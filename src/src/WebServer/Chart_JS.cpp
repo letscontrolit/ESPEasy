@@ -81,7 +81,7 @@ void add_ChartJS_chart_header(
   addHtml(chartTitle.toString());
   addHtml('}',  ','); // end plugins
 
-  if (nrSamples > 64) {
+  if (nrSamples >= 60) {
     // Default point radius = 3
     // Typically when having > 64 samples, these points become really cluttered
     // Thus it is best to remove them by setting the radius to 0.

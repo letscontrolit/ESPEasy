@@ -542,12 +542,16 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
     return;
   }
 
+  if (stats_long->getNrSamples() < 2 || stats_lat->getNrSamples() < 2) {
+    return;
+  }
+
   String axisOptions;
 
   {
     ChartJS_options_scales scales;
-    scales.add({ F("x"), F("Longitude") });
-    scales.add({ F("y"), F("Latitude") });
+    scales.add({ F("x"), stats_long->getLabel() });
+    scales.add({ F("y"), stats_lat->getLabel() });
     axisOptions = scales.toString();
   }
 
@@ -573,9 +577,10 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
   }
   addHtml(F("],datasets:["));
 
+  // Long/Lat Coordinates
   add_ChartJS_dataset_header(
   {
-    F("Coordinates Scatter Plot"),
+    F("Coordinates"),
     F("rgb(255, 99, 132)") });
 
 
@@ -587,6 +592,20 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
   }
 
   add_ChartJS_dataset_footer(F("showLine:true"));
+
+  // Add single point showing the average
+  add_ChartJS_dataset_header(
+  {
+    F("Average"),
+    F("#0F4C5C") });
+
+  {
+    const float longitude = stats_long->getSampleAvg();
+    const float latitude  = stats_lat->getSampleAvg();
+    add_ChartJS_scatter_data_point(longitude, latitude, 6);
+  }
+  add_ChartJS_dataset_footer(F("pointRadius:6,pointHoverRadius:10"));
+
   add_ChartJS_chart_footer();
 }
 
