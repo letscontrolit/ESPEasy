@@ -22,7 +22,6 @@ bool P042_data_struct::plugin_init(struct EventStruct *event) {
   Candle_blue   = P042_CONFIG_BLUE;
   Candle_bright = P042_CONFIG_BRIGHTNESS;
   Candle_pxlcnt = P042_CONFIG_PIXELCOUNT;
-  Candle_pxlcnt = P042_CONFIG_PIXELCOUNT;
   segment       = Candle_pxlcnt / 4;
 
   if ((Candle_red == 0) && (Candle_green == 0) && (Candle_blue == 0)) {
@@ -31,16 +30,16 @@ bool P042_data_struct::plugin_init(struct EventStruct *event) {
   Candle_type  = static_cast<P042_SimType>(P042_CONFIG_CANDLETYPE);
   Candle_color = static_cast<P042_ColorType>(P042_CONFIG_COLORTYPE);
 
-  if (!Candle_pixels || (GPIO_Set == false)) {
+  if ((nullptr == Candle_pixels) || !GPIO_Set) {
     GPIO_Set = validGpio(CONFIG_PIN1);
 
     if (GPIO_Set) {
-      if (Candle_pixels) {
+      if (nullptr != Candle_pixels) {
         delete Candle_pixels;
       }
       Candle_pixels = new (std::nothrow) NeoPixelBus_wrapper(P042_CONFIG_PIXELCOUNT, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
-      if (Candle_pixels != nullptr) {
+      if (nullptr != Candle_pixels) {
         SetPixelsBlack();
         Candle_pixels->setBrightness(Candle_bright);
         Candle_pixels->begin();
@@ -55,7 +54,7 @@ bool P042_data_struct::plugin_init(struct EventStruct *event) {
     }
   }
 
-  return Candle_pixels != nullptr;
+  return nullptr != Candle_pixels;
 }
 
 bool P042_data_struct::plugin_read(struct EventStruct *event) {
