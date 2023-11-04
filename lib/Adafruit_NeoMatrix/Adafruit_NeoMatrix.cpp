@@ -48,8 +48,7 @@
  */
 
 #include "gamma.h"
-#include <Adafruit_NeoMatrix.h>
-#include <Adafruit_NeoPixel.h>
+#include "Adafruit_NeoMatrix.h"
 #ifdef __AVR__
 #include <avr/pgmspace.h>
 #elif defined(ESP8266)
