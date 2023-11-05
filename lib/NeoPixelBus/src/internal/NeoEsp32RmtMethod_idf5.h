@@ -418,29 +418,41 @@ public:
 
     void Initialize()
     {
-#ifndef RMT_MEM_BLOCK_SYMBOLS
+#ifndef NEOESP32_RMT_FLAGS_WITH_DMA
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
-#define RMT_MEM_BLOCK_SYMBOLS 1536
+#define NEOESP32_RMT_FLAGS_WITH_DMA true
 #else
-#define RMT_MEM_BLOCK_SYMBOLS 0 // Use platform default (48 or 64)
+#define NEOESP32_RMT_FLAGS_WITH_DMA false
 #endif
 #endif
-#ifndef RMT_FLAGS_WITH_DMA
+
+
+#ifndef NEOESP32_RMT_MEM_BLOCK_SYMBOLS
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
-#define RMT_FLAGS_WITH_DMA true
+#ifdef NEOESP32_RMT_FLAGS_WITH_DMA
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 1536
 #else
-#define RMT_FLAGS_WITH_DMA false
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 96
+#endif
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+// Uses DMA, but should not set config.flags.with_dma = true;
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 384
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 128 // Use 2x platform default (Only ESP32 and ESP32-S2 have 64)
+#else
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 96 // Use 2x platform default
 #endif
 #endif
+
         esp_err_t ret = ESP_OK;
         rmt_tx_channel_config_t config = {};
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
-        config.mem_block_symbols = RMT_MEM_BLOCK_SYMBOLS;          // memory block size, 64 * 4 = 256 Bytes
+        config.mem_block_symbols = NEOESP32_RMT_MEM_BLOCK_SYMBOLS;          // memory block size, 64 * 4 = 256 Bytes
         config.resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
         config.flags.invert_out = false;        // do not invert output signal
-        config.flags.with_dma = RMT_FLAGS_WITH_DMA; 
+        config.flags.with_dma = NEOESP32_RMT_FLAGS_WITH_DMA; 
 
         ret += rmt_new_tx_channel(&config,&_channel.RmtChannelNumber);
         led_strip_encoder_config_t encoder_config = {};
