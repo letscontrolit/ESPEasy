@@ -40,7 +40,9 @@
 #include <pins_arduino.h>
 #endif
 #include <Adafruit_GFX.h>
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus_wrapper.h>
+
+// 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
 
 // Matrix layout information is passed in the 'matrixType' parameter for
 // each constructor (the parameter immediately following is the LED type
@@ -79,7 +81,7 @@
 /**
  * @brief Class for using NeoPixel matrices with the GFX graphics library.
  */
-class Adafruit_NeoMatrix : public Adafruit_GFX, public Adafruit_NeoPixel {
+class Adafruit_NeoMatrix : public Adafruit_GFX, public NeoPixelBus_wrapper {
 
 public:
   /**

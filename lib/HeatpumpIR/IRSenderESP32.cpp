@@ -6,6 +6,9 @@
 
 #if defined ESP32
 #include <IRSender.h>
+#if ( defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3) )
+#include <driver/gpio.h>
+#endif  // ESP_ARDUINO_VERSION_MAJOR >= 3
 IRSenderESP32::IRSenderESP32(uint8_t pin, uint8_t pwmChannel) : IRSender(pin)
 {
   _pwmChannel = pwmChannel;
@@ -20,10 +23,18 @@ void IRSenderESP32::setFrequency(int frequency)
 // Send an IR 'mark' symbol, i.e. transmitter ON
 void IRSenderESP32::mark(int markLength)
 {
+#if ( defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3) )
+  ledcAttach(_pin, _frequency, 8);
+#else   // ESP_ARDUINO_VERSION_MAJOR >= 3
   ledcSetup(_pwmChannel, _frequency, 8);
   ledcAttachPin(_pin, _pwmChannel);
+#endif  // ESP_ARDUINO_VERSION_MAJOR >= 3
   long beginning = micros();
+#if ( defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3) )
+  ledcWrite(_pin, 127);
+#else   // ESP_ARDUINO_VERSION_MAJOR >= 3
   ledcWrite(_pwmChannel, 127);
+#endif  // ESP_ARDUINO_VERSION_MAJOR >= 3
   while((int)(micros() - beginning) < markLength);
   gpio_reset_pin(static_cast<gpio_num_t>(_pin));
   digitalWrite(_pin, LOW);
