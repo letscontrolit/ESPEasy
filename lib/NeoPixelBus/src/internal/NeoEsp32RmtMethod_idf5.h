@@ -399,8 +399,8 @@ public:
     {
         // wait until the last send finishes before destructing everything
         // arbitrary time out of 10 seconds
-
         ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_tx_wait_all_done(_channel.RmtChannelNumber, 10000 / portTICK_PERIOD_MS));
+        ESP_ERROR_CHECK( rmt_disable(_channel.RmtChannelNumber));
         ESP_ERROR_CHECK( rmt_del_channel(_channel.RmtChannelNumber));
 
         gpio_matrix_out(_pin, 0x100, false, false);
@@ -438,7 +438,7 @@ public:
 #endif
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 // Uses DMA, but should not set config.flags.with_dma = true;
-#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 384
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 512
 #elif defined(CONFIG_IDF_TARGET_ESP32S2)
 // We use RMT channel 1, so we only can use upto 3x he default mem_block_symbols of 64
 #define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 192 // Use 3x platform default (Only ESP32 and ESP32-S2 have 64)
