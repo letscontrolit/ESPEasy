@@ -322,7 +322,7 @@ class NeoEsp32RmtChannel3
 public:
     NeoEsp32RmtChannel3() {};
 
-protected:
+public:
     rmt_channel_handle_t RmtChannelNumber = NULL;
 };
 #endif // !defined(CONFIG_IDF_TARGET_ESP32C6)
@@ -418,15 +418,29 @@ public:
 
     void Initialize()
     {
+#ifndef RMT_MEM_BLOCK_SYMBOLS
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define RMT_MEM_BLOCK_SYMBOLS 1536
+#else
+#define RMT_MEM_BLOCK_SYMBOLS 0 // Use platform default (48 or 64)
+#endif
+#endif
+#ifndef RMT_FLAGS_WITH_DMA
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define RMT_FLAGS_WITH_DMA true
+#else
+#define RMT_FLAGS_WITH_DMA false
+#endif
+#endif
         esp_err_t ret = ESP_OK;
         rmt_tx_channel_config_t config = {};
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
-        config.mem_block_symbols = 64;          // memory block size, 64 * 4 = 256 Bytes
+        config.mem_block_symbols = RMT_MEM_BLOCK_SYMBOLS;          // memory block size, 64 * 4 = 256 Bytes
         config.resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
         config.flags.invert_out = false;        // do not invert output signal
-        config.flags.with_dma = false;          // do not need DMA backend
+        config.flags.with_dma = RMT_FLAGS_WITH_DMA; 
 
         ret += rmt_new_tx_channel(&config,&_channel.RmtChannelNumber);
         led_strip_encoder_config_t encoder_config = {};
@@ -763,6 +777,42 @@ typedef NeoEsp32Rmt1400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
 #else // defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+
+// RMT channel 3 method is the default method for Esp32-S3 since we want to use DMA
+typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2813Method;
+typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2812xMethod;
+typedef NeoEsp32Rmt3800KbpsMethod NeoWs2812Method;
+typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2811Method;
+typedef NeoEsp32Rmt3Sk6812Method NeoSk6812Method;
+typedef NeoEsp32Rmt3Tm1814Method NeoTm1814Method;
+typedef NeoEsp32Rmt3Tm1829Method NeoTm1829Method;
+typedef NeoEsp32Rmt3Tm1914Method NeoTm1914Method;
+typedef NeoEsp32Rmt3Sk6812Method NeoLc8812Method;
+typedef NeoEsp32Rmt3Apa106Method NeoApa106Method;
+typedef NeoEsp32Rmt3Tx1812Method NeoTx1812Method;
+
+typedef NeoEsp32Rmt3Ws2812xMethod Neo800KbpsMethod;
+typedef NeoEsp32Rmt3400KbpsMethod Neo400KbpsMethod;
+
+typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2813InvertedMethod;
+typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
+typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2811InvertedMethod;
+typedef NeoEsp32Rmt3800KbpsInvertedMethod NeoWs2812InvertedMethod;
+typedef NeoEsp32Rmt3Sk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoEsp32Rmt3Tm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoEsp32Rmt3Tm1829InvertedMethod NeoTm1829InvertedMethod;
+typedef NeoEsp32Rmt3Tm1914InvertedMethod NeoTm1914InvertedMethod;
+typedef NeoEsp32Rmt3Sk6812InvertedMethod NeoLc8812InvertedMethod;
+typedef NeoEsp32Rmt3Apa106InvertedMethod NeoApa106InvertedMethod;
+typedef NeoEsp32Rmt3Tx1812InvertedMethod NeoTx1812InvertedMethod;
+
+typedef NeoEsp32Rmt3Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
+typedef NeoEsp32Rmt3400KbpsInvertedMethod Neo400KbpsInvertedMethod;
+
+
+#else
+
 // RMT channel 6 method is the default method for Esp32
 typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2812xMethod;
@@ -793,6 +843,8 @@ typedef NeoEsp32Rmt6Tx1812InvertedMethod NeoTx1812InvertedMethod;
 
 typedef NeoEsp32Rmt6Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32Rmt6400KbpsInvertedMethod Neo400KbpsInvertedMethod;
+
+#endif // defined(CONFIG_IDF_TARGET_ESP32S3)
 
 #endif // defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6)
 
