@@ -395,7 +395,7 @@ public:
         construct();
     }
 
-    ~NeoEsp32RmtMethodBase()
+    virtual ~NeoEsp32RmtMethodBase()
     {
         // wait until the last send finishes before destructing everything
         // arbitrary time out of 10 seconds
@@ -421,6 +421,8 @@ public:
 #ifndef NEOESP32_RMT_FLAGS_WITH_DMA
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
 #define NEOESP32_RMT_FLAGS_WITH_DMA true
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+#define NEOESP32_RMT_FLAGS_WITH_DMA false
 #else
 #define NEOESP32_RMT_FLAGS_WITH_DMA false
 #endif
@@ -430,15 +432,18 @@ public:
 #ifndef NEOESP32_RMT_MEM_BLOCK_SYMBOLS
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
 #ifdef NEOESP32_RMT_FLAGS_WITH_DMA
-#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 1536
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 1536 // 16 RGB pixels or 12 RGBW pixels
 #else
-#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 96
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 96 // Use 2x platform default
 #endif
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 // Uses DMA, but should not set config.flags.with_dma = true;
 #define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 384
 #elif defined(CONFIG_IDF_TARGET_ESP32S2)
-#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 128 // Use 2x platform default (Only ESP32 and ESP32-S2 have 64)
+// We use RMT channel 1, so we only can use upto 3x he default mem_block_symbols of 64
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 192 // Use 3x platform default (Only ESP32 and ESP32-S2 have 64)
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+#define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 192
 #else
 #define NEOESP32_RMT_MEM_BLOCK_SYMBOLS 96 // Use 2x platform default
 #endif
