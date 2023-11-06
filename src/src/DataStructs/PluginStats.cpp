@@ -583,6 +583,7 @@ void PluginStats_array::plot_ChartJS() const
 
   // Add labels
   addHtml(F("labels:["));
+
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
       addHtml(',');
@@ -597,6 +598,89 @@ void PluginStats_array::plot_ChartJS() const
     if (_plugin_stats[i] != nullptr) {
       _plugin_stats[i]->plot_ChartJS_dataset();
     }
+  }
+  add_ChartJS_chart_footer();
+}
+
+void PluginStats_array::plot_ChartJS_scatter(
+  taskVarIndex_t                values_X_axis_index,
+  taskVarIndex_t                values_Y_axis_index,
+  const __FlashStringHelper    *id,
+  const ChartJS_title         & chartTitle,
+  const ChartJS_dataset_config& datasetConfig,
+  int                           width,
+  int                           height,
+  bool                          showAverage,
+  const String                & options) const
+{
+  const PluginStats *stats_X = getPluginStats(values_X_axis_index);
+  const PluginStats *stats_Y = getPluginStats(values_Y_axis_index);
+
+  if ((stats_X == nullptr) || (stats_Y == nullptr)) {
+    return;
+  }
+
+  if ((stats_X->getNrSamples() < 2) || (stats_Y->getNrSamples() < 2)) {
+    return;
+  }
+
+  String axisOptions;
+
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), stats_X->getLabel() });
+    scales.add({ F("y"), stats_Y->getLabel() });
+    axisOptions = scales.toString();
+  }
+
+
+  const size_t nrSamples = stats_X->getNrSamples();
+
+  add_ChartJS_chart_header(
+    F("scatter"),
+    id,
+    chartTitle,
+    width,
+    height,
+    axisOptions,
+    nrSamples);
+
+  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
+  addHtml(F("labels:["));
+
+  for (size_t i = 0; i < nrSamples; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(i);
+  }
+  addHtml(F("],datasets:["));
+
+  // Long/Lat Coordinates
+  add_ChartJS_dataset_header(datasetConfig);
+
+  // Add scatter data
+  for (size_t i = 0; i < nrSamples; ++i) {
+    const float valX = (*stats_X)[i];
+    const float valY = (*stats_Y)[i];
+    add_ChartJS_scatter_data_point(valX, valY, 6);
+  }
+
+  add_ChartJS_dataset_footer(F("showLine:true"));
+
+  if (showAverage) {
+    // Add single point showing the average
+    add_ChartJS_dataset_header(
+    {
+      F("Average"),
+      F("#0F4C5C") });
+
+    {
+      const float valX = stats_X->getSampleAvg();
+      const float valY = stats_Y->getSampleAvg();
+      add_ChartJS_scatter_data_point(valX, valY, 6);
+    }
+    add_ChartJS_dataset_footer(F("pointRadius:6,pointHoverRadius:10"));
   }
   add_ChartJS_chart_footer();
 }

@@ -203,6 +203,33 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+
+# if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
+    {
+      P028_data_struct *P028_data =
+        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P028_data) {
+        if ((P028_data_struct::BMx_DetectMode::BMP280 != static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE)) &&
+            P028_data->hasHumidity()) 
+        {
+          P028_data->plot_ChartJS_scatter(
+            0,
+            1,
+            F("temphumscatter"),
+            { F("Temp/Humidity Scatter Plot") },
+            { F("temp/hum"), F("rgb(255, 99, 132)") },
+            500,
+            500);
+        }
+      }
+      // Do not set success = true, since we're not actually adding stats, but just plotting a scatter plot
+      break;
+    }
+#endif
+
+
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
     {
       # ifndef BUILD_NO_DEBUG

@@ -9,6 +9,10 @@
 # include "../DataTypes/TaskIndex.h"
 
 
+# if FEATURE_CHART_JS
+#  include "../WebServer/Chart_JS_title.h"
+# endif // if FEATURE_CHART_JS
+
 # include <CircularBuffer.h>
 
 # ifndef PLUGIN_STATS_NR_ELEMENTS
@@ -192,6 +196,19 @@ public:
 
 # if FEATURE_CHART_JS
   void   plot_ChartJS() const;
+
+  void   plot_ChartJS_scatter(
+    taskVarIndex_t                values_X_axis_index,
+    taskVarIndex_t                values_Y_axis_index,
+    const __FlashStringHelper    *id,
+    const ChartJS_title         & chartTitle,
+    const ChartJS_dataset_config& datasetConfig,
+    int                           width,
+    int                           height,
+    bool                          showAverage = true,
+    const String                & options     = EMPTY_STRING) const;
+
+
 # endif // if FEATURE_CHART_JS
 
 

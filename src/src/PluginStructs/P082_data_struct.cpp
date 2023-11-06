@@ -446,7 +446,7 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
       somethingAdded = true;
     }
 
-    bool   show_custom = false;
+    bool show_custom = false;
     ESPEASY_RULES_FLOAT_TYPE dist_p2p{};
     ESPEASY_RULES_FLOAT_TYPE dist_stddev{};
 
@@ -454,22 +454,25 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
       switch (query_type) {
         case P082_query::P082_QUERY_LAT:
           show_custom = true;
+
           // Compute distance between min and max peak
-          dist_p2p            = gps->distanceBetween(
+          dist_p2p = gps->distanceBetween(
             stats->getPeakLow(),  _last_lng,
             stats->getPeakHigh(), _last_lng);
-          dist_stddev         = gps->distanceBetween(
+          dist_stddev = gps->distanceBetween(
             _last_lat,                            _last_lng,
             _last_lat + stats->getSampleStdDev(), _last_lng);
           break;
         case P082_query::P082_QUERY_LONG:
           show_custom = true;
+
           // Compute distance between min and max peak
-          dist_p2p            = gps->distanceBetween(
+          dist_p2p = gps->distanceBetween(
             _last_lat, stats->getPeakLow(),
             _last_lat, stats->getPeakHigh());
+
           // Compute distance for std.dev
-          dist_stddev         = gps->distanceBetween(
+          dist_stddev = gps->distanceBetween(
             _last_lat, _last_lng,
             _last_lat, _last_lng + stats->getSampleStdDev());
           break;
@@ -515,12 +518,11 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
   return somethingAdded;
 }
 
-
 #  if FEATURE_CHART_JS
 void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct *event)
 {
-  const PluginStats *stats_long = nullptr;
-  const PluginStats *stats_lat  = nullptr;
+  taskVarIndex_t stats_long = INVALID_TASKVAR_INDEX;
+  taskVarIndex_t stats_lat  = INVALID_TASKVAR_INDEX;
 
   for (uint8_t var_index = 0; var_index < P082_NR_OUTPUT_VALUES; ++var_index) {
     const uint8_t pconfigIndex = var_index + P082_QUERY1_CONFIG_POS;
@@ -528,87 +530,26 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
 
     switch (query) {
       case P082_query::P082_QUERY_LONG:
-        stats_long = getPluginStats(var_index);
+        stats_long = var_index;
         break;
       case P082_query::P082_QUERY_LAT:
-        stats_lat = getPluginStats(var_index);
+        stats_lat = var_index;
         break;
       default:
         break;
     }
   }
 
-  if ((stats_long == nullptr) || (stats_lat == nullptr)) {
-    return;
-  }
-
-  if (stats_long->getNrSamples() < 2 || stats_lat->getNrSamples() < 2) {
-    return;
-  }
-
-  String axisOptions;
-
-  {
-    ChartJS_options_scales scales;
-    scales.add({ F("x"), stats_long->getLabel() });
-    scales.add({ F("y"), stats_lat->getLabel() });
-    axisOptions = scales.toString();
-  }
-
-
-  const size_t nrSamples = stats_long->getNrSamples();
-
-  add_ChartJS_chart_header(
-    F("scatter"),
+  plot_ChartJS_scatter(
+    stats_long,
+    stats_lat,
     F("positionscatter"),
     { F("Position Scatter Plot") },
+    { F("Coordinates"), F("rgb(255, 99, 132)") },
     500,
-    500,
-    axisOptions,
-    nrSamples);
-
-  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
-  addHtml(F("labels:["));
-  for (size_t i = 0; i < nrSamples; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtmlInt(i);
-  }
-  addHtml(F("],datasets:["));
-
-  // Long/Lat Coordinates
-  add_ChartJS_dataset_header(
-  {
-    F("Coordinates"),
-    F("rgb(255, 99, 132)") });
-
-
-  // Add scatter data
-  for (size_t i = 0; i < nrSamples; ++i) {
-    const float longitude = stats_long->getSample(i);
-    const float latitude  = stats_lat->getSample(i);
-    add_ChartJS_scatter_data_point(longitude, latitude, 6);
-  }
-
-  add_ChartJS_dataset_footer(F("showLine:true"));
-
-  // Add single point showing the average
-  add_ChartJS_dataset_header(
-  {
-    F("Average"),
-    F("#0F4C5C") });
-
-  {
-    const float longitude = stats_long->getSampleAvg();
-    const float latitude  = stats_lat->getSampleAvg();
-    add_ChartJS_scatter_data_point(longitude, latitude, 6);
-  }
-  add_ChartJS_dataset_footer(F("pointRadius:6,pointHoverRadius:10"));
-
-  add_ChartJS_chart_footer();
+    500);
 }
 
 #  endif // if FEATURE_CHART_JS
-# endif // if FEATURE_PLUGIN_STATS
-#endif  // ifdef USES_P082
+# endif  // if FEATURE_PLUGIN_STATS
+#endif   // ifdef USES_P082

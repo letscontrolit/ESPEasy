@@ -125,6 +125,31 @@ struct PluginTaskData_base {
     }
   }
 
+  void plot_ChartJS_scatter(
+    taskVarIndex_t                values_X_axis_index,
+    taskVarIndex_t                values_Y_axis_index,
+    const __FlashStringHelper    *id,
+    const ChartJS_title         & chartTitle,
+    const ChartJS_dataset_config& datasetConfig,
+    int                           width,
+    int                           height,
+    bool                          showAverage = true,
+    const String                & options     = EMPTY_STRING) const
+  {
+    if (_plugin_stats_array != nullptr) {
+      _plugin_stats_array->plot_ChartJS_scatter(
+        values_X_axis_index,
+        values_Y_axis_index,
+        id,
+        chartTitle,
+        datasetConfig,
+        width,
+        height,
+        showAverage,
+        options);
+    }
+  }
+
 # endif // if FEATURE_CHART_JS
 #endif  // if FEATURE_PLUGIN_STATS
 
