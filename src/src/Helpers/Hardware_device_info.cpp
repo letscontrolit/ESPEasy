@@ -114,8 +114,8 @@ int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_
 
 #endif // ifdef ESP8266
 
-#ifndef isFlashInterfacePin
-bool isFlashInterfacePin(int gpio) {
+
+bool isFlashInterfacePin_ESPEasy(int gpio) {
 # if CONFIG_IDF_TARGET_ESP32
 
   // GPIO-6 ... 11: SPI flash and PSRAM
@@ -142,12 +142,12 @@ bool isFlashInterfacePin(int gpio) {
   return ((gpio) >= 12 && (gpio) <= 17);
 
 # elif defined(ESP8266)
-  return ((gpio) == 6 || (gpio) == 7 || (gpio) == 8 || (gpio) == 11);
+  if (isESP8285())
+    return ((gpio) == 6 || (gpio) == 7 || (gpio) == 8 || (gpio) == 11);
+  return ((gpio) >= 6 && (gpio) <= 11);
 
 # endif // if CONFIG_IDF_TARGET_ESP32
 }
-
-#endif // ifndef isFlashInterfacePin
 
 uint32_t getFlashChipId() {
   // Cache since size does not change

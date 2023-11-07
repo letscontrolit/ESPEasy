@@ -353,7 +353,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
 
-  if (isFlashInterfacePin(gpio)) {
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
     if (isESP8285()) {
       if ((gpio == 9) || (gpio == 10)) {
         // Usable on ESP8285

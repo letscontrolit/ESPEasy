@@ -25,9 +25,10 @@ int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_
 
 #endif
 
-#ifndef isFlashInterfacePin
-bool isFlashInterfacePin(int gpio);
-#endif
+// Arduino has a different macro isFlashInterfacePin for ESP8266 as ESP8285
+// This has been fixed in SDK3.x, but since we still need to support SDK 2.7.x,
+// had to rename the function to isFlashInterfacePin_ESPEasy
+bool isFlashInterfacePin_ESPEasy(int gpio);
 
 
 uint32_t                   getFlashChipId();
