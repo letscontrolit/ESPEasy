@@ -2070,7 +2070,7 @@ const CPlugin_ptr_t PROGMEM CPlugin_ptr[] =
 constexpr size_t ProtocolIndex_to_CPlugin_id_size = sizeof(ProtocolIndex_to_CPlugin_id);
 
 // Highest CPlugin ID included in the build
-constexpr size_t Highest_CPlugin_id = ProtocolIndex_to_CPlugin_id[ProtocolIndex_to_CPlugin_id_size - 1];
+constexpr size_t Highest_CPlugin_id = ProtocolIndex_to_CPlugin_id_size == 0 ? 0 : ProtocolIndex_to_CPlugin_id[ProtocolIndex_to_CPlugin_id_size - 1];
 
 constexpr size_t CPlugin_id_to_ProtocolIndex_size = Highest_CPlugin_id + 1;
 
