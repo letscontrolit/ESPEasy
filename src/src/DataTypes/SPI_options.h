@@ -25,8 +25,12 @@
 //  FSPI_HOST = SPI2_HOST
 //  HSPI_HOST = SPI3_HOST
 // 
+// ESP32-C6:
+//  FSPI_HOST = SPI1_HOST
 // ESP32-C3:
 //  FSPI_HOST = SPI2_HOST
+// ESP32-C2:
+//  FSPI_HOST = SPI1_HOST
 
 
 // SPIx_HOST defined in enum spi_host_device_t in hal/spi_types.h

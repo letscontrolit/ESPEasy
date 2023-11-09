@@ -81,6 +81,8 @@ struct ImprovWiFiParamsStruct {
     "ESP32-S2"
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
     "ESP32-S3"
+#elif defined(CONFIG_IDF_TARGET_ESP32C2)
+    "ESP32-C2"
 #elif defined(CONFIG_IDF_TARGET_ESP32C3)
     "ESP32-C3"
 #elif defined(CONFIG_IDF_TARGET_ESP32C6)

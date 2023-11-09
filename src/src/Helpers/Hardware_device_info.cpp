@@ -40,7 +40,13 @@
 # elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
   #  define HAS_HALL_EFFECT_SENSOR  0
   #  define HAS_TOUCH_GPIO 1
+# elif CONFIG_IDF_TARGET_ESP32C6 // ESP32-C6
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO  0
 # elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO  0
+# elif CONFIG_IDF_TARGET_ESP32C2 // ESP32-C2
   #  define HAS_HALL_EFFECT_SENSOR  0
   #  define HAS_TOUCH_GPIO  0
 # elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
@@ -122,6 +128,12 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-16 & 17: CS for PSRAM, thus only unuable when PSRAM is present
   return ((gpio) >= 6 && (gpio) <= 11);
 
+# elif CONFIG_IDF_TARGET_ESP32S3
+
+  // GPIO-26 ... 32: SPI flash and PSRAM
+  // GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
+  return ((gpio) >= 26 && (gpio) <= 32);
+
 # elif CONFIG_IDF_TARGET_ESP32S2
 
   // GPIO-22 ... 25: SPI flash and PSRAM
@@ -129,16 +141,32 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
   return ((gpio) >= 22 && (gpio) <= 25);
 
-# elif CONFIG_IDF_TARGET_ESP32S3
+# elif CONFIG_IDF_TARGET_ESP32C6
 
-  // GPIO-26 ... 32: SPI flash and PSRAM
-  // GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
-  return ((gpio) >= 26 && (gpio) <= 32);
+  // FIXME TD-er: Must know whether we have internal or external flash
+
+  // For chip variants with an in-package flash, this pin can not be used.
+  if (gpio == 10 || gpio == 11) 
+    return true;
+
+  // For chip variants without an in-package flash, this pin can not be used.
+//  if (gpio == 14) 
+//    return true;
+  
+  // GPIO-27: Flash voltage selector
+  // GPIO-24 ... 30: Connected to internal flash (might be available when using external flash???)
+  return ((gpio) >= 24 && (gpio) <= 30 && gpio != 27);
 
 # elif CONFIG_IDF_TARGET_ESP32C3
 
   // GPIO-11: Flash voltage selector
   // GPIO-12 ... 17: Connected to flash
+  return ((gpio) >= 12 && (gpio) <= 17);
+
+# elif CONFIG_IDF_TARGET_ESP32C2
+
+  // GPIO-11: Flash voltage selector
+  // For chip variants with a SiP flash built in, GPIO11~ GPIO17 are dedicated to connecting SiP flash, not for other uses
   return ((gpio) >= 12 && (gpio) <= 17);
 
 # elif defined(ESP8266)

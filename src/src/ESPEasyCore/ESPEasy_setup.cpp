@@ -307,15 +307,18 @@ void ESPEasy_setup()
 #if CONFIG_IDF_TARGET_ESP32
     esp_pm_config_esp32_t pm_config = {
             .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
-#elif CONFIG_IDF_TARGET_ESP32S2
-    esp_pm_config_esp32s2_t pm_config = {
-            .max_freq_mhz = 240,
-#elif CONFIG_IDF_TARGET_ESP32C3
-    esp_pm_config_esp32c3_t pm_config = {
-            .max_freq_mhz = 160,
 #elif CONFIG_IDF_TARGET_ESP32S3
     esp_pm_config_esp32s3_t pm_config = {
             .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32S2
+    esp_pm_config_esp32s2_t pm_config = {
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C6
+    esp_pm_config_esp32c3_t pm_config = {
+            .max_freq_mhz = 160,
+#elif CONFIG_IDF_TARGET_ESP32C3
+    esp_pm_config_esp32c3_t pm_config = {
+            .max_freq_mhz = 160,
 #elif CONFIG_IDF_TARGET_ESP32C2
     esp_pm_config_esp32c2_t pm_config = {
             .max_freq_mhz = 120,
@@ -329,12 +332,14 @@ void ESPEasy_setup()
   esp_pm_config_t pm_config = {
 #if CONFIG_IDF_TARGET_ESP32
             .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
-#elif CONFIG_IDF_TARGET_ESP32S2
-            .max_freq_mhz = 240,
-#elif CONFIG_IDF_TARGET_ESP32C3
-            .max_freq_mhz = 160,
 #elif CONFIG_IDF_TARGET_ESP32S3
             .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32S2
+            .max_freq_mhz = 240,
+#elif CONFIG_IDF_TARGET_ESP32C6
+            .max_freq_mhz = 160,
+#elif CONFIG_IDF_TARGET_ESP32C3
+            .max_freq_mhz = 160,
 #elif CONFIG_IDF_TARGET_ESP32C2
             .max_freq_mhz = 120,
 #endif

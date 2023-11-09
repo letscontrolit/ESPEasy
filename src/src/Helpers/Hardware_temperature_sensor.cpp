@@ -17,7 +17,7 @@
 extern "C" {
 uint8_t temprature_sens_read();
 }
-#  elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+#  elif defined(ESP32C3) || defined(ESP32C3) || defined(ESP32C6) || defined(ESP32S2) || defined(ESP32S3)
 #   if ESP_IDF_VERSION_MAJOR < 5
 #    include <driver/temp_sensor.h>
 
@@ -61,7 +61,7 @@ esp_err_t do_read_internal_temperature(float& celsius) {
   return result;
 }
 
-#  elif defined(ESP32C3) || defined(ESP32S2) || defined(ESP32S3)
+#  elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6) || defined(ESP32S2) || defined(ESP32S3)
 
 esp_err_t do_read_internal_temperature(float& celsius) {
   esp_err_t result = ESP_FAIL;
@@ -81,7 +81,7 @@ esp_err_t do_read_internal_temperature(float& celsius) {
   // Thus dac_offset can be just about anything
   // dac_offset is used as index in an array without bounds checking
   {
-#    if defined(ESP32S3) || defined(ESP32C3)
+#    if defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
     static float s_deltaT = (esp_efuse_rtc_calib_get_ver() == 1) ?
                             (esp_efuse_rtc_calib_get_cal_temp(1) / 10.0f) :
                             0.0f;

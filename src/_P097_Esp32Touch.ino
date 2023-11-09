@@ -6,7 +6,7 @@
 // #######################################################################################################
 
 
-#if defined(ESP32) && !defined(ESP32C3)
+#if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
 #ifdef ESP32_CLASSIC
   # define HAS_T0_INPUT  1

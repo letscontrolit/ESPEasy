@@ -188,7 +188,15 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 
-  #elif defined(ESP32C3)
+  #elif defined(ESP32C6) 
+
+  if (gpio == 27) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    return F("Flash Vdd"); 
+  }
+
+  #elif defined(ESP32C2) || defined(ESP32C3) 
 
   if (gpio == 11) {
     // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11

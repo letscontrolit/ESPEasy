@@ -72,7 +72,13 @@
 # elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
   #  define HAS_HALL_EFFECT_SENSOR  0
   #  define HAS_TOUCH_GPIO 1
+# elif CONFIG_IDF_TARGET_ESP32C6 // ESP32-C6
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO  0
 # elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+  #  define HAS_HALL_EFFECT_SENSOR  0
+  #  define HAS_TOUCH_GPIO  0
+# elif CONFIG_IDF_TARGET_ESP32C2 // ESP32-C2
   #  define HAS_HALL_EFFECT_SENSOR  0
   #  define HAS_TOUCH_GPIO  0
 # elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
@@ -593,6 +599,27 @@ void readBootCause() {
   }
 
 
+#elif defined(ESP32C2)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<3, Deep Sleep reset digital core*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case INTRUSION_RESET        : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<10, Instrusion tested to reset CPU*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, super watchdog reset digital core and rtc module*/
+    case GLITCH_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<19, glitch reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<20, efuse reset digital core*/
+    case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset CPU*/
+  }
+
+
 #elif defined(ESP32C3)
   switch (rtc_get_reset_reason(0)) {
     case NO_MEAN                : break;
@@ -615,6 +642,29 @@ void readBootCause() {
     case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
     case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
     case POWER_GLITCH_RESET     : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<23, power glitch reset digital core and rtc module*/
+  }
+
+#elif defined(ESP32C6)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+    case SDIO_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<6, Reset by SLC module, reset digital core (hp system)*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
+    case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
+    case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
+    case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset CPU*/
   }
 
 # elif defined(ESP32_CLASSIC)

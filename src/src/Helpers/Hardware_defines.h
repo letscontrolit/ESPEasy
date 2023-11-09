@@ -55,7 +55,7 @@
 # define WIFI_SENSITIVITY_11b  -88
 # define WIFI_SENSITIVITY_54g  -76
 # define WIFI_SENSITIVITY_n    -72
-#elif defined(ESP32C3)
+#elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
 # define MAX_TX_PWR_DBM_11b  21.0f
 # define MAX_TX_PWR_DBM_54g  19.0f
 # define MAX_TX_PWR_DBM_n    18.5f
@@ -79,8 +79,12 @@ static_assert(false, "Implement processor architecture");
 #  define SOC_RX0 3
 # elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #  define SOC_RX0 44
+# elif CONFIG_IDF_TARGET_ESP32C6
+#  define SOC_RX0 17
 # elif CONFIG_IDF_TARGET_ESP32C3
 #  define SOC_RX0 20
+# elif CONFIG_IDF_TARGET_ESP32C2
+#  define SOC_RX0 19
 # elif defined(ESP8266)
 #  define SOC_RX0 3
 # endif // if CONFIG_IDF_TARGET_ESP32
@@ -91,8 +95,12 @@ static_assert(false, "Implement processor architecture");
 #  define SOC_TX0 1
 # elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #  define SOC_TX0 43
+# elif CONFIG_IDF_TARGET_ESP32C6
+#  define SOC_TX0 16
 # elif CONFIG_IDF_TARGET_ESP32C3
 #  define SOC_TX0 21
+# elif CONFIG_IDF_TARGET_ESP32C2
+#  define SOC_TX0 20
 # elif defined(ESP8266)
 #  define SOC_TX0 1
 # endif // if CONFIG_IDF_TARGET_ESP32
@@ -103,18 +111,26 @@ static_assert(false, "Implement processor architecture");
 #if defined(ESP32S2) ||  defined(ESP32S3)
 #define PIN_USB_D_MIN  19
 #endif
+#ifdef ESP32C6
+#define PIN_USB_D_MIN  12
+#endif
 #ifdef ESP32C3
 #define PIN_USB_D_MIN  18
 #endif
+// ESP32-C2 doesn't seem to have USB pins
 #endif
 
 #ifndef PIN_USB_D_PLUS
 #if defined(ESP32S2) ||  defined(ESP32S3)
 #define PIN_USB_D_PLUS 20
 #endif
+#ifdef ESP32C6
+#define PIN_USB_D_PLUS 13
+#endif
 #ifdef ESP32C3
 #define PIN_USB_D_PLUS 19
 #endif
+// ESP32-C2 doesn't seem to have USB pins
 #endif
 
 

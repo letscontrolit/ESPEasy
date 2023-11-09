@@ -113,6 +113,36 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   // GPIO 0  State during boot determines boot mode.
   if (gpio == 0) { warning = true; }
 
+# elif defined(ESP32C2)
+
+  if (gpio == 8) {
+    // Strapping pin which must be high during flashing
+    warning = true;
+  }
+
+  if (gpio == 9) {
+    // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic)
+    warning = true;
+  }
+
+  if (gpio == 11) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
+    // Connected to the integrated SPI flash.
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
 
 # elif defined(ESP32C3)
 
@@ -145,14 +175,14 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  if ((gpio >= 12) && (gpio <= 17)) {
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
     // Connected to the integrated SPI flash.
     input   = false;
     output  = false;
     warning = true;
   }
 
-  if ((gpio == 18) || (gpio == 19)) {
+  if ((gpio == PIN_USB_D_MIN) || (gpio == PIN_USB_D_PLUS)) {
     // USB OTG and USB Serial/JTAG function. USB signal is a differential
     // signal transmitted over a pair of D+ and D- wires.
     warning = true;
@@ -168,6 +198,45 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   // GPIO 20: U0RXD
   // GPIO 21: U0TXD
   
+
+  # elif defined(ESP32C6)
+
+  if (gpio == 8) {
+    // Strapping pin which must be high during flashing
+    warning = true;
+  }
+
+  if (gpio == 9) {
+    // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic)
+    warning = true;
+  }
+
+  if (gpio == 27) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
+    // Connected to the integrated SPI flash.
+    input   = false;
+    output  = false;
+    warning = true;
+  }
+
+  if ((gpio == PIN_USB_D_MIN) || (gpio == PIN_USB_D_PLUS)) {
+    // USB OTG and USB Serial/JTAG function. USB signal is a differential
+    // signal transmitted over a pair of D+ and D- wires.
+    warning = true;
+  }
+
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
+
 
 
 # elif defined(ESP32_CLASSIC)
@@ -291,7 +360,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
     hasPullDown = true;
   }
 
-# elif defined(ESP32C3)
+# elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
 
   if (validGpio(gpio)) {
     hasPullUp   = true;
@@ -419,6 +488,9 @@ bool validGpio(int gpio) {
 bool isSerialConsolePin(int gpio) {
   if (!Settings.UseSerial) { return false; }
 
+#if defined(SOC_RX0) && defined(SOC_TX0)
+  return gpio == SOC_TX0 || gpio == SOC_RX0;
+#else
 #ifdef ESP32S2
 
   // FIXME TD-er: Must check whether USB serial is used
@@ -444,6 +516,7 @@ bool isSerialConsolePin(int gpio) {
   static_assert(false, "Implement processor architecture");
   return false;
 #endif // ifdef ESP32S2
+#endif
 }
 
 #ifdef ESP32
@@ -487,18 +560,39 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   }
 
 
+# elif defined(ESP32C2)
+  if (gpio_pin >= 0 && gpio_pin <= 4) {
+    adc = 1;
+    ch = gpio_pin;
+    return true;
+  }
+  return false;
+
 # elif defined(ESP32C3)
 
-  switch (gpio_pin) {
-    case 0: adc = 1; ch = 0;  break;
-    case 1: adc = 1; ch = 1;  break;
-    case 2: adc = 1; ch = 2;  break;
-    case 3: adc = 1; ch = 3;  break;
-    case 4: adc = 1; ch = 4;  break;
-    case 5: adc = 2; ch = 0;  break;
-    default:
-      return false;
+  if (gpio_pin >= 0 && gpio_pin <= 4) {
+    adc = 1;
+    ch = gpio_pin;
+    return true;
   }
+  # if ESP_IDF_VERSION_MAJOR >= 5
+  // Support for ADC2 has been dropped. 
+  # else
+  if (gpio_pin == 5) {
+    adc = 2;
+    ch = 0;
+    return true;
+  }
+  #endif
+  return false;
+
+# elif defined(ESP32C6)
+  if (gpio_pin >= 0 && gpio_pin <= 6) {
+    adc = 1;
+    ch = gpio_pin;
+    return true;
+  }
+  return false;
 
 # elif defined(ESP32_CLASSIC)
 
@@ -559,7 +653,7 @@ int touchPinToGpio(int touch_pin)
       break;
   }
 
-# elif defined(ESP32C3)
+# elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
 // No touch pin support
 
 

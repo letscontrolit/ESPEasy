@@ -27,8 +27,12 @@
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S2_STD
   #elif defined(ESP32S3)
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S3_STD
+  #elif defined(ESP32C6)
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C6_STD
   #elif defined(ESP32C3)
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C3_STD
+  #elif defined(ESP32C2)
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C2_STD
   # elif defined(ESP32_CLASSIC)
     #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
   # else

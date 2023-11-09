@@ -18,16 +18,17 @@
 #  include <driver/adc.h>
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
 
-# if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32C3
-
+# if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 /**
  * On ESP32C3, ADC2 is no longer supported, due to its HW limitation.
  * Search for errata on espressif website for more details.
  */
-#  define HAS_ADC2  1
-# else // if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32C3
 #  define HAS_ADC2  0
-# endif // if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32C3
+# elif (SOC_ADC_PERIPH_NUM >= 2)
+#  define HAS_ADC2  1
+# else // if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32Cx
+#  define HAS_ADC2  0
+# endif // if (SOC_ADC_PERIPH_NUM >= 2) && !CONFIG_IDF_TARGET_ESP32Cx
 
 
 class Hardware_ADC_cali_t {
