@@ -722,7 +722,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 
   index_high = gpio_pin - maxStates;
 
-#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+#  if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C3)
 
   // These can all store in the PinBootStates_ESP32 array
   return (index_high < maxStatesesp32);

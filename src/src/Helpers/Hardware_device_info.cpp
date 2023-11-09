@@ -257,7 +257,7 @@ String getChipFeaturesString() {
 }
 
 bool getFlashChipOPI_wired() {
-  # ifdef ESP32_CLASSIC
+  # if defined(ESP32_CLASSIC) || defined(ESP32C2)
   return false;
 
   # else // ifdef ESP32_CLASSIC

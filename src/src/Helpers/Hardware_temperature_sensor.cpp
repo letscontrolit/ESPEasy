@@ -17,7 +17,7 @@
 extern "C" {
 uint8_t temprature_sens_read();
 }
-#  elif defined(ESP32C3) || defined(ESP32C3) || defined(ESP32C6) || defined(ESP32S2) || defined(ESP32S3)
+#  elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6) || defined(ESP32S2) || defined(ESP32S3)
 #   if ESP_IDF_VERSION_MAJOR < 5
 #    include <driver/temp_sensor.h>
 

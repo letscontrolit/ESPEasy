@@ -131,9 +131,9 @@ const __FlashStringHelper * getResetReasonString_f(uint8_t icore, bool& isDEEPSL
     case POWER_GLITCH_RESET     : return F("power glitch reset digital core and rtc module");
   }
 
-  #elif defined(ESP32C6)
+  #elif defined(ESP32C2)
 
-  // See tools\sdk\esp32\include\esp_rom\include\esp32c6\rom\rtc.h
+  // See tools\sdk\esp32\include\esp_rom\include\esp32c2\rom\rtc.h
   switch (rtc_get_reset_reason(icore)) {
     case NO_MEAN                : break;
     case POWERON_RESET          : return F("Vbat power on reset");
