@@ -37,6 +37,8 @@ def esp32_create_combined_bin(source, target, env):
     sections = env.subst(env.get("FLASH_EXTRA_IMAGES"))
     firmware_name = env.subst("$BUILD_DIR/${PROGNAME}.bin")
     chip = env.get("BOARD_MCU")
+    if chip == "esp32c6":
+        chip = "esp32c6beta"
     flash_size = env.BoardConfig().get("upload.flash_size")
     flash_freq = env.BoardConfig().get("build.f_flash", '40m')
     flash_freq = flash_freq.replace('000000L', 'm')
