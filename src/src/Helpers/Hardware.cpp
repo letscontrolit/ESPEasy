@@ -474,7 +474,14 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
 // Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
 // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L805
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <esp_random.h>
+#endif
+
 uint32_t HwRandom() {
+#if ESP_IDF_VERSION_MAJOR >= 5
+  return esp_random();
+#else
 #if ESP8266
 
   // https://web.archive.org/web/20160922031242/http://esp8266-re.foogod.com/wiki/Random_Number_Generator
@@ -494,6 +501,7 @@ uint32_t HwRandom() {
   last_ccount = ccount;
   return result ^ *(volatile uint32_t *)_RAND_ADDR; // -V566
 #undef _RAND_ADDR
+#endif
 }
 
 long HwRandom(long howbig) {
