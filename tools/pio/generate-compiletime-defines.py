@@ -62,9 +62,9 @@ def get_cdn_url_prefix():
                 tag = tag.replace('refs/tags/','@')
                 return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
         except:
-            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20231013/static/'
     except ImportError:
-        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20231013/static/'
 
 
 def get_git_description():

@@ -744,13 +744,19 @@ void handle_sysinfo_Storage() {
     addHtml(F("(offset / size per item / index)"));
 
     for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
-      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+      const SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+      #if !FEATURE_NOTIFIER
+      if (settingsType == SettingsType::Enum::NotificationSettings_Type) {
+        continue;
+      }
+      #endif
       html_TR_TD();
       addHtml(SettingsType::getSettingsTypeString(settingsType));
       html_BR();
       addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
+      delay(1);
     }
   }
 

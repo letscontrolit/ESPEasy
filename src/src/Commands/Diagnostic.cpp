@@ -100,22 +100,25 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
     int max_index, offset, max_size;
     int struct_size = 0;
     serialPrintln();
-    serialPrint(SettingsType::getSettingsTypeString(settingsType));
-    serialPrintln(F(" | start | end | max_size | struct_size"));
-    serialPrintln(F("--- | --- | --- | --- | ---"));
-    SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+    if (SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size))
+    {
+      serialPrint(SettingsType::getSettingsTypeString(settingsType));
+      serialPrintln(F(" | start | end | max_size | struct_size"));
+      serialPrintln(F("--- | --- | --- | --- | ---"));
 
-    for (int i = 0; i < max_index; ++i) {
-      SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
-      serialPrint(String(i));
-      serialPrint("|");
-      serialPrint(String(offset));
-      serialPrint("|");
-      serialPrint(String(offset + max_size - 1));
-      serialPrint("|");
-      serialPrint(String(max_size));
-      serialPrint("|");
-      serialPrintln(String(struct_size));
+      for (int i = 0; i < max_index; ++i) {
+        if (SettingsType::getSettingsParameters(settingsType, i, offset, max_size))
+        {
+          serialPrintln(strformat(
+            F("%d|%d|%d|%d|%d"),
+            i,
+            offset,
+            offset + max_size - 1,
+            max_size,
+            struct_size
+          ));
+        }
+      }
     }
   }
   return return_see_serial(event);

@@ -3202,5 +3202,27 @@ To create/register a plugin, you have to :
 #endif
 
 
+// Incompatible plugins with ESP32-C2/C6
+#if defined(ESP32C2) || defined(ESP32C6)
+
+  // Disable NeoPixel plugins
+  #ifdef USES_P038
+  #undef USES_P038
+  #endif
+  #ifdef USES_P041
+  #undef USES_P041
+  #endif
+  #ifdef USES_P042
+  #undef USES_P042
+  #endif
+  #ifdef USES_P070
+  #undef USES_P070
+  #endif
+  #ifdef USES_P128
+  #undef USES_P128
+  #endif
+
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
