@@ -197,9 +197,9 @@ WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
   return WiFi_AP_Candidate();
 }
 
-bool WiFi_AP_CandidatesList::hasKnownCredentials() {
+bool WiFi_AP_CandidatesList::hasCandidateCredentials() {
   load_knownCredentials();
-  return !known.empty();
+  return !candidates.empty();
 }
 
 bool WiFi_AP_CandidatesList::hasCandidates() const {

@@ -50,7 +50,7 @@ struct WiFi_AP_CandidatesList {
 
   WiFi_AP_Candidate        getBestCandidate() const;
 
-  bool                     hasKnownCredentials();
+  bool                     hasCandidateCredentials();
 
   bool                     hasCandidates() const;
 

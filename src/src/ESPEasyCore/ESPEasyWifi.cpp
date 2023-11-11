@@ -109,7 +109,7 @@ void ESPEasyWiFi_t::startScanning() {
 
 
 bool ESPEasyWiFi_t::connectSTA() {
-  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+  if (!WiFi_AP_Candidates.hasCandidateCredentials()) {
     if (!WiFiEventData.warnedNoValidWiFiSettings) {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
       WiFiEventData.warnedNoValidWiFiSettings = true;
@@ -505,7 +505,7 @@ void AttemptWiFiConnect() {
 // Set Wifi config
 // ********************************************************************************
 bool prepareWiFi() {
-  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+  if (!WiFi_AP_Candidates.hasCandidateCredentials()) {
     if (!WiFiEventData.warnedNoValidWiFiSettings) {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
       WiFiEventData.warnedNoValidWiFiSettings = true;
