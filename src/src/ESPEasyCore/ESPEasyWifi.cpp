@@ -1462,6 +1462,9 @@ void setConnectionSpeed() {
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
+    #ifdef ESP32C6
+    protocol |= WIFI_PROTOCOL_11AX;
+    #endif
   }
 
   const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
@@ -1469,9 +1472,18 @@ void setConnectionSpeed() {
     // Check to see if the access point is set to "N-only"
     if ((protocol & WIFI_PROTOCOL_11N) == 0) {
       if (!candidate.phy_11b && !candidate.phy_11g && candidate.phy_11n) {
-        // Set to use BGN
-        protocol |= WIFI_PROTOCOL_11N;
-        addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+        if (candidate.phy_11n) {
+          // Set to use BGN
+          protocol |= WIFI_PROTOCOL_11N;
+          addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+        }
+#ifdef ESP32C6
+        if (candidate.phy_11ax) {
+          // Set to use WiFi6
+          protocol |= WIFI_PROTOCOL_11AX;
+          addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11ax"));
+        }
+#endif
       }
     }
   }

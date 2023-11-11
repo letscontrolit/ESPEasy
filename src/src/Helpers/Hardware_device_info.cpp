@@ -1,6 +1,7 @@
 #include "../Helpers/Hardware_device_info.h"
 
 #include "../Helpers/Hardware_defines.h"
+#include "../Helpers/StringConverter.h"
 
 #ifdef ESP32
   # include <soc/soc.h>
@@ -276,6 +277,10 @@ uint32_t getFlashChipSpeed() {
   return ESP.getFlashChipSpeed();
   #else // ifdef ESP8266
   const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(FSPI));
+
+  addLog(LOG_LEVEL_INFO,   strformat(
+    F("SPI_clock: %x  FSPI: %d SPI_CLOCK_REG(0): %x"), 
+    spi_clock, FSPI, SPI_CLOCK_REG(FSPI)));
 
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
