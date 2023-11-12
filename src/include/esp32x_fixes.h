@@ -74,7 +74,7 @@
 # define SPI_HOST    SPI1_HOST
 # define HSPI_HOST   SPI2_HOST
 # define VSPI_HOST   SPI2_HOST /* No SPI3_host on C3 */
-# if ESP_IDF_VERSION_MAJOR < 5
+//# if ESP_IDF_VERSION_MAJOR < 5
 
 // fix a bug in esp-idf 4.4 for esp32c3
 #  ifndef REG_SPI_BASE
@@ -83,7 +83,7 @@
 // SPI_MOSI_DLEN_REG is not defined anymore in esp32c3, instead use SPI_MS_DLEN_REG
 #   define SPI_MOSI_DLEN_REG(x) SPI_MS_DLEN_REG(x)
 #  endif // REG_SPI_BASE
-# endif  // ESP_IDF_VERSION_MAJOR < 5
+//# endif  // ESP_IDF_VERSION_MAJOR < 5
 
 #elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
 # define SPI_HOST    SPI1_HOST
