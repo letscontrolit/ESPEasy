@@ -231,7 +231,11 @@ bool loadFromFS(String path) {
 #ifndef BUILD_NO_DEBUG
 
   if (static_file) {
-    addLog(LOG_LEVEL_INFO, concat(F("static_file: "), path));
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("static_file: %s to: %s"), 
+      path.c_str(),
+      web_server.client().remoteIP().toString().c_str()
+      ));
   }
 #endif // ifndef BUILD_NO_DEBUG
 #ifdef WEBSERVER_CUSTOM
@@ -256,9 +260,7 @@ bool loadFromFS(String path) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("HTML : Request file ");
-    log += path;
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, concat(F("HTML : Request file "), path));
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -272,8 +274,7 @@ bool loadFromFS(String path) {
       sendHeader(F("Last-Modified"), get_build_date_RFC1123());
     }
     sendHeader(F("Age"),           F("100"));
-    sendHeader(F("ETag"),          wrap_String(String(Cache.fileCacheClearMoment) + F("-a"), '"')); // added "-a" to the ETag to
-                                                                                                               // match the same encoding
+    sendHeader(F("ETag"),          strformat(F("\"%u-a\""), Cache.fileCacheClearMoment)); // added "-a" to the ETag to match the same encoding
   } else {
     sendHeader(F("Cache-Control"), F("no-cache"));
     sendHeader(F("ETag"),          F("\"2.0.0\""));

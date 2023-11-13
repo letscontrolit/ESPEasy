@@ -10,7 +10,7 @@
       "flash_mode": "qio",
       "mcu": "esp32c2",
       "variant": "esp32c2",
-      "partitions": "esp32_partition_app1700k_spiffs320k_noOTA.csv"
+      "partitions": "boards/partitions/esp32_partition_app1700k_spiffs320k_noOTA.csv"
     },
     "connectivity": [
       "wifi",

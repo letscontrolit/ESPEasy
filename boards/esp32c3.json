@@ -10,7 +10,7 @@
       "flash_mode": "dio",
       "mcu": "esp32c3",
       "variant": "esp32c3",
-      "partitions": "esp32_partition_app1810k_spiffs316k.csv"
+      "partitions": "boards/partitions/esp32_partition_app1810k_spiffs316k.csv"
     },
     "connectivity": [
       "wifi",
