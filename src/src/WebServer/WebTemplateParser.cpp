@@ -267,14 +267,17 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if (equals(varName, F("css")))
       {
         serve_favicon();
+/*
+        bool defaultCssServed = false;
 
-        // if (MENU_INDEX_SETUP == navMenuIndex) {
-        //  // Serve embedded CSS
-        //  serve_CSS_inline();
-        // } else {
-        serve_CSS(CSSfiles_e::ESPEasy_default);
-
-        // }
+        if (MENU_INDEX_SETUP == navMenuIndex) {
+          // Serve embedded CSS
+          defaultCssServed = serve_CSS_inline();
+        }
+        if (!defaultCssServed) {
+*/
+          serve_CSS(CSSfiles_e::ESPEasy_default);
+//        }
     #if FEATURE_RULES_EASY_COLOR_CODE
         if (!Settings.DisableRulesCodeCompletion() &&
           (MENU_INDEX_RULES == navMenuIndex ||

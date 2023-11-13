@@ -17,10 +17,19 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
 }
 
 void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
-  addHtml(F("<link"));
-  addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("href"), generate_external_URL(fname, isEmbedded));
-  addHtml('/', '>');
+  const String url = generate_external_URL(fname, isEmbedded);
+  addHtml(strformat(
+    F("<link rel=\"stylesheet\" href=\"%s\">"),
+    url.c_str()
+  ));
+  /*
+  // Delay loading CSS till after page has loaded.
+  // Disabled as it adds 'flickering' to the page loading
+  addHtml(strformat(
+    F("<link rel=\"preload\" href=\"%s\" as=\"style\" onload=\"this.onload=null;this.rel='stylesheet'\"><noscript><link rel=\"stylesheet\" href=\"%s\"></noscript>"),
+    url.c_str(), url.c_str()
+  ));
+  */
 }
 
 void serve_CDN_JS(const __FlashStringHelper * fname, 

@@ -86,39 +86,50 @@ void do_serveEmbedded(const __FlashStringHelper* contentType, PGM_P content, int
   }
 }
 
-void serveEmbedded(const String& path, const __FlashStringHelper* contentType, bool serve_inline) {
+bool serveEmbedded(const String& path, const __FlashStringHelper* contentType, bool serve_inline) {
 #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 
   if (matchFilename(path, F("esp.css"))) {
     #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ
+    if (serve_inline) {
+      return false;
+    }
     sendHeader(F("Content-Encoding"), F("gzip"));
     do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS_GZ), espeasy_default_min_css_gz_len, serve_inline);
+
     #else
     do_serveEmbedded(contentType, (PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS), -1, serve_inline);
     #endif
-    return;
+    return true;
   }
 #endif // if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
 #ifdef WEBSERVER_FAVICON
 
   if (matchFilename(path, F("favicon.ico"))) {
     do_serveEmbedded(contentType, (PGM_P)FPSTR(favicon_8b_ico), favicon_8b_ico_len, false);
-    return;
+    return true;
   }
 #endif // ifdef WEBSERVER_FAVICON
   addLog(LOG_LEVEL_ERROR, concat(F("serveEmbedded failed: "), path));
+  return false;
 }
 
 
-void serve_CSS_inline() {
+bool serve_CSS_inline() {
+  #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
   const __FlashStringHelper* fname = F("esp.css");
   addHtml(F("<style>"));
+  bool res = true;
   if (fileExists(fname)) {
-    streamFromFS(fname);
+    res = streamFromFS(fname);
   } else {
-    serveEmbedded(fname, F("text/css"), true);
+    res = serveEmbedded(fname, F("text/css"), true);
   }
   addHtml(F("</style>"));
+  return res;
+  #else
+  return false;
+  #endif
 }
 
 // ********************************************************************************
@@ -283,6 +294,14 @@ bool loadFromFS(String path) {
 
   if (path.endsWith(F(".dat"))) {
     sendHeader(F("Content-Disposition"), F("attachment;"));
+  }
+
+  if (!web_server.client().connected()) {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("loadFromFS: Client %s not connected"), 
+      web_server.client().remoteIP().toString().c_str()
+      ));
+    return false;
   }
 
   if (serve_304) {
