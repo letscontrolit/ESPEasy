@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P038
 
-# include <Adafruit_NeoPixel.h>
+# include <NeoPixelBus_wrapper.h>
 
 // # define P038_DEBUG_LOG // Enable for some (extra) logging
 
@@ -39,7 +39,7 @@ public:
 
 private:
 
-  Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
+  NeoPixelBus_wrapper *Plugin_038_pixels = nullptr;
 
   void HSV2RGBWorRGBandLog(float H,
                            float S,
