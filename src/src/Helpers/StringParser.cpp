@@ -43,6 +43,10 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize)
 
 String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool useURLencode)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -667,12 +671,16 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
   String cache_valueName;
-
-  cache_valueName.reserve(valueName.length() + 4);
-  cache_valueName  = valueName;
-  cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
-  cache_valueName += taskIndex;
-  cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
+  {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+    cache_valueName.reserve(valueName.length() + 4);
+    cache_valueName  = valueName;
+    cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
+    cache_valueName += taskIndex;
+    cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
+  }
 
   auto result = Cache.taskIndexValueName.find(cache_valueName);
 
@@ -686,6 +694,10 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
     {
+      #ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      #endif
+
       Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;
     }
@@ -732,6 +744,11 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   int hashpos;
 
   if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
+
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   deviceName = input.substring(startpos + 1, hashpos);
   valueName  = input.substring(hashpos + 1, endpos);
   hashpos    = valueName.indexOf('#');

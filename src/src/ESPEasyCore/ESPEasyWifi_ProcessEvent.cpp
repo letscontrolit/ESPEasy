@@ -75,9 +75,14 @@ void handle_unprocessedNetworkEvents()
           WiFiEventData.processedDisconnect = true;
         }        
         WiFiEventData.setWiFiServicesInitialized();
+//#ifdef ESP32
         setWebserverRunning(false);
         setWebserverRunning(true);
-//        CheckRunningServices();
+/*        
+#else
+        CheckRunningServices();
+#endif
+*/
       }
     }
   }

@@ -204,34 +204,44 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
-      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+      {
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
 
-      if (nullptr == P037_data) {
-        return success;
+        P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+
+        if (nullptr == P037_data) {
+          return success;
+        }
+        success = P037_data->loadSettings() && P037_data->webform_load(
+          # if P037_MAPPING_SUPPORT
+          P037_APPLY_MAPPINGS
+          # endif // if P037_MAPPING_SUPPORT
+          # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+          ,
+          # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+          # if P037_FILTER_SUPPORT
+          P037_APPLY_FILTERS
+          # endif // if P037_FILTER_SUPPORT
+          # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+          ,
+          # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+          # if P037_JSON_SUPPORT
+          P037_PARSE_JSON
+          # endif // if P037_JSON_SUPPORT
+          );
+        delete P037_data;
       }
-      success = P037_data->loadSettings() && P037_data->webform_load(
-        # if P037_MAPPING_SUPPORT
-        P037_APPLY_MAPPINGS
-        # endif // if P037_MAPPING_SUPPORT
-        # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
-        ,
-        # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
-        # if P037_FILTER_SUPPORT
-        P037_APPLY_FILTERS
-        # endif // if P037_FILTER_SUPPORT
-        # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
-        ,
-        # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
-        # if P037_JSON_SUPPORT
-        P037_PARSE_JSON
-        # endif // if P037_JSON_SUPPORT
-        );
-      delete P037_data;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
       if (nullptr == P037_data) {

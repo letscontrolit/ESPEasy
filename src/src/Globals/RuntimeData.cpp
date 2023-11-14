@@ -18,6 +18,10 @@ ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index) {
 }
 
 void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   customFloatVar[index] = value;
 }
 

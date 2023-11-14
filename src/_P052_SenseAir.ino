@@ -337,6 +337,11 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       const int16_t serial_rx      = CONFIG_PIN1;
       const int16_t serial_tx      = CONFIG_PIN2;
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
+
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P052_data_struct());
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));

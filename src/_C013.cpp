@@ -20,7 +20,6 @@
 # define CPLUGIN_ID_013         13
 # define CPLUGIN_NAME_013       "ESPEasy P2P Networking"
 
-WiFiUDP C013_portUDP;
 
 // Forward declarations
 void C013_SendUDPTaskInfo(uint8_t destUnit,
@@ -201,6 +200,8 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
+
+  WiFiUDP C013_portUDP;
 
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 

@@ -56,7 +56,13 @@ EspEasy_Console_t::EspEasy_Console_t()
   config.rxBuffSize    = 256;
   config.txBuffSize    = buffSize;
 
-  _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
+  }
 
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -139,6 +145,10 @@ void EspEasy_Console_t::reInit()
   }
 
   if ((_mainSerial._serial == nullptr) && mustHaveSerial) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     _mainSerial._serial = new (std::nothrow) ESPeasySerial(
       static_cast<ESPEasySerialPort>(_console_serial_port),
       _console_serial_rxpin,

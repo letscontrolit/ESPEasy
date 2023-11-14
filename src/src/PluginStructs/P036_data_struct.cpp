@@ -50,7 +50,16 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
 
   if (FreeMem() > 8000) {
     // Write in one single chunk.
-    tDisplayLines_storage_full *tmp = new (std::nothrow) tDisplayLines_storage_full;
+    tDisplayLines_storage_full *tmp = nullptr;
+    # ifdef USE_SECOND_HEAP
+    {
+      HeapSelectIram ephemeral;
+      tmp = new (std::nothrow) tDisplayLines_storage_full;
+    }
+    # endif // ifdef USE_SECOND_HEAP
+    if (tmp == nullptr) {
+      tmp = new (std::nothrow) tDisplayLines_storage_full;
+    }
 
     if (tmp != nullptr) {
       for (int i = 0; i < P36_Nlines; ++i) {
@@ -286,6 +295,10 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
 void P036_data_struct::RestoreLineContent(taskIndex_t taskIndex,
                                           uint8_t     LoadVersion,
                                           uint8_t     LineNo) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   P036_LineContent *TempContent = new (std::nothrow) P036_LineContent();
 
   if (TempContent != nullptr) {

@@ -248,11 +248,15 @@ void addLog(uint8_t logLevel, String&& string)
   addToLogMove(logLevel, std::move(string));
 }
 
+#include "../Helpers/Memory.h"
+
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     ESPEasy_Console.addToSerialBuffer(String(millis()));
-    ESPEasy_Console.addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(F(" : ("));
+    ESPEasy_Console.addToSerialBuffer(String(FreeMem()));
+    ESPEasy_Console.addToSerialBuffer(F(") "));
     {
       String loglevelDisplayString = getLogLevelDisplayString(logLevel);
       while (loglevelDisplayString.length() < 6) {

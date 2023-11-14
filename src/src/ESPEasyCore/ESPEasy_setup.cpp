@@ -292,7 +292,9 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasy_Console.reInit();
+#endif
 
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));

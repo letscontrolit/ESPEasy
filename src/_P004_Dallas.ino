@@ -249,6 +249,10 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(
                            event->TaskIndex,
                            Plugin_004_DallasPin_RX,

@@ -399,6 +399,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
     _plugin_stats[taskVarIndex] = nullptr;
 
     if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       _plugin_stats[taskVarIndex] = new (std::nothrow) PluginStats(
         ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
         ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);

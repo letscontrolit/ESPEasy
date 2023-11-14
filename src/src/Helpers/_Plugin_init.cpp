@@ -2222,7 +2222,13 @@ void PluginSetup()
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
   #ifdef ESP8266
-  Device = new (std::nothrow) DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    Device = new (std::nothrow) DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  }
   #else
   Device.resize(DeviceIndex_to_Plugin_id_size);
   #endif

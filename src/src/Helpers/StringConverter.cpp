@@ -29,6 +29,10 @@
 // -V::569
 
 String concat(const __FlashStringHelper * str, const String &val) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String res(str);
   res.concat(val);
   return res;
@@ -40,6 +44,10 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
 
 String concat(const char& str, const String &val)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String res(str);
   res.concat(val);
   return res;
@@ -60,6 +68,10 @@ bool equals(const String& str, const char& c) {
 
 String strformat(const String& format, ...)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String res;
   {
     va_list arg;
@@ -88,6 +100,10 @@ String strformat(const String& format, ...)
 
 String strformat(const __FlashStringHelper * format, ...)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String res;
   {
     va_list arg;
@@ -508,6 +524,10 @@ String wrap_braces(const String& string) {
 }
 
 String wrap_String(const String& string, char wrap) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String result;
   result.reserve(string.length() + 2);
   result += wrap;
@@ -517,6 +537,10 @@ String wrap_String(const String& string, char wrap) {
 }
 
 String wrap_String(const String& string, char char1, char char2) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String result;
   result.reserve(string.length() + 2);
   result += char1;
@@ -585,6 +609,10 @@ String to_json_object_value(const __FlashStringHelper * object,
 }
 
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String result;
   result.reserve(object.length() + value.length() + 6);
   result = wrap_String(object, '"');
@@ -830,6 +858,10 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
  * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
  ****************************************************************************/
 String parseHexTextString(const String& argument, int index) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   String result;
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
@@ -871,6 +903,10 @@ String parseHexTextString(const String& argument, int index) {
  * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
  ****************************************************************************/
 std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   std::vector<uint8_t> result;
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
@@ -1105,6 +1141,10 @@ void repl(const __FlashStringHelper * key1,
 
 void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
     if (s.indexOf(key) == -1) { return; }

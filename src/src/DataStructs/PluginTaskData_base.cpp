@@ -15,6 +15,10 @@ void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     if (_plugin_stats_array == nullptr) {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       _plugin_stats_array = new (std::nothrow) PluginStats_array();
     }
 

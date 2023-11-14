@@ -17,7 +17,11 @@
 
 # ifndef PLUGIN_STATS_NR_ELEMENTS
 #  ifdef ESP8266
+# ifdef USE_SECOND_HEAP
+#   define PLUGIN_STATS_NR_ELEMENTS 50
+#else
 #   define PLUGIN_STATS_NR_ELEMENTS 16
+#endif
 #  endif // ifdef ESP8266
 #  ifdef ESP32
 #   define PLUGIN_STATS_NR_ELEMENTS 250

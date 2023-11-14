@@ -346,6 +346,10 @@ class P036_LineContent {
 public:
 
   P036_LineContent() {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     DisplayLinesV1.resize(P36_Nlines);
   }
 

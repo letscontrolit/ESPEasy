@@ -103,11 +103,27 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
           if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
             checkDeviceVTypeForTask(event);
           }
-          success = CPluginCall(
-            getProtocolIndex_from_ControllerIndex(controllerindex),
-            Function,
-            event,
-            str);
+          # ifdef USE_SECOND_HEAP
+          if (Function == CPlugin::Function::CPLUGIN_INIT)
+          {
+            // Set 2nd heap active for the CPLUGIN_INIT call so controller service gets allocated on 2nd heap
+            HeapSelectIram ephemeral;
+            success = CPluginCall(
+              getProtocolIndex_from_ControllerIndex(controllerindex),
+              Function,
+              event,
+              str);
+          } else {
+          # endif // ifdef USE_SECOND_HEAP
+            success = CPluginCall(
+              getProtocolIndex_from_ControllerIndex(controllerindex),
+              Function,
+              event,
+              str);
+          # ifdef USE_SECOND_HEAP
+          }
+          # endif // ifdef USE_SECOND_HEAP
+
         }
         #ifdef ESP32
 
