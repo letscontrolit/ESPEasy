@@ -1109,10 +1109,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   }
   START_TIMER
 
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
-
   ExtraTaskSettings.clear();
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
   if (!validDeviceIndex(DeviceIndex)) {

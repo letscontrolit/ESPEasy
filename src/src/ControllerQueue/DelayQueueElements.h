@@ -70,7 +70,7 @@
   }                                                                                                                  \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                     \
-      HeapSelectIram ephemeral;                                                                                      \
+      HeapSelectDram ephemeral;                                                                                      \
       C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
     }                                                                                                                \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \

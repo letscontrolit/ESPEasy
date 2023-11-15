@@ -4,15 +4,17 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
+
 
 
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
   if (!deduplicate || !isDuplicate(event)) {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif // ifdef USE_SECOND_HEAP
+
     _eventQueue.push_back(event);
   }
 }
@@ -22,11 +24,7 @@ void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
-
-  // Wrap in String() constructor to make sure it is using the 2nd heap allocator if present.
-  if (!deduplicate || !isDuplicate(event)) {
-    _eventQueue.push_back(String(event));
-  }
+  add(String(event), deduplicate);
 }
 
 void EventQueueStruct::addMove(String&& event, bool deduplicate)
@@ -52,16 +50,22 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
 void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, const String& eventValue)
 {
   if (Settings.UseRules) {
-    String eventCommand = getTaskDeviceName(TaskIndex);
-    eventCommand.reserve(eventCommand.length() + 2 + varName.length() + eventValue.length());
-    eventCommand += '#';
-    eventCommand += varName;
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
 
-    if (!eventValue.isEmpty()) {
-      eventCommand += '='; // Add arguments
-      eventCommand += eventValue;
+    if (eventValue.isEmpty()) {
+      addMove(strformat(
+        F("%s#%s"), 
+        getTaskDeviceName(TaskIndex).c_str(), 
+        varName.c_str()));
+    } else {
+      addMove(strformat(
+        F("%s#%s=%s"), 
+        getTaskDeviceName(TaskIndex).c_str(), 
+        varName.c_str(), 
+        eventValue.c_str()));
     }
-    addMove(std::move(eventCommand));
   }
 }
 

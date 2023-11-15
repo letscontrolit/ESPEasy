@@ -61,6 +61,21 @@ bool equals(const String& str, const char& c) {
   return str.equals(String(c));
 }
 
+void move_special(String& dest, String&& source) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+
+  if ((source.length() > 0) && !mmu_is_iram(&(source[0]))) {
+    // The string was not allocated on the 2nd heap, so copy instead of move
+    dest = source;
+  } else {
+    dest = std::move(source);
+  }
+  #else // ifdef USE_SECOND_HEAP
+  dest = std::move(source);
+  #endif // ifdef USE_SECOND_HEAP
+
+}
 
 /********************************************************************************************\
    Format string using vsnprintf
@@ -524,29 +539,11 @@ String wrap_braces(const String& string) {
 }
 
 String wrap_String(const String& string, char wrap) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
-  String result;
-  result.reserve(string.length() + 2);
-  result += wrap;
-  result += string;
-  result += wrap;
-  return result;
+  return wrap_String(string, wrap, wrap);
 }
 
 String wrap_String(const String& string, char char1, char char2) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
-  String result;
-  result.reserve(string.length() + 2);
-  result += char1;
-  result += string;
-  result += char2;
-  return result;
+  return strformat(F("%c%s%c"), char1, string.c_str(), char2);
 }
 
 String wrapIfContains(const String& value, char contains, char wrap) {
@@ -564,10 +561,9 @@ String wrapWithQuotes(const String& text) {
   char quotechar = '_';
   if (!findUnusedQuoteChar(text, quotechar)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No unused quote to wrap: _");
-      log += text;
-      log += '_';
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No unused quote to wrap: _%s_"), 
+        text.c_str()));
     }
   }
   return wrap_String(text, quotechar);
@@ -609,16 +605,10 @@ String to_json_object_value(const __FlashStringHelper * object,
 }
 
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
-  String result;
-  result.reserve(object.length() + value.length() + 6);
-  result = wrap_String(object, '"');
-  result += ':';
-  result += to_json_value(value, wrapInQuotes);
-  return result;
+  return strformat(
+    F("%s:%s"), 
+    wrap_String(object, '"').c_str(),  
+    to_json_value(value, wrapInQuotes).c_str());
 }
 
 String to_json_value(const String& value, bool wrapInQuotes) {
@@ -667,6 +657,10 @@ String stripWrappingChar(const String& text, char wrappingChar) {
   const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     return text.substring(1, length - 1);
   }
   return text;
@@ -753,6 +747,7 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 
 // Convert a string to lower case and replace spaces with underscores.
 String to_internal_string(const String& input, char replaceSpace) {
+  // Do not set to 2nd heap as it is only used temporarily so prefer speed over mem usage
   String result = input;
 
   result.trim();
@@ -782,6 +777,9 @@ String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char s
 }
 
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
@@ -829,6 +827,10 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   if (!hasArgument || (pos_begin < 0) || (pos_begin == pos_end)) {
     return EMPTY_STRING;
   }
+
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
   String result = string.substring(pos_begin, pos_end);
 
   if (trimResult) {
@@ -858,16 +860,16 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
  * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
  ****************************************************************************/
 String parseHexTextString(const String& argument, int index) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   String result;
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
-
-  result.reserve(argument.length()); // longer than needed, most likely
+  {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+    result.reserve(argument.length()); // longer than needed, most likely
+  }
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -903,16 +905,19 @@ String parseHexTextString(const String& argument, int index) {
  * handles: 0xXX,text,0xXX," more text ",0xXX starting from index 2 (1-based)
  ****************************************************************************/
 std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   std::vector<uint8_t> result;
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
 
-  result.reserve(argument.length() / 2); // longer than needed, most likely
+  {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+  
+    result.reserve(argument.length() / 2); // longer than needed, most likely
+  }
+
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 

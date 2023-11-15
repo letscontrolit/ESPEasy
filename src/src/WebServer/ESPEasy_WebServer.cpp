@@ -369,6 +369,7 @@ void setWebserverRunning(bool state) {
     web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
+    web_server.client().stop();
     web_server.stop();
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }

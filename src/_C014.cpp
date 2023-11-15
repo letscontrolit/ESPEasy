@@ -841,6 +841,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           if ((equals(command, F("event"))) || (equals(command, F("asyncevent"))))
           {
             if (Settings.UseRules) {
+              # ifdef USE_SECOND_HEAP
+              HeapSelectIram ephemeral;
+              # endif // ifdef USE_SECOND_HEAP
+
               String newEvent = parseStringToEnd(cmd, 2);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {

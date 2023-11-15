@@ -61,6 +61,10 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       {
         // We now create a URI for the request
         const Sensor_VType sensorType = event->getSensorType();
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
         String url;
         const size_t expectedSize = sensorType == Sensor_VType::SENSOR_TYPE_STRING ? 64 + event->String2.length() : 128;
 

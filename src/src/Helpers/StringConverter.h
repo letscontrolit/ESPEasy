@@ -24,6 +24,10 @@ String concat(const char& str, const String &val);
 
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -31,6 +35,10 @@ String concat(const __FlashStringHelper * str, const T &val) {
 
 template <typename T>
 String concat(const String& str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -38,6 +46,9 @@ String concat(const String& str, const T &val) {
 
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
+
+// Move the string to 2nd heap if present
+void move_special(String& dest, String&& source);
 
 /*
 template <typename T>

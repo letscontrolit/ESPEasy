@@ -71,6 +71,10 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       std::unique_ptr<C004_queue_element> element(new C004_queue_element(event));
 
       success = C004_DelayHandler->addToQueue(std::move(element));

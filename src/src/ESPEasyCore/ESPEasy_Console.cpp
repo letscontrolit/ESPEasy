@@ -58,7 +58,7 @@ EspEasy_Console_t::EspEasy_Console_t()
 
   {
     # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
 
     _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
@@ -146,7 +146,7 @@ void EspEasy_Console_t::reInit()
 
   if ((_mainSerial._serial == nullptr) && mustHaveSerial) {
     # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
 
     _mainSerial._serial = new (std::nothrow) ESPeasySerial(

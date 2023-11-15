@@ -94,6 +94,10 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
           continue; // we skip values with empty labels
         }
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);
         String value;
@@ -156,6 +160,10 @@ bool C005_parse_command(struct EventStruct *event) {
     // Message: gpio,14,0
     // Full command:  gpio,14,0
 
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     cmd = event->String2;
 
     // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
@@ -176,6 +184,9 @@ bool C005_parse_command(struct EventStruct *event) {
     if (!topic_folder.isEmpty()) {
       int32_t cmd_arg_nr = -1;
       if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
         int constructed_cmd_arg_nr = 0;
         ++topic_index;
         topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
@@ -215,12 +226,14 @@ bool C005_parse_command(struct EventStruct *event) {
 
       if (validFloatFromString(event->String2, value_f) &&
           validIntFromString(lastPartTopic, lastPartTopic_int)) {
-        int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
-        cmd        = event->String1.substring(prevLastindex + 1, lastindex);
-        cmd       += ',';
-        cmd       += lastPartTopic_int;
-        cmd       += ',';
-        cmd       += event->String2; // Just use the original format
+        const int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
+
+        cmd = strformat(
+          F("%s,%d,%s"),
+          event->String1.substring(prevLastindex + 1, lastindex).c_str(),
+          lastPartTopic_int,
+          event->String2.c_str()  // Just use the original format
+        );
         validTopic = true;
       }
     }

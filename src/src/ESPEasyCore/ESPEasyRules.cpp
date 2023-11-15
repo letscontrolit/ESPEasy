@@ -28,7 +28,7 @@
 #include <math.h>
 #include <vector>
 
-
+#ifdef WEBSERVER_NEW_RULES
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
@@ -58,6 +58,7 @@ String FileNameToEvent(const String& fileName) {
   eventName.replace(RULE_FILE_SEPARAROR, '#');
   return eventName;
 }
+#endif
 
 void checkRuleSets() {
   Cache.rulesHelper.closeAllFiles();
@@ -98,9 +99,7 @@ void rulesProcessing(const String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("EVENT: ");
-    log += event;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
 
   if (Settings.OldRulesEngine()) {
@@ -139,12 +138,7 @@ void rulesProcessing(const String& event) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("EVENT: ");
-    log += event;
-    log += F(" Processing time:");
-    log += timePassedSince(timer);
-    log += F(" milliSeconds");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s Processing: %d ms"), event.c_str(), timePassedSince(timer)));
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
@@ -1315,6 +1309,11 @@ void createRuleEvents(struct EventStruct *event) {
     expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
+
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     String eventString;
 
     if (eventString.reserve(expectedSize + event->String2.length())) {
@@ -1339,6 +1338,10 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += '`';
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     String eventvalues;
     eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
 

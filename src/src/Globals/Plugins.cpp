@@ -350,6 +350,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           }
 
           START_TIMER;
+/*
           # ifdef USE_SECOND_HEAP
           if (Function == PLUGIN_INIT)
           {
@@ -358,10 +359,13 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
             retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
           } else {
           # endif // ifdef USE_SECOND_HEAP
+*/
             retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
+/*
           # ifdef USE_SECOND_HEAP
           }
           # endif // ifdef USE_SECOND_HEAP
+*/
 
           STOP_TIMER_TASK(DeviceIndex, Function);
 
@@ -581,11 +585,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
-          #ifndef BUILD_NO_RAM_TRACKER
-          checkRAM(F("PluginCallUDP"), taskIndex);
-          #endif
-          return true;
+        if (Settings.TaskDeviceEnabled[taskIndex]) {
+          if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
+            #ifndef BUILD_NO_RAM_TRACKER
+            checkRAM(F("PluginCallUDP"), taskIndex);
+            #endif
+            return true;
+          }
         }
       }
       return false;

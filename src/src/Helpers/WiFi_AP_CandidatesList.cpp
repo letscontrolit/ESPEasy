@@ -270,10 +270,6 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (scanned_new.size() > 0) {
     // We have new scans to process.
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    // TD-er: Disabled for now as it is suspect for crashes
-    #endif
     purge_expired();
     for (auto scan = scanned_new.begin(); scan != scanned_new.end();) {
       #ifndef BUILD_NO_DEBUG
@@ -322,6 +318,10 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {
           if (SecuritySettings.hasWiFiCredentials()) {
+            # ifdef USE_SECOND_HEAP
+            HeapSelectIram ephemeral;
+            # endif // ifdef USE_SECOND_HEAP
+
             candidates.push_back(*scan);
           }
         }
@@ -334,6 +334,9 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
             tmp.isEmergencyFallback = kn_it->isEmergencyFallback;
 
             if (tmp.usable()) {
+              # ifdef USE_SECOND_HEAP
+              HeapSelectIram ephemeral;
+              # endif // ifdef USE_SECOND_HEAP
               candidates.push_back(tmp);
               _addedKnownCandidate = true;
 

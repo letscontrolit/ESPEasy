@@ -466,16 +466,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
                 // Add sanity check for distance travelled
                 if (distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) {
                   if (Settings.UseRules) {
-                    String eventString = F("GPS#travelled=");
-                    eventString += distance;
-                    eventQueue.addMove(std::move(eventString));
+                    eventQueue.addMove(strformat(F("GPS#travelled=%f"), distance));
                   }
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    String log = F("GPS: Distance trigger : ");
-                    log += distance;
-                    log += F(" m");
-                    addLogMove(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, strformat(F("GPS: Distance trigger : %f m"), distance));
                   }
                 }
               }

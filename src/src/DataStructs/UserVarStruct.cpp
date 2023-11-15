@@ -8,7 +8,7 @@
 UserVarStruct::UserVarStruct()
 {
   # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
+  HeapSelectDram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
 
   _data.resize(TASKS_MAX);

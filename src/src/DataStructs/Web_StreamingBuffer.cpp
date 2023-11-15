@@ -24,8 +24,9 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
   maxServerUsage(0), sentBytes(0), flashStringCalls(0), flashStringData(0)
 {
+  // Make sure this is allocated on the DRAM since access to primary heap is faster
   # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
+  HeapSelectDram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
 
   buf.reserve(CHUNKED_BUFFER_SIZE + 50);

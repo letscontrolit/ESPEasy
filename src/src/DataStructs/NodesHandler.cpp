@@ -65,6 +65,10 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   {
     _nodes_mutex.lock();
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+
     _nodes[node.unit] = node;
     _ntp_candidate.set(node);
     _nodes[node.unit].lastUpdated = millis();

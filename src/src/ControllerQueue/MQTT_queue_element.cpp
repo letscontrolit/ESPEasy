@@ -2,6 +2,8 @@
 
 #if FEATURE_MQTT
 
+#include "../Helpers/StringConverter.h"
+
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
                                        const String& topic, const String& payload,
@@ -35,25 +37,8 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
   _call_PLUGIN_PROCESS_CONTROLLER_DATA = callbackTask;
 
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-
-  if (topic.length() && !mmu_is_iram(&(topic[0]))) {
-    _topic = topic;
-  } else {
-    _topic = std::move(topic);
-  }
-
-  if (payload.length() && !mmu_is_iram(&(payload[0]))) {
-    _payload = payload;
-  } else {
-    _payload = std::move(payload);
-  }
-  # else // ifdef USE_SECOND_HEAP
-  _topic   = std::move(topic);
-  _payload = std::move(payload);
-  # endif // ifdef USE_SECOND_HEAP
-
+  move_special(_topic, std::move(topic));
+  move_special(_payload, std::move(payload));
   removeEmptyTopics();
 }
 

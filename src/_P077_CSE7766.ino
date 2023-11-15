@@ -220,7 +220,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         P077_QUERY4 = static_cast<uint8_t>(P077_QUERY4_DFLT);
       }
 
-
+      # ifdef USE_SECOND_HEAP
+      HeapSelectDram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 

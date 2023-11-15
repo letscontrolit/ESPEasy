@@ -325,13 +325,7 @@ void checkUDP()
                 memcpy(&received, &packetBuffer[2], copy_length);
 
                 if (received.validate()) {
-                  {
-                    #ifdef USE_SECOND_HEAP
-                    HeapSelectIram ephemeral;
-                    #endif
-
-                    Nodes.addNode(received); // Create a new element when not present
-                  }
+                  Nodes.addNode(received); // Create a new element when not present
 
 # ifndef BUILD_NO_DEBUG
 
@@ -355,7 +349,8 @@ void checkUDP()
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
-                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
+                // TD-er: Disabled the PLUGIN_UDP_IN call as we don't have any plugin using this.
+                //PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
                 CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
                 break;
               }

@@ -261,6 +261,10 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   }
   //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   // Add a new element to the queue with the minimal payload
   std::unique_ptr<C011_queue_element> element(new C011_queue_element(event));
   bool success = C011_DelayHandler->addToQueue(std::move(element));

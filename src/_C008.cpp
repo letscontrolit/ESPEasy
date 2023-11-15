@@ -77,6 +77,9 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         pubname = ControllerSettings->Publish;
       }
 
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
       
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));

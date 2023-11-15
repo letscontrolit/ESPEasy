@@ -181,6 +181,10 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
@@ -460,6 +464,10 @@ BLYNK_WRITE_DEFAULT() {
   }
 
   if (Settings.UseRules) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     String eventCommand = F("blynkv");
     eventCommand += vPin;
     eventCommand += '=';

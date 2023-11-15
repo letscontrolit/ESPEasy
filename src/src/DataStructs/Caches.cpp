@@ -265,6 +265,10 @@ void Caches::updateExtraTaskSettingsCache()
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
 
   if (validTaskIndex(TaskIndex)) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     ExtraTaskSettings_cache_t tmp;
 
     auto it = extraTaskSettings_cache.find(TaskIndex);
