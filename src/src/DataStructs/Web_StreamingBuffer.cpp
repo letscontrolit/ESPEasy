@@ -148,14 +148,16 @@ Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
 
   unsigned int pos = 0;
   while (pos < length) {
-    if (flush_step == 0) {
+    if (flush_step <= 0) {
       flush();
       flush_step = CHUNKED_BUFFER_SIZE;
     } else {
-      // Just copy per byte instead of using substring as substring needs to allocate memory.
-      this->buf += a[pos];
-      ++pos;
-      --flush_step;
+      const int remaining = length - pos;
+      const int fetchLength = flush_step >= remaining ? remaining : flush_step;
+      const char* ch = a.begin() + pos;
+      this->buf.concat(ch, static_cast<unsigned int>(fetchLength));
+      pos += fetchLength;
+      flush_step -= fetchLength;
     }
   }
   return *this;
