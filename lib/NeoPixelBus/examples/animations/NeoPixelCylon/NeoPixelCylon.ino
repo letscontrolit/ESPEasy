@@ -14,9 +14,9 @@ const uint16_t PixelCount = 16; // make sure to set this to the number of pixels
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 const RgbColor CylonEyeColor(HtmlColor(0x7f0000));
 
-NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount);
+//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
 
 NeoPixelAnimator animations(2); // only ever need 2 animations
 

@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2023-10-26, tonhuisman:  Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
 // 2022-12-26, tonhuisman:  Set initial brightness with default value 255, and allow 'only' values 1..255
 // 2022-11-06, tonhuisman:  Add Initial and Max brightness settings, and NeoPixelBright[,0..255] command, 0 = initial
 //                          Code optimizations
