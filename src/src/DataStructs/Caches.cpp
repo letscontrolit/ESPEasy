@@ -6,7 +6,7 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-
+#include "../Helpers/StringConverter.h"
 
 #ifdef PLUGIN_USES_SERIAL
 # include <ESPeasySerial.h>
@@ -265,10 +265,6 @@ void Caches::updateExtraTaskSettingsCache()
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
 
   if (validTaskIndex(TaskIndex)) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
     ExtraTaskSettings_cache_t tmp;
 
     auto it = extraTaskSettings_cache.find(TaskIndex);
@@ -282,12 +278,11 @@ void Caches::updateExtraTaskSettingsCache()
       extraTaskSettings_cache.erase(it);
       clearTaskIndexFromMaps(TaskIndex);
     }
-
-    tmp.TaskDeviceName = ExtraTaskSettings.TaskDeviceName;
+    move_special(tmp.TaskDeviceName, String(ExtraTaskSettings.TaskDeviceName));
 
     for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         #ifdef ESP32
-      tmp.TaskDeviceValueNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
+        move_special(tmp.TaskDeviceValueNames[i], String(ExtraTaskSettings.TaskDeviceValueNames[i]));
         #endif // ifdef ESP32
 
       if (ExtraTaskSettings.TaskDeviceFormula[i][0] != 0) {

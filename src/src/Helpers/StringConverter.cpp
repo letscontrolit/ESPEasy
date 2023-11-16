@@ -29,11 +29,15 @@
 // -V::569
 
 String concat(const __FlashStringHelper * str, const String &val) {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
+  /*
+  String res;
+  reserve_special(res, strlen_P((PGM_P)str) + val.length());
+  res.concat(str);
+  res.concat(val);
+  */
 
   String res(str);
+  reserve_special(res, res.length() + val.length());
   res.concat(val);
   return res;
 }
@@ -44,11 +48,8 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
 
 String concat(const char& str, const String &val)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   String res(str);
+  reserve_special(res, res.length() + val.length());
   res.concat(val);
   return res;
 }
@@ -63,19 +64,45 @@ bool equals(const String& str, const char& c) {
 
 void move_special(String& dest, String&& source) {
   #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-
   if ((source.length() > 0) && !mmu_is_iram(&(source[0]))) {
     // The string was not allocated on the 2nd heap, so copy instead of move
-    dest = source;
-  } else {
-    dest = std::move(source);
+    HeapSelectIram ephemeral;
+    if (dest.reserve(source.length())) {
+      dest = source;
+      source = String();
+      return;
+    }
+    // Could not allocate on 2nd heap, so just move existing string
   }
-  #else // ifdef USE_SECOND_HEAP
-  dest = std::move(source);
   #endif // ifdef USE_SECOND_HEAP
-
+  dest = std::move(source);
 }
+
+String move_special(String&& source) {
+  String dest;
+  move_special(dest, std::move(source));
+  return dest;
+}
+
+
+bool reserve_special(String& str, size_t size) {
+  if (str.length() >= size) {
+    // Nothing needs to be done
+    return true;
+  }
+  // FIXME TD-er: Should also use this for ESP32 with PSRAM to allocate on PSRAM
+  #ifdef USE_SECOND_HEAP
+  {
+    HeapSelectIram ephemeral;
+    if (str.reserve(size)) {
+      return true;
+    }
+  }
+  #endif
+  return str.reserve(size);
+  // TD-er: should we also log here?
+}
+
 
 /********************************************************************************************\
    Format string using vsnprintf
@@ -83,10 +110,6 @@ void move_special(String& dest, String&& source) {
 
 String strformat(const String& format, ...)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   String res;
   {
     va_list arg;
@@ -104,7 +127,9 @@ String strformat(const String& format, ...)
         vsnprintf_P(buffer, len + 1, format.c_str(), arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -115,10 +140,6 @@ String strformat(const String& format, ...)
 
 String strformat(const __FlashStringHelper * format, ...)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   String res;
   {
     va_list arg;
@@ -136,7 +157,9 @@ String strformat(const __FlashStringHelper * format, ...)
         vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -777,9 +800,6 @@ String parseStringKeepCaseNoTrim(const String& string, uint8_t indexFind, char s
 }
 
 String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
@@ -828,10 +848,8 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
     return EMPTY_STRING;
   }
 
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
-  String result = string.substring(pos_begin, pos_end);
+  String result;
+  move_special(result, string.substring(pos_begin, pos_end));
 
   if (trimResult) {
     result.trim();
@@ -861,15 +879,10 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
  ****************************************************************************/
 String parseHexTextString(const String& argument, int index) {
   String result;
+  result.reserve(argument.length()); // longer than needed, most likely
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
-  {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    result.reserve(argument.length()); // longer than needed, most likely
-  }
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -910,13 +923,7 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
 
-  {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-  
-    result.reserve(argument.length() / 2); // longer than needed, most likely
-  }
+  result.reserve(argument.length() / 2); // longer than needed, most likely
 
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
@@ -1097,6 +1104,10 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
+  // Only used for temporary strings, so keep on default heap for speed
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -1146,10 +1157,6 @@ void repl(const __FlashStringHelper * key1,
 
 void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
     if (s.indexOf(key) == -1) { return; }
@@ -1431,10 +1438,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 
   if ((pos_begin >= 0) && (pos_end >= 0) && (pos_end > pos_begin)) {
     argvString.reserve(pos_end - pos_begin);
-
-    for (int i = pos_begin; i < pos_end; ++i) {
-      argvString += string[i];
-    }
+    argvString.concat(string + pos_begin, pos_end - pos_begin);
     argvString.trim();
     argvString = stripQuotes(argvString);
   }

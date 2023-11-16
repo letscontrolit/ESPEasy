@@ -45,7 +45,7 @@ bool P037_data_struct::loadSettings() {
 
       LoadCustomTaskSettings(_taskIndex, tmp,
                              1, 41, offset);
-      globalTopicPrefix = std::move(tmp[0]);
+      move_special(globalTopicPrefix, std::move(tmp[0]));
       offset           += 41;
     }
 

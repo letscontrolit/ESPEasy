@@ -80,10 +80,6 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         std::unique_ptr<C009_queue_element> element(new C009_queue_element(event));
         success = C009_DelayHandler->addToQueue(std::move(element));
         Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
@@ -117,11 +113,8 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
   // Make an educated guess on the actual length, based on earlier requests.
   static size_t expectedJsonLength = 100;
   {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    // Reserve on the 2nd heap
-    if (!jsonString.reserve(expectedJsonLength)) {
+    // Reserve on the heap with most space
+    if (!reserve_special(jsonString, expectedJsonLength)) {
       // Not enough free memory
       return false;
     }

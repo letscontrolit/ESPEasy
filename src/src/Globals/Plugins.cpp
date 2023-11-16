@@ -350,22 +350,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           }
 
           START_TIMER;
-/*
-          # ifdef USE_SECOND_HEAP
-          if (Function == PLUGIN_INIT)
-          {
-            // Set 2nd heap active for the PLUGIN_INIT call so plugin task data gets allocated on 2nd heap
-            HeapSelectIram ephemeral;
-            retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
-          } else {
-          # endif // ifdef USE_SECOND_HEAP
-*/
-            retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
-/*
-          # ifdef USE_SECOND_HEAP
-          }
-          # endif // ifdef USE_SECOND_HEAP
-*/
+          retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
 
           STOP_TIMER_TASK(DeviceIndex, Function);
 

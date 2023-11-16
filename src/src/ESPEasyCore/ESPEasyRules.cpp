@@ -1295,11 +1295,6 @@ void createRuleEvents(struct EventStruct *event) {
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  #ifdef USE_SECOND_HEAP
-//  HeapSelectIram ephemeral;  
-// TD-er: Disabled for now, suspect for causing crashes
-  #endif
-
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
@@ -1310,15 +1305,10 @@ void createRuleEvents(struct EventStruct *event) {
    
     bool appendCompleteStringvalue = false;
 
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
     String eventString;
-
-    if (eventString.reserve(expectedSize + event->String2.length())) {
+    if (reserve_special(eventString, expectedSize + event->String2.length())) {
       appendCompleteStringvalue = true;
-    } else if (!eventString.reserve(expectedSize + 24)) {
+    } else if (!reserve_special(eventString, expectedSize + 24)) {
       // No need to continue as we can't even allocate the event, we probably also cannot process it
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
@@ -1338,12 +1328,8 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += '`';
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
     String eventvalues;
-    eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
+    reserve_special(eventvalues, 32); // Enough for most use cases, prevent lots of memory allocations.
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {

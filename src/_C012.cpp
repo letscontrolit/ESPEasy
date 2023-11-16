@@ -57,10 +57,6 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       }
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       std::unique_ptr<C012_queue_element> element(new C012_queue_element(event, valueCount));
@@ -71,10 +67,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         const String formattedValue = formatUserVar(event, x, isvalid);
 
         if (isvalid) {
-          element->txt[x]  = F("update/V");
-          element->txt[x] += event->idx + x;
-          element->txt[x] += F("?value=");
-          element->txt[x] += formattedValue;
+          move_special(element->txt[x], strformat(
+            F("update/V%d?value=%s"), 
+            event->idx + x, 
+            formattedValue.c_str()));
+
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
             addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);

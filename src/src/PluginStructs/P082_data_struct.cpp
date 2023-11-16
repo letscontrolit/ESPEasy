@@ -109,6 +109,11 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
     easySerial = nullptr;
   }
 
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
+
   gps        = new (std::nothrow) TinyGPSPlus();
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx, false, 512);
 

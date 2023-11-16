@@ -535,9 +535,6 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
@@ -553,9 +550,6 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
     return false;
   }
 
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();

@@ -43,10 +43,6 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize)
 
 String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool useURLencode)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
@@ -55,9 +51,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   // Keep current loaded taskSettings to restore at the end.
   const taskIndex_t currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
-
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
-
 
   if (parseTemplate_CallBack_ptr != nullptr) {
     parseTemplate_CallBack_ptr(tmpString, useURLencode);
@@ -619,13 +613,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
   deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
-  #ifdef USE_SECOND_HEAP
-  HeapSelectDram ephemeral;
-  auto result = Cache.taskIndexName.find(String(deviceName));
-  #else
   auto result = Cache.taskIndexName.find(deviceName);
-  #endif
-
 
   if (result != Cache.taskIndexName.end()) {
     return result->second;
@@ -641,11 +629,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
         {
-          #ifdef USE_SECOND_HEAP
-          Cache.taskIndexName[String(deviceName)] = taskIndex;
-          #else
           Cache.taskIndexName[deviceName] = taskIndex;
-          #endif
           return taskIndex;
         }
       }
@@ -670,18 +654,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
-  String cache_valueName;
-  {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    cache_valueName.reserve(valueName.length() + 4);
-    cache_valueName  = valueName;
-    cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
-    cache_valueName += taskIndex;
-    cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
-  }
-
+  String cache_valueName = strformat(
+    F("%s#%d"),                   // The '#' cannot exist in a value name, use it in the cache key.
+    valueName.c_str(),
+    static_cast<int>(taskIndex));
+  cache_valueName.toLowerCase();  // No need to store multiple versions of the same entry with only different case.
+  
   auto result = Cache.taskIndexValueName.find(cache_valueName);
 
   if (result != Cache.taskIndexValueName.end()) {
@@ -694,10 +672,6 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
     {
-      #ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      #endif
-
       Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;
     }
@@ -745,18 +719,14 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
 
   if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
 
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif
-
-  deviceName = input.substring(startpos + 1, hashpos);
-  valueName  = input.substring(hashpos + 1, endpos);
-  hashpos    = valueName.indexOf('#');
+  move_special(deviceName, input.substring(startpos + 1, hashpos));
+  move_special(valueName , input.substring(hashpos + 1, endpos));
+  hashpos = valueName.indexOf('#');
 
   if (hashpos != -1) {
     // Found an extra '#' in the valueName, will split valueName and format.
-    format    = valueName.substring(hashpos + 1);
-    valueName = valueName.substring(0, hashpos);
+    move_special(format,    valueName.substring(hashpos + 1));
+    move_special(valueName, valueName.substring(0, hashpos));
   } else {
     format = String();
   }

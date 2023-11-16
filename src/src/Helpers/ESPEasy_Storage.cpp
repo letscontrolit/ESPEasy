@@ -894,13 +894,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
   String   tmpString;
-  {
-    #ifdef USE_SECOND_HEAP
-    // Store each string in 2nd heap
-    HeapSelectIram ephemeral;
-    #endif
-    tmpString.reserve(estimatedStringSize);
-  }
+  tmpString.reserve(estimatedStringSize);
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -919,13 +913,10 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            #ifdef USE_SECOND_HEAP
-            // Store each string in 2nd heap
-            HeapSelectIram ephemeral;
-            #endif
+            move_special(strings[stringCount], std::move(tmpString));
 
-            strings[stringCount] = tmpString;
-            tmpString = String();
+            // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
+            // We're appending per byte, so better prefer speed for short lived objects
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
@@ -940,7 +931,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
-    strings[stringCount] = tmpString;
+    move_special(strings[stringCount], std::move(tmpString));
   }
   return result;
 }

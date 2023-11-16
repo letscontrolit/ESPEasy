@@ -64,21 +64,31 @@ void P002_data_struct::load(struct EventStruct *event)
     String lines[nr_lines];
     LoadCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
     const int stored_nr_lines = lines[P002_SAVED_NR_LINES].toInt();
-    _formula              = lines[P002_LINE_INDEX_FORMULA];
-    _formula_preprocessed = RulesCalculate_t::preProces(_formula);
+    move_special(_formula, std::move(lines[P002_LINE_INDEX_FORMULA]));
+    move_special(_formula_preprocessed, RulesCalculate_t::preProces(_formula));
 
     for (size_t i = P002_LINE_IDX_FIRST_MP; i < nr_lines && static_cast<int>(i) < stored_nr_lines; i += P002_STRINGS_PER_MP) {
       float adc, value = 0.0f;
 
       if (validFloatFromString(lines[i], adc) && validFloatFromString(lines[i + 1], value)) {
+        // sizeof() multipoint item is multiple of 4 bytes, so should work just fine on 2nd heap
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
         _multipoint.emplace_back(adc, value);
       }
     }
   }
   std::sort(_multipoint.begin(), _multipoint.end());
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
 
-  _binning.resize(_multipoint.size(), 0);
-  _binningRange.resize(_multipoint.size());
+    _binning.resize(_multipoint.size(), 0);
+    _binningRange.resize(_multipoint.size());
+  }
 }
 
 # endif // ifndef LIMIT_BUILD_SIZE

@@ -205,10 +205,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
         if (nullptr == P037_data) {
@@ -238,10 +234,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
       if (nullptr == P037_data) {

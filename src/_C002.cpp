@@ -197,10 +197,6 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (event->idx != 0)
       {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         String json = serializeDomoticzJson(event);
 # ifndef BUILD_NO_DEBUG
 

@@ -51,6 +51,11 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 
     while (!done) {
       if (get_SSID(index, ssid)) {
+        // Make sure emplace_back is not done on the 2nd heap
+        # ifdef USE_SECOND_HEAP
+        HeapSelectDram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
         known.emplace_back(index, ssid);
         if (SettingsIndexMatchCustomCredentials(index)) {
           if (SettingsIndexMatchEmergencyFallback(index)) {
@@ -268,6 +273,11 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
 
 
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
+  // Make sure list operations are not done on the 2nd heap
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   if (scanned_new.size() > 0) {
     // We have new scans to process.
     purge_expired();
@@ -318,10 +328,6 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       if (scan->isHidden) {
         if (Settings.IncludeHiddenSSID()) {
           if (SecuritySettings.hasWiFiCredentials()) {
-            # ifdef USE_SECOND_HEAP
-            HeapSelectIram ephemeral;
-            # endif // ifdef USE_SECOND_HEAP
-
             candidates.push_back(*scan);
           }
         }
@@ -334,9 +340,6 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
             tmp.isEmergencyFallback = kn_it->isEmergencyFallback;
 
             if (tmp.usable()) {
-              # ifdef USE_SECOND_HEAP
-              HeapSelectIram ephemeral;
-              # endif // ifdef USE_SECOND_HEAP
               candidates.push_back(tmp);
               _addedKnownCandidate = true;
 

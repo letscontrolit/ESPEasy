@@ -8,6 +8,7 @@
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
 
 #include <FS.h>
 
@@ -175,17 +176,10 @@ void addLog(uint8_t logLevel, const __FlashStringHelper *str)
 {
   if (loglevelActiveFor(logLevel)) {
     String copy;
-    {
-      #ifdef USE_SECOND_HEAP
-      // Allow to store the logs in 2nd heap if present.
-      HeapSelectIram ephemeral;
-      #endif
-
-      if (!copy.reserve(strlen_P((PGM_P)str))) {
-        return;
-      }
-      copy = str;
+    if (!reserve_special(copy, strlen_P((PGM_P)str))) {
+      return;
     }
+    copy = str;
     addToLogMove(logLevel, std::move(copy));
   }
 }
@@ -199,8 +193,6 @@ void addLog(uint8_t logLevel, const char *line)
     #ifdef USE_SECOND_HEAP
     {
       // Allow to store the logs in 2nd heap if present.
-      HeapSelectIram ephemeral;
-
       if (mmu_is_iram(line)) {
         size_t length = 0;
         const char* cur_char = line;
@@ -212,7 +204,7 @@ void addLog(uint8_t logLevel, const char *line)
             if (copying) {
               done = true;
             } else {
-              if (!copy.reserve(length)) {
+              if (!reserve_special(copy, length)) {
                 return;
               }
               copying = true;
@@ -227,7 +219,7 @@ void addLog(uint8_t logLevel, const char *line)
           }
         }
       } else {
-        if (!copy.reserve(strlen_P((PGM_P)line))) {
+        if (!reserve_special(copy, strlen_P((PGM_P)line))) {
           return;
         }
         copy = line;

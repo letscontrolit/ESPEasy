@@ -119,9 +119,6 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
       const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
       initPluginTaskData(event->TaskIndex,
                          new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));

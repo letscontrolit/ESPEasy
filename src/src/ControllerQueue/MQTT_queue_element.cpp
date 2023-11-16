@@ -13,13 +13,10 @@ MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
   _controller_idx                      = ctrl_idx;
   _taskIndex                           = TaskIndex;
   _call_PLUGIN_PROCESS_CONTROLLER_DATA = callbackTask;
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
 
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
-  _topic   = topic;
-  _payload = payload;
+  move_special(_topic, String(topic));
+  move_special(_payload, String(payload));
 
   removeEmptyTopics();
 }

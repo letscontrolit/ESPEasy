@@ -181,10 +181,6 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
@@ -208,10 +204,11 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           }
 
           const String valueName = getTaskValueName(event->TaskIndex, x);
-          String valueFullName   = getTaskDeviceName(event->TaskIndex);
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
+          const String valueFullName = strformat(
+            F("%s.%s"),          
+            getTaskDeviceName(event->TaskIndex).c_str(),
+            valueName.c_str());
+          const String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
 
           if ((vPinNumber < 0) || (vPinNumber > 255)) {
@@ -237,7 +234,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             addLogMove(LOG_LEVEL_INFO, log);
           }
           element.vPin[x] = vPinNumber;
-          element.txt[x]  = formattedValue;
+          move_special(element.txt[x], std::move(formattedValue));
         }
       }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
@@ -452,27 +449,21 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  uint8_t  vPin     = request.pin;
-  float pinValue = param.asFloat();
+  const unsigned int  vPin     = request.pin;
+  const float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "server set v");
-    log += vPin;
-    log += F(" to ");
-    log += pinValue;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F(C015_LOG_PREFIX "server set v%u to %f"), 
+      vPin, 
+      pinValue));
   }
 
   if (Settings.UseRules) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
-    String eventCommand = F("blynkv");
-    eventCommand += vPin;
-    eventCommand += '=';
-    eventCommand += pinValue;
-    eventQueue.addMove(std::move(eventCommand));
+    eventQueue.addMove(strformat(    
+      F("blynkv%d=%f"),
+      vPin, 
+      pinValue));
   }
 }
 

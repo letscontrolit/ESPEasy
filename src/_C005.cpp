@@ -94,9 +94,6 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
           continue; // we skip values with empty labels
         }
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
 
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);
@@ -110,9 +107,10 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, 
-            strformat(F("MQTT : %s %s"),
-            tmppubname.c_str(),
-            value.c_str()));
+            strformat(
+              F("MQTT : %s %s"),
+              tmppubname.c_str(),
+              value.c_str()));
         }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -160,11 +158,7 @@ bool C005_parse_command(struct EventStruct *event) {
     // Message: gpio,14,0
     // Full command:  gpio,14,0
 
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
-    cmd = event->String2;
+    move_special(cmd, String(event->String2));
 
     // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
     validTopic = true;
@@ -184,9 +178,6 @@ bool C005_parse_command(struct EventStruct *event) {
     if (!topic_folder.isEmpty()) {
       int32_t cmd_arg_nr = -1;
       if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
         int constructed_cmd_arg_nr = 0;
         ++topic_index;
         topic_folder = parseStringKeepCase(event->String1, topic_index, '/');

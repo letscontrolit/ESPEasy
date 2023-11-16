@@ -186,10 +186,6 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
       }
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 

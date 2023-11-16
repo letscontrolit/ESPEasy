@@ -49,6 +49,10 @@ bool equals(const String& str, const char& c);
 
 // Move the string to 2nd heap if present
 void move_special(String& dest, String&& source);
+String move_special(String&& source);
+
+// Try to reserve on the heap with the most space available
+bool reserve_special(String& str, size_t size);
 
 /*
 template <typename T>

@@ -131,8 +131,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
             success = true;
         } else {
-          String value = formatUserVarNoCheck(event, x);
-          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag))
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(tmppubname), formatUserVarNoCheck(event, x), mqtt_retainFlag))
             success = true;
         }
       }

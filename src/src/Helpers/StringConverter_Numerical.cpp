@@ -2,6 +2,8 @@
 
 #include "../Helpers/Numerical.h"
 
+#include "../Helpers/StringConverter.h"
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -42,11 +44,9 @@ String toString(const float& value, unsigned int decimalPlaces)
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
 
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   char buf[decimalPlaces + 42];
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  String sValue;
+  move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
 /*
 #else
@@ -58,9 +58,6 @@ String toString(const float& value, unsigned int decimalPlaces)
 }
 
 String ull2String(uint64_t value, uint8_t base) {
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   String res;
 
   if (value == 0) {
@@ -88,10 +85,6 @@ String ull2String(uint64_t value, uint8_t base) {
 }
 
 String ll2String(int64_t value, uint8_t  base) {
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
-
   if (value < 0) {
     String res;
     res  = '-';
@@ -103,9 +96,6 @@ String ll2String(int64_t value, uint8_t  base) {
 }
 
 String trimTrailingZeros(const String& value) {
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
   String res(value);
   int dot_pos = res.lastIndexOf('.');
 
@@ -158,10 +148,8 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (nullptr == buf) {
     return F("nan");
   }
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
-  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  String res;
+  move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
   free(buf);
 

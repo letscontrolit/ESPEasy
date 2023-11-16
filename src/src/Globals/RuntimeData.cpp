@@ -18,8 +18,9 @@ ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index) {
 }
 
 void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value) {
+  // std::map doesn't handle 2nd heap well, so make sure we keep using the default heap.
   # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
+  HeapSelectDram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
 
   customFloatVar[index] = value;

@@ -32,13 +32,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
     delay(1);
     ModbusClient = nullptr;
   }
-  {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
-    ModbusClient    = new (std::nothrow) WiFiClient();
-  }
+  ModbusClient    = new (std::nothrow) WiFiClient();
   if (ModbusClient == nullptr) {
     return false;
   }

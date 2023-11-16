@@ -47,6 +47,12 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
     return;
   }
 
+  // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
+
   clearPluginTaskData(taskIndex);
 
   if (data != nullptr) {

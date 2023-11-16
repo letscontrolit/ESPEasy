@@ -17,16 +17,19 @@ bool LogEntry_t::add(const uint8_t loglevel, const String& line)
   if (line.length() == 0) {
     return false;
   }
+
+  {
     #ifdef USE_SECOND_HEAP
 
-  // Allow to store the logs in 2nd heap if present.
-  HeapSelectIram ephemeral;
+    // Need to make a substring or a copy, which is a new allocation, on the 2nd heap
+    HeapSelectIram ephemeral;
     #endif // ifdef USE_SECOND_HEAP
 
-  if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
-    _message = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
-  } else {
-    _message = line;
+    if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      _message = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    } else {
+      _message = line;
+    }
   }
   _loglevel  = loglevel;
   _timestamp = millis();

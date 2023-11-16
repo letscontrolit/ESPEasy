@@ -53,11 +53,6 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
-
       // We now create a URI for the request
       String url = strformat(
         F("variableset %d,%s\n"),

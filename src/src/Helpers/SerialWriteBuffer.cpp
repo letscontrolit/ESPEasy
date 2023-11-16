@@ -34,6 +34,12 @@ void SerialWriteBuffer_t::add(const __FlashStringHelper *line)
 
 void SerialWriteBuffer_t::add(char c)
 {
+  #ifdef USE_SECOND_HEAP
+
+  // Do not store in 2nd heap, std::dequeue cannot handle 2nd heap well
+  HeapSelectDram ephemeral;
+  #endif // ifdef USE_SECOND_HEAP
+
   if (_buffer.size() > _maxSize) {
     _buffer.pop_front();
   }

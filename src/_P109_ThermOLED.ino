@@ -163,10 +163,6 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       OLedFormContrast(F("contrast"), P109_CONFIG_CONTRAST);
 
       {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         P109_data_struct *P109_data = new (std::nothrow) P109_data_struct();
 
         if (nullptr != P109_data) {
@@ -221,10 +217,6 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       P109_FLAGS = lSettings;
 
       {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         P109_data_struct *P109_data = new (std::nothrow) P109_data_struct();
 
         if (nullptr != P109_data) {
@@ -239,10 +231,6 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P109_data_struct());
       P109_data_struct *P109_data = static_cast<P109_data_struct *>(getPluginTaskData(event->TaskIndex));
 

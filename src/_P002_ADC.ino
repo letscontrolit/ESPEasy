@@ -60,10 +60,6 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         P002_data->webformLoad(event);
         success = true;
       } else {
-        # ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-
         P002_data = new (std::nothrow) P002_data_struct();
 
         if (nullptr != P002_data) {
@@ -99,10 +95,6 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));

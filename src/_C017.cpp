@@ -67,10 +67,6 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
       std::unique_ptr<C017_queue_element> element(new C017_queue_element(event));
       success = C017_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
