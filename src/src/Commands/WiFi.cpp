@@ -145,9 +145,11 @@ const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const
 const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const char *Line)
 {
   #ifdef ESP8266
-  WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
-  WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  if (!ESP.eraseConfig())
+    return return_command_failed_flashstr();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
   #endif
 
   #ifdef ESP32
