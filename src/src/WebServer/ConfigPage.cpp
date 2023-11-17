@@ -146,6 +146,9 @@ void handle_config() {
     webArg2ip(F("espethsubnet"),  Settings.ETH_Subnet);
     webArg2ip(F("espethdns"),     Settings.ETH_DNS);
 #endif // if FEATURE_ETHERNET
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    set_CDN_url_override(webArg(F("alturl")));
+    #endif // if FEATURE_ALTERNATIVE_CDN_URL
     addHtmlError(SaveSettings());
   }
 
@@ -258,6 +261,15 @@ void handle_config() {
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
   addFormSeparator(2);
+
+  #if FEATURE_ALTERNATIVE_CDN_URL
+  addFormSubHeader(F("CDN Override"));
+
+  addFormTextBox(F("CDN Override URL"), F("alturl"), get_CDN_url_override(), 255);
+  addFormNote(F("Leave empty for default cdn.jdelivr.net url"));
+
+  addFormSeparator(2);
+  #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
   html_TR_TD();
   html_TD();

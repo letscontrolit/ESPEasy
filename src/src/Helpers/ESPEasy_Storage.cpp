@@ -1144,6 +1144,44 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   return result;
 }
 
+#if FEATURE_ALTERNATIVE_CDN_URL
+static String _CDN_url_cache;
+static bool   _CDN_url_loaded = false;
+
+String get_CDN_url_override() {
+  if (!_CDN_url_loaded) {
+    char override[256]{};
+    const __FlashStringHelper* cdnOverrideFile = F("cdnoverride.dat");
+    if (fileExists(cdnOverrideFile)) {
+      LoadFromFile(String(cdnOverrideFile).c_str(), 0, (uint8_t*)&override, sizeof(override));
+    }
+    _CDN_url_cache  = String(override);
+    _CDN_url_loaded = true;
+  }
+  return _CDN_url_cache;
+}
+
+void set_CDN_url_override(String url) {
+  _CDN_url_cache = url;
+  _CDN_url_cache.trim();
+  _CDN_url_loaded = true;
+  char override[256]{};
+  const __FlashStringHelper* cdnOverrideFile = F("cdnoverride.dat");
+  if (_CDN_url_cache.isEmpty()) {
+    if (fileExists(cdnOverrideFile)) {
+      tryDeleteFile(cdnOverrideFile);
+    }
+  } else {
+    if (!fileExists(cdnOverrideFile)) {
+      InitFile(cdnOverrideFile, 256);
+    }
+    if (safe_strncpy(override, _CDN_url_cache, sizeof(override))) {
+      SaveToFile(String(cdnOverrideFile).c_str(), 0, (uint8_t*)&override, sizeof(override));
+    }
+  }
+}
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
+
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/

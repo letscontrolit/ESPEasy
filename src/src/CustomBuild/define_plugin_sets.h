@@ -3178,7 +3178,14 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-    
+#if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
+  #define FEATURE_ALTERNATIVE_CDN_URL 1
+#endif // if !defined(CUSTOM_BUILD_CDN_URL)
+#if defined(FEATURE_ALTERNATIVE_CDN_URL) && FEATURE_ALTERNATIVE_CDN_URL && defined(PLUGIN_BUILD_MINIMAL_OTA)
+  #undef FEATURE_ALTERNATIVE_CDN_URL
+  #define FEATURE_ALTERNATIVE_CDN_URL 0
+#endif
+
 
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
