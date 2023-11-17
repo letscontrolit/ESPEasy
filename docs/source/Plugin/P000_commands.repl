@@ -7,6 +7,15 @@
     :widths: 8, 5, 30
 
     "
+    AppendUnitToHostname","
+    :red:`Internal`","
+    Get or set the Append Unit to Hostname option in the Config page.
+
+    ``AppendUnitToHostname``
+
+    ``AppendUnitToHostname,true`` (can use ``1``, ``true`` or ``on`` to enable, and ``0``, ``false`` or ``off`` to disable)
+    "
+    "
     AsyncEvent","
     :blue:`Special`","
     Schedule an event, it's possible to send a float value along as well.
