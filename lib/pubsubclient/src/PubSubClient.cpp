@@ -11,6 +11,11 @@
 #include <WiFiClient.h>
 #endif
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
+
 PubSubClient::PubSubClient() {
     this->_state = MQTT_DISCONNECTED;
     this->_client = NULL;
@@ -103,6 +108,16 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
     setCallback(callback);
     setClient(client);
     setStream(stream);
+}
+
+PubSubClient::~PubSubClient()
+{
+#ifdef USE_SECOND_HEAP
+    if (buffer != nullptr) {
+        free(buffer);
+        buffer = nullptr;
+    }
+#endif
 }
 
 boolean PubSubClient::connect(const char *id) {
@@ -326,6 +341,12 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
 }
 
 bool PubSubClient::loop_read() {
+# ifdef USE_SECOND_HEAP
+    if (!initBuffer()) {
+        return false;
+    }
+# endif // ifdef USE_SECOND_HEAP
+
     if (_client == nullptr) {
         return false;
     }
@@ -617,6 +638,15 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 }
 
 void PubSubClient::disconnect() {
+# ifdef USE_SECOND_HEAP
+    if (!initBuffer()) {
+        _state = MQTT_DISCONNECTED;
+        lastInActivity = lastOutActivity = millis();
+
+        return;
+    }
+# endif // ifdef USE_SECOND_HEAP
+
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
     if (_client != nullptr) {
@@ -670,6 +700,20 @@ size_t PubSubClient::flushBuffer() {
     }
     return rc;
 }
+
+# ifdef USE_SECOND_HEAP
+bool PubSubClient::initBuffer()
+{
+    if (buffer == nullptr) {
+        {
+            HeapSelectIram ephemeral;
+            buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
+        }
+    }
+    return buffer != nullptr;
+}
+#endif
+
 
 boolean PubSubClient::connected() {
     if (_client == NULL ) {

@@ -131,6 +131,10 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) 
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   if (lowMemorySkip) { return *this; }
   const unsigned int length = a.length();
   if (length == 0) { return *this; }

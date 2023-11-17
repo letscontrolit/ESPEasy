@@ -14,6 +14,10 @@
 // Web Interface handle other requests
 // ********************************************************************************
 void handleNotFound() {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleNotFound"));
   #endif // ifndef BUILD_NO_RAM_TRACKER

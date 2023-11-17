@@ -59,6 +59,10 @@
 // Web Interface root page
 // ********************************************************************************
 void handle_root() {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
   # endif // ifndef BUILD_NO_RAM_TRACKER

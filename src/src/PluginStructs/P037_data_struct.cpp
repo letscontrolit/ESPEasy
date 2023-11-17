@@ -958,6 +958,10 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr == root) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
   }
 
@@ -965,6 +969,10 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     deserializeJson(*root, message);
 
     if (!root->isNull()) {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       result = true;
       doc    = root->as<JsonObject>();
       iter   = doc.begin();

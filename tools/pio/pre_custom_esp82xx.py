@@ -34,6 +34,7 @@ else:
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P037",  # MQTT Import
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
     "-DUSES_P052",  # SenseAir
@@ -54,7 +55,7 @@ else:
     "-DUSES_P146",  # Cache Reader
 
     "-DUSES_C016",  # Cache Controller
-    "-DUSES_C018",  # TTN/RN2483
+#    "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
 #    "-DFEATURE_MDNS=1",

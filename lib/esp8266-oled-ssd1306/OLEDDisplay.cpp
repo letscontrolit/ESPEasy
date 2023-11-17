@@ -27,6 +27,10 @@
 
 #include "OLEDDisplay.h"
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
 OLEDDisplay::~OLEDDisplay() {
   end();
 }
@@ -37,7 +41,12 @@ bool OLEDDisplay::init() {
     return false;
   }
   if(this->buffer==NULL) {
-  this->buffer = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+    this->buffer = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  }
   if(!this->buffer) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][init] Not enough memory to create display\n");
     return false;
@@ -46,7 +55,12 @@ bool OLEDDisplay::init() {
 
   #ifdef OLEDDISPLAY_DOUBLE_BUFFER
   if(this->buffer_back==NULL) {
-  this->buffer_back = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+    this->buffer_back = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  }
   if(!this->buffer_back) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][init] Not enough memory to create back buffer\n");
     free(this->buffer);
@@ -626,7 +640,12 @@ bool OLEDDisplay::setLogBuffer(uint16_t lines, uint16_t chars){
     this->logBufferFilled   = 0;      // Nothing stored yet
     this->logBufferMaxLines = lines;  // Lines max printable
     this->logBufferSize     = size;   // Total number of characters the buffer can hold
-    this->logBuffer         = (char *) malloc(size * sizeof(uint8_t));
+    {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+      this->logBuffer         = (char *) malloc(size * sizeof(uint8_t));
+    }
     if(!this->logBuffer) {
       DEBUG_OLEDDISPLAY("[OLEDDISPLAY][setLogBuffer] Not enough memory to create log buffer\n");
       return false;

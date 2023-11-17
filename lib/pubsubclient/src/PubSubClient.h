@@ -99,7 +99,11 @@
 class PubSubClient : public Print {
 private:
    Client* _client;
+#ifdef USE_SECOND_HEAP
+   uint8_t *buffer = nullptr;
+#else
    uint8_t buffer[MQTT_MAX_PACKET_SIZE];
+#endif
    uint16_t nextMsgId;
    unsigned long lastOutActivity;
    unsigned long lastInActivity;
@@ -123,6 +127,10 @@ private:
    size_t appendBuffer(const uint8_t *data, size_t size);
    size_t flushBuffer();
 
+# ifdef USE_SECOND_HEAP
+   bool initBuffer();
+#endif
+
    IPAddress ip;
    String domain;
    uint16_t port;
@@ -144,7 +152,7 @@ public:
    PubSubClient(const char*, uint16_t, Client& client, Stream&);
    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client);
    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE,Client& client, Stream&);
-   virtual ~PubSubClient() {}
+   virtual ~PubSubClient();
 
    PubSubClient& setServer(IPAddress ip, uint16_t port);
    PubSubClient& setServer(uint8_t * ip, uint16_t port);

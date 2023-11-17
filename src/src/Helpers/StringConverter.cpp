@@ -29,16 +29,16 @@
 // -V::569
 
 String concat(const __FlashStringHelper * str, const String &val) {
-  /*
   String res;
   reserve_special(res, strlen_P((PGM_P)str) + val.length());
   res.concat(str);
   res.concat(val);
-  */
 
+  /*
   String res(str);
   reserve_special(res, res.length() + val.length());
   res.concat(val);
+  */
   return res;
 }
 

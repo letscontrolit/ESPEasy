@@ -121,7 +121,7 @@ void sw_watchdog_callback(void *arg)
 void ESPEasy_setup()
 {
 #if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
-  disable_extra4k_at_link_time();
+//  disable_extra4k_at_link_time();
 #endif
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();

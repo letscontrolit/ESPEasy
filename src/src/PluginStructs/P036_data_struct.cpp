@@ -226,7 +226,12 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
       return false;
   }
 
-  LineContent = new (std::nothrow) P036_LineContent();
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+    LineContent = new (std::nothrow) P036_LineContent();
+  }
 
   if (isInitialized()) {
     display->init(); // call to local override of init function
