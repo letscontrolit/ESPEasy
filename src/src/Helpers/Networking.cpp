@@ -1767,6 +1767,7 @@ bool downloadFirmware(String filename, String& error)
   if (ProvisioningSettings.get()) {
     loadProvisioningSettings(*ProvisioningSettings);
     if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
+      error = F("Not Allowed");
       return false;
     }
     baseurl = ProvisioningSettings->url;

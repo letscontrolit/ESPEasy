@@ -2137,6 +2137,10 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
         return F("Not Allowed");
       }
 
+      if (!ProvisioningSettings->url[0]) {
+        return F("Provision Config incomplete");
+      }
+
       url  = ProvisioningSettings->url;
       user = ProvisioningSettings->user;
       pass = ProvisioningSettings->pass;
