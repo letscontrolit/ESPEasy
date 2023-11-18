@@ -1054,10 +1054,62 @@ However, they can only be executed when:
 
 The commands are:
 
+Changed: 2023-11-18: Single-word commands split into 2 words: ``Provision,<subcmd>[,<params>]``
 
-* ``ProvisionConfig`` Fetch ``config.dat``
-* ``ProvisionSecurity`` Fetch ``security.dat``
-* ``ProvisionNotification`` Fetch ``notification.dat``
-* ``ProvisionProvision`` Fetch ``provisioning.dat``
-* ``ProvisionRules,1`` Fetch ``rules1.txt``
-* ``ProvisionCustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)
+* ``Provision,Config`` Fetch ``config.dat``
+* ``Provision,Security`` Fetch ``security.dat``
+* ``Provision,Notification`` Fetch ``notification.dat``
+* ``Provision,Provision`` Fetch ``provisioning.dat``
+* ``Provision,Rules,1`` Fetch ``rules1.txt``
+* ``Provision,CustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)
+
+* ``Provision,Firmware,<FirmwareBinary.bin>`` Fetch and install ``FirmwareBinary.bin`` on the unit
+
+Once the Firmware download & install is finished the outcome is completed by a generated event (gets the download filename as an argument):
+
+* ``ProvisionFirmware#Success=<FirmwareBinary.bin>`` When download and install where succesfull
+* ``ProvisionFirmware#Failed=<FirmwareBinary.bin>`` When something went wrong during download or install
+
+These events can be handled in rules, an provisioning support script could look like this:
+
+.. code-block:: none
+
+  On updateSettings Do
+    provision,provision
+    provision,config
+  Endon
+
+  On updateCredentials Do
+    provision,security  
+  Endon
+
+  On updateRules Do
+    provision,rules,1
+    provision,rules,2
+    provision,rules,3
+  Endon
+
+  On updateRulesSettings Do
+    AsyncEvent,updateSettings
+    AsyncEvent,updateRules
+    Reboot
+  Endon
+
+  // e.g.
+  // event,PerformFirmwareUpdate=firmware_max_ESP32_16M8M_LittleFS.bin
+  On PerformFirmwareUpdate=* Do
+    pwm,2,100,0,8
+    provision,firmware,%eventvalue1%
+  Endon
+
+  On provisionfirmware#success=* Do
+    gpio,2,0
+    Reboot
+  Endon
+
+  On provisionfirmware#failure Do
+    gpio,2,0
+    Reboot  
+  Endon
+
+
