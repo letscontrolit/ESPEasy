@@ -64,7 +64,8 @@ bool equals(const String& str, const char& c) {
 
 void move_special(String& dest, String&& source) {
   #ifdef USE_SECOND_HEAP
-  if ((source.length() > 0) && !mmu_is_iram(&(source[0]))) {
+  // Only try to store larger strings here as those tend to be kept for a longer period.
+  if ((source.length() >= 32) && mmu_is_dram(&(source[0]))) {
     // The string was not allocated on the 2nd heap, so copy instead of move
     HeapSelectIram ephemeral;
     if (dest.reserve(source.length())) {
@@ -92,8 +93,10 @@ bool reserve_special(String& str, size_t size) {
   }
   // FIXME TD-er: Should also use this for ESP32 with PSRAM to allocate on PSRAM
   #ifdef USE_SECOND_HEAP
-  {
+  if (size >= 32) {
+    // Only try to store larger strings here as those tend to be kept for a longer period.
     HeapSelectIram ephemeral;
+    // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
     if (str.reserve(size)) {
       return true;
     }

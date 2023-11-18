@@ -137,6 +137,12 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage, boolean cleanSession) {
+# ifdef USE_SECOND_HEAP
+    if (!initBuffer()) {
+        return false;
+    }
+# endif // ifdef USE_SECOND_HEAP
+
     if (!connected()) {
         int result = 0;
 
@@ -285,6 +291,12 @@ boolean PubSubClient::readByte(uint8_t * result, uint16_t * index){
 }
 
 uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
+# ifdef USE_SECOND_HEAP
+    if (!initBuffer()) {
+        return 0;
+    }
+# endif // ifdef USE_SECOND_HEAP
+
     uint16_t len = 0;
     if(!readByte(buffer, &len)) return 0;
     bool isPublish = (buffer[0]&0xF0) == MQTTPUBLISH;
@@ -672,6 +684,12 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 }
 
 size_t PubSubClient::appendBuffer(uint8_t data) {
+# ifdef USE_SECOND_HEAP
+    if (!initBuffer()) {
+        return 0;
+    }
+# endif // ifdef USE_SECOND_HEAP
+
     buffer[_bufferWritePos] = data;
     ++_bufferWritePos;
     if (_bufferWritePos >= MQTT_MAX_PACKET_SIZE) {

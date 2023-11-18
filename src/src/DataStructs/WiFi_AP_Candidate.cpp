@@ -173,16 +173,21 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
 
   result += encryption_type();
   if (phy_known()) {
-    result += ' ';
-    if (phy_11b) result += 'b';
-    if (phy_11g) result += 'g';
-    if (phy_11n) result += 'n';
+    String phy_str;
+    
+    if (phy_11b) phy_str += 'b';
+    if (phy_11g) phy_str += 'g';
+    if (phy_11n) phy_str += 'n';
 #ifdef ESP32
-    if (phy_11ax) result += F("/ax");
-    if (phy_lr) result += F("/lr");
-    if (ftm_initiator) result += F("/FTM_i");
-    if (ftm_responder) result += F("/FTM_r");
+    if (phy_11ax) phy_str += F("/ax");
+    if (phy_lr) phy_str += F("/lr");
+    if (ftm_initiator) phy_str += F("/FTM_i");
+    if (ftm_responder) phy_str += F("/FTM_r");
 #endif
+
+    if (phy_str.length()) {
+      result += strformat(F(" (%s)"), phy_str.c_str());
+    }
   }
   return result;
 }

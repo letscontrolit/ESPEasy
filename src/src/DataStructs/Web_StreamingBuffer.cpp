@@ -288,8 +288,6 @@ void Web_StreamingBuffer::endStream() {
 }
 
 
-
-
 void Web_StreamingBuffer::sendContentBlocking(String& data) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
@@ -300,12 +298,10 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    String log;
-    log += F("sendcontent free: ");
-    log += ESP.getFreeHeap();
-    log += F(" chunk size:");
-    log += length;
-    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, strformat(
+      F("sendcontent free: %u  chunk size: %u"), 
+      ESP.getFreeHeap(), 
+      length));
   }
 #endif // ifndef BUILD_NO_DEBUG
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -331,7 +327,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 
   web_server.sendContent(data);
 
-  if (data.length() > CHUNKED_BUFFER_SIZE) {
+  if (data.length() > (CHUNKED_BUFFER_SIZE + 1)) {
     data = String(); // Clear also allocated memory
   } else {
     data.clear();
@@ -385,6 +381,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
 
   const uint32_t beginWait = millis();
+
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
