@@ -16,6 +16,7 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
   #if FEATURE_ALTERNATIVE_CDN_URL
   String cdn = get_CDN_url_custom();
   if (!cdn.isEmpty()) {
+    cdn = parseTemplate(cdn);  // Replace system variables.
     return concat(cdn, fname); // cdn.endsWith('/') check done at save
   } else {
   #endif // if FEATURE_ALTERNATIVE_CDN_URL
