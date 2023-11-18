@@ -30,8 +30,9 @@ private:
       uint32_t delete_Bak_Files     : 1;
       uint32_t storeCredentials     : 1;
       uint32_t fetchProvisioningDat : 1;
+      uint32_t fetchCustomCdnUrlDat : 1;
 
-      uint32_t unused : 6;
+      uint32_t unused : 5;
     }        bits;
     uint32_t _preference{};
   };
@@ -126,6 +127,16 @@ public:
   void fetchProvisioningDat(bool fetch) {
     bits.fetchProvisioningDat = fetch;
   }
+
+  #if FEATURE_ALTERNATIVE_CDN_URL
+  bool fetchCustomCdnUrlDat() const {
+    return bits.fetchCustomCdnUrlDat;
+  }
+
+  void fetchCustomCdnUrlDat(bool fetch) {
+    bits.fetchCustomCdnUrlDat = fetch;
+  }
+  #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
   bool deleteFirst() const {
     return bits.deleteFirst;

@@ -415,6 +415,9 @@ bool executeInternalCommand(command_case_data & data)
       #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
+      #if FEATURE_ALTERNATIVE_CDN_URL
+      COMMAND_CASE_A( "provisioncustomcdnurl", Command_Provisioning_CustomCdnUrl, 0); // Provisioning.h
+      #endif // if FEATURE_ALTERNATIVE_CDN_URL
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
       #if FEATURE_NOTIFIER
       COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h

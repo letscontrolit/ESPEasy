@@ -1148,35 +1148,38 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 static String _CDN_url_cache;
 static bool   _CDN_url_loaded = false;
 
-String get_CDN_url_override() {
+String get_CDN_url_custom() {
   if (!_CDN_url_loaded) {
-    char override[256]{};
-    const __FlashStringHelper* cdnOverrideFile = F("cdnoverride.dat");
-    if (fileExists(cdnOverrideFile)) {
-      LoadFromFile(String(cdnOverrideFile).c_str(), 0, (uint8_t*)&override, sizeof(override));
+    char urlbuf[256]{};
+    const __FlashStringHelper* cdnUrlCustomFile = getFileName(FileType::CUSTOMCDNURL_DAT);
+    if (fileExists(cdnUrlCustomFile)) {
+      LoadFromFile(String(cdnUrlCustomFile).c_str(), 0, (uint8_t*)&urlbuf, sizeof(urlbuf));
     }
-    _CDN_url_cache  = String(override);
+    _CDN_url_cache  = String(urlbuf);
     _CDN_url_loaded = true;
   }
   return _CDN_url_cache;
 }
 
-void set_CDN_url_override(String url) {
+void set_CDN_url_custom(const String &url) {
   _CDN_url_cache = url;
   _CDN_url_cache.trim();
   _CDN_url_loaded = true;
-  char override[256]{};
-  const __FlashStringHelper* cdnOverrideFile = F("cdnoverride.dat");
+  char urlbuf[256]{};
+  const __FlashStringHelper* cdnUrlCustomFile = getFileName(FileType::CUSTOMCDNURL_DAT);
   if (_CDN_url_cache.isEmpty()) {
-    if (fileExists(cdnOverrideFile)) {
-      tryDeleteFile(cdnOverrideFile);
+    if (fileExists(cdnUrlCustomFile)) {
+      tryDeleteFile(cdnUrlCustomFile);
     }
   } else {
-    if (!fileExists(cdnOverrideFile)) {
-      InitFile(cdnOverrideFile, 256);
+    if (!fileExists(cdnUrlCustomFile)) {
+      InitFile(cdnUrlCustomFile, 256);
     }
-    if (safe_strncpy(override, _CDN_url_cache, sizeof(override))) {
-      SaveToFile(String(cdnOverrideFile).c_str(), 0, (uint8_t*)&override, sizeof(override));
+    if (!_CDN_url_cache.endsWith(F("/"))) {
+      _CDN_url_cache += '/'; // Fixup
+    }
+    if (safe_strncpy(urlbuf, _CDN_url_cache, sizeof(urlbuf))) {
+      SaveToFile(String(cdnUrlCustomFile).c_str(), 0, (uint8_t*)&urlbuf, sizeof(urlbuf));
     }
   }
 }

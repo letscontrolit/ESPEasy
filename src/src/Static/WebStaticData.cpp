@@ -14,9 +14,9 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
     return concat(F("static_"), Cache.fileCacheClearMoment) + '_' + fname;
   }
   #if FEATURE_ALTERNATIVE_CDN_URL
-  String cdn = get_CDN_url_override();
+  String cdn = get_CDN_url_custom();
   if (!cdn.isEmpty()) {
-    return concat(cdn.endsWith(F("/")) ? cdn : concat(cdn,'/'), fname);
+    return concat(cdn, fname); // cdn.endsWith('/') check done at save
   } else {
   #endif // if FEATURE_ALTERNATIVE_CDN_URL
     return concat(get_CDN_url_prefix(), fname);

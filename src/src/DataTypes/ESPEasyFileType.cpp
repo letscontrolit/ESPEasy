@@ -27,6 +27,9 @@ const __FlashStringHelper* getFileName(FileType::Enum filetype) {
     case FileType::NOTIFICATION_DAT: return F("notification.dat");
     case FileType::SECURITY_DAT:     return F("security.dat");
     case FileType::PROVISIONING_DAT: return F("provisioning.dat");
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    case FileType::CUSTOMCDNURL_DAT: return F("customcdnurl.dat");
+    #endif // if FEATURE_ALTERNATIVE_CDN_URL
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
@@ -63,6 +66,9 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat();
     case FileType::RULES_TXT:        return ResetFactoryDefaultPreference.fetchRulesTXT(filenr);
     case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat();
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    case FileType::CUSTOMCDNURL_DAT: return ResetFactoryDefaultPreference.fetchCustomCdnUrlDat();
+    #endif // if FEATURE_ALTERNATIVE_CDN_URL
       break;
 
     case FileType::MAX_FILETYPE:

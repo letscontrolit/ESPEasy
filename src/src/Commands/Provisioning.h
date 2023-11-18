@@ -11,12 +11,16 @@ String Command_Provisioning_Config(struct EventStruct *event,
                                    const char         *Line);
 String Command_Provisioning_Security(struct EventStruct *event,
                                      const char         *Line);
-#if FEATURE_NOTIFIER
+# if FEATURE_NOTIFIER
 String Command_Provisioning_Notification(struct EventStruct *event,
                                          const char         *Line);
-#endif
+# endif // if FEATURE_NOTIFIER
 String Command_Provisioning_Provision(struct EventStruct *event,
                                       const char         *Line);
+# if FEATURE_ALTERNATIVE_CDN_URL
+String Command_Provisioning_CustomCdnUrl(struct EventStruct *event,
+                                         const char         *Line);
+# endif // if FEATURE_ALTERNATIVE_CDN_URL
 String Command_Provisioning_Rules(struct EventStruct *event,
                                   const char         *Line);
 
