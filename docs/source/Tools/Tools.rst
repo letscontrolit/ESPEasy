@@ -1043,13 +1043,13 @@ See the ``Custom-sample.h`` file for some examples.
 Allow Fetch by Command
 ----------------------
 
-This checkbox allows provisioning via commands.
-These commands are not restricted, so they can also be given via HTTP or MQTT.
+This list of checkboxes per file allows provisioning via commands.
+These ``Provision*`` commands are not restricted, so they can also be given via HTTP or MQTT.
 
 However, they can only be executed when:
 
-* Allow Fetch by Command is enabled
-* the file to download is checked
+* the file at Allow Fetch by Command is checked
+* the file at Files to Download is *also* checked
 * URL (+ optional credentials) is stored
 
 The commands are:
@@ -1060,3 +1060,4 @@ The commands are:
 * ``ProvisionNotification`` Fetch ``notification.dat``
 * ``ProvisionProvision`` Fetch ``provisioning.dat``
 * ``ProvisionRules,1`` Fetch ``rules1.txt``
+* ``ProvisionCustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)
