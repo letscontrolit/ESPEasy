@@ -27,6 +27,8 @@ bool Hardware_ADC_cali_t::init(int         pin,
 {
 # if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
   _useHighResInterpolation = false;
+# elif ESP_IDF_VERSION_MAJOR >= 5
+  _useHighResInterpolation = attenuation != adc_atten_t::ADC_ATTEN_DB_12;
 # else // if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
   _useHighResInterpolation = attenuation != adc_atten_t::ADC_ATTEN_DB_11;
 # endif // if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED

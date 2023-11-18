@@ -56,7 +56,11 @@
 # define P002_ADC_0db              (ADC_ATTEN_DB_0  + 10)
 # define P002_ADC_2_5db            (ADC_ATTEN_DB_2_5 + 10)
 # define P002_ADC_6db              (ADC_ATTEN_DB_6 + 10)
+#if ESP_IDF_VERSION_MAJOR >= 5
+# define P002_ADC_11db             (ADC_ATTEN_DB_12 + 10)
+#else
 # define P002_ADC_11db             (ADC_ATTEN_DB_11 + 10)
+#endif
 
 
 struct P002_ADC_Value_pair {
@@ -263,7 +267,12 @@ private:
 # endif // ifndef LIMIT_BUILD_SIZE
 # ifdef ESP32
   bool        _useFactoryCalibration = false;
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+  adc_atten_t _attenuation           = ADC_ATTEN_DB_12;
+#else
   adc_atten_t _attenuation           = ADC_ATTEN_DB_11;
+#endif
 # endif // ifdef ESP32
 
 };

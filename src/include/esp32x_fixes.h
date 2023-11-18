@@ -64,7 +64,9 @@
 # define HSPI_HOST   SPI3_HOST
 # define VSPI_HOST   SPI3_HOST
 # ifndef REG_SPI_BASE
-#  define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#  if ESP_IDF_VERSION_MAJOR < 5
+#   define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#  endif
 
 // SPI_MOSI_DLEN_REG is not defined anymore in esp32s3, instead use SPI_MS_DLEN_REG
 #  define SPI_MOSI_DLEN_REG(x) SPI_MS_DLEN_REG(x)

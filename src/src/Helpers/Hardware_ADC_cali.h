@@ -41,7 +41,11 @@ public:
   // Return whether factory calibration is actually enabled.
   // Cannot enable factory calibration when no calibration is present.
   bool  init(int         pin,
+#if ESP_IDF_VERSION_MAJOR >= 5
+             adc_atten_t attenuation = ADC_ATTEN_DB_12);
+#else
              adc_atten_t attenuation = ADC_ATTEN_DB_11);
+#endif
 
   bool initialized() const { return _initialized; }
 

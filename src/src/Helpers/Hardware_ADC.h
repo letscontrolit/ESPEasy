@@ -30,7 +30,12 @@ public:
   ~Hardware_ADC_t();
 
   bool init(int         pin,
+#if ESP_IDF_VERSION_MAJOR >= 5
+            adc_atten_t attenuation = ADC_ATTEN_DB_12);
+#else
             adc_atten_t attenuation = ADC_ATTEN_DB_11);
+#endif
+
 
   // Return whether factory calibration is actually enabled.
   // Cannot enable factory calibration when no calibration is present.
@@ -49,7 +54,11 @@ private:
   bool _isTouchPin = false;
 # endif // if HAS_TOUCH_GPIO
   bool _useFactoryCalibration = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  adc_atten_t _attenuation    = ADC_ATTEN_DB_12;
+#else
   adc_atten_t _attenuation    = ADC_ATTEN_DB_11;
+#endif
 
 
   // ADC Factory calibration definition

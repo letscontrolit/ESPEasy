@@ -142,7 +142,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   {
     const __FlashStringHelper *outputOptions[] = {
-      F("11 dB"),
+      F("12 dB"),
       F("6 dB"),
       F("2.5 dB"),
       F("0 dB")
@@ -390,7 +390,13 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 
   size_t current_attenuation = getAttenuation(event);
 
-  if (current_attenuation >= P002_ADC_ATTEN_MAX) { current_attenuation = ADC_ATTEN_DB_11; }
+  if (current_attenuation >= P002_ADC_ATTEN_MAX) { 
+#if ESP_IDF_VERSION_MAJOR >= 5
+    current_attenuation = ADC_ATTEN_DB_12; 
+#else
+    current_attenuation = ADC_ATTEN_DB_11; 
+#endif
+  }
 
   for (size_t att = 0; att < P002_ADC_ATTEN_MAX; ++att)
   {
@@ -577,7 +583,7 @@ void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper 
 
 # ifdef ESP32
 const __FlashStringHelper * P002_data_struct::AttenuationToString(adc_atten_t attenuation) {
-  const __FlashStringHelper *datalabels[] = { F("0 dB"), F("2.5 dB"), F("6 dB"), F("11 dB") };
+  const __FlashStringHelper *datalabels[] = { F("0 dB"), F("2.5 dB"), F("6 dB"), F("12 dB") };
 
   if (attenuation < 4) { return datalabels[attenuation]; }
   return F("Unknown");
@@ -589,7 +595,12 @@ adc_atten_t P002_data_struct::getAttenuation(struct EventStruct *event) {
     return static_cast<adc_atten_t>(P002_ATTENUATION - 10);
   }
   P002_ATTENUATION = P002_ADC_11db;
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+  return ADC_ATTEN_DB_12;
+#else
   return ADC_ATTEN_DB_11;
+#endif
 }
 
 # endif // ifdef ESP32
