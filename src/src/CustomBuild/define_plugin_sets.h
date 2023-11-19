@@ -3202,6 +3202,15 @@ To create/register a plugin, you have to :
 #endif
 
 
+#ifdef USES_P036 // Framed OLED
+// Double buffer allows to check for changed pixels and thus send less data to the display
+# ifndef OLEDDISPLAY_DOUBLE_BUFFER
+#  if defined(ESP32) || defined(USE_SECOND_HEAP)
+#   define OLEDDISPLAY_DOUBLE_BUFFER
+#  endif
+# endif
+#endif
+
 // Incompatible plugins with ESP32-C2/C6
 #if defined(ESP32C2) || defined(ESP32C6)
  #define DISABLE_NEOPIXEL_PLUGINS 1

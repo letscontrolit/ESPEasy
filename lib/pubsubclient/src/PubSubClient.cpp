@@ -707,28 +707,16 @@ size_t PubSubClient::flushBuffer() {
     return rc;
 }
 
-# ifdef USE_SECOND_HEAP
 bool PubSubClient::initBuffer()
 {
     if (buffer == nullptr) {
-        {
-            HeapSelectIram ephemeral;
-            buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
-        }
-    }
-    return buffer != nullptr;
-}
-#else
-bool PubSubClient::initBuffer()
-{
-    if (buffer == nullptr) {
+#ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+#endif
         buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
     }
     return buffer != nullptr;
 }
-
-#endif
-
 
 boolean PubSubClient::connected() {
     if (_client == NULL ) {
