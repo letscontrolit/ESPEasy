@@ -112,12 +112,10 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
 
 PubSubClient::~PubSubClient()
 {
-#ifdef USE_SECOND_HEAP
     if (buffer != nullptr) {
         free(buffer);
         buffer = nullptr;
     }
-#endif
 }
 
 boolean PubSubClient::connect(const char *id) {
@@ -137,11 +135,9 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage, boolean cleanSession) {
-# ifdef USE_SECOND_HEAP
     if (!initBuffer()) {
         return false;
     }
-# endif // ifdef USE_SECOND_HEAP
 
     if (!connected()) {
         int result = 0;
@@ -291,11 +287,9 @@ boolean PubSubClient::readByte(uint8_t * result, uint16_t * index){
 }
 
 uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
-# ifdef USE_SECOND_HEAP
     if (!initBuffer()) {
         return 0;
     }
-# endif // ifdef USE_SECOND_HEAP
 
     uint16_t len = 0;
     if(!readByte(buffer, &len)) return 0;
@@ -353,11 +347,9 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
 }
 
 bool PubSubClient::loop_read() {
-# ifdef USE_SECOND_HEAP
     if (!initBuffer()) {
         return false;
     }
-# endif // ifdef USE_SECOND_HEAP
 
     if (_client == nullptr) {
         return false;
@@ -650,14 +642,12 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 }
 
 void PubSubClient::disconnect() {
-# ifdef USE_SECOND_HEAP
-    if (!initBuffer()) {
+    if (_state == MQTT_DISCONNECTED || !initBuffer()) {
         _state = MQTT_DISCONNECTED;
         lastInActivity = lastOutActivity = millis();
 
         return;
     }
-# endif // ifdef USE_SECOND_HEAP
 
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
@@ -684,11 +674,9 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 }
 
 size_t PubSubClient::appendBuffer(uint8_t data) {
-# ifdef USE_SECOND_HEAP
     if (!initBuffer()) {
         return 0;
     }
-# endif // ifdef USE_SECOND_HEAP
 
     buffer[_bufferWritePos] = data;
     ++_bufferWritePos;
@@ -730,6 +718,15 @@ bool PubSubClient::initBuffer()
     }
     return buffer != nullptr;
 }
+#else
+bool PubSubClient::initBuffer()
+{
+    if (buffer == nullptr) {
+        buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
+    }
+    return buffer != nullptr;
+}
+
 #endif
 
 

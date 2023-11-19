@@ -1,7 +1,6 @@
 #ifndef COMMAND_WIFI_H
 #define COMMAND_WIFI_H
 
-#include "../Globals/SecuritySettings.h"
 
 class String;
 

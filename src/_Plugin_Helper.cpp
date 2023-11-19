@@ -9,7 +9,6 @@
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-#include "src/Globals/SecuritySettings.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 

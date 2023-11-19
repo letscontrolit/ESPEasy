@@ -3,7 +3,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/RTC.h"
-#include "../Globals/SecuritySettings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"

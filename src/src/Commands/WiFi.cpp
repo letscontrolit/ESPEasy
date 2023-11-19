@@ -11,6 +11,7 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
+#include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringConverter.h"

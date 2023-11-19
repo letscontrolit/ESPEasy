@@ -166,13 +166,12 @@ void handle_root() {
     {
       addRowLabel(LabelType::FREE_MEM);
       addHtmlInt(freeMem);
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestRAM);
-      addHtml(F(" - "));
-      addHtml(lowestRAMfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
+      addHtml(strformat(
+        F(" (%d - %s)"),
+        lowestRAM,
+        lowestRAMfunction.c_str()));
+# endif // ifndef BUILD_NO_RAM_TRACKER
     }
     {
         # ifdef USE_SECOND_HEAP
@@ -182,13 +181,12 @@ void handle_root() {
     {
       addRowLabel(LabelType::FREE_STACK);
       addHtmlInt(getCurrentFreeStack());
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestFreeStack);
-      addHtml(F(" - "));
-      addHtml(lowestFreeStackfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
+      addHtml(strformat(
+        F(" (%d - %s)"),
+        lowestFreeStack,
+        lowestFreeStackfunction.c_str()));
+# endif // ifndef BUILD_NO_RAM_TRACKER
     }
 
   # if FEATURE_ETHERNET
@@ -199,10 +197,10 @@ void handle_root() {
     {
       addRowLabelValue(LabelType::IP_ADDRESS);
       addRowLabel(LabelType::WIFI_RSSI);
-      addHtmlInt(WiFi.RSSI());
-      addHtml(F(" dBm ("));
-      addHtml(WiFi.SSID());
-      addHtml(')');
+      addHtml(strformat(
+        F("%d dBm (%s)"),
+        WiFi.RSSI(),
+        WiFi.SSID().c_str()));
     }
 
   # if FEATURE_ETHERNET
