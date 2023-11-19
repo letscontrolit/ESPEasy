@@ -52,9 +52,29 @@
 #define Rw B00000010  // Read/Write bit
 #define Rs B00000001  // Register select bit
 
+// flags for _altMode:
+enum class LCD_AltMode : uint8_t {
+  None = 0u, // Regular Hitachi controller
+  ST7032,    // ST7032 controller
+  };
+
+// extra defines for ST7032 controller
+#define LCD_EX_INSTRUCTION      0x01        // IS: instruction table select
+#define LCD_EX_SETBIASOSC       0x10        // Bias selection / Internal OSC frequency adjust
+#define LCD_EX_SETICONRAMADDR   0x40        // Set ICON RAM address
+#define LCD_EX_POWICONCONTRASTH 0x50        // Power / ICON control / Contrast set(high byte)
+#define LCD_EX_FOLLOWERCONTROL  0x60        // Follower control
+#define LCD_EX_CONTRASTSETL     0x70        // Contrast set(low byte)
+#define LCD_OSC_183HZ           0x04        // 183Hz@3.0V
+#define LCD_FOLLOWER_ON         0x08        // internal follower circuit is turn on
+#define LCD_FOLLOWER_OFF        0x00        // internal follower circuit is turn off
+#define LCD_RAB_2_00            0x04        // 1+(Rb/Ra)=2.00
+#define LCD_BIAS_1_5            0x00        // bias will be 1/5
+
 class LiquidCrystal_I2C : public Print {
 public:
   LiquidCrystal_I2C(uint8_t lcd_Addr,uint8_t lcd_cols,uint8_t lcd_rows);
+  virtual ~LiquidCrystal_I2C() {}
   void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS );
   void clear();
   void home();
@@ -89,6 +109,9 @@ public:
   void command(uint8_t);
   void init();
   void oled_init();
+  void setAltMode(LCD_AltMode altMode) {
+    _altMode = altMode;
+  }
 
 ////compatibility API function aliases
 void blink_on();						// alias for blink()
@@ -117,6 +140,8 @@ private:
   void write4bits(uint8_t);
   void expanderWrite(uint8_t);
   void pulseEnable(uint8_t);
+  void normalFunctionSet();
+  void extendFunctionSet();
   uint8_t _Addr;
   uint8_t _displayfunction;
   uint8_t _displaycontrol;
@@ -126,6 +151,7 @@ private:
   uint8_t _cols;
   uint8_t _rows;
   uint8_t _backlightval;
+  LCD_AltMode _altMode = LCD_AltMode::None;
 };
 
 #endif

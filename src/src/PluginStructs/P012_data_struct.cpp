@@ -6,75 +6,99 @@
 // is in a directory which is excluded in the src_filter
 # include <LiquidCrystal_I2C.h>
 
+const __FlashStringHelper* toString(P012_DisplaySize_e display) {
+  switch (display) {
+    case P012_DisplaySize_e::LCD_2x16: return F("2 x 16");
+    case P012_DisplaySize_e::LCD_4x20: return F("4 x 20");
+    case P012_DisplaySize_e::LCD_2x16_ST7032: return F("2 x 16 (ST7032)");
+  }
+  return F("");
+}
 
-P012_data_struct::P012_data_struct(uint8_t addr,
-                                   uint8_t lcd_size,
-                                   uint8_t mode,
-                                   uint8_t timer) :
-  lcd(addr, 20, 4),
+P012_data_struct::P012_data_struct(uint8_t            addr,
+                                   P012_DisplaySize_e lcd_size,
+                                   uint8_t            mode,
+                                   uint8_t            timer) :
   Plugin_012_mode(mode),
   displayTimer(timer)
 {
-  switch (lcd_size)
-  {
-    case 1:
+  // Get display parameters right
+  switch (lcd_size) {
+    case P012_DisplaySize_e::LCD_2x16:
+    case P012_DisplaySize_e::LCD_2x16_ST7032:
       Plugin_012_rows = 2;
       Plugin_012_cols = 16;
       break;
-    case 2:
+    case P012_DisplaySize_e::LCD_4x20:
       Plugin_012_rows = 4;
       Plugin_012_cols = 20;
       break;
+  }
 
-    default:
-      Plugin_012_rows = 2;
-      Plugin_012_cols = 16;
-      break;
+  // Create the display object
+  lcd = new (std::nothrow) LiquidCrystal_I2C(addr, Plugin_012_cols, Plugin_012_rows);
+
+  if (isValid()) {
+    // If all is fine, set any additional parameters
+    switch (lcd_size) {
+      case P012_DisplaySize_e::LCD_2x16:
+      case P012_DisplaySize_e::LCD_4x20:
+        break;
+      case P012_DisplaySize_e::LCD_2x16_ST7032:
+        lcd->setAltMode(LCD_AltMode::ST7032); // Set alternative ST7032 mode, with adjusted initialization
+        break;
+    }
   }
 }
 
 void P012_data_struct::init() {
-  // Setup LCD display
-  lcd.init(); // initialize the lcd
-  lcd.backlight();
-  lcd.print(F("ESP Easy"));
-  createCustomChars();
+  if (isValid()) {
+    // Setup LCD display
+    lcd->init(); // initialize the lcd
+    lcd->backlight();
+    lcd->print(F("ESP Easy"));
+    createCustomChars();
+  }
 }
 
 void P012_data_struct::setBacklightTimer(uint8_t timer) {
-  displayTimer = timer;
-  lcd.backlight();
+  if (isValid()) {
+    displayTimer = timer;
+    lcd->backlight();
+  }
 }
 
 void P012_data_struct::checkTimer() {
-  if (displayTimer > 0)
+  if (isValid() && (displayTimer > 0))
   {
     displayTimer--;
 
     if (displayTimer == 0) {
-      lcd.noBacklight();
+      lcd->noBacklight();
     }
   }
 }
 
 void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
+  if (!isValid()) { return; }
+
   // clear line before writing new string
   if (Plugin_012_mode == 2) {
-    lcd.setCursor(col, row);
+    lcd->setCursor(col, row);
 
     for (uint8_t i = col; i < Plugin_012_cols; i++) {
-      lcd.print(' ');
+      lcd->print(' ');
     }
   }
 
-  lcd.setCursor(col, row);
+  lcd->setCursor(col, row);
 
   if ((Plugin_012_mode == 1) || (Plugin_012_mode == 2)) {
-    lcd.setCursor(col, row);
+    lcd->setCursor(col, row);
 
     for (uint8_t i = 0; i < Plugin_012_cols - col; i++) {
       if (text[i]) {
-        lcd.print(text[i]);
+        lcd->print(text[i]);
       }
     }
   }
@@ -88,13 +112,13 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
     while (stillProcessing) {
       if (++col > Plugin_012_cols) { // have we printed 20 characters yet (+1 for the logic)
         row += 1;
-        lcd.setCursor(0, row);       // move cursor down
+        lcd->setCursor(0, row);      // move cursor down
         col = 1;
       }
 
       // dont print if "lower" than the lcd
       if (row < Plugin_012_rows) {
-        lcd.print(text[charCount - 1]);
+        lcd->print(text[charCount - 1]);
       }
 
       if (!text[charCount]) { // no more chars to process?
@@ -103,7 +127,7 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
       charCount += 1;
     }
 
-    // lcd.print(text.c_str());
+    // lcd->print(text.c_str());
     // end fix
   }
 }
@@ -229,6 +253,7 @@ String P012_data_struct::P012_parseTemplate(String& tmpString, uint8_t lineSize)
 }
 
 void P012_data_struct::createCustomChars() {
+  if (!isValid()) { return; }
 # ifdef USES_P012_POLISH_CHARS
 
   /*
@@ -266,15 +291,15 @@ void P012_data_struct::createCustomChars() {
   static const char LETTER_z2[8] PROGMEM = { // z z kropka
     0b00100, 0b00000, 0b11111, 0b00010, 0b00100, 0b01000, 0b11111, 0b00000
   };
-  lcd.createChar(0, LETTER_o);               // probably defected memory cell
-  lcd.createChar(1, LETTER_l);
-  lcd.createChar(2, LETTER_e);
-  lcd.createChar(3, LETTER_c);
-  lcd.createChar(4, LETTER_n);
-  lcd.createChar(5, LETTER_a);
-  lcd.createChar(6, LETTER_s);
-  lcd.createChar(7, LETTER_z2);
-  lcd.createChar(8, LETTER_o);
+  lcd->createChar(0, LETTER_o);              // probably defected memory cell
+  lcd->createChar(1, LETTER_l);
+  lcd->createChar(2, LETTER_e);
+  lcd->createChar(3, LETTER_c);
+  lcd->createChar(4, LETTER_n);
+  lcd->createChar(5, LETTER_a);
+  lcd->createChar(6, LETTER_s);
+  lcd->createChar(7, LETTER_z2);
+  lcd->createChar(8, LETTER_o);
 # endif // ifdef USES_P012_POLISH_CHARS
 }
 

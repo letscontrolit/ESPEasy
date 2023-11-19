@@ -84,32 +84,41 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 	// before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
 	delay(50);
 
-	// Now we pull both RS and R/W low to begin commands
-	expanderWrite(_backlightval);	// reset expanderand turn backlight off (Bit 8 =1)
-	delay(1000);
+	if (LCD_AltMode::None == _altMode) {
+		// Now we pull both RS and R/W low to begin commands
+		expanderWrite(_backlightval);	// reset expander and turn backlight off (Bit 8 =1)
+		delay(1000); // FIXME tonhuisman Remove this huge, historic, delay
 
-  	//put the LCD into 4 bit mode
-	// this is according to the hitachi HD44780 datasheet
-	// figure 24, pg 46
+		//put the LCD into 4 bit mode
+		// this is according to the hitachi HD44780 datasheet
+		// figure 24, pg 46
 
-	  // we start in 8bit mode, try to set 4 bit mode
-   write4bits(0x03 << 4);
-   delayMicroseconds(4500); // wait min 4.1ms
+		// we start in 8bit mode, try to set 4 bit mode
+		write4bits(0x03 << 4);
+		delayMicroseconds(4500); // wait min 4.1ms
 
-   // second try
-   write4bits(0x03 << 4);
-   delayMicroseconds(4500); // wait min 4.1ms
+		// second try
+		write4bits(0x03 << 4);
+		delayMicroseconds(4500); // wait min 4.1ms
 
-   // third go!
-   write4bits(0x03 << 4);
-   delayMicroseconds(150);
+		// third go!
+		write4bits(0x03 << 4);
+		delayMicroseconds(150);
 
-   // finally, set to 4-bit interface
-   write4bits(0x02 << 4);
+		// finally, set to 4-bit interface
+		write4bits(0x02 << 4);
 
+		// set # lines, font size, etc.
+		command(LCD_FUNCTIONSET | _displayfunction);
 
-	// set # lines, font size, etc.
-	command(LCD_FUNCTIONSET | _displayfunction);
+	} else
+	if (LCD_AltMode::ST7032 == _altMode) {
+		extendFunctionSet();
+		command(LCD_EX_SETBIASOSC | LCD_BIAS_1_5 | LCD_OSC_183HZ);        // 1/5bias, OSC=183Hz@3.0V
+		command(LCD_EX_FOLLOWERCONTROL | LCD_FOLLOWER_ON | LCD_RAB_2_00); // internal follower circuit is turn on
+		delay(200);                                                       // Wait time >200ms (for power stable)
+		normalFunctionSet();
+	}
 
 	// turn the display on with no cursor or blinking default
 	_displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
@@ -245,9 +254,25 @@ void LiquidCrystal_I2C::backlight(void) {
 /*********** mid level commands, for sending data/cmds */
 
 inline void LiquidCrystal_I2C::command(uint8_t value) {
-	send(value, 0);
+	if (LCD_AltMode::None == _altMode) {
+		send(value, 0);
+	} else
+	if (LCD_AltMode::ST7032 == _altMode) {
+		Wire.beginTransmission(_Addr);
+		Wire.write((uint8_t)0x00);
+		Wire.write(value);
+		Wire.endTransmission();
+		delayMicroseconds(27);    // >26.3us
+	}
 }
 
+void LiquidCrystal_I2C::normalFunctionSet() {
+  command(LCD_FUNCTIONSET | _displayfunction);
+}
+
+void LiquidCrystal_I2C::extendFunctionSet() {
+  command(LCD_FUNCTIONSET | _displayfunction | LCD_EX_INSTRUCTION);
+}
 
 /************ low level data pushing commands **********/
 
