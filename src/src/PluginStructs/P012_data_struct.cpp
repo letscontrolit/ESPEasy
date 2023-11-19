@@ -51,6 +51,11 @@ P012_data_struct::P012_data_struct(uint8_t            addr,
   }
 }
 
+P012_data_struct::~P012_data_struct() {
+  delete lcd;
+  lcd = nullptr;
+}
+
 void P012_data_struct::init() {
   if (isValid()) {
     // Setup LCD display

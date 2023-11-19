@@ -21,7 +21,7 @@ struct P012_data_struct : public PluginTaskData_base {
                    uint8_t            mode,
                    uint8_t            timer);
   P012_data_struct()          = delete;
-  virtual ~P012_data_struct() = default;
+  virtual ~P012_data_struct();
 
   void init();
 
