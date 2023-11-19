@@ -1,8 +1,7 @@
 #ifndef COMMAND_WIFI_H
 #define COMMAND_WIFI_H
 
-
-class String;
+#include <WString.h>
 
 String                     Command_Wifi_SSID(struct EventStruct *event,
                                              const char         *Line);
