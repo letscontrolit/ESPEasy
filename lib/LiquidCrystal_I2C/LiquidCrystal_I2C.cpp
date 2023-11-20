@@ -113,11 +113,23 @@ void LiquidCrystal_I2C::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 
 	} else
 	if (LCD_AltMode::ST7032 == _altMode) {
-		extendFunctionSet();
-		command(LCD_EX_SETBIASOSC | LCD_BIAS_1_5 | LCD_OSC_183HZ);        // 1/5bias, OSC=183Hz@3.0V
-		command(LCD_EX_FOLLOWERCONTROL | LCD_FOLLOWER_ON | LCD_RAB_2_00); // internal follower circuit is turn on
-		delay(200);                                                       // Wait time >200ms (for power stable)
-		normalFunctionSet();
+		/***
+		 * Using BlackBrix library:
+		*/
+		// extendFunctionSet();
+		// command(LCD_EX_SETBIASOSC | LCD_BIAS_1_5 | LCD_OSC_183HZ);        // 1/5bias, OSC=183Hz@3.0V
+		// command(LCD_EX_FOLLOWERCONTROL | LCD_FOLLOWER_ON | LCD_RAB_2_00); // internal follower circuit is turn on
+		// delay(200);                                                       // Wait time >200ms (for power stable)
+		// normalFunctionSet();
+		/***
+		 * Using olkal library:
+		*/
+    command(LCD_FUNCTIONSET | LCD_8BITMODE | LCD_2LINE);
+		command(LCD_EX_SETBIASOSC | LCD_ICON_ON | LCD_OSC_183HZ);
+		command(LCD_EX_POWICONCONTRASTH | LCD_ICON_ON);
+		setContrast(_contrast);
+		command(LCD_EX_FOLLOWERCONTROL | LCD_FOLLOWER_ON | LCD_RAB_2_00);
+		delay(300); // FIXME tonhuisman: Fix delays
 	}
 
 	// turn the display on with no cursor or blinking default
@@ -259,7 +271,7 @@ inline void LiquidCrystal_I2C::command(uint8_t value) {
 	} else
 	if (LCD_AltMode::ST7032 == _altMode) {
 		Wire.beginTransmission(_Addr);
-		Wire.write((uint8_t)0x00);
+		Wire.write((uint8_t)0x80); // Single byte command
 		Wire.write(value);
 		Wire.endTransmission();
 		delayMicroseconds(27);    // >26.3us
@@ -349,6 +361,14 @@ void LiquidCrystal_I2C::printstr(const char c[]){
 	print(c);
 }
 
+void LiquidCrystal_I2C::setContrast(uint8_t val) {
+	if (val > LCD_CONTRAST_MAX) val = LCD_CONTRAST_MIN;
+	else if (val < LCD_CONTRAST_MIN) val = LCD_CONTRAST_MAX;
+	command(LCD_EX_CONTRASTSETL | (val & B00001111));
+	command((val >> 4) | LCD_EX_POWICONCONTRASTH | POWER_ICON_BOST_CONTR_Bon);
+	_contrast = val;
+}
+
 
 // unsupported API functions
 #pragma GCC diagnostic push
@@ -361,5 +381,4 @@ uint8_t LiquidCrystal_I2C::keypad (){return 0;}
 uint8_t LiquidCrystal_I2C::init_bargraph(uint8_t graphtype){return 0;}
 void LiquidCrystal_I2C::draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end){}
 void LiquidCrystal_I2C::draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_row_end){}
-void LiquidCrystal_I2C::setContrast(uint8_t new_val){}
 #pragma GCC diagnostic pop

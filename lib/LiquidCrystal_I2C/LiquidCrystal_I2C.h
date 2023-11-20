@@ -65,11 +65,15 @@ enum class LCD_AltMode : uint8_t {
 #define LCD_EX_POWICONCONTRASTH 0x50        // Power / ICON control / Contrast set(high byte)
 #define LCD_EX_FOLLOWERCONTROL  0x60        // Follower control
 #define LCD_EX_CONTRASTSETL     0x70        // Contrast set(low byte)
+#define LCD_ICON_ON             0x08        // ICON display on
 #define LCD_OSC_183HZ           0x04        // 183Hz@3.0V
 #define LCD_FOLLOWER_ON         0x08        // internal follower circuit is turn on
 #define LCD_FOLLOWER_OFF        0x00        // internal follower circuit is turn off
 #define LCD_RAB_2_00            0x04        // 1+(Rb/Ra)=2.00
 #define LCD_BIAS_1_5            0x00        // bias will be 1/5
+#define LCD_CONTRAST_MAX        0x3F        // limit range max value (0x00 - 0x3F)
+#define LCD_CONTRAST_MIN        0x00        // limit range min value (0x00 - 0x3F)
+#define POWER_ICON_BOST_CONTR_Bon     0x04 //Ion: ICON display on/off
 
 class LiquidCrystal_I2C : public Print {
 public:
@@ -151,6 +155,7 @@ private:
   uint8_t _cols;
   uint8_t _rows;
   uint8_t _backlightval;
+  uint8_t _contrast = 0x18; // Default for ST7032
   LCD_AltMode _altMode = LCD_AltMode::None;
 };
 
