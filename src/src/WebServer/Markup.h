@@ -175,6 +175,8 @@ void addRowLabel(LabelType::Enum label);
 
 void addRowLabelValue(LabelType::Enum label);
 
+void addRowLabelValues(const LabelType::Enum labels[]);
+
 void addRowLabelValue_copy(LabelType::Enum label);
 
 // ********************************************************************************

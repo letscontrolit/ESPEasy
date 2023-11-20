@@ -183,6 +183,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
     case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
+    case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
 
     case LabelType::BUILD_DESC:             return F("Build");
@@ -469,6 +471,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
+    case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
     case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.WifiNoneSleep());
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();

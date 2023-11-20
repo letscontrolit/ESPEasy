@@ -80,7 +80,8 @@ void handle_config() {
     copyFormPassword(F("key2"),  SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2));
 
     // Hidden SSID
-    Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+    Settings.IncludeHiddenSSID(isFormItemChecked(LabelType::CONNECT_HIDDEN_SSID));
+    Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
 
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
@@ -170,8 +171,11 @@ void handle_config() {
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
   addFormNote(F("WPA Key must be at least 8 characters long"));
 
-  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+  addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
   addFormNote(F("Must be checked to connect to a hidden SSID"));
+  
+  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
+  addFormNote(F("Required for some AP brands like Mikrotik to connect to hidden SSID"));
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);

@@ -519,6 +519,21 @@ void addRowLabelValue(LabelType::Enum label) {
   addHtml(getValue(label));
 }
 
+void addRowLabelValues(const LabelType::Enum labels[]) {
+  size_t i = 0;
+  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
+
+  while (true) {
+    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
+    addRowLabelValue(cur);
+    if (next == LabelType::MAX_LABEL) {
+      return;
+    }
+    ++i;
+    cur = next;
+  }
+}
+
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));

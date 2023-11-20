@@ -340,7 +340,7 @@ void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
 }
 #endif // if FEATURE_I2C_DEVICE_CHECK
 */
-
+/*
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect() const { 
   return bitRead(VariousBits2, 0);
@@ -374,7 +374,7 @@ void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) {
   bitWrite(VariousBits2, 2, value);
 }
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
-
+*/
 
 
 template<unsigned int N_TASKS>
