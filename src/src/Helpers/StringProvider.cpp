@@ -220,7 +220,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
     case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
 
-    case LabelType::ESP_BOARD_NAME:         return F("ESP Board Name");
+    case LabelType::BOARD_NAME:         return F("ESP Board Name");
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
     case LabelType::FLASH_CHIP_VENDOR:      return F("Flash Chip Vendor");
@@ -511,7 +511,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         retval = getChipCores(); break;
-    case LabelType::ESP_BOARD_NAME:         return get_board_name();
+    case LabelType::BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:

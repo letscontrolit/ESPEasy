@@ -230,7 +230,7 @@ void handle_sysvars() {
       SystemVariables::ESP_CHIP_MODEL,
       SystemVariables::ESP_CHIP_REVISION,
       SystemVariables::ESP_CHIP_CORES,
-      SystemVariables::ESP_BOARD_NAME,
+      SystemVariables::BOARD_NAME,
     };
     addSysVar_enum_html(vars, NR_ELEMENTS(vars));
   }

@@ -173,7 +173,7 @@ void handle_sysinfo_json() {
   json_number(F("xtal_freq"),    getValue(LabelType::ESP_CHIP_XTAL_FREQ));
   json_number(F("abp_freq"),     getValue(LabelType::ESP_CHIP_APB_FREQ));
 #endif
-  json_prop(F("board"),          getValue(LabelType::ESP_BOARD_NAME));
+  json_prop(F("board"),          getValue(LabelType::BOARD_NAME));
   json_close();
 
   json_open(false, F("storage"));
@@ -640,7 +640,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
 #   endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
-  addRowLabelValue(LabelType::ESP_BOARD_NAME);
+  addRowLabelValue(LabelType::BOARD_NAME);
 }
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
