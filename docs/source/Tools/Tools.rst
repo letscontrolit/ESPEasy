@@ -155,7 +155,7 @@ All these values are described in great detail in the Advanced section, where th
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
 * **Extra Wait WiFi Connect**: ``true`` means there is an extra wait upto 1000 msec after initiating a connection to an access point. This can be useful when connecting to some FritzBox access points or routers. (Added: 2023/04/05)
 * **Enable SDK WiFi Auto Reconnect**: ``true`` means the Espressif SDK will automatically attempt a reconnect when a connection is briefly lost. Access points (like TP-Link Omada) with "Band Steering" enabled may trigger a quick disconnect to force nodes to connect on the 5 GHz band. (Added: 2023/04/05)
-
+* **Hidden SSID Slow Connect**: ``true`` Connect per found hidden SSID to an access point. Needed for some APs like Mikrotik. This may slow down connecting to the AP significantly. (Added: 2023/11/20)
 
 
 
@@ -757,6 +757,18 @@ In such cases, where "Band Steering" cannot be disabled, one can enable the Espr
 This will act much faster on these disconnect events. However it also seems to suppress some WiFi events.
 
 Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
+
+
+Hidden SSID Slow Connect
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-11-20
+
+Some access points with hidden SSID do not react to a broadcast connect attempt with a given SSID.
+For example Mikrotik routers and access points only allow connecting to a hidden SSID when specifically addressed.
+This may cause a significant slow down connecting to a hidden AP when there are lots of hidden access points with a relative strong signal.
+
+This is enabled by default.
 
 
 Show JSON
