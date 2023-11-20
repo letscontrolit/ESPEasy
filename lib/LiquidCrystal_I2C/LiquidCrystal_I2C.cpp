@@ -278,10 +278,19 @@ void LiquidCrystal_I2C::extendFunctionSet() {
 
 // write either command or data
 void LiquidCrystal_I2C::send(uint8_t value, uint8_t mode) {
-	uint8_t highnib=value&0xf0;
-	uint8_t lownib=(value<<4)&0xf0;
-       write4bits((highnib)|mode);
-	write4bits((lownib)|mode);
+	if (LCD_AltMode::None == _altMode) {
+		uint8_t highnib=value&0xf0;
+		uint8_t lownib=(value<<4)&0xf0;
+				write4bits((highnib)|mode);
+		write4bits((lownib)|mode);
+	} else
+	if (LCD_AltMode::ST7032 == _altMode) {
+		Wire.beginTransmission(_Addr);
+		Wire.write((uint8_t)0x40);
+		Wire.write(value);
+		Wire.endTransmission();
+		delayMicroseconds(27);    // >26.3us
+  }
 }
 
 void LiquidCrystal_I2C::write4bits(uint8_t value) {
