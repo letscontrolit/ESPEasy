@@ -470,8 +470,8 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
-      if (Settings.HiddenSSID_SlowConnectPerBSSID() || 
-          (candidate.allowQuickConnect() && !candidate.isHidden)) {
+      if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
+           && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
