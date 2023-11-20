@@ -271,10 +271,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     uint32_t i;
 
     if (validUIntFromString(s.substring(v_index + 2), i)) {
-      String key = F("%v");
-      key += i;
-      key += '%';
-
+      const String key = strformat(F("%%v%u%%"), i);
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
         #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE

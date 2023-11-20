@@ -1136,7 +1136,9 @@ void repl(const __FlashStringHelper * key,
             String      & s,
             bool       useURLencode)
 {
-  repl(String(key), val, s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    repl(String(key), val, s, useURLencode);
 }
 
 void repl(const __FlashStringHelper * key,
@@ -1144,7 +1146,9 @@ void repl(const __FlashStringHelper * key,
           String      & s,
           bool       useURLencode)
 {
-  repl(String(key), String(val), s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    repl(String(key), String(val), s, useURLencode);
 }
 
 void repl(const __FlashStringHelper * key1,
@@ -1182,8 +1186,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     const char degree[3]   = { 0xc2, 0xb0, 0 };       // Unicode degree symbol
     const char degreeC[4]  = { 0xe2, 0x84, 0x83, 0 }; // Unicode degreeC symbol
     const char degree_C[4] = { 0xc2, 0xb0, 'C', 0 };  // Unicode degree symbol + captial C
-    repl(F("{D}"),   degree,   s, useURLencode);
-    repl(F("&deg;"), degree,   s, useURLencode);
+    if (!no_accolades)   repl(F("{D}"),   degree,   s, useURLencode);
+    if (!no_html_entity) repl(F("&deg;"), degree,   s, useURLencode);
     repl(degreeC,    degree_C, s, useURLencode);
   }
   // Degree symbol is often used on displays, so still support that one.
