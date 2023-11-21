@@ -19,6 +19,7 @@
 # include "../Globals/MQTT.h"
 #endif // if FEATURE_MQTT
 #include "../Globals/NetworkState.h"
+#include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
@@ -255,15 +256,26 @@ void parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
   int v_index = s.indexOf(key_prefix, start_pos);
 
   while ((v_index != -1)) {
-    // Check for nested indirections like %v%v1%%
-    if (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v') {
+    // Check for:
+    // - Calculations indicated with leading '='
+    // - nested indirections like %v%v1%%
+    if ((s.charAt(v_index + 2) == '=') ||
+        (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v')) {
+      // FIXME TD-er: This may lead to stack overflow if we do an awful lot of nested user variables
       parse_pct_v_num_pct(s, useURLencode, v_index + 2);
     }
 
-    uint32_t i;
-
-    if (validUIntFromString(s.substring(v_index + 2), i)) {
-      const String key = strformat(F("%%v%u%%"), i);
+    uint32_t i{};
+    // variable index may contain a calculation
+    // Calculations are enforced by a leading '='
+    // like: %v=1+%v2%%
+    const int pos_closing_pct = s.indexOf('%', v_index + 1);
+    const String arg = s.substring(v_index + 2, pos_closing_pct);
+    i = CalculateParam(arg);
+    //addLog(LOG_LEVEL_INFO, strformat(F("calc parse: %s => %u"), arg.c_str(), i));
+    if (i >= 0) {
+      // Need to replace the entire arg and not just the 'i'
+      const String key = strformat(F("%%v%s%%"), arg.c_str());
 
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
@@ -276,6 +288,7 @@ void parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
       }
     }
     v_index = s.indexOf(key_prefix, v_index + 1); // Find next occurance
+    //addLog(LOG_LEVEL_INFO, strformat(F("parse: %s"), s.c_str()));
   }
 }
 
@@ -342,6 +355,8 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   int percent_pos = last_percent_pos;
 
   do {
+    // Find first position in string which might be a good candidate to look for a system variable.
+    // Look for "%N" where 'N' is the first letter of a variable name we support.
     percent_pos = str.indexOf('%', percent_pos + 1);
 
     if (percent_pos == -1) {
@@ -357,10 +372,19 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
   }
 
   if (last_tested > nextTested) {
+    // Iterate over the possible system variables
     nextTested = static_cast<SystemVariables::Enum>(last_tested + 1);
+    const char firstChar_nextTested = static_cast<char>(pgm_read_byte(SystemVariables::toFlashString(nextTested)));
+    const char firstChar_expected = str[percent_pos + 1];
+
+    if (firstChar_nextTested != firstChar_expected) {
+      nextTested = Enum::UNKNOWN;
+    }
   }
 
   if (nextTested >= Enum::UNKNOWN) {
+    // We have tested all possible system variables
+    // Skip unsupported ones or maybe it is just a single percentage symbol in a string.
     percent_pos = str.indexOf('%', percent_pos + 1);
 
     if (percent_pos == -1) {
@@ -370,9 +394,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
     return SystemVariables::startIndex_beginWith(str[percent_pos + 1]);
   }
 
-
   const __FlashStringHelper *fstr_sysvar = SystemVariables::toFlashString(nextTested);
-
   String str_prefix        = strformat(F("%%%c"), static_cast<char>(pgm_read_byte(fstr_sysvar)));
   bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
 

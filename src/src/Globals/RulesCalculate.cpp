@@ -12,6 +12,10 @@ RulesCalculate_t RulesCalculate{};
 int CalculateParam(const String& TmpStr) {
   int32_t returnValue = 0;
 
+  if (TmpStr.length() == 0) {
+    return returnValue;
+  }
+
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
