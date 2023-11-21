@@ -279,9 +279,11 @@ uint32_t getFlashChipSpeed() {
   // All ESP32-variants have the SPI flash wired to SPI peripheral 1
   const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(1));
 
+/*
   addLog(LOG_LEVEL_INFO,   strformat(
     F("SPI_clock: %x  FSPI: %d SPI_CLOCK_REG(1): %x"), 
     spi_clock, FSPI, SPI_CLOCK_REG(1)));
+*/
 
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
