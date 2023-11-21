@@ -10,6 +10,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-11-21 tonhuisman: Add support for contrast for ST7032 based displays
  * 2023-11-18 tonhuisman: Trying to include support for Midas displays MD21605B6W-FTPLWI3 ST7032 (16x2 at I2C 0x3E)
  * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
  * 2023-03: First changelog added, older changes not logged
@@ -264,6 +265,13 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (equals(arg1, F("clear"))) {
             P012_data->lcd->clear();
+            success = true;
+          }
+          else if (equals(arg1, F("contrast")) &&
+                   (P012_DisplaySize_e::LCD_2x16_ST7032 == static_cast<P012_DisplaySize_e>(P012_SIZE)) &&
+                   (event->Par2 >= LCD_CONTRAST_MIN) &&
+                   (event->Par2 <= LCD_CONTRAST_MAX)) {
+            P012_data->lcd->setContrast(event->Par2);
             success = true;
           }
         }
