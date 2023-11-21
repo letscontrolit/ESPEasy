@@ -39,10 +39,15 @@
 #endif // if defined(ESP32)
 
 
-String getReplacementString(const String& format, String& s) {
+String getReplacementString(const String& format, const String& s) {
   int startpos = s.indexOf(format);
   int endpos   = s.indexOf('%', startpos + 1);
+  if (endpos == -1) {
+    addLog(LOG_LEVEL_ERROR, concat(F("SunTime syntax error: "), format));
+    return format;
+  }
   String R     = s.substring(startpos, endpos + 1);
+
 
 #ifndef BUILD_NO_DEBUG
 
@@ -58,13 +63,13 @@ String getReplacementString(const String& format, String& s) {
 }
 
 void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
-  String R = getReplacementString(format, s);
+  const String R(getReplacementString(format, s));
 
   repl(R, node_time.getSunriseTimeString(':', ESPEasy_time::getSecOffset(R)), s, useURLencode);
 }
 
 void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
-  String R = getReplacementString(format, s);
+  const String R(getReplacementString(format, s));
 
   repl(R, node_time.getSunsetTimeString(':', ESPEasy_time::getSecOffset(R)), s, useURLencode);
 }
@@ -130,7 +135,7 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ESP_CHIP_MODEL:    label = LabelType::ESP_CHIP_MODEL; break;
     case SystemVariables::ESP_CHIP_REVISION: label = LabelType::ESP_CHIP_REVISION; break;
     case SystemVariables::ESP_CHIP_CORES:    label = LabelType::ESP_CHIP_CORES; break;
-    case SystemVariables::BOARD_NAME:    label     = LabelType::BOARD_NAME; break;
+    case SystemVariables::BOARD_NAME:        label = LabelType::BOARD_NAME; break;
 
     default:
       // No matching LabelType yet.
@@ -145,49 +150,52 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   if (LabelType::MAX_LABEL != label) {
     return getValue(label);
   }
+  constexpr int INT_NOT_SET = std::numeric_limits<int>::min();
+
+  int intvalue = INT_NOT_SET;
 
   switch (enumval)
   {
-    case BOOT_CAUSE:        return String(lastBootCause);                         // Integer value to be used in rules
-    case BSSID:             return String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr());
+    case BOOT_CAUSE:        intvalue = lastBootCause; break;                         // Integer value to be used in rules
+    case BSSID:             return (WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr();
     case CR:                return String('\r');
-    case IP4:               return String(static_cast<int>(NetworkLocalIP()[3])); // 4th IP octet
-    case ISMQTT:            return String(
+    case IP4:               intvalue = static_cast<int>(NetworkLocalIP()[3]); break; // 4th IP octet
+    case ISMQTT:            intvalue = 
     #if FEATURE_MQTT
         MQTTclient_connected ? 1 :
     #endif // if FEATURE_MQTT
-        0);
+        0; break;
 
-    case ISMQTTIMP:         return String(
+    case ISMQTTIMP:         intvalue = 
     #ifdef USES_P037
         P037_MQTTImport_connected ? 1 :
     #endif // ifdef USES_P037
-        0);
+        0; break;
 
-    case ISNTP:             return String(statusNTPInitialized ? 1 : 0);
-    case ISWIFI:            return String(WiFiEventData.wifiStatus); // 0=disconnected, 1=connected, 2=got ip, 4=services
+    case ISNTP:             intvalue = statusNTPInitialized ? 1 : 0; break;
+    case ISWIFI:            intvalue = WiFiEventData.wifiStatus; break; // 0=disconnected, 1=connected, 2=got ip, 4=services
     // initialized
     case LCLTIME_AM:        return node_time.getDateTimeString_ampm('-', ':', ' ');
     case LF:                return String('\n');
-    case MAC_INT:           return String(getChipId()); // Last 24 bit of MAC address as integer, to be used in rules.
+    case MAC_INT:           intvalue = getChipId(); break; // Last 24 bit of MAC address as integer, to be used in rules.
     case SPACE:             return String(' ');
-    case SSID:              return (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID();
+    case SSID:              return (WiFiEventData.WiFiDisconnected()) ? String(F("--")) : WiFi.SSID();
     case SYSBUILD_DATE:     return get_build_date();
     case SYSBUILD_TIME:     return get_build_time();
-    case SYSDAY:            return String(node_time.day());
+    case SYSDAY:            intvalue = node_time.day(); break;
     case SYSDAY_0:          return timeReplacement_leadZero(node_time.day());
-    case SYSHEAP:           return String(ESP.getFreeHeap());
-    case SYSHOUR:           return String(node_time.hour());
+    case SYSHEAP:           intvalue = ESP.getFreeHeap(); break;
+    case SYSHOUR:           intvalue = node_time.hour(); break;
     case SYSHOUR_0:         return timeReplacement_leadZero(node_time.hour());
     case SYSLOAD:           return String(getCPUload(), 2);
-    case SYSMIN:            return String(node_time.minute());
+    case SYSMIN:            intvalue = node_time.minute(); break;
     case SYSMIN_0:          return timeReplacement_leadZero(node_time.minute());
-    case SYSMONTH:          return String(node_time.month());
-    case SYSMONTH_S:        return String(node_time.month_str());
+    case SYSMONTH:          intvalue = node_time.month(); break;
+    case SYSMONTH_S:        return node_time.month_str();
     case SYSNAME:           return Settings.getHostname();
-    case SYSSEC:            return String(node_time.second());
+    case SYSSEC:            intvalue = node_time.second(); break;
     case SYSSEC_0:          return timeReplacement_leadZero(node_time.second());
-    case SYSSEC_D:          return String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second());
+    case SYSSEC_D:          intvalue = ((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second(); break;
     case SYSTIME:           return node_time.getTimeString(':');
     case SYSTIME_AM:        return node_time.getTimeString_ampm(':');
     case SYSTIME_AM_0:      return node_time.getTimeString_ampm(':', true, '0');
@@ -199,77 +207,59 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
     case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
     case SYSTZOFFSET:       return node_time.getTimeZoneOffsetString();
-    case SYSWEEKDAY:        return String(node_time.weekday());
+    case SYSWEEKDAY:        intvalue = node_time.weekday(); break;
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
-    case SYSYEAR:           return String(node_time.year());
+    case SYSYEAR:           intvalue = node_time.year(); break;
     case SYSYEARS:          return timeReplacement_leadZero(node_time.year() % 100);
     case SYS_MONTH_0:       return timeReplacement_leadZero(node_time.month());
     case S_CR:              return F("\\r");
     case S_LF:              return F("\\n");
-    case UNIXDAY:           return String(node_time.getUnixTime() / 86400);
-    case UNIXDAY_SEC:       return String(node_time.getUnixTime() % 86400);
+    case UNIXDAY:           intvalue = node_time.getUnixTime() / 86400; break;
+    case UNIXDAY_SEC:       intvalue = node_time.getUnixTime() % 86400; break;
     case UNIXTIME:          return String(node_time.getUnixTime());
-    case UPTIME:            return String(getUptimeMinutes());
+    case UPTIME:            intvalue = getUptimeMinutes(); break;
     case UPTIME_MS:         return ull2String(getMicros64() / 1000);
     #if FEATURE_ADC_VCC
     case VCC:               return String(vcc);
     #else // if FEATURE_ADC_VCC
-    case VCC:               return F("-1");
+    case VCC:               intvalue = -1; break;
     #endif // if FEATURE_ADC_VCC
-    case WI_CH:             return String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel());
+    case WI_CH:             intvalue = (WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel(); break;
 
     default:
       // Already handled above.
       return EMPTY_STRING;
   }
+
+  if (intvalue != INT_NOT_SET) {
+    return String(intvalue);
+  }
+
   return EMPTY_STRING;
 }
 
+/*
 #define SMART_REPL_T(T, S) \
   while (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
+*/
 
-void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
+#define SMART_REPL_T(T, S) \
+  const String T_str(T); int __pos__ = s.indexOf(T_str); \
+  while (__pos__ != -1) { (S((T_str), s, useURLencode)); __pos__ = s.indexOf(T_str, __pos__ + 1);}
+
+// Parse %vN% to replace ESPEasy variables
+void parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
 {
-  START_TIMER
-
-  if (s.indexOf('%') == -1) {
-    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
-    return;
-  }
-
-  SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(0);
-
-  int last_percent_pos = -1;
-
-  do {
-    enumval = SystemVariables::nextReplacementEnum(s, enumval, last_percent_pos);
-
-    switch (enumval)
-    {
-      case SUNRISE:
-        SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString);
-        break;
-      case SUNSET:
-        SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString);
-        break;
-      case UNKNOWN:
-
-        // Do not replace
-        break;
-      default:
-      {
-        const String value = getSystemVariable(enumval);
-        repl(SystemVariables::toString(enumval), value, s, useURLencode);
-        break;
-      }
-    }
-  }
-  while (enumval != SystemVariables::Enum::UNKNOWN);
-
-  int v_index = s.indexOf(F("%v"));
+  const String key_prefix = F("%v");
+  int v_index = s.indexOf(key_prefix, start_pos);
 
   while ((v_index != -1)) {
+    // Check for nested indirections like %v%v1%%
+    if (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v') {
+      parse_pct_v_num_pct(s, useURLencode, v_index + 2);
+    }
+
     uint32_t i;
 
     if (validUIntFromString(s.substring(v_index + 2), i)) {
@@ -285,8 +275,60 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         repl(key, value, s, useURLencode);
       }
     }
-    v_index = s.indexOf(F("%v"), v_index + 1); // Find next occurance
+    v_index = s.indexOf(key_prefix, v_index + 1); // Find next occurance
   }
+}
+
+void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
+{
+  START_TIMER
+
+  if (s.indexOf('%') == -1) {
+    STOP_TIMER(PARSE_SYSVAR_NOCHANGE);
+    return;
+  }
+
+  // Parse ESPEasy user variables first as they might be combined 
+  // as arument or index for other variables
+  parse_pct_v_num_pct(s, useURLencode, 0);
+
+  SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(0);
+
+  int last_percent_pos = -1;
+
+  do {
+    enumval = SystemVariables::nextReplacementEnum(s, enumval, last_percent_pos);
+
+    switch (enumval)
+    {
+      case SUNRISE: {
+        SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString);
+        break;
+      }
+      case SUNSET: {
+        SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString);
+        break;
+      }
+      case VARIABLE:
+      {
+        // Should not be present anymore, but just in case...
+        parse_pct_v_num_pct(s, useURLencode, 0);
+  
+        break;
+      }
+      case UNKNOWN:
+
+        // Do not replace
+        break;
+      default:
+      {
+        const String value = getSystemVariable(enumval);
+        repl(SystemVariables::toString(enumval), value, s, useURLencode);
+        break;
+      }
+    }
+  }
+  while (enumval != SystemVariables::Enum::UNKNOWN);
 
   STOP_TIMER(PARSE_SYSVAR);
 }
@@ -358,7 +400,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
 
 String SystemVariables::toString(Enum enumval)
 {
-  if ((enumval == Enum::SUNRISE) || (enumval == Enum::SUNSET)) {
+  if ((enumval == Enum::SUNRISE) || (enumval == Enum::SUNSET) || enumval == Enum::VARIABLE) {
     // These need variables, so only prepend a %, not wrap.
     return String('%') + SystemVariables::toFlashString(enumval);
   }
@@ -389,7 +431,7 @@ SystemVariables::Enum SystemVariables::startIndex_beginWith(char beginchar)
     case 'r': return Enum::S_CR;
     case 's': return Enum::SPACE;
     case 'u': return Enum::UNIT_sysvar;
-    case 'v': return Enum::VCC;
+    case 'v': return Enum::VARIABLE;
     case 'w': return Enum::WI_CH;
   }
 
@@ -501,6 +543,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::UNIXTIME:           return F("unixtime");
     case Enum::UPTIME:             return F("uptime");
     case Enum::UPTIME_MS:          return F("uptime_ms");
+    case Enum::VARIABLE:           return F("v");
     case Enum::VCC:                return F("vcc");
     case Enum::WI_CH:              return F("wi_ch");
 

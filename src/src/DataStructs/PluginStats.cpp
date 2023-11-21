@@ -292,11 +292,9 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 {
   if (getNrSamples() > 0) {
-    addRowLabel(getLabel() +  F(" Average"));
+    addRowLabel(concat(getLabel(),  F(" Average")));
     addHtmlFloat(getSampleAvg(), _nrDecimals);
-    addHtml(' ', '(');
-    addHtmlInt(getNrSamples());
-    addHtml(F(" samples)"));
+    addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
   return false;
@@ -307,11 +305,9 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
   const float stdDev = getSampleStdDev();
 
   if (usableValue(stdDev) && (getNrSamples() > 1)) {
-    addRowLabel(getLabel() +  F(" std. dev"));
+    addRowLabel(concat(getLabel(),  F(" std. dev")));
     addHtmlFloat(stdDev, _nrDecimals);
-    addHtml(' ', '(');
-    addHtmlInt(getNrSamples());
-    addHtml(F(" samples)"));
+    addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
   return false;
@@ -320,13 +316,13 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include_peak_to_peak) const
 {
   if (hasPeaks() && (getNrSamples() > 1)) {
-    addRowLabel(getLabel() +  F(" Peak Low/High"));
+    addRowLabel(concat(getLabel(),  F(" Peak Low/High")));
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
     addHtmlFloat(getPeakHigh(), _nrDecimals);
 
     if (include_peak_to_peak) {
-      addRowLabel(getLabel() +  F(" Peak-to-peak"));
+      addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));
       addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
     }
     return true;
@@ -340,7 +336,7 @@ void PluginStats::webformLoad_show_val(
   ESPEASY_RULES_FLOAT_TYPE value,
   const String           & unit) const
 {
-  addRowLabel(getLabel() + label);
+  addRowLabel(concat(getLabel(), label));
   addHtmlFloat(value, _nrDecimals);
 
   if (!unit.isEmpty()) {

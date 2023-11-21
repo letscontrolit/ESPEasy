@@ -623,5 +623,5 @@ String getExtendedValue(LabelType::Enum label) {
     default:
       break;
   }
-  return "";
+  return EMPTY_STRING;
 }

@@ -110,6 +110,7 @@ public:
     UNIXTIME,
     UPTIME,
     UPTIME_MS,
+    VARIABLE,
     VCC,
     WI_CH,
 
