@@ -7,8 +7,21 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef ESP32
+# include "../Helpers/ESPEasy_NVS_Helper.h"
+#endif // ifdef ESP32
+
 struct ResetFactoryDefaultPreference_struct {
-  ResetFactoryDefaultPreference_struct(uint32_t preference = 0)  : _preference(preference) {}
+  ResetFactoryDefaultPreference_struct(uint32_t preference = 0);
+
+  void set(uint32_t preference);
+
+#ifdef ESP32
+  bool init();
+  bool from_NVS(ESPEasy_NVS_Helper& preferences);
+
+  void to_NVS(ESPEasy_NVS_Helper& preferences) const;
+#endif // ifdef ESP32
 
 private:
 
@@ -92,7 +105,7 @@ public:
     return bitRead(bits.fetchRulesFile, filenr);
   }
 
-  void fetchRulesTXT(int  filenr, bool fetch) {
+  void fetchRulesTXT(int filenr, bool fetch) {
     bitWrite(bits.fetchRulesFile, filenr, fetch);
   }
 
@@ -136,6 +149,7 @@ public:
   void fetchCustomCdnUrlDat(bool fetch) {
     bits.fetchCustomCdnUrlDat = fetch;
   }
+
   #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
   bool deleteFirst() const {
@@ -170,7 +184,7 @@ public:
     bits.storeCredentials = checked;
   }
 
-  uint32_t getPreference() {
+  uint32_t getPreference() const {
     return _preference;
   }
 

@@ -2942,7 +2942,21 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_SETTINGS_ARCHIVE              
+#ifdef ESP32
+#define FEATURE_SETTINGS_ARCHIVE              1
+#else
 #define FEATURE_SETTINGS_ARCHIVE              0
+#endif
+#endif
+
+
+#if FEATURE_SETTINGS_ARCHIVE
+#if defined(FEATURE_DOWNLOAD) && !FEATURE_DOWNLOAD
+#undef FEATURE_DOWNLOAD
+#endif
+#ifndef FEATURE_DOWNLOAD
+#define FEATURE_DOWNLOAD 1
+#endif
 #endif
 
 #ifndef FEATURE_SSDP                          

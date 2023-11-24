@@ -25,12 +25,44 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
+#ifdef ESP32
+
+// Store in NVS partition
+#include "../Helpers/ESPEasy_NVS_Helper.h"
+
+
+// Max. 15 char namespace for ESPEasy Factory Default settings
+# define FACTORY_DEFAULT_NVS_NAMESPACE      "ESPEasyFacDef"
+
+/*
+// Max. 15 char keys for ESPEasy Factory Default marked keys
+# define FACTORY_DEFAULT_NVS_PREF_KEY       "FacDefPref"
+# define FACTORY_DEFAULT_NVS_UNIT_NAME_KEY  "UnitName"
+# define FACTORY_DEFAULT_NVS_SSID1_KEY      "WIFI_SSID1"
+# define FACTORY_DEFAULT_NVS_WPA_PASS1_KEY  "WIFI_PASS1"
+# define FACTORY_DEFAULT_NVS_SSID2_KEY      "WIFI_SSID2"
+# define FACTORY_DEFAULT_NVS_WPA_PASS2_KEY  "WIFI_PASS2"
+# define FACTORY_DEFAULT_NVS_AP_PASS_KEY    "WIFI_AP_PASS"
+# define FACTORY_DEFAULT_NVS_WIFI_FLAGS_KEY "WIFI_Flags"
+*/
+
+# include "../Helpers/StringConverter.h"
+#include "../DataStructs/FactoryDefaultPref.h"
+#include "../DataStructs/FactoryDefault_UnitName_NVS.h"
+#include "../DataStructs/FactoryDefault_WiFi_NVS.h"
+
+
+
+#endif // ifdef ESP32
+
+
 /********************************************************************************************\
    Reset all settings to factory defaults
  \*********************************************************************************************/
 void ResetFactory(bool formatFS)
 {
   #if FEATURE_CUSTOM_PROVISIONING
+
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {
     ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
@@ -45,13 +77,13 @@ void ResetFactory(bool formatFS)
     ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
     ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
   }
-  #endif
+  #endif // if FEATURE_CUSTOM_PROVISIONING
 
 
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Direct Serial is allowed here, since this is only an emergency task.
   serialPrint(F("RESET: Resetting factory defaults... using "));
@@ -102,6 +134,7 @@ void ResetFactory(bool formatFS)
 #if FEATURE_CUSTOM_PROVISIONING
   {
     MakeProvisioningSettings(ProvisioningSettings);
+
     if (ProvisioningSettings.get()) {
       ProvisioningSettings->setUser(F(DEFAULT_PROVISIONING_USER));
       ProvisioningSettings->setPass(F(DEFAULT_PROVISIONING_PASS));
@@ -110,7 +143,7 @@ void ResetFactory(bool formatFS)
       saveProvisioningSettings(*ProvisioningSettings);
     }
   }
-#endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
   // pad files with extra zeros for future extensions
   InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
@@ -190,20 +223,22 @@ void ResetFactory(bool formatFS)
   Settings.Build   = get_build_nr();
 
   //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
-//  Settings.Delay                   = DEFAULT_DELAY;
-  Settings.Pin_i2c_sda             = gpio_settings.i2c_sda;
-  Settings.Pin_i2c_scl             = gpio_settings.i2c_scl;
-  Settings.Pin_status_led          = gpio_settings.status_led;
-//  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
-  Settings.Pin_sd_cs               = -1;
-  Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
-  Settings.Protocol[0]             = DEFAULT_PROTOCOL;
-//  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
-//  Settings.CustomCSS               = false;
-//  Settings.InitSPI                 = DEFAULT_SPI;
+  //  Settings.Delay                   = DEFAULT_DELAY;
+  Settings.Pin_i2c_sda    = gpio_settings.i2c_sda;
+  Settings.Pin_i2c_scl    = gpio_settings.i2c_scl;
+  Settings.Pin_status_led = gpio_settings.status_led;
+
+  //  Settings.Pin_status_led_Inversed = DEFAULT_PIN_STATUS_LED_INVERSED;
+  Settings.Pin_sd_cs   = -1;
+  Settings.Pin_Reset   = DEFAULT_PIN_RESET_BUTTON;
+  Settings.Protocol[0] = DEFAULT_PROTOCOL;
+
+  //  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
+  //  Settings.CustomCSS               = false;
+  //  Settings.InitSPI                 = DEFAULT_SPI;
 
   // advanced Settings
-//  Settings.UseRules                         = DEFAULT_USE_RULES;
+  //  Settings.UseRules                         = DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0]             = DEFAULT_CONTROLLER_ENABLED;
   Settings.MQTTRetainFlag_unused            = DEFAULT_MQTT_RETAIN;
   Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
@@ -217,10 +252,11 @@ void ResetFactory(bool formatFS)
   Settings.Longitude = DEFAULT_LONGITUDE;
   #endif // ifdef DEFAULT_LONGITUDE
 
-//  Settings.UseSerial = DEFAULT_USE_SERIAL;
-//  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
+  //  Settings.UseSerial = DEFAULT_USE_SERIAL;
+  //  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
 #ifdef ESP32
+
   // Ethernet related settings are never used on ESP8266
   Settings.ETH_Phy_Addr   = gpio_settings.eth_phyaddr;
   Settings.ETH_Pin_mdc    = gpio_settings.eth_mdc;
@@ -228,8 +264,8 @@ void ResetFactory(bool formatFS)
   Settings.ETH_Pin_power  = gpio_settings.eth_power;
   Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
-#endif
-  Settings.NetworkMedium  = gpio_settings.network_medium;
+#endif // ifdef ESP32
+  Settings.NetworkMedium = gpio_settings.network_medium;
 
   /*
           Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
@@ -240,7 +276,8 @@ void ResetFactory(bool formatFS)
           Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
           Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
    */
-//  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+
+  //  Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
   Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
   Settings.EnableTimingStats(DEFAULT_ENABLE_TIMING_STATS);
@@ -252,12 +289,12 @@ void ResetFactory(bool formatFS)
 #ifndef LIMIT_BUILD_SIZE
   addPredefinedPlugins(gpio_settings);
   addPredefinedRules(gpio_settings);
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE
 
 #if DEFAULT_CONTROLLER
   {
     // Place in a scope to have its memory freed ASAP
-    MakeControllerSettings(ControllerSettings); //-V522
+    MakeControllerSettings(ControllerSettings); // -V522
 
     if (AllocatedControllerSettings()) {
       safe_strncpy(ControllerSettings->Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings->Subscribe));
@@ -271,7 +308,7 @@ void ResetFactory(bool formatFS)
       ControllerSettings->setHostname(F(DEFAULT_SERVER_HOST));
       ControllerSettings->UseDNS = DEFAULT_SERVER_USEDNS;
       ControllerSettings->useExtendedCredentials(DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS);
-      ControllerSettings->Port = DEFAULT_PORT;
+      ControllerSettings->Port          = DEFAULT_PORT;
       ControllerSettings->ClientTimeout = DEFAULT_CONTROLLER_TIMEOUT;
       setControllerUser(0, *ControllerSettings, F(DEFAULT_CONTROLLER_USER));
       setControllerPass(0, *ControllerSettings, F(DEFAULT_CONTROLLER_PASS));
@@ -284,7 +321,7 @@ void ResetFactory(bool formatFS)
   SaveSettings(forFactoryReset);
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory2"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   serialPrintln(F("RESET: Successful, rebooting. (you might need to press the reset button if you've just flashed the firmware)"));
 
   // NOTE: this is a known ESP8266 bug, not our fault. :)
@@ -296,11 +333,60 @@ void ResetFactory(bool formatFS)
   reboot(IntendedRebootReason_e::ResetFactory);
 }
 
-
 /*********************************************************************************************\
    Collect the stored preference for factory default
 \*********************************************************************************************/
 void applyFactoryDefaultPref() {
   // TODO TD-er: Store it in more places to make it more persistent
   Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+
+#ifdef ESP32
+  ESPEasy_NVS_Helper preferences;
+  preferences.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE));
+  ResetFactoryDefaultPreference.to_NVS(preferences);
+  {
+    FactoryDefault_UnitName_NVS unitNameNVS{};
+    if (ResetFactoryDefaultPreference.keepUnitName())
+    {
+      // Store Unit nr and hostname
+      unitNameNVS.fromSettings();
+      unitNameNVS.to_NVS(preferences);
+    } else {
+      unitNameNVS.clear_from_NVS(preferences);
+    }
+  }
+  {
+    FactoryDefault_WiFi_NVS wifiNVS{};
+    if (ResetFactoryDefaultPreference.keepWiFi())
+    {
+      // Store WiFi credentials
+      wifiNVS.fromSettings_to_NVS(preferences);
+    } else {
+      wifiNVS.clear_from_NVS(preferences);
+    }
+  }
+  {
+    if (ResetFactoryDefaultPreference.keepNetwork())
+    {
+      // Store Network IP settings
+    }
+  }
+  {
+    if (ResetFactoryDefaultPreference.keepLogSettings())
+    {
+      // Store Log settings
+    }
+  }
+# if FEATURE_ALTERNATIVE_CDN_URL
+  {
+    if (ResetFactoryDefaultPreference.fetchCustomCdnUrlDat())
+    {
+      // Store custom CDN
+    }
+  }
+# endif // if FEATURE_ALTERNATIVE_CDN_URL
+
+
+  preferences.end();
+#endif // ifdef ESP32
 }
