@@ -946,6 +946,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
  \*********************************************************************************************/
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock)
 {
+  // FIXME TD-er: Must add some check to see if the existing data has changed before saving.
   int offset, max_size;
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
@@ -1169,7 +1170,18 @@ void set_CDN_url_custom(const String &url) {
   }
   _CDN_url_loaded = true;
 
-  String strings[] = { _CDN_url_cache };
+  String strings[] = { EMPTY_STRING };
+
+  LoadStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+
+  if (url.equals(strings[0])) {
+    // No need to save, is already the same
+    return;
+  }
+
+  strings[0] = url;
 
   SaveStringArray(
     SettingsType::Enum::CdnSettings_Type, 0,
