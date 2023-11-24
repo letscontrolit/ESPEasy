@@ -9,15 +9,17 @@
 
 
 class FactoryDefault_UnitName_NVS {
-public:
+private:
 
   void fromSettings();
 
   void applyToSettings() const;
 
-  bool from_NVS(ESPEasy_NVS_Helper& preferences);
+public:
 
-  void to_NVS(ESPEasy_NVS_Helper& preferences) const;
+  bool applyToSettings_from_NVS(ESPEasy_NVS_Helper& preferences);
+
+  void fromSettings_to_NVS(ESPEasy_NVS_Helper& preferences);
 
   void clear_from_NVS(ESPEasy_NVS_Helper& preferences);
 

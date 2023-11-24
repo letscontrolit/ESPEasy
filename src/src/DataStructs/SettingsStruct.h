@@ -300,6 +300,8 @@ public:
 
   pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
 
+  void forceSave() { memset(md5, 0, 16); }
+
 
   unsigned long PID = 0;
   int           Version = 0;

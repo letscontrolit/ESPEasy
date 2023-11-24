@@ -21,11 +21,16 @@ void FactoryDefault_UnitName_NVS::applyToSettings() const {
   memcpy(Settings.Name, (char *)(data + 2), sizeof(Settings.Name));
 }
 
-bool FactoryDefault_UnitName_NVS::from_NVS(ESPEasy_NVS_Helper& preferences) {
-  return preferences.getPreference(F(FACTORY_DEFAULT_NVS_UNIT_NAME_KEY), data, sizeof(data));
+bool FactoryDefault_UnitName_NVS::applyToSettings_from_NVS(ESPEasy_NVS_Helper& preferences) {
+  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_UNIT_NAME_KEY), data, sizeof(data))) {
+    applyToSettings();
+    return true;
+  }
+  return false;
 }
 
-void FactoryDefault_UnitName_NVS::to_NVS(ESPEasy_NVS_Helper& preferences) const {
+void FactoryDefault_UnitName_NVS::fromSettings_to_NVS(ESPEasy_NVS_Helper& preferences) {
+  fromSettings();
   preferences.setPreference(F(FACTORY_DEFAULT_NVS_UNIT_NAME_KEY), data, sizeof(data));
 }
 

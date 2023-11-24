@@ -566,6 +566,10 @@ String SaveSettings(bool forFactoryReset)
     Settings.validate();
     initSerial();
 
+    if (forFactoryReset) {
+      Settings.forceSave();
+    }
+
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
     computeChecksum(
@@ -646,6 +650,7 @@ void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
+  // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
@@ -653,7 +658,8 @@ void afterloadSettings() {
     if (ProvisioningSettings.get()) {
       loadProvisioningSettings(*ProvisioningSettings);
       if (ProvisioningSettings->matchingFlashSize()) {
-        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
+        if (pref_temp == 0 && ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)
+          pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }

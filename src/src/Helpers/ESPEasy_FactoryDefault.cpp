@@ -34,18 +34,6 @@
 // Max. 15 char namespace for ESPEasy Factory Default settings
 # define FACTORY_DEFAULT_NVS_NAMESPACE      "ESPEasyFacDef"
 
-/*
-// Max. 15 char keys for ESPEasy Factory Default marked keys
-# define FACTORY_DEFAULT_NVS_PREF_KEY       "FacDefPref"
-# define FACTORY_DEFAULT_NVS_UNIT_NAME_KEY  "UnitName"
-# define FACTORY_DEFAULT_NVS_SSID1_KEY      "WIFI_SSID1"
-# define FACTORY_DEFAULT_NVS_WPA_PASS1_KEY  "WIFI_PASS1"
-# define FACTORY_DEFAULT_NVS_SSID2_KEY      "WIFI_SSID2"
-# define FACTORY_DEFAULT_NVS_WPA_PASS2_KEY  "WIFI_PASS2"
-# define FACTORY_DEFAULT_NVS_AP_PASS_KEY    "WIFI_AP_PASS"
-# define FACTORY_DEFAULT_NVS_WIFI_FLAGS_KEY "WIFI_Flags"
-*/
-
 # include "../Helpers/StringConverter.h"
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/FactoryDefault_UnitName_NVS.h"
@@ -63,6 +51,10 @@
  \*********************************************************************************************/
 void ResetFactory(bool formatFS)
 {
+  #ifdef ESP32
+  ResetFactoryDefaultPreference.init();
+  #endif
+
   #if FEATURE_CUSTOM_PROVISIONING
 
   if (ResetFactoryDefaultPreference.getPreference() == 0)
@@ -319,6 +311,43 @@ void ResetFactory(bool formatFS)
     }
   }
 #endif // if DEFAULT_CONTROLLER
+
+#ifdef ESP32 
+  {
+    ESPEasy_NVS_Helper preferences;
+    preferences.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE), true);
+
+    if (ResetFactoryDefaultPreference.from_NVS(preferences)) {
+      Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+    }
+
+    if (ResetFactoryDefaultPreference.keepUnitName())
+    {
+      FactoryDefault_UnitName_NVS unitNameNVS{};
+      unitNameNVS.applyToSettings_from_NVS(preferences);
+    }
+    if (ResetFactoryDefaultPreference.keepWiFi()) 
+    {
+      FactoryDefault_WiFi_NVS wifiNVS{};
+      wifiNVS.applyToSettings_from_NVS(preferences);
+    }
+    if (ResetFactoryDefaultPreference.keepNetwork())
+    {
+      // Restore Network IP settings
+    }
+    if (ResetFactoryDefaultPreference.keepLogSettings())
+    {
+      // Restore Log settings
+    }
+
+#if FEATURE_ALTERNATIVE_CDN_URL
+    if (ResetFactoryDefaultPreference.keepCustomCdnUrl()) {
+      FactoryDefault_CDN_customurl_NVS::applyToSettings_from_NVS(preferences);
+    }
+#endif
+  }
+#endif
+
   const bool forFactoryReset = true;
   SaveSettings(forFactoryReset);
   #ifndef BUILD_NO_RAM_TRACKER
@@ -351,8 +380,7 @@ void applyFactoryDefaultPref() {
     if (ResetFactoryDefaultPreference.keepUnitName())
     {
       // Store Unit nr and hostname
-      unitNameNVS.fromSettings();
-      unitNameNVS.to_NVS(preferences);
+      unitNameNVS.fromSettings_to_NVS(preferences);
     } else {
       unitNameNVS.clear_from_NVS(preferences);
     }
