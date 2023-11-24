@@ -95,6 +95,11 @@
 # define DAT_EXTDCONTR_CRED_SIZE     1024
 #endif // ifndef DAT_EXTDCONTR_CRED_SIZE
 
+#ifndef DAT_CDN_SIZE
+# define DAT_CDN_SIZE     1024
+#endif
+
+
 
 /*
 
@@ -128,6 +133,10 @@
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #   define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX))  // each custom controller config = 1k, 4 max
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_TASKS - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
+
   #  ifndef CONFIG_FILE_SIZE
   #   define CONFIG_FILE_SIZE                65536
   #  endif // ifndef CONFIG_FILE_SIZE
@@ -138,11 +147,14 @@
   #   define DAT_OFFSET_TASKS                 4096 // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
   #  endif // ifndef DAT_OFFSET_TASKS
   #  ifndef DAT_OFFSET_CONTROLLER
-  #   define DAT_OFFSET_CONTROLLER           28672 // each controller = 1k, 4 max
+  #   define DAT_OFFSET_CONTROLLER           28672 // each controller = 1k, 3 max
   #  endif // ifndef DAT_OFFSET_CONTROLLER
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #   define DAT_OFFSET_CUSTOM_CONTROLLER    32768 // each custom controller config = 1k, 4 max.
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CUSTOM_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
   #  ifdef LIMIT_BUILD_SIZE
   // Limit the config size for 1M builds, since their file system is also quite small
   #   ifndef CONFIG_FILE_SIZE
@@ -161,11 +173,14 @@
   #  define DAT_OFFSET_TASKS                 32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
   # endif // ifndef DAT_OFFSET_TASKS
   # ifndef DAT_OFFSET_CONTROLLER
-  #  define DAT_OFFSET_CONTROLLER           8192  // each controller = 1k, 4 max
+  #  define DAT_OFFSET_CONTROLLER           8192  // each controller = 1k, 3 max
   # endif // ifndef DAT_OFFSET_CONTROLLER
   # ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #  define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
   # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CUSTOM_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE               131072
   # endif // ifndef CONFIG_FILE_SIZE

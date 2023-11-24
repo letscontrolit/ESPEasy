@@ -15,9 +15,7 @@ String Command_Provisioning_Security();
 String Command_Provisioning_Notification();
 # endif // if FEATURE_NOTIFIER
 String Command_Provisioning_Provision();
-# if FEATURE_ALTERNATIVE_CDN_URL
-String Command_Provisioning_CustomCdnUrl();
-# endif // if FEATURE_ALTERNATIVE_CDN_URL
+
 String Command_Provisioning_Rules(struct EventStruct *event);
 
 String Command_Provisioning_Firmware(struct EventStruct *event,

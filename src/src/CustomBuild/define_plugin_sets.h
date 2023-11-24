@@ -3181,13 +3181,13 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_CHART_STORAGE_LAYOUT
   #ifdef ESP32
-    #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+    #define FEATURE_CHART_STORAGE_LAYOUT 1
   #endif
   #ifdef ESP8266
     #ifndef LIMIT_BUILD_SIZE
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+      #define FEATURE_CHART_STORAGE_LAYOUT 1
     #else
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 0
+      #define FEATURE_CHART_STORAGE_LAYOUT 0
     #endif
   #endif
 #endif
@@ -3205,5 +3205,11 @@ To create/register a plugin, you have to :
 #endif
 
 
+
+// TODO TD-er: Test feature, must remove
+#ifdef FEATURE_ALTERNATIVE_CDN_URL
+#undef FEATURE_ALTERNATIVE_CDN_URL
+#endif
+#define FEATURE_ALTERNATIVE_CDN_URL 1
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

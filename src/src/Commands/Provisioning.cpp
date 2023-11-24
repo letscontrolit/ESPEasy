@@ -17,14 +17,9 @@ String Command_Provisioning_Dispatcher(struct EventStruct *event,
   if (equals(cmd, F("config"))) {
     return Command_Provisioning_Config();
   } else
-  # if FEATURE_ALTERNATIVE_CDN_URL
-  if (equals(cmd, F("customcdnurl"))) {
-    return Command_Provisioning_CustomCdnUrl();
-  } else
   if (equals(cmd, F("firmware"))) {
     return Command_Provisioning_Firmware(event, Line);
   } else
-  # endif // if FEATURE_ALTERNATIVE_CDN_URL
   # if FEATURE_NOTIFIER
   if (equals(cmd, F("notification"))) {
     return Command_Provisioning_Notification();
@@ -64,14 +59,6 @@ String Command_Provisioning_Provision()
 {
   return downloadFileType(FileType::PROVISIONING_DAT);
 }
-
-# if FEATURE_ALTERNATIVE_CDN_URL
-String Command_Provisioning_CustomCdnUrl()
-{
-  return downloadFileType(FileType::CUSTOMCDNURL_DAT);
-}
-
-# endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 String Command_Provisioning_Rules(struct EventStruct *event)
 {

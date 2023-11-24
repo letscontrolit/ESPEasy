@@ -43,9 +43,6 @@ bool ProvisioningStruct::fetchFileTypeAllowed(FileType::Enum filetype, unsigned 
     case FileType::NOTIFICATION_DAT: return allowedFlags.allowFetchNotificationDat;
     case FileType::RULES_TXT:        return (filenr < RULESETS_MAX) && bitRead(allowedFlags.allowFetchRules, filenr);
     case FileType::PROVISIONING_DAT: return allowedFlags.allowFetchProvisioningDat;
-    #if FEATURE_ALTERNATIVE_CDN_URL
-    case FileType::CUSTOMCDNURL_DAT: return allowedFlags.allowFetchCustomCdnUrlDat;
-    #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
     case FileType::MAX_FILETYPE:
       break;
@@ -66,9 +63,6 @@ void ProvisioningStruct::setFetchFileTypeAllowed(FileType::Enum filetype, unsign
         bitWrite(allowedFlags.allowFetchRules, filenr, checked);
       }
       break;
-    #if FEATURE_ALTERNATIVE_CDN_URL
-    case FileType::CUSTOMCDNURL_DAT: allowedFlags.allowFetchCustomCdnUrlDat = checked; break;
-    #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
     case FileType::MAX_FILETYPE:
       break;

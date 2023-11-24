@@ -50,7 +50,9 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/FactoryDefault_UnitName_NVS.h"
 #include "../DataStructs/FactoryDefault_WiFi_NVS.h"
-
+# if FEATURE_ALTERNATIVE_CDN_URL
+#include "../DataStructs/FactoryDefault_CDN_customurl_NVS.h"
+#endif
 
 
 #endif // ifdef ESP32
@@ -379,9 +381,10 @@ void applyFactoryDefaultPref() {
   }
 # if FEATURE_ALTERNATIVE_CDN_URL
   {
-    if (ResetFactoryDefaultPreference.fetchCustomCdnUrlDat())
+    if (ResetFactoryDefaultPreference.keepCustomCdnUrl())
     {
       // Store custom CDN
+      FactoryDefault_CDN_customurl_NVS::fromSettings_to_NVS(preferences);
     }
   }
 # endif // if FEATURE_ALTERNATIVE_CDN_URL

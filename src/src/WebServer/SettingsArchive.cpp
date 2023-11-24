@@ -257,9 +257,7 @@ void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr)
     case FileType::NOTIFICATION_DAT: ResetFactoryDefaultPreference.fetchNotificationDat(isChecked); break;
     case FileType::RULES_TXT: { ResetFactoryDefaultPreference.fetchRulesTXT(filenr, isChecked); break; }
     case FileType::PROVISIONING_DAT: { ResetFactoryDefaultPreference.fetchProvisioningDat(isChecked); break; }
-    #if FEATURE_ALTERNATIVE_CDN_URL
-    case FileType::CUSTOMCDNURL_DAT: { ResetFactoryDefaultPreference.fetchCustomCdnUrlDat(isChecked); break; }
-    #endif // if FEATURE_ALTERNATIVE_CDN_URL
+
     case FileType::MAX_FILETYPE:
       break;
   }

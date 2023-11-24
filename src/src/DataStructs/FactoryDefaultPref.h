@@ -43,7 +43,7 @@ private:
       uint32_t delete_Bak_Files     : 1;
       uint32_t storeCredentials     : 1;
       uint32_t fetchProvisioningDat : 1;
-      uint32_t fetchCustomCdnUrlDat : 1;
+      uint32_t keepCustomCdnUrl     : 1;
 
       uint32_t unused : 5;
     }        bits;
@@ -100,6 +100,14 @@ public:
     bits.keepUnitName = keep;
   }
 
+  bool keepCustomCdnUrl() const  {
+    return bits.keepCustomCdnUrl;
+  }
+
+  void keepCustomCdnUrl(bool keep) {
+    bits.keepCustomCdnUrl = keep;
+  }
+
   // filenr = 0...3 for files rules1.txt ... rules4.txt
   bool fetchRulesTXT(int filenr) const {
     return bitRead(bits.fetchRulesFile, filenr);
@@ -140,17 +148,6 @@ public:
   void fetchProvisioningDat(bool fetch) {
     bits.fetchProvisioningDat = fetch;
   }
-
-  #if FEATURE_ALTERNATIVE_CDN_URL
-  bool fetchCustomCdnUrlDat() const {
-    return bits.fetchCustomCdnUrlDat;
-  }
-
-  void fetchCustomCdnUrlDat(bool fetch) {
-    bits.fetchCustomCdnUrlDat = fetch;
-  }
-
-  #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
   bool deleteFirst() const {
     return bits.deleteFirst;

@@ -1145,17 +1145,17 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 }
 
 #if FEATURE_ALTERNATIVE_CDN_URL
-static String _CDN_url_cache;
-static bool   _CDN_url_loaded = false;
+String _CDN_url_cache;
+bool   _CDN_url_loaded = false;
 
 String get_CDN_url_custom() {
   if (!_CDN_url_loaded) {
-    char urlbuf[256]{};
-    const __FlashStringHelper* cdnUrlCustomFile = getFileName(FileType::CUSTOMCDNURL_DAT);
-    if (fileExists(cdnUrlCustomFile)) {
-      LoadFromFile(String(cdnUrlCustomFile).c_str(), 0, (uint8_t*)&urlbuf, sizeof(urlbuf));
-    }
-    _CDN_url_cache  = String(urlbuf);
+    String strings[] = {EMPTY_STRING};
+
+    LoadStringArray(
+      SettingsType::Enum::CdnSettings_Type, 0,
+      strings, NR_ELEMENTS(strings), 255, 0);
+    _CDN_url_cache  = strings[0];
     _CDN_url_loaded = true;
   }
   return _CDN_url_cache;
@@ -1164,24 +1164,16 @@ String get_CDN_url_custom() {
 void set_CDN_url_custom(const String &url) {
   _CDN_url_cache = url;
   _CDN_url_cache.trim();
-  _CDN_url_loaded = true;
-  char urlbuf[256]{};
-  const __FlashStringHelper* cdnUrlCustomFile = getFileName(FileType::CUSTOMCDNURL_DAT);
-  if (_CDN_url_cache.isEmpty()) {
-    if (fileExists(cdnUrlCustomFile)) {
-      tryDeleteFile(cdnUrlCustomFile);
-    }
-  } else {
-    if (!fileExists(cdnUrlCustomFile)) {
-      InitFile(cdnUrlCustomFile, 256);
-    }
-    if (!_CDN_url_cache.endsWith(F("/"))) {
-      _CDN_url_cache += '/'; // Fixup
-    }
-    if (safe_strncpy(urlbuf, _CDN_url_cache, sizeof(urlbuf))) {
-      SaveToFile(String(cdnUrlCustomFile).c_str(), 0, (uint8_t*)&urlbuf, sizeof(urlbuf));
-    }
+  if (!_CDN_url_cache.endsWith(F("/"))) {
+    _CDN_url_cache.concat('/');
   }
+  _CDN_url_loaded = true;
+
+  String strings[] = { _CDN_url_cache };
+
+  SaveStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
 }
 #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
