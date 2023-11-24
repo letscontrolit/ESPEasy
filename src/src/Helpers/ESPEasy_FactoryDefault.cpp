@@ -38,6 +38,7 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/FactoryDefault_UnitName_NVS.h"
 #include "../DataStructs/FactoryDefault_WiFi_NVS.h"
+#include "../DataStructs/FactoryDefault_Network_NVS.h"
 # if FEATURE_ALTERNATIVE_CDN_URL
 #include "../DataStructs/FactoryDefault_CDN_customurl_NVS.h"
 #endif
@@ -334,6 +335,8 @@ void ResetFactory(bool formatFS)
     if (ResetFactoryDefaultPreference.keepNetwork())
     {
       // Restore Network IP settings
+      FactoryDefault_Network_NVS network_nvs;
+      network_nvs.applyToSettings_from_NVS(preferences);
     }
     if (ResetFactoryDefaultPreference.keepLogSettings())
     {
@@ -396,9 +399,13 @@ void applyFactoryDefaultPref() {
     }
   }
   {
+    FactoryDefault_Network_NVS network_nvs{};
     if (ResetFactoryDefaultPreference.keepNetwork())
     {
       // Store Network IP settings
+      network_nvs.fromSettings_to_NVS(preferences);
+    } else {
+      network_nvs.clear_from_NVS(preferences);
     }
   }
   {
