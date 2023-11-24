@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-05-08 tonhuisman: Use ESPEasy core I2C functions where possible
  *                        Add support for use of the Analog output pin and 'analogout,<value>' command
  *                        Add configuration of all possible analog input modes
@@ -47,6 +48,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 
