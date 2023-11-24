@@ -1171,7 +1171,7 @@ String get_CDN_url_custom() {
 void set_CDN_url_custom(const String &url) {
   _CDN_url_cache = url;
   _CDN_url_cache.trim();
-  if (!_CDN_url_cache.endsWith(F("/"))) {
+  if (!_CDN_url_cache.isEmpty() && !_CDN_url_cache.endsWith(F("/"))) {
     _CDN_url_cache.concat('/');
   }
   _CDN_url_loaded = true;
