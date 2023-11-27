@@ -312,6 +312,8 @@ public:
 
   pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
 
+  void forceSave() { memset(md5, 0, 16); }
+
 
   unsigned long PID = 0;
   int           Version = 0;
@@ -445,7 +447,7 @@ public:
   uint32_t      ResetFactoryDefaultPreference = 0; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed = 400000;
   uint16_t      WebserverPort = 80;
-  uint16_t      SyslogPort = 0;
+  uint16_t      SyslogPort = DEFAULT_SYSLOG_PORT;
 
   int8_t          ETH_Phy_Addr = -1;
   int8_t          ETH_Pin_mdc = -1;

@@ -416,14 +416,17 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A("posttohttp", Command_HTTP_PostToHTTP,  -1); // HTTP.h
       #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
-      COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
-      COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      COMMAND_CASE_A( "provision", Command_Provisioning_Dispatcher, -1); // Provisioning.h
+      #ifdef PLUGIN_BUILD_MAX_ESP32 // FIXME DEPRECATED: Fallback for temporary backward compatibility
+      COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_ConfigFallback,       0); // Provisioning.h
+      COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_SecurityFallback,     0); // Provisioning.h
       #if FEATURE_NOTIFIER
-      COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      COMMAND_CASE_A( "provisionnotification", Command_Provisioning_NotificationFallback, 0); // Provisioning.h
       #endif
-      COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
-      COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
-      COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
+      COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_ProvisionFallback,    0); // Provisioning.h
+      COMMAND_CASE_A(        "provisionrules", Command_Provisioning_RulesFallback,        1); // Provisioning.h
+      COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_FirmwareFallback,     1); // Provisioning.h
+      #endif // ifdef PLUGIN_BUILD_MAX_ESP32
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #if FEATURE_MQTT
