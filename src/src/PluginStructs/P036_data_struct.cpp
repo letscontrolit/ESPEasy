@@ -415,6 +415,12 @@ void P036_data_struct::display_header() {
     display_time(); // only for 128pix wide displays
   }
   display_wifibars();
+
+#ifdef OLEDDISPLAY_DOUBLE_BUFFER
+  // Update only small sections of the display, reducing the amount of data to be sent to the display
+  update_display();
+#endif
+
 }
 
 void P036_data_struct::display_time() {
