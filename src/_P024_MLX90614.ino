@@ -5,6 +5,10 @@
 // #################################### Plugin 024: MLX90614 IR temperature I2C 0x5A)  ###############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
+ * 2023-11-23 tonhuisman: Add Changelog
+*/
 
 # include "src/PluginStructs/P024_data_struct.h"
 
@@ -36,6 +40,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 

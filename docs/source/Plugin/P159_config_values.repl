@@ -1,0 +1,74 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#Presence]``
+    ","
+    Returns the currently reported Presence state, 0 (no presence) or 1 (presence detected)
+    "
+    "
+    ``[<taskname>#StatPres]``
+    ","
+    Returns the currently reported Stationary Presence state, 0 (no presence) or 1 (presence detected)
+    "
+    "
+    ``[<taskname>#MovPres]``
+    ","
+    Returns the currently reported Moving Presence state, 0 (no presence) or 1 (presence detected)
+    "
+    "
+    ``[<taskname>#Distance]``
+    ","
+    Returns the distance of the detected object from the sensor, in cm.
+    "
+    "
+    ``[<taskname>#StatDist]``
+    ","
+    Returns the distance of the detected Stationary object from the sensor, in cm.
+    "
+    "
+    ``[<taskname>#MovDist]``
+    ","
+    Returns the distance of the detected Moving object from the sensor, in cm.
+    "
+    "
+    ``[<taskname>#StatEnergy]``
+    ","
+    Returns the energy level of the detected Stationary object from the sensor, unknown unit, range 0..100.
+    "
+    "
+    ``[<taskname>#MovEnergy]``
+    ","
+    Returns the energy level of the detected Moving object from the sensor, unknown unit, range 0..100.
+    "
+    "
+    ``[<taskname>#AmbLight]``
+    ","
+    Returns the level of the ambient light, when available, unknown unit, range 0..255.
+    "
+    "
+    ``[<taskname>#OutputPin]``
+    ","
+    Returns the currently reported Output pin state, 0 (no presence) or 1 (presence detected)
+    "
+    "
+    ``[<taskname>#StatEnergyGate0..8]``
+    ","
+    Returns the energy level of the Stationary object per gate 0..8, unknown unit, value range 0..100.
+    "
+    "
+    ``[<taskname>#MovEnergyGate0..8]``
+    ","
+    Returns the energy level of the Moving object per gate 0..8, unknown unit, value range 0..100.
+    "
+    "
+    ``[<taskname>#StatSensGate0..8]``
+    ","
+    Returns the configured sensitivity level of the Stationary object per gate 0..8, unknown unit, value range 0..100.
+    "
+    "
+    ``[<taskname>#MovSensGate0..8]``
+    ","
+    Returns the configured sensitivity level of the Moving object per gate 0..8, unknown unit, value range 0..100.
+    "
