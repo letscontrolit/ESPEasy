@@ -11,6 +11,7 @@
 
 // Changelog:
 //
+// 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
 // 2022-02-26 tonhuisman: Implement commands for get/set measurement interval, and a setting too. Bugfix.
 // 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
 // 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
@@ -56,6 +57,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 
