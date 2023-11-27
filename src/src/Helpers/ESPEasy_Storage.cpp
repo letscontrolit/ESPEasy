@@ -566,6 +566,10 @@ String SaveSettings(bool forFactoryReset)
     Settings.validate();
     initSerial();
 
+    if (forFactoryReset) {
+      Settings.forceSave();
+    }
+
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
     computeChecksum(
@@ -646,14 +650,25 @@ void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
+  // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
+  #ifdef ESP32
+  if (pref_temp == 0) {
+    if (ResetFactoryDefaultPreference.getPreference() == 0) {
+      // Try loading from NVS
+      ResetFactoryDefaultPreference.init();
+      pref_temp = ResetFactoryDefaultPreference.getPreference();
+    }
+  }
+  #endif
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
     if (ProvisioningSettings.get()) {
       loadProvisioningSettings(*ProvisioningSettings);
       if (ProvisioningSettings->matchingFlashSize()) {
-        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
+        if (pref_temp == 0 && ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)
+          pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -667,6 +682,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(pref.getDeviceModel())) {
     ResetFactoryDefaultPreference = pref_temp;
   }
+  applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
   setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
@@ -946,6 +962,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
  \*********************************************************************************************/
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock)
 {
+  // FIXME TD-er: Must add some check to see if the existing data has changed before saving.
   int offset, max_size;
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
@@ -1143,6 +1160,50 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   return result;
 }
+
+#if FEATURE_ALTERNATIVE_CDN_URL
+String _CDN_url_cache;
+bool   _CDN_url_loaded = false;
+
+String get_CDN_url_custom() {
+  if (!_CDN_url_loaded) {
+    String strings[] = {EMPTY_STRING};
+
+    LoadStringArray(
+      SettingsType::Enum::CdnSettings_Type, 0,
+      strings, NR_ELEMENTS(strings), 255, 0);
+    _CDN_url_cache  = strings[0];
+    _CDN_url_loaded = true;
+  }
+  return _CDN_url_cache;
+}
+
+void set_CDN_url_custom(const String &url) {
+  _CDN_url_cache = url;
+  _CDN_url_cache.trim();
+  if (!_CDN_url_cache.isEmpty() && !_CDN_url_cache.endsWith(F("/"))) {
+    _CDN_url_cache.concat('/');
+  }
+  _CDN_url_loaded = true;
+
+  String strings[] = { EMPTY_STRING };
+
+  LoadStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+
+  if (url.equals(strings[0])) {
+    // No need to save, is already the same
+    return;
+  }
+
+  strings[0] = url;
+
+  SaveStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+}
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 /********************************************************************************************\
    Save Custom Task settings to file system
@@ -2256,6 +2317,10 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 
       if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
+      }
+
+      if (!ProvisioningSettings->url[0]) {
+        return F("Provision Config incomplete");
       }
 
       url  = ProvisioningSettings->url;

@@ -195,13 +195,14 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   int16_t value = noSearchValue;
   bool    found = false;
 
-  if (search) {
-    const auto it = globalMapPortStatus.find(key);
-    if (it != globalMapPortStatus.end()) {
-      mode  = it->second.mode;
+  const auto it = globalMapPortStatus.find(key);
+  if (it != globalMapPortStatus.end()) {
+    found = true;
+    // update mode even if search = false, otherwise it will print mode assigned above
+    mode  = it->second.mode;
+    // update value only if search = true, otherwise use noSearchValue
+    if(search)
       value = it->second.getValue();
-      found = true;
-    }
   }
 
   if (!search || found)
