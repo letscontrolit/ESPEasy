@@ -104,6 +104,8 @@ var commonPlugins = [
   "dac", "dac,1", "dac,2",
   //P153
   "sht4x", "sht4x,startup",
+  //P159
+  "ld2410", "ld2410,factoryreset", "ld2410,logall",
 ];
 var pluginDispKind = [
   //P095

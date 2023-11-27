@@ -150,6 +150,14 @@ void handle_devices() {
     {
       // change of device: cleanup old device and reset default settings
       setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
+      const deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
+
+      if (validDeviceIndex(DeviceIndex)) { 
+        const DeviceStruct& device = Device[DeviceIndex];
+        if ((device.Type == DEVICE_TYPE_I2C) && device.I2CMax100kHz) {      // 100 kHz-only I2C device?
+          bitWrite(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
+        }
+      }
     }
     else if (taskdevicenumber != INVALID_PLUGIN_ID) // save settings
     {
@@ -951,7 +959,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
           addPinConfig = false;
 
           if (Settings.TaskDeviceDataFeed[taskIndex] == 0) {
-            devicePage_show_I2C_config(taskIndex);
+            devicePage_show_I2C_config(taskIndex, DeviceIndex);
           }
       }
 
@@ -1145,7 +1153,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 }
 #endif
 
-void devicePage_show_I2C_config(taskIndex_t taskIndex)
+void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
@@ -1159,6 +1167,9 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
   addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
+  if (Device[DeviceIndex].I2CMax100kHz) {
+    addFormNote(F("This device is specified for max. 100 kHz operation!"));
+  }
 
   # if FEATURE_I2CMULTIPLEXER
 

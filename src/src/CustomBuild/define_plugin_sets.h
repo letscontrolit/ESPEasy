@@ -1615,6 +1615,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
+  #ifndef USES_P159
+    #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
 
 #endif
 
@@ -2284,6 +2287,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
+  #endif
+  #ifndef USES_P159
+    #define USES_P159   // Presence - LD2410 Radar detection
   #endif
 
   // Controllers
