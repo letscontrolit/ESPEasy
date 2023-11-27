@@ -527,6 +527,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P153   // SHT4x
 // #define USES_P154   // BMP3xx
 
+// #define USES_P159   // Presence - LD2410 Radar detection
+
 /*
  #######################################################################################################
  ###########     Controllers
