@@ -525,8 +525,8 @@ void handle_sysinfo_WiFiSettings() {
 #endif
     LabelType::WIFI_NR_EXTRA_SCANS,
 #ifdef USES_ESPEASY_NOW
-    LabelType::USE_ESPEASY_NOW,
-    LabelType::FORCE_ESPEASY_NOW_CHANNEL,
+    LabelType::ESPEASY_NOW_ENABLED,
+    LabelType::ESPEASY_NOW_FORCED_CHANNEL,
 #endif
     LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
     LabelType::WAIT_WIFI_CONNECT,
