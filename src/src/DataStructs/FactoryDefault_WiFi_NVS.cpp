@@ -16,19 +16,18 @@
 
 
 void FactoryDefault_WiFi_NVS::fromSettings() {
-  bits.IncludeHiddenSSID           = Settings.IncludeHiddenSSID();
-  bits.ApDontForceSetup            = Settings.ApDontForceSetup();
-  bits.DoNotStartAP                = Settings.DoNotStartAP();
-  bits.ForceWiFi_bg_mode           = Settings.ForceWiFi_bg_mode();
-  bits.WiFiRestart_connection_lost = Settings.WiFiRestart_connection_lost();
-  bits.WifiNoneSleep               = Settings.WifiNoneSleep();
-  bits.gratuitousARP               = Settings.gratuitousARP();
-  bits.UseMaxTXpowerForSending     = Settings.UseMaxTXpowerForSending();
-  bits.UseLastWiFiFromRTC          = Settings.UseLastWiFiFromRTC();
-  bits.WaitWiFiConnect             = Settings.WaitWiFiConnect();
-  bits.SDK_WiFi_autoreconnect      = Settings.SDK_WiFi_autoreconnect();
-
-  //    bits.hiddenSSIDslowConnect = Settings.
+  bits.IncludeHiddenSSID              = Settings.IncludeHiddenSSID();
+  bits.ApDontForceSetup               = Settings.ApDontForceSetup();
+  bits.DoNotStartAP                   = Settings.DoNotStartAP();
+  bits.ForceWiFi_bg_mode              = Settings.ForceWiFi_bg_mode();
+  bits.WiFiRestart_connection_lost    = Settings.WiFiRestart_connection_lost();
+  bits.WifiNoneSleep                  = Settings.WifiNoneSleep();
+  bits.gratuitousARP                  = Settings.gratuitousARP();
+  bits.UseMaxTXpowerForSending        = Settings.UseMaxTXpowerForSending();
+  bits.UseLastWiFiFromRTC             = Settings.UseLastWiFiFromRTC();
+  bits.WaitWiFiConnect                = Settings.WaitWiFiConnect();
+  bits.SDK_WiFi_autoreconnect         = Settings.SDK_WiFi_autoreconnect();
+  bits.HiddenSSID_SlowConnectPerBSSID = Settings.HiddenSSID_SlowConnectPerBSSID();
 }
 
 void FactoryDefault_WiFi_NVS::applyToSettings() const {
@@ -43,8 +42,7 @@ void FactoryDefault_WiFi_NVS::applyToSettings() const {
   Settings.UseLastWiFiFromRTC(bits.UseLastWiFiFromRTC);
   Settings.WaitWiFiConnect(bits.WaitWiFiConnect);
   Settings.SDK_WiFi_autoreconnect(bits.SDK_WiFi_autoreconnect);
-
-  // Settings.  (bits.hiddenSSIDslowConnect);
+  Settings.HiddenSSID_SlowConnectPerBSSID(bits.HiddenSSID_SlowConnectPerBSSID);
 }
 
 bool FactoryDefault_WiFi_NVS::applyToSettings_from_NVS(ESPEasy_NVS_Helper& preferences) {
