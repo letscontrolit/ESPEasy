@@ -1,0 +1,50 @@
+ld2410	KEYWORD1
+
+begin	KEYWORD2
+debug	KEYWORD2
+isConnected	KEYWORD2
+read	KEYWORD2
+presenceDetected	KEYWORD2
+
+ld2410_loop	KEYWORD2
+isStationary	KEYWORD2
+isMoving	KEYWORD2
+isEngineeringMode	KEYWORD2
+reportingDataComposition	KEYWORD2
+detectionDistance KEYWORD2
+
+stationaryTargetDetected	KEYWORD2
+stationaryTargetDistance	KEYWORD2
+stationaryTargetEnergy	    KEYWORD2
+
+movingTargetDetected	KEYWORD2
+movingTargetDistance	KEYWORD2
+movingTargetEnergy	    KEYWORD2
+
+engMovingDistanceGateEnergy	KEYWORD2
+engStaticDistanceGateEnergy	KEYWORD2
+engMaxMovingDistanceGate	KEYWORD2
+engMaxStaticDistanceGate	KEYWORD2
+engRetainDataValue KEYWORD2
+
+requestRestart	KEYWORD2
+requestFactoryReset	KEYWORD2
+requestFirmwareVersion
+requestCurrentConfiguration
+requestStartEngineeringMode	KEYWORD2
+requestEndEngineeringMode	KEYWORD2
+setSerialBaudRate KEYWORD2
+setMaxValues	KEYWORD2
+setGateSensitivityThreshold	KEYWORD2
+requestConfigurationModeOpen	KEYWORD2
+requestConfigurationModeClose	KEYWORD2
+
+cmdProtocolVersion	KEYWORD2
+cmdFirmwareVersion	KEYWORD2
+
+cfgMaxGate	KEYWORD2
+cfgMaxMovingGate	KEYWORD2
+cfgMaxStationaryGate	KEYWORD2
+cfgSensorIdleTimeInSeconds	KEYWORD2
+cfgMovingGateSensitivity	KEYWORD2
+cfgStationaryGateSensitivity	KEYWORD2
