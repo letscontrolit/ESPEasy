@@ -28,18 +28,18 @@ private:
 
   union {
     struct {
-      uint64_t IncludeHiddenSSID           : 1;
-      uint64_t ApDontForceSetup            : 1;
-      uint64_t DoNotStartAP                : 1;
-      uint64_t ForceWiFi_bg_mode           : 1;
-      uint64_t WiFiRestart_connection_lost : 1;
-      uint64_t WifiNoneSleep               : 1;
-      uint64_t gratuitousARP               : 1;
-      uint64_t UseMaxTXpowerForSending     : 1;
-      uint64_t UseLastWiFiFromRTC          : 1;
-      uint64_t WaitWiFiConnect             : 1;
-      uint64_t SDK_WiFi_autoreconnect      : 1;
-      uint64_t hiddenSSIDslowConnect       : 1;
+      uint64_t IncludeHiddenSSID              : 1;
+      uint64_t ApDontForceSetup               : 1;
+      uint64_t DoNotStartAP                   : 1;
+      uint64_t ForceWiFi_bg_mode              : 1;
+      uint64_t WiFiRestart_connection_lost    : 1;
+      uint64_t WifiNoneSleep                  : 1;
+      uint64_t gratuitousARP                  : 1;
+      uint64_t UseMaxTXpowerForSending        : 1;
+      uint64_t UseLastWiFiFromRTC             : 1;
+      uint64_t WaitWiFiConnect                : 1;
+      uint64_t SDK_WiFi_autoreconnect         : 1;
+      uint64_t HiddenSSID_SlowConnectPerBSSID : 1;
 
       uint64_t unused : 52;
     } bits;
