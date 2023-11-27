@@ -71,11 +71,11 @@ void ResetFactoryDefaultPreference_struct::to_NVS(ESPEasy_NVS_Helper& preference
    bitWrite(_preference, 11, keep);
    }
 
-   bool ResetFactoryDefaultPreference_struct::keepLogSettings() const {
+   bool ResetFactoryDefaultPreference_struct::keepLogConsoleSettings() const {
    return bitRead(_preference, 12);
    }
 
-   void ResetFactoryDefaultPreference_struct::keepLogSettings(bool keep) {
+   void ResetFactoryDefaultPreference_struct::keepLogConsoleSettings(bool keep) {
    bitWrite(_preference, 12, keep);
    }
 

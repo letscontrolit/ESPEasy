@@ -51,7 +51,7 @@ void handle_factoryreset() {
     ResetFactoryDefaultPreference.keepWiFi(isFormItemChecked(F("kw")));
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked(F("knet")));
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked(F("kntp")));
-    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked(F("klog")));
+    ResetFactoryDefaultPreference.keepLogConsoleSettings(isFormItemChecked(F("klog")));
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
@@ -80,8 +80,8 @@ void handle_factoryreset() {
     addRowLabel(F("Keep NTP/DST config"));
     addCheckBox(F("kntp"), ResetFactoryDefaultPreference.keepNTP());
 
-    addRowLabel(F("Keep log config"));
-    addCheckBox(F("klog"), ResetFactoryDefaultPreference.keepLogSettings());
+    addRowLabel(F("Keep Console/Log config"));
+    addCheckBox(F("klog"), ResetFactoryDefaultPreference.keepLogConsoleSettings());
 
     addTableSeparator(F("Pre-defined configurations"), 2, 3);
     addRowLabel(F("Pre-defined config"));
@@ -157,7 +157,7 @@ void handle_factoryreset_json() {
   }
 
   if (hasArg(F("klog"))) {
-    ResetFactoryDefaultPreference.keepLogSettings(isFormItemChecked(F("klog")));
+    ResetFactoryDefaultPreference.keepLogConsoleSettings(isFormItemChecked(F("klog")));
   }
 #endif
   String error;

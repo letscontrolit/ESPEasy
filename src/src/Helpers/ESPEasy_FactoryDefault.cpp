@@ -39,6 +39,7 @@
 #include "../DataStructs/FactoryDefault_UnitName_NVS.h"
 #include "../DataStructs/FactoryDefault_WiFi_NVS.h"
 #include "../DataStructs/FactoryDefault_Network_NVS.h"
+#include "../DataStructs/FactoryDefault_LogConsoleSettings_NVS.h"
 # if FEATURE_ALTERNATIVE_CDN_URL
 #include "../DataStructs/FactoryDefault_CDN_customurl_NVS.h"
 #endif
@@ -180,7 +181,7 @@ void ResetFactory(bool formatFS)
   Settings.clearControllers();
   Settings.clearTasks();
 
-  if (!ResetFactoryDefaultPreference.keepLogSettings()) {
+  if (!ResetFactoryDefaultPreference.keepLogConsoleSettings()) {
     Settings.clearLogSettings();
     str2ip((char *)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
@@ -189,8 +190,17 @@ void ResetFactory(bool formatFS)
     setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
+    Settings.SyslogPort     = DEFAULT_SYSLOG_PORT;
     Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
-  }
+
+    // FIXME TD-er: Must also keep console settings.
+    Settings.console_serial_port = DEFAULT_CONSOLE_PORT; 
+    Settings.console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
+    Settings.console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+    Settings.console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+    Settings.UseSerial = DEFAULT_USE_SERIAL;
+    Settings.BaudRate = DEFAULT_SERIAL_BAUD;
+}
 
   if (!ResetFactoryDefaultPreference.keepUnitName()) {
     Settings.clearUnitNameSettings();
@@ -246,9 +256,6 @@ void ResetFactory(bool formatFS)
   #ifdef DEFAULT_LONGITUDE
   Settings.Longitude = DEFAULT_LONGITUDE;
   #endif // ifdef DEFAULT_LONGITUDE
-
-  //  Settings.UseSerial = DEFAULT_USE_SERIAL;
-  //  Settings.BaudRate  = DEFAULT_SERIAL_BAUD;
 
 #ifdef ESP32
 
@@ -338,9 +345,11 @@ void ResetFactory(bool formatFS)
       FactoryDefault_Network_NVS network_nvs;
       network_nvs.applyToSettings_from_NVS(preferences);
     }
-    if (ResetFactoryDefaultPreference.keepLogSettings())
+    if (ResetFactoryDefaultPreference.keepLogConsoleSettings())
     {
-      // Restore Log settings
+      // Restore Log and Console settings
+      FactoryDefault_LogConsoleSettings_NVS log_console_nvs;
+      log_console_nvs.applyToSettings_from_NVS(preferences);
     }
 
 #if FEATURE_ALTERNATIVE_CDN_URL
@@ -409,9 +418,13 @@ void applyFactoryDefaultPref() {
     }
   }
   {
-    if (ResetFactoryDefaultPreference.keepLogSettings())
+    FactoryDefault_LogConsoleSettings_NVS log_console_nvs{};
+    if (ResetFactoryDefaultPreference.keepLogConsoleSettings())
     {
-      // Store Log settings
+      // Store Log and Console settings
+      log_console_nvs.fromSettings_to_NVS(preferences);
+    } else {
+      log_console_nvs.clear_from_NVS(preferences);
     }
   }
 # if FEATURE_ALTERNATIVE_CDN_URL

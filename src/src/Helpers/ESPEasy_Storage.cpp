@@ -652,6 +652,15 @@ void afterloadSettings() {
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
+  #ifdef ESP32
+  if (pref_temp == 0) {
+    if (ResetFactoryDefaultPreference.getPreference() == 0) {
+      // Try loading from NVS
+      ResetFactoryDefaultPreference.init();
+      pref_temp = ResetFactoryDefaultPreference.getPreference();
+    }
+  }
+  #endif
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
@@ -673,6 +682,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(pref.getDeviceModel())) {
     ResetFactoryDefaultPreference = pref_temp;
   }
+  applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
   setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);

@@ -27,23 +27,23 @@ private:
 
   union {
     struct {
-      uint32_t deviceModel          : 8;
-      uint32_t unused_bit8          : 1;
-      uint32_t keepWiFi             : 1;
-      uint32_t keepNTP              : 1;
-      uint32_t keepNetwork          : 1;
-      uint32_t keepLogSettings      : 1;
-      uint32_t keepUnitName         : 1;
-      uint32_t fetchRulesFile       : 4;
-      uint32_t fetchNotificationDat : 1;
-      uint32_t fetchSecurityDat     : 1;
-      uint32_t fetchConfigDat       : 1;
-      uint32_t deleteFirst          : 1;
-      uint32_t saveURL              : 1;
-      uint32_t delete_Bak_Files     : 1;
-      uint32_t storeCredentials     : 1;
-      uint32_t fetchProvisioningDat : 1;
-      uint32_t keepCustomCdnUrl     : 1;
+      uint32_t deviceModel            : 8;
+      uint32_t unused_bit8            : 1;
+      uint32_t keepWiFi               : 1;
+      uint32_t keepNTP                : 1;
+      uint32_t keepNetwork            : 1;
+      uint32_t keepLogConsoleSettings : 1;
+      uint32_t keepUnitName           : 1;
+      uint32_t fetchRulesFile         : 4;
+      uint32_t fetchNotificationDat   : 1;
+      uint32_t fetchSecurityDat       : 1;
+      uint32_t fetchConfigDat         : 1;
+      uint32_t deleteFirst            : 1;
+      uint32_t saveURL                : 1;
+      uint32_t delete_Bak_Files       : 1;
+      uint32_t storeCredentials       : 1;
+      uint32_t fetchProvisioningDat   : 1;
+      uint32_t keepCustomCdnUrl       : 1;
 
       uint32_t unused : 5;
     }        bits;
@@ -84,12 +84,12 @@ public:
     bits.keepNetwork = keep;
   }
 
-  bool keepLogSettings() const  {
-    return bits.keepLogSettings;
+  bool keepLogConsoleSettings() const  {
+    return bits.keepLogConsoleSettings;
   }
 
-  void keepLogSettings(bool keep) {
-    bits.keepLogSettings = keep;
+  void keepLogConsoleSettings(bool keep) {
+    bits.keepLogConsoleSettings = keep;
   }
 
   bool keepUnitName() const  {
