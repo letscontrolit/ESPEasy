@@ -5,7 +5,7 @@
 
 #ifdef USES_P042
 
-# include <Adafruit_NeoPixel.h>
+# include <NeoPixelBus_wrapper.h>
 
 
 # define P042_NUM_PIXEL     20  // Defines the default amount of LED Pixels
@@ -98,9 +98,9 @@ private:
   // global variables
   unsigned long Candle_Update  = 0;
   word          Candle_Temp[3] = { 0 }; // Temp variables
-  boolean       GPIO_Set       = false;
+  bool          GPIO_Set       = false;
 
-  Adafruit_NeoPixel *Candle_pixels;
+  NeoPixelBus_wrapper *Candle_pixels = nullptr;
 };
 
 

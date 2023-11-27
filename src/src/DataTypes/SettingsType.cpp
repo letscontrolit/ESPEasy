@@ -23,6 +23,9 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
     #endif
     case Enum::SecuritySettings_Type:          return F("SecuritySettings");
     case Enum::ExtdControllerCredentials_Type: return F("ExtendedControllerCredentials");
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:               return F("CDN_url");
+    #endif
 
     case Enum::SettingsType_MAX: break;
   }
@@ -109,6 +112,19 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       struct_size = 0;
       break;
     }
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+    {
+      max_index   = 1;
+      offset      = DAT_OFFSET_CDN;
+      max_size    = DAT_CDN_SIZE;
+
+      // struct_size may differ.
+      struct_size = 0;
+    }
+    break;
+#endif
+
     case Enum::SettingsType_MAX:
     {
       max_index = -1;
@@ -177,6 +193,10 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
       return 0xff00a2;
     case Enum::ExtdControllerCredentials_Type:
       return 0xc300ff;
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+      return 0xff6600;
+#endif
     case Enum::SettingsType_MAX:
       break;
   }
@@ -193,6 +213,9 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
     case Enum::CustomTaskSettings_Type:
     case Enum::ControllerSettings_Type:
     case Enum::CustomControllerSettings_Type:
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+#endif
       return SettingsFileEnum::FILE_CONFIG_type;
     case Enum::NotificationSettings_Type:
       return SettingsFileEnum::FILE_NOTIFICATION_type;

@@ -1,3 +1,5 @@
+.. _ExternalHostedStaticFiles:
+
 External Hosted Static Files
 ****************************
 

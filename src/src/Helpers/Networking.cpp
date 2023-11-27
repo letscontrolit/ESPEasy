@@ -199,9 +199,7 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    String log = F("UDP  : Send UDP message to ");
-    log += unit;
-    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE,  concat(F("UDP  : Send UDP message to "), unit));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -237,17 +235,13 @@ void updateUDPport()
   if (Settings.UDPPort != 0) {
     if (portUDP.begin(Settings.UDPPort) == 0) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
-        log += String(Settings.UDPPort);
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, concat(F("UDP : Cannot bind to ESPEasy p2p UDP port "), Settings.UDPPort));
       }
     } else {
       lastUsedUDPPort = Settings.UDPPort;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("UDP : Start listening on port ");
-        log += String(Settings.UDPPort);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("UDP : Start listening on port "), Settings.UDPPort));
       }
     }
   }
@@ -1131,10 +1125,7 @@ bool hostReachable(const String& hostname) {
   }
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log = F("Hostname cannot be resolved: ");
-
-    log += hostname;
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR,  concat(F("Hostname cannot be resolved: "), hostname));
   }
   return false;
 }
@@ -1375,19 +1366,13 @@ void log_http_result(const HTTPClient& http,
   }
 
   if (loglevelActiveFor(loglevel)) {
-    String log = F("HTTP : ");
-    log += logIdentifier;
-    log += ' ';
-    log += host;
-    log += ' ';
-    log += HttpMethod;
-    log += F("... ");
+    String log = strformat(F("HTTP : %s %s %s"), 
+                          logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
 
     if (!success) {
       log += F("failed ");
     }
-    log += F("HTTP code: ");
-    log += String(httpCode);
+    log += concat(F("HTTP code: "), httpCode);
 
     if (!success) {
       log += ' ';
@@ -1395,8 +1380,7 @@ void log_http_result(const HTTPClient& http,
     }
 
     if (response.length() > 0) {
-      log += F(" Received reply: ");
-      log += response.substring(0, 100); // Returned string may be huge, so only log the first part.
+      log += concat(F(" Received reply: "), response.substring(0, 100)); // Returned string may be huge, so only log the first part.
     }
     addLogMove(loglevel, log);
   }
@@ -1515,7 +1499,7 @@ int http_authenticate(const String& logIdentifier,
     if (authReq.indexOf(F("Digest")) != -1) {
       // Use Digest authorization
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLogMove(LOG_LEVEL_INFO, String(F("HTTP : Start Digest Authorization for ")) + host);
+        addLogMove(LOG_LEVEL_INFO, concat(F("HTTP : Start Digest Authorization for "), host));
       }
 
       http.setAuthorization(""); // Clear Basic authorization
@@ -1654,14 +1638,8 @@ bool start_downloadFile(WiFiClient  & client,
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("downloadFile: URL: ");
-    log += url;
-    log += F(" decoded: ");
-    log += host;
-    log += ':';
-    log += port;
-    log += uri;
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("downloadFile: URL: %s decoded: %s:%d%s"), 
+                                          url.c_str(), host.c_str(), port, uri.c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -1708,8 +1686,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   if (fileExists(file_save)) {
-    error  = F("File exists: ");
-    error += file_save;
+    error  = concat(F("File exists: "), file_save);
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
     client.stop();
@@ -1742,11 +1719,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (f.write(buff, c) != c) {
-          error  = F("Error saving file: ");
-          error += file_save;
-          error += ' ';
-          error += bytesWritten;
-          error += F(" Bytes written");
+          error  = strformat(F("Error saving file: %s %d Bytes written"), file_save.c_str(), bytesWritten);
           addLog(LOG_LEVEL_ERROR, error);
           http.end();
           client.stop();
@@ -1758,8 +1731,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       }
 
       if (timeOutReached(timeout)) {
-        error  = F("Timeout: ");
-        error += file_save;
+        error  = concat(F("Timeout: "), file_save);
         addLog(LOG_LEVEL_ERROR, error);
         delay(0);
         http.end();
@@ -1773,17 +1745,13 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("downloadFile: ");
-      log += file_save;
-      log += F(" Success");
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
     return true;
   }
   http.end();
   client.stop();
-  error  = F("Failed to open file for writing: ");
-  error += file_save;
+  error  = concat(F("Failed to open file for writing: "), file_save);
   addLog(LOG_LEVEL_ERROR, error);
   return false;
 }
@@ -1797,6 +1765,7 @@ bool downloadFirmware(String filename, String& error)
   if (ProvisioningSettings.get()) {
     loadProvisioningSettings(*ProvisioningSettings);
     if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
+      error = F("Not Allowed");
       return false;
     }
     baseurl = ProvisioningSettings->url;
@@ -1843,11 +1812,8 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (Update.write(buff, c) != c) {
-          error  = F("Error saving firmware update: ");
-          error += file_save;
-          error += ' ';
-          error += bytesWritten;
-          error += F(" Bytes written");
+          error  = strformat(F("Error saving firmware update: %s %d Bytes written"),
+                             file_save.c_str(), bytesWritten);
           addLog(LOG_LEVEL_ERROR, error);
           Update.end();
           http.end();
@@ -1860,8 +1826,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
       }
 
       if (timeOutReached(timeout)) {
-        error  = F("Timeout: ");
-        error += file_save;
+        error  = concat(F("Timeout: "), file_save);
         addLog(LOG_LEVEL_ERROR, error);
         delay(0);
         Update.end();
@@ -1880,16 +1845,12 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("downloadFile: ");
-      log += file_save;
-      log += F(" Success");
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
 
     if (Update.end()) {
       if (Settings.UseRules) {
-        String event = F("ProvisionFirmware#success=");
-        event += file_save;
+        String event = concat(F("ProvisionFirmware#success="), file_save);
         eventQueue.addMove(std::move(event));
       }
     }
@@ -1898,8 +1859,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   http.end();
   client.stop();
   Update.end();
-  error  = F("Failed update firmware: ");
-  error += file_save;
+  error  = concat(F("Failed update firmware: "), file_save);
   addLog(LOG_LEVEL_ERROR, error);
 
   if (Settings.UseRules) {

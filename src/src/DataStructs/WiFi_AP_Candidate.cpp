@@ -41,6 +41,15 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
   enc_type = WiFi.encryptionType(networkItem);
   #ifdef ESP8266
   isHidden = WiFi.isHidden(networkItem);
+  #ifdef CORE_POST_3_0_0
+  const bss_info* it = reinterpret_cast<const bss_info*>(WiFi.getScanInfoByIndex(networkItem));
+  if (it) {
+    phy_11b = it->phy_11b;
+    phy_11g = it->phy_11g;
+    phy_11n = it->phy_11n;
+    wps = it->wps;
+  }
+  #endif
   #endif // ifdef ESP8266
   #ifdef ESP32
   isHidden = ssid.isEmpty();

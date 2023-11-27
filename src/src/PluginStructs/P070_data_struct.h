@@ -5,7 +5,7 @@
 #ifdef USES_P070
 
 
-# include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus_wrapper.h>
 
 
 # define NUMBER_LEDS      60 // number of LED in the strip
@@ -39,7 +39,7 @@ struct P070_data_struct : public PluginTaskData_base {
   bool    thick_12_mark         = false; // thicker marking of the 12h position
   uint8_t marks[14]             = { 0 }; // Positions of the hour marks and dials
 
-  Adafruit_NeoPixel *Plugin_070_pixels = nullptr;
+  NeoPixelBus_wrapper *Plugin_070_pixels = nullptr;
 };
 
 
