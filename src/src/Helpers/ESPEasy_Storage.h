@@ -168,6 +168,14 @@ String SaveTaskSettings(taskIndex_t TaskIndex);
 String LoadTaskSettings(taskIndex_t TaskIndex);
 
 /********************************************************************************************\
+   Load/Save CDN custom setting from file system
+ \*********************************************************************************************/
+#if FEATURE_ALTERNATIVE_CDN_URL
+String get_CDN_url_custom();
+void set_CDN_url_custom(const String &url);
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
+
+/********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize, uint32_t posInBlock = 0);

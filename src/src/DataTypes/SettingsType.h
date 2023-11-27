@@ -16,6 +16,9 @@ public:
     NotificationSettings_Type,
     SecuritySettings_Type,
     ExtdControllerCredentials_Type,
+#if FEATURE_ALTERNATIVE_CDN_URL
+    CdnSettings_Type,
+#endif
 
     SettingsType_MAX
   };
