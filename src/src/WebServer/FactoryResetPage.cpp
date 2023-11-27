@@ -52,6 +52,9 @@ void handle_factoryreset() {
     ResetFactoryDefaultPreference.keepNetwork(isFormItemChecked(F("knet")));
     ResetFactoryDefaultPreference.keepNTP(isFormItemChecked(F("kntp")));
     ResetFactoryDefaultPreference.keepLogConsoleSettings(isFormItemChecked(F("klog")));
+# if FEATURE_ALTERNATIVE_CDN_URL
+    ResetFactoryDefaultPreference.keepCustomCdnUrl(isFormItemChecked(F("kcdn")));
+#endif
     applyFactoryDefaultPref();
     addHtmlError(SaveSettings());
   }
@@ -82,6 +85,11 @@ void handle_factoryreset() {
 
     addRowLabel(F("Keep Console/Log config"));
     addCheckBox(F("klog"), ResetFactoryDefaultPreference.keepLogConsoleSettings());
+
+# if FEATURE_ALTERNATIVE_CDN_URL
+    addRowLabel(F("Keep Custom CDN url"));
+    addCheckBox(F("kcdn"), ResetFactoryDefaultPreference.keepCustomCdnUrl());
+#endif
 
     addTableSeparator(F("Pre-defined configurations"), 2, 3);
     addRowLabel(F("Pre-defined config"));
@@ -159,6 +167,14 @@ void handle_factoryreset_json() {
   if (hasArg(F("klog"))) {
     ResetFactoryDefaultPreference.keepLogConsoleSettings(isFormItemChecked(F("klog")));
   }
+
+# if FEATURE_ALTERNATIVE_CDN_URL
+  if (hasArg(F("kcdn"))) {
+    ResetFactoryDefaultPreference.keepCustomCdnUrl(isFormItemChecked(F("kcdn")));
+  }
+#endif
+
+
 #endif
   String error;
   bool   performReset = false;

@@ -433,6 +433,8 @@ void applyFactoryDefaultPref() {
     {
       // Store custom CDN
       FactoryDefault_CDN_customurl_NVS::fromSettings_to_NVS(preferences);
+    } else {
+      FactoryDefault_CDN_customurl_NVS::clear_from_NVS(preferences);
     }
   }
 # endif // if FEATURE_ALTERNATIVE_CDN_URL
