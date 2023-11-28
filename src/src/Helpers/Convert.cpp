@@ -102,7 +102,6 @@ String minutesToDayHourMinute(int minutes) {
   int  hours = (minutes % 1440) / 60;
   int  mins  = (minutes % 1440) % 60;
   char TimeString[20] = {0};
-
   sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c"), days, 'd', hours, 'h', mins, 'm');
   return TimeString;
 }
@@ -123,8 +122,11 @@ String secondsToDayHourMinuteSecond(int seconds) {
   int  hours   = (minutes % 1440) / 60;
   int  mins    = (minutes % 1440) % 60;
   char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c%02d"), days, 'd', hours, ':', mins, ':', sec);
+  if (days == 0) {
+    sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"), hours, ':', mins, ':', sec);
+  } else {
+    sprintf_P(TimeString, PSTR("%d%c% 02d%c%02d%c%02d"), days, 'd', hours, ':', mins, ':', sec);
+  }
   return TimeString;
 }
 

@@ -468,8 +468,10 @@ void handle_sysinfo_Network() {
   const int64_t tsf_time = WiFi_get_TSF_time();
   if (tsf_time > 0) {
     addRowLabel(F("WiFi TSF time"));
-    addHtmlInt(WiFi_get_TSF_time());
-    addUnit(F("usec"));
+    // Split it while printing, so we're not loosing a lot of decimals in the float conversion
+    addHtml(secondsToDayHourMinuteSecond(tsf_time / 1000000));
+    addHtml('.');    
+    addHtmlInt(tsf_time % 1000000);
   }
   #endif
 

@@ -300,14 +300,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
     case LabelType::TIME_SOURCE:
     {
+      String timeSource_str = toString(node_time.timeSource);
       if (((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) ||
            (node_time.timeSource == timeSource_t::ESP_now_peer)) &&
           (node_time.timeSource_p2p_unit != 0))
       {
-        return concat(toString(node_time.timeSource), ' ') +
-               wrap_braces(String(node_time.timeSource_p2p_unit));
+        return strformat(F("%s (%u)"), timeSource_str.c_str(), node_time.timeSource_p2p_unit);
       }
-      return toString(node_time.timeSource);
+      return timeSource_str;
     }
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
     #if FEATURE_EXT_RTC
@@ -415,13 +415,14 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              retval = WiFi.RSSI(); break;
-    case LabelType::IP_CONFIG:              return String(useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
-                                                            LabelType::IP_CONFIG_DYNAMIC));
+    case LabelType::IP_CONFIG:              return useStaticIP() 
+                                                     ? getLabel(LabelType::IP_CONFIG_STATIC) 
+                                                     : getLabel(LabelType::IP_CONFIG_DYNAMIC);
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return formatIP(NetworkLocalIP());
     case LabelType::IP_SUBNET:              return formatIP(NetworkSubnetMask());
-    case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
+    case LabelType::IP_ADDRESS_SUBNET:      return strformat(F("%s / %s"), getValue(LabelType::IP_ADDRESS).c_str(), getValue(LabelType::IP_SUBNET).c_str());
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #if FEATURE_INTERNAL_TEMPERATURE
@@ -431,7 +432,7 @@ String getValue(LabelType::Enum label) {
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
-    case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
+    case LabelType::DNS:                    return strformat(F("%s / %s"), getValue(LabelType::DNS_1).c_str(), getValue(LabelType::DNS_2).c_str());
     case LabelType::DNS_1:                  return formatIP(NetworkDnsIP(0));
     case LabelType::DNS_2:                  return formatIP(NetworkDnsIP(1));
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
@@ -536,8 +537,10 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return formatIP(NetworkLocalIP());
     case LabelType::ETH_IP_SUBNET:          return formatIP(NetworkSubnetMask());
-    case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") +
-                                                          getValue(LabelType::ETH_IP_SUBNET));
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return strformat(
+                                                          F("%s / %s"),
+                                                          getValue(LabelType::ETH_IP_ADDRESS).c_str(),
+                                                          getValue(LabelType::ETH_IP_SUBNET).c_str());
     case LabelType::ETH_IP_GATEWAY:         return formatIP(NetworkGatewayIP());
     case LabelType::ETH_IP_DNS:             return formatIP(NetworkDnsIP(0));
     case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
@@ -559,8 +562,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP());
     case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
     case LabelType::TIMEZONE_OFFSET:        retval = Settings.TimeZone; break;
-    case LabelType::LATITUDE:               return String(Settings.Latitude);
-    case LabelType::LONGITUDE:              return String(Settings.Longitude);
+    case LabelType::LATITUDE:               return toString(Settings.Latitude, 6);
+    case LabelType::LONGITUDE:              return toString(Settings.Longitude, 6);
 
     case LabelType::MAX_LABEL:
       break;
@@ -571,29 +574,17 @@ String getValue(LabelType::Enum label) {
 
 #if FEATURE_ETHERNET
 String getEthSpeed() {
-  String result;
-
-  result.reserve(7);
-  result += EthLinkSpeed();
-  result += F("Mbps");
-  return result;
+  return strformat(F("%dMbps"), EthLinkSpeed());
 }
 
 String getEthLinkSpeedState() {
-  String result;
-
-  result.reserve(29);
-
   if (EthLinkUp()) {
-    result += getValue(LabelType::ETH_STATE);
-    result += ' ';
-    result += getValue(LabelType::ETH_DUPLEX);
-    result += ' ';
-    result += getEthSpeed();
-  } else {
-    result = getValue(LabelType::ETH_STATE);
+    return strformat(F("%s %s %s"), 
+    getValue(LabelType::ETH_STATE).c_str(), 
+    getValue(LabelType::ETH_DUPLEX).c_str(), 
+    getEthSpeed().c_str());
   }
-  return result;
+  return getValue(LabelType::ETH_STATE);
 }
 
 #endif // if FEATURE_ETHERNET
@@ -603,21 +594,7 @@ String getExtendedValue(LabelType::Enum label) {
   {
     case LabelType::UPTIME:
     {
-      String result;
-      result.reserve(40);
-      int minutes = getUptimeMinutes();
-      int days    = minutes / 1440;
-      minutes = minutes % 1440;
-      int hrs = minutes / 60;
-      minutes = minutes % 60;
-
-      result += days;
-      result += F(" days ");
-      result += hrs;
-      result += F(" hours ");
-      result += minutes;
-      result += F(" minutes");
-      return result;
+      return minutesToDayHourMinute(getUptimeMinutes());
     }
 
     default:
