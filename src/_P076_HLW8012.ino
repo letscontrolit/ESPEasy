@@ -511,17 +511,17 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           bool changed = false;
 
           if (CalibVolt != 0) {
-            Plugin_076_hlw->expectedVoltage(CalibVolt);
+            Plugin_076_hlw->expectedVoltage(CalibVolt, UserVar[event->BaseVarIndex]);
             changed = true;
           }
 
           if (definitelyGreaterThan(CalibCurr, 0.0f)) {
-            Plugin_076_hlw->expectedCurrent(CalibCurr);
+            Plugin_076_hlw->expectedCurrent(CalibCurr, UserVar[event->BaseVarIndex + 1]);
             changed = true;
           }
 
           if (!essentiallyEqual(CalibAcPwr, 0.0f)) {
-            Plugin_076_hlw->expectedActivePower(CalibAcPwr);
+            Plugin_076_hlw->expectedActivePower(CalibAcPwr, UserVar[event->BaseVarIndex + 2]);
             changed = true;
           }
 
