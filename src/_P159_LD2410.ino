@@ -227,7 +227,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P159_SET_ENGINEERING_MODE(getFormItemInt(F("eng")));
-      P159_SET_UPDATE_DIFF_ONLY(isFormItemChecked(F("diff")) ? 1 : 0);
+      P159_SET_UPDATE_DIFF_ONLY(isFormItemChecked(F("diff")));
 
       P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
 
