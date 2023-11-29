@@ -122,7 +122,7 @@ The controller currently supports these features
 Future / planned features
 -------------------------
 
-- A special Homie Plugin is in devolopment to pass ``/set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$setable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...). See :ref:`P086_page` in :yellow:`Collection A` builds
+- A special Homie Plugin is in devolopment to pass ``/set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$settable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...). See :ref:`P086_page` in :yellow:`Collection A` builds
 - Further in field testing with different MQTT brokers and home automation systems.
 - Handling units via the ``$unit`` attribute. As ESPEasy is currenty "unitless" this needs a global concept within ESPEasy
 - Handling ``$datatype`` attribute. Currenly all values (except cmd and gpio) are defined as ``float``. See :ref:`P086_page` in :yellow:`Collection A` builds
@@ -131,7 +131,7 @@ Future / planned features
 Under the hood
 --------------
 
-Auto-dicover information is sent by several ``$attributes``
+Auto-discover information is sent by several ``$attributes``
 
 Currently the following attributes will be sent during boot
 
