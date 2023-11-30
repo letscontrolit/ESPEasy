@@ -147,6 +147,11 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+#ifdef ESP32
+  ResetFactoryDefaultPreference.init();
+#endif
+
+
   PluginSetup();
   CPluginSetup();
   

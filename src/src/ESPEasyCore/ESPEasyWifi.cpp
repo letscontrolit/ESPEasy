@@ -297,11 +297,11 @@ bool WiFiConnected() {
 
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
-      // Timer reached, so enable AP mode.
-      if (!WifiIsAP(WiFi.getMode())) {
-        if (!WiFiEventData.wifiConnectAttemptNeeded) {
-          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
-          if (!Settings.DoNotStartAP()) {
+      if (!Settings.DoNotStartAP()) {
+        // Timer reached, so enable AP mode.
+        if (!WifiIsAP(WiFi.getMode())) {
+          if (!WiFiEventData.wifiConnectAttemptNeeded) {
+            addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
             WifiScan(false);
             setAP(true);
           }
@@ -469,12 +469,14 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
-      if (candidate.allowQuickConnect() && !candidate.isHidden) {
+      if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
+           && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
-      if (Settings.WaitWiFiConnect()) {
+      if (Settings.WaitWiFiConnect() || candidate.isHidden) {
+//        WiFi.waitForConnectResult(candidate.isHidden ? 3000 : 1000);  // https://github.com/arendst/Tasmota/issues/14985
         WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
       delay(1);
