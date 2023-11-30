@@ -1966,7 +1966,7 @@ Added: 2023/10/26
   1. Get the value of a single field: 
   
      - Example command:
-     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last``
+     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last.csv``
      - Example of the resulting event:
      	``"EVENT: ThingspeakReply=1637928,5,24.2"``
        
@@ -1982,7 +1982,7 @@ Added: 2023/10/26
      	``"EVENT:ThingspeakReply=1637928,5929,353,42.0,177,19.1,995.6,,"``
         
         | channel number = ``%eventvalue1%``
-        | values = ``%eventvalue3%`` to ``%eventvalue9%``
+        | values = ``%eventvalue2%`` to ``%eventvalue9%``
      
 .. warning:: When using the command for all fields, the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields are filled with very big numbers)
 
