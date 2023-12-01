@@ -194,8 +194,11 @@ void Web_StreamingBuffer::startStream(const __FlashStringHelper * origin, int ht
   startStream(false, F("text/html"), origin, httpCode);
 }
 
-void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin, int httpCode) {
-  startStream(false, content_type, origin, httpCode);
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type,
+                                      const __FlashStringHelper * origin, 
+                                      int httpCode, 
+                                      bool cacheable) {
+  startStream(false, content_type, origin, httpCode, cacheable);
 }
 
 
@@ -206,7 +209,8 @@ void Web_StreamingBuffer::startJsonStream() {
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 
                                       const __FlashStringHelper * content_type, 
                                       const __FlashStringHelper * origin,
-                                      int httpCode) {
+                                      int httpCode,
+                                      bool cacheable) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -226,7 +230,7 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
       #endif // if defined(ESP8266)
     return;
   } else {
-    sendHeaderBlocking(allowOriginAll, content_type, origin, httpCode);
+    sendHeaderBlocking(allowOriginAll, content_type, origin, httpCode, cacheable);
   }
 }
 
@@ -355,7 +359,8 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll, 
                                              const String& content_type, 
                                              const String& origin,
-                                             int httpCode) {
+                                             int httpCode,
+                                             bool cacheable) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -383,7 +388,8 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   const uint32_t beginWait = millis();
 
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  web_server.sendHeader(F("Cache-Control"), F("no-cache"));
+  if (!cacheable)
+    web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
   if (origin.length() > 0) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);

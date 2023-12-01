@@ -78,7 +78,8 @@ void do_serveEmbedded(const __FlashStringHelper* contentType, PGM_P content, int
   // Serve using our own Web_StreamingBuffer
   // Serving via web_server.send_P may cause memory allocation issues when sending large flash strings.
   if (!serve_inline) {
-    TXBuffer.startStream(contentType, F("*"), 200);
+    const bool cacheable = true;
+    TXBuffer.startStream(contentType, F("*"), 200, cacheable);
   }
   TXBuffer.addFlashString(content, length);
   if (!serve_inline) {
@@ -162,7 +163,7 @@ bool isStaticFile_StripPrefix(String& path) {
 bool reply_304_not_modified(const String& path) {
   if (path.endsWith(F("favicon.ico"))) {
     // No need in serving 304 for the favicon
-    return false;
+    return true;
   }
   const String ifNoneMatch = stripQuotes(web_server.header(F("If-None-Match")));
   uint32_t etag_num = 0;
@@ -277,12 +278,12 @@ bool loadFromFS(String path) {
 
   // prevent reloading stuff on every click
   if (static_file) {
-    sendHeader(F("Cache-Control"), F("public, max-age=31536000, immutable"));
+    sendHeader(F("Cache-Control"), F("public, max-age=31536000, s-maxage=31536000, immutable"));
 
     //    sendHeader(F("Cache-Control"), F("max-age=86400"));
-    sendHeader(F("Expires"),       F("-1"));
+//    sendHeader(F("Expires"),       F("-1"));
     if (fileEmbedded && !fileExists(path)) {
-      sendHeader(F("Last-Modified"), get_build_date_RFC1123());
+//      sendHeader(F("Last-Modified"), get_build_date_RFC1123());
     }
     sendHeader(F("Age"),           F("100"));
     sendHeader(F("ETag"),          strformat(F("\"%u-a\""), Cache.fileCacheClearMoment)); // added "-a" to the ETag to match the same encoding
@@ -290,7 +291,7 @@ bool loadFromFS(String path) {
     sendHeader(F("Cache-Control"), F("no-cache"));
     sendHeader(F("ETag"),          F("\"2.0.0\""));
   }
-  sendHeader(F("Vary"), "*");
+  sendHeader(F("Vary"), "Accept-Encoding");
 
   if (path.endsWith(F(".dat"))) {
     sendHeader(F("Content-Disposition"), F("attachment;"));
