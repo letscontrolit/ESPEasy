@@ -1,5 +1,9 @@
 #include "../Helpers/WiFi_AP_CandidatesList.h"
 
+#ifdef ESP32
+#include "../DataStructs/WiFi_AP_Candidates_NVS.h"
+#endif
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
@@ -7,7 +11,6 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
-
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
@@ -230,6 +233,10 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
     RTC.lastWiFiChannel = currentCandidate.channel;
     currentCandidate.bssid.get(RTC.lastBSSID);
     RTC.lastWiFiSettingsIndex = currentCandidate.index;
+#ifdef ESP32
+    if (Settings.UseLastWiFiFromRTC())
+      WiFi_AP_Candidates_NVS::currentConnection_to_NVS(currentCandidate);
+#endif
   }
 
   candidates.clear();
@@ -366,7 +373,22 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) { return; }
+  if (!Settings.UseLastWiFiFromRTC()) return;
+  if (!RTC.lastWiFi_set()) { 
+    #ifdef ESP32
+    // Try to load from NVS and store in RTC
+    WiFi_AP_Candidate fromNVS;
+    if (WiFi_AP_Candidates_NVS::loadCandidate_from_NVS(fromNVS)) {
+      RTC.lastWiFiChannel = currentCandidate.channel;
+      currentCandidate.bssid.get(RTC.lastBSSID);
+      RTC.lastWiFiSettingsIndex = currentCandidate.index;
+    } else {
+      return;
+    }
+    #else
+    return;
+    #endif
+  }
 
   if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 

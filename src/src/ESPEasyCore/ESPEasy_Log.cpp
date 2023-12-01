@@ -245,7 +245,7 @@ void addLog(uint8_t logLevel, String&& string)
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    ESPEasy_Console.addToSerialBuffer(String(millis()));
+    ESPEasy_Console.addToSerialBuffer(format_msec_duration(millis()));
     ESPEasy_Console.addToSerialBuffer(F(" : ("));
     ESPEasy_Console.addToSerialBuffer(String(FreeMem()));
     ESPEasy_Console.addToSerialBuffer(F(") "));

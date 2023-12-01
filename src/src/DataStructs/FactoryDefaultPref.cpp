@@ -2,7 +2,11 @@
 
 #include "../../ESPEasy_common.h"
 
-ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct(uint32_t preference) : _preference(preference) {}
+ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct() : _preference(0)
+{}
+
+ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct(uint32_t preference) : _preference(preference)
+{}
 
 void ResetFactoryDefaultPreference_struct::set(uint32_t preference)
 {

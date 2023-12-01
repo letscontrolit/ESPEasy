@@ -523,6 +523,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         String log = F("NTP  : NTP replied: delay ");
         log += total_delay;
         log += F(" mSec");
+#ifndef LIMIT_BUILD_SIZE
         log += F(" Accuracy increased by ");
         double fractpart, intpart;
         fractpart = modf(unixTime_d, &intpart);
@@ -533,6 +534,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         }
         log += static_cast<int>(fractpart * 1000.0);
         log += F(" msec");
+#endif
         addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
