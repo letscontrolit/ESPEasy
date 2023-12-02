@@ -111,7 +111,8 @@ void handle_setup() {
               safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
               safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
               // Hidden SSID
-              Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+              Settings.IncludeHiddenSSID(isFormItemChecked(LabelType::CONNECT_HIDDEN_SSID));
+              Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
               addHtmlError(SaveSettings());
               WiFiEventData.wifiSetupConnect         = true;
               WiFiEventData.wifiConnectAttemptNeeded = true;
@@ -200,8 +201,11 @@ void handle_setup() {
 
       addFormHeader(F("Advanced WiFi settings"));
 
-      addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
+      addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
       addFormNote(F("Must be checked to connect to a hidden SSID"));
+
+      addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
+      addFormNote(F("Required for some AP brands like Mikrotik to connect to hidden SSID"));
 
       html_BR();
       html_BR();

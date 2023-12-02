@@ -1,0 +1,14 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``ld2410,factoryreset``
+    ","
+    Sending this command to the task and a sensor is connected, then the sensor will be reset to the factory default settings, and restarted. There are no questions asked or extra arguments to provide. Use with caution of you have carefully configured, f.e. the sensitivity settings.
+    "
+    "
+    ``ld2410,logall``
+    ","
+    This command will send all available sensor values (see below) to the log at INFO level. This can be viewed via an USB serial connection, when the Serial console is enabled, or via another log view, like the Tools/Log page. The minimum log level has to be set to INFO for the values to be shown.
+    "

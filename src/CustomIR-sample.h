@@ -240,15 +240,20 @@
 // #define SEND_ARRIS 0
 // #define DECODE_RHOSS 0
 // #define SEND_RHOSS 0
-// #define DECODE_AIRTON 0
-// #define SEND_AIRTON 0
-// #define DECODE_COOLIX48 0
-// #define SEND_COOLIX48 0
+
+// Since the upgrade to library version 2.8.6, a few more protocols had to be disabled, to fit the build in the 1M IR builds
+// !!! This is the last upgrade that will be made to fit. Later upgrades will be available only for 4MB ESP8266 IR builds
+
+// Version 2.8.1 added devices:
+#define DECODE_AIRTON 0
+#define SEND_AIRTON 0
+#define DECODE_COOLIX48 0
+#define SEND_COOLIX48 0
 
 // ATTENTION: DISABLE new devices from library version 2.8.2 and newer by default to save ESPEasy .bin size
 // When extending this list: Add both the DECODE_ and SEND_ defines per new device!
 
-// Version 2.8.2 added devices:
+// Version 2.8.2 added protocols:
 #define DECODE_HITACHI_AC264 0
 #define SEND_HITACHI_AC264 0
 #define DECODE_KELON168 0
@@ -257,6 +262,8 @@
 #define SEND_HITACHI_AC296 0
 #define DECODE_DAIKIN200 0
 #define SEND_DAIKIN200 0
+
+// Version 2.8.3 added protocols:
 #define DECODE_HAIER_AC160 0
 #define SEND_HAIER_AC160 0
 #define DECODE_CARRIER_AC128 0
@@ -273,6 +280,16 @@
 #define SEND_SANYO_AC152 0
 #define DECODE_DAIKIN312 0
 #define SEND_DAIKIN312 0
+
+// Version 2.8.5 added protocols:
+#define DECODE_GORENJE 0
+#define SEND_GORENJE 0
+#define DECODE_WOWWEE 0
+#define SEND_WOWWEE 0
+#define DECODE_CARRIER_AC84 0
+#define SEND_CARRIER_AC84 0
+#define DECODE_YORK 0
+#define SEND_YORK 0
 
 // Version 2.x.y added devices:
 

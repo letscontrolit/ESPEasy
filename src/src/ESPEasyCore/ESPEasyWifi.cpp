@@ -297,11 +297,11 @@ bool WiFiConnected() {
 
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
     if (WiFiEventData.timerAPoff.isSet() && !WiFiEventData.timerAPoff.timeReached()) {
-      // Timer reached, so enable AP mode.
-      if (!WifiIsAP(WiFi.getMode())) {
-        if (!WiFiEventData.wifiConnectAttemptNeeded) {
-          addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
-          if (!Settings.DoNotStartAP()) {
+      if (!Settings.DoNotStartAP()) {
+        // Timer reached, so enable AP mode.
+        if (!WifiIsAP(WiFi.getMode())) {
+          if (!WiFiEventData.wifiConnectAttemptNeeded) {
+            addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
             WifiScan(false);
             setAP(true);
           }
@@ -469,12 +469,14 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
-      if (candidate.allowQuickConnect() && !candidate.isHidden) {
+      if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
+           && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
-      if (Settings.WaitWiFiConnect()) {
+      if (Settings.WaitWiFiConnect() || candidate.isHidden) {
+//        WiFi.waitForConnectResult(candidate.isHidden ? 3000 : 1000);  // https://github.com/arendst/Tasmota/issues/14985
         WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
       delay(1);
@@ -1386,15 +1388,24 @@ bool wifiAPmodeActivelyUsed()
 
 void setConnectionSpeed() {
   #ifdef ESP8266
-  WiFiPhyMode_t phyMode = WIFI_PHY_MODE_11G;
+  // ESP8266 only supports 802.11g mode when running in STA+AP
   const bool forcedByAPmode = WifiIsAP(WiFi.getMode());
+  WiFiPhyMode_t phyMode = (Settings.ForceWiFi_bg_mode() || forcedByAPmode) ? WIFI_PHY_MODE_11G : WIFI_PHY_MODE_11N;
   if (!forcedByAPmode) {
-    // ESP8266 only supports 802.11g mode when running in STA+AP
-//    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
-
-    bool useAlternate = WiFi_AP_Candidates.attemptsLeft == 0;
-    if (Settings.ForceWiFi_bg_mode() == useAlternate) {
-      phyMode = WIFI_PHY_MODE_11N;
+    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
+    if (candidate.phy_known() && (candidate.phy_11g != candidate.phy_11n)) {
+      if ((WIFI_PHY_MODE_11G == phyMode) && !candidate.phy_11g) {
+        phyMode = WIFI_PHY_MODE_11N;
+        addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+      } else if ((WIFI_PHY_MODE_11N == phyMode) && !candidate.phy_11n) {
+        phyMode = WIFI_PHY_MODE_11G;
+        addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11g only"));
+      }      
+    } else {
+      bool useAlternate = WiFiEventData.connectionFailures > 10;
+      if (useAlternate) {
+        phyMode = (WIFI_PHY_MODE_11G == phyMode) ? WIFI_PHY_MODE_11N : WIFI_PHY_MODE_11G;
+      }
     }
   } else {
     // No need to perform a next attempt.
@@ -1421,6 +1432,15 @@ void setConnectionSpeed() {
 
   // Does not (yet) work, so commented out.
   #ifdef ESP32
+
+  // HT20 = 20 MHz channel width.
+  // HT40 = 40 MHz channel width.
+  // In theory, HT40 can offer upto 150 Mbps connection speed.
+  // However since HT40 is using nearly all channels on 2.4 GHz WiFi,
+  // Thus you are more likely to experience disturbances.
+  // The response speed and stability is better at HT20 for ESP units.
+  esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
+
   uint8_t protocol = WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G; // Default to BG
 
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
@@ -1428,7 +1448,23 @@ void setConnectionSpeed() {
     protocol |= WIFI_PROTOCOL_11N;
   }
 
+  const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
+  if (candidate.phy_known()) {
+    // Check to see if the access point is set to "N-only"
+    if ((protocol & WIFI_PROTOCOL_11N) == 0) {
+      if (!candidate.phy_11b && !candidate.phy_11g && candidate.phy_11n) {
+        // Set to use BGN
+        protocol |= WIFI_PROTOCOL_11N;
+        addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+      }
+    }
+  }
+
+
   if (WifiIsSTA(WiFi.getMode())) {
+    // Set to use "Long GI" making it more resilliant to reflections
+    // See: https://www.tp-link.com/us/configuration-guides/q_a_basic_wireless_concepts/?configurationId=2958#_idTextAnchor038
+    esp_wifi_config_80211_tx_rate(WIFI_IF_STA, WIFI_PHY_RATE_MCS3_LGI);
     esp_wifi_set_protocol(WIFI_IF_STA, protocol);
   }
 

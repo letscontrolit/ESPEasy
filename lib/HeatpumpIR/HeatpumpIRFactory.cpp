@@ -17,6 +17,8 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new DaikinHeatpumpARC480A14IR();
   } else if (strcmp_P(modelName, PSTR("daikin")) == 0) {
     return new DaikinHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("electroluxyal")) == 0) {
+    return new ElectroluxYALHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("fuego")) == 0) {
     return new FuegoHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("fujitsu_awyz")) == 0) {
@@ -77,6 +79,10 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new ToshibaDaiseikaiHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("toshiba")) == 0) {
     return new ToshibaHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("ZHJG01")) == 0) {
+    return new ZHJG01HeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("ZHLT01")) == 0) {
+    return new ZHLT01HeatpumpIR();
   }
 
    return NULL;

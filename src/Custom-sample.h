@@ -151,6 +151,8 @@
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
+#define DEFAULT_SYSLOG_PORT                     0                 // Standard syslog port: 514
+#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
@@ -159,12 +161,15 @@
 
 #define DEFAULT_USE_SERIAL                      true              // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
-#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
 #define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
 #define BUILD_NO_DEBUG
+
+// Custom built-in url for hosting JavaScript and CSS files.
+#define CUSTOM_BUILD_CDN_URL                   "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/"
+
 
 
 // Special SSID/key setup only to be used in custom builds.
@@ -345,75 +350,75 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P001   // Switch
 // #define USES_P002   // ADC
 // #define USES_P003   // Pulse
-// #define USES_P004   // Dallas
-// #define USES_P005   // DHT
-// #define USES_P006   // BMP085
+// #define USES_P004   // 1-Wire Temperature (Dallas/Maxim DS18B20)
+// #define USES_P005   // DHT11/12/22 SONOFF2301/7021/MS01
+// #define USES_P006   // BMP085/180
 // #define USES_P007   // PCF8591
-// #define USES_P008   // RFID
-// #define USES_P009   // MCP
+// #define USES_P008   // Wiegand (RFID)
+// #define USES_P009   // MCP23017
 
 // #define USES_P010   // BH1750
-// #define USES_P011   // PME
-// #define USES_P012   // LCD
-// #define USES_P013   // HCSR04
-// #define USES_P014   // SI7021
+// #define USES_P011   // ProMini Extender
+// #define USES_P012   // LCD2004
+// #define USES_P013   // HC-SR04/RCW-0001
+// #define USES_P014   // SI70xx/HTU21D
 // #define USES_P015   // TSL2561
 // #define USES_P017   // PN532
-// #define USES_P018   // Dust
+// #define USES_P018   // GP2Y10
 // #define USES_P019   // PCF8574
 
 // #define USES_P020   // Ser2Net
-// #define USES_P021   // Level
+// #define USES_P021   // Level Control
 // #define USES_P022   // PCA9685
-// #define USES_P023   // OLED
+// #define USES_P023   // OLED SSD1306
 // #define USES_P024   // MLX90614
 // #define USES_P025   // ADS1x15
 // #define USES_P026   // SysInfo
 // #define USES_P027   // INA219
-// #define USES_P028   // BME280
-// #define USES_P029   // Output
+// #define USES_P028   // BMx280
+// #define USES_P029   // Domoticz MQTT Helper
 
-// #define USES_P031   // SHT1X
-// #define USES_P032   // MS5611
-// #define USES_P033   // Dummy
+// #define USES_P031   // SHT1x
+// #define USES_P032   // MS5611 (GY-63)
+// #define USES_P033   // Dummy Device
 // #define USES_P034   // DHT12
-// #define USES_P036   // FrameOLED
+// #define USES_P036   // OLED SSD1306/SH1106 Framed
 // #define P036_FEATURE_DISPLAY_PREVIEW   1 // Enable Preview feature, shows on-display content on Devices overview page
 // #define P036_FEATURE_ALIGN_PREVIEW     1 // Enable center/right-align feature when preview is enabled (auto-disabled for 1M builds)
 // #define P036_ENABLE_TICKER   1 // Enable ticker function
-// #define USES_P037   // MQTTImport
+// #define USES_P037   // MQTT Import
 //   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
 //   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
-// #define USES_P039   // Environment - Thermocouple
+// #define USES_P039   // Thermocouple
 
 // #define USES_P040   // RFID - ID12LA/RDM6300
-// #define USES_P041   // NeoClock
-// #define USES_P042   // Candle
+// #define USES_P041   // NeoPixel (Word Clock)
+// #define USES_P042   // NeoPixel (Candle)
 // #define USES_P043   // ClkOutput
-// #define USES_P044   // P1WifiGateway
+// #define USES_P044   // P1 Wifi Gateway
 // #define USES_P045   // MPU6050
-// #define USES_P046   // VentusW266
-// #define USES_P047   // I2C_soil_misture
-// #define USES_P048   // Motoshield_v2
-// #define USES_P049   // MHZ19
+// #define USES_P046   // Ventus W266
+// #define USES_P047   // Soil moisture sensor
+// #define USES_P048   // Motoshield v2
+// #define USES_P049   // MH-Z19
 
 // #define USES_P050   // TCS34725 RGB Color Sensor with IR filter and White LED
 // #define USES_P051   // AM2320
 // #define USES_P052   // SenseAir
-// #define USES_P053   // PMSx003
+// #define USES_P053   // PMSx003 / PMSx003ST
 // #define USES_P054   // DMX512
 // #define USES_P055   // Chiming
-// #define USES_P056   // SDS011-Dust
+// #define USES_P056   // SDS011/018/198
 // #define USES_P057   // HT16K33_LED
 // #define USES_P058   // HT16K33_KeyPad
-// #define USES_P059   // Encoder
+// #define USES_P059   // Rotary Encoder
 
 // #define USES_P060   // MCP3221
-// #define USES_P061   // Keypad
-// #define USES_P062   // MPR121_KeyPad
-// #define USES_P063   // TTP229_KeyPad
+// #define USES_P061   // PCF8574 / MCP23017 / PCA8575
+// #define USES_P062   // MPR121
+// #define USES_P063   // TTP229
 // #define USES_P064   // APDS9960 Gesture
 // #define USES_P065   // DRF0299
 // #define USES_P066   // VEML6040
@@ -424,18 +429,18 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P070   // NeoPixel_Clock
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
-// #define USES_P073   // 7DG
+// #define USES_P073   // 7-segment display
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
-// #define USES_P076   // HWL8012   in POW r1
-// #define USES_P077   // CSE7766   in POW R2
-// #define USES_P078   // Eastron Modbus Energy meters
-// #define USES_P079   // Wemos Motoshield
+// #define USES_P076   // HLW8012/BL0937 (Shelly Plug S, Sonoff POW R1, Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23)
+// #define USES_P077   // CSE7766 (Sonoff S31, Sonoff POW R2, Sonoff POW R3xx(D), Sonoff Dual R3)
+// #define USES_P078   // Eastron SDMxxx Modbus
+// #define USES_P079   // Wemos / Lolin Motorshield
 
 // #define USES_P080   // iButton Sensor  DS1990A
 // #define USES_P081   // Cron
 // #define USES_P082   // GPS
-// #define USES_P083   // SGP30
+// #define USES_P083   // SGP30 TVOC
 // #define USES_P084   // VEML6070
 // #define USES_P085   // AcuDC24x
 // #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
@@ -443,30 +448,30 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P088   // HeatpumpIR
 // #define USES_P089   // Ping
 
-// #define USES_P090   // CCS811
-// #define USES_P091   // SerSwitch
+// #define USES_P090   // CCS811 TVOC
+// #define USES_P091   // Serial MCU controlled switch
 // #define USES_P092   // DLbus
-// #define USES_P093   // MitsubishiHP
-// #define USES_P094   // CULReader
-// #define USES_P095   // ILI9341
+// #define USES_P093   // Mitsubishi Heat Pump
+// #define USES_P094   // CUL Reader
+// #define USES_P095   // ILI934x / ILI948x
 // #define USES_P096   // eInk
-// #define USES_P097   // ESP32Touch
-// #define USES_P098   // 
+// #define USES_P097   // ESP32 Touch
+// #define USES_P098   // PWM Motor
 // #define USES_P099   // XPT2046 touchscreen
 
 // #define USES_P100   // DS2423 counter
-// #define USES_P101   // WakeOnLan
-// #define USES_P102   // PZEM004Tv3
+// #define USES_P101   // Wake On Lan
+// #define USES_P102   // PZEM-004Tv30-Multiple
 // #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
-// #define USES_P104   // MAX7219 dotmatrix
-// #define USES_P105   // AHT10/20/21
-// #define USES_P106   // BME680
-// #define USES_P107   // Si1145
+// #define USES_P104   // MAX7219 dot matrix
+// #define USES_P105   // AHT10/AHT2x
+// #define USES_P106   // BME68x
+// #define USES_P107   // SI1145
 // #define USES_P108   // DDS238-x ZN Modbus energy meters
 // #define USES_P109   // ThermoOLED
 
 // #define USES_P110   // VL53L0X Time of Flight sensor
-// #define USES_P111   // RF522 RFID reader
+// #define USES_P111   // MFRC522 RFID reader
 // #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
@@ -477,11 +482,13 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P119   // ITG3205 Gyro
 
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
-// #define USES_P124   // I2C MultiRelay
+// #define USES_P121   // HMC5883L
+// #define USES_P122   // SHT2x
+// #define USES_P124   // I2C Multi Relay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
-// #define USES_P128   // NeoPixelBusFX
+// #define USES_P128   // NeoPixel (BusFX)
 //   #define P128_USES_GRB  // Default
 //   #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
 //   #define P128_USES_RGB
@@ -492,7 +499,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters
 
-// #define USES_P131   // NeoMatrix
+// #define USES_P131   // NeoPixel Matrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
@@ -506,10 +513,21 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
 //   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
 //   #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+
+// #define USES_P144   // PM1006(K) (Vindriktning)
+// #define USES_P145   // MQxxx (MQ135 CO2, MQ3 Alcohol)
+// #define USES_P146   // Cache Reader
 // #define USES_P147   // SGP4x
 //   #define P147_FEATURE_GASINDEXALGORITHM    0 // Enabled by default, can be turned off here
 
+// #define USES_P148   // POWR3xxD/THR3xxD
+// #define USES_P150   // TMP117 Temperature
+// #define USES_P151   // Honeywell Pressure
+// #define USES_P152   // ESP32 DAC
+// #define USES_P153   // SHT4x
+// #define USES_P154   // BMP3xx
 
+// #define USES_P159   // Presence - LD2410 Radar detection
 
 /*
  #######################################################################################################

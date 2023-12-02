@@ -1,5 +1,6 @@
 /*
     Samsung AQV12PSBN / AQV09ASA heatpump control (remote control P/N zzz)
+    Samsung AQV12MSAN (remote control ARH-1362)
     Samsung FJM (RJ040F2HXEA / MH026FNEA) heatpump control (remote control P/N ARH-465)
 */
 #ifndef SamsungHeatpumpIR_h
@@ -47,11 +48,13 @@
 #define SAMSUNG_AIRCON2_VS_AUTO    0xF0
 #define SAMSUNG_AIRCON2_TURBO      0x06 // 30 minutes of full power
 
+#define MODEL_AQV12_MSAN            1
 
 class SamsungHeatpumpIR : public HeatpumpIR
 {
   protected:
     SamsungHeatpumpIR();
+    uint8_t _samsungAQVModel;	
   
   public:
     virtual void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
@@ -80,6 +83,12 @@ class SamsungFJMHeatpumpIR : public SamsungHeatpumpIR
     
   private:
     void sendSamsung(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, bool turboMode);    
+};
+
+class SamsungAQV12MSANHeatpumpIR : public SamsungAQVHeatpumpIR
+{
+  public:
+    SamsungAQV12MSANHeatpumpIR();
 };
 
 #endif
