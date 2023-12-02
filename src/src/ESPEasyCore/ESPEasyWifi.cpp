@@ -1566,11 +1566,10 @@ void logConnectionStatus() {
   #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : Arduino wifi status: ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    log += F(" ESPeasy internal wifi status: ");
-    log += WiFiEventData.ESPeasyWifiStatusToString();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("WIFI : Arduino wifi status: %s ESPeasy internal wifi status: %s"),
+      ArduinoWifiStatusToString(WiFi.status()).c_str(),
+      WiFiEventData.ESPeasyWifiStatusToString().c_str()));
   }
 /*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

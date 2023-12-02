@@ -218,10 +218,10 @@ void runEach30Seconds()
     }
     #endif // if FEATURE_ETHERNET
     if (logWiFiStatus) {
-      log += F(" WiFiStatus ");
-      log += ArduinoWifiStatusToString(WiFi.status());
-      log += F(" ESPeasy internal wifi status: ");
-      log += WiFiEventData.ESPeasyWifiStatusToString();
+      log += strformat(
+        F("WiFiStatus: %s ESPeasy internal wifi status: %s"),
+        ArduinoWifiStatusToString(WiFi.status()).c_str(),
+        WiFiEventData.ESPeasyWifiStatusToString().c_str());
     }
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
