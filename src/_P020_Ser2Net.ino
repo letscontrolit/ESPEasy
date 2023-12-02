@@ -203,8 +203,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(P020_Events::RFLink),
             static_cast<int>(P020_Events::P1WiFiGateway),
           };
+          constexpr int optionCount = NR_ELEMENTS(optionValues);
           addFormSelector(F("Event processing"), F("pevents"),
-                          sizeof(optionValues) / sizeof(int), options, optionValues,
+                          optionCount, options, optionValues,
                           P020_SERIAL_PROCESSING);
         }
         addFormCheckBox(F("P1 #data event with message"), F("pp1event"), P020_GET_P1_EVENT_DATA);
@@ -245,7 +246,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
       {
         addFormNumericBox(F("RX Receive Timeout (mSec)"), F("prxwait"), P020_RX_WAIT, 0, 200);
-        addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after init"), F("presetpin"), P020_RESET_TARGET_PIN);
+        addFormPinSelect(PinSelectPurpose::Generic_output, F("Reset target after init"), F("presetpin"), P020_RESET_TARGET_PIN);
 
         if (!P020_Emulate_P044) {
           addFormNumericBox(F("RX buffer size (bytes)"), F("prx_buffer"), P020_RX_BUFFER, 256, 2048);
@@ -258,7 +259,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Led"));
 
         addFormCheckBox(F("Led enabled"), F("pled"), P020_GET_LED_ENABLED);
-        addFormPinSelect(PinSelectPurpose::Generic, F("Led pin"), F("pledpin"), P020_LED_PIN);
+        addFormPinSelect(PinSelectPurpose::Generic_output, F("Led pin"), F("pledpin"), P020_LED_PIN);
         addFormCheckBox(F("Led inverted"), F("pledinv"), P020_GET_LED_INVERTED == 1);
       }
 
@@ -360,16 +361,14 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-        log.reserve(100);
-        log  = concat(F("Ser2Net: TaskIndex="), static_cast<int>(event->TaskIndex) + 1);
-        log += concat(F(" port="), static_cast<int>(CONFIG_PORT));
-        log += concat(F(" rxPin="), static_cast<int>(rxPin));
-        log += concat(F(" txPin="), static_cast<int>(txPin));
-        log += concat(F(" BAUDRATE="), static_cast<int>(P020_GET_BAUDRATE));
-        log += concat(F(" SERVER_PORT="), static_cast<int>(P020_GET_SERVER_PORT));
-        log += concat(F(" SERIAL_PROCESSING="), static_cast<int>(P020_SERIAL_PROCESSING));
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: TaskIndex=%d port=%d rxPin=%d txPin=%d BAUDRATE=%d SERVER_PORT=%d SERIAL_PROCESSING=%d"),
+                                         event->TaskIndex + 1,
+                                         CONFIG_PORT,
+                                         rxPin,
+                                         txPin,
+                                         P020_GET_BAUDRATE,
+                                         P020_GET_SERVER_PORT,
+                                         P020_SERIAL_PROCESSING));
       }
       # endif // ifndef LIMIT_BUILD_SIZE
 

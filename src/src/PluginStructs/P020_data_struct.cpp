@@ -58,9 +58,9 @@ void P020_Task::startServer(uint16_t portnumber) {
     ser2netServer->begin();
 
     if (serverActive(ser2netServer)) {
-      addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: WiFi server started at port "), portnumber));
+      addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: WiFi server started at port %d"), portnumber));
     } else {
-      addLog(LOG_LEVEL_ERROR, concat(F("Ser2Net: WiFi server start failed at port "), portnumber) + F(", retrying..."));
+      addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: WiFi server start FAILED at port %d, retrying..."), portnumber));
     }
   }
 }
