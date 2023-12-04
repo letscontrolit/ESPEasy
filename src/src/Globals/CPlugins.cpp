@@ -5,7 +5,6 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_init.h"
 
@@ -161,13 +160,15 @@ controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
 
 bool validProtocolIndex(protocolIndex_t index)
 {
-  return getCPluginID_from_ProtocolIndex(index) != INVALID_C_PLUGIN_ID;
+  return validProtocolIndex_init(index);
 }
 
+/*
 bool validControllerIndex(controllerIndex_t index)
 {
   return index < CONTROLLER_MAX;
 }
+*/
 
 bool validCPluginID(cpluginID_t cpluginID)
 {
@@ -213,10 +214,7 @@ String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
   protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID_(cpluginID);
 
   if (!validProtocolIndex(protocolIndex)) {
-    String name = F("CPlugin ");
-    name += String(static_cast<int>(cpluginID));
-    name += F(" not included in build");
-    return name;
+    return strformat(F("CPlugin %d not included in build"), cpluginID);
   }
   return getCPluginNameFromProtocolIndex(protocolIndex);
 }

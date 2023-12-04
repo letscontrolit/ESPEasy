@@ -532,6 +532,15 @@ uint16_t OLEDDisplay::getStringWidth(const String& strUser) {
   return width;
 }
 
+uint8_t OLEDDisplay::getCharWidth(const char c) {
+  uint8_t firstChar = pgm_read_byte(fontData + FIRST_CHAR_POS);
+  if (utf8ascii(c) == 0)
+    return 0;
+  if (c < firstChar)
+    return 0;
+  return pgm_read_byte(fontData + JUMPTABLE_START + (c- firstChar) * JUMPTABLE_BYTES + JUMPTABLE_WIDTH);
+}
+
 void OLEDDisplay::setTextAlignment(OLEDDISPLAY_TEXT_ALIGNMENT textAlignment) {
   this->textAlignment = textAlignment;
 }

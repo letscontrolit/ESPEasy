@@ -27,7 +27,7 @@ const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, con
     String event;
     rulesProcessingFile(filename, event);
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
@@ -46,7 +46,7 @@ const __FlashStringHelper * Command_Rules_Async_Events(struct EventStruct *event
     eventName.replace('$', '#');
     eventQueue.addMove(std::move(eventName));
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, const char *Line)
@@ -66,7 +66,7 @@ const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, cons
       eventQueue.addMove(std::move(eventName));
     }
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const char *Line)
@@ -79,11 +79,11 @@ const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const c
 
       if (!isError(Calculate(TmpStr1, result))) {
         setCustomFloatVar(event->Par1, result);
-        return return_command_success();
+        return return_command_success_flashstr();
       }
     }
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_Rules_IncDec(struct EventStruct *event, const char *Line, const ESPEASY_RULES_FLOAT_TYPE factor)
@@ -92,13 +92,13 @@ const __FlashStringHelper * Command_Rules_IncDec(struct EventStruct *event, cons
   ESPEASY_RULES_FLOAT_TYPE result = 1;
 
   if (GetArgv(Line, TmpStr1, 3) && isError(Calculate(TmpStr1, result))) {
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
   if (event->Par1 >= 0) {
     setCustomFloatVar(event->Par1, getCustomFloatVar(event->Par1) + (result * factor));
-    return return_command_success();
+    return return_command_success_flashstr();
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_Rules_Inc(struct EventStruct *event, const char *Line)

@@ -243,7 +243,7 @@ public:
 private:
  
 
-  OversamplingHelper<uint32_t> OverSampling;
+  OversamplingHelper<int32_t> OverSampling;
 
   int   _calib_adc1 = 0;
   int   _calib_adc2 = 0;

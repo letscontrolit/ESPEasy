@@ -155,7 +155,7 @@ All these values are described in great detail in the Advanced section, where th
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
 * **Extra Wait WiFi Connect**: ``true`` means there is an extra wait upto 1000 msec after initiating a connection to an access point. This can be useful when connecting to some FritzBox access points or routers. (Added: 2023/04/05)
 * **Enable SDK WiFi Auto Reconnect**: ``true`` means the Espressif SDK will automatically attempt a reconnect when a connection is briefly lost. Access points (like TP-Link Omada) with "Band Steering" enabled may trigger a quick disconnect to force nodes to connect on the 5 GHz band. (Added: 2023/04/05)
-
+* **Hidden SSID Slow Connect**: ``true`` Connect per found hidden SSID to an access point. Needed for some APs like Mikrotik. This may slow down connecting to the AP significantly. (Added: 2023/11/20)
 
 
 
@@ -759,6 +759,18 @@ This will act much faster on these disconnect events. However it also seems to s
 Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
 
 
+Hidden SSID Slow Connect
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-11-20
+
+Some access points with hidden SSID do not react to a broadcast connect attempt with a given SSID.
+For example Mikrotik routers and access points only allow connecting to a hidden SSID when specifically addressed.
+This may cause a significant slow down connecting to a hidden AP when there are lots of hidden access points with a relative strong signal.
+
+This is enabled by default.
+
+
 Show JSON
 =========
 
@@ -875,6 +887,27 @@ Then it does not make sense to have the client timeout of that controller set to
 
 System Variables
 ================
+
+
+I2C Scan
+========
+
+To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional busses provided via an I2C multiplexer, for available devices.
+
+The scan is performed if the I2C ``SDA`` and ``SCL`` GPIO pins are configured on the Hardware page, and will use the configured ``Slow device Clock Speed`` setting (default: 100 kHz) during the scan, as that should be supported by any I2C device available.
+
+The output is a list of all addresses, in hexadecimal notation, and, when included in the build, the known device name(s) supported at that address. On the same condition, and when the plugin for the detected device is included in the build, the name of the plugin is also listed:
+
+Example scan showing a single device, with the Plugin included in the build:
+
+.. image:: images/Tools_I2Cscan_single_bus.png
+
+Example scan using an I2C multiplexer, showing multiple devices across multiple channels, with the plugins included in the (MAX) build:
+
+.. image:: images/Tools_I2Cscan_multiplexer.png
+
+
+.. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
 
 Factory Reset
@@ -1022,20 +1055,73 @@ See the ``Custom-sample.h`` file for some examples.
 Allow Fetch by Command
 ----------------------
 
-This checkbox allows provisioning via commands.
-These commands are not restricted, so they can also be given via HTTP or MQTT.
+This list of checkboxes per file allows provisioning via commands.
+These ``Provision*`` commands are not restricted, so they can also be given via HTTP or MQTT.
 
 However, they can only be executed when:
 
-* Allow Fetch by Command is enabled
-* the file to download is checked
+* the file at Allow Fetch by Command is checked
+* the file at Files to Download is *also* checked
 * URL (+ optional credentials) is stored
 
 The commands are:
 
+Changed: 2023-11-18: Single-word commands split into 2 words: ``Provision,<subcmd>[,<params>]``
 
-* ``ProvisionConfig`` Fetch ``config.dat``
-* ``ProvisionSecurity`` Fetch ``security.dat``
-* ``ProvisionNotification`` Fetch ``notification.dat``
-* ``ProvisionProvision`` Fetch ``provisioning.dat``
-* ``ProvisionRules,1`` Fetch ``rules1.txt``
+* ``Provision,Config`` Fetch ``config.dat``
+* ``Provision,Security`` Fetch ``security.dat``
+* ``Provision,Notification`` Fetch ``notification.dat``
+* ``Provision,Provision`` Fetch ``provisioning.dat``
+* ``Provision,Rules,1`` Fetch ``rules1.txt``
+* ``Provision,CustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)
+
+* ``Provision,Firmware,<FirmwareBinary.bin>`` Fetch and install ``FirmwareBinary.bin`` on the unit
+
+Once the Firmware download & install is finished the outcome is completed by a generated event (gets the download filename as an argument):
+
+* ``ProvisionFirmware#Success=<FirmwareBinary.bin>`` When download and install where succesfull
+* ``ProvisionFirmware#Failed=<FirmwareBinary.bin>`` When something went wrong during download or install
+
+These events can be handled in rules, an provisioning support script could look like this:
+
+.. code-block:: none
+
+  On updateSettings Do
+    provision,provision
+    provision,config
+  Endon
+
+  On updateCredentials Do
+    provision,security  
+  Endon
+
+  On updateRules Do
+    provision,rules,1
+    provision,rules,2
+    provision,rules,3
+  Endon
+
+  On updateRulesSettings Do
+    AsyncEvent,updateSettings
+    AsyncEvent,updateRules
+    Reboot
+  Endon
+
+  // e.g.
+  // event,PerformFirmwareUpdate=firmware_max_ESP32_16M8M_LittleFS.bin
+  On PerformFirmwareUpdate=* Do
+    pwm,2,100,0,8
+    provision,firmware,%eventvalue1%
+  Endon
+
+  On provisionfirmware#success=* Do
+    gpio,2,0
+    Reboot
+  Endon
+
+  On provisionfirmware#failure Do
+    gpio,2,0
+    Reboot  
+  Endon
+
+

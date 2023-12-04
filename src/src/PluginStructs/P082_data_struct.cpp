@@ -119,10 +119,6 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   return isInitialized();
 }
 
-bool P082_data_struct::isInitialized() const {
-  return gps != nullptr && easySerial != nullptr;
-}
-
 bool P082_data_struct::loop() {
   if (!isInitialized()) {
     return false;

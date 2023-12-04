@@ -41,6 +41,15 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
   enc_type = WiFi.encryptionType(networkItem);
   #ifdef ESP8266
   isHidden = WiFi.isHidden(networkItem);
+  #ifdef CORE_POST_3_0_0
+  const bss_info* it = reinterpret_cast<const bss_info*>(WiFi.getScanInfoByIndex(networkItem));
+  if (it) {
+    phy_11b = it->phy_11b;
+    phy_11g = it->phy_11g;
+    phy_11n = it->phy_11n;
+    wps = it->wps;
+  }
+  #endif
   #endif // ifdef ESP8266
   #ifdef ESP32
   isHidden = ssid.isEmpty();
@@ -107,10 +116,6 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   return rssi > other.rssi;
 }
 
-bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
-  return bssid_match(other.bssid) && ssid.equals(other.ssid);// && key.equals(other.key);
-}
-
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
   // if (key.isEmpty()) return false;
@@ -138,22 +143,6 @@ bool WiFi_AP_Candidate::expired() const {
   return timePassedSince(last_seen) > WIFI_AP_CANDIDATE_MAX_AGE;
 }
 
-bool WiFi_AP_Candidate::allowQuickConnect() const {
-  if (channel == 0) { return false; }
-  return bssid_set();
-}
-
-bool WiFi_AP_Candidate::bssid_set() const {
-  return !bssid.all_zero();
-}
-
-bool WiFi_AP_Candidate::bssid_match(const uint8_t bssid_c[6]) const {
-  return bssid == bssid_c;
-}
-
-bool WiFi_AP_Candidate::bssid_match(const MAC_address& other) const {
-  return bssid == other;
-}
 
 String WiFi_AP_Candidate::toString(const String& separator) const {
   String result = ssid;
@@ -188,8 +177,4 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
 
 String WiFi_AP_Candidate::encryption_type() const {
   return WiFi_encryptionType(enc_type);
-}
-
-bool WiFi_AP_Candidate::phy_known() const {
-  return phy_11b || phy_11g || phy_11n;
 }

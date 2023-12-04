@@ -31,7 +31,7 @@ const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const ch
     eventName += x;
     SendUDPCommand(event->Par1, eventName.c_str(), eventName.length());
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 
@@ -43,7 +43,7 @@ const __FlashStringHelper * Command_UPD_SendTo(struct EventStruct *event, const 
     String eventName = tolerantParseStringKeepCase(Line, 3);
     SendUDPCommand(destUnit, eventName.c_str(), eventName.length());
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 #endif //FEATURE_ESPEASY_P2P
 
@@ -53,7 +53,7 @@ const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, con
     String ip      = parseString(Line, 2);
     int port    = parseCommandArgumentInt(Line, 2);
 
-    if (port < 0 || port > 65535) return return_command_failed();
+    if (port < 0 || port > 65535) return return_command_failed_flashstr();
     // FIXME TD-er: This command is not using the tolerance setting
     // tolerantParseStringKeepCase(Line, 4);
     String message = parseStringToEndKeepCase(Line, 4);
@@ -72,7 +72,7 @@ const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, con
       FeedSW_watchdog();
       delay(0);
     }
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   return return_not_connected();
 }

@@ -14,6 +14,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
+#include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
@@ -178,6 +179,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
     case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
+    case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
 
     case LabelType::BUILD_DESC:             return F("Build");
@@ -236,6 +239,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal temperature (ESP32)");
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
@@ -412,6 +418,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
@@ -456,6 +465,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
+    case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
     case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.WifiNoneSleep());
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();
@@ -467,7 +478,7 @@ String getValue(LabelType::Enum label) {
       return get_git_head();
     }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
-    case LabelType::PLUGIN_COUNT:           retval = deviceCount + 1; break;
+    case LabelType::PLUGIN_COUNT:           retval = getDeviceCount() + 1; break;
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             return String(get_build_date()) + ' ' + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();

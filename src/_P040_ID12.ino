@@ -120,8 +120,10 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
             {
               // temp woraround, ESP Easy framework does not currently prepare this...
               taskIndex_t index = INVALID_TASK_INDEX;
+              constexpr pluginID_t PLUGIN_ID_P040_ID12(PLUGIN_ID_040);
+
               for (taskIndex_t y = 0; y < TASKS_MAX; y++)
-                if (Settings.TaskDeviceNumber[y] == PLUGIN_ID_040)
+                if (Settings.getPluginID_for_task(y) == PLUGIN_ID_P040_ID12)
                   index = y;
               const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);
               if (!validDeviceIndex(DeviceIndex)) {

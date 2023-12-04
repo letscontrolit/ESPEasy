@@ -41,7 +41,7 @@ bool             validNPluginID(npluginID_t npluginID);
 String           getNPluginNameFromNotifierIndex(notifierIndex_t NotifierIndex);
 nprotocolIndex_t getNProtocolIndex(npluginID_t Number);
 nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index);
-bool             addNPlugin(npluginID_t npluginID, nprotocolIndex_t x);
+bool             addNPlugin(/*npluginID_t*/ uint8_t npluginID, nprotocolIndex_t x);
 
 #endif
 

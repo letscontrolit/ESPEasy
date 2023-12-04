@@ -370,8 +370,10 @@ bool BuildFixes()
   if (Settings.Build < 20114) {
     #ifdef USES_P003
     // P003_Pulse was always using the pull-up, now it is a setting.
+    constexpr pluginID_t PLUGIN_ID_P003_PULSE(3);
+
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 3) {
+      if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P003_PULSE) {
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
@@ -387,8 +389,10 @@ bool BuildFixes()
   #ifdef USES_P053
   if (Settings.Build < 20116) {
     // Added PWR button, init to "-none-"
+    constexpr pluginID_t PLUGIN_ID_P053_PMSx003(53);
+
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-      if (Settings.TaskDeviceNumber[taskIndex] == 53) {
+      if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P053_PMSx003) {
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }
@@ -562,6 +566,10 @@ String SaveSettings(bool forFactoryReset)
     Settings.validate();
     initSerial();
 
+    if (forFactoryReset) {
+      Settings.forceSave();
+    }
+
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
     computeChecksum(
@@ -642,14 +650,25 @@ void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
+  // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
+  #ifdef ESP32
+  if (pref_temp == 0) {
+    if (ResetFactoryDefaultPreference.getPreference() == 0) {
+      // Try loading from NVS
+      ResetFactoryDefaultPreference.init();
+      pref_temp = ResetFactoryDefaultPreference.getPreference();
+    }
+  }
+  #endif
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
     if (ProvisioningSettings.get()) {
       loadProvisioningSettings(*ProvisioningSettings);
       if (ProvisioningSettings->matchingFlashSize()) {
-        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
+        if (pref_temp == 0 && ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)
+          pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -663,6 +682,7 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(pref.getDeviceModel())) {
     ResetFactoryDefaultPreference = pref_temp;
   }
+  applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
   setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
@@ -750,6 +770,8 @@ uint8_t disablePlugin(uint8_t bootFailedCount) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
       }
     }
@@ -761,6 +783,8 @@ uint8_t disableAllPlugins(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+        // Disable temporarily as unit crashed
+        // FIXME TD-er: Should this be stored?
         Settings.TaskDeviceEnabled[i] = false;
     }
   }
@@ -938,6 +962,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
  \*********************************************************************************************/
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock)
 {
+  // FIXME TD-er: Must add some check to see if the existing data has changed before saving.
   int offset, max_size;
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
@@ -1135,6 +1160,50 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   return result;
 }
+
+#if FEATURE_ALTERNATIVE_CDN_URL
+String _CDN_url_cache;
+bool   _CDN_url_loaded = false;
+
+String get_CDN_url_custom() {
+  if (!_CDN_url_loaded) {
+    String strings[] = {EMPTY_STRING};
+
+    LoadStringArray(
+      SettingsType::Enum::CdnSettings_Type, 0,
+      strings, NR_ELEMENTS(strings), 255, 0);
+    _CDN_url_cache  = strings[0];
+    _CDN_url_loaded = true;
+  }
+  return _CDN_url_cache;
+}
+
+void set_CDN_url_custom(const String &url) {
+  _CDN_url_cache = url;
+  _CDN_url_cache.trim();
+  if (!_CDN_url_cache.isEmpty() && !_CDN_url_cache.endsWith(F("/"))) {
+    _CDN_url_cache.concat('/');
+  }
+  _CDN_url_loaded = true;
+
+  String strings[] = { EMPTY_STRING };
+
+  LoadStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+
+  if (url.equals(strings[0])) {
+    // No need to save, is already the same
+    return;
+  }
+
+  strings[0] = url;
+
+  SaveStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+}
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 /********************************************************************************************\
    Save Custom Task settings to file system
@@ -2086,6 +2155,10 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 
       if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
+      }
+
+      if (!ProvisioningSettings->url[0]) {
+        return F("Provision Config incomplete");
       }
 
       url  = ProvisioningSettings->url;

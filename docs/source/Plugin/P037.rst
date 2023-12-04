@@ -31,7 +31,7 @@ Only numbers can be stored in variables (Plugin Generic - Dummy Device), so eith
 Device configuration
 --------------------
 
-NB: To save space it is possible that not all features are available in all builds. All features are available in ``normal`` builds with 2MB or more flash size, ``max`` builds, and when self-building in a ``Custom`` build. The screenshots are taken including all options.
+NB: To save space it is possible that not all features are available in all builds. All features are available in ``normal`` builds with 2MB or more flash size, ``max`` builds, when self-building in a ``Custom`` build, and in all ``ESP32`` builds. The screenshots are taken including all options.
 
 The options that can be included or excluded are:
 

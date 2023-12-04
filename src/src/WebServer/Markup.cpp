@@ -540,6 +540,21 @@ void addRowLabelValue(LabelType::Enum label) {
   addHtml(getValue(label));
 }
 
+void addRowLabelValues(const LabelType::Enum labels[]) {
+  size_t i = 0;
+  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
+
+  while (true) {
+    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
+    addRowLabelValue(cur);
+    if (next == LabelType::MAX_LABEL) {
+      return;
+    }
+    ++i;
+    cur = next;
+  }
+}
+
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));
@@ -931,7 +946,11 @@ void addRTDPluginButton(pluginID_t pluginID) {
   url += F(".html");
   addRTDHelpButton(url);
 
-  if ((pluginID == 76) || (pluginID == 77)) {
+  constexpr pluginID_t PLUGIN_ID_P076_HLW8012(76);
+  constexpr pluginID_t PLUGIN_ID_P077_CSE7766(77);
+
+  if ((pluginID == PLUGIN_ID_P076_HLW8012) || 
+      (pluginID == PLUGIN_ID_P077_CSE7766)) {
     addHtmlLink(
       F("button help"),
       makeDocLink(F("Reference/Safety.html"), true),

@@ -60,10 +60,7 @@ bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
 
 const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, const char *Line)
 {
-  if (gpio_monitor_helper(event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(gpio_monitor_helper(event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event, const char *Line)
@@ -73,7 +70,7 @@ const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event,
   for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_monitor_helper(i, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
@@ -99,10 +96,9 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = concat(logPrefix,  F(" port #")); 
-      log += port; 
-      log += F(": added to monitor list.");
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, concat(
+        logPrefix,
+        strformat(F(" port #%d: added to monitor list."), port))); 
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -116,12 +112,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
 
 const __FlashStringHelper * Command_GPIO_UnMonitor(struct EventStruct *event, const char *Line)
 {
-  if (gpio_unmonitor_helper(event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  else {
-    return return_command_failed();
-  }
+  return return_command_boolean_result_flashstr(gpio_unmonitor_helper(event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *event, const char *Line)
@@ -131,7 +122,7 @@ const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *even
   for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_unmonitor_helper(i, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line)
@@ -151,10 +142,9 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
 
     removeMonitorFromPort(key);
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = concat(logPrefix, F(" port #"));
-      log += port;
-      log += F(": removed from monitor list.");
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, concat(
+        logPrefix,
+        strformat(F(" port #%d: removed from monitor list."), port)));
     }
 
     return true;
@@ -287,17 +277,18 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    return return_command_success();
+    return return_command_success_flashstr();
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
   bool sendStatusFlag;
-  uint8_t pluginID = 0;
+  pluginID_t pluginID;
+  int8_t value = -1;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {
@@ -308,28 +299,30 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 #ifdef USES_P009
     case 'm': // mcp
       pluginID       = PLUGIN_MCP;
-      sendStatusFlag = GPIO_MCP_Read(event->Par2) == -1;
+      value          = GPIO_MCP_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
 #ifdef USES_P019
     case 'p': // pcf
       pluginID       = PLUGIN_PCF;
-      sendStatusFlag = GPIO_PCF_Read(event->Par2) == -1;
+      value          = GPIO_PCF_Read(event->Par2);
+      sendStatusFlag = value == -1;
       break;
 #endif
     default:
       addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-      return return_command_failed();
+      return return_command_failed_flashstr();
   }
 
   if (!checkValidPortRange(pluginID, event->Par2))
   {
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
   const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
   String dummy;
-  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
-  return return_command_success();
+  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, value);
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char *Line)
@@ -359,10 +352,10 @@ const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const ch
 
     // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, pluginID, event->Par1, log, 0));
 
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const char *Line)
@@ -379,12 +372,12 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
   if (tone_espEasy(event->Par1, event->Par2, duration)) {
     if (mustScheduleToneOff) {
       // For now, we only support the internal GPIO pins.
-      uint8_t pluginID = PLUGIN_GPIO;
+      const pluginID_t pluginID = PLUGIN_GPIO;
       Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, 0);
     }
-    return return_command_success();
+    return return_command_success_flashstr();
   }
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
@@ -395,30 +388,36 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
   // more info.
 
+  // First assume 'new' syntax: rtttl,<gpio>,<rtttl string>
+  // Difference between 'old' and 'new':
+  // Comma between the GPIO argument and the melody
   String melody = parseStringToEndKeepCase(Line, 2);
+  melody = melody.substring(melody.indexOf(':'), melody.length());
+
   melody.replace('-', '#');
+  melody.replace('_', '#');
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = concat(F("RTTTL : pin: "),  event->Par1);
-    log += F(" melody: ");
-    log += melody;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("RTTTL: pin: %d melody: %s"), event->Par1, melody.c_str()));
   }
+  #if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
+  set_rtttl_melody(melody);
+  #endif // if FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 
   if (play_rtttl(event->Par1, melody.c_str())) {
-    return return_command_success();
+    return return_command_success_flashstr();
   }
   #else // if FEATURE_RTTTL
-  addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
+  addLog(LOG_LEVEL_ERROR, F("RTTTL: command not included in build"));
   #endif // if FEATURE_RTTTL
-  return return_command_failed();
+  return return_command_failed_flashstr();
 }
 
 const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const char *Line)
 {
   const __FlashStringHelper * logPrefix = F("");
   bool   success  = false;
-  uint8_t   pluginID = INVALID_PLUGIN_ID;
+  pluginID_t   pluginID;
 
   switch (tolower(Line[0]))
   {
@@ -454,16 +453,14 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
     GPIO_Write(pluginID, event->Par1, !event->Par2);
 
     String log = logPrefix;
-    log += concat(F(" : port "),  event->Par1);
-    log += concat(F(". Pulse set for "),  event->Par3);
-    log += F(" ms");
+    log += strformat(F(" : port %d. Pulse set for %d ms"), event->Par1, event->Par3);
     addLog(LOG_LEVEL_INFO, log);
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-    return return_command_success();
+    return return_command_success_flashstr();
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
@@ -502,32 +499,30 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         GPIO_Write(pluginID, event->Par1, !state);
 
         String log = logPrefix;
-        log += F(" toggle: port#");
-        log += event->Par1;
-        log += F(": set to ");
-        log += static_cast<int>(!state);
+        log += concat(
+          F(" toggle"),
+          strformat(F(": port#%d: set to %d"), event->Par1, static_cast<int>(!state)));
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
-        return return_command_success();
-        break;
+        return return_command_success_flashstr();
       }
       case PIN_MODE_OFFLINE:
         logErrorGpioOffline(logPrefix, event->Par1);
-        return return_command_failed();
+        return return_command_failed_flashstr();
       default:
         logErrorGpioNotOutput(logPrefix, event->Par1);
-        return return_command_failed();
+        return return_command_failed_flashstr();
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
 const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *Line)
 {
-  pluginID_t pluginID = INVALID_PLUGIN_ID;
+  pluginID_t pluginID;
   bool success = false;
 
   // Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
@@ -541,26 +536,26 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
     if (event->Par2 == 2) { // INPUT
       mode = PIN_MODE_INPUT_PULLUP;
 
-      switch (pluginID) {
-        case PLUGIN_GPIO:
+      switch (pluginID.value) {
+        case PLUGIN_GPIO_INT:
           setInternalGPIOPullupMode(event->Par1);
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
 #ifdef USES_P009
-        case PLUGIN_MCP:
+        case PLUGIN_MCP_INT:
           setMCPInputAndPullupMode(event->Par1, true);
-          GPIO_Read(PLUGIN_MCP, event->Par1, state);
+          GPIO_Read(pluginID, event->Par1, state);
           break;
 #endif
 #ifdef USES_P019
-        case PLUGIN_PCF:
+        case PLUGIN_PCF_INT:
           // PCF8574 specific: only can read 0/low state, so we must send 1
           state = 1;
           break;
 #endif
         default:
           addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
-          return return_command_failed();
+          return return_command_failed_flashstr();
       }
     } else { // OUTPUT
       mode  = PIN_MODE_OUTPUT;
@@ -583,28 +578,29 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
 
       if ((mode == PIN_MODE_OUTPUT) || (pluginID == PLUGIN_PCF)) { GPIO_Write(pluginID, event->Par1, state, mode); }
 
-      String log = logPrefix;
-      log += F(" : port#");
-      log += event->Par1;
-      log += F(": set to ");
-      log += state;
+      const String log = concat(
+        logPrefix,
+        strformat(F(": port#%d: set to %d"), event->Par1, state));
       addLog(LOG_LEVEL_INFO, log);
       SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
-      return return_command_success();
+      return return_command_success_flashstr();
     } else {
       logErrorGpioOffline(logPrefix, event->Par1);
-      return return_command_failed();
+      return return_command_failed_flashstr();
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
-    return return_command_failed();
+    return return_command_failed_flashstr();
   }
 }
 
 void logErrorGpio(const __FlashStringHelper * prefix, int port, const __FlashStringHelper * description)
 {
   if (port >= 0) {
-    addLog(LOG_LEVEL_ERROR, concat(prefix, concat(F(" : port#"), port)) + description);
+    String log = prefix;
+    log += concat(F(" : port#"), port);
+    log += description;
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 }
 
@@ -723,11 +719,11 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
 {
   range_pattern_helper_data data;
 
-  switch (plugin) {
-    case PLUGIN_PCF:
+  switch (plugin.value) {
+    case PLUGIN_PCF_INT:
       data.logPrefix = F("PCF");
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
       data.logPrefix = F("MCP");
       break;
   }
@@ -737,7 +733,7 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
       !checkValidPortRange(plugin, pin2) ||
       ((pin2 - pin1 + 1) > 16)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, concat(data.logPrefix, F(": pin numbers out of range.")));
+      addLog(LOG_LEVEL_ERROR, concat(data.logPrefix, F(": pin numbers out of range.")));
     }
     return data;
   }
@@ -795,7 +791,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
       data.write = data.write << data.deltaStart;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, concat(data.logPrefix,  F(": write value must be 0 or 1.")));
+        addLog(LOG_LEVEL_ERROR, concat(data.logPrefix,  F(": write value must be 0 or 1.")));
       }
       return data;
     }
@@ -835,14 +831,14 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
 #ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char *Line)
 {
-  return mcpgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(mcpgpio_range_pattern_helper(event, Line, true));
 }
 #endif
 
 #ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
 {
-  return pcfgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(pcfgpio_range_pattern_helper(event, Line, true));
 }
 #endif
 
@@ -868,18 +864,19 @@ const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *even
 #ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIORange(struct EventStruct *event, const char *Line)
 {
-  return mcpgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(mcpgpio_range_pattern_helper(event, Line, false));
 }
 #endif
 
 #ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
 {
-  return pcfgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(pcfgpio_range_pattern_helper(event, Line, false));
 }
 #endif
 
 #ifdef USES_P009
+// FIXME TD-er: Function is nearly identical to pcfgpio_range_pattern_helper
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
   range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_MCP, event, Line, isWritePattern);
@@ -925,10 +922,9 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         const int8_t state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        String log;
-        log += data.logPrefix;
-        log += concat(F(": port#"), static_cast<int>(currentPin));
-        log += concat(F(": set to "), static_cast<int>(state));
+        const String log = concat(
+          data.logPrefix,
+          strformat(F(": port#%d: set to %d"), currentPin, state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
@@ -948,6 +944,7 @@ uint8_t getPcfAddress(uint8_t pin)
   return retValue;
 }
 
+// FIXME TD-er: Function is nearly identical to mcpgpio_range_pattern_helper
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
   range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_PCF, event, Line, isWritePattern);
@@ -957,8 +954,6 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   }
 
   bool   onLine = false;
-  String log;
-
   for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
     uint8_t    currentAddress = getPcfAddress(event->Par1 + 8 * i);
@@ -983,7 +978,9 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = concat(data.logPrefix, F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        const String log = concat(
+          data.logPrefix,
+          strformat(F(": port#%d: set to %d"), currentPin, state));
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
@@ -1078,10 +1075,7 @@ bool setPCFMode(uint8_t pin, uint8_t mode)
  **********************************************/
 const __FlashStringHelper * Command_GPIO_Mode(struct EventStruct *event, const char *Line)
 {
-  if (gpio_mode_range_helper(event->Par1, event->Par2, event, Line)) {
-    return return_command_success();
-  }
-  return return_command_failed();
+  return return_command_boolean_result_flashstr(gpio_mode_range_helper(event->Par1, event->Par2, event, Line));
 }
 
 const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, const char *Line)
@@ -1091,7 +1085,7 @@ const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, co
   for (uint8_t i = event->Par1; i <= event->Par2; i++) {
     success &= gpio_mode_range_helper(i, event->Par3, event, Line);
   }
-  return success ? return_command_success() : return_command_failed();
+  return return_command_boolean_result_flashstr(success);
 }
 
 bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char *Line)
@@ -1126,18 +1120,18 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
     }
 
     if (mode < 255) {
-      switch (pluginID) {
-        case PLUGIN_GPIO:
+      switch (pluginID.value) {
+        case PLUGIN_GPIO_INT:
           /* setSuccess = */ setGPIOMode(pin, mode);
           break;
 #ifdef USES_P019
-        case PLUGIN_PCF:
+        case PLUGIN_PCF_INT:
           // set pin = 1 when INPUT
           /* setSuccess = */ setPCFMode(pin, mode);
           break;
 #endif
 #ifdef USES_P009
-        case PLUGIN_MCP:
+        case PLUGIN_MCP_INT:
           /* setSuccess = */ setMCPMode(pin, mode);
           break;
 #endif
@@ -1163,8 +1157,10 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
 
         createAndSetPortStatus_Mode_State(key, mode, currentState);
 
-        const String log = concat(logPrefix, F(" : port#")) + String(pin) + String(F(": MODE set to ")) + logPostfix + String(F(". Value = ")) +
-                     String(currentState);
+        String log = logPrefix;
+        log += strformat(F(" : port#%d: MODE set to "), pin);
+        log += logPostfix;
+        log += concat(F(". Value = "), currentState);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         return true;
@@ -1243,9 +1239,9 @@ bool getGPIOPinStateValues(String& str) {
         default:
         {
           #if FEATURE_PINSTATE_EXTENDED
-          unsigned int plugin = INVALID_PLUGIN_ID;
-          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID)) { // Valid plugin ID?
-            pluginID  = plugin;
+          unsigned int plugin = INVALID_PLUGIN_ID.value;
+          if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID.value)) { // Valid plugin ID?
+            pluginID.value  = plugin;
             #ifndef BUILD_NO_DEBUG
             logPrefix = get_formatted_Plugin_number(pluginID);
             #endif
@@ -1274,7 +1270,9 @@ bool getGPIOPinStateValues(String& str) {
 
     if (success) {
       #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_DEBUG, logPrefix + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
+      String log = logPrefix;
+      log += strformat(F(" PLUGIN PINSTATE pin =%d; value=%s"), par1, str.c_str());
+      addLog(LOG_LEVEL_DEBUG, log);
       #endif // ifndef BUILD_NO_DEBUG
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
@@ -1315,7 +1313,7 @@ bool getGPIOPinStateValues(String& str) {
           str       = String(tempValue);
           break;
         }
-          #endif
+#endif
         default:
           addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
           return false;
@@ -1324,16 +1322,14 @@ bool getGPIOPinStateValues(String& str) {
 
       if (success) {
         #ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_DEBUG,
-               concat(logPrefix, F(" PLUGIN RANGE pin start=")) + String(par1) + 
-               concat(F("; pin end="), par2) + 
-               concat(F("; value="), str));
+        addLog(LOG_LEVEL_DEBUG, concat(
+          logPrefix,
+          strformat(F(" PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str())));
         #endif // ifndef BUILD_NO_DEBUG
       } else {
-        addLogMove(LOG_LEVEL_ERROR,
-               concat(logPrefix,  F(" IS OFFLINE. PLUGIN RANGE pin start=")) + String(par1) + 
-               concat(F("; pin end="), par2) +
-               concat(F("; value="), str));
+        addLog(LOG_LEVEL_ERROR, concat(
+          logPrefix,
+          strformat(F(" IS OFFLINE. PLUGIN RANGE pin start=%d; pin end=%d; value=%s"), par1, par2, str.c_str())));
       }
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric."));

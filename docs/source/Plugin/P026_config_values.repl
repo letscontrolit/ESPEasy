@@ -1,0 +1,59 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#uptime]``
+    ","
+    | Returns the uptime of the unit in minutes.
+    "
+    "
+    | ``[<taskname>#freeheap]``
+    ","
+    | Returns the amount of free memory in bytes.
+    "
+    "
+    | ``[<taskname>#rssi]``
+    ","
+    | Returns the RSSI (Received signal strength indicator) value. This is a negative value.
+    "
+    "
+    | ``[<taskname>#vcc]``
+    ","
+    | Returns the voltage applied to the 3.3V VCC input of the ESP. This value is **only** available on ESP8266 builds with VCC enabled (included in the build name), else 0 will be shown.
+    "
+    "
+    | ``[<taskname>#load]``
+    ","
+    | Returns the load as displayed on the Main and Info pages, a percentage in range 0 .. 100.
+    "
+    "
+    | ``[<taskname>#ip1]`` .. ``[<taskname>#ip4]``
+    ","
+    | Returns the separate parts of the active IPv4 address of the unit, the parts 1..4 are counted from left to right.
+    "
+    "
+    | ``[<taskname>#web]``
+    ","
+    | Returns the time passed since the last web activity at the unit. Measured in seconds.
+    "
+    "
+    | ``[<taskname>#freestack]``
+    ","
+    | Returns the available stack space in bytes.
+    "
+    "
+    | ``[<taskname>#txpwr]``
+    ","
+    | Returns the current setting for transmit power via WiFi. This is determined dynamically, depending on the corresponding settings in the Tools/Advanced page, RSSI and other factors.
+    "
+    "
+    | ``[<taskname>#free2ndheap]``
+    ","
+    | Returns the available memory on the 2nd heap, **only** available in some specific ESP8266 builds, else it shows 0.
+    "
+    "
+    | ``[<taskname>#internaltemp]``
+    ","
+    | Returns the internal temperature of the ESP. **Only** available on ESP32 units. For ESP32-S2/S3/C2/C3/C6 MCUs there is official support for the internal temperature sensor via the Espressif libraries, that has compensation applied so it shows a realistic value. For ESP32 Classic this is determined empirically, based on the deviation of the 150 kHz internal clock generator, that is rather temperature dependent, compared to the (stable) crystal frequency. This should not be seen as an absolute temperature, but *can* be used as a relative measurement f.e. when comparing heavy load vs. light load situations.
+    "

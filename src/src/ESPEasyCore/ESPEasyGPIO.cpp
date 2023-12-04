@@ -415,29 +415,29 @@ void GPIO_Monitor10xSec()
     //only call monitor function if there is the need to
     if (it->second.monitor || it->second.command || it->second.init) {
       const uint16_t gpioPort = getPortFromKey(it->first);
-      const uint16_t pluginID = getPluginFromKey(it->first);
+      const pluginID_t pluginID = getPluginFromKey(it->first);
       int8_t currentState = -1;
       const __FlashStringHelper * eventString = F("");
       bool caseFound = true;
 
-      switch (pluginID)
+      switch (pluginID.value)
       {
-        case PLUGIN_GPIO:
+        case PLUGIN_GPIO_INT:
           currentState = GPIO_Read_Switch_State(gpioPort, it->second.mode);
           eventString = F("GPIO");
           break;
-        case PLUGIN_MCP:
 #ifdef USES_P009
+        case PLUGIN_MCP_INT:
           currentState = GPIO_MCP_Read(gpioPort);
           eventString = F("MCP");
-#endif
           break;
-        case PLUGIN_PCF:
+#endif
 #ifdef USES_P019
+        case PLUGIN_PCF_INT:
           currentState = GPIO_PCF_Read(gpioPort);
           eventString = F("PCF");
-#endif
           break;
+#endif
         default:
           caseFound=false;
         break;
@@ -477,13 +477,13 @@ void sendMonitorEvent(const __FlashStringHelper * prefix, int port, int8_t state
 
 bool checkValidPortRange(pluginID_t pluginID, int port)
 {
-  switch (pluginID)
+  switch (pluginID.value)
   {
-    case PLUGIN_GPIO:
+    case PLUGIN_GPIO_INT:
       return validGpio(port);
 
-    case PLUGIN_MCP:
-    case PLUGIN_PCF:
+    case PLUGIN_MCP_INT:
+    case PLUGIN_PCF_INT:
       return (port>=1 && port<=128);
   }
   return false;
@@ -508,20 +508,20 @@ void setInternalGPIOPullupMode(uint8_t port)
 bool GPIO_Write(pluginID_t pluginID, int port, uint8_t value, uint8_t pinMode)
 {
   bool success=true;
-  switch (pluginID)
+  switch (pluginID.value)
   {
-    case PLUGIN_GPIO:
+    case PLUGIN_GPIO_INT:
       if (pinMode==PIN_MODE_OUTPUT)
         GPIO_Internal_Write(port, value);
       else
         success=false;
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
 #ifdef USES_P009
       GPIO_MCP_Write(port, value);
 #endif
       break;
-    case PLUGIN_PCF:
+    case PLUGIN_PCF_INT:
 #ifdef USES_P019
       GPIO_PCF_Write(port, value);
 #endif
@@ -538,17 +538,17 @@ bool GPIO_Write(pluginID_t pluginID, int port, uint8_t value, uint8_t pinMode)
 bool GPIO_Read(pluginID_t pluginID, int port, int8_t &value)
 {
   bool success=true;
-  switch (pluginID)
+  switch (pluginID.value)
   {
-    case PLUGIN_GPIO:
+    case PLUGIN_GPIO_INT:
       value = GPIO_Internal_Read(port);
       break;
-    case PLUGIN_MCP:
+    case PLUGIN_MCP_INT:
 #ifdef USES_P009
       value = GPIO_MCP_Read(port);
 #endif
       break;
-    case PLUGIN_PCF:
+    case PLUGIN_PCF_INT:
 #ifdef USES_P019
       value = GPIO_PCF_Read(port);
 #endif
