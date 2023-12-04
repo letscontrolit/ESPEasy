@@ -1,3 +1,4 @@
+
 #define _ISOC99_SOURCE
 
 #include <stdio.h>
@@ -181,8 +182,9 @@ void parse_line(char *line, TinyCronJob *job, int count) {
     *job->cmd = '\0';
     ++job->cmd;
 }
+/*
 int main(int argc, char *argv[]) {
-    /*signal(SIGCHLD, sigchld_handler);*/
+    //signal(SIGCHLD, sigchld_handler);
     signal(SIGTERM, sig_handler);
     signal(SIGINT,  sig_handler);
 
@@ -232,3 +234,4 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
+*/
