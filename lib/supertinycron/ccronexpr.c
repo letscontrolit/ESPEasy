@@ -323,7 +323,7 @@ static int reset_all(int (*fn)(struct tm* calendar, int field), struct tm* calen
 }
 
 typedef enum { T_ASTERISK, T_QUESTION, T_NUMBER, T_COMMA, T_SLASH, T_L, T_W, T_HASH, T_MINUS, T_WS, T_EOF, T_INVALID } TokenType;
-typedef struct { const char* input; TokenType type; cron_expr* target; int field_type, value, min, max, offset, fix_dow; uint8_t* field; char* err; } ParserContext;
+typedef struct { const char* input; TokenType type; cron_expr* target; int field_type, value, min, max, offset, fix_dow; uint8_t* field; const char* err; } ParserContext;
 
 static int compare_strings(const char* str1, const char* str2, size_t len) {
     size_t i;
