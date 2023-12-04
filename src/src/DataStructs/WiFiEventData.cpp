@@ -89,6 +89,7 @@ void WiFiEventData_t::markWiFiTurnOn() {
 
 void WiFiEventData_t::clear_processed_flags() {
   // Mark all flags to default to prevent handling old events.
+  WiFi.scanDelete();
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;

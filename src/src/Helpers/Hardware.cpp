@@ -463,6 +463,36 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
   return value;
 }
 
+
+int  getCPU_MaxFreqMHz()
+{
+#if CONFIG_IDF_TARGET_ESP32
+            return static_cast<int>(efuse_hal_get_rated_freq_mhz());
+#elif CONFIG_IDF_TARGET_ESP32S3
+            return 240;
+#elif CONFIG_IDF_TARGET_ESP32S2
+            return 240;
+#elif CONFIG_IDF_TARGET_ESP32C6
+            return 160;
+#elif CONFIG_IDF_TARGET_ESP32C3
+            return 160;
+#elif CONFIG_IDF_TARGET_ESP32C2
+            return 120;
+#  else 
+  #   error Target CONFIG_IDF_TARGET is not supported
+  
+  return 160;
+
+#  endif
+}
+
+int  getCPU_MinFreqMHz()
+{
+  // TODO TD-er: May differ on some ESPs and also some allow less but only without WiFi
+  return 80;
+}
+
+
 #endif // ifdef ESP32
 
 

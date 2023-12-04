@@ -236,6 +236,8 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
 #ifdef ESP32
     if (Settings.UseLastWiFiFromRTC())
       WiFi_AP_Candidates_NVS::currentConnection_to_NVS(currentCandidate);
+    else
+      WiFi_AP_Candidates_NVS::clear_from_NVS();
 #endif
   }
 

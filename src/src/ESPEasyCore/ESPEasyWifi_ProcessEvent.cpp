@@ -536,6 +536,7 @@ void processScanDone() {
   switch (scanCompleteStatus) {
     case 0: // Nothing (yet) found
       if (WiFiEventData.lastGetScanMoment.timeoutReached(5000)) {
+        WiFi.scanDelete();
         WiFiEventData.processedScanDone = true;
       }
       return;
@@ -545,11 +546,13 @@ void processScanDone() {
         # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_ERROR, F("WiFi : Scan Running Timeout"));
       #endif
+        WiFi.scanDelete();
         WiFiEventData.processedScanDone = true;
       }
       return;
     case -2: // WIFI_SCAN_FAILED
       addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
+      WiFi.scanDelete();
       WiFiEventData.processedScanDone = true;
       return;
   }

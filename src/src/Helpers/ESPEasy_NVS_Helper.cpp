@@ -31,7 +31,7 @@ bool ESPEasy_NVS_Helper::getPreference(const String& key, String& value)
 
   const bool res = !value.isEmpty();
 
-  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS   : Load "), key));
+  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS  : Load "), key));
   return res;
 }
 
@@ -42,7 +42,7 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const String& value)
   }
   else if (!_preferences.getString(key.c_str(), EMPTY_STRING.c_str()).equals(value)) {
     _preferences.putString(key.c_str(), value);
-    addLog(LOG_LEVEL_INFO, concat(F("NVS   : Save "), key));
+    addLog(LOG_LEVEL_INFO, concat(F("NVS  : Save "), key));
   }
 }
 
@@ -54,7 +54,7 @@ bool ESPEasy_NVS_Helper::getPreference(const String& key, uint32_t& value)
 
   const bool res = value != defaultValue;
 
-  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS   : Load "), key));
+  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS  : Load "), key));
   return res;
 }
 
@@ -67,7 +67,7 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const uint32_t& value)
   }
   else if (_preferences.getUInt(key.c_str()) != value) {
     _preferences.putUInt(key.c_str(), value);
-    addLog(LOG_LEVEL_INFO, concat(F("NVS   : Save "), key));
+    addLog(LOG_LEVEL_INFO, concat(F("NVS  : Save "), key));
   }
 }
 
@@ -79,7 +79,7 @@ bool ESPEasy_NVS_Helper::getPreference(const String& key, uint64_t& value)
 
   const bool res = value != defaultValue;
 
-  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS   : Load "), key));
+  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS  : Load "), key));
   return res;
 }
 
@@ -92,7 +92,7 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const uint64_t& value)
   }
   else if (_preferences.getULong64(key.c_str()) != value) {
     _preferences.putULong64(key.c_str(), value);
-    addLog(LOG_LEVEL_INFO, concat(F("NVS   : Save "), key));
+    addLog(LOG_LEVEL_INFO, concat(F("NVS  : Save "), key));
   }
 }
 
@@ -100,7 +100,7 @@ bool ESPEasy_NVS_Helper::getPreference(const String& key, uint8_t *data, size_t 
 {
   const bool res = _preferences.getBytes(key.c_str(), data, length) == length;
 
-  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS   : Load "), key));
+  addLog(res ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, concat(F("NVS  : Load "), key));
   return res;
 }
 
@@ -117,7 +117,7 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const uint8_t *data, s
   }
 
   if (_preferences.putBytes(key.c_str(), data, length) == length) {
-    addLog(LOG_LEVEL_INFO, concat(F("NVS   : Save "), key));
+    addLog(LOG_LEVEL_INFO, concat(F("NVS  : Save "), key));
   }
 }
 

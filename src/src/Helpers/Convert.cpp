@@ -90,9 +90,9 @@ String minutesToDayHourMinute(int minutes) {
   const int  hours = (minutes % 1440) / 60;
   const int  mins  = (minutes % 1440) % 60;
   if (days == 0) {
-    return strformat(F("%02d:%02d"), hours, mins);
+    return strformat(F("%02dh%02dm"), hours, mins);
   }
-  return strformat(F("%dT%02d:%02d"), days, hours, mins);
+  return strformat(F("%dd%02dh%02dm"), days, hours, mins);
 }
 
 String minutesToHourColonMinute(int minutes) {

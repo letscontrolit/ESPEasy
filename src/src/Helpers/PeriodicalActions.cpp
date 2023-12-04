@@ -199,14 +199,11 @@ void runEach30Seconds()
   #endif
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += getUptimeMinutes();
-    log += F(" ConnectFailures ");
-    log += WiFiEventData.connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
+    String log = strformat(
+      F("WD   : Uptime %d  ConnectFailures %u FreeMem %u"),
+      getUptimeMinutes(),
+      WiFiEventData.connectionFailures,
+      FreeMem());
     bool logWiFiStatus = true;
     #if FEATURE_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
@@ -219,7 +216,7 @@ void runEach30Seconds()
     #endif // if FEATURE_ETHERNET
     if (logWiFiStatus) {
       log += strformat(
-        F("WiFiStatus: %s ESPeasy internal wifi status: %s"),
+        F(" WiFiStatus: %s ESPeasy internal wifi status: %s"),
         ArduinoWifiStatusToString(WiFi.status()).c_str(),
         WiFiEventData.ESPeasyWifiStatusToString().c_str());
     }

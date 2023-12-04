@@ -59,6 +59,9 @@ int                        getADC_num_for_gpio(int pin, int& channel);
 int                        espeasy_analogRead(int  pin,
                                               bool readAsTouch = false);
 
+int  getCPU_MaxFreqMHz();
+int  getCPU_MinFreqMHz();
+
 #endif // ifdef ESP32
 
 

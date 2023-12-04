@@ -445,11 +445,10 @@ void AttemptWiFiConnect() {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : Connecting ");
-      log += candidate.toString();
-      log += F(" attempt #");
-      log += WiFiEventData.wifi_connect_attempt;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("WIFI : Connecting %s attempt #%u"),
+        candidate.toString().c_str(),
+        WiFiEventData.wifi_connect_attempt));
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
@@ -967,7 +966,7 @@ bool WiFiScanAllowed() {
 
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
     if (!NetworkConnected()) {
-      return true;
+      return WiFiEventData.processedConnect;
     }
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
@@ -976,7 +975,7 @@ bool WiFiScanAllowed() {
       return false;
     }
   }
-  return true;
+  return WiFiEventData.processedConnect;
 }
 
 
@@ -1068,6 +1067,7 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 
 #ifdef ESP32
+#if ESP_IDF_VERSION_MAJOR<5
   RTC.clearLastWiFi();
   if (WiFiConnected()) {
     # ifndef BUILD_NO_DEBUG
@@ -1078,6 +1078,7 @@ void WifiScan(bool async, uint8_t channel) {
     WifiDisconnect();
     WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
   }
+#endif
 #endif
 
 }
