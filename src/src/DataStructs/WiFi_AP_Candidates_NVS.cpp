@@ -3,7 +3,7 @@
 #ifdef ESP32
 # include "../Helpers/ESPEasy_NVS_Helper.h"
 
-# define WIFI_AP_CANDIDATE_NVS_KEY "WIFI_CANDIDATE"
+# define WIFI_AP_CANDIDATE_NVS_KEY "WIFICANDIDATE"
 
 struct WiFi_AP_Candidates_NVS_data_t {
   union {
@@ -19,16 +19,18 @@ struct WiFi_AP_Candidates_NVS_data_t {
 
 bool WiFi_AP_Candidates_NVS::loadCandidate_from_NVS(WiFi_AP_Candidate& candidate)
 {
-  ESPEasy_NVS_Helper preferences;
-
-  if (!preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE), false)) {
-    return false;
-  }
-
   WiFi_AP_Candidates_NVS_data_t fromNVS;
 
-  if (!preferences.getPreference(F(WIFI_AP_CANDIDATE_NVS_KEY), fromNVS.rawdata)) {
-    return false;
+  {
+    ESPEasy_NVS_Helper preferences;
+
+    if (!preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE))) {
+      return false;
+    }
+
+    if (!preferences.getPreference(F(WIFI_AP_CANDIDATE_NVS_KEY), fromNVS.rawdata)) {
+      return false;
+    }
   }
   candidate.bssid.set(fromNVS.APdata.BSSID);
   candidate.channel = fromNVS.APdata.lastWiFiChannel;
@@ -40,21 +42,21 @@ void WiFi_AP_Candidates_NVS::currentConnection_to_NVS(const WiFi_AP_Candidate& c
 {
   ESPEasy_NVS_Helper preferences;
 
-  if (preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE), true)) {
-    WiFi_AP_Candidates_NVS_data_t toNVS;
-    candidate.bssid.get(toNVS.APdata.BSSID);
-    toNVS.APdata.lastWiFiChannel       = candidate.channel;
-    toNVS.APdata.lastWiFiSettingsIndex = candidate.index;
+  preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE));
+  WiFi_AP_Candidates_NVS_data_t toNVS;
 
-    preferences.setPreference(F(WIFI_AP_CANDIDATE_NVS_KEY), toNVS.rawdata);
-  }
+  candidate.bssid.get(toNVS.APdata.BSSID);
+  toNVS.APdata.lastWiFiChannel       = candidate.channel;
+  toNVS.APdata.lastWiFiSettingsIndex = candidate.index;
+
+  preferences.setPreference(F(WIFI_AP_CANDIDATE_NVS_KEY), toNVS.rawdata);
 }
 
 void WiFi_AP_Candidates_NVS::clear_from_NVS()
 {
   ESPEasy_NVS_Helper preferences;
 
-  if (preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE), true)) {
+  if (preferences.begin(F(WIFI_CONNECTION_NVS_NAMESPACE))) {
     preferences.remove(F(WIFI_AP_CANDIDATE_NVS_KEY));
   }
 }

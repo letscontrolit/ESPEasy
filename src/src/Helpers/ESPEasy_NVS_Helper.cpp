@@ -22,7 +22,9 @@ void ESPEasy_NVS_Helper::end()
 
 void ESPEasy_NVS_Helper::remove(const String& key)
 {
-  _preferences.remove(key.c_str());
+  if (_preferences.isKey(key.c_str())) {
+    _preferences.remove(key.c_str());
+  }
 }
 
 bool ESPEasy_NVS_Helper::getPreference(const String& key, String& value)

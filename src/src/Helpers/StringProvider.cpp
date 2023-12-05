@@ -44,6 +44,9 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
+#ifdef ESP32
+#include <soc/rtc.h>
+#endif
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -507,12 +510,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_FREQ:          retval = ESP.getCpuFreqMHz(); break;
 #ifdef ESP32
     case LabelType::ESP_CHIP_XTAL_FREQ:     retval = getXtalFrequencyMHz(); break;
-    case LabelType::ESP_CHIP_APB_FREQ:      retval = getApbFrequency() / 1000000; break;
+    case LabelType::ESP_CHIP_APB_FREQ:      retval = rtc_clk_apb_freq_get() / 1000000; break;
+    //getApbFrequency() / 1000000; break;
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         retval = getChipCores(); break;
-    case LabelType::BOARD_NAME:         return get_board_name();
+    case LabelType::BOARD_NAME:             return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:

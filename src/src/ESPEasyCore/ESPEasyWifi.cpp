@@ -1258,14 +1258,13 @@ void setWifiMode(WiFiMode_t new_mode) {
   processing_wifi_mode = new_mode;
 
   if (cur_mode == WIFI_OFF) {
+    #if defined(ESP32)
+    // Needs to be set while WiFi is off
+    WiFi.hostname(NetworkCreateRFCCompliantHostname());
+    #endif
     WiFiEventData.markWiFiTurnOn();
   }
   if (new_mode != WIFI_OFF) {
-    #if defined(ESP32)
-    // Needs to be set before calling WiFi.mode() on ESP32
-    WiFi.hostname(NetworkCreateRFCCompliantHostname());
-    #endif
-
     #ifdef ESP8266
     // See: https://github.com/esp8266/Arduino/issues/6172#issuecomment-500457407
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
@@ -1296,6 +1295,10 @@ void setWifiMode(WiFiMode_t new_mode) {
 
   if (new_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
+    #if defined(ESP32)
+    // Needs to be set while WiFi is off
+    WiFi.hostname(NetworkCreateRFCCompliantHostname());
+    #endif
     delay(100);
     #if defined(ESP32)
     esp_wifi_set_ps(WIFI_PS_NONE); 

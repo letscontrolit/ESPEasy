@@ -20,7 +20,7 @@
 #if FEATURE_CUSTOM_PROVISIONING
 #define WIFI_CONNECTION_CONSIDERED_STABLE   60000 // in milliSeconds
 #else
-#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
+#define WIFI_CONNECTION_CONSIDERED_STABLE  60000 // in milliSeconds
 #endif
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 #define WIFI_SCAN_INTERVAL_AP_USED         125000 // in milliSeconds

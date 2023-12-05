@@ -37,6 +37,7 @@
 #ifdef ESP32
   # include <soc/soc.h>
   # include <soc/efuse_reg.h>
+  # include <hal/efuse_hal.h>
   # include <soc/spi_reg.h>
   # include <soc/rtc.h>
 
@@ -467,22 +468,26 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 int  getCPU_MaxFreqMHz()
 {
 #if CONFIG_IDF_TARGET_ESP32
-            return static_cast<int>(efuse_hal_get_rated_freq_mhz());
-#elif CONFIG_IDF_TARGET_ESP32S3
-            return 240;
-#elif CONFIG_IDF_TARGET_ESP32S2
-            return 240;
-#elif CONFIG_IDF_TARGET_ESP32C6
-            return 160;
-#elif CONFIG_IDF_TARGET_ESP32C3
-            return 160;
+    return static_cast<int>(efuse_hal_get_rated_freq_mhz());
 #elif CONFIG_IDF_TARGET_ESP32C2
-            return 120;
+    return 120;
+#elif CONFIG_IDF_TARGET_ESP32C3
+    return 160;
+#elif CONFIG_IDF_TARGET_ESP32C6
+    return 160;
+#elif CONFIG_IDF_TARGET_ESP32H2
+    //IDF-6570
+    return 96;
+#elif CONFIG_IDF_TARGET_ESP32P4
+    return 400;
+#elif CONFIG_IDF_TARGET_ESP32S2
+    return 240;
+#elif CONFIG_IDF_TARGET_ESP32S3
+    return 240;
+
 #  else 
   #   error Target CONFIG_IDF_TARGET is not supported
-  
   return 160;
-
 #  endif
 }
 
