@@ -23,11 +23,11 @@
       "arduino",
       "espidf"
     ],
-    "name": "Espressif Generic ESP32-C2 = 4M Flash, ESPEasy 1810k Code/OTA 316k FS",
+    "name": "Espressif Generic ESP32-C2 = 4M Flash, Safeboot + ESPEasy 2880k Code/OTA 320k FS",
     "upload": {
       "flash_size": "4MB",
       "maximum_ram_size": 278528,
-      "maximum_size": 4194304,
+      "maximum_size": 2883584,
       "require_upload_port": true,
       "speed": 460800
     },
