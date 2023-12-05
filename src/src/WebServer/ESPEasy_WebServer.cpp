@@ -68,6 +68,7 @@
 
 #include "../Static/WebStaticData.h"
 
+#include <uri/UriGlob.h>
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
@@ -198,7 +199,7 @@ void WebServerInit()
   web_server.on(F("/"),             handle_root);
   // Entries for several captive portal URLs.
   // Maybe not needed. Might be handled by notFound handler.
-  web_server.on(F("/generate_204"), handle_root);  //Android captive portal.
+  web_server.on(UriGlob("/generate_204*"), handle_root);  // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
   web_server.on(F("/fwlink"),       handle_root);  //Microsoft captive portal.
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
