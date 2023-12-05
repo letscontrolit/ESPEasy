@@ -1606,6 +1606,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
+  #ifndef USES_P159
+    #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
 
 #endif
 
@@ -2279,6 +2282,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
+  #ifndef USES_P159
+    #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -2950,8 +2956,22 @@ To create/register a plugin, you have to :
 #define FEATURE_SERVO                         0
 #endif
 
-#ifndef FEATURE_SETTINGS_ARCHIVE
+#ifndef FEATURE_SETTINGS_ARCHIVE              
+#ifdef ESP32
+#define FEATURE_SETTINGS_ARCHIVE              1
+#else
 #define FEATURE_SETTINGS_ARCHIVE              0
+#endif
+#endif
+
+
+#if FEATURE_SETTINGS_ARCHIVE
+#if defined(FEATURE_DOWNLOAD) && !FEATURE_DOWNLOAD
+#undef FEATURE_DOWNLOAD
+#endif
+#ifndef FEATURE_DOWNLOAD
+#define FEATURE_DOWNLOAD 1
+#endif
 #endif
 
 #ifndef FEATURE_SSDP
@@ -3176,13 +3196,13 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_CHART_STORAGE_LAYOUT
   #ifdef ESP32
-    #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+    #define FEATURE_CHART_STORAGE_LAYOUT 1
   #endif
   #ifdef ESP8266
     #ifndef LIMIT_BUILD_SIZE
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 1
+      #define FEATURE_CHART_STORAGE_LAYOUT 1
     #else
-      #define FEATURE_CHART_SETTINGS_FILE_LAYOUT 0
+      #define FEATURE_CHART_STORAGE_LAYOUT 0
     #endif
   #endif
 #endif
@@ -3197,6 +3217,28 @@ To create/register a plugin, you have to :
 #endif // ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
 
     
+#if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
+  #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)
+    #define FEATURE_ALTERNATIVE_CDN_URL 0 // No need to configure custom CDN url when all content is included in build
+  #else
+    #define FEATURE_ALTERNATIVE_CDN_URL 1
+  #endif
+#endif // if !defined(CUSTOM_BUILD_CDN_URL)
+#if defined(FEATURE_ALTERNATIVE_CDN_URL) && FEATURE_ALTERNATIVE_CDN_URL && defined(PLUGIN_BUILD_MINIMAL_OTA)
+  #undef FEATURE_ALTERNATIVE_CDN_URL
+  #define FEATURE_ALTERNATIVE_CDN_URL 0
+#endif
+
+
+
+// TODO TD-er: Test feature, must remove
+/*
+#ifdef FEATURE_ALTERNATIVE_CDN_URL
+#undef FEATURE_ALTERNATIVE_CDN_URL
+#endif
+#define FEATURE_ALTERNATIVE_CDN_URL 1
+*/
+
 
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

@@ -28,18 +28,13 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
-// FIXME 2023-08-09 tonhuisman: Disabled deprecation warning as the newer classes won't properly work with ESP8266 for ESPEasy P128
-template<typename T_COLOR_FEATURE, typename T_METHOD> class /*[[deprecated("Use NeoPixelBusLg instead.")]]*/ NeoPixelBrightnessBus :
+template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBrightnessBus : 
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {
 private:
 
     void ScaleColor(uint16_t scale, typename T_COLOR_FEATURE::ColorObject* color)
     {
-        // This is the similiar as calling Dim on the color object
-        // there is an assumption that all color elements are byte aligned
-        // so if any future color object gets introduced that is not it will 
-        // cause a problem
         uint8_t* ptr = (uint8_t*)color;
         uint8_t* ptrEnd = ptr + sizeof(typename T_COLOR_FEATURE::ColorObject);
 
@@ -52,17 +47,12 @@ private:
 
     void ConvertColor(typename T_COLOR_FEATURE::ColorObject* color)
     {
-        // This is the same as calling Dim on the color object
         uint16_t scale = _brightness + 1;
         ScaleColor(scale, color);
     }
 
     void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color) const
     {
-        // this is the same as calling Brighton on the color object
-        // there is an assumption that all color elements are byte aligned
-        // so if any future color object gets introduced that is not it will 
-        // cause a problem
         uint8_t* ptr = (uint8_t*)color;
         uint8_t* ptrEnd = ptr + sizeof(typename T_COLOR_FEATURE::ColorObject);
         uint16_t scale = _brightness + 1;
@@ -89,12 +79,6 @@ public:
 
     NeoPixelBrightnessBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData),
-        _brightness(255)
-    {
-    }
-
-    NeoPixelBrightnessBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable),
         _brightness(255)
     {
     }

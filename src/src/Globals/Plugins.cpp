@@ -126,10 +126,7 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   deviceIndex_t deviceIndex = getDeviceIndex(pluginID);
 
   if (!validDeviceIndex(deviceIndex)) {
-    String name = F("Plugin ");
-    name += String(pluginID.value);
-    name += F(" not included in build");
-    return name;
+    return strformat(F("Plugin %d not included in build"), pluginID.value);
   }
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
@@ -678,14 +675,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(taskIndex);                       // Make sure any task data is actually cleared.
           if (PluginCallForTask(taskIndex, PLUGIN_INIT, &TempEvent, str, event) &&
               loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-            log.reserve(80);
-            log += concat(F("INIT : Started Priority task "), static_cast<int>(taskIndex + 1));
-            log += F(", [");
-            log += getTaskDeviceName(taskIndex);
-            log += F("] ");
-            log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(F("INIT : Started Priority task %d, [%s] %s"),
+                                       taskIndex + 1,
+                                       getTaskDeviceName(taskIndex).c_str(),
+                                       getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex)).c_str()));
           }
         }
       }

@@ -1,4 +1,142 @@
 -------------------------------------------------
+Changes in release mega-20231130 (since mega-20231013)
+-------------------------------------------------
+
+Release date: Thu Nov 30 08:11:17 PM CET 2023
+
+Fabio Ancona (3):
+      Update Custom-sample.h with missing Plugins and update description
+      Update Custom-sample.h after review
+      Details supported hardware
+
+TD-er (18):
+      [WiFi] Fix force B/G mode on ESP8266
+      [WiFi] Limit WiFi speed to HT20 for 802.11n mode on ESP32
+      [Build] Fix compile error when using default Custom.h (#4870)
+      [CDN URL] Add default CDN url with latest tag when no pygit2 installed
+      [WiFi] Fix connect to Hidden SSID on Mikrotik AP (#4885)
+      [WiFi] Only connect using BSSID when BSSID is available
+      [ESP32 WiFi] Fix reconnect issue after WIFI_REASON_AUTH_EXPIRE
+      [FactoryReset] Store settings to keep in ESP32 NVS storage
+      [Custom CDN] Move Custom CDN URL to config.dat
+      [Custom CDN] Move position of where Custom CDN URL is stored in settings
+      [Factory Reset] Use NVS stored defaults on reset
+      [Custom CDN] Fix storing empty CDN url.
+      [Factory Reset] Store WiFi/Eth config in NVS
+      [Factory Reset] Store log/console settings in NVS
+      [Custom CDN] Add checkbox to store Custom CDN to NVS
+      [Custom.h] Update Custom-sample.h with new CUSTOM_BUILD_CDN_URL
+      [Factory Reset] Add new flag to NVS for slow connect to hidden SSID
+      [ESP8266 build] Set all ESP8266 'normal' builds to use CDN for CSS/JS
+
+Ton Huisman (68):
+      [Lib] HeatpumpIR update to 1.0.23
+      [Lib] HeatpumpIR Add compatibility with ESP32 Arduino 3.0/IDF 5.1.x
+      [P023] Bugfix: Template parsing was overwriting the template
+      [P159] Add LD2410 Radar presence detection
+      [P023] Minor performance improvement
+      [P159] Remove copy/paste evidence :-D
+      [P159] Many improvements, add/update settings for sensitivity
+      [P159] Fix compilation on LIMIT_BUILD_SIZE builds
+      [P159] Small improvements
+      [P159] Small improvements
+      [P159] Add command for sensor factoryreset
+      [Lib] LD2410: Fix bug (-1 for uint), add undocumented OutputPinState value
+      [P159] Add OutputPinState option after AmbientLight option (breaking change!)
+      [P159] Minor change to determine how that may influence the build
+      [NEOPIXEL] Add NeoPixelBus_wrapper and implement in NeoPixel plugins
+      [Lib] Adjust Adafruit_NeoMatrix to use NeoPixelBus_wrapper
+      [ESP-IDF5.1] Update NeoPixelBus with Tasmota's patches for ESP-IDF5.1
+      [NeoPixel] Add changelogs for applying NeoPixelBus_wrapper library
+      [Build] Fix pygit2 version
+      [Build] Fix pygit2 version
+      [Build] Restore pygit2 version
+      [Build] Try older/current version of pip
+      [Build] Explicit version of libgit2
+      [Build] Undo changes
+      [ESP-IDF5.1] Fix build issue on older IDF based builds
+      [Neopixel] Fixes and improvements
+      [Build] Freeze pip dependencies
+      [Build] Undo changes
+      [Build] Try fix failing pygit2 install
+      [Build] Try older Python version
+      [Neopixel] Fix fall-through return value
+      [Build] Fix some cherry-pick diffs
+      [Build] Freeze Python to 3.11 to fix pygit2 build issue
+      [P159] Add Gate0 energy values that where missing Add GetConfig support for fetching all available values Add ld2410,logall command for dumping all values in the log (INFO level) Code improvements
+      [NeopixelWrapper] Code optimization
+      [P021] Set Hysteresis value via config command
+      [P021] Update documentation
+      [Build] Freeze Python version to avoid build issue with pygit2
+      [Build] Freeze Python version on 3.11 so pygit2 will run as intended
+      [P021] Change commands SetHysteresis and GetHysteresis for consistency
+      [Lib] LD2410: Read all data that can be read in 5 msec, add errorcount and data_valid checks
+      [P159] Rework processing, now near-instant response Add GetConfig support for sensitivity per gate values
+      [Lib] LD2410: Reformat source (nearly all is changed!) Replace yield() by delay(0)
+      [P159] Fix wrong use of F(""), should be EMPTY_STRING
+      [Lib] IRremoteESP8266 update to v2.8.6, with ESPEasy patches applied - Disable some (more) IR protocols to make 1M build fit - Add IDF 5.x compatibility
+      [Lib] Adafruit_NeoMatrix: Fix includes
+      [Lib] Remove Adafruit_NeoPixel from repo
+      [P131] Fix variable initialization, call begin() to start the NeoPixels
+      [P041] Uncrustify source, minor improvements
+      [P042] Fix initializations to avoid crash at start, minor improvements
+      [P070] Minor improvements
+      [Lib] Update library.properties for local copy of Adafruit_NeoMatrix
+      [Docs] Updates and corrections Nov. 2023
+      [Docs] Updates and corrections Nov. 2023
+      [P159] Add documentation
+      [P159] Update EasyColorMirror
+      [P159] Update comments to explicitly name LD2410
+      [CDN] Set override url for CDN hosted files
+      [CDN] Update documentation
+      [CDN] Code improvements, Add to Provisioning
+      [CDN] Update documentation
+      [Provisioning] Split provisioning commands, add fallback for MAX builds, code cleanup
+      [Provisioning] Update documentation
+      [CDN] Replace system variables in url, update documentation
+      [I2C] Add Device flag for 100 kHz-only devices
+      [I2C] Devices that only support 100 kHz speed
+      [Bugfix] [P159] Saving settings checkbox failed on ESP8266
+      [Docs] Fix some typos Nov. 2023
+
+jfmennedy (8):
+      P093 Mitsubishi HeatPump Add Support for SetRemoteTemperature Resolves P093 - Mitsubishi Heat Pump Add Remote Temperature #4711
+      Modify Changelog Order
+      Help needed here
+      - Fix float initialisaton, - Fix float comparator, - Still trying t get SetRemoteTemperature working...
+      -Fix static const uint8_t RemoteTemperature
+      - Implement remarks from review
+      Documentation
+      Documentation Review
+
+
+-------------------------------------------------
+Changes in release mega-20231013 (since mega-20230930)
+-------------------------------------------------
+
+Release date: Fri Oct 13 06:01:32 PM CEST 2023
+
+Fabio Ancona (1):
+      Fix SI7021/HTU21D DOC links
+
+TD-er (2):
+      [P039_Thermosensors] Fix check for valid value
+      [Controller Settings] Fix inverted Send LWT and Will Retain
+
+Ton Huisman (5):
+      [Networking] Log string and formatting improvements for size
+      [Networking] Fix typo in string argument for strformat
+      [P047] Update address-change documentation
+      [P131] Optimization for build size
+      [UI] Show Controller-state on Device page
+
+dobry kod (3):
+      [GPIO] Fix taking wrong branch in GPIO_Monitor10xSec when MCP/PCF plugin is disabled
+      [GPIO] Fix response to Status command
+      [GPIO] Fix mode reported in response to Status command
+
+
+-------------------------------------------------
 Changes in release mega-20230930 (since mega-20230822)
 -------------------------------------------------
 

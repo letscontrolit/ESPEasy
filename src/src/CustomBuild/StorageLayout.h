@@ -55,7 +55,18 @@
  */
 
 #ifndef DAT_BASIC_SETTINGS_SIZE
-# define DAT_BASIC_SETTINGS_SIZE          4096
+// For size of SettingsStruct stored at this area in config.dat
+// See: run_compiletime_checks()
+#ifdef ESP8266
+# if FEATURE_NON_STANDARD_24_TASKS
+# define DAT_BASIC_SETTINGS_SIZE          4096 // Current Settings Struct size is ~2.3k, leave some room to extend
+#else
+# define DAT_BASIC_SETTINGS_SIZE          3072 // Current Settings Struct size is ~1.3k, leave some room to extend
+#endif
+#endif
+#ifdef ESP32
+# define DAT_BASIC_SETTINGS_SIZE          6144 // Current Settings Struct size is ~3k, leave some room to extend
+#endif
 #endif // ifndef DAT_BASIC_SETTINGS_SIZE
 
 
@@ -114,6 +125,11 @@
 # define DAT_EXTDCONTR_CRED_SIZE     1024
 #endif // ifndef DAT_EXTDCONTR_CRED_SIZE
 
+#ifndef DAT_CDN_SIZE
+# define DAT_CDN_SIZE     1024
+#endif
+
+
 
 /*
 
@@ -145,13 +161,15 @@
                                                                                                                // custom)
   #  endif // ifndef DAT_OFFSET_TASKS
   #  ifndef DAT_OFFSET_CONTROLLER
-  #   define DAT_OFFSET_CONTROLLER            (DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX))            // each controller = 1k, 4
-                                                                                                               // max
+  #   define DAT_OFFSET_CONTROLLER            (DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX))  // each controller = 1k, 3 max, DAT_OFFSET_CDN is at position of any 4th controller.
   #  endif // ifndef DAT_OFFSET_CONTROLLER
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
-  #   define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX)) // each custom controller
-                                                                                                               // config = 1k, 4 max
+  #   define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX))  // each custom controller config = 1k, 3 max
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                    (DAT_OFFSET_CUSTOM_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
+
   #  ifndef CONFIG_FILE_SIZE
   #   define CONFIG_FILE_SIZE                65536
   #  endif // ifndef CONFIG_FILE_SIZE
@@ -167,6 +185,9 @@
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #   define DAT_OFFSET_CUSTOM_CONTROLLER    32768 // each custom controller config = 1k, 4 max.
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_TASKS - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
   #  ifdef LIMIT_BUILD_SIZE
 
 // Limit the config size for 1M builds, since their file system is also quite small
@@ -191,6 +212,9 @@
   # ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #  define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
   # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_CDN
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
+  # endif 
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE               131072
   # endif // ifndef CONFIG_FILE_SIZE

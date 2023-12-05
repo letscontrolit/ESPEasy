@@ -397,13 +397,22 @@ void handle_sysinfo_memory() {
 void handle_sysinfo_Ethernet() {
   if (active_network_medium == NetworkMedium_t::Ethernet) {
     addTableSeparator(F("Ethernet"), 2, 3);
-    addRowLabelValue(LabelType::ETH_STATE);
-    addRowLabelValue(LabelType::ETH_SPEED);
-    addRowLabelValue(LabelType::ETH_DUPLEX);
-    addRowLabelValue(LabelType::ETH_MAC);
-//    addRowLabelValue(LabelType::ETH_IP_ADDRESS_SUBNET);
-//    addRowLabelValue(LabelType::ETH_IP_GATEWAY);
-//    addRowLabelValue(LabelType::ETH_IP_DNS);
+
+    static const LabelType::Enum labels[] PROGMEM =
+    {
+      LabelType::ETH_STATE,
+      LabelType::ETH_SPEED,
+      LabelType::ETH_DUPLEX,
+      LabelType::ETH_MAC,
+//    LabelType::ETH_IP_ADDRESS_SUBNET,
+//    LabelType::ETH_IP_GATEWAY,
+//    LabelType::ETH_IP_DNS,
+
+      LabelType::MAX_LABEL
+    };
+
+    addRowLabelValues(labels);
+
   }
 }
 
@@ -412,18 +421,26 @@ void handle_sysinfo_Ethernet() {
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
-  addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  # endif 
+  {
+    static const LabelType::Enum labels[] PROGMEM =
+    {
+# if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
+      LabelType::ETH_WIFI_MODE,
+# endif 
+      LabelType::IP_CONFIG,
+      LabelType::IP_ADDRESS_SUBNET,
+      LabelType::GATEWAY,
+      LabelType::CLIENT_IP,
+      LabelType::DNS,
+      LabelType::ALLOWED_IP_RANGE,
+      LabelType::CONNECTED,
+      LabelType::NUMBER_RECONNECTS,
 
-  addRowLabelValue(LabelType::IP_CONFIG);
-  addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
-  addRowLabelValue(LabelType::GATEWAY);
-  addRowLabelValue(LabelType::CLIENT_IP);
-  addRowLabelValue(LabelType::DNS);
-  addRowLabelValue(LabelType::ALLOWED_IP_RANGE);
-  addRowLabelValue(LabelType::CONNECTED);
-  addRowLabelValue(LabelType::NUMBER_RECONNECTS);
+      LabelType::MAX_LABEL
+    };
+
+    addRowLabelValues(labels);
+  }
 
   addTableSeparator(F("WiFi"), 2, 3, F("Wifi"));
 
@@ -474,27 +491,37 @@ void handle_sysinfo_Network() {
 #ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
-  addRowLabelValue(LabelType::FORCE_WIFI_BG);
-  addRowLabelValue(LabelType::RESTART_WIFI_LOST_CONN);
-  addRowLabelValue(LabelType::FORCE_WIFI_NOSLEEP);
+
+  static const LabelType::Enum labels[] PROGMEM =
+  {
+    LabelType::FORCE_WIFI_BG,
+    LabelType::RESTART_WIFI_LOST_CONN,
+    LabelType::FORCE_WIFI_NOSLEEP,
 # ifdef SUPPORT_ARP
-  addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
+    LabelType::PERIODICAL_GRAT_ARP,
 # endif // ifdef SUPPORT_ARP
-  addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+    LabelType::CONNECTION_FAIL_THRESH,
 #if FEATURE_SET_WIFI_TX_PWR
-  addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
-  addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
-  addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
-  addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
+    LabelType::WIFI_TX_MAX_PWR,
+    LabelType::WIFI_CUR_TX_PWR,
+    LabelType::WIFI_SENS_MARGIN,
+    LabelType::WIFI_SEND_AT_MAX_TX_PWR,
 #endif
-  addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
+    LabelType::WIFI_NR_EXTRA_SCANS,
 #ifdef USES_ESPEASY_NOW
-  addRowLabelValue(LabelType::USE_ESPEASY_NOW);
-  addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
+    LabelType::USE_ESPEASY_NOW,
+    LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
-  addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
-  addRowLabelValue(LabelType::WAIT_WIFI_CONNECT);
-  addRowLabelValue(LabelType::SDK_WIFI_AUTORECONNECT);
+    LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
+    LabelType::WAIT_WIFI_CONNECT,
+    LabelType::HIDDEN_SSID_SLOW_CONNECT,
+    LabelType::CONNECT_HIDDEN_SSID,
+    LabelType::SDK_WIFI_AUTORECONNECT,
+
+    LabelType::MAX_LABEL
+  };
+
+  addRowLabelValues(labels);
 }
 #endif
 
@@ -526,25 +553,32 @@ void handle_sysinfo_Firmware() {
 void handle_sysinfo_SystemStatus() {
   addTableSeparator(F("System Status"), 2, 3);
 
-  // Actual Loglevel
-  addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
-  addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
-  addRowLabelValue(LabelType::WEB_LOG_LEVEL);
-  # if FEATURE_SD
-  addRowLabelValue(LabelType::SD_LOG_LEVEL);
-  # endif // if FEATURE_SD
+  static const LabelType::Enum labels[] PROGMEM =
+  {
+    // Actual Loglevel
+    LabelType::SYSLOG_LOG_LEVEL,
+    LabelType::SERIAL_LOG_LEVEL,
+    LabelType::WEB_LOG_LEVEL,
+# if FEATURE_SD
+    LabelType::SD_LOG_LEVEL,
+# endif // if FEATURE_SD
 
-  addRowLabelValue(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
-  addRowLabelValue(LabelType::CONSOLE_SERIAL_PORT);
+    LabelType::ENABLE_SERIAL_PORT_CONSOLE,
+    LabelType::CONSOLE_SERIAL_PORT,
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-  addRowLabelValue(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
-  addRowLabelValue(LabelType::CONSOLE_FALLBACK_PORT);
+    LabelType::CONSOLE_FALLBACK_TO_SERIAL0,
+    LabelType::CONSOLE_FALLBACK_PORT,
 #endif
+    LabelType::MAX_LABEL
+  };
 
+  addRowLabelValues(labels);
+#if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);
     addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
   }
+#endif
 }
 #endif
 
