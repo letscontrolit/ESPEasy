@@ -6,11 +6,16 @@
 // #################################### Plugin 043: Clock Output #########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-12-07 tonhuisman: Add support for %sunrise[+/-offsetHMS]% and %sunset[+/-offsetHMS]% format in constants
+ *                        also supports long offsets up to 32767 seconds using S suffix in offset
+ * 2023-12-06 tonhuisman: Add changelog
+ */
 
 # define PLUGIN_043
 # define PLUGIN_ID_043         43
 # define PLUGIN_NAME_043       "Output - Clock"
-# define PLUGIN_VALUENAME_043 "Output"
+# define PLUGIN_VALUENAME_043  "Output"
 
 // #define PLUGIN_VALUENAME1_043 "Output"
 // #define PLUGIN_VALUENAME2_043 "Output2"
@@ -125,10 +130,19 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     {
       for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
-        unsigned long clockEvent = (unsigned long)node_time.minute() % 10 | (unsigned long)(node_time.minute() / 10) <<
-        4 | (unsigned long)(node_time.hour() % 10) << 8 | (unsigned long)(node_time.hour() / 10) << 12 | (unsigned long)node_time.weekday() <<
-        16;
+        unsigned long clockEvent = (unsigned long)node_time.minute() % 10
+                                   | (unsigned long)(node_time.minute() / 10) << 4
+                                   | (unsigned long)(node_time.hour() % 10) << 8
+                                   | (unsigned long)(node_time.hour() / 10) << 12
+                                   | (unsigned long)node_time.weekday() << 16;
         unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
+
+        if (bitRead(clockSet, 28) || bitRead(clockSet, 29)) { // sunrise or sunset string, apply todays values
+          String specialTime = timeLong2String(clockSet);
+
+          parseSystemVariables(specialTime, false);           // Parse systemvariables only, to reduce processing
+          clockSet = string2TimeLong(specialTime);
+        }
 
         if (matchClockEvent(clockEvent, clockSet))
         {
@@ -148,9 +162,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
             }
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("TCLK : State ");
-              log += state;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, strformat(F("TCLK : State %d"), state));
             }
             sendData(event);
           }
