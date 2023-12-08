@@ -139,7 +139,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (f) {
-    f.read(reinterpret_cast<uint8_t *>(UserVar.getTaskValues_Data(event->TaskIndex)), 16);
+    f.read(reinterpret_cast<uint8_t *>(UserVar.getRawTaskValues_Data(event->TaskIndex)), 16);
     f.close();
   }
   _save_setpoint = UserVar[event->BaseVarIndex];
@@ -293,7 +293,7 @@ void P109_data_struct::saveThermoSettings(struct EventStruct *event) {
   fs::File f = tryOpenFile(fileName, F("w"));
 
   if (f) {
-    f.write(reinterpret_cast<const uint8_t *>(UserVar.getTaskValues_Data(event->TaskIndex)), 16);
+    f.write(reinterpret_cast<const uint8_t *>(UserVar.getRawTaskValues_Data(event->TaskIndex)), 16);
     f.close();
     flashCount();
   }

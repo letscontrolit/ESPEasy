@@ -14,16 +14,13 @@
 struct UserVarStruct {
   UserVarStruct();
 
-  void          clear();
+  void clear();
 
-  // Overloading [] operator to access elements in array style
-  /*
-  float       & operator[](unsigned int index);
-  */
-  float operator[](unsigned int index) const;
+  float         operator[](unsigned int index) const;
 
   // Legacy "long" type, which was spread over several floats.
-  unsigned long getSensorTypeLong(taskIndex_t taskIndex) const;
+  unsigned long getSensorTypeLong(taskIndex_t taskIndex,
+                                  bool        raw = false) const;
   void          setSensorTypeLong(taskIndex_t   taskIndex,
                                   unsigned long value);
 
@@ -31,7 +28,8 @@ struct UserVarStruct {
 
   // 32 bit signed int stored at the memory location of the float
   int32_t getInt32(taskIndex_t taskIndex,
-                   uint8_t     varNr) const;
+                   uint8_t     varNr,
+                   bool        raw = false) const;
   void    setInt32(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    int32_t     value);
@@ -39,7 +37,8 @@ struct UserVarStruct {
 
   // 32 bit unsigned int stored at the memory location of the float
   uint32_t getUint32(taskIndex_t taskIndex,
-                     uint8_t     varNr) const;
+                     uint8_t     varNr,
+                     bool        raw = false) const;
   void     setUint32(taskIndex_t taskIndex,
                      uint8_t     varNr,
                      uint32_t    value);
@@ -48,75 +47,85 @@ struct UserVarStruct {
 
   // 64 bit signed int stored at the memory location of the float
   int64_t getInt64(taskIndex_t taskIndex,
-                   uint8_t     varNr) const;
+                   uint8_t     varNr,
+                   bool        raw = false) const;
   void    setInt64(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    int64_t     value);
 
   // 64 bit unsigned int stored at the memory location of the float
   uint64_t getUint64(taskIndex_t taskIndex,
-                     uint8_t     varNr) const;
+                     uint8_t     varNr,
+                     bool        raw = false) const;
   void     setUint64(taskIndex_t taskIndex,
                      uint8_t     varNr,
                      uint64_t    value);
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   float getFloat(taskIndex_t taskIndex,
-                 uint8_t     varNr) const;
+                 uint8_t     varNr,
+                 bool        raw = false) const;
   void  setFloat(taskIndex_t taskIndex,
                  uint8_t     varNr,
                  float       value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
   // Double stored at the memory location of the float
   double getDouble(taskIndex_t taskIndex,
-                   uint8_t     varNr) const;
+                   uint8_t     varNr,
+                   bool        raw = false) const;
   void   setDouble(taskIndex_t taskIndex,
                    uint8_t     varNr,
                    double      value);
-#endif
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   ESPEASY_RULES_FLOAT_TYPE getAsDouble(taskIndex_t  taskIndex,
-                     uint8_t      varNr,
-                     Sensor_VType sensorType) const;
+                                       uint8_t      varNr,
+                                       Sensor_VType sensorType,
+                                       bool         raw = false) const;
 
   String getAsString(taskIndex_t  taskIndex,
                      uint8_t      varNr,
                      Sensor_VType sensorType,
-                     uint8_t      nrDecimals = 0) const;
+                     uint8_t      nrDecimals = 0,
+                     bool         raw = false) const;
 
 
-  void set(taskIndex_t   taskIndex,
-           uint8_t       varNr,
+  void set(taskIndex_t                     taskIndex,
+           uint8_t                         varNr,
            const ESPEASY_RULES_FLOAT_TYPE& value,
-           Sensor_VType  sensorType);
+           Sensor_VType                    sensorType);
 
   bool isValid(taskIndex_t  taskIndex,
                uint8_t      varNr,
-               Sensor_VType sensorType) const;
+               Sensor_VType sensorType,
+               bool         raw = false) const;
 
   uint8_t                * get(size_t& sizeInBytes);
 
-  const TaskValues_Data_t* getTaskValues_Data(taskIndex_t taskIndex) const;
-  TaskValues_Data_t      * getTaskValues_Data(taskIndex_t taskIndex);
+  const TaskValues_Data_t* getRawTaskValues_Data(taskIndex_t taskIndex) const;
+  TaskValues_Data_t      * getRawTaskValues_Data(taskIndex_t taskIndex);
 
   uint32_t                 compute_CRC32() const;
 
-  void clear_computed(taskIndex_t taskIndex);
+  void                     clear_computed(taskIndex_t taskIndex);
 
 private:
 
-  const TaskValues_Data_t* getRawOrComputed(taskIndex_t taskIndex, uint8_t varNr) const;
+  const TaskValues_Data_t* getRawOrComputed(taskIndex_t taskIndex,
+                                            uint8_t     varNr,
+                                            bool        raw) const;
 
-  void applyFormula(taskIndex_t   taskIndex,
-           uint8_t       varNr,
-           const ESPEASY_RULES_FLOAT_TYPE& value,
-           Sensor_VType  sensorType);
+  void applyFormula(taskIndex_t                     taskIndex,
+                    uint8_t                         varNr,
+                    const ESPEASY_RULES_FLOAT_TYPE& value,
+                    Sensor_VType                    sensorType);
 
   // Raw TaskValues data as stored in RTC
-  std::vector<TaskValues_Data_t>_data;
+  std::vector<TaskValues_Data_t> _rawData;
 
   // Computed TaskValues for those tasks which use a formula
   // Not stored in RTC, but used to cache calculated values.
