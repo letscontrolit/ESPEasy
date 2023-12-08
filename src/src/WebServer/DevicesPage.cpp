@@ -166,6 +166,7 @@ void handle_devices() {
       // N.B. When calling delete, the settings were already saved.
       if (nosave) {
         Cache.updateExtraTaskSettingsCache();
+        UserVar.clear_computed(taskIndex);
       } else {
         addHtmlError(SaveTaskSettings(taskIndex));
         addHtmlError(SaveSettings());
@@ -444,6 +445,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
+  UserVar.clear_computed(taskIndex);
 }
 
 

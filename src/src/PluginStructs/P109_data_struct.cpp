@@ -293,7 +293,7 @@ void P109_data_struct::saveThermoSettings(struct EventStruct *event) {
   fs::File f = tryOpenFile(fileName, F("w"));
 
   if (f) {
-    f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
+    f.write(reinterpret_cast<const uint8_t *>(UserVar.getTaskValues_Data(event->TaskIndex)), 16);
     f.close();
     flashCount();
   }

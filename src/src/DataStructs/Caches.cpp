@@ -147,6 +147,20 @@ String Caches::getTaskDeviceValueName(taskIndex_t TaskIndex, uint8_t rel_index)
   return EMPTY_STRING;
 }
 
+bool Caches::hasFormula(taskIndex_t TaskIndex, uint8_t rel_index)
+{
+  if (validTaskIndex(TaskIndex)) {
+    // Just a quick test to see if we do have a formula present.
+    // Task Formula are not used very often, so we will probably almost always have to return an empty string.
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return bitRead(it->second.hasFormula, rel_index);
+    }
+  }
+  return false;
+}
+
 bool Caches::hasFormula(taskIndex_t TaskIndex)
 {
   if (validTaskIndex(TaskIndex)) {
@@ -155,7 +169,7 @@ bool Caches::hasFormula(taskIndex_t TaskIndex)
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return it->second.hasFormula;
+      return it->second.hasFormula != 0;
     }
   }
   return false;
@@ -163,7 +177,7 @@ bool Caches::hasFormula(taskIndex_t TaskIndex)
 
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if ((rel_index < VARS_PER_TASK) && hasFormula(TaskIndex)) {
+  if ((rel_index < VARS_PER_TASK) && bitRead(hasFormula(TaskIndex), rel_index)) {
     #ifdef ESP32
     auto it = getExtraTaskSettings(TaskIndex);
 
@@ -286,7 +300,7 @@ void Caches::updateExtraTaskSettingsCache()
         #ifdef ESP32
         tmp.TaskDeviceFormula[i] = ExtraTaskSettings.TaskDeviceFormula[i];
         #endif
-        tmp.hasFormula = true;
+        bitSet(tmp.hasFormula, i);
       }
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
       #if FEATURE_PLUGIN_STATS

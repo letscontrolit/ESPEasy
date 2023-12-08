@@ -886,6 +886,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
+          UserVar.clear_computed(event->TaskIndex);
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();

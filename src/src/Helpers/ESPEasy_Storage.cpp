@@ -31,6 +31,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -1097,6 +1098,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
       err = checkTaskSettings(TaskIndex);
     }
 #endif
+    UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   } 
 #ifndef LIMIT_BUILD_SIZE
   else {
@@ -1156,6 +1158,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
+  UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

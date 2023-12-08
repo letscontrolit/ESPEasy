@@ -20,7 +20,7 @@ struct UserVarStruct {
   /*
   float       & operator[](unsigned int index);
   */
-  const float & operator[](unsigned int index) const;
+  float operator[](unsigned int index) const;
 
   // Legacy "long" type, which was spread over several floats.
   unsigned long getSensorTypeLong(taskIndex_t taskIndex) const;
@@ -104,7 +104,16 @@ struct UserVarStruct {
 
   uint32_t                 compute_CRC32() const;
 
+  void clear_computed(taskIndex_t taskIndex);
+
 private:
+
+  const TaskValues_Data_t* getRawOrComputed(taskIndex_t taskIndex, uint8_t varNr) const;
+
+  void applyFormula(taskIndex_t   taskIndex,
+           uint8_t       varNr,
+           const ESPEASY_RULES_FLOAT_TYPE& value,
+           Sensor_VType  sensorType);
 
   // Raw TaskValues data as stored in RTC
   std::vector<TaskValues_Data_t>_data;
