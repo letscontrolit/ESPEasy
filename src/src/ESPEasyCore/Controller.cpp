@@ -623,7 +623,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
-    bool success                    = false;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
