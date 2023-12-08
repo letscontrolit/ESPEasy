@@ -389,9 +389,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Data is checked and good, fill in output
-  UserVar.setFloat(event->TaskIndex, 0, data[PMS_PM1_0_ug_m3_normal];
-  UserVar.setFloat(event->TaskIndex, 1, data[PMS_PM2_5_ug_m3_normal];
-  UserVar.setFloat(event->TaskIndex, 2, data[PMS_PM10_0_ug_m3_normal];
+  UserVar.setFloat(event->TaskIndex, 0, data[PMS_PM1_0_ug_m3_normal]);
+  UserVar.setFloat(event->TaskIndex, 1, data[PMS_PM2_5_ug_m3_normal]);
+  UserVar.setFloat(event->TaskIndex, 2, data[PMS_PM10_0_ug_m3_normal]);
   _values_received                 = 1;
   # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
