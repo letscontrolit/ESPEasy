@@ -114,7 +114,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
       P069_data->setAddress((uint8_t)PCONFIG(0));
 
       const float tempC = P069_data->getTemperatureInDegrees();
-      UserVar[event->BaseVarIndex] = tempC;
+      UserVar.setFloat(event->TaskIndex, 0, tempC);
       success                      = !isnan(tempC);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {

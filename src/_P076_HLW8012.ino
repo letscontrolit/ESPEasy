@@ -389,10 +389,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             success = true;
           }
 
-          UserVar[event->BaseVarIndex]     = p076_hvoltage;
-          UserVar[event->BaseVarIndex + 1] = p076_hcurrent;
-          UserVar[event->BaseVarIndex + 2] = p076_hpower;
-          UserVar[event->BaseVarIndex + 3] = p076_hpowfact;
+          UserVar.setFloat(event->TaskIndex, 0, p076_hvoltage);
+          UserVar.setFloat(event->TaskIndex, 1, p076_hcurrent);
+          UserVar.setFloat(event->TaskIndex, 2, p076_hpower);
+          UserVar.setFloat(event->TaskIndex, 3, p076_hpowfact);
 
           // Measurement is complete.
           p076_read_stage = 0;

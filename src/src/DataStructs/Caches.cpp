@@ -168,8 +168,16 @@ bool Caches::hasFormula(taskIndex_t TaskIndex)
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
   if ((rel_index < VARS_PER_TASK) && hasFormula(TaskIndex)) {
+    #ifdef ESP32
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.TaskDeviceFormula[rel_index];
+    }
+    #else
     LoadTaskSettings(TaskIndex);
     return ExtraTaskSettings.TaskDeviceFormula[rel_index];
+    #endif
   }
   return EMPTY_STRING;
 }
@@ -286,6 +294,9 @@ void Caches::updateExtraTaskSettingsCache()
         #endif // ifdef ESP32
 
       if (ExtraTaskSettings.TaskDeviceFormula[i][0] != 0) {
+        #ifdef ESP32
+        move_special(tmp.TaskDeviceFormula[i], String(ExtraTaskSettings.TaskDeviceFormula[i]));
+        #endif
         tmp.hasFormula = true;
       }
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];

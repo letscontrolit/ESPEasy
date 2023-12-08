@@ -879,7 +879,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
-            UserVar[event->BaseVarIndex + i] = 0.0f;
+            UserVar.setFloat(event->TaskIndex, i,  0.0f);
           }
         }
 

@@ -144,7 +144,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P060_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P060_data) {
-        UserVar[event->BaseVarIndex] = P060_data->getValue();
+        UserVar.setFloat(event->TaskIndex, 0, P060_data->getValue());
 
         String log = F("ADMCP: Analog value: ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);
@@ -159,7 +159,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
           if (adc1 != adc2)
           {
             const float normalized = (UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            UserVar.setFloat(event->TaskIndex, 0, normalized * (out2 - out1) + out1);
 
             log += F(" = ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);

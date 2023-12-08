@@ -145,8 +145,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
         }
       } else {
@@ -183,8 +183,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
           success = true;
         }

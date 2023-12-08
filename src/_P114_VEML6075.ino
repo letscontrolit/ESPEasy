@@ -148,9 +148,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       float UVIndex = 0.0f;
 
       if (P114_data->read_sensor(UVA, UVB, UVIndex)) {
-        UserVar[event->BaseVarIndex]     = UVA;
-        UserVar[event->BaseVarIndex + 1] = UVB;
-        UserVar[event->BaseVarIndex + 2] = UVIndex;
+        UserVar.setFloat(event->TaskIndex, 0, UVA);
+        UserVar.setFloat(event->TaskIndex, 1, UVB);
+        UserVar.setFloat(event->TaskIndex, 2, UVIndex);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;

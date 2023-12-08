@@ -329,7 +329,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
           temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
           humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
         }
-        UserVar[event->BaseVarIndex] = P145_data->readValue(temperature, humidity);
+        UserVar.setFloat(event->TaskIndex, 0, P145_data->readValue(temperature, humidity));
         success = true;
       }
       break;

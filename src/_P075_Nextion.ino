@@ -396,8 +396,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               
               // FIXME TD-er: (PVS Studio) A part of conditional expression is always false: (0xFF == __buffer[4]). The value range of char type: [-128, 127].
               if ((0xFF == __buffer[4]) && (0xFF == __buffer[5]) && (0xFF == __buffer[6])) {
-                UserVar[event->BaseVarIndex]     = (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE;
-                UserVar[event->BaseVarIndex + 1] = __buffer[3];
+                UserVar.setFloat(event->TaskIndex, 0, (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE);
+                UserVar.setFloat(event->TaskIndex, 1, __buffer[3]);
                 sendData(event);
 
                 # ifdef P075_DEBUG_LOG
@@ -477,10 +477,13 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               }
 
               if (GotPipeCmd) {
-                UserVar[event->BaseVarIndex]     = 0.0f;
-                UserVar[event->BaseVarIndex + 1] = 0.0f;
-                validFloatFromString(Vidx,   UserVar[event->BaseVarIndex]);
-                validFloatFromString(Svalue, UserVar[event->BaseVarIndex + 1]);
+                float Vidx_f{};
+                float Svalue_f{};
+
+                validFloatFromString(Vidx,   Vidx_f);
+                validFloatFromString(Svalue, Svalue_f);
+                UserVar.setFloat(event->TaskIndex, 0, Vidx_f);
+                UserVar.setFloat(event->TaskIndex, 1, Svalue_f);  
                 sendData(event);
 
                 # ifdef P075_DEBUG_LOG

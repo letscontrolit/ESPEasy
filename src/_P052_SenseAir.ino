@@ -423,7 +423,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
               if (errorcode == 0) {
                 int relayStatus = (status >> 8) & 0x1;
-                UserVar[event->BaseVarIndex + varnr] = relayStatus;
+                UserVar.setFloat(event->TaskIndex, varnr, relayStatus);
                 log                                 += F("relay status = ");
                 log                                 += relayStatus;
               }
@@ -458,14 +458,14 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             }
             case 0:
             default: {
-              UserVar[event->BaseVarIndex + varnr] = 0;
+              UserVar.setFloat(event->TaskIndex, varnr, 0);
               break;
             }
           }
 
           if ((errorcode == 0) && (P052_data->modbus.getLastError() == 0)) {
             success                              = true;
-            UserVar[event->BaseVarIndex + varnr] = value;
+            UserVar.setFloat(event->TaskIndex, varnr, value);
             log                                 += logPrefix;
             log                                 += value;
           }

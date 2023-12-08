@@ -139,18 +139,18 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (f) {
-    f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
+    f.read(reinterpret_cast<uint8_t *>(UserVar.getTaskValues_Data(event->TaskIndex)), 16);
     f.close();
   }
   _save_setpoint = UserVar[event->BaseVarIndex];
   _prev_setpoint = UserVar[event->BaseVarIndex];
 
   if (UserVar[event->BaseVarIndex] < 1) {
-    UserVar[event->BaseVarIndex] = P109_SETPOINT_STATE_INITIAL; // setpoint
+    UserVar.setFloat(event->TaskIndex, 0, P109_SETPOINT_STATE_INITIAL); // setpoint
   }
-  UserVar[event->BaseVarIndex + 1] = 0.5f;                      // Unitialize relay state
-  UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;   // mode (X=0,A=1,M=2)
-  UserVar[event->BaseVarIndex + 3] = 0;                         // Reset
+  UserVar.setFloat(event->TaskIndex, 1, 0.5f);                      // Unitialize relay state
+  UserVar.setFloat(event->TaskIndex, 2, P109_MODE_STATE_INITIAL);   // mode (X=0,A=1,M=2)
+  UserVar.setFloat(event->TaskIndex, 3, 0);                         // Reset
 
   # ifndef BUILD_NO_DEBUG
 
@@ -243,12 +243,12 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
       _display->display();
     }
 
-    if (UserVar[event->BaseVarIndex + 2] == 2) { // manual timeout
+    if (UserVar.getFloat(event->TaskIndex, 2) == 2) { // manual timeout
       if (UserVar[event->BaseVarIndex + 3] > 0) {
-        UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - 1;
+        UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] - 1);
         display_timeout();
       } else {
-        UserVar[event->BaseVarIndex + 3] = 0;
+        UserVar.setFloat(event->TaskIndex, 3, 0);
         setMode(F("a"), F("0")); // heater to auto
         display_setpoint_temp(1);
         check_auto_mode(event);  // Check now to avoid a double save
@@ -322,7 +322,7 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
 }
 
 void P109_data_struct::check_auto_mode(struct EventStruct *event) {
-  if (UserVar[event->BaseVarIndex + 2] == 1) {
+  if (UserVar.getFloat(event->TaskIndex, 2) == 1) {
     String atempstr2 = _deviceTemplate[0];
     String atempstr  = parseTemplate(atempstr2);
 
@@ -441,10 +441,10 @@ void P109_data_struct::actionLeft(struct EventStruct *event) {
       break;
     }
     case 2: { // manual on mode, timer dec
-      UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS;
+      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS);
 
       if (UserVar[event->BaseVarIndex + 3] < 0) {
-        UserVar[event->BaseVarIndex + 3] = 5400;
+        UserVar.setFloat(event->TaskIndex, 3, 5400);
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
       break;
@@ -465,10 +465,10 @@ void P109_data_struct::actionRight(struct EventStruct *event) {
       break;
     }
     case 2: { // manual on mode, timer dec
-      UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS;
+      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS);
 
       if (UserVar[event->BaseVarIndex + 3] > 5400) {
-        UserVar[event->BaseVarIndex + 3] = 60;
+        UserVar.setFloat(event->TaskIndex, 3, 60);
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
       break;
@@ -607,7 +607,7 @@ void P109_data_struct::display_current_temp() {
  * Display the Setpoint temperature
  */
 void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
-  if (UserVar[_varIndex + 2] == 1) {
+  if (UserVar.getFloat(_taskIndex,  2) == 1) {
     float stemp = (roundf(UserVar[_varIndex] * 10.0f)) / 10.0f;
     bool  isDif = !essentiallyEqual(_prev_setpoint, stemp);
 
@@ -629,12 +629,12 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
  * Display the remaining timeout, if any is set
  */
 void P109_data_struct::display_timeout() {
-  if (UserVar[_varIndex + 2] == 2) {
-    if (_prev_timeout >= (UserVar[_varIndex + 3] + 60.0f)) {
-      String thour = minutesToHourColonMinute(static_cast<int>(UserVar[_varIndex + 3] / 60.0f));
+  if (UserVar.getFloat(_taskIndex,  2) == 2) {
+    if (_prev_timeout >= (UserVar.getFloat(_taskIndex,  3) + 60.0f)) {
+      String thour = minutesToHourColonMinute(static_cast<int>(UserVar.getFloat(_taskIndex,  3) / 60.0f));
       displayBigText(86, 35, 41, 21, getDialog_plain_18(), 89, 35, thour.substring(1, 5));
 
-      _prev_timeout = UserVar[_varIndex + 3];
+      _prev_timeout = UserVar.getFloat(_taskIndex,  3);
     }
   }
 }
@@ -643,13 +643,13 @@ void P109_data_struct::display_timeout() {
  * Display the current mode
  */
 void P109_data_struct::display_mode() {
-  if (_prev_mode != UserVar[_varIndex + 2]) {
+  if (_prev_mode != UserVar.getFloat(_taskIndex,  2)) {
     String   tmpString = F("XAM");
-    uint16_t xamIdx    = min(static_cast<int>(UserVar[_varIndex + 2]), 2);
+    uint16_t xamIdx    = min(static_cast<int>(UserVar.getFloat(_taskIndex,  2)), 2);
 
     displayBigText(61, 49, 12, 17, getArialMT_Plain_16(), 61, 49, tmpString.substring(xamIdx, xamIdx + 1));
 
-    _prev_mode = UserVar[_varIndex + 2];
+    _prev_mode = UserVar.getFloat(_taskIndex,  2);
   }
 }
 
@@ -672,15 +672,15 @@ void P109_data_struct::displayBigText(int16_t       x1,
  * Display the Heater status (flame)
  */
 void P109_data_struct::display_heat() {
-  if (_prev_heating != UserVar[_varIndex + 1]) {
+  if (_prev_heating != UserVar.getFloat(_taskIndex,  1)) {
     _display->setColor(BLACK);
     _display->fillRect(54, 19, 24, 27);
     _display->setColor(WHITE);
 
-    if (UserVar[_varIndex + 1] == 1) {
+    if (UserVar.getFloat(_taskIndex,  1) == 1) {
       _display->drawXbm(54, 19, 24, 27, flameimg);
     }
-    _prev_heating = UserVar[_varIndex + 1];
+    _prev_heating = UserVar.getFloat(_taskIndex,  1);
   }
 }
 
@@ -723,7 +723,7 @@ void P109_data_struct::setSetpoint(const String& sptemp) {
   } else {
     stemp = sptemp.toFloat();
   }
-  UserVar[_varIndex] = stemp;
+  UserVar.setFloat(_taskIndex, 0,  stemp);
   display_setpoint_temp();
 }
 
@@ -755,11 +755,11 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
 void P109_data_struct::setHeater(const String& heater) {
   if (_setpointDelay == 0) {
     if ((heater.charAt(0) == '1') || (equals(heater, F("on"))) ||
-        ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
-      UserVar[_varIndex + 1] = 1;
+        ((heater.length() == 0) && (UserVar.getFloat(_taskIndex, 1) == 0))) {
+      UserVar.setFloat(_taskIndex,  1, 1);
       setHeatRelay(HIGH);
     } else {
-      UserVar[_varIndex + 1] = 0;
+      UserVar.setFloat(_taskIndex,  1, 0);
       setHeatRelay(LOW);
     }
     display_heat();
@@ -772,25 +772,25 @@ void P109_data_struct::setHeater(const String& heater) {
  */
 void P109_data_struct::setMode(const String& amode,
                                const String& atimeout) {
-  UserVar[_varIndex + 3] = 0.0f; // Reset timeout
+  UserVar.setFloat(_taskIndex,  3, 0.0f); // Reset timeout
 
   if ((amode[0] == '0') || (amode[0] == 'x')) {
-    UserVar[_varIndex + 2] = 0;
+    UserVar.setFloat(_taskIndex,  2, 0);
     setHeater(F("0"));
     _display->setColor(BLACK);
     _display->fillRect(86, 35, 41, 21);
     _prev_setpoint = P109_SETPOINT_STATE_UNSET;
   } else if ((amode[0] == '1') || (amode[0] == 'a')) {
-    UserVar[_varIndex + 2] = 1;
+    UserVar.setFloat(_taskIndex,  2, 1);
     display_setpoint_temp(1);
   } else if ((amode[0] == '2') || (amode[0] == 'm')) {
-    UserVar[_varIndex + 2] = 2;
-    UserVar[_varIndex + 3] = (atimeout.toFloat() * 60.0f);
+    UserVar.setFloat(_taskIndex,  2, 2);
+    UserVar.setFloat(_taskIndex,  3, (atimeout.toFloat() * 60.0f));
     _prev_timeout          = P109_TIMEOUT_STATE_UNSET;
     display_timeout();
     setHeater(F("1"));
   } else {
-    UserVar[_varIndex + 2] = 0;
+    UserVar.setFloat(_taskIndex,  2, 0);
   }
 
   // _changed = 1;

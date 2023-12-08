@@ -130,8 +130,8 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 
       sht3x->tmpOff = PCONFIG(1) / 10.0f;
       sht3x->readFromSensor();
-      UserVar[event->BaseVarIndex + 0] = sht3x->tmp;
-      UserVar[event->BaseVarIndex + 1] = sht3x->hum;
+      UserVar.setFloat(event->TaskIndex, 0, sht3x->tmp);
+      UserVar.setFloat(event->TaskIndex, 1, sht3x->hum);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;

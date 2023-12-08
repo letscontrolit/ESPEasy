@@ -327,7 +327,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
               success = true; // "success" may be a confusing name here
 
               for (uint8_t i = 0; i < 3; i++) {
-                UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
+                UserVar.setFloat(event->TaskIndex, i, ExtraTaskSettings.TaskDeviceErrorValue[i]);
               }
             }
           }
@@ -339,14 +339,14 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
             event->idx        = getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO);
           }
-          UserVar[event->BaseVarIndex]     = ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val);
-          UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
+          UserVar.setFloat(event->TaskIndex, 0, ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val));
+          UserVar.setFloat(event->TaskIndex, 1, P028_data->last_hum_val);
           const int elev = P028_ALTITUDE;
 
           if (elev != 0) {
-            UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+            UserVar.setFloat(event->TaskIndex, 2, pressureElevation(P028_data->last_press_val, elev));
           } else {
-            UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
+            UserVar.setFloat(event->TaskIndex, 2, P028_data->last_press_val);
           }
 
           # ifndef LIMIT_BUILD_SIZE

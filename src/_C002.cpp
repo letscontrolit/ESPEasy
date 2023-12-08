@@ -109,18 +109,16 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  int baseVar = x * VARS_PER_TASK;
-
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
                     mustSendEvent = true;
-                    int32_t pwmValue = UserVar[baseVar];
+                    int32_t pwmValue = UserVar.getFloat(x, 0);
 
                     switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
                         pwmValue         = 0;
-                        UserVar[baseVar] = pwmValue;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                       case 1: // On
                       case 2: // Update dimmer value
@@ -129,7 +127,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         if (validIntFromString(svalue1, pwmValue)) {
                           pwmValue *= 10;
                         }
-                        UserVar[baseVar] = pwmValue;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                     }
 
@@ -141,7 +139,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     }
                   } else {
                     mustSendEvent    = true;
-                    UserVar[baseVar] = nvalue;
+                    UserVar.setFloat(x, 0, nvalue);
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
                       action  = F("gpio,");

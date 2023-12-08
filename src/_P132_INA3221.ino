@@ -240,10 +240,10 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         reg = static_cast<uint8_t>(PCONFIG(P132_CONFIG_BASE + r) + 1);
 
         if ((reg == 2) || (reg == 4) || (reg == 6)) {
-          UserVar[event->BaseVarIndex + r] = P132_data->getBusVoltage_V(reg)
-                                             + (P132_data->getShuntVoltage_mV(reg - 1) / 1000.0f);
+          UserVar.setFloat(event->TaskIndex, r, P132_data->getBusVoltage_V(reg)
+                                             + (P132_data->getShuntVoltage_mV(reg - 1) / 1000.0f));
         } else {
-          UserVar[event->BaseVarIndex + r] = (P132_data->getShuntVoltage_mV(reg) / 100.0f) * P132_SHUNT;
+          UserVar.setFloat(event->TaskIndex, r, (P132_data->getShuntVoltage_mV(reg) / 100.0f) * P132_SHUNT);
         }
       }
 

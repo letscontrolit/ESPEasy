@@ -302,10 +302,10 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
 
         if (P102_PZEM_ATTEMPT == 0)
         {
-          UserVar[event->BaseVarIndex]     = PZEM[P102_QUERY1];
-          UserVar[event->BaseVarIndex + 1] = PZEM[P102_QUERY2];
-          UserVar[event->BaseVarIndex + 2] = PZEM[P102_QUERY3];
-          UserVar[event->BaseVarIndex + 3] = PZEM[P102_QUERY4];
+          UserVar.setFloat(event->TaskIndex, 0, PZEM[P102_QUERY1]);
+          UserVar.setFloat(event->TaskIndex, 1, PZEM[P102_QUERY2]);
+          UserVar.setFloat(event->TaskIndex, 2, PZEM[P102_QUERY3]);
+          UserVar.setFloat(event->TaskIndex, 3, PZEM[P102_QUERY4]);
 
           // sendData(event);   //To send externally from the pluggin (to controller or to rules trigger)
         }

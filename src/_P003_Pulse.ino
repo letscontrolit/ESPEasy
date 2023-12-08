@@ -208,13 +208,14 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
         // store the current counter values into UserVar (RTC-memory)
         // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
-        UserVar[event->BaseVarIndex + P003_IDX_pulseCounter]      = pulseCounter;
-        UserVar[event->BaseVarIndex + P003_IDX_pulseTotalCounter] = pulseCounterTotal;
-        UserVar[event->BaseVarIndex + P003_IDX_pulseTime]         = pulseTime_msec;
+        // FIXME TD-er: Must check we're interacting with the raw values in this PulseCounter plugin
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter      , pulseCounter);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter , pulseCounterTotal);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTime         , pulseTime_msec);
 
         // Store the raw value in the unused 4th position.
         // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
-        UserVar[event->BaseVarIndex + P003_IDX_persistedTotalCounter] = pulseCounterTotal;
+        UserVar.setFloat(event->TaskIndex, P003_IDX_persistedTotalCounter, pulseCounterTotal);
 
         switch (PCONFIG(P003_IDX_COUNTERTYPE))
         {

@@ -617,7 +617,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   numericPayload = false;                                  // No, it isn't numeric
                   doublePayload  = NAN;                                    // Invalid value
                 }
-                UserVar[event->BaseVarIndex + x] = doublePayload;          // Save the new value
+                UserVar.setFloat(event->TaskIndex, x, doublePayload);          // Save the new value
 
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                   String RuleEvent;

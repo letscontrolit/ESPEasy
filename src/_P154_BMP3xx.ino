@@ -98,7 +98,11 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      success = P154_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1]);
+      float temp, pressure{};
+
+      success = P154_data->read(temp, pressure);
+      UserVar.setFloat(event->TaskIndex, 0, temp);
+      UserVar.setFloat(event->TaskIndex, 1, pressure);
       break;
     }
 

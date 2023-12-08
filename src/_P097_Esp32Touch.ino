@@ -144,7 +144,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
           if (touched != touched_prev) {
             // state changed
-            UserVar[event->BaseVarIndex] = touchRead(CONFIG_PIN1);
+            UserVar.setFloat(event->TaskIndex, 0, touchRead(CONFIG_PIN1));
 
             if (touched) {
               if (P097_SEND_TOUCH_EVENT) {
@@ -176,7 +176,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       int raw_value = touchRead(CONFIG_PIN1);
-      UserVar[event->BaseVarIndex] = raw_value;
+      UserVar.setFloat(event->TaskIndex, 0, raw_value);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Touch : ");

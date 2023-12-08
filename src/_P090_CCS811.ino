@@ -216,8 +216,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
       # endif // ifndef BUILD_NO_DEBUG
-      UserVar[event->BaseVarIndex]     = NAN;
-      UserVar[event->BaseVarIndex + 1] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      UserVar.setFloat(event->TaskIndex, 1, NAN);
 
       // This sets the mode to 1 second reads, and prints returned error status.
       // Mode 0 = Idle (not used)
@@ -264,8 +264,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
             // Temp compensation was set, so we have to dump the first reading.
             P090_data->compensation_set = false;
           } else {
-            UserVar[event->BaseVarIndex]     = P090_data->myCCS811.getTVOC();
-            UserVar[event->BaseVarIndex + 1] = P090_data->myCCS811.getCO2();
+            UserVar.setFloat(event->TaskIndex, 0, P090_data->myCCS811.getTVOC());
+            UserVar.setFloat(event->TaskIndex, 1, P090_data->myCCS811.getCO2());
             P090_data->newReadingAvailable   = true;
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {

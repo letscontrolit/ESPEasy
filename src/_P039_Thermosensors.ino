@@ -615,7 +615,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
       if (isValidFloat(Plugin_039_Celsius))
       {
-        UserVar[event->BaseVarIndex] = Plugin_039_Celsius;
+        UserVar.setFloat(event->TaskIndex, 0, Plugin_039_Celsius);
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -644,8 +644,8 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       }
       else
       {
-        UserVar[event->BaseVarIndex]     = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
