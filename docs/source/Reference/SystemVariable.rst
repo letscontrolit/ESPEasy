@@ -139,6 +139,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 5 (05)
      - Current second (ss). ``%syssec%`` omits leading zeros.
      - Yes
+   * - ``%syssec_d%``
+     - 83682
+     - Seconds since midnight.
+     -
    * - ``%sysday%`` (``%sysday_0%``)
      - 7 (07)
      - Current day of month (DD). ``%sysday%`` omits leading zeros.
