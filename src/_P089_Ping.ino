@@ -119,7 +119,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P089_taskdata->send_ping(event)) {
-        UserVar[event->BaseVarIndex]++;
+        UserVar.setFloat(event->TaskIndex, 0, UserVar.getFloat(event->TaskIndex, 0) + 1);
       }
 
       success = true;
