@@ -170,9 +170,9 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
         int X, Y, Z;
 
         if (P119_data->read_data(X, Y, Z)) {
-          UserVar[event->BaseVarIndex]     = X;
-          UserVar[event->BaseVarIndex + 1] = Y;
-          UserVar[event->BaseVarIndex + 2] = Z;
+          UserVar.setFloat(event->TaskIndex, 0, X);
+          UserVar.setFloat(event->TaskIndex, 1, Y);
+          UserVar.setFloat(event->TaskIndex, 2, Z);
 
           success = true;
         }

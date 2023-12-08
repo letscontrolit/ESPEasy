@@ -184,7 +184,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
             }
         # endif // ifndef BUILD_NO_DEBUG
 
-            UserVar[event->BaseVarIndex + i] = value;
+            UserVar.setFloat(event->TaskIndex, i,  value);
 
             const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
@@ -197,7 +197,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
               if (adc1 != adc2)
               {
                 const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-                UserVar[event->BaseVarIndex + i] = normalized * (out2 - out1) + out1;
+                UserVar.setFloat(event->TaskIndex, i,  normalized * (out2 - out1) + out1);
             # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

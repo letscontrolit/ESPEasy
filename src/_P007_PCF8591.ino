@@ -197,7 +197,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           if (Wire.available())
           {
             Wire.read();                                      // Read older value first (stored in chip)
-            UserVar[event->BaseVarIndex + var] = Wire.read(); // now read actual value and store into Value var
+            UserVar.setFloat(event->TaskIndex, var,  Wire.read()); // now read actual value and store into Value var
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
@@ -216,12 +216,12 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
             success = true;
           }
         } else {
-          UserVar[event->BaseVarIndex + var] = 0;
+          UserVar.setFloat(event->TaskIndex, var, 0);
         }
       }
 
       for (; var < VARS_PER_TASK; ++var) {
-        UserVar[event->BaseVarIndex + var] = 0;
+        UserVar.setFloat(event->TaskIndex, var, 0);
       }
       break;
     }

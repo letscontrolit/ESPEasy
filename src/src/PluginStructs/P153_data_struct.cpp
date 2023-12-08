@@ -91,8 +91,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
       if (!I2C_write8(_address, static_cast<uint8_t>((_intervalLoops > 0) ? _startupConfiguration : _normalConfiguration))) {
         timeDelay = -1; // Don't continue if writing command fails
 
-        UserVar[event->BaseVarIndex]     = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
@@ -135,8 +135,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           data[d] = Wire.read();
         }
       } else {
-        UserVar[event->BaseVarIndex]     = NAN; // Read error or I/O error
-        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN); // Read error or I/O error
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
@@ -160,8 +160,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
 
         if (definitelyGreaterThan(humidity, 100.0f)) { humidity = 100.0f; }
 
-        UserVar[event->BaseVarIndex]     = temperature + _tempOffset; // Apply offset
-        UserVar[event->BaseVarIndex + 1] = humidity;
+        UserVar.setFloat(event->TaskIndex, 0, temperature + _tempOffset); // Apply offset
+        UserVar.setFloat(event->TaskIndex, 1, humidity);
 
         success    = true;
         errorCount = 0;
@@ -190,8 +190,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           }
         }
       } else {
-        UserVar[event->BaseVarIndex]     = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
         addLog(LOG_LEVEL_ERROR, concat(F("SHT4x: READ CRC Error, data: 0x"), formatToHex_array(data, 6)));
         errorCount++;
 

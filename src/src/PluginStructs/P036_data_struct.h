@@ -16,7 +16,7 @@
 
 // Macros
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
-# define P036_SetDisplayOn(_state) (UserVar[event->BaseVarIndex] = _state)
+# define P036_SetDisplayOn(_state) (UserVar.setFloat(event->TaskIndex, 0, _state))
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)

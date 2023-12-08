@@ -284,8 +284,8 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-      UserVar[event->BaseVarIndex + 1] = curY;
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                               // and put into Values
+      UserVar.setFloat(event->TaskIndex, 1, curY);
 
       eInkScreen->display();
       eInkScreen->clearBuffer();
@@ -415,8 +415,8 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       if (success) {
         int16_t curX, curY;
         gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
-        UserVar[event->BaseVarIndex]     = curX;
-        UserVar[event->BaseVarIndex + 1] = curY;
+        UserVar.setFloat(event->TaskIndex, 0, curX);
+        UserVar.setFloat(event->TaskIndex, 1, curY);
       }
     }
   }

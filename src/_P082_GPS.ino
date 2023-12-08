@@ -607,7 +607,7 @@ void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float va
     const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
 
     if (PCONFIG(pconfigIndex) == outputType) {
-      UserVar[event->BaseVarIndex + i] = value;
+      UserVar.setFloat(event->TaskIndex, i,  value);
     }
   }
 }

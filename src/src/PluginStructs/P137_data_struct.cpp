@@ -189,7 +189,7 @@ bool P137_data_struct::plugin_read(struct EventStruct *event) {
 
   const uint8_t valueCount = P137_NR_OUTPUT_VALUES;
   for (uint8_t i = 0; i < valueCount; i++) {
-    UserVar[event->BaseVarIndex + i] = read_value(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i)));
+    UserVar.setFloat(event->TaskIndex, i,  read_value(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i))));
   }
 
   return success;

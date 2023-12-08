@@ -9,6 +9,7 @@
 #include "../DataTypes/TaskValues_Data.h"
 
 #include <vector>
+#include <map>
 
 struct UserVarStruct {
   UserVarStruct();
@@ -16,7 +17,9 @@ struct UserVarStruct {
   void          clear();
 
   // Overloading [] operator to access elements in array style
+  /*
   float       & operator[](unsigned int index);
+  */
   const float & operator[](unsigned int index) const;
 
   // Legacy "long" type, which was spread over several floats.
@@ -103,7 +106,14 @@ struct UserVarStruct {
 
 private:
 
+  // Raw TaskValues data as stored in RTC
   std::vector<TaskValues_Data_t>_data;
+
+  // Computed TaskValues for those tasks which use a formula
+  // Not stored in RTC, but used to cache calculated values.
+  // Since we can refer to any previous value in a formula (%pvalue%),
+  // we need to apply the formula when updating any value.
+  std::map<taskIndex_t, TaskValues_Data_t> _computed;
 };
 
 #endif // ifndef DATASTRUCTS_USERVARSTRUCT_H

@@ -35,10 +35,10 @@ P128_data_struct::~P128_data_struct() {
 
 bool P128_data_struct::plugin_read(struct EventStruct *event) {
   // there is no need to read them, just use current values
-  UserVar[event->BaseVarIndex]     = static_cast<int>(mode);
-  UserVar[event->BaseVarIndex + 1] = static_cast<int>(savemode);
-  UserVar[event->BaseVarIndex + 2] = fadetime;
-  UserVar[event->BaseVarIndex + 3] = fadedelay;
+  UserVar.setFloat(event->TaskIndex, 0, static_cast<int>(mode));
+  UserVar.setFloat(event->TaskIndex, 1, static_cast<int>(savemode));
+  UserVar.setFloat(event->TaskIndex, 2, fadetime);
+  UserVar.setFloat(event->TaskIndex, 3, fadedelay);
 
   # ifndef LIMIT_BUILD_SIZE
 

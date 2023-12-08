@@ -302,7 +302,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
               if (P004_data->read_temp(value, i))
               {
-                UserVar[event->BaseVarIndex + i] = value;
+                UserVar.setFloat(event->TaskIndex, i,  value);
                 success                          = true;
               }
               else
@@ -317,7 +317,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                     default:
                       break;
                   }
-                  UserVar[event->BaseVarIndex + i] = errorValue;
+                  UserVar.setFloat(event->TaskIndex, i,  errorValue);
                 }
               }
 

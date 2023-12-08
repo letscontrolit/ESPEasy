@@ -178,7 +178,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       const int valueCount = P026_NR_OUTPUT_VALUES;
 
       for (int i = 0; i < valueCount; ++i) {
-        UserVar[event->BaseVarIndex + i] = P026_get_value(PCONFIG(i));
+        UserVar.setFloat(event->TaskIndex, i, P026_get_value(PCONFIG(i)));
       }
       # ifndef LIMIT_BUILD_SIZE
 

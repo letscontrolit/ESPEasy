@@ -616,9 +616,9 @@ void P118_data_struct::ITHOcheck() {
 }
 
 void P118_data_struct::PublishData(struct EventStruct *event) {
-  UserVar[event->BaseVarIndex]     = _State;
-  UserVar[event->BaseVarIndex + 1] = _Timer;
-  UserVar[event->BaseVarIndex + 2] = _LastIDindex;
+  UserVar.setFloat(event->TaskIndex, 0, _State);
+  UserVar.setFloat(event->TaskIndex, 1, _Timer);
+  UserVar.setFloat(event->TaskIndex, 2, _LastIDindex);
 
   # ifndef BUILD_NO_DEBUG
 

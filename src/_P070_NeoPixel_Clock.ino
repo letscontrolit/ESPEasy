@@ -199,9 +199,9 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P070_data) {
-        UserVar[event->BaseVarIndex]     = P070_data->display_enabled;
-        UserVar[event->BaseVarIndex + 1] = P070_data->brightness;
-        UserVar[event->BaseVarIndex + 2] = P070_data->brightness_hour_marks;
+        UserVar.setFloat(event->TaskIndex, 0, P070_data->display_enabled);
+        UserVar.setFloat(event->TaskIndex, 1, P070_data->brightness);
+        UserVar.setFloat(event->TaskIndex, 2, P070_data->brightness_hour_marks);
 
         success = true;
       }

@@ -144,7 +144,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
           for (int8_t i = 0; i < valueCount; ++i) {
             const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
             bool isChanged             = false;
-            UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+            UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
             result |= isChanged;
           }
@@ -181,7 +181,7 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
     for (int8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
       bool isChanged             = false;
-      UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+      UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
       result |= isChanged;
     }

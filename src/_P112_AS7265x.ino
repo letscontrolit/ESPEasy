@@ -383,7 +383,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
               queueEvent(event->TaskIndex, 940, PCONFIG(6) ? P112_data->sensor.getCalibratedL() : P112_data->sensor.getL());
 
               P112_data->MeasurementStatus     = 0; // FIXME Why is this only executed for case 18?
-              UserVar[event->BaseVarIndex + 2] = 0;
+              UserVar.setFloat(event->TaskIndex, 2, 0);
 
               if (PCONFIG(0))                       // Blue Status LED
               {
@@ -402,7 +402,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
       if (P112_data->MeasurementStatus == 0) {
         if (P112_data->begin()) {
-          UserVar[event->BaseVarIndex + 2] = 1;
+          UserVar.setFloat(event->TaskIndex, 2, 1);
 
           P112_data->sensor.disableIndicator(); // Blue Status LEDs Off
 
@@ -422,8 +422,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           //
           P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
 
-          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getTemperature();
-          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getTemperatureAverage();
+          UserVar.setFloat(event->TaskIndex, 0, P112_data->sensor.getTemperature());
+          UserVar.setFloat(event->TaskIndex, 1, P112_data->sensor.getTemperatureAverage());
         }
       }
       success = true;

@@ -329,24 +329,28 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         uint32_t t       = r + g + b; // Normalization factor
 
         if (t == 0) {
-          UserVar[event->BaseVarIndex + 0] = 0.0f;
-          UserVar[event->BaseVarIndex + 1] = 0.0f;
-          UserVar[event->BaseVarIndex + 2] = 0.0f;
+          UserVar.setFloat(event->TaskIndex, 0, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 2, 0.0f);
         }
 
         switch (PCONFIG(2)) {
           case 0:
-            UserVar[event->BaseVarIndex + 0] = r;
-            UserVar[event->BaseVarIndex + 1] = g;
-            UserVar[event->BaseVarIndex + 2] = b;
+            UserVar.setFloat(event->TaskIndex, 0, r);
+            UserVar.setFloat(event->TaskIndex, 1, g);
+            UserVar.setFloat(event->TaskIndex, 2, b);
             break;
           case 1:
 
             if (t != 0) { // R/G/B transformed
-              P050_data->applyTransformation(r, g, b,
-                                             &UserVar[event->BaseVarIndex + 0],
-                                             &UserVar[event->BaseVarIndex + 1],
-                                             &UserVar[event->BaseVarIndex + 2]);
+              float r_f, g_f, b_f{};
+              P050_data->applyTransformation(
+                r, g, b,
+                &r_f, &g_f, &b_f);
+              UserVar.setFloat(event->TaskIndex, 0, r_f);
+              UserVar.setFloat(event->TaskIndex, 1, g_f);
+              UserVar.setFloat(event->TaskIndex, 2, b_f);
+
             }
             break;
           case 2:
@@ -356,9 +360,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           case 4:
 
             if (t != 0) { // r/g/b (normalized to 0.00..255.00 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex + 0] = static_cast<float>(r) / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 1] = static_cast<float>(g) / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 2] = static_cast<float>(b) / t * sRGBFactor;
+              UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(r) / t * sRGBFactor);
+              UserVar.setFloat(event->TaskIndex, 1, static_cast<float>(g) / t * sRGBFactor);
+              UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(b) / t * sRGBFactor);
             }
             break;
           case 3:
@@ -371,14 +375,18 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               const float nr = static_cast<float>(r) / t * sRGBFactor;
               const float ng = static_cast<float>(g) / t * sRGBFactor;
               const float nb = static_cast<float>(b) / t * sRGBFactor;
-              P050_data->applyTransformation(nr, ng, nb,
-                                             &UserVar[event->BaseVarIndex + 0],
-                                             &UserVar[event->BaseVarIndex + 1],
-                                             &UserVar[event->BaseVarIndex + 2]);
+
+              float r_f, g_f, b_f{};
+              P050_data->applyTransformation(
+                nr, ng, nb,
+                &r_f, &g_f, &b_f);
+              UserVar.setFloat(event->TaskIndex, 0, r_f);
+              UserVar.setFloat(event->TaskIndex, 1, g_f);
+              UserVar.setFloat(event->TaskIndex, 2, b_f);
             }
             break;
         }
-        UserVar[event->BaseVarIndex + 3] = value4;
+        UserVar.setFloat(event->TaskIndex, 3, value4);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("TCS34725: ");

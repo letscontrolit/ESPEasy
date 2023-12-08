@@ -19,6 +19,7 @@ void UserVarStruct::clear()
 
 // Implementation of [] operator.  This function must return a
 // reference as array element can be put on left side
+/*
 float& UserVarStruct::operator[](unsigned int index)
 {
   const unsigned int taskIndex = index / VARS_PER_TASK;
@@ -31,6 +32,7 @@ float& UserVarStruct::operator[](unsigned int index)
   }
   return _data.at(taskIndex).floats[varNr];
 }
+*/
 
 const float& UserVarStruct::operator[](unsigned int index) const
 {

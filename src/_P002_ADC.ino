@@ -129,7 +129,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((P002_data != nullptr) && P002_data->getValue(res_value, raw_value)) {
-        UserVar[event->BaseVarIndex] = res_value;
+        UserVar.setFloat(event->TaskIndex, 0, res_value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;

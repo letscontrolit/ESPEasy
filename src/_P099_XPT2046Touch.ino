@@ -62,6 +62,10 @@
 #define P099_VALUE_Y UserVar[event->BaseVarIndex + 1]
 #define P099_VALUE_Z UserVar[event->BaseVarIndex + 2]
 
+#define P099_SET_VALUE_X(v) UserVar.setFloat(event->TaskIndex, 0, v)
+#define P099_SET_VALUE_Y(v) UserVar.setFloat(event->TaskIndex, 1, v)
+#define P099_SET_VALUE_Z(v) UserVar.setFloat(event->TaskIndex, 2, v)
+
 #define P099_TS_TRESHOLD         15    // Treshold before the value is registered as a proper touch
 #define P099_TS_ROTATION         2     // Rotation 0-3 = 0/90/180/270 degrees, compatible with TFT ILI9341
 #define P099_TS_SEND_XY          true  // Enable X/Y events
@@ -480,9 +484,9 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
             ry = y;
             P099_data->scaleRawToCalibrated(x, y); // Map to screen coordinates if so configured
 
-            P099_VALUE_X = x;
-            P099_VALUE_Y = y;
-            P099_VALUE_Z = z;
+            P099_SET_VALUE_X(x);
+            P099_SET_VALUE_Y(y);
+            P099_SET_VALUE_Z(z);
 
             bool bEnableCalibrationLog = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION);
 

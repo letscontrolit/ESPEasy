@@ -192,8 +192,8 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         }
         P105_data->state = AHTx_state::AHTx_Values_read;
 
-        UserVar[event->BaseVarIndex]     = P105_data->getTemperature();
-        UserVar[event->BaseVarIndex + 1] = P105_data->getHumidity();
+        UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature());
+        UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity());
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
