@@ -51,7 +51,7 @@ struct ExtraTaskSettings_cache_t {
   #if FEATURE_PLUGIN_STATS
   PluginStats_Config_t pluginStatsConfig[VARS_PER_TASK] = {};
   #endif // if FEATURE_PLUGIN_STATS
-  bool hasFormula = false;
+  uint8_t hasFormula = 0; // Bitmap which task value has formula
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -86,7 +86,8 @@ struct Caches {
                                  uint8_t     rel_index);
 
   // Check to see if at least one of the taskvalues has a non-empty formula field.
-  bool    hasFormula(taskIndex_t TaskIndex);
+  bool hasFormula(taskIndex_t TaskIndex, uint8_t rel_index);
+  bool hasFormula(taskIndex_t TaskIndex);
 
 
   String  getTaskDeviceFormula(taskIndex_t TaskIndex,

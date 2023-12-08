@@ -19,6 +19,7 @@
 #define PLUGIN_VALUENAME1_152 "Output"
 
 #define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
+#define P152_SET_DAC_VALUE(x) UserVar.setFloat(event->TaskIndex, 0, x)
 
 #if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
 # error P152 ESP32 DAC not supported on this CPU type!
@@ -94,7 +95,7 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 
         if (getDAC_gpio_info(CONFIG_PIN1, dac) && (dac == event->Par1)) {
           int value = min(255, max(0, event->Par2)); // Limit value
-          P152_DAC_VALUE = value;
+          P152_SET_DAC_VALUE(value);
           dacWrite(CONFIG_PIN1, value);              // Set output value
           addLog(LOG_LEVEL_INFO,
                  formatGpioName_DAC(CONFIG_PIN1) +
