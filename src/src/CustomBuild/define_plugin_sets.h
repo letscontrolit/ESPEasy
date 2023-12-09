@@ -696,7 +696,7 @@ To create/register a plugin, you have to :
     #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
     #define NOTIFIER_SET_STABLE
-    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P076   // HLW8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
@@ -770,7 +770,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
-    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P076   // HLW8012   in POW r1
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
 #endif
@@ -1481,7 +1481,7 @@ To create/register a plugin, you have to :
     #define USES_P066   // VEML6040
 
     #define USES_P075   // Nextion
-    //#define USES_P076   // HWL8012   in POW r1
+    //#define USES_P076   // HLW8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     //#define USES_P077	  // CSE7766   in POW R2
     //#define USES_P078   // Eastron Modbus Energy meters
@@ -1634,7 +1634,7 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076
-     #define USES_P076   // HWL8012   in POW r1
+     #define USES_P076   // HLW8012   in POW r1
    #endif
    #ifndef USES_P077
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -2556,7 +2556,7 @@ To create/register a plugin, you have to :
   #define FEATURE_BLYNK 0
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
-      #undef USES_P076   // HWL8012   in POW r1
+      #undef USES_P076   // HLW8012   in POW r1
     #endif
     #ifdef USES_P093
       #undef USES_P093   // Mitsubishi Heat Pump
