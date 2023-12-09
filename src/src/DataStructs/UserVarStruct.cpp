@@ -21,6 +21,7 @@ void UserVarStruct::clear()
   for (size_t i = 0; i < _rawData.size(); ++i) {
     _rawData[i].clear();
   }
+  _computed.clear();
 }
 
 float UserVarStruct::operator[](unsigned int index) const
@@ -30,7 +31,7 @@ float UserVarStruct::operator[](unsigned int index) const
 
   constexpr bool raw = false;
 
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_QUAD, raw);
 
   if (data != nullptr) {
     return data->getFloat(varNr);
@@ -43,7 +44,7 @@ float UserVarStruct::operator[](unsigned int index) const
 
 unsigned long UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex, bool raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, 0, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, 0, Sensor_VType::SENSOR_TYPE_ULONG, raw);
 
   if (data != nullptr) {
     return data->getSensorTypeLong();
@@ -56,7 +57,7 @@ void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, 0)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, 0, tmp, Sensor_VType::SENSOR_TYPE_ULONG);
+      applyFormulaAndSet(taskIndex, 0, tmp, Sensor_VType::SENSOR_TYPE_ULONG);
     } else {
       _rawData[taskIndex].setSensorTypeLong(value);
     }
@@ -69,7 +70,7 @@ int32_t UserVarStruct::getInt32(taskIndex_t taskIndex,
                                 uint8_t     varNr,
                                 bool        raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_INT32_QUAD, raw);
 
   if (data != nullptr) {
     return data->getInt32(varNr);
@@ -84,7 +85,7 @@ void UserVarStruct::setInt32(taskIndex_t taskIndex,
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_INT32_QUAD);
+      applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_INT32_QUAD);
     } else {
       _rawData[taskIndex].setInt32(varNr, value);
     }
@@ -95,7 +96,11 @@ void UserVarStruct::setInt32(taskIndex_t taskIndex,
 
 uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr, bool raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_UINT32_QUAD, raw);
+#else
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_NOT_SET, true);
+#endif
 
   if (data != nullptr) {
     return data->getUint32(varNr);
@@ -109,11 +114,12 @@ void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t val
     // setUInt32 is used to read taskvalues back from RTC
     // If FEATURE_EXTENDED_TASK_VALUE_TYPES is not enabled, this function will never be used for anything else
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
+
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_UINT32_QUAD);
-    } else 
-#endif
+      applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_UINT32_QUAD);
+    } else
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
     {
       _rawData[taskIndex].setUint32(varNr, value);
     }
@@ -126,7 +132,7 @@ int64_t UserVarStruct::getInt64(taskIndex_t taskIndex,
                                 uint8_t     varNr,
                                 bool        raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_INT64_DUAL, raw);
 
   if (data != nullptr) {
     return data->getInt64(varNr);
@@ -141,7 +147,11 @@ void UserVarStruct::setInt64(taskIndex_t taskIndex,
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_INT64_DUAL);
+
+      if (applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_INT64_DUAL)) {
+        // Apply anyway so we don't loose resolution in the raw value
+        _rawData[taskIndex].setInt64(varNr, value);
+      }
     } else {
       _rawData[taskIndex].setInt64(varNr, value);
     }
@@ -152,7 +162,7 @@ uint64_t UserVarStruct::getUint64(taskIndex_t taskIndex,
                                   uint8_t     varNr,
                                   bool        raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_UINT64_DUAL, raw);
 
   if (data != nullptr) {
     return data->getUint64(varNr);
@@ -167,7 +177,11 @@ void UserVarStruct::setUint64(taskIndex_t taskIndex,
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_UINT64_DUAL);
+
+      if (applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_UINT64_DUAL)) {
+        // Apply anyway so we don't loose resolution in the raw value
+        _rawData[taskIndex].setUint64(varNr, value);
+      }
     } else {
       _rawData[taskIndex].setUint64(varNr, value);
     }
@@ -180,7 +194,7 @@ float UserVarStruct::getFloat(taskIndex_t taskIndex,
                               uint8_t     varNr,
                               bool        raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_QUAD, raw);
 
   if (data != nullptr) {
     return data->getFloat(varNr);
@@ -195,7 +209,7 @@ void UserVarStruct::setFloat(taskIndex_t taskIndex,
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
-      applyFormula(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_QUAD);
+      applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_QUAD);
     } else {
       _rawData[taskIndex].setFloat(varNr, value);
     }
@@ -207,7 +221,7 @@ void UserVarStruct::setFloat(taskIndex_t taskIndex,
 double UserVarStruct::getDouble(taskIndex_t taskIndex,
                                 uint8_t varNr, bool raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL, raw);
 
   if (data != nullptr) {
     return data->getDouble(varNr);
@@ -221,7 +235,7 @@ void UserVarStruct::setDouble(taskIndex_t taskIndex,
 {
   if (taskIndex < _rawData.size()) {
     if (Cache.hasFormula(taskIndex, varNr)) {
-      applyFormula(taskIndex, varNr, value, Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL);
+      applyFormulaAndSet(taskIndex, varNr, value, Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL);
     } else {
       _rawData[taskIndex].setDouble(varNr, value);
     }
@@ -236,7 +250,7 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
                                                     Sensor_VType sensorType,
                                                     bool         raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
     return data->getAsDouble(varNr, sensorType);
@@ -246,7 +260,7 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
 
 String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals, bool raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
     return data->getAsString(varNr, sensorType, nrDecimals);
@@ -256,7 +270,7 @@ String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_V
 
 void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const ESPEASY_RULES_FLOAT_TYPE& value, Sensor_VType sensorType)
 {
-  applyFormula(taskIndex, varNr, value, sensorType);
+  applyFormulaAndSet(taskIndex, varNr, value, sensorType);
 }
 
 bool UserVarStruct::isValid(taskIndex_t  taskIndex,
@@ -264,7 +278,7 @@ bool UserVarStruct::isValid(taskIndex_t  taskIndex,
                             Sensor_VType sensorType,
                             bool         raw) const
 {
-  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, raw);
+  const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
     return data->isValid(varNr, sensorType);
@@ -313,10 +327,25 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
   }
 }
 
-const TaskValues_Data_t * UserVarStruct::getRawOrComputed(taskIndex_t taskIndex, uint8_t varNr, bool raw) const
+const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
+  taskIndex_t  taskIndex,
+  uint8_t      varNr,
+  Sensor_VType sensorType,
+  bool         raw) const
 {
   if (!raw && Cache.hasFormula(taskIndex, varNr)) {
     auto it = _computed.find(taskIndex);
+
+    if (it == _computed.end()) {
+      // Try to compute values which do have a formula but not yet a 'computed' value cached.
+      // FIXME TD-er: This may yield unexpected results when formula contains references to %pvalue%
+      const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+      const String value   = getAsString(taskIndex, varNr, sensorType, nrDecimals, true);
+
+      if (applyFormula(taskIndex, varNr, value, sensorType)) {
+        it = _computed.find(taskIndex);
+      }
+    }
 
     if (it != _computed.end()) {
       return &(it->second);
@@ -325,15 +354,19 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(taskIndex_t taskIndex,
   return getRawTaskValues_Data(taskIndex);
 }
 
-void UserVarStruct::applyFormula(taskIndex_t                     taskIndex,
-                                 uint8_t                         varNr,
-                                 const ESPEASY_RULES_FLOAT_TYPE& value,
-                                 Sensor_VType                    sensorType)
+bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
+                                 uint8_t       varNr,
+                                 const String& value,
+                                 Sensor_VType  sensorType) const
 {
-  if ((taskIndex >= _rawData.size()) || (varNr >= VARS_PER_TASK)) {
-    return;
+  if ((taskIndex >= _rawData.size()) ||
+      (varNr >= VARS_PER_TASK) ||
+      (sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET))
+  {
+    return false;
   }
   String formula = Cache.getTaskDeviceFormula(taskIndex, varNr);
+  bool   res     = true;
 
   if (!formula.isEmpty())
   {
@@ -347,13 +380,7 @@ void UserVarStruct::applyFormula(taskIndex_t                     taskIndex,
       formula.replace(F("%pvalue%"), getAsString(taskIndex, varNr, sensorType, nrDecimals));
     }
 
-    if (formula.indexOf(F("%value%")) != -1)
-    {
-      // Use a temporary TaskValues_Data_t object to have uniform formatting
-      TaskValues_Data_t tmp;
-      tmp.set(varNr, value, sensorType);
-      formula.replace(F("%value%"), tmp.getAsString(varNr, sensorType, nrDecimals));
-    }
+    formula.replace(F("%value%"), value);
 
     ESPEASY_RULES_FLOAT_TYPE result{};
 
@@ -361,10 +388,28 @@ void UserVarStruct::applyFormula(taskIndex_t                     taskIndex,
       _computed[taskIndex].set(varNr, result, sensorType);
     } else {
       // FIXME TD-er: What to do now? Just copy the raw value, set error value or don't update?
+      res = false;
     }
 
     STOP_TIMER(COMPUTE_FORMULA_STATS);
   }
+  return res;
+}
 
-  _rawData[taskIndex].set(varNr, value, sensorType);
+bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex,
+                                       uint8_t                         varNr,
+                                       const ESPEASY_RULES_FLOAT_TYPE& value,
+                                       Sensor_VType                    sensorType)
+{
+  // Use a temporary TaskValues_Data_t object to have uniform formatting
+  TaskValues_Data_t tmp;
+
+  tmp.set(varNr, value, sensorType);
+  const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+
+  if (applyFormula(taskIndex, varNr, tmp.getAsString(varNr, sensorType, nrDecimals), sensorType)) {
+    _rawData[taskIndex].set(varNr, value, sensorType);
+    return true;
+  }
+  return false;
 }

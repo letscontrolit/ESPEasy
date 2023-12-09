@@ -14,7 +14,7 @@
 struct UserVarStruct {
   UserVarStruct();
 
-  void clear();
+  void          clear();
 
   float         operator[](unsigned int index) const;
 
@@ -80,7 +80,7 @@ struct UserVarStruct {
                    uint8_t     varNr,
                    double      value);
 # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+#endif  // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   ESPEASY_RULES_FLOAT_TYPE getAsDouble(taskIndex_t  taskIndex,
                                        uint8_t      varNr,
@@ -91,7 +91,7 @@ struct UserVarStruct {
                      uint8_t      varNr,
                      Sensor_VType sensorType,
                      uint8_t      nrDecimals = 0,
-                     bool         raw = false) const;
+                     bool         raw        = false) const;
 
 
   void set(taskIndex_t                     taskIndex,
@@ -115,23 +115,30 @@ struct UserVarStruct {
 
 private:
 
-  const TaskValues_Data_t* getRawOrComputed(taskIndex_t taskIndex,
-                                            uint8_t     varNr,
-                                            bool        raw) const;
+  const TaskValues_Data_t* getRawOrComputed(taskIndex_t  taskIndex,
+                                            uint8_t      varNr,
+                                            Sensor_VType sensorType,
+                                            bool         raw) const;
 
-  void applyFormula(taskIndex_t                     taskIndex,
-                    uint8_t                         varNr,
-                    const ESPEASY_RULES_FLOAT_TYPE& value,
-                    Sensor_VType                    sensorType);
+  bool applyFormula(taskIndex_t   taskIndex,
+                    uint8_t       varNr,
+                    const String& value,
+                    Sensor_VType  sensorType) const;
+
+  bool applyFormulaAndSet(taskIndex_t                     taskIndex,
+                          uint8_t                         varNr,
+                          const ESPEASY_RULES_FLOAT_TYPE& value,
+                          Sensor_VType                    sensorType);
+
 
   // Raw TaskValues data as stored in RTC
-  std::vector<TaskValues_Data_t> _rawData;
+  std::vector<TaskValues_Data_t>_rawData;
 
   // Computed TaskValues for those tasks which use a formula
   // Not stored in RTC, but used to cache calculated values.
   // Since we can refer to any previous value in a formula (%pvalue%),
   // we need to apply the formula when updating any value.
-  std::map<taskIndex_t, TaskValues_Data_t> _computed;
+  mutable std::map<taskIndex_t, TaskValues_Data_t>_computed;
 };
 
 #endif // ifndef DATASTRUCTS_USERVARSTRUCT_H
