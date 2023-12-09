@@ -783,6 +783,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
                 queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
               }
             } else {
+              // Must be done as soon as there are new values, so we can keep a copy of the previous value
+              // This previous value may be needed in formulas using %pvalue%
+              UserVar.markPluginRead(event->TaskIndex);
               #if FEATURE_PLUGIN_STATS
               PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
               if (taskData != nullptr) {
