@@ -2393,3 +2393,57 @@ This rule can be used to calculate the moving average for, f.e., a temperature s
 
 This assumes that a Controller has been configured, and the Dummy task is configured to send out its values via the controller.
 
+Register daily working time
+---------------------------
+
+To register the daily time in seconds that a device is active, these rules have been developed (from the forum).
+
+Required device tasks:
+
+* Sensor (temperature in the example)
+* Dummy device (named ``Dummy`` in this example, minimal 2 values, ``LoggingON`` and ``LoggingOFF``), Interval can be set to 0
+
+.. code-block:: none
+
+  On System#Boot Do
+    TaskValueSet,Dummy,LoggingON,1 // Make sure timer is started and Heater ON message is sent
+  Endon
+
+  On DS1#Temperature Do // Check tmeperature
+    If %eventvalue1% < 40
+      GPIO,5,0
+      AsyncEvent,HeaterON=%eventvalue1%
+    Endif
+    If %eventvalue1% > 55
+      GPIO,5,1
+      AsyncEvent,HeaterOFF=%eventvalue1%
+    Endif
+  Endon
+
+  On HeaterON Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingON] = 1
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater ON'
+      TaskValueSet,Dummy,LoggingON,0
+      TaskValueSet,Dummy,LoggingOFF,1
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On HeaterOFF Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingOFF] = 1
+      Let,2,[int#2]+%syssec_d%-[int#1] // Add run time to var#2
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater OFF'
+      TaskValueSet,Dummy,LoggingON,1
+      TaskValueSet,Dummy,LoggingOFF,0
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Send value of [int#2] to wherever you need it
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [int#2] Seconds'
+    Let,1,0 // Reset start time
+    Let,2,0 // Reset total counter 
+  Endon
+
