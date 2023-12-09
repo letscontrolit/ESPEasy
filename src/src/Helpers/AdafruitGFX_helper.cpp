@@ -4,6 +4,7 @@
 #ifdef PLUGIN_USES_ADAFRUITGFX
 
 # include "../Helpers/StringConverter.h"
+# include "../Helpers/StringGenerator_Web.h"
 # include "../WebServer/Markup_Forms.h"
 
 # if ADAGFX_FONTS_INCLUDED
@@ -2431,11 +2432,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
   const __FlashStringHelper *clr = AdaGFXcolorToString_internal(color, colorDepth, false);
 
   if (!equals(clr, '*')) {
-    addHtml(F("<option value=\""));
-    addHtml(clr);
-    addHtml(F("\">"));
-    addHtml(clr);
-    addHtml(F("</option>"));
+    datalistAddValue(clr);
   }
 }
 
@@ -2444,9 +2441,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
  ****************************************************************************************/
 void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
                                   const AdaGFXColorDepth   & colorDepth) {
-  addHtml(F("<datalist id=\""));
-  addHtml(id);
-  addHtml(F("\">"));
+  datalistStart(id);
 
   switch (colorDepth) {
     case AdaGFXColorDepth::BlackWhiteRed:
@@ -2502,7 +2497,7 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       break;
     }
   }
-  addHtml(F("</datalist>"));
+  datalistFinish();
 }
 
 /*****************************************************************************************
