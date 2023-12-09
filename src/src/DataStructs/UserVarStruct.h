@@ -11,6 +11,27 @@
 #include <vector>
 #include <map>
 
+struct TaskValues_Data_cache {
+  void set(uint8_t                         varNr,
+           const ESPEASY_RULES_FLOAT_TYPE& value,
+           Sensor_VType                    sensorType)
+  {
+    values.set(varNr, value, sensorType);
+    bitSet(values_set_map, varNr);
+  }
+
+  void clear(uint8_t varNr) {
+    bitClear(values_set_map, varNr);
+  }
+
+  bool isSet(uint8_t varNr) const {
+    return bitRead(values_set_map, varNr);
+  }
+
+  TaskValues_Data_t values{};
+  uint8_t           values_set_map{};
+};
+
 struct UserVarStruct {
   UserVarStruct();
 
@@ -138,7 +159,7 @@ private:
   // Not stored in RTC, but used to cache calculated values.
   // Since we can refer to any previous value in a formula (%pvalue%),
   // we need to apply the formula when updating any value.
-  mutable std::map<taskIndex_t, TaskValues_Data_t>_computed;
+  mutable std::map<taskIndex_t, TaskValues_Data_cache>_computed;
 };
 
 #endif // ifndef DATASTRUCTS_USERVARSTRUCT_H

@@ -102,9 +102,9 @@ uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr, bool raw
 {
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_UINT32_QUAD, raw);
-#else
+#else // if FEATURE_EXTENDED_TASK_VALUE_TYPES
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_NOT_SET, true);
-#endif
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
   if (data != nullptr) {
     return data->getUint32(varNr);
@@ -340,7 +340,7 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
   if (!raw && Cache.hasFormula(taskIndex, varNr)) {
     auto it = _computed.find(taskIndex);
 
-    if (it == _computed.end()) {
+    if ((it == _computed.end()) || !it->second.isSet(varNr)) {
       // Try to compute values which do have a formula but not yet a 'computed' value cached.
       // FIXME TD-er: This may yield unexpected results when formula contains references to %pvalue%
       const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
@@ -352,7 +352,9 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
     }
 
     if (it != _computed.end()) {
-      return &(it->second);
+      if (it->second.isSet(varNr)) {
+        return &(it->second.values);
+      }
     }
   }
   return getRawTaskValues_Data(taskIndex);
@@ -393,6 +395,10 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
     } else {
       // FIXME TD-er: What to do now? Just copy the raw value, set error value or don't update?
       res = false;
+      auto it = _computed.find(taskIndex);
+      if (it != _computed.end()) {
+        it->second.clear(varNr);
+      }
     }
 
     STOP_TIMER(COMPUTE_FORMULA_STATS);
