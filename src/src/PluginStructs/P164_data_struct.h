@@ -1,12 +1,28 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Plugin data structure for P164 "GASES - ENS16x (TVOC, eCO2)"
+// Plugin for ENS160 & ENS161 TVOC and eCO2 sensor with I2C interface from ScioSense
+// Based upon: https://github.com/sciosense/ENS160_driver
+// For documentation see 
+// https://www.sciosense.com/wp-content/uploads/documents/SC-001224-DS-9-ENS160-Datasheet.pdf
+//
+// 2023 By flashmark
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef PLUGINSTRUCTS_P164_DATA_STRUCT_H
 #define PLUGINSTRUCTS_P164_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P164
 
-#include "../Pluginstructs/P164_ENS160.h"
+#define P164_I2C_ADDR            PCONFIG(0)
+#define P164_PCONFIG_TEMP_TASK   PCONFIG(1)
+#define P164_PCONFIG_TEMP_VAL    PCONFIG(2)
+#define P164_PCONFIG_HUM_TASK    PCONFIG(3)
+#define P164_PCONFIG_HUM_VAL     PCONFIG(4)
 
-# define P164_I2C_ADDR        PCONFIG(0)
+// 7-bit I2C slave address of the ENS160
+#define ENS160_I2CADDR_0        0x52	//ADDR low
+#define ENS160_I2CADDR_1        0x53	//ADDR high
 
 struct P164_data_struct : public PluginTaskData_base {
 public:
@@ -17,6 +33,7 @@ public:
 
   bool begin();
   bool read(float& tvoc, float& eco2);
+  bool read(float& tvoc, float& eco2, float temp, float hum);
   static bool webformLoad(struct EventStruct *event);
   static bool webformSave(struct EventStruct *event);
   bool tenPerSecond(struct EventStruct *event);
@@ -26,7 +43,6 @@ private:
   bool        initialized = false;
 
   bool        evaluateState();                                // Evaluate state machine for next action. Should be called regularly.
-		
 	bool        start(uint8_t slaveaddr);                       // Init I2C communication, resets ENS160 and checks its PART_ID. Returns false on I2C problems or wrong PART_ID.
 	bool        available()     { return this->_available; }    // Report availability of sensor
 	uint8_t     revENS16x()     { return this->_revENS16x; }    // Report version of sensor (0: ENS160, 1: ENS161)
@@ -64,7 +80,7 @@ private:
 
   int         _state = 0;         // General state of the software
   ulong       _lastChange = 0u;   // Timestamp of last state transition
-  uint8_t     _opmode = 0;        // ENS160 Mode
+  uint8_t     _opmode = 0;        // Selected ENS160 Mode (as requested by higher level software)
   
   bool        checkPartID();      // Reads the part ID and confirms valid sensor
   bool        clearCommand();     // Initialize idle mode and confirms 
@@ -101,9 +117,6 @@ private:
   //Isotherm, HP0 252°C / HP1 350°C / HP2 250°C / HP3 324°C / measure every 1008ms
   uint8_t _seq_steps[1][8] = { { 0x7C, 0x0A, 0x7E, 0xAF, 0xAF, 0xA2, 0x00, 0x80 }, };
 
-/****************************************************************************/
-/* General functions														*/
-/****************************************************************************/
   void            moveToState(int newState);
 
   static uint8_t  read8(uint8_t addr, byte reg);	

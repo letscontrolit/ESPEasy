@@ -2,14 +2,22 @@
 #ifdef USES_P164
 
 // #######################################################################################################
-// #################################### Plugin-164: Gases - ENS160 (tvoc,eco2) ###########################
+// #################################### Plugin-164: Gases - ENS16x (tvoc,eco2) ###########################
+// #######################################################################################################
+// P164 "GASES - ENS16x (TVOC, eCO2)"
+// Plugin for ENS160 & ENS161 TVOC and eCO2 sensor with I2C interface from ScioSense
+// Based upon: https://github.com/sciosense/ENS160_driver
+// For documentation see 
+// https://www.sciosense.com/wp-content/uploads/documents/SC-001224-DS-9-ENS160-Datasheet.pdf
+//
+// 2023 By flashmark
 // #######################################################################################################
 
 # include "src/PluginStructs/P164_data_struct.h"
 
 # define PLUGIN_164
 # define PLUGIN_ID_164         164
-# define PLUGIN_NAME_164       "Gases - ENS160"
+# define PLUGIN_NAME_164       "Gases - ENS16x"
 # define PLUGIN_VALUENAME1_164 "TVOC"
 # define PLUGIN_VALUENAME2_164 "eCO2"
 
@@ -59,13 +67,9 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P164_I2C_ADDR);
         addFormNote(F("ADDR Low=0x52, High=0x53"));
-        Serial.print("ENS16x: plugin_webform_show_i2c_params() = ");
-        Serial.println(success);
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);
-        Serial.print("ENS16x: plugin_i2c_has_address() = ");
-        Serial.println(success);       
-       }
+      }
 
       break;
     }
@@ -75,8 +79,6 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     {
       event->Par1 = P164_I2C_ADDR;
       success     = true;
-      Serial.print("ENS16x: plugin_i2c_get_addr() = ");
-      Serial.println(success);      
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
@@ -85,8 +87,6 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     {
       P164_I2C_ADDR = ENS160_I2CADDR_1;
       success = true;
-      Serial.print("ENS16x: plugin_set_defaults() = ");
-      Serial.println(success);
       break;
     }
 
@@ -96,8 +96,6 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P164_data && P164_data->begin());
-      Serial.print("ENS16x: plugin_init() = ");
-      Serial.println(success);
       break;
     }
 
@@ -106,17 +104,20 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P164_data) {
-        Serial.print("ENS16x: plugin_read NULLPTR");
+        Serial.print("P164: plugin_read NULLPTR");
         break;
       }
 
-      success = P164_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1]);
-      Serial.print("ENS16x: plugin_read() = ");
-      Serial.print(success);
-      Serial.print(" val1= ");
-      Serial.print(UserVar[event->BaseVarIndex]);
-      Serial.print(" val2= ");
-      Serial.println(UserVar[event->BaseVarIndex+1]);
+      float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
+      float humidity = 50.0f;     // A reasonable value in case humidity source task is invalid
+      if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
+      {
+        // we're checking a var from another task, so calculate that basevar
+        temperature = UserVar[P164_PCONFIG_TEMP_TASK * VARS_PER_TASK + P164_PCONFIG_TEMP_VAL]; // in degrees C
+        humidity = UserVar[P164_PCONFIG_HUM_TASK * VARS_PER_TASK + P164_PCONFIG_HUM_VAL];    // in % relative
+      }
+      success = P164_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1], temperature, humidity);
+
       success = true;
       break;
     }
@@ -124,20 +125,12 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       success = P164_data_struct::webformLoad(event);
-      Serial.print("ENS16x: plugin_webform_load() = ");
-      Serial.println(success);
-      success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
       success = P164_data_struct::webformSave(event);
-      Serial.print(F("ENS16x: plugin_webform_save() = "));
-      Serial.println(success);
-      Serial.print(F("ENS16x: I2C_ADDR = 0x"));
-      Serial.println(P164_I2C_ADDR, HEX);
-      success = true;
       break;
     }
 
@@ -157,12 +150,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     {
       break;
     }
-    default:
-    {
-      // Serial.print(F("ENS160: Unhandled plugin call: "));
-      // Serial.println(function);
-      break;
-    }
+    
   }
   return success;
 }
