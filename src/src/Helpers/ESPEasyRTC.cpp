@@ -200,7 +200,9 @@ bool readUserVarFromRTC()
     for (size_t i = 0; i < UserVar_nrelements; ++i) {
       const taskIndex_t taskIndex = i / VARS_PER_TASK;
       const uint8_t varNr = i % VARS_PER_TASK;
-      UserVar.setUint32(taskIndex, varNr, UserVar_RTC[i]);
+      // Store in raw form, so we don't apply formula as we don't really know what type is required.
+      TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(taskIndex);
+      taskValues->setUint32(varNr, UserVar_RTC[i]);
     }
     return true;
   }
