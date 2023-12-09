@@ -155,7 +155,7 @@ bool Caches::hasFormula(taskIndex_t TaskIndex, uint8_t rel_index)
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return bitRead(it->second.hasFormula, 2*rel_index);
+      return bitRead(it->second.hasFormula, 2 * rel_index);
     }
   }
   return false;
@@ -182,7 +182,7 @@ bool Caches::hasFormula_with_prevValue(taskIndex_t TaskIndex, uint8_t rel_index)
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return bitRead(it->second.hasFormula, 2*rel_index + 1);
+      return bitRead(it->second.hasFormula, 2 * rel_index + 1);
     }
   }
   return false;
@@ -197,10 +197,10 @@ String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
     if (it != extraTaskSettings_cache.end()) {
       return it->second.TaskDeviceFormula[rel_index];
     }
-    #else
+    #else // ifdef ESP32
     LoadTaskSettings(TaskIndex);
     return ExtraTaskSettings.TaskDeviceFormula[rel_index];
-    #endif
+    #endif // ifdef ESP32
   }
   return EMPTY_STRING;
 }
@@ -290,7 +290,7 @@ void Caches::updateExtraTaskSettingsCache()
 
     if (it != extraTaskSettings_cache.end()) {
       // We need to keep the original checksum, from when loaded from storage
-      tmp.md5checksum = it->second.md5checksum;
+      tmp.md5checksum                = it->second.md5checksum;
       tmp.defaultTaskDeviceValueName = it->second.defaultTaskDeviceValueName;
 
       // Now clear it so we can create a fresh copy.
@@ -310,16 +310,17 @@ void Caches::updateExtraTaskSettingsCache()
         #endif // ifdef ESP32
 
       if (ExtraTaskSettings.TaskDeviceFormula[i][0] != 0) {
-        bitSet(tmp.hasFormula, 2*i);
+        bitSet(tmp.hasFormula, 2 * i);
         String formula(ExtraTaskSettings.TaskDeviceFormula[i]);
+
         if (formula.indexOf(F("%pvalue%")) != -1) {
-          bitSet(tmp.hasFormula, 2*i + 1);
+          bitSet(tmp.hasFormula, 2 * i + 1);
         }
 
 
         #ifdef ESP32
         tmp.TaskDeviceFormula[i] = std::move(formula);
-        #endif
+        #endif // ifdef ESP32
       }
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
       #if FEATURE_PLUGIN_STATS
