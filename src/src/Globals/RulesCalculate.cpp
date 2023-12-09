@@ -59,7 +59,6 @@ CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
 CalculateReturnCode Calculate(const String& input,
                               ESPEASY_RULES_FLOAT_TYPE      & result)
 {
-  START_TIMER;
   CalculateReturnCode returnCode = Calculate_preProcessed(
     RulesCalculate_t::preProces(input),
     result);
@@ -105,7 +104,6 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
-  STOP_TIMER(COMPUTE_STATS);
   return returnCode;
 }
 

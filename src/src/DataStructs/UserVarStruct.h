@@ -164,11 +164,14 @@ private:
   // we need to apply the formula when updating any value.
   mutable std::map<taskIndex_t, TaskValues_Data_cache>_computed;
 
-  String getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varNr) const;
-  String getPreviousValue(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType sensorType) const;
+  String getPreprocessedFormula(taskIndex_t taskIndex,
+                                uint8_t     varNr) const;
+  String getPreviousValue(taskIndex_t  taskIndex,
+                          uint8_t      varNr,
+                          Sensor_VType sensorType) const;
 
-  mutable std::map<uint16_t, String> _preprocessedFormula;
-  mutable std::map<uint16_t, String> _prevValue;
+  mutable std::map<uint16_t, String>_preprocessedFormula;
+  mutable std::map<uint16_t, String>_prevValue;
 };
 
 #endif // ifndef DATASTRUCTS_USERVARSTRUCT_H
