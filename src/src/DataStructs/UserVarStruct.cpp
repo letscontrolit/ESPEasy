@@ -401,6 +401,7 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
   if (!applyNow && !Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
     // Must check whether we can delay calculations until it is read for the first time.
     auto it = _computed.find(taskIndex);
+
     if (it != _computed.end()) {
       // Make sure it will apply formula when the value is actually read
       it->second.clear(varNr);
@@ -419,7 +420,8 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
     // TD-er: Should we use the set nr of decimals here, or not round at all?
     // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
     if (formula.indexOf(F("%pvalue%")) != -1) {
-      formula.replace(F("%pvalue%"), getPreviousValue(taskIndex, varNr, sensorType));
+      const String prev_str = getPreviousValue(taskIndex, varNr, sensorType);
+      formula.replace(F("%pvalue%"), prev_str.isEmpty() ? value : prev_str);
     }
 
     formula.replace(F("%value%"), value);
@@ -473,31 +475,30 @@ String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varN
   const uint16_t key = makeWord(taskIndex, varNr);
   auto it            = _preprocessedFormula.find(key);
 
-  if (it != _preprocessedFormula.end()) {
-    return it->second;
+  if (it == _preprocessedFormula.end()) {
+    _preprocessedFormula[key] = RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
   }
-
-  String prepocessed = RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
-
-  _preprocessedFormula[key] = prepocessed;
-  return prepocessed;
+  return _preprocessedFormula[key];
 }
 
 String UserVarStruct::getPreviousValue(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType sensorType) const
 {
   /*
-  if (!Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
-    // Should not happen.
+     if (!Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+     // Should not happen.
 
-  }
-  */
+     }
+   */
 
-    const uint16_t key = makeWord(taskIndex, varNr);
+  const uint16_t key = makeWord(taskIndex, varNr);
   auto it            = _prevValue.find(key);
 
   if (it != _prevValue.end()) {
     return it->second;
   }
+
   // Probably the first run, so just return the current value
-  return getAsString(taskIndex, varNr, sensorType);    
+
+  // Do not call getAsString here as this will result in stack overflow.
+  return EMPTY_STRING;
 }
