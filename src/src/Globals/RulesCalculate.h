@@ -19,6 +19,9 @@ extern RulesCalculate_t RulesCalculate;
 
 int                 CalculateParam(const String& TmpStr);
 
+CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
+                              ESPEASY_RULES_FLOAT_TYPE      & result);
+
 CalculateReturnCode Calculate(const String& input,
                               ESPEASY_RULES_FLOAT_TYPE      & result);
 

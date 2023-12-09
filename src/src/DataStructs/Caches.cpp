@@ -149,13 +149,13 @@ String Caches::getTaskDeviceValueName(taskIndex_t TaskIndex, uint8_t rel_index)
 
 bool Caches::hasFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if (validTaskIndex(TaskIndex)) {
+  if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
     // Just a quick test to see if we do have a formula present.
     // Task Formula are not used very often, so we will probably almost always have to return an empty string.
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
-      return bitRead(it->second.hasFormula, rel_index);
+      return bitRead(it->second.hasFormula, 2*rel_index);
     }
   }
   return false;
@@ -175,9 +175,22 @@ bool Caches::hasFormula(taskIndex_t TaskIndex)
   return false;
 }
 
+bool Caches::hasFormula_with_prevValue(taskIndex_t TaskIndex, uint8_t rel_index)
+{
+  if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
+    // Just a quick test to see if we do have a formula present which requires %pvalue%.
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return bitRead(it->second.hasFormula, 2*rel_index + 1);
+    }
+  }
+  return false;
+}
+
 String Caches::getTaskDeviceFormula(taskIndex_t TaskIndex, uint8_t rel_index)
 {
-  if ((rel_index < VARS_PER_TASK) && bitRead(hasFormula(TaskIndex), rel_index)) {
+  if ((rel_index < VARS_PER_TASK) && hasFormula(TaskIndex, rel_index)) {
     #ifdef ESP32
     auto it = getExtraTaskSettings(TaskIndex);
 
@@ -297,10 +310,16 @@ void Caches::updateExtraTaskSettingsCache()
         #endif // ifdef ESP32
 
       if (ExtraTaskSettings.TaskDeviceFormula[i][0] != 0) {
+        bitSet(tmp.hasFormula, 2*i);
+        String formula(ExtraTaskSettings.TaskDeviceFormula[i]);
+        if (formula.indexOf(F("%pvalue%")) != -1) {
+          bitSet(tmp.hasFormula, 2*i + 1);
+        }
+
+
         #ifdef ESP32
-        tmp.TaskDeviceFormula[i] = ExtraTaskSettings.TaskDeviceFormula[i];
+        tmp.TaskDeviceFormula[i] = std::move(formula);
         #endif
-        bitSet(tmp.hasFormula, i);
       }
       tmp.decimals[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
       #if FEATURE_PLUGIN_STATS

@@ -8,6 +8,7 @@
 #include "../Globals/RulesCalculate.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/CRC_functions.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
 
@@ -22,6 +23,7 @@ void UserVarStruct::clear()
     _rawData[i].clear();
   }
   _computed.clear();
+  _preprocessedFormula.clear();
 }
 
 float UserVarStruct::operator[](unsigned int index) const
@@ -263,6 +265,12 @@ String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_V
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
+    if (nrDecimals == 255) {
+      // TD-er: Should we use the set nr of decimals here, or not round at all?
+      // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
+      nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+    }
+
     return data->getAsString(varNr, sensorType, nrDecimals);
   }
   return EMPTY_STRING;
@@ -325,6 +333,25 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
       _computed.erase(it);
     }
   }
+
+  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+    const uint16_t key = makeWord(taskIndex, varNr);
+    auto it            = _preprocessedFormula.find(key);
+
+    if (it != _preprocessedFormula.end()) {
+      _preprocessedFormula.erase(it);
+    }
+  }
+}
+
+void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
+{
+  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+    if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+      const uint16_t key = makeWord(taskIndex, varNr);
+      _prevValue[key] = formatUserVarNoCheck(taskIndex, varNr);
+    }
+  }
 }
 
 const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
@@ -342,7 +369,9 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
       const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
       const String value   = getAsString(taskIndex, varNr, sensorType, nrDecimals, true);
 
-      if (applyFormula(taskIndex, varNr, value, sensorType)) {
+      constexpr bool applyNow = true;
+
+      if (applyFormula(taskIndex, varNr, value, sensorType, applyNow)) {
         it = _computed.find(taskIndex);
       }
     }
@@ -359,7 +388,8 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
 bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
                                  uint8_t       varNr,
                                  const String& value,
-                                 Sensor_VType  sensorType) const
+                                 Sensor_VType  sensorType,
+                                 bool          applyNow) const
 {
   if ((taskIndex >= _rawData.size()) ||
       (varNr >= VARS_PER_TASK) ||
@@ -367,7 +397,19 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
   {
     return false;
   }
-  String formula = Cache.getTaskDeviceFormula(taskIndex, varNr);
+
+  if (!applyNow && !Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+    // Must check whether we can delay calculations until it is read for the first time.
+    auto it = _computed.find(taskIndex);
+    if (it != _computed.end()) {
+      // Make sure it will apply formula when the value is actually read
+      it->second.clear(varNr);
+    }
+    return true;
+  }
+
+
+  String formula = getPreprocessedFormula(taskIndex, varNr);
   bool   res     = true;
 
   if (!formula.isEmpty())
@@ -376,25 +418,19 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
 
     // TD-er: Should we use the set nr of decimals here, or not round at all?
     // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-    const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
-
     if (formula.indexOf(F("%pvalue%")) != -1) {
-      formula.replace(F("%pvalue%"), getAsString(taskIndex, varNr, sensorType, nrDecimals));
+      formula.replace(F("%pvalue%"), getPreviousValue(taskIndex, varNr, sensorType));
     }
 
     formula.replace(F("%value%"), value);
 
     ESPEASY_RULES_FLOAT_TYPE result{};
 
-    if (!isError(Calculate(parseTemplate(formula), result))) {
+    if (!isError(Calculate_preProcessed(parseTemplate(formula), result))) {
       _computed[taskIndex].set(varNr, result, sensorType);
     } else {
       // FIXME TD-er: What to do now? Just copy the raw value, set error value or don't update?
       res = false;
-      auto it = _computed.find(taskIndex);
-      if (it != _computed.end()) {
-        it->second.clear(varNr);
-      }
     }
 
     STOP_TIMER(COMPUTE_FORMULA_STATS);
@@ -407,15 +443,61 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
                                        const ESPEASY_RULES_FLOAT_TYPE& value,
                                        Sensor_VType                    sensorType)
 {
+  if (!Cache.hasFormula(taskIndex, varNr)) {
+    return true;
+  }
+
   // Use a temporary TaskValues_Data_t object to have uniform formatting
   TaskValues_Data_t tmp;
 
   tmp.set(varNr, value, sensorType);
-  const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+  const uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+  const String  value_str  = tmp.getAsString(varNr, sensorType, nrDecimals);
 
-  if (applyFormula(taskIndex, varNr, tmp.getAsString(varNr, sensorType, nrDecimals), sensorType)) {
+  constexpr bool applyNow = false;
+
+  if (applyFormula(taskIndex, varNr, value_str, sensorType, applyNow)) {
     _rawData[taskIndex].set(varNr, value, sensorType);
     return true;
   }
   return false;
+}
+
+String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varNr) const
+{
+  if (!Cache.hasFormula(taskIndex, varNr)) {
+    return EMPTY_STRING;
+  }
+
+
+  const uint16_t key = makeWord(taskIndex, varNr);
+  auto it            = _preprocessedFormula.find(key);
+
+  if (it != _preprocessedFormula.end()) {
+    return it->second;
+  }
+
+  String prepocessed = RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
+
+  _preprocessedFormula[key] = prepocessed;
+  return prepocessed;
+}
+
+String UserVarStruct::getPreviousValue(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType sensorType) const
+{
+  /*
+  if (!Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+    // Should not happen.
+
+  }
+  */
+
+    const uint16_t key = makeWord(taskIndex, varNr);
+  auto it            = _prevValue.find(key);
+
+  if (it != _prevValue.end()) {
+    return it->second;
+  }
+  // Probably the first run, so just return the current value
+  return getAsString(taskIndex, varNr, sensorType);    
 }

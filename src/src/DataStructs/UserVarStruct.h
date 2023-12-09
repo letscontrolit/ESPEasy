@@ -111,7 +111,7 @@ struct UserVarStruct {
   String getAsString(taskIndex_t  taskIndex,
                      uint8_t      varNr,
                      Sensor_VType sensorType,
-                     uint8_t      nrDecimals = 0,
+                     uint8_t      nrDecimals = 255,
                      bool         raw        = false) const;
 
 
@@ -134,6 +134,8 @@ struct UserVarStruct {
 
   void                     clear_computed(taskIndex_t taskIndex);
 
+  void                     markPluginRead(taskIndex_t taskIndex);
+
 private:
 
   const TaskValues_Data_t* getRawOrComputed(taskIndex_t  taskIndex,
@@ -144,7 +146,8 @@ private:
   bool applyFormula(taskIndex_t   taskIndex,
                     uint8_t       varNr,
                     const String& value,
-                    Sensor_VType  sensorType) const;
+                    Sensor_VType  sensorType,
+                    bool          applyNow) const;
 
   bool applyFormulaAndSet(taskIndex_t                     taskIndex,
                           uint8_t                         varNr,
@@ -160,6 +163,12 @@ private:
   // Since we can refer to any previous value in a formula (%pvalue%),
   // we need to apply the formula when updating any value.
   mutable std::map<taskIndex_t, TaskValues_Data_cache>_computed;
+
+  String getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varNr) const;
+  String getPreviousValue(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType sensorType) const;
+
+  mutable std::map<uint16_t, String> _preprocessedFormula;
+  mutable std::map<uint16_t, String> _prevValue;
 };
 
 #endif // ifndef DATASTRUCTS_USERVARSTRUCT_H

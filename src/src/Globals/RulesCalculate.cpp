@@ -39,13 +39,26 @@ int CalculateParam(const String& TmpStr) {
   return returnValue;
 }
 
-CalculateReturnCode Calculate(const String& input,
+CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
                               ESPEASY_RULES_FLOAT_TYPE      & result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
-    RulesCalculate_t::preProces(input).c_str(),
+    preprocessd_input.c_str(),
     &result);
+
+  STOP_TIMER(COMPUTE_STATS);
+  return returnCode;
+}
+
+
+CalculateReturnCode Calculate(const String& input,
+                              ESPEASY_RULES_FLOAT_TYPE      & result)
+{
+  START_TIMER;
+  CalculateReturnCode returnCode = Calculate_preProcessed(
+    RulesCalculate_t::preProces(input),
+    result);
 
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
