@@ -12,6 +12,8 @@
  * 2023-12-06 tonhuisman: Add changelog
  */
 
+# include "src/Helpers/StringGenerator_Web.h"
+
 # define PLUGIN_043
 # define PLUGIN_ID_043         43
 # define PLUGIN_NAME_043       "Output - Clock"
@@ -86,12 +88,32 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         F("On"),
       };
 
+      # ifndef LIMIT_BUILD_SIZE
+      const String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
+      datalistStart(F("timepatternlist"));
+
+      for (unsigned int n = 0; n < weekDays.length() / 3u; ++n) {
+        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",00:00")));
+        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",%sunrise%")));
+        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",%sunset%")));
+      }
+      datalistFinish();
+      # endif // ifndef LIMIT_BUILD_SIZE
+
       for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
         addFormTextBox(
           concat(F("Day,Time "), x + 1),
           concat(F("clock"),     x),
-          timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x)), 32);
+          timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x)), 32
+          # ifndef LIMIT_BUILD_SIZE
+          , false, false, EMPTY_STRING
+          #  if FEATURE_TOOLTIPS
+          , EMPTY_STRING
+          #  endif // if FEATURE_TOOLTIPS
+          , F("timepatternlist")
+          # endif // ifndef LIMIT_BUILD_SIZE
+          );
 
         if (CONFIG_PIN1 >= 0) {
           addHtml(' ');
@@ -150,7 +172,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
           if (state != 0)
           {
-            if (CONFIG_PIN1 >= 0) { // if GPIO is specified, use the old behavior
+            if (validGpio(CONFIG_PIN1)) { // if GPIO is specified, use the old behavior
               state--;
               pinMode(CONFIG_PIN1, OUTPUT);
               digitalWrite(CONFIG_PIN1, state);
