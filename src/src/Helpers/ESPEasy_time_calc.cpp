@@ -312,9 +312,9 @@ unsigned long string2TimeLong(const String& str)
 
     if (off || TmpStr1.startsWith(SystemVariables::toString(SystemVariables::Enum::SUNSET))) {
       if (off == 0) { off = 7; }
-      int lperc = TmpStr1.indexOf('%', off + 1);
+      int lperc = TmpStr1.indexOf('%', off);
 
-      if (lperc > off) {            // Valid variable used, having a second % sign?
+      if (lperc >= off) {           // Valid variable used, having a second % sign?
         bitSet(lngTime, 21u + off); // bit 28 = sunset, bit 29 = sunrise
         int delta            = ESPEasy_time::getSecOffset(TmpStr1.substring(off, lperc + 1));
         const bool isSeconds = 's' == TmpStr1[lperc - 1];
