@@ -117,5 +117,7 @@ private:
 #include "LOLIN_UC8151D.h"
 #include "LOLIN_SSD1680.h"
 #include "Waveshare_2in7.h"
+#include "Waveshare_1in54bv2.h"
+#include "MH_ET_Live_1in54.h"
 
 #endif
