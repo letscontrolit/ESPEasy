@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-10 tonhuisman: Change input layout for non-LIMIT_BUILD_SIZE builds, to select a day and a time string in separate
+ *                        inputs.
+ *                        Add setting for number of Day,Time settings (range 1..16), default is 8.
  * 2023-12-07 tonhuisman: Add support for %sunrise[+/-offsetHMS]% and %sunset[+/-offsetHMS]% format in constants
  *                        also supports long offsets up to 32767 seconds using S suffix in offset
  * 2023-12-06 tonhuisman: Add changelog
@@ -21,13 +24,17 @@
 
 // #define PLUGIN_VALUENAME1_043 "Output"
 // #define PLUGIN_VALUENAME2_043 "Output2"
-# define PLUGIN_043_MAX_SETTINGS 8
+# define PLUGIN_043_MAX_SETTINGS PCONFIG(7)
+# define P043_DEFAULT_MAX        8
 # define P043_SENSOR_TYPE_INDEX  2
 # define P043_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P043_SENSOR_TYPE_INDEX)))
 
 
 boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 {
+  # ifndef LIMIT_BUILD_SIZE
+  const String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
+  # endif // ifndef LIMIT_BUILD_SIZE
   boolean success = false;
 
   switch (function)
@@ -59,6 +66,12 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX;
+      break;
+    }
+
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = P043_NR_OUTPUT_VALUES;
@@ -82,48 +95,68 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const __FlashStringHelper *options[3] = {
+      if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
+      addFormNumericBox(F("Nr. of Day,Time fields"), F("vcount"), PLUGIN_043_MAX_SETTINGS, 1, 16);
+      addUnit(F("1..16"));
+      # ifndef LIMIT_BUILD_SIZE
+      addFormNote(F("Page will be updated after Submit"));
+      # endif // ifndef LIMIT_BUILD_SIZE
+
+      const __FlashStringHelper *options[] = {
         F(""),
         F("Off"),
         F("On"),
       };
 
       # ifndef LIMIT_BUILD_SIZE
-      const String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
-      datalistStart(F("timepatternlist"));
+      const unsigned int daysCount = weekDays.length() / 3;
+      String days[daysCount];
 
       for (unsigned int n = 0; n < weekDays.length() / 3u; ++n) {
-        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",00:00")));
-        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",%sunrise%")));
-        datalistAddValue(concat(weekDays.substring(n * 3, n * 3 + 3), F(",%sunset%")));
+        days[n] = weekDays.substring(n * 3, n * 3 + 3);
       }
+
+      datalistStart(F("timepatternlist"));
+      datalistAddValue(F("00:00"));
+      datalistAddValue(F("%sunrise%"));
+      datalistAddValue(F("%sunset%"));
       datalistFinish();
       # endif // ifndef LIMIT_BUILD_SIZE
 
       for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
-        addFormTextBox(
-          concat(F("Day,Time "), x + 1),
-          concat(F("clock"),     x),
-          timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x)), 32
-          # ifndef LIMIT_BUILD_SIZE
-          , false, false, EMPTY_STRING
-          #  if FEATURE_TOOLTIPS
-          , EMPTY_STRING
-          #  endif // if FEATURE_TOOLTIPS
-          , F("timepatternlist")
-          # endif // ifndef LIMIT_BUILD_SIZE
-          );
+        const String timeStr = timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x));
+        # ifndef LIMIT_BUILD_SIZE
+        addRowLabel(concat(F("Day,Time "), x + 1));
+        int thisDay = weekDays.indexOf(timeStr.substring(0, 3));
 
-        if (CONFIG_PIN1 >= 0) {
+        if (thisDay > 0) { thisDay /= 3; }
+        addSelector(concat(F("day"), x), daysCount, days, nullptr, nullptr, thisDay, false, true, F(""));
+        addHtml(',');
+        addTextBox(concat(F("clock"), x),
+                   parseString(timeStr, 2), 32
+                   , false, false, EMPTY_STRING, F("")
+                   #  if FEATURE_TOOLTIPS
+                   , EMPTY_STRING
+                   #  endif // if FEATURE_TOOLTIPS
+                   , F("timepatternlist"));
+        # else // ifndef LIMIT_BUILD_SIZE
+        addFormTextBox(concat(F("Day,Time "), x + 1),
+                       concat(F("clock"), x),
+                       timeStr, 32);
+        # endif // ifndef LIMIT_BUILD_SIZE
+
+        if (validGpio(CONFIG_PIN1)) {
           addHtml(' ');
-          const uint8_t choice = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
-          addSelector(concat(F("state"), x), 3, options, nullptr, nullptr, choice);
+          const uint8_t choice       = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
+          constexpr int optionsCount = NR_ELEMENTS(options);
+          addSelector(concat(F("state"), x), optionsCount, options, nullptr, nullptr, choice);
         }
-        else { addFormNumericBox(
-                 concat(F("Value"), x + 1),
-                 concat(F("state"), x),
-                 Cache.getTaskDevicePluginConfig(event->TaskIndex, x)); }
+        else {
+          addFormNumericBox(concat(F("Value"), x + 1),
+                            concat(F("state"), x),
+                            Cache.getTaskDevicePluginConfig(event->TaskIndex, x));
+        }
       }
       success = true;
       break;
@@ -131,9 +164,17 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      PLUGIN_043_MAX_SETTINGS = getFormItemInt(F("vcount"));
+
       for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
-        const String plugin1 = webArg(concat(F("clock"), x));
+        String plugin1;
+        # ifndef LIMIT_BUILD_SIZE
+        const int day = getFormItemInt(concat(F("day"), x));
+        plugin1 = strformat(F("%s,%s"), weekDays.substring(day * 3, day * 3 + 3).c_str(), webArg(concat(F("clock"), x)).c_str());
+        # else // ifndef LIMIT_BUILD_SIZE
+        plugin1 = webArg(concat(F("clock"), x));
+        # endif // ifndef LIMIT_BUILD_SIZE
         ExtraTaskSettings.TaskDevicePluginConfigLong[x] = string2TimeLong(plugin1);
         const String plugin2 = webArg(concat(F("state"), x));
         ExtraTaskSettings.TaskDevicePluginConfig[x] = plugin2.toInt();
@@ -150,6 +191,8 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
     {
+      if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
+
       for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
         unsigned long clockEvent = (unsigned long)node_time.minute() % 10
