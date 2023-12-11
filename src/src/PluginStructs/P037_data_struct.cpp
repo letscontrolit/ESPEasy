@@ -525,7 +525,7 @@ bool P037_data_struct::webform_save(
     if (!left.isEmpty() || !right.isEmpty()) {
       valueArray[mappingOffset]  = wrapWithQuotes(left);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
-      uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 1));
+      uint8_t oper = getFormItemIntCustomArgName(idx + 1);
       valueArray[mappingOffset] += operands.substring(oper, oper + 1);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
       valueArray[mappingOffset] += wrapWithQuotes(right);
@@ -571,7 +571,7 @@ bool P037_data_struct::webform_save(
         ) {
       valueArray[filterOffset]  = wrapWithQuotes(left);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
-      uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 100 + 1));
+      uint8_t oper = getFormItemIntCustomArgName(idx + 100 + 1);
       valueArray[filterOffset] += filters.substring(oper, oper + 1);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
       valueArray[filterOffset] += wrapWithQuotes(right);

@@ -1185,7 +1185,7 @@ bool getGPIOPinStateValues(String& str) {
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
 
-  if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinstate")) && (device.length() > 0)) {
+  if ((command.length() >= 8) && equals(command, F("pinstate")) && (device.length() > 0)) {
     #ifndef BUILD_NO_DEBUG
     String logPrefix;
     #endif
@@ -1277,7 +1277,7 @@ bool getGPIOPinStateValues(String& str) {
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
     }
-  } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
+  } else if ((command.length() >= 8) && equals(command, F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
     int32_t  par1, par2;
     bool successPar = false;

@@ -62,7 +62,7 @@ CalculateReturnCode Calculate(const String& input,
   CalculateReturnCode returnCode = Calculate_preProcessed(
     RulesCalculate_t::preProces(input),
     result);
-
+#ifndef LIMIT_BUILD_SIZE
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Calculate: ");
@@ -104,6 +104,7 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
+#endif
   return returnCode;
 }
 

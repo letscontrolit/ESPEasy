@@ -229,8 +229,8 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         P062_data->loadTouchObjects(event->TaskIndex);
 
         for (int objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
-          P062_data->StoredSettings.TouchObjects[objectNr].touch   = getFormItemInt(getPluginCustomArgName(objectNr + 100));
-          P062_data->StoredSettings.TouchObjects[objectNr].release = getFormItemInt(getPluginCustomArgName(objectNr + 200));
+          P062_data->StoredSettings.TouchObjects[objectNr].touch   = getFormItemIntCustomArgName(objectNr + 100);
+          P062_data->StoredSettings.TouchObjects[objectNr].release = getFormItemIntCustomArgName(objectNr + 200);
         }
         # ifdef PLUGIN_062_DEBUG
 

@@ -141,13 +141,13 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
         P099_CONFIG_DEBOUNCE_MS = P099_DEBOUNCE_MILLIS;
 
-        uint32_t lSettings = 0;
-        bitWrite(lSettings, P099_FLAGS_SEND_XY,          P099_TS_SEND_XY);
-        bitWrite(lSettings, P099_FLAGS_SEND_Z,           P099_TS_SEND_Z);
-        bitWrite(lSettings, P099_FLAGS_SEND_OBJECTNAME,  P099_TS_SEND_OBJECTNAME);
-        bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION,  P099_TS_USE_CALIBRATION);
-        bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION,  P099_TS_LOG_CALIBRATION);
-        bitWrite(lSettings, P099_FLAGS_ROTATION_FLIPPED, P099_TS_ROTATION_FLIPPED);
+        constexpr uint32_t lSettings = 0
+        + (P099_TS_SEND_XY          ? (1 << P099_FLAGS_SEND_XY          ) : 0)
+        + (P099_TS_SEND_Z           ? (1 << P099_FLAGS_SEND_Z           ) : 0)
+        + (P099_TS_SEND_OBJECTNAME  ? (1 << P099_FLAGS_SEND_OBJECTNAME  ) : 0)
+        + (P099_TS_USE_CALIBRATION  ? (1 << P099_FLAGS_USE_CALIBRATION  ) : 0)
+        + (P099_TS_LOG_CALIBRATION  ? (1 << P099_FLAGS_LOG_CALIBRATION  ) : 0)
+        + (P099_TS_ROTATION_FLIPPED ? (1 << P099_FLAGS_ROTATION_FLIPPED ) : 0);
         P099_CONFIG_FLAGS = lSettings;
       }
       success = true;
@@ -366,10 +366,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           error += concat(F("Invalid character in objectname #"), objectNr + 1);
           error += F(". Do not use ',-+/*=^%!#[]{}()' or space.\n");
         }
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     = getFormItemInt(getPluginCustomArgName(objectNr + 100));
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     = getFormItemInt(getPluginCustomArgName(objectNr + 200));
-        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemInt(getPluginCustomArgName(objectNr + 300));
-        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemInt(getPluginCustomArgName(objectNr + 400));
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     = getFormItemIntCustomArgName(objectNr + 100);
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     = getFormItemIntCustomArgName(objectNr + 200);
+        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemIntCustomArgName(objectNr + 300);
+        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemIntCustomArgName(objectNr + 400);
 
         uint8_t flags = 0;
         bitWrite(flags, P099_FLAGS_ON_OFF_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 500)));
@@ -490,23 +490,17 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
             bool bEnableCalibrationLog = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION);
 
-            if (bEnableCalibrationLog && loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not
-                                                                              // make this optional!
-              String log;
-
-              if (log.reserve(72)) {
-                log  = F("Touch calibration rx= "); // Space before the logged values was added for readability
-                log += rx;
-                log += F(", ry= ");
-                log += ry;
-                log += F("; z= "); // Always log the z value even if not used.
-                log += z;
-                log += F(", x= ");
-                log += x;
-                log += F(", y= ");
-                log += y;
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
+            if (bEnableCalibrationLog && loglevelActiveFor(LOG_LEVEL_INFO)) { 
+              // REQUIRED for calibration and setting up objects, so do not
+              // make this optional!
+              // Space before the logged values was added for readability
+              addLogMove(LOG_LEVEL_INFO, strformat(
+                F("Touch calibration rx= %u, ry= %u; z= %u, x= %u, y= %u"),
+                rx,
+                ry,
+                z,  // Always log the z value even if not used.
+                x,
+                y));
             }
 
             if (Settings.UseRules) {                                                                   // No events to handle if rules not
@@ -567,13 +561,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                     }
                   } else {
                     // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                    String eventValues;
-                    eventValues += x;
-                    eventValues += ',';
-                    eventValues += y;
-                    eventValues += ',';
-                    eventValues += z;
-                    eventQueue.add(event->TaskIndex, selectedObjectName, eventValues);
+                    eventQueue.add(
+                      event->TaskIndex, 
+                      selectedObjectName, 
+                      strformat(F("%u,%u,%u"), x, y, z));
                   }
                 }
               }

@@ -2425,7 +2425,7 @@ To create/register a plugin, you have to :
 
 
 // Disable Homie plugin for now in the dev build to make it fit.
-#if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
+#if defined(PLUGIN_DISPLAY_COLLECTION) && defined(USES_C014) && defined(ESP8266)
   #undef USES_C014
 #endif
 

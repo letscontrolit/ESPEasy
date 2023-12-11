@@ -181,12 +181,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number = PLUGIN_ID_016;
       Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
-
-      if (P016_SEND_IR_TO_CONTROLLER) {
+#if P016_SEND_IR_TO_CONTROLLER
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
-      } else {
+#else
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
-      }
+#endif
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = true;
@@ -513,7 +512,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           strError.clear();
 
           // Normal Code & flags
-          line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
+          line.CodeDecodeType = static_cast<decode_type_t>(getFormItemIntCustomArgName(rowCnt + 0));
           bitWrite(line.CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
           line.Code = 0;
 
@@ -531,7 +530,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           // Alternate Code & flags
           line.AlternativeCodeDecodeType =
-            static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
+            static_cast<decode_type_t>(getFormItemIntCustomArgName(rowCnt + 3));
           bitWrite(line.AlternativeCodeFlags, P16_FLAGS_REPEAT,
                    isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
           line.AlternativeCode = 0;
@@ -825,10 +824,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
         # endif // P016_P035_Extended_AC
 
-        if (!P016_SEND_IR_TO_CONTROLLER) {
+#if !P016_SEND_IR_TO_CONTROLLER
+        {
           unsigned long IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
         }
+#endif
         sendData(event);
       }
       success = true;

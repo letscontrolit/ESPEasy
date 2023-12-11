@@ -12,22 +12,17 @@
 #include "../Helpers/StringParser.h"
 
 
-UserVarStruct::UserVarStruct()
-{
-  # ifdef USE_SECOND_HEAP
-  HeapSelectDram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
-
-  _rawData.resize(TASKS_MAX);
-}
 
 void UserVarStruct::clear()
 {
-  for (size_t i = 0; i < _rawData.size(); ++i) {
+  for (size_t i = 0; i < TASKS_MAX; ++i) {
     _rawData[i].clear();
   }
   _computed.clear();
+#ifndef LIMIT_BUILD_SIZE
   _preprocessedFormula.clear();
+#endif // ifndef LIMIT_BUILD_SIZE
+  _prevValue.clear();
 }
 
 float UserVarStruct::operator[](unsigned int index) const
@@ -43,7 +38,9 @@ float UserVarStruct::operator[](unsigned int index) const
     return data->getFloat(varNr);
   } else {
     static float errorvalue = NAN;
+#ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
+#endif
     return errorvalue;
   }
 }
@@ -60,7 +57,7 @@ unsigned long UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex, bool raw) 
 
 void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, 0)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
       applyFormulaAndSet(taskIndex, 0, tmp, Sensor_VType::SENSOR_TYPE_ULONG);
@@ -72,9 +69,9 @@ void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-int32_t UserVarStruct::getInt32(taskIndex_t taskIndex,
-                                uint8_t     varNr,
-                                bool        raw) const
+int32_t UserVarStruct::getInt32(taskIndex_t    taskIndex,
+                                taskVarIndex_t varNr,
+                                bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_INT32_QUAD, raw);
 
@@ -84,11 +81,11 @@ int32_t UserVarStruct::getInt32(taskIndex_t taskIndex,
   return 0;
 }
 
-void UserVarStruct::setInt32(taskIndex_t taskIndex,
-                             uint8_t     varNr,
-                             int32_t     value)
+void UserVarStruct::setInt32(taskIndex_t    taskIndex,
+                             taskVarIndex_t varNr,
+                             int32_t        value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
       applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_INT32_QUAD);
@@ -100,7 +97,7 @@ void UserVarStruct::setInt32(taskIndex_t taskIndex,
 
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr, bool raw) const
+uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, taskVarIndex_t varNr, bool raw) const
 {
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_UINT32_QUAD, raw);
@@ -114,9 +111,9 @@ uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr, bool raw
   return 0u;
 }
 
-void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t value)
+void UserVarStruct::setUint32(taskIndex_t taskIndex, taskVarIndex_t varNr, uint32_t value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     // setUInt32 is used to read taskvalues back from RTC
     // If FEATURE_EXTENDED_TASK_VALUE_TYPES is not enabled, this function will never be used for anything else
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
@@ -134,9 +131,9 @@ void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t val
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-int64_t UserVarStruct::getInt64(taskIndex_t taskIndex,
-                                uint8_t     varNr,
-                                bool        raw) const
+int64_t UserVarStruct::getInt64(taskIndex_t    taskIndex,
+                                taskVarIndex_t varNr,
+                                bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_INT64_DUAL, raw);
 
@@ -146,11 +143,11 @@ int64_t UserVarStruct::getInt64(taskIndex_t taskIndex,
   return 0;
 }
 
-void UserVarStruct::setInt64(taskIndex_t taskIndex,
-                             uint8_t     varNr,
-                             int64_t     value)
+void UserVarStruct::setInt64(taskIndex_t    taskIndex,
+                             taskVarIndex_t varNr,
+                             int64_t        value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
 
@@ -164,9 +161,9 @@ void UserVarStruct::setInt64(taskIndex_t taskIndex,
   }
 }
 
-uint64_t UserVarStruct::getUint64(taskIndex_t taskIndex,
-                                  uint8_t     varNr,
-                                  bool        raw) const
+uint64_t UserVarStruct::getUint64(taskIndex_t    taskIndex,
+                                  taskVarIndex_t varNr,
+                                  bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_UINT64_DUAL, raw);
 
@@ -176,11 +173,11 @@ uint64_t UserVarStruct::getUint64(taskIndex_t taskIndex,
   return 0u;
 }
 
-void UserVarStruct::setUint64(taskIndex_t taskIndex,
-                              uint8_t     varNr,
-                              uint64_t    value)
+void UserVarStruct::setUint64(taskIndex_t    taskIndex,
+                              taskVarIndex_t varNr,
+                              uint64_t       value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
 
@@ -196,9 +193,9 @@ void UserVarStruct::setUint64(taskIndex_t taskIndex,
 
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-float UserVarStruct::getFloat(taskIndex_t taskIndex,
-                              uint8_t     varNr,
-                              bool        raw) const
+float UserVarStruct::getFloat(taskIndex_t    taskIndex,
+                              taskVarIndex_t varNr,
+                              bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_QUAD, raw);
 
@@ -208,11 +205,11 @@ float UserVarStruct::getFloat(taskIndex_t taskIndex,
   return 0.0f;
 }
 
-void UserVarStruct::setFloat(taskIndex_t taskIndex,
-                             uint8_t     varNr,
-                             float       value)
+void UserVarStruct::setFloat(taskIndex_t    taskIndex,
+                             taskVarIndex_t varNr,
+                             float          value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       const ESPEASY_RULES_FLOAT_TYPE tmp = value;
       applyFormulaAndSet(taskIndex, varNr, tmp, Sensor_VType::SENSOR_TYPE_QUAD);
@@ -225,7 +222,7 @@ void UserVarStruct::setFloat(taskIndex_t taskIndex,
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
 # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 double UserVarStruct::getDouble(taskIndex_t taskIndex,
-                                uint8_t varNr, bool raw) const
+                                taskVarIndex_t varNr, bool raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL, raw);
 
@@ -235,11 +232,11 @@ double UserVarStruct::getDouble(taskIndex_t taskIndex,
   return 0.0;
 }
 
-void UserVarStruct::setDouble(taskIndex_t taskIndex,
-                              uint8_t     varNr,
-                              double      value)
+void UserVarStruct::setDouble(taskIndex_t    taskIndex,
+                              taskVarIndex_t varNr,
+                              double         value)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, varNr)) {
       applyFormulaAndSet(taskIndex, varNr, value, Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL);
     } else {
@@ -251,10 +248,10 @@ void UserVarStruct::setDouble(taskIndex_t taskIndex,
 # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 #endif  // if FEATURE_EXTENDED_TASK_VALUE_TYPES
 
-ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
-                                                    uint8_t      varNr,
-                                                    Sensor_VType sensorType,
-                                                    bool         raw) const
+ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t    taskIndex,
+                                                    taskVarIndex_t varNr,
+                                                    Sensor_VType   sensorType,
+                                                    bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
@@ -264,7 +261,7 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t  taskIndex,
   return 0.0;
 }
 
-String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals, bool raw) const
+String UserVarStruct::getAsString(taskIndex_t taskIndex, taskVarIndex_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals, bool raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
@@ -280,15 +277,15 @@ String UserVarStruct::getAsString(taskIndex_t taskIndex, uint8_t varNr, Sensor_V
   return EMPTY_STRING;
 }
 
-void UserVarStruct::set(taskIndex_t taskIndex, uint8_t varNr, const ESPEASY_RULES_FLOAT_TYPE& value, Sensor_VType sensorType)
+void UserVarStruct::set(taskIndex_t taskIndex, taskVarIndex_t varNr, const ESPEASY_RULES_FLOAT_TYPE& value, Sensor_VType sensorType)
 {
   applyFormulaAndSet(taskIndex, varNr, value, sensorType);
 }
 
-bool UserVarStruct::isValid(taskIndex_t  taskIndex,
-                            uint8_t      varNr,
-                            Sensor_VType sensorType,
-                            bool         raw) const
+bool UserVarStruct::isValid(taskIndex_t    taskIndex,
+                            taskVarIndex_t varNr,
+                            Sensor_VType   sensorType,
+                            bool           raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
@@ -300,13 +297,15 @@ bool UserVarStruct::isValid(taskIndex_t  taskIndex,
 
 uint8_t * UserVarStruct::get(size_t& sizeInBytes)
 {
-  sizeInBytes = _rawData.size() * sizeof(TaskValues_Data_t);
+  constexpr size_t size_rawData = TASKS_MAX * sizeof(TaskValues_Data_t);
+
+  sizeInBytes = size_rawData;
   return reinterpret_cast<uint8_t *>(&_rawData[0]);
 }
 
 const TaskValues_Data_t * UserVarStruct::getRawTaskValues_Data(taskIndex_t taskIndex) const
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     return &_rawData[taskIndex];
   }
   return nullptr;
@@ -314,7 +313,7 @@ const TaskValues_Data_t * UserVarStruct::getRawTaskValues_Data(taskIndex_t taskI
 
 TaskValues_Data_t * UserVarStruct::getRawTaskValues_Data(taskIndex_t taskIndex)
 {
-  if (taskIndex < _rawData.size()) {
+  if (validTaskIndex(taskIndex)) {
     return &_rawData[taskIndex];
   }
   return nullptr;
@@ -322,10 +321,10 @@ TaskValues_Data_t * UserVarStruct::getRawTaskValues_Data(taskIndex_t taskIndex)
 
 uint32_t UserVarStruct::compute_CRC32() const
 {
-  const uint8_t *buffer = reinterpret_cast<const uint8_t *>(&_rawData[0]);
-  const size_t   size   = _rawData.size() * sizeof(TaskValues_Data_t);
+  const uint8_t   *buffer       = reinterpret_cast<const uint8_t *>(&_rawData[0]);
+  constexpr size_t size_rawData = TASKS_MAX * sizeof(TaskValues_Data_t);
 
-  return calc_CRC32(buffer, size);
+  return calc_CRC32(buffer, size_rawData);
 }
 
 void UserVarStruct::clear_computed(taskIndex_t taskIndex)
@@ -337,8 +336,9 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
       _computed.erase(it);
     }
   }
+#ifndef LIMIT_BUILD_SIZE
 
-  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+  for (taskVarIndex_t varNr = 0; validTaskVarIndex(varNr); ++varNr) {
     const uint16_t key = makeWord(taskIndex, varNr);
     auto it            = _preprocessedFormula.find(key);
 
@@ -346,11 +346,12 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
       _preprocessedFormula.erase(it);
     }
   }
+#endif // ifndef LIMIT_BUILD_SIZE
 }
 
 void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
 {
-  for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+  for (taskVarIndex_t varNr = 0; validTaskVarIndex(varNr); ++varNr) {
     if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
       const uint16_t key = makeWord(taskIndex, varNr);
       _prevValue[key] = formatUserVarNoCheck(taskIndex, varNr);
@@ -359,10 +360,10 @@ void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
 }
 
 const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
-  taskIndex_t  taskIndex,
-  uint8_t      varNr,
-  Sensor_VType sensorType,
-  bool         raw) const
+  taskIndex_t    taskIndex,
+  taskVarIndex_t varNr,
+  Sensor_VType   sensorType,
+  bool           raw) const
 {
   if (!raw && Cache.hasFormula(taskIndex, varNr)) {
     auto it = _computed.find(taskIndex);
@@ -389,14 +390,14 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
   return getRawTaskValues_Data(taskIndex);
 }
 
-bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
-                                 uint8_t       varNr,
-                                 const String& value,
-                                 Sensor_VType  sensorType,
-                                 bool          applyNow) const
+bool UserVarStruct::applyFormula(taskIndex_t    taskIndex,
+                                 taskVarIndex_t varNr,
+                                 const String & value,
+                                 Sensor_VType   sensorType,
+                                 bool           applyNow) const
 {
-  if ((taskIndex >= _rawData.size()) ||
-      (varNr >= VARS_PER_TASK) ||
+  if (!validTaskIndex(taskIndex) ||
+      !validTaskVarIndex(varNr) ||
       (sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET))
   {
     return false;
@@ -445,7 +446,7 @@ bool UserVarStruct::applyFormula(taskIndex_t   taskIndex,
 }
 
 bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex,
-                                       uint8_t                         varNr,
+                                       taskVarIndex_t                  varNr,
                                        const ESPEASY_RULES_FLOAT_TYPE& value,
                                        Sensor_VType                    sensorType)
 {
@@ -469,13 +470,13 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
   return false;
 }
 
-String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varNr) const
+String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, taskVarIndex_t varNr) const
 {
   if (!Cache.hasFormula(taskIndex, varNr)) {
     return EMPTY_STRING;
   }
 
-
+#ifndef LIMIT_BUILD_SIZE
   const uint16_t key = makeWord(taskIndex, varNr);
   auto it            = _preprocessedFormula.find(key);
 
@@ -483,9 +484,12 @@ String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, uint8_t varN
     _preprocessedFormula[key] = RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
   }
   return _preprocessedFormula[key];
+#else // ifndef LIMIT_BUILD_SIZE
+  return RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
+#endif // ifndef LIMIT_BUILD_SIZE
 }
 
-String UserVarStruct::getPreviousValue(taskIndex_t taskIndex, uint8_t varNr, Sensor_VType sensorType) const
+String UserVarStruct::getPreviousValue(taskIndex_t taskIndex, taskVarIndex_t varNr, Sensor_VType sensorType) const
 {
   /*
      if (!Cache.hasFormula_with_prevValue(taskIndex, varNr)) {

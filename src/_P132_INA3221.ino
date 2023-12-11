@@ -198,7 +198,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       P132_I2C_ADDR = getFormItemInt(F("i2c_addr"));
 
       for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
-        PCONFIG(P132_CONFIG_BASE + r) = getFormItemInt(getPluginCustomArgName(r));
+        PCONFIG(P132_CONFIG_BASE + r) = getFormItemIntCustomArgName(r);
       }
       P132_SHUNT = getFormItemInt(F("shunt"));
 

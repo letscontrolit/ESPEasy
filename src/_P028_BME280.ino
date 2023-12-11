@@ -352,31 +352,18 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           # ifndef LIMIT_BUILD_SIZE
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-
-            if (log.reserve(40)) { // Prevent re-allocation
-              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
-              log += F(": Address: ");
-              log += formatToHex(P028_I2C_ADDRESS, 2);
-              addLogMove(LOG_LEVEL_INFO, log);
-
-              // addLogMove does also clear the string.
-              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
-              log += F(": Temperature: ");
-              log += formatUserVarNoCheck(event->TaskIndex, 0);
-              addLogMove(LOG_LEVEL_INFO, log);
-
-              if (P028_data->hasHumidity()) {
-                log  = P028_data_struct::getDeviceName(P028_data->sensorID);
-                log += F(": Humidity: ");
-                log += formatUserVarNoCheck(event->TaskIndex, 1);
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
-              log  = P028_data_struct::getDeviceName(P028_data->sensorID);
-              log += F(": Barometric Pressure: ");
-              log += formatUserVarNoCheck(event->TaskIndex, 2);
-              addLogMove(LOG_LEVEL_INFO, log);
+            String hum;
+            if (P028_data->hasHumidity()) {
+              hum = formatUserVarNoCheck(event->TaskIndex, 1);
             }
+            addLogMove(LOG_LEVEL_INFO, concat(
+              P028_data_struct::getDeviceName(P028_data->sensorID),
+              strformat(
+                F(": Addr: %s T: %s H: %s P: %s"), 
+                formatToHex(P028_I2C_ADDRESS, 2).c_str(),
+                formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+                hum.c_str(),
+                formatUserVarNoCheck(event->TaskIndex, 2).c_str())));
           }
           # endif // ifndef LIMIT_BUILD_SIZE
           success = true;
