@@ -151,18 +151,17 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   if (isHidden) {
     result += F("#Hidden#");
   }
-  result += separator;
-  result += bssid.toString();
-  result += separator;
-  result += F("Ch:");
-  result += channel;
+  result += strformat(
+    F("%s%s%sCh:%u"),
+    separator.c_str(),
+    bssid.toString().c_str(),
+    separator.c_str(),
+    channel);
 
   if (rssi == -1) {
     result += F(" (RTC) ");
   } else {
-    result += F(" (");
-    result += rssi;
-    result += F("dBm) ");
+    result += strformat(F(" (%ddBm)"), rssi);
   }
 
   result += encryption_type();

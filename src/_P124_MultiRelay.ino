@@ -160,9 +160,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_CONFIG_RELAY_COUNT = getFormItemInt(F("relays"));
       P124_CONFIG_I2C_ADDRESS = getFormItemInt(F("i2caddress"));
       uint32_t lSettings = 0u;
-      bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemIntCustomArgName(P124_FLAGS_INIT_RELAYS) == 1);
       bitWrite(lSettings, P124_FLAGS_INIT_ALWAYS, isFormItemChecked(getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS)));
-      bitWrite(lSettings, P124_FLAGS_EXIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_EXIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_EXIT_RELAYS, getFormItemIntCustomArgName(P124_FLAGS_EXIT_RELAYS) == 1);
       bitWrite(lSettings, P124_FLAGS_LOOP_GET,    isFormItemChecked(getPluginCustomArgName(P124_FLAGS_LOOP_GET)));
 
       if (lSettings != 0) {

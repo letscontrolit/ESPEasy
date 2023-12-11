@@ -1033,12 +1033,7 @@ void htmlStrongEscape(String& html)
     }
     else
     {
-      char s[4] = {0};
-      sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
-      escaped += '&';
-      escaped += '#';
-      escaped += s;
-      escaped += ';';
+      escaped += strformat(F("&#%03d;"), static_cast<int>(html[i]));
     }
   }
   html = escaped;

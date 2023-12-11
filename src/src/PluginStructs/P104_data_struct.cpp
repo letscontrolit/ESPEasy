@@ -1575,7 +1575,7 @@ bool P104_data_struct::saveSettings() {
 
   for (uint8_t zCounter = 0; zCounter < expectedZones; zCounter++) {
     # ifdef P104_USE_ZONE_ACTIONS
-    action = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ACTION));
+    action = getFormItemIntCustomArgName(index + P104_OFFSET_ACTION);
 
     if (((action == P104_ACTION_ADD_ABOVE) && (zoneOrder == 0)) ||
         ((action == P104_ACTION_ADD_BELOW) && (zoneOrder == 1))) {

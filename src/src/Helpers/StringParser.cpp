@@ -108,11 +108,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
         // The command is stored in valueName & format
-        String command;
-        command.reserve(valueName.length() + format.length() + 1);
-        command  = valueName;
-        command += '#';
-        command += format;
+        String command = strformat(F("%s#%s"), valueName.c_str(), format.c_str());
         command.replace('#', ',');
 
         if (getGPIOPinStateValues(command)) {

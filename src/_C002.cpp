@@ -101,10 +101,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               switch (Settings.getPluginID_for_task(x).value) {
                 case 1: // temp solution, if input switch, update state
                 {
-                  action  = F("inputSwitchState,");
-                  action += x;
-                  action += ',';
-                  action += nvalue;
+                  action = strformat(F("inputSwitchState,%u,%.2f"), x, nvalue);
                   break;
                 }
                 case 29: // temp solution, if plugin 029, set gpio
@@ -132,20 +129,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     }
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("pwm,");
-                      action += Settings.TaskDevicePin1[x];
-                      action += ',';
-                      action += pwmValue;
+                      action = strformat(F("pwm,%d,%d"), Settings.TaskDevicePin1[x], pwmValue);
                     }
                   } else {
                     mustSendEvent    = true;
                     UserVar.setFloat(x, 0, nvalue);
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("gpio,");
-                      action += Settings.TaskDevicePin1[x];
-                      action += ',';
-                      action += static_cast<int>(nvalue);
+                      action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], static_cast<int>(nvalue));
                     }
                   }
                   break;
@@ -154,8 +145,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 case 88: // Send heatpump IR (P088) if IDX matches
                   //                case 115:            // Send heatpump IR (P115) if IDX matches
                 {
-                  action  = F("heatpumpir,");
-                  action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action  = concat(F("heatpumpir,"),svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
 # endif // USES_P088 || USES_P115
