@@ -12,16 +12,6 @@
 
 #ifdef USES_P164
 
-#define  P164_ENS160_DEBUG      // Enable debugging using teh serial port
-
-// Use a state machine to avoid blocking the CPU while waiting for the response
-#define ENS160_STATE_INITIAL        0 // Device is in an unknown state, typically after reset
-#define ENS160_STATE_ERROR          1 // Device is in an error state
-#define ENS160_STATE_RESETTING      2 // Waiting for response after reset
-#define ENS160_STATE_IDLE           3 // Device is brought into IDLE mode
-#define ENS160_STATE_DEEPSLEEP      4 // Device is brought into DEEPSLEEP mode
-#define ENS160_STATE_OPERATIONAL    5 // Device is brought into OPERATIONAL mode
-
 // A curious delay inserted in the original code [ms] 
 #define ENS160_BOOTING          10
 
@@ -113,6 +103,7 @@
 #define P164_GUID_HUM_T      "f10"
 #define P164_GUID_HUM_V      "f11"
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +127,6 @@ bool P164_data_struct::begin()
     return false;
   }
   setMode(ENS160_OPMODE_STD);
-  initialized = true;
   #ifdef P164_ENS160_DEBUG
     Serial.println(F("P164: begin(): success"));
   #endif
@@ -173,8 +163,6 @@ bool P164_data_struct::read(float& tvoc, float& eco2, float temp, float hum)
 bool P164_data_struct::webformLoad(struct EventStruct *event)
 {
   bool  found = false; // A chip has responded at the I2C address
-  bool compensate = true;  // TODO: make selectable
-  uint8 reg0, reg1;
   uint16_t chipID = 0;
 
   addRowLabel(F("Detected Sensor Type"));
@@ -253,12 +241,12 @@ void printState(int state) {
     #ifdef P164_ENS160_DEBUG
 
   switch (state) {
-    case ENS160_STATE_INITIAL:      Serial.print(F("initial")); break;
-    case ENS160_STATE_ERROR:        Serial.print(F("error")); break;
-    case ENS160_STATE_RESETTING:    Serial.print(F("resetting")); break;
-    case ENS160_STATE_IDLE:         Serial.print(F("idle")); break;
-    case ENS160_STATE_DEEPSLEEP:    Serial.print(F("deepsleep")); break;
-    case ENS160_STATE_OPERATIONAL:  Serial.print(F("operational")); break;
+    case P164_STATE_INITIAL:      Serial.print(F("initial")); break;
+    case P164_STATE_ERROR:        Serial.print(F("error")); break;
+    case P164_STATE_RESETTING:    Serial.print(F("resetting")); break;
+    case P164_STATE_IDLE:         Serial.print(F("idle")); break;
+    case P164_STATE_DEEPSLEEP:    Serial.print(F("deepsleep")); break;
+    case P164_STATE_OPERATIONAL:  Serial.print(F("operational")); break;
     default:                        Serial.print(F("***ERROR***")); break;
   }
     #endif // ifdef P164_ENS160_DEBUG
@@ -286,25 +274,25 @@ void printState(int state) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::evaluateState()
 {
-  bool success  = true;
-  int  newState = this->_state; // Determine next state
+  bool success  = true;                // State transition went without problems with device
+  P164_state  newState = this->_state; // Determine next state, start with current state
 
   switch (this->_state) {
-    case ENS160_STATE_INITIAL:
+    case P164_STATE_INITIAL:
       // Waiting for external call to begin()
       this->_available = false;
       break;
-    case ENS160_STATE_ERROR:
+    case P164_STATE_ERROR:
       // Stay here until correct device ID is detected and status register can be read
-      // If there is a device connected then reset it and initizlize it
+      // If there is a proper device connected then reset it and initialize it
       this->_available = false;
       success = this->checkPartID() && this->getStatus();
       if (success){
         success = this->writeMode(ENS160_OPMODE_RESET);  // Reset the device, takes some time
-        newState = ENS160_STATE_RESETTING;
+        newState = P164_STATE_RESETTING;
       }
       break;
-    case ENS160_STATE_RESETTING:
+    case P164_STATE_RESETTING:
       this->_available = false;
 
       // Once device has rebooted read some stuff from it and move to idle
@@ -314,58 +302,58 @@ bool P164_data_struct::evaluateState()
         this->clearCommand();
         this->getFirmware();
         this->getStatus();
-        newState = ENS160_STATE_IDLE;
+        newState = P164_STATE_IDLE;
       }
       break;
-    case ENS160_STATE_IDLE:
+    case P164_STATE_IDLE:
       // Set device into desired operation mode as requested through _opmode
       this->_available = true;
 
       switch (this->_opmode) {
         case ENS160_OPMODE_STD:
           this->writeMode(ENS160_OPMODE_STD);
-          newState = ENS160_STATE_OPERATIONAL;
+          newState = P164_STATE_OPERATIONAL;
           break;
         case ENS160_OPMODE_LP:
           this->writeMode(ENS160_OPMODE_LP);
-          newState = ENS160_STATE_OPERATIONAL;
+          newState = P164_STATE_OPERATIONAL;
           break;
         case ENS160_OPMODE_ULP:
           this->writeMode(ENS160_OPMODE_ULP);
-          newState = ENS160_STATE_OPERATIONAL;
+          newState = P164_STATE_OPERATIONAL;
           break;
         case ENS160_OPMODE_RESET:
           this->writeMode(ENS160_OPMODE_RESET);
           this->_opmode = ENS160_OPMODE_IDLE; // Prevent reset loop
-          newState      = ENS160_STATE_RESETTING;
+          newState      = P164_STATE_RESETTING;
           break;
       }
       break;
-    case ENS160_STATE_DEEPSLEEP:
+    case P164_STATE_DEEPSLEEP:
       // Device is put to DEEPSLEEP mode. If requested move to another mode. But alsways through IDLE
       this->_available = true;
 
       if (this->_opmode != ENS160_OPMODE_DEEP_SLEEP) {
         this->writeMode(ENS160_OPMODE_IDLE); // Move through Idle state
-        newState = ENS160_STATE_IDLE;
+        newState = P164_STATE_IDLE;
       }
       break;
-    case ENS160_STATE_OPERATIONAL:
+    case P164_STATE_OPERATIONAL:
       // Device is in one of the operational modes
       this->_available = true;
 
       switch (this->_opmode) {
         case ENS160_OPMODE_DEEP_SLEEP:
-        case ENS160_STATE_IDLE:
+        case P164_STATE_IDLE:
         case ENS160_OPMODE_RESET:
           this->writeMode(ENS160_OPMODE_IDLE); // Move through Idle state
-          newState = ENS160_STATE_IDLE;
+          newState = P164_STATE_IDLE;
           break;
       }
       break;
     default:
       // Unplanned state, force into error state
-      newState = ENS160_STATE_ERROR;
+      newState = P164_STATE_ERROR;
       break;
   }
 
@@ -373,20 +361,23 @@ bool P164_data_struct::evaluateState()
     this->_state      = newState;
     this->_lastChange = millis();
     #ifdef P164_ENS160_DEBUG
-      Serial.print(F("P164: State transition:"));
+      Serial.print(F("P164: State transition->"));
       printState(newState);
-      Serial.print(F("; opmode "));
+      Serial.print(F("; opmode= "));
       Serial.print(this->_opmode);
       Serial.println(F("."));
     #endif // ifdef P164_ENS160_DEBUG
   }
   else {
-     #ifdef P164_ENS160_DEBUG
-     //   Serial.print(F("P164: state "));
-     //   printState(newState);
-     //   Serial.print(F(" opmode "));
-     //   Serial.println(this->_opmode);
-     #endif
+    #ifdef P164_ENS160_DEBUG
+//      if (millis() > (this->_dbgtm + 1000)) {
+//        this->_dbgtm = millis();
+//        Serial.print(F("P164: state "));
+//        printState(newState);
+//        Serial.print(F(" opmode "));
+//        Serial.println(this->_opmode);
+//      }
+    #endif
   }
 
   return success;
@@ -395,7 +386,7 @@ bool P164_data_struct::evaluateState()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper function to enter a new state                                                          //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void P164_data_struct::moveToState(int newState)
+void P164_data_struct::moveToState(P164_state newState)
 {
   this->_state      = newState; // Enter the new state
   this->_lastChange = millis(); // Mark time of transition
@@ -413,29 +404,19 @@ bool P164_data_struct::start(uint8_t slaveaddr)
   uint8_t result = 0;
 
   // Initialize internal bookkeeping;
-  this->_state      = ENS160_STATE_INITIAL; // Assume nothing, start clean
+  this->_state      = P164_STATE_INITIAL; // Assume nothing, start clean
   this->_lastChange = millis();             // Bookmark last state change as now
   this->_available  = false;
   this->_opmode     = ENS160_OPMODE_STD;
 
   // Set IO pin levels
-  // TODO: Pin definitions are not available on the user interface yet
-  if (this->_ADDR > 0) {
-    pinMode(this->_ADDR, OUTPUT);       // ADDR is input pin for device
-    digitalWrite(this->_ADDR, LOW);     // Set it identify ENS160_I2CADDR_0
-  }
-
+  // TODO: It is doubtable we will use the INT pin in future
   if (this->_nINT > 0) {
     pinMode(this->_nINT, INPUT_PULLUP); // INT is open drain output pin for the device
   }
 
-  if (this->_nCS > 0) {
-    pinMode(this->_nCS, OUTPUT);        // CS is input for the device
-    digitalWrite(this->_nCS, HIGH);     // Must be HIGH for I2C operation
-  }
-
   result = this->writeMode(ENS160_OPMODE_RESET);  // Reset the device, takes some time
-  this->moveToState(ENS160_STATE_RESETTING); // Go to next state RESETTING
+  this->moveToState(P164_STATE_RESETTING); // Go to next state RESETTING
 
   #ifdef P164_ENS160_DEBUG
     Serial.print(F("P164: reset() result: "));
@@ -443,6 +424,66 @@ bool P164_data_struct::start(uint8_t slaveaddr)
   #endif
   return result;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Perform prediction measurement and store result in internal variables                         //
+// Return: true if data is fresh (first reading of new data)                                     //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool P164_data_struct::measure() {
+  uint8_t i2cbuf[8];
+  uint8_t status;
+  bool    newData = false;
+
+  #ifdef P164_ENS160_DEBUG
+    Serial.println(F("P164: Start measurement"));
+  #endif // ifdef P164_ENS160_DEBUG
+
+  if (this->_state == P164_STATE_OPERATIONAL)  {
+    // Check if new data is aquired
+    if (this->getStatus()) {
+      status = this->_statusReg;
+
+      // Read predictions
+      if (IS_NEWDAT(status)) {
+        newData = true;
+        P164_data_struct::read(i2cAddress, ENS160_REG_DATA_AQI, i2cbuf, 7);
+        _data_aqi  = i2cbuf[0];
+        _data_tvoc = i2cbuf[1] | ((uint16_t)i2cbuf[2] << 8);
+        _data_eco2 = i2cbuf[3] | ((uint16_t)i2cbuf[4] << 8);
+
+        if (_revENS16x > 0) {
+          _data_aqi500 = ((uint16_t)i2cbuf[5]) | ((uint16_t)i2cbuf[6] << 8);
+        }
+        else {
+          _data_aqi500 = 0;
+        }
+      }
+    }
+    else {
+      // Some issues with the device connectivity, move to error state
+      this->moveToState(P164_STATE_ERROR);
+    }
+  }
+
+  #ifdef P164_ENS160_DEBUG
+    Serial.print(F("P164: measure: aqi= "));
+    Serial.print(_data_aqi);
+    Serial.print(F(" tvoc= "));
+    Serial.print(_data_tvoc);
+    Serial.print(F(" eco2= "));
+    Serial.print(_data_eco2);
+    Serial.print(F(" newdata = "));
+    Serial.println(newData);
+  #endif // ifdef P164_ENS160_DEBUG
+
+  return newData;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Following code is used to handle custom aquisition modes as defined by Sciosense Github code  //
+// Note that custom modes are not documented in the official datasheet                           //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef P164_USE_CUSTOMMODE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialize definition of custom mode with <n> steps                                           //
@@ -523,60 +564,6 @@ bool P164_data_struct::addCustomStep(uint16_t time, bool measureHP0, bool measur
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Perform prediction measurement and store result in internal variables                         //
-// Return: true if data is fresh (first reading of new data)                                     //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::measure() {
-  uint8_t i2cbuf[8];
-  uint8_t status;
-  bool    newData = false;
-
-  #ifdef P164_ENS160_DEBUG
-    Serial.println(F("P164: Start measurement"));
-  #endif // ifdef P164_ENS160_DEBUG
-
-  if (this->_state == ENS160_STATE_OPERATIONAL)  {
-    // Check if new data is aquired
-    if (this->getStatus()) {
-      status = this->_statusReg;
-
-      // Read predictions
-      if (IS_NEWDAT(status)) {
-        newData = true;
-        P164_data_struct::read(i2cAddress, ENS160_REG_DATA_AQI, i2cbuf, 7);
-        _data_aqi  = i2cbuf[0];
-        _data_tvoc = i2cbuf[1] | ((uint16_t)i2cbuf[2] << 8);
-        _data_eco2 = i2cbuf[3] | ((uint16_t)i2cbuf[4] << 8);
-
-        if (_revENS16x > 0) {
-          _data_aqi500 = ((uint16_t)i2cbuf[5]) | ((uint16_t)i2cbuf[6] << 8);
-        }
-        else {
-          _data_aqi500 = 0;
-        }
-      }
-    }
-    else {
-      // Some issues with the device connectivity, move to error state
-      this->moveToState(ENS160_STATE_ERROR);
-    }
-  }
-
-  #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: measure: aqi= "));
-    Serial.print(_data_aqi);
-    Serial.print(F(" tvoc= "));
-    Serial.print(_data_tvoc);
-    Serial.print(F(" eco2= "));
-    Serial.print(_data_eco2);
-    Serial.print(F(" newdata = "));
-    Serial.println(newData);
-  #endif // ifdef P164_ENS160_DEBUG
-
-  return newData;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 // Perfrom raw measurement and store result in internal variables                                //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::measureRaw() {
@@ -589,7 +576,7 @@ bool P164_data_struct::measureRaw() {
     Serial.println("ENS16x: Start measurement");
   #endif // ifdef P164_ENS160_DEBUG
 
-  if (this->_state == ENS160_STATE_OPERATIONAL)  {
+  if (this->_state == P164_STATE_OPERATIONAL)  {
     this->getStatus();
     status = this->_statusReg;
 
@@ -617,6 +604,7 @@ bool P164_data_struct::measureRaw() {
 
   return newData;
 }
+#endif // P164_USE_CUSTOMMODE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Writes t (degC) and h (%rh) to ENV_DATA. Returns false on I2C problems.                       //
@@ -717,7 +705,7 @@ bool P164_data_struct::writeMode(uint8_t mode) {
   result = P164_data_struct::write8(i2cAddress, ENS160_REG_OPMODE, mode);
 
     #ifdef P164_ENS160_DEBUG
-      Serial.print(F("P164: writeMode() activate result: "));
+      Serial.print(F("P164: writeMode() result: "));
       Serial.println(result == 0 ? F("ok") : F("nok"));
     #endif // ifdef P164_ENS160_DEBUG
 
@@ -779,7 +767,12 @@ bool P164_data_struct::clearCommand(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::getStatus()
 {
-  this->_statusReg = P164_data_struct::read8(i2cAddress, ENS160_REG_DATA_STATUS);
+  bool ret = false;
+  uint8_t val = 0;
+
+  //this->_statusReg = P164_data_struct::read8(i2cAddress, ENS160_REG_DATA_STATUS);
+  ret = P164_data_struct::read(i2cAddress, ENS160_REG_DATA_STATUS, &val, 1);
+  this->_statusReg = val;
   #ifdef P164_ENS160_DEBUG
     Serial.print(F("P164: Status register: 0x"));
     Serial.print(this->_statusReg, HEX);
@@ -792,9 +785,11 @@ bool P164_data_struct::getStatus()
     Serial.print(F(" NEWDAT: "));
     Serial.print((this->_statusReg & ENS160_STATUS_NEWDAT) == ENS160_STATUS_NEWDAT);
     Serial.print(F(" NEWGRP: "));
-    Serial.println((this->_statusReg & ENS160_STATUS_NEWGPR) == ENS160_STATUS_NEWGPR);
+    Serial.print((this->_statusReg & ENS160_STATUS_NEWGPR) == ENS160_STATUS_NEWGPR);
+    Serial.print(F(" return: "));
+    Serial.println(ret);
   #endif // ifdef P164_ENS160_DEBUG
-  return true;
+  return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -802,6 +797,9 @@ bool P164_data_struct::getStatus()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Read one byte from a device register                                                          //
+// Return: byte read                                                                             //
+// Note: No indication I2C operation was successful                                              //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 uint8_t P164_data_struct::read8(uint8_t addr, byte reg) {
   uint8_t ret;
@@ -812,10 +810,12 @@ uint8_t P164_data_struct::read8(uint8_t addr, byte reg) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Read a consecutive range of registers from device                                             //
+// Return: boolean == true when I2C transaction was succesful                                    //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::read(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
   uint8_t pos    = 0;
-  bool    result = true;
+  uint8_t result = 0;
 
   #ifdef P164_ENS160_DEBUG
     Serial.print(F("P164: I2C read address: 0x"));
@@ -847,16 +847,20 @@ bool P164_data_struct::read(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num
       Serial.println(".");
     #endif // ifdef P164_ENS160_DEBUG
 
-  return result;
+  return result == 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Write one byte to a device register                                                           //
+// Return: boolean == true when I2C transaction was succesful                                    //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::write8(uint8_t addr, byte reg, byte value) {
   return P164_data_struct::write(addr, reg, &value, 1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Write a consecutive range of registers to device                                              //
+// Return: boolean == true when I2C transaction was succesful                                    //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::write(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
   uint8_t result;
