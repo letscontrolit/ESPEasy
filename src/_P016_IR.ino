@@ -23,6 +23,9 @@
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 
 /** Changelog:
+ * 2023-12-11 uwekaditz:  Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
+ *                        Note: for decoding a RAW message DECODE_HASH must be set
+ *                        uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1)
  * 2022-08-08 tonhuisman: Optionally (compile-time) disable command handling by setting #define P016_FEATURE_COMMAND_HDNLING 0
  *                        Make reserved buffer size for receiver configurable 100..1024 uint16_t = 200-2048 bytes
  *                        Change UI to show buffer size in bytes instead of 'units' to avoid confusion.
@@ -56,6 +59,10 @@
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
 // History
+// @uwekaditz: 2023-12-11
+// NEW: Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
+// MSG: for decoding a RAW message DECODE_HASH must be set
+// FIX: uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1)
 // @tonhuisman: 2022-08-08
 // FIX: Resolve high memory use bu having the default buffer size reduced from 1024 to 100, and make that a setting
 // @tonhuisman: 2021-08-05
@@ -361,6 +368,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           for (int i = 0; i < size; i++) {
             const String protocol = typeToString(static_cast<decode_type_t>(i), false);
 
+            if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == RAW))
+              continue;
             if (protocol.length() > 1) {
               decodeTypeOptions.push_back(i);
               decodeTypes.push_back(protocol);
@@ -635,9 +644,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               if (Log.reserve(output.length() + 22)) {
                 Log += F("IRSEND,\'");
                 Log += output;
-                Log += F("\' type: 0x");
-                Log += uint64ToString(results.decode_type);
-                addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
+                if (results.decode_type == decode_type_t::UNKNOWN) {
+                  Log += F("\' type: -1");
+                }
+                else {
+                  Log += F("\' type: 0x");
+                  Log += uint64ToString(results.decode_type);
+                }
+               addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
               }
             }
             event->String2 = std::move(output);
