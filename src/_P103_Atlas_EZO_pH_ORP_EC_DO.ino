@@ -319,11 +319,11 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
         {
-          addFormNote(F("It seems I can't parse your formula. Fixed value will be used!"));
+          addFormNote(F("Formula parse error. Using fixed value!"));
           value = P103_FIXED_TEMP_VALUE;
         }
 
-        addFormNote(concat(F("Actual value: "), toString(value, 2)));
+        addFormNote(strformat(F("Actual value: %.2f"), value));
       }
 
       success = true;

@@ -212,13 +212,11 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 // Example:  TaskInit#bme=1,0    (taskindex = 0, return value = 0)
 void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, const String& value_str) {
   if (Settings.UseRules) {
-    String event;
-    event.reserve(eventName.length() + 32 + value_str.length());
-    event  = eventName;
-    event += '#';
-    event += getTaskDeviceName(taskIndex);
-    event += '=';
-    event += taskIndex + 1;
+    String event = strformat(
+      F("%s#%s=%d"), 
+      eventName.c_str(), 
+      getTaskDeviceName(taskIndex).c_str(),
+      taskIndex + 1);
     if (value_str.length() > 0) {
       event += ',';
       event += wrapWithQuotesIfContainsParameterSeparatorChar(value_str);

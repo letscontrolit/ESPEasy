@@ -223,13 +223,14 @@ void processDisconnect() {
   if (WiFiEventData.processedDisconnect) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : Disconnected! Reason: '");
-    log += getLastDisconnectReason();
-    log += '\'';
+    String log = strformat(
+      F("WIFI : Disconnected! Reason: '%s'"), 
+      getLastDisconnectReason().c_str());
 
     if (WiFiEventData.lastConnectedDuration_us > 0) {
-      log += F(" Connected for ");
-      log += format_msec_duration(WiFiEventData.lastConnectedDuration_us / 1000ll);
+      log += concat(
+        F(" Connected for "), 
+        format_msec_duration(WiFiEventData.lastConnectedDuration_us / 1000ll));
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -399,19 +400,17 @@ void processGotIP() {
   WiFiEventData.dns1_cache = WiFi.dnsIP(1);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = concat(F("WIFI : "), useStaticIP() ? F("Static IP: ") : F("DHCP IP: "));
-    log += formatIP(ip);
-    log += ' ';
-    log += wrap_braces(NetworkGetHostname());
-    log += concat(F(" GW: "), formatIP(gw));
-    log += concat(F(" SN: "), formatIP(subnet));
-    log += concat(F(" DNS: "), getValue(LabelType::DNS));
+    String log = strformat(
+      F("WIFI : %s (%s) GW: %s SN: %s DNS: %s"),
+      concat(useStaticIP() ? F("Static IP: ") : F("DHCP IP: "), formatIP(ip)).c_str(),
+      NetworkGetHostname().c_str(),
+      formatIP(gw).c_str(),
+      formatIP(subnet).c_str(),
+      getValue(LabelType::DNS).c_str());
 
     if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
       // Just log times when they make sense.
-      log += F("   duration: ");
-      log += static_cast<int32_t>(dhcp_duration / 1000);
-      log += F(" ms");
+      log += strformat(F("   duration: %d ms"), static_cast<int32_t>(dhcp_duration / 1000));
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }

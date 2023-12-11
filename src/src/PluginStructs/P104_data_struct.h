@@ -84,7 +84,7 @@
 # define P104_MAX_MESG             20        // Message size for time/date (dd-mm-yyyy hh:mm:ss\0)
 
 # ifdef ESP32
-#  define P104_MAX_ZONES           16u       // 1..P104_MAX_ZONES zones selectable
+#  define P104_MAX_ZONES           16        // 1..P104_MAX_ZONES zones selectable
 #  define P104_SETTINGS_BUFFER_V1  1020      // Bigger buffer possible on ESP32
 # else // ifdef ESP32
 #  define P104_MAX_ZONES           8u        // 1..P104_MAX_ZONES zones selectable

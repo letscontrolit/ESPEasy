@@ -1557,7 +1557,6 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
  **************************************/
 bool P104_data_struct::saveSettings() {
   error = String(); // Clear
-  String zbuffer;
 
   # ifdef P104_DEBUG_DEV
 
@@ -1657,41 +1656,27 @@ bool P104_data_struct::saveSettings() {
   error      += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
   saveOffset += sizeof(bufferSize);
 
+  String zbuffer;
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
-      zbuffer.clear();
-
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-      zbuffer += it->size;          // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->text;          // 2 + ~15
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->content;       // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->alignment;     // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->animationIn;   // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->speed;         // 5
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->animationOut;  // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->pause;         // 5
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->font;          // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->layout;        // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->specialEffect; // 1
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->offset;        // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->brightness;    // 2
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->repeatDelay;   // 4
-      zbuffer += P104_FIELD_SEP;    // 1
-      zbuffer += it->inverted;      // 1
-      zbuffer += P104_FIELD_SEP;    // 1
+      zbuffer = strformat(
+        F("%u\x01%s\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%d\x01%d\x01%d\x01"),
+        it->size,          // 2
+        it->text.c_str(),  // 2 + ~15
+        it->content,       // 1
+        it->alignment,     // 1
+        it->animationIn,   // 2
+        it->speed,         // 5
+        it->animationOut,  // 2
+        it->pause,         // 5
+        it->font,          // 1
+        it->layout,        // 1
+        it->specialEffect, // 1
+        it->offset,        // 2
+        it->brightness,    // 2
+        it->repeatDelay,   // 4
+        it->inverted);     // 1
 
       // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
       // stored with the length prefixed
@@ -1749,10 +1734,7 @@ bool P104_data_struct::saveSettings() {
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
 
     if (numDevices > 255) {
-      error += F("More than 255 modules configured (");
-      error += numDevices;
-      error += ')';
-      error += '\n';
+      error += strformat(F("More than 255 modules configured (%u)\n"), numDevices);
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Can't allocate string for saving settings, insufficient memory!"));
@@ -1778,7 +1760,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Other 3 (DR:0, CR:1, RR:1)"),    // 011
       F("Other 4 (DR:1, CR:0, RR:1)")     // 101
     };
-    const int hardwareOptions[P104_hardwareTypeCount] = {
+    constexpr int hardwareOptions[P104_hardwareTypeCount] = {
       static_cast<int>(MD_MAX72XX::moduleType_t::GENERIC_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::PAROLA_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW),
@@ -1822,7 +1804,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Month Day [Year] (US-style)"),
       F("[Year] Month Day (Japanese-style)")
     };
-    const int dateFormatOptions[] = {
+    constexpr int dateFormatOptions[] = {
       P104_DATE_FORMAT_EU,
       P104_DATE_FORMAT_US,
       P104_DATE_FORMAT_JP
@@ -1839,7 +1821,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Dash -"),
       F("Dot <b>.</b>")
     };
-    const int dateSeparatorOptions[] = {
+    constexpr int dateSeparatorOptions[] = {
       P104_DATE_SEPARATOR_SPACE,
       P104_DATE_SEPARATOR_SLASH,
       P104_DATE_SEPARATOR_DASH,
@@ -1865,17 +1847,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonesOptions[i] = i + 1; // No 0 needed or wanted
     }
     # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    String zonetip;
+    #define STRINGIFY(s) STRINGIFY1(s)
+    #define STRINGIFY1(s) #s
 
-    if (zonetip.reserve(90)) {
-      zonetip  = F("Select between 1 and ");
-      zonetip += P104_MAX_ZONES;
-      zonetip += F(" zones, changing");
+    const String zonetip = F("Select between 1 and " STRINGIFY(P104_MAX_ZONES) " zones, changing"
       #  ifdef P104_USE_ZONE_ORDERING
-      zonetip += F(" Zones or Zone order");
+      " Zones or Zone order"
       #  endif // ifdef P104_USE_ZONE_ORDERING
-      zonetip += F(" will save and reload the page.");
-    }
+      " will save and reload the page.");
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     addFormSelector(F("Zones"), F("zonecnt"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
@@ -1915,28 +1894,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(textPosition_t::PA_CENTER),
       static_cast<int>(textPosition_t::PA_RIGHT)
     };
-    int animationCount = 6;
-    # if ENA_SPRITE
-    animationCount += 1;
-    # endif // ENA_SPRITE
-    # if ENA_MISC
-    animationCount += 6;
-    # endif // ENA_MISC
-    # if ENA_WIPE
-    animationCount += 2;
-    # endif // ENA_WIPE
-    # if ENA_SCAN
-    animationCount += 4;
-    # endif // ENA_SCAN
-    # if ENA_OPNCLS
-    animationCount += 4;
-    # endif // ENA_OPNCLS
-    # if ENA_SCR_DIA
-    animationCount += 4;
-    # endif // ENA_SCR_DIA
-    # if ENA_GROW
-    animationCount += 2;
-    # endif // ENA_GROW
     String animationTypes[] {
       F("None")
       , F("Print")
@@ -2028,36 +1985,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif // ENA_GROW
     };
 
+    constexpr int animationCount = NR_ELEMENTS(animationOptions);
+
     // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
     for (uint8_t a = 0; a < animationCount; a++) {
-      animationTypes[a] += F(" (");
-      animationTypes[a] += animationOptions[a];
-      animationTypes[a] += ')';
+      animationTypes[a] += strformat(F(" (%d)"), animationOptions[a]);
     }
     delay(0);
 
-    int fontCount = 1;
-    # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-    # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-    # ifdef P104_USE_VERTICAL_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_VERTICAL_FONT
-    # ifdef P104_USE_EXT_ASCII_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_EXT_ASCII_FONT
-    # ifdef P104_USE_ARABIC_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_ARABIC_FONT
-    # ifdef P104_USE_GREEK_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_GREEK_FONT
-    # ifdef P104_USE_KATAKANA_FONT
-    fontCount++;
-    # endif // ifdef P104_USE_KATAKANA_FONT
     const __FlashStringHelper *fontTypes[] = {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -2107,10 +2042,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif   // ifdef P104_USE_KATAKANA_FONT
     };
 
-    int layoutCount = 1;
-    # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-    layoutCount += 2;
-    # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     const __FlashStringHelper *layoutTypes[] = {
       F("Standard")
     # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
@@ -2126,7 +2057,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
 
-    const int specialEffectCount                    = 4;
     const __FlashStringHelper *specialEffectTypes[] = {
       F("None"),
       F("Flip up/down"),
@@ -2306,7 +2236,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Font
         addSelector(getPluginCustomArgName(index + P104_OFFSET_FONT),
-                    fontCount,
+                    NR_ELEMENTS(fontOptions),
                     fontTypes,
                     fontOptions,
                     nullptr,
@@ -2321,7 +2251,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Inverted
         addSelector(getPluginCustomArgName(index + P104_OFFSET_INVERTED),
-                    2,
+                    NR_ELEMENTS(invertedOptions),
                     invertedTypes,
                     invertedOptions,
                     nullptr,
@@ -2385,7 +2315,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Layout
         addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
-                    layoutCount,
+                    NR_ELEMENTS(layoutOptions),
                     layoutTypes,
                     layoutOptions,
                     nullptr,
@@ -2400,7 +2330,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Special effects
         addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
-                    specialEffectCount,
+                    NR_ELEMENTS(specialEffectOptions),
                     specialEffectTypes,
                     specialEffectOptions,
                     nullptr,
