@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-11 tonhuisman: Put Value X input on same line as Day,Time X inputs, just like the On/Off combobox.
+ *                        Code optimization, calculating the current time to compare to only once.
  * 2023-12-10 tonhuisman: Change input layout for non-LIMIT_BUILD_SIZE builds, to select a day and a time string in separate
  *                        inputs.
  *                        Add setting for number of Day,Time settings (range 1..16), default is 8.
@@ -153,9 +155,9 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
           addSelector(concat(F("state"), x), optionsCount, options, nullptr, nullptr, choice);
         }
         else {
-          addFormNumericBox(concat(F("Value"), x + 1),
-                            concat(F("state"), x),
-                            Cache.getTaskDevicePluginConfig(event->TaskIndex, x));
+          addHtml(strformat(F("Value %d:"), x + 1));
+          addNumericBox(concat(F("state"), x),
+                        Cache.getTaskDevicePluginConfig(event->TaskIndex, x), INT_MIN, INT_MAX);
         }
       }
       success = true;
@@ -193,13 +195,14 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     {
       if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
 
+      unsigned long clockEvent = (unsigned long)node_time.minute() % 10
+                                 | (unsigned long)(node_time.minute() / 10) << 4
+                                 | (unsigned long)(node_time.hour() % 10) << 8
+                                 | (unsigned long)(node_time.hour() / 10) << 12
+                                 | (unsigned long)node_time.weekday() << 16;
+
       for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
-        unsigned long clockEvent = (unsigned long)node_time.minute() % 10
-                                   | (unsigned long)(node_time.minute() / 10) << 4
-                                   | (unsigned long)(node_time.hour() % 10) << 8
-                                   | (unsigned long)(node_time.hour() / 10) << 12
-                                   | (unsigned long)node_time.weekday() << 16;
         unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
 
         if (bitRead(clockSet, 28) || bitRead(clockSet, 29)) { // sunrise or sunset string, apply todays values
