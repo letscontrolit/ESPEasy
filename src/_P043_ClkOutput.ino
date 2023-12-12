@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-12 tonhuisman: Add option to choose simplified Off/On input instead of full numeric input for non-GPIO configuration
  * 2023-12-11 tonhuisman: Put Value X input on same line as Day,Time X inputs, just like the On/Off combobox.
  *                        Code optimization, calculating the current time to compare to only once.
  * 2023-12-10 tonhuisman: Change input layout for non-LIMIT_BUILD_SIZE builds, to select a day and a time string in separate
@@ -26,6 +27,7 @@
 
 // #define PLUGIN_VALUENAME1_043 "Output"
 // #define PLUGIN_VALUENAME2_043 "Output2"
+# define P043_SIMPLE_VALUE       PCONFIG(6)
 # define PLUGIN_043_MAX_SETTINGS PCONFIG(7)
 # define P043_DEFAULT_MAX        8
 # define P043_SENSOR_TYPE_INDEX  2
@@ -100,6 +102,8 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
       if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
       addFormNumericBox(F("Nr. of Day,Time fields"), F("vcount"), PLUGIN_043_MAX_SETTINGS, 1, 16);
       addUnit(F("1..16"));
+
+      addFormCheckBox(F("Value input On/Off only"), F("simpl"), P043_SIMPLE_VALUE == 1);
       # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("Page will be updated after Submit"));
       # endif // ifndef LIMIT_BUILD_SIZE
@@ -109,6 +113,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         F("Off"),
         F("On"),
       };
+      constexpr int optionsCount = NR_ELEMENTS(options);
 
       # ifndef LIMIT_BUILD_SIZE
       const unsigned int daysCount = weekDays.length() / 3;
@@ -148,10 +153,9 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
                        timeStr, 32);
         # endif // ifndef LIMIT_BUILD_SIZE
 
-        if (validGpio(CONFIG_PIN1)) {
+        if (validGpio(CONFIG_PIN1) || (P043_SIMPLE_VALUE == 1)) {
           addHtml(' ');
-          const uint8_t choice       = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
-          constexpr int optionsCount = NR_ELEMENTS(options);
+          const uint8_t choice = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
           addSelector(concat(F("state"), x), optionsCount, options, nullptr, nullptr, choice);
         }
         else {
@@ -167,6 +171,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PLUGIN_043_MAX_SETTINGS = getFormItemInt(F("vcount"));
+      P043_SIMPLE_VALUE       = isFormItemChecked(F("simpl")) ? 1 : 0;
 
       for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
       {
