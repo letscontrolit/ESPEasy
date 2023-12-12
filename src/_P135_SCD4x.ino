@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-08-28 tonhuisman: Include 'CO2' in plugin name, to be in line with other CO2 plugins
  * 2022-08-24 tonhuisman: Removed [TESTING] tag
  * 2022-08-04 tonhuisman: Add forced recalibration subcommand scd4x,setfrc,<frcvalue>
@@ -49,6 +50,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
 
       break;
     }
