@@ -371,20 +371,12 @@ String AdaGFXparseTemplate(const String      & tmpString,
         String subcommand = result.substring(prefixTrigger + ADAGFX_PARSE_POSTFIX_LEN, postfixTrigger);
 
         if (!subcommand.isEmpty()) {
-          String command;
-          command.reserve(trigger.length() + 1 + subcommand.length());
-          command += trigger;
-          command += ',';
-          command += subcommand;
+          const String command = strformat(F("%s,%s"), trigger.c_str(), subcommand.c_str());
 
           #  ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-            String log;
-            log.reserve(command.length() + 20);
-            log += F("AdaGFX: inline cmd: ");
-            log += command;
-            addLogMove(ADAGFX_LOG_LEVEL, log);
+            addLogMove(ADAGFX_LOG_LEVEL, concat(F("AdaGFX: inline cmd: "), command));
           }
           #  endif // ifndef BUILD_NO_DEBUG
 
@@ -554,12 +546,7 @@ String AdaGFXparseTemplate(const String      & tmpString,
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(result.length() + 24);
-    log += F("AdaGFX: parse result: '");
-    log += result;
-    log += '\'';
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: parse result: '%s'"), result.c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
   return result;
@@ -618,19 +605,9 @@ void AdafruitGFX_helper::initialize() {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(65);
-    log += F("AdaGFX: Init, x: ");
-    log += _res_x;
-    log += F(", y: ");
-    log += _res_y;
-    log += F(", colors: ");
-    log += static_cast<uint16_t>(_colorDepth);
-    log += F(", trigger: ");
-    log += _trigger;
-    log += F(", ");
-    log += getFeatures();
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: Init, x: %d, y: %d, colors: %d, trigger: %s, %s"),
+                                           _res_x, _res_y, static_cast<uint16_t>(_colorDepth),
+                                           _trigger.c_str(), getFeatures().c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -654,26 +631,26 @@ void AdafruitGFX_helper::initialize() {
  * Show enabled features of the helper
  ***************************************************************************/
 String AdafruitGFX_helper::getFeatures() {
-  String log = F("Features:");
-
-  # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
-  log += F(" asciitable,");
-  # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
-  # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
-  log += F(" lm/lmr,");
-  # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
-  # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
-  log += F(" bmp,");
-  # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
-  # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
-  log += F(" btn,");
-  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
-  # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
-  log += F(" win,");
-  # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
-  # if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
-  log += F(" getconf,");
-  # endif // if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+  String log = F("Features:"
+                 # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+                 " asciitable,"
+                 # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+                 # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+                 " lm/lmr,"
+                 # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+                 # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+                 " bmp,"
+                 # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+                 # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+                 " btn,"
+                 # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
+                 # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+                 " win,"
+                 # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+                 # if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+                 " getconf,"
+                 # endif // if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+                 );
 
   if (log.endsWith(F(","))) {
     log.remove(log.length() - 1);
@@ -846,12 +823,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
-  String   cmd        = parseString(string, 1); // lower case
-  String   subcommand = parseString(string, 2);
-  uint16_t res_x      = _res_x;
-  uint16_t res_y      = _res_y;
-  uint16_t _xo        = 0;
-  uint16_t _yo        = 0;
+  const String cmd        = parseString(string, 1); // lower case
+  const String subcommand = parseString(string, 2);
+  uint16_t     res_x      = _res_x;
+  uint16_t     res_y      = _res_y;
+  uint16_t     _xo        = 0;
+  uint16_t     _yo        = 0;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);
@@ -862,7 +839,6 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         isAdaGFXTrigger(cmd)) ||
       subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
-  String log;
   std::vector<String> sParams;
   std::vector<int>    nParams;
   uint8_t emptyCount = 0;
@@ -885,11 +861,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-      log  = ':';
-      log += argCount;
-      log += ' ';
-      log += sParams[argCount];
-      addLog(LOG_LEVEL_DEBUG_DEV, log);
+      addLog(LOG_LEVEL_DEBUG_DEV, strformat(F(":%d %s"), argCount, sParams[argCount].c_str()));
     }
     # endif // ifndef BUILD_NO_DEBUG
 
@@ -901,21 +873,26 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    log.reserve(90);
-    log.clear();
-    log += F("AdaGFX: command: ");
-    log += _trigger;
-    log += F(" argCount: ");
-    log += argCount;
-    log += ':';
-    log += string;
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLog(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: command: %s argCount: %d:%s"), _trigger.c_str(), argCount, string.c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
   char tmp[12]{};
   const int subcommand_i         = GetCommandCode(tmp, sizeof(tmp), subcommand.c_str(), adagfx_commands);
   const adagfx_commands_e subcmd = static_cast<adagfx_commands_e>(subcommand_i);
+  const bool currentColRowState  = _columnRowMode;
+
+  # if ADAGFX_ARGUMENT_VALIDATION
+
+  // Optimize some coordinate checks, with less than 3 occurrences there is no gain
+  const bool invCoord_0_1     = argCount >= 2 && invalidCoordinates(nParams[0], nParams[1]);
+  const bool invCoord_2_3     = argCount >= 4 && invalidCoordinates(nParams[2], nParams[3]);
+  const bool invCoord_0_2_1_3 = argCount >= 4 && invalidCoordinates(nParams[0] + nParams[2],
+                                                                    nParams[1] + nParams[3]);
+  const bool invCoord_0_1_comp_cr = argCount >= 2 && invalidCoordinates(nParams[0] - _x_compensation,
+                                                                        nParams[1] - _y_compensation,
+                                                                        _columnRowMode);
+  # endif // if ADAGFX_ARGUMENT_VALIDATION
 
   if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
   {
@@ -956,10 +933,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2))   // txl: Text at line(s)
   {
-    uint8_t _line              = 0;
-    uint8_t _column            = 0;
-    uint8_t idx                = 0;
-    bool    currentColRowState = _columnRowMode;
+    uint8_t _line   = 0;
+    uint8_t _column = 0;
+    uint8_t idx     = 0;
     setColumnRowMode(true); // this command is by default set to Column/Row mode
 
     while (idx < argCount && !sParams[idx + 1].isEmpty()) {
@@ -1001,7 +977,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
+        if (invCoord_0_1_comp_cr) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1018,7 +994,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
+        if (invCoord_0_1_comp_cr) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1035,7 +1011,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
+        if (invCoord_0_1_comp_cr) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1053,7 +1029,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
+        if (invCoord_0_1_comp_cr) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1071,7 +1047,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
+        if (invCoord_0_1_comp_cr) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1152,9 +1128,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     line.reserve(_textcols);
     _display->setCursor(0, 0);
-    int16_t row        = 0;
-    const bool colMode = _columnRowMode;
-    _columnRowMode = true;
+    int16_t row = 0;
+    setColumnRowMode(true);
 
     for (int16_t i = start; i <= 0xFF && row < _textrows; i++) {
       if ((i % 4 == 0) && (line.length() > (_textcols - 8u))) { // 8 = 4x space + char
@@ -1164,10 +1139,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       }
 
       if (line.isEmpty()) {
-        line += F("0x");
-
-        if (i < 0x10) { line += '0'; }
-        line += String(i, HEX);
+        line += formatToHex(i, 2);
       }
       line += ' ';
       line += static_cast<char>(((i == 0x0A) || (i == 0x0D) ? 0x20 : i)); // Show a space instead of CR/LF
@@ -1177,9 +1149,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
     }
 
-    _columnRowMode = colMode;           // Restore
+    setColumnRowMode(currentColRowState); // Restore
 
-    if (_fontscaling != currentScale) { // Restore if needed
+    if (_fontscaling != currentScale) {   // Restore if needed
       _fontscaling = currentScale;
       _display->setTextSize(_fontscaling);
       calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
@@ -1349,8 +1321,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   else if ((adagfx_commands_e::l == subcmd) && (argCount == 5)) { // l: Line
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3])) {
+    if (invCoord_0_1 ||
+        invCoord_2_3) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1383,18 +1355,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   # if ADAGFX_ENABLE_EXTRA_CMDS
   else if (((adagfx_commands_e::lm == subcmd) || (adagfx_commands_e::lmr == subcmd)) && (argCount >= 5)) { // lm/lmr: Multi-line, multiple
                                                                                                            // coordinates
-    uint16_t mcolor   = AdaGFXparseColor(sParams[0], _colorDepth);
-    bool     mloop    = true;
-    uint8_t  parCount = 0;
-    uint8_t  optCount = 0;
-    int  cx           = -1;
-    int  cy           = -1;
-    bool closeLine    = false;
-    bool relativeMode = (adagfx_commands_e::lmr == subcmd); // Use Relative mode
-    #  ifndef BUILD_NO_DEBUG
-    String log;
-    log.reserve(40);
-    #  endif // ifndef BUILD_NO_DEBUG
+    uint16_t mcolor         = AdaGFXparseColor(sParams[0], _colorDepth);
+    bool     mloop          = true;
+    uint8_t  parCount       = 0;
+    uint8_t  optCount       = 0;
+    int  cx                 = -1;
+    int  cy                 = -1;
+    bool closeLine          = false;
+    const bool relativeMode = (adagfx_commands_e::lmr == subcmd);  // Use Relative mode
 
     while (mloop) {
       sParams[optCount] = parseString(string, parCount + 4);       // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
@@ -1429,20 +1397,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             mloop      = false; // Exit after closing the line
           }
           #  ifndef BUILD_NO_DEBUG
-          log.clear();
-          log += F("AdaGFX: cmd: lm x/y/x1/y1:");
-          log += nParams[0];
-          log += '/';
-          log += nParams[1];
-          log += '/';
-          log += nParams[2];
-          log += '/';
-          log += nParams[3];
-          log += F(" loop:");
-          log += mloop ? 'T' : 'f';
-          log += F(" color:");
-          log += AdaGFXcolorToString(mcolor, _colorDepth);
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("AdaGFX: cmd: lm x/y/x1/y1:%d/%d/%d/%d loop:%c color:%s"),
+                                           nParams[0], nParams[1], nParams[2], nParams[3],
+                                           mloop ? 'T' : 'f', AdaGFXcolorToString(mcolor, _colorDepth).c_str()));
           #  endif // ifndef BUILD_NO_DEBUG
           _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, mcolor);
 
@@ -1458,87 +1415,58 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # endif // if ADAGFX_ENABLE_EXTRA_CMDS
-  else if ((adagfx_commands_e::r == subcmd) && (argCount == 5)) { // r: Rectangle
+  else if (((adagfx_commands_e::r == subcmd) && (argCount == 5)) ||  // r: Rectangle
+           ((adagfx_commands_e::rf == subcmd) && (argCount == 6))) { // rf: Rectangled, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
+    if (invCoord_0_1 ||
+        invCoord_0_2_1_3) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
+      if (adagfx_commands_e::rf == subcmd) {
+        _display->fillRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
+      }
       _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
-  else if ((adagfx_commands_e::rf == subcmd) && (argCount == 6)) { // rf: Rectangled, filled
+  else if (((adagfx_commands_e::c == subcmd) && (argCount == 4)) ||  // c: Circle
+           ((adagfx_commands_e::cf == subcmd) && (argCount == 5))) { // cf: Circle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
-      _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::c == subcmd) && (argCount == 4)) { // c: Circle
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
+    if (invCoord_0_1 ||
         invalidCoordinates(nParams[2], 0)) { // Also check radius
       success = false;
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
+      if (adagfx_commands_e::cf == subcmd) {
+        _display->fillCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
+      }
       _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
-  else if ((adagfx_commands_e::cf == subcmd) && (argCount == 5)) { // cf: Circle, filled
+  else if (((adagfx_commands_e::t == subcmd) && (argCount == 7)) ||  // t: Triangle
+           ((adagfx_commands_e::tf == subcmd) && (argCount == 8))) { // tf: Triangle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], 0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
-      _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::t == subcmd) && (argCount == 7)) { // t: Triangle
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
+    if (invCoord_0_1 ||
+        invCoord_2_3 ||
         invalidCoordinates(nParams[4], nParams[5])) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawTriangle(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, nParams[4] + _xo, nParams[5] + _yo,
-                             AdaGFXparseColor(sParams[6], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::tf == subcmd) && (argCount == 8)) { // tf: Triangle, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[4], nParams[5])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillTriangle(nParams[0] + _xo,
-                             nParams[1] + _yo,
-                             nParams[2] + _xo,
-                             nParams[3] + _yo,
-                             nParams[4] + _xo,
-                             nParams[5] + _yo,
-                             AdaGFXparseColor(sParams[7], _colorDepth));
+      if (adagfx_commands_e::tf == subcmd) {
+        _display->fillTriangle(nParams[0] + _xo,
+                               nParams[1] + _yo,
+                               nParams[2] + _xo,
+                               nParams[3] + _yo,
+                               nParams[4] + _xo,
+                               nParams[5] + _yo,
+                               AdaGFXparseColor(sParams[7], _colorDepth));
+      }
       _display->drawTriangle(nParams[0] + _xo,
                              nParams[1] + _yo,
                              nParams[2] + _xo,
@@ -1548,40 +1476,25 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                              AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
-  else if ((adagfx_commands_e::rr == subcmd) && (argCount == 6)) { // rr: Rounded rectangle
+  else if (((adagfx_commands_e::rr == subcmd) && (argCount == 6)) ||  // rr: Rounded rectangle
+           ((adagfx_commands_e::rrf == subcmd) && (argCount == 7))) { // rrf: Rounded rectangle, filled
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
-        invalidCoordinates(nParams[4],              0)) { // Also check radius
+    if (invCoord_0_1 ||
+        invCoord_0_2_1_3 ||
+        invalidCoordinates(nParams[4], 0)) { // Also check radius
       success = false;
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawRoundRect(nParams[0] + _xo,
-                              nParams[1] + _yo,
-                              nParams[2],
-                              nParams[3],
-                              nParams[4],
-                              AdaGFXparseColor(sParams[5], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::rrf == subcmd) && (argCount == 7)) { // rrf: Rounded rectangle, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
-        invalidCoordinates(nParams[4],              0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillRoundRect(nParams[0] + _xo,
-                              nParams[1] + _yo,
-                              nParams[2],
-                              nParams[3],
-                              nParams[4],
-                              AdaGFXparseColor(sParams[6], _colorDepth));
+      if (adagfx_commands_e::rrf == subcmd) {
+        _display->fillRoundRect(nParams[0] + _xo,
+                                nParams[1] + _yo,
+                                nParams[2],
+                                nParams[3],
+                                nParams[4],
+                                AdaGFXparseColor(sParams[6], _colorDepth));
+      }
       _display->drawRoundRect(nParams[0] + _xo,
                               nParams[1] + _yo,
                               nParams[2],
@@ -1593,7 +1506,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   else if ((adagfx_commands_e::px == subcmd) && (argCount == 3)) { // px: Pixel
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1])) {
+    if (invCoord_0_1) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1605,7 +1518,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                                                                                                            // incremented merged loop is
     # if ADAGFX_ARGUMENT_VALIDATION                                                                        // smaller than 2 separate loops
 
-    if (invalidCoordinates(nParams[0], nParams[1])) {
+    if (invCoord_0_1) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -1670,7 +1583,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     // (*clr = color, TaskIndex, Group and SelGrp are ignored)
     #  if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[2], nParams[3]) ||
+    if (invCoord_2_3 ||
         invalidCoordinates(nParams[2] + nParams[4], nParams[3] + nParams[5])) {
       success = false;
     } else
@@ -1700,13 +1613,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
       if (!sParams[16].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[16], _colorDepth); }
 
-      uint16_t fillColor = onColor;
-      uint16_t textColor = captionColor;
-      bool     clearArea = nParams[7] < 0;
+      uint16_t   fillColor = onColor;
+      uint16_t   textColor = captionColor;
+      const bool clearArea = nParams[7] < 0;
       nParams[7] = std::abs(nParams[7]);
 
-      Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
-      Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
+      const Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
+      const Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
 
       // Check mode & state: -2, -1, 0, 1 to select used colors
       if (nParams[0] == 0) {
@@ -1857,8 +1770,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
+    if (invCoord_0_1 ||
+        invCoord_0_2_1_3) {
       success = false;
 
       if (curWin != 0) { selectWindow(curWin); }  // restore current window
@@ -1886,7 +1799,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, concat(F("AdaGFX defined window id: "), static_cast<int>(win)));
+          addLogMove(LOG_LEVEL_INFO, strformat(F("AdaGFX defined window id: %d"), win));
         }
         #  endif // ifndef BUILD_NO_DEBUG
 
@@ -1898,12 +1811,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       // logWindows(F(" deFwin ")); // Use for debugging only?
     }
   }
-  else if ((adagfx_commands_e::delwin == subcmd) && (argCount == 1)) { // delwin: delete window
+  else if ((adagfx_commands_e::delwin == subcmd) && (argCount == 1) && (nParams[0] > 0)) { // delwin: delete window, don't delete window 0
     // logWindows(F(" deLwin ")); // use for debugging only
 
-    if (nParams[0] > 0) {                                              // don't delete window 0
-      success = deleteWindow(nParams[0]);
-    }
+    success = deleteWindow(nParams[0]);
   }
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   else {
@@ -2189,29 +2100,10 @@ void AdafruitGFX_helper::printText(const char     *string,
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("printText: clear: _x:");
-      log += _x;
-      log += F(", oTop:");
-      log += oTop;
-      log += F(", _y:");
-      log += _y;
-      log += F(", xTx:");
-      log += xText;
-      log += F(", yTx:");
-      log += yText;
-      log += F(", wTx:");
-      log += wText;
-      log += F(", hTx:");
-      log += hText;
-      log += F(", oBot:");
-      log += oBottom;
-      log += F(", _res_x/max:");
-      log += _res_x;
-      log += '/';
-      log += res_x;
-      log += F(", str:");
-      log += newString;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("printText: clear: _x:%d, oTop:%d, _y:%d, xTx:%d, yTx:%d, wTx:%d,"
+                                              " hTx:%d, oBot:%d, _res_x/max:%d/%d, str:%s"),
+                                            _x, oTop, _y, xText, yText, wText,
+                                            hText, oBottom, _res_x, res_x, newString.c_str()));
     }
     # endif // ifndef BUILD_NO_DEBUG
 
@@ -2708,23 +2600,8 @@ void AdafruitGFX_helper::calculateTextMetrics(const uint8_t fontwidth,
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(60);
-    log += F("AdaGFX:");
-
-    if (!_trigger.isEmpty()) {
-      log += F(" tr: ");
-      log += _trigger;
-    }
-    log += F(" x: ");
-    log += res_x;
-    log += F(", y: ");
-    log += res_y;
-    log += F(", text columns: ");
-    log += _textcols;
-    log += F(" rows: ");
-    log += _textrows;
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: tr: %s x: %d, y: %d, text columns: %d rows: %d"),
+                                           _trigger.c_str(), res_x, res_y, _textcols, _textrows));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
@@ -2750,18 +2627,8 @@ bool AdafruitGFX_helper::invalidCoordinates(const int  X,
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-
-    log.reserve(49);
-    log += F("invalidCoordinates: X:");
-    log += X;
-    log += '/';
-    log += (colRowMode ? _textcols : res_x);
-    log += F(" Y:");
-    log += Y;
-    log += '/';
-    log += (colRowMode ? _textrows : res_y);
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("invalidCoordinates: X:%d/%d Y:%d/%d"),
+                                           X, colRowMode ? _textcols : res_x, Y, colRowMode ? _textrows : res_y));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
@@ -2948,27 +2815,10 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       colors = 1 << depth;
     }
     #  ifndef BUILD_NO_DEBUG
-    String log;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log.reserve(80);
-      log += F("showBmp: bitmap w:");
-      log += bmpWidth;
-      log += F(", h:");
-      log += bmpHeight;
-      log += F(", dpt:");
-      log += depth;
-      log += F(", colors:");
-      log += colors;
-      log += F(", cmp:");
-      log += compression;
-      log += F(", pl:");
-      log += planes;
-      log += F(", x:");
-      log += x;
-      log += F(", y:");
-      log += y;
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(F("showBmp: bitmap w:%d, h:%d, dpt:%d, colors:%d, cmp:%d, pl:%d, x:%d, y:%d"),
+                                       bmpWidth, bmpHeight, depth, colors, compression, planes, x, y));
     }
     #  endif // ifndef BUILD_NO_DEBUG
 
@@ -3002,16 +2852,8 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     #  ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log.clear();
-      log += F("showBmp: x:");
-      log += x;
-      log += F(", y:");
-      log += y;
-      log += F(", dw:");
-      log += _display->width();
-      log += F(", dh:");
-      log += _display->height();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("showBmp: x:%d, y:%d, dw:%d, dh:%d"),
+                                           x, y, _display->width(), _display->height()));
     }
     #  endif // ifndef BUILD_NO_DEBUG
 
@@ -3353,37 +3195,14 @@ bool AdafruitGFX_helper::deleteWindow(const uint8_t& windowId) {
  ***************************************************************************/
 void AdafruitGFX_helper::logWindows(const String& prefix) {
   #  ifndef BUILD_NO_DEBUG
-  String log;
-
-  log.reserve(50);
 
   for (auto it = _windows.begin(); it != _windows.end(); it++) {
-    log.clear();
-    log += F("AdaGFX window ");
-    log += prefix;
-    log += F(": ");
-    log += (*it).id;
-    log += F(", x:");
-    log += (*it).top_left.x;
-    log += F(", y:");
-    log += (*it).top_left.y;
-    log += F(", w:");
-    log += (*it).width_height.x;
-    log += F(", h:");
-    log += (*it).width_height.y;
-    log += F(", rot:");
-    log += (*it).rotation;
-    log += F(", current: ");
-    log += getWindow();
-    log += F(", org x:");
-    log += (*it).org_top_left.x;
-    log += F(", y:");
-    log += (*it).org_top_left.y;
-    log += F(", w:");
-    log += (*it).org_width_height.x;
-    log += F(", h:");
-    log += (*it).org_width_height.y;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("AdaGFX window %s: %d, x:%d, y:%d, w:%d, h:%d"
+                                           ", rot%d, current: %d, org x:%d, y:%d, w:%d, h:%d"),
+                                         prefix.c_str(), (*it).id, (*it).top_left.x, (*it).top_left.y,
+                                         (*it).width_height.x, (*it).width_height.y,
+                                         (*it).rotation, getWindow(), (*it).org_top_left.x, (*it).org_top_left.y,
+                                         (*it).org_width_height.x, (*it).org_width_height.y));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 }
