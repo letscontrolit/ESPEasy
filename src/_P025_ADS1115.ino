@@ -155,10 +155,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
-      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P025_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
       break;
     }
 

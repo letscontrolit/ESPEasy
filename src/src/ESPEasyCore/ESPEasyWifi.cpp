@@ -811,6 +811,16 @@ float GetRSSIthreshold(float& maxTXpwr) {
   return threshold;
 }
 
+int GetRSSI_quality() {
+  long rssi = WiFi.RSSI();
+
+  if (-50 < rssi) { return 10; }
+
+  if (rssi <= -98) { return 0;  }
+  rssi = rssi + 97; // Range 0..47 => 1..9
+  return (rssi / 5) + 1;
+}
+
 WiFiConnectionProtocol getConnectionProtocol() {
   if (WiFi.RSSI() < 0) {
     #ifdef ESP8266

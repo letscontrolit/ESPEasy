@@ -143,11 +143,7 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
-      P119_data_struct *P119_data = static_cast<P119_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P119_data);
-
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
       break;
     }
 

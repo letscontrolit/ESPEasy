@@ -120,12 +120,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));
-      P028_data_struct *P028_data =
-        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P028_data);
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));
 
       break;
     }

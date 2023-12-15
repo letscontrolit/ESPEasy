@@ -142,11 +142,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P015_data_struct(P015_I2C_ADDR, P015_GAIN, P015_INTEGRATION));
-      P015_data_struct *P015_data =
-        static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P015_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P015_data_struct(P015_I2C_ADDR, P015_GAIN, P015_INTEGRATION));
       break;
     }
 

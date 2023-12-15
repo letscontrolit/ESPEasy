@@ -6,6 +6,7 @@
 # include "../DataTypes/TaskIndex.h"
 
 # include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 
 # include "../Globals/Cache.h"
 
@@ -40,14 +41,8 @@ int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
   return 3;
 }
 
-int mapRSSItoDomoticz() {
-  long rssi = WiFi.RSSI();
-
-  if (-50 < rssi) { return 10; }
-
-  if (rssi <= -98) { return 0;  }
-  rssi = rssi + 97; // Range 0..47 => 1..9
-  return (rssi / 5) + 1;
+int mapRSSItoDomoticz() { 
+  return GetRSSI_quality(); 
 }
 
 int mapVccToDomoticz() {

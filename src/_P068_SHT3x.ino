@@ -112,10 +112,7 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P068_SHT3X(PCONFIG(0)));
-      P068_SHT3X *P068_data = static_cast<P068_SHT3X *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P068_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P068_SHT3X(PCONFIG(0)));
       break;
     }
 

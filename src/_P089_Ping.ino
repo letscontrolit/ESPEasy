@@ -103,9 +103,8 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
       UserVar.setFloat(event->TaskIndex, 0, 0);
-      success                      = true;
       break;
     }
 

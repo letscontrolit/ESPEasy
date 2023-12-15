@@ -102,7 +102,7 @@ void                 resetPluginTaskData();
 
 void                 clearPluginTaskData(taskIndex_t taskIndex);
 
-void                 initPluginTaskData(taskIndex_t          taskIndex,
+bool                 initPluginTaskData(taskIndex_t          taskIndex,
                                         PluginTaskData_base *data);
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);

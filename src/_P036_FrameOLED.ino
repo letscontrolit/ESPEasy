@@ -293,8 +293,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Btn: ");
-      string += formatGpioLabel(CONFIG_PIN3, false);
+      string  = concat(F("Btn: "), formatGpioLabel(CONFIG_PIN3, false));
       success = true;
       break;
     }
@@ -532,7 +531,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1);
             html_TD(F("padding-right: 8px")); // text box is (100% - 8 pixel) on right side wide
             addTextBox(getPluginCustomArgName(varNr),
-                       String(P036_lines.DisplayLinesV1[varNr].Content),
+                       P036_lines.DisplayLinesV1[varNr].Content,
                        P36_NcharsV1 - 1,
                        false,        // readonly,
                        false,        // required,

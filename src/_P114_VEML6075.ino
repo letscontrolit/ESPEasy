@@ -125,12 +125,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
-      P114_data_struct *P114_data =
-        static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P114_data);
-
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
       break;
     }
 

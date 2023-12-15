@@ -157,13 +157,9 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1))));
-      P105_data_struct *P105_data =
-        static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P105_data);
-
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1))));
       break;
     }
 

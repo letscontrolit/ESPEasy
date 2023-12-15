@@ -123,6 +123,10 @@ void SetWiFiTXpower(float dBm); // 0-20.5
 void SetWiFiTXpower(float dBm, float rssi);
 #endif
 float GetRSSIthreshold(float& maxTXpwr);
+// Return some quality based on RSSI.
+// <-97 => 0 , >-50 => 10
+// -97 ... -50 => 1 ... 9
+int GetRSSI_quality();
 WiFiConnectionProtocol getConnectionProtocol();
 #ifdef ESP32
 // TSF time is 64-bit timer in usec, sent by the AP along with other packets.

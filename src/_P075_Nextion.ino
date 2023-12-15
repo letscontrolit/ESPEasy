@@ -3,6 +3,8 @@
 
 # include "src/PluginStructs/P075_data_struct.h"
 
+#include "src/ESPEasyCore/ESPEasyWifi.h"
+
 // #######################################################################################################
 // #######################################################################################################
 // ################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
@@ -201,62 +203,24 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P075_data) {
-        int RssiIndex;
         String newString;
-        String UcTmpString;
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
         for (uint8_t x = 0; x < P75_Nlines; x++) {
           if (P075_data->displayLines[x].length()) {
-            String tmpString = P075_data->displayLines[x];
-            UcTmpString = P075_data->displayLines[x];
-            UcTmpString.toUpperCase();
-            RssiIndex = UcTmpString.indexOf(F("RSSIBAR")); // RSSI bargraph Keyword found, wifi value in dBm.
-
+            int RssiIndex;
+            {
+              String UcTmpString(P075_data->displayLines[x]);
+              UcTmpString.toUpperCase();
+              RssiIndex = UcTmpString.indexOf(F("RSSIBAR")); // RSSI bargraph Keyword found, wifi value in dBm.
+            }
             if (RssiIndex >= 0) {
-              int barVal = 0;
-              newString.reserve(P75_Nchars + 10); // Prevent re-allocation
-              newString.clear();
-              newString += P075_data->displayLines[x].substring(0, RssiIndex);
-              int nbars = WiFi.RSSI();
-
-              if ((nbars < -100) || (nbars >= 0)) {
-                barVal = 0;
-              }
-              else if ((nbars < -95)) {
-                barVal = 5;
-              }
-              else if ((nbars < -90)) {
-                barVal = 10;
-              }
-              else if ((nbars < -85)) {
-                barVal = 20;
-              }
-              else if ((nbars < -80)) {
-                barVal = 30;
-              }
-              else if ((nbars < -75)) {
-                barVal = 45;
-              }
-              else if ((nbars < -70)) {
-                barVal = 60;
-              }
-              else if ((nbars < -65)) {
-                barVal = 70;
-              }
-              else if ((nbars < -55)) {
-                barVal = 80;
-              }
-              else if ((nbars < -50)) {
-                barVal = 90;
-              }
-              else {
-                barVal = 100;
-              }
-
-              newString += barVal;
+              newString = concat(
+                P075_data->displayLines[x].substring(0, RssiIndex), 
+                GetRSSI_quality() * 10);
             }
             else {
+              String tmpString(P075_data->displayLines[x]);
               newString = parseTemplate(tmpString);
             }
 
@@ -305,9 +269,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         const String nextionArguments = parseStringToEndKeepCase(string, 2);
         P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
         {
-          String log;
-          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
-          log += concat(F("NEXTION075 : WRITE = "), nextionArguments);
+          String log = concat(F("NEXTION075 : WRITE = "), nextionArguments);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, log);
           # endif // ifndef BUILD_NO_DEBUG
