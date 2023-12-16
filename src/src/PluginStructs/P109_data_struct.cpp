@@ -128,9 +128,9 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   _prev_temp = P109_TEMP_STATE_UNSET;
 
-  String fileName;
-  fileName += concat(F("thermo"), static_cast<int>(_taskIndex + 1)); // Settings per task index
-  fileName += F(".dat");
+  String fileName = strformat(
+    F("thermo%d.dat"), 
+    static_cast<int>(_taskIndex + 1)); // Settings per task index
   fs::File f = tryOpenFile(fileName, String('r'));
 
   if (!f) { // Not found? Then open previous default filename
@@ -155,12 +155,10 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(48);
-    log += F("Thermo : Starting status S:");
-    log += formatUserVarNoCheck(event, 0);
-    log += concat(F(", R:"), static_cast<int>(UserVar[event->BaseVarIndex + 1]));
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("Thermo : Starting status S:%s, R:%d"),
+      formatUserVarNoCheck(event, 0).c_str(),
+      static_cast<int>(UserVar[event->BaseVarIndex + 1])));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
