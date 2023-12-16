@@ -7,6 +7,12 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-16 tonhuisman: Add support for _GET_CONFIG_VALUE function, with [Clock#GetTimeX] and [Clock#GetValueX], where X is
+ *                        in range 1..Nr. of Day,Time fields (PLUGIN_EXTRACONFIGVAR_MAX = 16)
+ *                        Renamed setting PLUGIN_043_MAX_SETTINGS to P043_MAX_SETTINGS (to avoid confusion)
+ * 2023-12-14 tonhuisman: Fix 'Simplified' mode to behave like GPIO mode, so state Off = 0 and On = 1
+ *                        Add support for config command: config,task,<taskName>,SetTime,<timeIndex>,<timeString>[],<value>]
+ *                        Use convention of accepting '$' for '%' in <timeString> value, to prevent todays values to be used
  * 2023-12-12 tonhuisman: Add option to choose simplified Off/On input instead of full numeric input for non-GPIO configuration
  * 2023-12-11 tonhuisman: Put Value X input on same line as Day,Time X inputs, just like the On/Off combobox.
  *                        Code optimization, calculating the current time to compare to only once.
@@ -18,6 +24,23 @@
  * 2023-12-06 tonhuisman: Add changelog
  */
 
+/** Supported command:
+ * config,task,<taskName>,SetTime,<timeIndex>,<timeString>[],<value>]
+ * <timeIndex>: Range 1..number of Day,Time fields
+ * <timeString>: As entered in the UI: Mon,12:34, can also be quoted: "Mon,12:34". Day name has to be 3 letters
+ * To enter %Sunrise% or %Sunset-1h% etc. use $Sunrise$ or $Sunset-1h$ to prevent todays values to be used
+ * ($ for % is a convention introduced in P036)
+ * <value>: (Optional) Use 0 or 1 for GPIO configuration or when 'Value input On/Off only' is enabled
+ *          For non-GPIO and 'Value input On/Off only' is off, then value 0 won't cause an event to be generated!
+ */
+
+/** Supported values:
+ * GetTimeX:  Get the time string for Day,Time line X
+ * GetValueX: Get the configured value for Day,Time line X.
+ *            With a configured GPIO or 'Value input On/Off only' enabled, the value will be converted to Off=0, On=1
+ * NB: X is in range 1..Nr. of Day,Time fields
+ */
+
 # include "src/Helpers/StringGenerator_Web.h"
 
 # define PLUGIN_043
@@ -25,10 +48,8 @@
 # define PLUGIN_NAME_043       "Output - Clock"
 # define PLUGIN_VALUENAME_043  "Output"
 
-// #define PLUGIN_VALUENAME1_043 "Output"
-// #define PLUGIN_VALUENAME2_043 "Output2"
 # define P043_SIMPLE_VALUE       PCONFIG(6)
-# define PLUGIN_043_MAX_SETTINGS PCONFIG(7)
+# define P043_MAX_SETTINGS       PCONFIG(7)
 # define P043_DEFAULT_MAX        8
 # define P043_SENSOR_TYPE_INDEX  2
 # define P043_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P043_SENSOR_TYPE_INDEX)))
@@ -72,7 +93,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX;
+      P043_MAX_SETTINGS = P043_DEFAULT_MAX;
       break;
     }
 
@@ -99,9 +120,9 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
-      addFormNumericBox(F("Nr. of Day,Time fields"), F("vcount"), PLUGIN_043_MAX_SETTINGS, 1, 16);
-      addUnit(F("1..16"));
+      if (P043_MAX_SETTINGS == 0) { P043_MAX_SETTINGS = P043_DEFAULT_MAX; }
+      addFormNumericBox(F("Nr. of Day,Time fields"), F("vcount"), P043_MAX_SETTINGS, 1, PLUGIN_EXTRACONFIGVAR_MAX);
+      addUnit(concat(F("1.."), PLUGIN_EXTRACONFIGVAR_MAX));
 
       addFormCheckBox(F("Value input On/Off only"), F("simpl"), P043_SIMPLE_VALUE == 1);
       # ifndef LIMIT_BUILD_SIZE
@@ -130,7 +151,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
       datalistFinish();
       # endif // ifndef LIMIT_BUILD_SIZE
 
-      for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+      for (int x = 0; x < P043_MAX_SETTINGS; x++)
       {
         const String timeStr = timeLong2String(Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x));
         # ifndef LIMIT_BUILD_SIZE
@@ -170,10 +191,10 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PLUGIN_043_MAX_SETTINGS = getFormItemInt(F("vcount"));
-      P043_SIMPLE_VALUE       = isFormItemChecked(F("simpl")) ? 1 : 0;
+      P043_MAX_SETTINGS = getFormItemInt(F("vcount"));
+      P043_SIMPLE_VALUE = isFormItemChecked(F("simpl")) ? 1 : 0;
 
-      for (int x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+      for (int x = 0; x < P043_MAX_SETTINGS; x++)
       {
         String plugin1;
         # ifndef LIMIT_BUILD_SIZE
@@ -198,7 +219,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
     {
-      if (PLUGIN_043_MAX_SETTINGS == 0) { PLUGIN_043_MAX_SETTINGS = P043_DEFAULT_MAX; }
+      if (P043_MAX_SETTINGS == 0) { P043_MAX_SETTINGS = P043_DEFAULT_MAX; }
 
       unsigned long clockEvent = (unsigned long)node_time.minute() % 10
                                  | (unsigned long)(node_time.minute() / 10) << 4
@@ -206,7 +227,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
                                  | (unsigned long)(node_time.hour() / 10) << 12
                                  | (unsigned long)node_time.weekday() << 16;
 
-      for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+      for (uint8_t x = 0; x < P043_MAX_SETTINGS; x++)
       {
         unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
 
@@ -230,6 +251,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = state;
             }
             else {
+              if (P043_SIMPLE_VALUE == 1) { state--; } // Behave like GPIO mode, 0 = Off, 1 = On
               UserVar[event->BaseVarIndex]     = x + 1;
               UserVar[event->BaseVarIndex + 1] = state;
             }
@@ -241,6 +263,91 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
           }
         }
       }
+      break;
+    }
+
+    case PLUGIN_SET_CONFIG:
+    {
+      const String cmd = parseString(string, 1);
+
+      // command: config,task,<taskname>,SetTime,<timeIndex>,<timeString>,<value>
+      if (equals(cmd, F("settime"))) {
+        String para      = parseString(string, 2);
+        int    timeIndex = 0;
+
+        if (validIntFromString(para, timeIndex) && (timeIndex > 0) && (timeIndex <= P043_MAX_SETTINGS)) {
+          para = parseString(string, 3);
+          String para4       = parseString(string, 4);
+          const String para5 = parseString(string, 5);
+          int value          = INT_MIN;
+
+          if ((para.length() == 3) && !para4.isEmpty() && !para5.isEmpty()) {
+            // handle timeString without quotes: All,12:34,<value> instead of "All,12:34",<value>
+            para += ','; // (most compact code...)
+            para += para4;
+            para4 = para5;
+          }
+
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, concat(F("P043: Time received "), para));
+          # endif // ifndef BUILD_NO_DEBUG
+
+          para.replace('$', '%');             // Allow %Sunrise%/%Sunset% by using $ instead of %
+
+          LoadTaskSettings(event->TaskIndex); // Not preloaded
+
+          ExtraTaskSettings.TaskDevicePluginConfigLong[timeIndex - 1] = string2TimeLong(para);
+
+          if (validIntFromString(para4, value)) { // Value is optional
+            if (validGpio(CONFIG_PIN1) || (P043_SIMPLE_VALUE == 1)) { value++; } // Off is stored as 1, On is stored as 2 for GPIO action
+
+            ExtraTaskSettings.TaskDevicePluginConfig[timeIndex - 1] = value;
+          }
+
+          Cache.updateExtraTaskSettingsCache();
+          SaveTaskSettings(event->TaskIndex); // Unfortunately we have to save the settings here, or they will get lost
+          // Using too often will wear out the flash memory quickly!
+
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, strformat(F("P043: Time received %s, value %d, stored %s, long: %d"), para.c_str(), value,
+                                            timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[timeIndex - 1]).c_str(),
+                                            string2TimeLong(para)));
+          # endif // ifndef BUILD_NO_DEBUG
+          success = true;
+        }
+      }
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      # define P043_GETTIME_LENGTH  7u // Length of 'gettime'
+      # define P043_GETVALUE_LENGTH 8u // Length of 'getvalue'
+      const String cmd = parseString(string, 1);
+      unsigned int idx = 0u;
+      int timeIndex    = -1;
+
+      if (cmd.startsWith(F("gettime"))) {
+        idx = P043_GETTIME_LENGTH;
+      } else
+      if (cmd.startsWith(F("getvalue"))) {
+        idx = P043_GETVALUE_LENGTH;
+      }
+
+      if ((idx > 0) && validIntFromString(cmd.substring(idx), timeIndex) &&
+          (timeIndex > 0) && (timeIndex <= P043_MAX_SETTINGS)) {
+        LoadTaskSettings(event->TaskIndex); // Not preloaded
+
+        if (idx == P043_GETTIME_LENGTH) {   // gettime
+          string = timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[timeIndex - 1]);
+        } else {                            // getvalue
+          const int16_t offset = (validGpio(CONFIG_PIN1) || (P043_SIMPLE_VALUE == 1)) ? 1 : 0;
+          string = ExtraTaskSettings.TaskDevicePluginConfig[timeIndex - 1] - offset;
+        }
+        success = true;
+      }
+      # undef P043_GETTIME_LENGTH // No longer needed
+      # undef P043_GETVALUE_LENGTH
       break;
     }
   }
