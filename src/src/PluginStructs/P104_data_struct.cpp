@@ -152,8 +152,7 @@ void P104_data_struct::loadSettings() {
     uint8_t zoneIndex = 0;
 
     {
-      String buffer;
-      buffer = String(settingsBuffer);
+      String buffer(settingsBuffer);
       # ifdef P104_DEBUG_DEV
 
       String log;
