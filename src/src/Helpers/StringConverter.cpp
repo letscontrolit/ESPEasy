@@ -1036,6 +1036,12 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   return result;
 }
 
+int GetCommandCode(const char* needle, const char* haystack)
+{
+  // Likely long enough to parse any command
+  char temp[32]{};
+  return GetCommandCode(temp, sizeof(temp), needle, haystack);
+}
 
 
 // escapes special characters in strings for use in html-forms

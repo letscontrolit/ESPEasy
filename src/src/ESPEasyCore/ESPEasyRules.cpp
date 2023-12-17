@@ -337,8 +337,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     return false;
   }
 
-  char tmp[10]{};
-  int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), bitwise_functions);
+  int command_i = GetCommandCode(cmd_s_lower.c_str(), bitwise_functions);
   if (command_i == -1) {
     // No matching function found
     return false;
@@ -494,8 +493,7 @@ void parse_string_commands(String& line) {
         replacement = ull2String(iresult);
       } else {
 
-        char tmp[12]{};
-        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), string_commands);
+        int command_i = GetCommandCode(cmd_s_lower.c_str(), string_commands);
         if (command_i != -1) {
           const string_commands_e command = static_cast<string_commands_e>(command_i);
 

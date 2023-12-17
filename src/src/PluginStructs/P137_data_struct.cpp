@@ -188,8 +188,9 @@ bool P137_data_struct::plugin_read(struct EventStruct *event) {
   bool success = true;
 
   const uint8_t valueCount = P137_NR_OUTPUT_VALUES;
+
   for (uint8_t i = 0; i < valueCount; i++) {
-    UserVar.setFloat(event->TaskIndex, i,  read_value(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i))));
+    UserVar.setFloat(event->TaskIndex, i, read_value(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i))));
   }
 
   return success;
@@ -258,8 +259,7 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
 
   if (isInitialized() && equals(cmd, F("axp"))) { // Command trigger
     cmd = parseString(string, 2);                 // sub command
-    char tmp[10]{};
-    const int subcommand_i          = GetCommandCode(tmp, sizeof(tmp), cmd.c_str(), P137_subcommands);
+    const int subcommand_i          = GetCommandCode(cmd.c_str(), P137_subcommands);
     const P137_subcommands_e subcmd = static_cast<P137_subcommands_e>(subcommand_i);
 
     String var3       = parseString(string, 3);
@@ -367,75 +367,46 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
 /****************************************************************************
  * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
  ***************************************************************************/
-const char P137_getvalues[] PROGMEM = "batvoltage|batdischarge|batcharge|batpower|inpvoltage|inpcurrent|vbusvolt|vbuscurr|"
-                                      "inttemp|apsvolt|ldo2volt|ldo3volt|ldoiovolt|dcdc2volt|dcdc3volt|";
-enum class P137_getvalues_e : int8_t {
-  invalid    = -1,
-  batvoltage = 0,
-  batdischarge,
-  batcharge,
-  batpower,
-  inpvoltage,
-  inpcurrent,
-  vbusvolt,
-  vbuscurr,
-  inttemp,
-  apsvolt,
-  ldo2volt,
-  ldo3volt,
-  ldoiovolt,
-  dcdc2volt,
-  dcdc3volt,
-};
+const char P137_getvalues[] PROGMEM =
+  "batvoltage"    //  BatteryVoltage          = 0x01,
+  "|batdischarge" //  BatteryDischargeCurrent = 0x02,
+  "|batcharge"    //  BatteryChargeCurrent    = 0x03,
+  "|batpower"     //  BatteryPower            = 0x04,
+  "|inpvoltage"   //  AcinVoltage             = 0x05,
+  "|inpcurrent"   //  AcinCurrent             = 0x06,
+  "|vbusvolt"     //  VbusVoltage             = 0x07,
+  "|vbuscurr"     //  VbusCurrent             = 0x08,
+  "|inttemp"      //  InternalTemperature     = 0x09,
+  "|apsvolt"      //  ApsVoltage              = 0x0A,
+  "|ldo2volt"     //  LDO2                    = 0x0B,
+  "|ldo3volt"     //  LDO3                    = 0x0C,
+  "|ldoiovolt"    //  LDOIO                   = 0x0D,
+  "|dcdc2volt"    //  DCDC2                   = 0x12,
+  "|dcdc3volt"    //  DCDC3                   = 0x13,
+;
+
 
 bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
-                                               String            & string) {
-  bool   success = true;
-  String command = parseString(string, 1);
-  float  value;
-  char   tmp[14]{};
-  const int getvalue_i          = GetCommandCode(tmp, sizeof(tmp), command.c_str(), P137_getvalues);
-  const P137_getvalues_e getval = static_cast<P137_getvalues_e>(getvalue_i);
+                                               String            & string)
+{
+  const String command = parseString(string, 1);
+  int getvalue_i       = GetCommandCode(command.c_str(), P137_getvalues);
 
-  if (P137_getvalues_e::batvoltage == getval) {          // batvoltage
-    value = read_value(P137_valueOptions_e::BatteryVoltage);
-  } else if (P137_getvalues_e::batdischarge == getval) { // batdischarge
-    value = read_value(P137_valueOptions_e::BatteryDischargeCurrent);
-  } else if (P137_getvalues_e::batcharge == getval) {    // batcharge
-    value = read_value(P137_valueOptions_e::BatteryChargeCurrent);
-  } else if (P137_getvalues_e::batpower == getval) {     // batpower
-    value = read_value(P137_valueOptions_e::BatteryPower);
-  } else if (P137_getvalues_e::inpvoltage == getval) {   // inpvoltage
-    value = read_value(P137_valueOptions_e::AcinVoltage);
-  } else if (P137_getvalues_e::inpcurrent == getval) {   // inpcurrent
-    value = read_value(P137_valueOptions_e::AcinCurrent);
-  } else if (P137_getvalues_e::vbusvolt == getval) {     // vbusvolt
-    value = read_value(P137_valueOptions_e::VbusVoltage);
-  } else if (P137_getvalues_e::vbuscurr == getval) {     // vbuscurr
-    value = read_value(P137_valueOptions_e::VbusCurrent);
-  } else if (P137_getvalues_e::inttemp == getval) {      // inttemp
-    value = read_value(P137_valueOptions_e::InternalTemperature);
-  } else if (P137_getvalues_e::apsvolt == getval) {      // apsvolt
-    value = read_value(P137_valueOptions_e::ApsVoltage);
-  } else if (P137_getvalues_e::ldo2volt == getval) {     // ldo2volt
-    value = read_value(P137_valueOptions_e::LDO2);
-  } else if (P137_getvalues_e::ldo3volt == getval) {     // ldo3volt
-    value = read_value(P137_valueOptions_e::LDO3);
-  } else if (P137_getvalues_e::ldoiovolt == getval) {    // ldoiovolt
-    value = read_value(P137_valueOptions_e::LDOIO);
-  } else if (P137_getvalues_e::dcdc2volt == getval) {    // dcdc2volt
-    value = read_value(P137_valueOptions_e::DCDC2);
-  } else if (P137_getvalues_e::dcdc3volt == getval) {    // dcdc3volt
-    value = read_value(P137_valueOptions_e::DCDC3);
-  } else {
-    success = false;
-  }
+  if (getvalue_i == -1) { return false; }
 
-  if (success) {
-    string = String(value, static_cast<unsigned int>(P137_CONFIG_DECIMALS));
+  // P137_valueOptions_e do not enumerate without a gap, so we need to 'patch' the index
+  if (getvalue_i == 13) {
+    getvalue_i = static_cast<int>(P137_valueOptions_e::DCDC2);
+  }  else if (getvalue_i == 14) {
+    getvalue_i = static_cast<int>(P137_valueOptions_e::DCDC3);
+  }  else {
+    ++getvalue_i; // Don't match with "None"
   }
-  return success;
+  const P137_valueOptions_e getval = static_cast<P137_valueOptions_e>(getvalue_i);
+
+  string = toString(read_value(getval), static_cast<unsigned int>(P137_CONFIG_DECIMALS));
+  return true;
 }
 
 # endif // ifdef ESP32
-#endif // ifdef USES_P137
+#endif  // ifdef USES_P137

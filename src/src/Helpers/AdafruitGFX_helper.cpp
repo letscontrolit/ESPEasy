@@ -913,8 +913,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  char tmp[12]{};
-  const int subcommand_i         = GetCommandCode(tmp, sizeof(tmp), subcommand.c_str(), adagfx_commands);
+  const int subcommand_i         = GetCommandCode(subcommand.c_str(), adagfx_commands);
   const adagfx_commands_e subcmd = static_cast<adagfx_commands_e>(subcommand_i);
 
   if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
@@ -1935,8 +1934,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  char tmp[12]{};
-  const int command_i            = GetCommandCode(tmp, sizeof(tmp), command.c_str(), adagfx_getcommands);
+  const int command_i            = GetCommandCode(command.c_str(), adagfx_getcommands);
   const adagfx_getcommands_e cmd = static_cast<adagfx_getcommands_e>(command_i);
 
   switch (cmd) {
@@ -2296,8 +2294,7 @@ uint16_t AdaGFXparseColor(String                & s,
                           const bool              emptyIsBlack) {
   s.toLowerCase();
   int32_t   result = -1; // No result yet
-  char      tmp[12]{};
-  const int color_i = GetCommandCode(tmp, sizeof(tmp), s.c_str(), adagfx_colornames);
+  const int color_i = GetCommandCode(s.c_str(), adagfx_colornames);
 
   const adagfx_colornames_e color = static_cast<adagfx_colornames_e>(color_i);
 

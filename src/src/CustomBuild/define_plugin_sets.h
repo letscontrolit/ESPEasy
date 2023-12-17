@@ -1739,6 +1739,7 @@ To create/register a plugin, you have to :
     #define USES_P099   // XPT2046 Touchscreen
    #endif
    #ifndef USES_P104
+    // Plugin adds over 40k to build size
     #define USES_P104   // MAX7219 dot matrix
    #endif
    #if !defined(USES_P109) && defined(ESP32)
@@ -3186,11 +3187,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
     #define FEATURE_IMPROV 0
   #else
-    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-      #define FEATURE_IMPROV 1
-    #else
-      #define FEATURE_IMPROV 0
-    #endif
+    #define FEATURE_IMPROV 1
   #endif
 #endif
 

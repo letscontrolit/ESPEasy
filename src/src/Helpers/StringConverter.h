@@ -333,6 +333,8 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
 \*********************************************************************************************/
 int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
 
+int GetCommandCode(const char* needle, const char* haystack);
+
 
 
 // escapes special characters in strings for use in html-forms
