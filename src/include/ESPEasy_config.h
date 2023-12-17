@@ -104,6 +104,10 @@ constexpr unsigned CEIL_LOG2(unsigned x)
 # define MASK_BITS(x) ((1 << (x)) - 1)
 
 
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
 #ifdef ESP32
   // Special macros to disable interrupts from within an ISR function.
   //

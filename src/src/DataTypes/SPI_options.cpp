@@ -33,9 +33,6 @@
 //  MISO = 5
 //  MOSI = 6
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
-
 
 #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
 #define VSPI_FSPI_SHORT_STRING "FSPI"

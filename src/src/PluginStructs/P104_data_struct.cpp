@@ -1847,8 +1847,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonesOptions[i] = i + 1; // No 0 needed or wanted
     }
     # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    #define STRINGIFY(s) STRINGIFY1(s)
-    #define STRINGIFY1(s) #s
 
     const String zonetip = F("Select between 1 and " STRINGIFY(P104_MAX_ZONES) " zones, changing"
       #  ifdef P104_USE_ZONE_ORDERING
@@ -1894,51 +1892,56 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(textPosition_t::PA_CENTER),
       static_cast<int>(textPosition_t::PA_RIGHT)
     };
-    String animationTypes[] {
-      F("None")
-      , F("Print")
-      , F("Scroll up")
-      , F("Scroll down")
-      , F("Scroll left *")
-      , F("Scroll right *")
+
+
+
+    // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
+    const __FlashStringHelper * animationTypes[] {
+      F("None (0)")
+      , F("Print (1)")
+      , F("Scroll up (2)")
+      , F("Scroll down (3)")
+      , F("Scroll left * (4)")
+      , F("Scroll right * (5)")
     # if ENA_SPRITE
-      , F("Sprite")
+      , F("Sprite (6)")
     # endif // ENA_SPRITE
     # if ENA_MISC
-      , F("Slice *")
-      , F("Mesh")
-      , F("Fade")
-      , F("Dissolve")
-      , F("Blinds")
-      , F("Random")
+      , F("Slice * (7)")
+      , F("Mesh (8)")
+      , F("Fade (9)")
+      , F("Dissolve (10)")
+      , F("Blinds (11)")
+      , F("Random (12)")
     # endif // ENA_MISC
     # if ENA_WIPE
-      , F("Wipe")
-      , F("Wipe w. cursor")
+      , F("Wipe (13)")
+      , F("Wipe w. cursor (14)")
     # endif // ENA_WIPE
     # if ENA_SCAN
-      , F("Scan horiz.")
-      , F("Scan horiz. cursor")
-      , F("Scan vert.")
-      , F("Scan vert. cursor")
+      , F("Scan horiz. (15)")
+      , F("Scan horiz. cursor (16)")
+      , F("Scan vert. (17)")
+      , F("Scan vert. cursor (18)")
     # endif // ENA_SCAN
     # if ENA_OPNCLS
-      , F("Opening")
-      , F("Opening w. cursor")
-      , F("Closing")
-      , F("Closing w. cursor")
+      , F("Opening (19)")
+      , F("Opening w. cursor (20)")
+      , F("Closing (21)")
+      , F("Closing w. cursor (22)")
     # endif // ENA_OPNCLS
     # if ENA_SCR_DIA
-      , F("Scroll up left *")
-      , F("Scroll up right *")
-      , F("Scroll down left *")
-      , F("Scroll down right *")
+      , F("Scroll up left * (23)")
+      , F("Scroll up right * (24)")
+      , F("Scroll down left * (25)")
+      , F("Scroll down right * (26)")
     # endif // ENA_SCR_DIA
     # if ENA_GROW
-      , F("Grow up")
-      , F("Grow down")
+      , F("Grow up (27)")
+      , F("Grow down (28)")
     # endif // ENA_GROW
     };
+
     const int animationOptions[] = {
       static_cast<int>(textEffect_t::PA_NO_EFFECT)
       , static_cast<int>(textEffect_t::PA_PRINT)
@@ -1987,10 +1990,6 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
     constexpr int animationCount = NR_ELEMENTS(animationOptions);
 
-    // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
-    for (uint8_t a = 0; a < animationCount; a++) {
-      animationTypes[a] += strformat(F(" (%d)"), animationOptions[a]);
-    }
     delay(0);
 
     const __FlashStringHelper *fontTypes[] = {
