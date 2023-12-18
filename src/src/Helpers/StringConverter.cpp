@@ -973,25 +973,27 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
   // Returns empty string if not found
   // Returns text of found
   char* write = destination;
-  const char* read = haystack;
 
-  index++;
-  while (index--) {
-    size_t size = destination_size -1;
-    write = destination;
-    char ch = '.';
-    while ((ch != '\0') && (ch != '|')) {
-      ch = pgm_read_byte(read++);
-      if (size && (ch != '|'))  {
-        *write++ = ch;
-        size--;
+  if (haystack != nullptr) {
+    const char* read = haystack;
+    index++;
+    while (index--) {
+      size_t size = destination_size -1;
+      write = destination;
+      char ch = '.';
+      while ((ch != '\0') && (ch != '|')) {
+        ch = pgm_read_byte(read++);
+        if (size && (ch != '|'))  {
+          *write++ = ch;
+          size--;
+        }
       }
-    }
-    if (0 == ch) {
-      if (index) {
-        write = destination;
+      if (0 == ch) {
+        if (index) {
+          write = destination;
+        }
+        break;
       }
-      break;
     }
   }
   *write = '\0';
@@ -1009,6 +1011,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   // Returns -1 of not found
   // Returns index and command if found
   int result = -1;
+  if (haystack == nullptr) 
+    return result;
   const char* read = haystack;
   char* write = destination;
 

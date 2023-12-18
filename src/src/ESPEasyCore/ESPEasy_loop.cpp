@@ -21,6 +21,9 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
+
+#include "../Commands/InternalCommands_decoder.h"
+
 void updateLoopStats() {
   ++loopCounter;
   ++loopCounter_full;
@@ -84,6 +87,11 @@ void ESPEasy_loop()
       event += Settings.deepSleep_wakeTime;
       eventQueue.addMove(std::move(event));
     }
+
+#ifndef BUILD_NO_DEBUG
+    checkAll_internalCommands();
+#endif
+
 
     RTC.bootFailedCount = 0;
     saveToRTC();

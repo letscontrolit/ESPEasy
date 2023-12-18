@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../Commands/InternalCommands_decoder.h"
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -165,6 +166,9 @@ void ESPEasy_setup()
   ResetFactoryDefaultPreference.init();
 #endif
 
+#ifndef BUILD_NO_DEBUG
+//  checkAll_internalCommands();
+#endif
 
   PluginSetup();
   CPluginSetup();
