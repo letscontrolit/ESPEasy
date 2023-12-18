@@ -88,4 +88,158 @@ bool P052_data_struct::readHoldingRegister(short addr, int& value)
   return errorcode == 0;
 }
 
+const char p052_subcommands[] PROGMEM = "writehr|readhr|enableabc|disableabc|setabcperiod|setrelay";
+enum class p052_subcommands_e {
+  writehr, // Modbus Write Holding Register
+  readhr,  // Modbus Read Holding Register
+  enableabc,
+  disableabc,
+  setabcperiod,
+  setrelay
+};
+
+
+bool P052_data_struct::plugin_write(struct EventStruct *event, const String& string)
+{
+  if (!isInitialized()) {
+    return false;
+  }
+
+  bool success         = true;
+  const String command = parseString(string, 1);
+
+  if (equals(command, F("senseair"))) {
+    const String subcommand = parseString(string, 2);
+
+    const int command_i = GetCommandCode(subcommand.c_str(), p052_subcommands);
+
+    if (command_i == -1) {
+      // No matching subcommand found
+      return false;
+    }
+
+
+    switch (static_cast<p052_subcommands_e>(command_i)) {
+      case p052_subcommands_e::writehr:
+      {
+        // FIXME TD-er: Must test, never tested on real hardware yet....
+
+        uint32_t addr = 0;
+        uint32_t cmnd = 0;
+
+        if (validUIntFromString(parseString(string, 3), addr) &&
+            validUIntFromString(parseString(string, 4), cmnd)) {
+          uint8_t errorcode = 0;
+          modbus.writeSingleRegister(addr, cmnd, errorcode);
+          success = 0 == errorcode;
+
+          if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(
+                     F("Senseair command: %s=%d,%d"),
+                     subcommand.c_str(),
+                     addr,
+                     cmnd));
+          }
+        }
+
+        // Already sent log, thus return here
+        return success;
+      }
+      case p052_subcommands_e::readhr:
+      {
+        uint32_t addr = 0;
+
+        if (validUIntFromString(parseString(string, 3), addr)) {
+          uint8_t   errorcode = 0;
+          const int value     = modbus.readHoldingRegister(addr, errorcode);
+
+          if (0 == errorcode) {
+            success = true;
+
+            if (Settings.UseRules) {
+              eventQueue.add(
+                event->TaskIndex,
+                subcommand,
+                strformat(
+                  F("%d,%d"),
+                  (addr + 1), // HR1 = addr 0x00
+                  value));
+            }
+          }
+        }
+        break;
+      }
+      case p052_subcommands_e::enableabc:
+      {
+        uint32_t hours = 0;
+
+        if (validUIntFromString(parseString(string, 3), hours)) {
+          // FIXME TD-er: Implement
+
+
+          // Read HR19
+
+          // Clear bit 1 in register and write back HR19
+
+          // Read HR14 and verify desired ABC period
+
+          // If HR14 (ABC period) is not the desired period,
+          // write desired ABC period to HR14
+        }
+        break;
+      }
+      case p052_subcommands_e::disableabc:
+      {
+        // FIXME TD-er: Implement
+
+        // Read HR19
+
+        // Set bit 1 in register and write back HR19
+        break;
+      }
+      case p052_subcommands_e::setabcperiod:
+      {
+        // FIXME TD-er: Must test, never tested on real hardware yet....
+
+        int32_t period = 0;
+
+        if (validIntFromString(parseString(string, 3), period)) {
+          if (period >= 0) {
+            setABCperiod(period);
+            success = true;
+          }
+        }
+        break;
+      }
+      case p052_subcommands_e::setrelay:
+      {
+        int32_t state = 0;
+
+        if (validIntFromString(parseString(string, 3), state)) {
+          short relaystatus = 1;
+
+          //  Refer to sensor model’s specification for voltage at 100% output.
+          if (state == 0) { relaystatus = 0; }
+          else if (state == 1) { relaystatus = 0x3FFF; } // 0x3FFF represents 100% output.
+          else if (state == -1) { relaystatus = 0x7FFF; }
+
+          if (1 != relaystatus) {
+            modbus.writeSingleRegister(0x18, relaystatus);
+            success = true;
+          }
+        }
+        break;
+      }
+    }
+
+    if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, strformat(
+               F("Senseair command: %s=%d"),
+               subcommand.c_str(),
+               event->Par2));
+    }
+  }
+  return success;
+}
+
 #endif // ifdef USES_P052

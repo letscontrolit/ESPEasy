@@ -240,15 +240,18 @@ void addLog(uint8_t logLevel, String&& string)
   addToLogMove(logLevel, std::move(string));
 }
 
+
+#ifndef LIMIT_BUILD_SIZE
 #include "../Helpers/Memory.h"
+#endif
 
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     ESPEasy_Console.addToSerialBuffer(format_msec_duration(millis()));
-    ESPEasy_Console.addToSerialBuffer(F(" : ("));
-    ESPEasy_Console.addToSerialBuffer(String(FreeMem()));
-    ESPEasy_Console.addToSerialBuffer(F(") "));
+    #ifndef LIMIT_BUILD_SIZE
+    ESPEasy_Console.addToSerialBuffer(strformat(F(" : (%d) "), FreeMem()));
+    #endif
     {
       String loglevelDisplayString = getLogLevelDisplayString(logLevel);
       while (loglevelDisplayString.length() < 6) {
@@ -272,7 +275,7 @@ void addToSysLog(uint8_t logLevel, const String& string)
 void addToSDLog(uint8_t logLevel, const String& string)
 {
 #if FEATURE_SD
-  if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
+  if (!string.isEmpty() && loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     String   logName = patch_fname(F("log.txt"));
     fs::File logFile = SD.open(logName, "a+");
     if (logFile) {
@@ -290,6 +293,7 @@ void addToSDLog(uint8_t logLevel, const String& string)
 
 void addLog(uint8_t logLevel, const String& string)
 {
+  if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);
   addToSDLog(logLevel, string);
@@ -300,6 +304,7 @@ void addLog(uint8_t logLevel, const String& string)
 
 void addToLogMove(uint8_t logLevel, String&& string)
 {
+  if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);
   addToSDLog(logLevel, string);

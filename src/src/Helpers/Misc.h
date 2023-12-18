@@ -16,7 +16,7 @@
 
 // Simple bitwise get/set functions
 
-#define setNBitToUL(N, B, V, M)  N=(((N) & ~(M << (B))) | (((V) & M) << (B)))
+#define setNBitToUL(N, B, V, M)  N=(((N) & ~(M << (B))) | (static_cast<uint32_t>((V) & M) << (B)))
 #define getNBitFromUL(number, bitnr, mask)  ((number >> bitnr) & mask)
 
 #define set8BitToUL(N, B, V) setNBitToUL(N, B, V, 0xFFUL)

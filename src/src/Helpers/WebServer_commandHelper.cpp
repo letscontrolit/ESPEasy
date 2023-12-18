@@ -50,9 +50,9 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
     // handledCmd = true;
   } else {
-    printToWeb     = true;
-    handledCmd     = ExecuteCommand_all_config(source, webrequest.c_str());
-    sendOK         = false;
+    printToWeb = true;
+    handledCmd = ExecuteCommand_all_config(source, webrequest.c_str());
+    sendOK     = false;
   }
 
   if (handledCmd) {
@@ -61,11 +61,10 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
       removeChar(reply, '\n'); // Don't use newline in JSON.
       if (printToWebJSON) {
         // Format "OK" to JSON format
-        printWebString = F("{\"return\": \"");
-        printWebString += reply;
-        printWebString += F("\",\"command\": \"");
-        printWebString += webrequest;
-        printWebString += F("\"}");
+        printWebString = strformat(
+          F("{\"return\": \"%s\",\"command\": \"%s\"}"),
+          reply.c_str(),
+          webrequest.c_str());
       } else {
         printWebString = reply;
       }
@@ -75,11 +74,9 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (printToWebJSON) {
     // Format error to JSON format
-    printWebString = F("{\"return\": \"");
-    printWebString += F("Unknown or restricted command");
-    printWebString += F("\",\"command\": \"");
-    printWebString += webrequest;
-    printWebString += F("\"}");
+    printWebString = strformat(
+      F("{\"return\": \"Unknown or restricted command\",\"command\": \"%s\"}"),
+      webrequest.c_str());
   }
   return HandledWebCommand_result::Unknown_or_restricted_command;
 }

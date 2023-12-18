@@ -391,7 +391,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           switch (PCONFIG(varnr)) {
             case 1: {
               value     = P052_data->modbus.readInputRegister(P052_IR4_MEASURED_FILTERED_CO2, errorcode);
-              logPrefix = F("co2 = ");
+              logPrefix = F("co2=");
               break;
             }
             case 2: {
@@ -409,13 +409,13 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
                 temperatureX100 -= 65536;
               }
               value     = static_cast<float>(temperatureX100) / 100.0f;
-              logPrefix = F("temperature = ");
+              logPrefix = F("temp=");
               break;
             }
             case 3: {
               int rhX100 = P052_data->modbus.readInputRegister(P052_IR6_SPACE_HUMIDITY, errorcode);
               value     = static_cast<float>(rhX100) / 100.0f;
-              logPrefix = F("humidity = ");
+              logPrefix = F("hum=");
               break;
             }
             case 4: {
@@ -424,15 +424,15 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
               if (errorcode == 0) {
                 int relayStatus = (status >> 8) & 0x1;
                 UserVar.setFloat(event->TaskIndex, varnr, relayStatus);
-                log                                 += F("relay status = ");
-                log                                 += relayStatus;
+                log += F("relay status=");
+                log += relayStatus;
               }
               break;
             }
             case 5: {
               int temperatureAdjustment = P052_data->modbus.readInputRegister(P052_IR11_MEASURED_CONCENTRATION_UNFILTERED, errorcode);
               value     = static_cast<float>(temperatureAdjustment);
-              logPrefix = F("temperature adjustment = ");
+              logPrefix = F("temp adj=");
               break;
             }
 
@@ -444,14 +444,14 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
                 for (size_t i = 0; i < 9; i++) {
                   if (bitRead(errorWord, i)) {
-                    log += F("error code = ");
+                    log += F("err=");
                     log += i;
                     break;
                   }
                 }
               } else {
                 value = -1;
-                log  += F("error code = ");
+                log  += F("err=");
                 log  += -1;
               }
               break;
@@ -464,10 +464,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           }
 
           if ((errorcode == 0) && (P052_data->modbus.getLastError() == 0)) {
-            success                              = true;
+            success = true;
             UserVar.setFloat(event->TaskIndex, varnr, value);
-            log                                 += logPrefix;
-            log                                 += value;
+            log += logPrefix;
+            log += value;
           }
         }
         addLogMove(LOG_LEVEL_INFO, log);
@@ -481,98 +481,8 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       P052_data_struct *P052_data =
         static_cast<P052_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P052_data) && P052_data->isInitialized()) {
-        const String command = parseString(string, 1);
-
-        if (equals(command, F("senseair"))) {
-          const String subcommand = parseString(string, 2);
-
-          if (equals(subcommand, F("writehr"))) {
-            // FIXME TD-er: Must test, never tested on real hardware yet....
-
-            uint32_t addr = 0;
-            uint32_t cmnd = 0;
-
-            if (validUIntFromString(parseString(string, 3), addr) &&
-                validUIntFromString(parseString(string, 4), cmnd)) {
-              uint8_t errorcode = 0;
-              P052_data->modbus.writeSingleRegister(addr, cmnd, errorcode);
-              success = 0 == errorcode;
-            }
-          } else if (equals(subcommand, F("readhr"))) {
-            uint32_t addr = 0;
-
-            if (validUIntFromString(parseString(string, 3), addr)) {
-              uint8_t   errorcode = 0;
-              const int value     = P052_data->modbus.readHoldingRegister(addr, errorcode);
-
-              if (0 == errorcode) {
-                success = true;
-
-                if (Settings.UseRules) {
-                  String eventvalues;
-                  eventvalues += (addr + 1); // HR1 = addr 0x00
-                  eventvalues += ',';
-                  eventvalues += value;
-                  eventQueue.add(event->TaskIndex, F("readhr"), eventvalues);
-                }
-              }
-            }
-          } else if (equals(subcommand, F("enableabc"))) {
-            uint32_t hours = 0;
-
-            if (validUIntFromString(parseString(string, 3), hours)) {
-              // FIXME TD-er: Implement
-
-
-              // Read HR19
-
-              // Clear bit 1 in register and write back HR19
-
-              // Read HR14 and verify desired ABC period
-
-              // If HR14 (ABC period) is not the desired period,
-              // write desired ABC period to HR14
-            }
-          } else if (equals(subcommand, F("disableabc"))) {
-            // FIXME TD-er: Implement
-
-            // Read HR19
-
-            // Set bit 1 in register and write back HR19
-          } else if (equals(subcommand, F("setabcperiod"))) {
-            // FIXME TD-er: Must test, never tested on real hardware yet....
-
-            int32_t period = 0;
-
-            if (validIntFromString(parseString(string, 3), period)) {
-              if (period >= 0) {
-                P052_data->setABCperiod(period);
-                addLog(LOG_LEVEL_INFO, String(F("Senseair command: ABCperiod=")) +
-                       period);
-                success = true;
-              }
-            }
-          } else if (equals(subcommand, F("setrelay"))) {
-            int32_t state = 0;
-
-            if (validIntFromString(parseString(string, 3), state)) {
-              short relaystatus = 0; // 0x3FFF represents 100% output.
-              success = true;
-
-              //  Refer to sensor model’s specification for voltage at 100% output.
-              if (state == 0) { relaystatus = 0; }
-              else if (state == 1) { relaystatus = 0x3FFF; }
-              else if (state == -1) { relaystatus = 0x7FFF; }
-              else { success = false; }
-
-              if (success) {
-                P052_data->modbus.writeSingleRegister(0x18, relaystatus);
-                addLog(LOG_LEVEL_INFO, concat(F("Senseair command: relay="), state));
-              }
-            }
-          }
-        }
+      if ((nullptr != P052_data) && P052_data->plugin_write(event, string)) {
+        success = true;
       }
       break;
     }

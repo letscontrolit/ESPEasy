@@ -120,6 +120,8 @@ struct P052_data_struct : public PluginTaskData_base {
   bool readHoldingRegister(short addr,
                            int & value);
 
+  bool plugin_write(struct EventStruct *event, const String& string);
+  
   ModbusRTU_struct modbus;
 };
 
