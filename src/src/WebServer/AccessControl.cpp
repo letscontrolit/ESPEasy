@@ -20,7 +20,7 @@ boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
   // FIXME TD-er: Must check whether both are of same type and check full range IPv6
   for (int i = 0; i < 4; ++i) {
-    if (ip[i] != ip[i]) {
+    if (ip[i] != high[i]) {
       return ip[i] < high[i];
     }
   }
