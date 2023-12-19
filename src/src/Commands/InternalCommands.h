@@ -6,19 +6,6 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
 
-bool checkSourceFlags(EventValueSource::Enum      source,
-                      EventValueSourceGroup::Enum group);
-
-bool checkNrArguments(const char   *cmd,
-                      const String& Line,
-                      int           nrArguments);
-
-
-// Typedef for function pointer to be called for handling an internal command.
-typedef String (*command_function)(struct EventStruct *,
-                                   const char *);
-typedef const __FlashStringHelper * (*command_function_fs)(struct EventStruct *,
-                                                           const char *);
 
 // Simple struct to be used in handling commands.
 // By packing all into a struct, the macro calling do_command_case generates a lot less code
@@ -46,6 +33,13 @@ public:
 
 private:
 
+  // Typedef for function pointer to be called for handling an internal command.
+  typedef String (*command_function)(struct EventStruct *,
+                                     const char *);
+  typedef const __FlashStringHelper * (*command_function_fs)(struct EventStruct *,
+                                                             const char *);
+
+
   bool        do_command_case_all(command_function_fs pFunc,
                                   int                 nrArguments);
 
@@ -70,7 +64,7 @@ private:
 public:
 
   /*********************************************************************************************\
-  * Registers command
+  * Wrapper to call all commands
   \*********************************************************************************************/
   bool                     executeInternalCommand();
 

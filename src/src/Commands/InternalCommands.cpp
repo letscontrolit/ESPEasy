@@ -230,23 +230,20 @@ bool InternalCommands::do_command_case(command_case_data         & data,
 
 bool InternalCommands::executeInternalCommand()
 {
-  const size_t cmd_lc_length = _data.cmd_lc.length();
-
-  if (cmd_lc_length < 2) { return false; // No commands less than 2 characters
-  }
-
   // Simple macro to match command to function call.
 
   // EventValueSourceGroup::Enum::ALL
   #define COMMAND_CASE_A(C, NARGS) \
-  return do_command_case_all(&C, NARGS);
+  do_command_case_all(&C, NARGS); break;
 
   // EventValueSourceGroup::Enum::RESTRICTED
   #define COMMAND_CASE_R(C, NARGS) \
-  return do_command_case_all_restricted(&C, NARGS);
+   do_command_case_all_restricted(&C, NARGS); break;
 
 
   const ESPEasy_cmd_e cmd = match_ESPEasy_internal_command(_data.cmd_lc);
+
+  _data.retval = false;
 
   if (cmd == ESPEasy_cmd_e::NotMatched) {
     return false;
@@ -469,7 +466,7 @@ bool InternalCommands::executeInternalCommand()
 
 
     case ESPEasy_cmd_e::NotMatched:
-      break;
+      return false;
 
       // Do not add default: here
       // The compiler will then warn when a command is not included
@@ -477,5 +474,5 @@ bool InternalCommands::executeInternalCommand()
 
   #undef COMMAND_CASE_R
   #undef COMMAND_CASE_A
-  return false;
+  return _data.retval;
 }
