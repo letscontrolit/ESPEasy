@@ -47,11 +47,11 @@ Device Settings
 
 * **Nr. of Day,Time fields**: Select a number between 1 and 16 for the number of Day,Time fields to be available. Will be applied after the page is submitted. (Default: 8)
 
-* **Value input On/Off only**: When checked, the selection for Value will be for On/Off (or empty) only, to avoid misconfiguration for less experienced users. The default is unchecked.
+* **Value input On/Off only**: When checked, the selection for Value will be for On/Off (or empty) only, to avoid misconfiguration for less experienced users, and the Output variable response the same as if a GPIO was selected. The default is unchecked.
 
 .. image:: P043_GPIO_Enabled.png
 
-* **Day,Time X**: Select the Day and Time that should be checked. For Limited builds the day and time have to be entered manually, for other builds, tha Day can be selected from a combobox, and the time can be selected from a predefined list and set to a desired time.
+* **Day,Time X**: Select the Day and Time that should be checked. For Limited builds the day and time have to be entered manually, for other builds, the Day can be selected from a combobox, and the time can be selected from a predefined list and set to a desired time.
 
 For Day, the available options are All, Sun, Mon, Tue, Wed, Thu, Fri, Sat, Wrk (workday), Wkd (weekend).
 

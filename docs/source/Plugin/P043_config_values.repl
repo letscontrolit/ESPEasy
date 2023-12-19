@@ -6,6 +6,11 @@
     ``[<taskname>#GetTimeX]``
     ","
     Returns the configured Day,Time string for line X (Range: 1..Nr. of Day,Time fields), as shown in the UI.
+
+    Examples:
+
+    - ``All,06:00``
+    - ``Wrk,%sunset-1h%``
     "
     "
     ``[<taskname>#GetValueX]``
