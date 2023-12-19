@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-19 tonhuisman: Fix Value input On/Off only to behave exactly like when using a GPIO, except for changing the GPIO state
  * 2023-12-16 tonhuisman: Add support for _GET_CONFIG_VALUE function, with [Clock#GetTimeX] and [Clock#GetValueX], where X is
  *                        in range 1..Nr. of Day,Time fields (PLUGIN_EXTRACONFIGVAR_MAX = 16)
  *                        Renamed setting PLUGIN_043_MAX_SETTINGS to P043_MAX_SETTINGS (to avoid confusion)
@@ -244,14 +245,18 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
           if (state != 0)
           {
-            if (validGpio(CONFIG_PIN1)) { // if GPIO is specified, use the old behavior
+            const bool hasGpio = validGpio(CONFIG_PIN1);
+
+            if (hasGpio || (P043_SIMPLE_VALUE == 1)) { // if GPIO or Yes/No selection is specified, use the old behavior
               state--;
-              pinMode(CONFIG_PIN1, OUTPUT);
-              digitalWrite(CONFIG_PIN1, state);
+
+              if (hasGpio) {
+                pinMode(CONFIG_PIN1, OUTPUT);
+                digitalWrite(CONFIG_PIN1, state);
+              }
               UserVar[event->BaseVarIndex] = state;
             }
             else {
-              if (P043_SIMPLE_VALUE == 1) { state--; } // Behave like GPIO mode, 0 = Off, 1 = On
               UserVar[event->BaseVarIndex]     = x + 1;
               UserVar[event->BaseVarIndex + 1] = state;
             }
