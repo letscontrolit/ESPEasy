@@ -10,7 +10,7 @@
 # include "../WebServer/Markup_Buttons.h"
 # include "../WebServer/Markup_Forms.h"
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/ESPEasyWiFiEvent.h"

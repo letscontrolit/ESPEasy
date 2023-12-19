@@ -1,5 +1,6 @@
 #include "../Commands/InternalCommands_decoder.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../Helpers/StringConverter.h"
 
 // Keep the order of elements in ESPEasy_cmd_e enum
@@ -348,6 +349,7 @@ const char* getInternalCommand_Haystack_Offset(const char firstLetter, int& offs
 
 ESPEasy_cmd_e match_ESPEasy_internal_command(const String& cmd)
 {
+  START_TIMER;
   ESPEasy_cmd_e res = ESPEasy_cmd_e::NotMatched;
 
   if (cmd.length() < 2) {
@@ -384,7 +386,7 @@ ESPEasy_cmd_e match_ESPEasy_internal_command(const String& cmd)
     }
 */
   }
-
+  STOP_TIMER(COMMAND_DECODE_INTERNAL);
   return res;
 }
 

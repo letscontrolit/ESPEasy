@@ -133,34 +133,34 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
   cmd_lc.toLowerCase();
 }
 
-// Wrapper to reduce generated code by macro
-bool do_command_case_all(command_case_data & data,
-                         command_function_fs pFunc,
-                         int                 nrArguments)
-{
-  return do_command_case(data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
-}
+InternalCommands::InternalCommands(const char *cmd, struct EventStruct *event, const char *line)
+  : _data(cmd, event, line) {}
 
-bool do_command_case_all(command_case_data& data,
-                         command_function   pFunc,
-                         int                nrArguments)
-{
-  return do_command_case(data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
-}
 
 // Wrapper to reduce generated code by macro
-bool do_command_case_all_restricted(command_case_data & data,
-                                    command_function_fs pFunc,
-                                    int                 nrArguments)
+bool InternalCommands::do_command_case_all(command_function_fs pFunc,
+                                           int                 nrArguments)
 {
-  return do_command_case(data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+  return do_command_case(_data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
 }
 
-bool do_command_case_all_restricted(command_case_data& data,
-                                    command_function   pFunc,
-                                    int                nrArguments)
+bool InternalCommands::do_command_case_all(command_function pFunc,
+                                           int              nrArguments)
 {
-  return do_command_case(data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+  return do_command_case(_data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+}
+
+// Wrapper to reduce generated code by macro
+bool InternalCommands::do_command_case_all_restricted(command_function_fs pFunc,
+                                                      int                 nrArguments)
+{
+  return do_command_case(_data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+}
+
+bool InternalCommands::do_command_case_all_restricted(command_function pFunc,
+                                                      int              nrArguments)
+{
+  return do_command_case(_data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
 }
 
 bool do_command_case_check(command_case_data         & data,
@@ -196,10 +196,10 @@ bool do_command_case_check(command_case_data         & data,
   return true;        // Command is handled
 }
 
-bool do_command_case(command_case_data         & data,
-                     command_function_fs         pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+bool InternalCommands::do_command_case(command_case_data         & data,
+                                       command_function_fs         pFunc,
+                                       int                         nrArguments,
+                                       EventValueSourceGroup::Enum group)
 {
   if (do_command_case_check(data, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
@@ -212,10 +212,10 @@ bool do_command_case(command_case_data         & data,
   return false;
 }
 
-bool do_command_case(command_case_data         & data,
-                     command_function            pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+bool InternalCommands::do_command_case(command_case_data         & data,
+                                       command_function            pFunc,
+                                       int                         nrArguments,
+                                       EventValueSourceGroup::Enum group)
 {
   if (do_command_case_check(data, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
@@ -228,9 +228,9 @@ bool do_command_case(command_case_data         & data,
   return false;
 }
 
-bool executeInternalCommand(command_case_data& data)
+bool InternalCommands::executeInternalCommand()
 {
-  const size_t cmd_lc_length = data.cmd_lc.length();
+  const size_t cmd_lc_length = _data.cmd_lc.length();
 
   if (cmd_lc_length < 2) { return false; // No commands less than 2 characters
   }
@@ -239,14 +239,14 @@ bool executeInternalCommand(command_case_data& data)
 
   // EventValueSourceGroup::Enum::ALL
   #define COMMAND_CASE_A(C, NARGS) \
-  return do_command_case_all(data, &C, NARGS);
+  return do_command_case_all(&C, NARGS);
 
   // EventValueSourceGroup::Enum::RESTRICTED
   #define COMMAND_CASE_R(C, NARGS) \
-  return do_command_case_all_restricted(data, &C, NARGS);
+  return do_command_case_all_restricted(&C, NARGS);
 
 
-  const ESPEasy_cmd_e cmd = match_ESPEasy_internal_command(data.cmd_lc);
+  const ESPEasy_cmd_e cmd = match_ESPEasy_internal_command(_data.cmd_lc);
 
   if (cmd == ESPEasy_cmd_e::NotMatched) {
     return false;
@@ -477,182 +477,5 @@ bool executeInternalCommand(command_case_data& data)
 
   #undef COMMAND_CASE_R
   #undef COMMAND_CASE_A
-  return false;
-}
-
-// Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
-}
-
-bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
-}
-
-bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
-}
-
-bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
-{
-  bool tryInternal = false;
-
-  {
-    String cmd;
-
-    if (GetArgv(Line, cmd, 1)) {
-      tryInternal = cmd.equalsIgnoreCase(F("event"));
-    }
-  }
-
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
-}
-
-bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
-}
-
-bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
-}
-
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(taskIndex, source, Line, true, false, false);
-}
-
-bool ExecuteCommand(taskIndex_t            taskIndex,
-                    EventValueSource::Enum source,
-                    const char            *Line,
-                    bool                   tryPlugin,
-                    bool                   tryInternal,
-                    bool                   tryRemoteConfig)
-{
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("ExecuteCommand"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  String cmd;
-
-  // We first try internal commands, which should not have a taskIndex set.
-  struct EventStruct TempEvent;
-
-  if (!GetArgv(Line, cmd, 1)) {
-    SendStatus(&TempEvent, return_command_failed());
-    return false;
-  }
-
-  if (tryInternal) {
-    // Small optimization for events, which happen frequently
-    // FIXME TD-er: Make quick check to see if a command is an internal command, so we don't need to try all
-    if (cmd.equalsIgnoreCase(F("event"))) {
-      tryPlugin       = false;
-      tryRemoteConfig = false;
-    }
-  }
-
-  TempEvent.Source = source;
-
-  String action(Line);
-  action = parseTemplate(action); // parseTemplate before executing the command
-
-  // Split the arguments into Par1...5 of the event.
-  // Do not split it in executeInternalCommand, since that one will be called from the scheduler with pre-set events.
-  // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
-  parseCommandString(&TempEvent, action);
-
-  // FIXME TD-er: This part seems a bit strange.
-  // It can't schedule a call to PLUGIN_WRITE.
-  // Maybe ExecuteCommand can be scheduled?
-  delay(0);
-
-#ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, concat(F("Command: "), cmd));
-    addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    addLogMove(LOG_LEVEL_DEBUG, strformat(
-                 F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
-                 TempEvent.Par1,
-                 TempEvent.Par2,
-                 TempEvent.Par3,
-                 TempEvent.Par4,
-                 TempEvent.Par5));
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
-
-  if (tryInternal) {
-    command_case_data data(cmd.c_str(), &TempEvent, action.c_str());
-    bool handled = executeInternalCommand(data);
-
-    if (data.status.length() > 0) {
-      delay(0);
-      SendStatus(&TempEvent, data.status);
-      delay(0);
-    }
-
-    if (handled) {
-      //      addLog(LOG_LEVEL_INFO, F("executeInternalCommand accepted"));
-      return true;
-    }
-  }
-
-  // When trying a task command, set the task index, even if it is not a valid task index.
-  // For example commands from elsewhere may not have a proper task index.
-  TempEvent.setTaskIndex(taskIndex);
-  checkDeviceVTypeForTask(&TempEvent);
-
-  if (tryPlugin) {
-    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
-    // alter the string.
-    String tmpAction(action);
-    bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
-
-    //    if (handled) addLog(LOG_LEVEL_INFO, F("PLUGIN_WRITE accepted"));
-
-    #ifndef BUILD_NO_DEBUG
-
-    if (!tmpAction.equals(action)) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("PLUGIN_WRITE altered the string: ");
-        log += action;
-        log += F(" to: ");
-        log += tmpAction;
-        addLogMove(LOG_LEVEL_ERROR, log);
-      }
-    }
-    #endif // ifndef BUILD_NO_DEBUG
-
-    if (!handled) {
-      // Try a controller
-      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
-
-      //      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
-    }
-
-    if (handled) {
-      SendStatus(&TempEvent, return_command_success());
-      return true;
-    }
-  }
-
-  if (tryRemoteConfig) {
-    if (remoteConfig(&TempEvent, action)) {
-      SendStatus(&TempEvent, return_command_success());
-
-      //      addLog(LOG_LEVEL_INFO, F("remoteConfig accepted"));
-
-      return true;
-    }
-  }
-  const String errorUnknown = concat(F("Command unknown: "), action);
-  addLog(LOG_LEVEL_INFO, errorUnknown);
-  SendStatus(&TempEvent, errorUnknown);
-  delay(0);
   return false;
 }

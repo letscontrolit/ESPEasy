@@ -5,7 +5,7 @@
 // ########################### Controller Plugin 006: PiDome MQTT ########################################
 // #######################################################################################################
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/Network.h"

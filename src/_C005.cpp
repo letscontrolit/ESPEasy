@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C005
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/Globals/EventQueue.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "src/Helpers/StringParser.h"

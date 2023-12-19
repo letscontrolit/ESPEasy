@@ -1,7 +1,7 @@
 #include "../ESPEasyCore/ESPEasy_Console.h"
 
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 
 #include "../DataStructs/TimingStats.h"
 

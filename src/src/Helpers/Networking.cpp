@@ -1,6 +1,6 @@
 #include "../Helpers/Networking.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/TimingStats.h"
