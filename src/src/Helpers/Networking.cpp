@@ -1043,11 +1043,11 @@ void scrubDNS() {
 
 bool valid_DNS_address(const IPAddress& dns) {
   return (/*dns.v4() != (uint32_t)0x00000000 && */
-          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != IPAddress((uint32_t)0xFD000000) && 
 #ifdef ESP32
           // Bug where IPv6 global prefix is set as DNS
           // Global IPv6 prefixes currently start with 2xxx::
-          (dns.v4() & (uint32_t)0xF0000000) != (uint32_t)0x20000000 && 
+          (dns[0] & 0xF0) != 0x20 && 
 #endif
           dns != INADDR_NONE);
 }
@@ -1069,7 +1069,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (valid_DNS_address(dns) || dns.v4() == (uint32_t)0x00000000) {
+  if (valid_DNS_address(dns) || dns == INADDR_NONE) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
