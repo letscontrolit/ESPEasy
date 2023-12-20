@@ -18,6 +18,18 @@
 #include <ETH.h>
 #endif
 
+
+#ifdef LWIP_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
 void setNetworkMedium(NetworkMedium_t new_medium) {
 #if !(FEATURE_ETHERNET)
   if (new_medium == NetworkMedium_t::Ethernet) {
@@ -138,6 +150,61 @@ IPAddress NetworkDnsIP(uint8_t dns_no) {
   #endif
   return WiFi.dnsIP(dns_no);
 }
+
+#ifdef LWIP_IPV6
+
+
+IPAddress NetworkLocalIP6() {
+  esp_interface_t iface = ESP_IF_MAX;
+  #if FEATURE_ETHERNET
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
+    if(EthEventData.ethInitSuccess) {
+      iface = ESP_IF_ETH;
+    }
+  } else
+  #endif
+  {
+    if (WifiIsSTA(WiFi.getMode())) {
+      iface = ESP_IF_WIFI_STA;
+    }
+  }
+  esp_ip6_addr_t addr;
+  if(ESP_IF_MAX == iface ||
+     esp_netif_get_ip6_linklocal(get_esp_interface_netif(iface), &addr)) 
+  {
+    return IN6ADDR_ANY;
+  }
+
+  IPAddress res(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return res;
+}
+
+IPAddress NetworkGlobalIP6() {
+  esp_interface_t iface = ESP_IF_MAX;
+  #if FEATURE_ETHERNET
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
+    if(EthEventData.ethInitSuccess) {
+      iface = ESP_IF_ETH;
+    }
+  } else
+  #endif
+  {
+    if (WifiIsSTA(WiFi.getMode())) {
+      iface = ESP_IF_WIFI_STA;
+    }
+  }
+  esp_ip6_addr_t addr;
+  if(ESP_IF_MAX == iface ||
+     esp_netif_get_ip6_global(get_esp_interface_netif(iface), &addr)) 
+  {
+    return IN6ADDR_ANY;
+  }
+
+  IPAddress res(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return res;
+}
+#endif
+
 
 MAC_address NetworkMacAddress() {
   #if FEATURE_ETHERNET

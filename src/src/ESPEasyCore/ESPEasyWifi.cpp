@@ -469,6 +469,10 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+      WiFi.IPv6(true);
+#endif
+
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
            && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);

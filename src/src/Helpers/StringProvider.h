@@ -104,6 +104,12 @@ struct LabelType {
     IP_SUBNET,               // 255.255.255.0
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
+#ifdef LWIP_IPV6
+    IP6_LOCAL,
+    IP6_GLOBAL,
+//    IP6_ADDRESS_CDIR,
+//    IP6_GATEWAY,
+#endif
     CLIENT_IP,               // 192.168.1.67
     #if FEATURE_MDNS
     M_DNS,                   // breadboard.local

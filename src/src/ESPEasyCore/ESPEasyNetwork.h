@@ -15,6 +15,10 @@ IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
 IPAddress NetworkDnsIP (uint8_t dns_no);
+#ifdef LWIP_IPV6
+IPAddress NetworkLocalIP6();
+IPAddress NetworkGlobalIP6();
+#endif
 MAC_address NetworkMacAddress();
 String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
 String NetworkGetHostname();

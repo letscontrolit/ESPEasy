@@ -120,6 +120,11 @@ void handle_sysinfo_json() {
   json_number(F("rssi"),        String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
+#ifdef LWIP_IPV6
+  json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
+  json_prop(F("ip6_global"),     getValue(LabelType::IP6_GLOBAL));
+#endif
+
   json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
   json_prop(F("gw"),            getValue(LabelType::GATEWAY));
   json_prop(F("dns1"),          getValue(LabelType::DNS_1));
@@ -428,6 +433,10 @@ void handle_sysinfo_Network() {
 # endif 
       LabelType::IP_CONFIG,
       LabelType::IP_ADDRESS_SUBNET,
+#ifdef LWIP_IPV6
+      LabelType::IP6_LOCAL,
+      LabelType::IP6_GLOBAL,
+#endif
       LabelType::GATEWAY,
       LabelType::CLIENT_IP,
       LabelType::DNS,

@@ -235,6 +235,10 @@ void handle_json()
         #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
+#ifdef LWIP_IPV6
+        LabelType::IP6_LOCAL,
+        LabelType::IP6_GLOBAL,
+#endif
         LabelType::IP_SUBNET,
         LabelType::GATEWAY,
         LabelType::STA_MAC,

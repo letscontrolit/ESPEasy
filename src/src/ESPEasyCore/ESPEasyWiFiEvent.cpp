@@ -160,6 +160,18 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ignoreDisconnectEvent = false;
       WiFiEventData.markGotIP();
       break;
+    #if ESP_IDF_VERSION_MAJOR >= 5
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
+    {
+      ip_event_got_ip6_t * event = static_cast<ip_event_got_ip6_t*>(&info.got_ip6);
+      IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
+      addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip.toString());
+      break;
+    }
+    case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP got IP6"));
+      break;
+    #endif
     case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
       #if ESP_IDF_VERSION_MAJOR > 3
       WiFiEventData.markConnectedAPmode(info.wifi_ap_staconnected.mac);

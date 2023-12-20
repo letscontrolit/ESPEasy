@@ -196,6 +196,10 @@ void handle_root() {
     if (!WiFiEventData.WiFiDisconnected())
     {
       addRowLabelValue(LabelType::IP_ADDRESS);
+#ifdef LWIP_IPV6
+      addRowLabelValue(LabelType::IP6_LOCAL);
+      addRowLabelValue(LabelType::IP6_GLOBAL);
+#endif
       addRowLabel(LabelType::WIFI_RSSI);
       addHtml(strformat(
         F("%d dBm (%s)"),
@@ -208,6 +212,10 @@ void handle_root() {
     if (active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
+#ifdef LWIP_IPV6
+      addRowLabelValue(LabelType::IP6_LOCAL);
+      addRowLabelValue(LabelType::IP6_GLOBAL);
+#endif
     }
   # endif // if FEATURE_ETHERNET
 

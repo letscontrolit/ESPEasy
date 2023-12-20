@@ -151,6 +151,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::WIFI_CONNECTION:        return F("WiFi Connection");
     case LabelType::WIFI_RSSI:              return F("RSSI");
     case LabelType::IP_CONFIG:              return F("IP Config");
+#ifdef LWIP_IPV6
+    case LabelType::IP6_LOCAL:              return F("IPv6 link local");
+    case LabelType::IP6_GLOBAL:             return F("IPv6 global");
+#endif
     case LabelType::IP_CONFIG_STATIC:       return F("Static");
     case LabelType::IP_CONFIG_DYNAMIC:      return F("DHCP");
     case LabelType::IP_ADDRESS:             return F("IP Address");
@@ -427,6 +431,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_SUBNET:              return formatIP(NetworkSubnetMask());
     case LabelType::IP_ADDRESS_SUBNET:      return strformat(F("%s / %s"), getValue(LabelType::IP_ADDRESS).c_str(), getValue(LabelType::IP_SUBNET).c_str());
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
+#ifdef LWIP_IPV6
+    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6());
+    case LabelType::IP6_GLOBAL:             return formatIP(NetworkGlobalIP6());
+#endif
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
