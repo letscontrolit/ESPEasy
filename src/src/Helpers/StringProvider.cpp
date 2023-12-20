@@ -155,7 +155,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::IP6_LOCAL:              return F("IPv6 link local");
     case LabelType::IP6_GLOBAL:             return F("IPv6 global");
     case LabelType::IP6_ALL_ADDRESSES:      return F("IPv6 all addresses");
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#endif
     case LabelType::IP_CONFIG_STATIC:       return F("Static");
     case LabelType::IP_CONFIG_DYNAMIC:      return F("DHCP");
     case LabelType::IP_ADDRESS:             return F("IP Address");
