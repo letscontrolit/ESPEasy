@@ -104,9 +104,10 @@ struct LabelType {
     IP_SUBNET,               // 255.255.255.0
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
-#ifdef LWIP_IPV6
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
     IP6_LOCAL,
     IP6_GLOBAL,
+    IP6_ALL_ADDRESSES,
 //    IP6_ADDRESS_CDIR,
 //    IP6_GATEWAY,
 #endif

@@ -19,7 +19,7 @@
 #endif
 
 
-#ifdef LWIP_IPV6
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
 #include <esp_netif.h>
 
 // -----------------------------------------------------------------------------------------------------------------------
@@ -151,10 +151,8 @@ IPAddress NetworkDnsIP(uint8_t dns_no) {
   return WiFi.dnsIP(dns_no);
 }
 
-#ifdef LWIP_IPV6
-
-
-IPAddress NetworkLocalIP6() {
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+esp_interface_t getActiveNetworkMediumInterface() {
   esp_interface_t iface = ESP_IF_MAX;
   #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
@@ -168,6 +166,11 @@ IPAddress NetworkLocalIP6() {
       iface = ESP_IF_WIFI_STA;
     }
   }
+  return iface;
+}
+
+IPAddress NetworkLocalIP6() {
+  esp_interface_t iface = getActiveNetworkMediumInterface();
   esp_ip6_addr_t addr;
   if(ESP_IF_MAX == iface ||
      esp_netif_get_ip6_linklocal(get_esp_interface_netif(iface), &addr)) 
@@ -180,19 +183,7 @@ IPAddress NetworkLocalIP6() {
 }
 
 IPAddress NetworkGlobalIP6() {
-  esp_interface_t iface = ESP_IF_MAX;
-  #if FEATURE_ETHERNET
-  if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(EthEventData.ethInitSuccess) {
-      iface = ESP_IF_ETH;
-    }
-  } else
-  #endif
-  {
-    if (WifiIsSTA(WiFi.getMode())) {
-      iface = ESP_IF_WIFI_STA;
-    }
-  }
+  esp_interface_t iface = getActiveNetworkMediumInterface();
   esp_ip6_addr_t addr;
   if(ESP_IF_MAX == iface ||
      esp_netif_get_ip6_global(get_esp_interface_netif(iface), &addr)) 
@@ -203,6 +194,22 @@ IPAddress NetworkGlobalIP6() {
   IPAddress res(IPv6, (const uint8_t*)addr.addr, addr.zone);
   return res;
 }
+
+IP6Addresses_t NetworkAllIPv6() {
+  IP6Addresses_t addresses;
+  esp_interface_t iface = getActiveNetworkMediumInterface();
+  if(ESP_IF_MAX != iface) {
+    esp_ip6_addr_t esp_ip6_addr[LWIP_IPV6_NUM_ADDRESSES]{};
+
+    int count = esp_netif_get_all_ip6(get_esp_interface_netif(iface), esp_ip6_addr);
+    for (int i = 0; i < count; ++i) {
+      addresses.emplace_back(IPv6, (const uint8_t*)esp_ip6_addr[i].addr, esp_ip6_addr[i].zone);
+    }
+  }
+
+  return addresses;
+}
+
 #endif
 
 

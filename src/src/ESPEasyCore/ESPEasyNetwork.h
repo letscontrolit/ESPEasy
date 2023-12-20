@@ -7,6 +7,13 @@
 
 #include <IPAddress.h>
 
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#include <vector>
+//typedef uint8_t ip6_addr_type_t;
+//typedef std::vector<std::pair<IPAddress, ip6_addr_type_t>> IP6Addresses_t;
+typedef std::vector<IPAddress> IP6Addresses_t;
+#endif
+
 void setNetworkMedium(NetworkMedium_t medium);
 
 void NetworkConnectRelaxed();
@@ -15,9 +22,11 @@ IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
 IPAddress NetworkDnsIP (uint8_t dns_no);
-#ifdef LWIP_IPV6
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+
 IPAddress NetworkLocalIP6();
 IPAddress NetworkGlobalIP6();
+IP6Addresses_t NetworkAllIPv6();
 #endif
 MAC_address NetworkMacAddress();
 String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
