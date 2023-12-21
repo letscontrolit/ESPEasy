@@ -196,7 +196,7 @@ void handle_root() {
     if (!WiFiEventData.WiFiDisconnected())
     {
       addRowLabelValue(LabelType::IP_ADDRESS);
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
       addRowLabelValue(LabelType::IP6_LOCAL);
       addRowLabelValue(LabelType::IP6_GLOBAL);
 #endif
@@ -212,7 +212,7 @@ void handle_root() {
     if (active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
       addRowLabelValue(LabelType::IP6_LOCAL);
       addRowLabelValue(LabelType::IP6_GLOBAL);
 #endif

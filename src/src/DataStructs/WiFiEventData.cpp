@@ -93,6 +93,9 @@ void WiFiEventData_t::clear_processed_flags() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
@@ -160,6 +163,14 @@ void WiFiEventData_t::markGotIP() {
   bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
   processedGotIP = false;
 }
+
+#if FEATURE_USE_IPV6
+  void WiFiEventData_t::martGotIP6(const IPAddress& ip6) {
+    processedGotIP6 = false;
+    unprocessed_IP6 = ip6;
+  }
+#endif
+
 
 void WiFiEventData_t::markLostIP() {
   bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);

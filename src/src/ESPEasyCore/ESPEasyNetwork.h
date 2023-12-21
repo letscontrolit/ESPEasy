@@ -7,7 +7,7 @@
 
 #include <IPAddress.h>
 
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
 #include <vector>
 //typedef uint8_t ip6_addr_type_t;
 //typedef std::vector<std::pair<IPAddress, ip6_addr_type_t>> IP6Addresses_t;
@@ -22,7 +22,7 @@ IPAddress NetworkLocalIP();
 IPAddress NetworkSubnetMask();
 IPAddress NetworkGatewayIP();
 IPAddress NetworkDnsIP (uint8_t dns_no);
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
 
 IPAddress NetworkLocalIP6();
 IPAddress NetworkGlobalIP6();

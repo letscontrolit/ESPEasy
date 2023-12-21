@@ -235,7 +235,7 @@ void handle_json()
         #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
         LabelType::IP6_LOCAL,
         LabelType::IP6_GLOBAL,
 #endif

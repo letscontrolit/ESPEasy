@@ -3234,6 +3234,15 @@ To create/register a plugin, you have to :
  #define DISABLE_NEOPIXEL_PLUGINS 1
 #endif
 
+#ifndef FEATURE_USE_IPV6
+#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#define FEATURE_USE_IPV6   1
+#else 
+#define FEATURE_USE_IPV6   0
+#endif
+#endif
+
+
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins
   #ifdef USES_P038

@@ -469,7 +469,7 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
-#if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#if FEATURE_USE_IPV6
       WiFi.IPv6(true);
 #endif
 
