@@ -165,7 +165,7 @@ void WiFiEventData_t::markGotIP() {
 }
 
 #if FEATURE_USE_IPV6
-  void WiFiEventData_t::martGotIP6(const IPAddress& ip6) {
+  void WiFiEventData_t::markGotIPv6(const IPAddress& ip6) {
     processedGotIP6 = false;
     unprocessed_IP6 = ip6;
   }

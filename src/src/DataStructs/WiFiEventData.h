@@ -67,7 +67,7 @@ struct WiFiEventData_t {
 
   void markGotIP();
 #if FEATURE_USE_IPV6
-  void martGotIP6(const IPAddress& ip6);
+  void markGotIPv6(const IPAddress& ip6);
 #endif
   void markLostIP();
   void markDisconnect(WiFiDisconnectReason reason);
