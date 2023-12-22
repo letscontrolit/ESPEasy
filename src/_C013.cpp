@@ -312,13 +312,13 @@ void C013_Receive(struct EventStruct *event) {
           //
           // If the node is not present in the nodes list (e.g. it had not announced itself in the last 10 minutes or announcement was missed)
           // Then we cannot be sure about its build.
-          bool mustMatchPluginID = false;
+          bool mustMatch = false;
           NodeStruct *sourceNode = Nodes.getNode(dataReply.sourceUnit);
           if (sourceNode != nullptr) {
-            mustMatchPluginID = sourceNode->build >= 20460;
+            mustMatch = sourceNode->build >= 20460;
           }
 
-          if (mustMatchPluginID && !dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
+          if (mustMatch && !dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
             // Mismatch in plugin ID from sending node
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
@@ -333,7 +333,7 @@ void C013_Receive(struct EventStruct *event) {
 
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
-            if (dataReply.matchesSensorType(sensorType)) {
+            if (!mustMatch || dataReply.matchesSensorType(sensorType)) {
               TaskValues_Data_t *taskValues = UserVar.getTaskValues_Data(dataReply.destTaskIndex);
 
               if (taskValues != nullptr) {
