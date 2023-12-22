@@ -3236,7 +3236,7 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_USE_IPV6
 # if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
-#  ifndef TESTING_FEATURE_USE_IPV6
+#  ifdef TESTING_FEATURE_USE_IPV6
 #   define FEATURE_USE_IPV6   1
 #  else 
 #   define FEATURE_USE_IPV6   0
