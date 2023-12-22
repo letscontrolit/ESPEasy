@@ -353,7 +353,14 @@ void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
 
   // Set local data
+  #if FEATURE_ETHERNET
+  {
+    MAC_address mac = NetworkMacAddress();
+    mac.get(thisNode.sta_mac);
+  }
+  #else
   WiFi.macAddress(thisNode.sta_mac);
+  #endif
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
     const bool addIP = NetworkConnected();
@@ -466,6 +473,12 @@ void NodesHandler::updateThisNode() {
     #endif
   }
   thisNode.distance = _distance;
+
+  #if FEATURE_USE_IPV6
+  thisNode.hasIPv4 = thisNode.IP() != INADDR_NONE;
+  thisNode.hasIPv6_mac_based_link_local = is_IPv6_link_local_from_MAC(thisNode.sta_mac);
+  thisNode.hasIPv6_mac_based_link_global = is_IPv6_global_from_MAC(thisNode.sta_mac);
+  #endif
 
   #ifdef USES_ESPEASY_NOW
   addNode(thisNode, thisTraceRoute);

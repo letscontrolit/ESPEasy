@@ -335,12 +335,42 @@ void handle_root() {
           html_TD();
         }
 
-        if (it->second.ip[0] != 0)
+        if (it->second.ip[0] != 0
+#if FEATURE_USE_IPV6
+            || it->second.hasIPv6_mac_based_link_local
+            || it->second.hasIPv6_mac_based_link_global
+#endif
+        )
         {
           html_add_wide_button_prefix();
 
           addHtml(F("http://"));
-          addHtml(formatIP(it->second.IP()));
+          IPAddress ip = it->second.IP();
+          #if FEATURE_USE_IPV6
+          bool isIPv6 = false;
+//          if (!it->second.hasIPv4) {
+            if (it->second.hasIPv6_mac_based_link_local) {
+              ip = it->second.IPv6_link_local();
+              if (ip.zone() != 0) {
+                // Clear the zone as it is of no use here.
+                ip = IPAddress(IPv6, &ip[0], 0);
+              }
+
+              isIPv6 = true;
+            } else if (it->second.hasIPv6_mac_based_link_global) {
+              ip = it->second.IPv6_global();
+              isIPv6 = true;
+            }
+  //        }
+          if (isIPv6) {
+            addHtml(wrap_String(formatIP(ip), '[', ']'));
+          } else {
+            addHtml(formatIP(ip));
+          }
+          #else
+          addHtml(formatIP(ip));
+          #endif
+          
           uint16_t port = it->second.webgui_portnumber;
 
           if ((port != 0) && (port != 80)) {
@@ -348,7 +378,7 @@ void handle_root() {
             addHtmlInt(port);
           }
           addHtml('\'', '>');
-          addHtml(formatIP(it->second.IP()));
+          addHtml(formatIP(ip));
           addHtml(F("</a>"));
         }
         html_TD();

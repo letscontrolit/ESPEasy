@@ -217,7 +217,69 @@ IP6Addresses_t NetworkAllIPv6() {
   return addresses;
 }
 
-#endif
+bool IPv6_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  if (ipv6 == IN6ADDR_ANY) { return false; }
+  int index_offset = 8;
+
+  for (int i = 0; i < 6; ++i, ++index_offset) {
+    ipv6[index_offset] = mac.mac[i];
+
+    if (i == 0) {
+      // invert bit 2
+      bitToggle(ipv6[index_offset], 1);
+    }
+
+    if (i == 2) {
+      ipv6[++index_offset] = 0xFF;
+      ipv6[++index_offset] = 0xFE;
+    }
+  }
+/*
+  addLog(LOG_LEVEL_INFO, strformat(
+     F("IPv6_from_MAC: Mac %s IP %s"),
+     mac.toString().c_str(),
+     ipv6.toString().c_str()
+     ));
+*/
+  return true;
+}
+
+bool is_IPv6_based_on_MAC(const MAC_address& mac, const IPAddress& ipv6)
+{
+  IPAddress tmp = ipv6;
+
+  if (IPv6_from_MAC(mac, tmp)) {
+    return ipv6 == tmp;
+  }
+  return false;
+}
+
+bool IPv6_link_local_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  ipv6 = NetworkLocalIP6();
+  return IPv6_from_MAC(mac, ipv6);
+}
+
+bool is_IPv6_link_local_from_MAC(const MAC_address& mac)
+{
+  return is_IPv6_based_on_MAC(mac, NetworkLocalIP6());
+}
+
+// Assume we're in the same subnet, thus use our own IPv6 global address
+bool IPv6_global_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  ipv6 = NetworkGlobalIP6();
+  return IPv6_from_MAC(mac, ipv6);
+}
+
+bool is_IPv6_global_from_MAC(const MAC_address& mac)
+{
+  return is_IPv6_based_on_MAC(mac, NetworkGlobalIP6());
+}
+
+#endif // if FEATURE_USE_IPV6
+
 
 
 MAC_address NetworkMacAddress() {

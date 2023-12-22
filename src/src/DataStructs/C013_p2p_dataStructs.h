@@ -14,7 +14,7 @@
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
 
-struct C013_SensorInfoStruct
+struct __attribute__((__packed__)) C013_SensorInfoStruct
 {
   C013_SensorInfoStruct() = default;
 
@@ -56,6 +56,8 @@ struct C013_SensorDataStruct
   Sensor_VType      sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
   TaskValues_Data_t values{};
 };
+
+constexpr unsigned int size = sizeof(C013_SensorDataStruct);
 
 #endif // ifdef USES_C013
 

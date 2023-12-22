@@ -24,7 +24,11 @@ bool EthernetEventData_t::EthConnectAllowed() const {
 }
 
 bool EthernetEventData_t::unprocessedEthEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }

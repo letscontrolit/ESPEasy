@@ -192,10 +192,16 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
     return;
   }
 
+  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+
+
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE, concat(F("C013 : Send UDP message to "), unit));
+    addLogMove(LOG_LEVEL_DEBUG_MORE, strformat(
+      F("C013 : Send UDP message to %d (%s)"), 
+      unit, 
+      remoteNodeIP.toString().c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -206,7 +212,6 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 
   FeedSW_watchdog();
-  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
 
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);

@@ -199,7 +199,11 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE,  concat(F("UDP  : Send UDP message to "), unit));
+    addLogMove(LOG_LEVEL_DEBUG_MORE,  strformat(
+      F("UDP  : Send UDP message to %d (%s)"), 
+      unit,
+      remoteNodeIP.toString().c_str()
+      ));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -297,7 +301,14 @@ void checkUDP()
           {
             packetBuffer[len] = 0;
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLogMove(LOG_LEVEL_DEBUG,  
+                strformat(F("UDP  : %s  Command: %s"), 
+                  formatIP(remoteIP).c_str(), 
+                  wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
+                  ));
+            }
             #endif
             ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
           }
@@ -324,14 +335,16 @@ void checkUDP()
                 NodeStruct received;
                 memcpy(&received, &packetBuffer[2], copy_length);
 
-                if (received.validate()) {
+                if (received.validate(remoteIP)) {
                   Nodes.addNode(received); // Create a new element when not present
 
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
                     addLogMove(LOG_LEVEL_DEBUG_MORE,  
-                      strformat(F("UDP  : %s,%s,%d"), 
+                      strformat(F("UDP  : %s (%d) %s,%s,%d"), 
+                        formatIP(remoteIP).c_str(), 
+                        received.unit,
                         received.STA_MAC().toString().c_str(), 
                         formatIP(received.IP()).c_str(), 
                         received.unit));
@@ -405,6 +418,14 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     IPAddress ip;
     return ip;
   }
+#if FEATURE_USE_IPV6
+  if (it->second.hasIPv6_mac_based_link_local) {
+    return it->second.IPv6_link_local();
+  }
+  if (it->second.hasIPv6_mac_based_link_global) {
+    return it->second.IPv6_global();
+  }
+#endif
   return it->second.IP();
 }
 
@@ -1890,3 +1911,4 @@ String joinUrlFilename(const String& url, String& filename)
 }
 
 #endif // if FEATURE_DOWNLOAD
+

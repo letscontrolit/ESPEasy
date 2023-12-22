@@ -229,10 +229,21 @@ bool WiFiConnected() {
   static uint32_t lastCheckedTime = 0;
   static bool lastState = false;
 
+#if FEATURE_USE_IPV6
+  if (!WiFiEventData.processedGotIP6) {
+#if FEATURE_ESPEASY_P2P
+    updateUDPport();
+#endif
+    WiFiEventData.processedGotIP6 = true;
+  }
+#endif
+
+
   if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
     // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
     return lastState;
   }
+
 
 
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
@@ -380,6 +391,12 @@ void WiFiConnectRelaxed() {
       if (!WiFiEventData.processedGotIP) {
         log += F(" gotIP");
       }
+#if FEATURE_USE_IPV6
+      if (!WiFiEventData.processedGotIP6) {
+        log += F(" gotIP6");
+      }
+#endif
+
       if (!WiFiEventData.processedDHCPTimeout) {
         log += F(" DHCP_t/o");
       }
