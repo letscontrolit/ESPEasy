@@ -307,7 +307,19 @@ void C013_Receive(struct EventStruct *event) {
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          if (!dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
+          // deviceNumber and sensorType were not present before build 2023-05-05. (build NR 20460)
+          // See: https://github.com/letscontrolit/ESPEasy/commit/cf791527eeaf31ca98b07c45c1b64e2561a7b041#diff-86b42dd78398b103e272503f05f55ee0870ae5fb907d713c2505d63279bb0321
+          // Thus should not be checked
+          //
+          // If the node is not present in the nodes list (e.g. it had not announced itself in the last 10 minutes or announcement was missed)
+          // Then we cannot be sure about its build.
+          bool mustMatchPluginID = false;
+          NodeStruct *sourceNode = Nodes.getNode(dataReply.sourceUnit);
+          if (sourceNode != nullptr) {
+            mustMatchPluginID = sourceNode->build >= 20460;
+          }
+
+          if (mustMatchPluginID && !dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
             // Mismatch in plugin ID from sending node
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);

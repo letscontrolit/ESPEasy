@@ -48,6 +48,10 @@ struct C013_SensorDataStruct
   uint8_t           destUnit        = 0;
   taskIndex_t       sourceTaskIndex = INVALID_TASK_INDEX;
   taskIndex_t       destTaskIndex   = INVALID_TASK_INDEX;
+
+  // deviceNumber and sensorType were not present before build 2023-05-05. (build NR 20460)
+  // See: https://github.com/letscontrolit/ESPEasy/commit/cf791527eeaf31ca98b07c45c1b64e2561a7b041#diff-86b42dd78398b103e272503f05f55ee0870ae5fb907d713c2505d63279bb0321
+  // Thus should not be checked
   pluginID_t        deviceNumber    = INVALID_PLUGIN_ID;
   Sensor_VType      sensorType      = Sensor_VType::SENSOR_TYPE_NONE;
   TaskValues_Data_t values{};
