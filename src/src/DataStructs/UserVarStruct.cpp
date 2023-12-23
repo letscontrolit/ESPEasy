@@ -451,6 +451,7 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
                                        Sensor_VType                    sensorType)
 {
   if (!Cache.hasFormula(taskIndex, varNr)) {
+    _rawData[taskIndex].set(varNr, value, sensorType);
     return true;
   }
 
