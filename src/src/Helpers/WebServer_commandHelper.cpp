@@ -50,9 +50,13 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
                command_e == ESPEasy_cmd_e::taskvaluesetandrun ||
                command_e == ESPEasy_cmd_e::taskvaluetoggle ||
                command_e == ESPEasy_cmd_e::let ||
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
                command_e == ESPEasy_cmd_e::logportstatus ||
+#endif
                command_e == ESPEasy_cmd_e::logentry ||
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
                command_e == ESPEasy_cmd_e::jsonportstatus ||
+#endif
                command_e == ESPEasy_cmd_e::rules) {
       sendOK     = true;
 
