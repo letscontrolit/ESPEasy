@@ -64,8 +64,10 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     } else {
       sendOK     = false;
     }
-    printToWeb = true;
-    handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
+    if (!handledCmd) {
+      printToWeb = true;
+      handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
+    }
   }
 
   if (handledCmd) {
