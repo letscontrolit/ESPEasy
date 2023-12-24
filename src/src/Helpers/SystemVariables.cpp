@@ -305,43 +305,50 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
   // as arument or index for other variables
   parse_pct_v_num_pct(s, useURLencode, 0);
 
-  SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(0);
-
-  int last_percent_pos = -1;
-
+  bool somethingReplaced = false;
   do {
-    enumval = SystemVariables::nextReplacementEnum(s, enumval, last_percent_pos);
+    int last_percent_pos = -1;
+    somethingReplaced = false;
+    SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(0);
+    do {
+      enumval = SystemVariables::nextReplacementEnum(s, enumval, last_percent_pos);
 
-    switch (enumval)
-    {
-      case SUNRISE: {
-        SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString);
-        break;
-      }
-      case SUNSET: {
-        SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString);
-        break;
-      }
-      case VARIABLE:
+      switch (enumval)
       {
-        // Should not be present anymore, but just in case...
-        parse_pct_v_num_pct(s, useURLencode, 0);
-  
-        break;
-      }
-      case UNKNOWN:
+        case SUNRISE: {
+          SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString);
+          somethingReplaced = true;
+          break;
+        }
+        case SUNSET: {
+          SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString);
+          somethingReplaced = true;
+          break;
+        }
+        case VARIABLE:
+        {
+          // Should not be present anymore, but just in case...
+          parse_pct_v_num_pct(s, useURLencode, 0);
+          somethingReplaced = true;
+    
+          break;
+        }
+        case UNKNOWN:
 
-        // Do not replace
-        break;
-      default:
-      {
-        const String value = getSystemVariable(enumval);
-        repl(SystemVariables::toString(enumval), value, s, useURLencode);
-        break;
+          // Do not replace
+          break;
+        default:
+        {
+          const String value = getSystemVariable(enumval);
+          repl(SystemVariables::toString(enumval), value, s, useURLencode);
+          somethingReplaced = true;
+          break;
+        }
       }
     }
+    while (enumval != SystemVariables::Enum::UNKNOWN);
   }
-  while (enumval != SystemVariables::Enum::UNKNOWN);
+  while (somethingReplaced);
 
   STOP_TIMER(PARSE_SYSVAR);
 }
