@@ -153,7 +153,7 @@ const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char 
   return return_see_serial(event);
 }
 
-const __FlashStringHelper * Command_logentry(struct EventStruct *event, const char *Line)
+String Command_logentry(struct EventStruct *event, const char *Line)
 {
   uint8_t level = LOG_LEVEL_INFO;
   // An extra optional parameter to set log level.
@@ -164,8 +164,9 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
     LOG_LEVEL_INFO
   #endif
     ) { level = event->Par2; }
-  addLog(level, tolerantParseStringKeepCase(Line, 2));
-  return return_command_success_flashstr();
+  String res = tolerantParseStringKeepCase(Line, 2);
+  addLog(level, res);
+  return res;
 }
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
