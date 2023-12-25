@@ -98,10 +98,11 @@ jobs:
           python tools/ci/build-and-archive.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Binaries-${{ matrix.env }}
+          name: zzBinaries-${{ matrix.env }} # Sort as last
           path: |
             bin
           if-no-files-found: ignore
+          # retention-days: 1 # Remove automatically after 1 day
 
   # Repackage separately for ESP82xx and ESP32
   repackage:
@@ -123,7 +124,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts/Binaries/
-          pattern: Binaries-*
+          pattern: zzBinaries-*
           merge-multiple: true
       - name: Prepare artifacts
         run: |
@@ -149,6 +150,8 @@ jobs:
               cd ../artifacts/Binaries
               find . -name "$spec" -exec mv {} ../../ESPEasy_dist_${cpu}/bin/ \;
               cd ../..
+              # List gathered bin files
+              ls -l ESPEasy_dist_${cpu}/bin/
             fi
           done
       # Each supported cpu has to be listed separately, but empty folders are ignored
@@ -156,59 +159,60 @@ jobs:
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32/*
+            ESPEasy_dist_ESP32/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32solo1/*
+            ESPEasy_dist_ESP32solo1/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32s2/*
+            ESPEasy_dist_ESP32s2/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32c3/*
+            ESPEasy_dist_ESP32c3/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32s3/*
+            ESPEasy_dist_ESP32s3/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32c2/*
+            ESPEasy_dist_ESP32c2/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32c6/*
+            ESPEasy_dist_ESP32c6/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32h2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP32h2/*
+            ESPEasy_dist_ESP32h2/
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
-            ESPEasy_dist_ESP82xx/*
+            ESPEasy_dist_ESP82xx/
           if-no-files-found: ignore
       # When successfully re-packaged, the original Binaries can be removed
       # comment below 4 lines to not remove the Binaries artifact after repackaging
       - uses: geekyeggo/delete-artifact@v4
         with:
-            token: ${{ secrets.GITHUB_TOKEN }}
-            name: Binaries-**
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: |
+            zzBinaries-**
