@@ -98,7 +98,7 @@ jobs:
           python tools/ci/build-and-archive.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Binaries-${{ matrix.runs-on }}
+          name: Binaries-${{ matrix.env }}
           path: |
             bin
           if-no-files-found: ignore
