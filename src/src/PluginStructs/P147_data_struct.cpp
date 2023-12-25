@@ -296,11 +296,11 @@ bool P147_data_struct::plugin_read(struct EventStruct *event) {
         if (_rawOnly)
         # endif // if P147_FEATURE_GASINDEXALGORITHM
         {
-          UserVar[event->BaseVarIndex] = _rawVOC;
+          UserVar.setFloat(event->TaskIndex, 0, _rawVOC);
         }
         # if P147_FEATURE_GASINDEXALGORITHM
         else {
-          UserVar[event->BaseVarIndex] = _vocIndex; // Use normalized VOC index
+          UserVar.setFloat(event->TaskIndex, 0, _vocIndex); // Use normalized VOC index
         }
         # endif // if P147_FEATURE_GASINDEXALGORITHM
 
@@ -310,11 +310,11 @@ bool P147_data_struct::plugin_read(struct EventStruct *event) {
           if (_rawOnly)
           # endif // if P147_FEATURE_GASINDEXALGORITHM
           {
-            UserVar[event->BaseVarIndex + 1] = _rawNOx;
+            UserVar.setFloat(event->TaskIndex, 1, _rawNOx);
           }
           # if P147_FEATURE_GASINDEXALGORITHM
           else {
-            UserVar[event->BaseVarIndex + 1] = _noxIndex; // Use normalized NOx index
+            UserVar.setFloat(event->TaskIndex, 1, _noxIndex); // Use normalized NOx index
           }
           # endif // if P147_FEATURE_GASINDEXALGORITHM
         }

@@ -165,7 +165,7 @@ public:
     {
     }
 
-    ~NeoPixelBus()
+    virtual ~NeoPixelBus()
     {
     }
 

@@ -143,9 +143,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_RGB_VALUENAME3_064));
 
         // Reset values
-        UserVar[event->BaseVarIndex + 0] = 0.0f;
-        UserVar[event->BaseVarIndex + 1] = 0.0f;
-        UserVar[event->BaseVarIndex + 2] = 0.0f;
+        UserVar.setFloat(event->TaskIndex, 0, 0.0f);
+        UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+        UserVar.setFloat(event->TaskIndex, 2, 0.0f);
       }
 
       if (P064_IS_GPL_SENSOR // Gesture/Proximity/ALS mode and default R/G/B values: Set new default names
@@ -157,9 +157,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_GPL_VALUENAME3_064));
 
         // Reset values
-        UserVar[event->BaseVarIndex + 0] = 0.0f;
-        UserVar[event->BaseVarIndex + 1] = 0.0f;
-        UserVar[event->BaseVarIndex + 2] = 0.0f;
+        UserVar.setFloat(event->TaskIndex, 0, 0.0f);
+        UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+        UserVar.setFloat(event->TaskIndex, 2, 0.0f);
       }
 
       {
@@ -316,7 +316,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         }
         # endif // ifndef BUILD_NO_DEBUG
 
-        UserVar[event->BaseVarIndex] = static_cast<float>(gesture);
+        UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(gesture));
         event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event); // Process immediately
@@ -337,11 +337,11 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           uint8_t proximity_data = 0;
           success                          = success && P064_data->sensor.readProximity(proximity_data);
-          UserVar[event->BaseVarIndex + 1] = static_cast<float>(proximity_data);
+          UserVar.setFloat(event->TaskIndex, 1, static_cast<float>(proximity_data));
 
           uint16_t ambient_light = 0;
           success                          = success && P064_data->sensor.readAmbientLight(ambient_light);
-          UserVar[event->BaseVarIndex + 2] = static_cast<float>(ambient_light);
+          UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(ambient_light));
         } else {
           uint16_t red_light   = 0;
           uint16_t green_light = 0;
@@ -349,9 +349,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           success = success && (P064_data->sensor.readRedLight(red_light) &&
                                 P064_data->sensor.readGreenLight(green_light) &&
                                 P064_data->sensor.readBlueLight(blue_light));
-          UserVar[event->BaseVarIndex + 0] = static_cast<float>(red_light);
-          UserVar[event->BaseVarIndex + 1] = static_cast<float>(green_light);
-          UserVar[event->BaseVarIndex + 2] = static_cast<float>(blue_light);
+          UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(red_light));
+          UserVar.setFloat(event->TaskIndex, 1, static_cast<float>(green_light));
+          UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(blue_light));
         }
       }
       break;

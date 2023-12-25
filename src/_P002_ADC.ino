@@ -129,25 +129,16 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((P002_data != nullptr) && P002_data->getValue(res_value, raw_value)) {
-        UserVar[event->BaseVarIndex] = res_value;
+        UserVar.setFloat(event->TaskIndex, 0, res_value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          static size_t logSize = 28;
-          log.reserve(logSize);
-          log += F("ADC  : Analog value: ");
-          log += raw_value;
-          log += F(" = ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          String log = strformat(
+            F("ADC  : Analog value: %d = %s"), 
+            raw_value,
+            formatUserVarNoCheck(event->TaskIndex, 0).c_str());
 
           if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
-            log += F(" (");
-            log += P002_data->getOversamplingCount();
-            log += F(" samples)");
-          }
-
-          if (logSize < log.length()) {
-            logSize = log.length();
+            log += strformat(F(" (%u samples)"), P002_data->getOversamplingCount());
           }
           addLogMove(LOG_LEVEL_INFO, log);
         }

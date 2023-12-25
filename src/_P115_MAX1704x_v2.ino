@@ -135,10 +135,10 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P115_data) && P115_data->initialized) {
-        UserVar[event->BaseVarIndex + 0] = P115_data->voltage;
-        UserVar[event->BaseVarIndex + 1] = P115_data->soc;
-        UserVar[event->BaseVarIndex + 2] = P115_data->alert;
-        UserVar[event->BaseVarIndex + 3] = P115_data->changeRate;
+        UserVar.setFloat(event->TaskIndex, 0, P115_data->voltage);
+        UserVar.setFloat(event->TaskIndex, 1, P115_data->soc);
+        UserVar.setFloat(event->TaskIndex, 2, P115_data->alert);
+        UserVar.setFloat(event->TaskIndex, 3, P115_data->changeRate);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;

@@ -24,9 +24,14 @@ unsigned int count_newlines(const String& str);
 
 String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
+String concat(const char& str, const String &val);
 
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -34,6 +39,10 @@ String concat(const __FlashStringHelper * str, const T &val) {
 
 template <typename T>
 String concat(const String& str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -41,6 +50,13 @@ String concat(const String& str, const T &val) {
 
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
+
+// Move the string to 2nd heap if present
+void move_special(String& dest, String&& source);
+String move_special(String&& source);
+
+// Try to reserve on the heap with the most space available
+bool reserve_special(String& str, size_t size);
 
 /*
 template <typename T>
@@ -321,6 +337,8 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
 \*********************************************************************************************/
 int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
 
+int GetCommandCode(const char* needle, const char* haystack);
+
 
 
 // escapes special characters in strings for use in html-forms
@@ -336,23 +354,23 @@ void   htmlStrongEscape(String& html);
 
 String URLEncode(const String& msg);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key1,
-             const __FlashStringHelper * key2,
+bool   repl(const __FlashStringHelper * key1,
+            const __FlashStringHelper * key2,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const String& key,
+bool   repl(const String& key,
             const String& val,
             String      & s,
             bool       useURLencode);

@@ -140,11 +140,11 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
               state--;
               pinMode(CONFIG_PIN1, OUTPUT);
               digitalWrite(CONFIG_PIN1, state);
-              UserVar[event->BaseVarIndex] = state;
+              UserVar.setFloat(event->TaskIndex, 0, state);
             }
             else {
-              UserVar[event->BaseVarIndex]     = x + 1;
-              UserVar[event->BaseVarIndex + 1] = state;
+              UserVar.setFloat(event->TaskIndex, 0, x + 1);
+              UserVar.setFloat(event->TaskIndex, 1, state);
             }
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {

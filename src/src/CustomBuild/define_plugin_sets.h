@@ -133,7 +133,7 @@ To create/register a plugin, you have to :
 
 #ifndef PLUGIN_BUILD_CUSTOM
     #ifndef FEATURE_SSDP
-        #define FEATURE_SSDP  1
+        #define FEATURE_SSDP  0
     #endif
     #ifndef FEATURE_TIMING_STATS
         #define FEATURE_TIMING_STATS  1
@@ -413,6 +413,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_MDNS 0
 
+    #ifdef FEATURE_SSDP
+      #undef FEATURE_SSDP
+    #endif
+    #define FEATURE_SSDP 0
+
     #ifndef DISABLE_SC16IS752_Serial
       #define DISABLE_SC16IS752_Serial
     #endif
@@ -429,6 +434,10 @@ To create/register a plugin, you have to :
 
     #ifndef CONTROLLER_SET_NONE
       #define CONTROLLER_SET_NONE
+    #endif
+
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
     #endif
 
     #define BUILD_MINIMAL_OTA
@@ -1736,6 +1745,7 @@ To create/register a plugin, you have to :
     #define USES_P099   // XPT2046 Touchscreen
    #endif
    #ifndef USES_P104
+    // Plugin adds over 40k to build size
     #define USES_P104   // MAX7219 dot matrix
    #endif
    #if !defined(USES_P109) && defined(ESP32)
@@ -2425,7 +2435,7 @@ To create/register a plugin, you have to :
 
 
 // Disable Homie plugin for now in the dev build to make it fit.
-#if defined(PLUGIN_BUILD_DEV) && defined(USES_C014)
+#if defined(PLUGIN_DISPLAY_COLLECTION) && defined(USES_C014) && defined(ESP8266)
   #undef USES_C014
 #endif
 
@@ -3147,7 +3157,7 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_SET_WIFI_TX_PWR
   #ifdef ESP32
-    #if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+    #if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
       #define FEATURE_SET_WIFI_TX_PWR   1
     #else
       // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
@@ -3198,11 +3208,7 @@ To create/register a plugin, you have to :
   #if defined(ESP8266) && defined(LIMIT_BUILD_SIZE)
     #define FEATURE_IMPROV 0
   #else
-    #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-      #define FEATURE_IMPROV 1
-    #else
-      #define FEATURE_IMPROV 0
-    #endif
+    #define FEATURE_IMPROV 1
   #endif
 #endif
 
@@ -3219,6 +3225,74 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+
+#ifndef FEATURE_CLEAR_I2C_STUCK
+  #ifdef ESP8266
+    #define FEATURE_CLEAR_I2C_STUCK 1
+  #endif
+  #ifdef ESP32
+    #if ESP_IDF_VERSION_MAJOR >= 5
+      // Messing with the I2C pin mode doesn't work well on IDF5.x
+      #define FEATURE_CLEAR_I2C_STUCK 0
+    #else
+      #define FEATURE_CLEAR_I2C_STUCK 1
+    #endif
+  #endif
+#endif
+
+
+#ifdef USES_P036 // Framed OLED
+// Double buffer allows to check for changed pixels and thus send less data to the display
+# ifndef OLEDDISPLAY_DOUBLE_BUFFER
+#  if defined(ESP32) || defined(USE_SECOND_HEAP)
+#   define OLEDDISPLAY_DOUBLE_BUFFER
+#  endif
+# endif
+#endif
+
+// Incompatible plugins with ESP32-C2/C6
+#if defined(ESP32C2) || defined(ESP32C6)
+ #define DISABLE_NEOPIXEL_PLUGINS 1
+#endif
+
+#ifndef FEATURE_USE_IPV6
+# if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
+#  ifdef TESTING_FEATURE_USE_IPV6
+#   define FEATURE_USE_IPV6   1
+#  else 
+#   define FEATURE_USE_IPV6   0
+#  endif
+# else 
+#  define FEATURE_USE_IPV6   0
+# endif
+#endif
+
+
+#if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
+  // Disable NeoPixel plugins
+  #ifdef USES_P038
+  #undef USES_P038
+  #endif
+  #ifdef USES_P041
+  #undef USES_P041
+  #endif
+  #ifdef USES_P042
+  #undef USES_P042
+  #endif
+  #ifdef USES_P070
+  #undef USES_P070
+  #endif
+  #ifdef USES_P128
+  #undef USES_P128
+  #endif
+  #ifdef USES_P131
+  #undef USES_P131
+  #endif
+#endif
+
+
+  
+  
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
   #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)
     #define FEATURE_ALTERNATIVE_CDN_URL 0 // No need to configure custom CDN url when all content is included in build

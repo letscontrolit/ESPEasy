@@ -2,6 +2,23 @@
 
 #include "../DataStructs/TimingStats.h"
 #include "../Helpers/RulesMatcher.h"
+#include "../Helpers/StringConverter.h"
+
+
+RulesEventCache_element::RulesEventCache_element(
+  const String& filename, size_t pos, const String& event, const String& action)
+    : _filename(filename), _posInFile(pos), _event(event), _action(action)
+  {}
+
+
+RulesEventCache_element::RulesEventCache_element(
+  const String& filename, size_t pos, String&& event, String&& action) :
+  _posInFile(pos)
+{
+  move_special(_filename, String(filename));
+  move_special(_event, std::move(event));
+  move_special(_action, std::move(action));  
+}
 
 
 void RulesEventCache::clear()
@@ -20,6 +37,11 @@ bool RulesEventCache::addLine(const String& line, const String& filename, size_t
   String event, action;
 
   if (getEventFromRulesLine(line, event, action)) {
+    // Do not emplace on the 2nd heap
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     _eventCache.emplace_back(filename, pos, std::move(event), std::move(action));
     return true;
   }

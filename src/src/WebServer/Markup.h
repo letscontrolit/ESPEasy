@@ -343,7 +343,9 @@ void addPinSelect(PinSelectPurpose purpose,
 enum class AdcPinSelectPurpose {
   TouchOnly,
   ADC_Touch,
+#if HAS_HALL_EFFECT_SENSOR
   ADC_Touch_HallEffect,
+#endif
   ADC_Touch_Optional
 };
 void addADC_PinSelect(AdcPinSelectPurpose purpose,

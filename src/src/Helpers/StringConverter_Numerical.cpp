@@ -2,6 +2,8 @@
 
 #include "../Helpers/Numerical.h"
 
+#include "../Helpers/StringConverter.h"
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -9,7 +11,7 @@
 // FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(const char *string)
 {
-  unsigned int temp = 0;
+  uint32_t temp = 0;
 
   validUIntFromString(string, temp);
 
@@ -41,8 +43,10 @@ String toString(const float& value, unsigned int decimalPlaces)
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
+
   char buf[decimalPlaces + 42];
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  String sValue;
+  move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
 /*
 #else
@@ -144,7 +148,8 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (nullptr == buf) {
     return F("nan");
   }
-  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  String res;
+  move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
   free(buf);
 
