@@ -138,6 +138,14 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
       success = false;
       return F("CALCULATION_ERROR");
     }
+    #ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
+      Line,
+      taskIndex,
+      varNr, result, sensorType));
+    #endif
+
     UserVar.set(taskIndex, varNr, result, sensorType);
   } else  {
     // TODO: Get Task description and var name
@@ -280,7 +288,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
     return F("TASK_NOT_ENABLED");
   }
 
-  unsigned int msecFromNow = 0;
+  uint32_t msecFromNow = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     if (validUIntFromString(par3, msecFromNow)) {
@@ -301,7 +309,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     return F("TASK_NOT_ENABLED");
   }
-  unsigned int unixTime = 0;
+  uint32_t unixTime = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     validUIntFromString(par3, unixTime);

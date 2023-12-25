@@ -12,7 +12,8 @@
 #endif // ifdef ESP32
 
 struct ResetFactoryDefaultPreference_struct {
-  ResetFactoryDefaultPreference_struct(uint32_t preference = 0);
+  ResetFactoryDefaultPreference_struct();
+  ResetFactoryDefaultPreference_struct(uint32_t preference);
 
   void set(uint32_t preference);
 

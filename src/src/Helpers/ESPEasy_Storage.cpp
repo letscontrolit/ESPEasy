@@ -31,6 +31,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -41,6 +42,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -276,14 +278,18 @@ bool BuildFixes()
 
   if (Settings.Build < 20101)
   {
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix reset Pin"));
+    #endif
     Settings.Pin_Reset = -1;
   }
 
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    #endif
     Settings.UseRTOSMultitasking       = false;
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
@@ -685,7 +691,7 @@ void afterloadSettings() {
   applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
-  setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
+  setCpuFrequencyMhz(Settings.EcoPowerMode() ? getCPU_MinFreqMHz() : getCPU_MaxFreqMHz());
   #endif
 
   if (!Settings.UseRules) {
@@ -905,13 +911,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
   String   tmpString;
-  {
-    #ifdef USE_SECOND_HEAP
-    // Store each string in 2nd heap
-    HeapSelectIram ephemeral;
-    #endif
-    tmpString.reserve(estimatedStringSize);
-  }
+  tmpString.reserve(estimatedStringSize);
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -930,13 +930,10 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            #ifdef USE_SECOND_HEAP
-            // Store each string in 2nd heap
-            HeapSelectIram ephemeral;
-            #endif
+            move_special(strings[stringCount], std::move(tmpString));
 
-            strings[stringCount] = tmpString;
-            tmpString = String();
+            // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
+            // We're appending per byte, so better prefer speed for short lived objects
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
@@ -951,7 +948,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
-    strings[stringCount] = tmpString;
+    move_special(strings[stringCount], std::move(tmpString));
   }
   return result;
 }
@@ -1097,6 +1094,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
       err = checkTaskSettings(TaskIndex);
     }
 #endif
+    UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   } 
 #ifndef LIMIT_BUILD_SIZE
   else {
@@ -1156,6 +1154,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
+  UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
@@ -1908,7 +1907,7 @@ int getCacheFileCountFromFilename(const String& fname) {
   if (endpos < 0) { return -1; }
 
   //  String digits = fname.substring(startpos + 1, endpos);
-  int result;
+  int32_t result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
     return result;

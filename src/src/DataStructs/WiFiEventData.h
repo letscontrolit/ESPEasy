@@ -70,6 +70,9 @@ struct WiFiEventData_t {
 
 
   void markGotIP();
+#if FEATURE_USE_IPV6
+  void markGotIPv6(const IPAddress& ip6);
+#endif
   void markLostIP();
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
@@ -127,6 +130,11 @@ struct WiFiEventData_t {
   IPAddress dns0_cache;
   IPAddress dns1_cache;
 
+  #if FEATURE_USE_IPV6
+  IPAddress unprocessed_IP6;
+  #endif
+
+
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.
   LongTermTimer processingDisconnect;
@@ -136,6 +144,9 @@ struct WiFiEventData_t {
   bool processedConnect          = true;
   bool processedDisconnect       = true;
   bool processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  bool processedGotIP6           = true;
+  #endif
   bool processedDHCPTimeout      = true;
   bool processedConnectAPmode    = true;
   bool processedDisconnectAPmode = true;

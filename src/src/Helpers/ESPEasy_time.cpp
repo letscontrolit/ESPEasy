@@ -24,6 +24,7 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
@@ -307,9 +308,9 @@ unsigned long ESPEasy_time::now() {
     calcSunRiseAndSet();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Local time: ");
-      log += getDateTimeString('-', ':', ' ');
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("Local time: %s"),
+       getDateTimeString('-', ':', ' ').c_str()));
     }
     {
       // Notify plugins the time has been set.
@@ -392,8 +393,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     nextSyncTime = sysTime + HwRandom(20, 60);
   } else  {
     // Have to do a lookup each time, since the NTP pool always returns another IP
-    String ntpServerName = String(HwRandom(0, 3));
-    ntpServerName += F(".pool.ntp.org");
+    const String ntpServerName = strformat(
+      F("%d.pool.ntp.org"), HwRandom(0, 3));
     resolveHostByName(ntpServerName.c_str(), timeServerIP);
     log += ntpServerName;
 
@@ -420,7 +421,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   const int NTP_PACKET_SIZE = 48;          // NTP time is in the first 48 bytes of message
-  uint8_t   packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
+  uint8_t   packetBuffer[NTP_PACKET_SIZE]{}; // buffer to hold incoming & outgoing packets
 
   log += F(" queried");
 #ifndef BUILD_NO_DEBUG
@@ -429,7 +430,6 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   while (udp.parsePacket() > 0) { // discard any previously received packets
   }
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
   packetBuffer[0]  = 0b11100011; // LI, Version, Mode
   packetBuffer[1]  = 0;          // Stratum, or type of clock
   packetBuffer[2]  = 6;          // Polling Interval
@@ -464,10 +464,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // Leap-Indicator: unknown (clock unsynchronized)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("NTP  : NTP host (");
-          log += formatIP(timeServerIP);
-          log += F(") unsynchronized");
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, strformat(
+            F("NTP  : NTP host (%s) unsynchronized"),
+            formatIP(timeServerIP).c_str()));
         }
 
         if (!useNTPpool) {
@@ -529,6 +528,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         String log = F("NTP  : NTP replied: delay ");
         log += total_delay;
         log += F(" mSec");
+#ifndef LIMIT_BUILD_SIZE
         log += F(" Accuracy increased by ");
         double fractpart, intpart;
         fractpart = modf(unixTime_d, &intpart);
@@ -539,6 +539,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         }
         log += static_cast<int>(fractpart * 1000.0);
         log += F(" msec");
+#endif
         addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
@@ -671,7 +672,7 @@ int ESPEasy_time::getSecOffset(const String& format) {
     return 0;
   }
 
-  int value;
+  int32_t value;
 
   if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
     return 0;

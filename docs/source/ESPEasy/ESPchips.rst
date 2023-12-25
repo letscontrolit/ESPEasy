@@ -71,8 +71,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2021/09
       - 2023/05
       - 2023/05
-      - 
-      - 
+      - 2023/11
+      - 2023/11
       - 
    *  - Introduction
       - 2014
@@ -319,7 +319,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - YES
    *  - Hall
       - 0
-      - 1
+      - 1 (removed in ESP-IDF5)
       - 0
       - 0
       - 0
@@ -328,7 +328,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
    *  - Ethernet
       - 0
-      - 1
+      - 1 (RMII)
       - 0
       - 0
       - 0
@@ -424,6 +424,7 @@ Sources:
 * `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
 * `Espressif ESP32-xx modules overview <https://www.espressif.com/en/products/modules>`_
+* `Espressif Product overview SoCs <https://www.espressif.com/en/products/socs>`_
 
 Datasheets
 ==========
@@ -521,11 +522,12 @@ The only advantages of the ESP32-S2 compared to its predecessor are:
 - 2 extra ADC capable pins
 - 4 extra touch capable pins
 - USB OTG (not yet supported in ESPEasy)
+- Native USB (supported only for ESPEasy Serial console)
 - LCD interface (not yet supported in ESPEasy)
 - Camera interface (not yet supported in ESPEasy)
 - Extra hardware accelerated encryption functions (not yet supported in ESPEasy)
 - Supposedly lower power consumption (not yet verified)
-- Time of Flight (TOF) support that would (theoretically) allow indoor positioning
+- Time of Flight (TOF) support that would (theoretically) allow indoor positioning (not yet supported in ESPEasy)
 
 
 ESP32-S3
@@ -677,22 +679,28 @@ Due to the RISC-V core used in the ESP32-C3, this is a very 'snappy' device and 
 ESP32-C2/ESP8684
 ================
 
+Added: 2023/11/10
+
 The ESP32-C2 is only available with embedded flash and can only be found labelled as "ESP8684".
 
 It looks like it is aimed to be used in single purpose devices, due to its low GPIO count and only requiring a bare minimum of external parts.
 
+Espressif suggests this SoC as replacement for the ESP8266/ESP8285
+
 It is yet unclear whether the ESP8684 and ESP32-C2 are exchangable, like with the ESP32-C3 and the ESP8685.
 
-.. note:: Not yet supported (as of May 2023)
+.. note:: No official support from Arduino (as of Nov 2023), preliminary support  in ESPEasy.
 
 ESP32-C6
 ========
+
+Added: 2023/11/10
 
 The ESP32-C6 seems to be aimed at being used as a gateway for the new Thread protocol and Wi-Fi.
 
 It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz.
 
-.. note:: Not yet supported (as of May 2023)
+.. note:: Labelled as "unstable" by the Arduino team (as of Nov 2023), preliminary support in ESPEasy
 
 ESP32-H2
 ========

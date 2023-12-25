@@ -31,7 +31,7 @@
 # include "../Helpers/Convert.h"
 # include "../Helpers/ESPEasyStatistics.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
+# include "../Helpers/Hardware_device_info.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/Networking.h"
@@ -120,6 +120,11 @@ void handle_sysinfo_json() {
   json_number(F("rssi"),        String(WiFi.RSSI()));
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
+#if FEATURE_USE_IPV6
+  json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
+  json_prop(F("ip6_global"),     getValue(LabelType::IP6_GLOBAL));
+#endif
+
   json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
   json_prop(F("gw"),            getValue(LabelType::GATEWAY));
   json_prop(F("dns1"),          getValue(LabelType::DNS_1));
@@ -173,7 +178,7 @@ void handle_sysinfo_json() {
   json_number(F("xtal_freq"),    getValue(LabelType::ESP_CHIP_XTAL_FREQ));
   json_number(F("abp_freq"),     getValue(LabelType::ESP_CHIP_APB_FREQ));
 #endif
-  json_prop(F("board"),          getValue(LabelType::ESP_BOARD_NAME));
+  json_prop(F("board"),          getValue(LabelType::BOARD_NAME));
   json_close();
 
   json_open(false, F("storage"));
@@ -314,10 +319,10 @@ void handle_sysinfo_basicInfo() {
 
   if (wdcounter > 0)
   {
-    addHtml(String(getCPUload()));
-    addHtml(F("% (LC="));
-    addHtmlInt(getLoopCountPerSec());
-    addHtml(')');
+    addHtml(strformat(
+      F("%.2f%% (LC=%d)"),
+      getCPUload(),
+      getLoopCountPerSec()));
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
@@ -325,9 +330,8 @@ void handle_sysinfo_basicInfo() {
   addRowLabel(F("Boot"));
   {
     addHtml(getLastBootCauseString());
-    addHtml(F(" ("));
-    addHtmlInt(static_cast<uint32_t>(RTC.bootCounter));
-    addHtml(')');
+    addHtml(strformat(
+      F(" (%d)"), static_cast<uint32_t>(RTC.bootCounter)));
   }
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
@@ -445,6 +449,11 @@ void handle_sysinfo_Network() {
 # endif 
       LabelType::IP_CONFIG,
       LabelType::IP_ADDRESS_SUBNET,
+#if FEATURE_USE_IPV6
+      LabelType::IP6_LOCAL,
+      LabelType::IP6_GLOBAL,
+//      LabelType::IP6_ALL_ADDRESSES,
+#endif
       LabelType::GATEWAY,
       LabelType::CLIENT_IP,
       LabelType::DNS,
@@ -480,6 +489,17 @@ void handle_sysinfo_Network() {
     addHtml(WiFi.BSSIDstr());
     addHtml(')');
   } else addHtml('-');
+
+  #ifdef ESP32
+  const int64_t tsf_time = WiFi_get_TSF_time();
+  if (tsf_time > 0) {
+    addRowLabel(F("WiFi TSF time"));
+    // Split it while printing, so we're not loosing a lot of decimals in the float conversion
+    addHtml(secondsToDayHourMinuteSecond(tsf_time / 1000000));
+    addHtml('.');    
+    addHtmlInt(tsf_time % 1000000);
+  }
+  #endif
 
   addRowLabel(getLabel(LabelType::CHANNEL));
   if (showWiFiConnectionInfo) {
@@ -623,12 +643,12 @@ void handle_sysinfo_ESP_Board() {
 
 
   addRowLabel(LabelType::ESP_CHIP_ID);
-  {
-    addHtmlInt(getChipId());
-    addHtml(' ', '(');
-    addHtml(formatToHex(getChipId(), 6));
-    addHtml(')');
-  }
+
+  const uint32_t chipID = getChipId();
+  addHtml(strformat(
+    F("%d (%s)"), 
+    chipID, 
+    formatToHex(chipID, 6).c_str()));
 
   addRowLabelValue(LabelType::ESP_CHIP_FREQ);
   addHtml(F(" MHz"));
@@ -648,7 +668,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
 #   endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
-  addRowLabelValue(LabelType::ESP_BOARD_NAME);
+  addRowLabelValue(LabelType::BOARD_NAME);
 }
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
@@ -657,9 +677,7 @@ void handle_sysinfo_ESP_Board() {
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
-  uint32_t flashChipId = getFlashChipId();
-
-  if (flashChipId != 0) {
+  if (getFlashChipId() != 0) {
     addRowLabel(LabelType::FLASH_CHIP_ID);
 
 
@@ -710,22 +728,18 @@ void handle_sysinfo_Storage() {
   addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
-  {
-    addHtmlInt(RTC.flashDayCounter);
-    addHtml(F(" daily / "));
-    addHtmlInt(static_cast<int>(RTC.flashCounter));
-    addHtml(F(" boot"));
-  }
+  addHtml(strformat(
+    F("%d daily / %d boot"),
+    RTC.flashDayCounter,
+    static_cast<int>(RTC.flashCounter)));
 
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
-    {
-      addHtmlInt(getSketchSize() / 1024);
-      addHtml(F(" kB ("));
-      addHtmlInt(getFreeSketchSpace() / 1024);
-      addHtml(F(" kB free)"));
-    }
+    addHtml(strformat(
+      F("%d kB (%d kB free)"),
+      getSketchSize() / 1024,
+      getFreeSketchSpace() / 1024));
 
     uint32_t maxSketchSize;
     bool     use2step;
@@ -734,12 +748,10 @@ void handle_sysinfo_Storage() {
     # endif // if defined(ESP8266)
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
-    {
-      addHtmlInt(maxSketchSize / 1024);
-      addHtml(F(" kB ("));
-      addHtmlInt(maxSketchSize);
-      addHtml(F(" bytes)"));
-    }
+    addHtml(strformat(
+      F("%d kB (%d bytes)"),
+      maxSketchSize / 1024,
+      maxSketchSize));
 
     # if defined(ESP8266)
     addRowLabel(LabelType::OTA_POSSIBLE);
@@ -751,12 +763,11 @@ void handle_sysinfo_Storage() {
   }
 
   addRowLabel(LabelType::FS_SIZE);
-  {
-    addHtmlInt(SpiffsTotalBytes() / 1024);
-    addHtml(F(" kB ("));
-    addHtmlInt(SpiffsFreeSpace() / 1024);
-    addHtml(F(" kB free)"));
-  }
+  addHtml(strformat(
+    F("%d kB (%d kB free)"),
+    SpiffsTotalBytes() / 1024,
+    SpiffsFreeSpace() / 1024));
+
   # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtmlInt(SpiffsPagesize());
@@ -794,13 +805,19 @@ void handle_sysinfo_Storage() {
     addHtml(F("(offset / size per item / index)"));
 
     for (int st = 0; st < static_cast<int>(SettingsType::Enum::SettingsType_MAX); ++st) {
-      SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+      const SettingsType::Enum settingsType = static_cast<SettingsType::Enum>(st);
+      #if !FEATURE_NOTIFIER
+      if (settingsType == SettingsType::Enum::NotificationSettings_Type) {
+        continue;
+      }
+      #endif
       html_TR_TD();
       addHtml(SettingsType::getSettingsTypeString(settingsType));
       html_BR();
       addHtml(SettingsType::getSettingsFileName(settingsType));
       html_TD();
       getStorageTableSVG(settingsType);
+      delay(1);
     }
   }
 

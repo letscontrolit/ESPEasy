@@ -24,6 +24,8 @@ public:
   void applyTransformation(uint16_t r, uint16_t g, uint16_t b, float *rc, float *gc, float *bc);
   void applyTransformation(float nr, float ng, float nb, float *rc, float *gc, float *bc);
 
+  static String generate_cal_id(int i, int j);
+
   Adafruit_TCS34725           tcs;
 
   tcsTransformationSettings_t TransformationSettings;

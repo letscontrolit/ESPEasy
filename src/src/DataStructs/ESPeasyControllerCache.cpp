@@ -33,6 +33,10 @@ bool ControllerCache_struct::flush() {
 
 void ControllerCache_struct::init() {
   if (_RTC_cache_handler == nullptr) {
+    # ifdef USE_SECOND_HEAP
+//    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
     if (_RTC_cache_handler != nullptr) {
       _RTC_cache_handler->init();

@@ -9,11 +9,7 @@ public:
 
   MAC_address() = default;
 
-  MAC_address(const uint8_t new_mac[6])
-  {
-    memcpy(mac, new_mac, 6);
-  }
-
+  MAC_address(const uint8_t new_mac[6]);
 
   MAC_address(const MAC_address& other);
 
@@ -39,15 +35,9 @@ public:
   // Returns false if the given string has no valid formatted mac address.
   bool set(const char *string);
 
-  void set(const uint8_t other[6])
-  {
-    memcpy(mac, other, 6);
-  }
+  void set(const uint8_t other[6]);
 
-  void get(uint8_t mac_out[6]) const
-  {
-    memcpy(mac_out, mac, 6);
-  }
+  void get(uint8_t mac_out[6]) const;
 
   bool   all_zero() const;
 

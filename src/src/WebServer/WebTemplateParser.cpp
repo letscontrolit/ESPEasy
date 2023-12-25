@@ -23,31 +23,59 @@
 #endif // ifndef MENU_INDEX_MAIN_VISIBLE
 
 #ifndef MENU_INDEX_CONFIG_VISIBLE
+#ifdef WEBSERVER_CONFIG
   # define MENU_INDEX_CONFIG_VISIBLE true
+#else
+  # define MENU_INDEX_CONFIG_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_CONFIG_VISIBLE
 
 #ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+#ifdef WEBSERVER_CONTROLLERS
   # define MENU_INDEX_CONTROLLERS_VISIBLE true
+#else
+  # define MENU_INDEX_CONTROLLERS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
 
 #ifndef MENU_INDEX_HARDWARE_VISIBLE
+#ifdef WEBSERVER_HARDWARE
   # define MENU_INDEX_HARDWARE_VISIBLE true
+#else
+  # define MENU_INDEX_HARDWARE_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
 
 #ifndef MENU_INDEX_DEVICES_VISIBLE
+#ifdef WEBSERVER_DEVICES
   # define MENU_INDEX_DEVICES_VISIBLE true
+#else
+  # define MENU_INDEX_DEVICES_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_DEVICES_VISIBLE
 
 #ifndef MENU_INDEX_RULES_VISIBLE
+#ifdef WEBSERVER_RULES
   # define MENU_INDEX_RULES_VISIBLE true
+#else
+  # define MENU_INDEX_RULES_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_RULES_VISIBLE
 
 #ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+#if FEATURE_NOTIFIER
   # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
+#else
+  # define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
 
 #ifndef MENU_INDEX_TOOLS_VISIBLE
+#ifdef WEBSERVER_TOOLS
   # define MENU_INDEX_TOOLS_VISIBLE true
+#else
+  # define MENU_INDEX_TOOLS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_TOOLS_VISIBLE
 
 
@@ -267,14 +295,17 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if (equals(varName, F("css")))
       {
         serve_favicon();
+/*
+        bool defaultCssServed = false;
 
-        // if (MENU_INDEX_SETUP == navMenuIndex) {
-        //  // Serve embedded CSS
-        //  serve_CSS_inline();
-        // } else {
-        serve_CSS(CSSfiles_e::ESPEasy_default);
-
-        // }
+        if (MENU_INDEX_SETUP == navMenuIndex) {
+          // Serve embedded CSS
+          defaultCssServed = serve_CSS_inline();
+        }
+        if (!defaultCssServed) {
+*/
+          serve_CSS(CSSfiles_e::ESPEasy_default);
+//        }
     #if FEATURE_RULES_EASY_COLOR_CODE
         if (!Settings.DisableRulesCodeCompletion() &&
           (MENU_INDEX_RULES == navMenuIndex ||

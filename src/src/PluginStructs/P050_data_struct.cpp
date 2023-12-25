@@ -69,4 +69,9 @@ bool P050_data_struct::saveSettings(taskIndex_t taskIndex) {
   return true;
 }
 
+String P050_data_struct::generate_cal_id(int i, int j) {
+  return strformat(F("cal_%c_%d"), static_cast<char>('a' + i), j);
+}
+
+
 #endif // ifdef USES_P050

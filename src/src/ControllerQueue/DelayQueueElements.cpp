@@ -18,7 +18,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
 
   if (MQTTDelayHandler == nullptr) {
     # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
 
     MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct;
