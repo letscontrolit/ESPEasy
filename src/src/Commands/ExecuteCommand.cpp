@@ -28,35 +28,12 @@ bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Lin
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
 }
 
-bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
-{
-  bool tryInternal = false;
-
-  {
-    String cmd;
-
-    if (GetArgv(Line, cmd, 1)) {
-      tryInternal = cmd.equalsIgnoreCase(F("event"));
-    }
-  }
-
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
-}
 
 bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
 {
   return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
 }
 
-bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
-}
-
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(taskIndex, source, Line, true, false, false);
-}
 
 bool ExecuteCommand(taskIndex_t            taskIndex,
                     EventValueSource::Enum source,

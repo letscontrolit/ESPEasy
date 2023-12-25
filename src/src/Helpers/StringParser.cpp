@@ -749,7 +749,8 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int arg
 /********************************************************************************************\
    Get int from command argument (argc = 0 => command)
  \*********************************************************************************************/
-int parseCommandArgumentInt(const String& string, unsigned int argc)
+int parseCommandArgumentInt(const String& string, unsigned int argc,
+                            int errorValue)
 {
   int value = 0;
 
@@ -758,7 +759,7 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
     String TmpStr;
 
     if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
-      value = CalculateParam(TmpStr);
+      value = CalculateParam(TmpStr, errorValue);
     }
   }
   return value;

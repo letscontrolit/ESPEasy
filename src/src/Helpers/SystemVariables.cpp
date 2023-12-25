@@ -250,46 +250,57 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   while (__pos__ != -1) { (S((T_str), s, useURLencode)); __pos__ = s.indexOf(T_str, __pos__ + 1);}
 
 // Parse %vN% to replace ESPEasy variables
-void parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
+bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
 {
   const String key_prefix = F("%v");
   int v_index = s.indexOf(key_prefix, start_pos);
 
+  bool somethingReplaced = false;
+
   while ((v_index != -1)) {
-    // Check for:
-    // - Calculations indicated with leading '='
-    // - nested indirections like %v%v1%%
-    if ((s.charAt(v_index + 2) == '=') ||
-        (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v')) {
-      // FIXME TD-er: This may lead to stack overflow if we do an awful lot of nested user variables
-      parse_pct_v_num_pct(s, useURLencode, v_index + 2);
-    }
+    // Exclude "%valname% or %value%"
+    // FIXME TD-er: Must find a more elegant way to fix this
+    if (!isalpha(s.charAt(v_index + 2))) {
+      // Check for:
+      // - Calculations indicated with leading '='
+      // - nested indirections like %v%v1%%
+      if ((s.charAt(v_index + 2) == '=') ||
+          (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v')) {
+        // FIXME TD-er: This may lead to stack overflow if we do an awful lot of nested user variables
+        if (parse_pct_v_num_pct(s, useURLencode, v_index + 2)) {
+          somethingReplaced = true;
+        }
+      }
 
-    uint32_t i{};
-    // variable index may contain a calculation
-    // Calculations are enforced by a leading '='
-    // like: %v=1+%v2%%
-    const int pos_closing_pct = s.indexOf('%', v_index + 1);
-    const String arg = s.substring(v_index + 2, pos_closing_pct);
-    i = CalculateParam(arg);
-    //addLog(LOG_LEVEL_INFO, strformat(F("calc parse: %s => %u"), arg.c_str(), i));
-    if (i >= 0) {
-      // Need to replace the entire arg and not just the 'i'
-      const String key = strformat(F("%%v%s%%"), arg.c_str());
+      uint32_t i{};
+      // variable index may contain a calculation
+      // Calculations are enforced by a leading '='
+      // like: %v=1+%v2%%
+      const int pos_closing_pct = s.indexOf('%', v_index + 1);
+      const String arg = s.substring(v_index + 2, pos_closing_pct);
+      i = CalculateParam(arg, -1);
+      //addLog(LOG_LEVEL_INFO, strformat(F("calc parse: %s => %u"), arg.c_str(), i));
+      if (i >= 0) {
+        // Need to replace the entire arg and not just the 'i'
+        const String key = strformat(F("%%v%s%%"), arg.c_str());
 
-      if (s.indexOf(key) != -1) {
-        const bool trimTrailingZeros = true;
-        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
-        #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        const String value = floatToString(getCustomFloatVar(i), 6, trimTrailingZeros);
-        #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        repl(key, value, s, useURLencode);
+        if (s.indexOf(key) != -1) {
+          const bool trimTrailingZeros = true;
+          #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+          #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          const String value = floatToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+          #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          if (repl(key, value, s, useURLencode)) {
+            somethingReplaced = true;
+          }
+        }
       }
     }
     v_index = s.indexOf(key_prefix, v_index + 1); // Find next occurance
     //addLog(LOG_LEVEL_INFO, strformat(F("parse: %s"), s.c_str()));
   }
+  return somethingReplaced;
 }
 
 void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
@@ -301,11 +312,12 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
     return;
   }
 
+  bool somethingReplaced = false;
+
   // Parse ESPEasy user variables first as they might be combined 
   // as arument or index for other variables
   parse_pct_v_num_pct(s, useURLencode, 0);
 
-  bool somethingReplaced = false;
   do {
     int last_percent_pos = -1;
     somethingReplaced = false;
@@ -328,8 +340,8 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
         case VARIABLE:
         {
           // Should not be present anymore, but just in case...
-          parse_pct_v_num_pct(s, useURLencode, 0);
-          somethingReplaced = true;
+          if (parse_pct_v_num_pct(s, useURLencode, 0))
+            somethingReplaced = true;
     
           break;
         }
@@ -339,9 +351,15 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
           break;
         default:
         {
-          const String value = getSystemVariable(enumval);
-          repl(SystemVariables::toString(enumval), value, s, useURLencode);
-          somethingReplaced = true;
+          const String sysvar_str(SystemVariables::toString(enumval));
+          if (s.indexOf(sysvar_str) != -1) {
+            if (repl(
+              sysvar_str, 
+              getSystemVariable(enumval), 
+              s, 
+              useURLencode))
+              somethingReplaced = true;
+          }
           break;
         }
       }

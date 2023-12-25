@@ -138,6 +138,14 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
       success = false;
       return F("CALCULATION_ERROR");
     }
+    #ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
+      Line,
+      taskIndex,
+      varNr, result, sensorType));
+    #endif
+
     UserVar.set(taskIndex, varNr, result, sensorType);
   } else  {
     // TODO: Get Task description and var name

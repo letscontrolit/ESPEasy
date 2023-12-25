@@ -1136,46 +1136,50 @@ String URLEncode(const String& msg)
   return encodedMsg;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode)
 {
   const char c = pgm_read_byte(key);
   if (s.indexOf(c) != -1) 
-    repl(String(key), val, s, useURLencode);
+    return repl(String(key), val, s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
           const char* val,
           String      & s,
           bool       useURLencode)
 {
   const char c = pgm_read_byte(key);
   if (s.indexOf(c) != -1) 
-    repl(String(key), String(val), s, useURLencode);
+    return repl(String(key), String(val), s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key1,
+bool repl(const __FlashStringHelper * key1,
            const __FlashStringHelper * key2,
            const char* val,
            String      & s,
            bool       useURLencode)
 {
-  repl(key1, val, s, useURLencode);
-  repl(key2, val, s, useURLencode);
+  bool somethingReplaced = false;
+  if (repl(key1, val, s, useURLencode)) somethingReplaced = true;
+  if (repl(key2, val, s, useURLencode)) somethingReplaced = true;
+  return somethingReplaced;
 }
 
 
-void repl(const String& key, const String& val, String& s, bool useURLencode)
+bool repl(const String& key, const String& val, String& s, bool useURLencode)
 {
+  if (s.indexOf(key) == -1) { return false; }
   if (useURLencode) {
-    // URLEncode does take resources, so check first if needed.
-    if (s.indexOf(key) == -1) { return; }
     s.replace(key, URLEncode(val));
   } else {
     s.replace(key, val);
   }
+  return true;
 }
 
 void parseSpecialCharacters(String& s, bool useURLencode)
@@ -1380,8 +1384,8 @@ struct ConvertArgumentData {
   bool  URLencode;
 };
 
-void repl(ConvertArgumentData& data, const String& repl_str) {
-  repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
+bool repl(ConvertArgumentData& data, const String& repl_str) {
+  return repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
 }
 
 bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData& data) {

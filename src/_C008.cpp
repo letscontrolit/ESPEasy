@@ -94,7 +94,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
-          const String formattedValue = formatUserVar(event, x, isvalid);
+          const String formattedValue = formatUserVar(event, x , isvalid);
 
           if (isvalid) {
             // First store in a temporary string, so we can use move_special to allocate on the best heap
@@ -102,11 +102,22 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             txt += '/';
             txt += pubname;
             parseSingleControllerVariable(txt, event, x, true);
+
+# ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, strformat(
+                F("C008 : pubname: %s value: %s"),
+                pubname.c_str(),
+                formattedValue.c_str()
+              ));
+            }
+#endif
             txt.replace(F("%value%"), formattedValue);
             move_special(element.txt[x], std::move(txt));
 # ifndef BUILD_NO_DEBUG
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+              addLog(LOG_LEVEL_DEBUG_MORE, concat(F("C008 : "), element.txt[x]));
+            }
 # endif // ifndef BUILD_NO_DEBUG
           }
         }

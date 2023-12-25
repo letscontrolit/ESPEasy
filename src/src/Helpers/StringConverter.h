@@ -350,23 +350,23 @@ void   htmlStrongEscape(String& html);
 
 String URLEncode(const String& msg);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key1,
-             const __FlashStringHelper * key2,
+bool   repl(const __FlashStringHelper * key1,
+            const __FlashStringHelper * key2,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const String& key,
+bool   repl(const String& key,
             const String& val,
             String      & s,
             bool       useURLencode);
