@@ -27,6 +27,15 @@
 void handle_unprocessedEthEvents() {
   if (EthEventData.unprocessedEthEvents()) {
     // Process disconnect events before connect events.
+#if FEATURE_USE_IPV6
+    if (!EthEventData.processedGotIP6) {
+#if FEATURE_ESPEASY_P2P
+      updateUDPport();
+#endif
+      EthEventData.processedGotIP6 = true;
+    }
+#endif
+
     if (!EthEventData.processedDisconnect) {
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));

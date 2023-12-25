@@ -109,6 +109,11 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
     easySerial = nullptr;
   }
 
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
+
   gps        = new (std::nothrow) TinyGPSPlus();
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx, false, 512);
 
@@ -434,7 +439,7 @@ bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
 }
 
 # if FEATURE_PLUGIN_STATS
-bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type)
+bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type) const
 {
   bool somethingAdded = false;
 
@@ -446,7 +451,7 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
       somethingAdded = true;
     }
 
-    bool   show_custom = false;
+    bool show_custom = false;
     ESPEASY_RULES_FLOAT_TYPE dist_p2p{};
     ESPEASY_RULES_FLOAT_TYPE dist_stddev{};
 
@@ -454,22 +459,25 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
       switch (query_type) {
         case P082_query::P082_QUERY_LAT:
           show_custom = true;
+
           // Compute distance between min and max peak
-          dist_p2p            = gps->distanceBetween(
+          dist_p2p = gps->distanceBetween(
             stats->getPeakLow(),  _last_lng,
             stats->getPeakHigh(), _last_lng);
-          dist_stddev         = gps->distanceBetween(
+          dist_stddev = gps->distanceBetween(
             _last_lat,                            _last_lng,
             _last_lat + stats->getSampleStdDev(), _last_lng);
           break;
         case P082_query::P082_QUERY_LONG:
           show_custom = true;
+
           // Compute distance between min and max peak
-          dist_p2p            = gps->distanceBetween(
+          dist_p2p = gps->distanceBetween(
             _last_lat, stats->getPeakLow(),
             _last_lat, stats->getPeakHigh());
+
           // Compute distance for std.dev
-          dist_stddev         = gps->distanceBetween(
+          dist_stddev = gps->distanceBetween(
             _last_lat, _last_lng,
             _last_lat, _last_lng + stats->getSampleStdDev());
           break;
@@ -515,7 +523,38 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
   return somethingAdded;
 }
 
-# endif // if FEATURE_PLUGIN_STATS
+#  if FEATURE_CHART_JS
+void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct *event)
+{
+  taskVarIndex_t stats_long = INVALID_TASKVAR_INDEX;
+  taskVarIndex_t stats_lat  = INVALID_TASKVAR_INDEX;
 
+  for (uint8_t var_index = 0; var_index < P082_NR_OUTPUT_VALUES; ++var_index) {
+    const uint8_t pconfigIndex = var_index + P082_QUERY1_CONFIG_POS;
+    const P082_query query     = static_cast<P082_query>(PCONFIG(pconfigIndex));
 
-#endif // ifdef USES_P082
+    switch (query) {
+      case P082_query::P082_QUERY_LONG:
+        stats_long = var_index;
+        break;
+      case P082_query::P082_QUERY_LAT:
+        stats_lat = var_index;
+        break;
+      default:
+        break;
+    }
+  }
+
+  plot_ChartJS_scatter(
+    stats_long,
+    stats_lat,
+    F("positionscatter"),
+    { F("Position Scatter Plot") },
+    { F("Coordinates"), F("rgb(255, 99, 132)") },
+    500,
+    500);
+}
+
+#  endif // if FEATURE_CHART_JS
+# endif  // if FEATURE_PLUGIN_STATS
+#endif   // ifdef USES_P082

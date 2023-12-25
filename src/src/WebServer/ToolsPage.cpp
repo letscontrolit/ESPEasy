@@ -12,7 +12,7 @@
 
 #include "../../ESPEasy-Globals.h"
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
@@ -98,6 +98,9 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+  # ifdef WEBSERVER_SETUP
+  addWideButtonPlusDescription(F("setup"),                F("Setup WiFi"), F("WiFi setup page"));
+  #endif // ifdef WEBSERVER_SETUP
 
   # ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
@@ -161,10 +164,16 @@ void handle_tools() {
   }
 # endif     // if defined(ESP8266)
 
+  # if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
   addFormSubHeader(F("Filesystem"));
+  # endif // if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
 
+  # ifdef WEBSERVER_FILELIST
   addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
+  # endif // ifdef WEBSERVER_FILELIST
+  # ifdef WEBSERVER_FACTORY_RESET
   addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
+  # endif // ifdef WEBSERVER_FACTORY_RESET
   # if FEATURE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
   # endif // if FEATURE_SETTINGS_ARCHIVE

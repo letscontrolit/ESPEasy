@@ -173,7 +173,7 @@ bool P120_data_struct::read_data(struct EventStruct *event) const
         case valueType::NR_ValueTypes:
           break;
       }
-      UserVar[event->BaseVarIndex + i] = value;
+      UserVar.setFloat(event->TaskIndex, i,  value);
     }
   }
   return true;

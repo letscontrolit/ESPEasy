@@ -1,7 +1,7 @@
 #include "../ESPEasyCore/ESPEasy_Console.h"
 
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -56,7 +56,13 @@ EspEasy_Console_t::EspEasy_Console_t()
   config.rxBuffSize    = 256;
   config.txBuffSize    = buffSize;
 
-  _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
+  }
 
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -76,6 +82,7 @@ EspEasy_Console_t::EspEasy_Console_t()
 void EspEasy_Console_t::reInit()
 {
   updateActiveTaskUseSerial0();
+  bool somethingChanged = false;
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
 
@@ -114,6 +121,7 @@ void EspEasy_Console_t::reInit()
       _fallbackSerial._serial->end();
       delete _fallbackSerial._serial;
       _fallbackSerial._serial = nullptr;
+      somethingChanged = true;
     }
   }
 # endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
@@ -128,6 +136,7 @@ void EspEasy_Console_t::reInit()
       _mainSerial._serial->end();
       delete _mainSerial._serial;
       _mainSerial._serial = nullptr;
+      somethingChanged = true;
     }
 
     _console_serial_port  = Settings.console_serial_port;
@@ -136,10 +145,15 @@ void EspEasy_Console_t::reInit()
   }
 
   if ((_mainSerial._serial == nullptr) && mustHaveSerial) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     _mainSerial._serial = new (std::nothrow) ESPeasySerial(
       static_cast<ESPEasySerialPort>(_console_serial_port),
       _console_serial_rxpin,
       _console_serial_txpin);
+    somethingChanged = true;
   }
 # if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -148,6 +162,7 @@ void EspEasy_Console_t::reInit()
       ESPEasySerialPort::serial0,
       SOC_RX0,
       SOC_TX0);
+    somethingChanged = true;
   }
 # endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -164,7 +179,9 @@ void EspEasy_Console_t::reInit()
     _mainSerial._serialWriteBuffer.clear();
   }
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  begin(Settings.BaudRate);
+  if (somethingChanged) {
+    begin(Settings.BaudRate);
+  }
 }
 
 void EspEasy_Console_t::begin(uint32_t baudrate)

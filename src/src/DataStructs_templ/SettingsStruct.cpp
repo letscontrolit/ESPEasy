@@ -17,6 +17,12 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/gpio.h>
+#endif
+
+
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -716,7 +722,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 
   index_high = gpio_pin - maxStates;
 
-#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+#  if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C3)|| defined(ESP32C6)
 
   // These can all store in the PinBootStates_ESP32 array
   return (index_high < maxStatesesp32);

@@ -7,23 +7,17 @@
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
 # include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
+# include "../Helpers/StringConverter.h"
 
 C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount)
 {
   _controller_idx = event->ControllerIndex;
   _taskIndex      = event->TaskIndex;
   # if FEATURE_PACKED_RAW_DATA
-    #  ifdef USE_SECOND_HEAP
-
-  //    HeapSelectIram ephemeral;
-    #  endif // ifdef USE_SECOND_HEAP
-
-  packed = getPackedFromPlugin(event, sampleSetCount);
+  move_special(packed, getPackedFromPlugin(event, sampleSetCount));
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("C018 queue element: ");
-    log += packed;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("C018 queue element: "), packed));
   }
   # endif // if FEATURE_PACKED_RAW_DATA
 }

@@ -111,8 +111,8 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       hdc1080_rawhum = hdc1080_msb << 8 | hdc1080_lsb;
       hdc1080_hum    = (static_cast<float>(hdc1080_rawhum) / 65536.0f) * 100.0f;
 
-      UserVar[event->BaseVarIndex]     = hdc1080_temp;
-      UserVar[event->BaseVarIndex + 1] = hdc1080_hum;
+      UserVar.setFloat(event->TaskIndex, 0, hdc1080_temp);
+      UserVar.setFloat(event->TaskIndex, 1, hdc1080_hum);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("HDC10xx: Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));

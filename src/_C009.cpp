@@ -113,11 +113,8 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
   // Make an educated guess on the actual length, based on earlier requests.
   static size_t expectedJsonLength = 100;
   {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    // Reserve on the 2nd heap
-    if (!jsonString.reserve(expectedJsonLength)) {
+    // Reserve on the heap with most space
+    if (!reserve_special(jsonString, expectedJsonLength)) {
       // Not enough free memory
       return false;
     }

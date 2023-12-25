@@ -11,6 +11,7 @@
 
 // Max. 15 char namespace for ESPEasy Factory Default settings
 # define FACTORY_DEFAULT_NVS_NAMESPACE      "ESPEasyFacDef"
+# define WIFI_CONNECTION_NVS_NAMESPACE      "ESPEasyWiFi"
 
 
 class ESPEasy_NVS_Helper {

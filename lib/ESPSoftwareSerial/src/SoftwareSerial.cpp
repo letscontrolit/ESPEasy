@@ -20,11 +20,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
-#ifndef USES_LATEST_SOFTWARE_SERIAL_LIBRARY
-#define USES_LATEST_SOFTWARE_SERIAL_LIBRARY 1
-#endif
-#if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
-
 #include "SoftwareSerial.h"
 #include <Arduino.h>
 
@@ -36,7 +31,7 @@ uint32_t UARTBase::m_savedPS = 0;
 portMUX_TYPE UARTBase::m_interruptsMux = portMUX_INITIALIZER_UNLOCKED;
 #endif
 
-__attribute__((always_inline)) inline void IRAM_ATTR UARTBase::disableInterrupts()
+ALWAYS_INLINE_ATTR inline void IRAM_ATTR UARTBase::disableInterrupts()
 {
 #ifndef ESP32
     m_savedPS = xt_rsil(15);
@@ -45,7 +40,7 @@ __attribute__((always_inline)) inline void IRAM_ATTR UARTBase::disableInterrupts
 #endif
 }
 
-__attribute__((always_inline)) inline void IRAM_ATTR UARTBase::restoreInterrupts()
+ALWAYS_INLINE_ATTR inline void IRAM_ATTR UARTBase::restoreInterrupts()
 {
 #ifndef ESP32
     xt_wsr_ps(m_savedPS);
@@ -309,7 +304,7 @@ void IRAM_ATTR UARTBase::writePeriod(
             GPOS = m_txBitMask;
         }
 #else
-        *m_txReg |= m_txBitMask;
+        *m_txReg = *m_txReg | m_txBitMask;
 #endif
         m_periodDuration += dutyCycle;
         if (offCycle || (withStopBit && !m_invert)) {
@@ -331,7 +326,7 @@ void IRAM_ATTR UARTBase::writePeriod(
             GPOC = m_txBitMask;
         }
 #else
-        *m_txReg &= ~m_txBitMask;
+        *m_txReg = *m_txReg & ~m_txBitMask;
 #endif
         m_periodDuration += offCycle;
         if (withStopBit && m_invert) lazyDelay();
@@ -611,6 +606,7 @@ void UARTBase::onReceive(Delegate<void(), void*>&& handler) {
     restoreInterrupts();
 }
 
+#if __GNUC__ < 12
 // The template member functions below must be in IRAM, but due to a bug GCC doesn't currently
 // honor the attribute. Instead, it is possible to do explicit specialization and adorn
 // these with the IRAM attribute:
@@ -621,5 +617,5 @@ template void IRAM_ATTR delegate::detail::DelegateImpl<void*, void>::operator()(
 template size_t IRAM_ATTR circular_queue<uint32_t, UARTBase*>::available() const;
 template bool IRAM_ATTR circular_queue<uint32_t, UARTBase*>::push(uint32_t&&);
 template bool IRAM_ATTR circular_queue<uint32_t, UARTBase*>::push(const uint32_t&);
+#endif // __GNUC__ < 12
 
-#endif

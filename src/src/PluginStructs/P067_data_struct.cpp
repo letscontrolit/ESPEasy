@@ -56,8 +56,8 @@ bool P067_data_struct::init(struct EventStruct *event) {
     log += concat(F(" DOUT="), static_cast<int>(_pinDOUT));
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  UserVar[event->BaseVarIndex]     = 0.0f; // Reset output
-  UserVar[event->BaseVarIndex + 1] = 0.0f;
+  UserVar.setFloat(event->TaskIndex, 0, 0.0f); // Reset output
+  UserVar.setFloat(event->TaskIndex, 1, 0.0f);
 
   if (isInitialized()) {
     pinMode(_pinSCL, OUTPUT); // Keep regular pinMode functions for initialization
@@ -88,8 +88,8 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
       float value{};
       if (OversamplingChanA.get(value)) {
-        UserVar[event->BaseVarIndex + 2] = value;
-        UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] + _offsetChanA; // Offset
+        UserVar.setFloat(event->TaskIndex, 2, value);
+        UserVar.setFloat(event->TaskIndex, 0, UserVar[event->BaseVarIndex + 2] + _offsetChanA); // Offset
 
         log += formatUserVarNoCheck(event->TaskIndex, 0);
 
@@ -101,7 +101,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
           if (adc1 != adc2) {
             const float normalized = static_cast<float>(UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            UserVar.setFloat(event->TaskIndex, 0, normalized * (out2 - out1) + out1);
 
             log += F(" = ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
@@ -121,8 +121,8 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
       float value{};
       if (OversamplingChanB.get(value)) {
-        UserVar[event->BaseVarIndex + 3] = value;
-        UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex + 3] + _offsetChanB; // Offset
+        UserVar.setFloat(event->TaskIndex, 3, value);
+        UserVar.setFloat(event->TaskIndex, 1, UserVar[event->BaseVarIndex + 3] + _offsetChanB); // Offset
 
         log += formatUserVarNoCheck(event->TaskIndex, 1);
 
@@ -134,7 +134,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
           if (adc1 != adc2) {
             const float normalized = (UserVar[event->BaseVarIndex + 1] - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex + 1] = normalized * (out2 - out1) + out1;
+            UserVar.setFloat(event->TaskIndex, 1, normalized * (out2 - out1) + out1);
 
             log += F(" = ");
             log += formatUserVarNoCheck(event->TaskIndex, 1);

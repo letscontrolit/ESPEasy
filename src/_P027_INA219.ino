@@ -193,9 +193,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         float current = P027_data->getCurrent_mA() / 1000;
         float power   = voltage * current;
 
-        UserVar[event->BaseVarIndex]     = voltage;
-        UserVar[event->BaseVarIndex + 1] = current;
-        UserVar[event->BaseVarIndex + 2] = power;
+        UserVar.setFloat(event->TaskIndex, 0, voltage);
+        UserVar.setFloat(event->TaskIndex, 1, current);
+        UserVar.setFloat(event->TaskIndex, 2, power);
 
         const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
         String     log;
@@ -210,7 +210,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           case 0:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = voltage;
+            UserVar.setFloat(event->TaskIndex, 0, voltage);
 
             if (mustLog) {
               log += F(": Voltage: ");
@@ -221,7 +221,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           case 1:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = current;
+            UserVar.setFloat(event->TaskIndex, 0, current);
 
             if (mustLog) {
               log += F(" Current: ");
@@ -232,7 +232,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           case 2:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = power;
+            UserVar.setFloat(event->TaskIndex, 0, power);
 
             if (mustLog) {
               log += F(" Power: ");
@@ -243,9 +243,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           case 3:
           {
             event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
-            UserVar[event->BaseVarIndex]     = voltage;
-            UserVar[event->BaseVarIndex + 1] = current;
-            UserVar[event->BaseVarIndex + 2] = power;
+            UserVar.setFloat(event->TaskIndex, 0, voltage);
+            UserVar.setFloat(event->TaskIndex, 1, current);
+            UserVar.setFloat(event->TaskIndex, 2, power);
 
             if (mustLog) {
               log += F(": Voltage: ");

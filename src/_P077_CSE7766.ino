@@ -220,7 +220,6 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         P077_QUERY4 = static_cast<uint8_t>(P077_QUERY4_DFLT);
       }
 
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
