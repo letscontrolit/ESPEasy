@@ -81,7 +81,7 @@ void P094_filter::fromString(String str)
             break;
           case 1: // Meter type
           {
-            int metertype = mBus_packet_wildcard_metertype;
+            int32_t metertype = mBus_packet_wildcard_metertype;
 
             if (validIntFromString(tmp, metertype)) {
               _filter._meterType = metertype;
@@ -90,7 +90,7 @@ void P094_filter::fromString(String str)
           }
           case 2: // Serial
           {
-            int serial = mBus_packet_wildcard_serial;
+            int32_t serial = mBus_packet_wildcard_serial;
 
             if (validIntFromString(tmp, serial)) {
               _filter._serialNr = serial;

@@ -28,6 +28,11 @@ bool NodeStruct::valid() const {
   return true;
 }
 
+bool NodeStruct::validate() {
+  IPAddress tmp(0, 0, 0, 0);
+  return validate(tmp);
+}
+
 bool NodeStruct::validate(const IPAddress& remoteIP) {
   if (build < 20107) {
     // webserverPort introduced in 20107

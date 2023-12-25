@@ -201,9 +201,10 @@ bool ESPEasy_now_handler_t::do_begin()
 
   setAP(true);
   # ifdef ESP32
-
   // We're running a dummy AP, so don't run DHCP server.
+  # if ESP_IDF_VERSION_MAJOR < 5
   tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
+  #endif
   # endif // ifdef ESP32
 
   // Make sure AP will not be turned off.

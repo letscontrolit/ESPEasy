@@ -41,7 +41,11 @@ extern std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestRece
 
 #ifdef ESP32
 #ifdef USES_ESPEASY_NOW
+# if ESP_IDF_VERSION_MAJOR>=5
+extern std::list<wifi_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#else
 extern std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#endif
 #endif
 #endif
 

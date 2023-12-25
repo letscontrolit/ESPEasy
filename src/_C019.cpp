@@ -157,7 +157,7 @@ bool do_process_c019_delay_queue(int controller_number, const Queue_element_base
   if (Sensor_VType::SENSOR_TYPE_ULONG == data.sensorType) {
     data.addString(element.event.String2);
   } else {
-    const TaskValues_Data_t * taskValues = UserVar.getTaskValues_Data(taskIndex);
+    const TaskValues_Data_t * taskValues = UserVar.getRawTaskValues_Data(taskIndex);
     if (taskValues != nullptr) {
       data.addBinaryData((uint8_t *)(taskValues), sizeof(TaskValues_Data_t));
     }

@@ -40,7 +40,7 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
   return true;
 }
 
-bool WiFiEventData_t::unprocessedWifiEvents() const {
+bool WiFiEventData_t::unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
 #if FEATURE_USE_IPV6
       && processedGotIP6
