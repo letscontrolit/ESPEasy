@@ -47,8 +47,8 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
       break;
 
     default:
-      UserVar[event->BaseVarIndex]     = NAN;
-      UserVar[event->BaseVarIndex + 1] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      UserVar.setFloat(event->TaskIndex, 1, NAN);
       break;
   }
 
@@ -351,8 +351,8 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     return false; 
   }
 
-  UserVar[event->BaseVarIndex]     = temperature;
-  UserVar[event->BaseVarIndex + 1] = humidity;
+  UserVar.setFloat(event->TaskIndex, 0, temperature);
+  UserVar.setFloat(event->TaskIndex, 1, humidity);
   P005_log(event, P005_logNr::P005_info_temperature);
   P005_log(event, P005_logNr::P005_info_humidity);
   return true;

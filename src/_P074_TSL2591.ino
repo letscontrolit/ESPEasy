@@ -190,10 +190,10 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
 
           const float lux = P074_data->tsl.calculateLuxf(full, ir); // get LUX
 
-          UserVar[event->BaseVarIndex + 0] = lux;
-          UserVar[event->BaseVarIndex + 1] = full;
-          UserVar[event->BaseVarIndex + 2] = visible;
-          UserVar[event->BaseVarIndex + 3] = ir;
+          UserVar.setFloat(event->TaskIndex, 0, lux);
+          UserVar.setFloat(event->TaskIndex, 1, full);
+          UserVar.setFloat(event->TaskIndex, 2, visible);
+          UserVar.setFloat(event->TaskIndex, 3, ir);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log;

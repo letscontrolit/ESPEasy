@@ -144,8 +144,6 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
       char   ipString[IP_BUFF_SIZE_P101]   = {0};
       char   macString[MAC_BUFF_SIZE_P101] = {0};
-      String msgStr;
-
       addFormSubHeader(""); // Blank line, vertical space.
       addFormHeader(F("Default Settings"));
 
@@ -154,28 +152,24 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
       safe_strncpy(macString, strings[1], MAC_BUFF_SIZE_P101);
       addFormTextBox(F("MAC Address"), getPluginCustomArgName(1), macString, MAC_ADDR_SIZE_P101);
-      msgStr  = F("Format Example, ");
-      msgStr += F(MAC_STR_EXP_P101);
-      addFormNote(msgStr);
+      addFormNote(F("Format Example, " MAC_STR_EXP_P101));
       addFormSubHeader(""); // Blank line, vertical space.
 
       safe_strncpy(ipString, strings[0], IP_BUFF_SIZE_P101);
       addFormTextBox(F("IPv4 Address"), getPluginCustomArgName(0), ipString, IP_ADDR_SIZE_P101);
       addFormNumericBox(F("UDP Port"), F(FORM_PORT_P101), GET_UDP_PORT_P101, 0, PORT_MAX_P101);
-      msgStr  = F("Typical Installations use IP Address ");
-      msgStr += F(IP_STR_DEF_P101);
-      msgStr += F(", Port ");
-      msgStr += PORT_DEF_P101;
-      addFormNote(msgStr);
+      addFormNote(
+        concat(F("Typical Installations use IP Address "),  F(IP_STR_DEF_P101)) +
+        concat(F(", Port "),  PORT_DEF_P101));
 
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      char   ipString[IP_BUFF_SIZE_P101]   = {0};
-      char   macString[MAC_BUFF_SIZE_P101] = {0};
-      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101] = {};
+      char   ipString[IP_BUFF_SIZE_P101] {0};
+      char   macString[MAC_BUFF_SIZE_P101] {0};
+      char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101] {};
       String errorStr;
       String msgStr;
       const String wolStr = F(LOG_NAME_P101);
@@ -210,18 +204,16 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
         strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
 
-        msgStr    = F("Provided IP Invalid (Using Default). ");
-        errorStr += msgStr;
-        msgStr    = wolStr + msgStr;
+        errorStr += F("Provided IP Invalid (Using Default). ");
+        msgStr    = concat(wolStr, F("Provided IP Invalid (Using Default). "));
         msgStr   += '[';
         msgStr   += F(IP_STR_DEF_P101);
         msgStr   += ']';
         addLogMove(LOG_LEVEL_INFO, msgStr);
       }
       else if (!validateIp(ipString)) { // Unexpected IP Address value. Leave as-is, but Warn User.
-        msgStr    = F("WARNING, Please Review IP Address. ");
-        errorStr += msgStr;
-        msgStr    = wolStr + msgStr;
+        errorStr += F("WARNING, Please Review IP Address. ");
+        msgStr    = concat(wolStr, F("WARNING, Please Review IP Address. "));
         msgStr   += '[';
         msgStr   += ipString;
         msgStr   += ']';
@@ -239,14 +231,12 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       if (strlen(macString) == 0) { // MAC Address missing, use default value.
         strcpy_P(macString, String(F(MAC_STR_DEF_P101)).c_str());
 
-        msgStr    = F("MAC Address Not Provided, Populated with Zero Values. ");
-        errorStr += msgStr;
-        addLog(LOG_LEVEL_INFO, wolStr + msgStr);
+        errorStr += F("MAC Address Not Provided, Populated with Zero Values. ");
+        addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("MAC Address Not Provided, Populated with Zero Values. ")));
       }
       else if (!validateMac(macString)) { // Suspicious MAC Address. Leave as-is, but warn User.
-        msgStr    = F("ERROR, MAC Address Invalid. ");
-        errorStr += msgStr;
-        msgStr    = wolStr + msgStr;
+        errorStr += F("ERROR, MAC Address Invalid. ");
+        msgStr    = concat(wolStr, F("ERROR, MAC Address Invalid. "));
         msgStr   += '[';
         msgStr   += macString;
         msgStr   += ']';
@@ -327,15 +317,13 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
         if (paramPort.isEmpty()) {
           LoadTaskSettings(event->TaskIndex);
-          int portNumber = GET_UDP_PORT_P101; // Get default Port from user settings.
-          paramPort = portNumber;
+          paramPort = GET_UDP_PORT_P101; // Get default Port from user settings.
         }
 
         // Validate the MAC Address.
         if (!validateMac(paramMac)) {
           parse_error = true;
-          msgStr      = wolStr;
-          msgStr     += F("Error, MAC Addr Invalid [");
+          msgStr      = concat(wolStr, F("Error, MAC Addr Invalid ["));
           msgStr     += paramMac;
           msgStr     += ']';
           addLogMove(LOG_LEVEL_INFO, msgStr);
@@ -344,8 +332,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         // Validate IP Address.
         if (!validateIp(paramIp)) {
           parse_error = true;
-          msgStr      = wolStr;
-          msgStr     += F("Error, IP Addr Invalid [");
+          msgStr      = concat(wolStr, F("Error, IP Addr Invalid ["));
           msgStr     += paramIp;
           msgStr     += ']';
           addLogMove(LOG_LEVEL_INFO, msgStr);
@@ -354,8 +341,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         // Validate UDP Port.
         if (!validatePort(paramPort)) {
           parse_error = true;
-          msgStr      = wolStr;
-          msgStr     += F("Error, Port Invalid [");
+          msgStr      = concat(wolStr, F("Error, Port Invalid ["));
           msgStr     += paramPort;
           msgStr     += ']';
           addLogMove(LOG_LEVEL_INFO, msgStr);
@@ -364,19 +350,17 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         // If no errors we can send Magic Packet.
         if (parse_error == true) {
           msgStr = F("CMD Syntax Error");
-          addLog(LOG_LEVEL_INFO, wolStr + msgStr);
+          addLogMove(LOG_LEVEL_INFO, concat(wolStr, msgStr));
           msgStr += F(" <br>");
           SendStatus(event, msgStr); // Reply (echo) to sender. This will print message on browser.
         }
         else {                               // No parsing errors, Send Magic Packet (Wake Up the MAC).
-          msgStr  = wolStr;
-          msgStr += F("MAC= ");
-          msgStr += paramMac;
-          msgStr += F(", IP= ");
-          msgStr += paramIp;
-          msgStr += F(", Port= ");
-          msgStr += paramPort;
-          addLogMove(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, strformat(
+            F("%sMAC= %s, IP= %s, Port= %s"),
+            wolStr.c_str(),
+            paramMac.c_str(),
+            paramIp.c_str(),
+            paramPort.c_str()));
 
           // Send Magic Packet.
           if (WiFi.status() == WL_CONNECTED) {
@@ -387,23 +371,14 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
             // WOL.setRepeat(1, 0); // One Magic Packet, No Repeats. (Library default)
 
             if (!WOL.sendMagicPacket(paramMac, paramPort.toInt())) {
-              msgStr  = wolStr;
-              msgStr += F("Error, Magic Packet Failed (check parameters)");
-              addLogMove(LOG_LEVEL_INFO, msgStr);
+              addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("Error, Magic Packet Failed (check parameters)")));
             }
           }
           else {
-            msgStr  = wolStr;
-            msgStr += F("Error, WiFi Off-Line");
-            addLogMove(LOG_LEVEL_INFO, msgStr);
+            addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("Error, WiFi Off-Line")));
           }
         }
       }
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
       break;
     }
   }
@@ -415,23 +390,19 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 // Arg: task index
 // Returns: NAME_SAFE, NAME_MISSING, or NAME_USAFE.
 uint8_t safeName(taskIndex_t index) {
-  uint8_t safeCode = NAME_SAFE;
   String  devName  = getTaskDeviceName(index);
 
+  if (devName.isEmpty()) {
+    return NAME_MISSING;
+  }
   devName.toLowerCase();
 
-  if (devName.isEmpty()) {
-    safeCode = NAME_MISSING;
+  if (equals(devName, F("reboot")) ||
+      equals(devName, F("reset"))) {
+    return NAME_UNSAFE;
   }
 
-  if (equals(devName, F("reboot"))) {
-    safeCode = NAME_UNSAFE;
-  }
-  else if (equals(devName, F("reset"))) {
-    safeCode = NAME_UNSAFE;
-  }
-
-  return safeCode;
+  return NAME_SAFE;
 }
 
 // ************************************************************************************************

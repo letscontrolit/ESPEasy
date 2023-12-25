@@ -61,13 +61,14 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 
 #include "../Static/WebStaticData.h"
 
+#include <uri/UriGlob.h>
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
@@ -160,14 +161,14 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
-  const bool fromAP = web_server.client().localIP() == apIP;
+  const IPAddress client_localIP = web_server.client().localIP();
+  const bool fromAP = client_localIP == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
   if (hasWiFiCredentials || !fromAP) {
     return false;
   }
   if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
-    String redirectURL = F("http://");
-    redirectURL += formatIP(web_server.client().localIP());
+    String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
     if (fromAP && !hasWiFiCredentials) {
       redirectURL += F("/setup");
@@ -198,7 +199,7 @@ void WebServerInit()
   web_server.on(F("/"),             handle_root);
   // Entries for several captive portal URLs.
   // Maybe not needed. Might be handled by notFound handler.
-  web_server.on(F("/generate_204"), handle_root);  //Android captive portal.
+  web_server.on(UriGlob("/generate_204*"), handle_root);  // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
   web_server.on(F("/fwlink"),       handle_root);  //Microsoft captive portal.
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
@@ -341,19 +342,17 @@ void WebServerInit()
   if (Settings.UseSSDP)
   {
     web_server.on(F("/ssdp.xml"), HTTP_GET, []() {
-      WiFiClient client(web_server.client());
-
       #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
-      client.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
-      Client *pClient = &client;
-      pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+      web_server.client().setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+      Client &pClient = web_server.client();
+      pClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
       #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+      web_server.client().setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
       #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-      SSDP_schema(client);
+      SSDP_schema();
     });
     SSDP_begin();
   }
@@ -371,6 +370,7 @@ void setWebserverRunning(bool state) {
     web_server.begin(Settings.WebserverPort);
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
   } else {
+    web_server.client().stop();
     web_server.stop();
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
   }
@@ -800,13 +800,24 @@ String getControllerSymbol(uint8_t index)
    }
  */
 
+void addSVG_param(const char key, int value)
+{
+  addHtml(strformat(F(" %c=\"%d\""), key, value));
+}
+
+void addSVG_param(const char key, float value)
+{
+  addSVG_param(key, toString(value, 2));
+}
+
+void addSVG_param(const char key, const String& value)
+{
+  addHtml(strformat(F(" %c=\"%s\""), key, value.c_str()));
+}
+
+
 void addSVG_param(const __FlashStringHelper * key, int value) {
-  addHtml(' ');
-  addHtml(key);
-  addHtml('=');
-  addHtml('\"');
-  addHtmlInt(value);
-  addHtml('\"');
+  addHtml(strformat(F(" %s=\"%d\""), String(key).c_str(), value));
 }
 
 void addSVG_param(const __FlashStringHelper * key, float value) {
@@ -814,12 +825,7 @@ void addSVG_param(const __FlashStringHelper * key, float value) {
 }
 
 void addSVG_param(const __FlashStringHelper * key, const String& value) {
-  addHtml(' ');
-  addHtml(key);
-  addHtml('=');
-  addHtml('\"');
-  addHtml(value);
-  addHtml('\"');
+  addHtml(strformat(F(" %s=\"%s\""), String(key).c_str(), value.c_str()));
 }
 
 void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
@@ -846,8 +852,8 @@ void createSvgRect(const String& classname,
     addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#"), 3));
     addSVG_param(F("stroke-width"), strokeWidth);
   }
-  addSVG_param(F("x"),      xoffset);
-  addSVG_param(F("y"),      yoffset);
+  addSVG_param('x',         xoffset);
+  addSVG_param('y',         yoffset);
   addSVG_param(F("width"),  width);
   addSVG_param(F("height"), height);
   addSVG_param(F("rx"),     rx);
@@ -856,34 +862,37 @@ void createSvgRect(const String& classname,
 }
 
 void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
-  float width = SVG_BAR_WIDTH * size / range;
+  if (range == 0) {
+    range = 1;
+  }
+  float width = (SVG_BAR_WIDTH * size) / range;
 
   if (width < 2) { width = 2; }
   addHtml(formatToHex(color, F("<path fill=\"#")));
   addHtml(F("\" d=\"M"));
-  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtmlFloat((SVG_BAR_WIDTH * xoffset) / range);
   addHtml(' ');
   addHtmlInt(yoffset);
   addHtml('h');
-  addHtml(toString(width, 2));
+  addHtmlFloat(width);
   addHtml('v');
   addHtmlInt(height);
   addHtml('H');
-  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtmlFloat((SVG_BAR_WIDTH * xoffset) / range);
   addHtml(F("z\"/>\n"));
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
-  addHtml(F("<text x=\""));
-  addHtml(toString(textXoffset, 2));
-  addHtml(F("\" y=\""));
-  addHtml(toString(textYoffset, 2));
-  addHtml(F("\" >\n"));
-  addHtml(F("<tspan x=\""));
-  addHtml(toString(textXoffset, 2));
-  addHtml(F("\" y=\""));
-  addHtml(toString(textYoffset, 2));
-  addHtml('"', '>');
+  addHtml(F("<text"));
+  addSVG_param('x', textXoffset);
+  addSVG_param('y', textYoffset);
+  addHtml('>', '\n');
+
+  addHtml(F("<tspan"));
+  addSVG_param('x', textXoffset);
+  addSVG_param('y', textYoffset);
+  addHtml('>');
+
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -931,15 +940,15 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
 void getWiFi_RSSI_icon(int rssi, int width_pixels)
 {
   const int nbars_filled = (rssi + 100) / 8;
-  int nbars              = 5;
+  const int nbars        = 5;
   int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2f;
 
   if (white_between_bar < 1) { white_between_bar = 1; }
   const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
-  int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
+  const int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
 
   write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
-  float scale               = 100.0f / svg_width_pixels;
+  const float scale         = 100.0f / svg_width_pixels;
   const int bar_height_step = 100 / nbars;
 
   for (int i = 0; i < nbars; ++i) {
@@ -950,14 +959,14 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   addHtml(F("</svg>\n"));
 }
 
-#ifndef BUILD_MINIMAL_OTA
+#if FEATURE_CHART_STORAGE_LAYOUT
 void getConfig_dat_file_layout() {
   const int shiftY  = 2;
   float     yOffset = shiftY;
 
   write_SVG_image_header(SVG_BAR_WIDTH + 250, SVG_BAR_HEIGHT + shiftY);
 
-  int max_index, offset, max_size;
+  int max_index, offset, max_size{};
   int struct_size = 0;
 
   // background
@@ -970,19 +979,20 @@ void getConfig_dat_file_layout() {
 
     if (SettingsType::getSettingsFile(settingsType) == SettingsType::SettingsFileEnum::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
-      SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
-
-      for (int i = 0; i < max_index; ++i) {
-        SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
-
-        // Struct position
-        createSvgHorRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      if (SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size))
+      {
+        for (int i = 0; i < max_index; ++i) {
+          if (SettingsType::getSettingsParameters(settingsType, i, offset, max_size)) {
+            // Struct position
+            createSvgHorRectPath(color, offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+          }
+        }
       }
     }
   }
 
   // Text labels
-  float textXoffset = SVG_BAR_WIDTH + 2;
+  constexpr float textXoffset = SVG_BAR_WIDTH + 2;
   float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
@@ -994,10 +1004,13 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   unsigned int color  = SettingsType::getSVGcolor(settingsType);
   const int    shiftY = 2;
 
-  int max_index, offset, max_size;
+  int max_index, offset, max_size{};
   int struct_size = 0;
 
-  SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+  if (!SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size))
+  {
+    return;
+  }
 
   if (max_index == 0) { return; }
 
@@ -1006,23 +1019,23 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   float yOffset = shiftY;
 
   for (int i = 0; i < max_index; ++i) {
-    SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
+    if (SettingsType::getSettingsParameters(settingsType, i, offset, max_size)) {
+      // background
+      createSvgHorRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-    // background
-    createSvgHorRectPath(0xcdcdcd, 0,      yOffset, realSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
+      // Struct position
+      createSvgHorRectPath(color,    offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
 
-    // Struct position
-    createSvgHorRectPath(color,    offset, yOffset, max_size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
-
-    // Text labels
-    float textXoffset = SVG_BAR_WIDTH + 2;
-    float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
-    createSvgTextElement(formatHumanReadable(offset, 1024),   textXoffset, textYoffset);
-    textXoffset = SVG_BAR_WIDTH + 60;
-    createSvgTextElement(formatHumanReadable(max_size, 1024), textXoffset, textYoffset);
-    textXoffset = SVG_BAR_WIDTH + 130;
-    createSvgTextElement(String(i),                           textXoffset, textYoffset);
-    yOffset += SVG_BAR_HEIGHT;
+      // Text labels
+      float textXoffset = SVG_BAR_WIDTH + 2;
+      float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
+      createSvgTextElement(formatHumanReadable(offset, 1024),   textXoffset, textYoffset);
+      textXoffset = SVG_BAR_WIDTH + 60;
+      createSvgTextElement(formatHumanReadable(max_size, 1024), textXoffset, textYoffset);
+      textXoffset = SVG_BAR_WIDTH + 130;
+      createSvgTextElement(String(i),                           textXoffset, textYoffset);
+      yOffset += SVG_BAR_HEIGHT;
+    }
   }
 
   // usage
@@ -1051,9 +1064,6 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   addHtml(F("</svg>\n"));
 }
 
-#endif // ifndef BUILD_MINIMAL_OTA
-
-
 void drawPartitionChartSVG(
                           float yOffset, 
                           uint32_t realSize, 
@@ -1066,7 +1076,7 @@ void drawPartitionChartSVG(
   createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
   createSvgHorRectPath(partitionColor, partitionAddress, yOffset, partitionSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
   float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
+  const float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
   createSvgTextElement(formatHumanReadable(partitionSize, 1024),          textXoffset, textYoffset);
   textXoffset = SVG_BAR_WIDTH + 60;
   createSvgTextElement(label, textXoffset, textYoffset);
@@ -1187,6 +1197,7 @@ void getPartitionTableSVG() {
   }
   addHtml(F("</svg>\n"));
 }
+#endif
 #endif
 
 bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {

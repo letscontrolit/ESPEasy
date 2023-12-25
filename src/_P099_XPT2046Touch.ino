@@ -41,45 +41,6 @@
 #include "_Plugin_Helper.h"
 #include "src/PluginStructs/P099_data_struct.h"
 
-#define P099_FLAGS_SEND_XY          0 // Set in P099_CONFIG_FLAGS
-#define P099_FLAGS_SEND_Z           1 // Set in P099_CONFIG_FLAGS
-#define P099_FLAGS_SEND_OBJECTNAME  2 // Set in P099_CONFIG_FLAGS
-#define P099_FLAGS_USE_CALIBRATION  3 // Set in P099_CONFIG_FLAGS
-#define P099_FLAGS_LOG_CALIBRATION  4 // Set in P099_CONFIG_FLAGS
-#define P099_FLAGS_ROTATION_FLIPPED 5 // Set in P099_CONFIG_FLAGS
-
-#define P099_CONFIG_STATE       PCONFIG(0)
-#define P099_CONFIG_CS_PIN      PIN(0)
-#define P099_CONFIG_TRESHOLD    PCONFIG(1)
-#define P099_CONFIG_ROTATION    PCONFIG(2)
-#define P099_CONFIG_X_RES       PCONFIG(3)
-#define P099_CONFIG_Y_RES       PCONFIG(4)
-#define P099_CONFIG_OBJECTCOUNT PCONFIG(5)
-#define P099_CONFIG_DEBOUNCE_MS PCONFIG(6)
-#define P099_CONFIG_FLAGS       PCONFIG_LONG(0) // 0-31 flags
-
-#define P099_VALUE_X UserVar[event->BaseVarIndex + 0]
-#define P099_VALUE_Y UserVar[event->BaseVarIndex + 1]
-#define P099_VALUE_Z UserVar[event->BaseVarIndex + 2]
-
-#define P099_TS_TRESHOLD         15    // Treshold before the value is registered as a proper touch
-#define P099_TS_ROTATION         2     // Rotation 0-3 = 0/90/180/270 degrees, compatible with TFT ILI9341
-#define P099_TS_SEND_XY          true  // Enable X/Y events
-#define P099_TS_SEND_Z           false // Disable Z events
-#define P099_TS_SEND_OBJECTNAME  true  // Enable objectname events
-#define P099_TS_USE_CALIBRATION  false // Disable calibration
-#define P099_TS_LOG_CALIBRATION  true  // Enable calibration logging
-#define P099_TS_ROTATION_FLIPPED false // Enable rotation flipped 180 deg.
-#define P099_TS_X_RES            240   // Pixels, should match with the screen it is mounted on
-#define P099_TS_Y_RES            320
-#define P099_INIT_OBJECTCOUNT    8     // Initial setting
-#define P099_DEBOUNCE_MILLIS     150   // Debounce delay for On/Off button function
-
-#define P099_TOUCH_X_INVALID  4095     // When picking up spurious noise (or an open/not connected TS-CS pin), these are the values that
-                                       // turn up
-#define P099_TOUCH_Y_INVALID  4095
-#define P099_TOUCH_Z_INVALID  255
-
 
 boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -137,13 +98,13 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
         P099_CONFIG_DEBOUNCE_MS = P099_DEBOUNCE_MILLIS;
 
-        uint32_t lSettings = 0;
-        bitWrite(lSettings, P099_FLAGS_SEND_XY,          P099_TS_SEND_XY);
-        bitWrite(lSettings, P099_FLAGS_SEND_Z,           P099_TS_SEND_Z);
-        bitWrite(lSettings, P099_FLAGS_SEND_OBJECTNAME,  P099_TS_SEND_OBJECTNAME);
-        bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION,  P099_TS_USE_CALIBRATION);
-        bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION,  P099_TS_LOG_CALIBRATION);
-        bitWrite(lSettings, P099_FLAGS_ROTATION_FLIPPED, P099_TS_ROTATION_FLIPPED);
+        constexpr uint32_t lSettings = 0
+                                       + (P099_TS_SEND_XY          ? (1 << P099_FLAGS_SEND_XY) : 0)
+                                       + (P099_TS_SEND_Z           ? (1 << P099_FLAGS_SEND_Z) : 0)
+                                       + (P099_TS_SEND_OBJECTNAME  ? (1 << P099_FLAGS_SEND_OBJECTNAME) : 0)
+                                       + (P099_TS_USE_CALIBRATION  ? (1 << P099_FLAGS_USE_CALIBRATION) : 0)
+                                       + (P099_TS_LOG_CALIBRATION  ? (1 << P099_FLAGS_LOG_CALIBRATION) : 0)
+                                       + (P099_TS_ROTATION_FLIPPED ? (1 << P099_FLAGS_ROTATION_FLIPPED) : 0);
         P099_CONFIG_FLAGS = lSettings;
       }
       success = true;
@@ -362,10 +323,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           error += concat(F("Invalid character in objectname #"), objectNr + 1);
           error += F(". Do not use ',-+/*=^%!#[]{}()' or space.\n");
         }
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     = getFormItemInt(getPluginCustomArgName(objectNr + 100));
-        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     = getFormItemInt(getPluginCustomArgName(objectNr + 200));
-        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemInt(getPluginCustomArgName(objectNr + 300));
-        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemInt(getPluginCustomArgName(objectNr + 400));
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.x     = getFormItemIntCustomArgName(objectNr + 100);
+        P099_data->StoredSettings.TouchObjects[objectNr].top_left.y     = getFormItemIntCustomArgName(objectNr + 200);
+        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.x = getFormItemIntCustomArgName(objectNr + 300);
+        P099_data->StoredSettings.TouchObjects[objectNr].bottom_right.y = getFormItemIntCustomArgName(objectNr + 400);
 
         uint8_t flags = 0;
         bitWrite(flags, P099_FLAGS_ON_OFF_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 500)));
@@ -423,41 +384,12 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command;
-      String subcommand;
+      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      int argIndex = string.indexOf(',');
-
-      if (argIndex) {
-        command    = parseString(string, 1);
-        subcommand = parseString(string, 2);
-
-        if (equals(command, F("touch"))) {
-          P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-          if (nullptr == P099_data) {
-            return success;
-          }
-
-          if (equals(subcommand, F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
-            uint8_t rot_ = static_cast<uint8_t>(parseString(string, 3).toInt() % 4);
-
-            P099_data->setRotation(rot_);
-            success = true;
-          } else if (equals(subcommand, F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
-            bool flip_ = (parseString(string, 3).toInt() > 0);
-
-            P099_data->setRotationFlipped(flip_);
-            success = true;
-          } else if (equals(subcommand, F("enable"))) {  // touch,enable,<objectName> : Enables a disabled objectname (with a leading
-                                                        // underscore)
-            success = P099_data->setTouchObjectState(parseString(string, 3), true, P099_CONFIG_OBJECTCOUNT);
-          } else if (equals(subcommand, F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname (without a leading
-                                                        // underscore)
-            success = P099_data->setTouchObjectState(parseString(string, 3), false, P099_CONFIG_OBJECTCOUNT);
-          }
-        }
+      if (nullptr != P099_data) {
+        success = P099_data->plugin_write(event, string);
       }
+
       break;
     }
 
@@ -480,29 +412,23 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
             ry = y;
             P099_data->scaleRawToCalibrated(x, y); // Map to screen coordinates if so configured
 
-            P099_VALUE_X = x;
-            P099_VALUE_Y = y;
-            P099_VALUE_Z = z;
+            P099_SET_VALUE_X(x);
+            P099_SET_VALUE_Y(y);
+            P099_SET_VALUE_Z(z);
 
             bool bEnableCalibrationLog = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION);
 
-            if (bEnableCalibrationLog && loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not
-                                                                              // make this optional!
-              String log;
-
-              if (log.reserve(72)) {
-                log  = F("Touch calibration rx= "); // Space before the logged values was added for readability
-                log += rx;
-                log += F(", ry= ");
-                log += ry;
-                log += F("; z= "); // Always log the z value even if not used.
-                log += z;
-                log += F(", x= ");
-                log += x;
-                log += F(", y= ");
-                log += y;
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
+            if (bEnableCalibrationLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
+              // REQUIRED for calibration and setting up objects, so do not
+              // make this optional!
+              // Space before the logged values was added for readability
+              addLogMove(LOG_LEVEL_INFO, strformat(
+                           F("Touch calibration rx= %u, ry= %u; z= %u, x= %u, y= %u"),
+                           rx,
+                           ry,
+                           z, // Always log the z value even if not used.
+                           x,
+                           y));
             }
 
             if (Settings.UseRules) {                                                                   // No events to handle if rules not
@@ -516,10 +442,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                   #ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device[DeviceIndex].ValueCount = 2;
-                  #else
+                  #else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
-                  #endif
+                  #endif // ifdef ESP8266
                 }
                 sendData(event);                                                                       // Send X/Y(/Z) event
 
@@ -528,10 +454,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                   #ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device[DeviceIndex].ValueCount = 3;
-                  #else
+                  #else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
-                  #endif
+                  #endif // ifdef ESP8266
                 }
               }
 
@@ -563,13 +489,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                     }
                   } else {
                     // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
-                    String eventValues;
-                    eventValues += x;
-                    eventValues += ',';
-                    eventValues += y;
-                    eventValues += ',';
-                    eventValues += z;
-                    eventQueue.add(event->TaskIndex, selectedObjectName, eventValues);
+                    eventQueue.add(
+                      event->TaskIndex,
+                      selectedObjectName,
+                      strformat(F("%u,%u,%u"), x, y, z));
                   }
                 }
               }

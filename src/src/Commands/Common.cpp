@@ -142,7 +142,7 @@ String Command_GetORSetBool(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      int tmp_int = 0;
+      int32_t tmp_int = 0;
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = tmp_int > 0;
       }
@@ -177,7 +177,7 @@ String Command_GetORSetETH(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      int tmp_int = 0;
+      int32_t tmp_int = 0;
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = static_cast<uint8_t>(tmp_int);
       }
@@ -222,7 +222,7 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
       hasArgument = true;
       TmpStr1.toLowerCase();
 
-      int tmp_int = 0;
+      int32_t tmp_int = 0;
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = static_cast<int8_t>(tmp_int);
       }

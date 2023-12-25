@@ -247,7 +247,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                       log += floatValue;
                       addLogMove(LOG_LEVEL_INFO, log);
                     }
-                    UserVar[userVarIndex]=floatValue;
+                    UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
                   } else { // float conversion failed!
                     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
                       log += F(" parameter:");
@@ -271,7 +271,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 } else {
                   floatValue = 1.0f;
                 }
-                UserVar[userVarIndex]=floatValue;
+                UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" boolean set to ");
                   log += floatValue;
@@ -299,7 +299,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                   }
                   i++;
                 }
-                UserVar[userVarIndex]=floatValue;
+                UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" enum set to ");
                   log += floatValue;

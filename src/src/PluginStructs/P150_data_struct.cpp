@@ -59,8 +59,8 @@ void P150_data_struct::setConfig() {
  */
 bool P150_data_struct::plugin_read(struct EventStruct *event) {
   if (_readValid && definitelyGreaterThan(_finalTempC, -256.0f)) {
-    UserVar[event->BaseVarIndex]     = _finalTempC;
-    UserVar[event->BaseVarIndex + 1] = _digitalTempC;
+    UserVar.setFloat(event->TaskIndex, 0, _finalTempC);
+    UserVar.setFloat(event->TaskIndex, 1, _digitalTempC);
 
     if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = concat(F("TMP117: Temperature: "), formatUserVarNoCheck(event, 0));

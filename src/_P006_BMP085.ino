@@ -98,7 +98,7 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P006_data) {
         if (P006_data->begin())
         {
-          UserVar[event->BaseVarIndex] = P006_data->readTemperature();
+          UserVar.setFloat(event->TaskIndex, 0, P006_data->readTemperature());
           int   elev     = PCONFIG(1);
           float pressure = static_cast<float>(P006_data->readPressure()) / 100.0f;
 
@@ -106,7 +106,7 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
           {
             pressure = pressureElevation(pressure, elev);
           }
-          UserVar[event->BaseVarIndex + 1] = pressure;
+          UserVar.setFloat(event->TaskIndex, 1, pressure);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("BMP  : Temperature: ");

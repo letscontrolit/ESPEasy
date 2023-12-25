@@ -549,6 +549,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
+
   const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
@@ -623,7 +624,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
-    bool success                    = false;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -633,53 +633,8 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     TempEvent.timestamp = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
-
-    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-    // Store the previous value, in case %pvalue% is used in the formula
-    String preValue[VARS_PER_TASK];
-    const bool processFormula = Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex);
-    if (processFormula) {
-      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-      {
-        const String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
-        if (!formula.isEmpty())
-        {
-          if (formula.indexOf(F("%pvalue%")) != -1) {
-            preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
-          }
-        }
-      }
-    }
-
-    {
-      String dummy;
-      success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
-    }
-
-    if (success)
-    {
-      if (processFormula) {
-        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-        {
-          String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
-          if (!formula.isEmpty())
-          {
-            START_TIMER;
-
-            // TD-er: Should we use the set nr of decimals here, or not round at all?
-            // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-            formula.replace(F("%pvalue%"), preValue[varNr]);
-            formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
-            ESPEASY_RULES_FLOAT_TYPE result{};
-
-            if (!isError(Calculate(parseTemplate(formula), result))) {
-              UserVar.set(event->TaskIndex, varNr, result, TempEvent.sensorType);
-            }
-
-            STOP_TIMER(COMPUTE_FORMULA_STATS);
-          }
-        }
-      }
+    String dummy;
+    if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
   }

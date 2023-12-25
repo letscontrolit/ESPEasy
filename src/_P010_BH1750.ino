@@ -131,7 +131,7 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
       float lux = sensor.readLightLevel();
 
       if (lux != -1) {
-        UserVar[event->BaseVarIndex] = lux;
+        UserVar.setFloat(event->TaskIndex, 0, lux);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("BH1750 Address: ");

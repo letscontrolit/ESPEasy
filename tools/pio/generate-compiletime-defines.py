@@ -67,7 +67,6 @@ def get_cdn_url_prefix():
         return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/'
 
 
-
 def get_git_description():
     try:
         from pygit2 import Repository

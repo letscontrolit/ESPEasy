@@ -219,7 +219,13 @@ private:
 };
 
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
+/*
+# ifdef USE_SECOND_HEAP
+#define MakeControllerSettings(T) HeapSelectIram ephemeral; ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
+#else
+*/
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
+//#endif
 
 // Check to see if MakeControllerSettings was successful
 #define AllocatedControllerSettings() (ControllerSettings.get() != nullptr)

@@ -33,6 +33,10 @@ License along with MechInputs.  If not, see
  #include <pins_arduino.h>
 #endif
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 class QEIx4
 {
 public:
@@ -112,7 +116,12 @@ protected:
 
 protected:
 
-  volatile long _counter;
+#if ESP_IDF_VERSION_MAJOR >= 5
+	std::atomic<long> _counter{};
+#else
+	volatile long _counter = 0;
+#endif
+
   volatile bool _bHasChanged;
   volatile bool _bIndexTrigger;
 

@@ -10,11 +10,11 @@
 bool isValidFloat(float f);
 bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f);
 
-bool validIntFromString(const String& tBuf, int& result);
+bool validIntFromString(const String& tBuf, int32_t& result);
 
 bool validInt64FromString(const String& tBuf, int64_t& result);
 
-bool validUIntFromString(const String& tBuf, unsigned int& result);
+bool validUIntFromString(const String& tBuf, uint32_t& result);
 
 bool validUInt64FromString(const String& tBuf, uint64_t& result);
 

@@ -5,7 +5,7 @@
 
 #include "../DataTypes/SensorVType.h"
 
-struct TaskValues_Data_t {
+struct __attribute__((__packed__)) TaskValues_Data_t {
   TaskValues_Data_t();
 
   TaskValues_Data_t(const TaskValues_Data_t& other);

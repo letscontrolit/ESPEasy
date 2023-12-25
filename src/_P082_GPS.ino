@@ -30,34 +30,6 @@
 # define PLUGIN_VALUENAME4_082 "Speed"
 
 
-# define P082_TIMEOUT        PCONFIG(0)
-# define P082_TIMEOUT_LABEL  PCONFIG_LABEL(0)
-# define P082_BAUDRATE       PCONFIG(1)
-# define P082_BAUDRATE_LABEL PCONFIG_LABEL(1)
-# define P082_DISTANCE       PCONFIG(2)
-# define P082_DISTANCE_LABEL PCONFIG_LABEL(2)
-
-# define P082_QUERY1_CONFIG_POS  3
-# define P082_QUERY1         PCONFIG(3) // P082_QUERY1_CONFIG_POS
-# define P082_QUERY2         PCONFIG(4) // P082_QUERY1_CONFIG_POS + 1
-# define P082_QUERY3         PCONFIG(5) // P082_QUERY1_CONFIG_POS + 2
-# define P082_QUERY4         PCONFIG(6) // P082_QUERY1_CONFIG_POS + 3
-
-# define P082_LONG_REF       PCONFIG_FLOAT(0)
-# define P082_LAT_REF        PCONFIG_FLOAT(1)
-# ifdef P082_USE_U_BLOX_SPECIFIC
-#  define P082_POWER_MODE     PCONFIG(7)
-#  define P082_DYNAMIC_MODEL  PCONFIG_LONG(0)
-# endif // P082_USE_U_BLOX_SPECIFIC
-
-# define P082_NR_OUTPUT_VALUES   VARS_PER_TASK
-
-
-# define P082_DISTANCE_DFLT       0 // Disable update per distance travelled.
-# define P082_QUERY1_DFLT         P082_query::P082_QUERY_LONG
-# define P082_QUERY2_DFLT         P082_query::P082_QUERY_LAT
-# define P082_QUERY3_DFLT         P082_query::P082_QUERY_ALT
-# define P082_QUERY4_DFLT         P082_query::P082_QUERY_SPD
 
 // Must use volatile declared variable (which will end up in iRAM)
 volatile unsigned long P082_pps_time = 0;
@@ -321,6 +293,9 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P082_data) {
+        #if FEATURE_CHART_JS
+        P082_data->webformLoad_show_position_scatterplot(event);
+        #endif
         for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
           const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
 
@@ -341,6 +316,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       const int16_t serial_rx      = CONFIG_PIN1;
       const int16_t serial_tx      = CONFIG_PIN2;
       const int16_t pps_pin        = CONFIG_PIN3;
+
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P082_data_struct());
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -486,16 +466,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
                 // Add sanity check for distance travelled
                 if (distance > static_cast<ESPEASY_RULES_FLOAT_TYPE>(P082_DISTANCE)) {
                   if (Settings.UseRules) {
-                    String eventString = F("GPS#travelled=");
-                    eventString += distance;
-                    eventQueue.addMove(std::move(eventString));
+                    eventQueue.addMove(strformat(F("GPS#travelled=%f"), distance));
                   }
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    String log = F("GPS: Distance trigger : ");
-                    log += distance;
-                    log += F(" m");
-                    addLogMove(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, strformat(F("GPS: Distance trigger : %f m"), distance));
                   }
                 }
               }
@@ -607,7 +582,7 @@ void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float va
     const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
 
     if (PCONFIG(pconfigIndex) == outputType) {
-      UserVar[event->BaseVarIndex + i] = value;
+      UserVar.setFloat(event->TaskIndex, i,  value);
     }
   }
 }

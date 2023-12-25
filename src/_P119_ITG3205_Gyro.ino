@@ -143,11 +143,7 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
-      P119_data_struct *P119_data = static_cast<P119_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P119_data);
-
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P119_data_struct(P119_I2C_ADDR, P119_RAW_DATA, P119_AVERAGE_BUFFER));
       break;
     }
 
@@ -170,9 +166,9 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
         int X, Y, Z;
 
         if (P119_data->read_data(X, Y, Z)) {
-          UserVar[event->BaseVarIndex]     = X;
-          UserVar[event->BaseVarIndex + 1] = Y;
-          UserVar[event->BaseVarIndex + 2] = Z;
+          UserVar.setFloat(event->TaskIndex, 0, X);
+          UserVar.setFloat(event->TaskIndex, 1, Y);
+          UserVar.setFloat(event->TaskIndex, 2, Z);
 
           success = true;
         }
