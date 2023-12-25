@@ -39,7 +39,7 @@ jobs:
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Documentation
           path: ESPEasy_docs.zip
@@ -96,9 +96,9 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: Binaries
+          name: Binaries-${{ matrix.runs-on }}
           path: |
             bin
           if-no-files-found: ignore
@@ -120,9 +120,11 @@ jobs:
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          path: artifacts/
+          path: artifacts/Binaries/
+          pattern: Binaries-*
+          merge-multiple: true
       - name: Prepare artifacts
         run: |
           # ESP82xx
@@ -150,62 +152,63 @@ jobs:
             fi
           done
       # Each supported cpu has to be listed separately, but empty folders are ignored
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32solo1/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32s2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c3/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32s3/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c6/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32h2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32h2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP82xx/*
           if-no-files-found: ignore
       # When successfully re-packaged, the original Binaries can be removed
-      # comment below 3 lines to not remove the Binaries artifact after repackaging
-      - uses: geekyeggo/delete-artifact@v2
+      # comment below 4 lines to not remove the Binaries artifact after repackaging
+      - uses: geekyeggo/delete-artifact@v4
         with:
-            name: Binaries
+            token: ${{ secrets.GITHUB_TOKEN }}
+            name: Binaries-*
