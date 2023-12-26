@@ -107,8 +107,8 @@ jobs:
             bin
           if-no-files-found: ignore
 
-  # Repackage all ESP82xx and ESP32 into a single Binaries-all.zip
-  repackage:
+  # Package all ESP82xx and ESP32 into a single Binaries-all.zip
+  combine_package:
     needs: build
     runs-on: ubuntu-22.04
     steps:
@@ -129,7 +129,7 @@ jobs:
           path: artifacts/Binaries/
           pattern: Binaries-*
           merge-multiple: true
-      - name: Repackage for single-archive upload
+      - name: Combine all files in a package for single-archive upload
         run: |
           ls -R
           cd artifacts/Binaries
