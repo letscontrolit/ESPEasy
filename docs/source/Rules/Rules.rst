@@ -722,12 +722,23 @@ brackets in order for it to compute, i.e. ``[var#12]``.
 If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
 The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
 
+The short hand notation (e.g. ``%v7%``) will be processed first.
+Meaning this can be used to switch sets of variables by nesting like this: ``[int#%v7%]``.
+
 On the "System Variables" page of the web interface all set values can be inspected including their values.
 If none is set, "No variables set" will be shown.
 
 If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
 
 .. note:: Internal variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without losing power), please use a dummy task for this.
+
+
+Added: 2023-12-01
+
+Short hand notation can be nested like this: ``[int#%v%v7%%]`` or use simple calculations like this: ``[int#%v=7+%v100%%]``
+This allows to simply switch a number of variable offsets in rules by only changing 1 variable.
+
+
 
 
 Task-specific settings

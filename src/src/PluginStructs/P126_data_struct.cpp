@@ -164,7 +164,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
 
       while (!arg.isEmpty() && idx < _chipCount && success) {
         int colon = arg.indexOf(':'); // First colon: Chip-index, range 1.._chipCount
-        int itmp  = 0;
+        int32_t itmp  = 0;
 
         if (colon != -1) {
           String cis = arg.substring(0, colon);

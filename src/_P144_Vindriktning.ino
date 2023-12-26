@@ -179,7 +179,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P144_data != nullptr) {
-        UserVar[event->BaseVarIndex]  = P144_data->getValue(); 
+        UserVar.setFloat(event->TaskIndex, 0, P144_data->getValue()); 
         #ifdef PLUGIN_144_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {

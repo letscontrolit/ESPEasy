@@ -530,4 +530,115 @@ void P148_data_struct::setUnit(P148_data_struct::Tm1621UnitOfMeasure unit, bool 
   }
 }
 
+const char p148_subcommands[] PROGMEM = "raw|writerow|write|voltamp|energy|celcius|fahrenheit|humidity";
+enum class p148_subcommands_e {
+  raw,
+  writerow,
+  write,
+  voltamp,
+  energy,
+  celcius,
+  fahrenheit,
+  humidity
+};
+
+
+bool P148_data_struct::plugin_write(struct EventStruct *event, const String& string)
+{
+  const String command = parseString(string, 1);
+
+  if (equals(command, F("tm1621"))) {
+    const String subcommand = parseString(string, 2);
+
+    const int command_i = GetCommandCode(subcommand.c_str(), p148_subcommands);
+
+    if (command_i == -1) {
+      // No matching subcommand found
+      return false;
+    }
+
+    switch (static_cast<p148_subcommands_e>(command_i)) {
+      case p148_subcommands_e::raw:
+      {
+        // Write raw data to the display
+        // Typical use case: testing fonts
+        const String rawdata_str = parseString(string, 3);
+        uint64_t     rawdata;
+
+        if (validUInt64FromString(rawdata_str, rawdata)) {
+          writeRawData(rawdata);
+          return true;
+        }
+
+        break;
+      }
+      case p148_subcommands_e::writerow:
+      {
+        // tm1621,write,<rownr>,<string>
+        const bool firstrow = event->Par2 <= 1;
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::None, firstrow);
+        writeString(firstrow, parseString(string, 4));
+
+        return true;
+      }
+      case p148_subcommands_e::write:
+      {
+        // tm1621,write,<string1>,<string2>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
+        const String str1 = parseString(string, 3);
+        const String str2 = parseString(string, 4);
+
+        if (str2.isEmpty()) {
+          writeString(true, str1);
+        } else {
+          writeStrings(str1, str2);
+        }
+
+        return true;
+      }
+      case p148_subcommands_e::voltamp:
+      {
+        // tm1621,voltamp,<volt>,<amp>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
+        writeStrings(parseString(string, 3), parseString(string, 4));
+
+        return true;
+      }
+      case p148_subcommands_e::energy:
+      {
+        // tm1621,energy,<kWh>,<Watt>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
+        writeStrings(parseString(string, 3), parseString(string, 4));
+
+        return true;
+      }
+      case p148_subcommands_e::celcius:
+      {
+        // tm1621,celcius,<temperture>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius, true);
+        writeString(true, parseString(string, 3));
+
+        return true;
+      }
+      case p148_subcommands_e::fahrenheit:
+      {
+        // tm1621,fahrenheit,<temperture>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit, true);
+        writeString(true, parseString(string, 3));
+
+        return true;
+      }
+      case p148_subcommands_e::humidity:
+      {
+        // tm1621,humidity,<%humidity>
+        setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity, false);
+        writeString(false, parseString(string, 3));
+
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 #endif // ifdef USES_P148

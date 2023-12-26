@@ -144,7 +144,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
           for (int8_t i = 0; i < valueCount; ++i) {
             const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
             bool isChanged             = false;
-            UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+            UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
             result |= isChanged;
           }
@@ -181,7 +181,7 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
     for (int8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
       bool isChanged             = false;
-      UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+      UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
       result |= isChanged;
     }
@@ -323,17 +323,17 @@ bool P159_data_struct::plugin_webform_save(struct EventStruct *event) {
 
   if (isValid() && doSave) {
     int idx              = 0;
-    const uint16_t idle  = getFormItemInt(getPluginCustomArgName(idx++));
-    const uint8_t  gMove = getFormItemInt(getPluginCustomArgName(idx++));
-    const uint8_t  gStat = getFormItemInt(getPluginCustomArgName(idx++));
+    const uint16_t idle  = getFormItemIntCustomArgName(idx++);
+    const uint8_t  gMove = getFormItemIntCustomArgName(idx++);
+    const uint8_t  gStat = getFormItemIntCustomArgName(idx++);
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, start..."));
     radar->requestConfigurationModeBegin();
     radar->setMaxValues(gMove, gStat, idle);
     const uint16_t maxGate = radar->cfgMaxGate();
 
     for (uint16_t gate = 0; gate <= maxGate; ++gate) {
-      const uint16_t sMove = getFormItemInt(getPluginCustomArgName(idx++));
-      const uint16_t sStat = getFormItemInt(getPluginCustomArgName(idx++));
+      const uint16_t sMove = getFormItemIntCustomArgName(idx++);
+      const uint16_t sStat = getFormItemIntCustomArgName(idx++);
 
       // Set sensitivity (level) to 100 to effectively disable sensitivity
       radar->setGateSensitivityThreshold(gate, gate <= gMove ? sMove : 100, gate <= gStat ? sStat : 100);

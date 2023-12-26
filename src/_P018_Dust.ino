@@ -80,7 +80,7 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
           delayMicroseconds(9680);
         }
         ISR_interrupts();
-        UserVar[event->BaseVarIndex] = value;
+        UserVar.setFloat(event->TaskIndex, 0, value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, concat(F("GPY  : Dust value: "), value));

@@ -38,6 +38,8 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
 bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
   // The defined offsets should be used with () just in case they are the result of a formula in the defines.
   struct_size = 0;
+  max_index = -1;
+  offset    = -1;
 
   switch (settingsType) {
     case Enum::BasicSettings_Type:
@@ -58,7 +60,8 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     case Enum::CustomTaskSettings_Type:
     {
-      getSettingsParameters(Enum::TaskSettings_Type, index, max_index, offset, max_size, struct_size);
+      if (!getSettingsParameters(Enum::TaskSettings_Type, index, max_index, offset, max_size, struct_size))
+        return false;
       offset  += (DAT_TASKS_CUSTOM_OFFSET);
       max_size = DAT_TASKS_CUSTOM_SIZE;
 
@@ -91,8 +94,10 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       offset      = index * (DAT_NOTIFICATION_SIZE);
       max_size    = DAT_NOTIFICATION_SIZE;
       struct_size = sizeof(NotificationSettingsStruct);
-#endif
       break;
+#else
+      return false;
+#endif
     }
     case Enum::SecuritySettings_Type:
     {
@@ -149,12 +154,13 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& offs
 }
 
 int SettingsType::getMaxFilePos(Enum settingsType) {
-  int max_index, offset, max_size;
+  int max_index, offset, max_size{};
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0,             max_index, offset, max_size, struct_size);
-  getSettingsParameters(settingsType, max_index - 1, offset,    max_size);
-  return offset + max_size - 1;
+  if (getSettingsParameters(settingsType, 0,             max_index, offset, max_size, struct_size) &&
+      getSettingsParameters(settingsType, max_index - 1, offset,    max_size))
+    return offset + max_size - 1;
+  return -1;
 }
 
 int SettingsType::getFileSize(Enum settingsType) {
@@ -163,7 +169,7 @@ int SettingsType::getFileSize(Enum settingsType) {
 
   for (int st = 0; st < static_cast<int>(Enum::SettingsType_MAX); ++st) {
     if (SettingsType::getSettingsFile(static_cast<Enum>(st)) == file_type) {
-      int filePos = SettingsType::getMaxFilePos(static_cast<Enum>(st));
+      const int filePos = SettingsType::getMaxFilePos(static_cast<Enum>(st));
 
       if (filePos > max_file_pos) {
         max_file_pos = filePos;

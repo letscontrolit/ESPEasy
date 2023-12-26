@@ -4,64 +4,68 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
+
 
 
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
   if (!deduplicate || !isDuplicate(event)) {
+    #ifdef USE_SECOND_HEAP
+    String tmp;
+    reserve_special(tmp, event.length());
+    tmp = event;
+
+    // Do not add to the list while on 2nd heap
+    HeapSelectDram ephemeral;
+
+    _eventQueue.emplace_back(std::move(tmp));
+    #else
     _eventQueue.push_back(event);
+    #endif // ifdef USE_SECOND_HEAP
   }
 }
 
 void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
 {
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
-  // Wrap in String() constructor to make sure it is using the 2nd heap allocator if present.
-  if (!deduplicate || !isDuplicate(event)) {
-    _eventQueue.push_back(String(event));
-  }
+  String str;
+  move_special(str, String(event));
+  add(str, deduplicate);
 }
 
 void EventQueueStruct::addMove(String&& event, bool deduplicate)
 {
   if (!event.length()) { return; }
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-
-  if (!mmu_is_iram(&(event[0]))) {
-    // Wrap in String constructor to make sure it is stored in the 2nd heap.
-    if (!deduplicate || !isDuplicate(event)) {
-      _eventQueue.push_back(String(event));
-    }
-    return;
-  }
-  #endif // ifdef USE_SECOND_HEAP
 
   if (!deduplicate || !isDuplicate(event)) {
+    #ifdef USE_SECOND_HEAP
+    String tmp;
+    move_special(tmp, std::move(event));
+
+    // Do not add to the list while on 2nd heap
+    HeapSelectDram ephemeral;
+    _eventQueue.emplace_back(std::move(tmp));
+    #else
     _eventQueue.emplace_back(std::move(event));
+    #endif // ifdef USE_SECOND_HEAP
   }
 }
 
 void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, const String& eventValue)
 {
   if (Settings.UseRules) {
-    String eventCommand = getTaskDeviceName(TaskIndex);
-    eventCommand.reserve(eventCommand.length() + 2 + varName.length() + eventValue.length());
-    eventCommand += '#';
-    eventCommand += varName;
-
-    if (!eventValue.isEmpty()) {
-      eventCommand += '='; // Add arguments
-      eventCommand += eventValue;
+    if (eventValue.isEmpty()) {
+      addMove(strformat(
+        F("%s#%s"), 
+        getTaskDeviceName(TaskIndex).c_str(), 
+        varName.c_str()));
+    } else {
+      addMove(strformat(
+        F("%s#%s=%s"), 
+        getTaskDeviceName(TaskIndex).c_str(), 
+        varName.c_str(), 
+        eventValue.c_str()));
     }
-    addMove(std::move(eventCommand));
   }
 }
 
@@ -91,16 +95,7 @@ bool EventQueueStruct::getNext(String& event)
   if (_eventQueue.empty()) {
     return false;
   }
-  #ifdef USE_SECOND_HEAP
-  {
-    // Fetch the event and make sure it is allocated on the DRAM heap, not the 2nd heap
-    // Otherwise checks like strnlen_P may crash on it.
-    HeapSelectDram ephemeral;
-    event = std::move(String(_eventQueue.front()));
-  }
-  #else // ifdef USE_SECOND_HEAP
   event = std::move(_eventQueue.front());
-  #endif // ifdef USE_SECOND_HEAP
   _eventQueue.pop_front();
   return true;
 }

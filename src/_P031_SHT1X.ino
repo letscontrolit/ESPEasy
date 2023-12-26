@@ -129,8 +129,8 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P031_data) {
         if (P031_data->measurementReady()) {
-          UserVar[event->BaseVarIndex]     = P031_data->tempC;
-          UserVar[event->BaseVarIndex + 1] = P031_data->rhTrue;
+          UserVar.setFloat(event->TaskIndex, 0, P031_data->tempC);
+          UserVar.setFloat(event->TaskIndex, 1, P031_data->rhTrue);
           success                          = true;
           P031_data->state                 = P031_IDLE;
         } else if (P031_data->state == P031_IDLE) {

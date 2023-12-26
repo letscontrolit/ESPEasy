@@ -191,9 +191,9 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           const int filterValue = PCONFIG(1);
 
           if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
-            UserVar[event->BaseVarIndex]     = ppm;
-            UserVar[event->BaseVarIndex + 1] = temp;
-            UserVar[event->BaseVarIndex + 2] = u;
+            UserVar.setFloat(event->TaskIndex, 0, ppm);
+            UserVar.setFloat(event->TaskIndex, 1, temp);
+            UserVar.setFloat(event->TaskIndex, 2, u);
             success                          = true;
           } else {
             success = false;
