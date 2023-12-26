@@ -19,7 +19,7 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
 const __FlashStringHelper * Command_Background(struct EventStruct *event, const char* Line);
 #endif
 const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char* Line);
-const __FlashStringHelper * Command_logentry(struct EventStruct *event, const char* Line);
+String Command_logentry(struct EventStruct *event, const char* Line);
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char* Line);
 //void createLogPortStatus(std::map< uint32_t, portStatusStruct >::iterator it);

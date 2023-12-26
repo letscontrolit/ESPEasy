@@ -229,8 +229,8 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
                log += F(" L/H");
 //              addLog(LOG_LEVEL_INFO, log);
               }
-              UserVar[event->BaseVarIndex] = m_energy; //gives energy in Wh
-              UserVar[event->BaseVarIndex+1] = m_volume;  //gives volume in liters
+              UserVar.setFloat(event->TaskIndex, 0, m_energy); //gives energy in Wh
+              UserVar.setFloat(event->TaskIndex, 1, m_volume);  //gives volume in liters
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("Kamstrup  : Heat value: ");
@@ -252,8 +252,8 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
                 log += message;
                 addLogMove(LOG_LEVEL_INFO, log);
               }
-              //UserVar[event->BaseVarIndex] = NAN;
-              //UserVar[event->BaseVarIndex + 1] = NAN;
+              //UserVar.setFloat(event->TaskIndex, 0, NAN);
+              //UserVar.setFloat(event->TaskIndex, 1, NAN);
             }
             break;
           }
@@ -266,8 +266,8 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
               addLogMove(LOG_LEVEL_INFO, log);
             }
 
-            //UserVar[event->BaseVarIndex] = NAN;
-            //UserVar[event->BaseVarIndex + 1] = NAN;
+            //UserVar.setFloat(event->TaskIndex, 0, NAN);
+            //UserVar.setFloat(event->TaskIndex, 1, NAN);
             break;
           }
         }

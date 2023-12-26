@@ -139,50 +139,50 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
         default:
         case 0:
         {
-          UserVar[event->BaseVarIndex + 0] = R;
-          UserVar[event->BaseVarIndex + 1] = G;
-          UserVar[event->BaseVarIndex + 2] = B;
-          UserVar[event->BaseVarIndex + 3] = W;
+          UserVar.setFloat(event->TaskIndex, 0, R);
+          UserVar.setFloat(event->TaskIndex, 1, G);
+          UserVar.setFloat(event->TaskIndex, 2, B);
+          UserVar.setFloat(event->TaskIndex, 3, W);
           break;
         }
         case 1:
         {
-          UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcRelW(R, W) * 100.0f;
-          UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcRelW(G, W) * 100.0f;
-          UserVar[event->BaseVarIndex + 2] = Plugin_066_CalcRelW(B, W) * 100.0f;
-          UserVar[event->BaseVarIndex + 3] = W;
+          UserVar.setFloat(event->TaskIndex, 0, Plugin_066_CalcRelW(R, W) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 1, Plugin_066_CalcRelW(G, W) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 2, Plugin_066_CalcRelW(B, W) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 3, W);
           break;
         }
         case 2:
         {
-          UserVar[event->BaseVarIndex + 0] = powf(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 1] = powf(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 2] = powf(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 3] = W;
+          UserVar.setFloat(event->TaskIndex, 0, powf(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 1, powf(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 2, powf(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f);
+          UserVar.setFloat(event->TaskIndex, 3, W);
           break;
         }
         case 3:
         {
-          UserVar[event->BaseVarIndex + 0] = R;
-          UserVar[event->BaseVarIndex + 1] = G;
-          UserVar[event->BaseVarIndex + 2] = B;
-          UserVar[event->BaseVarIndex + 3] = Plugin_066_CalcCCT(R, G, B);
+          UserVar.setFloat(event->TaskIndex, 0, R);
+          UserVar.setFloat(event->TaskIndex, 1, G);
+          UserVar.setFloat(event->TaskIndex, 2, B);
+          UserVar.setFloat(event->TaskIndex, 3, Plugin_066_CalcCCT(R, G, B));
           break;
         }
         case 4:
         {
-          UserVar[event->BaseVarIndex + 0] = R;
-          UserVar[event->BaseVarIndex + 1] = G;
-          UserVar[event->BaseVarIndex + 2] = B;
-          UserVar[event->BaseVarIndex + 3] = Plugin_066_CalcAmbientLight(G, PCONFIG(1));
+          UserVar.setFloat(event->TaskIndex, 0, R);
+          UserVar.setFloat(event->TaskIndex, 1, G);
+          UserVar.setFloat(event->TaskIndex, 2, B);
+          UserVar.setFloat(event->TaskIndex, 3, Plugin_066_CalcAmbientLight(G, PCONFIG(1)));
           break;
         }
         case 5:
         {
-          UserVar[event->BaseVarIndex + 0] = Plugin_066_CalcCCT(R, G, B);
-          UserVar[event->BaseVarIndex + 1] = Plugin_066_CalcAmbientLight(G, PCONFIG(1));
-          UserVar[event->BaseVarIndex + 2] = (R + G + B) / 3.0f; // 0.299*R + 0.587*G + 0.114*B;
-          UserVar[event->BaseVarIndex + 3] = W;
+          UserVar.setFloat(event->TaskIndex, 0, Plugin_066_CalcCCT(R, G, B));
+          UserVar.setFloat(event->TaskIndex, 1, Plugin_066_CalcAmbientLight(G, PCONFIG(1)));
+          UserVar.setFloat(event->TaskIndex, 2, (R + G + B) / 3.0f); // 0.299*R + 0.587*G + 0.114*B;
+          UserVar.setFloat(event->TaskIndex, 3, W);
           break;
         }
       }

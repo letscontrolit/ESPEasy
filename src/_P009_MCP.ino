@@ -199,9 +199,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // @giig1967g-20181022: set initial UserVar of the switch
         if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-          UserVar[event->BaseVarIndex] = !newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
         } else {
-          UserVar[event->BaseVarIndex] = newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
         }
 
         // if boot state must be send, inverse default state
@@ -340,7 +340,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               output_value = sendState ? 1 : 0; // single click
             }
 
-            UserVar[event->BaseVarIndex] = output_value;
+            UserVar.setFloat(event->TaskIndex, 0, output_value);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("MCP  : Port=");
@@ -407,7 +407,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             output_value = sendState ? 1 : 0;
             output_value = output_value + 10;
 
-            UserVar[event->BaseVarIndex] = output_value;
+            UserVar.setFloat(event->TaskIndex, 0, output_value);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("MCP  : LongPress: Port=");
@@ -426,7 +426,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value); }
 
             // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
           }
         } else {
           if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
@@ -435,7 +435,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
             // Create EVENT with value = 4 for SafeButton false positive detection
             const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
-            UserVar[event->BaseVarIndex] = 4;
+            UserVar.setFloat(event->TaskIndex, 0, 4);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("MCP : SafeButton: false positive detected. GPIO= ");
@@ -451,12 +451,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, 4); }
 
             // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = tempUserVar;
+            UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
           }
         }
       } else if ((state != currentStatus.state) && (state == -1)) {
         // set UserVar and switchState = -1 and send EVENT to notify user
-        UserVar[event->BaseVarIndex] = state;
+        UserVar.setFloat(event->TaskIndex, 0, state);
         currentStatus.mode           = PIN_MODE_OFFLINE;
 
         // switchstate[event->TaskIndex] = state;
@@ -510,7 +510,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
       if ((string.length() >= 16) && string.substring(0, 16).equalsIgnoreCase(F("mcpgpio,pinstate")))
       {
-        int par1;
+        int32_t par1;
 
         if (validIntFromString(parseString(string, 3), par1)) {
           string = GPIO_MCP_Read(par1);

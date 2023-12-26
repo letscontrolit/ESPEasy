@@ -175,6 +175,8 @@ void addRowLabel(LabelType::Enum label);
 
 void addRowLabelValue(LabelType::Enum label);
 
+void addRowLabelValues(const LabelType::Enum labels[]);
+
 void addRowLabelValue_copy(LabelType::Enum label);
 
 // ********************************************************************************
@@ -341,7 +343,9 @@ void addPinSelect(PinSelectPurpose purpose,
 enum class AdcPinSelectPurpose {
   TouchOnly,
   ADC_Touch,
+#if HAS_HALL_EFFECT_SENSOR
   ADC_Touch_HallEffect,
+#endif
   ADC_Touch_Optional
 };
 void addADC_PinSelect(AdcPinSelectPurpose purpose,

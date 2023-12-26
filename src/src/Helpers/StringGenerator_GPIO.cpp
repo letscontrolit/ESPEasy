@@ -1,7 +1,8 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 
@@ -170,15 +171,14 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (gpio == PIN_USB_D_PLUS) { return F("USB_D+"); }
 #endif
 
-  if (isFlashInterfacePin(gpio)) {
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
     return F("Flash");
   }
 
-#ifdef isPSRAMInterfacePin
+#ifdef ESP32
   if (isPSRAMInterfacePin(gpio)) {
     return F("PSRAM");
   }
-
 #endif
 
   # ifdef ESP32S2
@@ -188,7 +188,15 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 
-  #elif defined(ESP32C3)
+  #elif defined(ESP32C6) 
+
+  if (gpio == 27) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    return F("Flash Vdd"); 
+  }
+
+  #elif defined(ESP32C2) || defined(ESP32C3) 
 
   if (gpio == 11) {
     // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11

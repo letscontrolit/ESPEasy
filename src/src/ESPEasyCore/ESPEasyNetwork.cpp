@@ -18,6 +18,18 @@
 #include <ETH.h>
 #endif
 
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
 void setNetworkMedium(NetworkMedium_t new_medium) {
 #if !(FEATURE_ETHERNET)
   if (new_medium == NetworkMedium_t::Ethernet) {
@@ -138,6 +150,137 @@ IPAddress NetworkDnsIP(uint8_t dns_no) {
   #endif
   return WiFi.dnsIP(dns_no);
 }
+
+#if FEATURE_USE_IPV6
+esp_netif_t * getActiveNetworkMediumInterface() {
+  esp_interface_t iface = ESP_IF_MAX;
+  #if FEATURE_ETHERNET
+  if(active_network_medium == NetworkMedium_t::Ethernet) {
+    if(EthEventData.ethInitSuccess) {
+      esp_netif_t *res = ETH.netif();
+      if (res == nullptr) {
+        res = get_esp_interface_netif(ESP_IF_ETH);
+      }
+      if (res != nullptr)
+        return res;
+    }
+  } else
+  #endif
+  {
+    if (WifiIsSTA(WiFi.getMode())) {
+      iface = ESP_IF_WIFI_STA;
+    }
+  }
+  if (ESP_IF_MAX == iface) 
+    return nullptr;
+  return get_esp_interface_netif(iface);
+}
+
+IPAddress NetworkLocalIP6() {
+  esp_netif_t * iface = getActiveNetworkMediumInterface();
+  esp_ip6_addr_t addr;
+  if (nullptr == iface ||
+     esp_netif_get_ip6_linklocal(iface, &addr)) 
+  {
+    return IN6ADDR_ANY;
+  }
+
+  IPAddress res(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return res;
+}
+
+IPAddress NetworkGlobalIP6() {
+  esp_netif_t * iface = getActiveNetworkMediumInterface();
+  esp_ip6_addr_t addr;
+  if (nullptr == iface ||
+     esp_netif_get_ip6_global(iface, &addr)) 
+  {
+    return IN6ADDR_ANY;
+  }
+
+  IPAddress res(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return res;
+}
+
+IP6Addresses_t NetworkAllIPv6() {
+  IP6Addresses_t addresses;
+  esp_netif_t * iface = getActiveNetworkMediumInterface();
+  if (nullptr != iface) {
+    esp_ip6_addr_t esp_ip6_addr[LWIP_IPV6_NUM_ADDRESSES]{};
+
+    int count = esp_netif_get_all_ip6(iface, esp_ip6_addr);
+    for (int i = 0; i < count; ++i) {
+      addresses.emplace_back(IPv6, (const uint8_t*)esp_ip6_addr[i].addr, esp_ip6_addr[i].zone);
+    }
+  }
+
+  return addresses;
+}
+
+bool IPv6_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  if (ipv6 == IN6ADDR_ANY) { return false; }
+  int index_offset = 8;
+
+  for (int i = 0; i < 6; ++i, ++index_offset) {
+    ipv6[index_offset] = mac.mac[i];
+
+    if (i == 0) {
+      // invert bit 2
+      bitToggle(ipv6[index_offset], 1);
+    }
+
+    if (i == 2) {
+      ipv6[++index_offset] = 0xFF;
+      ipv6[++index_offset] = 0xFE;
+    }
+  }
+/*
+  addLog(LOG_LEVEL_INFO, strformat(
+     F("IPv6_from_MAC: Mac %s IP %s"),
+     mac.toString().c_str(),
+     ipv6.toString().c_str()
+     ));
+*/
+  return true;
+}
+
+bool is_IPv6_based_on_MAC(const MAC_address& mac, const IPAddress& ipv6)
+{
+  IPAddress tmp = ipv6;
+
+  if (IPv6_from_MAC(mac, tmp)) {
+    return ipv6 == tmp;
+  }
+  return false;
+}
+
+bool IPv6_link_local_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  ipv6 = NetworkLocalIP6();
+  return IPv6_from_MAC(mac, ipv6);
+}
+
+bool is_IPv6_link_local_from_MAC(const MAC_address& mac)
+{
+  return is_IPv6_based_on_MAC(mac, NetworkLocalIP6());
+}
+
+// Assume we're in the same subnet, thus use our own IPv6 global address
+bool IPv6_global_from_MAC(const MAC_address& mac, IPAddress& ipv6)
+{
+  ipv6 = NetworkGlobalIP6();
+  return IPv6_from_MAC(mac, ipv6);
+}
+
+bool is_IPv6_global_from_MAC(const MAC_address& mac)
+{
+  return is_IPv6_based_on_MAC(mac, NetworkGlobalIP6());
+}
+
+#endif // if FEATURE_USE_IPV6
+
+
 
 MAC_address NetworkMacAddress() {
   #if FEATURE_ETHERNET

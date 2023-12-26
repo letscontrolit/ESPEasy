@@ -321,7 +321,7 @@ bool P077_data_struct::plugin_read(struct EventStruct *event) {
       float value{};
 
       if (_cache[index].peek(value)) {
-        UserVar[event->BaseVarIndex + i] = value;
+        UserVar.setFloat(event->TaskIndex, i,  value);
       }
     }
   }
@@ -434,7 +434,7 @@ void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outp
         // Set preliminary averaged value as task value.
         // This way we can see intermediate updates.
         _cache[index].peek(value);
-        UserVar[event->BaseVarIndex + i] = value;
+        UserVar.setFloat(event->TaskIndex, i,  value);
       }
     }
   }

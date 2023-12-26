@@ -93,6 +93,7 @@ struct __attribute__((__packed__)) DeviceStruct
                                      // (F.e.: M5Stack Core/Core2 needs to power the TFT before SPI can be started)
   bool TaskLogsOwnPeaks   : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
   bool I2CNoDeviceCheck   : 1;       // When enabled, NO I2C check will be done on the I2C address returned from PLUGIN_I2C_GET_ADDRESS function call
+  bool I2CMax100kHz       : 1;       // When enabled, the device is only able to handle 100 kHz bus-clock speed, shows warning and enables "Force Slow I2C speed" by default
 };
 
 

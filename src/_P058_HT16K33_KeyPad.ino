@@ -110,11 +110,7 @@ boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P058_data_struct(PCONFIG(0)));
-      P058_data_struct *P058_data =
-        static_cast<P058_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P058_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P058_data_struct(PCONFIG(0)));
       break;
     }
 
@@ -128,7 +124,7 @@ boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
 
         if (P058_data->readKey(key))
         {
-          UserVar[event->BaseVarIndex] = key;
+          UserVar.setFloat(event->TaskIndex, 0, key);
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

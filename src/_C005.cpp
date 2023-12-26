@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C005
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/Globals/EventQueue.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "src/Helpers/StringParser.h"
@@ -94,6 +94,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
           continue; // we skip values with empty labels
         }
+
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);
         String value;
@@ -105,11 +106,11 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("MQTT : ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(
+              F("MQTT : %s %s"),
+              tmppubname.c_str(),
+              value.c_str()));
         }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -157,7 +158,7 @@ bool C005_parse_command(struct EventStruct *event) {
     // Message: gpio,14,0
     // Full command:  gpio,14,0
 
-    cmd = event->String2;
+    move_special(cmd, String(event->String2));
 
     // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
     validTopic = true;
@@ -175,7 +176,7 @@ bool C005_parse_command(struct EventStruct *event) {
       topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
     }
     if (!topic_folder.isEmpty()) {
-      int cmd_arg_nr = -1;
+      int32_t cmd_arg_nr = -1;
       if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
         int constructed_cmd_arg_nr = 0;
         ++topic_index;
@@ -211,17 +212,19 @@ bool C005_parse_command(struct EventStruct *event) {
     // Full command:  gpio,14,0
     if (lastindex > 0) {
       // Topic has at least one separator
-      int   lastPartTopic_int;
+      int32_t lastPartTopic_int;
       float value_f;
 
       if (validFloatFromString(event->String2, value_f) &&
           validIntFromString(lastPartTopic, lastPartTopic_int)) {
-        int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
-        cmd        = event->String1.substring(prevLastindex + 1, lastindex);
-        cmd       += ',';
-        cmd       += lastPartTopic_int;
-        cmd       += ',';
-        cmd       += event->String2; // Just use the original format
+        const int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
+
+        cmd = strformat(
+          F("%s,%d,%s"),
+          event->String1.substring(prevLastindex + 1, lastindex).c_str(),
+          lastPartTopic_int,
+          event->String2.c_str()  // Just use the original format
+        );
         validTopic = true;
       }
     }

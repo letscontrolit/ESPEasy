@@ -23,6 +23,9 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
     #endif
     case Enum::SecuritySettings_Type:          return F("SecuritySettings");
     case Enum::ExtdControllerCredentials_Type: return F("ExtendedControllerCredentials");
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:               return F("CDN_url");
+    #endif
 
     case Enum::SettingsType_MAX: break;
   }
@@ -35,6 +38,8 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
 bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_index, int& offset, int& max_size, int& struct_size) {
   // The defined offsets should be used with () just in case they are the result of a formula in the defines.
   struct_size = 0;
+  max_index = -1;
+  offset    = -1;
 
   switch (settingsType) {
     case Enum::BasicSettings_Type:
@@ -55,7 +60,8 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     case Enum::CustomTaskSettings_Type:
     {
-      getSettingsParameters(Enum::TaskSettings_Type, index, max_index, offset, max_size, struct_size);
+      if (!getSettingsParameters(Enum::TaskSettings_Type, index, max_index, offset, max_size, struct_size))
+        return false;
       offset  += (DAT_TASKS_CUSTOM_OFFSET);
       max_size = DAT_TASKS_CUSTOM_SIZE;
 
@@ -88,8 +94,10 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       offset      = index * (DAT_NOTIFICATION_SIZE);
       max_size    = DAT_NOTIFICATION_SIZE;
       struct_size = sizeof(NotificationSettingsStruct);
-#endif
       break;
+#else
+      return false;
+#endif
     }
     case Enum::SecuritySettings_Type:
     {
@@ -109,6 +117,19 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       struct_size = 0;
       break;
     }
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+    {
+      max_index   = 1;
+      offset      = DAT_OFFSET_CDN;
+      max_size    = DAT_CDN_SIZE;
+
+      // struct_size may differ.
+      struct_size = 0;
+    }
+    break;
+#endif
+
     case Enum::SettingsType_MAX:
     {
       max_index = -1;
@@ -133,12 +154,13 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& offs
 }
 
 int SettingsType::getMaxFilePos(Enum settingsType) {
-  int max_index, offset, max_size;
+  int max_index, offset, max_size{};
   int struct_size = 0;
 
-  getSettingsParameters(settingsType, 0,             max_index, offset, max_size, struct_size);
-  getSettingsParameters(settingsType, max_index - 1, offset,    max_size);
-  return offset + max_size - 1;
+  if (getSettingsParameters(settingsType, 0,             max_index, offset, max_size, struct_size) &&
+      getSettingsParameters(settingsType, max_index - 1, offset,    max_size))
+    return offset + max_size - 1;
+  return -1;
 }
 
 int SettingsType::getFileSize(Enum settingsType) {
@@ -147,7 +169,7 @@ int SettingsType::getFileSize(Enum settingsType) {
 
   for (int st = 0; st < static_cast<int>(Enum::SettingsType_MAX); ++st) {
     if (SettingsType::getSettingsFile(static_cast<Enum>(st)) == file_type) {
-      int filePos = SettingsType::getMaxFilePos(static_cast<Enum>(st));
+      const int filePos = SettingsType::getMaxFilePos(static_cast<Enum>(st));
 
       if (filePos > max_file_pos) {
         max_file_pos = filePos;
@@ -177,6 +199,10 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
       return 0xff00a2;
     case Enum::ExtdControllerCredentials_Type:
       return 0xc300ff;
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+      return 0xff6600;
+#endif
     case Enum::SettingsType_MAX:
       break;
   }
@@ -193,6 +219,9 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
     case Enum::CustomTaskSettings_Type:
     case Enum::ControllerSettings_Type:
     case Enum::CustomControllerSettings_Type:
+#if FEATURE_ALTERNATIVE_CDN_URL
+    case Enum::CdnSettings_Type:
+#endif
       return SettingsFileEnum::FILE_CONFIG_type;
     case Enum::NotificationSettings_Type:
       return SettingsFileEnum::FILE_NOTIFICATION_type;

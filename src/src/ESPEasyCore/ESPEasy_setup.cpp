@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../Commands/InternalCommands_decoder.h"
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -27,7 +28,7 @@
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_checks.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringGenerator_System.h"
@@ -44,15 +45,25 @@
 #endif // if FEATURE_ARDUINO_OTA
 
 #ifdef ESP32
+
+#if ESP_IDF_VERSION_MAJOR < 5
+#include <esp_pm.h>
+#include <soc/efuse_reg.h>
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
-#include <soc/efuse_reg.h>
-
+#else
+#include <hal/efuse_hal.h>
+#include <rom/gpio.h>
 #include <esp_pm.h>
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
+#if ESP_IDF_VERSION_MAJOR < 5
 # include "hal/efuse_ll.h"
 # include "hal/efuse_hal.h"
+#else
+#include <soc/efuse_defs.h>
+#endif
 #endif
 
 #endif
@@ -111,7 +122,7 @@ void sw_watchdog_callback(void *arg)
 void ESPEasy_setup()
 {
 #if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
-  disable_extra4k_at_link_time();
+//  disable_extra4k_at_link_time();
 #endif
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();
@@ -132,7 +143,11 @@ void ESPEasy_setup()
   // restore GPIO16/17 if no PSRAM is found
   if (!FoundPSRAM()) {
     // test if the CPU is not pico
+    #if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    #else
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
+    #endif
     uint32_t pkg_version = chip_ver & 0x7;
     if (pkg_version <= 3) {   // D0WD, S0WD, D2WD
       gpio_reset_pin(GPIO_NUM_16);
@@ -146,6 +161,14 @@ void ESPEasy_setup()
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
+
+#ifdef ESP32
+  ResetFactoryDefaultPreference.init();
+#endif
+
+#ifndef BUILD_NO_DEBUG
+//  checkAll_internalCommands();
+#endif
 
   PluginSetup();
   CPluginSetup();
@@ -278,7 +301,9 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasy_Console.reInit();
+#endif
 
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
@@ -289,35 +314,47 @@ void ESPEasy_setup()
     // Configure dynamic frequency scaling:
     // maximum and minimum frequencies are set in sdkconfig,
     // automatic light sleep is enabled if tickless idle support is enabled.
+#if ESP_IDF_VERSION_MAJOR < 5
 #if CONFIG_IDF_TARGET_ESP32
-    esp_pm_config_esp32_t pm_config = {
-            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
-#elif CONFIG_IDF_TARGET_ESP32S2
-    esp_pm_config_esp32s2_t pm_config = {
-            .max_freq_mhz = 240,
-#elif CONFIG_IDF_TARGET_ESP32C3
-    esp_pm_config_esp32c3_t pm_config = {
-            .max_freq_mhz = 160,
+    esp_pm_config_esp32_t pm_config =
 #elif CONFIG_IDF_TARGET_ESP32S3
-    esp_pm_config_esp32s3_t pm_config = {
-            .max_freq_mhz = 240,
+    esp_pm_config_esp32s3_t pm_config =
+#elif CONFIG_IDF_TARGET_ESP32S2
+    esp_pm_config_esp32s2_t pm_config =
+#elif CONFIG_IDF_TARGET_ESP32C6
+    esp_pm_config_esp32c3_t pm_config =
+#elif CONFIG_IDF_TARGET_ESP32C3
+    esp_pm_config_esp32c3_t pm_config =
 #elif CONFIG_IDF_TARGET_ESP32C2
-    esp_pm_config_esp32c2_t pm_config = {
-            .max_freq_mhz = 120,
+    esp_pm_config_esp32c2_t pm_config =
 #endif
-            .min_freq_mhz = 80,
+    {
+            .max_freq_mhz = getCPU_MaxFreqMHz(),
+
+            .min_freq_mhz = getCPU_MinFreqMHz(),
 #if CONFIG_FREERTOS_USE_TICKLESS_IDLE
             .light_sleep_enable = true
 #endif
     };
+#else
+  esp_pm_config_t pm_config = {
+            .max_freq_mhz = getCPU_MaxFreqMHz(),
+            .min_freq_mhz = 80,
+#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
+            .light_sleep_enable = true
+#else
+            .light_sleep_enable = false
+#endif
+    };
+#endif
     esp_pm_configure(&pm_config);
 #if CONFIG_IDF_TARGET_ESP32
   } else {
     // Set the max/min frequency based on what's being reported by the efuses.
     // Only ESP32 seems to have this function.
     esp_pm_config_esp32_t pm_config = {
-            .max_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
-            .min_freq_mhz = static_cast<int>(efuse_hal_get_rated_freq_mhz()),
+            .max_freq_mhz = getCPU_MaxFreqMHz(),
+            .min_freq_mhz = getCPU_MinFreqMHz(),
 #if CONFIG_FREERTOS_USE_TICKLESS_IDLE
             .light_sleep_enable = false
 #endif
@@ -392,7 +429,7 @@ void ESPEasy_setup()
     WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
-    if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+    if (!WiFi_AP_Candidates.hasCandidates()) {
       WiFiEventData.wifiSetup = true;
       RTC.clearLastWiFi(); // Must scan all channels
       // Wait until scan has finished to make sure as many as possible are found

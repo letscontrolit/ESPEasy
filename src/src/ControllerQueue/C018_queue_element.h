@@ -23,11 +23,7 @@ public:
 
   C018_queue_element() = default;
 
-# ifdef USE_SECOND_HEAP
-  C018_queue_element(const C018_queue_element& other) = default;
-# else // ifdef USE_SECOND_HEAP
   C018_queue_element(const C018_queue_element& other) = delete;
-# endif // ifdef USE_SECOND_HEAP
 
   C018_queue_element(C018_queue_element&& other) = default;
 
