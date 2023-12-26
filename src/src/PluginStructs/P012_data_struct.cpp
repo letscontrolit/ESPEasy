@@ -96,11 +96,10 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
     }
   }
 
+  if (row == 0) { firstLineState = 0; } // Reset firstLineState
   lcd->setCursor(col, row);
 
   if ((Plugin_012_mode == 1) || (Plugin_012_mode == 2)) {
-    lcd->setCursor(col, row);
-
     for (uint8_t i = 0; i < Plugin_012_cols - col; i++) {
       if (text[i]) {
         lcd->print(text[i]);

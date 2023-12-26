@@ -10,6 +10,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-26 tonhuisman: Clear the splash from the display after 5 seconds if not already overwritten
  * 2023-11-21 tonhuisman: Add support for contrast for ST7032 based displays
  * 2023-11-18 tonhuisman: Trying to include support for Midas displays MD21605B6W-FTPLWI3 ST7032 (16x2 at I2C 0x3E)
  * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
@@ -228,6 +229,15 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
 
+        if (P012_data->firstLineState == 0) {
+          // Most common route
+        } else if (P012_data->firstLineState == 2) {
+          P012_data->firstLineState = 1;
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 5000);
+        } else if (P012_data->firstLineState == 1) {
+          P012_data->lcdWrite(F("        "), 0, 0); // Wipe 'ESP Easy' splash text, will reset firstLineState
+        }
+
         for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
         {
           String tmpString = deviceTemplate[x];
@@ -265,7 +275,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (equals(arg1, F("clear"))) {
             P012_data->lcd->clear();
-            success = true;
+            P012_data->firstLineState = 0;
+            success                   = true;
           }
           else if (equals(arg1, F("contrast")) &&
                    (P012_DisplaySize_e::LCD_2x16_ST7032 == static_cast<P012_DisplaySize_e>(P012_SIZE)) &&

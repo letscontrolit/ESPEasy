@@ -20,7 +20,7 @@ struct P012_data_struct : public PluginTaskData_base {
                    P012_DisplaySize_e lcd_size,
                    uint8_t            mode,
                    uint8_t            timer);
-  P012_data_struct()          = delete;
+  P012_data_struct() = delete;
   virtual ~P012_data_struct();
 
   void init();
@@ -47,6 +47,7 @@ struct P012_data_struct : public PluginTaskData_base {
   int                Plugin_012_rows = 2;
   int                Plugin_012_mode = 1;
   uint8_t            displayTimer    = 0;
+  uint8_t            firstLineState  = 2;
 };
 
 #endif // ifdef USES_P012
