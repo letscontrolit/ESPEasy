@@ -96,13 +96,52 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
+      - id: string
+        uses: Entepotenz/change-string-case-action-min-dependencies@v1
+        with:
+          string: ${{ matrix.chip }}
       - uses: actions/upload-artifact@v4
         with:
-          name: Binaries-${{ matrix.typ }}-${{ matrix.env }} # Sort by ESP type
+          name: Binaries-${{ steps.string.outputs.uppercase }}-${{ matrix.env }} # Sort by ESP type
           path: |
             bin
           if-no-files-found: ignore
 
+  # Repackage all ESP82xx and ESP32 into a single Binaries-all.zip
+  repackage:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+      - name: Get current date
+        id: date
+        run: |
+          echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-*
+          merge-multiple: true
+      - name: Repackage for single-archive upload
+        run: |
+          ls -R
+          cd artifacts/Binaries
+          mkdir bin
+          mv *.* bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ESPEasy-all-Binaries-${{ steps.date.outputs.builddate }}_PR#${{ github.event.number }}_${{ github.run_id }}
+          path: |
+            artifacts/Binaries/
+          if-no-files-found: ignore
+  
   # Repackage separately for ESP82xx and ESP32
   # repackage:
   #   needs: build

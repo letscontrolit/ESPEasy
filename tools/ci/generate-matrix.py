@@ -23,9 +23,9 @@ def get_jobs(cfg):
         else:
             typ = "ESP8266" # Catch WROOM02 and some other 'hard_' builds
         if "espressif8266" in platform:
-            yield {"chip": "esp8266", "env": env, "typ": typ}
+            yield {"chip": typ.lower(), "env": env}
         elif "espressif32" in platform:
-            yield {"chip": "esp32", "env": env, "typ": typ}
+            yield {"chip": typ.lower(), "env": env}
         else:
             raise ValueError(
                 "Unknown `platform = {}` for `[env:{}]`".format(platform, env)
