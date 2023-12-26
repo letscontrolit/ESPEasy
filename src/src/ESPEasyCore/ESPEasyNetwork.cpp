@@ -475,6 +475,7 @@ uint8_t EthLinkSpeed()
 
 
 void stop_eth_dhcps() {
+# if ESP_IDF_VERSION_MAJOR<5
   esp_err_t err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_ETH);
   if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
 /*
@@ -485,6 +486,7 @@ void stop_eth_dhcps() {
     }
 */
   }
+#endif
 }
 
 #endif
