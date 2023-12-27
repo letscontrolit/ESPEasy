@@ -15,10 +15,12 @@
 #ifdef USES_P164
 
 //#define P164_USE_CUSTOMMODE     // Enable usage of ENS160 custom modes
-#define P164_ENS160_DEBUG       // Enable debugging using the serial port
+#ifndef BUILD_NO_DEBUG
+//#define P164_ENS160_DEBUG       // Enable debugging using the serial port
+#endif
 
 // ESPEasy plugin parameter storage
-#define P164_I2C_ADDR            PCONFIG(0)
+#define P164_PCONFIG_I2C_ADDR    PCONFIG(0)
 #define P164_PCONFIG_TEMP_TASK   PCONFIG(1)
 #define P164_PCONFIG_TEMP_VAL    PCONFIG(2)
 #define P164_PCONFIG_HUM_TASK    PCONFIG(3)
@@ -35,6 +37,8 @@ enum P164_state
   P164_STATE_INITIAL,        // Device is in an unknown state, typically after reset
   P164_STATE_ERROR,          // Device is in an error state
   P164_STATE_RESETTING,      // Waiting for response after reset
+  P164_STATE_STARTING1,      // Warming up after reset, wait to become idle
+  P164_STATE_STARTING2,      // Startup state waiting for previous command to be finished
   P164_STATE_IDLE,           // Device is brought into IDLE mode
   P164_STATE_DEEPSLEEP,      // Device is brought into DEEPSLEEP mode
   P164_STATE_OPERATIONAL,    // Device is brought into OPERATIONAL mode
@@ -93,7 +97,6 @@ private:
   void        moveToState(P164_state newState);               // Trigger a state change
 
   uint8_t     i2cAddress = ENS160_I2CADDR_0;                  // The I2C address of the connected device
-  uint8_t     _nINT = 0;                  // INT pin number (0: not used)
   
   P164_state  _state = P164_STATE_INITIAL;  // General state of the software
   ulong       _lastChange = 0u;           // Timestamp of last state transition
@@ -127,11 +130,7 @@ private:
 #endif // P164_USE_CUSTOMMODE
 
   // I2C access functions
-  static uint8_t  read8(uint8_t addr, byte reg);	
-  static bool     read(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num);
-  static bool     write8(uint8_t addr, byte reg, byte value);
-  static bool     write(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num);
-
+  static bool     readI2C(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num);
 };
 #endif // ifdef USES_P164
 #endif // ifndef PLUGINSTRUCTS_P164_DATA_STRUCT_H

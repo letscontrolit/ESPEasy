@@ -5,6 +5,17 @@
 // For documentation see 
 // https://www.sciosense.com/wp-content/uploads/documents/SC-001224-DS-9-ENS160-Datasheet.pdf
 //
+// Based upon: https://github.com/sciosense/ENS160_driver
+// MIT License for the original code referenced above
+// Copyright (c) 2020 Sciosense
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 // 2023 By flashmark
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +37,8 @@
 #define ENS160_REG_DATA_AQI     0x21    // Air quality according to index according to UBA
 #define ENS160_REG_DATA_TVOC    0x22    // Equivalent TVOC concentartion (ppb)
 #define ENS160_REG_DATA_ECO2    0x24		// Equivalent CO2 concentration (ppm)
-#define ENS160_REG_DATA_BL      0x28    // Relative air quality index according to ScioSense
+#define ENS160_REG_DATA_AQI_S   0x26    // Relative Air Quality Index according to ScioSense [ENS161 only]
+#define ENS160_REG_DATA_BL      0x28    // Undocumented
 #define ENS160_REG_DATA_T       0x30    // Temperature used in calculations
 #define ENS160_REG_DATA_RH      0x32    // Relative humidity used in calculations
 #define ENS160_REG_DATA_MISR    0x38    //Data integrity field (optional)
@@ -39,7 +51,11 @@
 #define ENS160_REG_GPR_WRITE_6  ENS160_REG_GPR_WRITE_0 + 6
 #define ENS160_REG_GPR_WRITE_7  ENS160_REG_GPR_WRITE_0 + 7
 #define ENS160_REG_GPR_READ_0   0x48    // General purpose read registers [8 bytes]
+#define ENS160_REG_GPR_READ_1   ENS160_REG_GPR_READ_0 + 1
+#define ENS160_REG_GPR_READ_2   ENS160_REG_GPR_READ_0 + 2
+#define ENS160_REG_GPR_READ_3   ENS160_REG_GPR_READ_0 + 3
 #define ENS160_REG_GPR_READ_4   ENS160_REG_GPR_READ_0 + 4
+#define ENS160_REG_GPR_READ_5   ENS160_REG_GPR_READ_0 + 5
 #define ENS160_REG_GPR_READ_6   ENS160_REG_GPR_READ_0 + 6
 #define ENS160_REG_GPR_READ_7   ENS160_REG_GPR_READ_0 + 7
 
@@ -98,23 +114,18 @@
 #define CONVERT_RS_RAW2OHMS_F(x)    (pow (2, (float)(x) / 2048))
 
 // Form IDs used on the device setup page. Should be a short unique string.
-#define P164_GUID_TEMP_T     "f08"
-#define P164_GUID_TEMP_V     "f09"
-#define P164_GUID_HUM_T      "f10"
-#define P164_GUID_HUM_V      "f11"
+#define P164_GUID_TEMP_T     "f01"
+#define P164_GUID_TEMP_V     "f02"
+#define P164_GUID_HUM_T      "f03"
+#define P164_GUID_HUM_V      "f04"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 P164_data_struct::P164_data_struct(struct EventStruct *event) :
-  i2cAddress(P164_I2C_ADDR)
+  i2cAddress(P164_PCONFIG_I2C_ADDR)
 {
-  #ifdef P164_ENS160_DEBUG
-    Serial.println(F("ENS160: Constructor"));
-    Serial.print("ENS160: I2C address =");
-    Serial.println(i2cAddress, HEX);
-  #endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,13 +133,15 @@ P164_data_struct::P164_data_struct(struct EventStruct *event) :
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::begin()
 {
+  // Start connecting the device over I2C
   if (!start(i2cAddress)) {
-    Serial.println(F("P164: device initialization ***FAILED***"));
+    addLogMove(LOG_LEVEL_ERROR, F("P164: device initialization FAILED"));
     return false;
   }
-  setMode(ENS160_OPMODE_STD);
+  setMode(ENS160_OPMODE_STD); // For now we only support the standard acquisition mode
+
   #ifdef P164_ENS160_DEBUG
-    Serial.println(F("P164: begin(): success"));
+    addLogMove(LOG_LEVEL_DEBUG, F("P164: begin(): success"));
   #endif
   return true;
 }
@@ -138,9 +151,9 @@ bool P164_data_struct::begin()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::read(float& tvoc, float& eco2)
 {
-  bool success = measure();
-  tvoc = (float)_data_tvoc;
-  eco2 = (float)_data_eco2;
+  bool success = measure();       // Read measurement values from device
+  tvoc = (float)_data_tvoc;       // Latest acquired TVOC value
+  eco2 = (float)_data_eco2;       // Latest aquired eCO2 value
   return success;
 }
 
@@ -150,7 +163,7 @@ bool P164_data_struct::read(float& tvoc, float& eco2)
 bool P164_data_struct::read(float& tvoc, float& eco2, float temp, float hum)
 {
   this->set_envdata(temp, hum);   // Write new compensation temp & hum to device
-  bool success = measure();       // Read emasurement values from device
+  bool success = measure();       // Read measurement values from device
   tvoc = (float)_data_tvoc;       // Latest acquired TVOC value
   eco2 = (float)_data_eco2;       // Latest aquired eCO2 value
   return success;
@@ -166,9 +179,7 @@ bool P164_data_struct::webformLoad(struct EventStruct *event)
   uint16_t chipID = 0;
 
   addRowLabel(F("Detected Sensor Type"));
-
-  chipID = I2C_read16_LE_reg(P164_I2C_ADDR, ENS160_REG_PART_ID, &found);
-
+  chipID = I2C_read16_LE_reg(P164_PCONFIG_I2C_ADDR, ENS160_REG_PART_ID, &found);
   if (!found) {
     addHtml(F("No device found"));
   } else if (chipID == ENS160_PARTID) {
@@ -177,6 +188,16 @@ bool P164_data_struct::webformLoad(struct EventStruct *event)
     addHtml(F("ENS161"));
   } else {
     addHtmlInt(chipID);
+  }
+
+  P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (P164_data != nullptr) {
+    addHtml(F(" Firmware: "));
+    addHtmlInt(P164_data->getMajorRev());
+    addHtml(F("."));
+    addHtmlInt(P164_data->getMinorRev());    
+    addHtml(F("."));
+    addHtmlInt(P164_data->getBuild());
   }
 
   addFormNote(F("Both Temperature and Humidity task & values are needed to enable compensation"));
@@ -209,8 +230,7 @@ bool P164_data_struct::webformLoad(struct EventStruct *event)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::webformSave(struct EventStruct *event)
 {
-  P164_I2C_ADDR = getFormItemInt(F("i2c_addr"));
-
+  P164_PCONFIG_I2C_ADDR  = getFormItemInt(F("i2c_addr"));
   P164_PCONFIG_TEMP_TASK = getFormItemInt(F(P164_GUID_TEMP_T));
   P164_PCONFIG_TEMP_VAL  = getFormItemInt(F(P164_GUID_TEMP_V));
   P164_PCONFIG_HUM_TASK  = getFormItemInt(F(P164_GUID_HUM_T));
@@ -227,29 +247,55 @@ bool P164_data_struct::tenPerSecond(struct EventStruct *event)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+// Set operation mode of sensor                                                                  //
+// Note: This function is to set the operation mode to the plugin software structure only        //
+//       The statemachine shall handle the actual programming of the OPMODE register             //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+bool P164_data_struct::setMode(uint8_t mode) {
+  bool result = false;
+
+  // LP only valid for rev>0
+  if (!(mode == ENS160_OPMODE_LP) and (_revENS16x == 0)) {
+    this->_opmode = mode;
+    result        = true;
+  }
+
+  #ifdef P164_ENS160_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log;
+      log += F("P164: setMode(");
+      log += mode;
+      log += F(")");
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+  #endif // ifdef P164_ENS160_DEBUG
+
+  return result;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //                     **** The sensor handling code ****                                        //
 // This is based upon Sciosense code on github                                                   //
-// The code is adapted to fit the ESPEasy structures                                             //
+// The code is adapted to fit the ESPEasy structures and statemachine behavior is added          //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper function to display the current state in readable format                               //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef P164_ENS160_DEBUG
-void printState(int state) {
-    #ifdef P164_ENS160_DEBUG
-
+String printState(int state) {
   switch (state) {
-    case P164_STATE_INITIAL:      Serial.print(F("initial")); break;
-    case P164_STATE_ERROR:        Serial.print(F("error")); break;
-    case P164_STATE_RESETTING:    Serial.print(F("resetting")); break;
-    case P164_STATE_IDLE:         Serial.print(F("idle")); break;
-    case P164_STATE_DEEPSLEEP:    Serial.print(F("deepsleep")); break;
-    case P164_STATE_OPERATIONAL:  Serial.print(F("operational")); break;
-    default:                        Serial.print(F("***ERROR***")); break;
+    case P164_STATE_INITIAL:      return F("initial"); break;
+    case P164_STATE_ERROR:        return F("error"); break;
+    case P164_STATE_RESETTING:    return F("resetting"); break;
+    case P164_STATE_STARTING1:    return F("starting1"); break;
+    case P164_STATE_STARTING2:    return F("starting2"); break;
+    case P164_STATE_IDLE:         return F("idle"); break;
+    case P164_STATE_DEEPSLEEP:    return F("deepsleep"); break;
+    case P164_STATE_OPERATIONAL:  return F("operational"); break;
+    default:                      return F("***ERROR***"); break;
   }
-    #endif // ifdef P164_ENS160_DEBUG
 }
 #endif
 
@@ -264,6 +310,8 @@ void printState(int state) {
 //   + INITIAL      Class is constructed, waiting for begin()                                    //
 //   + ERROR        Communication with the device failed or other fatal error conditions         //
 //   + RESETTING    Waiting for device reset to be finished                                      //
+//   + STARTING1    Startup sequence waiting for previous command to be acknowledged             //
+//   + STARTING2    Startup sequence waiting for previous command to be acknowledged             //
 // Note that the ENS161 device has various gas sensing operation modes which all map to the      //
 // same OPERATIONAL state. These are combined in the same OPMODE register in the device          //
 //   - STANDARD                                                                                  //
@@ -293,15 +341,33 @@ bool P164_data_struct::evaluateState()
       }
       break;
     case P164_STATE_RESETTING:
+      // Device has been reset, give it some time to get accessible again
       this->_available = false;
 
-      // Once device has rebooted read some stuff from it and move to idle
-      if (timePassedSince(this->_lastChange) > ENS160_BOOTING) { // Wait until device has rebooted
-        this->checkPartID();
+      // Once device has rebooted check if it is a supported device at the given I2C address
+      if (timePassedSince(this->_lastChange) > ENS160_BOOTING) { 
+        if (this->checkPartID())
+        {
+          newState = P164_STATE_STARTING1;
+        }
+      }
+      break;
+    case P164_STATE_STARTING1:
+      // A valid device is found, check if its status is ready to continue
+      this->_available = false;
+      this->getStatus();
+      if (GET_STATUS_VALIDITY(this->_statusReg) == 0)
+      {
         this->writeMode(ENS160_OPMODE_IDLE);
         this->clearCommand();
+        newState = P164_STATE_STARTING2;
+      }
+      break;
+    case P164_STATE_STARTING2:
+      this->_available = false;
+      this->getStatus();
+      if (GET_STATUS_VALIDITY(this->_statusReg) == 0) {
         this->getFirmware();
-        this->getStatus();
         newState = P164_STATE_IDLE;
       }
       break;
@@ -358,26 +424,19 @@ bool P164_data_struct::evaluateState()
   }
 
   if (newState != this->_state) {
+    #ifdef P164_ENS160_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("P164: State transition ");
+        log += printState(this->_state);
+        log += F(" -> ");
+        log += printState(newState);
+        log += F("; opmode= ");
+        log += this->_opmode;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+    #endif // ifdef P164_ENS160_DEBUG
     this->_state      = newState;
     this->_lastChange = millis();
-    #ifdef P164_ENS160_DEBUG
-      Serial.print(F("P164: State transition->"));
-      printState(newState);
-      Serial.print(F("; opmode= "));
-      Serial.print(this->_opmode);
-      Serial.println(F("."));
-    #endif // ifdef P164_ENS160_DEBUG
-  }
-  else {
-    #ifdef P164_ENS160_DEBUG
-//      if (millis() > (this->_dbgtm + 1000)) {
-//        this->_dbgtm = millis();
-//        Serial.print(F("P164: state "));
-//        printState(newState);
-//        Serial.print(F(" opmode "));
-//        Serial.println(this->_opmode);
-//      }
-    #endif
   }
 
   return success;
@@ -385,9 +444,21 @@ bool P164_data_struct::evaluateState()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper function to enter a new state                                                          //
+// Function must be called outside evaluateState() when an action causes a state transition      //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void P164_data_struct::moveToState(P164_state newState)
 {
+  #ifdef P164_ENS160_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log;
+      log += F("P164: Move to state: ");
+      log += printState(this->_state);
+      log += F(" --> ");
+      log += printState(newState);
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+  #endif // ifdef P164_ENS160_DEBUG
+
   this->_state      = newState; // Enter the new state
   this->_lastChange = millis(); // Mark time of transition
   this->evaluateState();        // Check if we can already move on
@@ -395,7 +466,6 @@ void P164_data_struct::moveToState(P164_state newState)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Init the device:                                                                              //
-// Setup optional hardware pins (not implemented yet)                                            //
 // Reset ENS16x                                                                                  //
 // Returns false on encountered errors                                                           //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -404,23 +474,22 @@ bool P164_data_struct::start(uint8_t slaveaddr)
   uint8_t result = 0;
 
   // Initialize internal bookkeeping;
-  this->_state      = P164_STATE_INITIAL; // Assume nothing, start clean
+  this->_state      = P164_STATE_INITIAL;   // Assume nothing, start clean
   this->_lastChange = millis();             // Bookmark last state change as now
   this->_available  = false;
   this->_opmode     = ENS160_OPMODE_STD;
-
-  // Set IO pin levels
-  // TODO: It is doubtable we will use the INT pin in future
-  if (this->_nINT > 0) {
-    pinMode(this->_nINT, INPUT_PULLUP); // INT is open drain output pin for the device
-  }
+  this->i2cAddress  = slaveaddr;
 
   result = this->writeMode(ENS160_OPMODE_RESET);  // Reset the device, takes some time
-  this->moveToState(P164_STATE_RESETTING); // Go to next state RESETTING
+  this->moveToState(P164_STATE_RESETTING);        // Go to next state RESETTING
 
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: reset() result: "));
-    Serial.println(result == 0 ? F("ok") : F("nok"));
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log;
+      log += F("P164: start() result= ");
+      log += result ? F("ok") : F("nok");
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   #endif
   return result;
 }
@@ -431,28 +500,18 @@ bool P164_data_struct::start(uint8_t slaveaddr)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::measure() {
   uint8_t i2cbuf[8];
-  uint8_t status;
   bool    newData = false;
-
-  #ifdef P164_ENS160_DEBUG
-    Serial.println(F("P164: Start measurement"));
-  #endif // ifdef P164_ENS160_DEBUG
+  bool    is_ok;
 
   if (this->_state == P164_STATE_OPERATIONAL)  {
-    // Check if new data is aquired
-    if (this->getStatus()) {
-      status = this->_statusReg;
-
-      // Read predictions
-      if (IS_NEWDAT(status)) {
+    if (this->getStatus()) {              // Check status register if new data is aquired
+      if (IS_NEWDAT(this->_statusReg)) {
         newData = true;
-        P164_data_struct::read(i2cAddress, ENS160_REG_DATA_AQI, i2cbuf, 7);
-        _data_aqi  = i2cbuf[0];
-        _data_tvoc = i2cbuf[1] | ((uint16_t)i2cbuf[2] << 8);
-        _data_eco2 = i2cbuf[3] | ((uint16_t)i2cbuf[4] << 8);
-
-        if (_revENS16x > 0) {
-          _data_aqi500 = ((uint16_t)i2cbuf[5]) | ((uint16_t)i2cbuf[6] << 8);
+        _data_aqi  = I2C_read8_reg(i2cAddress, ENS160_REG_DATA_AQI, &is_ok);
+        _data_tvoc = I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_TVOC, &is_ok);
+        _data_eco2 = I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_ECO2, &is_ok);
+        if (_revENS16x > 0) {             // AQI500 only available for ENS161
+          _data_aqi500 = I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_AQI_S, &is_ok);
         }
         else {
           _data_aqi500 = 0;
@@ -466,14 +525,22 @@ bool P164_data_struct::measure() {
   }
 
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: measure: aqi= "));
-    Serial.print(_data_aqi);
-    Serial.print(F(" tvoc= "));
-    Serial.print(_data_tvoc);
-    Serial.print(F(" eco2= "));
-    Serial.print(_data_eco2);
-    Serial.print(F(" newdata = "));
-    Serial.println(newData);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log += F("P164: measure() state= ");
+      log += printState(this->_state);
+      log += F(", aqi= ");
+      log += _data_aqi;
+      log += F(", tvoc= ");
+      log += _data_tvoc;
+      log += F(", eco2= ");
+      log += _data_eco2;
+      log += F(", AQI500= ");
+      log += _data_aqi500;
+      log += F(", newdata = ");
+      log += newData;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   #endif // ifdef P164_ENS160_DEBUG
 
   return newData;
@@ -490,18 +557,19 @@ bool P164_data_struct::measure() {
 // This feature is not documented in the datasheet, but code is provided by Sciosense            //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::initCustomMode(uint16_t stepNum) {
-  uint8_t result;
+  bool result = false;
 
   if (stepNum > 0) {
     this->_stepCount = stepNum;
     result           = this->writeMode(ENS160_OPMODE_IDLE);
     result           = this->clearCommand();
-    result           = P164_data_struct::write8(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_SETSEQ);
-  } else {
-    result = 1;
+    result           = I2C_write8_reg(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_SETSEQ);
+  } 
+  else {
+    result = false;
   }
 
-  return result == 0;
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -514,11 +582,13 @@ bool P164_data_struct::addCustomStep(uint16_t time, bool measureHP0, bool measur
                                      uint16_t tempHP1, uint16_t tempHP2, uint16_t tempHP3) {
   uint8_t seq_ack;
   uint8_t temp;
+  bool    is_ok;
 
-    #ifdef P164_ENS160_DEBUG
-  Serial.print("setCustomMode() write step ");
-  Serial.println(this->_stepCount);
-    #endif // ifdef P164_ENS160_DEBUG
+  #ifdef P164_ENS160_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("setCustomMode() write step "), this->_stepCount));
+    }
+  #endif // ifdef P164_ENS160_DEBUG
 
   // TODO check if delay is needed
   // delay(ENS160_BOOTING);                   // Wait to boot after reset
@@ -529,28 +599,28 @@ bool P164_data_struct::addCustomStep(uint16_t time, bool measureHP0, bool measur
   if (measureHP1) { temp = temp | 0x10; }
   if (measureHP2) { temp = temp | 0x8; }
   if (measureHP3) { temp = temp | 0x4; }
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_0, temp);
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_0, temp);
 
   temp = (uint8_t)(((time / 24) - 1) >> 2);
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_1, temp);
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_1, temp);
 
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_2, (uint8_t)(tempHP0 / 2));
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_3, (uint8_t)(tempHP1 / 2));
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_4, (uint8_t)(tempHP2 / 2));
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_5, (uint8_t)(tempHP3 / 2));
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_2, (uint8_t)(tempHP0 / 2));
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_3, (uint8_t)(tempHP1 / 2));
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_4, (uint8_t)(tempHP2 / 2));
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_5, (uint8_t)(tempHP3 / 2));
 
-  P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_6, (uint8_t)(this->_stepCount - 1));
+  I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_6, (uint8_t)(this->_stepCount - 1));
 
   if (this->_stepCount == 1) {
-    P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_7, 128);
+    I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_7, 128);
   } else {
-    P164_data_struct::write8(i2cAddress, ENS160_REG_GPR_WRITE_7, 0);
+    I2C_write8_reg(i2cAddress, ENS160_REG_GPR_WRITE_7, 0);
   }
 
   // TODO check if delay is needed
   // delay(ENS160_BOOTING);
+  seq_ack = I2C_read8_reg(i2cAddress, ENS160_REG_GPR_READ_7, &is_ok);
 
-  seq_ack = P164_data_struct::read8(i2cAddress, ENS160_REG_GPR_READ_7);
 
   // TODO check if delay is needed
   // delay(ENS160_BOOTING);                   // Wait to boot after reset
@@ -568,37 +638,27 @@ bool P164_data_struct::addCustomStep(uint16_t time, bool measureHP0, bool measur
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::measureRaw() {
   uint8_t i2cbuf[8];
-  uint8_t status;
   bool    newData = false;
-
-  // Set default status for early bail out
-  #ifdef P164_ENS160_DEBUG
-    Serial.println("ENS16x: Start measurement");
-  #endif // ifdef P164_ENS160_DEBUG
+  bool    is_ok = true;
 
   if (this->_state == P164_STATE_OPERATIONAL)  {
     this->getStatus();
-    status = this->_statusReg;
-
-    if (IS_NEWGPR(status)) {
+    if (IS_NEWGPR(this->_statusReg)) {
       newData = true;
 
       // Read raw resistance values
-      P164_data_struct::read(i2cAddress, ENS160_REG_GPR_READ_0, i2cbuf, 8);
-      _hp0_rs = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[0] | ((uint16_t)i2cbuf[1] << 8)));
-      _hp1_rs = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[2] | ((uint16_t)i2cbuf[3] << 8)));
-      _hp2_rs = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[4] | ((uint16_t)i2cbuf[5] << 8)));
-      _hp3_rs = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[6] | ((uint16_t)i2cbuf[7] << 8)));
+      _hp0_rs = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_GPR_READ_0, &is_ok));
+      _hp1_rs = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_GPR_READ_2, &is_ok));
+      _hp2_rs = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_GPR_READ_4, &is_ok));
+      _hp3_rs = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_GPR_READ_6, &is_ok));
 
       // Read baselines
-      P164_data_struct::read(i2cAddress, ENS160_REG_DATA_BL, i2cbuf, 8);
-      _hp0_bl = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[0] | ((uint16_t)i2cbuf[1] << 8)));
-      _hp1_bl = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[2] | ((uint16_t)i2cbuf[3] << 8)));
-      _hp2_bl = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[4] | ((uint16_t)i2cbuf[5] << 8)));
-      _hp3_bl = CONVERT_RS_RAW2OHMS_F((uint32_t)(i2cbuf[6] | ((uint16_t)i2cbuf[7] << 8)));
+      _hp0_bl = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_BL+0, &is_ok));
+      _hp1_bl = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_BL+2, &is_ok));
+      _hp2_bl = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_BL+4, &is_ok));
+      _hp3_bl = CONVERT_RS_RAW2OHMS_F(I2C_read16_LE_reg(i2cAddress, ENS160_REG_DATA_BL+6, &is_ok));
 
-      P164_data_struct::read(i2cAddress, ENS160_REG_DATA_MISR, i2cbuf, 1);
-      _misr = i2cbuf[0];
+      _misr = I2C_read8_reg(i2cAddress, ENS160_REG_DATA_MISR, &is_ok);
     }
   }
 
@@ -630,7 +690,7 @@ bool P164_data_struct::set_envdata210(uint16_t t, uint16_t h) {
   trh_in[2] = h & 0xff;        // RH_IN LSB
   trh_in[3] = (h >> 8) & 0xff; // RH_IN MSB
 
-  uint8_t result = P164_data_struct::write(i2cAddress, ENS160_REG_TEMP_IN, trh_in, 4);
+  uint8_t result = I2C_writeBytes_reg(i2cAddress, ENS160_REG_TEMP_IN, trh_in, 4); 
 
   return result;
 }
@@ -638,21 +698,33 @@ bool P164_data_struct::set_envdata210(uint16_t t, uint16_t h) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Read firmware revision                                                                        //
 // Precondition: Device MODE is IDLE                                                             //
+// Note: This is according to original Sciosense software and matches ENS161 datasheet           //
+//       The ENS160 datasheet is unclear, suggesting GRP_READ0 and GRP_READ1 registers           //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::getFirmware() {
-  uint8_t i2cbuf[3];
-  uint8_t result;
+  bool result = false;  // Build return value for function
+  bool is_ok;           // Temporary flag to track status
+  unsigned long ts;     // Timestamp to limit polling time
 
-  result = P164_data_struct::write8(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_GET_APPVER);
-
-  if (result == 0) {
-    result = P164_data_struct::read(i2cAddress, ENS160_REG_GPR_READ_4, i2cbuf, 3);
+  result = I2C_write8_reg(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_GET_APPVER);
+  
+  // Wait till GRP_READ registers are available.
+  is_ok = result;
+  ts = millis();
+  while (is_ok) {                                     // Abuse is_ok to keep polling until:
+    is_ok &= this->getStatus();                       // - Device is inaccessible
+    is_ok &= (! IS_NEWGPR(this->_statusReg));         // - Firmware data is available
+    is_ok &= (timePassedSince(ts) < ENS160_BOOTING);  // - Timeout occured
+  }
+  if (! IS_NEWGPR(this->_statusReg)) {                // Check if firmware could be read
+    result = false;
+    addLogMove(LOG_LEVEL_ERROR, F("P164: Could not read firmware version"));
   }
 
-  if (result == 0)  {
-    this->_fw_ver_major = i2cbuf[0];
-    this->_fw_ver_minor = i2cbuf[1];
-    this->_fw_ver_build = i2cbuf[2];
+  if (result)  {
+    this->_fw_ver_major = I2C_read8_reg(i2cAddress, ENS160_REG_GPR_READ_4, &is_ok);
+    this->_fw_ver_minor = I2C_read8_reg(i2cAddress, ENS160_REG_GPR_READ_5, &is_ok);
+    this->_fw_ver_build = I2C_read8_reg(i2cAddress, ENS160_REG_GPR_READ_6, &is_ok);
   }
   else {
     this->_fw_ver_major = 0;
@@ -661,55 +733,50 @@ bool P164_data_struct::getFirmware() {
   }
 
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: getFirmware() result: "));
-    Serial.print(result == 0 ? "ok," : "nok, major= ");
-    Serial.print(this->_fw_ver_major);
-    Serial.print(F(", minor="));
-    Serial.print(this->_fw_ver_minor);
-    Serial.print(F(", build="));
-    Serial.println(this->_fw_ver_build);
-  #endif // ifdef P164_ENS160_DEBUG
-
-  return result == 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Set operation mode of sensor                                                                  //
-// Note: This function is to set the operation mode to the plugin software structure only        //
-//       The statemachine shall handle the actual programming of the OPMODE register             //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::setMode(uint8_t mode) {
-  bool result = false;
-
-  // LP only valid for rev>0
-  if (!(mode == ENS160_OPMODE_LP) and (_revENS16x == 0)) {
-    this->_opmode = mode;
-    result        = true;
-  }
-
-  #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: setMode("));
-    Serial.print(mode);
-    Serial.println(F(")"));
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log;
+      log += F("P164: getFirmware() result: ");
+      log += result ? F("ok") : F("nok");
+      log += F(", major=");
+      log += this->_fw_ver_major;
+      log += F(", minor=");
+      log += this->_fw_ver_minor;
+      log += F(", build=");
+      log += this->_fw_ver_build;
+      log += F(", registers=");
+      for (int i=0; i<8; i++)
+      {
+        log += formatToHex_decimal(I2C_read8_reg(i2cAddress, ENS160_REG_GPR_READ_0+i, &is_ok));
+        log += ", ";
+      }
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   #endif // ifdef P164_ENS160_DEBUG
 
   return result;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Write to opmode register of the device                                                        //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::writeMode(uint8_t mode) {
-  uint8_t result;
+  bool result;
 
-  result = P164_data_struct::write8(i2cAddress, ENS160_REG_OPMODE, mode);
+  result = I2C_write8_reg(i2cAddress, ENS160_REG_OPMODE, mode);
 
     #ifdef P164_ENS160_DEBUG
-      Serial.print(F("P164: writeMode() result: "));
-      Serial.println(result == 0 ? F("ok") : F("nok"));
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log;
+        log += F("P164: writeMode(");
+        log += mode;
+        log += F(") result: ");
+        log += result ? F("ok") : F("nok");
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
     #endif // ifdef P164_ENS160_DEBUG
 
-  return result == 0;
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -720,10 +787,13 @@ bool P164_data_struct::checkPartID(void) {
   uint16_t part_id;   // Resulting PartID
   bool     result = false;
 
-  P164_data_struct::read(i2cAddress, ENS160_REG_PART_ID, i2cbuf, 2);
-  part_id = i2cbuf[0] | ((uint16_t)i2cbuf[1] << 8);
+  part_id = I2C_read16_LE_reg(i2cAddress, ENS160_REG_PART_ID, &result);
 
-  if (part_id == ENS160_PARTID) {
+  if (!result) {
+    this->_revENS16x = 0xFF;
+    result           = false;
+  }
+  else if (part_id == ENS160_PARTID) {
     this->_revENS16x = 0;
     result           = true;
   }
@@ -737,10 +807,14 @@ bool P164_data_struct::checkPartID(void) {
   }
 
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: checkPartID() result: "));
-    if (part_id == ENS160_PARTID) { Serial.println(F("ENS160")); }
-    else if (part_id == ENS161_PARTID) { Serial.println(F("ENS161")); }
-    else { Serial.println(F("no valid part ID read")); }
+    String log;
+    log += F("P164: checkPartID() result: ");
+    switch (part_id) {
+      case ENS160_PARTID: log += F("ENS160"); break;
+      case ENS161_PARTID: log += F("ENS161"); break;
+      default:            log += F("no valid part ID read"); break;
+    }
+    addLogMove(LOG_LEVEL_DEBUG, log);
   #endif // ifdef P164_ENS160_DEBUG
 
   return result;
@@ -752,11 +826,12 @@ bool P164_data_struct::checkPartID(void) {
 bool P164_data_struct::clearCommand(void) {
   bool result = false;
 
-  result = P164_data_struct::write8(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_NOP);
-  result = P164_data_struct::write8(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_CLRGPR);
+  result = I2C_write8_reg(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_NOP);
+  result = I2C_write8_reg(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_CLRGPR);
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: clearCommand() result: "));
-    Serial.println(result == 0 ? "ok" : "nok");
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("P164: clearCommand() result: "), result ? "ok" : "nok"));
+    }
   #endif // ifdef P164_ENS160_DEBUG
 
   return result;
@@ -770,24 +845,27 @@ bool P164_data_struct::getStatus()
   bool ret = false;
   uint8_t val = 0;
 
-  //this->_statusReg = P164_data_struct::read8(i2cAddress, ENS160_REG_DATA_STATUS);
-  ret = P164_data_struct::read(i2cAddress, ENS160_REG_DATA_STATUS, &val, 1);
+  val = I2C_read8_reg(i2cAddress, ENS160_REG_DATA_STATUS, &ret);
   this->_statusReg = val;
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: Status register: 0x"));
-    Serial.print(this->_statusReg, HEX);
-    Serial.print(F(" VALIDITY: "));
-    Serial.print(GET_STATUS_VALIDITY(this->_statusReg) );
-    Serial.print(F(" STATAS: "));
-    Serial.print((this->_statusReg & ENS160_STATUS_STATAS) == ENS160_STATUS_STATAS);
-    Serial.print(F(" STATER: "));
-    Serial.print((this->_statusReg & ENS160_STATUS_STATER) == ENS160_STATUS_STATER);
-    Serial.print(F(" NEWDAT: "));
-    Serial.print((this->_statusReg & ENS160_STATUS_NEWDAT) == ENS160_STATUS_NEWDAT);
-    Serial.print(F(" NEWGRP: "));
-    Serial.print((this->_statusReg & ENS160_STATUS_NEWGPR) == ENS160_STATUS_NEWGPR);
-    Serial.print(F(" return: "));
-    Serial.println(ret);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log;
+      log += F("P164: Status register: ");
+      log += formatToHex_decimal(this->_statusReg, HEX);
+      log += F(", VALIDITY: ");
+      log += GET_STATUS_VALIDITY(this->_statusReg);
+      log += F(", STATAS: ");
+      log += (this->_statusReg & ENS160_STATUS_STATAS) == ENS160_STATUS_STATAS;
+      log += F(", STATER: ");
+      log += (this->_statusReg & ENS160_STATUS_STATER) == ENS160_STATUS_STATER;
+      log += F(", NEWDAT: ");
+      log += (this->_statusReg & ENS160_STATUS_NEWDAT) == ENS160_STATUS_NEWDAT;
+      log += F(", NEWGRP: ");
+      log += (this->_statusReg & ENS160_STATUS_NEWGPR) == ENS160_STATUS_NEWGPR;
+      log += F(", return: ");
+      log += ret;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   #endif // ifdef P164_ENS160_DEBUG
   return ret;
 }
@@ -797,32 +875,24 @@ bool P164_data_struct::getStatus()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// Read one byte from a device register                                                          //
-// Return: byte read                                                                             //
-// Note: No indication I2C operation was successful                                              //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-uint8_t P164_data_struct::read8(uint8_t addr, byte reg) {
-  uint8_t ret;
-
-  (void)P164_data_struct::read(addr, reg, &ret, 1);
-
-  return ret;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 // Read a consecutive range of registers from device                                             //
 // Return: boolean == true when I2C transaction was succesful                                    //
+// Note: This functionality is not found in ESPEasy I2C library                                  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::read(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
+#ifdef P164_LEGACY_CODE
+bool P164_data_struct::readI2C(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
   uint8_t pos    = 0;
   uint8_t result = 0;
 
   #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: I2C read address: 0x"));
-    Serial.print(addr, HEX);
-    Serial.print(F(", register: 0x"));
-    Serial.print(reg,  HEX);
-    Serial.print(F(" data:"));
+    String log;   // Debug String concatenated in multiple sections. Keep outside local if statement
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      log += F("P164: I2C read address: ");
+      log += formatToHex_decimal(addr);
+      log += F(", register: ");
+      log += formatToHex_decimal(reg);
+      log += F(" data:");
+    }
   #endif // ifdef P164_ENS160_DEBUG
 
   // on arduino we need to read in 32 byte chunks
@@ -836,54 +906,24 @@ bool P164_data_struct::read(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num
 
     for (int i = 0; i < read_now; i++) {
       buf[pos] = Wire.read();
-            #ifdef P164_ENS160_DEBUG
-      Serial.print(" 0x");
-      Serial.print(buf[pos], HEX);
-            #endif // ifdef P164_ENS160_DEBUG
+      #ifdef P164_ENS160_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          log += F(" ");
+          log += formatToHex_decimal(buf[pos]);
+        }
+      #endif // ifdef P164_ENS160_DEBUG
       pos++;
     }
   }
-    #ifdef P164_ENS160_DEBUG
-      Serial.println(".");
-    #endif // ifdef P164_ENS160_DEBUG
+  #ifdef P164_ENS160_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      log += F(".");
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+  #endif // ifdef P164_ENS160_DEBUG
 
   return result == 0;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Write one byte to a device register                                                           //
-// Return: boolean == true when I2C transaction was succesful                                    //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::write8(uint8_t addr, byte reg, byte value) {
-  return P164_data_struct::write(addr, reg, &value, 1);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Write a consecutive range of registers to device                                              //
-// Return: boolean == true when I2C transaction was succesful                                    //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::write(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
-  uint8_t result;
-
-  #ifdef P164_ENS160_DEBUG
-    Serial.print(F("P164: I2C write address: 0x"));
-    Serial.print(addr, HEX);
-    Serial.print(F(", register: 0x"));
-    Serial.print(reg,  HEX);
-    Serial.print(F(",  value:"));
-
-    for (int i = 0; i < num; i++) {
-      Serial.print(F(" 0x"));
-      Serial.print(buf[i], HEX);
-    }
-  Serial.println();
-  #endif // ifdef P164_ENS160_DEBUG
-
-  Wire.beginTransmission((uint8_t)addr);
-  Wire.write((uint8_t)reg);
-  Wire.write((uint8_t *)buf, num);
-  result = Wire.endTransmission();
-  return result;
-}
+#endif // P164_LEGACY_CODE
 
 #endif // ifdef USES_P164

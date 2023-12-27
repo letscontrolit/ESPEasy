@@ -6,10 +6,10 @@
 // #######################################################################################################
 // P164 "GASES - ENS16x (TVOC, eCO2)"
 // Plugin for ENS160 & ENS161 TVOC and eCO2 sensor with I2C interface from ScioSense
-// Based upon: https://github.com/sciosense/ENS160_driver
-// For documentation see 
+// For documentation of the ENS160 hardware device see 
 // https://www.sciosense.com/wp-content/uploads/documents/SC-001224-DS-9-ENS160-Datasheet.pdf
 //
+// PLugin code:
 // 2023 By flashmark
 // #######################################################################################################
 
@@ -65,7 +65,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P164_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P164_PCONFIG_I2C_ADDR);
         addFormNote(F("ADDR Low=0x52, High=0x53"));
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);
@@ -77,7 +77,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = P164_I2C_ADDR;
+      event->Par1 = P164_PCONFIG_I2C_ADDR;
       success     = true;
       break;
     }
@@ -85,7 +85,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P164_I2C_ADDR = ENS160_I2CADDR_1;
+      P164_PCONFIG_I2C_ADDR = ENS160_I2CADDR_1;
       success = true;
       break;
     }
@@ -104,7 +104,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P164_data) {
-        Serial.print("P164: plugin_read NULLPTR");
+        addLogMove(LOG_LEVEL_ERROR, "P164: plugin_read NULLPTR");
         break;
       }
 
@@ -113,12 +113,10 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
       {
         // we're checking a var from another task, so calculate that basevar
-        temperature = UserVar[P164_PCONFIG_TEMP_TASK * VARS_PER_TASK + P164_PCONFIG_TEMP_VAL]; // in degrees C
-        humidity = UserVar[P164_PCONFIG_HUM_TASK * VARS_PER_TASK + P164_PCONFIG_HUM_VAL];    // in % relative
+        temperature = UserVar.getFloat(P164_PCONFIG_TEMP_TASK, P164_PCONFIG_TEMP_VAL); // in degrees C
+        humidity    = UserVar.getFloat(P164_PCONFIG_HUM_TASK, P164_PCONFIG_HUM_VAL);   // in % relative
       }
       success = P164_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1], temperature, humidity);
-
-      success = true;
       break;
     }
 
@@ -142,15 +140,8 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
       success = P164_data->tenPerSecond(event);
-      success = true;
-    }
-
-    case PLUGIN_FIFTY_PER_SECOND:
-    case PLUGIN_ONCE_A_SECOND:
-    {
       break;
     }
-    
   }
   return success;
 }
