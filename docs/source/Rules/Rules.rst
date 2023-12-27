@@ -2458,3 +2458,59 @@ Required device tasks:
     Let,2,0 // Reset total counter 
   Endon
 
+
+Register power used for a heater
+--------------------------------
+
+As a variation on the running time, we can also measure the time and calculate the total power used, as long as the used device-power is known. Parts from the above example have been re-used.
+
+This example uses a ``Generic - Dummy Device``, so the values can also be viewed on the Devices page. This has name: Power, output data type: Dual (or Triple or Quad, must be able to store decimals!), value names: Seconds (0 decimmals) and PowerUsed (4 decimals).
+
+The time is counted while GPIO-14 (D5 on a Wemos or NodeMCU ESP8266) has a low state, and power is calculated once the power goes off. The not-On state will need a pull-up resistor to pull the level to 3V3!
+
+After loading this code, either reboot the ESP, or run the command ``event,system#boot`` to set up the GPIO monitoring and wattage of the device.
+
+.. code-block:: none
+
+  // Used variables: 1,3,4,5
+
+  On GPIO#14 Do // GPIO-14 = D5 on Wemos/NodeMCU ESP8266 boards
+    If %eventvalue1%=0 // On state
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+    Else // Off state
+      Event,CalcPower // Don't queue
+      Event,TransmitPower // Send out to receiver
+    Endif
+    Let,5,!%eventvalue1% // 0 = On, to invert on/off state change to: Let,5,%eventvalue1%
+    LogEntry,"Power [int#5#O#C], measured: [Power#Seconds] sec. [Power#PowerUsed#d.4] kWh"
+  Endon
+
+  On CalcPower Do
+    TaskValueSet,Power,Seconds,[Power#Seconds]+%syssec_d%-[int#1] // Add run time to Power#Seconds
+    Let,4,[Power#Seconds]*[var#3] // Wattseconds
+    If [var#4]>0
+      TaskValueSet,Power,PowerUsed,[var#4]/3600000 // Wattseconds to kWh
+    Endif
+    TaskRun,Power
+  Endon
+
+  On TransmitPower Do
+    // Send value of [Power#Seconds] and [Power#PowerUsed] to wherever you need it, adjust as needed
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [Power#Seconds] Seconds, PowerUsed = [Power#PowerUsed] kWh'
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Include power used until midnight
+    If [Plugin#GPIO#PinState#14]=0 // Still on?
+      Event,CalcPower // Don't queue
+    Endif
+    Let,1,0 // Reset start time
+    Event,TransmitPower // Send out remainder of the day
+    TaskValueSet,Power,Seconds,0 // Reset total counter
+    TaskValueSet,Power,PowerUsed,0 // Reset total power
+  Endon
+
+  On System#Boot Do
+    Monitor,gpio,14 // Generate an event when the GPIO state changes
+    Let,3,250 // Wattage of the load, adjust as needed
+  Endon
