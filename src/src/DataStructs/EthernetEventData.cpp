@@ -24,7 +24,11 @@ bool EthernetEventData_t::EthConnectAllowed() const {
 }
 
 bool EthernetEventData_t::unprocessedEthEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }
@@ -44,6 +48,9 @@ void EthernetEventData_t::clearAll() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
   dns0_cache = IPAddress();
@@ -81,6 +88,9 @@ void EthernetEventData_t::setEthDisconnected() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
 
   ethStatus = ESPEASY_ETH_DISCONNECTED;
@@ -127,6 +137,14 @@ void EthernetEventData_t::markGotIP() {
   processedGotIP = false;
 }
 
+#if FEATURE_USE_IPV6
+void EthernetEventData_t::markGotIPv6(const IPAddress& ip6) {
+  processedGotIP6 = false;
+  unprocessed_IP6 = ip6;
+}
+#endif
+
+
 void EthernetEventData_t::markLostIP() {
   bitClear(ethStatus, ESPEASY_ETH_GOT_IP);
   bitClear(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
@@ -150,6 +168,10 @@ void EthernetEventData_t::markDisconnect() {
 void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
+#if FEATURE_USE_IPV6
+  ETH.enableIpV6();
+#endif
+
 }
 
 String EthernetEventData_t::ESPEasyEthStatusToString() const {

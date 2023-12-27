@@ -159,7 +159,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
           long c = P_059_sensordefs[event->TaskIndex]->read();
-          UserVar[event->BaseVarIndex] = c;
+          UserVar.setFloat(event->TaskIndex, 0, c);
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -179,7 +179,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P_059_sensordefs.count(event->TaskIndex) != 0)
       {
-        UserVar[event->BaseVarIndex] = P_059_sensordefs[event->TaskIndex]->read();
+        UserVar.setFloat(event->TaskIndex, 0, P_059_sensordefs[event->TaskIndex]->read());
       }
       success = true;
       break;

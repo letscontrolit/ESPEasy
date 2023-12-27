@@ -137,7 +137,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      UserVar[event->BaseVarIndex] = P127_data->readData();
+      UserVar.setFloat(event->TaskIndex, 0, P127_data->readData());
 
       success = true;
 

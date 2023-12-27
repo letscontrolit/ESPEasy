@@ -2,8 +2,6 @@
 
 #ifdef USES_P141
 
-# include "../Helpers/Hardware.h"
-
 /****************************************************************************
  * toString: return the command string selected
  ***************************************************************************/
@@ -338,8 +336,8 @@ void P141_data_struct::updateValues(struct EventStruct *event) {
   if (nullptr != gfxHelper) {
     gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
   }
-  UserVar[event->BaseVarIndex]     = curX;
-  UserVar[event->BaseVarIndex + 1] = curY;
+  UserVar.setFloat(event->TaskIndex, 0, curX);
+  UserVar.setFloat(event->TaskIndex, 1, curY);
 }
 
 # endif // if P141_FEATURE_CURSOR_XY_VALUES

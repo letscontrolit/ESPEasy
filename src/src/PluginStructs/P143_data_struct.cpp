@@ -200,7 +200,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
     // Set initial button state
     _buttonState = (P143_ButtonAction_e::PushButtonInverted == static_cast<P143_ButtonAction_e>(P143_PLUGIN_BUTTON_ACTION)) ? 0 : 1;
 
-    UserVar[event->BaseVarIndex + 1] = _buttonState;
+    UserVar.setFloat(event->TaskIndex, 1, _buttonState);
 
     # if P143_FEATURE_COUNTER_COLORMAPPING
 
@@ -296,8 +296,8 @@ bool P143_data_struct::plugin_exit(struct EventStruct *event) {
 bool P143_data_struct::plugin_read(struct EventStruct *event)           {
   if (_initialized) {
     // Last obtained values
-    UserVar[event->BaseVarIndex]     = _encoderPosition;
-    UserVar[event->BaseVarIndex + 1] = _buttonState;
+    UserVar.setFloat(event->TaskIndex, 0, _encoderPosition);
+    UserVar.setFloat(event->TaskIndex, 1, _buttonState);
     return true;
   }
   return false;
@@ -567,7 +567,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       // Set task value
       _encoderPosition = current;
 
-      UserVar[event->BaseVarIndex] = _encoderPosition;
+      UserVar.setFloat(event->TaskIndex, 0, _encoderPosition);
 
       result = true;
 
@@ -853,7 +853,7 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
       // Set task value
       _buttonState = state;
 
-      UserVar[event->BaseVarIndex + 1] = _buttonState;
+      UserVar.setFloat(event->TaskIndex, 1, _buttonState);
 
       return true;
     }

@@ -2,7 +2,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -28,7 +28,7 @@
 #include <math.h>
 #include <vector>
 
-
+#ifdef WEBSERVER_NEW_RULES
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
@@ -58,6 +58,7 @@ String FileNameToEvent(const String& fileName) {
   eventName.replace(RULE_FILE_SEPARAROR, '#');
   return eventName;
 }
+#endif
 
 void checkRuleSets() {
   Cache.rulesHelper.closeAllFiles();
@@ -98,9 +99,7 @@ void rulesProcessing(const String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("EVENT: ");
-    log += event;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
 
   if (Settings.OldRulesEngine()) {
@@ -139,12 +138,7 @@ void rulesProcessing(const String& event) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("EVENT: ");
-    log += event;
-    log += F(" Processing time:");
-    log += timePassedSince(timer);
-    log += F(" milliSeconds");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s Processing: %d ms"), event.c_str(), timePassedSince(timer)));
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
@@ -343,8 +337,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     return false;
   }
 
-  char tmp[10]{};
-  int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), bitwise_functions);
+  int command_i = GetCommandCode(cmd_s_lower.c_str(), bitwise_functions);
   if (command_i == -1) {
     // No matching function found
     return false;
@@ -485,7 +478,7 @@ void parse_string_commands(String& line) {
       uint64_t iarg1, iarg2 = 0;
       ESPEASY_RULES_FLOAT_TYPE fresult{};
       int64_t  iresult = 0;
-      int startpos, endpos = -1;
+      int32_t startpos, endpos = -1;
       const bool arg1valid = validIntFromString(arg1, startpos);
       const bool arg2valid = validIntFromString(arg2, endpos);
 
@@ -500,8 +493,7 @@ void parse_string_commands(String& line) {
         replacement = ull2String(iresult);
       } else {
 
-        char tmp[12]{};
-        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), string_commands);
+        int command_i = GetCommandCode(cmd_s_lower.c_str(), string_commands);
         if (command_i != -1) {
           const string_commands_e command = static_cast<string_commands_e>(command_i);
 
@@ -526,7 +518,7 @@ void parse_string_commands(String& line) {
 
               if (!arg1.isEmpty()
                   && !arg2.isEmpty()) {
-                unsigned int offset = 0;
+                uint32_t offset = 0;
                 validUIntFromString(arg3, offset);
                 if (command == string_commands_e::indexof_ci) {
                   String arg1copy(arg1);
@@ -1120,9 +1112,9 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   }
 
   time_seconds = -1;
-  int hours   = 0;
-  int minutes = 0;
-  int seconds = 0;
+  int32_t hours   = 0;
+  int32_t minutes = 0;
+  int32_t seconds = 0;
 
   int tmpIndex = 0;
   String hours_str, minutes_str, seconds_str;
@@ -1301,11 +1293,6 @@ void createRuleEvents(struct EventStruct *event) {
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  #ifdef USE_SECOND_HEAP
-//  HeapSelectIram ephemeral;  
-// TD-er: Disabled for now, suspect for causing crashes
-  #endif
-
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
@@ -1315,11 +1302,11 @@ void createRuleEvents(struct EventStruct *event) {
     expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
-    String eventString;
 
-    if (eventString.reserve(expectedSize + event->String2.length())) {
+    String eventString;
+    if (reserve_special(eventString, expectedSize + event->String2.length())) {
       appendCompleteStringvalue = true;
-    } else if (!eventString.reserve(expectedSize + 24)) {
+    } else if (!reserve_special(eventString, expectedSize + 24)) {
       // No need to continue as we can't even allocate the event, we probably also cannot process it
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
@@ -1340,7 +1327,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventvalues;
-    eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
+    reserve_special(eventvalues, 32); // Enough for most use cases, prevent lots of memory allocations.
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {

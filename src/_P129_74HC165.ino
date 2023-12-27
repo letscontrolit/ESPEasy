@@ -43,14 +43,10 @@
 
 // TODO tonhuisman: ? Move to StringConverter ? though it is a bit specific, can also be used by P126
 String P129_ul2stringFixed(uint32_t value, uint8_t base) {
-  uint64_t val = static_cast<uint64_t>(value);
+  // Set bit just left of 32 bits so we will see the leading zeroes
+  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
 
-  val &= 0x0ffffffff;     // Keep 32 bits
-  val |= 0x100000000;     // Set bit just left of 32 bits so we will see the leading zeroes
-  String valStr = ull2String(val, base);
-
-  valStr.remove(0, 1);    // Delete leading 1 we added
-
+  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
   if (base == HEX) {
     valStr.toUpperCase(); // uppercase hex for readability
   }

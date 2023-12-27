@@ -138,7 +138,7 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
         success = P110_data->isReadSuccessful();
 
         if (success) {
-          UserVar[event->BaseVarIndex] = dist; // Value is classified as invalid when > 8190, so no conversion or 'split' needed
+          UserVar.setFloat(event->TaskIndex, 0, dist); // Value is classified as invalid when > 8190, so no conversion or 'split' needed
         }
       }
       break;

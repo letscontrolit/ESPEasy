@@ -100,8 +100,8 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
           break;
         case 0:
         {
-          UserVar[event->BaseVarIndex]     = th.t;
-          UserVar[event->BaseVarIndex + 1] = th.h;
+          UserVar.setFloat(event->TaskIndex, 0, th.t);
+          UserVar.setFloat(event->TaskIndex, 1, th.h);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("AM2320: Temperature: ");
