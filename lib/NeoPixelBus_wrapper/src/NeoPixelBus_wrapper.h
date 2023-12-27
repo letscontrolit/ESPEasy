@@ -76,14 +76,9 @@ public:
            static_cast<uint32_t>(b);
   }
 
-  #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-
 private:
 
-  #ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-  Adafruit_NeoPixel *neopixels = nullptr;
-  #else // ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-  NEOPIXEL_LIB<NeoGrbFeature, METHOD>  *neopixels_grb = nullptr;
+  NEOPIXEL_LIB<NeoGrbFeature, METHOD>  *neopixels_grb  = nullptr;
   NEOPIXEL_LIB<NeoGrbwFeature, METHOD> *neopixels_grbw = nullptr;
   uint16_t                              numLEDs        = 0;
   #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT

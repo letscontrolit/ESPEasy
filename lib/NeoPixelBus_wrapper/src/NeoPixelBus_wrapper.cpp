@@ -7,11 +7,11 @@ NeoPixelBus_wrapper::NeoPixelBus_wrapper(uint16_t     _maxPixels,
                                          neoPixelType _stripType)
   #ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
   : numLEDs(_maxPixels)
+  #else // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+  : Adafruit_NeoPixel(_maxPixels, _gpioPin, _stripType)
   #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 {
-  #ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-  neopixels = new (std::nothrow) Adafruit_NeoPixel(_maxPixels, _gpioPin, _stripType);
-  #else // ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+  #ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 
   if (NEO_GRBW == (_stripType & NEO_GRBW)) {
     # ifdef ESP8266
@@ -28,19 +28,16 @@ NeoPixelBus_wrapper::NeoPixelBus_wrapper(uint16_t     _maxPixels,
     neopixels_grb = new (std::nothrow) NEOPIXEL_LIB<NeoGrbFeature, METHOD>(_maxPixels, _gpioPin);
     # endif // ifdef ESP32
   }
-  #endif // ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+  #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 }
 
 NeoPixelBus_wrapper::~NeoPixelBus_wrapper() {
-  #ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-  delete neopixels;
-  neopixels = nullptr;
-  #else // ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+  #ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
   delete neopixels_grb;
   neopixels_grb = nullptr;
   delete neopixels_grbw;
   neopixels_grbw = nullptr;
-  #endif // ifdef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+  #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 }
 
 #ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
