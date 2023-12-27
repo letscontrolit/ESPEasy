@@ -96,7 +96,7 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
     }
   }
 
-  if (row == 0) { firstLineState = 0; } // Reset firstLineState
+  if (row == 0) { splashState = P012_splashState_e::SplashCleared; } // Reset splashState
   lcd->setCursor(col, row);
 
   if ((Plugin_012_mode == 1) || (Plugin_012_mode == 2)) {

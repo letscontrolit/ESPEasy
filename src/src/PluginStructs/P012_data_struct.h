@@ -13,6 +13,12 @@ enum class P012_DisplaySize_e : uint8_t {
   LCD_2x16_ST7032,
 };
 
+enum class P012_splashState_e : uint8_t {
+  SplashCleared      = 0u,
+  SplashTimerRunning = 1u,
+  SplashInitial      = 2u
+};
+
 const __FlashStringHelper* toString(P012_DisplaySize_e display);
 
 struct P012_data_struct : public PluginTaskData_base {
@@ -47,7 +53,7 @@ struct P012_data_struct : public PluginTaskData_base {
   int                Plugin_012_rows = 2;
   int                Plugin_012_mode = 1;
   uint8_t            displayTimer    = 0;
-  uint8_t            firstLineState  = 2;
+  P012_splashState_e splashState     = P012_splashState_e::SplashInitial;
 };
 
 #endif // ifdef USES_P012

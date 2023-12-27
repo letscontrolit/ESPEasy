@@ -229,13 +229,17 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
 
-        if (P012_data->firstLineState == 0) {
-          // Most common route
-        } else if (P012_data->firstLineState == 2) {
-          P012_data->firstLineState = 1;
-          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 5000);
-        } else if (P012_data->firstLineState == 1) {
-          P012_data->lcdWrite(F("        "), 0, 0); // Wipe 'ESP Easy' splash text, will reset firstLineState
+        switch (P012_data->splashState) {
+          case P012_splashState_e::SplashCleared:
+            // Most common route
+            break;
+          case P012_splashState_e::SplashInitial:
+            P012_data->splashState = P012_splashState_e::SplashTimerRunning;
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 5000);
+            break;
+          case P012_splashState_e::SplashTimerRunning:
+            P012_data->lcdWrite(F("        "), 0, 0); // Wipe 'ESP Easy' splash text, will reset splashState
+            break;
         }
 
         for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
@@ -275,8 +279,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (equals(arg1, F("clear"))) {
             P012_data->lcd->clear();
-            P012_data->firstLineState = 0;
-            success                   = true;
+            P012_data->splashState = P012_splashState_e::SplashCleared;
+            success                = true;
           }
           else if (equals(arg1, F("contrast")) &&
                    (P012_DisplaySize_e::LCD_2x16_ST7032 == static_cast<P012_DisplaySize_e>(P012_SIZE)) &&
