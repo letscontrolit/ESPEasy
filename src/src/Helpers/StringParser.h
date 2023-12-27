@@ -76,7 +76,8 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string,
    Get int from command argument (argc = 0 => command)
  \*********************************************************************************************/
 int parseCommandArgumentInt(const String& string,
-                            unsigned int  argc);
+                            unsigned int  argc,
+                            int errorValue = 0);
 
 /********************************************************************************************\
    Parse a command string to event struct

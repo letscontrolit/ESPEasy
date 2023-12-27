@@ -6,6 +6,7 @@
 # include "../DataTypes/TaskIndex.h"
 
 # include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasyWifi.h"
 
 # include "../Globals/Cache.h"
 
@@ -25,29 +26,23 @@
 // 1=Comfortable
 // 2=Dry
 // 3=Wet
-String humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
+int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
   userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
 
   if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {
     const int hum = UserVar[userVarIndex];
 
-    if (hum < 30) { return formatUserVarDomoticz(2); }
+    if (hum < 30) { return 2; }
 
-    if (hum < 40) { return formatUserVarDomoticz(0); }
+    if (hum < 40) { return 0; }
 
-    if (hum < 59) { return formatUserVarDomoticz(1); }
+    if (hum < 59) { return 1; }
   }
-  return formatUserVarDomoticz(3);
+  return 3;
 }
 
-int mapRSSItoDomoticz() {
-  long rssi = WiFi.RSSI();
-
-  if (-50 < rssi) { return 10; }
-
-  if (rssi <= -98) { return 0;  }
-  rssi = rssi + 97; // Range 0..47 => 1..9
-  return (rssi / 5) + 1;
+int mapRSSItoDomoticz() { 
+  return GetRSSI_quality(); 
 }
 
 int mapVccToDomoticz() {
@@ -59,20 +54,6 @@ int mapVccToDomoticz() {
   # else // if FEATURE_ADC_VCC
   return 255;
   # endif // if FEATURE_ADC_VCC
-}
-
-// Format including trailing semi colon
-String formatUserVarDomoticz(struct EventStruct *event, uint8_t rel_index) {
-  return formatUserVarNoCheck(event, rel_index) + ';';
-}
-
-String formatUserVarDomoticz(int value) {
-  String text;
-
-  text += value;
-  text.trim();
-  text += ';';
-  return text;
 }
 
 String formatDomoticzSensorType(struct EventStruct *event) {
@@ -89,61 +70,49 @@ String formatDomoticzSensorType(struct EventStruct *event) {
     const uint8_t valueCount = getValueCountFromSensorType(sensorType);
 
     for (uint8_t i = 0; i < valueCount; ++i) {
-      values += formatUserVarDomoticz(event, i);
+      values += formatUserVarNoCheck(event, i);
+      values += ';';
     }
   } else {
     switch (sensorType)
     {
-      case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
-
-        // temp + hum + hum_stat, used for DHT11
+      case Sensor_VType::SENSOR_TYPE_TEMP_HUM:      // temp + hum + hum_stat, used for DHT11
+      case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO: // temp + hum + hum_stat + bar + bar_fore, used for BME280
         // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity
-        values  = formatUserVarDomoticz(event, 0); // TEMP = Temperature
-        values += formatUserVarDomoticz(event, 1); // HUM = Humidity
-        values += humStatDomoticz(event, 1);       // HUM_STAT = Humidity status
-        break;
-      case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+        values = strformat(
+          F("%s;%s;%d;"),
+          formatUserVarNoCheck(event, 0).c_str(), // TEMP = Temperature
+          formatUserVarNoCheck(event, 1).c_str(), // HUM = Humidity
+          humStatDomoticz(event, 1));             // HUM_STAT = Humidity status
 
-        // temp + hum + hum_stat + bar + bar_fore, used for BME280
-        // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fhumidity.2Fbarometer
-        values  = formatUserVarDomoticz(event, 0); // TEMP = Temperature
-        values += formatUserVarDomoticz(event, 1); // HUM = Humidity
-        values += humStatDomoticz(event, 1);       // HUM_STAT = Humidity status
-        values += formatUserVarDomoticz(event, 2); // BAR = Barometric pressure
-        values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
+        if (sensorType == Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO) {
+          values += formatUserVarNoCheck(event, 2); // BAR = Barometric pressure
+          values += F(";0;");                       // BAR_FOR = Barometer forecast
+        }
         break;
-      case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-
-        // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+      case Sensor_VType::SENSOR_TYPE_TEMP_BARO:       // temp + hum + hum_stat + bar + bar_fore, used for BMP085
+      case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO: // temp + bar + bar_fore, used for BMP280
+      {
         // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
-        values  = formatUserVarDomoticz(event, 0); // TEMP = Temperature
-        values += formatUserVarDomoticz(event, 1); // BAR = Barometric pressure
-        values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
-        values += formatUserVarDomoticz(0);        // ALTITUDE= Not used at the moment, can be 0
+        const int baroIndex = sensorType == Sensor_VType::SENSOR_TYPE_TEMP_BARO ? 1 : 2;
+        values = strformat(
+          F("%s;%s;0;0;"),
+          formatUserVarNoCheck(event, 0).c_str(),   // TEMP = Temperature
+          formatUserVarNoCheck(event, baroIndex).c_str());  // BAR = Barometric pressure
+                                                    // BAR_FOR = Barometer forecast
+                                                    // ALTITUDE= Not used at the moment, can be 0
         break;
-      case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:
-
-        // temp + bar + bar_fore, used for BMP280
-        // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Temperature.2Fbarometer
-        values  = formatUserVarDomoticz(event, 0); // TEMP = Temperature
-        values += formatUserVarDomoticz(event, 2); // BAR = Barometric pressure
-        values += formatUserVarDomoticz(0);        // BAR_FOR = Barometer forecast
-        values += formatUserVarDomoticz(0);        // ALTITUDE= Not used at the moment, can be 0
-        break;
+      }
       case Sensor_VType::SENSOR_TYPE_WIND:
 
         // WindDir in degrees; WindDir as text; Wind speed average ; Wind speed gust; 0
         // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Wind
-        values  = formatUserVarDomoticz(event, 0);          // WB = Wind bearing (0-359)
-        values += getBearing(UserVar[event->BaseVarIndex]); // WD = Wind direction (S, SW, NNW, etc.)
-        values += ';';                                      // Needed after getBearing
-        // Domoticz expects the wind speed in (m/s * 10)
-        values += toString((UserVar[event->BaseVarIndex + 1] * 10), Cache.getTaskDeviceValueDecimals(event->TaskIndex, 1));
-        values += ';';                                      // WS = 10 * Wind speed [m/s]
-        values += toString((UserVar[event->BaseVarIndex + 2] * 10), Cache.getTaskDeviceValueDecimals(event->TaskIndex, 2));
-        values += ';';                                      // WG = 10 * Gust [m/s]
-        values += formatUserVarDomoticz(0);                 // Temperature
-        values += formatUserVarDomoticz(0);                 // Temperature Windchill
+        values = strformat(
+          F("%s;%s;%d;%d;0;0;"),
+          formatUserVarNoCheck(event, 0).c_str(),                   // WB = Wind bearing (0-359)
+          String(getBearing(UserVar[event->BaseVarIndex])).c_str(), // WD = Wind direction (S, SW, NNW, etc.)
+          static_cast<int>(UserVar[event->BaseVarIndex + 1] * 10),  // WS = 10 * Wind speed [m/s]
+          static_cast<int>(UserVar[event->BaseVarIndex + 2] * 10)); // WG = 10 * Gust [m/s]
         break;
       case Sensor_VType::SENSOR_TYPE_SWITCH:
       case Sensor_VType::SENSOR_TYPE_DIMMER:
@@ -258,30 +227,18 @@ String serializeDomoticzJson(struct EventStruct *event)
 
     const Sensor_VType sensorType = event->getSensorType();
 
-    if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH)
-    {
+    if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH ||
+        sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) {
       json += ',';
       json += to_json_object_value(F("command"), F("switchlight"));
-
-      if (essentiallyZero(UserVar[event->BaseVarIndex])) {
-        json += ',';
-        json += to_json_object_value(F("switchcmd"), F("Off"));
-      }
-      else {
-        json += ',';
-        json += to_json_object_value(F("switchcmd"), F("On"));
-      }
-    } else if (sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) {
       json += ',';
-      json += to_json_object_value(F("command"), F("switchlight"));
 
-      if (essentiallyZero(UserVar[event->BaseVarIndex])) {
-        json += ',';
-        json += to_json_object_value(F("switchcmd"), F("Off"));
-      }
-      else {
-        json += ',';
+      const bool value_zero = essentiallyZero(UserVar[event->BaseVarIndex]);
+      if (sensorType == Sensor_VType::SENSOR_TYPE_DIMMER && !value_zero)
+      {
         json += to_json_object_value(F("Set%20Level"), toString(UserVar[event->BaseVarIndex], 2));
+      } else {
+        json += to_json_object_value(F("switchcmd"), value_zero ? F("Off") : F("On"));
       }
     } else {
       json += ',';

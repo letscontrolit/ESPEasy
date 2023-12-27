@@ -243,7 +243,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P108_data) && P108_data->isInitialized()) {
         for (int i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
-          UserVar[event->BaseVarIndex + i] = p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event);
+          UserVar.setFloat(event->TaskIndex, i,  p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event));
           delay(1);
         }
 

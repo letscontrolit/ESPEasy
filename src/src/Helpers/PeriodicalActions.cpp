@@ -25,14 +25,13 @@
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
-#include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/FS_Helper.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_temperature_sensor.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -151,14 +150,11 @@ void runOncePerSecond()
     {
       // FIXME TD-er: What to do when the system time is not (yet) present?
       if (node_time.systemTimePresent()) {
-        String event;
-        event.reserve(21);
-        event += F("Clock#Time=");
-        event += node_time.weekday_str();
-        event += ',';
-        event += node_time.getTimeString(':', false);
-
         // TD-er: Do not add to the eventQueue, but execute right now.
+        const String event = strformat(
+          F("Clock#Time=%s,%s"), 
+          node_time.weekday_str().c_str(),
+          node_time.getTimeString(':', false).c_str());
         rulesProcessing(event);
       }
     }
@@ -203,14 +199,11 @@ void runEach30Seconds()
   #endif
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += getUptimeMinutes();
-    log += F(" ConnectFailures ");
-    log += WiFiEventData.connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
+    String log = strformat(
+      F("WD   : Uptime %d  ConnectFailures %u FreeMem %u"),
+      getUptimeMinutes(),
+      WiFiEventData.connectionFailures,
+      FreeMem());
     bool logWiFiStatus = true;
     #if FEATURE_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
@@ -222,10 +215,10 @@ void runEach30Seconds()
     }
     #endif // if FEATURE_ETHERNET
     if (logWiFiStatus) {
-      log += F(" WiFiStatus ");
-      log += ArduinoWifiStatusToString(WiFi.status());
-      log += F(" ESPeasy internal wifi status: ");
-      log += WiFiEventData.ESPeasyWifiStatusToString();
+      log += strformat(
+        F(" WiFiStatus: %s ESPeasy internal wifi status: %s"),
+        ArduinoWifiStatusToString(WiFi.status()).c_str(),
+        WiFiEventData.ESPeasyWifiStatusToString().c_str());
     }
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();

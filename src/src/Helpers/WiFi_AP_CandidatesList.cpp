@@ -1,12 +1,16 @@
 #include "../Helpers/WiFi_AP_CandidatesList.h"
 
+#ifdef ESP32
+#include "../DataStructs/WiFi_AP_Candidates_NVS.h"
+#endif
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
-
+#include "../Helpers/StringConverter.h"
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
@@ -50,6 +54,11 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
 
     while (!done) {
       if (get_SSID(index, ssid)) {
+        // Make sure emplace_back is not done on the 2nd heap
+        # ifdef USE_SECOND_HEAP
+        HeapSelectDram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
         known.emplace_back(index, ssid);
         if (SettingsIndexMatchCustomCredentials(index)) {
           if (SettingsIndexMatchEmergencyFallback(index)) {
@@ -197,7 +206,7 @@ WiFi_AP_Candidate WiFi_AP_CandidatesList::getBestCandidate() const {
   return WiFi_AP_Candidate();
 }
 
-bool WiFi_AP_CandidatesList::hasKnownCredentials() {
+bool WiFi_AP_CandidatesList::hasCandidateCredentials() {
   load_knownCredentials();
   return !known.empty();
 }
@@ -224,6 +233,12 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
     RTC.lastWiFiChannel = currentCandidate.channel;
     currentCandidate.bssid.get(RTC.lastBSSID);
     RTC.lastWiFiSettingsIndex = currentCandidate.index;
+#ifdef ESP32
+    if (Settings.UseLastWiFiFromRTC())
+      WiFi_AP_Candidates_NVS::currentConnection_to_NVS(currentCandidate);
+    else
+      WiFi_AP_Candidates_NVS::clear_from_NVS();
+#endif
   }
 
   candidates.clear();
@@ -267,19 +282,18 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
 
 
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
+  // Make sure list operations are not done on the 2nd heap
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   if (scanned_new.size() > 0) {
     // We have new scans to process.
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    // TD-er: Disabled for now as it is suspect for crashes
-    #endif
     purge_expired();
     for (auto scan = scanned_new.begin(); scan != scanned_new.end();) {
       #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("WiFi : Scan result: ");
-        log += scan->toString();
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, concat(F("WiFi : Scan result: "), scan->toString()));
       }
       #endif // ifndef BUILD_NO_DEBUG
 
@@ -350,9 +364,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const WiFi_AP_Candidate bestCandidate = getBestCandidate();
     if (bestCandidate.usable()) {
-      String log = F("WiFi : Best AP candidate: ");
-      log += bestCandidate.toString();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("WiFi : Best AP candidate: "), bestCandidate.toString()));
     }
   }
   #endif
@@ -363,7 +375,22 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) { return; }
+  if (!Settings.UseLastWiFiFromRTC()) return;
+  if (!RTC.lastWiFi_set()) { 
+    #ifdef ESP32
+    // Try to load from NVS and store in RTC
+    WiFi_AP_Candidate fromNVS;
+    if (WiFi_AP_Candidates_NVS::loadCandidate_from_NVS(fromNVS)) {
+      RTC.lastWiFiChannel = currentCandidate.channel;
+      currentCandidate.bssid.get(RTC.lastBSSID);
+      RTC.lastWiFiSettingsIndex = currentCandidate.index;
+    } else {
+      return;
+    }
+    #else
+    return;
+    #endif
+  }
 
   if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 

@@ -97,7 +97,7 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
     }
 
     if (measurementStatus == A02YYUW_status_e::STATUS_OK) {
-      UserVar[event->BaseVarIndex] = static_cast<float>(measuredDistance);
+      UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(measuredDistance));
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("A02YYUW: Distance value = "), static_cast<int>(measuredDistance)));

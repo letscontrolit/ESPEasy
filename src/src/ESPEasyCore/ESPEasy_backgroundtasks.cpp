@@ -78,9 +78,9 @@ void backgroundtasks()
   if (!UseRTOSMultitasking) {
     serial();
 
-    if (webserverRunning) {
+//    if (webserverRunning) {
       web_server.handleClient();
-    }
+//    }
     #if FEATURE_ESPEASY_P2P
     checkUDP();
     #endif

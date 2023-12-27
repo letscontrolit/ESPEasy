@@ -98,22 +98,10 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t unit    = CONFIG_PORT;
-      uint8_t address = 0x5A + unit;
+      const uint8_t unit    = CONFIG_PORT;
+      const uint8_t address = 0x5A + unit;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
-      P024_data_struct *P024_data =
-        static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P024_data);
-
-      //        if (!msgTemp024) // Mysensors
-      //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
-      //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-      //        serialPrint("Present MLX90614: "); //Mysensors
-      //        serialPrintln(event->BaseVarIndex); //Mysensors
-      //   success = true;
-      // }
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
       break;
     }
 
@@ -123,7 +111,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P024_data) {
-        UserVar[event->BaseVarIndex] = P024_data->readTemperature(PCONFIG(0));
+        UserVar.setFloat(event->TaskIndex, 0, P024_data->readTemperature(PCONFIG(0)));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MLX90614  : Temperature: ");

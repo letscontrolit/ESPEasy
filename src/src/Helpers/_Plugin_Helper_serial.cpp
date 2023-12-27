@@ -200,9 +200,6 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
   #endif // ifdef ESP8266
   #ifdef ESP32
 
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
-
   // Script to show GPIO pins for HW serial ports or I2C addresses for the I2C to UART bridge
   // "function serialPortChanged(elem) {var style = (elem.value == 2 || elem.value == 4 || elem.value == 5) ? '' : 'none';var i2cstyle =
   // elem.value == 1 ? '' : 'none';document.getElementById('tr_taskdevicepin1').style.display =

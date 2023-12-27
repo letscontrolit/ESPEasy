@@ -421,7 +421,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                     }
                     for (int i = 0; i < 3; ++i) {
                       if (Plugin_091_ostate[i] != Plugin_091_switchstate[i]) {
-                        UserVar[event->BaseVarIndex + i] = Plugin_091_switchstate[i];
+                        UserVar.setFloat(event->TaskIndex,  i, Plugin_091_switchstate[i]);
                         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                           log += F(" r");
                           log += i;
@@ -454,7 +454,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                           switch (btnnum) {
                             case 0: {
                                 if (Plugin_091_numrelay > 0) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" r0:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -462,7 +462,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                             case 1: {
                                 if (Plugin_091_numrelay > 1) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" r1:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -470,7 +470,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                             case 2: {
                                 if (Plugin_091_numrelay > 2) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" r2:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -478,7 +478,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                             case 3: {
                                 if (Plugin_091_numrelay > 3) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" r3:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -504,7 +504,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                           switch (btnnum) {
                             case 1: {
                                 if (Plugin_091_numrelay > 1) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" d1:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -512,7 +512,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                             case 2: {
                                 if (Plugin_091_numrelay > 2) {
-                                  UserVar[event->BaseVarIndex + btnnum] = Plugin_091_switchstate[btnnum];
+                                  UserVar.setFloat(event->TaskIndex,  btnnum, Plugin_091_switchstate[btnnum]);
                                   log += F(" d2:");
                                   log += Plugin_091_switchstate[btnnum];
                                 }
@@ -553,11 +553,11 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER) {
             if (Plugin_091_switchstate[1] < 1)
             {
-              UserVar[event->BaseVarIndex] = 0;
+              UserVar.setFloat(event->TaskIndex, 0, 0);
             } else {
-              UserVar[event->BaseVarIndex] = 1;
+              UserVar.setFloat(event->TaskIndex, 0, 1);
             }
-            UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+            UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
           }
           success = true;
         }
@@ -598,18 +598,18 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
+                UserVar.setFloat(event->TaskIndex, rnum, Plugin_091_switchstate[rnum]);
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
+                  UserVar.setFloat(event->TaskIndex,  1 - rnum, 0);
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  UserVar.setFloat(event->TaskIndex,  1 - rnum, Plugin_091_switchstate[1 - rnum]);
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -646,18 +646,18 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             sendmcucommand(rnum, !rcmd, Plugin_091_globalpar0, par3); // invert state
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
+                UserVar.setFloat(event->TaskIndex, rnum, Plugin_091_switchstate[rnum]);
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
+                  UserVar.setFloat(event->TaskIndex, 1 - rnum, 0);
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  UserVar.setFloat(event->TaskIndex,  1 - rnum, Plugin_091_switchstate[1 - rnum]);
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -699,18 +699,18 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             Scheduler.setPluginTaskTimer(timer, event->TaskIndex, rnum, !rcmd);
             if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
               if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-                UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
+                UserVar.setFloat(event->TaskIndex, rnum, Plugin_091_switchstate[rnum]);
                 if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
                 { // exclusive on mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
+                  UserVar.setFloat(event->TaskIndex,  1 - rnum, 0);
                 }
                 if (par3 == 2) { // simultaneous mode for Dual
                   // FIXME TD-er: Is this a valid UserVar index?
-                  UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+                  UserVar.setFloat(event->TaskIndex,  1 - rnum, Plugin_091_switchstate[1 - rnum]);
                 }
                 if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -740,11 +740,11 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
                 if (Plugin_091_switchstate[1] < 1) // follow state
                 {
-                  UserVar[event->BaseVarIndex] = 0;
-                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar.setFloat(event->TaskIndex, 0, 0);
+                  UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
                 } else {
-                  UserVar[event->BaseVarIndex] = 1;
-                  UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+                  UserVar.setFloat(event->TaskIndex, 0, 1);
+                  UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
                 }
                 event->sensorType = Plugin_091_type;
                 sendData(event);
@@ -781,18 +781,18 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // invert state
         if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
           if (UserVar[(event->BaseVarIndex + rnum)] != Plugin_091_switchstate[rnum]) { // report only if state is really changed
-            UserVar[(event->BaseVarIndex + rnum)] = Plugin_091_switchstate[rnum];
+            UserVar.setFloat(event->TaskIndex,  rnum, Plugin_091_switchstate[rnum]);
             if (( par3 == 1) && (rcmd == 1) && (rnum < 2))
             { // exclusive on mode for Dual
               // FIXME TD-er: Is this a valid UserVar index?
-              UserVar[(event->BaseVarIndex + 1 - rnum)] = 0;
+              UserVar.setFloat(event->TaskIndex,  1 - rnum, 0);
             }
             if (par3 == 2) { // simultaneous mode for Dual
               // FIXME TD-er: Is this a valid UserVar index?
-              UserVar[(event->BaseVarIndex + 1 - rnum)] = Plugin_091_switchstate[1 - rnum];
+              UserVar.setFloat(event->TaskIndex,  1 - rnum, Plugin_091_switchstate[1 - rnum]);
             }
             if (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER) {
-              UserVar[event->BaseVarIndex + 1] = Plugin_091_switchstate[1];
+              UserVar.setFloat(event->TaskIndex, 1, Plugin_091_switchstate[1]);
             }
             event->sensorType = Plugin_091_type;
             sendData(event);

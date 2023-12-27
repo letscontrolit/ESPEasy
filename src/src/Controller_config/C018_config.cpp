@@ -157,7 +157,7 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
     addHtml(C018_data->getLastError());
 
     addRowLabel(F("Sample Set Counter"));
-    addHtmlInt(C018_data->getSampleSetCount());
+    addHtmlInt(static_cast<uint32_t>(C018_data->getSampleSetCount()));
 
     addRowLabel(F("Data Rate"));
     addHtml(C018_data->getDataRate());
@@ -172,7 +172,7 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
       addEnabled(status.Joined);
 
       addRowLabel(F("Silent Immediately"));
-      addHtmlInt(status.SilentImmediately ? 1 : 0);
+      addHtmlInt(static_cast<uint32_t>(status.SilentImmediately ? 1 : 0));
     }
   }
 }

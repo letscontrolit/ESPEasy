@@ -1,6 +1,6 @@
 #include "../Helpers/Networking.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/TimingStats.h"
@@ -199,7 +199,11 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE,  concat(F("UDP  : Send UDP message to "), unit));
+    addLogMove(LOG_LEVEL_DEBUG_MORE,  strformat(
+      F("UDP  : Send UDP message to %d (%s)"), 
+      unit,
+      remoteNodeIP.toString().c_str()
+      ));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -297,7 +301,14 @@ void checkUDP()
           {
             packetBuffer[len] = 0;
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLogMove(LOG_LEVEL_DEBUG,  
+                strformat(F("UDP  : %s  Command: %s"), 
+                  formatIP(remoteIP).c_str(), 
+                  wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
+                  ));
+            }
             #endif
             ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
           }
@@ -324,20 +335,16 @@ void checkUDP()
                 NodeStruct received;
                 memcpy(&received, &packetBuffer[2], copy_length);
 
-                if (received.validate()) {
-                  {
-                    #ifdef USE_SECOND_HEAP
-                    HeapSelectIram ephemeral;
-                    #endif
-
-                    Nodes.addNode(received); // Create a new element when not present
-                  }
+                if (received.validate(remoteIP)) {
+                  Nodes.addNode(received); // Create a new element when not present
 
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
                     addLogMove(LOG_LEVEL_DEBUG_MORE,  
-                      strformat(F("UDP  : %s,%s,%d"), 
+                      strformat(F("UDP  : %s (%d) %s,%s,%d"), 
+                        formatIP(remoteIP).c_str(), 
+                        received.unit,
                         received.STA_MAC().toString().c_str(), 
                         formatIP(received.IP()).c_str(), 
                         received.unit));
@@ -355,7 +362,8 @@ void checkUDP()
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
-                PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
+                // TD-er: Disabled the PLUGIN_UDP_IN call as we don't have any plugin using this.
+                //PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
                 CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
                 break;
               }
@@ -410,6 +418,14 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     IPAddress ip;
     return ip;
   }
+#if FEATURE_USE_IPV6
+  if (it->second.hasIPv6_mac_based_link_local) {
+    return it->second.IPv6_link_local();
+  }
+  if (it->second.hasIPv6_mac_based_link_global) {
+    return it->second.IPv6_global();
+  }
+#endif
   return it->second.IP();
 }
 
@@ -507,7 +523,7 @@ void sendSysInfoUDP(uint8_t repeats)
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
-void SSDP_schema(WiFiClient& client) {
+void SSDP_schema() {
   if (!NetworkConnected(10)) {
     return;
   }
@@ -521,7 +537,7 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)((chipId >>  8) & 0xff),
             (uint16_t)chipId        & 0xff);
 
-  client.print(F(
+  web_server.client().print(F(
                  "HTTP/1.1 200 OK\r\n"
                  "Content-Type: text/xml\r\n"
                  "Connection: close\r\n"
@@ -535,27 +551,27 @@ void SSDP_schema(WiFiClient& client) {
                  "</specVersion>"
                  "<URLBase>http://"));
 
-  client.print(formatIP(ip));
-  client.print(F(":80/</URLBase>"
+  web_server.client().print(formatIP(ip));
+  web_server.client().print(F(":80/</URLBase>"
                  "<device>"
                  "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
                  "<friendlyName>"));
-  client.print(Settings.getName());
-  client.print(F("</friendlyName>"
+  web_server.client().print(Settings.getName());
+  web_server.client().print(F("</friendlyName>"
                  "<presentationURL>/</presentationURL>"
                  "<serialNumber>"));
-  client.print(String(ESP.getChipId()));
-  client.print(F("</serialNumber>"
+  web_server.client().print(String(ESP.getChipId()));
+  web_server.client().print(F("</serialNumber>"
                  "<modelName>ESP Easy</modelName>"
                  "<modelNumber>"));
-  client.print(getValue(LabelType::GIT_BUILD));
-  client.print(F("</modelNumber>"
+  web_server.client().print(getValue(LabelType::GIT_BUILD));
+  web_server.client().print(F("</modelNumber>"
                  "<modelURL>http://www.letscontrolit.com</modelURL>"
                  "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                  "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
                  "<UDN>uuid:"));
-  client.print(String(uuid));
-  client.print(F("</UDN></device>"
+  web_server.client().print(String(uuid));
+  web_server.client().print(F("</UDN></device>"
                  "</root>\r\n"
                  "\r\n"));
 }
@@ -1048,11 +1064,11 @@ void scrubDNS() {
 
 bool valid_DNS_address(const IPAddress& dns) {
   return (/*dns.v4() != (uint32_t)0x00000000 && */
-          dns.v4() != (uint32_t)0xFD000000 && 
+          dns != IPAddress((uint32_t)0xFD000000) && 
 #ifdef ESP32
           // Bug where IPv6 global prefix is set as DNS
           // Global IPv6 prefixes currently start with 2xxx::
-          (dns.v4() & (uint32_t)0xF0000000) != (uint32_t)0x20000000 && 
+          (dns[0] & 0xF0) != 0x20 && 
 #endif
           dns != INADDR_NONE);
 }
@@ -1074,7 +1090,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (valid_DNS_address(dns) || dns.v4() == (uint32_t)0x00000000) {
+  if (valid_DNS_address(dns) || dns == INADDR_NONE) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
@@ -1182,7 +1198,7 @@ bool splitHostPortString(const String& hostPortString, String& host, uint16_t& p
   int index_colon = hostPortString.indexOf(':');
 
   if (index_colon >= 0) {
-    int port_tmp;
+    int32_t port_tmp;
 
     if (!validIntFromString(hostPortString.substring(index_colon + 1), port_tmp)) {
       return false;
@@ -1775,7 +1791,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
     return true;
   }
@@ -1875,13 +1891,12 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     client.stop();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
 
     if (Update.end()) {
       if (Settings.UseRules) {
-        String event = concat(F("ProvisionFirmware#success="), file_save);
-        eventQueue.addMove(std::move(event));
+        eventQueue.addMove(concat(F("ProvisionFirmware#success="), file_save));
       }
     }
     return true;
@@ -1924,3 +1939,4 @@ String joinUrlFilename(const String& url, String& filename)
 }
 
 #endif // if FEATURE_DOWNLOAD
+

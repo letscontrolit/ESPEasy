@@ -20,7 +20,7 @@
      <body>
      <form method='POST' action='' enctype='multipart/form-data'>
          Firmware:<br>
-         <input type='file' accept='.bin' name='firmware'>
+         <input type='file' accept='.bin,.bin.gz' name='firmware'>
          <input type='submit' value='Update Firmware'>
      </form>
      </body>
