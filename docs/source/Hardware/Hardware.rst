@@ -55,6 +55,9 @@ ESPEasy has a separate setting for Slow I2C devices, and per I2C device this slo
 
 .. image:: Device_I2COptionsShort.png
 
+Added: 2023-11-23
+
+A device flag has been added for specific devices to have **Force Slow I2C speed** set by default. After adding the device this option will be checked, but can still be unchecked to use (try) Fast I2C speed (400 kHz).
 
 ---------------
 I2C Multiplexer

@@ -149,13 +149,13 @@ private:
   int8_t  _pin          = -1;
   uint8_t _matrixType   = NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE |
                           NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE;
+  neoPixelType        _ledType     = NEO_GRB + NEO_KHZ800;
   uint8_t             _rotation    = 0;
   uint8_t             _fontscaling = 1;
   AdaGFXTextPrintMode _textmode    = AdaGFXTextPrintMode::ContinueToNextLine;
   String              _commandTrigger;
   uint8_t             _brightness = 40;
   uint8_t             _maxbright  = 255;
-  neoPixelType        _ledType    = NEO_GRB + NEO_KHZ800;
   uint16_t            _fgcolor    = ADAGFX_WHITE;
   uint16_t            _bgcolor    = ADAGFX_BLACK;
 
