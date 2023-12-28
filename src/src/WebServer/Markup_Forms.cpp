@@ -249,6 +249,8 @@ void addFormTextBox(const String  & label,
                     #if FEATURE_TOOLTIPS
                     , const String& tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String&   datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -256,6 +258,7 @@ void addFormTextBox(const String  & label,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
@@ -271,6 +274,8 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     ,
                     const String& tooltip 
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -278,6 +283,7 @@ void addFormTextBox(const __FlashStringHelper * classname,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
