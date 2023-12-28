@@ -91,7 +91,11 @@ bool P020_Task::hasClientConnected() {
   if ((nullptr != ser2netServer) && ser2netServer->hasClient())
   {
     if (ser2netClient) { ser2netClient.stop(); }
+    #if ESP_IDF_VERSION_MAJOR >= 5
+    ser2netClient = ser2netServer->accept();
+    #else
     ser2netClient = ser2netServer->available();
+    #endif
 
     # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
