@@ -27,8 +27,8 @@
 #define P164_PCONFIG_HUM_VAL     PCONFIG(4)
 
 // 7-bit I2C slave address of the ENS160
-#define ENS160_I2CADDR_0        0x52	//ADDR low
-#define ENS160_I2CADDR_1        0x53	//ADDR high
+#define P164_ENS160_I2CADDR_0    0x52	//ADDR low
+#define P164_ENS160_I2CADDR_1    0x53	//ADDR high
 
 // Use a state machine to avoid blocking the CPU while waiting for the response
 // See P164_data_struct.cpp for detailed description
@@ -96,7 +96,7 @@ private:
   bool        writeMode(uint8_t mode);                        // Write the opmode register
   void        moveToState(P164_state newState);               // Trigger a state change
 
-  uint8_t     i2cAddress = ENS160_I2CADDR_0;                  // The I2C address of the connected device
+  uint8_t     i2cAddress = P164_ENS160_I2CADDR_0;             // The I2C address of the connected device
   
   P164_state  _state = P164_STATE_INITIAL;  // General state of the software
   ulong       _lastChange = 0u;           // Timestamp of last state transition

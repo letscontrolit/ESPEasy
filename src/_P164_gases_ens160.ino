@@ -41,7 +41,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].I2CNoDeviceCheck   = true;  //TODO
+      Device[deviceCount].I2CNoDeviceCheck   = true;
       break;
     }
 
@@ -61,7 +61,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { ENS160_I2CADDR_0, ENS160_I2CADDR_1 };
+      const uint8_t i2cAddressValues[] = { P164_ENS160_I2CADDR_0, P164_ENS160_I2CADDR_1 };
       constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
@@ -85,7 +85,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P164_PCONFIG_I2C_ADDR = ENS160_I2CADDR_1;
+      P164_PCONFIG_I2C_ADDR = P164_ENS160_I2CADDR_1;
       success = true;
       break;
     }
@@ -104,18 +104,18 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P164_data) {
-        addLogMove(LOG_LEVEL_ERROR, "P164: plugin_read NULLPTR");
+        addLogMove(LOG_LEVEL_ERROR, F("P164: plugin_read NULLPTR"));
         break;
       }
 
       float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
       float humidity = 50.0f;     // A reasonable value in case humidity source task is invalid
-      float tvoc = 0.0f;
-      float eco2 = 0.0f;
+      float tvoc = 0.0f;          // tvoc value to be retrieved from device
+      float eco2 = 0.0f;          // eCO2 value to be retrieved from device
 
       if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
       {
-        // we're checking a var from another task, so calculate that basevar
+        // we're checking a value from other tasks
         temperature = UserVar.getFloat(P164_PCONFIG_TEMP_TASK, P164_PCONFIG_TEMP_VAL); // in degrees C
         humidity    = UserVar.getFloat(P164_PCONFIG_HUM_TASK, P164_PCONFIG_HUM_VAL);   // in % relative
       }

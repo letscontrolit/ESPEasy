@@ -25,6 +25,8 @@
 
 // A curious delay inserted in the original code [ms] 
 #define ENS160_BOOTING          10
+// Max time for device to react on a reset [ms]
+#define ENS160_MAXBOOTING       2000
 
 // ENS160 registers for version V0
 #define ENS160_REG_PART_ID      0x00    // 2 byte register for part identification
@@ -79,7 +81,7 @@
 #define ENS160_OPMODE_ULP           0x04    // ULTRA LOW POWER (ENS161 only)
 #define ENS160_OPMODE_CUSTOM        0xC0    // Not specified in datasheet
 
-// ENS160 undefined bitfields?
+// ENS160 unspecified bitfields?
 #define ENS160_BL_CMD_START         0x02
 #define ENS160_BL_CMD_ERASE_APP     0x04
 #define ENS160_BL_CMD_ERASE_BLINE   0x06
@@ -89,7 +91,7 @@
 #define ENS160_BL_CMD_GET_APPVER    0x0E
 #define ENS160_BL_CMD_EXITBL        0x12
 
-// ENS160 undefined bitfields?
+// ENS160 unspecified bitfields?
 #define ENS160_SEQ_ACK_NOTCOMPLETE  0x80
 #define ENS160_SEQ_ACK_COMPLETE     0xC0
 
@@ -97,9 +99,13 @@
 #define IS_ENS160_SEQ_ACK_COMPLETE(x)       (ENS160_SEQ_ACK_COMPLETE == (ENS160_SEQ_ACK_COMPLETE & (x)))
 
 // ENS160 STATUS bitfields
-#define ENS160_STATUS_STATAS        0x80    // STATAS: Indicates that an OPMODE is rumming
+#define ENS160_STATUS_STATAS        0x80    // STATAS: Indicates that an OPMODE is running
 #define ENS160_STATUS_STATER        0x40    // STATER: High indicated that an error is detected
 #define ENS160_STATUS_VALIDITY      0x0C    // VALIDITY FLAG
+#define ENS160_STATUS_VAL_NORM      0x00    //   0: Normal operation
+#define ENS160_STATUS_VAL_WARM      0x01    //   1: Warm-Up phase
+#define ENS160_STATUS_VAL_NOUSE     0x02    //   2: Not used
+#define ENS160_STATUS_VAL_INVAL     0x03    //   3: Invalid output
 #define ENS160_STATUS_NEWDAT        0x02    // NEWDAT: 1= New data in data registers available
 #define ENS160_STATUS_NEWGPR        0x01    // NEWGRP: 1= New data in GRP_READ registers available 
 
@@ -350,13 +356,16 @@ bool P164_data_struct::evaluateState()
         {
           newState = P164_STATE_STARTING1;
         }
+        else if (timePassedSince(this->_lastChange) > ENS160_MAXBOOTING) {
+          newState = P164_STATE_ERROR;
+        }
       }
       break;
     case P164_STATE_STARTING1:
       // A valid device is found, check if its status is ready to continue
       this->_available = false;
       this->getStatus();
-      if (GET_STATUS_VALIDITY(this->_statusReg) == 0)
+      if (GET_STATUS_VALIDITY(this->_statusReg) == ENS160_STATUS_VAL_NORM)
       {
         this->writeMode(ENS160_OPMODE_IDLE);
         this->clearCommand();
@@ -366,7 +375,7 @@ bool P164_data_struct::evaluateState()
     case P164_STATE_STARTING2:
       this->_available = false;
       this->getStatus();
-      if (GET_STATUS_VALIDITY(this->_statusReg) == 0) {
+      if (GET_STATUS_VALIDITY(this->_statusReg) == ENS160_STATUS_VAL_NORM) {
         this->getFirmware();
         newState = P164_STATE_IDLE;
       }
