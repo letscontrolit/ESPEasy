@@ -34,7 +34,7 @@
 
 #ifdef HAS_ESP_IDF_5
 
-void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
+void espShow(int16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
   rmt_data_t led_data[numBytes * 8];
 
   if (!rmtInit(pin, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
@@ -131,7 +131,7 @@ static void IRAM_ATTR ws2812_rmt_adapter(const void *src, rmt_item32_t *dest, si
     *item_num = num;
 }
 
-void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
+void espShow(int16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
     // Reserve channel
     rmt_channel_t channel = ADAFRUIT_RMT_CHANNEL_MAX;
     for (size_t i = 0; i < ADAFRUIT_RMT_CHANNEL_MAX; i++) {
