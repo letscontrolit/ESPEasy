@@ -16,7 +16,7 @@
 
 //#define P164_USE_CUSTOMMODE     // Enable usage of ENS160 custom modes
 #ifndef BUILD_NO_DEBUG
-//#define P164_ENS160_DEBUG       // Enable debugging using the serial port
+  #define P164_ENS160_DEBUG       // Enable debugging using the serial port
 #endif
 
 // ESPEasy plugin parameter storage

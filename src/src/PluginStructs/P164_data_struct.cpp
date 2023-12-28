@@ -508,9 +508,8 @@ bool P164_data_struct::start(uint8_t slaveaddr)
 // Return: true if data is fresh (first reading of new data)                                     //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::measure() {
-  uint8_t i2cbuf[8];
-  bool    newData = false;
-  bool    is_ok;
+  bool    newData = false;      // True when new data is availabl at device
+  bool    is_ok;                // Dump I2C transaction status
 
   if (this->_state == P164_STATE_OPERATIONAL)  {
     if (this->getStatus()) {              // Check status register if new data is aquired
@@ -791,7 +790,6 @@ bool P164_data_struct::writeMode(uint8_t mode) {
 // Read the part ID from ENS160 device and check for validity                                    //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::checkPartID(void) {
-  uint8_t  i2cbuf[2]; // Buffer for returned I2C data
   uint16_t part_id;   // Resulting PartID
   bool     result = false;
 
@@ -851,10 +849,8 @@ bool P164_data_struct::clearCommand(void) {
 bool P164_data_struct::getStatus()
 {
   bool ret = false;
-  uint8_t val = 0;
 
-  val = I2C_read8_reg(i2cAddress, ENS160_REG_DATA_STATUS, &ret);
-  this->_statusReg = val;
+  this->_statusReg = I2C_read8_reg(i2cAddress, ENS160_REG_DATA_STATUS, &ret);
   #ifdef P164_ENS160_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
@@ -878,8 +874,9 @@ bool P164_data_struct::getStatus()
   return ret;
 }
 
+#ifdef P164_LEGACY_CODE
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// I2C functionality copied from Sciosense.  TODO: Refactor I2C to use the ESPEasy standard      //
+// I2C functionality copied from Sciosense.                                                      //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -887,7 +884,6 @@ bool P164_data_struct::getStatus()
 // Return: boolean == true when I2C transaction was succesful                                    //
 // Note: This functionality is not found in ESPEasy I2C library                                  //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef P164_LEGACY_CODE
 bool P164_data_struct::readI2C(uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t num) {
   uint8_t pos    = 0;
   uint8_t result = 0;
