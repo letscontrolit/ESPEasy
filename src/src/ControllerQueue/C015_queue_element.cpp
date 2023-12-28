@@ -4,6 +4,8 @@
 
 #ifdef USES_C015
 
+#include "../Helpers/StringConverter.h"
+
 C015_queue_element::C015_queue_element(C015_queue_element&& other)
   : idx(other.idx)
   , valuesSent(other.valuesSent)
@@ -12,12 +14,9 @@ C015_queue_element::C015_queue_element(C015_queue_element&& other)
   _timestamp      = other._timestamp;
   _controller_idx = other._controller_idx;
   _taskIndex      = other._taskIndex;
-  # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    txt[i]  = std::move(other.txt[i]);
+    move_special(txt[i], std::move(other.txt[i]));
     vPin[i] = other.vPin[i];
   }
 }
@@ -39,7 +38,7 @@ C015_queue_element& C015_queue_element::operator=(C015_queue_element&& other) {
   valueCount      = other.valueCount;
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    txt[i]  = std::move(other.txt[i]);
+    move_special(txt[i], std::move(other.txt[i]));
     vPin[i] = other.vPin[i];
   }
   return *this;

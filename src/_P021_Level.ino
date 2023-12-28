@@ -240,7 +240,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         if (validGpio(CONFIG_PIN1)) {
           digitalWrite(CONFIG_PIN1, state);
         }
-        UserVar[event->BaseVarIndex] = state;
+        UserVar.setFloat(event->TaskIndex, 0, state);
         sendData(event);
       }
 

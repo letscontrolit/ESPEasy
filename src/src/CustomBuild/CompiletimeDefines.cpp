@@ -18,8 +18,10 @@
 // *INDENT-OFF*
 
 // Need to add quotes around defines as the PIO build tools make it hard to include the string quotes.
+#ifndef STRINGIFY
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
+#endif
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
 

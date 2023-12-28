@@ -3,6 +3,10 @@
 #include "../../ESPEasy_common.h"
 
 
+MAC_address::MAC_address(const uint8_t new_mac[6])
+{
+  memcpy(mac, new_mac, 6);
+}
 
 MAC_address::MAC_address(const MAC_address& other)
 {
@@ -33,6 +37,17 @@ bool MAC_address::set(const char *string)
   }
   return true;
 }
+
+void MAC_address::set(const uint8_t other[6])
+{
+  memcpy(mac, other, 6);
+}
+
+void MAC_address::get(uint8_t mac_out[6]) const
+{
+  memcpy(mac_out, mac, 6);
+}
+
 
 bool MAC_address::all_zero() const
 {

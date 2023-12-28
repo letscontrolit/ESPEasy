@@ -84,40 +84,6 @@
   */
 
 #endif
-/*
-#if defined(ESP32)
-  #include <WiFi.h>
-
-  #ifdef ESP32S2
-    #include <esp32s2/rom/rtc.h>
-  #elif defined(ESP32S3)
-    #include <esp32s3/rom/rtc.h>
-  #elif defined(ESP32C3)
-    #include <esp32c3/rom/rtc.h>
-  # elif defined(ESP32_CLASSIC)
-    #if ESP_IDF_VERSION_MAJOR > 3
-      #include <esp32/rom/rtc.h>
-    #else
-      #include <rom/rtc.h>
-    #endif
-  # else
-
-    static_assert(false, "Implement processor architecture");
-
-  #endif
-//  #include <WiFi.h>
-//  #include  "esp32_ping.h"
-
- 
-  #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
-#endif
-*/
-
-
-//#include <WiFiUdp.h>
-//#include <Wire.h>
-//#include <SPI.h>
-
 
 extern const String EMPTY_STRING;
 
