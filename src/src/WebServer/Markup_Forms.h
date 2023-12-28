@@ -171,6 +171,8 @@ void addFormTextBox(const String& label,
                     ,
                     const String& tooltip = EMPTY_STRING
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist = EMPTY_STRING
                     );
 
 void addFormTextBox(const __FlashStringHelper * classname,
@@ -185,6 +187,8 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     ,
                     const String& tooltip = EMPTY_STRING
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist  = EMPTY_STRING
                     );
 
 
