@@ -646,7 +646,6 @@ bool P164_data_struct::addCustomStep(uint16_t time, bool measureHP0, bool measur
 // Perfrom raw measurement and store result in internal variables                                //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 bool P164_data_struct::measureRaw() {
-  uint8_t i2cbuf[8];
   bool    newData = false;
   bool    is_ok = true;
 
