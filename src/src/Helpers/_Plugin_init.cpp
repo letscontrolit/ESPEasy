@@ -407,11 +407,11 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
+  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
   // Touch (ESP32)
   97,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
+  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -1443,11 +1443,11 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
+  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
   // Touch (ESP32)
   &Plugin_097,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
+  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -2083,6 +2083,8 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P255
 };
 
+bool _Plugin_init_setupDone = false;
+
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
 
@@ -2174,7 +2176,7 @@ deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  if (validDeviceIndex_init(deviceIndex))
   {
     return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
@@ -2183,13 +2185,16 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 
 bool validDeviceIndex_init(deviceIndex_t deviceIndex)
 {
-  return deviceIndex < DeviceIndex_to_Plugin_id_size;
+  if (_Plugin_init_setupDone) {
+    return deviceIndex < DeviceIndex_to_Plugin_id_size;
+  }
+  return false;
 }
 
 // Array containing "DeviceIndex" alfabetically sorted.
 deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size) {
+  if (validDeviceIndex_init(deviceIndex)) {
     return DeviceIndex_sorted[deviceIndex.value];
   }
   return INVALID_DEVICE_INDEX;
@@ -2198,7 +2203,7 @@ deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
 
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  if (validDeviceIndex_init(deviceIndex))
   {
     Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex.value);
     return plugin_call(function, event, string);
@@ -2208,10 +2213,9 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 
 void PluginSetup()
 {
-  static bool setupDone = false;
-  if (setupDone) return;
+  if (_Plugin_init_setupDone) return;
 
-  setupDone = true;
+  _Plugin_init_setupDone = true;
 
   for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {

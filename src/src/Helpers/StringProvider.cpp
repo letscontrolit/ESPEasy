@@ -31,6 +31,8 @@
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware_device_info.h"
+#include "../Helpers/Hardware_temperature_sensor.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -42,6 +44,9 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
+#ifdef ESP32
+#include <soc/rtc.h>
+#endif
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -119,7 +124,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
     case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
+#if FEATURE_CLEAR_I2C_STUCK
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return F("Try clear I2C bus when stuck");
+#endif
     #if FEATURE_I2C_DEVICE_CHECK
     case LabelType::ENABLE_I2C_DEVICE_CHECK:    return F("Check I2C devices when enabled");
     #endif // if FEATURE_I2C_DEVICE_CHECK
@@ -144,6 +151,11 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::WIFI_CONNECTION:        return F("WiFi Connection");
     case LabelType::WIFI_RSSI:              return F("RSSI");
     case LabelType::IP_CONFIG:              return F("IP Config");
+#if FEATURE_USE_IPV6
+    case LabelType::IP6_LOCAL:              return F("IPv6 link local");
+    case LabelType::IP6_GLOBAL:             return F("IPv6 global");
+//    case LabelType::IP6_ALL_ADDRESSES:      return F("IPv6 all addresses");
+#endif
     case LabelType::IP_CONFIG_STATIC:       return F("Static");
     case LabelType::IP_CONFIG_DYNAMIC:      return F("DHCP");
     case LabelType::IP_ADDRESS:             return F("IP Address");
@@ -216,7 +228,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
     case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
 
-    case LabelType::ESP_BOARD_NAME:         return F("ESP Board Name");
+    case LabelType::BOARD_NAME:         return F("ESP Board Name");
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
     case LabelType::FLASH_CHIP_VENDOR:      return F("Flash Chip Vendor");
@@ -296,14 +308,14 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
     case LabelType::TIME_SOURCE:
     {
+      String timeSource_str = toString(node_time.timeSource);
       if (((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) ||
            (node_time.timeSource == timeSource_t::ESP_now_peer)) &&
           (node_time.timeSource_p2p_unit != 0))
       {
-        return concat(toString(node_time.timeSource), ' ') +
-               wrap_braces(String(node_time.timeSource_p2p_unit));
+        return strformat(F("%s (%u)"), timeSource_str.c_str(), node_time.timeSource_p2p_unit);
       }
-      return toString(node_time.timeSource);
+      return timeSource_str;
     }
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
     #if FEATURE_EXT_RTC
@@ -386,10 +398,12 @@ String getValue(LabelType::Enum label) {
 //    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());
+#if FEATURE_CLEAR_I2C_STUCK
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return jsonBool(Settings.EnableClearHangingI2Cbus());
-    #if FEATURE_I2C_DEVICE_CHECK
+#endif
+#if FEATURE_I2C_DEVICE_CHECK
     case LabelType::ENABLE_I2C_DEVICE_CHECK:    return jsonBool(Settings.CheckI2Cdevice());
-    #endif // if FEATURE_I2C_DEVICE_CHECK
+#endif // if FEATURE_I2C_DEVICE_CHECK
 #ifndef BUILD_NO_RAM_TRACKER
     case LabelType::ENABLE_RAM_TRACKING:        return jsonBool(Settings.EnableRAMTracking());
 #endif
@@ -409,14 +423,32 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              retval = WiFi.RSSI(); break;
-    case LabelType::IP_CONFIG:              return String(useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
-                                                            LabelType::IP_CONFIG_DYNAMIC));
+    case LabelType::IP_CONFIG:              return useStaticIP() 
+                                                     ? getLabel(LabelType::IP_CONFIG_STATIC) 
+                                                     : getLabel(LabelType::IP_CONFIG_DYNAMIC);
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return formatIP(NetworkLocalIP());
     case LabelType::IP_SUBNET:              return formatIP(NetworkSubnetMask());
-    case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
+    case LabelType::IP_ADDRESS_SUBNET:      return strformat(F("%s / %s"), getValue(LabelType::IP_ADDRESS).c_str(), getValue(LabelType::IP_SUBNET).c_str());
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
+#if FEATURE_USE_IPV6
+    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6());
+    case LabelType::IP6_GLOBAL:             return formatIP(NetworkGlobalIP6());
+//    case LabelType::IP6_ALL_ADDRESSES:
+    {
+      IP6Addresses_t addresses = NetworkAllIPv6();
+      String res;
+      for (auto it = addresses.begin(); it != addresses.end(); ++it)
+      {
+        if (!res.isEmpty()) {
+          res += F("<br>");
+        }
+        res += it->toString();
+      }
+      return res;
+    }
+#endif
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
     #if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
@@ -425,7 +457,7 @@ String getValue(LabelType::Enum label) {
     #if FEATURE_MDNS
     case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
-    case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
+    case LabelType::DNS:                    return strformat(F("%s / %s"), getValue(LabelType::DNS_1).c_str(), getValue(LabelType::DNS_2).c_str());
     case LabelType::DNS_1:                  return formatIP(NetworkDnsIP(0));
     case LabelType::DNS_2:                  return formatIP(NetworkDnsIP(1));
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
@@ -500,12 +532,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_FREQ:          retval = ESP.getCpuFreqMHz(); break;
 #ifdef ESP32
     case LabelType::ESP_CHIP_XTAL_FREQ:     retval = getXtalFrequencyMHz(); break;
-    case LabelType::ESP_CHIP_APB_FREQ:      retval = getApbFrequency() / 1000000; break;
+    case LabelType::ESP_CHIP_APB_FREQ:      retval = rtc_clk_apb_freq_get() / 1000000; break;
+    //getApbFrequency() / 1000000; break;
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return getChipRevision();
     case LabelType::ESP_CHIP_CORES:         retval = getChipCores(); break;
-    case LabelType::ESP_BOARD_NAME:         return get_board_name();
+    case LabelType::BOARD_NAME:             return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:
@@ -530,8 +563,10 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return formatIP(NetworkLocalIP());
     case LabelType::ETH_IP_SUBNET:          return formatIP(NetworkSubnetMask());
-    case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") +
-                                                          getValue(LabelType::ETH_IP_SUBNET));
+    case LabelType::ETH_IP_ADDRESS_SUBNET:  return strformat(
+                                                          F("%s / %s"),
+                                                          getValue(LabelType::ETH_IP_ADDRESS).c_str(),
+                                                          getValue(LabelType::ETH_IP_SUBNET).c_str());
     case LabelType::ETH_IP_GATEWAY:         return formatIP(NetworkGatewayIP());
     case LabelType::ETH_IP_DNS:             return formatIP(NetworkDnsIP(0));
     case LabelType::ETH_MAC:                return NetworkMacAddress().toString();
@@ -553,8 +588,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP());
     case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
     case LabelType::TIMEZONE_OFFSET:        retval = Settings.TimeZone; break;
-    case LabelType::LATITUDE:               return String(Settings.Latitude);
-    case LabelType::LONGITUDE:              return String(Settings.Longitude);
+    case LabelType::LATITUDE:               return toString(Settings.Latitude, 6);
+    case LabelType::LONGITUDE:              return toString(Settings.Longitude, 6);
 
     case LabelType::MAX_LABEL:
       break;
@@ -565,29 +600,17 @@ String getValue(LabelType::Enum label) {
 
 #if FEATURE_ETHERNET
 String getEthSpeed() {
-  String result;
-
-  result.reserve(7);
-  result += EthLinkSpeed();
-  result += F("Mbps");
-  return result;
+  return strformat(F("%dMbps"), EthLinkSpeed());
 }
 
 String getEthLinkSpeedState() {
-  String result;
-
-  result.reserve(29);
-
   if (EthLinkUp()) {
-    result += getValue(LabelType::ETH_STATE);
-    result += ' ';
-    result += getValue(LabelType::ETH_DUPLEX);
-    result += ' ';
-    result += getEthSpeed();
-  } else {
-    result = getValue(LabelType::ETH_STATE);
+    return strformat(F("%s %s %s"), 
+    getValue(LabelType::ETH_STATE).c_str(), 
+    getValue(LabelType::ETH_DUPLEX).c_str(), 
+    getEthSpeed().c_str());
   }
-  return result;
+  return getValue(LabelType::ETH_STATE);
 }
 
 #endif // if FEATURE_ETHERNET
@@ -597,25 +620,11 @@ String getExtendedValue(LabelType::Enum label) {
   {
     case LabelType::UPTIME:
     {
-      String result;
-      result.reserve(40);
-      int minutes = getUptimeMinutes();
-      int days    = minutes / 1440;
-      minutes = minutes % 1440;
-      int hrs = minutes / 60;
-      minutes = minutes % 60;
-
-      result += days;
-      result += F(" days ");
-      result += hrs;
-      result += F(" hours ");
-      result += minutes;
-      result += F(" minutes");
-      return result;
+      return minutesToDayHourMinute(getUptimeMinutes());
     }
 
     default:
       break;
   }
-  return "";
+  return EMPTY_STRING;
 }

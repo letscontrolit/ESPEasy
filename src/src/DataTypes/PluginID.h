@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-struct pluginID_t {
+struct __attribute__((__packed__)) pluginID_t {
   pluginID_t() = default;
 
   pluginID_t(const pluginID_t& other)

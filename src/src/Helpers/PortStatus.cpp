@@ -8,7 +8,7 @@
 
 #ifdef ESP32
 
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_PWM.h"
 
 void checkAndClearPWM(uint32_t key) {
   if (existPortStatus(key)) {

@@ -254,11 +254,11 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
                 pinMode(CONFIG_PIN1, OUTPUT);
                 digitalWrite(CONFIG_PIN1, state);
               }
-              UserVar[event->BaseVarIndex] = state;
+              UserVar.setFloat(event->TaskIndex, 0, state);
             }
             else {
-              UserVar[event->BaseVarIndex]     = x + 1;
-              UserVar[event->BaseVarIndex + 1] = state;
+              UserVar.setFloat(event->TaskIndex, 0, x + 1);
+              UserVar.setFloat(event->TaskIndex, 1, state);
             }
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -277,14 +277,14 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 
       // command: config,task,<taskname>,SetTime,<timeIndex>,<timeString>,<value>
       if (equals(cmd, F("settime"))) {
-        String para      = parseString(string, 2);
-        int    timeIndex = 0;
+        String  para      = parseString(string, 2);
+        int32_t timeIndex = 0;
 
         if (validIntFromString(para, timeIndex) && (timeIndex > 0) && (timeIndex <= P043_MAX_SETTINGS)) {
           para = parseString(string, 3);
           String para4       = parseString(string, 4);
           const String para5 = parseString(string, 5);
-          int value          = INT_MIN;
+          int32_t value      = INT_MIN;
 
           if ((para.length() == 3) && !para4.isEmpty() && !para5.isEmpty()) {
             // handle timeString without quotes: All,12:34,<value> instead of "All,12:34",<value>
@@ -328,9 +328,9 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     {
       # define P043_GETTIME_LENGTH  7u // Length of 'gettime'
       # define P043_GETVALUE_LENGTH 8u // Length of 'getvalue'
-      const String cmd = parseString(string, 1);
-      unsigned int idx = 0u;
-      int timeIndex    = -1;
+      const String cmd  = parseString(string, 1);
+      unsigned int idx  = 0u;
+      int32_t timeIndex = -1;
 
       if (cmd.startsWith(F("gettime"))) {
         idx = P043_GETTIME_LENGTH;

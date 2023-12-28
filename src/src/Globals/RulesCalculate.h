@@ -17,7 +17,10 @@ extern RulesCalculate_t RulesCalculate;
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
 
-int                 CalculateParam(const String& TmpStr);
+int                 CalculateParam(const String& TmpStr, int errorValue = 0);
+
+CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
+                              ESPEASY_RULES_FLOAT_TYPE      & result);
 
 CalculateReturnCode Calculate(const String& input,
                               ESPEASY_RULES_FLOAT_TYPE      & result);

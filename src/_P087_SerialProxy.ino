@@ -252,7 +252,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         } else
         if (equals(cmd, F("serialproxy_writemix"))) {
           std::vector<uint8_t> param1 = parseHexTextData(string);
-          P087_data->sendData(&param1[0], param1.size());
+          if (param1.size())
+            P087_data->sendData(&param1[0], param1.size());
           success = true;
         }
       }

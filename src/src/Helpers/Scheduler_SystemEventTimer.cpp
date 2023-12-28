@@ -11,6 +11,7 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
 * System Event Timer
@@ -33,30 +34,23 @@ void ESPEasy_Scheduler::schedule_plugin_task_event_timer(
 
 #if FEATURE_MQTT
 void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(
-  deviceIndex_t DeviceIndex,
-  taskIndex_t   TaskIndex,
-  uint8_t       Function,
-  char         *c_topic,
-  uint8_t      *b_payload,
-  unsigned int  length) {
+  deviceIndex_t  DeviceIndex,
+  taskIndex_t    TaskIndex,
+  uint8_t        Function,
+  const char    *c_topic,
+  const uint8_t *b_payload,
+  unsigned int   length) {
   if (validDeviceIndex(DeviceIndex)) {
     EventStruct  event(TaskIndex);
     const size_t topic_length = strlen_P(c_topic);
 
-    if (!(event.String1.reserve(topic_length) &&
-          event.String2.reserve(length))) {
+    if (!(reserve_special(event.String1, topic_length) &&
+          reserve_special(event.String2, length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
       return;
     }
-
-    for (size_t i = 0; i < topic_length; ++i) {
-      event.String1 += c_topic[i];
-    }
-
-    for (unsigned int i = 0; i < length; ++i) {
-      const char c = static_cast<char>(*(b_payload + i));
-      event.String2 += c;
-    }
+    event.String1.concat(c_topic, topic_length);
+    event.String2.concat((const char *)b_payload, length);
 
     // Emplace using move.
     // This makes sure the relatively large event will not be in memory twice.
@@ -64,7 +58,15 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(
       SchedulerPluginPtrType_e::TaskPlugin,
       DeviceIndex.value,
       static_cast<uint8_t>(Function));
-    ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
+
+    {
+      // Make sure the emplace_back is not using 2nd heap
+      # ifdef USE_SECOND_HEAP
+      HeapSelectDram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
+      ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
+    }
   }
 }
 
@@ -87,29 +89,35 @@ void ESPEasy_Scheduler::schedule_controller_event_timer(
 void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
   protocolIndex_t   ProtocolIndex,
   CPlugin::Function Function,
-  char             *c_topic,
-  uint8_t          *b_payload,
+  const char       *c_topic,
+  const uint8_t    *b_payload,
   unsigned int      length) {
   if (validProtocolIndex(ProtocolIndex)) {
-    // Emplace empty event in the queue first and the fill it.
+    EventStruct  event;
+    const size_t topic_length = strlen_P(c_topic);
+
+    // This is being called from a callback function, so do not try to allocate this on the 2nd heap, but rather on the default heap.
+    if (!(event.String1.reserve(topic_length) &&
+          event.String2.reserve(length))) {
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+      return;
+    }
+    event.String1.concat(c_topic, topic_length);
+    event.String2.concat((const char *)b_payload, length);
+
+    // Emplace using move.
     // This makes sure the relatively large event will not be in memory twice.
     const SystemEventQueueTimerID timerID(
       SchedulerPluginPtrType_e::ControllerPlugin,
       ProtocolIndex,
       static_cast<uint8_t>(Function));
 
-    ScheduledEventQueue.emplace_back(timerID.mixed_id, EventStruct());
-    ScheduledEventQueue.back().event.String1 = c_topic;
-
-    String& payload = ScheduledEventQueue.back().event.String2;
-
-    if (!payload.reserve(length)) {
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
-    }
-
-    for (unsigned int i = 0; i < length; ++i) {
-      char c = static_cast<char>(*(b_payload + i));
-      payload += c;
+    {
+      # ifdef USE_SECOND_HEAP
+      // Make sure emplace_back is not called when on 2nd heap
+      HeapSelectDram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+      ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
     }
   }
 }
@@ -139,6 +147,11 @@ void ESPEasy_Scheduler::schedule_event_timer(
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
   //  ScheduledEventQueue.push_back(eventWrapper);
+
+  // Make sure emplace_back is not done on the 2nd heap
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
   ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
 }
 

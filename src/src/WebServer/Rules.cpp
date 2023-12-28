@@ -33,16 +33,15 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  const uint8_t rulesSet = getFormItemInt(F("set"), 1);
+  const int rulesSet = getFormItemInt(F("set"), 1);
 
-  # if defined(ESP8266)
-  String fileName = F("rules");
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  String fileName = F("/rules");
-  # endif // if defined(ESP32)
-  fileName += rulesSet;
-  fileName += F(".txt");
+  const String fileName = strformat(
+    #ifdef ESP8266
+    F("rules%d.txt")
+    #else
+    F("/rules%d.txt")
+    #endif
+    , rulesSet);
 
   String error;
 
@@ -50,9 +49,7 @@ void handle_rules() {
   if (!fileExists(fileName))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Rules : Create new file: ");
-      log += fileName;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("Rules : Create new file: %s"), fileName));
     }
     fs::File f = tryOpenFile(fileName, "w");
 
@@ -74,14 +71,13 @@ void handle_rules() {
   addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
-    uint8_t choice = rulesSet;
+    int choice = rulesSet;
     String  options[RULESETS_MAX];
     int     optionValues[RULESETS_MAX];
 
     for (uint8_t x = 0; x < RULESETS_MAX; x++)
     {
-      options[x]      = F("Rules Set ");
-      options[x]     += x + 1;
+      options[x]      = concat(F("Rules Set "), x+1);
       optionValues[x] = x + 1;
     }
 
@@ -148,7 +144,7 @@ void handle_rules_new() {
 
   // Pagionation of rules list
   const int rulesListPageSize = 25;
-  int startIdx                = 0;
+  int32_t startIdx            = 0;
 
   const String fstart = webArg(F("start"));
 

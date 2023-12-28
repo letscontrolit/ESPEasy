@@ -202,15 +202,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
           for (int i = 0; i < 3; i++) {
             addRowLabel(RGB.substring(i, i + 1));
-            String id = F("cal_");
-
             for (int j = 0; j < 3; j++) {
-              addHtml(static_cast<char>('a' + i));
-              addHtml(F("<sub>"));
-              addHtmlInt(j + 1);
-              addHtml(F("</sub>"));
-              addHtml(':');
-              addFloatNumberBox(id + static_cast<char>('a' + i) + '_' + String(j),
+              addHtml(strformat(F("%c<sub>%d</sub>:"), static_cast<char>('a' + i), j + 1));
+              addFloatNumberBox(P050_data_struct::generate_cal_id(i, j),
                                 P050_data->TransformationSettings.matrix[i][j],
                                 -255.999f,
                                 255.999f);
@@ -253,10 +247,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           } else {
             // Save new settings
             for (int i = 0; i < 3; i++) {
-              String id = F("cal_");
-
               for (int j = 0; j < 3; j++) {
-                P050_data->TransformationSettings.matrix[i][j] = getFormItemFloat(id + static_cast<char>('a' + i) + '_' + String(j));
+                P050_data->TransformationSettings.matrix[i][j] = 
+                  getFormItemFloat(P050_data_struct::generate_cal_id(i, j));
               }
             }
           }
@@ -329,24 +322,28 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         uint32_t t       = r + g + b; // Normalization factor
 
         if (t == 0) {
-          UserVar[event->BaseVarIndex + 0] = 0.0f;
-          UserVar[event->BaseVarIndex + 1] = 0.0f;
-          UserVar[event->BaseVarIndex + 2] = 0.0f;
+          UserVar.setFloat(event->TaskIndex, 0, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 2, 0.0f);
         }
 
         switch (PCONFIG(2)) {
           case 0:
-            UserVar[event->BaseVarIndex + 0] = r;
-            UserVar[event->BaseVarIndex + 1] = g;
-            UserVar[event->BaseVarIndex + 2] = b;
+            UserVar.setFloat(event->TaskIndex, 0, r);
+            UserVar.setFloat(event->TaskIndex, 1, g);
+            UserVar.setFloat(event->TaskIndex, 2, b);
             break;
           case 1:
 
             if (t != 0) { // R/G/B transformed
-              P050_data->applyTransformation(r, g, b,
-                                             &UserVar[event->BaseVarIndex + 0],
-                                             &UserVar[event->BaseVarIndex + 1],
-                                             &UserVar[event->BaseVarIndex + 2]);
+              float r_f, g_f, b_f{};
+              P050_data->applyTransformation(
+                r, g, b,
+                &r_f, &g_f, &b_f);
+              UserVar.setFloat(event->TaskIndex, 0, r_f);
+              UserVar.setFloat(event->TaskIndex, 1, g_f);
+              UserVar.setFloat(event->TaskIndex, 2, b_f);
+
             }
             break;
           case 2:
@@ -356,9 +353,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           case 4:
 
             if (t != 0) { // r/g/b (normalized to 0.00..255.00 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex + 0] = static_cast<float>(r) / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 1] = static_cast<float>(g) / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 2] = static_cast<float>(b) / t * sRGBFactor;
+              UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(r) / t * sRGBFactor);
+              UserVar.setFloat(event->TaskIndex, 1, static_cast<float>(g) / t * sRGBFactor);
+              UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(b) / t * sRGBFactor);
             }
             break;
           case 3:
@@ -371,14 +368,18 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               const float nr = static_cast<float>(r) / t * sRGBFactor;
               const float ng = static_cast<float>(g) / t * sRGBFactor;
               const float nb = static_cast<float>(b) / t * sRGBFactor;
-              P050_data->applyTransformation(nr, ng, nb,
-                                             &UserVar[event->BaseVarIndex + 0],
-                                             &UserVar[event->BaseVarIndex + 1],
-                                             &UserVar[event->BaseVarIndex + 2]);
+
+              float r_f, g_f, b_f{};
+              P050_data->applyTransformation(
+                nr, ng, nb,
+                &r_f, &g_f, &b_f);
+              UserVar.setFloat(event->TaskIndex, 0, r_f);
+              UserVar.setFloat(event->TaskIndex, 1, g_f);
+              UserVar.setFloat(event->TaskIndex, 2, b_f);
             }
             break;
         }
-        UserVar[event->BaseVarIndex + 3] = value4;
+        UserVar.setFloat(event->TaskIndex, 3, value4);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("TCS34725: ");
@@ -395,13 +396,12 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               log += F("Clear : ");
               break;
           }
-          log += formatUserVarNoCheck(event->TaskIndex, 3);
-          log += F(" R: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += F(" G: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 1);
-          log += F(" B: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 2);
+          log += strformat(
+            F(" %s R: %s G: %s B: %s "),
+            formatUserVarNoCheck(event->TaskIndex, 3).c_str(),
+            formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+            formatUserVarNoCheck(event->TaskIndex, 1).c_str(),
+            formatUserVarNoCheck(event->TaskIndex, 2).c_str());
           addLogMove(LOG_LEVEL_INFO, log);
         }
 
@@ -420,11 +420,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               switch (i) {
                 case 0:
                   varName = F("RawRGB");
-                  eventValues += r;
-                  eventValues += ',';
-                  eventValues += g;
-                  eventValues += ',';
-                  eventValues += b;
+                  eventValues += strformat(F("%u,%u,%u"), r, g, b);
                   break;
                 case 3:
                   sRGBFactor = 255.0f;
@@ -447,11 +443,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                     nb = static_cast<float>(b) / t * sRGBFactor;
                     P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
                   }
-                  eventValues += toString(tr, 4);
-                  eventValues += ',';
-                  eventValues += toString(tg, 4);
-                  eventValues += ',';
-                  eventValues += toString(tb, 4);
+
+                  eventValues += strformat(F("%.4f,%.4f,%.4f"), tr, tg, tb);
                   break;
                 case 2:
                   sRGBFactor = 255.0f;
@@ -464,11 +457,11 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     varName = F("NormSRGB");
                   }
-                  eventValues += toString(static_cast<float>(r) / t * sRGBFactor, 4);
-                  eventValues += ',';
-                  eventValues += toString(static_cast<float>(g) / t * sRGBFactor, 4);
-                  eventValues += ',';
-                  eventValues += toString(static_cast<float>(b) / t * sRGBFactor, 4);
+                  eventValues += strformat(
+                    F("%.4f,%.4f,%.4f"),
+                    static_cast<float>(r) / t * sRGBFactor,
+                    static_cast<float>(g) / t * sRGBFactor,
+                    static_cast<float>(b) / t * sRGBFactor);
                   break;
                 default:
                   eventValues.clear();

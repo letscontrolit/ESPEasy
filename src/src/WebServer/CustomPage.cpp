@@ -8,7 +8,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"

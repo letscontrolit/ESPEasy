@@ -68,8 +68,14 @@ float p076_hpowfact{};
 # define P076_Gosund       9
 # define P076_Shelly_PLUG_S 10
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+// FIXME TD-er: Must check if older (and ESP8266) envs need IRAM_ATTR in the function declaration.
+void  p076_hlw8012_cf1_interrupt();
+void  p076_hlw8012_cf_interrupt();
+#else
 void IRAM_ATTR p076_hlw8012_cf1_interrupt();
 void IRAM_ATTR p076_hlw8012_cf_interrupt();
+#endif
 
 
 bool p076_getDeviceParameters(int      device,
@@ -383,10 +389,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             success = true;
           }
 
-          UserVar[event->BaseVarIndex]     = p076_hvoltage;
-          UserVar[event->BaseVarIndex + 1] = p076_hcurrent;
-          UserVar[event->BaseVarIndex + 2] = p076_hpower;
-          UserVar[event->BaseVarIndex + 3] = p076_hpowfact;
+          UserVar.setFloat(event->TaskIndex, 0, p076_hvoltage);
+          UserVar.setFloat(event->TaskIndex, 1, p076_hcurrent);
+          UserVar.setFloat(event->TaskIndex, 2, p076_hpower);
+          UserVar.setFloat(event->TaskIndex, 3, p076_hpowfact);
 
           // Measurement is complete.
           p076_read_stage = 0;

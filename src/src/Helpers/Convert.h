@@ -20,8 +20,6 @@ float minutesToDay(int minutes);
 
 String minutesToDayHour(int minutes);
 
-String minutesToHourMinute(int minutes);
-
 String minutesToDayHourMinute(int minutes);
 
 String minutesToHourColonMinute(int minutes);
