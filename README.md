@@ -13,7 +13,7 @@ Introduction https://espeasy.readthedocs.io/en/latest/ (and, mostly outdated, wi
 This is the development branch of ESPEasy. All new features go into this branch, and it has become the current stable branch. If you want to do a bugfix, do it on this branch.
 
 
-Check here to learn how to use this branch and help us improving ESPEasy: http://www.letscontrolit.com/wiki/index.php/ESPEasy#Source_code_development
+Check here to learn how to use this branch and help us improving ESPEasy: [Starter guide for (local) development on ESPEasy](https://espeasy.readthedocs.io/en/latest/Participate/PlatformIO.html#starter-guide-for-local-development-on-espeasy)
 
 ## Web based flasher (experimental)
 
@@ -58,6 +58,7 @@ hard         | hardware specific builds                  | Minimal              
 minimal      | minimal plugins for specific use-cases    | Switch and Controller            |
 spec_*       | specialized technical builds              | Not intended for regular use     |
 IRext        | Infra-red hardware specific               | Sending and receiving IR cmd     |
+safeboot     | (Experimental) `safeboot` build to enable<br>most/all plugins on 4MB Flash boards | None                             |
 
 
 *[opt-arduino-library]* (optional) can be any of:
@@ -81,6 +82,8 @@ ESP32solo1       | Espressif ESP32-Solo1 generic boards        |
 ESP32s2          | Espressif ESP32-S2 generic boards           |
 ESP32c3          | Espressif ESP32-C3 generic boards           |
 ESP32s3          | Espressif ESP32-S3 generic boards           |
+ESP32c2          | Espressif ESP32-C2 generic boards           |
+ESP32c6          | Espressif ESP32-C6 generic boards           |
 ESP32-wrover-kit | Espressif ESP32 wrover-kit boards           |
 SONOFF           | Sonoff hardware specific                    |
 other_POW        | Switch with power measurement               |
@@ -98,6 +101,7 @@ Flash size | Description                 |
 1M         | 1 MB with 128 kB filesystem |
 2M         | 2 MB with 128 kB filesystem |
 2M256      | 2 MB with 256 kB filesystem |
+2M320k     | 2 MB with 320 kB filesystem |
 4M1M       | 4 MB with 1 MB filesystem   |
 4M2M       | 4 MB with 2 MB filesystem   |
 16M        | 16 MB with 14 MB filesystem |
@@ -106,18 +110,21 @@ Flash size | Description                 |
 16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
 
+N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.1, to support newer ESP32 chips like ESP32-C2 and ESP32-C6. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer available in IDF 5 and later. A migration plan will be made available in 2024.
 
 *[opt-build-features]* can be any of:
-Build features  | Description                                                                |
-----------------|----------------------------------------------------------------------------|
-LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB)     |
-VCC             | Analog input configured to measure VCC voltage (ESP8266 only)              |
-OTA             | Arduino OTA (Over The Air) update feature enabled                          |
-Domoticz        | Only Domoticz controllers (HTTP+MQTT) and plugins included                 |
-FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included   |
-ETH             | Ethernet interface enabled (ESP32 only)                                    |
-OPI_PSRAM       | Specific configuration to enable PSRAM detection, ESP32-S3 only            |
-CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2 and ESP32-S3     |
+Build features  | Description                                                                                               |
+----------------|-----------------------------------------------------------------------------------------------------------|
+LittleFS        | Use LittleFS instead of SPIFFS filesystem (SPIFFS is unstable \> 2 MB, and no longer supported in IDF \> 5) |
+VCC             | Analog input configured to measure VCC voltage (ESP8266 only)                                             |
+OTA             | Arduino OTA (Over The Air) update feature enabled                                                         |
+Domoticz        | Only Domoticz controllers (HTTP) and plugins included                                                     |
+Domoticz_MQTT   | Only Domoticz controllers (MQTT) and plugins included                                                     |
+FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included                                  |
+ETH             | Ethernet interface enabled (ESP32-classic only)                                                           |
+OPI_PSRAM       | Specific configuration to enable PSRAM detection, ESP32-S3 only                                           |
+CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2, ESP32-S3 and ESP32-C6                          |
+noOTA/NO_OTA    | Does not support OTA (Over The Air-updating of the firmware) Use [the flash page](https://td-er.nl/ESPEasy/) or ESPTool via USB Serial |
 
 Some example firmware names:
 Firmware name                                                     | Hardware                              | Included plugins                 |
