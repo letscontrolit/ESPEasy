@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-28 tonhuisman: Exclude some code that won't work for PLUGIN_BUILD_MINIMAL_OTA builds
  * 2023-12-19 tonhuisman: Fix Value input On/Off only to behave exactly like when using a GPIO, except for changing the GPIO state
  * 2023-12-16 tonhuisman: Add support for _GET_CONFIG_VALUE function, with [Clock#GetTimeX] and [Clock#GetValueX], where X is
  *                        in range 1..Nr. of Day,Time fields (PLUGIN_EXTRACONFIGVAR_MAX = 16)
@@ -232,12 +233,15 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
       {
         unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
 
+        # ifndef PLUGIN_BUILD_MINIMAL_OTA
+
         if (bitRead(clockSet, 28) || bitRead(clockSet, 29)) { // sunrise or sunset string, apply todays values
           String specialTime = timeLong2String(clockSet);
 
           parseSystemVariables(specialTime, false);           // Parse systemvariables only, to reduce processing
           clockSet = string2TimeLong(specialTime);
         }
+        # endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
 
         if (matchClockEvent(clockEvent, clockSet))
         {
