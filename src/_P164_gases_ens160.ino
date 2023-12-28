@@ -110,13 +110,18 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
 
       float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
       float humidity = 50.0f;     // A reasonable value in case humidity source task is invalid
+      float tvoc = 0.0f;
+      float eco2 = 0.0f;
+
       if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
       {
         // we're checking a var from another task, so calculate that basevar
         temperature = UserVar.getFloat(P164_PCONFIG_TEMP_TASK, P164_PCONFIG_TEMP_VAL); // in degrees C
         humidity    = UserVar.getFloat(P164_PCONFIG_HUM_TASK, P164_PCONFIG_HUM_VAL);   // in % relative
       }
-      success = P164_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1], temperature, humidity);
+      success = P164_data->read(tvoc, eco2, temperature, humidity);
+      UserVar.setFloat(event->TaskIndex, 0, tvoc);
+      UserVar.setFloat(event->TaskIndex, 1, eco2);
       break;
     }
 
