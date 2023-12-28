@@ -127,7 +127,42 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts/Binaries/
-          pattern: Binaries-*
+          pattern: Binaries-ESP82*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32S2*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32S3*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32C2*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32C3*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32C6*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32SOLO*
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Binaries/
+          pattern: Binaries-ESP32-*
           merge-multiple: true
       - name: Combine all files in a package for single-archive upload
         run: |
