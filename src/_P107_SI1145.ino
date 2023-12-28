@@ -90,9 +90,9 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       }
       delay(8); // Measurement Rate: 255 * 31.25uS = 8ms
 
-      UserVar[event->BaseVarIndex]     = P107_data->uv.readVisible();
-      UserVar[event->BaseVarIndex + 1] = P107_data->uv.readIR();
-      UserVar[event->BaseVarIndex + 2] = P107_data->uv.readUV() / 100.0f;
+      UserVar.setFloat(event->TaskIndex, 0, P107_data->uv.readVisible());
+      UserVar.setFloat(event->TaskIndex, 1, P107_data->uv.readIR());
+      UserVar.setFloat(event->TaskIndex, 2, P107_data->uv.readUV() / 100.0f);
 
       P107_data->uv.reset(); // Stop the sensor reading
 

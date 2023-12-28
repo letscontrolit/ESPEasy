@@ -2,7 +2,6 @@
 
 #ifdef USES_P096
 
-# include "../Helpers/Hardware.h"
 
 /****************************************************************************
  * EPD_type_toString: Display-value for the device selected
@@ -284,8 +283,8 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-      UserVar[event->BaseVarIndex + 1] = curY;
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                               // and put into Values
+      UserVar.setFloat(event->TaskIndex, 1, curY);
 
       eInkScreen->display();
       eInkScreen->clearBuffer();
@@ -359,7 +358,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
     else if (equals(arg1, F("inv"))) {
       String arg2 = parseString(string, 3);
-      int    nArg2;
+      int32_t    nArg2;
 
       if (validIntFromString(arg2, nArg2) &&
           (nArg2 >= 0) &&
@@ -373,7 +372,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       String arg2 = parseString(string, 3);
-      int    nArg2;
+      int32_t    nArg2;
 
       if (validIntFromString(arg2, nArg2) &&
           (nArg2 >= 0)) {
@@ -415,8 +414,8 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       if (success) {
         int16_t curX, curY;
         gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
-        UserVar[event->BaseVarIndex]     = curX;
-        UserVar[event->BaseVarIndex + 1] = curY;
+        UserVar.setFloat(event->TaskIndex, 0, curX);
+        UserVar.setFloat(event->TaskIndex, 1, curY);
       }
     }
   }

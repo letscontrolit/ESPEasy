@@ -303,7 +303,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           # endif // if P013_FEATURE_COMBINED_MODE
           ) {
         const float value = Plugin_013_read(event);
-        UserVar[event->BaseVarIndex] = value;
+        UserVar.setFloat(event->TaskIndex, 0, value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("ULTRASONIC : TaskNr: ");
@@ -365,7 +365,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
             addLogMove(LOG_LEVEL_INFO, log);
           }
           switchstate[event->TaskIndex] = state;
-          UserVar[event->BaseVarIndex]  = state;
+          UserVar.setFloat(event->TaskIndex, 0, state);
           event->sensorType             = Sensor_VType::SENSOR_TYPE_SWITCH;
           sendData(event);
         }

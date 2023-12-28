@@ -27,6 +27,10 @@
 
 #include "OLEDDisplay.h"
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
 OLEDDisplay::~OLEDDisplay() {
   end();
 }
@@ -37,7 +41,9 @@ bool OLEDDisplay::init() {
     return false;
   }
   if(this->buffer==NULL) {
-  this->buffer = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  {
+    this->buffer = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  }
   if(!this->buffer) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][init] Not enough memory to create display\n");
     return false;
@@ -46,7 +52,12 @@ bool OLEDDisplay::init() {
 
   #ifdef OLEDDISPLAY_DOUBLE_BUFFER
   if(this->buffer_back==NULL) {
-  this->buffer_back = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+    this->buffer_back = (uint8_t*) malloc(sizeof(uint8_t) * DISPLAY_BUFFER_SIZE);
+  }
   if(!this->buffer_back) {
     DEBUG_OLEDDISPLAY("[OLEDDISPLAY][init] Not enough memory to create back buffer\n");
     free(this->buffer);
@@ -626,7 +637,12 @@ bool OLEDDisplay::setLogBuffer(uint16_t lines, uint16_t chars){
     this->logBufferFilled   = 0;      // Nothing stored yet
     this->logBufferMaxLines = lines;  // Lines max printable
     this->logBufferSize     = size;   // Total number of characters the buffer can hold
-    this->logBuffer         = (char *) malloc(size * sizeof(uint8_t));
+    {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+      this->logBuffer         = (char *) malloc(size * sizeof(uint8_t));
+    }
     if(!this->logBuffer) {
       DEBUG_OLEDDISPLAY("[OLEDDISPLAY][setLogBuffer] Not enough memory to create log buffer\n");
       return false;
@@ -691,6 +707,61 @@ size_t OLEDDisplay::write(const char* str) {
   }
   return length;
 }
+
+#ifdef OLEDDISPLAY_DOUBLE_BUFFER
+bool OLEDDisplay::getChangedBoundingBox(
+  uint8_t& minBoundX, 
+  uint8_t& minBoundY, 
+  uint8_t& maxBoundX, 
+  uint8_t& maxBoundY)
+{
+  minBoundY = ~0;
+  maxBoundY = 0;
+
+  minBoundX = ~0;
+  maxBoundX = 0;
+  // Calculate the Y bounding box of changes
+  // and copy buffer[pos] to buffer_back[pos];
+  const uint32_t* buf_32 = (const uint32_t*)((uintptr_t)buffer & ~(uintptr_t)3u);
+  uint32_t* back_buf_32 = (uint32_t*)((uintptr_t)buffer_back & ~(uintptr_t)3u);
+
+  const uint8_t y_maxindex = this->height() / 8;
+  const uint8_t x_maxindex = this->width(); 
+
+  for (uint8_t y = 0; y < y_maxindex; ++y) {
+    for (uint8_t x = 0; x < x_maxindex; x += 4) {
+      const uint16_t pos = (x + (y * this->width())) >> 2;
+
+      uint32_t buf_val, back_buf_val;
+      __builtin_memcpy(&buf_val, (buf_32 + pos), sizeof(uint32_t));
+      __builtin_memcpy(&back_buf_val, (back_buf_32 + pos), sizeof(uint32_t));
+      asm volatile ("" :"+r"(back_buf_val)); // inject 32-bit dependency
+
+      if (buf_val != back_buf_val) {
+        minBoundY = _min(minBoundY, y);
+        maxBoundY = _max(maxBoundY, y);
+        if ((x < minBoundX) || ((x+3) > maxBoundX)) {
+          for (uint8_t i = 0; i < 4; ++i) {
+            if (((buf_val >> (8*i)) & 0xFF) != ((back_buf_val >> (8*i)) & 0xFF))
+            {
+              minBoundX = _min(minBoundX, x + i);
+              maxBoundX = _max(maxBoundX, x + i);
+            }
+          }
+        }
+        __builtin_memcpy((back_buf_32 + pos), &buf_val, sizeof(uint32_t));
+      }
+    }
+    yield();
+  }
+
+  // If the minBoundY wasn't updated
+  // we can savely assume that buffer_back[pos] == buffer[pos]
+  // holdes true for all values of pos
+  return (minBoundY != (uint8_t)(~0));
+}
+#endif
+
 
 void OLEDDisplay::SetComPins(uint8_t _compins) {
   sendCommand(SETCOMPINS);

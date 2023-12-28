@@ -79,9 +79,9 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
       }
       else
       {
-        UserVar[event->BaseVarIndex]     = temperature;
-        UserVar[event->BaseVarIndex + 1] = moisture;
-        UserVar[event->BaseVarIndex + 2] = light;
+        UserVar.setFloat(event->TaskIndex, 0, temperature);
+        UserVar.setFloat(event->TaskIndex, 1, moisture);
+        UserVar.setFloat(event->TaskIndex, 2, light);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = concat(F("SoilMoisture: Address: "), formatToHex(P047_I2C_ADDR));

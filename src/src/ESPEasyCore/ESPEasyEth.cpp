@@ -11,7 +11,7 @@
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/Networking.h"
 
@@ -153,6 +153,7 @@ bool ETHConnectRelaxed() {
 
   if (!EthEventData.ethInitSuccess) {
     ethResetGPIOpins();
+#if ESP_IDF_VERSION_MAJOR < 5
     EthEventData.ethInitSuccess = ETH.begin( 
       Settings.ETH_Phy_Addr,
       Settings.ETH_Pin_power,
@@ -160,6 +161,16 @@ bool ETHConnectRelaxed() {
       Settings.ETH_Pin_mdio,
       (eth_phy_type_t)Settings.ETH_Phy_Type,
       (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+#else
+    EthEventData.ethInitSuccess = ETH.begin( 
+      (eth_phy_type_t)Settings.ETH_Phy_Type,
+      Settings.ETH_Phy_Addr,
+      Settings.ETH_Pin_mdc,
+      Settings.ETH_Pin_mdio,
+      Settings.ETH_Pin_power,
+      (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+
+#endif
   }
   if (EthEventData.ethInitSuccess) {
     // FIXME TD-er: Not sure if this is correctly set to false

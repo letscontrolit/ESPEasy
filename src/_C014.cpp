@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/DataTypes/NodeTypeID.h"
 # include "src/Globals/Device.h"
 # include "src/Globals/MQTT.h"
@@ -929,11 +929,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("C014 : Sent to ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(F("C014 : Sent to %s %s"),
+            tmppubname.c_str(),
+            value.c_str()));
         }
 #endif
       }

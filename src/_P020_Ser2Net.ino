@@ -387,7 +387,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLogMove(LOG_LEVEL_DEBUG, concat(F("Ser2Net: P020_RESET_TARGET_PIN : "), static_cast<int>(P020_RESET_TARGET_PIN)));
+          addLogMove(LOG_LEVEL_DEBUG, strformat(
+            F("Ser2net  : P020_RESET_TARGET_PIN : %d"), 
+            P020_RESET_TARGET_PIN));
         }
         # endif // ifndef BUILD_NO_DEBUG
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);

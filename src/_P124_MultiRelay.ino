@@ -160,9 +160,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_CONFIG_RELAY_COUNT = getFormItemInt(F("relays"));
       P124_CONFIG_I2C_ADDRESS = getFormItemInt(F("i2caddress"));
       uint32_t lSettings = 0u;
-      bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemIntCustomArgName(P124_FLAGS_INIT_RELAYS) == 1);
       bitWrite(lSettings, P124_FLAGS_INIT_ALWAYS, isFormItemChecked(getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS)));
-      bitWrite(lSettings, P124_FLAGS_EXIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_EXIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_EXIT_RELAYS, getFormItemIntCustomArgName(P124_FLAGS_EXIT_RELAYS) == 1);
       bitWrite(lSettings, P124_FLAGS_LOOP_GET,    isFormItemChecked(getPluginCustomArgName(P124_FLAGS_LOOP_GET)));
 
       if (lSettings != 0) {
@@ -206,7 +206,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
             (!bitRead(P124_InitializedRelays, event->TaskIndex) ||
              bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_ALWAYS))) {
           P124_data->channelCtrl(get8BitFromUL(P124_CONFIG_FLAGS, P124_FLAGS_INIT_OFFSET)); // Set relays state
-          UserVar[event->BaseVarIndex] = P124_data->getChannelState();                      // Get relays state
+          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());                      // Get relays state
           bitSet(P124_InitializedRelays, event->TaskIndex);                                 // Update initialization status
         }
         P124_data->setLoopState(bitRead(P124_CONFIG_FLAGS, P124_FLAGS_LOOP_GET));           // Loop state
@@ -225,7 +225,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P124_data) {
         if (P124_data->isInitialized()) {
           P124_data->channelCtrl(get8BitFromUL(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_OFFSET)); // Set relays state
-          UserVar[event->BaseVarIndex] = P124_data->getChannelState();                      // Get relays state
+          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());                      // Get relays state
         }
         addLog(LOG_LEVEL_INFO, F("MultiRelay: Object still alive."));
       }
@@ -238,13 +238,13 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P124_data) && P124_data->isInitialized()) {
-        UserVar[event->BaseVarIndex] = P124_data->getChannelState(); // Get relays state
+        UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState()); // Get relays state
 
         if (P124_data->isLoopEnabled()) {
           uint8_t chan = P124_data->getNextLoop();
           uint8_t data = P124_data->getChannelState() & (1 << (chan - 1));
-          UserVar[event->BaseVarIndex + 1] = chan;
-          UserVar[event->BaseVarIndex + 2] = (data ? 1 : 0);
+          UserVar.setFloat(event->TaskIndex, 1, chan);
+          UserVar.setFloat(event->TaskIndex, 2, data ? 1 : 0);
         }
         success = true;
       }
@@ -316,8 +316,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
           success = P124_data->channelCtrl(event->Par2);
         } else if (equals(subcommand, F("get")) && (event->Par2 > 0) && (event->Par2 <= P124_CONFIG_RELAY_COUNT)) {
           uint8_t data = P124_data->getChannelState() & (1 << (event->Par2 - 1));
-          UserVar[event->BaseVarIndex + 1] = event->Par2;
-          UserVar[event->BaseVarIndex + 2] = (data ? 1 : 0);
+          UserVar.setFloat(event->TaskIndex, 1, event->Par2);
+          UserVar.setFloat(event->TaskIndex, 2, (data ? 1 : 0));
 
           success = true;
         } else if (equals(subcommand, F("loop")) && (event->Par2 >= 0) && (event->Par2 <= 1)) {
@@ -327,7 +327,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (success) {
-          UserVar[event->BaseVarIndex] = P124_data->getChannelState(); // Get relays state
+          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState()); // Get relays state
         }
       }
       break;
