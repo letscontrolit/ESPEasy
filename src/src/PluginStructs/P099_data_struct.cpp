@@ -180,7 +180,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
     String objectName = String(StoredSettings.TouchObjects[objectNr].objectname);
 
     if ((objectName.length() > 0)
-        && !equals(objectName.substring(0, 1), '_')                    // Ignore if name starts with an underscore
+        && !equals(objectName.substring(0, 1), '_')                      // Ignore if name starts with an underscore
         && (StoredSettings.TouchObjects[objectNr].bottom_right.x > 0)
         && (StoredSettings.TouchObjects[objectNr].bottom_right.y > 0)) { // Not initial could be valid
       if (SurfaceAreas[objectNr] == 0) {                                 // Need to calculate the surface area
@@ -235,9 +235,9 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x,
  * Checks if the name doesn't exceed the max. length.
  */
 bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount) {
-  if (touchObject.isEmpty() || touchObject[0] == '_') { return false; }
+  if (touchObject.isEmpty() || (touchObject[0] == '_')) { return false; }
   const String findObject = concat((state ? F("_") : F("")), touchObject); // When enabling, try to find a disabled object
-  bool   success = false;
+  bool success            = false;
 
   for (uint8_t objectNr = 0; objectNr < checkObjectCount; objectNr++) {
     const String thisObject(StoredSettings.TouchObjects[objectNr].objectname);
@@ -245,13 +245,13 @@ bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state
     if ((thisObject.length() > 0) && findObject.equalsIgnoreCase(thisObject)) {
       if (state) {
         // Keep original character casing
-        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength); 
+        success = safe_strncpy(StoredSettings.TouchObjects[objectNr].objectname, thisObject.substring(1), P099_MaxObjectNameLength);
       } else {
-        if (thisObject.length() < P099_MaxObjectNameLength - 2) {                                                                    
+        if (thisObject.length() < P099_MaxObjectNameLength - 2) {
           // Leave room for the underscore and the terminating 0.
           success = safe_strncpy(
-            StoredSettings.TouchObjects[objectNr].objectname, 
-            concat(F("_"), thisObject),  // disabledObject
+            StoredSettings.TouchObjects[objectNr].objectname,
+            concat(F("_"), thisObject), // disabledObject
             P099_MaxObjectNameLength);
         }
       }
@@ -309,4 +309,65 @@ void P099_data_struct::scaleRawToCalibrated(uint16_t& x, uint16_t& y) {
   }
 }
 
-#endif  // ifdef USES_P099
+const char p099_subcommands[] PROGMEM = "rot|flip|enable|disable";
+enum class p099_subcommands_e {
+  rot,
+  flip,
+  enable,
+  disable
+};
+
+bool P099_data_struct::plugin_write(struct EventStruct *event, const String& string) {
+  String command;
+  String subcommand;
+
+  int argIndex = string.indexOf(',');
+
+  if (argIndex) {
+    command    = parseString(string, 1);
+    subcommand = parseString(string, 2);
+
+    if (equals(command, F("touch"))) {
+      int  command_i = GetCommandCode(subcommand.c_str(), p099_subcommands);
+
+      if (command_i == -1) {
+        // No matching subcommand found
+        return false;
+      }
+
+      switch (static_cast<p099_subcommands_e>(command_i)) {
+        case p099_subcommands_e::rot:
+        {
+          // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
+          setRotation(static_cast<uint8_t>(parseString(string, 3).toInt() % 4));
+          return true;
+        }
+        case p099_subcommands_e::flip:
+        {
+          // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
+          setRotationFlipped(parseString(string, 3).toInt() > 0);
+          return true;
+        }
+        case p099_subcommands_e::enable:
+        {
+          // touch,enable,<objectName> : Enables a disabled objectname (with a leading underscore)
+          return setTouchObjectState(
+            parseString(string, 3),
+            true,
+            P099_CONFIG_OBJECTCOUNT);
+        }
+        case p099_subcommands_e::disable:
+        {
+          // touch,disable,<objectName> : Disables an enabled objectname (without a leading underscore)
+          return setTouchObjectState(
+            parseString(string, 3),
+            false,
+            P099_CONFIG_OBJECTCOUNT);
+        }
+      }
+    }
+  }
+  return false;
+}
+
+#endif // ifdef USES_P099

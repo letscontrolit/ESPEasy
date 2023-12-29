@@ -2,6 +2,9 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/PluginStats_Config.h"
+
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_Plugin.h"
 
@@ -213,6 +216,24 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
   }
   return false;
 }
+
+PluginStats_Config_t ExtraTaskSettingsStruct::getPluginStatsConfig(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return PluginStats_Config_t(); }
+
+  PluginStats_Config_t res(get8BitFromUL(VariousBits[taskVarIndex], 0));
+  return res;
+}
+
+void ExtraTaskSettingsStruct::setPluginStatsConfig(taskVarIndex_t taskVarIndex, PluginStats_Config_t config)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    uint8_t value = config.getStoredBits();
+    bitWrite(value, 1, bitRead(VariousBits[taskVarIndex], 1));
+    set8BitToUL(VariousBits[taskVarIndex], 0, value);
+  }
+}
+
 
 #endif // if FEATURE_PLUGIN_STATS
 

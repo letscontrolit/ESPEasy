@@ -138,17 +138,16 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Btn L: ");
-      string += formatGpioLabel(CONFIG_PIN1, false);
-      string += event->String1; // newline
-      string += F("Btn R: ");
-      string += formatGpioLabel(CONFIG_PIN2, false);
-      string += event->String1; // newline
-      string += F("Btn M: ");
-      string += formatGpioLabel(CONFIG_PIN3, false);
-      string += event->String1; // newline
-      string += F("Relay: ");
-      string += formatGpioLabel(P109_CONFIG_RELAYPIN, false);
+      const char* separator = event->String1.c_str();
+      string = strformat(
+        F("Btn L: %s%sBtn R: %s%sBtn M: %s%sRelay: %s"),
+       formatGpioLabel(CONFIG_PIN1, false).c_str(),
+       separator,
+       formatGpioLabel(CONFIG_PIN2, false).c_str(),
+       separator,
+       formatGpioLabel(CONFIG_PIN3, false).c_str(),
+       separator,
+       formatGpioLabel(P109_CONFIG_RELAYPIN, false).c_str());
       success = true;
       break;
     }
@@ -194,7 +193,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P109_CONFIG_SETPOINT_DELAY == 0) { P109_CONFIG_SETPOINT_DELAY = P109_DEFAULT_SETPOINT_DELAY + P109_SETPOINT_OFFSET; }
         addFormNumericBox(F("Delay on setpoint change"), F("setpdelay"), P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET, 1, 10);
-        addUnit(F("1..10 sec."));
+        addUnit('s');
       }
 
       success = true;

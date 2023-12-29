@@ -84,11 +84,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P005_data_struct(event));
-        P005_data_struct *P005_data =
-          static_cast<P005_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        success = (nullptr != P005_data);
+        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P005_data_struct(event));
         break;
       }
 

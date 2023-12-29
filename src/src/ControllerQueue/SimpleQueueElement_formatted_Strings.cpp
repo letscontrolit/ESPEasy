@@ -13,14 +13,11 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(struc
 {
   _controller_idx = event->ControllerIndex;
   _taskIndex = event->TaskIndex;
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
 
   valueCount = getValueCountForTask(_taskIndex);
 
   for (uint8_t i = 0; i < valueCount; ++i) {
-    txt[i] = formatUserVarNoCheck(event, i);
+    move_special(txt[i], formatUserVarNoCheck(event, i));
   }
 }
 
@@ -41,12 +38,9 @@ SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(Simpl
   _timestamp      = rval._timestamp;
   _controller_idx = rval._controller_idx;
   _taskIndex      = rval._taskIndex;
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    txt[i] = std::move(rval.txt[i]);
+    move_special(txt[i], std::move(rval.txt[i]));
   }
 }
 
@@ -60,17 +54,7 @@ SimpleQueueElement_formatted_Strings& SimpleQueueElement_formatted_Strings::oper
   valueCount      = rval.valueCount;
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-
-    if (rval.txt[i].length() && !mmu_is_iram(&(rval.txt[i][0]))) {
-      txt[i] = rval.txt[i];
-    } else {
-      txt[i] = std::move(rval.txt[i]);
-    }
-    #else // ifdef USE_SECOND_HEAP
-    txt[i] = std::move(rval.txt[i]);
-    #endif // ifdef USE_SECOND_HEAP
+    move_special(txt[i], std::move(rval.txt[i]));
   }
   return *this;
 }

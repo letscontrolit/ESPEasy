@@ -11,7 +11,7 @@ OUTPUT_DIR = "build_output{}".format(os.path.sep)
 def get_max_bin_size(env_name, file_suffix):
     # FIXME TD-er: Must determine the max size for .bin.gz files
 
-    max_bin_size = 1044464
+    max_bin_size = 1024*1024 # 1044464
     if "_1M" in env_name:
         # max 872 kiB - 16 bytes
         max_bin_size = 892912

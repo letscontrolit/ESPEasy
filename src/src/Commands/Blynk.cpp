@@ -49,7 +49,7 @@ const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const c
 
       if (Blynk_get(blynkcommand, first_enabled_blynk_controller, &value))
       {
-        UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = value;
+        UserVar.setFloat((event->Par1 - 1), event->Par2 - 1, value);
       }
       else {
         return F("Error getting data");

@@ -133,9 +133,9 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
         sensors_event_t s_event;
         P121_data->mag.getEvent(&s_event);
 
-        UserVar[event->BaseVarIndex + 0] = s_event.magnetic.x;
-        UserVar[event->BaseVarIndex + 1] = s_event.magnetic.y;
-        UserVar[event->BaseVarIndex + 2] = s_event.magnetic.z;
+        UserVar.setFloat(event->TaskIndex, 0, s_event.magnetic.x);
+        UserVar.setFloat(event->TaskIndex, 1, s_event.magnetic.y);
+        UserVar.setFloat(event->TaskIndex, 2, s_event.magnetic.z);
 
         float heading = atan2(s_event.magnetic.y, s_event.magnetic.x);
 
@@ -153,7 +153,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
           heading -= 2.0f * PI;
         }
 
-        UserVar[event->BaseVarIndex + 3] = heading * 180.0f / M_PI;
+        UserVar.setFloat(event->TaskIndex, 3, heading * 180.0f / M_PI);
 
         success = true; // Assume we want to send out values to controllers
       }

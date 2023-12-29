@@ -3,7 +3,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/RTC.h"
-#include "../Globals/SecuritySettings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
@@ -42,7 +41,11 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
 }
 
 bool WiFiEventData_t::unprocessedWifiEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }
@@ -90,9 +93,13 @@ void WiFiEventData_t::markWiFiTurnOn() {
 
 void WiFiEventData_t::clear_processed_flags() {
   // Mark all flags to default to prevent handling old events.
+  WiFi.scanDelete();
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
@@ -160,6 +167,14 @@ void WiFiEventData_t::markGotIP() {
   bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
   processedGotIP = false;
 }
+
+#if FEATURE_USE_IPV6
+  void WiFiEventData_t::markGotIPv6(const IPAddress& ip6) {
+    processedGotIP6 = false;
+    unprocessed_IP6 = ip6;
+  }
+#endif
+
 
 void WiFiEventData_t::markLostIP() {
   bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);

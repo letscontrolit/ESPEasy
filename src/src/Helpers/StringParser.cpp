@@ -51,9 +51,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   // Keep current loaded taskSettings to restore at the end.
   const taskIndex_t currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
-
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
-
 
   if (parseTemplate_CallBack_ptr != nullptr) {
     parseTemplate_CallBack_ptr(tmpString, useURLencode);
@@ -77,7 +75,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       {
         // Address an internal variable either as float or as int
         // For example: Let,10,[VAR#9]
-        unsigned int varNum;
+        uint32_t varNum;
 
         if (validUIntFromString(valueName, varNum)) {
           unsigned char nr_decimals = maxNrDecimals_fpType(getCustomFloatVar(varNum));
@@ -108,11 +106,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
         // The command is stored in valueName & format
-        String command;
-        command.reserve(valueName.length() + format.length() + 1);
-        command  = valueName;
-        command += '#';
-        command += format;
+        String command = strformat(F("%s#%s"), valueName.c_str(), format.c_str());
         command.replace('#', ',');
 
         if (getGPIOPinStateValues(command)) {
@@ -172,7 +166,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               value = getValueCountForTask(taskIndex);
             } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
               String ctrl = valueName.substring(19, 20);
-              int ctrlNr = 0;
+              int32_t ctrlNr = 0;
               if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
                   Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
@@ -615,13 +609,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
   deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
-  #ifdef USE_SECOND_HEAP
-  HeapSelectDram ephemeral;
-  auto result = Cache.taskIndexName.find(String(deviceName));
-  #else
   auto result = Cache.taskIndexName.find(deviceName);
-  #endif
-
 
   if (result != Cache.taskIndexName.end()) {
     return result->second;
@@ -637,11 +625,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
         {
-          #ifdef USE_SECOND_HEAP
-          Cache.taskIndexName[String(deviceName)] = taskIndex;
-          #else
           Cache.taskIndexName[deviceName] = taskIndex;
-          #endif
           return taskIndex;
         }
       }
@@ -666,14 +650,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
-  String cache_valueName;
-
-  cache_valueName.reserve(valueName.length() + 4);
-  cache_valueName  = valueName;
-  cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
-  cache_valueName += taskIndex;
-  cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
-
+  String cache_valueName = strformat(
+    F("%s#%d"),                   // The '#' cannot exist in a value name, use it in the cache key.
+    valueName.c_str(),
+    static_cast<int>(taskIndex));
+  cache_valueName.toLowerCase();  // No need to store multiple versions of the same entry with only different case.
+  
   auto result = Cache.taskIndexValueName.find(cache_valueName);
 
   if (result != Cache.taskIndexValueName.end()) {
@@ -732,14 +714,15 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   int hashpos;
 
   if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
-  deviceName = input.substring(startpos + 1, hashpos);
-  valueName  = input.substring(hashpos + 1, endpos);
-  hashpos    = valueName.indexOf('#');
+
+  move_special(deviceName, input.substring(startpos + 1, hashpos));
+  move_special(valueName , input.substring(hashpos + 1, endpos));
+  hashpos = valueName.indexOf('#');
 
   if (hashpos != -1) {
     // Found an extra '#' in the valueName, will split valueName and format.
-    format    = valueName.substring(hashpos + 1);
-    valueName = valueName.substring(0, hashpos);
+    move_special(format,    valueName.substring(hashpos + 1));
+    move_special(valueName, valueName.substring(0, hashpos));
   } else {
     format = String();
   }
@@ -766,7 +749,8 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int arg
 /********************************************************************************************\
    Get int from command argument (argc = 0 => command)
  \*********************************************************************************************/
-int parseCommandArgumentInt(const String& string, unsigned int argc)
+int parseCommandArgumentInt(const String& string, unsigned int argc,
+                            int errorValue)
 {
   int value = 0;
 
@@ -775,7 +759,7 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
     String TmpStr;
 
     if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
-      value = CalculateParam(TmpStr);
+      value = CalculateParam(TmpStr, errorValue);
     }
   }
   return value;
