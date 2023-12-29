@@ -36,7 +36,7 @@ enum class ESPEasySerialPort : uint8_t {
 };
 
 
-const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port);
+const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port, bool shortName = false);
 
 bool                       isHWserial(ESPEasySerialPort port);
 
