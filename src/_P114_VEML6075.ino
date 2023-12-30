@@ -125,12 +125,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
-      P114_data_struct *P114_data =
-        static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P114_data);
-
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
       break;
     }
 
@@ -148,9 +143,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       float UVIndex = 0.0f;
 
       if (P114_data->read_sensor(UVA, UVB, UVIndex)) {
-        UserVar[event->BaseVarIndex]     = UVA;
-        UserVar[event->BaseVarIndex + 1] = UVB;
-        UserVar[event->BaseVarIndex + 2] = UVIndex;
+        UserVar.setFloat(event->TaskIndex, 0, UVA);
+        UserVar.setFloat(event->TaskIndex, 1, UVB);
+        UserVar.setFloat(event->TaskIndex, 2, UVIndex);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;

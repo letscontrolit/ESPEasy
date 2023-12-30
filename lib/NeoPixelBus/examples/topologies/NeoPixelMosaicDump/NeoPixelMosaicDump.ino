@@ -41,13 +41,10 @@ NeoMosaic <MyPanelLayout> mosaic(
 
 void DumpMosaic()
 {
-    int16_t totalWidth = static_cast<int16_t>(mosaic.getWidth());
-    int16_t totalHeight = static_cast<int16_t>(mosaic.getHeight());
-
     Serial.println();
 
     Serial.print("\t\t");
-    for (int16_t x = 0; x < totalWidth; x++)
+    for (int x = 0; x < mosaic.getWidth(); x++)
     {
         Serial.print(x);
         Serial.print("\t");
@@ -55,19 +52,19 @@ void DumpMosaic()
     Serial.println();
 
     Serial.print("\t---");
-    for (int16_t x = 0; x < totalWidth; x++)
+    for (int x = 0; x < mosaic.getWidth(); x++)
     {
         Serial.print("--------");
     }
     Serial.println();
 
-    for (int16_t y = 0; y < totalHeight; y++)
+    for (int y = 0; y < mosaic.getHeight(); y++)
     {
         Serial.print("  ");
         Serial.print(y);
         Serial.print("\t|\t");
 
-        for (int16_t x = 0; x < totalWidth; x++)
+        for (int x = 0; x < mosaic.getWidth(); x++)
         {
             NeoTopologyHint hint = mosaic.TopologyHint(x, y);
 

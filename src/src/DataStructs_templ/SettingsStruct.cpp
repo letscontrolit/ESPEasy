@@ -17,6 +17,12 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/gpio.h>
+#endif
+
+
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -334,7 +340,7 @@ void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
 }
 #endif // if FEATURE_I2C_DEVICE_CHECK
 */
-
+/*
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect() const { 
   return bitRead(VariousBits2, 0);
@@ -372,14 +378,15 @@ void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) {
 #if FEATURE_TARSTREAM_SUPPORT
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar() const { 
-  return bitRead(VariousBits2, 3);
+  return bitRead(VariousBits2, 3); // Using bit 4 now...
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar(bool value) { 
-  bitWrite(VariousBits2, 3, value);
+  bitWrite(VariousBits2, 3, value); // Using bit 4 now...
 }
 #endif // if FEATURE_TARSTREAM_SUPPORT
+*/
 
 
 template<unsigned int N_TASKS>
@@ -727,7 +734,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 
   index_high = gpio_pin - maxStates;
 
-#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+#  if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C3)|| defined(ESP32C6)
 
   // These can all store in the PinBootStates_ESP32 array
   return (index_high < maxStatesesp32);

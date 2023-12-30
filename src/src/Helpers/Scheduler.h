@@ -241,12 +241,12 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
                                         struct EventStruct&& event);
 
 #if FEATURE_MQTT
-  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
-                                               taskIndex_t   TaskIndex,
-                                               uint8_t       Function,
-                                               char         *c_topic,
-                                               uint8_t      *b_payload,
-                                               unsigned int  length);
+  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t  DeviceIndex,
+                                               taskIndex_t    TaskIndex,
+                                               uint8_t        Function,
+                                               const char    *c_topic,
+                                               const uint8_t *b_payload,
+                                               unsigned int   length);
 #endif
 
 
@@ -258,8 +258,8 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
 #if FEATURE_MQTT
   void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
-                                            char             *c_topic,
-                                            uint8_t          *b_payload,
+                                            const char       *c_topic,
+                                            const uint8_t    *b_payload,
                                             unsigned int      length);
 #endif
 

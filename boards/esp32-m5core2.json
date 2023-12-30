@@ -11,7 +11,7 @@
     "flash_mode": "dio",
     "mcu": "esp32",
     "variant": "m5stack_core2",
-    "partitions": "esp32_partition_app4096k_spiffs8124k.csv"
+    "partitions": "boards/partitions/esp32_partition_app4096k_spiffs8124k.csv"
   },
   "connectivity": [
     "wifi",

@@ -92,19 +92,23 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       addFormTextBox(F("Hysteresis"), F("physt"),     toString(P021_TRIGGER_HYSTERESIS), 8);
 
-      addFormCheckBox(F("Invert Output"),                                               F("inv"),          P021_INVERT_OUTPUT == 1);
+      addFormCheckBox(F("Invert Output"),
+                      F("inv"),
+                      P021_INVERT_OUTPUT == 1);
 
       // inverted flag!
-      addFormCheckBox(F("Save 'Set Level' after change via <pre>config</pre> command"), F("psave_always"), P021_DONT_ALWAYS_SAVE == 0);
-      # ifndef BUILD_NO_DEBUG
+      addFormCheckBox(F("Save 'Set Level'/'Hysteresis' after change via <pre>config</pre> command"),
+                      F("psave_always"),
+                      P021_DONT_ALWAYS_SAVE == 0);
+      // # ifndef BUILD_NO_DEBUG
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
-      # endif // ifndef BUILD_NO_DEBUG
+      // # endif // ifndef BUILD_NO_DEBUG
 
       addFormNumericBox(F("Auto-save interval"), F("pautosave"), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       addUnit(F("minutes"));
-      # ifndef BUILD_NO_DEBUG
-      addFormNote(F("Interval to check if 'Set Level' is changed via <pre>config</pre> command and saves it. Max. 24h, 0 = Off"));
-      # endif // ifndef BUILD_NO_DEBUG
+      // # ifndef BUILD_NO_DEBUG
+      addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
+      // # endif // ifndef BUILD_NO_DEBUG
 
       success = true;
       break;
@@ -127,17 +131,30 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_CONFIG:
     {
-      String command = parseString(string, 1);
+      const String command      = parseString(string, 1);
+      const bool   isHysteresis =  equals(command, F("sethysteresis"));
 
-      if (equals(command, F("setlevel"))) {
-        String value  = parseString(string, 2);
+      if (equals(command, F("setlevel")) || isHysteresis) {
+        String value = parseString(string, 2);
         ESPEASY_RULES_FLOAT_TYPE result{};
 
         if (!isError(Calculate(value, result))) {
-          if (!essentiallyEqual(static_cast<ESPEASY_RULES_FLOAT_TYPE>(P021_TRIGGER_LEVEL), result)) { // Save only if different
-            P021_TRIGGER_LEVEL = result;
+          bool isChanged = false;
 
-            if (P021_DONT_ALWAYS_SAVE == 0) {                                       // save only if explicitly enabled
+          if (!isHysteresis &&
+              !essentiallyEqual(static_cast<ESPEASY_RULES_FLOAT_TYPE>(P021_TRIGGER_LEVEL), result)) { // Save only if different
+            P021_TRIGGER_LEVEL = result;
+            isChanged          = true;
+          }
+
+          if (isHysteresis &&
+              !essentiallyEqual(static_cast<ESPEASY_RULES_FLOAT_TYPE>(P021_TRIGGER_HYSTERESIS), result)) { // Save only if different
+            P021_TRIGGER_HYSTERESIS = result;
+            isChanged               = true;
+          }
+
+          if (isChanged) {
+            if (P021_DONT_ALWAYS_SAVE == 0) { // save only if explicitly enabled
               P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
               SaveSettings();
             } else {
@@ -166,6 +183,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("getlevel"))) {
         string  = toString(P021_TRIGGER_LEVEL);
+        success = true;
+      }
+      else
+      if (equals(command, F("gethysteresis"))) {
+        string  = toString(P021_TRIGGER_HYSTERESIS);
         success = true;
       }
       break;
@@ -218,7 +240,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         if (validGpio(CONFIG_PIN1)) {
           digitalWrite(CONFIG_PIN1, state);
         }
-        UserVar[event->BaseVarIndex] = state;
+        UserVar.setFloat(event->TaskIndex, 0, state);
         sendData(event);
       }
 
@@ -247,6 +269,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
   }
+
   return success;
 }
 

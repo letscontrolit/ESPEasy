@@ -20,8 +20,12 @@
 #   define SOC_RX0 3
 #  elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #   define SOC_RX0 44
+#  elif CONFIG_IDF_TARGET_ESP32C6
+#   define SOC_RX0 17
 #  elif CONFIG_IDF_TARGET_ESP32C3
 #   define SOC_RX0 20
+#  elif CONFIG_IDF_TARGET_ESP32C2
+#   define SOC_RX0 19
 #  endif // if CONFIG_IDF_TARGET_ESP32
 # endif  // ifndef SOC_RX0
 
@@ -30,8 +34,12 @@
 #   define SOC_TX0 1
 #  elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #   define SOC_TX0 43
+#  elif CONFIG_IDF_TARGET_ESP32C6
+#   define SOC_TX0 16
 #  elif CONFIG_IDF_TARGET_ESP32C3
 #   define SOC_TX0 21
+#  elif CONFIG_IDF_TARGET_ESP32C2
+#   define SOC_TX0 20
 #  endif // if CONFIG_IDF_TARGET_ESP32
 # endif  // ifndef SOC_TX0
 
@@ -42,7 +50,7 @@
 #    define SOC_RX1 13
 #   elif CONFIG_IDF_TARGET_ESP32S2
 #    define SOC_RX1 18
-#   elif CONFIG_IDF_TARGET_ESP32C3
+#   elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 #    define SOC_RX1 4
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_RX1 15
@@ -54,7 +62,7 @@
 #    define SOC_TX1 15
 #   elif CONFIG_IDF_TARGET_ESP32S2
 #    define SOC_TX1 17
-#   elif CONFIG_IDF_TARGET_ESP32C3
+#   elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 #    define SOC_TX1 5
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_TX1 16
@@ -70,6 +78,8 @@
 #    define SOC_RX2 16
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_RX2 19
+#   elif CONFIG_IDF_TARGET_ESP32C6
+#    define SOC_RX2 6
 #   else // if CONFIG_IDF_TARGET_ESP32
 #    define SOC_RX2 -1
 #   endif // if CONFIG_IDF_TARGET_ESP32
@@ -80,6 +90,8 @@
 #    define SOC_TX2 17
 #   elif CONFIG_IDF_TARGET_ESP32S3
 #    define SOC_TX2 20
+#   elif CONFIG_IDF_TARGET_ESP32C6
+#    define SOC_TX2 7
 #   else // if CONFIG_IDF_TARGET_ESP32
 #    define SOC_TX2 -1
 #   endif // if CONFIG_IDF_TARGET_ESP32

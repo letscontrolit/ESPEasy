@@ -16,7 +16,7 @@
 
 // Macros
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
-# define P036_SetDisplayOn(_state) (UserVar[event->BaseVarIndex] = _state)
+# define P036_SetDisplayOn(_state) (UserVar.setFloat(event->TaskIndex, 0, _state))
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
@@ -142,6 +142,16 @@
 // P036_FLAGS_1
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
+
+
+# define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
+# define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
+# define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
+# define P036_EVENT_LINE     3 // event: <taskname>#line=1..n
+# define P036_EVENT_LINECNT  4 // event: <taskname>#linecount=1..4
+# define P036_EVENT_RESTORE  5 // event: <taskname>#restore=1..n
+# define P036_EVENT_SCROLL   6 // event: <taskname>#scroll=ePSS_VerySlow..ePSS_Ticker
+
 
 enum class eHeaderContent : uint8_t {
   eNone     = 0u,
@@ -346,6 +356,10 @@ class P036_LineContent {
 public:
 
   P036_LineContent() {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     DisplayLinesV1.resize(P36_Nlines);
   }
 
@@ -380,8 +394,9 @@ struct P036_data_struct : public PluginTaskData_base {
                                    ePageScrollSpeed ScrollSpeed,
                                    uint8_t          NrLines);
 
-  bool isInitialized() const;
+  bool plugin_write(struct EventStruct *event, const String& string);
 
+  bool isInitialized() const;
 
   // Set the display contrast
   // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
@@ -530,6 +545,13 @@ private:
   # if P036_FEATURE_DISPLAY_PREVIEW
   String currentLines[P36_MAX_LinesPerPage]{};
   # endif // if P036_FEATURE_DISPLAY_PREVIEW
+
+# if P036_SEND_EVENTS
+ 
+public:
+  static void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue);
+#endif
+
 };
 
 #endif // ifdef USES_P036

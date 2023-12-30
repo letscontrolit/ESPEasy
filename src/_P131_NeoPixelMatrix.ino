@@ -256,7 +256,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                         );
 
           opts = parseString(strings[varNr], 3);
-          int scrollSpeed = 0;
+          int32_t scrollSpeed = 0;
           validIntFromString(opts, scrollSpeed);
 
           if (scrollSpeed == 0) { scrollSpeed = 10; }

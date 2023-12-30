@@ -7,6 +7,8 @@
 
 #include "../Globals/Plugins.h"
 
+#include "../Helpers/Hardware_I2C.h"
+
 #include <vector>
 
 I2C_bus_state I2C_check_bus(int8_t scl,

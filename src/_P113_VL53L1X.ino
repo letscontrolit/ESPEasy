@@ -155,8 +155,8 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
         bool     triggered = (dist > UserVar[event->BaseVarIndex] + PCONFIG(4)) || (dist < UserVar[event->BaseVarIndex] - PCONFIG(4));
 
         if (P113_data->isReadSuccessful() && (triggered || (PCONFIG(3) == 1)) && (dist != 0xFFFF)) {
-          UserVar[event->BaseVarIndex + 0] = dist;
-          UserVar[event->BaseVarIndex + 1] = ambient;
+          UserVar.setFloat(event->TaskIndex, 0, dist);
+          UserVar.setFloat(event->TaskIndex, 1, ambient);
           success                          = true;
         }
       }

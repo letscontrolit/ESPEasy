@@ -65,22 +65,22 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       break;
     case ARDUINO_EVENT_WIFI_STA_START:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
     #endif
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
     #endif
       break;
     case ARDUINO_EVENT_WIFI_AP_START:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
     #endif
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
     #endif
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
@@ -95,12 +95,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, 
+      //addLog(LOG_LEVEL_INFO, 
       /*
         active_network_medium == NetworkMedium_t::Ethernet ?
         F("ETH : Event Lost IP") :
       */
-         F("WiFi : Event Lost IP"));
+//         F("WiFi : Event Lost IP"));
       #endif
       break;
 
@@ -108,7 +108,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       #endif
       break;
 
@@ -122,15 +122,20 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
 
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
     {
-      char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
+      char ssid_copy[33]; // Ensure space for maximum len SSID (32) plus trailing 0
       #if ESP_IDF_VERSION_MAJOR > 3
       memcpy(ssid_copy, info.wifi_sta_connected.ssid, info.wifi_sta_connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       WiFiEventData.markConnected((const char*) ssid_copy, info.wifi_sta_connected.bssid, info.wifi_sta_connected.channel);
+      WiFiEventData.setAuthMode(info.wifi_sta_connected.authmode);
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event WIFI_STA_CONNECTED"));
       #else
       memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       WiFiEventData.markConnected((const char*) ssid_copy, info.connected.bssid, info.connected.channel);
+      #endif
+      #if FEATURE_USE_IPV6
+      WiFi.enableIpV6();
       #endif
       break;
     }
@@ -139,8 +144,16 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
         ignoreDisconnectEvent = true;
         #if ESP_IDF_VERSION_MAJOR > 3
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
+        if (info.wifi_sta_disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
+          // See: https://github.com/espressif/arduino-esp32/issues/8877#issuecomment-1807677897
+          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+        }
         #else
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
+        if (info.disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
+          // See: https://github.com/espressif/arduino-esp32/issues/8877#issuecomment-1807677897
+          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+        }
         #endif
         WiFi.persistent(false);
         WiFi.disconnect(true);
@@ -150,6 +163,19 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ignoreDisconnectEvent = false;
       WiFiEventData.markGotIP();
       break;
+    #if FEATURE_USE_IPV6
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
+    {
+      ip_event_got_ip6_t * event = static_cast<ip_event_got_ip6_t*>(&info.got_ip6);
+      IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
+      WiFiEventData.markGotIPv6(ip);
+      addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip.toString());
+      break;
+    }
+    case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
+      addLog(LOG_LEVEL_INFO, F("WIFI : AP got IP6"));
+      break;
+    #endif
     case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
       #if ESP_IDF_VERSION_MAJOR > 3
       WiFiEventData.markConnectedAPmode(info.wifi_ap_staconnected.mac);
@@ -183,9 +209,8 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
 #endif //FEATURE_ETHERNET
     default:
       {
-        String log = F("UNKNOWN WIFI/ETH EVENT: ");
-        log += event;
-        addLogMove(LOG_LEVEL_ERROR, log);
+
+        // addLogMove(LOG_LEVEL_ERROR, concat(F("UNKNOWN WIFI/ETH EVENT: "),  event));
       }
       break;
   }
@@ -198,22 +223,22 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_STA_START:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Started"));
     #endif
       break;
     case SYSTEM_EVENT_STA_STOP:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event STA Stopped"));
     #endif
       break;
     case SYSTEM_EVENT_AP_START:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Started"));
     #endif
       break;
     case SYSTEM_EVENT_AP_STOP:
     # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP Stopped"));
     #endif
       break;
     case SYSTEM_EVENT_STA_LOST_IP:
@@ -226,9 +251,11 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
       # ifndef BUILD_NO_DEBUG
+      /*
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
         F("ETH : Event Lost IP") : F("WiFi : Event Lost IP"));
+      */
       #endif
       break;
 
@@ -236,7 +263,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       // Receive probe request packet in soft-AP interface
       // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
       # ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
+      //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       #endif
       break;
 
@@ -298,35 +325,33 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #if FEATURE_ETHERNET
     case SYSTEM_EVENT_ETH_START:
       if (ethPrepare()) {
-        addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
+        //addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("ETH event: Could not prepare ETH!"));
+        //addLog(LOG_LEVEL_ERROR, F("ETH event: Could not prepare ETH!"));
       }
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
-      addLog(LOG_LEVEL_INFO, F("ETH event: Connected"));
+      //addLog(LOG_LEVEL_INFO, F("ETH event: Connected"));
       EthEventData.markConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
       EthEventData.markGotIP();
-      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP"));
+      //addLog(LOG_LEVEL_INFO, F("ETH event: Got IP"));
       break;
     case SYSTEM_EVENT_ETH_DISCONNECTED:
-      addLog(LOG_LEVEL_ERROR, F("ETH event: Disconnected"));
+      //addLog(LOG_LEVEL_ERROR, F("ETH event: Disconnected"));
       EthEventData.markDisconnect();
       break;
     case SYSTEM_EVENT_ETH_STOP:
-      addLog(LOG_LEVEL_INFO, F("ETH event: Stopped"));
+      //addLog(LOG_LEVEL_INFO, F("ETH event: Stopped"));
       break;
     case SYSTEM_EVENT_GOT_IP6:
-      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
+      //addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
       break;
 #endif //FEATURE_ETHERNET
     default:
       {
-        String log = F("UNKNOWN WIFI/ETH EVENT: ");
-        log += event;
-        addLogMove(LOG_LEVEL_ERROR, log);
+        //addLogMove(LOG_LEVEL_ERROR, concat(F("UNKNOWN WIFI/ETH EVENT: "), event));
       }
       break;
   }
@@ -385,18 +410,18 @@ void onWiFiScanDone(void *arg, STATUS status) {
     WiFiEventData.lastGetScanMoment.setNow();
 //    WiFiEventData.processedScanDone = true;
 # ifndef BUILD_NO_DEBUG
+/*
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WiFi : Scan finished (ESP8266), found: ");
-      log += scanCount;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("WiFi : Scan finished (ESP8266), found: "), scanCount));
     }
+*/
 #endif
     WiFi_AP_Candidates.load_knownCredentials();
     if (WiFi_AP_Candidates.addedKnownCandidate() || !NetworkConnected()) {
       WiFiEventData.wifiConnectAttemptNeeded = true;
       # ifndef BUILD_NO_DEBUG
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
-        addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
+        //addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
       }
       #endif
       NetworkConnectRelaxed();

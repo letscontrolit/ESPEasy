@@ -1,7 +1,7 @@
 #include "../ESPEasyCore/Serial.h"
 
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasy_Console.h"

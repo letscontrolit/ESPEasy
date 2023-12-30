@@ -6,6 +6,7 @@
 
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware_I2C.h"
 
 #include "../WebServer/HTML_wrappers.h"
 

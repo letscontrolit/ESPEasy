@@ -23,6 +23,8 @@
 
 # include <jkSDS011.h>
 
+#include "ESPEasy-Globals.h"
+
 
 CjkSDS011 *Plugin_056_SDS = nullptr;
 
@@ -162,8 +164,8 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 
         if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
         {
-          UserVar[event->BaseVarIndex + 0] = pm2_5;
-          UserVar[event->BaseVarIndex + 1] = pm10;
+          UserVar.setFloat(event->TaskIndex, 0, pm2_5);
+          UserVar.setFloat(event->TaskIndex, 1, pm10);
           event->sensorType                = Sensor_VType::SENSOR_TYPE_DUAL;
           sendData(event);
         }
@@ -182,8 +184,8 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
       float pm25, pm10;
 
       if (Plugin_056_SDS->ReadAverage(pm25, pm10)) {
-        UserVar[event->BaseVarIndex + 0] = pm25;
-        UserVar[event->BaseVarIndex + 1] = pm10;
+        UserVar.setFloat(event->TaskIndex, 0, pm25);
+        UserVar.setFloat(event->TaskIndex, 1, pm10);
         success                          = true;
       }
       break;

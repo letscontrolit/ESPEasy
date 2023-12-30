@@ -137,10 +137,11 @@ Please read [CONTRIBUTING.md](https://github.com/adafruit/Adafruit_NeoPixel/blob
 
 The PRIME DIRECTIVE is to maintain backward compatibility with existing Arduino sketches -- many are hosted elsewhere and don't track changes here, some are in print and can never be changed!
 
-Please don't reformat code for the sake of reformatting code. The resulting large "visual diff" makes it impossible to untangle actual bug fixes from merely rearranged lines. (Exception for first item in wishlist below.)
+Please don't reformat code for the sake of reformatting code. The resulting large "visual diff" makes it impossible to untangle actual bug fixes from merely rearranged lines. Also, don't bother with PRs for timing adjustments "to better match the datasheet," because the datasheet isn't really true to begin with.
 
 Things I'd Like To Do But There's No Official Timeline So Please Don't Count On Any Of This Ever Being Canonical:
 
+- 400 KHz support can be removed, turns out it was never actually necessary; even the earliest NeoPixels can ingest 800 KHz data. Of course the #defines should remain so old sketches still compile, but both can be set to 0 and would have no effect on anything.
 - For the show() function (with all the delicate pixel timing stuff), break out each architecture into separate source files rather than the current unmaintainable tangle of #ifdef statements!
 - Please don't use updateLength() or updateType() in new code. They should not have been implemented this way (use the C++ 'new' operator with the regular constructor instead) and are only sticking around because of the Prime Directive. setPin() is OK for now though, it's a trick we can use to 'recycle' pixel memory across multiple strips.
 - In the M0 and M4 code, use the hardware systick counter for bit timing rather than hand-tweaked NOPs (a temporary kludge at the time because I wasn't reading systick correctly). (As of 1.4.2, systick is used on M4 devices and it appears to be overclock-compatible. Not for M0 yet, which is why this item is still here.)

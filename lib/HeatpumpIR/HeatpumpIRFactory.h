@@ -7,6 +7,7 @@
 #include <DaikinHeatpumpIR.h>
 #include <DaikinHeatpumpARC417IR.h>
 #include <DaikinHeatpumpARC480A14IR.h>
+#include <ElectroluxHeatpumpIR.h>
 #include <FuegoHeatpumpIR.h>
 #include <FujitsuHeatpumpIR.h>
 #include <GreeHeatpumpIR.h>
@@ -26,7 +27,8 @@
 #include <SharpHeatpumpIR.h>
 #include <ToshibaDaiseikaiHeatpumpIR.h>
 #include <ToshibaHeatpumpIR.h>
-
+#include <ZHJG01HeatpumpIR.h>
+#include <ZHLT01HeatpumpIR.h>
 
 class HeatpumpIRFactory
 {
