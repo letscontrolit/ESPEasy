@@ -18,8 +18,10 @@
 // *INDENT-OFF*
 
 // Need to add quotes around defines as the PIO build tools make it hard to include the string quotes.
+#ifndef STRINGIFY
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
+#endif
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
 
@@ -112,8 +114,8 @@ const __FlashStringHelper * get_CDN_url_prefix() {
   #else
     // Some fallback tag
     // FIXME TD-er: Not sure which is better, serving the latest (which will have caching issues) or a tag which will become outdated
-    return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20220809/static/");
-    //return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/");
+    return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/");
+    //return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20231013/static/");
   #endif
 }
 

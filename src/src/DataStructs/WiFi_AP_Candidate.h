@@ -60,25 +60,30 @@ struct WiFi_AP_Candidate {
   String  ssid;
 //  String  key;
 
-  unsigned long last_seen = 0;
-  int32_t       rssi     = 0;
-  int32_t       channel  = 0;
+  unsigned long last_seen = 0u;
   MAC_address   bssid;
-  uint8_t       index    = 0;     // Index of the matching credentials
-  uint8_t       enc_type = 0;     // Encryption used (e.g. WPA2)
+  int8_t        rssi{};
+  uint8_t       channel{};
+  uint8_t       index{};     // Index of the matching credentials
+  uint8_t       enc_type{};     // Encryption used (e.g. WPA2)
   union 
   {
     struct {
-      uint8_t isHidden:1; // Hidden SSID
-      uint8_t lowPriority:1; // Try as last attempt
-      uint8_t isEmergencyFallback:1; 
-      uint8_t phy_11b:1; 
-      uint8_t phy_11g:1; 
-      uint8_t phy_11n:1; 
-      uint8_t wps:1; 
-      uint8_t unused:1;      
+      uint16_t isHidden:1; // Hidden SSID
+      uint16_t lowPriority:1; // Try as last attempt
+      uint16_t isEmergencyFallback:1; 
+      uint16_t phy_11b:1; 
+      uint16_t phy_11g:1; 
+      uint16_t phy_11n:1; 
+      uint16_t phy_lr:1; 
+      uint16_t phy_11ax:1; 
+      uint16_t wps:1; 
+      uint16_t ftm_responder:1; 
+      uint16_t ftm_initiator:1; 
+
+      uint16_t unused:5;      
     };
-    uint8_t flags = 0;
+    uint16_t flags{};
   };
   
 };

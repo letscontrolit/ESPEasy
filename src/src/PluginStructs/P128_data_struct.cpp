@@ -35,10 +35,10 @@ P128_data_struct::~P128_data_struct() {
 
 bool P128_data_struct::plugin_read(struct EventStruct *event) {
   // there is no need to read them, just use current values
-  UserVar[event->BaseVarIndex]     = static_cast<int>(mode);
-  UserVar[event->BaseVarIndex + 1] = static_cast<int>(savemode);
-  UserVar[event->BaseVarIndex + 2] = fadetime;
-  UserVar[event->BaseVarIndex + 3] = fadedelay;
+  UserVar.setFloat(event->TaskIndex, 0, static_cast<int>(mode));
+  UserVar.setFloat(event->TaskIndex, 1, static_cast<int>(savemode));
+  UserVar.setFloat(event->TaskIndex, 2, fadetime);
+  UserVar.setFloat(event->TaskIndex, 3, fadedelay);
 
   # ifndef LIMIT_BUILD_SIZE
 
@@ -79,6 +79,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     const String  str7  = parseString(string, 7);
     const int32_t str7i = str7.toInt();
 
+    const bool command_is_on = (equals(subCommand, F("on")));
+    const bool command_is_off = (equals(subCommand, F("off")));
+
     if (equals(subCommand, F("fadetime"))) {
       success  = true;
       fadetime = str3i;
@@ -105,16 +108,13 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       count   = str3i;
     }
 
-    else if ((equals(subCommand, F("on"))) || (equals(subCommand, F("off")))) {
+    else if (command_is_on || command_is_off) {
       success   = true;
-      fadetime  = 1000;
-      fadedelay = 0;
-
-      fadetime = str3.isEmpty()
-          ? fadetime
+      fadetime  = str3.isEmpty()
+          ? 1000
           : str3i;
       fadedelay = str4.isEmpty()
-          ? fadedelay
+          ? 0
           : str4i;
 
       for (int pixel = 0; pixel < pixelCount; pixel++) {
@@ -124,18 +124,18 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
         starttime[r_pixel] = counter20ms + (pixel * abs(fadedelay) / 20);
 
-        if ((equals(subCommand, F("on"))) && (mode == P128_modetype::Off)) { // switch on
+        if ((command_is_on) && (mode == P128_modetype::Off)) { // switch on
           rgb_target[pixel] = rgb_old[pixel];
           rgb_old[pixel]    = Plugin_128_pixels->GetPixelColor(pixel);
-        } else if (equals(subCommand, F("off"))) {                           // switch off
+        } else if (command_is_off) {                           // switch off
           rgb_old[pixel]    = Plugin_128_pixels->GetPixelColor(pixel);
           rgb_target[pixel] = RgbColor(0);
         }
       }
 
-      if ((equals(subCommand, F("on"))) && (mode == P128_modetype::Off)) { // switch on
+      if ((command_is_on) && (mode == P128_modetype::Off)) { // switch on
         mode = (savemode == P128_modetype::On) ? P128_modetype::Fade : savemode;
-      } else if (equals(subCommand, F("off"))) {                           // switch off
+      } else if (command_is_off) {                           // switch off
         savemode = mode;
         mode     = P128_modetype::Fade;
       }

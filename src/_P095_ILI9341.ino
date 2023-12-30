@@ -261,7 +261,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("TFT display model"),
                         F("dsptype"),
-                        sizeof(hardwareOptions) / sizeof(int),
+                        NR_ELEMENTS(hardwareOptions),
                         hardwareTypes,
                         hardwareOptions,
                         P095_CONFIG_FLAG_GET_TYPE);
@@ -306,7 +306,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
-                        sizeof(commandTriggerOptions) / sizeof(int),
+                        NR_ELEMENTS(commandTriggerOptions),
                         commandTriggers,
                         commandTriggerOptions,
                         P095_CONFIG_FLAG_GET_CMD_TRIGGER);
@@ -344,9 +344,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
 
         for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-          String line = F("Line ");
-          line += (varNr + 1);
-          addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
+          addFormTextBox(
+            concat(F("Line "), varNr + 1), 
+            getPluginCustomArgName(varNr), 
+            strings[varNr], 
+            P095_Nchars);
           remain -= (strings[varNr].length() + 1);
         }
       }
@@ -386,27 +388,30 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P095_CONFIG_FLAG_TYPE,        getFormItemInt(F("dsptype")));         // Bit 20..24 Hardwaretype
       P095_CONFIG_FLAGS = lSettings;
 
-      String   color   = webArg(F("pfgcolor"));
-      uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
+      {
+        String   color   = webArg(F("pfgcolor"));
+        uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
-      if (!color.isEmpty()) {
-        fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
+        if (!color.isEmpty()) {
+          fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
+        }
+        color = webArg(F("pbgcolor"));
+        uint16_t bgcolor = AdaGFXparseColor(color);
+
+        P095_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
       }
-      color = webArg(F("pbgcolor"));
-      uint16_t bgcolor = AdaGFXparseColor(color);
+      {
+        String strings[P095_Nlines];
 
-      P095_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
+        for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
+          strings[varNr] = webArg(getPluginCustomArgName(varNr));
+        }
 
-      String strings[P095_Nlines];
+        String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
-      for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-        strings[varNr] = webArg(getPluginCustomArgName(varNr));
-      }
-
-      String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
-
-      if (error.length() > 0) {
-        addHtmlError(error);
+        if (error.length() > 0) {
+          addHtmlError(error);
+        }
       }
 
       success = true;

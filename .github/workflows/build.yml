@@ -86,6 +86,7 @@ jobs:
           sudo apt-get update
           sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip3 install --upgrade pip
+          pip install wheel
           pip install -r requirements.txt
           platformio update
       - name: Build and archive

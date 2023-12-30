@@ -87,7 +87,7 @@
 // 0bRRRRGGBB for RGB
 
 // RGB NeoPixel permutations; white and red offsets are always same
-// Offset:         W        R        G        B
+// Offset:        W          R          G          B
 #define NEO_RGB ((0 << 6) | (0 << 4) | (1 << 2) | (2)) ///< Transmit as R,G,B
 #define NEO_RBG ((0 << 6) | (0 << 4) | (2 << 2) | (1)) ///< Transmit as R,B,G
 #define NEO_GRB ((1 << 6) | (1 << 4) | (0 << 2) | (2)) ///< Transmit as G,R,B
@@ -370,6 +370,8 @@ public:
   void rainbow(uint16_t first_hue = 0, int8_t reps = 1,
                uint8_t saturation = 255, uint8_t brightness = 255,
                bool gammify = true);
+
+  static neoPixelType str2order(const char *v);
 
 private:
 #if defined(ARDUINO_ARCH_RP2040)

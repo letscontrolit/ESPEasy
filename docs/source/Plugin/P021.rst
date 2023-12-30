@@ -92,6 +92,9 @@ Change log
   ...
 
   |added|
+  2023-10-28: Set Hysteresis via ``config`` command and get via ``[<Taskname>#GetHysteresis]`` variable.
+
+  |added|
   2022-08-22: Auto-save interval option.
 
   |added|

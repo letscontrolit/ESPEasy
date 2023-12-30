@@ -7,7 +7,6 @@
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/GlobalMapPortStatus.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/PortStatus.h"
 
 

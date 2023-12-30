@@ -23,23 +23,19 @@ void wrap_html_tag(const __FlashStringHelper * tag, const String& text) {
 }
 
 void wrap_html_tag(const String& tag, const String& text) {
-  addHtml('<');
-  addHtml(tag);
-  addHtml('>');
-  addHtml(text);
-  addHtml('<', '/');
-  addHtml(tag);
-  addHtml('>');
+  addHtml(strformat(
+    F("<%s>%s</%s>"),
+    tag.c_str(),
+    text.c_str(),
+    tag.c_str()));
 }
 
 void wrap_html_tag(char tag, const String& text) {
-  addHtml('<');
-  addHtml(tag);
-  addHtml('>');
-  addHtml(text);
-  addHtml('<', '/');
-  addHtml(tag);
-  addHtml('>');
+  addHtml(strformat(
+    F("<%c>%s</%c>"),
+    tag,
+    text.c_str(),
+    tag));
 }
 
 void html_B(const __FlashStringHelper * text) {
@@ -78,10 +74,8 @@ void html_TR() {
 
 void html_TR_TD_height(int height) {
   html_TR();
-
-  addHtml(F("<TD HEIGHT=\""));
-  addHtmlInt(height);
-  addHtml('"', '>');
+  addHtml(strformat(
+    F("<TD HEIGHT=\"%d\">"), height));
 }
 
 void html_TD() {
@@ -109,9 +103,8 @@ void html_reset_copyTextCounter() {
 void html_copyText_TD() {
   ++copyTextCounter;
 
-  addHtml(F("<TD id='copyText_"));
-  addHtmlInt(copyTextCounter);
-  addHtml('\'', '>');;
+  addHtml(strformat(
+    F("<TD id='copyText_%d'>"), copyTextCounter));
 }
 
 // Add some recognizable token to show which parts will be copied.
@@ -211,9 +204,8 @@ void html_table_header(const String& label, const String& helpButton, const Stri
   addHtml(F("<TH"));
 
   if (width > 0) {
-    addHtml(F(" style='width:"));
-    addHtmlInt(width);
-    addHtml(F("px;'"));
+    addHtml(strformat(
+      F(" style='width:%dpx;'"), width));
   }
   addHtml('>');
   addHtml(label);
@@ -268,12 +260,7 @@ void html_add_wide_button_prefix() {
 }
 
 void html_add_wide_button_prefix(const String& classes, bool enabled) {
-  String wide_classes;
-
-  wide_classes.reserve(classes.length() + 5);
-  wide_classes  = F("wide ");
-  wide_classes += classes;
-  html_add_button_prefix(wide_classes, enabled);
+  html_add_button_prefix(concat(F("wide "), classes), enabled);
 }
 
 void html_add_form() {
@@ -282,7 +269,7 @@ void html_add_form() {
 
 void html_add_JQuery_script() {
   #ifndef CDN_URL_JQUERY
-    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
+    #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.4.min.js"
   #endif // ifndef CDN_URL_JQUERY
   addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
 }
@@ -294,7 +281,7 @@ void html_add_ChartJS_script() {
   // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
   // - Replace the url in below script src element, keeping the quotes
   #ifndef CDN_URL_CHART_JS
-    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
   #endif // ifndef CDN_URL_CHART_JS
   addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
 }
@@ -392,6 +379,30 @@ void addHtml(const String& html) {
 void addHtml(String&& html) {
   TXBuffer += html;
 }
+
+void addHtmlInt(int8_t int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(uint8_t int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(int16_t int_val) {
+  addHtml(String(int_val));
+}
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#ifndef __riscv
+void addHtmlInt(int int_val) {
+  addHtml(String(int_val));
+}
+
+void addHtmlInt(unsigned int int_val) {
+  addHtml(String(int_val));
+}
+#endif
+#endif
 
 void addHtmlInt(int32_t int_val) {
   addHtml(String(int_val));

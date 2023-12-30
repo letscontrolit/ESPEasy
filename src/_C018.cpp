@@ -128,16 +128,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       {
         // Keep this object in a small scope so we can destruct it as soon as possible again.
-        std::shared_ptr<C018_ConfigStruct> customConfig;
-        {
-          // Try to allocate on 2nd heap
-          # ifdef USE_SECOND_HEAP
-
-          //          HeapSelectIram ephemeral;
-          # endif // ifdef USE_SECOND_HEAP
-          std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
-          customConfig = std::move(tmp_shared);
-        }
+        std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
 
         if (!customConfig) {
           break;
@@ -150,16 +141,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     }
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C018_ConfigStruct> customConfig;
-      {
-        // Try to allocate on 2nd heap
-        # ifdef USE_SECOND_HEAP
-
-        //        HeapSelectIram ephemeral;
-        # endif // ifdef USE_SECOND_HEAP
-        std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
-        customConfig = std::move(tmp_shared);
-      }
+      std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
 
       if (customConfig) {
         customConfig->webform_save();
@@ -204,10 +186,12 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       if (C018_data != nullptr) {
-        std::unique_ptr<C018_queue_element> element(new C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
-        success = C018_DelayHandler->addToQueue(std::move(element));
-        Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
-                                         C018_DelayHandler->getNextScheduleTime());
+        {
+          std::unique_ptr<C018_queue_element> element(new C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          success = C018_DelayHandler->addToQueue(std::move(element));
+          Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
+                                          C018_DelayHandler->getNextScheduleTime());
+        }
 
         if (!C018_data->isInitialized()) {
           // Sometimes the module does need some time after power on to respond.
@@ -311,16 +295,7 @@ bool C018_init(struct EventStruct *event) {
     Port               = ControllerSettings->Port;
   }
 
-  std::shared_ptr<C018_ConfigStruct> customConfig;
-  {
-    // Try to allocate on 2nd heap
-    # ifdef USE_SECOND_HEAP
-
-    //    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-    std::shared_ptr<C018_ConfigStruct> tmp_shared(new (std::nothrow) C018_ConfigStruct);
-    customConfig = std::move(tmp_shared);
-  }
+  std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
 
   if (!customConfig) {
     return false;

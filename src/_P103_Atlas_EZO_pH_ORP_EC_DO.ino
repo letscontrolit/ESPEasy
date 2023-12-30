@@ -159,7 +159,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         char *statuschar = strchr(boarddata, ',');
 
-        if (statuschar > 0)
+        if (statuschar != nullptr)
         {
           switch (boarddata[statuschar - boarddata + 1])
           {
@@ -319,11 +319,11 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
         if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
         {
-          addFormNote(F("It seems I can't parse your formula. Fixed value will be used!"));
+          addFormNote(F("Formula parse error. Using fixed value!"));
           value = P103_FIXED_TEMP_VALUE;
         }
 
-        addFormNote(concat(F("Actual value: "), toString(value, 2)));
+        addFormNote(strformat(F("Actual value: %.2f"), value));
       }
 
       success = true;
@@ -474,22 +474,26 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       // ok, now we can read the sensor data
       char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
-      UserVar[event->BaseVarIndex] = -1;
+      UserVar.setFloat(event->TaskIndex, 0, -1);
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata))
       {
         String sensorString(boarddata);
-        string2float(sensorString, UserVar[event->BaseVarIndex]);
+        float sensor_f{};
+        string2float(sensorString, sensor_f);
+        UserVar.setFloat(event->TaskIndex, 0, sensor_f);
       }
 
       // we read the voltagedata
       memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
-      UserVar[event->BaseVarIndex + 1] = -1;
+      UserVar.setFloat(event->TaskIndex, 1, -1);
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata))
       {
         String voltage(boarddata);
-        string2float(voltage.substring(voltage.lastIndexOf(',') + 1), UserVar[event->BaseVarIndex + 1]);
+        float volt_f{};
+        string2float(voltage.substring(voltage.lastIndexOf(',') + 1), volt_f);
+        UserVar.setFloat(event->TaskIndex, 1, volt_f);
       }
 
       success = true;

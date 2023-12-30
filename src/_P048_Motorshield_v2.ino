@@ -137,8 +137,8 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
         String param4 = parseString(string, 5);
         String param5 = parseString(string, 6);
 
-        int p2_int;
-        int p4_int;
+        int32_t p2_int;
+        int32_t p4_int;
         const bool param2_is_int = validIntFromString(param2, p2_int);
         const bool param4_is_int = validIntFromString(param4, p4_int);
 

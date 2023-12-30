@@ -104,9 +104,9 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
     }
 
     if (getMeasure && scd4x->readMeasurement()) {
-      UserVar[event->BaseVarIndex]     = scd4x->getCO2();
-      UserVar[event->BaseVarIndex + 1] = scd4x->getHumidity();
-      UserVar[event->BaseVarIndex + 2] = scd4x->getTemperature();
+      UserVar.setFloat(event->TaskIndex, 0, scd4x->getCO2());
+      UserVar.setFloat(event->TaskIndex, 1, scd4x->getHumidity());
+      UserVar.setFloat(event->TaskIndex, 2, scd4x->getTemperature());
 
       success = !firstRead;           // Discard first measurement
 
@@ -131,7 +131,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
     if (errorCount > P135_MAX_ERRORS) {
       initialized = false;
       scd4x->stopPeriodicMeasurement(); // Stop measuring, no need to wait for completion
-      UserVar[event->BaseVarIndex] = 0; // Indicate an error state
+      UserVar.setFloat(event->TaskIndex, 0, 0); // Indicate an error state
       addLog(LOG_LEVEL_ERROR, F("SCD4x: Max. read errors reached, plugin stopped."));
     }
 

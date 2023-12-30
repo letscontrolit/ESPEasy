@@ -20,13 +20,56 @@
 #if defined(ESP32)
 
 #include <Arduino.h>
-#include "driver/rmt.h"
 
 #if defined(ESP_IDF_VERSION)
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)
 #define HAS_ESP_IDF_4
 #endif
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#define HAS_ESP_IDF_5
 #endif
+#endif
+
+
+
+#ifdef HAS_ESP_IDF_5
+
+void espShow(int16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
+  rmt_data_t led_data[numBytes * 8];
+
+  if (!rmtInit(pin, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
+    log_e("Failed to init RMT TX mode on pin %d", pin);
+    return;
+  }
+
+  int i=0;
+  for (int b=0; b < numBytes; b++) {
+    for (int bit=0; bit<8; bit++){
+      if ( pixels[b] & (1<<(7-bit)) ) {
+        led_data[i].level0 = 1;
+        led_data[i].duration0 = 8;
+        led_data[i].level1 = 0;
+        led_data[i].duration1 = 4;
+      } else {
+        led_data[i].level0 = 1;
+        led_data[i].duration0 = 4;
+        led_data[i].level1 = 0;
+        led_data[i].duration1 = 8;
+      }
+      i++;
+    }
+  }
+
+  //pinMode(pin, OUTPUT);  // don't do this, will cause the rmt to disable!
+  rmtWrite(pin, led_data, numBytes * 8, RMT_WAIT_FOR_EVER);
+}
+
+
+
+#else
+
+#include "driver/rmt.h"
+
 
 // This code is adapted from the ESP-IDF v3.4 RMT "led_strip" example, altered
 // to work with the Arduino version of the ESP-IDF (3.2)
@@ -88,7 +131,7 @@ static void IRAM_ATTR ws2812_rmt_adapter(const void *src, rmt_item32_t *dest, si
     *item_num = num;
 }
 
-void espShow(uint8_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
+void espShow(int16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) {
     // Reserve channel
     rmt_channel_t channel = ADAFRUIT_RMT_CHANNEL_MAX;
     for (size_t i = 0; i < ADAFRUIT_RMT_CHANNEL_MAX; i++) {
@@ -175,4 +218,7 @@ void espShow(uint8_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz) 
     gpio_set_direction(pin, GPIO_MODE_OUTPUT);
 }
 
-#endif
+#endif // ifndef IDF5
+ 
+
+#endif // ifdef(ESP32)

@@ -43,6 +43,9 @@ struct EthernetEventData_t {
 
 
   void markGotIP();
+#if FEATURE_USE_IPV6
+  void markGotIPv6(const IPAddress& ip6);
+#endif
   void markLostIP();
   void markDisconnect();
   void markConnected();
@@ -66,11 +69,17 @@ struct EthernetEventData_t {
 
   IPAddress dns0_cache{};
   IPAddress dns1_cache{};
+  #if FEATURE_USE_IPV6
+  IPAddress unprocessed_IP6;
+  #endif
 
   // Semaphore like bools for processing data gathered from Eth events.
   bool processedConnect          = true;
   bool processedDisconnect       = true;
   bool processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  bool processedGotIP6           = true;
+  #endif
   bool processedDHCPTimeout      = true;
   bool ethConnectAttemptNeeded  = true;
   bool ethConnectInProgress     = false;

@@ -20,7 +20,7 @@
   "name": "Espressif Generic ESP8266 ESPEasy 2M Flash 256k FS",
   "upload": {
     "maximum_ram_size": 81920,
-    "maximum_size": 1040316,
+    "maximum_size": 1044464,
     "require_upload_port": true,
     "resetmethod": "nodemcu",
     "speed": 115200

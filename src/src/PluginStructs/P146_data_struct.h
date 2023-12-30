@@ -14,8 +14,11 @@
 # define P146_PublishTopicIndex                 1
 
 
-# define P146_TASKVALUE_FILENR  UserVar[event->BaseVarIndex + 0]
-# define P146_TASKVALUE_FILEPOS UserVar[event->BaseVarIndex + 1]
+# define P146_TASKVALUE_FILENR  UserVar.getFloat(event->TaskIndex, 0)
+# define P146_SET_TASKVALUE_FILENR(x)  UserVar.setFloat(event->TaskIndex, 0, x)
+
+# define P146_TASKVALUE_FILEPOS UserVar.getFloat(event->TaskIndex, 1)
+# define P146_SET_TASKVALUE_FILEPOS(x)  UserVar.setFloat(event->TaskIndex, 1, x)
 
 # define P146_GET_SEND_BINARY       bitRead(PCONFIG(0), 0)
 # define P146_SET_SEND_BINARY(X)    bitWrite(PCONFIG(0), 0, X)

@@ -56,7 +56,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 void devicePage_show_serial_config(taskIndex_t taskIndex);
 #endif
 
-void devicePage_show_I2C_config(taskIndex_t taskIndex);
+void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
