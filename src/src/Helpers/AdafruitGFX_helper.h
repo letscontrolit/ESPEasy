@@ -12,6 +12,14 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2023-12-30 tonhuisman: Optimization of font handling, also reducing code-size
+ *                        Add some additional 7-segment/LCD-like fonts (18 pt enabled by default for ESP32 builds using this helper)
+ *                        - sevenseg18b (7segment 18 pt) (very few non-alphanumeric characters, slightly slanted)
+ *                        - sevenseg24b (7segment 24 pt)
+ *                        - lcd14cond18pt (LCD 14 segment, condensed, 18 pt)
+ *                        - lcd14cond24pt (LCD 14 segment, condensed, 24 pt)
+ *                        as sevenseg18 and sevenseg24 are partially proportionally spaced, even in the numeric characters :-(
+ * 2023-12-29 tonhuisman: Bugfixes: txz and txtfull subcommands didn't properly use the last set FG/BG colors
  * 2023-12-12 tonhuisman: Code deduplication and string optimizations to reduce build size
  * 2023-02-26 tonhuisman: Use GetCommandCode() / PROGMEM for parsing of commands and colors to reduce .bin size.
  * 2022-10-05 tonhuisman: No longer trim off spaces from arguments to commands
@@ -51,7 +59,7 @@
 # include <vector>
 
 // Used for bmp support
-# define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
+# define BUFPIXELS 200                  ///< 200 * 5 = 1000 bytes
 
 # define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
@@ -93,11 +101,12 @@
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
 // # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 5 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~19.9 kB
-// # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
+// # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 3 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~13.8 kB
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
+// # define ADAGFX_FONTS_EXTRA_24PT_INCLUDED // 2 extra 24pt fonts, should probably only be enabled in a private custom build, adds ~11.1 kB
 
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
-# define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_8PT_ANGELINA  // This font is proportinally spaced!
 # define ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACE
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
@@ -129,9 +138,20 @@
 
 // To enable/disable 18pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_18PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+# define ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+# ifndef ESP8266
+#  ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+# endif // ifndef ESP8266
 
 // To enable/disable 20pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_20PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+
+// To enable/disable 24pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_24PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+# define ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
 
 # ifdef LIMIT_BUILD_SIZE
 #  ifdef ADAGFX_FONTS_INCLUDED
@@ -176,6 +196,9 @@
 #  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 #  ifndef ADAGFX_SUPPORT_7COLOR
 #   define ADAGFX_SUPPORT_7COLOR       1
 #  endif // ifndef ADAGFX_SUPPORT_7COLOR
@@ -473,7 +496,7 @@ public:
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
-  uint8_t getWindow() {
+  uint8_t getWindow() const {
     return _window;
   }
 

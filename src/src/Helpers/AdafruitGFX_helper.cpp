@@ -12,11 +12,21 @@
 #  include "../Static/Fonts/Seven_Segment18pt7b.h"
 #  include "../Static/Fonts/FreeSans9pt7b.h"
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   include "../Static/Fonts/angelina8pt7b.h"
-#   include "../Static/Fonts/NovaMono8pt7b.h"
-#   include "../Static/Fonts/unispace8pt7b.h"
-#   include "../Static/Fonts/unispace_italic8pt7b.h"
-#   include "../Static/Fonts/whitrabt8pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+#    include "../Static/Fonts/angelina8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+#    include "../Static/Fonts/NovaMono8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+#    include "../Static/Fonts/unispace8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+#    include "../Static/Fonts/unispace_italic8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular8pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
@@ -28,12 +38,24 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   include "../Static/Fonts/angelina12pt7b.h"
-#   include "../Static/Fonts/NovaMono12pt7b.h"
-#   include "../Static/Fonts/RepetitionScrolling12pt7b.h"
-#   include "../Static/Fonts/unispace12pt7b.h"
-#   include "../Static/Fonts/unispace_italic12pt7b.h"
-#   include "../Static/Fonts/whitrabt12pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+#    include "../Static/Fonts/angelina12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+#    include "../Static/Fonts/NovaMono12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+#    include "../Static/Fonts/RepetitionScrolling12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+#    include "../Static/Fonts/unispace12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+#    include "../Static/Fonts/unispace_italic12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular12pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
@@ -45,8 +67,12 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   include "../Static/Fonts/AmerikaSans16pt7b.h"
-#   include "../Static/Fonts/whitrabt16pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+#    include "../Static/Fonts/AmerikaSans16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
@@ -58,11 +84,29 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   include "../Static/Fonts/whitrabt18pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+#    include "../Static/Fonts/7segment18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+#    include "../Static/Fonts/LCD14cond18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
 #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   include "../Static/Fonts/whitrabt20pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt20pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#   ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+#    include "../Static/Fonts/7segment24pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+#   ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+#    include "../Static/Fonts/LCD14cond24pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+#  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
 # if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
@@ -760,64 +804,223 @@ enum class adagfx_commands_e : int8_t {
   defwin,
   delwin,
 };
-const char adagfx_fonts[] PROGMEM = "default|sevenseg24|sevenseg18|freesans|"
-                                    # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-                                    "angelina8prop|novamono8pt|unispace8pt|unispaceitalic8pt|whiterabbit8pt|roboto8pt|robotocond8pt|robotomono8pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-                                    "angelina12prop|novamono12pt|repetitionscrolling12pt|unispace12pt|unispaceitalic12pt|whiterabbit12pt|roboto12pt|robotocond12pt|robotomono12pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-                                    "amerikasans16pt|whiterabbit16pt|roboto16pt|robotocond16pt|robotomono16pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-                                    "whiterabbit18pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-                                    "whiterabbit20pt"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-                                    "";
-enum class adagfx_fonts_e : int8_t {
-  invalid      = -1,
-  default_font = 0,
-  sevenseg24,
-  sevenseg18,
-  freesans,
+# if ADAGFX_FONTS_INCLUDED
+
+// *** Don't forget to add the | separator at the end of a (new) font-name! (except for the last one in the list)
+const char adagfx_fonts[] PROGMEM =
+  "default|sevenseg24|sevenseg18|freesans|"
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  "angelina8prop|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  "novamono8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  "unispace8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  "unispaceitalic8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  "whiterabbit8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  "roboto8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  "robotocond8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  "robotomono8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  "angelina12prop|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  "novamono12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  "repetitionscrolling12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  "unispace12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  "unispaceitalic12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  "whiterabbit12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  "roboto12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  "robotocond12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  "robotomono12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  "amerikasans16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  "whiterabbit16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  "roboto16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  "robotocond16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  "robotomono16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  "whiterabbit18pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  "sevenseg18b|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  "lcd14cond18pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  "whiterabbit20pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  "sevenseg24b|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  #   ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  "lcd14cond24pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  "";
+
+typedef struct  {
+  const GFXfont *f;
+  uint8_t        width;
+  uint8_t        height;
+  int8_t         offset;
+  bool           proportional;
+} tFontArgs;
+
+/* *INDENT-OFF* */
+const tFontArgs fontargs[] =
+{
+  { NULL,                           9,                6,   0,   false },
+  { &Seven_Segment24pt7b,           21,               42,  35,  true  },
+  { &Seven_Segment18pt7b,           16,               33,  26,  true  },
+  { &FreeSans9pt7b,                 10,               16,  12,  false },
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-  angelina8prop,
-  novamono8pt, // 8pt
-  unispace8pt,
-  unispaceitalic8pt,
-  whiterabbit8pt,
-  roboto8pt,
-  robotocond8pt,
-  robotomono8pt,  // 8pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  { &angelina8pt7b,                 6,                16,  12,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  { &NovaMono8pt7b,                 9,                16,  12,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  { &unispace8pt7b,                 13,               24,  20,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  { &unispace_italic8pt7b,          13,               24,  20,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  { &whitrabt8pt7b,                 10,               16,  12,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  { &Roboto_Regular8pt7b,           10,               16,  12,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular8pt7b,  9,                16,  12,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  { &RobotoMono_Regular8pt7b,       10,               16,  12,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-  angelina12prop, // 12pt
-  novamono12pt,
-  repetitionscrolling12pt,
-  unispace12pt,
-  unispaceitalic12pt,
-  whiterabbit12pt,
-  roboto12pt,
-  robotocond12pt,
-  robotomono12pt,  // 12pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  { &angelina12pt7b,                8,                22,  18,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  { &NovaMono12pt7b,                13,               26,  22,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  { &RepetitionScrolling12pt7b,     13,               22,  18,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  { &unispace12pt7b,                18,               30,  26,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  { &unispace_italic12pt7b,         18,               30,  26,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  { &whitrabt12pt7b,                13,               20,  16,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  { &Roboto_Regular12pt7b,          13,               20,  16,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular12pt7b, 13,               20,  16,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  { &RobotoMono_Regular12pt7b,      13,               20,  16,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-  amerikasans16pt, // 16pt
-  whiterabbit16pt,
-  roboto16pt,
-  robotocond16pt,
-  robotomono16pt,  // 16pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  { &AmerikaSans16pt7b,             17,               30,  26,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  { &whitrabt16pt7b,                18,               26,  22,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  { &Roboto_Regular16pt7b,          18,               27,  23,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular16pt7b, 18,               27,  23,  true  },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  { &RobotoMono_Regular16pt7b,      18,               27,  23,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-  whiterabbit18pt, // 18pt
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  { &whitrabt18pt7b,                21,               30,  26,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  { &_7segment18pt7b,               21,               30,  0,   false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  { &LCD14cond18pt7b,               24,               30,  0,   false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
   # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-  whiterabbit20pt, // 20pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  { &whitrabt20pt7b,                24,               32,  28,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  { &_7segment24pt7b,               26,               34,  0,   false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  { &LCD14cond24pt7b,               26,               34,  0,   false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 };
+/* *INDENT-ON* */
+# endif // if ADAGFX_FONTS_INCLUDED
 
 bool AdafruitGFX_helper::processCommand(const String& string) {
   bool success = false;
@@ -840,7 +1043,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         isAdaGFXTrigger(cmd)) ||
       subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
-  std::vector<String> sParams;
+  std::vector<String>  sParams;
   std::vector<int32_t> nParams;
   uint8_t emptyCount = 0;
   int     argCount   = 0;
@@ -889,9 +1092,6 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   const bool invCoord_2_3     = argCount >= 4 && invalidCoordinates(nParams[2], nParams[3]);
   const bool invCoord_0_2_1_3 = argCount >= 4 && invalidCoordinates(nParams[0] + nParams[2],
                                                                     nParams[1] + nParams[3]);
-  const bool invCoord_0_1_comp_cr = argCount >= 2 && invalidCoordinates(nParams[0] - _x_compensation,
-                                                                        nParams[1] - _y_compensation,
-                                                                        _columnRowMode);
   # endif // if ADAGFX_ARGUMENT_VALIDATION
 
   if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
@@ -923,15 +1123,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
-      } else {
-        _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
-      }
-      _display->println(parseStringToEndKeepCaseNoTrim(string, 5)); // Print entire rest of provided line
+      printText(parseStringToEndKeepCaseNoTrim(string, 5).c_str(),
+                nParams[0] + _xo - _x_compensation,
+                nParams[1] + _yo - _y_compensation,
+                _fontscaling,
+                _fgcolor,
+                _bgcolor);
     }
   }
-  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2))   // txl: Text at line(s)
+  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2)) // txl: Text at line(s)
   {
     uint8_t _line   = 0;
     uint8_t _column = 0;
@@ -972,85 +1172,58 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   else if ((adagfx_commands_e::txtfull == subcmd) && (argCount >= 3) && (argCount <= 8)) { // txtfull: Text at position, with size and color
-    switch (argCount) {
-      case 3:                                                                              // single text
+    uint16_t par3color = argCount < 5 || sParams[3].isEmpty() ? _fgcolor : AdaGFXparseColor(sParams[3], _colorDepth);
+    uint16_t par4color = argCount < 6 || sParams[4].isEmpty() ? _bgcolor : AdaGFXparseColor(sParams[4], _colorDepth);
 
-        # if ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invCoord_0_1_comp_cr) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
+    if (invalidCoordinates(nParams[0] - _x_compensation,
+                           nParams[1] - _y_compensation,
+                           _columnRowMode)) {
+      success = false;
+    } else
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    {
+      switch (argCount) {
+        case 3: // single text
+
           printText(sParams[2].c_str(),
                     nParams[0] - _x_compensation,
                     nParams[1] - _y_compensation,
                     _fontscaling,
                     _fgcolor,
-                    _fgcolor); // transparent bg
-        }
-        break;
-      case 4:                  // text + size
+                    _bgcolor);
+          break;
+        case 4: // text + size
 
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invCoord_0_1_comp_cr) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
           printText(sParams[3].c_str(),
                     nParams[0] - _x_compensation,
                     nParams[1] - _y_compensation,
                     nParams[2],
                     _fgcolor,
-                    _fgcolor); // transparent bg
-        }
-        break;
-      case 5:                  // text + size + color
+                    _bgcolor);
+          break;
+        case 5: // text + size + color
 
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invCoord_0_1_comp_cr) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
-          uint16_t color = AdaGFXparseColor(sParams[3], _colorDepth);
           printText(sParams[4].c_str(),
                     nParams[0] - _x_compensation,
                     nParams[1] - _y_compensation,
                     nParams[2],
-                    color,
-                    color); // transparent bg
-        }
-        break;
-      case 6:               // text + size + color + bkcolor
+                    par3color,
+                    par3color); // transparent bg
+          break;
+        case 6:                 // text + size + color + bkcolor
 
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invCoord_0_1_comp_cr) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
           printText(sParams[5].c_str(),
                     nParams[0] - _x_compensation,
                     nParams[1] - _y_compensation,
                     nParams[2],
-                    AdaGFXparseColor(sParams[3], _colorDepth),
-                    AdaGFXparseColor(sParams[4], _colorDepth));
-        }
-        break;
-      case 7: // 7: text + size + color + bkcolor + printmode
-      case 8: // as 7 but: + maxwidth
+                    par3color,
+                    par4color);
+          break;
+        case 7: // 7: text + size + color + bkcolor + printmode
+        case 8: // as 7 but: + maxwidth
 
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invCoord_0_1_comp_cr) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           AdaGFXTextPrintMode tmpPrintMode = _textPrintMode;
 
@@ -1062,19 +1235,20 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                     nParams[0] - _x_compensation,
                     nParams[1] - _y_compensation,
                     nParams[2],
-                    AdaGFXparseColor(sParams[3], _colorDepth),
-                    AdaGFXparseColor(sParams[4], _colorDepth),
+                    par3color,
+                    par4color,
                     argCount == 8 ? nParams[argCount - 2] : 0);
 
           if (_textPrintMode != tmpPrintMode) {
             _textPrintMode = tmpPrintMode;
             _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
           }
+          break;
         }
-        break;
-      default:
-        success = false;
-        break;
+        default:
+          success = false;
+          break;
+      }
     }
   }
   else if (adagfx_commands_e::clear == subcmd) // clear: Clear display
@@ -1162,155 +1336,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # if ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();
 
-    char ftmp[24]{};
-    const int font_i          = GetCommandCode(ftmp, sizeof(ftmp), sParams[0].c_str(), adagfx_fonts);
-    const adagfx_fonts_e font = static_cast<adagfx_fonts_e>(font_i);
+    constexpr int font_max = NR_ELEMENTS(fontargs);
+    const int     font_i   = GetCommandCode(sParams[0].c_str(), adagfx_fonts);
 
-    if (adagfx_fonts_e::sevenseg24 == font) {
-      _display->setFont(&Seven_Segment24pt7b);
-      calculateTextMetrics(21, 42, 35, true);
-    } else if (adagfx_fonts_e::sevenseg18 == font) {
-      _display->setFont(&Seven_Segment18pt7b);
-      calculateTextMetrics(16, 33, 26, true);
-    } else if (adagfx_fonts_e::freesans == font) {
-      _display->setFont(&FreeSans9pt7b);
-      calculateTextMetrics(10, 16, 12);
-
-      // Extra 8pt fonts:
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    } else if (adagfx_fonts_e::angelina8prop == font) { // Proportional font!
-      _display->setFont(&angelina8pt7b);
-      calculateTextMetrics(6, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    } else if (adagfx_fonts_e::novamono8pt == font) {
-      _display->setFont(&NovaMono8pt7b);
-      calculateTextMetrics(9, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    } else if (adagfx_fonts_e::unispace8pt == font) {
-      _display->setFont(&unispace8pt7b);
-      calculateTextMetrics(13, 24, 20);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    } else if (adagfx_fonts_e::unispaceitalic8pt == font) {
-      _display->setFont(&unispace_italic8pt7b);
-      calculateTextMetrics(13, 24, 20);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit8pt == font) {
-      _display->setFont(&whitrabt8pt7b);
-      calculateTextMetrics(10, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto8pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular8pt7b);
-      calculateTextMetrics(10, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond8pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular8pt7b);
-      calculateTextMetrics(9, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono8pt == font) {
-      _display->setFont(&RobotoMono_Regular8pt7b);
-      calculateTextMetrics(10, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-      // Extra 12pt fonts:
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    } else if (adagfx_fonts_e::angelina12prop == font) { // Proportional font!
-      _display->setFont(&angelina12pt7b);
-      calculateTextMetrics(8, 22, 18, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    } else if (adagfx_fonts_e::novamono12pt == font) {
-      _display->setFont(&NovaMono12pt7b);
-      calculateTextMetrics(13, 26, 22);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    } else if (adagfx_fonts_e::repetitionscrolling12pt == font) {
-      _display->setFont(&RepetitionScrolling12pt7b);
-      calculateTextMetrics(13, 22, 18);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    } else if (adagfx_fonts_e::unispace12pt == font) {
-      _display->setFont(&unispace12pt7b);
-      calculateTextMetrics(18, 30, 26);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    } else if (adagfx_fonts_e::unispaceitalic12pt == font) {
-      _display->setFont(&unispace_italic12pt7b);
-      calculateTextMetrics(18, 30, 26);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit12pt == font) {
-      _display->setFont(&whitrabt12pt7b);
-      calculateTextMetrics(13, 20, 16);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto12pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond12pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono12pt == font) {
-      _display->setFont(&RobotoMono_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    } else if (adagfx_fonts_e::amerikasans16pt == font) { // Proportional font!
-      _display->setFont(&AmerikaSans16pt7b);
-      calculateTextMetrics(17, 30, 26, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit16pt == font) {
-      _display->setFont(&whitrabt16pt7b);
-      calculateTextMetrics(18, 26, 22);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto16pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond16pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono16pt == font) {
-      _display->setFont(&RobotoMono_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit18pt == font) {
-      _display->setFont(&whitrabt18pt7b);
-      calculateTextMetrics(21, 30, 26);
-      #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    #  endif    // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit20pt == font) {
-      _display->setFont(&whitrabt20pt7b);
-      calculateTextMetrics(24, 32, 28);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-    } else if (adagfx_fonts_e::default_font == font) { // font,default is always available!
-      _display->setFont();
-      calculateTextMetrics(6, 9);
+    if ((font_i >= 0) && (font_i < font_max)) {
+      _display->setFont(fontargs[font_i].f);
+      calculateTextMetrics(fontargs[font_i].width,
+                           fontargs[font_i].height,
+                           fontargs[font_i].offset,
+                           fontargs[font_i].proportional);
     } else {
       success = false;
     }
@@ -1766,7 +1800,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -2186,7 +2220,7 @@ uint16_t AdaGFXparseColor(String                & s,
                           const AdaGFXColorDepth& colorDepth,
                           const bool              emptyIsBlack) {
   s.toLowerCase();
-  int32_t   result = -1; // No result yet
+  int32_t   result  = -1; // No result yet
   const int color_i = GetCommandCode(s.c_str(), adagfx_colornames);
 
   const adagfx_colornames_e color = static_cast<adagfx_colornames_e>(color_i);
