@@ -54,12 +54,10 @@ void handle_config_download(bool fullBackup) {
   {
     str += F("config_");
   }
-  str += Settings.getName();
-  str += F("_U");
-  str += Settings.Unit;
-  str += F("_Build");
-  str += getSystemBuildString();
-  str += '_';
+  str += strformat(F("%s_U%d_Build%s_"),
+                   Settings.getName().c_str(),
+                   Settings.Unit,
+                   getSystemBuildString().c_str());
 
   if (node_time.systemTimePresent())
   {
@@ -105,7 +103,7 @@ void handle_config_download(bool fullBackup) {
       #  if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
       // extcfg<tasknr>.dat files
-      for (uint8_t n = 0; n < TASKS_MAX; n++) {
+      for (uint8_t n = 0; n < TASKS_MAX; ++n) {
         tarStream->addFileIfExists(SettingsType::getSettingsFileName(SettingsType::Enum::CustomTaskSettings_Type, n));
       }
       #  endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
@@ -116,7 +114,7 @@ void handle_config_download(bool fullBackup) {
       tarStream->addFileIfExists(getFileName(FileType::SECURITY_DAT));
 
       // rules<n>.txt files
-      for (unsigned int rf = 0; rf < RULESETS_MAX; rf++) {
+      for (unsigned int rf = 0; rf < RULESETS_MAX; ++rf) {
         tarStream->addFileIfExists(getRulesFileName(rf));
       }
     }

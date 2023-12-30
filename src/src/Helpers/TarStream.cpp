@@ -39,16 +39,12 @@ TarStream::TarStream(const String fileName, FileDestination_e destination)
   : _fileName(fileName), _destination(destination) {}
 
 TarStream::~TarStream() {
-  if (_filesList.size() > 0) {
-    _filesList.clear();
-  }
+  _filesList.clear();
 }
 
 size_t TarStream::write(uint8_t ch) {
   // TODO implement
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    addLogMove(LOG_LEVEL_ERROR, concat(F("TarStream: "), F("write(ch) NOT IMPLEMENTED YET.")));
-  }
+  addLogMove(LOG_LEVEL_ERROR, F("TarStream: write(ch) NOT IMPLEMENTED YET."));
   return 1u;
 }
 
@@ -80,7 +76,7 @@ size_t TarStream::write(const uint8_t *buf,
         if (_headerPosition == TAR_HEADER_SIZE) {
           bool allZeros = true;
 
-          for (size_t n = 0; n < TAR_HEADER_SIZE && allZeros; n++) {
+          for (size_t n = 0; n < TAR_HEADER_SIZE && allZeros; ++n) {
             allZeros &= (_tarData[n] == 0u);
           }
 
@@ -88,10 +84,7 @@ size_t TarStream::write(const uint8_t *buf,
             _headerPosition = 0;
             _streamState    = TarStreamState_e::WritingFinal;
             # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
-              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingFinal")));
-            }
+            addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial/WritingHeader to WritingFinal"));
             # endif // if TAR_STREAM_DEBUG
           } else {
             const String fname(_tarHeader.name);
@@ -100,8 +93,8 @@ size_t TarStream::write(const uint8_t *buf,
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               # if TAR_STREAM_DEBUG
-              addLog(LOG_LEVEL_INFO, strformat(F("%sWrite Receiving file %s size: %d"),
-                                               String(F("TarStream: ")).c_str(), fname.c_str(), fsize));
+              addLog(LOG_LEVEL_INFO, strformat(F("TarStream: Write Receiving file %s size: %d"),
+                                               fname.c_str(), fsize));
               # else // if TAR_STREAM_DEBUG
               addLog(LOG_LEVEL_INFO, concat(F("Tar   : Load file: "), fname));
               # endif // if TAR_STREAM_DEBUG
@@ -140,38 +133,32 @@ size_t TarStream::write(const uint8_t *buf,
                   if (fileExists(_filesList[_fileIndex].fileName) &&
                       !tryDeleteFile(_filesList[_fileIndex].fileName, _destination) &&
                       loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Can't delete file: "), _filesList[_fileIndex].fileName)));
+                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: Can't delete file: "), _filesList[_fileIndex].fileName));
                   }
                   _currentFile = tryOpenFile(_filesList[_fileIndex].fileName, F("w"), _destination);
 
                   if (!_currentFile && loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Can't create file: "), _filesList[_fileIndex].fileName)));
+                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: Can't create file: "), _filesList[_fileIndex].fileName));
                   }
                 } else {
                   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), concat(F("Not enough space to save file: "),
-                                                                            _filesList[_fileIndex].fileName)));
+                    addLog(LOG_LEVEL_ERROR, concat(F("TarStream: Not enough space to save file: "),
+                                                   _filesList[_fileIndex].fileName));
                   }
                 }
 
                 # if TAR_STREAM_DEBUG
-
-                if (logInfo) {
-                  addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingFile")));
-                }
+                addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial/WritingHeader to WritingFile"));
                 # endif // if TAR_STREAM_DEBUG
               } else {
                 _streamState = TarStreamState_e::WritingSlack;
 
                 if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                  addLog(LOG_LEVEL_ERROR, concat(F("TarStream: "), F("Received invalid config.dat, ignored.")));
+                  addLog(LOG_LEVEL_ERROR, F("TarStream: Received invalid config.dat, ignored."));
                 }
                 _filesList[_fileIndex].fileName = F("(ignored)"); // Won't be recognized
                 # if TAR_STREAM_DEBUG
-
-                if (logInfo) {
-                  addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to WritingSlack")));
-                }
+                addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial/WritingHeader to WritingSlack"));
                 # endif // if TAR_STREAM_DEBUG
               }
               _writePosition = 0u; // Start at file-position 0
@@ -179,14 +166,11 @@ size_t TarStream::write(const uint8_t *buf,
               _streamState = TarStreamState_e::Error;
 
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                addLog(LOG_LEVEL_ERROR, strformat(F("%sUnsupported file: %s, type: %c"),
-                                                  String(F("TarStream: ")).c_str(), fname.c_str(), _tarHeader.typeflag));
+                addLog(LOG_LEVEL_ERROR, strformat(F("TarStream: Unsupported file: %s, type: %c"),
+                                                  fname.c_str(), _tarHeader.typeflag));
               }
               # if TAR_STREAM_DEBUG
-
-              if (logInfo) {
-                addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial/WritingHeader to Error")));
-              }
+              addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial/WritingHeader to Error"));
               # endif // if TAR_STREAM_DEBUG
             }
           }
@@ -195,8 +179,8 @@ size_t TarStream::write(const uint8_t *buf,
         # if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
 
         if (loglevelActiveFor(TAR_LOG_LEVEL_DEBUG)) {
-          addLog(TAR_LOG_LEVEL_DEBUG, strformat(F("%sDEBUG WritingHeader size: %d, offset: %d, stay: %d"),
-                                                String(F("TarStream: ")).c_str(), size, bufOffset, stayInLoop));
+          addLog(TAR_LOG_LEVEL_DEBUG, strformat(F("TarStream: DEBUG WritingHeader size: %d, offset: %d, stay: %d"),
+                                                size, bufOffset, stayInLoop));
         }
         # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
 
@@ -216,9 +200,10 @@ size_t TarStream::write(const uint8_t *buf,
         # if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
 
         if (loglevelActiveFor(TAR_LOG_LEVEL_DEBUG)) {
-          addLog(TAR_LOG_LEVEL_DEBUG, strformat(F("%sDEBUG WritingFile %d bytes of %d to file, pos: %d, size: %d, bufoff: %d, stay: %d"),
-                                                String(F("TarStream: ")).c_str(), toWrite, _filesList[_fileIndex].fileSize,
-                                                _writePosition, size, bufOffset, stayInLoop));
+          addLog(TAR_LOG_LEVEL_DEBUG,
+                 strformat(F("TarStream: DEBUG WritingFile %d bytes of %d to file, pos: %d, size: %d, bufoff: %d, stay: %d"),
+                           toWrite, _filesList[_fileIndex].fileSize,
+                           _writePosition, size, bufOffset, stayInLoop));
         }
         # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
 
@@ -233,8 +218,8 @@ size_t TarStream::write(const uint8_t *buf,
             # if TAR_STREAM_DEBUG
 
             if (logInfo) {
-              addLog(LOG_LEVEL_INFO, strformat(F("%sWritingFile to WritingSlack, bytes: %d"),
-                                               String(F("TarStream: Switch from ")).c_str(), _writePosition));
+              addLog(LOG_LEVEL_INFO, strformat(F("TarStream: Switch from WritingFile to WritingSlack, bytes: %d"),
+                                               _writePosition));
             }
             # endif // if TAR_STREAM_DEBUG
           } else {
@@ -242,8 +227,8 @@ size_t TarStream::write(const uint8_t *buf,
             # if TAR_STREAM_DEBUG
 
             if (logInfo) {
-              addLog(LOG_LEVEL_INFO, strformat(F("%sWritingFile to WritingHeader, bytes: %d"),
-                                               String(F("TarStream: Switch from ")).c_str(), _writePosition));
+              addLog(LOG_LEVEL_INFO, strformat(F("TarStream: Switch from WritingFile to WritingHeader, bytes: %d"),
+                                               _writePosition));
             }
             # endif // if TAR_STREAM_DEBUG
             _headerPosition = 0;
@@ -269,10 +254,7 @@ size_t TarStream::write(const uint8_t *buf,
         if (_writePosition == _filesList[_fileIndex].tarSize) {
           _streamState = TarStreamState_e::WritingHeader;
           # if TAR_STREAM_DEBUG
-
-          if (logInfo) {
-            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("WritingSlack to WritingHeader")));
-          }
+          addLog(LOG_LEVEL_INFO, F("TarStream: Switch from WritingSlack to WritingHeader"));
           # endif // if TAR_STREAM_DEBUG
           _headerPosition = 0;
         }
@@ -288,7 +270,7 @@ size_t TarStream::write(const uint8_t *buf,
         bool allZeros = true;
 
         if (_headerPosition == TAR_HEADER_SIZE) {
-          for (size_t n = 0; n < TAR_HEADER_SIZE && allZeros; n++) {
+          for (size_t n = 0; n < TAR_HEADER_SIZE && allZeros; ++n) {
             allZeros &= (_tarData[n] == 0u);
           }
           _streamState = TarStreamState_e::WritingDone;
@@ -309,7 +291,7 @@ size_t TarStream::write(const uint8_t *buf,
         # if TAR_STREAM_DEBUG
 
         if (logInfo) {
-          addLog(LOG_LEVEL_INFO, strformat(F("%sWritingDone, skipping: %d"), String(F("TarStream: ")).c_str(), toSkip));
+          addLog(LOG_LEVEL_INFO, strformat(F("TarStream: WritingDone, skipping: %d"), toSkip));
         }
         # endif // if TAR_STREAM_DEBUG
         break;
@@ -345,13 +327,13 @@ void TarStream::setupHeader() {
 
   clearHeader();
   safe_strncpy(_tarHeader.name, _currentIndex.fileName.c_str(), tarHeader_name_size);
-  sprintf(_tarHeader.mode,  "%07o",  TUREAD + TUWRITE + TUEXEC + TGREAD + TGWRITE + TGEXEC + TOREAD + TOWRITE + TOEXEC);
-  sprintf(_tarHeader.uid,   "%07o",  0);
-  sprintf(_tarHeader.gid,   "%07o",  0);
-  sprintf(_tarHeader.size,  "%011o", _currentIndex.fileSize);
-  sprintf(_tarHeader.mtime, "%011o", node_time.getUnixTime()); // We don't have file-date/times, use current date/time
+  sprintf(_tarHeader.mode,  PSTR("%07o"),  TUREAD + TUWRITE + TUEXEC + TGREAD + TGWRITE + TGEXEC + TOREAD + TOWRITE + TOEXEC);
+  sprintf(_tarHeader.uid,   PSTR("%07o"),  0);
+  sprintf(_tarHeader.gid,   PSTR("%07o"),  0);
+  sprintf(_tarHeader.size,  PSTR("%011o"), _currentIndex.fileSize);
+  sprintf(_tarHeader.mtime, PSTR("%011o"), node_time.getUnixTime()); // We don't have file-date/times, use current date/time
   _tarHeader.typeflag = REGTYPE;
-  sprintf(_tarHeader.magic, "%s",    TMAGIC);
+  sprintf(_tarHeader.magic, PSTR("%s"),    TMAGIC);
   _tarHeader.version[0] = TVERSION[0]; _tarHeader.version[1] = TVERSION[1];
 
   const uint32_t chksum = clearAndCalculateHeaderChecksum();
@@ -370,8 +352,8 @@ bool TarStream::validateHeader() {
   # if TAR_STREAM_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, strformat(F("%sValidate Header, magic: %s checksum: %06o expected: %06o (octal)"),
-                                     String(F("TarStream: ")).c_str(), magic.c_str(), chksum, expected));
+    addLog(LOG_LEVEL_INFO, strformat(F("TarStream: Validate Header, magic: %s checksum: %06o expected: %06o (octal)"),
+                                     magic.c_str(), chksum, expected));
   }
   # endif // if TAR_STREAM_DEBUG
   return magic.equals(F(TMAGIC)) && chksum == expected;
@@ -381,11 +363,11 @@ uint32_t TarStream::clearAndCalculateHeaderChecksum() {
   constexpr size_t tarHeader_chksum_size = NR_ELEMENTS(_tarHeader.chksum);
   uint32_t chksum                        = 0u;
 
-  for (size_t c = 0; c < tarHeader_chksum_size; c++) { // note: chksum content during calculation is spaces
+  for (size_t c = 0; c < tarHeader_chksum_size; ++c) { // note: chksum content during calculation is spaces
     _tarHeader.chksum[c] = ' ';
   }
 
-  for (uint16_t hdr = 0; hdr < TAR_HEADER_SIZE; hdr++) {
+  for (uint16_t hdr = 0; hdr < TAR_HEADER_SIZE; ++hdr) {
     chksum += _tarData[hdr];
   }
   return chksum;
@@ -393,10 +375,6 @@ uint32_t TarStream::clearAndCalculateHeaderChecksum() {
 
 int TarStream::read() {
   int result = EOF;
-
-  # if TAR_STREAM_DEBUG
-  const bool logInfo = loglevelActiveFor(LOG_LEVEL_INFO);
-  # endif // if TAR_STREAM_DEBUG
 
   switch (_streamState) {
     case TarStreamState_e::Initial:
@@ -406,9 +384,12 @@ int TarStream::read() {
       _currentFile     = tryOpenFile(_currentIndex.fileName, F("r"));
 
       if (_currentFile) {
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, concat(F("Tar   : Save file: "), _currentIndex.fileName));
         }
+        # endif // ifndef BUILD_NO_DEBUG
 
         // Set up header
         setupHeader();
@@ -418,19 +399,13 @@ int TarStream::read() {
         _headerPosition = 0;
         result          = _tarData[_headerPosition];
         # if TAR_STREAM_DEBUG
-
-        if (logInfo) {
-          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to ReadingHeader")));
-        }
+        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial to ReadingHeader"));
         # endif // if TAR_STREAM_DEBUG
       } else {
         _streamState = TarStreamState_e::Error;
 
         # if TAR_STREAM_DEBUG
-
-        if (logInfo) {
-          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("Initial to Error")));
-        }
+        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from Initial to Error"));
         # endif // if TAR_STREAM_DEBUG
       }
       break;
@@ -451,28 +426,19 @@ int TarStream::read() {
             result       = _currentFile.read();
             _streamState = TarStreamState_e::ReadingFile;
             # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
-              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to ReadingFile")));
-            }
+            addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingHeader to ReadingFile"));
             # endif // if TAR_STREAM_DEBUG
           } else {
             _streamState = TarStreamState_e::ReadingSlack;
             # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
-              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to ReadingSlack 0")));
-            }
+            addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingHeader to ReadingSlack 0"));
             # endif // if TAR_STREAM_DEBUG
             result = 0;
           }
         } else {
           _streamState = TarStreamState_e::Error;
           # if TAR_STREAM_DEBUG
-
-          if (logInfo) {
-            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingHeader to Error")));
-          }
+          addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingHeader to Error"));
           # endif // if TAR_STREAM_DEBUG
         }
       }
@@ -490,10 +456,7 @@ int TarStream::read() {
         result       = 0;
         _streamState = TarStreamState_e::ReadingSlack;
         # if TAR_STREAM_DEBUG
-
-        if (logInfo) {
-          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFile to ReadingSlack 1")));
-        }
+        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 1"));
         # endif // if TAR_STREAM_DEBUG
         break;
       }
@@ -501,10 +464,7 @@ int TarStream::read() {
       _tarPosition--; // revert 1 position
       _streamState = TarStreamState_e::ReadingSlack;
       # if TAR_STREAM_DEBUG
-
-      if (logInfo) {
-        addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFile to ReadingSlack 2")));
-      }
+      addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 2"));
       # endif // if TAR_STREAM_DEBUG
 
       // Fall through
@@ -533,28 +493,19 @@ int TarStream::read() {
             // Header done
             _streamState = TarStreamState_e::ReadingHeader;
             # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
-              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to ReadingHeader")));
-            }
+            addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingSlack to ReadingHeader"));
             # endif // if TAR_STREAM_DEBUG
           } else {
             _streamState = TarStreamState_e::Error;
             # if TAR_STREAM_DEBUG
-
-            if (logInfo) {
-              addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to Error")));
-            }
+            addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingSlack to Error"));
             # endif // if TAR_STREAM_DEBUG
           }
         } else {
           clearHeader();
           _streamState = TarStreamState_e::ReadingFinal;
           # if TAR_STREAM_DEBUG
-
-          if (logInfo) {
-            addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingSlack to ReadingFinal")));
-          }
+          addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingSlack to ReadingFinal"));
           # endif // if TAR_STREAM_DEBUG
         }
         _headerPosition = 0;
@@ -570,19 +521,13 @@ int TarStream::read() {
       if (_headerPosition == (TAR_BLOCK_SIZE * 2)) {
         result = EOF;
         # if TAR_STREAM_DEBUG
-
-        if (logInfo) {
-          addLog(LOG_LEVEL_INFO, concat(F("TarStream: "), F("Reached ReadingFinal EOF")));
-        }
+        addLog(LOG_LEVEL_INFO, F("TarStream: Reached ReadingFinal EOF"));
         # endif // if TAR_STREAM_DEBUG
       } else if (_headerPosition > (TAR_BLOCK_SIZE * 2)) {
         result       = EOF;
         _streamState = TarStreamState_e::Error;
         # if TAR_STREAM_DEBUG
-
-        if (logInfo) {
-          addLog(LOG_LEVEL_INFO, concat(F("TarStream: Switch from "), F("ReadingFinal to Error")));
-        }
+        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFinal to Error"));
         # endif // if TAR_STREAM_DEBUG
       }
       break;
