@@ -5,6 +5,10 @@
 // #################################### Plugin 024: MLX90614 IR temperature I2C 0x5A)  ###############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
+ * 2023-11-23 tonhuisman: Add Changelog
+*/
 
 # include "src/PluginStructs/P024_data_struct.h"
 
@@ -36,6 +40,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 
@@ -93,22 +98,10 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t unit    = CONFIG_PORT;
-      uint8_t address = 0x5A + unit;
+      const uint8_t unit    = CONFIG_PORT;
+      const uint8_t address = 0x5A + unit;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
-      P024_data_struct *P024_data =
-        static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P024_data);
-
-      //        if (!msgTemp024) // Mysensors
-      //          msgTemp024 = new MyMessage(event->BaseVarIndex, V_TEMP); //Mysensors
-      //        present(event->BaseVarIndex, S_TEMP); //Mysensors
-      //        serialPrint("Present MLX90614: "); //Mysensors
-      //        serialPrintln(event->BaseVarIndex); //Mysensors
-      //   success = true;
-      // }
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));
       break;
     }
 
@@ -118,7 +111,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P024_data) {
-        UserVar[event->BaseVarIndex] = P024_data->readTemperature(PCONFIG(0));
+        UserVar.setFloat(event->TaskIndex, 0, P024_data->readTemperature(PCONFIG(0)));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MLX90614  : Temperature: ");

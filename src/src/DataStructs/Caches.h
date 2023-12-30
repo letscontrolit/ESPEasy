@@ -9,6 +9,11 @@
 # include "../DataStructs/ControllerSettingsStruct.h"
 # include "../DataTypes/ControllerIndex.h"
 #endif // ifdef ESP32
+
+#if FEATURE_PLUGIN_STATS
+# include "../DataStructs/PluginStats_Config.h"
+#endif // if FEATURE_PLUGIN_STATS
+
 #include "../Globals/Plugins.h"
 
 #include "../Helpers/RulesHelper.h"
@@ -37,15 +42,16 @@ struct ExtraTaskSettings_cache_t {
   uint16_t TaskDevicePluginConfig_index_used     = 0;
 
   String TaskDeviceValueNames[VARS_PER_TASK];
+  String TaskDeviceFormula[VARS_PER_TASK];
   #endif // ifdef ESP32
   String       TaskDeviceName;
   ChecksumType md5checksum;
   uint8_t      decimals[VARS_PER_TASK] = { 0 };
   uint8_t      defaultTaskDeviceValueName{};
   #if FEATURE_PLUGIN_STATS
-  uint8_t enabledPluginStats = 0;
+  PluginStats_Config_t pluginStatsConfig[VARS_PER_TASK] = {};
   #endif // if FEATURE_PLUGIN_STATS
-  bool hasFormula = false;
+  uint8_t hasFormula = 0; // Bitmap which task value has formula and whether a formula needs previous value
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -80,7 +86,9 @@ struct Caches {
                                  uint8_t     rel_index);
 
   // Check to see if at least one of the taskvalues has a non-empty formula field.
-  bool    hasFormula(taskIndex_t TaskIndex);
+  bool hasFormula(taskIndex_t TaskIndex, uint8_t rel_index);
+  bool hasFormula(taskIndex_t TaskIndex);
+  bool hasFormula_with_prevValue(taskIndex_t TaskIndex, uint8_t rel_index);
 
 
   String  getTaskDeviceFormula(taskIndex_t TaskIndex,
@@ -93,8 +101,12 @@ struct Caches {
                                     uint8_t     rel_index);
 
   #if FEATURE_PLUGIN_STATS
-  bool enabledPluginStats(taskIndex_t TaskIndex,
-                          uint8_t     rel_index);
+  bool                 enabledPluginStats(taskIndex_t TaskIndex,
+                                          uint8_t     rel_index);
+
+  PluginStats_Config_t getPluginStatsConfig(taskIndex_t    TaskIndex,
+                                            taskVarIndex_t taskVarIndex);
+
   #endif // if FEATURE_PLUGIN_STATS
 
 

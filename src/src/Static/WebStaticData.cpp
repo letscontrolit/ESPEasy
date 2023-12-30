@@ -13,14 +13,33 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
     // Generate some URL indicating static files which will need to be served with some cache-control header
     return concat(F("static_"), Cache.fileCacheClearMoment) + '_' + fname;
   }
-  return concat(get_CDN_url_prefix(), fname);
+  #if FEATURE_ALTERNATIVE_CDN_URL
+  String cdn = get_CDN_url_custom();
+  if (!cdn.isEmpty()) {
+    cdn = parseTemplate(cdn);  // Replace system variables.
+    return concat(cdn, fname); // cdn.endsWith('/') check done at save
+  } else {
+  #endif // if FEATURE_ALTERNATIVE_CDN_URL
+    return concat(get_CDN_url_prefix(), fname);
+  #if FEATURE_ALTERNATIVE_CDN_URL
+  }
+  #endif // if FEATURE_ALTERNATIVE_CDN_URL
 }
 
 void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
-  addHtml(F("<link"));
-  addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("href"), generate_external_URL(fname, isEmbedded));
-  addHtml('/', '>');
+  const String url = generate_external_URL(fname, isEmbedded);
+  addHtml(strformat(
+    F("<link rel=\"stylesheet\" href=\"%s\">"),
+    url.c_str()
+  ));
+  /*
+  // Delay loading CSS till after page has loaded.
+  // Disabled as it adds 'flickering' to the page loading
+  addHtml(strformat(
+    F("<link rel=\"preload\" href=\"%s\" as=\"style\" onload=\"this.onload=null;this.rel='stylesheet'\"><noscript><link rel=\"stylesheet\" href=\"%s\"></noscript>"),
+    url.c_str(), url.c_str()
+  ));
+  */
 }
 
 void serve_CDN_JS(const __FlashStringHelper * fname, 

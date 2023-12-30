@@ -82,8 +82,8 @@ bool P151_data_struct::fetch_last_sample(struct EventStruct *event) {
     }
     _pressure += P151_PRESSURE_MIN;
 
-    UserVar[event->BaseVarIndex]     = _pressure;
-    UserVar[event->BaseVarIndex + 1] = ((_rawTemperature * 200.0f) / 2047.0f) - 50.0f;
+    UserVar.setFloat(event->TaskIndex, 0, _pressure);
+    UserVar.setFloat(event->TaskIndex, 1, ((_rawTemperature * 200.0f) / 2047.0f) - 50.0f);
     _updated                         = false;
     return true;
   }

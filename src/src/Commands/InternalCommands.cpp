@@ -15,6 +15,7 @@
 #include "../Commands/Diagnostic.h"
 #include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
+#include "../Commands/InternalCommands_decoder.h"
 #include "../Commands/i2c.h"
 
 #if FEATURE_MQTT
@@ -23,14 +24,16 @@
 
 #include "../Commands/Networks.h"
 #if FEATURE_NOTIFIER
-#include "../Commands/Notifications.h"
-#endif
+# include "../Commands/Notifications.h"
+#endif // if FEATURE_NOTIFIER
 #include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
 #include "../Commands/SDCARD.h"
 #include "../Commands/Settings.h"
-#include "../Commands/Servo.h"
+#if FEATURE_SERVO
+# include "../Commands/Servo.h"
+#endif // if FEATURE_SERVO
 #include "../Commands/System.h"
 #include "../Commands/Tasks.h"
 #include "../Commands/Time.h"
@@ -54,8 +57,10 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
   if (HasArgv(Line.c_str(), nrArguments + 2)) {
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
+
       if (log.reserve(128)) {
         log += F("Too many arguments: cmd=");
         log += cmd;
@@ -86,7 +91,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
               } else {
                 log += F(" ExtraArg");
               }
-              log += String(i);
+              log += i;
               log += '=';
               log += parameter;
             }
@@ -96,21 +101,14 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
         log += F(" lineLength=");
         log += Line.length();
         addLogMove(LOG_LEVEL_ERROR, log);
-        log  = F("Line: _");
-        log += Line;
-        log += '_';
-        addLogMove(LOG_LEVEL_ERROR, log);
-
-        if (!Settings.TolerantLastArgParse()) {
-          log = F("Command not executed!");
-        } else {
-          log = F("Command executed, but may fail.");
-        }
-        log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
-        addLogMove(LOG_LEVEL_ERROR, log);
       }
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("Line: _%s_"), Line.c_str()));
+
+      addLogMove(LOG_LEVEL_ERROR, concat(Settings.TolerantLastArgParse() ?
+                                         F("Command executed, but may fail.") : F("Command not executed!"),
+                                         F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724")));
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
 
     if (Settings.TolerantLastArgParse()) {
       return true;
@@ -135,46 +133,37 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
   cmd_lc.toLowerCase();
 }
 
+InternalCommands::InternalCommands(const char *cmd, struct EventStruct *event, const char *line)
+  : _data(cmd, event, line) {}
+
 
 // Wrapper to reduce generated code by macro
-bool do_command_case_all(command_case_data         & data,
-                         const __FlashStringHelper * cmd_test,
-                         command_function_fs         pFunc,
-                         int                         nrArguments)
+bool InternalCommands::do_command_case_all(command_function_fs pFunc,
+                                           int                 nrArguments)
 {
-  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+  return do_command_case(_data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
 }
 
-
-bool do_command_case_all(command_case_data         & data,
-                         const __FlashStringHelper * cmd_test,
-                         command_function            pFunc,
-                         int                         nrArguments)
+bool InternalCommands::do_command_case_all(command_function pFunc,
+                                           int              nrArguments)
 {
-  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+  return do_command_case(_data, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
 }
 
 // Wrapper to reduce generated code by macro
-bool do_command_case_all_restricted(command_case_data         & data,
-                                    const __FlashStringHelper * cmd_test,
-                                    command_function_fs         pFunc,
-                                    int                         nrArguments)
+bool InternalCommands::do_command_case_all_restricted(command_function_fs pFunc,
+                                                      int                 nrArguments)
 {
-  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+  return do_command_case(_data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
 }
 
-
-bool do_command_case_all_restricted(command_case_data         & data,
-                                    const __FlashStringHelper * cmd_test,
-                                    command_function            pFunc,
-                                    int                         nrArguments)
+bool InternalCommands::do_command_case_all_restricted(command_function pFunc,
+                                                      int              nrArguments)
 {
-  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+  return do_command_case(_data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
 }
-
 
 bool do_command_case_check(command_case_data         & data,
-                           const __FlashStringHelper * cmd_test,
                            int                         nrArguments,
                            EventValueSourceGroup::Enum group)
 {
@@ -182,37 +171,37 @@ bool do_command_case_check(command_case_data         & data,
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
   data.status = String();
-  if (!data.cmd_lc.equals(cmd_test)) {
-    return false;
-  }
+
   if (!checkSourceFlags(data.event->Source, group)) {
     data.status = return_incorrect_source();
     return false;
-  } 
+  }
+
   // FIXME TD-er: Do not check nr arguments from MQTT source.
   // See https://github.com/letscontrolit/ESPEasy/issues/3344
   // C005 does recreate command partly from topic and published message
   // e.g. ESP_Easy/Bathroom_pir_env/GPIO/14 with data 0 or 1
   // This only allows for 2 parameters, but some commands need more arguments (default to "0")
   const bool mustCheckNrArguments = data.event->Source != EventValueSource::Enum::VALUE_SOURCE_MQTT;
+
   if (mustCheckNrArguments) {
     if (!checkNrArguments(data.cmd, data.line, nrArguments)) {
       data.status = return_incorrect_nr_arguments();
-      //data.retval = false;
-      return true; // Command is handled
+
+      // data.retval = false;
+      return true;    // Command is handled
     }
   }
   data.retval = true; // Mark the command should be executed.
-  return true; // Command is handled
+  return true;        // Command is handled
 }
 
-bool do_command_case(command_case_data         & data,
-                     const __FlashStringHelper * cmd_test,
-                     command_function_fs         pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+bool InternalCommands::do_command_case(command_case_data         & data,
+                                       command_function_fs         pFunc,
+                                       int                         nrArguments,
+                                       EventValueSourceGroup::Enum group)
 {
-  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+  if (do_command_case_check(data, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
     START_TIMER;
@@ -223,14 +212,12 @@ bool do_command_case(command_case_data         & data,
   return false;
 }
 
-
-bool do_command_case(command_case_data         & data,
-                     const __FlashStringHelper * cmd_test,
-                     command_function            pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+bool InternalCommands::do_command_case(command_case_data         & data,
+                                       command_function            pFunc,
+                                       int                         nrArguments,
+                                       EventValueSourceGroup::Enum group)
 {
-  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+  if (do_command_case_check(data, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
     // FIXME TD-er: Must change command function signature to use const String&
     START_TIMER;
@@ -241,473 +228,251 @@ bool do_command_case(command_case_data         & data,
   return false;
 }
 
-bool executeInternalCommand(command_case_data & data)
+bool InternalCommands::executeInternalCommand()
 {
-  const size_t cmd_lc_length = data.cmd_lc.length();
-  if (cmd_lc_length < 2) return false; // No commands less than 2 characters
   // Simple macro to match command to function call.
 
   // EventValueSourceGroup::Enum::ALL
-  #define COMMAND_CASE_A(S, C, NARGS) \
-  if (do_command_case_all(data, F(S), &C, NARGS)) { return data.retval; }
+  #define COMMAND_CASE_A(C, NARGS) \
+  do_command_case_all(&C, NARGS); break;
 
   // EventValueSourceGroup::Enum::RESTRICTED
-  #define COMMAND_CASE_R(S, C, NARGS) \
-  if (do_command_case_all_restricted(data, F(S), &C, NARGS)) { return data.retval; }
+  #define COMMAND_CASE_R(C, NARGS) \
+   do_command_case_all_restricted(&C, NARGS); break;
+
+
+  const ESPEasy_cmd_e cmd = match_ESPEasy_internal_command(_data.cmd_lc);
+
+  _data.retval = false;
+
+  if (cmd == ESPEasy_cmd_e::NotMatched) {
+    return false;
+  }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
-  switch (data.cmd_lc[0]) {
-    case 'a': {
-      COMMAND_CASE_A("accessinfo", Command_AccessInfo_Ls,       0); // Network Command
-      COMMAND_CASE_A("asyncevent", Command_Rules_Async_Events, -1); // Rule.h
-      break;
-    }
-    case 'b': {
-    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_R("background", Command_Background, 1); // Diagnostic.h
-    #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-    #ifdef USES_C012
-      COMMAND_CASE_A("blynkget", Command_Blynk_Get, -1);
-    #endif // ifdef USES_C012
-    #ifdef USES_C015
-      COMMAND_CASE_R("blynkset", Command_Blynk_Set, -1);
-    #endif // ifdef USES_C015
-      COMMAND_CASE_A("build", Command_Settings_Build, 1);      // Settings.h
-      break;
-    }
-    case 'c': {
-      COMMAND_CASE_R( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
-      COMMAND_CASE_R(    "clearpassword", Command_Settings_Password_Clear,     1); // Settings.h
-      COMMAND_CASE_R(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
-      #ifdef ESP8266
-      COMMAND_CASE_R(     "clearsdkwifi", Command_System_Erase_SDK_WiFiconfig,  0); // System.h
-      COMMAND_CASE_R(   "clearwifirfcal", Command_System_Erase_RFcal,  0); // System.h
-      #endif
-      COMMAND_CASE_R(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
-      COMMAND_CASE_R("controllerdisable", Command_Controller_Disable, 1); // Controller.h
-      COMMAND_CASE_R( "controllerenable", Command_Controller_Enable,  1); // Controller.h
-
-      break;
-    }
-    case 'd': {
-      COMMAND_CASE_R(           "datetime", Command_DateTime,             2); // Time.h
-      COMMAND_CASE_R(              "debug", Command_Debug,                1); // Diagnostic.h
-      COMMAND_CASE_A(                "dec", Command_Rules_Dec,           -1); // Rules.h
-      COMMAND_CASE_R(          "deepsleep", Command_System_deepSleep,     1); // System.h
-      COMMAND_CASE_R(              "delay", Command_Delay,                1); // Timers.h
-    #if FEATURE_PLUGIN_PRIORITY
-      COMMAND_CASE_R("disableprioritytask", Command_PriorityTask_Disable, 1); // Tasks.h
-    #endif // if FEATURE_PLUGIN_PRIORITY
-      COMMAND_CASE_R(                "dns", Command_DNS,                  1); // Network Command
-      COMMAND_CASE_R(                "dst", Command_DST,                  1); // Time.h
-      break;
-    }
-    case 'e': {
-    #if FEATURE_ETHERNET
-      COMMAND_CASE_R(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
-      COMMAND_CASE_R(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
-      COMMAND_CASE_R(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
-      COMMAND_CASE_R( "ethpinpower", Command_ETH_Pin_power,  1); // Network Command
-      COMMAND_CASE_R(  "ethphytype", Command_ETH_Phy_Type,   1); // Network Command
-      COMMAND_CASE_R("ethclockmode", Command_ETH_Clock_Mode, 1); // Network Command
-      COMMAND_CASE_R(       "ethip", Command_ETH_IP,         1); // Network Command
-      COMMAND_CASE_R(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
-      COMMAND_CASE_R(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
-      COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
-      COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
-      COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
-    #endif // FEATURE_ETHERNET
-      COMMAND_CASE_R("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
-      COMMAND_CASE_A(       "event", Command_Rules_Events,  -1); // Rule.h
-      COMMAND_CASE_A("executerules", Command_Rules_Execute, -1); // Rule.h
-      break;
-    }
-    case 'g': {
-      COMMAND_CASE_R(   "gateway", Command_Gateway,     1); // Network Command
-      COMMAND_CASE_A(      "gpio", Command_GPIO,        2); // Gpio.h
-      COMMAND_CASE_A("gpiotoggle", Command_GPIO_Toggle, 1); // Gpio.h
-      break;
-    }
-    case 'h': {
-      COMMAND_CASE_R("hiddenssid", Command_Wifi_HiddenSSID, 1); // wifi.h
-      break;
-    }
-    case 'i': {
-      COMMAND_CASE_R("i2cscanner", Command_i2c_Scanner, -1); // i2c.h
-      COMMAND_CASE_A(       "inc", Command_Rules_Inc,   -1); // Rules.h
-      COMMAND_CASE_R(        "ip", Command_IP,           1); // Network Command
-      break;
-    }
-    case 'j': {
-      #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A("jsonportstatus", Command_JSONPortStatus, -1); // Diagnostic.h
-      #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      break;
-    }
-    case 'l': {
-      COMMAND_CASE_A(            "let", Command_Rules_Let,         2); // Rules.h
-      COMMAND_CASE_A(           "load", Command_Settings_Load,     0); // Settings.h
-      COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
-      COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
-      COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
-      COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    5);    // GPIO.h
-      COMMAND_CASE_A(   "longpulse_ms", Command_GPIO_LongPulse_Ms, 5);    // GPIO.h
-    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A(  "logportstatus", Command_logPortStatus,     0); // Diagnostic.h
-      COMMAND_CASE_A(         "lowmem", Command_Lowmem,            0); // Diagnostic.h
-    #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      break;
-    }
-    case 'm': {
+  switch (cmd) {
+    case ESPEasy_cmd_e::accessinfo:                 COMMAND_CASE_A(Command_AccessInfo_Ls,       0); // Network Command
+    case ESPEasy_cmd_e::asyncevent:                 COMMAND_CASE_A(Command_Rules_Async_Events, -1); // Rule.h
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::background:                 COMMAND_CASE_R(Command_Background, 1);          // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+#ifdef USES_C012
+    case ESPEasy_cmd_e::blynkget:                   COMMAND_CASE_A(Command_Blynk_Get, -1);
+#endif // ifdef USES_C012
+#ifdef USES_C015
+    case ESPEasy_cmd_e::blynkset:                   COMMAND_CASE_R(Command_Blynk_Set, -1);
+#endif // ifdef USES_C015
+    case ESPEasy_cmd_e::build:                      COMMAND_CASE_A(Command_Settings_Build, 1);      // Settings.h
+    case ESPEasy_cmd_e::clearaccessblock:           COMMAND_CASE_R(Command_AccessInfo_Clear,   0);  // Network Command
+    case ESPEasy_cmd_e::clearpassword:              COMMAND_CASE_R(Command_Settings_Password_Clear, 1);      // Settings.h
+    case ESPEasy_cmd_e::clearrtcram:                COMMAND_CASE_R(Command_RTC_Clear,          0);           // RTC.h
+#ifdef ESP8266
+    case ESPEasy_cmd_e::clearsdkwifi:               COMMAND_CASE_R(Command_System_Erase_SDK_WiFiconfig,  0); // System.h
+    case ESPEasy_cmd_e::clearwifirfcal:             COMMAND_CASE_R(Command_System_Erase_RFcal,  0);          // System.h
+#endif // ifdef ESP8266
+    case ESPEasy_cmd_e::config:                     COMMAND_CASE_R(Command_Task_RemoteConfig, -1);           // Tasks.h
+    case ESPEasy_cmd_e::controllerdisable:          COMMAND_CASE_R(Command_Controller_Disable, 1);           // Controller.h
+    case ESPEasy_cmd_e::controllerenable:           COMMAND_CASE_R(Command_Controller_Enable,  1);           // Controller.h
+    case ESPEasy_cmd_e::datetime:                   COMMAND_CASE_R(Command_DateTime,             2);         // Time.h
+    case ESPEasy_cmd_e::debug:                      COMMAND_CASE_R(Command_Debug,                1);         // Diagnostic.h
+    case ESPEasy_cmd_e::dec:                        COMMAND_CASE_A(Command_Rules_Dec,           -1);         // Rules.h
+    case ESPEasy_cmd_e::deepsleep:                  COMMAND_CASE_R(Command_System_deepSleep,     1);         // System.h
+    case ESPEasy_cmd_e::delay:                      COMMAND_CASE_R(Command_Delay,                1);         // Timers.h
+#if FEATURE_PLUGIN_PRIORITY
+    case ESPEasy_cmd_e::disableprioritytask:        COMMAND_CASE_R(Command_PriorityTask_Disable, 1);         // Tasks.h
+#endif // if FEATURE_PLUGIN_PRIORITY
+    case ESPEasy_cmd_e::dns:                        COMMAND_CASE_R(Command_DNS,                  1);         // Network Command
+    case ESPEasy_cmd_e::dst:                        COMMAND_CASE_R(Command_DST,                  1);         // Time.h
+#if FEATURE_ETHERNET
+    case ESPEasy_cmd_e::ethphyadr:                  COMMAND_CASE_R(Command_ETH_Phy_Addr,   1);               // Network Command
+    case ESPEasy_cmd_e::ethpinmdc:                  COMMAND_CASE_R(Command_ETH_Pin_mdc,    1);               // Network Command
+    case ESPEasy_cmd_e::ethpinmdio:                 COMMAND_CASE_R(Command_ETH_Pin_mdio,   1);               // Network Command
+    case ESPEasy_cmd_e::ethpinpower:                COMMAND_CASE_R(Command_ETH_Pin_power,  1);               // Network Command
+    case ESPEasy_cmd_e::ethphytype:                 COMMAND_CASE_R(Command_ETH_Phy_Type,   1);               // Network Command
+    case ESPEasy_cmd_e::ethclockmode:               COMMAND_CASE_R(Command_ETH_Clock_Mode, 1);               // Network Command
+    case ESPEasy_cmd_e::ethip:                      COMMAND_CASE_R(Command_ETH_IP,         1);               // Network Command
+    case ESPEasy_cmd_e::ethgateway:                 COMMAND_CASE_R(Command_ETH_Gateway,    1);               // Network Command
+    case ESPEasy_cmd_e::ethsubnet:                  COMMAND_CASE_R(Command_ETH_Subnet,     1);               // Network Command
+    case ESPEasy_cmd_e::ethdns:                     COMMAND_CASE_R(Command_ETH_DNS,        1);               // Network Command
+    case ESPEasy_cmd_e::ethdisconnect:              COMMAND_CASE_A(Command_ETH_Disconnect, 0);               // Network Command
+    case ESPEasy_cmd_e::ethwifimode:                COMMAND_CASE_R(Command_ETH_Wifi_Mode,  1);               // Network Command
+#endif // FEATURE_ETHERNET
+    case ESPEasy_cmd_e::erasesdkwifi:               COMMAND_CASE_R(Command_WiFi_Erase,     0);               // WiFi.h
+    case ESPEasy_cmd_e::event:                      COMMAND_CASE_A(Command_Rules_Events,  -1);               // Rule.h
+    case ESPEasy_cmd_e::executerules:               COMMAND_CASE_A(Command_Rules_Execute, -1);               // Rule.h
+    case ESPEasy_cmd_e::gateway:                    COMMAND_CASE_R(Command_Gateway,     1);                  // Network Command
+    case ESPEasy_cmd_e::gpio:                       COMMAND_CASE_A(Command_GPIO,        2);                  // Gpio.h
+    case ESPEasy_cmd_e::gpiotoggle:                 COMMAND_CASE_A(Command_GPIO_Toggle, 1);                  // Gpio.h
+    case ESPEasy_cmd_e::hiddenssid:                 COMMAND_CASE_R(Command_Wifi_HiddenSSID, 1);              // wifi.h
+    case ESPEasy_cmd_e::i2cscanner:                 COMMAND_CASE_R(Command_i2c_Scanner, -1);                 // i2c.h
+    case ESPEasy_cmd_e::inc:                        COMMAND_CASE_A(Command_Rules_Inc,   -1);                 // Rules.h
+    case ESPEasy_cmd_e::ip:                         COMMAND_CASE_R(Command_IP,           1);                 // Network Command
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::jsonportstatus:             COMMAND_CASE_A(Command_JSONPortStatus, -1);              // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::let:                        COMMAND_CASE_A(Command_Rules_Let,         2);            // Rules.h
+    case ESPEasy_cmd_e::load:                       COMMAND_CASE_A(Command_Settings_Load,     0);            // Settings.h
+    case ESPEasy_cmd_e::logentry:                   COMMAND_CASE_A(Command_logentry,         -1);            // Diagnostic.h
+    case ESPEasy_cmd_e::looptimerset:               COMMAND_CASE_A(Command_Loop_Timer_Set,    3);            // Timers.h
+    case ESPEasy_cmd_e::looptimerset_ms:            COMMAND_CASE_A(Command_Loop_Timer_Set_ms, 3);            // Timers.h
+    case ESPEasy_cmd_e::longpulse:                  COMMAND_CASE_A(Command_GPIO_LongPulse,    5);            // GPIO.h
+    case ESPEasy_cmd_e::longpulse_ms:               COMMAND_CASE_A(Command_GPIO_LongPulse_Ms, 5);            // GPIO.h
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::logportstatus:              COMMAND_CASE_A(Command_logPortStatus,     0);            // Diagnostic.h
+    case ESPEasy_cmd_e::lowmem:                     COMMAND_CASE_A(Command_Lowmem,            0);            // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 #ifdef USES_P009
-      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
-        COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
-        COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
-        COMMAND_CASE_A( "mcpgpiopattern", Command_GPIO_McpGPIOPattern, -1); // Gpio.h
-        COMMAND_CASE_A(  "mcpgpiotoggle", Command_GPIO_Toggle,       1); // Gpio.h
-      } else if (data.cmd_lc[1] == 'c') {
-        COMMAND_CASE_A(   "mcplongpulse", Command_GPIO_LongPulse,    3); // GPIO.h
-        COMMAND_CASE_A("mcplongpulse_ms", Command_GPIO_LongPulse_Ms, 3); // GPIO.h
-        COMMAND_CASE_A(        "mcpmode", Command_GPIO_Mode,         2); // Gpio.h   
-        COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_ModeRange,    3); // Gpio.h   
-        COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
-      }
-#endif
-      COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
-      COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
-    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A(          "malloc", Command_Malloc,         1);        // Diagnostic.h
-      COMMAND_CASE_A(         "meminfo", Command_MemInfo,        0);        // Diagnostic.h
-      COMMAND_CASE_A(   "meminfodetail", Command_MemInfo_detail, 0);        // Diagnostic.h
-    #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-
-      break;
-    }
-    case 'n': {
-      COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
-      COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
+    case ESPEasy_cmd_e::mcpgpio:                    COMMAND_CASE_A(Command_GPIO,              2);            // Gpio.h
+    case ESPEasy_cmd_e::mcpgpiorange:               COMMAND_CASE_A(Command_GPIO_McpGPIORange, -1);           // Gpio.h
+    case ESPEasy_cmd_e::mcpgpiopattern:             COMMAND_CASE_A(Command_GPIO_McpGPIOPattern, -1);         // Gpio.h
+    case ESPEasy_cmd_e::mcpgpiotoggle:              COMMAND_CASE_A(Command_GPIO_Toggle,       1);            // Gpio.h
+    case ESPEasy_cmd_e::mcplongpulse:               COMMAND_CASE_A(Command_GPIO_LongPulse,    3);            // GPIO.h
+    case ESPEasy_cmd_e::mcplongpulse_ms:            COMMAND_CASE_A(Command_GPIO_LongPulse_Ms, 3);            // GPIO.h
+    case ESPEasy_cmd_e::mcpmode:                    COMMAND_CASE_A(Command_GPIO_Mode,         2);            // Gpio.h
+    case ESPEasy_cmd_e::mcpmoderange:               COMMAND_CASE_A(Command_GPIO_ModeRange,    3);            // Gpio.h
+    case ESPEasy_cmd_e::mcppulse:                   COMMAND_CASE_A(Command_GPIO_Pulse,        3);            // GPIO.h
+#endif // ifdef USES_P009
+    case ESPEasy_cmd_e::monitor:                    COMMAND_CASE_A(Command_GPIO_Monitor,      2);            // GPIO.h
+    case ESPEasy_cmd_e::monitorrange:               COMMAND_CASE_A(Command_GPIO_MonitorRange, 3);            // GPIO.h
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::malloc:                     COMMAND_CASE_A(Command_Malloc,         1);               // Diagnostic.h
+    case ESPEasy_cmd_e::meminfo:                    COMMAND_CASE_A(Command_MemInfo,        0);               // Diagnostic.h
+    case ESPEasy_cmd_e::meminfodetail:              COMMAND_CASE_A(Command_MemInfo_detail, 0);               // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::name:                       COMMAND_CASE_R(Command_Settings_Name,        1);         // Settings.h
+    case ESPEasy_cmd_e::nosleep:                    COMMAND_CASE_R(Command_System_NoSleep,       1);         // System.h
 #if FEATURE_NOTIFIER
-      COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
-#endif
-      COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
-      break;
-    }
-    case 'p': {
+    case ESPEasy_cmd_e::notify:                     COMMAND_CASE_R(Command_Notifications_Notify, 2);         // Notifications.h
+#endif // if FEATURE_NOTIFIER
+    case ESPEasy_cmd_e::ntphost:                    COMMAND_CASE_R(Command_NTPHost,              1);         // Time.h
 #ifdef USES_P019
-      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
-        COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
-        COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
-        COMMAND_CASE_A( "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
-        COMMAND_CASE_A(  "pcfgpiotoggle", Command_GPIO_Toggle,          1); // Gpio.h
-      } else if (data.cmd_lc[1] == 'c') {
-        COMMAND_CASE_A(   "pcflongpulse", Command_GPIO_LongPulse,       3); // GPIO.h
-        COMMAND_CASE_A("pcflongpulse_ms", Command_GPIO_LongPulse_Ms,    3); // GPIO.h
-        COMMAND_CASE_A(        "pcfmode", Command_GPIO_Mode,            2); // Gpio.h   
-        COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_ModeRange,       3); // Gpio.h   ************
-        COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
-      }
-#endif
-      COMMAND_CASE_R(  "password", Command_Settings_Password, 1); // Settings.h
-      #if FEATURE_POST_TO_HTTP
-      COMMAND_CASE_A("posttohttp", Command_HTTP_PostToHTTP,  -1); // HTTP.h
-      #endif // if FEATURE_POST_TO_HTTP
+    case ESPEasy_cmd_e::pcfgpio:                    COMMAND_CASE_A(Command_GPIO,                 2);         // Gpio.h
+    case ESPEasy_cmd_e::pcfgpiorange:               COMMAND_CASE_A(Command_GPIO_PcfGPIORange,   -1);         // Gpio.h
+    case ESPEasy_cmd_e::pcfgpiopattern:             COMMAND_CASE_A(Command_GPIO_PcfGPIOPattern, -1);         // Gpio.h
+    case ESPEasy_cmd_e::pcfgpiotoggle:              COMMAND_CASE_A(Command_GPIO_Toggle,          1);         // Gpio.h
+    case ESPEasy_cmd_e::pcflongpulse:               COMMAND_CASE_A(Command_GPIO_LongPulse,       3);         // GPIO.h
+    case ESPEasy_cmd_e::pcflongpulse_ms:            COMMAND_CASE_A(Command_GPIO_LongPulse_Ms,    3);         // GPIO.h
+    case ESPEasy_cmd_e::pcfmode:                    COMMAND_CASE_A(Command_GPIO_Mode,            2);         // Gpio.h
+    case ESPEasy_cmd_e::pcfmoderange:               COMMAND_CASE_A(Command_GPIO_ModeRange,       3);         // Gpio.h   ************
+    case ESPEasy_cmd_e::pcfpulse:                   COMMAND_CASE_A(Command_GPIO_Pulse,           3);         // GPIO.h
+#endif // ifdef USES_P019
+    case ESPEasy_cmd_e::password:                   COMMAND_CASE_R(Command_Settings_Password, 1);            // Settings.h
+#if FEATURE_POST_TO_HTTP
+    case ESPEasy_cmd_e::posttohttp:                 COMMAND_CASE_A(Command_HTTP_PostToHTTP,  -1);            // HTTP.h
+#endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
-      COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
-      COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
-      #if FEATURE_NOTIFIER
-      COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
-      #endif
-      COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
-      COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
-      COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
-#endif
-      COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
+    case ESPEasy_cmd_e::provision:                  COMMAND_CASE_A(Command_Provisioning_Dispatcher, -1);     // Provisioning.h
+# ifdef PLUGIN_BUILD_MAX_ESP32
+
+    // FIXME DEPRECATED: Fallback for temporary backward compatibility
+    case ESPEasy_cmd_e::provisionconfig:            COMMAND_CASE_A(Command_Provisioning_ConfigFallback,       0); // Provisioning.h
+    case ESPEasy_cmd_e::provisionsecurity:          COMMAND_CASE_A(Command_Provisioning_SecurityFallback,     0); // Provisioning.h
+#  if FEATURE_NOTIFIER
+    case ESPEasy_cmd_e::provisionnotification:      COMMAND_CASE_A(Command_Provisioning_NotificationFallback, 0); // Provisioning.h
+#  endif // if FEATURE_NOTIFIER
+    case ESPEasy_cmd_e::provisionprovision:         COMMAND_CASE_A(Command_Provisioning_ProvisionFallback,    0); // Provisioning.h
+    case ESPEasy_cmd_e::provisionrules:             COMMAND_CASE_A(Command_Provisioning_RulesFallback,        1); // Provisioning.h
+    case ESPEasy_cmd_e::provisionfirmware:          COMMAND_CASE_A(Command_Provisioning_FirmwareFallback,     1); // Provisioning.h
+# endif // ifdef PLUGIN_BUILD_MAX_ESP32
+#endif // if FEATURE_CUSTOM_PROVISIONING
+    case ESPEasy_cmd_e::pulse:                      COMMAND_CASE_A(Command_GPIO_Pulse,        3);                 // GPIO.h
 #if FEATURE_MQTT
-      COMMAND_CASE_A( "publish", Command_MQTT_Publish,     -1); // MQTT.h
+    case ESPEasy_cmd_e::publish:                    COMMAND_CASE_A(Command_MQTT_Publish,     -1);                 // MQTT.h
 #endif // if FEATURE_MQTT
-      #if FEATURE_PUT_TO_HTTP
-      COMMAND_CASE_A("puttohttp", Command_HTTP_PutToHTTP,  -1); // HTTP.h
-      #endif // if FEATURE_PUT_TO_HTTP
-      COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
-      break;
-    }
-    case 'r': {
-      COMMAND_CASE_A(                "reboot", Command_System_Reboot,              0); // System.h
-      COMMAND_CASE_R(                 "reset", Command_Settings_Reset,             0); // Settings.h
-      COMMAND_CASE_A("resetflashwritecounter", Command_RTC_resetFlashWriteCounter, 0); // RTC.h
-      COMMAND_CASE_A(               "restart", Command_System_Reboot,              0); // System.h
-      COMMAND_CASE_A(                 "rtttl", Command_GPIO_RTTTL,                -1); // GPIO.h
-      COMMAND_CASE_A(                 "rules", Command_Rules_UseRules,             1); // Rule.h
-      break;
-    }
-    case 's': {
-      COMMAND_CASE_R(           "save", Command_Settings_Save, 0); // Settings.h
-      COMMAND_CASE_A("scheduletaskrun", Command_ScheduleTask_Run, 2); // Tasks.h
+#if FEATURE_PUT_TO_HTTP
+    case ESPEasy_cmd_e::puttohttp:                  COMMAND_CASE_A(Command_HTTP_PutToHTTP,  -1);                  // HTTP.h
+#endif // if FEATURE_PUT_TO_HTTP
+    case ESPEasy_cmd_e::pwm:                        COMMAND_CASE_A(Command_GPIO_PWM,          4);                 // GPIO.h
+    case ESPEasy_cmd_e::reboot:                     COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
+    case ESPEasy_cmd_e::reset:                      COMMAND_CASE_R(Command_Settings_Reset,             0);        // Settings.h
+    case ESPEasy_cmd_e::resetflashwritecounter:     COMMAND_CASE_A(Command_RTC_resetFlashWriteCounter, 0);        // RTC.h
+    case ESPEasy_cmd_e::restart:                    COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
+    case ESPEasy_cmd_e::rtttl:                      COMMAND_CASE_A(Command_GPIO_RTTTL,                -1);        // GPIO.h
+    case ESPEasy_cmd_e::rules:                      COMMAND_CASE_A(Command_Rules_UseRules,             1);        // Rule.h
+    case ESPEasy_cmd_e::save:                       COMMAND_CASE_R(Command_Settings_Save, 0);                     // Settings.h
+    case ESPEasy_cmd_e::scheduletaskrun:            COMMAND_CASE_A(Command_ScheduleTask_Run, 2);                  // Tasks.h
 
-    #if FEATURE_SD
-      COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
-      COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
-    #endif // if FEATURE_SD
+#if FEATURE_SD
+    case ESPEasy_cmd_e::sdcard:                     COMMAND_CASE_R(Command_SD_LS,         0);                     // SDCARDS.h
+    case ESPEasy_cmd_e::sdremove:                   COMMAND_CASE_R(Command_SD_Remove,     1);                     // SDCARDS.h
+#endif // if FEATURE_SD
 
-      if (data.cmd_lc[1] == 'e') {
-      #if FEATURE_ESPEASY_P2P
-        COMMAND_CASE_A(    "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr
-                                                                  // of
-                                                                  // arguments?
-      #endif
-        #if FEATURE_SEND_TO_HTTP
-        COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
-        #endif // FEATURE_SEND_TO_HTTP
-        COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
-    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-        COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
-    #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-        COMMAND_CASE_R(   "settings", Command_Settings_Print, 0); // Settings.h
-        COMMAND_CASE_A(      "servo", Command_Servo,          3); // Servo.h
-      }
-      COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
-      COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
-    #if FEATURE_MQTT
-      COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
-    #endif // if FEATURE_MQTT
-    #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      COMMAND_CASE_A(  "sysload", Command_SysLoad,        0);     // Diagnostic.h
-    #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-      break;
-    }
-    case 't': {
-      if (data.cmd_lc[1] == 'a') {
-        COMMAND_CASE_R(   "taskclear", Command_Task_Clear,    1);             // Tasks.h
-        COMMAND_CASE_R("taskclearall", Command_Task_ClearAll, 0);             // Tasks.h
-        COMMAND_CASE_R( "taskdisable", Command_Task_Disable,  1);             // Tasks.h
-        COMMAND_CASE_R(  "taskenable", Command_Task_Enable,   1);             // Tasks.h
-        COMMAND_CASE_A(           "taskrun", Command_Task_Run,            1); // Tasks.h
-        COMMAND_CASE_A(         "taskrunat", Command_Task_Run,            2); // Tasks.h
-        COMMAND_CASE_A(      "taskvalueset", Command_Task_ValueSet,       3); // Tasks.h
-        COMMAND_CASE_A(   "taskvaluetoggle", Command_Task_ValueToggle,    2); // Tasks.h
-        COMMAND_CASE_A("taskvaluesetandrun", Command_Task_ValueSetAndRun, 3); // Tasks.h
-      } else if (data.cmd_lc[1] == 'i') {
-        COMMAND_CASE_A( "timerpause", Command_Timer_Pause,  1);               // Timers.h
-        COMMAND_CASE_A("timerresume", Command_Timer_Resume, 1);               // Timers.h
-        COMMAND_CASE_A(   "timerset", Command_Timer_Set,    2);               // Timers.h
-        COMMAND_CASE_A("timerset_ms", Command_Timer_Set_ms, 2); // Timers.h
-        COMMAND_CASE_R("timezone", Command_TimeZone, 1);                      // Time.h
-      }
-      COMMAND_CASE_A(      "tone", Command_GPIO_Tone, 3); // GPIO.h
-      break;
-    }
-    case 'u': {
-      COMMAND_CASE_R("udpport", Command_UDP_Port,      1);    // UDP.h
-    #if FEATURE_ESPEASY_P2P
-      COMMAND_CASE_R("udptest", Command_UDP_Test,      2);    // UDP.h
-    #endif
-      COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1);    // Settings.h
-      COMMAND_CASE_A("unmonitor", Command_GPIO_UnMonitor, 2); // GPIO.h
-      COMMAND_CASE_A("unmonitorrange", Command_GPIO_UnMonitorRange, 3); // GPIO.h
-      COMMAND_CASE_R("usentp", Command_useNTP, 1);            // Time.h
-      break;
-    }
-    case 'w': {
-      #ifndef LIMIT_BUILD_SIZE
-      COMMAND_CASE_R("wdconfig", Command_WD_Config, 3);               // WD.h
-      COMMAND_CASE_R(  "wdread", Command_WD_Read,   2);               // WD.h
-      #endif
+#if FEATURE_ESPEASY_P2P
 
-      if (data.cmd_lc[1] == 'i') {
-        COMMAND_CASE_R(   "wifiallowap", Command_Wifi_AllowAP,    0); // WiFi.h
-        COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
-        COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
-        COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
-        COMMAND_CASE_R(       "wifikey", Command_Wifi_Key,        1); // WiFi.h
-        COMMAND_CASE_R(      "wifikey2", Command_Wifi_Key2,       1); // WiFi.h
-        COMMAND_CASE_R(      "wifimode", Command_Wifi_Mode,       1); // WiFi.h
-        COMMAND_CASE_R(      "wifiscan", Command_Wifi_Scan,       0); // WiFi.h
-        COMMAND_CASE_R(      "wifissid", Command_Wifi_SSID,       1); // WiFi.h
-        COMMAND_CASE_R(     "wifissid2", Command_Wifi_SSID2,      1); // WiFi.h
-        COMMAND_CASE_R(   "wifistamode", Command_Wifi_STAMode,    0); // WiFi.h
-      }
-      break;
-    }
-    default:
-      break;
+    // FIXME TD-er: These send commands, can we determine the nr of arguments?
+    case ESPEasy_cmd_e::sendto:                     COMMAND_CASE_A(Command_UPD_SendTo,      2);      // UDP.h
+#endif // if FEATURE_ESPEASY_P2P
+#if FEATURE_SEND_TO_HTTP
+    case ESPEasy_cmd_e::sendtohttp:                 COMMAND_CASE_A(Command_HTTP_SendToHTTP, 3);      // HTTP.h
+#endif // FEATURE_SEND_TO_HTTP
+    case ESPEasy_cmd_e::sendtoudp:                  COMMAND_CASE_A(Command_UDP_SendToUPD,   3);      // UDP.h
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::serialfloat:                COMMAND_CASE_R(Command_SerialFloat,    0);       // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::settings:                   COMMAND_CASE_R(Command_Settings_Print, 0);       // Settings.h
+#if FEATURE_SERVO
+    case ESPEasy_cmd_e::servo:                      COMMAND_CASE_A(Command_Servo,          3);       // Servo.h
+#endif // if FEATURE_SERVO
+
+    case ESPEasy_cmd_e::status:                     COMMAND_CASE_A(Command_GPIO_Status,          2); // GPIO.h
+    case ESPEasy_cmd_e::subnet:                     COMMAND_CASE_R(Command_Subnet, 1);               // Network Command
+#if FEATURE_MQTT
+    case ESPEasy_cmd_e::subscribe:                  COMMAND_CASE_A(Command_MQTT_Subscribe, 1);       // MQTT.h
+#endif // if FEATURE_MQTT
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::sysload:                    COMMAND_CASE_A(Command_SysLoad,        0);       // Diagnostic.h
+#endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    case ESPEasy_cmd_e::taskclear:                  COMMAND_CASE_R(Command_Task_Clear,    1);        // Tasks.h
+    case ESPEasy_cmd_e::taskclearall:               COMMAND_CASE_R(Command_Task_ClearAll, 0);        // Tasks.h
+    case ESPEasy_cmd_e::taskdisable:                COMMAND_CASE_R(Command_Task_Disable,  1);        // Tasks.h
+    case ESPEasy_cmd_e::taskenable:                 COMMAND_CASE_R(Command_Task_Enable,   1);        // Tasks.h
+    case ESPEasy_cmd_e::taskrun:                    COMMAND_CASE_A(Command_Task_Run,            1);  // Tasks.h
+    case ESPEasy_cmd_e::taskrunat:                  COMMAND_CASE_A(Command_Task_Run,            2);  // Tasks.h
+    case ESPEasy_cmd_e::taskvalueset:               COMMAND_CASE_A(Command_Task_ValueSet,       3);  // Tasks.h
+    case ESPEasy_cmd_e::taskvaluetoggle:            COMMAND_CASE_A(Command_Task_ValueToggle,    2);  // Tasks.h
+    case ESPEasy_cmd_e::taskvaluesetandrun:         COMMAND_CASE_A(Command_Task_ValueSetAndRun, 3);  // Tasks.h
+    case ESPEasy_cmd_e::timerpause:                 COMMAND_CASE_A(Command_Timer_Pause,  1);         // Timers.h
+    case ESPEasy_cmd_e::timerresume:                COMMAND_CASE_A(Command_Timer_Resume, 1);         // Timers.h
+    case ESPEasy_cmd_e::timerset:                   COMMAND_CASE_A(Command_Timer_Set,    2);         // Timers.h
+    case ESPEasy_cmd_e::timerset_ms:                COMMAND_CASE_A(Command_Timer_Set_ms, 2);         // Timers.h
+    case ESPEasy_cmd_e::timezone:                   COMMAND_CASE_R(Command_TimeZone, 1);             // Time.h
+    case ESPEasy_cmd_e::tone:                       COMMAND_CASE_A(Command_GPIO_Tone, 3);            // GPIO.h
+    case ESPEasy_cmd_e::udpport:                    COMMAND_CASE_R(Command_UDP_Port,      1);        // UDP.h
+#if FEATURE_ESPEASY_P2P
+    case ESPEasy_cmd_e::udptest:                    COMMAND_CASE_R(Command_UDP_Test,      2);        // UDP.h
+#endif // if FEATURE_ESPEASY_P2P
+    case ESPEasy_cmd_e::unit:                       COMMAND_CASE_R(Command_Settings_Unit, 1);        // Settings.h
+    case ESPEasy_cmd_e::unmonitor:                  COMMAND_CASE_A(Command_GPIO_UnMonitor, 2);       // GPIO.h
+    case ESPEasy_cmd_e::unmonitorrange:             COMMAND_CASE_A(Command_GPIO_UnMonitorRange, 3);  // GPIO.h
+    case ESPEasy_cmd_e::usentp:                     COMMAND_CASE_R(Command_useNTP, 1);               // Time.h
+#ifndef LIMIT_BUILD_SIZE
+    case ESPEasy_cmd_e::wdconfig:                   COMMAND_CASE_R(Command_WD_Config, 3);            // WD.h
+    case ESPEasy_cmd_e::wdread:                     COMMAND_CASE_R(Command_WD_Read,   2);            // WD.h
+#endif // ifndef LIMIT_BUILD_SIZE
+
+    case ESPEasy_cmd_e::wifiallowap:                COMMAND_CASE_R(Command_Wifi_AllowAP,    0);      // WiFi.h
+    case ESPEasy_cmd_e::wifiapmode:                 COMMAND_CASE_R(Command_Wifi_APMode,     0);      // WiFi.h
+    case ESPEasy_cmd_e::wificonnect:                COMMAND_CASE_A(Command_Wifi_Connect,    0);      // WiFi.h
+    case ESPEasy_cmd_e::wifidisconnect:             COMMAND_CASE_A(Command_Wifi_Disconnect, 0);      // WiFi.h
+    case ESPEasy_cmd_e::wifikey:                    COMMAND_CASE_R(Command_Wifi_Key,        1);      // WiFi.h
+    case ESPEasy_cmd_e::wifikey2:                   COMMAND_CASE_R(Command_Wifi_Key2,       1);      // WiFi.h
+    case ESPEasy_cmd_e::wifimode:                   COMMAND_CASE_R(Command_Wifi_Mode,       1);      // WiFi.h
+    case ESPEasy_cmd_e::wifiscan:                   COMMAND_CASE_R(Command_Wifi_Scan,       0);      // WiFi.h
+    case ESPEasy_cmd_e::wifissid:                   COMMAND_CASE_R(Command_Wifi_SSID,       1);      // WiFi.h
+    case ESPEasy_cmd_e::wifissid2:                  COMMAND_CASE_R(Command_Wifi_SSID2,      1);      // WiFi.h
+    case ESPEasy_cmd_e::wifistamode:                COMMAND_CASE_R(Command_Wifi_STAMode,    0);      // WiFi.h
+
+
+    case ESPEasy_cmd_e::NotMatched:
+      return false;
+
+      // Do not add default: here
+      // The compiler will then warn when a command is not included
   }
 
   #undef COMMAND_CASE_R
   #undef COMMAND_CASE_A
-  return false;
-}
-
-// Execute command which may be plugin or internal commands
-bool ExecuteCommand_all(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, false);
-}
-
-bool ExecuteCommand_all_config(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, true, true);
-}
-
-bool ExecuteCommand_plugin_config(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, true);
-}
-
-bool ExecuteCommand_all_config_eventOnly(EventValueSource::Enum source, const char *Line)
-{
-  bool tryInternal = false;
-  {
-    String cmd;
-
-    if (GetArgv(Line, cmd, 1)) {
-      tryInternal = cmd.equalsIgnoreCase(F("event"));
-    }
-  }
-
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, tryInternal, true);
-}
-
-bool ExecuteCommand_internal(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, false, true, false);
-}
-
-bool ExecuteCommand_plugin(EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(INVALID_TASK_INDEX, source, Line, true, false, false);
-}
-
-bool ExecuteCommand_plugin(taskIndex_t taskIndex, EventValueSource::Enum source, const char *Line)
-{
-  return ExecuteCommand(taskIndex, source, Line, true, false, false);
-}
-
-bool ExecuteCommand(taskIndex_t            taskIndex,
-                    EventValueSource::Enum source,
-                    const char            *Line,
-                    bool                   tryPlugin,
-                    bool                   tryInternal,
-                    bool                   tryRemoteConfig)
-{
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("ExecuteCommand"));
-  #endif
-  String cmd;
-
-  // We first try internal commands, which should not have a taskIndex set.
-  struct EventStruct TempEvent;
-
-  if (!GetArgv(Line, cmd, 1)) {
-    SendStatus(&TempEvent, return_command_failed());
-    return false;
-  }
-
-  if (tryInternal) {
-    // Small optimization for events, which happen frequently
-    // FIXME TD-er: Make quick check to see if a command is an internal command, so we don't need to try all
-    if (cmd.equalsIgnoreCase(F("event"))) {
-      tryPlugin       = false;
-      tryRemoteConfig = false;
-    }
-  }
-
-  TempEvent.Source = source;
-
-  String action(Line);
-  action = parseTemplate(action); // parseTemplate before executing the command
-
-  // Split the arguments into Par1...5 of the event.
-  // Do not split it in executeInternalCommand, since that one will be called from the scheduler with pre-set events.
-  // FIXME TD-er: Why call this for all commands? The CalculateParam function is quite heavy.
-  parseCommandString(&TempEvent, action);
-
-  // FIXME TD-er: This part seems a bit strange.
-  // It can't schedule a call to PLUGIN_WRITE.
-  // Maybe ExecuteCommand can be scheduled?
-  delay(0);
-
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    {
-      addLogMove(LOG_LEVEL_DEBUG, concat(F("Command: "), cmd));
-    }
-    addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    addLogMove(LOG_LEVEL_DEBUG, strformat(
-        F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
-        TempEvent.Par1,
-        TempEvent.Par2,
-        TempEvent.Par3,
-        TempEvent.Par4,
-        TempEvent.Par5));
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
-
-  if (tryInternal) {
-    command_case_data data(cmd.c_str(), &TempEvent, action.c_str());
-    bool   handled = executeInternalCommand(data);
-
-    if (data.status.length() > 0) {
-      delay(0);
-      SendStatus(&TempEvent, data.status);
-      delay(0);
-    }
-
-    if (handled) {
-//      addLog(LOG_LEVEL_INFO, F("executeInternalCommand accepted"));
-      return true;
-    }
-  }
-
-  // When trying a task command, set the task index, even if it is not a valid task index.
-  // For example commands from elsewhere may not have a proper task index.
-  TempEvent.setTaskIndex(taskIndex);
-  checkDeviceVTypeForTask(&TempEvent);
-
-  if (tryPlugin) {
-    // Use a tmp string to call PLUGIN_WRITE, since PluginCall may inadvertenly
-    // alter the string.
-    String tmpAction(action);
-    bool   handled = PluginCall(PLUGIN_WRITE, &TempEvent, tmpAction);
-//    if (handled) addLog(LOG_LEVEL_INFO, F("PLUGIN_WRITE accepted"));
-    
-    #ifndef BUILD_NO_DEBUG
-    if (!tmpAction.equals(action)) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("PLUGIN_WRITE altered the string: ");
-        log += action;
-        log += F(" to: ");
-        log += tmpAction;
-        addLogMove(LOG_LEVEL_ERROR, log);
-      }
-    }
-    #endif
-
-    if (!handled) {
-      // Try a controller
-      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
-//      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
-    }
-
-    if (handled) {
-      SendStatus(&TempEvent, return_command_success());
-      return true;
-    }
-  }
-
-  if (tryRemoteConfig) {
-    if (remoteConfig(&TempEvent, action)) {
-      SendStatus(&TempEvent, return_command_success());
-//      addLog(LOG_LEVEL_INFO, F("remoteConfig accepted"));
-
-      return true;
-    }
-  }
-  const String errorUnknown = concat(F("Command unknown: "), action);
-  addLog(LOG_LEVEL_INFO, errorUnknown);
-  SendStatus(&TempEvent, errorUnknown);
-  delay(0);
-  return false;
+  return _data.retval;
 }

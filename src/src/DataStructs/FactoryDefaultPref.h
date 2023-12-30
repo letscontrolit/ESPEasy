@@ -7,31 +7,46 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef ESP32
+# include "../Helpers/ESPEasy_NVS_Helper.h"
+#endif // ifdef ESP32
+
 struct ResetFactoryDefaultPreference_struct {
-  ResetFactoryDefaultPreference_struct(uint32_t preference = 0)  : _preference(preference) {}
+  ResetFactoryDefaultPreference_struct();
+  ResetFactoryDefaultPreference_struct(uint32_t preference);
+
+  void set(uint32_t preference);
+
+#ifdef ESP32
+  bool init();
+  bool from_NVS(ESPEasy_NVS_Helper& preferences);
+
+  void to_NVS(ESPEasy_NVS_Helper& preferences) const;
+#endif // ifdef ESP32
 
 private:
 
   union {
     struct {
-      uint32_t deviceModel          : 8;
-      uint32_t unused_bit8          : 1;
-      uint32_t keepWiFi             : 1;
-      uint32_t keepNTP              : 1;
-      uint32_t keepNetwork          : 1;
-      uint32_t keepLogSettings      : 1;
-      uint32_t keepUnitName         : 1;
-      uint32_t fetchRulesFile       : 4;
-      uint32_t fetchNotificationDat : 1;
-      uint32_t fetchSecurityDat     : 1;
-      uint32_t fetchConfigDat       : 1;
-      uint32_t deleteFirst          : 1;
-      uint32_t saveURL              : 1;
-      uint32_t delete_Bak_Files     : 1;
-      uint32_t storeCredentials     : 1;
-      uint32_t fetchProvisioningDat : 1;
+      uint32_t deviceModel            : 8;
+      uint32_t unused_bit8            : 1;
+      uint32_t keepWiFi               : 1;
+      uint32_t keepNTP                : 1;
+      uint32_t keepNetwork            : 1;
+      uint32_t keepLogConsoleSettings : 1;
+      uint32_t keepUnitName           : 1;
+      uint32_t fetchRulesFile         : 4;
+      uint32_t fetchNotificationDat   : 1;
+      uint32_t fetchSecurityDat       : 1;
+      uint32_t fetchConfigDat         : 1;
+      uint32_t deleteFirst            : 1;
+      uint32_t saveURL                : 1;
+      uint32_t delete_Bak_Files       : 1;
+      uint32_t storeCredentials       : 1;
+      uint32_t fetchProvisioningDat   : 1;
+      uint32_t keepCustomCdnUrl       : 1;
 
-      uint32_t unused : 6;
+      uint32_t unused : 5;
     }        bits;
     uint32_t _preference{};
   };
@@ -70,12 +85,12 @@ public:
     bits.keepNetwork = keep;
   }
 
-  bool keepLogSettings() const  {
-    return bits.keepLogSettings;
+  bool keepLogConsoleSettings() const  {
+    return bits.keepLogConsoleSettings;
   }
 
-  void keepLogSettings(bool keep) {
-    bits.keepLogSettings = keep;
+  void keepLogConsoleSettings(bool keep) {
+    bits.keepLogConsoleSettings = keep;
   }
 
   bool keepUnitName() const  {
@@ -86,12 +101,20 @@ public:
     bits.keepUnitName = keep;
   }
 
+  bool keepCustomCdnUrl() const  {
+    return bits.keepCustomCdnUrl;
+  }
+
+  void keepCustomCdnUrl(bool keep) {
+    bits.keepCustomCdnUrl = keep;
+  }
+
   // filenr = 0...3 for files rules1.txt ... rules4.txt
   bool fetchRulesTXT(int filenr) const {
     return bitRead(bits.fetchRulesFile, filenr);
   }
 
-  void fetchRulesTXT(int  filenr, bool fetch) {
+  void fetchRulesTXT(int filenr, bool fetch) {
     bitWrite(bits.fetchRulesFile, filenr, fetch);
   }
 
@@ -159,7 +182,7 @@ public:
     bits.storeCredentials = checked;
   }
 
-  uint32_t getPreference() {
+  uint32_t getPreference() const {
     return _preference;
   }
 

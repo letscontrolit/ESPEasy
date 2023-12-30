@@ -259,6 +259,17 @@ class OLEDDisplay : public Print {
 
   protected:
 
+#ifdef OLEDDISPLAY_DOUBLE_BUFFER
+    // Get bounding box of changed pixels
+    // @retval True when there have been pixels changed    
+    bool getChangedBoundingBox(
+      uint8_t& minBoundX, 
+      uint8_t& minBoundY, 
+      uint8_t& maxBoundX, 
+      uint8_t& maxBoundY);
+#endif
+
+
     OLEDDISPLAY_TEXT_ALIGNMENT   textAlignment = TEXT_ALIGN_LEFT;
     OLEDDISPLAY_COLOR            color         = WHITE;
 

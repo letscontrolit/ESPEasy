@@ -14,9 +14,15 @@
 // Web Interface handle other requests
 // ********************************************************************************
 void handleNotFound() {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handleNotFound"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (loadFromFS(web_server.uri())) { return; }
 
   if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
     return;
@@ -33,8 +39,6 @@ void handleNotFound() {
 
   if (handle_rules_edit(web_server.uri())) { return; }
 #endif // ifdef WEBSERVER_RULES
-
-  if (loadFromFS(web_server.uri())) { return; }
 
   TXBuffer.startStream(F("text/plain"), F(""), 404);
   addHtml(F("URI: "));

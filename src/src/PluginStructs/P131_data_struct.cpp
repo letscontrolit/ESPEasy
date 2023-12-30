@@ -119,6 +119,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     if (success) {
       gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
+      matrix->begin();
       matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
       matrix->fillScreen(_bgcolor);                             // fill screen with black color
       matrix->show();                                           // Update the display
@@ -236,7 +237,7 @@ void P131_data_struct::initialize_content(struct EventStruct *event,
   content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0;      // Inverted
   content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1; // Add offset once
   opts                   = parseString(strings[x], 3);
-  int speed = 0;
+  int32_t speed = 0;
 
   validIntFromString(opts, speed);
   content[x].speed = speed;
@@ -264,8 +265,8 @@ void P131_data_struct::display_content(struct EventStruct *event,
                                        bool                scrollOnly,
                                        uint8_t             line) {
   if (isInitialized() && (nullptr != gfxHelper)) {
-    int16_t yPos   = 0;
-    bool    useVal = gfxHelper->getValidation();
+    int16_t yPos      = 0;
+    const bool useVal = gfxHelper->getValidation();
     gfxHelper->setValidation(false); // Ignore validation to enable scrolling
 
     uint8_t x     = 0;

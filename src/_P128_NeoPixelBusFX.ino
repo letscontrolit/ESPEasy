@@ -237,10 +237,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P128_CONFIG_MAX_BRIGHT == 0) { P128_CONFIG_MAX_BRIGHT = 255; } // Set to default for existing installations
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT, P128_CONFIG_MAX_BRIGHT));
-      P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = nullptr != P128_data;
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT, P128_CONFIG_MAX_BRIGHT));
       break;
     }
 

@@ -26,9 +26,9 @@ bool P038_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (!isInitialized()) {
-    Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(_maxPixels,
-                                                             _gpioPin,
-                                                             (_stripType == P038_STRIP_TYPE_RGBW ? NEO_GRBW : NEO_GRB) + NEO_KHZ800);
+    Plugin_038_pixels = new (std::nothrow) NeoPixelBus_wrapper(_maxPixels,
+                                                               _gpioPin,
+                                                               (_stripType == P038_STRIP_TYPE_RGBW ? NEO_GRBW : NEO_GRB) + NEO_KHZ800);
 
     if (Plugin_038_pixels != nullptr) {
       Plugin_038_pixels->begin();                                          // This initializes the NeoPixel library.
@@ -110,8 +110,8 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       }
     } else
 
-    if (equals(cmd, F("neopixelline"))) {                      // NeoPixelLine
-      int brightness = 0;
+    if (equals(cmd, F("neopixelline"))) {                     // NeoPixelLine
+      int32_t brightness = 0;
       validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
 
       for (int i = event->Par1 - 1; i < event->Par2; i++) {

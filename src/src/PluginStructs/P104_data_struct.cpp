@@ -174,8 +174,7 @@ void P104_data_struct::loadSettings() {
     uint8_t zoneIndex = 0;
 
     {
-      String buffer;
-      buffer = String(settingsBuffer);
+      String buffer(settingsBuffer);
       # ifdef P104_DEBUG_DEV
 
       String log;
@@ -201,7 +200,7 @@ void P104_data_struct::loadSettings() {
 
       String   tmp;
       String   fld;
-      int      tmp_int;
+      int32_t  tmp_int;
       uint16_t prev2   = 0;
       int16_t  offset2 = buffer.indexOf(P104_ZONE_SEP);
 
@@ -694,7 +693,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
       if (datapart.isEmpty()) {
         barGraphs[currentBar].direction = 0;
       } else {
-        int value = 0;
+        int32_t value = 0;
         validIntFromString(datapart, value);
         barGraphs[currentBar].direction = value;
       }
@@ -703,7 +702,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
       if (datapart.isEmpty()) {
         barGraphs[currentBar].barType = 0;
       } else {
-        int value = 0;
+        int32_t value = 0;
         validIntFromString(datapart, value);
         barGraphs[currentBar].barType = value;
       }
@@ -850,8 +849,8 @@ void P104_data_struct::displayDots(uint8_t                 zone,
   if ((nullptr == P) || (nullptr == pM) || dots.isEmpty()) { return; }
   {
     uint8_t idx = 0;
-    int     row;
-    int     col;
+    int32_t row;
+    int32_t col;
     String  sRow;
     String  sCol;
     String  sOn_off;
@@ -985,10 +984,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   if ((nullptr != P) && equals(command, F("dotmatrix"))) { // main command: dotmatrix
     const String sub = parseString(string, 2);
 
-    int zoneIndex;
+    int32_t zoneIndex{};
     const String string4 = parseStringKeepCaseNoTrim(string, 4);
     # ifdef P104_USE_COMMANDS
-    int value4;
+    int32_t value4{};
     validIntFromString(string4, value4);
     # endif // ifdef P104_USE_COMMANDS
 
@@ -1575,7 +1574,6 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
  **************************************/
 bool P104_data_struct::saveSettings() {
   error = String(); // Clear
-  String zbuffer;
 
   # ifdef P104_DEBUG_DEV
 
@@ -1593,7 +1591,7 @@ bool P104_data_struct::saveSettings() {
 
   for (uint8_t zCounter = 0; zCounter < expectedZones; zCounter++) {
     # ifdef P104_USE_ZONE_ACTIONS
-    action = getFormItemInt(getPluginCustomArgName(index + P104_OFFSET_ACTION));
+    action = getFormItemIntCustomArgName(index + P104_OFFSET_ACTION);
 
     if (((action == P104_ACTION_ADD_ABOVE) && (zoneOrder == 0)) ||
         ((action == P104_ACTION_ADD_BELOW) && (zoneOrder == 1))) {
@@ -1684,41 +1682,27 @@ bool P104_data_struct::saveSettings() {
   saveOffset += sizeof(bufferSize);
   # endif // if P104_FEATURE_STORAGE_V3
 
+  String zbuffer;
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
-      zbuffer.clear();
-
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-      zbuffer += it->size;                          // 2
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += it->text;                          // 2 + ~15
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->content);       // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->alignment);     // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->animationIn);   // 2
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->speed);         // 5
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->animationOut);  // 2
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->pause);         // 5
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->font);          // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->layout);        // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->specialEffect); // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->offset);        // 2
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->brightness);    // 2
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->repeatDelay);   // 4
-      zbuffer += P104_FIELD_SEP;                    // 1
-      zbuffer += toStringNoZero(it->inverted);      // 1
-      zbuffer += P104_FIELD_SEP;                    // 1
+      zbuffer = strformat(
+        F("%u\x01%s\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%d\x01%d\x01%d\x01"),
+        it->size,          // 2
+        it->text.c_str(),  // 2 + ~15
+        it->content,       // 1
+        it->alignment,     // 1
+        it->animationIn,   // 2
+        it->speed,         // 5
+        it->animationOut,  // 2
+        it->pause,         // 5
+        it->font,          // 1
+        it->layout,        // 1
+        it->specialEffect, // 1
+        it->offset,        // 2
+        it->brightness,    // 2
+        it->repeatDelay,   // 4
+        it->inverted);     // 1
 
       // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
       // stored with the length prefixed
@@ -1773,7 +1757,7 @@ bool P104_data_struct::saveSettings() {
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
 
     if (numDevices > 255) {
-      error += strformat(F("More than 255 modules configured (%d)\n"), numDevices);
+      error += strformat(F("More than 255 modules configured (%u)\n"), numDevices);
     }
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Can't allocate string for saving settings, insufficient memory!"));
@@ -1799,7 +1783,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Other 3 (DR:0, CR:1, RR:1)"),    // 011
       F("Other 4 (DR:1, CR:0, RR:1)")     // 101
     };
-    const int hardwareOptions[P104_hardwareTypeCount] = {
+    constexpr int hardwareOptions[P104_hardwareTypeCount] = {
       static_cast<int>(MD_MAX72XX::moduleType_t::GENERIC_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::PAROLA_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW),
@@ -1843,7 +1827,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Month Day [Year] (US-style)"),
       F("[Year] Month Day (Japanese-style)")
     };
-    const int dateFormatOptions[] = {
+    constexpr int dateFormatOptions[] = {
       P104_DATE_FORMAT_EU,
       P104_DATE_FORMAT_US,
       P104_DATE_FORMAT_JP
@@ -1860,7 +1844,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Dash -"),
       F("Dot <b>.</b>")
     };
-    const int dateSeparatorOptions[] = {
+    constexpr int dateSeparatorOptions[] = {
       P104_DATE_SEPARATOR_SPACE,
       P104_DATE_SEPARATOR_SLASH,
       P104_DATE_SEPARATOR_DASH,
@@ -1886,15 +1870,12 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonesOptions[i] = i + 1; // No 0 needed or wanted
     }
     # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    String zonetip;
 
-    if (zonetip.reserve(90)) {
-      zonetip = strformat(F("Select between 1 and %d zones, changing"), P104_MAX_ZONES);
+    const String zonetip = F("Select between 1 and " STRINGIFY(P104_MAX_ZONES) " zones, changing"
       #  ifdef P104_USE_ZONE_ORDERING
-      zonetip += F(" Zones or Zone order");
+      " Zones or Zone order"
       #  endif // ifdef P104_USE_ZONE_ORDERING
-      zonetip += F(" will save and reload the page.");
-    }
+      " will save and reload the page.");
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
     addFormSelector(F("Zones"), F("zonecnt"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
@@ -1934,51 +1915,56 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(textPosition_t::PA_CENTER),
       static_cast<int>(textPosition_t::PA_RIGHT)
     };
-    String    animationTypes[] {
-      F("None")
-      , F("Print")
-      , F("Scroll up")
-      , F("Scroll down")
-      , F("Scroll left *")
-      , F("Scroll right *")
+
+
+
+    // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
+    const __FlashStringHelper * animationTypes[] {
+      F("None (0)")
+      , F("Print (1)")
+      , F("Scroll up (2)")
+      , F("Scroll down (3)")
+      , F("Scroll left * (4)")
+      , F("Scroll right * (5)")
     # if ENA_SPRITE
-      , F("Sprite")
+      , F("Sprite (6)")
     # endif // ENA_SPRITE
     # if ENA_MISC
-      , F("Slice *")
-      , F("Mesh")
-      , F("Fade")
-      , F("Dissolve")
-      , F("Blinds")
-      , F("Random")
+      , F("Slice * (7)")
+      , F("Mesh (8)")
+      , F("Fade (9)")
+      , F("Dissolve (10)")
+      , F("Blinds (11)")
+      , F("Random (12)")
     # endif // ENA_MISC
     # if ENA_WIPE
-      , F("Wipe")
-      , F("Wipe w. cursor")
+      , F("Wipe (13)")
+      , F("Wipe w. cursor (14)")
     # endif // ENA_WIPE
     # if ENA_SCAN
-      , F("Scan horiz.")
-      , F("Scan horiz. cursor")
-      , F("Scan vert.")
-      , F("Scan vert. cursor")
+      , F("Scan horiz. (15)")
+      , F("Scan horiz. cursor (16)")
+      , F("Scan vert. (17)")
+      , F("Scan vert. cursor (18)")
     # endif // ENA_SCAN
     # if ENA_OPNCLS
-      , F("Opening")
-      , F("Opening w. cursor")
-      , F("Closing")
-      , F("Closing w. cursor")
+      , F("Opening (19)")
+      , F("Opening w. cursor (20)")
+      , F("Closing (21)")
+      , F("Closing w. cursor (22)")
     # endif // ENA_OPNCLS
     # if ENA_SCR_DIA
-      , F("Scroll up left *")
-      , F("Scroll up right *")
-      , F("Scroll down left *")
-      , F("Scroll down right *")
+      , F("Scroll up left * (23)")
+      , F("Scroll up right * (24)")
+      , F("Scroll down left * (25)")
+      , F("Scroll down right * (26)")
     # endif // ENA_SCR_DIA
     # if ENA_GROW
-      , F("Grow up")
-      , F("Grow down")
+      , F("Grow up (27)")
+      , F("Grow down (28)")
     # endif // ENA_GROW
     };
+
     const int animationOptions[] = {
       static_cast<int>(textEffect_t::PA_NO_EFFECT)
       , static_cast<int>(textEffect_t::PA_PRINT)
@@ -2025,14 +2011,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # endif // ENA_GROW
     };
 
-    constexpr int animationCount = NR_ELEMENTS(animationTypes);
+    constexpr int animationCount = NR_ELEMENTS(animationOptions);
 
-    // Append the numeric value as a reference for the 'anim.in' and 'anim.out' subcommands
-    for (uint8_t a = 0; a < animationCount; a++) {
-      animationTypes[a] += F(" (");
-      animationTypes[a] += animationOptions[a];
-      animationTypes[a] += ')';
-    }
     delay(0);
 
     const __FlashStringHelper *fontTypes[] = {
@@ -2281,7 +2261,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Font
         addSelector(getPluginCustomArgName(index + P104_OFFSET_FONT),
-                    fontCount,
+                    NR_ELEMENTS(fontOptions),
                     fontTypes,
                     fontOptions,
                     nullptr,
@@ -2296,7 +2276,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Inverted
         addSelector(getPluginCustomArgName(index + P104_OFFSET_INVERTED),
-                    2,
+                    NR_ELEMENTS(invertedOptions),
                     invertedTypes,
                     invertedOptions,
                     nullptr,
@@ -2360,7 +2340,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Layout
         addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
-                    layoutCount,
+                    NR_ELEMENTS(layoutOptions),
                     layoutTypes,
                     layoutOptions,
                     nullptr,
@@ -2375,7 +2355,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Special effects
         addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
-                    specialEffectCount,
+                    NR_ELEMENTS(specialEffectOptions),
                     specialEffectTypes,
                     specialEffectOptions,
                     nullptr,

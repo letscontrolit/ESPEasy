@@ -229,11 +229,11 @@ void  Adafruit_NeoPixel::rp2040Show(uint8_t pin, uint8_t *pixels, uint32_t numBy
 
 #if defined(ESP8266)
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
-extern "C" IRAM_ATTR void espShow(uint8_t pin, uint8_t *pixels,
-                                  uint32_t numBytes, boolean is800KHz);
+extern "C" IRAM_ATTR void espShow(int16_t pin, uint8_t *pixels,
+                                  uint32_t numBytes, uint8_t type);
 #elif defined(ESP32)
-extern "C" void espShow(uint8_t pin, uint8_t *pixels, uint32_t numBytes,
-                        boolean is800KHz);
+extern "C" void espShow(int16_t pin, uint8_t *pixels, uint32_t numBytes,
+                        uint8_t type);
 #endif // ESP8266
 
 #if defined(K210)
@@ -3439,3 +3439,36 @@ void Adafruit_NeoPixel::rainbow(uint16_t first_hue, int8_t reps,
     setPixelColor(i, color);
   }
 }
+
+/*!
+  @brief  Convert pixel color order from string (e.g. "BGR") to NeoPixel
+          color order constant (e.g. NEO_BGR). This may be helpful for code
+          that initializes from text configuration rather than compile-time
+          constants.
+  @param   v  Input string. Should be reasonably sanitized (a 3- or 4-
+              character NUL-terminated string) or undefined behavior may
+              result (output is still a valid NeoPixel order constant, but
+              might not present as expected). Garbage in, garbage out.
+  @return  One of the NeoPixel color order constants (e.g. NEO_BGR).
+           NEO_KHZ400 or NEO_KHZ800 bits are not included, nor needed (all
+           NeoPixels actually support 800 KHz it's been found, and this is
+           the default state if no KHZ bits set).
+  @note    This function is declared static in the class so it can be called
+           without a NeoPixel object (since it's not likely been declared
+           in the code yet). Use Adafruit_NeoPixel::str2order().
+*/
+neoPixelType Adafruit_NeoPixel::str2order(const char *v) {
+  int8_t r = 0, g = 0, b = 0, w = -1;
+  if (v) {
+    char c;
+    for (uint8_t i=0; ((c = tolower(v[i]))); i++) {
+      if (c == 'r') r = i;
+      else if (c == 'g') g = i;
+      else if (c == 'b') b = i;
+      else if (c == 'w') w = i;
+    }
+    r &= 3;
+  }
+  if (w < 0) w = r; // If 'w' not specified, duplicate r bits
+  return (w << 6) | (r << 4) | ((g & 3) << 2) | (b & 3);
+} 

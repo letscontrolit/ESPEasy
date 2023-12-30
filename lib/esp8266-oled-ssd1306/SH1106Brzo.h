@@ -57,33 +57,9 @@ class SH1106Brzo : public OLEDDisplay {
 
     void display(void) {
     #ifdef OLEDDISPLAY_DOUBLE_BUFFER
-       uint8_t minBoundY = ~0;
-       uint8_t maxBoundY = 0;
-
-       uint8_t minBoundX = ~0;
-       uint8_t maxBoundX = 0;
-       uint8_t x, y;
-
-       // Calculate the Y bounding box of changes
-       // and copy buffer[pos] to buffer_back[pos];
-       for (y = 0; y < (DISPLAY_HEIGHT / 8); y++) {
-         for (x = 0; x < DISPLAY_WIDTH; x++) {
-          uint16_t pos = x + y * DISPLAY_WIDTH;
-          if (buffer[pos] != buffer_back[pos]) {
-            minBoundY = _min(minBoundY, y);
-            maxBoundY = _max(maxBoundY, y);
-            minBoundX = _min(minBoundX, x);
-            maxBoundX = _max(maxBoundX, x);
-          }
-          buffer_back[pos] = buffer[pos];
-        }
-        yield();
-       }
-
-       // If the minBoundY wasn't updated
-       // we can savely assume that buffer_back[pos] == buffer[pos]
-       // holdes true for all values of pos
-       if (minBoundY == ~0) return;
+       uint8_t minBoundX, minBoundY, maxBoundX, maxBoundY;
+       if (!getChangedBoundingBox(minBoundX, minBoundY, maxBoundX, maxBoundY))
+         return;
 
        uint8_t k = 0;
        uint8_t sendBuffer[17];
@@ -95,11 +71,11 @@ class SH1106Brzo : public OLEDDisplay {
 
        brzo_i2c_start_transaction(this->_address, BRZO_I2C_SPEED);
 
-       for (y = minBoundY; y <= maxBoundY; y++) {
+       for (uint8_t y = minBoundY; y <= maxBoundY; y++) {
          sendCommand(0xB0 + y);
          sendCommand(minBoundXp2H);
          sendCommand(minBoundXp2L);
-         for (x = minBoundX; x <= maxBoundX; x++) {
+         for (uint8_t x = minBoundX; x <= maxBoundX; x++) {
              k++;
              sendBuffer[k] = buffer[x + y * DISPLAY_WIDTH];
              if (k == 16)  {

@@ -150,6 +150,8 @@ public:
   void setUnit(Tm1621UnitOfMeasure unit);
   void setUnit(Tm1621UnitOfMeasure unit, bool firstrow);
 
+  bool plugin_write(struct EventStruct *event, const String& string);
+
   MonitorTaskValue_t MonitorTaskValues[6] = {};
 
 private:

@@ -13,18 +13,12 @@
 // 1=Comfortable
 // 2=Dry
 // 3=Wet
-String humStatDomoticz(struct EventStruct *event,
+int humStatDomoticz(struct EventStruct *event,
                        uint8_t                rel_index);
 
 int    mapRSSItoDomoticz();
 
 int    mapVccToDomoticz();
-
-// Format including trailing semi colon
-String formatUserVarDomoticz(struct EventStruct *event,
-                             uint8_t                rel_index);
-
-String formatUserVarDomoticz(int value);
 
 String formatDomoticzSensorType(struct EventStruct *event);
 

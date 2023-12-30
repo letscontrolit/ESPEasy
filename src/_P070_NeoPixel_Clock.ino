@@ -7,6 +7,11 @@
 // #################################### Plugin 070: NeoPixel ring clock #######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
+ * 2023-10 tonhuisman: Add changelog.
+ */
+
 
 // A clock that uses a strip/ring of 60 WS2812 NeoPixel LEDs as display for a classic clock.
 // The hours are RED, the minutes are GREEN, the seconds are BLUE and the hour marks are WHITE.
@@ -146,7 +151,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P070_data) && (equals(command, F("clock")))) {
-        int val_Mode;
+        int32_t val_Mode{};
 
         if (validIntFromString(param1, val_Mode)) {
           if ((val_Mode > -1) && (val_Mode < 2)) {
@@ -154,7 +159,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG(0)                 = P070_data->display_enabled;
           }
         }
-        int val_Bright;
+        int32_t val_Bright{};
 
         if (validIntFromString(param2, val_Bright)) {
           if ((val_Bright > -1) && (val_Bright < 256)) {
@@ -162,7 +167,7 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
             PCONFIG(1)            = P070_data->brightness;
           }
         }
-        int val_Marks;
+        int32_t val_Marks{};
 
         if (validIntFromString(param3, val_Marks)) {
           if ((val_Marks > -1) && (val_Marks < 256)) {
@@ -194,9 +199,9 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P070_data) {
-        UserVar[event->BaseVarIndex]     = P070_data->display_enabled;
-        UserVar[event->BaseVarIndex + 1] = P070_data->brightness;
-        UserVar[event->BaseVarIndex + 2] = P070_data->brightness_hour_marks;
+        UserVar.setFloat(event->TaskIndex, 0, P070_data->display_enabled);
+        UserVar.setFloat(event->TaskIndex, 1, P070_data->brightness);
+        UserVar.setFloat(event->TaskIndex, 2, P070_data->brightness_hour_marks);
 
         success = true;
       }
