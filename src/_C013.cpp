@@ -20,7 +20,6 @@
 # define CPLUGIN_ID_013         13
 # define CPLUGIN_NAME_013       "ESPEasy P2P Networking"
 
-WiFiUDP C013_portUDP;
 
 // Forward declarations
 void C013_SendUDPTaskInfo(uint8_t destUnit,
@@ -161,7 +160,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   // For example sending different sensor type data from one dummy to another is probably not going to work well
   dataReply.sensorType = event->getSensorType();
 
-  const TaskValues_Data_t *taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
+  const TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(event->TaskIndex);
 
   if (taskValues != nullptr) {
     for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
@@ -193,19 +192,26 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
     return;
   }
 
+  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+
+
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE, concat(F("C013 : Send UDP message to "), unit));
+    addLogMove(LOG_LEVEL_DEBUG_MORE, strformat(
+      F("C013 : Send UDP message to %d (%s)"), 
+      unit, 
+      remoteNodeIP.toString().c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
 
+  WiFiUDP C013_portUDP;
+
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 
   FeedSW_watchdog();
-  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
 
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
@@ -306,7 +312,19 @@ void C013_Receive(struct EventStruct *event) {
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          if (!dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
+          // deviceNumber and sensorType were not present before build 2023-05-05. (build NR 20460)
+          // See: https://github.com/letscontrolit/ESPEasy/commit/cf791527eeaf31ca98b07c45c1b64e2561a7b041#diff-86b42dd78398b103e272503f05f55ee0870ae5fb907d713c2505d63279bb0321
+          // Thus should not be checked
+          //
+          // If the node is not present in the nodes list (e.g. it had not announced itself in the last 10 minutes or announcement was missed)
+          // Then we cannot be sure about its build.
+          bool mustMatch = false;
+          NodeStruct *sourceNode = Nodes.getNode(dataReply.sourceUnit);
+          if (sourceNode != nullptr) {
+            mustMatch = sourceNode->build >= 20460;
+          }
+
+          if (mustMatch && !dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
             // Mismatch in plugin ID from sending node
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
@@ -321,8 +339,8 @@ void C013_Receive(struct EventStruct *event) {
 
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
-            if (dataReply.matchesSensorType(sensorType)) {
-              TaskValues_Data_t *taskValues = UserVar.getTaskValues_Data(dataReply.destTaskIndex);
+            if (!mustMatch || dataReply.matchesSensorType(sensorType)) {
+              TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(dataReply.destTaskIndex);
 
               if (taskValues != nullptr) {
                 for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)

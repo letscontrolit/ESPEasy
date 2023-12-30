@@ -187,7 +187,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 
       String command = parseString(string, 1);
       String param   = parseString(string, 2);
-      int    value;
+      int32_t    value;
       bool   valueValid = validIntFromString(param, value);
 
       if (valueValid && equals(command, F("play")))

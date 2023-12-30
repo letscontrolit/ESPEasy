@@ -6,7 +6,7 @@
 
 #ifdef WEBSERVER_TOOLS
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 
 // ********************************************************************************
 // Web Interface Tools page

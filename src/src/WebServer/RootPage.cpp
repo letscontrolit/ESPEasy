@@ -10,7 +10,7 @@
 # include "../WebServer/Markup_Buttons.h"
 # include "../WebServer/Markup_Forms.h"
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
@@ -59,6 +59,10 @@
 // Web Interface root page
 // ********************************************************************************
 void handle_root() {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
@@ -162,13 +166,12 @@ void handle_root() {
     {
       addRowLabel(LabelType::FREE_MEM);
       addHtmlInt(freeMem);
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestRAM);
-      addHtml(F(" - "));
-      addHtml(lowestRAMfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
+      addHtml(strformat(
+        F(" (%d - %s)"),
+        lowestRAM,
+        lowestRAMfunction.c_str()));
+# endif // ifndef BUILD_NO_RAM_TRACKER
     }
     {
         # ifdef USE_SECOND_HEAP
@@ -178,13 +181,12 @@ void handle_root() {
     {
       addRowLabel(LabelType::FREE_STACK);
       addHtmlInt(getCurrentFreeStack());
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestFreeStack);
-      addHtml(F(" - "));
-      addHtml(lowestFreeStackfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_RAM_TRACKER
+      addHtml(strformat(
+        F(" (%d - %s)"),
+        lowestFreeStack,
+        lowestFreeStackfunction.c_str()));
+# endif // ifndef BUILD_NO_RAM_TRACKER
     }
 
   # if FEATURE_ETHERNET
@@ -194,11 +196,15 @@ void handle_root() {
     if (!WiFiEventData.WiFiDisconnected())
     {
       addRowLabelValue(LabelType::IP_ADDRESS);
+#if FEATURE_USE_IPV6
+      addRowLabelValue(LabelType::IP6_LOCAL);
+      addRowLabelValue(LabelType::IP6_GLOBAL);
+#endif
       addRowLabel(LabelType::WIFI_RSSI);
-      addHtmlInt(WiFi.RSSI());
-      addHtml(F(" dBm ("));
-      addHtml(WiFi.SSID());
-      addHtml(')');
+      addHtml(strformat(
+        F("%d dBm (%s)"),
+        WiFi.RSSI(),
+        WiFi.SSID().c_str()));
     }
 
   # if FEATURE_ETHERNET
@@ -206,6 +212,10 @@ void handle_root() {
     if (active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
+#if FEATURE_USE_IPV6
+      addRowLabelValue(LabelType::IP6_LOCAL);
+      addRowLabelValue(LabelType::IP6_GLOBAL);
+#endif
     }
   # endif // if FEATURE_ETHERNET
 
@@ -325,12 +335,42 @@ void handle_root() {
           html_TD();
         }
 
-        if (it->second.ip[0] != 0)
+        if (it->second.ip[0] != 0
+#if FEATURE_USE_IPV6
+            || it->second.hasIPv6_mac_based_link_local
+            || it->second.hasIPv6_mac_based_link_global
+#endif
+        )
         {
           html_add_wide_button_prefix();
 
           addHtml(F("http://"));
-          addHtml(formatIP(it->second.IP()));
+          IPAddress ip = it->second.IP();
+          #if FEATURE_USE_IPV6
+          bool isIPv6 = false;
+//          if (!it->second.hasIPv4) {
+            if (it->second.hasIPv6_mac_based_link_local) {
+              ip = it->second.IPv6_link_local();
+              if (ip.zone() != 0) {
+                // Clear the zone as it is of no use here.
+                ip = IPAddress(IPv6, &ip[0], 0);
+              }
+
+              isIPv6 = true;
+            } else if (it->second.hasIPv6_mac_based_link_global) {
+              ip = it->second.IPv6_global();
+              isIPv6 = true;
+            }
+  //        }
+          if (isIPv6) {
+            addHtml(wrap_String(formatIP(ip), '[', ']'));
+          } else {
+            addHtml(formatIP(ip));
+          }
+          #else
+          addHtml(formatIP(ip));
+          #endif
+          
           uint16_t port = it->second.webgui_portnumber;
 
           if ((port != 0) && (port != 80)) {
@@ -338,7 +378,7 @@ void handle_root() {
             addHtmlInt(port);
           }
           addHtml('\'', '>');
-          addHtml(formatIP(it->second.IP()));
+          addHtml(formatIP(ip));
           addHtml(F("</a>"));
         }
         html_TD();

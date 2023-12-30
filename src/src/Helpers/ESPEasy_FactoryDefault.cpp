@@ -22,7 +22,6 @@
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/FS_Helper.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
 #ifdef ESP32
@@ -56,11 +55,11 @@ void ResetFactory(bool formatFS)
   #ifdef ESP32
   ResetFactoryDefaultPreference.init();
   #endif
-
-  #if FEATURE_CUSTOM_PROVISIONING
+  bool mustApplySafebootDefaults = false;
 
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {
+#if FEATURE_CUSTOM_PROVISIONING
     ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
     ResetFactoryDefaultPreference.fetchRulesTXT(0, DEFAULT_PROVISIONING_FETCH_RULES1);
     ResetFactoryDefaultPreference.fetchRulesTXT(1, DEFAULT_PROVISIONING_FETCH_RULES2);
@@ -72,8 +71,19 @@ void ResetFactory(bool formatFS)
     ResetFactoryDefaultPreference.fetchProvisioningDat(DEFAULT_PROVISIONING_FETCH_PROVISIONING);
     ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
     ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
+#endif // if FEATURE_CUSTOM_PROVISIONING
+#ifdef PLUGIN_BUILD_SAFEBOOT
+    mustApplySafebootDefaults = true;
+    ResetFactoryDefaultPreference.keepWiFi(true);
+    ResetFactoryDefaultPreference.keepNetwork(true);
+    ResetFactoryDefaultPreference.keepUnitName(true);
+    ResetFactoryDefaultPreference.keepLogConsoleSettings(true);
+    ResetFactoryDefaultPreference.keepCustomCdnUrl(true);
+
+    Settings.UseLastWiFiFromRTC(true);
+#endif // ifdef PLUGIN_BUILD_SAFEBOOT
+
   }
-  #endif // if FEATURE_CUSTOM_PROVISIONING
 
 
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
@@ -152,7 +162,7 @@ void ResetFactory(bool formatFS)
 
   Settings.clearMisc();
 
-  if (!ResetFactoryDefaultPreference.keepNTP()) {
+  if (!ResetFactoryDefaultPreference.keepNTP() || mustApplySafebootDefaults) {
     Settings.clearTimeSettings();
     Settings.UseNTP(DEFAULT_USE_NTP);
     strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
@@ -160,7 +170,7 @@ void ResetFactory(bool formatFS)
     Settings.DST      = DEFAULT_USE_DST;
   }
 
-  if (!ResetFactoryDefaultPreference.keepNetwork()) {
+  if (!ResetFactoryDefaultPreference.keepNetwork() || mustApplySafebootDefaults) {
     Settings.clearNetworkSettings();
 
     // TD-er Reset access control
@@ -181,7 +191,7 @@ void ResetFactory(bool formatFS)
   Settings.clearControllers();
   Settings.clearTasks();
 
-  if (!ResetFactoryDefaultPreference.keepLogConsoleSettings()) {
+  if (!ResetFactoryDefaultPreference.keepLogConsoleSettings() || mustApplySafebootDefaults) {
     Settings.clearLogSettings();
     str2ip((char *)DEFAULT_SYSLOG_IP, Settings.Syslog_IP);
 
@@ -202,14 +212,14 @@ void ResetFactory(bool formatFS)
     Settings.BaudRate = DEFAULT_SERIAL_BAUD;
 }
 
-  if (!ResetFactoryDefaultPreference.keepUnitName()) {
+  if (!ResetFactoryDefaultPreference.keepUnitName() || mustApplySafebootDefaults) {
     Settings.clearUnitNameSettings();
     Settings.Unit = UNIT;
     strcpy_P(Settings.Name, PSTR(DEFAULT_NAME));
     Settings.UDPPort = DEFAULT_SYNC_UDP_PORT;
   }
 
-  if (!ResetFactoryDefaultPreference.keepWiFi()) {
+  if (!ResetFactoryDefaultPreference.keepWiFi() || mustApplySafebootDefaults) {
     strcpy_P(SecuritySettings.WifiSSID,  PSTR(DEFAULT_SSID));
     strcpy_P(SecuritySettings.WifiKey,   PSTR(DEFAULT_KEY));
     strcpy_P(SecuritySettings.WifiSSID2, PSTR(DEFAULT_SSID2));

@@ -288,7 +288,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P085_data) && P085_data->isInitialized()) {
         for (int i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
-          UserVar[event->BaseVarIndex + i] = p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event);
+          UserVar.setFloat(event->TaskIndex, i,  p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event));
           delay(1);
         }
 

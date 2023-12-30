@@ -239,10 +239,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(0) = getFormItemInt(F("Gain"));
       PCONFIG_LONG(1) = getFormItemInt(F("IntegrationTime"));
       PCONFIG(0)      = isFormItemChecked(PCONFIG_LABEL(0));
-      PCONFIG(1)      = getFormItemInt(PCONFIG_LABEL(1));
-      PCONFIG(2)      = getFormItemInt(PCONFIG_LABEL(2));
-      PCONFIG(3)      = getFormItemInt(PCONFIG_LABEL(3));
-      PCONFIG(4)      = getFormItemInt(PCONFIG_LABEL(4));
+      for (int i = 1; i <= 4; ++i) {
+        PCONFIG(i)      = getFormItemInt(PCONFIG_LABEL(i));
+      }
       PCONFIG(5)      = isFormItemChecked(PCONFIG_LABEL(5));
       PCONFIG(6)      = isFormItemChecked(PCONFIG_LABEL(6));
       success         = true;
@@ -281,25 +280,13 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           P112_data->sensor.setBulbCurrent(PCONFIG(4), AS7265x_LED_UV);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("AS7265X: AMS Device Type: 0x");
-            log += P112_data->sensor.getDeviceType();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Hardware Version: 0x");
-            log += P112_data->sensor.getHardwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Major Firmware Version: 0x");
-            log += P112_data->sensor.getMajorFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Patch Firmware Version: 0x");
-            log += P112_data->sensor.getPatchFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Build Firmware Version: 0x");
-            log += P112_data->sensor.getBuildFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(
+              F("AS7265X: AMS Device Type: 0x%X HW ver: 0x%X FW ver: %X.%X.%X"),
+              P112_data->sensor.getDeviceType(),
+              P112_data->sensor.getHardwareVersion(),
+              P112_data->sensor.getMajorFirmwareVersion(),
+              P112_data->sensor.getPatchFirmwareVersion(),
+              P112_data->sensor.getBuildFirmwareVersion()));
           }
 
           success = true;
@@ -383,7 +370,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
               queueEvent(event->TaskIndex, 940, PCONFIG(6) ? P112_data->sensor.getCalibratedL() : P112_data->sensor.getL());
 
               P112_data->MeasurementStatus     = 0; // FIXME Why is this only executed for case 18?
-              UserVar[event->BaseVarIndex + 2] = 0;
+              UserVar.setFloat(event->TaskIndex, 2, 0);
 
               if (PCONFIG(0))                       // Blue Status LED
               {
@@ -402,7 +389,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
       if (P112_data->MeasurementStatus == 0) {
         if (P112_data->begin()) {
-          UserVar[event->BaseVarIndex + 2] = 1;
+          UserVar.setFloat(event->TaskIndex, 2, 1);
 
           P112_data->sensor.disableIndicator(); // Blue Status LEDs Off
 
@@ -422,8 +409,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           //
           P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
 
-          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getTemperature();
-          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getTemperatureAverage();
+          UserVar.setFloat(event->TaskIndex, 0, P112_data->sensor.getTemperature());
+          UserVar.setFloat(event->TaskIndex, 1, P112_data->sensor.getTemperatureAverage());
         }
       }
       success = true;

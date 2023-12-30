@@ -7,10 +7,7 @@
 
 
 struct SchedulerTimerID {
-  explicit SchedulerTimerID(SchedulerTimerType_e timerType)
-  {
-    timer_type = static_cast<uint32_t>(timerType);
-  }
+  explicit SchedulerTimerID(SchedulerTimerType_e timerType);
 
   explicit SchedulerTimerID(uint32_t mixedID)  : mixed_id(mixedID) {}
 

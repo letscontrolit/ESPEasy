@@ -204,10 +204,11 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           }
 
           const String valueName = getTaskValueName(event->TaskIndex, x);
-          String valueFullName   = getTaskDeviceName(event->TaskIndex);
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
+          const String valueFullName = strformat(
+            F("%s.%s"),          
+            getTaskDeviceName(event->TaskIndex).c_str(),
+            valueName.c_str());
+          const String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
 
           if ((vPinNumber < 0) || (vPinNumber > 255)) {
@@ -218,22 +219,21 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             log += Blynk.connected() ? F("(online): ") : F("(offline): ");
 
             if ((vPinNumber > 0) && (vPinNumber < 256)) {
-              log += F("send ");
-              log += valueFullName;
-              log += F(" = ");
-              log += formattedValue;
-              log += F(" to blynk pin v");
-              log += vPinNumber;
+              log += strformat(
+                F("send %s = %s to blynk pin v%d"),
+                valueFullName.c_str(),
+                formattedValue.c_str(),
+                vPinNumber);
             } else {
-              log += F("error got vPin number for ");
-              log += valueFullName;
-              log += F(", got not valid value: ");
-              log += vPinNumberStr;
+              log += strformat(
+              F("error got vPin number for %s, got not valid value: %s"),
+              valueFullName.c_str(),
+              vPinNumberStr.c_str());
             }
             addLogMove(LOG_LEVEL_INFO, log);
           }
           element.vPin[x] = vPinNumber;
-          element.txt[x]  = formattedValue;
+          move_special(element.txt[x], std::move(formattedValue));
         }
       }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
@@ -408,26 +408,20 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
   int vPin = event->Par1;
 
   if ((vPin < 0)  || (vPin > 255)) {
-    String err = F("Not correct blynk vPin number ");
-    err += vPin;
-    return err;
+    return concat(F("Not correct blynk vPin number "), vPin);
   }
 
   String data = parseString(Line, 3);
 
   if (data.isEmpty()) {
-    String err = F("Skip sending empty data to blynk vPin ");
-    err += vPin;
-    return err;
+    return concat(F("Skip sending empty data to blynk vPin "), vPin);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
-
-    log += vPin;
-    log += F(" = ");
-    log += data;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F(C015_LOG_PREFIX "(online): send blynk pin v%d = %s"),
+      vPin,
+      data.c_str()));
   }
 
   Blynk.virtualWrite(vPin, data);
@@ -448,23 +442,21 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  uint8_t  vPin     = request.pin;
-  float pinValue = param.asFloat();
+  const unsigned int  vPin     = request.pin;
+  const float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "server set v");
-    log += vPin;
-    log += F(" to ");
-    log += pinValue;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F(C015_LOG_PREFIX "server set v%u to %f"), 
+      vPin, 
+      pinValue));
   }
 
   if (Settings.UseRules) {
-    String eventCommand = F("blynkv");
-    eventCommand += vPin;
-    eventCommand += '=';
-    eventCommand += pinValue;
-    eventQueue.addMove(std::move(eventCommand));
+    eventQueue.addMove(strformat(    
+      F("blynkv%d=%f"),
+      vPin, 
+      pinValue));
   }
 }
 

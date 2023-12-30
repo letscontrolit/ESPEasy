@@ -45,7 +45,13 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
     return false;
   }
   reset();
-  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  }
   if (easySerial == nullptr) { return false; }
   easySerial->begin(baudrate);
 

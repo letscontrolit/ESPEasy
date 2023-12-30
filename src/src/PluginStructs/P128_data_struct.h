@@ -2209,8 +2209,10 @@ const uint8_t PROGMEM ftv_colors[] = {
   0X20, 0XE4, 0X21, 0XA6, 0X29, 0XE7, 0X32, 0X28 };
 # endif // if P128_ENABLE_FAKETV
 
+# include <NeoPixelBus.h>
 # include <NeoPixelBrightnessBus.h> // Be sure to keep this header file when upgrading the NeoPixelBus library,
                                     // and remove the deprecation warning if needed
+
 # include "../../ESPEasy-Globals.h"
 
 # define P128_CONFIG_LED_COUNT  PCONFIG(0)

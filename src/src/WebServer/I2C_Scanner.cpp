@@ -10,7 +10,6 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_Plugin_init.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
