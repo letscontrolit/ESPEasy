@@ -2,6 +2,8 @@
 
 #ifdef PLUGIN_USES_TOUCHHANDLER
 
+# include "src/Commands/ExecuteCommand.h"
+
 /****************************************************************************
  * toString: Display-value for the touch action
  ***************************************************************************/
@@ -256,7 +258,7 @@ int ESPEasy_TouchHandler::parseStringToInt(const String & string,
                                            const int    & defaultValue) {
   String parsed = parseStringKeepCase(string, indexFind, separator);
 
-  int result = defaultValue;
+  int32_t result = defaultValue;
 
   validIntFromString(parsed, result);
 
@@ -346,7 +348,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
                                                  const bool        & isButton) {
   if (touchObject.isEmpty()) { return -1; }
 
-  int index = -1;
+  int32_t index = -1;
 
   int16_t idx = -1;
 
@@ -355,11 +357,11 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
 
     # if TOUCH_FEATURE_EXTENDED_TOUCH
 
-    int grp = -1;
+    int32_t grp = -1;
 
     if (validIntFromString(part, grp) && validButtonGroup(static_cast<int16_t>(grp), false)) {
       part = touchObject.substring(idx + 1);
-      int btn = -1;
+      int32_t btn = -1;
 
       if (validIntFromString(part, btn)) {
         idx = 0;
@@ -1670,12 +1672,12 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
   // Avoid event-storms by deduplicating coordinates, ignore z value when no z-event is generated
   if (!_deduplicate ||
-      (_deduplicate && ((TOUCH_VALUE_X != x) || (TOUCH_VALUE_Y != y) ||
-                        (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && (TOUCH_VALUE_Z != z))))) {
-    success       = true;
-    TOUCH_VALUE_X = x;
-    TOUCH_VALUE_Y = y;
-    TOUCH_VALUE_Z = z;
+      (_deduplicate && ((TOUCH_GET_VALUE_X != x) || (TOUCH_GET_VALUE_Y != y) ||
+                        (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z) && (TOUCH_GET_VALUE_Z != z))))) {
+    success = true;
+    TOUCH_SET_VALUE_X(x);
+    TOUCH_SET_VALUE_Y(y);
+    TOUCH_SET_VALUE_Z(z);
   }
 
   if (success &&
@@ -2049,7 +2051,7 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
     success = true;
   #  if TOUCH_FEATURE_SWIPE
   } else if (command.equals(F("swipedir"))) {
-    int state;
+    int32_t state;
 
     if (validIntFromString(parseString(string, 2), state)) {
       string  = toString(static_cast<Swipe_action_e>(state));
