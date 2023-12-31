@@ -2022,7 +2022,7 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
     success = true;
   # if TOUCH_FEATURE_EXTENDED_TOUCH
   } else if (command.equals(F("hasgroup"))) {
-    int group; // We'll be ignoring group 0 if there are multiple button groups
+    int32_t group; // We'll be ignoring group 0 if there are multiple button groups
 
     if (validIntFromString(parseString(string, 2), group)) {
       string  = validButtonGroup(group, true) ? 1 : 0;
