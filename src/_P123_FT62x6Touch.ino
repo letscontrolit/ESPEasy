@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2023-12-31 tonhuisman: Code optimizations
  * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values using PLUGIN_GET_DEVICEVALUECOUNT, store (also) in task
  *                        settings for speed
  *                        Implement PLUGIN_I2C_GET_ADDRESS function

@@ -34,10 +34,9 @@ void P123_data_struct::reset() {
   addLog(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
   # endif // PLUGIN_123_DEBUG
 
-  if (nullptr != touchscreen) { delete touchscreen; }
+  delete touchscreen;
   touchscreen = nullptr;
-
-  if (nullptr != touchHandler) { delete touchHandler; }
+  delete touchHandler;
   touchHandler = nullptr;
 }
 
@@ -149,7 +148,7 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
   command    = parseString(string, 1);
   subcommand = parseString(string, 2);
 
-  if (isInitialized() && command.equals(F("touch"))) {
+  if (isInitialized() && equals(command, F("touch"))) {
     # ifdef PLUGIN_123_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -158,13 +157,13 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
     }
     # endif // ifdef PLUGIN_123_DEBUG
 
-    if (subcommand.equals(F("rot"))) {         // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
+    if (equals(subcommand, F("rot"))) {         // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
       setRotation(static_cast<uint8_t>(event->Par2 % 4));
       success = true;
-    } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
+    } else if (equals(subcommand, F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
       setRotationFlipped(event->Par2 > 0);
       success = true;
-    } else {                                   // Rest of the commands handled by ESPEasy_TouchHandler
+    } else {                                    // Rest of the commands handled by ESPEasy_TouchHandler
       success = touchHandler->plugin_write(event, string);
     }
   }
@@ -295,7 +294,7 @@ void P123_data_struct::setRotation(uint8_t n) {
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(F("P123 DEBUG Rotation set: %d"), _rotation));
+    addLogMove(LOG_LEVEL_INFO, concat(F("P123 DEBUG Rotation set: "), _rotation));
   }
   # endif // PLUGIN_123_DEBUG
 }
@@ -337,7 +336,7 @@ int8_t P123_data_struct::getTouchObjectIndex(struct EventStruct *event,
   if (nullptr != touchHandler) {
     return touchHandler->getTouchObjectIndex(event, touchObject, isButton);
   }
-  return false;
+  return -1;
 }
 
 /**
@@ -399,7 +398,7 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x,
 /**
  * Get the current button group
  */
-int16_t P123_data_struct::getButtonGroup() {
+int16_t P123_data_struct::getButtonGroup() const {
   if (nullptr != touchHandler) {
     return touchHandler->getButtonGroup();
   }

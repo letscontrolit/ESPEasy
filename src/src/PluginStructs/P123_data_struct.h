@@ -23,7 +23,7 @@
 #  undef PLUGIN_123_DEBUG
 # endif // if defined(BUILD_NO_DEBUG) && defined(PLUGIN_123_DEBUG)
 
-# define P123_I2C_ADDRESS           (0x38)  // Fixed value
+# define P123_I2C_ADDRESS           (0x38) // Fixed value
 # define P123_CONFIG_DISPLAY_TASK   PCONFIG(0)
 
 # define P123_COLOR_DEPTH           PCONFIG_LONG(1)
@@ -93,7 +93,7 @@ struct P123_data_struct : public PluginTaskData_base
   void    scaleRawToCalibrated(int16_t& x,
                                int16_t& y);
 
-  int16_t getButtonGroup();
+  int16_t getButtonGroup() const;
   bool    validButtonGroup(int16_t buttonGroup,
                            bool    ignoreZero = false);
   bool    setButtonGroup(struct EventStruct *event,
