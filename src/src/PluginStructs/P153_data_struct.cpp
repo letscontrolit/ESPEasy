@@ -95,13 +95,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
         UserVar.setFloat(event->TaskIndex, 1, NAN);
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-
-          if (log.reserve(40)) {
-            log  = getTaskDeviceName(event->TaskIndex);
-            log += F(": Error writing command to sensor");
-            addLogMove(LOG_LEVEL_ERROR, log);
-          }
+          addLogMove(LOG_LEVEL_ERROR, strformat(F("%s: Error writing command to sensor"), getTaskDeviceName(event->TaskIndex).c_str()));
         }
       }
       # ifndef BUILD_NO_DEBUG
@@ -151,8 +145,8 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
 
       // Data valid?
       if (CRC8(data[0], data[1], data[2]) && CRC8(data[3], data[4], data[5])) {
-        float temp = static_cast<float>(((uint16_t)data[0] << 8) | (uint16_t)data[1]);
-        float hum  = static_cast<float>(((uint16_t)data[3] << 8) | (uint16_t)data[4]);
+        const float temp = static_cast<float>(((uint16_t)data[0] << 8) | (uint16_t)data[1]);
+        const float hum  = static_cast<float>(((uint16_t)data[3] << 8) | (uint16_t)data[4]);
         temperature = -45.0f + 175.0f * temp / 65535.0f;
         humidity    = -6.0f + 125.0f * hum / 65535.0f;
 
@@ -175,19 +169,14 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
+          const String taskName = getTaskDeviceName(event->TaskIndex);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("%s: Temperature: %s"),
+                                               taskName.c_str(),
+                                               formatUserVarNoCheck(event->TaskIndex, 0).c_str()));
 
-          if (log.reserve(40)) {
-            log  = getTaskDeviceName(event->TaskIndex);
-            log += F(": Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = getTaskDeviceName(event->TaskIndex);
-            log += F(": Humidity: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(F("%s: Humidity: %s"),
+                                               taskName.c_str(),
+                                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
         }
       } else {
         UserVar.setFloat(event->TaskIndex, 0, NAN);
@@ -249,7 +238,7 @@ bool P153_data_struct::plugin_get_config_value(struct EventStruct *event,
   const String var = parseString(string, 1);
 
   if (equals(var, F("serialnumber"))) { // [<taskname>#serialnumber] = the devices electronic serial number
-    string  = String(serialNumber);
+    string  = serialNumber;
     success = true;
   }
   return success;
