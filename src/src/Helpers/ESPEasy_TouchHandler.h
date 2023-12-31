@@ -11,6 +11,7 @@
 
 /*****
  * Changelog:
+ * 2023-12-31 tonhuisman: Code optimizations reducing .bin size (ESP32) with ~1kB
  * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values not by changing the DeviceVector but using
  *                        PLUGIN_GET_DEVICEVALUECOUNT plugin function.
  * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, minor improvements

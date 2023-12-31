@@ -73,7 +73,7 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   _buttonGroups.clear();                          // Clear groups
   _buttonGroups.insert(0u);                       // Always have group 0
 
-  for (uint8_t i = TOUCH_OBJECT_INDEX_END; i >= TOUCH_OBJECT_INDEX_START; i--) {
+  for (uint8_t i = TOUCH_OBJECT_INDEX_END; i >= TOUCH_OBJECT_INDEX_START; --i) {
     if (!settingsArray[i].isEmpty() && (lastObjectIndex < TOUCH_OBJECT_INDEX_START)) {
       lastObjectIndex = i;
       objectCount++; // Count actual number of objects
@@ -151,7 +151,7 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
     TouchObjects.reserve(objectCount);
     uint8_t t = 0u;
 
-    for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; i++) {
+    for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; ++i) {
       if (!settingsArray[i].isEmpty()) {
         TouchObjects.push_back(tTouchObjects());
         TouchObjects[t].flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
@@ -171,8 +171,10 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
         TouchObjects[t].colorDisabledCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABCAPT, TOUCH_SETTINGS_SEPARATOR);
         TouchObjects[t].groupFlags           = parseStringToInt(settingsArray[i], TOUCH_OBJECT_GROUPFLAGS, TOUCH_SETTINGS_SEPARATOR);
 
-        if (!validButtonGroup(get8BitFromUL(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_GROUP))) {
-          _buttonGroups.insert(get8BitFromUL(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_GROUP));
+        const uint8_t g = get8BitFromUL(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_GROUP);
+
+        if (!validButtonGroup(g)) {
+          _buttonGroups.insert(g);
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
@@ -256,9 +258,8 @@ int ESPEasy_TouchHandler::parseStringToInt(const String & string,
                                            const uint8_t& indexFind,
                                            const char   & separator,
                                            const int    & defaultValue) {
-  String parsed = parseStringKeepCase(string, indexFind, separator);
-
-  int32_t result = defaultValue;
+  const String parsed = parseStringKeepCase(string, indexFind, separator);
+  int32_t result      = defaultValue;
 
   validIntFromString(parsed, result);
 
@@ -289,10 +290,10 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
                                                         int8_t       & selectedObjectIndex) {
   uint32_t lastObjectArea = 0u;
   bool     selected       = false;
-  uint16_t _x             = static_cast<uint16_t>(x);
-  uint16_t _y             = static_cast<uint16_t>(y);
+  const uint16_t _x       = static_cast<uint16_t>(x);
+  const uint16_t _y       = static_cast<uint16_t>(y);
 
-  for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+  for (size_t objectNr = 0; objectNr < TouchObjects.size(); ++objectNr) {
     const uint8_t group = get8BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_GROUP);
 
     if (!TouchObjects[objectNr].objectName.isEmpty()
@@ -318,21 +319,19 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
       # ifdef TOUCH_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log;
-        log.reserve(72);
-        log = strformat(F("TOUCH DEBUG Touched: obj: %s,%d,%d,%d,%d surface:%d x,y:%d,%d sel:%s/%d/%c"),
-                        TouchObjects[objectNr].objectName.c_str(),
-                        TouchObjects[objectNr].top_left.x,
-                        TouchObjects[objectNr].top_left.y,
-                        TouchObjects[objectNr].width_height.x,
-                        TouchObjects[objectNr].width_height.y,
-                        TouchObjects[objectNr].SurfaceAreas,
-                        x,
-                        y,
-                        selectedObjectName.c_str(),
-                        selectedObjectIndex,
-                        selected ? 'T' : 'f');
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG,
+               strformat(F("TOUCH DEBUG Touched: obj: %s,%d,%d,%d,%d surface:%d x,y:%d,%d sel:%s/%d/%c"),
+                         TouchObjects[objectNr].objectName.c_str(),
+                         TouchObjects[objectNr].top_left.x,
+                         TouchObjects[objectNr].top_left.y,
+                         TouchObjects[objectNr].width_height.x,
+                         TouchObjects[objectNr].width_height.y,
+                         TouchObjects[objectNr].SurfaceAreas,
+                         x,
+                         y,
+                         selectedObjectName.c_str(),
+                         selectedObjectIndex,
+                         selected ? 'T' : 'f'));
       }
       # endif // ifdef TOUCH_DEBUG
     }
@@ -349,8 +348,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
   if (touchObject.isEmpty()) { return -1; }
 
   int32_t index = -1;
-
-  int16_t idx = -1;
+  int32_t idx   = -1;
 
   if ((idx = touchObject.indexOf('.')) > -1) {
     String part = touchObject.substring(0, idx);
@@ -366,9 +364,9 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
       if (validIntFromString(part, btn)) {
         idx = 0;
 
-        for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+        for (size_t objectNr = 0; objectNr < TouchObjects.size(); ++objectNr) {
           if (!TouchObjects[objectNr].objectName.isEmpty()
-              && (get8BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_GROUP) == grp)
+              && (get8BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_GROUP) == static_cast<uint8_t>(grp))
               && (!isButton || bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON))) {
             idx++;
 
@@ -393,7 +391,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
     return static_cast<int8_t>(index - 1);
   }
 
-  for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+  for (size_t objectNr = 0; objectNr < TouchObjects.size(); ++objectNr) {
     if (!TouchObjects[objectNr].objectName.isEmpty()
         && touchObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)
         && (!isButton || bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON))) {
@@ -412,7 +410,7 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
-  int8_t objectNr = getTouchObjectIndex(event, touchObject);
+  const int8_t objectNr = getTouchObjectIndex(event, touchObject);
 
   if (objectNr > -1) {
     success = true;                                                             // Succes if matched object
@@ -459,9 +457,8 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
 int8_t ESPEasy_TouchHandler::getTouchObjectState(struct EventStruct *event,
                                                  const String      & touchObject) {
   if (touchObject.isEmpty()) { return false; }
-  int8_t result = -1;
-
-  int8_t objectNr = getTouchObjectIndex(event, touchObject);
+  int8_t result         = -1;
+  const int8_t objectNr = getTouchObjectIndex(event, touchObject);
 
   if (objectNr > -1) {
     result =  bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED) ? 1 : 0;
@@ -476,9 +473,8 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
                                                const String      & touchObject,
                                                const bool        & state) {
   if (touchObject.isEmpty()) { return false; }
-  bool success = false;
-
-  int8_t objectNr = getTouchObjectIndex(event, touchObject, true);
+  bool success          = false;
+  const int8_t objectNr = getTouchObjectIndex(event, touchObject, true);
 
   if ((objectNr > -1)
       && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED)
@@ -515,9 +511,8 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
 int16_t ESPEasy_TouchHandler::getTouchObjectValue(struct EventStruct *event,
                                                   const String      & touchObject) {
   if (touchObject.isEmpty()) { return -1; }
-  int16_t result = -1; // invalid object
-
-  int8_t objectNr = getTouchObjectIndex(event, touchObject);
+  int16_t result        = -1; // invalid object
+  const int8_t objectNr = getTouchObjectIndex(event, touchObject);
 
   if ((objectNr > -1)
       && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED)) {
@@ -538,10 +533,9 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
                                                const String      & touchObject,
                                                const int16_t     & value) {
   if (touchObject.isEmpty()) { return false; }
-  bool success = false;
-
-  int8_t  objectNr = getTouchObjectIndex(event, touchObject, false);
-  int16_t _value   = value;
+  bool success          = false;
+  const int8_t objectNr = getTouchObjectIndex(event, touchObject, false);
+  int16_t _value        = value;
 
   if ((objectNr > -1)
       && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED)) {
@@ -581,11 +575,9 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
     # ifdef TOUCH_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log;
-      log.reserve(72);
-      log = strformat(F("TOUCH setTouchObjectValue: obj: %s/%d, new value: %d"),
-                      touchObject.c_str(), objectNr, _value);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG,
+                 strformat(F("TOUCH setTouchObjectValue: obj: %s/%d, new value: %d"),
+                           touchObject.c_str(), objectNr, _value));
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -606,7 +598,7 @@ bool ESPEasy_TouchHandler::parseRangeToInt16(const String& range,
   tmp = parseString(range, 2);
 
   if (validFrom && validFloatFromString(tmp, rangeTo) &&
-      !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
+      !essentiallyZero(rangeFrom) && !essentiallyZero(rangeTo)) {
     lowRange  = static_cast<int16_t>(rangeFrom);
     highRange = static_cast<int16_t>(rangeTo);
     return true;
@@ -621,7 +613,7 @@ bool ESPEasy_TouchHandler::parseRangeToInt16(const String& range,
 void ESPEasy_TouchHandler::displayButtonGroup(struct EventStruct *event,
                                               const int16_t     & buttonGroup,
                                               const int8_t      & mode) {
-  for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
+  for (int8_t objectNr = 0; objectNr < static_cast<int8_t>(TouchObjects.size()); ++objectNr) {
     displayButton(event, objectNr, buttonGroup, mode);
 
     delay(0);
@@ -629,16 +621,10 @@ void ESPEasy_TouchHandler::displayButtonGroup(struct EventStruct *event,
 
   if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME)) {
     // Send an event <taskname>#Group,<group>,<mode> with the selected group and the mode (-3..0)
-    String eventCommand;
-    eventCommand.reserve(24);
-    eventCommand += getTaskDeviceName(event->TaskIndex);
-    eventCommand += '#';
-    eventCommand += F("Group");
-    eventCommand += '='; // Add arguments
-    eventCommand += buttonGroup;
-    eventCommand += ',';
-    eventCommand += mode;
-    eventQueue.addMove(std::move(eventCommand));
+    eventQueue.add(strformat(F("%s#Group=%d,%d"),
+                             getTaskDeviceName(event->TaskIndex).c_str(),
+                             buttonGroup,
+                             mode));
   }
 
   delay(0);
@@ -652,8 +638,8 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
                                          const int16_t     & buttonGroup,
                                          int8_t              mode) {
   if ((buttonNr < 0) || (buttonNr >= static_cast<int8_t>(TouchObjects.size()))) { return false; } // sanity check
-  int8_t  state = 99;
-  int16_t group = get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP);
+  int8_t state        = 99;
+  const int16_t group = get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP);
 
   #  if TOUCH_FEATURE_EXTENDED_TOUCH
   Touch_action_e action = static_cast<Touch_action_e>(get4BitFromUL(TouchObjects[buttonNr].groupFlags, TOUCH_OBJECT_GROUP_ACTION));
@@ -685,7 +671,7 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
     #  if TOUCH_FEATURE_EXTENDED_TOUCH
 
     if (isArrow) {                                    // Auto-Enable/Disable the arrow buttons
-      bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
+      const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
       state = 1;                                      // always get ON state!
 
       if (action == Touch_action_e::DecrementGroup) { // Left arrow
@@ -715,16 +701,14 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
   #  ifdef TOUCH_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log;
-    log.reserve(90);
-    log = strformat(F("TOUCH: button init, state: %d, group: %d, mode: %d, group: %d, en: %d, object: %d"),
-                    state,
-                    buttonGroup,
-                    mode,
-                    get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP),
-                    bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_BUTTON),
-                    buttonNr);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG,
+           strformat(F("TOUCH: button init, state: %d, group: %d, mode: %d, group: %d, en: %d, object: %d"),
+                     state,
+                     buttonGroup,
+                     mode,
+                     get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP),
+                     bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_BUTTON),
+                     buttonNr));
   }
   #  endif // ifdef TOUCH_DEBUG
   return true;
@@ -749,9 +733,9 @@ bool ESPEasy_TouchHandler::validButtonGroup(const int16_t& group,
  */
 bool ESPEasy_TouchHandler::handleButtonSwipe(struct EventStruct *event,
                                              const int16_t     & swipeValue) {
-  bool success         = false;
-  Swipe_action_e swipe = static_cast<Swipe_action_e>(swipeValue);
-  bool swapped         = bitRead(Touch_Settings.flags, TOUCH_FLAGS_SWAP_LEFT_RIGHT);
+  bool success               = false;
+  const Swipe_action_e swipe = static_cast<Swipe_action_e>(swipeValue);
+  const bool swapped         = bitRead(Touch_Settings.flags, TOUCH_FLAGS_SWAP_LEFT_RIGHT);
 
   if (swipe == Swipe_action_e::Up) {
     if (swapped) {
@@ -827,7 +811,7 @@ bool ESPEasy_TouchHandler::decrementButtonGroup(struct EventStruct *event) {
  * Increment button group by page (+10), if max. group > 0 then min. group = 1
  */
 bool ESPEasy_TouchHandler::incrementButtonPage(struct EventStruct *event) {
-  bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
+  const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup + (pgupInvert ? -10 : 10))) {
     return setButtonGroup(event, _buttonGroup + (pgupInvert ? -10 : 10));
@@ -839,7 +823,7 @@ bool ESPEasy_TouchHandler::incrementButtonPage(struct EventStruct *event) {
  * Decrement button group by page (+10), if max. group > 0 then min. group = 1
  */
 bool ESPEasy_TouchHandler::decrementButtonPage(struct EventStruct *event) {
-  bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
+  const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup + (pgupInvert ? 10 : -10))) {
     return setButtonGroup(event, _buttonGroup + (pgupInvert ? 10 : -10));
@@ -858,10 +842,10 @@ uint8_t ESPEasy_TouchHandler::get_device_valuecount(struct EventStruct *event) {
     _settingsLoaded = true;
   }
 
-  if (!bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z)) {
-    return getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_DUAL);
-  }
-  return getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TRIPLE);
+  return getValueCountFromSensorType(
+    bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z)
+    ? Sensor_VType::SENSOR_TYPE_TRIPLE
+    : Sensor_VType::SENSOR_TYPE_DUAL);
 }
 
 /**
@@ -886,8 +870,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   bitWrite(choice3, TOUCH_FLAGS_SEND_Z,          bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_Z));
   bitWrite(choice3, TOUCH_FLAGS_SEND_OBJECTNAME, bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME));
   {
-    # define TOUCH_EVENTS_OPTIONS 6
-    const __FlashStringHelper *options3[TOUCH_EVENTS_OPTIONS] =
+    const __FlashStringHelper *options3[] =
     { F("None"),
       F("X and Y"),
       F("X, Y and Z"),
@@ -901,8 +884,8 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       F("Objectnames, X, Y and Z")
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
     };
-    const int optionValues3[TOUCH_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("events"), TOUCH_EVENTS_OPTIONS, options3, optionValues3, choice3);
+    const int optionValues3[] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
+    addFormSelector(F("Events"), F("events"), NR_ELEMENTS(optionValues3), options3, optionValues3, choice3);
 
     addFormCheckBox(F("Draw buttons when started"), F("initobj"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
     # ifndef LIMIT_BUILD_SIZE
@@ -1210,11 +1193,11 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
     # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-    uint8_t maxIdx = std::min(static_cast<int>(TouchObjects.size() + TOUCH_EXTRA_OBJECT_COUNT), TOUCH_MAX_OBJECT_COUNT);
-    String  parsed;
+    const uint8_t maxIdx = std::min(static_cast<int>(TouchObjects.size() + TOUCH_EXTRA_OBJECT_COUNT), TOUCH_MAX_OBJECT_COUNT);
+    String parsed;
     TouchObjects.resize(maxIdx, tTouchObjects());
 
-    for (int objectNr = 0; objectNr < maxIdx; objectNr++) {
+    for (int8_t objectNr = 0; objectNr < maxIdx; ++objectNr) {
       html_TR_TD();
       addHtml(F("&nbsp;"));
       addHtmlInt(objectNr + 1); // Arrayindex to objectindex
@@ -1342,14 +1325,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       html_TD(2);   // Start with some blank columns
       # if TOUCH_FEATURE_EXTENDED_TOUCH
       {
-        #  if TOUCH_FEATURE_TOOLTIPS
-        String buttonGroupToolTip(concat(F("Button-group [0.."), static_cast<int>(TOUCH_MAX_BUTTON_GROUPS)));
-        buttonGroupToolTip += ']';
-        #  endif // if TOUCH_FEATURE_TOOLTIPS
         addNumericBox(getPluginCustomArgName(objectNr + 1600),
                       get8BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_GROUP), 0, TOUCH_MAX_BUTTON_GROUPS
                       #  if TOUCH_FEATURE_TOOLTIPS
-                      , F("widenumber"), buttonGroupToolTip
+                      , F("widenumber"), strformat(F("Button-group [0..%d]"), TOUCH_MAX_BUTTON_GROUPS)
                       #  endif // if TOUCH_FEATURE_TOOLTIPS
                       );
       }
@@ -1428,8 +1407,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       addNumericBox(getPluginCustomArgName(objectNr + 2100),
                     get8BitFromUL(TouchObjects[objectNr].groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP), 0, TOUCH_MAX_BUTTON_GROUPS
                     #  if TOUCH_FEATURE_TOOLTIPS
-                    , F("widenumber")
-                    , F("Action group")
+                    , F("widenumber"), F("Action group")
                     #  endif // if TOUCH_FEATURE_TOOLTIPS
                     );
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
@@ -1528,7 +1506,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 
   String error;
 
-  for (int objectNr = 0; objectNr < TOUCH_MAX_OBJECT_COUNT; objectNr++) {
+  for (int8_t objectNr = 0; objectNr < TOUCH_MAX_OBJECT_COUNT; ++objectNr) {
     config.clear();
     config += webArg(getPluginCustomArgName(objectNr + 100)); // Name
     config.trim();                                            // Remove leading/trailing whitespace from name
@@ -1538,8 +1516,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 
       if (!ExtraTaskSettings.checkInvalidCharInNames(config.c_str()) ||
           numStart) {                                         // Check for invalid characters in objectname
-        error += concat(F("Invalid character in objectname #"), objectNr + 1);
-        error += F(". ");
+        error += strformat(F("Invalid character in objectname #%d. "), objectNr + 1);
         error += numStart ? F("Should not start with a digit.\n") : F("Do not use ',-+/*=^%!#[]{}()' or space.\n");
       }
       config += TOUCH_SETTINGS_SEPARATOR;
@@ -1568,15 +1545,16 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
       bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 600)));  // On/Off button
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-      config += ull2String(flags);                                                                           // Flags
+      // REMARK: Converting the code below to strformat() increases the build by 200 bytes!
+      config += ull2String(flags);                                           // Flags
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 200));                                 // Top x
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 200)); // Top x
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 300));                                 // Top y
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 300)); // Top y
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 400));                                 // Bottom x
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 400)); // Bottom x
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 500));                                 // Bottom y
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 500)); // Bottom y
 
       # if TOUCH_FEATURE_EXTENDED_TOUCH
       config    += TOUCH_SETTINGS_SEPARATOR;
@@ -1632,7 +1610,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
         !config.isEmpty()) {
       config.replace(TOUCH_SETTINGS_SEPARATOR, ',');
-      addLogMove(LOG_LEVEL_INFO, strformat(F("Save touch object #%d settings: %s"), objectNr, config.c_str()));
+      addLogMove(LOG_LEVEL_INFO, strformat(F("Save touch object #%d settings: %s"), objectNr + 1, config.c_str()));
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -1645,7 +1623,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   error = SaveCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(F("TOUCH: Save settings, size: %d"), saveSize));
+    addLogMove(LOG_LEVEL_INFO, concat(F("TOUCH: Save settings, size: "), saveSize));
   }
 
   if (!error.isEmpty()) {
@@ -1740,11 +1718,9 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           #  ifdef TOUCH_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log;
-            log.reserve(72);
-            log += strformat(F("Touch Swiped, direction: %s, dx: %d, dy: %d"),
-                             String(toString(swipe)).c_str(), delta_x, delta_y);
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLog(LOG_LEVEL_DEBUG,
+                   strformat(F("Touch Swiped, direction: %s, dx: %d, dy: %d"),
+                             String(toString(swipe)).c_str(), delta_x, delta_y));
           }
           #  endif // ifdef TOUCH_DEBUG
         }
@@ -1826,11 +1802,9 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
               # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               #  ifdef TOUCH_DEBUG
-              String log;
-              log.reserve(72);
-              log += strformat(F("Swiped/touched, object: %s:"), _lastObjectName.c_str());
-              log += toString(swipe);
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO,
+                         strformat(F("Swiped/touched, object: %s:%s"), _lastObjectName.c_str(),
+                                   String(toString(swipe)).c_str()));
               #  endif // ifdef TOUCH_DEBUG
 
               if (swipe != Swipe_action_e::None) {
@@ -1876,23 +1850,19 @@ void ESPEasy_TouchHandler::releaseTouch(struct EventStruct *event) {
     if (_lastSwipe == Swipe_action_e::None)
     # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     {
-      eventCommand += _lastObjectName;
-      eventCommand += '='; // Add arguments
-      eventCommand += _last_point.x;
-      eventCommand += ',';
-      eventCommand += _last_point.y;
-      eventCommand += ',';
-      eventCommand += _last_point_z.x;
+      eventCommand += strformat(F("%s=%d,%d,%d"),
+                                _lastObjectName.c_str(),
+                                _last_point.x,
+                                _last_point.y,
+                                _last_point_z.x);
     }
     # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     else {
-      eventCommand += F("Swiped="); // Add arguments
-      eventCommand += static_cast<int>(_lastSwipe);
-      eventCommand += ',';
-      eventCommand += _last_delta_x;
-      eventCommand += ',';
-      eventCommand += _last_delta_y;
-      _lastSwipe    = Swipe_action_e::None;
+      eventCommand += strformat(F("Swiped=%d,%d,%d"), // Add arguments
+                                static_cast<int>(_lastSwipe),
+                                _last_delta_x,
+                                _last_delta_y);
+      _lastSwipe = Swipe_action_e::None;
     }
     # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     eventQueue.addMove(std::move(eventCommand));
@@ -1914,86 +1884,83 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
 
   command = parseString(string, 1);
 
-  if (command.equals(F("touch"))) {
+  if (equals(command, F("touch"))) {
     arguments.reserve(24);
     subcommand = parseString(string, 2);
     # ifdef TOUCH_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log;
-      log.reserve(90);
-      log = strformat(F("TOUCH PLUGIN_WRITE arguments Par1: %d, 2: %d, 3: %d, 4: %d, string: %s"),
-                      event->Par1, event->Par2, event->Par3, event->Par4, string.c_str());
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLog(LOG_LEVEL_DEBUG, strformat(F("TOUCH PLUGIN_WRITE arguments Par1: %d, 2: %d, 3: %d, 4: %d, string: %s"),
+                                        event->Par1, event->Par2, event->Par3, event->Par4, string.c_str()));
     }
     # endif // ifdef TOUCH_DEBUG
 
-    if (subcommand.equals(F("enable"))) { // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
+    if (equals(subcommand, F("enable"))) { // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
         success  |= setTouchObjectState(event, arguments, true);
         arguments = parseString(string, ++arg);
       }
-    } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
+    } else if (equals(subcommand, F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
         success  |= setTouchObjectState(event, arguments, false);
         arguments = parseString(string, ++arg);
       }
-    } else if (subcommand.equals(F("on"))) { // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
+    } else if (equals(subcommand, F("on"))) { // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
         success  |= setTouchButtonOnOff(event, arguments, true);
         arguments = parseString(string, ++arg);
       }
-    } else if (subcommand.equals(F("off"))) { // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
+    } else if (equals(subcommand, F("off"))) { // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
         success  |= setTouchButtonOnOff(event, arguments, false);
         arguments = parseString(string, ++arg);
       }
-    } else if (subcommand.equals(F("toggle"))) { // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
+    } else if (equals(subcommand, F("toggle"))) { // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
       arguments = parseString(string, arg);
 
       while (!arguments.isEmpty()) {
-        int16_t state = getTouchObjectValue(event, arguments);
+        const int16_t state = getTouchObjectValue(event, arguments);
 
         if (state > -1) {
           success |= setTouchButtonOnOff(event, arguments, state == 0);
         }
         arguments = parseString(string, ++arg);
       }
-    } else if (subcommand.equals(F("set"))) { // touch,set,<objectName>,<value> : Set TouchObject value
+    } else if (equals(subcommand, F("set"))) { // touch,set,<objectName>,<value> : Set TouchObject value
       arguments = parseString(string, arg);
       success   = setTouchObjectValue(event, arguments, event->Par3);
     # if TOUCH_FEATURE_EXTENDED_TOUCH
     #  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-    } else if (subcommand.equals(F("swipe"))) {        // touch,swipe,<swipeValue> : Switch button group via swipe value
+    } else if (equals(subcommand, F("swipe"))) {        // touch,swipe,<swipeValue> : Switch button group via swipe value
       success = handleButtonSwipe(event, event->Par2);
     #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-    } else if (subcommand.equals(F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
+    } else if (equals(subcommand, F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
       success = setButtonGroup(event, event->Par2);
-    } else if (subcommand.equals(F("incgrp"))) {       // touch,incgrp : increment group and Activate
+    } else if (equals(subcommand, F("incgrp"))) {       // touch,incgrp : increment group and Activate
       success = incrementButtonGroup(event);
-    } else if (subcommand.equals(F("decgrp"))) {       // touch,decgrp : Decrement group and Activate
+    } else if (equals(subcommand, F("decgrp"))) {       // touch,decgrp : Decrement group and Activate
       success = decrementButtonGroup(event);
-    } else if (subcommand.equals(F("incpage"))) {      // touch,incpage : increment page and Activate
+    } else if (equals(subcommand, F("incpage"))) {      // touch,incpage : increment page and Activate
       success = incrementButtonPage(event);
-    } else if (subcommand.equals(F("decpage"))) {      // touch,decpage : Decrement page and Activate
+    } else if (equals(subcommand, F("decpage"))) {      // touch,decpage : Decrement page and Activate
       success = decrementButtonPage(event);
-    } else if (subcommand.equals(F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
+    } else if (equals(subcommand, F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
       arguments = parseString(string, 3);
 
       // Check for a valid button name or number, returns a 0-based index
-      int index = getTouchObjectIndex(event, arguments, true);
+      const int8_t index = getTouchObjectIndex(event, arguments, true);
 
       if (index > -1) {
-        bool hasPar3 = !parseString(string, 4).isEmpty();
-        bool hasPar4 = !parseString(string, 5).isEmpty();
+        const bool hasPar3 = !parseString(string, 4).isEmpty();
+        const bool hasPar4 = !parseString(string, 5).isEmpty();
 
         if (hasPar4) {
           success = displayButton(event, index, event->Par3, event->Par4);
@@ -2017,11 +1984,11 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
   bool success         = false;
   const String command = parseString(string, 1);
 
-  if (command.equals(F("buttongroup"))) {
+  if (equals(command, F("buttongroup"))) {
     string  = getButtonGroup();
     success = true;
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command.equals(F("hasgroup"))) {
+  } else if (equals(command, F("hasgroup"))) {
     int32_t group; // We'll be ignoring group 0 if there are multiple button groups
 
     if (validIntFromString(parseString(string, 2), group)) {
@@ -2031,26 +1998,24 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
       string = '0'; // invalid number = false
     }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command.equals(F("enabled"))) {
-    const String arguments = parseStringKeepCase(string, 2);
-    int8_t enabled         = getTouchObjectState(event, arguments);
+  } else if (equals(command, F("enabled"))) {
+    const int8_t enabled = getTouchObjectState(event, parseStringKeepCase(string, 2));
 
     if (enabled > -1) {
       string  = enabled;
       success = true;
     }
-  } else if (command.equals(F("state"))) {
-    const String arguments = parseStringKeepCase(string, 2);
-    int16_t state          = getTouchObjectValue(event, arguments);
+  } else if (equals(command, F("state"))) {
+    const int16_t state = getTouchObjectValue(event, parseStringKeepCase(string, 2));
 
     string  = state;
     success = true;
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command.equals(F("pagemode"))) {
+  } else if (equals(command, F("pagemode"))) {
     string  = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
     success = true;
   #  if TOUCH_FEATURE_SWIPE
-  } else if (command.equals(F("swipedir"))) {
+  } else if (equals(command, F("swipedir"))) {
     int32_t state;
 
     if (validIntFromString(parseString(string, 2), state)) {
@@ -2084,18 +2049,15 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
   eventCommand.reserve(120);
   extraCommand.reserve(48);
 
-  extraCommand += getTaskDeviceName(event->TaskIndex);
-  extraCommand += '#';
-  extraCommand += TouchObjects[objectIndex].objectName;
-  extraCommand += '='; // Add arguments: (%eventvalue#%)
+  // Task with added arguments: (%eventvalue#%)
+  extraCommand += strformat(F("%s#%s="), getTaskDeviceName(event->TaskIndex).c_str(), TouchObjects[objectIndex].objectName.c_str());
 
   if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_DRAWBTN_VIA_RULES)) {
     eventCommand = extraCommand;
-  } else {                                        // Handle via direct btn commands
-    if (_displayTask != event->TaskIndex) {       // Add arguments for display
-      eventCommand += '[';
-      eventCommand += _displayTask + 1;
-      eventCommand += F("].adagfx_trigger,btn,"); // Internal command trigger
+  } else {                                  // Handle via direct btn commands
+    if (_displayTask != event->TaskIndex) { // Add arguments for display
+      // Internal command trigger
+      eventCommand += strformat(F("[%d].adagfx_trigger,btn,"), _displayTask + 1);
     } else {
       addLog(LOG_LEVEL_ERROR, F("TOUCH: No valid Display task selected."));
       return;
@@ -2120,42 +2082,35 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
     }
   }
   eventCommand += ',';
-  eventCommand += mode;                                       // (2 = mode)
+  eventCommand += mode;                         // (2 = mode)
   extraCommand += ',';
-  extraCommand += mode;                                       // (2 = mode) // duplicate
+  extraCommand += mode;                         // (2 = mode) // duplicate
 
-  if (_displayTask != event->TaskIndex) {                     // Add arguments for display
-    eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].top_left.x;     // (3 = x)
-    eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].top_left.y;     // (4 = y)
-    eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].width_height.x; // (5 = width)
-    eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].width_height.y; // (6 = height)
-    eventCommand += ',';
-    eventCommand += objectIndex + 1;                          // Adjust to displayed index (7 = id)
-    eventCommand += ',';                                      // (8 = type + layout, 4+4 bit, side by side)
-    eventCommand += get8BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_BUTTONTYPE) * factor;
+  if (_displayTask != event->TaskIndex) {       // Add arguments for display
+    eventCommand += strformat(
+      F(",%d,%d,%d,%d,%d,%d"),
+      TouchObjects[objectIndex].top_left.x,     // (3 = x)
+      TouchObjects[objectIndex].top_left.y,     // (4 = y)
+      TouchObjects[objectIndex].width_height.x, // (5 = width)
+      TouchObjects[objectIndex].width_height.y, // (6 = height)
+      objectIndex + 1,                          // Adjust to displayed index (7 = id)
+                                                // (8 = type + layout, 4+4 bit, side by side)
+      get8BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_BUTTONTYPE) * factor);
     # if TOUCH_FEATURE_EXTENDED_TOUCH
-    eventCommand += ',';                                      // (9 = ON color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorOn == 0
-                                        ? Touch_Settings.colorOn
-                                        : TouchObjects[objectIndex].colorOn,
-                                        _colorDepth);
-    eventCommand += ','; // (10 = OFF color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorOff == 0
-                                        ? Touch_Settings.colorOff
-                                        : TouchObjects[objectIndex].colorOff,
-                                        _colorDepth);
-    eventCommand += ','; // (11 = Caption color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorCaption == 0
-                                        ? Touch_Settings.colorCaption
-                                        : TouchObjects[objectIndex].colorCaption,
-                                        _colorDepth);
-    eventCommand += ','; // (12 = Font scaling)
-    eventCommand += get4BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_FONTSCALE);
-    eventCommand += ','; // (13 = ON caption, default=object name)
+    eventCommand += strformat(
+      F(",%s,%s,%s,%d,"),
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorOn == 0
+                          ? Touch_Settings.colorOn
+                          : TouchObjects[objectIndex].colorOn, _colorDepth).c_str(),      // (9 = ON color)
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorOff == 0
+                          ? Touch_Settings.colorOff
+                          : TouchObjects[objectIndex].colorOff, _colorDepth).c_str(),     // (10 = OFF color)
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorCaption == 0
+                          ? Touch_Settings.colorCaption
+                          : TouchObjects[objectIndex].colorCaption, _colorDepth).c_str(), // (11 = Caption color)
+      get4BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_FONTSCALE));       // (12 = Font scaling)
+
+    // (13 = ON caption, default=object name)
     String _capt;
 
     if (TouchObjects[objectIndex].captionOn.isEmpty()) {
@@ -2181,54 +2136,36 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
       _capt = TouchObjects[objectIndex].captionOff;
     }
     _capt.replace('_', ' '); // Replace all '_' by space
-    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(_capt);
-    eventCommand += ',';     // (15 = Border color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorBorder == 0
-                                        ? Touch_Settings.colorBorder
-                                        : TouchObjects[objectIndex].colorBorder,
-                                        _colorDepth);
-    eventCommand += ','; // (16 = Disabled color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabled == 0
-                                        ? Touch_Settings.colorDisabled
-                                        : TouchObjects[objectIndex].colorDisabled,
-                                        _colorDepth);
-    eventCommand += ','; // (17 = Disabled caption color)
-    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabledCaption == 0
-                                        ? Touch_Settings.colorDisabledCaption
-                                        : TouchObjects[objectIndex].colorDisabledCaption,
-                                        _colorDepth);
+    eventCommand += strformat(
+      F("%s,%s,%s,%s"),
+      wrapWithQuotesIfContainsParameterSeparatorChar(_capt).c_str(),
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorBorder == 0
+                          ? Touch_Settings.colorBorder
+                          : TouchObjects[objectIndex].colorBorder, _colorDepth).c_str(),           // (15 = Border color)
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabled == 0
+                          ? Touch_Settings.colorDisabled
+                          : TouchObjects[objectIndex].colorDisabled, _colorDepth).c_str(),         // (16 = Disabled color)
+      AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabledCaption == 0
+                          ? Touch_Settings.colorDisabledCaption
+                          : TouchObjects[objectIndex].colorDisabledCaption, _colorDepth).c_str()); // (17 = Disabled caption color)
     # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-    eventCommand += ',';
-    eventCommand += _displayTask + 1; // What TaskIndex? (18) or (9)
-    eventCommand += ',';              // Group (19) or (10)
-    eventCommand += get8BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_GROUP);
+    eventCommand += strformat(
+      F(",%d,%d"),
+      _displayTask + 1,                                                         // What TaskIndex? (18) or (9)
+      get8BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_GROUP)); // Group (19) or (10)
     # if TOUCH_FEATURE_EXTENDED_TOUCH
-    eventCommand += ',';              // Group mode (20)
-    uint8_t action = get4BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTION);
+    eventCommand += ',';                                                        // Group mode (20)
+    const uint8_t action        = get4BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTION);
+    const Touch_action_e actGrp = static_cast<Touch_action_e>(action);
 
-    if (!groupSwitch && (static_cast<Touch_action_e>(action) != Touch_action_e::Default)) {
-      switch (static_cast<Touch_action_e>(action)) {
-        case Touch_action_e::ActivateGroup:
-          eventCommand += get8BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP);
-          break;
-        case Touch_action_e::IncrementGroup:
-          eventCommand += -2;
-          break;
-        case Touch_action_e::DecrementGroup:
-          eventCommand += -3;
-          break;
-        case Touch_action_e::IncrementPage:
-          eventCommand += -4;
-          break;
-        case Touch_action_e::DecrementPage:
-          eventCommand += -5;
-          break;
-        case Touch_action_e::Default:
-          eventCommand += -1; // Ignore
-          break;
+    if (!groupSwitch && (Touch_action_e::Default != actGrp)) {
+      if (Touch_action_e::ActivateGroup == actGrp) {
+        eventCommand += get8BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP);
+      } else {
+        eventCommand += (action * -1); // Default is already ignored
       }
     } else {
-      eventCommand += -1; // No group to activate
+      eventCommand += -1;              // No group to activate
     }
     # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   }
