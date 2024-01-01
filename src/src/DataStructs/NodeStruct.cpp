@@ -172,6 +172,11 @@ IPAddress NodeStruct::IPv6_global() const
   }
   return IN6ADDR_ANY;
 }
+
+bool NodeStruct::hasIPv6() const {
+  return hasIPv6_mac_based_link_local ||
+         hasIPv6_mac_based_link_global;
+}
 #endif
 
 

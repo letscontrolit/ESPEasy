@@ -419,12 +419,15 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     return ip;
   }
 #if FEATURE_USE_IPV6
+/*
+  // FIXME TD-er: for now do not try to send to IPv6
   if (it->second.hasIPv6_mac_based_link_local) {
     return it->second.IPv6_link_local();
   }
   if (it->second.hasIPv6_mac_based_link_global) {
     return it->second.IPv6_global();
   }
+*/
 #endif
   return it->second.IP();
 }
