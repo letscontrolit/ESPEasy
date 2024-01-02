@@ -29,7 +29,8 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options = EMPTY_STRING,
-  size_t                     nrSamples = 0);
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON = false);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -38,8 +39,14 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options = EMPTY_STRING,
-  size_t                     nrSamples = 0);
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON = false);
 
+void add_ChartJS_chart_JSON_header(
+  const __FlashStringHelper *chartType,
+  const ChartJS_title      & chartTitle,
+  const String             & options,
+  size_t                     nrSamples);
 
 void add_ChartJS_chart_labels(
   int       valueCount,
@@ -64,7 +71,7 @@ void add_ChartJS_dataset_header(const ChartJS_dataset_config& config);
 void add_ChartJS_dataset_footer(const String& options = EMPTY_STRING);
 
 
-void add_ChartJS_chart_footer();
+void add_ChartJS_chart_footer(bool onlyJSON = false);
 #endif // if FEATURE_CHART_JS
 
 #endif // ifndef WEBSERVER_CHART_JS_H

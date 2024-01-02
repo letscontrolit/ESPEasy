@@ -411,6 +411,10 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
       colors[att]);
       config.hidden = att != current_attenuation;
 
+    if (att != 0) {
+      addHtml(',');
+    }
+
     add_ChartJS_dataset(
       config,
       values,
@@ -631,14 +635,14 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       axisOptions);
 
     // Add labels
-    addHtml(F("labels:["));
+    addHtml(F("\"labels\":["));
     for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
         addHtml(',');
       }
       addHtmlFloat(_multipoint[i]._adc, _nrDecimals);
     }
-    addHtml(F("],datasets:["));
+    addHtml(F("],\"datasets\":["));
 
     add_ChartJS_dataset_header(
       {
@@ -726,6 +730,10 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
           label,
           color);
         config.hidden = hidden;
+
+        if (step != 0) {
+          addHtml(',');
+        }
 
         add_ChartJS_dataset(
           config,

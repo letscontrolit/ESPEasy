@@ -545,7 +545,7 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 }
 
 # if FEATURE_CHART_JS
-void PluginStats_array::plot_ChartJS() const
+void PluginStats_array::plot_ChartJS(bool onlyJSON) const
 {
   const size_t nrSamples = nrSamplesPresent();
 
@@ -577,12 +577,13 @@ void PluginStats_array::plot_ChartJS() const
       500 + (70 * (scales.nr_Y_scales() - 1)),
       500,
       scales.toString(),
-      nrSamples);
+      nrSamples,
+      onlyJSON);
   }
 
 
   // Add labels
-  addHtml(F("labels:["));
+  addHtml(F("\"labels\":["));
 
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
@@ -590,16 +591,21 @@ void PluginStats_array::plot_ChartJS() const
     }
     addHtmlInt(i);
   }
-  addHtml(F("],datasets:["));
+  addHtml(F("],\"datasets\":["));
 
 
   // Data sets
+  bool first = true;
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
+      if (!first) {
+        addHtml(',');
+      }
+      first = false;
       _plugin_stats[i]->plot_ChartJS_dataset();
     }
   }
-  add_ChartJS_chart_footer();
+  add_ChartJS_chart_footer(onlyJSON);
 }
 
 void PluginStats_array::plot_ChartJS_scatter(
@@ -611,7 +617,8 @@ void PluginStats_array::plot_ChartJS_scatter(
   int                           width,
   int                           height,
   bool                          showAverage,
-  const String                & options) const
+  const String                & options,
+  bool                          onlyJSON) const
 {
   const PluginStats *stats_X = getPluginStats(values_X_axis_index);
   const PluginStats *stats_Y = getPluginStats(values_Y_axis_index);
@@ -643,10 +650,11 @@ void PluginStats_array::plot_ChartJS_scatter(
     width,
     height,
     axisOptions,
-    nrSamples);
+    nrSamples,
+    onlyJSON);
 
   // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
-  addHtml(F("labels:["));
+  addHtml(F("\"labels\":["));
 
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
@@ -654,7 +662,7 @@ void PluginStats_array::plot_ChartJS_scatter(
     }
     addHtmlInt(i);
   }
-  addHtml(F("],datasets:["));
+  addHtml(F("],\"datasets\":["));
 
   // Long/Lat Coordinates
   add_ChartJS_dataset_header(datasetConfig);
@@ -666,10 +674,11 @@ void PluginStats_array::plot_ChartJS_scatter(
     add_ChartJS_scatter_data_point(valX, valY, 6);
   }
 
-  add_ChartJS_dataset_footer(F("showLine:true"));
+  add_ChartJS_dataset_footer(F("\"showLine\":true"));
 
   if (showAverage) {
     // Add single point showing the average
+    addHtml(',');
     add_ChartJS_dataset_header(
     {
       F("Average"),
@@ -680,9 +689,9 @@ void PluginStats_array::plot_ChartJS_scatter(
       const float valY = stats_Y->getSampleAvg();
       add_ChartJS_scatter_data_point(valX, valY, 6);
     }
-    add_ChartJS_dataset_footer(F("pointRadius:6,pointHoverRadius:10"));
+    add_ChartJS_dataset_footer(F("\"pointRadius\":6,\"pointHoverRadius\":10"));
   }
-  add_ChartJS_chart_footer();
+  add_ChartJS_chart_footer(onlyJSON);
 }
 
 # endif // if FEATURE_CHART_JS

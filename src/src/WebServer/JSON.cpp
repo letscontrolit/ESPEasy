@@ -121,6 +121,9 @@ void handle_json()
   #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
   #endif
+  #if FEATURE_PLUGIN_STATS
+  bool showPluginStats     = isFormItemChecked(F("showpluginstats"));
+  #endif
 
   if (equals(webArg(F("view")), F("sensorupdate"))) {
     showSystem = false;
@@ -132,6 +135,9 @@ void handle_json()
     showTaskDetails     = false;
     #if FEATURE_ESPEASY_P2P
     showNodes           = false;
+    #endif
+    #if FEATURE_PLUGIN_STATS
+    showPluginStats     = false;
     #endif
   }
 
@@ -446,6 +452,16 @@ void handle_json()
       }
 
       if (showTaskDetails) {
+#if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
+        if (Device[DeviceIndex].PluginStats && showPluginStats) {
+          PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(TaskIndex);
+          if (taskData != nullptr && taskData->nrSamplesPresent() > 0) {
+            addHtml(F("\"PluginStats\":\n"));
+            taskData->plot_ChartJS(true);
+            addHtml(',');
+          }
+        }
+#endif
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
