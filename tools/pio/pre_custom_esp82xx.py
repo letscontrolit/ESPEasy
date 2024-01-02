@@ -33,10 +33,10 @@ else:
     "-DUSES_P027",  # INA219
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
-    "-DUSES_P036",  # FrameOLED
-    "-DUSES_P037",  # MQTT Import
+    # "-DUSES_P036",  # FrameOLED
+    # "-DUSES_P037",  # MQTT Import
     "-DUSES_P045",  # MPU6050
-    "-DUSES_P049",  # MHZ19
+    # "-DUSES_P049",  # MHZ19
     "-DUSES_P052",  # SenseAir
     "-DUSES_P056",  # SDS011-Dust
 #    "-DUSES_P059",  # Encoder
@@ -52,6 +52,8 @@ else:
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
+    "-DUSES_P116",  # ST77xx
+    "-DUSES_P123",  # FT62x6
     "-DUSES_P146",  # Cache Reader
 
     "-DUSES_C016",  # Cache Controller
