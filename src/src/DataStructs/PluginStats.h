@@ -17,11 +17,11 @@
 
 # ifndef PLUGIN_STATS_NR_ELEMENTS
 #  ifdef ESP8266
-# ifdef USE_SECOND_HEAP
-#   define PLUGIN_STATS_NR_ELEMENTS 50
-#else
-#   define PLUGIN_STATS_NR_ELEMENTS 16
-#endif
+#   ifdef USE_SECOND_HEAP
+#    define PLUGIN_STATS_NR_ELEMENTS 50
+#   else // ifdef USE_SECOND_HEAP
+#    define PLUGIN_STATS_NR_ELEMENTS 16
+#   endif // ifdef USE_SECOND_HEAP
 #  endif // ifdef ESP8266
 #  ifdef ESP32
 #   define PLUGIN_STATS_NR_ELEMENTS 250
@@ -211,7 +211,7 @@ public:
     int                           height,
     bool                          showAverage = true,
     const String                & options     = EMPTY_STRING,
-    bool                          onlyJSON = false) const;
+    bool                          onlyJSON    = false) const;
 
 
 # endif // if FEATURE_CHART_JS

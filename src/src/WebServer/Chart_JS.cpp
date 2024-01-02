@@ -11,9 +11,9 @@ void add_ChartJS_array(int          valueCount,
 {
   for (int i = 0; i < valueCount; ++i) {
     if (i != 0) {
-      addHtml(',');
+      addHtml(',', '\n');
     }
-    addHtml(wrapIfContains(array[i], ' ', '"'));
+    addHtml(to_json_value(array[i]));
   }
 }
 
@@ -23,7 +23,7 @@ void add_ChartJS_array(int          valueCount,
 {
   for (int i = 0; i < valueCount; ++i) {
     if (i != 0) {
-      addHtml(',');
+      addHtml(',', '\n');
     }
     addHtmlFloat(array[i], nrDecimals);
   }
@@ -34,7 +34,7 @@ void add_ChartJS_array(int       valueCount,
 {
   for (int i = 0; i < valueCount; ++i) {
     if (i != 0) {
-      addHtml(',');
+      addHtml(',', '\n');
     }
     addHtmlInt(array[i]);
   }
@@ -69,15 +69,15 @@ void add_ChartJS_chart_header(
     addHtmlAttribute(F("width"),  width);
     addHtmlAttribute(F("height"), height);
     addHtml(F("></canvas>"));
-    const char* id_c_str = id.c_str();
+    const char *id_c_str = id.c_str();
     addHtml(strformat(
-      F("<script>"
-        "const %sc=document.getElementById('%s');"
-        "const my_%s_C=new Chart(%sc,"),
-      id_c_str,
-      id_c_str,
-      id_c_str,
-      id_c_str));
+              F("<script>"
+                "const %sc=document.getElementById('%s');"
+                "const my_%s_C=new Chart(%sc,"),
+              id_c_str,
+              id_c_str,
+              id_c_str,
+              id_c_str));
   }
   add_ChartJS_chart_JSON_header(chartType, chartTitle, options, nrSamples);
 }
@@ -91,10 +91,10 @@ void add_ChartJS_chart_JSON_header(
   addHtml(F("{\"type\":\""));
   addHtml(chartType);
   addHtml(F("\",\"options\":{"
-              "\"responsive\":false,\"plugins\":{"
-                "\"legend\":{"
-                  "\"position\":\"top\""
-                "},\"title\":"));
+            "\"responsive\":false,\"plugins\":{"
+            "\"legend\":{"
+            "\"position\":\"top\""
+            "},\"title\":"));
   addHtml(chartTitle.toString());
   addHtml('}'); // end plugins
 
@@ -106,38 +106,38 @@ void add_ChartJS_chart_JSON_header(
   }
 
   if (!options.isEmpty()) {
-    addHtml(',');
+    addHtml(',', '\n');
     addHtml(options);
   }
 
-  addHtml(F("},"  // end options
-            "\"data\":{"));
+  addHtml(F("}," // end options
+            "\n\"data\":{"));
 }
 
 void add_ChartJS_chart_labels(
   int       valueCount,
-  const int labels[]) 
+  const int labels[])
 {
-  addHtml(F("\"labels\":["));
+  addHtml(F("\n\"labels\":["));
   add_ChartJS_array(valueCount, labels);
-  addHtml(F("],\"datasets\":["));
+  addHtml(F("],\n\"datasets\":["));
 }
 
 void add_ChartJS_chart_labels(
   int          valueCount,
   const String labels[])
 {
-  addHtml(F("\"labels\":["));
+  addHtml(F("\n\"labels\":["));
   add_ChartJS_array(valueCount, labels);
-  addHtml(F("],\"datasets\":["));
+  addHtml(F("],\n\"datasets\":["));
 }
 
 void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals)
 {
   addHtml(strformat(
-    F("{\"x\":%s,\"y\":%s},"),
-    toString(x, nrDecimals).c_str(),
-    toString(y, nrDecimals).c_str()));
+            F("{\"x\":%s,\"y\":%s},"),
+            toString(x, nrDecimals).c_str(),
+            toString(y, nrDecimals).c_str()));
 }
 
 void add_ChartJS_dataset(
@@ -173,24 +173,23 @@ void add_ChartJS_dataset_header(const ChartJS_dataset_config& config)
     addHtml(F("\"hidden\":true,"));
   }
 
-  addHtml(F("\"data\":["));
+  addHtml(F("\n\"data\":[\n"));
 }
 
 void add_ChartJS_dataset_footer(const String& options) {
   addHtml(']');
 
   if (!options.isEmpty()) {
-    addHtml(',');
+    addHtml(',', '\n');
     addHtml(options);
-
-    //    if (!options.endsWith(F(","))) { addHtml(','); }
   }
 
-  addHtml('}');
+  addHtml('}', '\n');
 }
 
 void add_ChartJS_chart_footer(bool onlyJSON) {
   addHtml(F("]}}"));
+
   if (!onlyJSON) {
     addHtml(F(");</script>"));
   }

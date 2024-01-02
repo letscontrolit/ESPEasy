@@ -591,7 +591,7 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
     }
     addHtmlInt(i);
   }
-  addHtml(F("],\"datasets\":["));
+  addHtml(F("],\n\"datasets\":["));
 
 
   // Data sets
@@ -662,7 +662,7 @@ void PluginStats_array::plot_ChartJS_scatter(
     }
     addHtmlInt(i);
   }
-  addHtml(F("],\"datasets\":["));
+  addHtml(F("],\n\"datasets\":["));
 
   // Long/Lat Coordinates
   add_ChartJS_dataset_header(datasetConfig);

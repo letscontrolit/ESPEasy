@@ -125,6 +125,7 @@ String ChartJS_options_scales::toString() const
         res += ',';
       }
       first = false;
+      res  += '\n';
       res  += scale_str;
     }
   }

@@ -28,9 +28,9 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING,
+  const String             & options   = EMPTY_STRING,
   size_t                     nrSamples = 0,
-  bool                       onlyJSON = false);
+  bool                       onlyJSON  = false);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -38,9 +38,9 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING,
+  const String             & options   = EMPTY_STRING,
   size_t                     nrSamples = 0,
-  bool                       onlyJSON = false);
+  bool                       onlyJSON  = false);
 
 void add_ChartJS_chart_JSON_header(
   const __FlashStringHelper *chartType,
@@ -57,7 +57,9 @@ void add_ChartJS_chart_labels(
   const String labels[]);
 
 
-void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals);
+void add_ChartJS_scatter_data_point(float x,
+                                    float y,
+                                    int   nrDecimals);
 
 void add_ChartJS_dataset(
   const ChartJS_dataset_config& config,
