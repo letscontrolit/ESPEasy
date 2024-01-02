@@ -344,7 +344,21 @@ void handle_json()
           if (rssi < 0) {
             stream_next_json_object_value(F("rssi"), rssi);
           }
+          if (it->second.build >= 20107) {
+            stream_next_json_object_value(F("load"), toString(it->second.getLoad(), 2));
+            if (it->second.webgui_portnumber != 80) {
+              stream_next_json_object_value(F("webport"), it->second.webgui_portnumber);
+            }
+          }
           stream_next_json_object_value(F("ip"), formatIP(it->second.IP()));
+#if FEATURE_USE_IPV6
+          if (it->second.hasIPv6_mac_based_link_local) {
+            stream_next_json_object_value(F("ipv6local"), formatIP(it->second.IPv6_link_local(true)));
+          }
+          if (it->second.hasIPv6_mac_based_link_global) {
+            stream_next_json_object_value(F("ipv6global"), formatIP(it->second.IPv6_global()));
+          }
+#endif
           stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
@@ -430,6 +444,18 @@ void handle_json()
         addHtml(F("],\n"));
       }
 
+#if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
+      if (showPluginStats && Device[DeviceIndex].PluginStats) {
+        PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(TaskIndex);
+        if (taskData != nullptr && taskData->nrSamplesPresent() > 0) {
+          addHtml(F("\"PluginStats\":\n"));
+          taskData->plot_ChartJS(true);
+          stream_comma_newline();
+        }
+      }
+#endif
+
+
       if (showSpecificTask) {
         stream_next_json_object_value(F("TTL"), ttl_json * 1000);
       }
@@ -452,16 +478,6 @@ void handle_json()
       }
 
       if (showTaskDetails) {
-#if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
-        if (Device[DeviceIndex].PluginStats && showPluginStats) {
-          PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(TaskIndex);
-          if (taskData != nullptr && taskData->nrSamplesPresent() > 0) {
-            addHtml(F("\"PluginStats\":\n"));
-            taskData->plot_ChartJS(true);
-            addHtml(',');
-          }
-        }
-#endif
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));

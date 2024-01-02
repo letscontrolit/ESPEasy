@@ -219,11 +219,11 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
-void updateUDPport()
+void updateUDPport(bool force)
 {
   static uint16_t lastUsedUDPPort = 0;
 
-  if (Settings.UDPPort == lastUsedUDPPort) {
+  if (!force && Settings.UDPPort == lastUsedUDPPort) {
     return;
   }
 

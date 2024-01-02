@@ -348,12 +348,7 @@ void handle_root() {
 #if FEATURE_USE_IPV6
           bool isIPv6 = false;
           if (it->second.hasIPv6_mac_based_link_local) {
-            ip = it->second.IPv6_link_local();
-            if (ip.zone() != 0) {
-              // Clear the zone as it is of no use here.
-              ip = IPAddress(IPv6, &ip[0], 0);
-            }
-
+            ip = it->second.IPv6_link_local(true);
             isIPv6 = true;
           } else if (it->second.hasIPv6_mac_based_link_global) {
             ip = it->second.IPv6_global();
