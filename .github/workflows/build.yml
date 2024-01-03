@@ -39,7 +39,7 @@ jobs:
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Documentation
           path: ESPEasy_docs.zip
@@ -96,7 +96,7 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Binaries
           path: |
@@ -150,55 +150,55 @@ jobs:
             fi
           done
       # Each supported cpu has to be listed separately, but empty folders are ignored
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32solo1/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32s2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c3/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32s3/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32c6/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32h2_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
             ESPEasy_dist_ESP32h2/*
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_PR#${{ github.event.number }}_${{ github.run_id }}
           path: |
