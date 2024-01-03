@@ -235,10 +235,10 @@ bool WiFiConnected() {
 
 #if FEATURE_USE_IPV6
   if (!WiFiEventData.processedGotIP6) {
-#if FEATURE_ESPEASY_P2P
-    updateUDPport();
-#endif
     WiFiEventData.processedGotIP6 = true;
+#if FEATURE_ESPEASY_P2P
+    updateUDPport(true);
+#endif
   }
 #endif
 

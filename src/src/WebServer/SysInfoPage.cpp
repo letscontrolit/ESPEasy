@@ -151,6 +151,9 @@ void handle_sysinfo_json() {
   json_prop(F("ethspeed"),      getValue(LabelType::ETH_SPEED));
   json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
   json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
+#if FEATURE_USE_IPV6
+  json_prop(F("ethipv6local"), getValue(LabelType::ETH_IP6_LOCAL));
+#endif
   json_close();
 # endif // if FEATURE_ETHERNET
 

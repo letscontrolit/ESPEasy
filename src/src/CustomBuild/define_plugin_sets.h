@@ -705,7 +705,7 @@ To create/register a plugin, you have to :
     #define CONTROLLER_SET_STABLE
     #define PLUGIN_SET_ONLY_SWITCH
     #define NOTIFIER_SET_STABLE
-    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P076   // HLW8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
@@ -779,7 +779,7 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_ONLY_SWITCH
     #define CONTROLLER_SET_STABLE
     #define NOTIFIER_SET_STABLE
-    #define USES_P076   // HWL8012   in POW r1
+    #define USES_P076   // HLW8012   in POW r1
     #define USES_P077	  // CSE7766   in POW R2
     #define USES_P081   // Cron
 #endif
@@ -1490,7 +1490,7 @@ To create/register a plugin, you have to :
     #define USES_P066   // VEML6040
 
     #define USES_P075   // Nextion
-    //#define USES_P076   // HWL8012   in POW r1
+    //#define USES_P076   // HLW8012   in POW r1
     // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
     //#define USES_P077	  // CSE7766   in POW R2
     //#define USES_P078   // Eastron Modbus Energy meters
@@ -1643,7 +1643,7 @@ To create/register a plugin, you have to :
      #define USES_P027   // INA219
    #endif
    #ifndef USES_P076
-     #define USES_P076   // HWL8012   in POW r1
+     #define USES_P076   // HLW8012   in POW r1
    #endif
    #ifndef USES_P077
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
@@ -1676,7 +1676,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-   #ifndef USES_P148
+   #if !defined(USES_P148) && defined(ESP32)
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
 
@@ -2343,6 +2343,9 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
+#if defined(USES_P044) && !defined(USES_P020) // P020 is used to replace/emulate P044
+  #define USES_P020
+#endif
 #if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_P144) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
@@ -2569,7 +2572,7 @@ To create/register a plugin, you have to :
   #define FEATURE_BLYNK 0
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
-      #undef USES_P076   // HWL8012   in POW r1
+      #undef USES_P076   // HLW8012   in POW r1
     #endif
     #ifdef USES_P093
       #undef USES_P093   // Mitsubishi Heat Pump

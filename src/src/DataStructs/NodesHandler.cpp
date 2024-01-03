@@ -232,7 +232,7 @@ const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr, bo
 }
 
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching, bool checkMQTT_QueueState) const {
-  const NodeStruct *thisNodeSTA = getNodeByMac(WifiSTAmacAddress());
+  const NodeStruct *thisNodeSTA = getNodeByMac(NetworkMacAddress());
   const NodeStruct *thisNodeAP  = getNodeByMac(WifiSoftAPmacAddress());
   const NodeStruct *reject      = getNodeByMac(not_matching);
 
@@ -370,14 +370,10 @@ void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
 
   // Set local data
-  #if FEATURE_ETHERNET
   {
     MAC_address mac = NetworkMacAddress();
     mac.get(thisNode.sta_mac);
   }
-  #else
-  WiFi.macAddress(thisNode.sta_mac);
-  #endif
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
     const bool addIP = NetworkConnected();
@@ -516,8 +512,7 @@ void NodesHandler::updateThisNode() {
 const NodeStruct * NodesHandler::getThisNode() {
   node_time.now();
   updateThisNode();
-  MAC_address this_mac;
-  WiFi.macAddress(this_mac.mac);
+  MAC_address this_mac = NetworkMacAddress();
   return getNodeByMac(this_mac.mac);
 }
 

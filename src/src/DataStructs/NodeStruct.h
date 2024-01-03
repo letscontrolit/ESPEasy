@@ -37,8 +37,10 @@ struct __attribute__((__packed__)) NodeStruct
   IPAddress     IP() const;
 
   #if FEATURE_USE_IPV6
-  IPAddress     IPv6_link_local() const;
+  IPAddress     IPv6_link_local(bool stripZone = false) const;
   IPAddress     IPv6_global() const;
+
+  bool          hasIPv6() const;
   #endif
 
   MAC_address   STA_MAC() const;

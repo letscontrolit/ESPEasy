@@ -214,6 +214,9 @@ struct LabelType {
     ETH_IP_ADDRESS_SUBNET,
     ETH_IP_GATEWAY,
     ETH_IP_DNS,
+#if FEATURE_USE_IPV6
+    ETH_IP6_LOCAL,
+#endif
     ETH_MAC,
     ETH_DUPLEX,
     ETH_SPEED,
