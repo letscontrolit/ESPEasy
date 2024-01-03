@@ -65,8 +65,8 @@ private:
   Hardware_ADC_cali_t _adc_cali_handle;
 
 # if ESP_IDF_VERSION_MAJOR >= 5
-  adc_channel_t _channel;
-  adc_oneshot_unit_handle_t _adc_handle;
+  adc_channel_t _channel = ADC_CHANNEL_0;
+  adc_oneshot_unit_handle_t _adc_handle = nullptr;
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
 
 #endif  // ifdef ESP32

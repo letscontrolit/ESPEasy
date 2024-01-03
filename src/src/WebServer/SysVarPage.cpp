@@ -48,6 +48,19 @@ void handle_sysvars() {
   html_table_header(F("Normal"));
   html_table_header(F("URL encoded"), F("ESPEasy_System_Variables"), 0);
 
+  addTableSeparator(F("Custom Variables"), 3, 3);
+
+  if (customFloatVar.empty()) {
+    html_TR_TD();
+    addHtml(F("No variables set"));
+    html_TD();
+    html_TD();
+  } else {
+    for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
+      addSysVar_html(strformat(F("%%v%u%%"), it->first), false);
+    }
+  }
+
   addTableSeparator(F("Constants"), 3, 3);
   {
     const SystemVariables::Enum vars[] = {
@@ -64,9 +77,7 @@ void handle_sysvars() {
   {
     const SystemVariables::Enum vars[] = {
       SystemVariables::MAC,
-# if defined(ESP8266)
       SystemVariables::MAC_INT,
-# endif // if defined(ESP8266)
       SystemVariables::IP,
       SystemVariables::IP4,
       SystemVariables::SUBNET,
@@ -74,6 +85,9 @@ void handle_sysvars() {
       SystemVariables::DNS,
       SystemVariables::DNS_1,
       SystemVariables::DNS_2,
+#if FEATURE_USE_IPV6
+      SystemVariables::IP6_LOCAL,
+#endif
       SystemVariables::RSSI,
       SystemVariables::SSID,
       SystemVariables::BSSID,
@@ -248,21 +262,6 @@ void handle_sysvars() {
     addSysVar_enum_html(vars, NR_ELEMENTS(vars));
   }
 
-  addTableSeparator(F("Custom Variables"), 3, 3);
-
-  bool customVariablesAdded = false;
-
-  for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
-    addSysVar_html(strformat(F("%%v%u%%"), it->first), false);
-    customVariablesAdded = true;
-  }
-
-  if (!customVariablesAdded) {
-    html_TR_TD();
-    addHtml(F("No variables set"));
-    html_TD();
-    html_TD();
-  }
 # ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   {
     addTableSeparator(F("Special Characters"), 3, 2);

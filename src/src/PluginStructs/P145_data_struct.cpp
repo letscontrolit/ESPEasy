@@ -282,6 +282,7 @@ float P145_data_struct::getRZero(float rSensor) const
       break;
     case p145AlgNone:
       newValue = rzero;
+      break;
     default:
       if (sensordef.cleanRatio > 0.0f)
       {

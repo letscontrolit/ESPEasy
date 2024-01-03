@@ -52,7 +52,7 @@ struct PluginTaskData_base {
   bool webformLoad_show_stats(struct EventStruct *event) const;
 
 # if FEATURE_CHART_JS
-  void plot_ChartJS() const;
+  void plot_ChartJS(bool onlyJSON = false) const;
 
   void plot_ChartJS_scatter(
     taskVarIndex_t                values_X_axis_index,
@@ -63,7 +63,8 @@ struct PluginTaskData_base {
     int                           width,
     int                           height,
     bool                          showAverage = true,
-    const String                & options     = EMPTY_STRING) const;
+    const String                & options     = EMPTY_STRING,
+    bool                          onlyJSON    = false) const;
 
 # endif // if FEATURE_CHART_JS
 #endif  // if FEATURE_PLUGIN_STATS
