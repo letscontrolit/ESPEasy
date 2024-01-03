@@ -120,7 +120,7 @@ jobs:
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts/
       - name: Prepare artifacts
