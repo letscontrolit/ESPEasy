@@ -206,6 +206,6 @@ jobs:
           if-no-files-found: ignore
       # When successfully re-packaged, the original Binaries can be removed
       # comment below 3 lines to not remove the Binaries artifact after repackaging
-      - uses: geekyeggo/delete-artifact@v2
+      - uses: geekyeggo/delete-artifact@v4
         with:
             name: Binaries
