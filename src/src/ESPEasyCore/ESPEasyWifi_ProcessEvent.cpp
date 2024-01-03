@@ -211,7 +211,7 @@ void handle_unprocessedNetworkEvents()
 #endif // if FEATURE_ETHERNET
 
 #if FEATURE_ESPEASY_P2P
-  updateUDPport();
+  updateUDPport(false);
 #endif
 }
 
