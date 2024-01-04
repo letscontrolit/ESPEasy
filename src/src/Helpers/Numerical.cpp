@@ -150,6 +150,9 @@ bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result)
 }
 
 bool mustConsiderAsString(NumericalType detectedType) {
+  return detectedType != NumericalType::FloatingPoint &&
+         detectedType != NumericalType::Integer;
+/*
   switch (detectedType) {
     case NumericalType::FloatingPoint:
     case NumericalType::Integer:
@@ -160,6 +163,7 @@ bool mustConsiderAsString(NumericalType detectedType) {
       return true;
   }
   return false;
+*/
 }
 
 bool mustConsiderAsJSONString(const String& value) {
@@ -167,13 +171,22 @@ bool mustConsiderAsJSONString(const String& value) {
     // Empty string
     return true;
   }
+  const char c = value[0];
 
-  NumericalType detectedType;
-  if (isNumerical(value, detectedType)) {
-    return mustConsiderAsString(detectedType);
+  if (isDigit(c) || c == '-' || c == '.' || c == '+' || c == ' ') {
+    NumericalType detectedType;
+    if (isNumerical(value, detectedType)) {
+      return mustConsiderAsString(detectedType);
+    }
   }
-  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-  return !isBool;
+  if (equals(value, F("true")) ||
+      equals(value, F("false")) ||
+      equals(value, F("null"))) 
+  {
+    return !Settings.JSONBoolWithoutQuotes();
+  }
+
+  return true;
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {

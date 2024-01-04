@@ -29,10 +29,10 @@ void handle_unprocessedEthEvents() {
     // Process disconnect events before connect events.
 #if FEATURE_USE_IPV6
     if (!EthEventData.processedGotIP6) {
-#if FEATURE_ESPEASY_P2P
-      updateUDPport();
-#endif
       EthEventData.processedGotIP6 = true;
+#if FEATURE_ESPEASY_P2P
+      updateUDPport(true);
+#endif
     }
 #endif
 
