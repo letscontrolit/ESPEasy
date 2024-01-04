@@ -163,7 +163,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("RST")), F("rstpin"), PLUGIN_053_RST_PIN);
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("SET")), F("pwrpin"), PLUGIN_053_PWR_PIN);
-      addFormNote(F("RST and SET pins on sensor are pulled up internal in the sensor"));
+      addFormNote(F("RST and SET pins on sensor are pulled up internally by the sensor"));
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
