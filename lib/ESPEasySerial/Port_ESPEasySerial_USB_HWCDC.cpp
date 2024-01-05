@@ -60,6 +60,10 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
   if (_hwcdc_serial != nullptr) {
     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
+
+    // See: https://github.com/espressif/arduino-esp32/issues/9043
+    _hwcdc_serial->setTxTimeoutMs(0);       // sets no timeout when trying to write to USB HW CDC
+
     _hwcdc_serial->begin();
 
     //    _hwcdc_serial->onEvent(hwcdcEventCallback);
