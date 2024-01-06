@@ -22,6 +22,23 @@ bool ResetFactoryDefaultPreference_struct::init()
 {
   ESPEasy_NVS_Helper nvs_helper;
 
+  // Set bits to default, will be overwritten if there was a different setting stored in NVS
+  #if DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME
+  bits.keepUnitName = 1;
+  #endif
+  #if DEFAULT_FACTORY_RESET_KEEP_WIFI
+  bits.keepWiFi = 1;
+  #endif
+  #if DEFAULT_FACTORY_RESET_KEEP_NETWORK
+  bits.keepNetwork = 1;
+  #endif
+  #if DEFAULT_FACTORY_RESET_KEEP_NTP_DST
+  bits.keepNTP = 1;
+  #endif
+  #if DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG
+  bits.keepLogConsoleSettings = 1;
+  #endif
+
   if (nvs_helper.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE))) {
     return from_NVS(nvs_helper);
   }
