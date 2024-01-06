@@ -96,7 +96,9 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Temperature offset"), F("tempoffset"), PCONFIG(1));
       addUnit(F("x 0.1C"));
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Offset in units of 0.1 degree Celsius"));
+      # endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }
@@ -131,16 +133,8 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
       UserVar.setFloat(event->TaskIndex, 1, sht3x->hum);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-
-        if (log.reserve(25)) {
-          log  = F("SHT3x: Temperature: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLogMove(LOG_LEVEL_INFO, log);
-          log  = F("SHT3x: Humidity: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLogMove(LOG_LEVEL_INFO, log);
-        }
+        addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+        addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Humidity: "), formatUserVarNoCheck(event->TaskIndex, 1)));
       }
       success = true;
       break;

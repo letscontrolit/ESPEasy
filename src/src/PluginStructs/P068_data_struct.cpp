@@ -30,12 +30,9 @@ void P068_SHT3X::readFromSensor()
   {
     uint16_t data[6];
 
-    data[0] = Wire.read();
-    data[1] = Wire.read();
-    data[2] = Wire.read();
-    data[3] = Wire.read();
-    data[4] = Wire.read();
-    data[5] = Wire.read();
+    for (uint8_t i = 0; i < 6u; ++i) {
+      data[i] = Wire.read();
+    }
 
     // TODO: check CRC (data[2] and data[5])
     if (CRC8(data[0], data[1], data[2]) &&
@@ -46,9 +43,9 @@ void P068_SHT3X::readFromSensor()
 
       // Humidity temperature compensation borrowed from P028 BME280
       if (!essentiallyZero(tmpOff)) {
-        float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
-        hum = compute_humidity_from_dewpoint(tmp + tmpOff, last_dew_temp_val);
-        tmp = tmp + tmpOff;
+        const float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
+        tmp += tmpOff;
+        hum  = compute_humidity_from_dewpoint(tmp, last_dew_temp_val);
       }
     }
   }
