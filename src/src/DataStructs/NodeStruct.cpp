@@ -149,12 +149,15 @@ IPAddress NodeStruct::IP() const {
 }
 
 #if FEATURE_USE_IPV6
-IPAddress NodeStruct::IPv6_link_local() const
+IPAddress NodeStruct::IPv6_link_local(bool stripZone) const
 {
   if (hasIPv6_mac_based_link_local) {
     // Base IPv6 on MAC address
     IPAddress ipv6;
     if (IPv6_link_local_from_MAC(sta_mac, ipv6)) {
+      if (stripZone) {
+        return IPAddress(IPv6, &ipv6[0], 0);
+      }
       return ipv6;
     }
   }
@@ -171,6 +174,11 @@ IPAddress NodeStruct::IPv6_global() const
     }
   }
   return IN6ADDR_ANY;
+}
+
+bool NodeStruct::hasIPv6() const {
+  return hasIPv6_mac_based_link_local ||
+         hasIPv6_mac_based_link_global;
 }
 #endif
 
