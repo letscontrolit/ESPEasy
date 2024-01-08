@@ -139,13 +139,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P108_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-        String chksumStats;
-        chksumStats  = reads_pass;
-        chksumStats += '/';
-        chksumStats += reads_crc_failed;
-        chksumStats += '/';
-        chksumStats += reads_nodata;
-        addHtml(chksumStats);
+        addHtml(strformat(F("%d/%d/%d"), reads_pass, reads_crc_failed, reads_nodata));
 
         addFormSubHeader(F("Logged Values"));
         p108_showValueLoadPage(P108_QUERY_Wh_imp, event);
@@ -243,7 +237,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P108_data) && P108_data->isInitialized()) {
         for (int i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
-          UserVar.setFloat(event->TaskIndex, i,  p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event));
+          UserVar.setFloat(event->TaskIndex, i, p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event));
           delay(1);
         }
 
