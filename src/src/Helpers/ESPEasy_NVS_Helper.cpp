@@ -29,8 +29,9 @@ void ESPEasy_NVS_Helper::remove(const String& key)
 
 bool ESPEasy_NVS_Helper::getPreference(const String& key, String& value)
 {
-  if (!_preferences.isKey(key.c_str())) 
+  if (!_preferences.isKey(key.c_str())) {
     return false;
+  }
 
   value = _preferences.getString(key.c_str());
 
@@ -53,8 +54,9 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const String& value)
 
 bool ESPEasy_NVS_Helper::getPreference(const String& key, uint32_t& value)
 {
-  if (!_preferences.isKey(key.c_str())) 
+  if (!_preferences.isKey(key.c_str())) {
     return false;
+  }
   constexpr uint32_t defaultValue = std::numeric_limits<uint32_t>::max();
 
   value = _preferences.getUInt(key.c_str(), defaultValue);
@@ -80,9 +82,11 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const uint32_t& value)
 
 bool ESPEasy_NVS_Helper::getPreference(const String& key, uint64_t& value)
 {
-  if (!_preferences.isKey(key.c_str())) 
+  if (!_preferences.isKey(key.c_str())) {
     return false;
-  // Make this a signed value as an erased flash chip only has 0xFF's 
+  }
+
+  // Make this a signed value as an erased flash chip only has 0xFF's
   // and max uint64 also contains only 0xFF bytes.
   constexpr uint64_t defaultValue = std::numeric_limits<int64_t>::max();
 
@@ -109,8 +113,9 @@ void ESPEasy_NVS_Helper::setPreference(const String& key, const uint64_t& value)
 
 bool ESPEasy_NVS_Helper::getPreference(const String& key, uint8_t *data, size_t length)
 {
-  if (!_preferences.isKey(key.c_str())) 
+  if (!_preferences.isKey(key.c_str())) {
     return false;
+  }
 
   const bool res = _preferences.getBytes(key.c_str(), data, length) == length;
 

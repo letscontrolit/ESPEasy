@@ -223,6 +223,14 @@ String to_json_object_value(const String& object,
                             const String& value,
                             bool wrapInQuotes = false);
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            int value,
+                            bool wrapInQuotes = false);
+
+String to_json_object_value(const String& object,
+                            int value,
+                            bool wrapInQuotes = false);
+
 String to_json_value(const String& value,
                      bool wrapInQuotes = false);
 

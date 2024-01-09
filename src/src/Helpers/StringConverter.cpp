@@ -630,10 +630,34 @@ String to_json_object_value(const __FlashStringHelper * object,
   return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  return to_json_object_value(String(object), value, wrapInQuotes);
+}
+
+String to_json_object_value(const String& object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  if (wrapInQuotes) {
+    return strformat(
+      F("\"%s\":\"%d\""),
+      object.c_str(),
+      value);
+  }
+    
+  return strformat(
+    F("\"%s\":%d"), 
+    object.c_str(),
+    value);
+}
+
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   return strformat(
-    F("%s:%s"), 
-    wrap_String(object, '"').c_str(),  
+    F("\"%s\":%s"), 
+    object.c_str(),
     to_json_value(value, wrapInQuotes).c_str());
 }
 
