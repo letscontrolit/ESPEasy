@@ -528,6 +528,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
         case neopixelfx_subcommands_e::twinkle:
         {
+          // FIXME TD-er: code duplication in: Twinkle, twinklefade, sparkle
           mode = P128_modetype::Twinkle;
 
           _counter_mode_step = 0;
@@ -574,28 +575,11 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
         }
 
         case neopixelfx_subcommands_e::wipe:
-        {
-          mode = P128_modetype::Wipe;
-
-          _counter_mode_step = 0;
-
-          hex2rgb(str3);
-
-          if (!str4.isEmpty()) {
-            hex2rrggbb(str4);
-          } else {
-            hex2rrggbb(F("000000"));
-          }
-
-          speed = str5.isEmpty()
-          ? defaultspeed
-          : str5i;
-          break;
-        }
-
         case neopixelfx_subcommands_e::dualwipe:
         {
-          mode = P128_modetype::Dualwipe;
+          mode =   (subcommands_e == neopixelfx_subcommands_e::wipe)
+          ? P128_modetype::Wipe
+          : P128_modetype::Dualwipe;
 
           _counter_mode_step = 0;
 
@@ -785,10 +769,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 }
 
 void P128_data_struct::rgb2colorStr() {
-  colorStr.clear();
-  colorStr += formatToHex_no_prefix(rgb.R, 2);
-  colorStr += formatToHex_no_prefix(rgb.G, 2);
-  colorStr += formatToHex_no_prefix(rgb.B, 2);
+  colorStr = formatToHex_no_prefix(
+    (rgb.R << 16) | (rgb.G << 8) | rgb.B, 
+    6);
 }
 
 bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
@@ -887,8 +870,7 @@ void P128_data_struct::fade(void) {
   for (int pixel = 0; pixel < pixelCount; pixel++) {
     long  counter  = 20 * (counter20ms - starttime[pixel]);
     float progress = (float)counter / (float)fadetime;
-    progress = (progress < 0) ? 0 : progress;
-    progress = (progress > 1) ? 1 : progress;
+    progress = constrain(progress, 0.0f, 1.0f);
 
     # if defined(RGBW) || defined(GRBW)
     RgbwColor updatedColor = RgbwColor::LinearBlend(
@@ -918,8 +900,7 @@ void P128_data_struct::colorfade(void) {
   for (uint16_t i = 0; i <= difference; i++)
   {
     progress = (float)i / (difference - 1);
-    progress = (progress >= 1) ? 1 : progress;
-    progress = (progress <= 0) ? 0 : progress;
+    progress = constrain(progress, 0.0f, 1.0f);
 
     # if defined(RGBW) || defined(GRBW)
     RgbwColor updatedColor = RgbwColor::LinearBlend(
@@ -1063,10 +1044,12 @@ void P128_data_struct::rainbow(void) {
   }
 
   for (int i = 0; i < pixelCount; i++) {
-    uint8_t r1 = (Wheel(((i * 256 / pixelCount) + counter20ms * rainbowspeed / 10) & 255) >> 16);
-    uint8_t g1 = (Wheel(((i * 256 / pixelCount) + counter20ms * rainbowspeed / 10) & 255) >> 8);
-    uint8_t b1 = (Wheel(((i * 256 / pixelCount) + counter20ms * rainbowspeed / 10) & 255));
-    Plugin_128_pixels->SetPixelColor(i, RgbColor(r1, g1, b1));
+    const uint32_t color = Wheel(((i * 256 / pixelCount) + counter20ms * rainbowspeed / 10) & 255);
+    Plugin_128_pixels->SetPixelColor(i, 
+      RgbColor(
+        (color >> 16), // r
+        (color >> 8),  // g
+        (color)));     // b
   }
   mode = (rainbowspeed == 0) ? P128_modetype::On : P128_modetype::Rainbow;
 }
@@ -1098,19 +1081,19 @@ void P128_data_struct::kitt(void) {
       RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(i);
 
       // fade out (divide by 2)
-      px_rgb.R = px_rgb.R >> 1;
-      px_rgb.G = px_rgb.G >> 1;
-      px_rgb.B = px_rgb.B >> 1;
-      px_rgb.W = px_rgb.W >> 1;
+      px_rgb.R >>= 1;
+      px_rgb.G >>= 1;
+      px_rgb.B >>= 1;
+      px_rgb.W >>= 1;
 
       # else // if defined(RGBW) || defined(GRBW)
 
       RgbColor px_rgb = Plugin_128_pixels->GetPixelColor(i);
 
       // fade out (divide by 2)
-      px_rgb.R = px_rgb.R >> 1;
-      px_rgb.G = px_rgb.G >> 1;
-      px_rgb.B = px_rgb.B >> 1;
+      px_rgb.R >>= 1;
+      px_rgb.G >>= 1;
+      px_rgb.B >>= 1;
       # endif // if defined(RGBW) || defined(GRBW)
 
       Plugin_128_pixels->SetPixelColor(i, px_rgb);
@@ -1134,55 +1117,32 @@ void P128_data_struct::kitt(void) {
 void P128_data_struct::comet(void) {
   if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
     for (uint16_t i = 0; i < pixelCount; i++) {
-      if (speed > 0) {
-        # if defined(RGBW) || defined(GRBW)
-        RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(i);
+      const uint16_t pixelIndex = (speed > 0) ? i : pixelCount - i - 1;
+      # if defined(RGBW) || defined(GRBW)
+      RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(pixelIndex);
 
-        // fade out (divide by 2)
-        px_rgb.R = px_rgb.R >> 1;
-        px_rgb.G = px_rgb.G >> 1;
-        px_rgb.B = px_rgb.B >> 1;
-        px_rgb.W = px_rgb.W >> 1;
+      // fade out (divide by 2)
+      px_rgb.R >>= 1;
+      px_rgb.G >>= 1;
+      px_rgb.B >>= 1;
+      px_rgb.W >>= 1;
 
-        # else // if defined(RGBW) || defined(GRBW)
+      # else // if defined(RGBW) || defined(GRBW)
 
-        RgbColor px_rgb = Plugin_128_pixels->GetPixelColor(i);
+      RgbColor px_rgb = Plugin_128_pixels->GetPixelColor(pixelIndex);
 
-        // fade out (divide by 2)
-        px_rgb.R = px_rgb.R >> 1;
-        px_rgb.G = px_rgb.G >> 1;
-        px_rgb.B = px_rgb.B >> 1;
-        # endif // if defined(RGBW) || defined(GRBW)
+      // fade out (divide by 2)
+      px_rgb.R >>= 1;
+      px_rgb.G >>= 1;
+      px_rgb.B >>= 1;
+      # endif // if defined(RGBW) || defined(GRBW)
 
-        Plugin_128_pixels->SetPixelColor(i, px_rgb);
-      } else {
-        # if defined(RGBW) || defined(GRBW)
-        RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(pixelCount - i - 1);
-
-        // fade out (divide by 2)
-        px_rgb.R = px_rgb.R >> 1;
-        px_rgb.G = px_rgb.G >> 1;
-        px_rgb.B = px_rgb.B >> 1;
-        px_rgb.W = px_rgb.W >> 1;
-
-        # else // if defined(RGBW) || defined(GRBW)
-
-        RgbColor px_rgb = Plugin_128_pixels->GetPixelColor(pixelCount - i - 1);
-
-        // fade out (divide by 2)
-        px_rgb.R = px_rgb.R >> 1;
-        px_rgb.G = px_rgb.G >> 1;
-        px_rgb.B = px_rgb.B >> 1;
-        # endif // if defined(RGBW) || defined(GRBW)
-
-        Plugin_128_pixels->SetPixelColor(pixelCount - i - 1, px_rgb);
-      }
+      Plugin_128_pixels->SetPixelColor(pixelIndex, px_rgb);
     }
 
-    if (speed > 0) {
-      Plugin_128_pixels->SetPixelColor(_counter_mode_step, rgb);
-    } else {
-      Plugin_128_pixels->SetPixelColor(pixelCount - _counter_mode_step - 1, rgb);
+    {
+      const uint16_t pixelIndex = (speed > 0) ? _counter_mode_step : pixelCount - _counter_mode_step - 1;
+      Plugin_128_pixels->SetPixelColor(pixelIndex, rgb);
     }
 
     _counter_mode_step = (_counter_mode_step + 1) % pixelCount;
@@ -1484,24 +1444,21 @@ void P128_data_struct::Plugin_128_simpleclock() {
   Plugin_128_pixels->ClearTo(rrggbb);
 
   for (int i = 0; i < (60 / small_tick); i++) {
-    if (i % (big_tick / small_tick) == 0) {
-      Plugin_128_pixels->SetPixelColor((i * pixelCount * small_tick / 60) % pixelCount, rgb_tick_b);
-    } else {
-      Plugin_128_pixels->SetPixelColor((i * pixelCount * small_tick / 60) % pixelCount, rgb_tick_s);
-    }
+    const bool use_big_tick = i % (big_tick / small_tick) == 0;
+    Plugin_128_pixels->SetPixelColor((i * pixelCount * small_tick / 60) % pixelCount, use_big_tick ? rgb_tick_b : rgb_tick_s);
   }
 
 
   for (int i = 0; i < pixelCount; i++) {
-    if (lround((((float)Seconds + ((float)counter20ms - (float)maxtime) / 50.0) * (float)pixelCount) / 60.0) == i) {
+    if (lround((((float)Seconds + ((float)counter20ms - (float)maxtime) / 50.0f) * (float)pixelCount) / 60.0f) == i) {
       if (rgb_s_off  == false) {
         Plugin_128_pixels->SetPixelColor(i, rgb_s);
       }
     }
-    else if (lround((((float)Minutes * 60.0) + (float)Seconds) / 60.0 * (float)pixelCount / 60.0) == i) {
+    else if (lround((((float)Minutes * 60.0f) + (float)Seconds) / 60.0f * (float)pixelCount / 60.0f) == i) {
       Plugin_128_pixels->SetPixelColor(i, rgb_m);
     }
-    else if (lround(((float)Hours + (float)Minutes / 60) * (float)pixelCount / 12.0)  == i) {
+    else if (lround(((float)Hours + (float)Minutes / 60) * (float)pixelCount / 12.0f)  == i) {
       Plugin_128_pixels->SetPixelColor(i,                                 rgb_h);
       Plugin_128_pixels->SetPixelColor((i + 1) % pixelCount,              rgb_h);
       Plugin_128_pixels->SetPixelColor((i - 1 + pixelCount) % pixelCount, rgb_h);
@@ -1509,10 +1466,8 @@ void P128_data_struct::Plugin_128_simpleclock() {
   }
 }
 
-uint32_t P128_data_struct::rgbStr2Num(String rgbStr) {
-  uint32_t rgbDec = static_cast<uint32_t>(strtoul(&rgbStr[0], NULL, 16));
-
-  return rgbDec;
+uint32_t P128_data_struct::rgbStr2Num(const String& rgbStr) {
+  return static_cast<uint32_t>(strtoul(rgbStr.c_str(), NULL, 16));
 }
 
 RgbColor P128_data_struct::rgbStr2RgbColor(const String& str)

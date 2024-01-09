@@ -2447,7 +2447,7 @@ private:
   void             Fire2012(void);
   void             fire_flicker();
   void             Plugin_128_simpleclock();
-  static uint32_t  rgbStr2Num(String rgbStr);
+  static uint32_t  rgbStr2Num(const String& rgbStr);
   static RgbColor  rgbStr2RgbColor(const String& str);
   static RgbwColor rgbStr2RgbWColor(const String& str);
   void             hex2rgb(const String& hexcolor);
