@@ -43,17 +43,12 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
   # ifndef LIMIT_BUILD_SIZE
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(64);
-    log  = F("Lights: mode: ");
-    log += P128_modeType_toString(mode);
-    log += F(" lastmode: ");
-    log += P128_modeType_toString(savemode);
-    log += F(" fadetime: ");
-    log += (int)UserVar[event->BaseVarIndex + 2];
-    log += F(" fadedelay: ");
-    log += (int)UserVar[event->BaseVarIndex + 3];
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("Lights: mode: %s lastmode: %s fadetime: %d fadedelay: %d"),
+      String(P128_modeType_toString(mode)).c_str(),
+      String(P128_modeType_toString(savemode)).c_str(),
+      (int)UserVar[event->BaseVarIndex + 2],
+      (int)UserVar[event->BaseVarIndex + 3]));
   }
   # endif // ifndef LIMIT_BUILD_SIZE
   return true;
@@ -252,7 +247,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
           hex2rgb(str5);
 
-          for (int i = 0; i <= (str4i - str3i + pixelCount) % pixelCount; i++) {
+          const int lastPixelIndex = (str4i - str3i + pixelCount) % pixelCount;
+
+          for (int i = 0; i <= lastPixelIndex; ++i) {
             Plugin_128_pixels->SetPixelColor((i + str3i - 1) % pixelCount, rgb);
           }
           break;
@@ -378,7 +375,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
           hex2rgb(colorStr);
 
-          for (int i = 0; i <= (str4i - str3i + pixelCount) % pixelCount; i++) {
+          const int lastPixelIndex = (str4i - str3i + pixelCount) % pixelCount;
+
+          for (int i = 0; i <= lastPixelIndex; ++i) {
             Plugin_128_pixels->SetPixelColor((i + str3i - 1) % pixelCount, rgb);
           }
           break;
@@ -857,9 +856,9 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
   if (mode != lastmode) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("NeoPixelBus: Mode Change: ");
-      log += P128_modeType_toString(mode);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(
+        F("NeoPixelBus: Mode Change: "), 
+        P128_modeType_toString(mode)));
     }
     NeoPixelSendStatus(event);
   }
@@ -937,8 +936,7 @@ void P128_data_struct::wipe(void) {
 void P128_data_struct::dualwipe(void) {
   if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
     if (speed > 0) {
-      int i = _counter_mode_step - pixelCount;
-      i = abs(i);
+      const int i = abs(static_cast<int>(_counter_mode_step - pixelCount));
       Plugin_128_pixels->SetPixelColor(_counter_mode_step, rrggbb);
       Plugin_128_pixels->SetPixelColor(i,                  rgb);
 
@@ -947,8 +945,7 @@ void P128_data_struct::dualwipe(void) {
         Plugin_128_pixels->SetPixelColor(i - 1,                  rrggbb);
       }
     } else {
-      int i = (pixelCount / 2) - _counter_mode_step;
-      i = abs(i);
+      const int i = abs(static_cast<int>((pixelCount / 2) - _counter_mode_step));
       Plugin_128_pixels->SetPixelColor(_counter_mode_step + (pixelCount / 2), rrggbb);
       Plugin_128_pixels->SetPixelColor(i,                                     rgb);
 
@@ -1035,8 +1032,8 @@ void P128_data_struct::faketv(void) {
  * Cycles a rainbow over the entire string of LEDs.
  */
 void P128_data_struct::rainbow(void) {
-  long  counter  = 20 * (counter20ms - starttimerb);
-  float progress = (float)counter / (float)fadetime;
+  const long  counter  = 20 * (counter20ms - starttimerb);
+  const float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
     Plugin_128_pixels->SetBrightness(progress * maxBright); // Safety check
