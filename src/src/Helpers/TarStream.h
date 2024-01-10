@@ -4,6 +4,7 @@
  * Code is inspired by this example: https://github.com/esp8266/Arduino/issues/3966#issuecomment-351850298
  *
  * Changelog:
+ * 2024-01-10 tonhuisman: Fix handling of 0-byte files (next files where shifted 1 byte forward for each 0-byte file)
  * 2023-08-27 tonhuisman: Add explicit check for / in filename, to avoid subdirectory/file to overwrite file (subdir is ignored by SPIFFS)
  *                        Check if file exists before trying to delete it, avoiding unneeded error log messages
  *                        Add link to the code that inspired this class

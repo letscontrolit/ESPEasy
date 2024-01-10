@@ -442,30 +442,36 @@ int TarStream::read() {
           # endif // if TAR_STREAM_DEBUG
         }
       }
-      break;
+
+      if (!((TarStreamState_e::ReadingSlack == _streamState) && (_currentIndex.fileSize == 0))) {
+        break; // Special 0-file case
+      }
     }
     case TarStreamState_e::ReadingFile:
     {
-      _tarPosition++;
+      // FIXME tonhuisman: This looks horrible... but we can't return a single byte for a 0-size file :-(
+      if (!((TarStreamState_e::ReadingSlack == _streamState) && (_currentIndex.fileSize == 0))) {
+        _tarPosition++;
 
-      if (_tarPosition < _currentFile.size()) {
-        result = _currentFile.read();
-        break;
-      } else if (_tarPosition < _currentIndex.tarSize) {
+        if (_tarPosition < _currentFile.size()) {
+          result = _currentFile.read();
+          break;
+        } else if (_tarPosition < _currentIndex.tarSize) {
+          _currentFile.close();
+          result       = 0;
+          _streamState = TarStreamState_e::ReadingSlack;
+          # if TAR_STREAM_DEBUG
+          addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 1"));
+          # endif // if TAR_STREAM_DEBUG
+          break;
+        }
         _currentFile.close();
-        result       = 0;
+        _tarPosition--; // revert 1 position
         _streamState = TarStreamState_e::ReadingSlack;
         # if TAR_STREAM_DEBUG
-        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 1"));
+        addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 2"));
         # endif // if TAR_STREAM_DEBUG
-        break;
       }
-      _currentFile.close();
-      _tarPosition--; // revert 1 position
-      _streamState = TarStreamState_e::ReadingSlack;
-      # if TAR_STREAM_DEBUG
-      addLog(LOG_LEVEL_INFO, F("TarStream: Switch from ReadingFile to ReadingSlack 2"));
-      # endif // if TAR_STREAM_DEBUG
 
       // Fall through
     }
@@ -473,9 +479,12 @@ int TarStream::read() {
     {
       _tarPosition++;
 
-      if (_tarPosition < _currentIndex.tarSize) {
+      if ((_tarPosition < _currentIndex.tarSize) && (_currentIndex.fileSize != 0)) {
         result = 0;
       } else {
+        if (_currentIndex.fileSize == 0) {
+          _tarPosition--; // Revert 1 position for 0 byte file
+        }
         _currentIterator++;
 
         if (_currentIterator != _filesList.end()) {
