@@ -207,63 +207,14 @@ void P104_data_struct::loadSettings() {
         tmp_int = 0;
 
         // WARNING: Order of parsing these values should match the numeric order of P104_OFFSET_* values
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_SIZE, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].size = tmp_int;
-        }
-
-        zones[zoneIndex].text = parseStringKeepCaseNoTrim(tmp, 1 + P104_OFFSET_TEXT, P104_FIELD_SEP);
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_ALIGNMENT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].alignment = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_ANIM_IN, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].animationIn = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_SPEED, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].speed = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_ANIM_OUT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].animationOut = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_PAUSE, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].pause = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_FONT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].font = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_CONTENT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].content = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_LAYOUT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].layout = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_SPEC_EFFECT, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].specialEffect = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_OFFSET, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].offset = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_BRIGHTNESS, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].brightness = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_REPEATDELAY, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].repeatDelay = tmp_int;
-        }
-
-        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_INVERTED, P104_FIELD_SEP), tmp_int)) {
-          zones[zoneIndex].inverted = tmp_int;
+        for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
+          if (i == P104_OFFSET_TEXT) {
+            zones[zoneIndex].text = parseStringKeepCaseNoTrim(tmp, 1 + P104_OFFSET_TEXT, P104_FIELD_SEP);
+          } else {
+            if (validIntFromString(parseString(tmp, 1 + i, P104_FIELD_SEP), tmp_int)) {
+              zones[zoneIndex].setIntValue(i, tmp_int);
+            }
+          }
         }
 
         delay(0);
@@ -1751,23 +1702,18 @@ bool P104_data_struct::saveSettings() {
       # endif // ifdef P104_DEBUG_DEV
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
-      zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
-      zones[zoneIndex].text          = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
-      zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
-      zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
-      zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
-      zones[zoneIndex].speed         = getFormItemIntCustomArgName(index + P104_OFFSET_SPEED);
-      zones[zoneIndex].animationOut  = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_OUT);
-      zones[zoneIndex].pause         = getFormItemIntCustomArgName(index + P104_OFFSET_PAUSE);
-      zones[zoneIndex].font          = getFormItemIntCustomArgName(index + P104_OFFSET_FONT);
-      zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
-      zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
-      zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
-      zones[zoneIndex].inverted      = getFormItemIntCustomArgName(index + P104_OFFSET_INVERTED);
-
-      if (zones[zoneIndex].size != 0) { // for newly added zone, use defaults
-        zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
-        zones[zoneIndex].repeatDelay = getFormItemIntCustomArgName(index + P104_OFFSET_REPEATDELAY);
+      for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
+        // for newly added zone, use defaults
+        const bool mustCheckSize = 
+          (i == P104_OFFSET_BRIGHTNESS) || 
+          (i == P104_OFFSET_REPEATDELAY);
+        if (!mustCheckSize || zones[zoneIndex].size != 0) {          
+          if (i == P104_OFFSET_TEXT) {
+            zones[zoneIndex].text = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
+          } else {
+            zones[zoneIndex].setIntValue(i, getFormItemIntCustomArgName(index + i));
+          }
+        }
       }
     }
     # ifdef P104_DEBUG_DEV
@@ -1808,29 +1754,24 @@ bool P104_data_struct::saveSettings() {
 
   String zbuffer;
 
+  // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
+  // stored with the length prefixed
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
-      zbuffer = strformat(
-        F("%u\x01%s\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%u\x01%d\x01%d\x01%d\x01"),
-        it->size,          // 2
-        it->text.c_str(),  // 2 + ~15
-        it->content,       // 1
-        it->alignment,     // 1
-        it->animationIn,   // 2
-        it->speed,         // 5
-        it->animationOut,  // 2
-        it->pause,         // 5
-        it->font,          // 1
-        it->layout,        // 1
-        it->specialEffect, // 1
-        it->offset,        // 2
-        it->brightness,    // 2
-        it->repeatDelay,   // 4
-        it->inverted);     // 1
-
-      // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
-      // stored with the length prefixed
+      zbuffer.clear();
+      for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
+        if (i == P104_OFFSET_TEXT) {
+          zbuffer += it->text;
+          zbuffer += '\x01';
+        } else {
+          int32_t value{};
+          if (it->getIntValue(i, value)) {
+            zbuffer += value;
+            zbuffer += '\x01';
+          }
+        }
+      }
 
       numDevices += (it->size != 0 ? it->size : 1) + it->offset;                                // Count corrected for newly added zones
 
@@ -2582,5 +2523,63 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
 
   return result;
 }
+
+
+
+
+P104_zone_struct::P104_zone_struct(uint8_t _zone) 
+  :  text(F("\"\"")), zone(_zone) {}
+
+
+bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
+{
+  switch (offset) {
+    case P104_OFFSET_SIZE:          value = size;           break; 
+    case P104_OFFSET_TEXT:          return false;
+    case P104_OFFSET_CONTENT:       value = content;        break; 
+    case P104_OFFSET_ALIGNMENT:     value = alignment;      break; 
+    case P104_OFFSET_ANIM_IN:       value = animationIn;    break; 
+    case P104_OFFSET_SPEED:         value = speed;          break; 
+    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break; 
+    case P104_OFFSET_PAUSE:         value = pause;          break; 
+    case P104_OFFSET_FONT:          value = font;           break; 
+    case P104_OFFSET_LAYOUT:        value = layout;         break; 
+    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break; 
+    case P104_OFFSET_OFFSET:        value = offset;         break; 
+    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break; 
+    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break; 
+    case P104_OFFSET_INVERTED:      value = inverted;       break; 
+
+    default:
+      return false;
+  }
+  return true;
+}
+
+bool P104_zone_struct::setIntValue(uint8_t offset, int32_t value)
+{
+  switch (offset) {
+    case P104_OFFSET_SIZE:          size          = value; break; 
+    case P104_OFFSET_TEXT:          return false;
+    case P104_OFFSET_CONTENT:       content       = value; break; 
+    case P104_OFFSET_ALIGNMENT:     alignment     = value; break; 
+    case P104_OFFSET_ANIM_IN:       animationIn   = value; break; 
+    case P104_OFFSET_SPEED:         speed         = value; break; 
+    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break; 
+    case P104_OFFSET_PAUSE:         pause         = value; break; 
+    case P104_OFFSET_FONT:          font          = value; break; 
+    case P104_OFFSET_LAYOUT:        layout        = value; break; 
+    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break; 
+    case P104_OFFSET_OFFSET:        offset        = value; break; 
+    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break; 
+    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break; 
+    case P104_OFFSET_INVERTED:      inverted      = value; break; 
+
+    default:
+      return false;
+  }
+  return true;
+}
+
 
 #endif // ifdef USES_P104
