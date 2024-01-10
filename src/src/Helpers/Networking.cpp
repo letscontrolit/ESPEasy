@@ -1313,6 +1313,7 @@ String getCNonce(const int len) {
   String s;
 
   for (int i = 0; i < len; ++i) {
+    // FIXME TD-er: Is this "-1" correct? The mod operator makes sure we never reach the sizeof index
     s += alphanum[rand() % (sizeof(alphanum) - 1)];
   }
 
@@ -1350,21 +1351,22 @@ String getDigestAuth(const String& authReq,
   md5.begin();
   md5.add(h1 + ':' + nonce + ':' + String(nc) + ':' + cNonce + F(":auth:") + h2);
   md5.calculate();
-  const String response = md5.toString();
 
-  const String authorization =
-    String(F("Digest username=\"")) + username +
-    F("\", realm=\"") + realm +
-    F("\", nonce=\"") + nonce +
-    F("\", uri=\"") + uri +
-    F("\", algorithm=\"MD5\", qop=auth, nc=") + String(nc) +
-    F(", cnonce=\"") + cNonce +
-    F("\", response=\"") + response +
-    '"';
-
-  //  ESPEASY_SERIAL_CONSOLE_PORT.println(authorization);
-
-  return authorization;
+  // return authorization
+  return strformat(
+    F("Digest username=\"%s\""
+    ", realm=\"%s\""
+    ", nonce=\"%s\""
+    ", uri=\"%s\""
+    ", algorithm=\"MD5\", qop=auth, nc=%s, cnonce=\"%s\""
+    ", response=\"%s\""),
+    username.c_str(),
+    realm.c_str(),
+    nonce.c_str(),
+    uri.c_str(),
+    nc,
+    cNonce.c_str(),
+    md5.toString().c_str()); // response
 }
 
 #ifndef BUILD_NO_DEBUG
@@ -1558,11 +1560,7 @@ int http_authenticate(const String& logIdentifier,
   if (Settings.UseRules) {
     // Generate event with the HTTP return code
     // e.g. http#hostname=401
-    String event = F("http#");
-    event += host;
-    event += '=';
-    event += httpCode;
-    eventQueue.addMove(std::move(event));
+    eventQueue.addMove(strformat(F("http#%s=%d"), host.c_str(), httpCode));
   }
 #ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);

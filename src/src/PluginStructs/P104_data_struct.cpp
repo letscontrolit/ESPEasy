@@ -782,8 +782,6 @@ void P104_data_struct::displayDots(uint8_t                 zone,
   if ((nullptr == P) || (nullptr == pM) || dots.isEmpty()) { return; }
   {
     uint8_t idx = 0;
-    int32_t row;
-    int32_t col;
     String  sRow;
     String  sCol;
     String  sOn_off;
@@ -797,6 +795,8 @@ void P104_data_struct::displayDots(uint8_t                 zone,
     while (!sRow.isEmpty() && !sCol.isEmpty()) {
       on_off = true; // Default On
 
+      int32_t row;
+      int32_t col;
       if (validIntFromString(sRow, row) &&
           validIntFromString(sCol, col) &&
           (row > 0) && ((row - 1) < 8) &&
@@ -2219,18 +2219,31 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
     {
       html_table(EMPTY_STRING); // Sub-table
-      html_table_header(F("Zone #&nbsp;"));
-      html_table_header(F("Modules"));
-      html_table_header(F("Text"), 180);
-      html_table_header(F("Content"));
-      html_table_header(F("Alignment"));
-      html_table_header(F("Animation In/Out"));               // 1st and 2nd row title
-      html_table_header(F("Speed/Pause"));                    // 1st and 2nd row title
-      html_table_header(F("Font/Layout"));                    // 1st and 2nd row title
-      html_table_header(F("Inverted/ Special&nbsp;Effects")); // 1st and 2nd row title
-      html_table_header(F("Offset"));
-      html_table_header(F("Brightness"));
-      html_table_header(F("Repeat (sec)"));
+
+      const __FlashStringHelper *headers[] = {
+        F("Zone #&nbsp;"),
+        F("Modules"),
+        F("Text"),
+        F("Content"),
+        F("Alignment"),
+        F("Animation In/Out"),               // 1st and 2nd row title
+        F("Speed/Pause"),                    // 1st and 2nd row title
+        F("Font/Layout"),                    // 1st and 2nd row title
+        F("Inverted/ Special&nbsp;Effects"), // 1st and 2nd row title
+        F("Offset"),
+        F("Brightness"),
+        F("Repeat (sec)")
+      };
+
+      constexpr unsigned nrHeaders = NR_ELEMENTS(headers);
+      for (unsigned i = 0; i < nrHeaders; ++i) {
+        int width = 0;
+        if (i == 2) {
+          // "Text" needs a width
+          width = 180;
+        }
+        html_table_header(headers[i], width);
+      }
       # ifdef P104_USE_ZONE_ACTIONS
       html_table_header(F(""),       15); // Spacer
       html_table_header(F("Action"), 45);

@@ -1526,9 +1526,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack: "),  getCurrentFreeStack()));
   }
   #endif
   delay(1);
