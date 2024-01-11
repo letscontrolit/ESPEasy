@@ -899,32 +899,8 @@ Then it does not make sense to have the client timeout of that controller set to
 System Variables
 ================
 
-Settings
-========
-
-The :cyan:`Load` button will allow to load files onto the Flash file system. If you want to restore a previously saved ``config.dat``, the downloaded file has to be renamed to exactly ``config.dat`` and uploaded.
-
-Since 2023-08-25, .tar archive support has been added and made available in most builds, allowing to download and upload the complete configuration, and even all files on the flash file system, as a single archive, for backup and restore/clone purposes. This makes it possible to more easily deploy a unit using a pre-configured configuration.
-
-Uploading an earlier created backup as a .tar file, will unpack all files in the root of the archive to the flash file system, *overwriting* any files that already exist. If the archive includes ``config.dat`` and the Extended CustomTaskSettings feature is available, any already existing ``extcfg<NN>.dat`` file that's not included in the archive will be removed, as that is part of the configuration, and these files can not be deleted manually.
-
-Any files in subdirectories in the archive will be ignored, as directories are not supported on the flash filesystem.
-
-The :cyan:`Save` button offers to download the configuration of the unit. If .tar file support is included in the build, by default all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``) will be included, if they exist, in the .tar archive that can be downloaded.
-
-If .tar file support is not included, or the Tools/Advanced option **Disable Save Config as .tar** is enabled, only the ``config.dat`` file will be downloaded.
-
-The :cyan:`Backup files` button is only available if .tar file support is inlcuded in the build, and offers to download a .tar archive containing all files on the flash file system. These can be stored as a backup and restored in case of some configuration or system failure, or used to create 1 or multiple clones of the unit for multi-deployment. Uploading can also be started from an automation system or script, POST-ing the .tar archive from an external source.
-
-Firmware update
-===============
-
-Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, downloaded from the Releases page, an Actions run, or self-built, and install that. When using the same flash configuration (``4M1M``, ``4M316k``, ``8M1M``, etc.) all settings will be preserved. When uncertain, the configuration can be saved using either the Save (or Backup files if available) button above.
-
-File system
-===========
-
-Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
+Interfaces
+==========
 
 I2C Scan
 ========
@@ -946,6 +922,33 @@ Example scan using an I2C multiplexer, showing multiple devices across multiple 
 
 .. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
+
+Settings
+========
+
+The :cyan:`Load` button will allow to load files onto the Flash file system. If you want to restore a previously saved ``config.dat``, the downloaded file has to be renamed to exactly ``config.dat`` and uploaded.
+
+Since 2023-08-25, .tar archive support has been added and made available in most builds, allowing to download and upload the complete configuration, and even all files on the flash file system, as a single archive, for backup and restore/clone purposes. This makes it possible to more easily deploy a unit using a pre-configured configuration.
+
+Uploading an earlier created backup as a .tar file, will unpack all files in the root of the archive to the flash file system, *overwriting* any files that already exist. If the archive includes ``config.dat`` and the Extended CustomTaskSettings feature is available, any already existing ``extcfg<NN>.dat`` file that's not included in the archive will be removed, as that is part of the configuration, and these files can not be deleted manually.
+
+Any files in subdirectories in the archive will be ignored, as directories are not supported on the flash filesystem.
+
+The :cyan:`Save` button offers to download the configuration of the unit. If .tar file support is included in the build, by default all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``) will be included, if they exist, in the .tar archive that can be downloaded.
+
+If .tar file support is not included, or the Tools/Advanced option **Disable Save Config as .tar** is enabled, only the ``config.dat`` file will be downloaded.
+
+The :cyan:`Backup files` button is only available if .tar file support is included in the build, and offers to download a .tar archive containing all files on the flash file system. These can be stored as a backup and restored in case of some configuration or system failure, or used to create 1 or multiple clones of the unit for multi-deployment. Uploading can also be started from an automation system or script, POST-ing the .tar archive from an external source.
+
+Firmware update
+===============
+
+Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, downloaded from the Releases page, an Actions run, or self-built, and install that. When using the same flash configuration (``4M1M``, ``4M316k``, ``8M1M``, etc.) all settings will be preserved. When uncertain, the configuration can be saved using either the Save (or Backup files if available) button above.
+
+File system
+===========
+
+Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
 
 Factory Reset
 =============

@@ -2,6 +2,7 @@
 
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
+#include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/HTML_wrappers.h"
 
 #include "../Globals/Cache.h"
@@ -60,7 +61,9 @@ void handle_upload_post() {
       if (uploadResult_e::SuccessReboot == uploadResult) { // Enable string de-duplication
         addHtml(F("<font color='red'>"));
         addHtml(F("You REALLY need to reboot to apply all settings..."));
-        addHtml(F("</font><BR>"));
+        addHtml(F("</font>&nbsp;"));
+        addWideButton(F("/?cmd=reboot"), F("Reboot now"));
+        addHtml(F("<BR>"));
       } else {
         addHtml(F("You may"));
         addHtml(F(" need to reboot to apply all settings..."));
