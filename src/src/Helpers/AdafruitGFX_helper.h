@@ -1,11 +1,11 @@
 #ifndef HELPERS_ADAFRUITGFX_HELPER_H
-# define HELPERS_ADAFRUITGFX_HELPER_H
+#define HELPERS_ADAFRUITGFX_HELPER_H
 
-# include "../../_Plugin_Helper.h"
+#include "../../_Plugin_Helper.h"
 
-# ifdef PLUGIN_USES_ADAFRUITGFX
+#ifdef PLUGIN_USES_ADAFRUITGFX
 
-#  define ADAGFX_LOG_LEVEL LOG_LEVEL_DEBUG
+# define ADAGFX_LOG_LEVEL LOG_LEVEL_DEBUG
 
 /****************************************************************************
  * helper class and functions for displays that use Adafruit_GFX library
@@ -39,55 +39,55 @@
  * 2022-05-23 tonhuisman: Add changelog, older changes have not been logged.
  ***************************************************************************/
 
-#  include "../Helpers/Numerical.h"
-#  include "../Helpers/ESPEasy_Storage.h"
-#  include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../Helpers/Numerical.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../ESPEasyCore/ESPEasy_Log.h"
 
 
-#  include <Adafruit_GFX.h>
-#  include <Adafruit_SPITFT.h>
-#  include <FS.h>
-#  include <vector>
+# include <Adafruit_GFX.h>
+# include <Adafruit_SPITFT.h>
+# include <FS.h>
+# include <vector>
 
 // Used for bmp support
-#  define BUFPIXELS 200                  ///< 200 * 5 = 1000 bytes
+# define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
 
-#  define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
-#  ifndef ADAGFX_ARGUMENT_VALIDATION
-#   define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
-#  endif // ifndef ADAGFX_ARGUMENT_VALIDATION
-#  ifndef ADAGFX_USE_ASCIITABLE
-#   define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
-#  endif // ifndef ADAGFX_USE_ASCIITABLE
-#  ifndef ADAGFX_SUPPORT_7COLOR
+# define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
+# ifndef ADAGFX_ARGUMENT_VALIDATION
+#  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
+# endif // ifndef ADAGFX_ARGUMENT_VALIDATION
+# ifndef ADAGFX_USE_ASCIITABLE
+#  define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
+# endif // ifndef ADAGFX_USE_ASCIITABLE
+# ifndef ADAGFX_SUPPORT_7COLOR
 
 // #  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
-#  endif // ifndef ADAGFX_SUPPORT_7COLOR
-#  ifndef ADAGFX_SUPPORT_8and16COLOR
+# endif // ifndef ADAGFX_SUPPORT_7COLOR
+# ifndef ADAGFX_SUPPORT_8and16COLOR
 
 // #  define ADAGFX_SUPPORT_8and16COLOR  1  // Do we support 8 and 16-Color displays?
-#  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
-#  ifndef ADAGFX_FONTS_INCLUDED
-#   define ADAGFX_FONTS_INCLUDED       1    // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
-#  endif // ifndef ADAGFX_FONTS_INCLUDED
-#  ifndef ADAGFX_PARSE_SUBCOMMAND
-#   define ADAGFX_PARSE_SUBCOMMAND     1    // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
-#  endif // ifndef ADAGFX_PARSE_SUBCOMMAND
-#  ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#   define ADAGFX_ENABLE_EXTRA_CMDS    1    // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
-#  endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#   define ADAGFX_ENABLE_BMP_DISPLAY   1    // Enable subcommands for displaying .bmp files on supported displays (color)
-#  endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#  ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#   define ADAGFX_ENABLE_BUTTON_DRAW    1   // Enable subcommands for displaying button-like shapes
-#  endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#  ifndef ADAGFX_ENABLE_FRAMED_WINDOW
-#   define ADAGFX_ENABLE_FRAMED_WINDOW 1    // Enable framed window features
-#  endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#  ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
-#   define ADAGFX_ENABLE_GET_CONFIG_VALUE  1// Enable getting values features
-#  endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
+# endif // ifndef ADAGFX_SUPPORT_8and16COLOR
+# ifndef ADAGFX_FONTS_INCLUDED
+#  define ADAGFX_FONTS_INCLUDED       1     // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+# endif // ifndef ADAGFX_FONTS_INCLUDED
+# ifndef ADAGFX_PARSE_SUBCOMMAND
+#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
+# endif // ifndef ADAGFX_PARSE_SUBCOMMAND
+# ifndef ADAGFX_ENABLE_EXTRA_CMDS
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
+# endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
+# ifndef ADAGFX_ENABLE_BMP_DISPLAY
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable subcommands for displaying .bmp files on supported displays (color)
+# endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
+# ifndef ADAGFX_ENABLE_BUTTON_DRAW
+#  define ADAGFX_ENABLE_BUTTON_DRAW    1    // Enable subcommands for displaying button-like shapes
+# endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_FRAMED_WINDOW
+#  define ADAGFX_ENABLE_FRAMED_WINDOW 1     // Enable framed window features
+# endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
+#  define ADAGFX_ENABLE_GET_CONFIG_VALUE  1 // Enable getting values features
+# endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
@@ -96,55 +96,55 @@
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
-#  define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-#  define ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-#  define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-#  define ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+# define ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+# define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+# define ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
 
 // # define ADAGFX_FONTS_EXTRA_8PT_ROBOTO          // This font is proportinally spaced!
 // # define ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+# define ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 
 // To enable/disable 12pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_12PT_INCLUDED is defined)
-#  define ADAGFX_FONTS_EXTRA_12PT_ANGELINA // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-#  define ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-#  define ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-#  define ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-#  define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_12PT_ANGELINA // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+# define ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+# define ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+# define ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+# define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 
 // # define ADAGFX_FONTS_EXTRA_12PT_ROBOTO          // This font is proportinally spaced!
 // # define ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+# define ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 
 // To enable/disable 16pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_16PT_INCLUDED is defined)
-#  define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
 
 // # define ADAGFX_FONTS_EXTRA_16PT_ROBOTO          // This font is proportinally spaced!
 // # define ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED // This font is proportinally spaced!
-#  define ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+# define ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 
 // To enable/disable 18pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_18PT_INCLUDED is defined)
-#  define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
 
 // To enable/disable 20pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_20PT_INCLUDED is defined)
-#  define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
 
-#  ifdef LIMIT_BUILD_SIZE
-#   ifdef ADAGFX_FONTS_INCLUDED
-#    undef ADAGFX_FONTS_INCLUDED
-#   endif // ifdef ADAGFX_FONTS_INCLUDED
-#   ifdef ADAGFX_ARGUMENT_VALIDATION
-#    undef ADAGFX_ARGUMENT_VALIDATION
-#   endif // ifdef ADAGFX_ARGUMENT_VALIDATION
-#   ifdef ADAGFX_USE_ASCIITABLE
-#    undef ADAGFX_USE_ASCIITABLE
-#   endif // ifdef ADAGFX_USE_ASCIITABLE
-#   ifdef ADAGFX_SUPPORT_8and16COLOR
-#    undef ADAGFX_SUPPORT_8and16COLOR
-#   endif // ifdef ADAGFX_SUPPORT_8and16COLOR
+# ifdef LIMIT_BUILD_SIZE
+#  ifdef ADAGFX_FONTS_INCLUDED
+#   undef ADAGFX_FONTS_INCLUDED
+#  endif // ifdef ADAGFX_FONTS_INCLUDED
+#  ifdef ADAGFX_ARGUMENT_VALIDATION
+#   undef ADAGFX_ARGUMENT_VALIDATION
+#  endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+#  ifdef ADAGFX_USE_ASCIITABLE
+#   undef ADAGFX_USE_ASCIITABLE
+#  endif // ifdef ADAGFX_USE_ASCIITABLE
+#  ifdef ADAGFX_SUPPORT_8and16COLOR
+#   undef ADAGFX_SUPPORT_8and16COLOR
+#  endif // ifdef ADAGFX_SUPPORT_8and16COLOR
 // #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
 // #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
@@ -157,72 +157,72 @@
 // #  ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #   undef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #  endif // ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
-#  endif // ifdef LIMIT_BUILD_SIZE
+# endif  // ifdef LIMIT_BUILD_SIZE
 
-#  ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
-#   ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#    define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#    define ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   endif // ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#    define ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   endif // ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#    define ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   endif // ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#    define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   ifndef ADAGFX_SUPPORT_7COLOR
-#    define ADAGFX_SUPPORT_7COLOR       1
-#   endif // ifndef ADAGFX_SUPPORT_7COLOR
-#   ifndef ADAGFX_SUPPORT_8and16COLOR
-#    define ADAGFX_SUPPORT_8and16COLOR  1
-#   endif // ifndef ADAGFX_SUPPORT_8and16COLOR
-#  endif  // ifdef PLUGIN_SET_MAX
+# ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
+#  ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifndef ADAGFX_SUPPORT_7COLOR
+#   define ADAGFX_SUPPORT_7COLOR       1
+#  endif // ifndef ADAGFX_SUPPORT_7COLOR
+#  ifndef ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_SUPPORT_8and16COLOR  1
+#  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
+# endif  // ifdef PLUGIN_SET_MAX
 
-#  define ADAGFX_PARSE_PREFIX      F("~")             // Subcommand-trigger prefix and postfix strings
-#  define ADAGFX_PARSE_PREFIX_LEN  1
-#  define ADAGFX_PARSE_POSTFIX     F("~")              // Will be removed before the normal template parsing is done
-#  define ADAGFX_PARSE_POSTFIX_LEN 1
+# define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX_LEN  1
+# define ADAGFX_PARSE_POSTFIX     F("~")              // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX_LEN 1
 
-#  define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_trigger") // Universal command trigger
+# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_trigger") // Universal command trigger
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
-#  define ADAGFX_BLACK        0x0000 ///<   0,   0,   0
-#  define ADAGFX_NAVY         0x000F ///<   0,   0, 123
-#  define ADAGFX_DARKGREEN    0x03E0 ///<   0, 125,   0
-#  define ADAGFX_DARKCYAN     0x03EF ///<   0, 125, 123
-#  define ADAGFX_MAROON       0x7800 ///< 123,   0,   0
-#  define ADAGFX_PURPLE       0x780F ///< 123,   0, 123
-#  define ADAGFX_OLIVE        0x7BE0 ///< 123, 125,   0
-#  define ADAGFX_LIGHTGREY    0xC618 ///< 198, 195, 198
-#  define ADAGFX_DARKGREY     0x7BEF ///< 123, 125, 123
-#  define ADAGFX_BLUE         0x001F ///<   0,   0, 255
-#  define ADAGFX_GREEN        0x07E0 ///<   0, 255,   0
-#  define ADAGFX_CYAN         0x07FF ///<   0, 255, 255
-#  define ADAGFX_RED          0xF800 ///< 255,   0,   0
-#  define ADAGFX_MAGENTA      0xF81F ///< 255,   0, 255
-#  define ADAGFX_YELLOW       0xFFE0 ///< 255, 255,   0
-#  define ADAGFX_WHITE        0xFFFF ///< 255, 255, 255
-#  define ADAGFX_ORANGE       0xFD20 ///< 255, 165,   0
-#  define ADAGFX_GREENYELLOW  0xAFE5 ///< 173, 255,  41
-#  define ADAGFX_PINK         0xFC18 ///< 255, 130, 198
+# define ADAGFX_BLACK        0x0000 ///<   0,   0,   0
+# define ADAGFX_NAVY         0x000F ///<   0,   0, 123
+# define ADAGFX_DARKGREEN    0x03E0 ///<   0, 125,   0
+# define ADAGFX_DARKCYAN     0x03EF ///<   0, 125, 123
+# define ADAGFX_MAROON       0x7800 ///< 123,   0,   0
+# define ADAGFX_PURPLE       0x780F ///< 123,   0, 123
+# define ADAGFX_OLIVE        0x7BE0 ///< 123, 125,   0
+# define ADAGFX_LIGHTGREY    0xC618 ///< 198, 195, 198
+# define ADAGFX_DARKGREY     0x7BEF ///< 123, 125, 123
+# define ADAGFX_BLUE         0x001F ///<   0,   0, 255
+# define ADAGFX_GREEN        0x07E0 ///<   0, 255,   0
+# define ADAGFX_CYAN         0x07FF ///<   0, 255, 255
+# define ADAGFX_RED          0xF800 ///< 255,   0,   0
+# define ADAGFX_MAGENTA      0xF81F ///< 255,   0, 255
+# define ADAGFX_YELLOW       0xFFE0 ///< 255, 255,   0
+# define ADAGFX_WHITE        0xFFFF ///< 255, 255, 255
+# define ADAGFX_ORANGE       0xFD20 ///< 255, 165,   0
+# define ADAGFX_GREENYELLOW  0xAFE5 ///< 173, 255,  41
+# define ADAGFX_PINK         0xFC18 ///< 255, 130, 198
 
-enum class AdaGFXMonoRedGreyscaleColors : uint16_t {
-  ADAGFXEPD_BLACK,                   ///< black color
-  ADAGFXEPD_WHITE,                   ///< white color
-  ADAGFXEPD_INVERSE,                 ///< invert color
-  ADAGFXEPD_RED,                     ///< red color
-  ADAGFXEPD_DARK,                    ///< darker color
-  ADAGFXEPD_LIGHT                    ///< lighter color
+enum class AdaGFXMonoRedGreyscaleColors: uint16_t {
+  ADAGFXEPD_BLACK,                  ///< black color
+  ADAGFXEPD_WHITE,                  ///< white color
+  ADAGFXEPD_INVERSE,                ///< invert color
+  ADAGFXEPD_RED,                    ///< red color
+  ADAGFXEPD_DARK,                   ///< darker color
+  ADAGFXEPD_LIGHT                   ///< lighter color
 };
 
-#  if ADAGFX_SUPPORT_7COLOR
-enum class AdaGFX7Colors : uint16_t {
+# if ADAGFX_SUPPORT_7COLOR
+enum class AdaGFX7Colors: uint16_t {
   ADAGFX7C_BLACK,  ///< black color
   ADAGFX7C_WHITE,  ///< white color
   ADAGFX7C_GREEN,  ///< green color
@@ -231,7 +231,7 @@ enum class AdaGFX7Colors : uint16_t {
   ADAGFX7C_YELLOW, ///< yellow color
   ADAGFX7C_ORANGE  ///< orange color
 };
-#  endif // if ADAGFX_SUPPORT_7COLOR
+# endif // if ADAGFX_SUPPORT_7COLOR
 
 enum class AdaGFXTextPrintMode : uint8_t {
   ContinueToNextLine        = 0u,
@@ -242,38 +242,38 @@ enum class AdaGFXTextPrintMode : uint8_t {
   MAX                             // Keep as last
 };
 
-#  if ADAGFX_SUPPORT_7COLOR
-#   if ADAGFX_SUPPORT_8and16COLOR
-#    define ADAGFX_COLORDEPTH_COUNT 7
-#    define ADAGFX_MONOCOLORS_COUNT 4
-#   else // if ADAGFX_SUPPORT_8and16COLOR
-#    define ADAGFX_COLORDEPTH_COUNT 5
-#    define ADAGFX_MONOCOLORS_COUNT 4
-#   endif // if ADAGFX_SUPPORT_8and16COLOR
-#  else // if ADAGFX_SUPPORT_7COLOR
-#   if ADAGFX_SUPPORT_8and16COLOR
-#    define ADAGFX_COLORDEPTH_COUNT 6
-#    define ADAGFX_MONOCOLORS_COUNT 3
-#   else // if ADAGFX_SUPPORT_8and16COLOR
-#    define ADAGFX_COLORDEPTH_COUNT 4
-#    define ADAGFX_MONOCOLORS_COUNT 3
-#   endif // if ADAGFX_SUPPORT_8and16COLOR
-#  endif // if ADAGFX_SUPPORT_7COLOR
+# if ADAGFX_SUPPORT_7COLOR
+#  if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 7
+#   define ADAGFX_MONOCOLORS_COUNT 4
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 5
+#   define ADAGFX_MONOCOLORS_COUNT 4
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
+# else // if ADAGFX_SUPPORT_7COLOR
+#  if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 6
+#   define ADAGFX_MONOCOLORS_COUNT 3
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 4
+#   define ADAGFX_MONOCOLORS_COUNT 3
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
+# endif // if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFXColorDepth : uint16_t {
   Monochrome            = 2u, // Black & white
   BlackWhiteRed         = 3u, // Black, white & red (or yellow)
   BlackWhite2Greyscales = 4u, // Black, white, lightgrey & darkgrey
-  #  if ADAGFX_SUPPORT_7COLOR
+  # if ADAGFX_SUPPORT_7COLOR
   SevenColor = 7u,            // Black, white, red, yellow, blue, green, orange
-  #  endif // if ADAGFX_SUPPORT_7COLOR
-  #  if ADAGFX_SUPPORT_8and16COLOR
+  # endif // if ADAGFX_SUPPORT_7COLOR
+  # if ADAGFX_SUPPORT_8and16COLOR
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
-  #  endif // if ADAGFX_SUPPORT_8and16COLOR
+  # endif // if ADAGFX_SUPPORT_8and16COLOR
   FullColor = 65535u          // 65535 colors (max. supported by RGB565)
 };
 
-#  if ADAGFX_ENABLE_BUTTON_DRAW
+# if ADAGFX_ENABLE_BUTTON_DRAW
 
 // Only bits 0..3 can be used, masked with: 0x0F
 // stored combined with Button_layout_e value
@@ -309,9 +309,9 @@ enum class Button_layout_e : uint8_t {
 const __FlashStringHelper* toString(const Button_type_e button);
 const __FlashStringHelper* toString(const Button_layout_e layout);
 
-#  endif // if ADAGFX_ENABLE_BUTTON_DRAW
+# endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
-#  if ADAGFX_ENABLE_FRAMED_WINDOW
+# if ADAGFX_ENABLE_FRAMED_WINDOW
 
 struct tWindowPoint {
   uint16_t x = 0;
@@ -325,112 +325,7 @@ struct tWindowObject {
   uint8_t      id       = 0u;
   int8_t       rotation = 0;
 };
-#  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-
-enum class adagfx_fonts_e : int8_t {
-  invalid      = -1,
-  default_font = 0,       // font,default is always available!
-  sevenseg24,
-  sevenseg18,
-  freesans,
-
-      // Extra 8pt fonts:
-
-#ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-  angelina8prop,          // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-  novamono8pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-  unispace8pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-  unispaceitalic8pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-  whiterabbit8pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-  roboto8pt,              // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-  robotocond8pt,          // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-  robotomono8pt,
-#endif
-#endif
-
-      // Extra 12pt fonts:
-
-#ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-  angelina12prop,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-  novamono12pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-  repetitionscrolling12pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-  unispace12pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-  unispaceitalic12pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-  whiterabbit12pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-  roboto12pt,             // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-  robotocond12pt,         // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-  robotomono12pt,
-#endif
-#endif
-
-      // Extra 16pt fonts:
-
-#ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-  amerikasans16pt,        // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-  whiterabbit16pt,
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-  roboto16pt,             // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-  robotocond16pt,         // Proportional font!
-#endif
-#ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-  robotomono16pt,
-#endif
-#endif
-
-      // Extra 18pt fonts:
-
-#ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-  whiterabbit18pt,
-#endif
-#endif
-
-      // Extra 20pt fonts:
-
-#ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-  whiterabbit20pt
-#endif
-#endif
-};
+# endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
 class AdafruitGFX_helper; // Forward declaration
 
@@ -481,9 +376,9 @@ void   AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
 String AdaGFXcolorToString(const uint16_t        & color,
                            const AdaGFXColorDepth& colorDepth   = AdaGFXColorDepth::FullColor,
                            bool                    blackIsEmpty = false);
-#   if ADAGFX_SUPPORT_7COLOR
+# if ADAGFX_SUPPORT_7COLOR
 uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to 7-color
-#   endif // if ADAGFX_SUPPORT_7COLOR
+# endif // if ADAGFX_SUPPORT_7COLOR
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
 
@@ -501,7 +396,7 @@ public:
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
                      const bool                 textBackFill  = false);
-  #   if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   AdafruitGFX_helper(Adafruit_SPITFT           *display,
                      const String             & trigger,
                      const uint16_t             res_x,
@@ -513,33 +408,24 @@ public:
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
                      const bool                 textBackFill  = false);
-  #   endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
   String getFeatures();
 
   bool   processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
 
-private:
+  # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  bool   pluginGetConfigValue(String& string); // Get a config value from the plugin
+  # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
-  #   if ADAGFX_FONTS_INCLUDED
-  bool setFont(adagfx_fonts_e font);
-
-  #   endif // if ADAGFX_FONTS_INCLUDED
-
-public:
-
-  #   if ADAGFX_ENABLE_GET_CONFIG_VALUE
-  bool pluginGetConfigValue(String& string); // Get a config value from the plugin
-  #   endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
-
-  void printText(const char     *string,
-                 const int16_t & X,
-                 const int16_t & Y,
-                 const uint8_t & textSize = 0,
-                 const uint16_t& color    = ADAGFX_WHITE,
-                 uint16_t        bkcolor  = ADAGFX_BLACK,
-                 const uint16_t& maxWidth = 0);
+  void   printText(const char     *string,
+                   const int16_t & X,
+                   const int16_t & Y,
+                   const uint8_t & textSize = 0,
+                   const uint16_t& color    = ADAGFX_WHITE,
+                   uint16_t        bkcolor  = ADAGFX_BLACK,
+                   const uint16_t& maxWidth = 0);
   void calculateTextMetrics(const uint8_t fontwidth,
                             const uint8_t fontheight,
                             const int8_t  heightOffset   = 0,
@@ -579,13 +465,13 @@ public:
     return trigger.equalsIgnoreCase(ADAGFX_UNIVERSAL_TRIGGER);
   }
 
-  #   if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   bool showBmp(const String& filename,
                int16_t       x,
                int16_t       y);
-  #   endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
 
-  #   if ADAGFX_ENABLE_FRAMED_WINDOW
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
   uint8_t getWindow() {
     return _window;
   }
@@ -600,7 +486,7 @@ public:
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
   bool     deleteWindow(const uint8_t& windowId);
-  #   endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   uint16_t getTextSize(const String& text,
                        uint16_t    & h); // return length and height in pixels using current font
@@ -615,12 +501,12 @@ public:
 
 private:
 
-  #   if ADAGFX_ARGUMENT_VALIDATION
+  # if ADAGFX_ARGUMENT_VALIDATION
   bool invalidCoordinates(const int  X,
                           const int  Y,
                           const bool colRowMode = false);
-  #   endif // if ADAGFX_ARGUMENT_VALIDATION
-  #   if ADAGFX_ENABLE_BUTTON_DRAW
+  # endif // if ADAGFX_ARGUMENT_VALIDATION
+  # if ADAGFX_ENABLE_BUTTON_DRAW
   void drawButtonShape(const Button_type_e& buttonType,
                        const int          & x,
                        const int          & y,
@@ -628,7 +514,7 @@ private:
                        const int          & h,
                        const uint16_t     & fillColor,
                        const uint16_t     & borderColor);
-  #   endif // if ADAGFX_ENABLE_BUTTON_DRAW
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
   Adafruit_GFX *_display = nullptr;
   Adafruit_SPITFT *_tft = nullptr;
@@ -659,12 +545,12 @@ private:
 
   uint16_t _display_x = 0;
   uint16_t _display_y = 0;
-  #   if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   uint16_t readLE16(void);
   uint32_t readLE32(void);
   fs::File file;
-  #   endif // if ADAGFX_ENABLE_BMP_DISPLAY
-  #   if ADAGFX_ENABLE_FRAMED_WINDOW
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
   int16_t getWindowIndex(const int16_t& windowId);
   void    logWindows(const String& prefix = EMPTY_STRING);
   void    getWindowOffsets(uint16_t& xOffset,
@@ -674,8 +560,8 @@ private:
   std::vector<tWindowObject>_windows;
   uint8_t _window      = 0; // current window
   uint8_t _windowIndex = 0; // current window Index
-  #   endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 };
-#  endif // ifdef PLUGIN_USES_ADAFRUITGFX
+#endif // ifdef PLUGIN_USES_ADAFRUITGFX
 
-# endif // ifndef HELPERS_ADAFRUITGFX_HELPER_H
+#endif // ifndef HELPERS_ADAFRUITGFX_HELPER_H
