@@ -488,7 +488,7 @@ void AttemptWiFiConnect() {
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
 #if FEATURE_USE_IPV6
-      WiFi.IPv6(true);
+      WiFi.enableIPv6(true);
 #endif
 
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)

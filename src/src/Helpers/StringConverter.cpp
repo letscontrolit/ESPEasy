@@ -59,7 +59,7 @@ bool equals(const String& str, const __FlashStringHelper * f_str) {
 }
 
 bool equals(const String& str, const char& c) {
-  return str.equals(String(c));
+  return str.length() == 1 && str[0] == c;
 }
 
 void move_special(String& dest, String&& source) {
@@ -199,7 +199,7 @@ bool str2ip(const char *string, uint8_t *IP)
   return false;
 }
 
-String formatIP(const IPAddress& ip) {
+String formatIP(const IPAddress& ip, bool includeZone) {
 #ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
@@ -218,7 +218,7 @@ String formatIP(const IPAddress& ip) {
   }
   #endif
 */
-  return ip.toString();
+  return ip.toString(includeZone);
 #endif
 }
 

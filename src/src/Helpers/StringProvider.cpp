@@ -436,10 +436,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return strformat(F("%s / %s"), getValue(LabelType::IP_ADDRESS).c_str(), getValue(LabelType::IP_SUBNET).c_str());
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
 #if FEATURE_USE_IPV6
-    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6());
+    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6(), true);
     case LabelType::IP6_GLOBAL:             return formatIP(NetworkGlobalIP6());
 #if FEATURE_ETHERNET
-    case LabelType::ETH_IP6_LOCAL:          return formatIP(NetworkLocalIP6());
+    case LabelType::ETH_IP6_LOCAL:          return formatIP(NetworkLocalIP6(), true);
 #endif
 /*
     case LabelType::IP6_ALL_ADDRESSES:
@@ -457,7 +457,7 @@ String getValue(LabelType::Enum label) {
     }
 */
 #endif
-    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP(), true);
     #if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
     #endif // if FEATURE_INTERNAL_TEMPERATURE

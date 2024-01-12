@@ -305,7 +305,7 @@ void checkUDP()
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               addLogMove(LOG_LEVEL_DEBUG,  
                 strformat(F("UDP  : %s  Command: %s"), 
-                  formatIP(remoteIP).c_str(), 
+                  formatIP(remoteIP, true).c_str(), 
                   wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
                   ));
             }
@@ -346,7 +346,7 @@ void checkUDP()
                         formatIP(remoteIP).c_str(), 
                         received.unit,
                         received.STA_MAC().toString().c_str(), 
-                        formatIP(received.IP()).c_str(), 
+                        formatIP(received.IP(), true).c_str(), 
                         received.unit));
                   }
 

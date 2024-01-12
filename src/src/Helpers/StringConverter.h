@@ -82,7 +82,7 @@ bool str2ip(const String& string,
 bool str2ip(const char *string,
                uint8_t       *IP);
 
-String  formatIP(const IPAddress& ip);
+String  formatIP(const IPAddress& ip, bool includeZone = false);
 
 
 /********************************************************************************************\

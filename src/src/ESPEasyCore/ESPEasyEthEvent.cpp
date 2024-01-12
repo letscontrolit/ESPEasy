@@ -52,7 +52,7 @@ void EthEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ip_event_got_ip6_t * event = static_cast<ip_event_got_ip6_t*>(&info.got_ip6);
       IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
       EthEventData.markGotIPv6(ip);
-      addLog(LOG_LEVEL_INFO, String(F("ETH event: Got IP6")) + ip.toString());
+      addLog(LOG_LEVEL_INFO, String(F("ETH event: Got IP6")) + ip.toString()true);
     }
     #else
     addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
