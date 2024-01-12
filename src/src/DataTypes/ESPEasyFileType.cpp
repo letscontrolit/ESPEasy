@@ -25,7 +25,7 @@ bool isProtectedFileType(const String& filename)
   const int8_t mPerc        = mask.indexOf('%');
 
   if ((mPerc > -1) && fname.startsWith(mask.substring(0, mPerc))) {
-    for (uint8_t n = 0; n < TASKS_MAX && !isTaskSpecificConfig; n++) {
+    for (uint8_t n = 0; n < TASKS_MAX && !isTaskSpecificConfig; ++n) {
       isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(mask, n + 1)));
     }
   }
