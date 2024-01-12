@@ -43,6 +43,9 @@ public:
 
     IP4,
     IP,
+#if FEATURE_USE_IPV6
+    IP6_LOCAL,
+#endif
     ISMQTT,
     ISMQTTIMP,
     ISNTP,

@@ -90,6 +90,9 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
   switch (enumval)
   {
     case SystemVariables::IP:                label = LabelType::IP_ADDRESS; break;
+#if FEATURE_USE_IPV6
+    case SystemVariables::IP6_LOCAL:         label = LabelType::IP6_LOCAL; break;
+#endif
     case SystemVariables::SUBNET:            label = LabelType::IP_SUBNET; break;
     case SystemVariables::DNS:               label = LabelType::DNS; break;
     case SystemVariables::DNS_1:             label = LabelType::DNS_1; break;
@@ -523,6 +526,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
 
     case Enum::IP4:                return F("ip4");
     case Enum::IP:                 return F("ip");
+#if FEATURE_USE_IPV6
+    case Enum::IP6_LOCAL:          return F("ipv6local");
+#endif
     case Enum::ISMQTT:             return F("ismqtt");
     case Enum::ISMQTTIMP:          return F("ismqttimp");
     case Enum::ISNTP:              return F("isntp");
