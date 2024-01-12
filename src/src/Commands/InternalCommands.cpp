@@ -309,6 +309,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::i2cscanner:                 COMMAND_CASE_R(Command_i2c_Scanner, -1);                 // i2c.h
     case ESPEasy_cmd_e::inc:                        COMMAND_CASE_A(Command_Rules_Inc,   -1);                 // Rules.h
     case ESPEasy_cmd_e::ip:                         COMMAND_CASE_R(Command_IP,           1);                 // Network Command
+#if FEATURE_USE_IPV6
+    case ESPEasy_cmd_e::ip6:                        COMMAND_CASE_R(Command_show_all_IP6,           0);                 // Network Command
+#endif
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::jsonportstatus:             COMMAND_CASE_A(Command_JSONPortStatus, -1);              // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

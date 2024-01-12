@@ -1088,6 +1088,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_MAX
     #define CONTROLLER_SET_ALL
     #define NOTIFIER_SET_ALL
+    #ifndef TESTING_FEATURE_USE_IPV6
+        #define TESTING_FEATURE_USE_IPV6
+    #endif
     #ifndef PLUGIN_ENERGY_COLLECTION
         #define PLUGIN_ENERGY_COLLECTION
     #endif

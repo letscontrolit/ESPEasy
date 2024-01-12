@@ -218,7 +218,11 @@ String formatIP(const IPAddress& ip, bool includeZone) {
   }
   #endif
 */
+#if FEATURE_USE_IPV6
   return ip.toString(includeZone);
+#else
+  return ip.toString();
+#endif
 #endif
 }
 
@@ -666,6 +670,18 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Empty string
     return F("\"\"");
   }
+  if (value.length() > 2) {
+    // Check for JSON objects or arrays
+    const char firstchar = value[0];
+    const char lastchar = value[value.length() - 1];
+    if ((firstchar == '[' && lastchar == ']') ||
+        (firstchar == '{' && lastchar == '}')) 
+    {
+      return value;
+    }
+  }
+
+
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
 
