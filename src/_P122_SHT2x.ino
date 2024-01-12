@@ -234,12 +234,6 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      // code to be executed once a second. Tasks which do not require fast response can be added here
-      success = true;
-    }
-
     case PLUGIN_TEN_PER_SECOND:
     {
       // code to be executed 10 times per second. Tasks which require fast response can be added here
@@ -251,6 +245,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->update(); // SHT2x FSM evaluation
       }
       success = true;
+      break;
     }
   } // switch
   return success;

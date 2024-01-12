@@ -203,9 +203,9 @@ typedef struct {
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
   uint8_t  SLidx       = 0;    // index to DisplayLinesV1
-  uint8_t  reserved22;         // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t  reserved23;
-  uint8_t  reserved24;
+  uint8_t  reserved22{};         // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t  reserved23{};
+  uint8_t  reserved24{};
 } tScrollLine;
 
 typedef struct {
@@ -216,8 +216,8 @@ typedef struct {
   uint16_t TickerAvgPixPerChar = 0; // max of average pixel per character or pix change per scroll time (100ms)
   int16_t  MaxPixLen           = 0; // Max pix length to display (display width + 2*TickerAvgPixPerChar)
   # ifdef ESP8266                   // Helpful on ESP8266 only, it seems
-  uint8_t reserved15;               // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t reserved16;
+  uint8_t reserved15{};             // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved16{};
   # endif // ifdef ESP8266
 } tTicker;
 

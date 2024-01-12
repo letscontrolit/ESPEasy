@@ -128,10 +128,10 @@ bool PluginTaskData_base::webformLoad_show_stats(struct EventStruct *event) cons
 }
 
 # if FEATURE_CHART_JS
-void PluginTaskData_base::plot_ChartJS() const
+void PluginTaskData_base::plot_ChartJS(bool onlyJSON) const
 {
   if (_plugin_stats_array != nullptr) {
-    _plugin_stats_array->plot_ChartJS();
+    _plugin_stats_array->plot_ChartJS(onlyJSON);
   }
 }
 
@@ -144,7 +144,8 @@ void PluginTaskData_base::plot_ChartJS_scatter(
   int                           width,
   int                           height,
   bool                          showAverage,
-  const String                & options) const
+  const String                & options,
+  bool                          onlyJSON) const
 {
   if (_plugin_stats_array != nullptr) {
     _plugin_stats_array->plot_ChartJS_scatter(
@@ -156,7 +157,8 @@ void PluginTaskData_base::plot_ChartJS_scatter(
       width,
       height,
       showAverage,
-      options);
+      options,
+      onlyJSON);
   }
 }
 
