@@ -654,6 +654,10 @@ String SaveSecuritySettings(bool forFactoryReset) {
 
 void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID)) {
+    // Not valid settings, so do not continue
+    return;
+  }
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
@@ -662,7 +666,8 @@ void afterloadSettings() {
   if (pref_temp == 0) {
     if (ResetFactoryDefaultPreference.getPreference() == 0) {
       // Try loading from NVS
-      ResetFactoryDefaultPreference.init();
+      ESPEasy_NVS_Helper preferences;
+      ResetFactoryDefaultPreference.init(preferences);
       pref_temp = ResetFactoryDefaultPreference.getPreference();
     }
   }
