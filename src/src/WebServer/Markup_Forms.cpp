@@ -249,6 +249,8 @@ void addFormTextBox(const String  & label,
                     #if FEATURE_TOOLTIPS
                     , const String& tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String&   datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -256,6 +258,7 @@ void addFormTextBox(const String  & label,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
@@ -271,6 +274,8 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     ,
                     const String& tooltip 
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -278,6 +283,7 @@ void addFormTextBox(const __FlashStringHelper * classname,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
@@ -386,6 +392,32 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label, const __Fla
 {
   addRowLabel_tr_id(label, id);
   addIPaccessControlSelect(id, choice);
+}
+
+// ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText) {
+  const int len = charset.length() + 1;
+  String    charList[len];
+  int charOpts[len];
+
+  charList[0] = F("None");
+  charOpts[0] = 0;
+
+  for (uint16_t i = 0; i < charset.length(); i++) {
+    charList[i + 1] = charset[i];
+    charOpts[i + 1] = static_cast<int>(charset[i]);
+  }
+  addFormSelector(rowLabel, id, len, charList, charOpts, value);
+
+  if (!String(additionalText).isEmpty()) {
+    addUnit(additionalText);
+  }
 }
 
 // ********************************************************************************

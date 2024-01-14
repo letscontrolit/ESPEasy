@@ -1,0 +1,14 @@
+.. csv-table::
+  :header: "Event", "Example"
+  :widths: 30, 20
+
+  "
+  ``clock#Output`` The value provided with this event is the field (1..Nr. of Day,Time fields) that was triggered.
+
+  ``clock#Output2`` When the 'Number Output Values' is set to Dual, Triple or Quad, and a GPIO is configured or 'Value input On/Off only' is checked the On (1) or Off (0) value is included as an event argument (``%eventvalue1%``).
+
+  If no GPIO is configured and 'Value input On/Off only' is unchecked, the configured value is provided as ``%eventvalue1%``.
+
+  Events are only generated if the value is not set to 0 or empty.
+  ","
+  "
