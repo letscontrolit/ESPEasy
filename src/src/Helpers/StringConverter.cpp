@@ -1464,6 +1464,9 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
   pos_begin = -1;
   pos_end   = -1;
+  if (string == nullptr) {
+    return false;
+  }
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
   bool parenthesis          = false;
