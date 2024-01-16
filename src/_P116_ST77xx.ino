@@ -159,7 +159,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
-        constexpr int optCount4 = sizeof(optionValues4) / sizeof(optionValues4[0]);
+        constexpr int optCount4 = NR_ELEMENTS(optionValues4);
         addFormSelector(F("TFT display model"),
                         F("type"),
                         optCount4,
@@ -193,7 +193,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7789),
           static_cast<int>(P116_CommandTrigger::st7796)
         };
-        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
+        constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
                         cmdCount,
@@ -227,7 +227,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
         uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
 
-        for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
+        for (uint8_t varNr = 0; varNr < P116_Nlines; ++varNr) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
           remain -= (strings[varNr].length() + 1);
         }
@@ -273,7 +273,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       {
         String strings[P116_Nlines];
 
-        for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
+        for (uint8_t varNr = 0; varNr < P116_Nlines; ++varNr) {
           strings[varNr] = webArg(getPluginCustomArgName(varNr));
         }
 

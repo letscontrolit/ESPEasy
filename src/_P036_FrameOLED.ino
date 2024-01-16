@@ -409,9 +409,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *options9[] =
-        { F("SSID"),           F("SysName"),               F("IP"),              F("MAC"),                    F("RSSI"),
-          F("BSSID"),          F("WiFi channel"),          F("Unit"),            F("SysLoad"),                F("SysHeap"),
-          F("SysStack"),       F("Date"),                  F("Time"),            F("PageNumbers"),
+        { F("SSID"),           F("SysName"),               F("IP"),                    F("MAC"),                    F("RSSI"),
+          F("BSSID"),          F("WiFi channel"),          F("Unit"),                  F("SysLoad"),                F("SysHeap"),
+          F("SysStack"),       F("Date"),                  F("Time"),                  F("PageNumbers"),
           # if P036_USERDEF_HEADERS
           F("User defined 1"),
           F("User defined 2"),
@@ -512,7 +512,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
 
-          for (int varNr = 0; varNr < P36_Nlines; varNr++)
+          for (int varNr = 0; varNr < P36_Nlines; ++varNr)
           {
             html_TR_TD();                     // All columns use max. width available
             addHtml(F("&nbsp;"));
@@ -634,7 +634,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_CheckHeap(F("_SAVE: After (*P036_lines = new)"));
 # endif // P036_CHECK_HEAP
 
-          for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+          for (uint8_t varNr = 0; varNr < P36_Nlines; ++varNr)
           {
             P036_lines.DisplayLinesV1[varNr].Content  = webArg(getPluginCustomArgName(varNr));
             P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
@@ -1034,9 +1034,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P036_data) {
-        if (P036_data->isInitialized()) {
-          success = P036_data->plugin_write(event, string);
-        }
+        success = P036_data->plugin_write(event, string);
       }
 
       break;
@@ -1045,18 +1043,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-
 # ifdef P036_CHECK_HEAP
 void P036_CheckHeap(String dbgtxt) {
-  String log;
-
-  log.reserve(80);
-  log += dbgtxt;
-  log += F(" FreeHeap:");
-  log += ESP.getFreeHeap();
-  log += F(" FreeStack:");
-  log += getCurrentFreeStack();
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO,
+         strformat(F("%s FreeHeap:%d FreeStack:%d"),
+                   dbgtxt.c_str(), ESP.getFreeHeap(), getCurrentFreeStack()));
 }
 
 # endif // ifdef P036_CHECK_HEAP
