@@ -439,11 +439,15 @@ void fileSystemCheck()
   {
     clearAllCaches();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FS   : Mount successful, used ");
-      log += SpiffsUsedBytes();
-      log += F(" bytes of ");
-      log += SpiffsTotalBytes();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("FS   : "
+#ifdef USE_LITTLEFS
+          "LittleFS"
+#else
+          "SPIFFS"
+#endif
+          " mount successful, used %u bytes of %u"), 
+        SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
 
     // Run garbage collection before any file is open.
@@ -736,9 +740,9 @@ String LoadSettings()
 
     #ifndef BUILD_NO_DEBUG
     if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+      addLog(LOG_LEVEL_INFO,  concat(F("CRC  : Settings CRC"), F("...OK")));
     } else{
-      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+      addLog(LOG_LEVEL_ERROR, concat(F("CRC  : Settings CRC"), F("...FAIL")));
     }
     #endif
   }
@@ -750,14 +754,14 @@ String LoadSettings()
 
 #ifndef BUILD_NO_DEBUG
   if (SecuritySettings.checksumMatch()) {
-    addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
+    addLog(LOG_LEVEL_INFO, concat(F("CRC  : SecuritySettings CRC"), F("...OK ")));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
     }
   }
   else {
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, concat(F("CRC  : SecuritySettings CRC"), F("...FAIL")));
   }
 #endif
 
