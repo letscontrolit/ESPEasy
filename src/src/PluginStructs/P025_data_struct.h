@@ -35,7 +35,7 @@ union P025_VARIOUS_BITS_t {
 // - PCONFIG(6)
 // - PCONFIG(7)
 # define P025_SENSOR_TYPE_INDEX 4 // Storing the output selector
-# define P025_PCONFIG_INDEX(x) ((x == 0) ? 2 : x + P025_SENSOR_TYPE_INDEX)
+# define P025_PCONFIG_INDEX(x) (((x) == 0) ? 2 : (x) + P025_SENSOR_TYPE_INDEX)
 
 # define P025_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P025_SENSOR_TYPE_INDEX)))
 

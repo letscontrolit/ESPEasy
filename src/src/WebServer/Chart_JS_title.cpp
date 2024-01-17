@@ -18,7 +18,7 @@ ChartJS_title::ChartJS_title(const String& titleText, Align alignment)
 
 String ChartJS_title::toString() const {
   if (text.isEmpty()) {
-    return F("{display: false}");
+    return F("{\"display\": false}");
   }
 
   const String alignStr =
@@ -28,11 +28,11 @@ String ChartJS_title::toString() const {
   String colorStr;
 
   if (!color.isEmpty()) {
-    colorStr = strformat(F(",color:\"%s\""), color.c_str());
+    colorStr = strformat(F(",\"color\":\"%s\""), color.c_str());
   }
 
   return strformat(
-    F("{display: true,align:\"%s\",text:\"%s\"%s}"),
+    F("{\"display\": true,\"align\":\"%s\",\"text\":\"%s\"%s}"),
     alignStr.c_str(),
     text.c_str(),
     colorStr.c_str());
