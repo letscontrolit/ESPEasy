@@ -651,6 +651,8 @@ To support all modes, we simply need to make several versions
       - 2 MB (Quad SPI)
       - ``qio_qspi``
 
+`Table Source <https://api.riot-os.org/group__cpu__esp32__esp32s3.html>`_
+
 
 Build versions:
 

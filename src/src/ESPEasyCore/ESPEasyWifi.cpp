@@ -315,6 +315,7 @@ bool WiFiConnected() {
           if (!WiFiEventData.wifiConnectAttemptNeeded) {
             addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
             WifiScan(false);
+            setSTA(false); // Force reset WiFi + reduce power consumption
             setAP(true);
           }
         }
@@ -487,7 +488,7 @@ void AttemptWiFiConnect() {
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
 #if FEATURE_USE_IPV6
-      WiFi.IPv6(true);
+      WiFi.enableIPv6(true);
 #endif
 
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
@@ -1217,7 +1218,13 @@ void setAPinternal(bool enable)
     IPAddress subnet(DEFAULT_AP_SUBNET);
 
     if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
-      addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
+      addLog(LOG_LEVEL_ERROR, strformat(
+        ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s"),
+        apIP.toString().c_str(), 
+        apIP.toString().c_str(), 
+        subnet.toString().c_str()
+      )
+      );
     }
 
     int channel = 1;
