@@ -1863,6 +1863,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   uint8_t errorcode = 0;
   if (!Update.end()) {
     errorcode = Update.getError();
+#ifdef ESP32
     const __FlashStringHelper * err_fstr = F("Unknown");
     switch (errorcode) {
       case UPDATE_ERROR_OK:                  err_fstr = F("OK");           break;
@@ -1880,6 +1881,9 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
       case UPDATE_ERROR_ABORT:               err_fstr = F("ABORT");        break;
     }
     error += concat(F(" Error: "), err_fstr);
+#else
+    error += concat(F(" Error: "), errorcode);
+#endif
   } else {
     if (Settings.UseRules) {
       eventQueue.addMove(concat(F("ProvisionFirmware#success="), file_save));
