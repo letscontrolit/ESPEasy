@@ -82,7 +82,7 @@ bool str2ip(const String& string,
 bool str2ip(const char *string,
                uint8_t       *IP);
 
-String  formatIP(const IPAddress& ip);
+String  formatIP(const IPAddress& ip, bool includeZone = false);
 
 
 /********************************************************************************************\
@@ -221,6 +221,14 @@ String to_json_object_value(const __FlashStringHelper * object,
 
 String to_json_object_value(const String& object,
                             const String& value,
+                            bool wrapInQuotes = false);
+
+String to_json_object_value(const __FlashStringHelper * object,
+                            int value,
+                            bool wrapInQuotes = false);
+
+String to_json_object_value(const String& object,
+                            int value,
                             bool wrapInQuotes = false);
 
 String to_json_value(const String& value,

@@ -18,7 +18,7 @@ struct ResetFactoryDefaultPreference_struct {
   void set(uint32_t preference);
 
 #ifdef ESP32
-  bool init();
+  bool init(ESPEasy_NVS_Helper& preferences);
   bool from_NVS(ESPEasy_NVS_Helper& preferences);
 
   void to_NVS(ESPEasy_NVS_Helper& preferences) const;
