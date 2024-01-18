@@ -71,6 +71,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   i2cscanner,
   inc,
   ip,
+#if FEATURE_USE_IPV6
+  ip6,
+#endif
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   jsonportstatus,
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

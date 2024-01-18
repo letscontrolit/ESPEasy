@@ -386,6 +386,26 @@
 #define DEFAULT_SYNC_UDP_PORT                   8266                    // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
 
+
+// Factory Reset defaults
+#ifndef DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME
+#define DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME    true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_WIFI
+#define DEFAULT_FACTORY_RESET_KEEP_WIFI         true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_NETWORK
+#define DEFAULT_FACTORY_RESET_KEEP_NETWORK      true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_NTP_DST
+#define DEFAULT_FACTORY_RESET_KEEP_NTP_DST      true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG
+#define DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG  true
+#endif
+
+
+
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
 #if FEATURE_CUSTOM_PROVISIONING
   #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL

@@ -166,6 +166,14 @@
 #define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
+// Factory Reset defaults
+#define DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME    true
+#define DEFAULT_FACTORY_RESET_KEEP_WIFI         true
+#define DEFAULT_FACTORY_RESET_KEEP_NETWORK      true
+#define DEFAULT_FACTORY_RESET_KEEP_NTP_DST      true
+#define DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG  true
+
+
 #define BUILD_NO_DEBUG
 
 // Custom built-in url for hosting JavaScript and CSS files.

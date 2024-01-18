@@ -1088,6 +1088,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_SET_MAX
     #define CONTROLLER_SET_ALL
     #define NOTIFIER_SET_ALL
+    #ifndef TESTING_FEATURE_USE_IPV6
+        #define TESTING_FEATURE_USE_IPV6
+    #endif
     #ifndef PLUGIN_ENERGY_COLLECTION
         #define PLUGIN_ENERGY_COLLECTION
     #endif
@@ -1113,6 +1116,7 @@ To create/register a plugin, you have to :
     #ifdef FEATURE_CUSTOM_PROVISIONING
         #undef FEATURE_CUSTOM_PROVISIONING
     #endif
+    // FIXME TD-er: Should this be enabled on non-Custom builds???
     #define FEATURE_CUSTOM_PROVISIONING 1
 
 
@@ -3288,6 +3292,20 @@ To create/register a plugin, you have to :
 #if defined(FEATURE_ALTERNATIVE_CDN_URL) && FEATURE_ALTERNATIVE_CDN_URL && defined(PLUGIN_BUILD_MINIMAL_OTA)
   #undef FEATURE_ALTERNATIVE_CDN_URL
   #define FEATURE_ALTERNATIVE_CDN_URL 0
+#endif
+
+
+// Enable dependencies for custom provisioning
+// FIXME TD-er: What about using this feature on non-Custom builds????
+#if FEATURE_CUSTOM_PROVISIONING 
+  #ifdef FEATURE_DOWNLOAD
+    #undef FEATURE_DOWNLOAD
+  #endif
+  #define FEATURE_DOWNLOAD 1
+  #ifdef FEATURE_SETTINGS_ARCHIVE
+    #undef FEATURE_SETTINGS_ARCHIVE
+  #endif
+  #define FEATURE_SETTINGS_ARCHIVE 1
 #endif
 
 

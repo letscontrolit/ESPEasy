@@ -439,11 +439,15 @@ void fileSystemCheck()
   {
     clearAllCaches();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FS   : Mount successful, used ");
-      log += SpiffsUsedBytes();
-      log += F(" bytes of ");
-      log += SpiffsTotalBytes();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("FS   : "
+#ifdef USE_LITTLEFS
+          "LittleFS"
+#else
+          "SPIFFS"
+#endif
+          " mount successful, used %u bytes of %u"), 
+        SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
 
     // Run garbage collection before any file is open.
@@ -654,6 +658,10 @@ String SaveSecuritySettings(bool forFactoryReset) {
 
 void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID)) {
+    // Not valid settings, so do not continue
+    return;
+  }
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
@@ -662,7 +670,8 @@ void afterloadSettings() {
   if (pref_temp == 0) {
     if (ResetFactoryDefaultPreference.getPreference() == 0) {
       // Try loading from NVS
-      ResetFactoryDefaultPreference.init();
+      ESPEasy_NVS_Helper preferences;
+      ResetFactoryDefaultPreference.init(preferences);
       pref_temp = ResetFactoryDefaultPreference.getPreference();
     }
   }
@@ -731,9 +740,9 @@ String LoadSettings()
 
     #ifndef BUILD_NO_DEBUG
     if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+      addLog(LOG_LEVEL_INFO,  concat(F("CRC  : Settings CRC"), F("...OK")));
     } else{
-      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+      addLog(LOG_LEVEL_ERROR, concat(F("CRC  : Settings CRC"), F("...FAIL")));
     }
     #endif
   }
@@ -745,14 +754,14 @@ String LoadSettings()
 
 #ifndef BUILD_NO_DEBUG
   if (SecuritySettings.checksumMatch()) {
-    addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
+    addLog(LOG_LEVEL_INFO, concat(F("CRC  : SecuritySettings CRC"), F("...OK ")));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
     }
   }
   else {
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, concat(F("CRC  : SecuritySettings CRC"), F("...FAIL")));
   }
 #endif
 
@@ -1526,9 +1535,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack: "),  getCurrentFreeStack()));
   }
   #endif
   delay(1);

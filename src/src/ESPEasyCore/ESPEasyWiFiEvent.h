@@ -11,7 +11,7 @@
 // See reported issue: https://github.com/esp8266/Arduino/issues/4114
 // ********************************************************************************
 #ifdef ESP32
-#include <IPv6Address.h>
+#include <IPAddress.h>
 #include <WiFiSTA.h>
 #include <WiFi.h>
 class WiFi_Access_Static_IP : public WiFiSTAClass {

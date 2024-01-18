@@ -356,7 +356,7 @@ void handle_json()
           stream_next_json_object_value(F("ip"), formatIP(it->second.IP()));
 #if FEATURE_USE_IPV6
           if (it->second.hasIPv6_mac_based_link_local) {
-            stream_next_json_object_value(F("ipv6local"), formatIP(it->second.IPv6_link_local(true)));
+            stream_next_json_object_value(F("ipv6local"), formatIP(it->second.IPv6_link_local(true), true));
           }
           if (it->second.hasIPv6_mac_based_link_global) {
             stream_next_json_object_value(F("ipv6global"), formatIP(it->second.IPv6_global()));

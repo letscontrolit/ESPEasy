@@ -294,7 +294,7 @@ bool IPv6_from_MAC(const MAC_address& mac, IPAddress& ipv6)
   addLog(LOG_LEVEL_INFO, strformat(
      F("IPv6_from_MAC: Mac %s IP %s"),
      mac.toString().c_str(),
-     ipv6.toString().c_str()
+     ipv6.toString(true).c_str()
      ));
 */
   return true;
