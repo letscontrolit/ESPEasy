@@ -78,6 +78,8 @@ bool ChartJS_options_scale::is_Y_axis() const
          position == Position::Right;
 }
 
+ChartJS_options_scales::ChartJS_options_scales() {}
+
 void ChartJS_options_scales::add(const ChartJS_options_scale& scale)
 {
   for (auto it = _scales.begin(); it != _scales.end(); ++it) {

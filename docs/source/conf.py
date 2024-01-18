@@ -179,7 +179,7 @@ html_theme_options = {
 
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
-    'bootstrap_version': "3",
+    'bootstrap_version': "5",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
