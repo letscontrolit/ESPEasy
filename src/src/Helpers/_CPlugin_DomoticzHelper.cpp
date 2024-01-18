@@ -217,12 +217,12 @@ String serializeDomoticzJson(struct EventStruct *event)
   String json;
   {
     json += '{';
-    json += to_json_object_value(F("idx"), String(event->idx));
+    json += to_json_object_value(F("idx"), static_cast<int>(event->idx));
     json += ',';
-    json += to_json_object_value(F("RSSI"), String(mapRSSItoDomoticz()));
+    json += to_json_object_value(F("RSSI"), mapRSSItoDomoticz());
     #  if FEATURE_ADC_VCC
     json += ',';
-    json += to_json_object_value(F("Battery"), String(mapVccToDomoticz()));
+    json += to_json_object_value(F("Battery"), mapVccToDomoticz());
     #  endif // if FEATURE_ADC_VCC
 
     const Sensor_VType sensorType = event->getSensorType();
@@ -242,7 +242,7 @@ String serializeDomoticzJson(struct EventStruct *event)
       }
     } else {
       json += ',';
-      json += to_json_object_value(F("nvalue"), F("0"));
+      json += to_json_object_value(F("nvalue"), 0);
       json += ',';
       json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event), true);
     }
