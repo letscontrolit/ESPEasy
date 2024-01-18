@@ -211,7 +211,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
     }
   }
 
-  for (int i = 0; i < P16_Nlines; ++i) {
+  for (unsigned int i = 0; i < P16_Nlines; ++i) {
     if (validateCode(i, Code, DecodeType, CodeFlags)) {
       // code already saved
       iLastCmd        = Code;
@@ -219,7 +219,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       iLastCodeFlags  = CodeFlags;
       iLastCmdTime    = millis();
 
-      if (CommandLines[i].Command[0] != 0) {
+      if ((i < CommandLines.size()) && (CommandLines[i].Command[0] != 0)) {
         #  ifdef PLUGIN_016_DEBUG
         bool _success =
         #  endif // ifdef PLUGIN_016_DEBUG
