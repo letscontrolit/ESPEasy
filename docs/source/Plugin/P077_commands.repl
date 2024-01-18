@@ -24,3 +24,10 @@
         ","
         Will reset the calibration values to the default values, causing auto-calibration.
         "
+        "
+        ``cseclearpulses``
+
+        ","
+        (Added: 2024-01-16)
+        Will reset the CF-pulse counter.
+        "
