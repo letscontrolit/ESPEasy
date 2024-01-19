@@ -355,8 +355,8 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
     changed   = true;
   } else if (equals(cmd, F("cseclearpulses"))) {
     // Clear the pulses count
-    last_cf_pulses = 0;
     cf_pulses = 0;
+    success   = true;
   } else if (equals(cmd, F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
     success = true;
     float CalibVolt  = 0.0f;
