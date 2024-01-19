@@ -1,4 +1,6 @@
-Sphinx==4.5.0
+Sphinx==7.*
 sphinx-autobuild==2021.3.14
 sphinx-bootstrap-theme==0.8.1
 recommonmark==0.7.1
+sphinxcontrib-htmlhelp>=2.0.5
+sphinxcontrib-applehelp>=1.0.8
