@@ -40,6 +40,29 @@ String Command_IP (struct EventStruct *event, const char* Line)
   return Command_GetORSetIP(event, F("IP:"), Line, Settings.IP, NetworkLocalIP(),1);
 }
 
+#if FEATURE_USE_IPV6
+String Command_show_all_IP6 (struct EventStruct *event, const char* Line)
+{
+  // Only get all IPv6 addresses
+  IP6Addresses_t addresses = NetworkAllIPv6();
+  String res;
+  res += '[';
+  bool first = true;
+  for (auto it = addresses.begin(); it != addresses.end(); ++it)
+  {
+    if (first) {
+      first = false;
+    } else {
+      res += ',';
+    }
+    res += wrap_String(it->toString(true), '"');
+  }
+  res += ']';
+  return res;
+}
+#endif
+
+
 String Command_Subnet (struct EventStruct *event, const char* Line)
 {
   return Command_GetORSetIP(event, F("Subnet:"), Line, Settings.Subnet, NetworkSubnetMask(), 1);

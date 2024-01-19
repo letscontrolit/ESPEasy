@@ -87,6 +87,9 @@ const char Internal_commands_ghij[] PROGMEM =
   "i2cscanner|"
   "inc|"
   "ip|"
+#if FEATURE_USE_IPV6
+  "ip6|"
+#endif
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   "jsonportstatus|"
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
