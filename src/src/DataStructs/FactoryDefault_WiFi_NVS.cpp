@@ -45,29 +45,35 @@ void FactoryDefault_WiFi_NVS::applyToSettings() const {
   Settings.HiddenSSID_SlowConnectPerBSSID(bits.HiddenSSID_SlowConnectPerBSSID);
 }
 
+struct FactoryDefault_WiFi_NVS_securityPrefs {
+  FactoryDefault_WiFi_NVS_securityPrefs(const __FlashStringHelper *pref,
+                                        char                      *dest,
+                                        size_t                     size)
+    : _pref(pref), _dest(dest), _size(size) {}
+
+  const __FlashStringHelper *_pref;
+  char                      *_dest;
+  size_t                     _size;
+};
+
+const FactoryDefault_WiFi_NVS_securityPrefs _WiFi_NVS_securityPrefs_values[] = {
+  { F(FACTORY_DEFAULT_NVS_SSID1_KEY),     SecuritySettings.WifiSSID,  sizeof(SecuritySettings.WifiSSID)  },
+  { F(FACTORY_DEFAULT_NVS_WPA_PASS1_KEY), SecuritySettings.WifiKey,   sizeof(SecuritySettings.WifiKey)   },
+  { F(FACTORY_DEFAULT_NVS_SSID2_KEY),     SecuritySettings.WifiSSID2, sizeof(SecuritySettings.WifiSSID2) },
+  { F(FACTORY_DEFAULT_NVS_WPA_PASS2_KEY), SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2)  },
+  { F(FACTORY_DEFAULT_NVS_AP_PASS_KEY),   SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey) }
+};
+
+
 bool FactoryDefault_WiFi_NVS::applyToSettings_from_NVS(ESPEasy_NVS_Helper& preferences) {
   String tmp;
+  constexpr unsigned nr__WiFi_NVS_securityPrefs_values = NR_ELEMENTS(_WiFi_NVS_securityPrefs_values);
 
-  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_SSID1_KEY), tmp)) {
-    safe_strncpy(SecuritySettings.WifiSSID, tmp, sizeof(SecuritySettings.WifiSSID));
+  for (unsigned i = 0; i < nr__WiFi_NVS_securityPrefs_values; ++i) {
+    if (preferences.getPreference(_WiFi_NVS_securityPrefs_values[i]._pref, tmp)) {
+      safe_strncpy(_WiFi_NVS_securityPrefs_values[i]._dest, tmp, _WiFi_NVS_securityPrefs_values[i]._size);
+    }
   }
-
-  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_WPA_PASS1_KEY), tmp)) {
-    safe_strncpy(SecuritySettings.WifiKey, tmp, sizeof(SecuritySettings.WifiKey));
-  }
-
-  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_SSID2_KEY), tmp)) {
-    safe_strncpy(SecuritySettings.WifiSSID2, tmp, sizeof(SecuritySettings.WifiSSID2));
-  }
-
-  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_WPA_PASS2_KEY), tmp)) {
-    safe_strncpy(SecuritySettings.WifiKey2, tmp, sizeof(SecuritySettings.WifiKey2));
-  }
-
-  if (preferences.getPreference(F(FACTORY_DEFAULT_NVS_AP_PASS_KEY), tmp)) {
-    safe_strncpy(SecuritySettings.WifiAPKey, tmp, sizeof(SecuritySettings.WifiAPKey));
-  }
-
 
   if (!preferences.getPreference(F(FACTORY_DEFAULT_NVS_WIFI_FLAGS_KEY), data)) {
     return false;
@@ -82,19 +88,19 @@ void FactoryDefault_WiFi_NVS::fromSettings_to_NVS(ESPEasy_NVS_Helper& preference
   preferences.setPreference(F(FACTORY_DEFAULT_NVS_WIFI_FLAGS_KEY), data);
 
   // Store WiFi credentials
-  preferences.setPreference(F(FACTORY_DEFAULT_NVS_SSID1_KEY),      String(SecuritySettings.WifiSSID));
-  preferences.setPreference(F(FACTORY_DEFAULT_NVS_WPA_PASS1_KEY),  String(SecuritySettings.WifiKey));
-  preferences.setPreference(F(FACTORY_DEFAULT_NVS_SSID2_KEY),      String(SecuritySettings.WifiSSID2));
-  preferences.setPreference(F(FACTORY_DEFAULT_NVS_WPA_PASS2_KEY),  String(SecuritySettings.WifiKey2));
-  preferences.setPreference(F(FACTORY_DEFAULT_NVS_AP_PASS_KEY),    String(SecuritySettings.WifiAPKey));
+  constexpr unsigned nr__WiFi_NVS_securityPrefs_values = NR_ELEMENTS(_WiFi_NVS_securityPrefs_values);
+
+  for (unsigned i = 0; i < nr__WiFi_NVS_securityPrefs_values; ++i) {
+    preferences.setPreference(_WiFi_NVS_securityPrefs_values[i]._pref, String(_WiFi_NVS_securityPrefs_values[i]._dest));
+  }
 }
 
 void FactoryDefault_WiFi_NVS::clear_from_NVS(ESPEasy_NVS_Helper& preferences) {
-  preferences.remove(F(FACTORY_DEFAULT_NVS_SSID1_KEY));
-  preferences.remove(F(FACTORY_DEFAULT_NVS_WPA_PASS1_KEY));
-  preferences.remove(F(FACTORY_DEFAULT_NVS_SSID2_KEY));
-  preferences.remove(F(FACTORY_DEFAULT_NVS_WPA_PASS2_KEY));
-  preferences.remove(F(FACTORY_DEFAULT_NVS_AP_PASS_KEY));
+  constexpr unsigned nr__WiFi_NVS_securityPrefs_values = NR_ELEMENTS(_WiFi_NVS_securityPrefs_values);
+
+  for (unsigned i = 0; i < nr__WiFi_NVS_securityPrefs_values; ++i) {
+    preferences.remove(_WiFi_NVS_securityPrefs_values[i]._pref);
+  }
   preferences.remove(F(FACTORY_DEFAULT_NVS_WIFI_FLAGS_KEY));
 }
 

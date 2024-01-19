@@ -57,10 +57,10 @@ String ChartJS_options_scale::toString() const
     String ticksStr;
 
     if (tickCount > 0) {
-      ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
+      ticksStr = strformat(F(",\"ticks\":{\"count\":%d}"), tickCount);
     }
     return strformat(
-      F("\"%s\":{display:%s,type:\"%s\",position:\"%s\",title:%s,weight:%d%s}"),
+      F("\"%s\":{\"display\":%s,\"type\":\"%s\",\"position\":\"%s\",\"title\":%s,\"weight\":%d%s}"),
       axisID.c_str(),
       displayStr.c_str(),
       typeStr.c_str(),
@@ -77,6 +77,8 @@ bool ChartJS_options_scale::is_Y_axis() const
   return position == Position::Left ||
          position == Position::Right;
 }
+
+ChartJS_options_scales::ChartJS_options_scales() {}
 
 void ChartJS_options_scales::add(const ChartJS_options_scale& scale)
 {
@@ -114,7 +116,7 @@ String ChartJS_options_scales::toString() const
 {
   if (_scales.empty()) { return EMPTY_STRING; }
 
-  String res   = F("scales:{");
+  String res   = F("\"scales\":{");
   bool   first = true;
 
   for (auto it = _scales.begin(); it != _scales.end(); ++it) {
@@ -125,11 +127,11 @@ String ChartJS_options_scales::toString() const
         res += ',';
       }
       first = false;
+      res  += '\n';
       res  += scale_str;
     }
   }
   res += '}';
-  res += ',';
   return res;
 }
 

@@ -4526,7 +4526,7 @@ TD-er (106):
       [WiFi] Process Station event Auth Changed
       [Controller] Debug log on remove duplicate queued message
       [GPIO] Fix warning of unused variable
-      [Build] Remove HWL8012 from "energy" build
+      [Build] Remove HLW8012 from "energy" build
       [Energy build] Add P093 Mitsubishi Heat Pump
       [Cleanup] Remove ICACHE_RAM_ATTR on wifi event function
       [Build] LittleFS can only be built on 'beta' builds
@@ -4534,7 +4534,7 @@ TD-er (106):
       [Cleanup] Reduce IRAM usage in Dallas bit read/write code
       [Build] Fix normal_beta_ESP8266_16M_LittleFS build
       [Cleanup] Remove unneeded ICACHE_RAM_ATTR on DHCP timeout callback
-      [Build] Remove P076 HWL8012 from "testing" builds due to build size
+      [Build] Remove P076 HLW8012 from "testing" builds due to build size
       [Build] Disable test_ESP8266_4M1M_VCC_MDNS_SD as it does not fit in IRAM
       [Build] Set normal_IRext_no_rx_ESP8266_4M2M to LIMIT_BUILD_SIZE
       [GPS] Fix running out of memory when no GPS data is received.
