@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    paths-ignore: [ "*.md" ]
+  pull_request:
+    paths-ignore: [ "*.md" ]
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    name: Build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        cron_use_local_time:
+          - ""
+          - "-DCRON_USE_LOCAL_TIME=1"
+        char_c_flag:
+          - ""
+          - "-fsigned-char"
+          - "-funsigned-char"
+
+        exclude:
+          - os: ubuntu-latest
+            char_c_flag: ""
+          - os: windows-latest
+            char_c_flag: "-fsigned-char"
+          - os: windows-latest
+            char_c_flag: "-funsigned-char"
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{github.workspace}}/build
+
+      - name: Configure CMake
+        shell: bash
+        working-directory: ${{github.workspace}}/build
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE ${{ matrix.cron_use_local_time }}
+        env:
+          CFLAGS: ${{ matrix.char_c_flag }}
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: ctest --extra-verbose -C $BUILD_TYPE
