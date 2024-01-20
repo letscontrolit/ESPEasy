@@ -161,9 +161,9 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       return true;
     }
   }
-  const String errorUnknown = concat(F("Command unknown: "), action);
-  addLog(LOG_LEVEL_INFO, errorUnknown);
+  String errorUnknown = concat(F("Command unknown: "), action);
   SendStatus(&TempEvent, errorUnknown);
+  addLogMove(LOG_LEVEL_INFO, errorUnknown);
   delay(0);
   return false;
 }

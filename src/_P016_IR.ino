@@ -604,10 +604,19 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      decode_results results;
+# if P016_FEATURE_COMMAND_HANDLING
 
-      if (irReceiver->decode(&results))
+      // Need to call the actual ExecuteCommand_all function call after all the rest is done
+      // Or else it may cause stack overflow.
+      int commandLineToExecute = -1;
       {
+#endif
+        decode_results results;
+
+        if (!irReceiver->decode(&results))
+        {
+          return success;
+        }
         yield(); // Feed the WDT after a time expensive decoding procedure
 
         if (results.overflow)
@@ -621,34 +630,29 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         if ((results.decode_type != decode_type_t::UNKNOWN) || (bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)))
         {
           {
-            String output;
-            output.reserve(100); // Length of expected string, needed for strings > 11 chars
             // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' +
             // resultToHexidecimal(&results)
             // + ',' + uint64ToString(results.bits);
             // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old
             // style
             // command
-            output += F("{\"protocol\":\"");
-            output += typeToString(results.decode_type, results.repeat);
-            output += F("\",\"data\":\"");
-            output += resultToHexidecimal(&results);
-            output += F("\",\"bits\":");
-            output += uint64ToString(results.bits);
-            output += '}';
+            event->String2 = strformat(
+              F("{\"protocol\":\"%s\",\"data\":\"%s\",\"bits\":%s}"),
+              typeToString(results.decode_type, results.repeat).c_str(),
+              resultToHexidecimal(&results).c_str(),
+              uint64ToString(results.bits).c_str());
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String Log;
 
-              if (Log.reserve(output.length() + 22)) {
+              if (Log.reserve(event->String2.length() + 22)) {
                 Log += F("IRSEND,\'");
-                Log += output;
+                Log += event->String2;
                 Log += F("\' type as int: ");
                 Log += ll2String(results.decode_type);
-               addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
+                addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
               }
             }
-            event->String2 = std::move(output);
           }
 
           # if P016_FEATURE_COMMAND_HANDLING
@@ -678,7 +682,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               }
 
               if (bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd)) {
-                P016_data->ExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
+                commandLineToExecute = P016_data->CheckExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
               }
             }
           }
@@ -840,7 +844,17 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
 #endif
         sendData(event);
+# if P016_FEATURE_COMMAND_HANDLING
       }
+      if (commandLineToExecute >= 0) {
+        P016_data_struct *P016_data =
+          static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P016_data) {
+          P016_data->ExecuteCode(commandLineToExecute);
+        }
+      }
+#endif
       success = true;
       break;
     }

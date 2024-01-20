@@ -100,9 +100,11 @@ public:
   void AddCode(uint64_t      Code,
                decode_type_t DecodeType = decode_type_t::UNKNOWN,
                uint16_t      CodeFlags  = 0u);
-  void ExecuteCode(uint64_t      Code,
+  int CheckExecuteCode(uint64_t      Code,
                    decode_type_t DecodeType = decode_type_t::UNKNOWN,
                    uint16_t      CodeFlags  = 0u);
+
+  bool ExecuteCode(int commandLineToExecute);
 
   // CustomTaskSettings
   std::vector<tCommandLinesV2>CommandLines; // holds the CustomTaskSettings V2

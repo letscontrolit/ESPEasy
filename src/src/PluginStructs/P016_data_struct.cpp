@@ -183,35 +183,31 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
   #  ifdef PLUGIN_016_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-
-    if (log.reserve(80)) { // estimated
-      log  = F("[P016] AddCode: ");
-      log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-      log += F(" code: 0x");
-      log += uint64ToString(Code, 16);
-      log += F(" to index ");
-      log += _index;
-      addLogMove(LOG_LEVEL_INFO, log);
-    }
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("[P016] AddCode: %s code: 0x%s to index %d"),
+      typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+      uint64ToString(Code, 16).c_str(),
+      _index));
   }
   #  endif // PLUGIN_016_DEBUG
 }
 
-void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
+int P016_data_struct::CheckExecuteCode(uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
   if (Code == 0) {
-    return;
+    return -1;
   }
 
   if ((iLastCmd == Code) && (iLastDecodeType == DecodeType)) {
     // same code as before
     if (iCmdInhibitTime > timePassedSince(iLastCmdTime)) {
       // inhibit time not ellapsed
-      return;
+      return -1;
     }
   }
 
-  for (unsigned int i = 0; i < P16_Nlines; ++i) {
+  const unsigned int nr_CommandLines = CommandLines.size();
+
+  for (unsigned int i = 0; i < nr_CommandLines; ++i) {
     if (validateCode(i, Code, DecodeType, CodeFlags)) {
       // code already saved
       iLastCmd        = Code;
@@ -219,62 +215,60 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       iLastCodeFlags  = CodeFlags;
       iLastCmdTime    = millis();
 
-      if ((i < CommandLines.size()) && (CommandLines[i].Command[0] != 0)) {
+      if (CommandLines[i].Command[0] != 0) {
         #  ifdef PLUGIN_016_DEBUG
-        bool _success =
+        const bool _success =
         #  endif // ifdef PLUGIN_016_DEBUG
         ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
         #  ifdef PLUGIN_016_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-
-          if (log.reserve(128)) { // estimated
-            log  = F("[P016] Execute: ");
-            log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-            log += F(" Code: 0x");
-            log += uint64ToString(Code, 16);
-            log += F(" with command ");
-            log += (i + 1);
-            log += F(": {");
-            log += String(CommandLines[i].Command);
-            log += '}';
-
-            if (!_success) {
-              log += F(" FAILED!");
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(
+            F("[P016] Execute: %s Code: 0x%s with command %d: {%s}"),
+            typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+            uint64ToString(Code, 16).c_str(),
+            (i + 1),
+            CommandLines[i].Command));
         }
         #  endif // PLUGIN_016_DEBUG
       }
-      return;
+      return i;
     }
     #  ifdef PLUGIN_016_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      if (log.reserve(128)) { // estimated
-        log  = F("[P016] ValidateCode failed: ");
-        log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(Code, 16);
-        log += F(" / [");
-        log += (i + 1);
-        log += F("] = {");
-        log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(CommandLines[i].Code, 16);
-        log += '}';
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("[P016] ValidateCode failed: %s Code: 0x%s / [%d] = {%s Code: 0x%s}"),
+        typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+        uint64ToString(Code, 16).c_str(),
+        (i + 1),
+        typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+        uint64ToString(CommandLines[i].Code, 16).c_str()));
     }
     #  endif // PLUGIN_016_DEBUG
   }
+  return -1;
+}
+
+bool P016_data_struct::ExecuteCode(int commandLineToExecute) {
+  if (commandLineToExecute < 0 || commandLineToExecute >= CommandLines.size()) {
+    return false;
+  }
+  const bool _success = ExecuteCommand_all(
+    EventValueSource::Enum::VALUE_SOURCE_SYSTEM, 
+    CommandLines[commandLineToExecute].Command);
+#ifdef PLUGIN_016_DEBUG
+  if (!_success && loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    addLogMove(LOG_LEVEL_ERROR, strformat(
+      F("[P016] Execute FAILED: %s"),
+      CommandLines[commandLineToExecute].Command));
+  }
+#endif
+  return _success;
 }
 
 bool P016_data_struct::validateCode(int i, uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
+  if (i >= CommandLines.size() || i < 0) return false;
   return ((CommandLines[i].Code == Code)
           && (CommandLines[i].CodeDecodeType == DecodeType)
           && (CommandLines[i].CodeFlags == CodeFlags))
