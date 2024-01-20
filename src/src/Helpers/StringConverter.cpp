@@ -117,7 +117,7 @@ String strformat(const String& format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
     va_end(arg);
@@ -147,7 +147,7 @@ String strformat(const __FlashStringHelper * format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
     va_end(arg);

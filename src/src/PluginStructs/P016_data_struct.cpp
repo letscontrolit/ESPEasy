@@ -216,12 +216,7 @@ int P016_data_struct::CheckExecuteCode(uint64_t Code, decode_type_t DecodeType, 
       iLastCmdTime    = millis();
 
       if (CommandLines[i].Command[0] != 0) {
-        #  ifdef PLUGIN_016_DEBUG
-        const bool _success =
-        #  endif // ifdef PLUGIN_016_DEBUG
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
-        #  ifdef PLUGIN_016_DEBUG
-
+        #ifdef PLUGIN_016_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(
             F("[P016] Execute: %s Code: 0x%s with command %d: {%s}"),
@@ -231,8 +226,8 @@ int P016_data_struct::CheckExecuteCode(uint64_t Code, decode_type_t DecodeType, 
             CommandLines[i].Command));
         }
         #  endif // PLUGIN_016_DEBUG
+        return i;
       }
-      return i;
     }
     #  ifdef PLUGIN_016_DEBUG
 
@@ -251,7 +246,7 @@ int P016_data_struct::CheckExecuteCode(uint64_t Code, decode_type_t DecodeType, 
 }
 
 bool P016_data_struct::ExecuteCode(int commandLineToExecute) {
-  if (commandLineToExecute < 0 || commandLineToExecute >= CommandLines.size()) {
+  if (commandLineToExecute < 0 || commandLineToExecute >= static_cast<int>(CommandLines.size())) {
     return false;
   }
   const bool _success = ExecuteCommand_all(
@@ -268,7 +263,7 @@ bool P016_data_struct::ExecuteCode(int commandLineToExecute) {
 }
 
 bool P016_data_struct::validateCode(int i, uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
-  if (i >= CommandLines.size() || i < 0) return false;
+  if (i >= static_cast<int>(CommandLines.size()) || i < 0) return false;
   return ((CommandLines[i].Code == Code)
           && (CommandLines[i].CodeDecodeType == DecodeType)
           && (CommandLines[i].CodeFlags == CodeFlags))
