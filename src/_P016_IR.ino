@@ -615,7 +615,20 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         if (!irReceiver->decode(&results))
         {
+#ifdef DEBUG_UWE
+          static unsigned long lastrun = 0;
+          if (timePassedSince(lastrun) > 20000) {
+            lastrun = millis();
+          } else {
+            return success;
+          }          
+          results.decode_type = decode_type_t::NEC;
+          results.value = 0x20250AF;// 0x202807F;
+          results.overflow = false;
+          results.repeat = false;
+#else
           return success;
+#endif
         }
         yield(); // Feed the WDT after a time expensive decoding procedure
 
