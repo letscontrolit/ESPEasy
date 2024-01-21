@@ -713,35 +713,10 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
 
         # ifdef P016_P035_Extended_AC
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String description = IRAcUtils::resultAcToString(&results);
 
-        // Display any extra A/C info if we have it.
-        // Display the human readable state of an A/C message if we can.
-        stdAc::state_t state;
-
-        // Initialize state settings
-        state.protocol = decode_type_t::UNKNOWN;
-        state.model    = -1; // Unknown.
-        state.power    = false;
-        state.mode     = stdAc::opmode_t::kAuto;
-        state.celsius  = true;
-        state.degrees  = 22;
-        state.fanspeed = stdAc::fanspeed_t::kAuto;
-        state.swingv   = stdAc::swingv_t::kAuto;
-        state.swingh   = stdAc::swingh_t::kAuto;
-        state.quiet    = false;
-        state.turbo    = false;
-        state.econo    = false;
-        state.light    = false;
-        state.filter   = false;
-        state.clean    = false;
-        state.beep     = false;
-        state.sleep    = -1;
-        state.clock    = -1;
-
-        String description = IRAcUtils::resultAcToString(&results);
-
-        if (!description.isEmpty()) {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          if (!description.isEmpty()) {
             // If we got a human-readable description of the message, display it.
             String log;
 
@@ -756,6 +731,31 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         if (IRac::isProtocolSupported(results.decode_type) && // Check If there is a replayable AC state and show the JSON command that can
             (typeToString(results.decode_type).length() > 1)) // be sent
         {
+          // Display any extra A/C info if we have it.
+          // Display the human readable state of an A/C message if we can.
+          stdAc::state_t state;
+
+          // Initialize state settings
+          state.protocol = decode_type_t::UNKNOWN;
+          state.model    = -1; // Unknown.
+          state.power    = false;
+          state.mode     = stdAc::opmode_t::kAuto;
+          state.celsius  = true;
+          state.degrees  = 22;
+          state.fanspeed = stdAc::fanspeed_t::kAuto;
+          state.swingv   = stdAc::swingv_t::kAuto;
+          state.swingh   = stdAc::swingh_t::kAuto;
+          state.quiet    = false;
+          state.turbo    = false;
+          state.econo    = false;
+          state.light    = false;
+          state.filter   = false;
+          state.clean    = false;
+          state.beep     = false;
+          state.sleep    = -1;
+          state.clock    = -1;
+
+
           IRAcUtils::decodeToState(&results, &state);
           DynamicJsonDocument doc(300);
 
@@ -839,7 +839,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
 #if !P016_SEND_IR_TO_CONTROLLER
         {
-          unsigned long IRcode = results.value;
+          const unsigned long IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
         }
 #endif
