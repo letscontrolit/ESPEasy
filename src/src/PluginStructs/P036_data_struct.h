@@ -416,6 +416,11 @@ struct P036_data_struct : public PluginTaskData_base {
                           uint8_t     LoadVersion,
                           uint8_t     LineNo);
 
+private:
+  String create_display_header_text(eHeaderContent iHeaderContent) const;
+
+public:
+
   // The screen is set up as:
   // - 10 rows at the top for the header
   // - 46 rows in the middle for the scroll region
