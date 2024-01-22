@@ -162,9 +162,17 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 # ifdef PLUGIN_016_DEBUG
 void P016_infoLogMemory(const __FlashStringHelper *text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(
-      F("P016: Free memory %s: %d stack: %d"),
-       text, FreeMem(), getCurrentFreeStack()));
+    String log;
+
+    if (log.reserve(40 + strlen_P((PGM_P)text))) {
+      log += F("P016: Free memory ");
+      log += text;
+      log += F(": ");
+      log += FreeMem();
+      log += F(" stack: ");
+      log += getCurrentFreeStack();
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 }
 
@@ -372,7 +380,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("IR: available decodetypes: %d"), protocolCount));
+            String log; // Log this always
+
+            if (log.reserve(30)) {
+              log += F("IR: available decodetypes: ");
+              log += protocolCount;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
@@ -729,7 +743,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         if (!description.isEmpty()) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // If we got a human-readable description of the message, display it.
-            addLogMove(LOG_LEVEL_INFO, strformat(F("AC State: %s"), description));
+            String log;
+
+            if (log.reserve(10 + description.length())) {
+              log += F("AC State: ");
+              log += description;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
+          }
         }
 
         if (IRac::isProtocolSupported(results.decode_type) && // Check If there is a replayable AC state and show the JSON command that can
