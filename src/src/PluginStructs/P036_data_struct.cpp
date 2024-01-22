@@ -332,7 +332,7 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
   const bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
       # endif // if P036_SEND_EVENTS
 
-  int  command_i = GetCommandCode(subcommand.c_str(), p036_subcommands);
+  const int command_i = GetCommandCode(subcommand.c_str(), p036_subcommands);
 
   if (command_i == -1) {
     if ((LineNo > 0) && (LineNo <= P36_Nlines)) {
@@ -750,6 +750,8 @@ void P036_data_struct::display_header() {
 
   eHeaderContent iHeaderContent;
   String newString, strHeader;
+  const __FlashStringHelper *newString_f = F("%sysname%");
+  bool use_newString_f = true;
 
   if ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) {
     iHeaderContent = HeaderContent;
@@ -762,48 +764,50 @@ void P036_data_struct::display_header() {
 
       if (NetworkConnected()) {
         strHeader = WiFi.SSID();
+        use_newString_f = false;
       }
-      else {
-        newString = F("%sysname%");
-      }
+//      else {
+//        newString_f = F("%sysname%");
+//      }
       break;
     case eHeaderContent::eSysName:
-      newString = F("%sysname%");
+//      newString_f = F("%sysname%");
       break;
     case eHeaderContent::eTime:
-      newString = F("%systime%");
+      newString_f = F("%systime%");
       break;
     case eHeaderContent::eDate:
-      newString = F("%sysday_0%.%sysmonth_0%.%sysyear%");
+      newString_f = F("%sysday_0%.%sysmonth_0%.%sysyear%");
       break;
     case eHeaderContent::eIP:
-      newString = F("%ip%");
+      newString_f = F("%ip%");
       break;
     case eHeaderContent::eMAC:
-      newString = F("%mac%");
+      newString_f = F("%mac%");
       break;
     case eHeaderContent::eRSSI:
-      newString = F("%rssi%dBm");
+      newString_f = F("%rssi%dBm");
       break;
     case eHeaderContent::eBSSID:
-      newString = F("%bssid%");
+      newString_f = F("%bssid%");
       break;
     case eHeaderContent::eWiFiCh:
-      newString = F("Channel: %wi_ch%");
+      newString_f = F("Channel: %wi_ch%");
       break;
     case eHeaderContent::eUnit:
-      newString = F("Unit: %unit%");
+      newString_f = F("Unit: %unit%");
       break;
     case eHeaderContent::eSysLoad:
-      newString = F("Load: %sysload%%");
+      newString_f = F("Load: %sysload%%");
       break;
     case eHeaderContent::eSysHeap:
-      newString = F("Mem: %sysheap%");
+      newString_f = F("Mem: %sysheap%");
       break;
     case eHeaderContent::eSysStack:
-      newString = F("Stack: %sysstack%");
+      newString_f = F("Stack: %sysstack%");
       break;
     case eHeaderContent::ePageNo:
+      use_newString_f = false;
       strHeader  = F("page ");
       strHeader += (currentFrameToDisplay + 1);
 
@@ -814,14 +818,20 @@ void P036_data_struct::display_header() {
       break;
     # if P036_USERDEF_HEADERS
     case eHeaderContent::eUserDef1:
+      use_newString_f = false;
       newString = userDef1;
       break;
     case eHeaderContent::eUserDef2:
+      use_newString_f = false;
       newString = userDef2;
       break;
     # endif // if P036_USERDEF_HEADERS
     case eHeaderContent::eNone:
       return;
+  }
+
+  if (use_newString_f) {
+    newString = newString_f;
   }
 
   if (newString.length() > 0) {
