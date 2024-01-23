@@ -10,13 +10,13 @@
 
 # define PLUGIN_016_DEBUG // additional debug messages in the log
 // # define P016_CHECK_HEAP
-# if defined(LIMIT_BUILD_SIZE) 
-# if defined(PLUGIN_016_DEBUG)
-#  undef PLUGIN_016_DEBUG
-# endif // if defined(PLUGIN_016_DEBUG)
-# if defined(P016_CHECK_HEAP)
-#  undef P016_CHECK_HEAP
-# endif // if defined(P016_CHECK_HEAP)
+# if defined(LIMIT_BUILD_SIZE)
+#  if defined(PLUGIN_016_DEBUG)
+#   undef PLUGIN_016_DEBUG
+#  endif // if defined(PLUGIN_016_DEBUG)
+#  if defined(P016_CHECK_HEAP)
+#   undef P016_CHECK_HEAP
+#  endif // if defined(P016_CHECK_HEAP)
 # endif // if defined(LIMIT_BUILD_SIZE)
 
 // bit definition in PCONFIG_LONG(0)
@@ -82,7 +82,7 @@ struct tCommandLinesV2 {
 struct P016_data_struct : public PluginTaskData_base {
 public:
 
-  P016_data_struct() = default;
+  P016_data_struct()          = default;
   virtual ~P016_data_struct() = default;
 
   void        init(struct EventStruct *event,

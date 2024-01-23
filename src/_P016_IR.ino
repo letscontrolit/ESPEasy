@@ -72,7 +72,7 @@
 // @uwekaditz: 2023-12-11
 // NEW: Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
 // MSG: for decoding a RAW message DECODE_HASH must be set
-// FIX: uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1), changed to ll2String() 
+// FIX: uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1), changed to ll2String()
 // @tonhuisman: 2022-08-08
 // FIX: Resolve high memory use bu having the default buffer size reduced from 1024 to 100, and make that a setting
 // @tonhuisman: 2021-08-05
@@ -164,8 +164,8 @@ IRrecv *irReceiver          = nullptr;
 bool    bEnableIRcodeAdding = false;
 
 # ifdef P016_CHECK_HEAP
-  uint32_t fMem=0;
-  uint32_t fFreeStack=0;
+uint32_t fMem       = 0;
+uint32_t fFreeStack = 0;
 # endif // ifdef P016_CHECK_HEAP
 
 # ifdef P016_P035_USE_RAW_RAW2
@@ -179,10 +179,11 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 void P016_infoLogMemory(const __FlashStringHelper *text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, strformat(
-      F("P016: %s FreeMem: %d FreeStack:%d"),
-       text, FreeMem(), getCurrentFreeStack()));
+                 F("P016: %s FreeMem: %d FreeStack:%d"),
+                 text, FreeMem(), getCurrentFreeStack()));
   }
 }
+
 # endif // ifdef PLUGIN_016_DEBUG
 
 boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
@@ -195,11 +196,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number = PLUGIN_ID_016;
       Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
-#if P016_SEND_IR_TO_CONTROLLER
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
-#else
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
-#endif
+# if P016_SEND_IR_TO_CONTROLLER
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
+# else // if P016_SEND_IR_TO_CONTROLLER
+      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
+# endif // if P016_SEND_IR_TO_CONTROLLER
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = true;
@@ -374,8 +375,10 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           for (int i = 0; i < size; i++) {
             const String protocol = typeToString(static_cast<decode_type_t>(i), false);
 
-            if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == RAW))
+            if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == RAW)) {
               continue;
+            }
+
             if (protocol.length() > 1) {
               decodeTypeOptions.push_back(i);
               decodeTypes.push_back(protocol);
@@ -401,7 +404,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Alt. Decode type"));
           html_table_header(F("Repeat"));
           html_table_header(F("Alt. Code [Hex]"));
-          html_TR(); //added to make "tworow" work
+          html_TR(); // added to make "tworow" work
 
           int rowCnt = 0;
 
@@ -608,8 +611,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       decode_results results;
 
 # ifdef P016_CHECK_HEAP
-  fMem=FreeMem();
-  fFreeStack=getCurrentFreeStack();
+      fMem       = FreeMem();
+      fFreeStack = getCurrentFreeStack();
 # endif // ifdef P016_CHECK_HEAP
 
       if (irReceiver->decode(&results))
@@ -679,14 +682,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags); // add code if not saved so far
               }
 
-# ifdef P016_CHECK_HEAP
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(
-      F("Before decode: FreeMem: %d  FreeStack:%d / After: FreeMem: %d  FreeStack:%d"),
-      fMem, fFreeStack,
-      FreeMem(), getCurrentFreeStack()));
-  }
-# endif // ifdef P016_CHECK_HEAP
+#  ifdef P016_CHECK_HEAP
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                addLogMove(LOG_LEVEL_INFO, strformat(
+                             F("Before decode: FreeMem: %d  FreeStack:%d / After: FreeMem: %d  FreeStack:%d"),
+                             fMem, fFreeStack,
+                             FreeMem(), getCurrentFreeStack()));
+              }
+#  endif // ifdef P016_CHECK_HEAP
 
               if (bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd)) {
                 success = P016_data->ExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
@@ -838,12 +842,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
 # endif // P016_P035_Extended_AC
 
-#if !P016_SEND_IR_TO_CONTROLLER
+# if !P016_SEND_IR_TO_CONTROLLER
         {
           unsigned long IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
         }
-#endif
+# endif // if !P016_SEND_IR_TO_CONTROLLER
         sendData(event);
         break;
       }
