@@ -1045,18 +1045,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-
 # ifdef P036_CHECK_HEAP
 void P036_CheckHeap(String dbgtxt) {
-  String log;
-
-  log.reserve(80);
-  log += dbgtxt;
-  log += F(" FreeHeap:");
-  log += ESP.getFreeHeap();
-  log += F(" FreeStack:");
-  log += getCurrentFreeStack();
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO,
+         strformat(F("%s FreeHeap:%d FreeStack:%d"),
+                   dbgtxt.c_str(), ESP.getFreeHeap(), getCurrentFreeStack()));
 }
 
 # endif // ifdef P036_CHECK_HEAP

@@ -9,9 +9,15 @@
 # include <vector>
 
 # define PLUGIN_016_DEBUG // additional debug messages in the log
-# if defined(LIMIT_BUILD_SIZE) && defined(PLUGIN_016_DEBUG)
+// # define P016_CHECK_HEAP
+# if defined(LIMIT_BUILD_SIZE) 
+# if defined(PLUGIN_016_DEBUG)
 #  undef PLUGIN_016_DEBUG
-# endif // if defined(LIMIT_BUILD_SIZE) && defined(PLUGIN_016_DEBUG)
+# endif // if defined(PLUGIN_016_DEBUG)
+# if defined(P016_CHECK_HEAP)
+#  undef P016_CHECK_HEAP
+# endif // if defined(P016_CHECK_HEAP)
+# endif // if defined(LIMIT_BUILD_SIZE)
 
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0        // Add automatically new code into Code of the command structure
@@ -100,11 +106,9 @@ public:
   void AddCode(uint64_t      Code,
                decode_type_t DecodeType = decode_type_t::UNKNOWN,
                uint16_t      CodeFlags  = 0u);
-  int CheckExecuteCode(uint64_t      Code,
+  bool ExecuteCode(uint64_t      Code,
                    decode_type_t DecodeType = decode_type_t::UNKNOWN,
                    uint16_t      CodeFlags  = 0u);
-
-  bool ExecuteCode(int commandLineToExecute);
 
   // CustomTaskSettings
   std::vector<tCommandLinesV2>CommandLines; // holds the CustomTaskSettings V2
@@ -126,6 +130,9 @@ private:
   uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
   uint16_t      iLastCodeFlags  = 0;                      // last flags sent
   # endif // if P016_FEATURE_COMMAND_HANDLING
+# ifdef P016_CHECK_HEAP
+  void CheckHeap(String dbgtxt);
+# endif // ifdef P016_CHECK_HEAP
 };
 
 #endif // ifdef USES_P016

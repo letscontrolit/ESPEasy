@@ -23,6 +23,9 @@
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 
 /** Changelog:
+ * 2024-01-23 uwekaditz:  Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
+ *                        Using strformat() for the debug messages
+ *                        Heap and memory can be reported (P016_CHECK_HEAP)
  * 2023-12-11 uwekaditz:  Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
  *                        Note: for decoding a RAW message DECODE_HASH must be set
  *                        uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1), changed to ll2String()
@@ -45,6 +48,9 @@
 # ifdef P016_P035_Extended_AC
 #  include <IRac.h>
 # endif // ifdef P016_P035_Extended_AC
+# ifdef P016_CHECK_HEAP
+#  include "src/Helpers/Memory.h"
+# endif // ifdef P016_CHECK_HEAP
 
 # define PLUGIN_016
 # define PLUGIN_ID_016 16
@@ -59,6 +65,10 @@
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
 // History
+// @uwekaditz: 2024-01-23
+// CHG: Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
+// NEW: Heap and memory can be reported (P016_CHECK_HEAP)
+// MSG: Using strformat() for the debug messages
 // @uwekaditz: 2023-12-11
 // NEW: Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
 // MSG: for decoding a RAW message DECODE_HASH must be set
@@ -152,6 +162,12 @@ const uint16_t kMinUnknownSize = 12;
 
 IRrecv *irReceiver          = nullptr;
 bool    bEnableIRcodeAdding = false;
+
+# ifdef P016_CHECK_HEAP
+  uint32_t fMem=0;
+  uint32_t fFreeStack=0;
+# endif // ifdef P016_CHECK_HEAP
+
 # ifdef P016_P035_USE_RAW_RAW2
 
 /* *INDENT-OFF* */
@@ -163,11 +179,10 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 void P016_infoLogMemory(const __FlashStringHelper *text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, strformat(
-      F("P016: Free memory %s: %d stack: %d"),
+      F("P016: %s FreeMem: %d FreeStack:%d"),
        text, FreeMem(), getCurrentFreeStack()));
   }
 }
-
 # endif // ifdef PLUGIN_016_DEBUG
 
 boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
@@ -590,19 +605,16 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-# if P016_FEATURE_COMMAND_HANDLING
+      decode_results results;
 
-      // Need to call the actual ExecuteCommand_all function call after all the rest is done
-      // Or else it may cause stack overflow.
-      int commandLineToExecute = -1;
+# ifdef P016_CHECK_HEAP
+  fMem=FreeMem();
+  fFreeStack=getCurrentFreeStack();
+# endif // ifdef P016_CHECK_HEAP
+
+      if (irReceiver->decode(&results))
       {
-#endif
-        decode_results results;
-
-        if (!irReceiver->decode(&results))
-        {
-          return success;
-        }
+        success = true;
         yield(); // Feed the WDT after a time expensive decoding procedure
 
         if (results.overflow)
@@ -641,7 +653,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-          # if P016_FEATURE_COMMAND_HANDLING
+# if P016_FEATURE_COMMAND_HANDLING
 
           // Check if this is a code we have a command for or we have to add
           P016_data_struct *P016_data =
@@ -667,12 +679,21 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags); // add code if not saved so far
               }
 
+# ifdef P016_CHECK_HEAP
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("Before decode: FreeMem: %d  FreeStack:%d / After: FreeMem: %d  FreeStack:%d"),
+      fMem, fFreeStack,
+      FreeMem(), getCurrentFreeStack()));
+  }
+# endif // ifdef P016_CHECK_HEAP
+
               if (bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd)) {
-                commandLineToExecute = P016_data->CheckExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
+                success = P016_data->ExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
               }
             }
           }
-          # endif // if P016_FEATURE_COMMAND_HANDLING
+# endif // if P016_FEATURE_COMMAND_HANDLING
         }
 
         if  (!bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)) {
@@ -698,7 +719,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        # ifdef P016_P035_Extended_AC
+# ifdef P016_P035_Extended_AC
 
         // Display any extra A/C info if we have it.
         // Display the human readable state of an A/C message if we can.
@@ -729,7 +750,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           if (!description.isEmpty()) {
             // If we got a human-readable description of the message, display it.
-            addLogMove(LOG_LEVEL_INFO, strformat(F("AC State: %s"), description));
+            addLogMove(LOG_LEVEL_INFO, strformat(F("AC State: %s"), description.c_str()));
           }
         }
 
@@ -815,7 +836,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
-        # endif // P016_P035_Extended_AC
+# endif // P016_P035_Extended_AC
 
 #if !P016_SEND_IR_TO_CONTROLLER
         {
@@ -824,19 +845,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
 #endif
         sendData(event);
-# if P016_FEATURE_COMMAND_HANDLING
+        break;
       }
-      if (commandLineToExecute >= 0) {
-        P016_data_struct *P016_data =
-          static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P016_data) {
-          P016_data->ExecuteCode(commandLineToExecute);
-        }
-      }
-#endif
-      success = true;
-      break;
     }
   }
   return success;
