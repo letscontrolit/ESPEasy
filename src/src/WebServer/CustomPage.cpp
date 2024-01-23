@@ -137,7 +137,7 @@ bool handle_custom(const String& path) {
   String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str()});
 
     // handle some update processes first, before returning page update...
     String dummy;
