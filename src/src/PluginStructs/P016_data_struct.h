@@ -130,9 +130,9 @@ private:
   uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
   uint16_t      iLastCodeFlags  = 0;                      // last flags sent
   # endif // if P016_FEATURE_COMMAND_HANDLING
-# ifdef P016_CHECK_HEAP
+  # ifdef P016_CHECK_HEAP
   void CheckHeap(String dbgtxt);
-# endif // ifdef P016_CHECK_HEAP
+  # endif // ifdef P016_CHECK_HEAP
 };
 
 #endif // ifdef USES_P016

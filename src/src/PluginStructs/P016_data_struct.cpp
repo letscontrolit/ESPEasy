@@ -219,15 +219,15 @@ bool P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       iLastCmdTime    = millis();
 
       if (CommandLines[i].Command[0] != 0) {
-#  ifdef P016_CHECK_HEAP
+        #  ifdef P016_CHECK_HEAP
         CheckHeap(F("Before ExecuteCommand_all:"));
-#  endif // ifdef P016_CHECK_HEAP
+        #  endif // ifdef P016_CHECK_HEAP
         ExecuteCommand_all(
           { EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command }, true);
-#  ifdef P016_CHECK_HEAP
+        #  ifdef P016_CHECK_HEAP
         CheckHeap(F("After ExecuteCommand_all:"));
-#  endif // ifdef P016_CHECK_HEAP
-#  ifdef PLUGIN_016_DEBUG
+        #  endif // ifdef P016_CHECK_HEAP
+        #  ifdef PLUGIN_016_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(
@@ -237,12 +237,12 @@ bool P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
                        (i + 1),
                        CommandLines[i].Command));
         }
-#  endif // PLUGIN_016_DEBUG
+        #  endif // PLUGIN_016_DEBUG
         return true;
       }
     }
   }
-#  ifdef PLUGIN_016_DEBUG
+  #  ifdef PLUGIN_016_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     addLogMove(LOG_LEVEL_ERROR, strformat(
@@ -250,7 +250,7 @@ bool P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
                  typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
                  uint64ToString(Code, 16).c_str()));
   }
-#  endif // PLUGIN_016_DEBUG
+  #  endif // PLUGIN_016_DEBUG
   return false;
 }
 

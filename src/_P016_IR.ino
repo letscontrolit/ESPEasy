@@ -28,7 +28,8 @@
  *                        Heap and memory can be reported (P016_CHECK_HEAP)
  * 2023-12-11 uwekaditz:  Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
  *                        Note: for decoding a RAW message DECODE_HASH must be set
- *                        uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1), changed to ll2String()
+ *                        uint64ToString() in debug message in PLUGIN_TEN_PER_SECOND can not handle decode_type_t::UNKNOWN (-1),
+ *                        changed to ll2String()
  * 2022-08-08 tonhuisman: Optionally (compile-time) disable command handling by setting #define P016_FEATURE_COMMAND_HDNLING 0
  *                        Make reserved buffer size for receiver configurable 100..1024 uint16_t = 200-2048 bytes
  *                        Change UI to show buffer size in bytes instead of 'units' to avoid confusion.
@@ -196,11 +197,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number = PLUGIN_ID_016;
       Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
-# if P016_SEND_IR_TO_CONTROLLER
+      # if P016_SEND_IR_TO_CONTROLLER
       Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
-# else // if P016_SEND_IR_TO_CONTROLLER
+      # else // if P016_SEND_IR_TO_CONTROLLER
       Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
-# endif // if P016_SEND_IR_TO_CONTROLLER
+      # endif // if P016_SEND_IR_TO_CONTROLLER
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
       Device[deviceCount].InverseLogicOption = true;
@@ -610,10 +611,10 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
     {
       decode_results results;
 
-# ifdef P016_CHECK_HEAP
+      # ifdef P016_CHECK_HEAP
       fMem       = FreeMem();
       fFreeStack = getCurrentFreeStack();
-# endif // ifdef P016_CHECK_HEAP
+      # endif // ifdef P016_CHECK_HEAP
 
       if (irReceiver->decode(&results))
       {
@@ -656,7 +657,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-# if P016_FEATURE_COMMAND_HANDLING
+          # if P016_FEATURE_COMMAND_HANDLING
 
           // Check if this is a code we have a command for or we have to add
           P016_data_struct *P016_data =
@@ -682,7 +683,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags); // add code if not saved so far
               }
 
-#  ifdef P016_CHECK_HEAP
+              #  ifdef P016_CHECK_HEAP
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLogMove(LOG_LEVEL_INFO, strformat(
@@ -690,14 +691,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
                              fMem, fFreeStack,
                              FreeMem(), getCurrentFreeStack()));
               }
-#  endif // ifdef P016_CHECK_HEAP
+              #  endif // ifdef P016_CHECK_HEAP
 
               if (bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd)) {
                 success = P016_data->ExecuteCode(iCode, iCodeDecodeType, iCodeFlags); // execute command for code if available
               }
             }
           }
-# endif // if P016_FEATURE_COMMAND_HANDLING
+          # endif // if P016_FEATURE_COMMAND_HANDLING
         }
 
         if  (!bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)) {
@@ -723,7 +724,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-# ifdef P016_P035_Extended_AC
+        # ifdef P016_P035_Extended_AC
 
         // Display any extra A/C info if we have it.
         // Display the human readable state of an A/C message if we can.
@@ -840,14 +841,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
-# endif // P016_P035_Extended_AC
+        # endif // P016_P035_Extended_AC
 
-# if !P016_SEND_IR_TO_CONTROLLER
+        # if !P016_SEND_IR_TO_CONTROLLER
         {
           unsigned long IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
         }
-# endif // if !P016_SEND_IR_TO_CONTROLLER
+        # endif // if !P016_SEND_IR_TO_CONTROLLER
         sendData(event);
         break;
       }
@@ -1058,7 +1059,7 @@ unsigned int storeB32Hex(char out[], unsigned int iOut, unsigned int val)
 
 void enableIR_RX(boolean enable)
 {
-#ifdef PLUGIN_016
+  #ifdef PLUGIN_016
 
   if (irReceiver == 0) { return; }
 
@@ -1067,5 +1068,5 @@ void enableIR_RX(boolean enable)
   } else {
     irReceiver->disableIRIn(); // Stop the receiver
   }
-#endif // PLUGIN_016
+  #endif // PLUGIN_016
 }
