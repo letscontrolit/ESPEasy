@@ -310,7 +310,7 @@ void checkUDP()
                   ));
             }
             #endif
-            ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
+            ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]}, true);
           }
           else
           {

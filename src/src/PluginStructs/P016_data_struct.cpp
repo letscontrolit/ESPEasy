@@ -216,7 +216,11 @@ int P016_data_struct::CheckExecuteCode(uint64_t Code, decode_type_t DecodeType, 
       iLastCmdTime    = millis();
 
       if (CommandLines[i].Command[0] != 0) {
-        #ifdef PLUGIN_016_DEBUG
+        #  ifdef PLUGIN_016_DEBUG
+        bool _success =
+        #  endif // ifdef PLUGIN_016_DEBUG
+        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command}, true);
+        #  ifdef PLUGIN_016_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(
             F("[P016] Execute: %s Code: 0x%s with command %d: {%s}"),
