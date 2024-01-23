@@ -35,7 +35,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   if (command_e == ESPEasy_cmd_e::NotMatched) {
     // For sure not an internal command, try plugin or remote config
     printToWeb = true;
-    handledCmd = ExecuteCommand_plugin_config(source, webrequest.c_str());
+    handledCmd = ExecuteCommand_plugin_config({source, webrequest.c_str()});
     sendOK     = false;
   } else {
     if ((command_e == ESPEasy_cmd_e::event) || (command_e == ESPEasy_cmd_e::asyncevent))
@@ -80,7 +80,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     } 
     if (!handledCmd) {
       printToWeb = true;
-      handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
+      handledCmd = ExecuteCommand_internal({source, webrequest.c_str()});
     }
   }
 
