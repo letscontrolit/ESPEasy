@@ -281,7 +281,7 @@ bool C005_parse_command(struct EventStruct *event) {
         eventQueue.addMove(std::move(cmd), true);
       }
     } else {
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
     }
   }
   return validTopic;

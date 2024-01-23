@@ -29,6 +29,7 @@ else:
     "-DUSES_P002",  # ADC
     "-DUSES_P003",  # Generic Pulse Counter
     "-DUSES_P004",  # Dallas DS18b20
+    "-DUSES_P016",  # IR
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
     "-DUSES_P028",  # BME280
@@ -41,7 +42,7 @@ else:
 #    "-DUSES_P059",  # Encoder
 #    "-DUSES_P080",  # Dallas iButton
     "-DUSES_P081",  # Cron
-    "-DUSES_P082",  # GPS
+#    "-DUSES_P082",  # GPS
 #   "-DUSES_P085",  # AcuDC24x
     "-DUSES_P098",  # PWM motor
 #   "-DUSES_P100",  # Pulse Counter - DS2423
@@ -60,13 +61,13 @@ else:
 #    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
 #    "-DFEATURE_EXT_RTC=1",
-    "-DFEATURE_I2CMULTIPLEXER=1",
+    "-DFEATURE_I2CMULTIPLEXER=0",
     "-DFEATURE_TRIGONOMETRIC_FUNCTIONS_RULES=1",
 #    "-DFEATURE_CUSTOM_PROVISIONING=1",
 
     "-DFEATURE_ESPEASY_P2P=1",
 
-    "-DFEATURE_SETTINGS_ARCHIVE=1"
+    "-DFEATURE_SETTINGS_ARCHIVE=0"
   ]
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
