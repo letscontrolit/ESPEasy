@@ -862,31 +862,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.addMove(std::move(newEvent));
             }
           } else { // not an event
-            String log;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log = F("C014 :");
-            }
-
             // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-            if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Internal Command: OK!");
-              }
-            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" PluginCall: OK!");
-              }
-            } else {
-              remoteConfig(&TempEvent, cmd);
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Plugin/Internal command failed! remoteConfig?");
-              }
-            }
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
+            ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
           }
         }
       }

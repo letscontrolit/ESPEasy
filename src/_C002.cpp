@@ -159,7 +159,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 mustSendEvent = true;
 
                 // Try plugin and internal
-                ExecuteCommand(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str(), true, true, false);
+                ExecuteCommandArgs args(
+                  x, 
+                  EventValueSource::Enum::VALUE_SOURCE_MQTT, 
+                  action.c_str(), 
+                  true, 
+                  true, 
+                  false);
+                ExecuteCommand(std::move(args), true);
               }
 
               if (mustSendEvent) {
