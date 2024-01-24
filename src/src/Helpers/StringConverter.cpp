@@ -1083,7 +1083,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
 int GetCommandCode(const char* needle, const char* haystack)
 {
   // Likely long enough to parse any command
-  char temp[32]{};
+  static char temp[32]{};
+  temp[0] = '\0';
   return GetCommandCode(temp, sizeof(temp), needle, haystack);
 }
 

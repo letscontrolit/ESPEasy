@@ -159,7 +159,7 @@ const tFontSizes FontSizes[P36_MaxFontCount] = {
 };
 /* *INDENT-ON* */
 
-const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
+constexpr tSizeSettings SizeSettings[P36_MaxSizesCount] = {
   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,  // 128x64
     4,                                             // max. line count
     113, 15                                        // WiFi indicator
@@ -731,72 +731,61 @@ void P036_data_struct::setNrLines(struct EventStruct *event, uint8_t NrLines) {
 
 # endif // if P036_ENABLE_LINECOUNT
 
-
-void P036_data_struct::display_header() {
-  if (!isInitialized()) {
-    return;
-  }
-
-  if (bHideHeader) { //  hide header
-    return;
-  }
-
-  eHeaderContent iHeaderContent;
+String P036_data_struct::create_display_header_text(eHeaderContent iHeaderContent) const
+{
   String newString, strHeader;
-
-  if ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) {
-    iHeaderContent = HeaderContent;
-  } else {
-    iHeaderContent = HeaderContentAlternative;
-  }
+  const __FlashStringHelper *newString_f = F("%sysname%");
+  bool use_newString_f = true;
 
   switch (iHeaderContent) {
     case eHeaderContent::eSSID:
 
       if (NetworkConnected()) {
         strHeader = WiFi.SSID();
+        use_newString_f = false;
       }
-      else {
-        newString = F("%sysname%");
-      }
+//      else {
+//        newString_f = F("%sysname%");
+//      }
       break;
     case eHeaderContent::eSysName:
-      newString = F("%sysname%");
+//      newString_f = F("%sysname%");
       break;
     case eHeaderContent::eTime:
-      newString = F("%systime%");
+      newString_f = F("%systime%");
       break;
     case eHeaderContent::eDate:
-      newString = F("%sysday_0%.%sysmonth_0%.%sysyear%");
+      newString_f = F("%sysday_0%.%sysmonth_0%.%sysyear%");
       break;
     case eHeaderContent::eIP:
-      newString = F("%ip%");
+      newString_f = F("%ip%");
       break;
     case eHeaderContent::eMAC:
-      newString = F("%mac%");
+      newString_f = F("%mac%");
       break;
     case eHeaderContent::eRSSI:
-      newString = F("%rssi%dBm");
+      newString_f = F("%rssi%dBm");
       break;
     case eHeaderContent::eBSSID:
-      newString = F("%bssid%");
+      newString_f = F("%bssid%");
       break;
     case eHeaderContent::eWiFiCh:
-      newString = F("Channel: %wi_ch%");
+      newString_f = F("Channel: %wi_ch%");
       break;
     case eHeaderContent::eUnit:
-      newString = F("Unit: %unit%");
+      newString_f = F("Unit: %unit%");
       break;
     case eHeaderContent::eSysLoad:
-      newString = F("Load: %sysload%%");
+      newString_f = F("Load: %sysload%%");
       break;
     case eHeaderContent::eSysHeap:
-      newString = F("Mem: %sysheap%");
+      newString_f = F("Mem: %sysheap%");
       break;
     case eHeaderContent::eSysStack:
-      newString = F("Stack: %sysstack%");
+      newString_f = F("Stack: %sysstack%");
       break;
     case eHeaderContent::ePageNo:
+      use_newString_f = false;
       strHeader  = F("page ");
       strHeader += (currentFrameToDisplay + 1);
 
@@ -807,14 +796,20 @@ void P036_data_struct::display_header() {
       break;
     # if P036_USERDEF_HEADERS
     case eHeaderContent::eUserDef1:
+      use_newString_f = false;
       newString = userDef1;
       break;
     case eHeaderContent::eUserDef2:
+      use_newString_f = false;
       newString = userDef2;
       break;
     # endif // if P036_USERDEF_HEADERS
     case eHeaderContent::eNone:
-      return;
+      return EMPTY_STRING;
+  }
+
+  if (use_newString_f) {
+    newString = newString_f;
   }
 
   if (newString.length() > 0) {
@@ -824,7 +819,23 @@ void P036_data_struct::display_header() {
   }
 
   strHeader.trim();
-  display_title(strHeader);
+  return strHeader;
+}
+
+void P036_data_struct::display_header() {
+  if (!isInitialized()) {
+    return;
+  }
+
+  if (bHideHeader) { //  hide header
+    return;
+  }
+
+  const eHeaderContent iHeaderContent = ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) 
+    ? HeaderContent
+    : HeaderContentAlternative;
+  const String title = create_display_header_text(iHeaderContent);
+  display_title(title);
 
   // Display time and wifibars both clear area below, so paint them after the title.
   if (getDisplaySizeSettings(disp_resolution).Width == P36_MaxDisplayWidth) {
@@ -844,26 +855,27 @@ void P036_data_struct::display_time() {
     return;
   }
 
-  String dtime = F("%systime%");
-
-  parseSystemVariables(dtime, false);
+  const String dtime = SystemVariables::getSystemVariable(SystemVariables::SYSTIME);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, 28, GetHeaderHeight() - 2);
   display->setColor(WHITE);
-  display->drawString(0, TopLineOffset, dtime.substring(0, 5));
+  display->drawString(0, TopLineOffset, dtime);
 }
 
 void P036_data_struct::display_title(const String& title) {
   if (!isInitialized()) {
     return;
   }
-  display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, GetHeaderHeight()); // don't clear line under title.
   display->setColor(WHITE);
 
+  if (title.isEmpty()) {
+    return;
+  }
+  display->setFont(getArialMT_Plain_10());
   if (getDisplaySizeSettings(disp_resolution).Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->drawString(P36_DisplayCentre, TopLineOffset, title);
