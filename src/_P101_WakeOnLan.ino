@@ -244,7 +244,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE: {
       String strings[2];
 
-      //  addLog(LOG_LEVEL_INFO, String(F("--> WOL taskIndex= ")) + String(event->TaskIndex)); // Debug
+      //  addLog(LOG_LEVEL_INFO, concat(F("--> WOL taskIndex= "), event->TaskIndex)); // Debug
 
       const String cmd = parseString(string, 1);
 

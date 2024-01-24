@@ -247,7 +247,7 @@ size_t TarStream::write(const uint8_t *buf,
 
         if (loglevelActiveFor(TAR_LOG_LEVEL_DEBUG)) {
           addLog(TAR_LOG_LEVEL_DEBUG, strformat(F("%sDEBUG WritingSlack %d bytes of %d to file"),
-                                                String(F("TarStream: ")).c_str(), toSkip, _filesList[_fileIndex].tarSize));
+                                                F("TarStream: "), toSkip, _filesList[_fileIndex].tarSize));
         }
         # endif // if !defined(BUILD_NO_DEBUG) && TAR_STREAM_DEBUG
 
@@ -278,7 +278,7 @@ size_t TarStream::write(const uint8_t *buf,
 
           if (logInfo) {
             addLog(LOG_LEVEL_INFO, strformat(F("%sWritingFinal to WritingDone, allZeros: %d"),
-                                             String(F("TarStream: Switch from ")).c_str(), allZeros));
+                                             F("TarStream: Switch from "), allZeros));
           }
           # endif // if TAR_STREAM_DEBUG
         }

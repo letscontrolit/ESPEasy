@@ -134,13 +134,13 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
+    addLog(LOG_LEVEL_DEBUG, strformat(F("EMAIL: Connecting to %s:%d"), aHost.c_str(), notificationsettings.Port));
   }
 #endif
 
   if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
+      addLog(LOG_LEVEL_ERROR, strformat(F("EMAIL: Error connecting to %s:%d"), aHost.c_str(), notificationsettings.Port));
     }
     myStatus = false;
   } else {

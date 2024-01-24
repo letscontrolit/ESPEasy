@@ -458,7 +458,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-//  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
+//  addLog(LOG_LEVEL_INFO, concat(F("tmpl.length(): "), tmpl.length()));
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
@@ -820,7 +820,7 @@ void addSVG_param(const char key, const String& value)
 
 
 void addSVG_param(const __FlashStringHelper * key, int value) {
-  addHtml(strformat(F(" %s=\"%d\""), String(key).c_str(), value));
+  addHtml(strformat(F(" %s=\"%d\""), key, value));
 }
 
 void addSVG_param(const __FlashStringHelper * key, float value) {
@@ -828,7 +828,7 @@ void addSVG_param(const __FlashStringHelper * key, float value) {
 }
 
 void addSVG_param(const __FlashStringHelper * key, const String& value) {
-  addHtml(strformat(F(" %s=\"%s\""), String(key).c_str(), value.c_str()));
+  addHtml(strformat(F(" %s=\"%s\""), key, value.c_str()));
 }
 
 void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
