@@ -162,9 +162,9 @@ bool ETHConnectRelaxed() {
       (eth_phy_type_t)Settings.ETH_Phy_Type,
       (eth_clock_mode_t)Settings.ETH_Clock_Mode);
 #else
-      #if FEATURE_USE_IPV6
-      ETH.enableIPv6(true);
-      #endif
+#if FEATURE_USE_IPV6
+    ETH.enableIPv6(true);
+#endif
 
     EthEventData.ethInitSuccess = ETH.begin( 
       (eth_phy_type_t)Settings.ETH_Phy_Type,

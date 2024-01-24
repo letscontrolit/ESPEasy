@@ -134,9 +134,6 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       WiFiEventData.markConnected((const char*) ssid_copy, info.connected.bssid, info.connected.channel);
       #endif
-      #if FEATURE_USE_IPV6
-      WiFi.enableIPv6(true);
-      #endif
       break;
     }
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
