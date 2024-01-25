@@ -20,7 +20,6 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/StringConverter.h"
 
 
 #if FEATURE_ETHERNET
@@ -170,7 +169,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ip_event_got_ip6_t * event = static_cast<ip_event_got_ip6_t*>(&info.got_ip6);
       IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
       WiFiEventData.markGotIPv6(ip);
-      addLog(LOG_LEVEL_INFO, concat(F("WIFI : STA got IP6 "), ip.toString(true)));
+      addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip.toString(true));
       break;
     }
     case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
