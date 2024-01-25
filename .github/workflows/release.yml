@@ -40,16 +40,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp32') }}
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp8266') }}
         with:
           path: ~/.platformio
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
