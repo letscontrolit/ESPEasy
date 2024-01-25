@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-01-25 tonhuisman: Add I2C enabled check on PLUGIN_INIT
  * 2024-01-24 tonhuisman: Add GET_CONFIG support
  * 2024-01-23 tonhuisman: Add initial value per channel, add some logging, refactoring
  * 2024-01-22 tonhuisman: Add named presets (not case-sensitive) and command handling
@@ -202,12 +203,16 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P166_data_struct(P166_I2C_ADDRESS,
-                                                             static_cast<DFRobot_GP8403::eOutPutRange_t>(P166_MAX_VOLTAGE)));
-      P166_data_struct *P166_data = static_cast<P166_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (Settings.isI2CEnabled()) {
+        initPluginTaskData(event->TaskIndex,
+                           new (std::nothrow) P166_data_struct(P166_I2C_ADDRESS,
+                                                               static_cast<DFRobot_GP8403::eOutPutRange_t>(P166_MAX_VOLTAGE)));
+        P166_data_struct *P166_data = static_cast<P166_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P166_data) && P166_data->init(event);
+        success = (nullptr != P166_data) && P166_data->init(event);
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("GP8403: I2C not enabled, init cancelled."));
+      }
 
       break;
     }
