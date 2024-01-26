@@ -246,13 +246,7 @@ void handle_hardware() {
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
-  #if ESP_IDF_VERSION_MAJOR > 3
-    const uint32_t nrItems = 5;
-  #else
-    const uint32_t nrItems = 2;
-  #endif
-    const __FlashStringHelper * ethPhyTypes[nrItems] = { 
-    toString(EthPhyType_t::notSet),
+    const __FlashStringHelper * ethPhyTypes[] = { 
 # if CONFIG_ETH_USE_ESP32_EMAC
     toString(EthPhyType_t::LAN8710),			  
     toString(EthPhyType_t::TLK110),				  
@@ -265,7 +259,7 @@ void handle_hardware() {
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     toString(EthPhyType_t::DM9051),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -278,7 +272,6 @@ void handle_hardware() {
 #endif
       };
     const int ethPhyTypes_index[] = {
-    static_cast<int>(EthPhyType_t::notSet),
 # if CONFIG_ETH_USE_ESP32_EMAC
     static_cast<int>(EthPhyType_t::LAN8710),			  
     static_cast<int>(EthPhyType_t::TLK110),				  
@@ -291,7 +284,7 @@ void handle_hardware() {
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     static_cast<int>(EthPhyType_t::DM9051),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -303,6 +296,9 @@ void handle_hardware() {
 # endif // if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
 #endif
     };
+
+    constexpr unsigned nrItems = NR_ELEMENTS(ethPhyTypes_index);
+
 
     const int choice = isValid(Settings.ETH_Phy_Type) 
       ? static_cast<int>(Settings.ETH_Phy_Type) 

@@ -33,7 +33,7 @@ enum class EthPhyType_t : uint8_t {
   KSZ8081 = 6,
 #endif
 #endif
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
   DM9051 = 10, 
 #endif

@@ -50,7 +50,7 @@ bool isValid(EthPhyType_t phyType) {
       return true;
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     case EthPhyType_t::DM9051: return true;
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -70,7 +70,7 @@ bool isValid(EthPhyType_t phyType) {
 
 #if FEATURE_ETHERNET
 bool isSPI_EthernetType(EthPhyType_t phyType) {
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
   return
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     phyType ==  EthPhyType_t::DM9051 ||
@@ -91,7 +91,11 @@ eth_phy_type_t to_ESP_phy_type(EthPhyType_t phyType)
 {
   switch (phyType) {
 # if CONFIG_ETH_USE_ESP32_EMAC
+#if ESP_IDF_VERSION_MAJOR >= 5
     case EthPhyType_t::LAN8710:  return ETH_PHY_LAN8710;
+#else
+    case EthPhyType_t::LAN8710:  return ETH_PHY_LAN8720;
+#endif
     case EthPhyType_t::TLK110:   return ETH_PHY_TLK110;
 #if ESP_IDF_VERSION_MAJOR > 3
     case EthPhyType_t::RTL8201:  return ETH_PHY_RTL8201;
@@ -102,7 +106,7 @@ eth_phy_type_t to_ESP_phy_type(EthPhyType_t phyType)
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     case EthPhyType_t::DM9051:   return ETH_PHY_DM9051;
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -136,7 +140,7 @@ const __FlashStringHelper* toString(EthPhyType_t phyType) {
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
-#if ESP_IDF_VERSION_MAJOR > 3
+#if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
     case EthPhyType_t::DM9051:   return F("DM9051");
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
