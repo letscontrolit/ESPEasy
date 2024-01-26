@@ -2,7 +2,7 @@
 
 #ifdef USES_P016
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include <IRutils.h>
 
@@ -223,7 +223,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
         #  ifdef PLUGIN_016_DEBUG
         bool _success =
         #  endif // ifdef PLUGIN_016_DEBUG
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
+        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command}, true);
         #  ifdef PLUGIN_016_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {

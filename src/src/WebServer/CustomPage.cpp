@@ -8,7 +8,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
@@ -137,7 +137,7 @@ bool handle_custom(const String& path) {
   String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str()});
 
     // handle some update processes first, before returning page update...
     String dummy;

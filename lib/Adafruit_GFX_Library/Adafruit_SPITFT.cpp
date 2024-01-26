@@ -35,6 +35,18 @@
 
 #include "Adafruit_SPITFT.h"
 
+#if defined(ESP32)
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#define NOT_FAST_PINIO_WAIT  for (std::atomic<uint8_t> i = 0; i < 1; i++) ;
+#else
+#define NOT_FAST_PINIO_WAIT  for (volatile uint8_t i = 0; i < 1; i++) ;
+#endif
+#else
+#define NOT_FAST_PINIO_WAIT
+#endif
+
+
 #if defined(__AVR__)
 #if defined(__AVR_XMEGA__) // only tested with __AVR_ATmega4809__
 #define AVR_WRITESPI(x)                                                        \
@@ -2305,10 +2317,7 @@ inline void Adafruit_SPITFT::SPI_MOSI_HIGH(void) {
 #endif // end !HAS_PORT_SET_CLR
 #else  // !USE_FAST_PINIO
   digitalWrite(swspi._mosi, HIGH);
-#if defined(ESP32)
-  for (volatile uint8_t i = 0; i < 1; i++)
-    ;
-#endif // end ESP32
+  NOT_FAST_PINIO_WAIT
 #endif // end !USE_FAST_PINIO
 }
 
@@ -2328,10 +2337,7 @@ inline void Adafruit_SPITFT::SPI_MOSI_LOW(void) {
 #endif // end !HAS_PORT_SET_CLR
 #else  // !USE_FAST_PINIO
   digitalWrite(swspi._mosi, LOW);
-#if defined(ESP32)
-  for (volatile uint8_t i = 0; i < 1; i++)
-    ;
-#endif // end ESP32
+  NOT_FAST_PINIO_WAIT
 #endif // end !USE_FAST_PINIO
 }
 
@@ -2355,10 +2361,7 @@ inline void Adafruit_SPITFT::SPI_SCK_HIGH(void) {
 #endif // end !HAS_PORT_SET_CLR
 #else  // !USE_FAST_PINIO
   digitalWrite(swspi._sck, HIGH);
-#if defined(ESP32)
-  for (volatile uint8_t i = 0; i < 1; i++)
-    ;
-#endif // end ESP32
+  NOT_FAST_PINIO_WAIT
 #endif // end !USE_FAST_PINIO
 }
 
@@ -2382,10 +2385,7 @@ inline void Adafruit_SPITFT::SPI_SCK_LOW(void) {
 #endif // end !HAS_PORT_SET_CLR
 #else  // !USE_FAST_PINIO
   digitalWrite(swspi._sck, LOW);
-#if defined(ESP32)
-  for (volatile uint8_t i = 0; i < 1; i++)
-    ;
-#endif // end ESP32
+  NOT_FAST_PINIO_WAIT
 #endif // end !USE_FAST_PINIO
 }
 

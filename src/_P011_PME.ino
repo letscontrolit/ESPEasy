@@ -88,7 +88,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      UserVar[event->BaseVarIndex] = Plugin_011_Read(PCONFIG(0), CONFIG_PORT);
+      UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(PCONFIG(0), CONFIG_PORT));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
       }

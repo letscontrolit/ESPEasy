@@ -137,7 +137,13 @@ class SettingsStruct_tmpl
   void EnableTimingStats(bool value) { VariousBits_1.EnableTimingStats = value; }
 
   // Allow to actively reset I2C bus if it appears to be hanging.
-  bool EnableClearHangingI2Cbus() const { return VariousBits_1.EnableClearHangingI2Cbus; }
+  bool EnableClearHangingI2Cbus() const { 
+#if FEATURE_CLEAR_I2C_STUCK
+    return VariousBits_1.EnableClearHangingI2Cbus; 
+#else
+    return false;
+#endif
+}
   void EnableClearHangingI2Cbus(bool value) { VariousBits_1.EnableClearHangingI2Cbus = value; }
 
   // Enable RAM Tracking (may consume a few kB of RAM and cause some performance hit)
@@ -170,17 +176,23 @@ class SettingsStruct_tmpl
 
   // Wait for a second after calling WiFi.begin()
   // Especially useful for some FritzBox routers.
-  bool WaitWiFiConnect() const;
-  void WaitWiFiConnect(bool value);
+  bool WaitWiFiConnect() const { return VariousBits_2.WaitWiFiConnect; }
+  void WaitWiFiConnect(bool value) { VariousBits_2.WaitWiFiConnect = value; }
+
+  // Connect to Hidden SSID using channel and BSSID
+  // This is much slower, but appears to be needed for some access points 
+  // like MikroTik.
+  bool HiddenSSID_SlowConnectPerBSSID() const { return !VariousBits_2.HiddenSSID_SlowConnectPerBSSID; }
+  void HiddenSSID_SlowConnectPerBSSID(bool value) { VariousBits_2.HiddenSSID_SlowConnectPerBSSID = !value; }
 
   // Use Espressif's auto reconnect.
-  bool SDK_WiFi_autoreconnect() const;
-  void SDK_WiFi_autoreconnect(bool value);
+  bool SDK_WiFi_autoreconnect() const { return VariousBits_2.SDK_WiFi_autoreconnect; }
+  void SDK_WiFi_autoreconnect(bool value) { VariousBits_2.SDK_WiFi_autoreconnect = value; }
 
   #if FEATURE_RULES_EASY_COLOR_CODE
   // Inhibit RulesCodeCompletion
-  bool DisableRulesCodeCompletion() const;
-  void DisableRulesCodeCompletion(bool value);
+  bool DisableRulesCodeCompletion() const { return VariousBits_2.DisableRulesCodeCompletion; }
+  void DisableRulesCodeCompletion(bool value) { VariousBits_2.DisableRulesCodeCompletion = value; }
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
 
@@ -299,6 +311,8 @@ public:
   void setWiFi_TX_power(float dBm);
 
   pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
+
+  void forceSave() { memset(md5, 0, 16); }
 
 
   unsigned long PID = 0;
@@ -433,7 +447,7 @@ public:
   uint32_t      ResetFactoryDefaultPreference = 0; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed = 400000;
   uint16_t      WebserverPort = 80;
-  uint16_t      SyslogPort = 0;
+  uint16_t      SyslogPort = DEFAULT_SYSLOG_PORT;
 
   int8_t          ETH_Phy_Addr = -1;
   int8_t          ETH_Pin_mdc = -1;
@@ -467,7 +481,46 @@ public:
   // Do not rename or move this checksum.
   // Checksum calculation will work "around" this
   uint8_t       md5[16]{}; // Store checksum of the settings.
-  uint32_t      VariousBits2 = 0;
+  union {
+    // VariousBits2 defaults to 0, keep in mind when adding bit lookups.
+    struct {
+      uint32_t WaitWiFiConnect                  : 1; // Bit 00
+      uint32_t SDK_WiFi_autoreconnect           : 1; // Bit 01
+      uint32_t DisableRulesCodeCompletion       : 1; // Bit 02
+      uint32_t HiddenSSID_SlowConnectPerBSSID   : 1; // Bit 03  // inverted
+      uint32_t unused_04                        : 1; // Bit 04
+      uint32_t unused_05                        : 1; // Bit 05
+      uint32_t unused_06                        : 1; // Bit 06
+      uint32_t unused_07                        : 1; // Bit 07
+      uint32_t unused_08                        : 1; // Bit 08
+      uint32_t unused_09                        : 1; // Bit 09
+      uint32_t unused_10                        : 1; // Bit 10
+      uint32_t unused_11                        : 1; // Bit 11
+      uint32_t unused_12                        : 1; // Bit 12
+      uint32_t unused_13                        : 1; // Bit 13
+      uint32_t unused_14                        : 1; // Bit 14
+      uint32_t unused_15                        : 1; // Bit 15
+      uint32_t unused_16                        : 1; // Bit 16
+      uint32_t unused_17                        : 1; // Bit 17
+      uint32_t unused_18                        : 1; // Bit 18
+      uint32_t unused_19                        : 1; // Bit 19
+      uint32_t unused_20                        : 1; // Bit 20
+      uint32_t unused_21                        : 1; // Bit 21
+      uint32_t unused_22                        : 1; // Bit 22
+      uint32_t unused_23                        : 1; // Bit 23
+      uint32_t unused_24                        : 1; // Bit 24
+      uint32_t unused_25                        : 1; // Bit 25
+      uint32_t unused_26                        : 1; // Bit 26
+      uint32_t unused_27                        : 1; // Bit 27
+      uint32_t unused_28                        : 1; // Bit 28
+      uint32_t unused_29                        : 1; // Bit 29
+      uint32_t unused_30                        : 1; // Bit 30
+      uint32_t unused_31                        : 1; // Bit 31
+
+    } VariousBits_2;
+    uint32_t      VariousBits2 = 0;
+  };
+
 
   uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
   int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;

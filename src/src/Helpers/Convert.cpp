@@ -80,85 +80,58 @@ float minutesToDay(int minutes) {
 }
 
 String minutesToDayHour(int minutes) {
-  int  days  = minutes / 1440;
-  int  hours = (minutes % 1440) / 60;
-  char TimeString[8] = {0}; // 5 digits plus the null char minimum
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c"), days, 'd', hours, 'h');
-  return TimeString;
-}
-
-String minutesToHourMinute(int minutes) {
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c"), hours, 'h', mins, 'm');
-  return TimeString;
+  const int  days  = minutes / 1440;
+  const int  hours = (minutes % 1440) / 60;
+  return strformat(F("%dd%02dh"), days, hours);
 }
 
 String minutesToDayHourMinute(int minutes) {
-  int  days  = minutes / 1440;
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c"), days, 'd', hours, 'h', mins, 'm');
-  return TimeString;
+  const int  days  = minutes / 1440;
+  const int  hours = (minutes % 1440) / 60;
+  const int  mins  = (minutes % 1440) % 60;
+  if (days == 0) {
+    return strformat(F("%02dh%02dm"), hours, mins);
+  }
+  return strformat(F("%dd%02dh%02dm"), days, hours, mins);
 }
 
 String minutesToHourColonMinute(int minutes) {
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[8] = {0};
+  const int  hours = (minutes % 1440) / 60;
+  const int  mins  = (minutes % 1440) % 60;
 
-  sprintf_P(TimeString, PSTR("%02d%c%02d"), hours, ':', mins);
-  return TimeString;
+  return strformat(F("%02d:%02d"), hours, mins);
 }
 
 String secondsToDayHourMinuteSecond(int seconds) {
-  int  sec     = seconds % 60;
-  int  minutes = seconds / 60;
-  int  days    = minutes / 1440;
-  int  hours   = (minutes % 1440) / 60;
-  int  mins    = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c%02d"), days, 'd', hours, ':', mins, ':', sec);
-  return TimeString;
+  const int  sec     = seconds % 60;
+  const int  minutes = seconds / 60;
+  const int  days    = minutes / 1440;
+  const int  min_day = (minutes % 1440);
+  const int  hours   = min_day / 60;
+  const int  mins    = min_day % 60;
+  if (days == 0) {
+    return strformat(F("%02d:%02d:%02d"), hours, mins, sec);
+  } 
+  return strformat(F("%dT%02d:%02d:%02d"), days, hours, mins, sec);
 }
 
 String format_msec_duration(int64_t duration) {
-  String result;
-
-  if (duration < 0) {
-    result   = '-';
-    duration = -1ll * duration;
+  if (duration < 0ll) {
+    return concat('-', format_msec_duration(-1ll*duration));
   }
+  const uint32_t duration_s = duration / 1000ll;
+  const int32_t duration_ms = duration % 1000ll;
 
-  if (duration < 10000ll) {
-    result += static_cast<int32_t>(duration);
-    result += F(" ms");
-    return result;
+  if (duration_s < 60) {
+    return strformat(
+      F("%02d.%03d"),
+      duration_s,
+      duration_ms);
   }
-  duration /= 1000ll;
-
-  if (duration < 3600ll) {
-    int sec     = duration % 60ll;
-    int minutes = duration / 60ll;
-
-    if (minutes > 0ll) {
-      result += minutes;
-      result += F(" m ");
-    }
-    result += sec;
-    result += F(" s");
-    return result;
-  }
-  duration /= 60ll;
-
-  if (duration < 1440ll) { return minutesToHourMinute(duration); }
-  return minutesToDayHourMinute(duration);
+  return strformat(
+    F("%s.%03d"),
+    secondsToDayHourMinuteSecond(duration_s).c_str(),
+    duration_ms);
 }
 
 

@@ -72,7 +72,9 @@ struct LabelType {
 //    ENABLE_RULES_EVENT_REORDER, // TD-er: Disabled for now
     TASKVALUESET_ALL_PLUGINS,
     ALLOW_OTA_UNLIMITED,
+#if FEATURE_CLEAR_I2C_STUCK
     ENABLE_CLEAR_HUNG_I2C_BUS,
+#endif
     #if FEATURE_I2C_DEVICE_CHECK
     ENABLE_I2C_DEVICE_CHECK,
     #endif // if FEATURE_I2C_DEVICE_CHECK
@@ -102,6 +104,13 @@ struct LabelType {
     IP_SUBNET,               // 255.255.255.0
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
+#if FEATURE_USE_IPV6
+    IP6_LOCAL,
+    IP6_GLOBAL,
+//    IP6_ALL_ADDRESSES,
+//    IP6_ADDRESS_CDIR,
+//    IP6_GATEWAY,
+#endif
     CLIENT_IP,               // 192.168.1.67
     #if FEATURE_MDNS
     M_DNS,                   // breadboard.local
@@ -130,6 +139,8 @@ struct LabelType {
     PERIODICAL_GRAT_ARP,
     CONNECTION_FAIL_THRESH,
     WAIT_WIFI_CONNECT,
+    HIDDEN_SSID_SLOW_CONNECT,
+    CONNECT_HIDDEN_SSID,
     SDK_WIFI_AUTORECONNECT,
 
     BUILD_DESC,
@@ -165,7 +176,7 @@ struct LabelType {
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,
-    ESP_BOARD_NAME,
+    BOARD_NAME,
 
     FLASH_CHIP_ID,
     FLASH_CHIP_VENDOR,
@@ -192,6 +203,9 @@ struct LabelType {
     ETH_IP_ADDRESS_SUBNET,
     ETH_IP_GATEWAY,
     ETH_IP_DNS,
+#if FEATURE_USE_IPV6
+    ETH_IP6_LOCAL,
+#endif
     ETH_MAC,
     ETH_DUPLEX,
     ETH_SPEED,

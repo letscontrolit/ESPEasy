@@ -13,6 +13,7 @@
 /**
  * 2023-06-17, tonhuisman: Replace Device[].FormulaOption by Device[].DecimalsOnly option, as no (successful) PLUGIN_READ is done
  * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
+ * 2022-12-13, tonhuisman: Implement separator character input selector
  * 2022-11-14, tonhuisman: Add support for selecting JSON sub-attributes, using the . notation, like main.sub (1 level only)
  * 2022-11-02, tonhuisman: Enable plugin to generate events initially, like the plugin did before the mapping, filtering and json parsing
  *                         features were added
@@ -196,37 +197,36 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
       # if P037_REPLACE_BY_COMMA_SUPPORT
       {
-        String character = F(" ");
-        character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
-        addRowLabel(F("To replace by comma in event"));
-        addTextBox(F("preplch"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
-        addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
+        addFormSeparatorCharInput(F("To replace by comma in event"), F("preplch"),
+                                  P037_REPLACE_BY_COMMA, F(P037_REPLACE_CHAR_SET), F(""));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
-      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+      {
+        P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
-      if (nullptr == P037_data) {
-        return success;
+        if (nullptr == P037_data) {
+          return success;
+        }
+        success = P037_data->loadSettings() && P037_data->webform_load(
+          # if P037_MAPPING_SUPPORT
+          P037_APPLY_MAPPINGS
+          # endif // if P037_MAPPING_SUPPORT
+          # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+          ,
+          # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+          # if P037_FILTER_SUPPORT
+          P037_APPLY_FILTERS
+          # endif // if P037_FILTER_SUPPORT
+          # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+          ,
+          # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+          # if P037_JSON_SUPPORT
+          P037_PARSE_JSON
+          # endif // if P037_JSON_SUPPORT
+          );
+        delete P037_data;
       }
-      success = P037_data->loadSettings() && P037_data->webform_load(
-        # if P037_MAPPING_SUPPORT
-        P037_APPLY_MAPPINGS
-        # endif // if P037_MAPPING_SUPPORT
-        # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
-        ,
-        # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
-        # if P037_FILTER_SUPPORT
-        P037_APPLY_FILTERS
-        # endif // if P037_FILTER_SUPPORT
-        # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
-        ,
-        # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
-        # if P037_JSON_SUPPORT
-        P037_PARSE_JSON
-        # endif // if P037_JSON_SUPPORT
-        );
-      delete P037_data;
       break;
     }
 
@@ -251,13 +251,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
       P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("pdedupe")) ? 1 : 0;
       P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("pquedepth"));
-      # if P037_REPLACE_BY_COMMA_SUPPORT
-      String character = webArg(F("preplch"));
-      P037_REPLACE_BY_COMMA = character[0];
 
-      if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
-        P037_REPLACE_BY_COMMA = 0x0;
-      }
+      # if P037_REPLACE_BY_COMMA_SUPPORT
+      P037_REPLACE_BY_COMMA = getFormItemInt(F("preplch"));
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       success = P037_data->webform_save(
@@ -615,7 +611,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   numericPayload = false;                                  // No, it isn't numeric
                   doublePayload  = NAN;                                    // Invalid value
                 }
-                UserVar[event->BaseVarIndex + x] = doublePayload;          // Save the new value
+                UserVar.setFloat(event->TaskIndex, x, doublePayload);          // Save the new value
 
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                   String RuleEvent;

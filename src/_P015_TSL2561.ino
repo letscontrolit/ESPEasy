@@ -142,11 +142,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P015_data_struct(P015_I2C_ADDR, P015_GAIN, P015_INTEGRATION));
-      P015_data_struct *P015_data =
-        static_cast<P015_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P015_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P015_data_struct(P015_I2C_ADDR, P015_GAIN, P015_INTEGRATION));
       break;
     }
 
@@ -158,11 +154,14 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P015_data) {
         P015_data->begin();
 
+        float luxVal, infraredVal, broadbandVal, ir_broadband_ratio{};
+
         success = P015_data->performRead(
-          UserVar[event->BaseVarIndex],      // lux
-          UserVar[event->BaseVarIndex + 1],  // infrared
-          UserVar[event->BaseVarIndex + 2],  // broadband
-          UserVar[event->BaseVarIndex + 3]); // ir_broadband_ratio
+          luxVal, infraredVal, broadbandVal, ir_broadband_ratio);
+        UserVar.setFloat(event->TaskIndex, 0, luxVal);
+        UserVar.setFloat(event->TaskIndex, 1, infraredVal);
+        UserVar.setFloat(event->TaskIndex, 2, broadbandVal);
+        UserVar.setFloat(event->TaskIndex, 3, ir_broadband_ratio);
 
         if (P015_SLEEP) {
           # ifndef BUILD_NO_DEBUG

@@ -9,6 +9,10 @@
 # include "../WebServer/Markup_Forms.h"
 
 # include "../DataStructs/NodeStruct.h"
+#if FEATURE_PLUGIN_STATS
+#include "../DataStructs/PluginStats_Config.h"
+#endif
+
 
 # include "../Globals/CPlugins.h"
 # include "../Globals/Device.h"
@@ -23,7 +27,6 @@
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/I2C_Plugin_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
@@ -147,6 +150,14 @@ void handle_devices() {
     {
       // change of device: cleanup old device and reset default settings
       setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
+      const deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
+
+      if (validDeviceIndex(DeviceIndex)) { 
+        const DeviceStruct& device = Device[DeviceIndex];
+        if ((device.Type == DEVICE_TYPE_I2C) && device.I2CMax100kHz) {      // 100 kHz-only I2C device?
+          bitWrite(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
+        }
+      }
     }
     else if (taskdevicenumber != INVALID_PLUGIN_ID) // save settings
     {
@@ -158,6 +169,7 @@ void handle_devices() {
       // N.B. When calling delete, the settings were already saved.
       if (nosave) {
         Cache.updateExtraTaskSettingsCache();
+        UserVar.clear_computed(taskIndex);
       } else {
         addHtmlError(SaveTaskSettings(taskIndex));
         addHtmlError(SaveSettings());
@@ -320,7 +332,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       update_whenset_FormItemInt(concat(F("taskdevicepin"), i + 1), pins[i]);
     }
 
-    bool taskEnabled = isFormItemChecked(F("TDE"));
+    const bool taskEnabled = isFormItemChecked(F("TDE"));
     setBasicTaskValues(taskIndex, taskdevicetimer,
                       taskEnabled, webArg(F("TDN")),
                       pins);
@@ -382,7 +394,17 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     ExtraTaskSettings.enablePluginFilter(varNr, isFormItemChecked(getPluginCustomArgName(F("TDFIL"), varNr)));
 #endif
 #if FEATURE_PLUGIN_STATS
-    ExtraTaskSettings.enablePluginStats(varNr, isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
+    PluginStats_Config_t pluginStats_Config;
+    pluginStats_Config.setEnabled(isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
+    pluginStats_Config.setHidden(isFormItemChecked(getPluginCustomArgName(F("TDSH"), varNr)));
+    const int selectedAxis = getFormItemInt(getPluginCustomArgName(F("TDSA"), varNr));
+    pluginStats_Config.setAxisIndex(selectedAxis);
+    pluginStats_Config.setAxisPosition(
+      ((selectedAxis >> 2) == 0) 
+      ? PluginStats_Config_t::AxisPosition::Left 
+      : PluginStats_Config_t::AxisPosition::Right);
+
+    ExtraTaskSettings.setPluginStatsConfig(varNr, pluginStats_Config);
 #endif
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
@@ -436,15 +458,15 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
+  UserVar.clear_computed(taskIndex);
 }
 
 
 void html_add_setPage(uint8_t page, bool isLinkToPrev) {
-  addHtml(F("devices?setpage="));
-  addHtmlInt(page);
-  addHtml(F("'>&"));
-  addHtml(isLinkToPrev ? 'l' : 'g');
-  addHtml(F("t;</a>"));
+  addHtml(strformat(
+    F("devices?setpage=%u'>&%ct;</a>"),
+    static_cast<unsigned int>(page),
+    isLinkToPrev ? 'l' : 'g'));
 }
 
 // ********************************************************************************
@@ -490,11 +512,13 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_add_button_prefix();
     }
     {
-      addHtml(concat(F("devices?index="), static_cast<int>(x + 1)));
-      addHtml(concat(F("&page="), static_cast<int>(page)));
-      addHtml('\'', '>');
+      const int pageIndex = static_cast<int>(x + 1);
+      addHtml(strformat(
+        F("devices?index=%d&page=%u'>"), 
+        pageIndex,
+        static_cast<unsigned int>(page)));
       addHtml(pluginID_set ? F("Edit") : F("Add"));
-      addHtml(concat(F("</a><TD>"), static_cast<int>(x + 1)));
+      addHtml(concat(F("</a><TD>"), pageIndex));
       html_TD();
     }
 
@@ -570,8 +594,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               if (validProtocolIndex(ProtocolIndex)) {
                 if (getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[controllerNr] != 0))
                 {
-                  addHtml(concat(F(" ("), static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
-                  addHtml(')');
+                  addHtml(strformat(
+                    F(" (%d)"),
+                    static_cast<int>(Settings.TaskDeviceID[controllerNr][x])));
 
                   if (Settings.TaskDeviceID[controllerNr][x] == 0) {
                     addHtml(' ');
@@ -936,7 +961,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
           addPinConfig = false;
 
           if (Settings.TaskDeviceDataFeed[taskIndex] == 0) {
-            devicePage_show_I2C_config(taskIndex);
+            devicePage_show_I2C_config(taskIndex, DeviceIndex);
           }
       }
 
@@ -1123,14 +1148,17 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
-  serialHelper_webformLoad(&TempEvent);
   String webformLoadString;
+
+  PluginCall(PLUGIN_WEBFORM_PRE_SERIAL_PARAMS, &TempEvent, webformLoadString);
+
+  serialHelper_webformLoad(&TempEvent);
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
 #endif
 
-void devicePage_show_I2C_config(taskIndex_t taskIndex)
+void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
@@ -1144,6 +1172,9 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
   addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
+  if (Device[DeviceIndex].I2CMax100kHz) {
+    addFormNote(F("This device is specified for max. 100 kHz operation!"));
+  }
 
   # if FEATURE_I2CMULTIPLEXER
 
@@ -1189,23 +1220,22 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
       html_end_table();
     } else {
       int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
-      String  i2c_mux_portoptions[9];
-      int     i2c_mux_portchoices[9];
-      uint8_t mux_opt = 0;
-      i2c_mux_portoptions[mux_opt] = F("(Not connected via multiplexer)");
-      i2c_mux_portchoices[mux_opt] = -1;
-      uint8_t mux_max = I2CMultiplexerMaxChannels();
-
-      for (int x = 0; x < mux_max; x++) {
-        mux_opt++;
+      const uint32_t mux_max = I2CMultiplexerMaxChannels();
+      String  i2c_mux_portoptions[mux_max + 1];
+      int     i2c_mux_portchoices[mux_max + 1];
+      i2c_mux_portoptions[0] = F("(Not connected via multiplexer)");
+      i2c_mux_portchoices[0] = -1;
+      
+      for (uint32_t x = 0; x < mux_max; x++) {
+        const uint32_t mux_opt = x + 1;
         i2c_mux_portoptions[mux_opt] = concat(F("Channel "), x);
         i2c_mux_portchoices[mux_opt] = x;
       }
 
-      if (taskDeviceI2CMuxPort >= mux_max) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
+      if (taskDeviceI2CMuxPort >= static_cast<int>(mux_max)) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
       addFormSelector(F("Connected to"),
                       F("taskdevicei2cmuxport"),
-                      mux_opt + 1,
+                      mux_max + 1,
                       i2c_mux_portoptions,
                       i2c_mux_portchoices,
                       taskDeviceI2CMuxPort);
@@ -1389,19 +1419,23 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
-#if FEATURE_PLUGIN_STATS
-    if (device.PluginStats)
-    {
-      html_table_header(F("Stats"), 30);
-      ++colCount;
-    }
-#endif
-
     if (device.configurableDecimals())
     {
       html_table_header(F("Decimals"), 30);
       ++colCount;
     }
+
+#if FEATURE_PLUGIN_STATS
+    if (device.PluginStats)
+    {
+      html_table_header(F("Stats"), 30);
+      ++colCount;
+      html_table_header(F("Hide"), 30);
+      ++colCount;
+      html_table_header(F("Axis"), 30);
+      ++colCount;
+    }
+#endif
 
     //placeholder header
     html_table_header(F(""));
@@ -1425,21 +1459,54 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
       }
 
-#if FEATURE_PLUGIN_STATS
-      if (device.PluginStats)
-      {
-        html_TD();
-        const String id = getPluginCustomArgName(F("TDS"), varNr); // ="taskdevicestats"
-        addCheckBox(id, Cache.enabledPluginStats(taskIndex, varNr));
-      }
-#endif
-
       if (device.configurableDecimals())
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
         addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
       }
+
+#if FEATURE_PLUGIN_STATS
+      if (device.PluginStats)
+      {
+        PluginStats_Config_t cachedConfig = Cache.getPluginStatsConfig(taskIndex, varNr);
+        html_TD();
+        addCheckBox(
+          getPluginCustomArgName(F("TDS"), varNr), // ="taskdevicestats"
+          cachedConfig.isEnabled());
+
+        html_TD();
+        addCheckBox(
+          getPluginCustomArgName(F("TDSH"), varNr),  // ="taskdevicestats Hidden"
+          cachedConfig.showHidden());
+
+        html_TD();
+
+        const __FlashStringHelper *chartAxis[] = {
+          F("L1"),
+          F("L2"),
+          F("L3"),
+          F("L4"),
+          F("R1"),
+          F("R2"),
+          F("R3"),
+          F("R4")
+        };
+
+        int selected = cachedConfig.getAxisIndex();
+        if (!cachedConfig.isLeft()) {
+          selected += 4;
+        }
+
+        addSelector(
+          getPluginCustomArgName(F("TDSA"), varNr),
+          NR_ELEMENTS(chartAxis), 
+          chartAxis, 
+          nullptr,
+          nullptr,
+          selected);
+      }
+#endif
     }
     addFormSeparator(colCount);
   }

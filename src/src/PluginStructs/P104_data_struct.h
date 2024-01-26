@@ -13,7 +13,6 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Plugins.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 
@@ -85,7 +84,7 @@
 # define P104_MAX_MESG             20        // Message size for time/date (dd-mm-yyyy hh:mm:ss\0)
 
 # ifdef ESP32
-#  define P104_MAX_ZONES           16u       // 1..P104_MAX_ZONES zones selectable
+#  define P104_MAX_ZONES           16        // 1..P104_MAX_ZONES zones selectable
 #  define P104_SETTINGS_BUFFER_V1  1020      // Bigger buffer possible on ESP32
 # else // ifdef ESP32
 #  define P104_MAX_ZONES           8u        // 1..P104_MAX_ZONES zones selectable
@@ -307,7 +306,7 @@
 
 struct P104_zone_struct {
   P104_zone_struct() = delete; // Not used, so leave out explicitly
-  P104_zone_struct(uint8_t _zone) :  text(F("\"\"")), zone(_zone) {}
+  P104_zone_struct(uint8_t _zone);
 
   String   text;
   int32_t  repeatDelay  = -1;
@@ -332,6 +331,10 @@ struct P104_zone_struct {
   uint16_t _upper       = 0u; // lower and upper pixel numbers
   uint8_t  _startModule = 0u; // starting module, end module is _startModule + size - 1
   # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+
+  // Used to loop over member values
+  bool getIntValue(uint8_t offset, int32_t& value) const;
+  bool setIntValue(uint8_t offset, int32_t value);
 };
 
 # ifdef P104_USE_BAR_GRAPH

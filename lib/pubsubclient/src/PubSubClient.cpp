@@ -11,6 +11,11 @@
 #include <WiFiClient.h>
 #endif
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
+
 PubSubClient::PubSubClient() {
     this->_state = MQTT_DISCONNECTED;
     this->_client = NULL;
@@ -105,6 +110,14 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
     setStream(stream);
 }
 
+PubSubClient::~PubSubClient()
+{
+    if (buffer != nullptr) {
+        free(buffer);
+        buffer = nullptr;
+    }
+}
+
 boolean PubSubClient::connect(const char *id) {
     return connect(id,NULL,NULL,0,0,0,0,1);
 }
@@ -122,6 +135,10 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage, boolean cleanSession) {
+    if (!initBuffer()) {
+        return false;
+    }
+
     if (!connected()) {
         int result = 0;
 
@@ -270,6 +287,10 @@ boolean PubSubClient::readByte(uint8_t * result, uint16_t * index){
 }
 
 uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
+    if (!initBuffer()) {
+        return 0;
+    }
+
     uint16_t len = 0;
     if(!readByte(buffer, &len)) return 0;
     bool isPublish = (buffer[0]&0xF0) == MQTTPUBLISH;
@@ -326,6 +347,10 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
 }
 
 bool PubSubClient::loop_read() {
+    if (!initBuffer()) {
+        return false;
+    }
+
     if (_client == nullptr) {
         return false;
     }
@@ -617,6 +642,13 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 }
 
 void PubSubClient::disconnect() {
+    if (_state == MQTT_DISCONNECTED || !initBuffer()) {
+        _state = MQTT_DISCONNECTED;
+        lastInActivity = lastOutActivity = millis();
+
+        return;
+    }
+
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
     if (_client != nullptr) {
@@ -642,6 +674,10 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 }
 
 size_t PubSubClient::appendBuffer(uint8_t data) {
+    if (!initBuffer()) {
+        return 0;
+    }
+
     buffer[_bufferWritePos] = data;
     ++_bufferWritePos;
     if (_bufferWritePos >= MQTT_MAX_PACKET_SIZE) {
@@ -669,6 +705,17 @@ size_t PubSubClient::flushBuffer() {
         _bufferWritePos = 0;
     }
     return rc;
+}
+
+bool PubSubClient::initBuffer()
+{
+    if (buffer == nullptr) {
+#ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+#endif
+        buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
+    }
+    return buffer != nullptr;
 }
 
 boolean PubSubClient::connected() {

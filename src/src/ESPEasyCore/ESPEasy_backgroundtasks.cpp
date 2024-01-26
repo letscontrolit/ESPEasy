@@ -56,7 +56,7 @@ void backgroundtasks()
   lastRunBackgroundTasks = millis();
 
   START_TIMER
-  #if FEATURE_MDNS
+  #if FEATURE_MDNS || FEATURE_ESPEASY_P2P
   const bool networkConnected = NetworkConnected();
   #else
   NetworkConnected();
@@ -78,11 +78,13 @@ void backgroundtasks()
   if (!UseRTOSMultitasking) {
     serial();
 
-    if (webserverRunning) {
+//    if (webserverRunning) {
       web_server.handleClient();
-    }
+//    }
     #if FEATURE_ESPEASY_P2P
-    checkUDP();
+    if (networkConnected) {
+      checkUDP();
+    }
     #endif
   }
 

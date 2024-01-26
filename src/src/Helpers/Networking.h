@@ -28,7 +28,7 @@ void sendSyslog(uint8_t logLevel, const String& message);
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
-void updateUDPport();
+void updateUDPport(bool force);
 
 
 /*********************************************************************************************\
@@ -77,7 +77,7 @@ void sendSysInfoUDP(uint8_t repeats);
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
-void SSDP_schema(WiFiClient& client);
+void SSDP_schema();
 
 /********************************************************************************************\
    Global SSDP stuff
@@ -238,9 +238,6 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
 String joinUrlFilename(const String& url, String& filename);
 
 #endif // if FEATURE_DOWNLOAD
-
-
-
 
 
 

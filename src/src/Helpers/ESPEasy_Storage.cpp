@@ -31,6 +31,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -41,6 +42,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -276,14 +278,18 @@ bool BuildFixes()
 
   if (Settings.Build < 20101)
   {
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix reset Pin"));
+    #endif
     Settings.Pin_Reset = -1;
   }
 
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
+    #endif
     Settings.UseRTOSMultitasking       = false;
     Settings.Pin_Reset                 = -1;
     Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
@@ -433,11 +439,15 @@ void fileSystemCheck()
   {
     clearAllCaches();
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FS   : Mount successful, used ");
-      log += SpiffsUsedBytes();
-      log += F(" bytes of ");
-      log += SpiffsTotalBytes();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("FS   : "
+#ifdef USE_LITTLEFS
+          "LittleFS"
+#else
+          "SPIFFS"
+#endif
+          " mount successful, used %u bytes of %u"), 
+        SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
 
     // Run garbage collection before any file is open.
@@ -566,6 +576,10 @@ String SaveSettings(bool forFactoryReset)
     Settings.validate();
     initSerial();
 
+    if (forFactoryReset) {
+      Settings.forceSave();
+    }
+
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
     /*
     computeChecksum(
@@ -644,16 +658,32 @@ String SaveSecuritySettings(bool forFactoryReset) {
 
 void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
+  if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID)) {
+    // Not valid settings, so do not continue
+    return;
+  }
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
+  // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
+  #ifdef ESP32
+  if (pref_temp == 0) {
+    if (ResetFactoryDefaultPreference.getPreference() == 0) {
+      // Try loading from NVS
+      ESPEasy_NVS_Helper preferences;
+      ResetFactoryDefaultPreference.init(preferences);
+      pref_temp = ResetFactoryDefaultPreference.getPreference();
+    }
+  }
+  #endif
   #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
     if (ProvisioningSettings.get()) {
       loadProvisioningSettings(*ProvisioningSettings);
       if (ProvisioningSettings->matchingFlashSize()) {
-        pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
+        if (pref_temp == 0 && ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)
+          pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
       }
     }
   }
@@ -667,9 +697,10 @@ void afterloadSettings() {
   if (modelMatchingFlashSize(pref.getDeviceModel())) {
     ResetFactoryDefaultPreference = pref_temp;
   }
+  applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
-  setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
+  setCpuFrequencyMhz(Settings.EcoPowerMode() ? getCPU_MinFreqMHz() : getCPU_MaxFreqMHz());
   #endif
 
   if (!Settings.UseRules) {
@@ -709,9 +740,9 @@ String LoadSettings()
 
     #ifndef BUILD_NO_DEBUG
     if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
+      addLog(LOG_LEVEL_INFO,  concat(F("CRC  : Settings CRC"), F("...OK")));
     } else{
-      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+      addLog(LOG_LEVEL_ERROR, concat(F("CRC  : Settings CRC"), F("...FAIL")));
     }
     #endif
   }
@@ -723,14 +754,14 @@ String LoadSettings()
 
 #ifndef BUILD_NO_DEBUG
   if (SecuritySettings.checksumMatch()) {
-    addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
+    addLog(LOG_LEVEL_INFO, concat(F("CRC  : SecuritySettings CRC"), F("...OK ")));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
     }
   }
   else {
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, concat(F("CRC  : SecuritySettings CRC"), F("...FAIL")));
   }
 #endif
 
@@ -889,13 +920,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
   String   tmpString;
-  {
-    #ifdef USE_SECOND_HEAP
-    // Store each string in 2nd heap
-    HeapSelectIram ephemeral;
-    #endif
-    tmpString.reserve(estimatedStringSize);
-  }
+  tmpString.reserve(estimatedStringSize);
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -914,13 +939,10 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            #ifdef USE_SECOND_HEAP
-            // Store each string in 2nd heap
-            HeapSelectIram ephemeral;
-            #endif
+            move_special(strings[stringCount], std::move(tmpString));
 
-            strings[stringCount] = tmpString;
-            tmpString = String();
+            // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
+            // We're appending per byte, so better prefer speed for short lived objects
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
@@ -935,7 +957,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
     result              += F("Incomplete custom settings for index ");
     result              += (index + 1);
-    strings[stringCount] = tmpString;
+    move_special(strings[stringCount], std::move(tmpString));
   }
   return result;
 }
@@ -946,6 +968,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
  \*********************************************************************************************/
 String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock)
 {
+  // FIXME TD-er: Must add some check to see if the existing data has changed before saving.
   int offset, max_size;
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
@@ -1080,6 +1103,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
       err = checkTaskSettings(TaskIndex);
     }
 #endif
+    UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   } 
 #ifndef LIMIT_BUILD_SIZE
   else {
@@ -1139,10 +1163,55 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
+  UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;
 }
+
+#if FEATURE_ALTERNATIVE_CDN_URL
+String _CDN_url_cache;
+bool   _CDN_url_loaded = false;
+
+String get_CDN_url_custom() {
+  if (!_CDN_url_loaded) {
+    String strings[] = {EMPTY_STRING};
+
+    LoadStringArray(
+      SettingsType::Enum::CdnSettings_Type, 0,
+      strings, NR_ELEMENTS(strings), 255, 0);
+    _CDN_url_cache  = strings[0];
+    _CDN_url_loaded = true;
+  }
+  return _CDN_url_cache;
+}
+
+void set_CDN_url_custom(const String &url) {
+  _CDN_url_cache = url;
+  _CDN_url_cache.trim();
+  if (!_CDN_url_cache.isEmpty() && !_CDN_url_cache.endsWith(F("/"))) {
+    _CDN_url_cache.concat('/');
+  }
+  _CDN_url_loaded = true;
+
+  String strings[] = { EMPTY_STRING };
+
+  LoadStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+
+  if (url.equals(strings[0])) {
+    // No need to save, is already the same
+    return;
+  }
+
+  strings[0] = url;
+
+  SaveStringArray(
+    SettingsType::Enum::CdnSettings_Type, 0,
+    strings, NR_ELEMENTS(strings), 255, 0);
+}
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 /********************************************************************************************\
    Save Custom Task settings to file system
@@ -1466,9 +1535,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack: "),  getCurrentFreeStack()));
   }
   #endif
   delay(1);
@@ -1847,7 +1914,7 @@ int getCacheFileCountFromFilename(const String& fname) {
   if (endpos < 0) { return -1; }
 
   //  String digits = fname.substring(startpos + 1, endpos);
-  int result;
+  int32_t result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
     return result;
@@ -2094,6 +2161,10 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 
       if (!ProvisioningSettings->fetchFileTypeAllowed(filetype, filenr)) {
         return F("Not Allowed");
+      }
+
+      if (!ProvisioningSettings->url[0]) {
+        return F("Provision Config incomplete");
       }
 
       url  = ProvisioningSettings->url;

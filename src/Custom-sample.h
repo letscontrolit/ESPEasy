@@ -151,6 +151,8 @@
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
+#define DEFAULT_SYSLOG_PORT                     0                 // Standard syslog port: 514
+#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
@@ -159,12 +161,23 @@
 
 #define DEFAULT_USE_SERIAL                      true              // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
-#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
 #define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
+// Factory Reset defaults
+#define DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME    true
+#define DEFAULT_FACTORY_RESET_KEEP_WIFI         true
+#define DEFAULT_FACTORY_RESET_KEEP_NETWORK      true
+#define DEFAULT_FACTORY_RESET_KEEP_NTP_DST      true
+#define DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG  true
+
+
 #define BUILD_NO_DEBUG
+
+// Custom built-in url for hosting JavaScript and CSS files.
+#define CUSTOM_BUILD_CDN_URL                   "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/"
+
 
 
 // Special SSID/key setup only to be used in custom builds.
@@ -521,6 +534,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P152   // ESP32 DAC
 // #define USES_P153   // SHT4x
 // #define USES_P154   // BMP3xx
+
+// #define USES_P159   // Presence - LD2410 Radar detection
 
 /*
  #######################################################################################################

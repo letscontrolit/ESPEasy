@@ -267,7 +267,7 @@ The trigger can be an device value being changed:
 Operator (inequality function)
 ------------------------------
 
-Or a inequality function:
+Or an inequality function:
 
 .. code-block:: none
 
@@ -722,12 +722,23 @@ brackets in order for it to compute, i.e. ``[var#12]``.
 If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
 The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
 
+The short hand notation (e.g. ``%v7%``) will be processed first.
+Meaning this can be used to switch sets of variables by nesting like this: ``[int#%v7%]``.
+
 On the "System Variables" page of the web interface all set values can be inspected including their values.
 If none is set, "No variables set" will be shown.
 
 If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
 
 .. note:: Internal variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without losing power), please use a dummy task for this.
+
+
+Added: 2023-12-01
+
+Short hand notation can be nested like this: ``[int#%v%v7%%]`` or use simple calculations like this: ``[int#%v=7+%v100%%]``
+This allows to simply switch a number of variable offsets in rules by only changing 1 variable.
+
+
 
 
 Task-specific settings
@@ -924,7 +935,7 @@ For example:
 
 .. code-block:: none
  
- on DS-1#Temperature do
+ on DS_1#Temperature do
    logentry,{substring:0:1:%eventvalue1%}
    logentry,{substring:1:2:%eventvalue1%}
    logentry,{substring:2:3:%eventvalue1%}
@@ -935,7 +946,7 @@ The output in the log will then be:
 
 .. code-block:: none
 
- 1512372 : Info  : EVENT: DS-1#Temperature=23.06
+ 1512372 : Info  : EVENT: DS_1#Temperature=23.06
  1512404 : Info  : ACT  : logentry,2
  1512405 : Info  : Command: logentry
  1512406 : Info  : 2
@@ -951,13 +962,13 @@ For example (bit useless example, just for illustrative purposes):
 
 .. code-block:: none
 
- on DS-1#Temperature do
+ on DS_1#Temperature do
    logentry,{substring:0:2:{strtol:16:{substring:0:2:%eventvalue1%}{substring:3:5:%eventvalue1%}}}
  endon
 
 .. code-block:: none
 
- 221313 : Info  : EVENT: DS-1#Temperature=22.13
+ 221313 : Info  : EVENT: DS_1#Temperature=22.13
  221346 : Info  : parse_string_commands cmd: substring:0:2:22.13 -> 22
  221347 : Info  : parse_string_commands cmd: substring:3:5:22.13 -> 13
  221348 : Info  : parse_string_commands cmd: strtol:16:2213 -> 8723
@@ -1030,14 +1041,14 @@ Example of extracting sub strings from a value and interpreting as if they were 
 
 .. code-block:: none
 
- on DS-1#Temperature do
+ on DS_1#Temperature do
    logentry,{strtol:16:%eventvalue1%}
    logentry,{strtol:16:{substring:3:5:%eventvalue1%}}
  endon
 
 .. code-block:: none
 
- 1987550 : Info  : EVENT: DS-1#Temperature=24.12
+ 1987550 : Info  : EVENT: DS_1#Temperature=24.12
  1987586 : Info  : ACT  : logentry,36
  1987587 : Info  : Command: logentry
  1987588 : Info  : 36
@@ -1163,7 +1174,7 @@ For example:
 
 .. code-block:: none
 
- on DS-1#Temperature do
+ on DS_1#Temperature do
    logentry,{ord:A}   // ASCII value of 'A'
    logentry,{ord:{substring:2:3:%eventvalue1%}}  // ASCII value of 3rd character of %eventvalue1%
  endon
@@ -1171,7 +1182,7 @@ For example:
 
 .. code-block:: none
 
- 2982455 : Info  : EVENT: DS-1#Temperature=23.12
+ 2982455 : Info  : EVENT: DS_1#Temperature=23.12
  2982487 : Info  : ACT  : logentry,65
  2982488 : Info  : Command: logentry
  2982489 : Info  : 65
@@ -2025,7 +2036,7 @@ For dew point on the 'inside':
   if %eventvalue1%>49
    Publish,%sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]
   else
-   Publish,%sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]*  //This asterix shows that the calculation is not correct due to the humidity being below 50%!
+   Publish,%sysname%/DewPoint_INSIDE/°C,[Dew_point#°C2]*  //This asterisk shows that the calculation is not correct due to the humidity being below 50%!
   endif
  endon
 
@@ -2040,12 +2051,11 @@ published a IP number for 30+ seconds the unit is experiencing problems.
 
  On System#Boot do    //When the ESP boots, do
   Publish,%sysname%/IP,%ip%
-  timerSet,1,30      //Set Timer 1 for the next event in 30 seconds
+  loopTimerSet,1,30   //Set Timer 1 for the next event in 30 seconds, repeating
  endon
 
  On Rules#Timer=1 do  //When Timer1 expires, do
   Publish,%sysname%/IP,%ip%
-  timerSet,1,30       //Resets the Timer 1 for another 30 seconds
  endon
 
 Custom reports to Domoticz with own IDX
@@ -2062,11 +2072,11 @@ just as an example we want to publish these as custom messages with a unique IDX
 .. code-block:: none
 
  on INA219#Amps do
-  Publish domoticz/in,{"idx":123456,"nvalue":0,"svalue":"%eventvalue1%"} //Own made up IDX 123456
+  Publish domoticz/in,'{"idx":123456,"nvalue":0,"svalue":"%eventvalue1%"}' //Own made up IDX 123456
  endon
 
  on INA219#Watts do
-  Publish domoticz/in,{"idx":654321,"nvalue":0,"svalue":"%eventvalue1%"} //Own made up IDX 654321
+  Publish domoticz/in,'{"idx":654321,"nvalue":0,"svalue":"%eventvalue1%"}' //Own made up IDX 654321
  endon
 
 
@@ -2350,7 +2360,7 @@ Moving average of many values
 
 To calculate the moving average of a value over many (several dozens up to 200) measurements, this script has been developed:
 
-.. code:: none
+.. code-block:: none
 
   on MovingAverage do
     // %v201% = max elements
@@ -2385,7 +2395,7 @@ To calculate the moving average of a value over many (several dozens up to 200) 
 
 This rule can be used to calculate the moving average for, f.e., a temperature sensor like this:
 
-.. code:: none
+.. code-block:: none
 
   on bme#temperature do
     event,MovingAverage=%eventvalue1%   // Calculate the moving avg.
@@ -2394,3 +2404,113 @@ This rule can be used to calculate the moving average for, f.e., a temperature s
 
 This assumes that a Controller has been configured, and the Dummy task is configured to send out its values via the controller.
 
+Register daily working time
+---------------------------
+
+To register the daily time in seconds that a device is active, these rules have been developed (from the forum).
+
+Required device tasks:
+
+* Sensor (temperature in the example)
+* Dummy device (named ``Dummy`` in this example, minimal 2 values, ``LoggingON`` and ``LoggingOFF``), Interval can be set to 0
+
+.. code-block:: none
+
+  On System#Boot Do
+    TaskValueSet,Dummy,LoggingON,1 // Make sure timer is started and Heater ON message is sent
+  Endon
+
+  On DS1#Temperature Do // Check tmeperature
+    If %eventvalue1% < 40
+      GPIO,5,0
+      AsyncEvent,HeaterON=%eventvalue1%
+    Endif
+    If %eventvalue1% > 55
+      GPIO,5,1
+      AsyncEvent,HeaterOFF=%eventvalue1%
+    Endif
+  Endon
+
+  On HeaterON Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingON] = 1
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater ON'
+      TaskValueSet,Dummy,LoggingON,0
+      TaskValueSet,Dummy,LoggingOFF,1
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On HeaterOFF Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingOFF] = 1
+      Let,2,[int#2]+%syssec_d%-[int#1] // Add run time to var#2
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater OFF'
+      TaskValueSet,Dummy,LoggingON,1
+      TaskValueSet,Dummy,LoggingOFF,0
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Send value of [int#2] to wherever you need it
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [int#2] Seconds'
+    Let,1,0 // Reset start time
+    Let,2,0 // Reset total counter 
+  Endon
+
+
+Register power used for a heater
+--------------------------------
+
+As a variation on the running time, we can also measure the time and calculate the total power used, as long as the used device-power is known. Parts from the above example have been re-used.
+
+This example uses a ``Generic - Dummy Device``, so the values can also be viewed on the Devices page. This has name: Power, output data type: Dual (or Triple or Quad, must be able to store decimals!), value names: Seconds (0 decimmals) and PowerUsed (4 decimals).
+
+The time is counted while GPIO-14 (D5 on a Wemos or NodeMCU ESP8266) has a low state, and power is calculated once the power goes off. The not-On state will need a pull-up resistor to pull the level to 3V3!
+
+After loading this code, either reboot the ESP, or run the command ``event,system#boot`` to set up the GPIO monitoring and wattage of the device.
+
+.. code-block:: none
+
+  // Used variables: 1,3,4,5
+
+  On GPIO#14 Do // GPIO-14 = D5 on Wemos/NodeMCU ESP8266 boards
+    If %eventvalue1%=0 // On state
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+    Else // Off state
+      Event,CalcPower // Don't queue
+      Event,TransmitPower // Send out to receiver
+    Endif
+    Let,5,!%eventvalue1% // 0 = On, to invert on/off state change to: Let,5,%eventvalue1%
+    LogEntry,"Power [int#5#O#C], measured: [Power#Seconds] sec. [Power#PowerUsed#d.4] kWh"
+  Endon
+
+  On CalcPower Do
+    TaskValueSet,Power,Seconds,[Power#Seconds]+%syssec_d%-[int#1] // Add run time to Power#Seconds
+    Let,4,[Power#Seconds]*[var#3] // Wattseconds
+    If [var#4]>0
+      TaskValueSet,Power,PowerUsed,[var#4]/3600000 // Wattseconds to kWh
+    Endif
+    TaskRun,Power
+  Endon
+
+  On TransmitPower Do
+    // Send value of [Power#Seconds] and [Power#PowerUsed] to wherever you need it, adjust as needed
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [Power#Seconds] Seconds, PowerUsed = [Power#PowerUsed] kWh'
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Include power used until midnight
+    If [Plugin#GPIO#PinState#14]=0 // Still on?
+      Event,CalcPower // Don't queue
+    Endif
+    Let,1,0 // Reset start time
+    Event,TransmitPower // Send out remainder of the day
+    TaskValueSet,Power,Seconds,0 // Reset total counter
+    TaskValueSet,Power,PowerUsed,0 // Reset total power
+  Endon
+
+  On System#Boot Do
+    Monitor,gpio,14 // Generate an event when the GPIO state changes
+    Let,3,250 // Wattage of the load, adjust as needed
+  Endon

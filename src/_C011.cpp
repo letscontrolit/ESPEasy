@@ -138,15 +138,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C011_ConfigStruct> customConfig;
-      {
-        // Try to allocate on 2nd heap
-        #ifdef USE_SECOND_HEAP
-//        HeapSelectIram ephemeral;
-        #endif
-        std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
-        customConfig = std::move(tmp_shared);
-      }
+      std::shared_ptr<C011_ConfigStruct> customConfig(new (std::nothrow) C011_ConfigStruct);
 
       if (customConfig) {
         uint8_t   choice    = 0;
@@ -228,25 +220,17 @@ bool do_process_c011_delay_queue(int controller_number, const Queue_element_base
 
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
   // Just copy the needed strings and destruct the C011_ConfigStruct as soon as possible
-  std::shared_ptr<C011_ConfigStruct> customConfig;
-  {
-    // Try to allocate on 2nd heap
-    #ifdef USE_SECOND_HEAP
-//    HeapSelectIram ephemeral;
-    #endif
-    std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
-    customConfig = std::move(tmp_shared);
-  }
+  std::shared_ptr<C011_ConfigStruct> customConfig(new (std::nothrow) C011_ConfigStruct);
 
   if (!customConfig) {
     return false;
   }
   LoadCustomControllerSettings(ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
-  HttpMethod = customConfig->HttpMethod;
-  HttpUri    = customConfig->HttpUri;
-  HttpHeader = customConfig->HttpHeader;
-  HttpBody   =  customConfig->HttpBody;
+  move_special(HttpMethod, String(customConfig->HttpMethod));
+  move_special(HttpUri   , String(customConfig->HttpUri));
+  move_special(HttpHeader, String(customConfig->HttpHeader));
+  move_special(HttpBody  , String(customConfig->HttpBody));
   return true;
 }
 
@@ -275,12 +259,12 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     if (!load_C011_ConfigStruct(event->ControllerIndex, element.HttpMethod, element.uri, element.header, element.postStr))
     {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("C011   : ");
-        log += element.HttpMethod;
-        log += element.uri;
-        log += element.header;
-        log += element.postStr;
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+          F("C011   : %s %s %s %s"),
+          element.HttpMethod.c_str(),
+          element.uri.c_str(),
+          element.header.c_str(),
+          element.postStr.c_str()));
       }
       C011_DelayHandler->sendQueue.pop_back();
       return false;
@@ -309,13 +293,8 @@ void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
 
   for (uint8_t i = 1; i < 5; i++)
   {
-    String startToken;
-    startToken += '%';
-    startToken += i;
-    startToken += '%';
-    String endToken = F("%/");
-    endToken += i;
-    endToken += '%';
+    const String startToken(strformat(F("%%%d%%"), i));
+    const String endToken(strformat(F("%%/%d%%"), i));
 
     // do we want to keep this one?
     if (i < numberOfValuesWanted)

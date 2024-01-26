@@ -17,7 +17,6 @@
 #include "../Helpers/_Plugin_Helper_serial.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
@@ -125,12 +124,15 @@ void handle_advanced() {
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
 #endif
     Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
+#if FEATURE_CLEAR_I2C_STUCK
     Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
+#endif
     #if FEATURE_I2C_DEVICE_CHECK
     Settings.CheckI2Cdevice(isFormItemChecked(LabelType::ENABLE_I2C_DEVICE_CHECK));
     #endif // if FEATURE_I2C_DEVICE_CHECK
 
     Settings.WaitWiFiConnect(isFormItemChecked(LabelType::WAIT_WIFI_CONNECT));
+    Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
     Settings.SDK_WiFi_autoreconnect(isFormItemChecked(LabelType::SDK_WIFI_AUTORECONNECT));
 
 
@@ -304,7 +306,9 @@ void handle_advanced() {
 #endif
 
   addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
+#if FEATURE_CLEAR_I2C_STUCK
   addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+#endif
   #if FEATURE_I2C_DEVICE_CHECK
   addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
   #endif // if FEATURE_I2C_DEVICE_CHECK
@@ -362,18 +366,14 @@ void handle_advanced() {
     
     addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
     addUnit(F("dBm"));
-    String note;
-    note = F("Current max: ");
-    note += toString(maxTXpwr, 2);
-    note += F(" dBm");
-    addFormNote(note);
+    addFormNote(strformat(
+      F("Current max: %.2f dBm"), maxTXpwr));
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
-    note = F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: ");
-    note += toString(sensitivity, 2);
-    note += F(" dBm");
-    addFormNote(note);
+    addFormNote(strformat(
+      F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: %.2f dBm"),
+      sensitivity));
   }
   addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
 #endif
@@ -386,6 +386,7 @@ void handle_advanced() {
 
   addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,      Settings.WaitWiFiConnect());
   addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT, Settings.SDK_WiFi_autoreconnect());
+  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
 
 
 
@@ -410,51 +411,47 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   {
-    const __FlashStringHelper *  week[5] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
-    int    weekValues[5] = { 0, 1, 2, 3, 4 };
-
-    {
-      String weeklabel = isStart ? F("Start")  : F("End");
-      weeklabel += F(" (week, dow, month)");
-      addRowLabel(weeklabel);
-    }
+    const __FlashStringHelper *  week[] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
+    constexpr int weekValues[] = { 0, 1, 2, 3, 4 };
+    addRowLabel(concat(
+      isStart ? F("Start")  : F("End"),
+      F(" (week, dow, month)")));
     addSelector(
       isStart ? F("dststartweek")  : F("dstendweek"), 
-      5, week, weekValues, nullptr, rule.week);
+      NR_ELEMENTS(weekValues), week, weekValues, nullptr, rule.week);
   }
   html_BR();
   {
-    const __FlashStringHelper *  dow[7] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
-    int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
+    const __FlashStringHelper *  dow[] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
+    constexpr int dowValues[]  = { 1, 2, 3, 4, 5, 6, 7 };
 
     addSelector(
       isStart ? F("dststartdow")   : F("dstenddow"),
-      7, dow, dowValues, nullptr, rule.dow);
+      NR_ELEMENTS(dowValues), dow, dowValues, nullptr, rule.dow);
   }
   html_BR();
   {
-    const __FlashStringHelper * month[12] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
+    const __FlashStringHelper * month[] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
                              "Dec") };
-    int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    constexpr int monthValues[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
     addSelector(isStart ? F("dststartmonth") : F("dstendmonth"),
-                12, month, monthValues, nullptr, rule.month);
+                NR_ELEMENTS(monthValues), month, monthValues, nullptr, rule.month);
   }
-  {
-    addFormNumericBox(
-      isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
-      isStart ? F("dststarthour")  : F("dstendhour"),
-      rule.hour, 0, 23);
-    addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
-  }
+
+  addFormNumericBox(
+    isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
+    isStart ? F("dststarthour")  : F("dstendhour"),
+    rule.hour, 0, 23);
+  addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
 }
 
 void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[5] =
+  const __FlashStringHelper * options[] =
     { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
-  const int optionValues[5] = { 
+  constexpr int optionValues[] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
@@ -462,7 +459,7 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
     static_cast<int>(ExtTimeSource_e::PCF8563)
     };
 
-  addSelector(id, 5, options, optionValues, nullptr, static_cast<int>(choice));
+  addSelector(id, NR_ELEMENTS(optionValues), options, optionValues, nullptr, static_cast<int>(choice));
 }
 
 

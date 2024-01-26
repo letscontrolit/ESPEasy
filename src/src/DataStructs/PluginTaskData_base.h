@@ -17,53 +17,19 @@
 // N.B. in order to use this, a data object must inherit from this base class.
 //      This is a compile time check.
 struct PluginTaskData_base {
-  PluginTaskData_base()
-    : _taskdata_pluginID(INVALID_PLUGIN_ID)
-#if FEATURE_PLUGIN_STATS
-    , _plugin_stats_array(nullptr)
-#endif // if FEATURE_PLUGIN_STATS
-  {}
+  PluginTaskData_base();
 
-  virtual ~PluginTaskData_base()  {
-#if FEATURE_PLUGIN_STATS
-    delete _plugin_stats_array;
-    _plugin_stats_array = nullptr;
-#endif // if FEATURE_PLUGIN_STATS
-  }
+  virtual ~PluginTaskData_base();
 
   bool baseClassOnly() const {
     return _baseClassOnly;
   }
 
-  bool hasPluginStats() const {
-#if FEATURE_PLUGIN_STATS
+  bool hasPluginStats() const;
 
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->hasStats();
-    }
-#endif // if FEATURE_PLUGIN_STATS
-    return false;
-  }
+  bool hasPeaks() const;
 
-  bool hasPeaks() const {
-#if FEATURE_PLUGIN_STATS
-
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->hasPeaks();
-    }
-#endif // if FEATURE_PLUGIN_STATS
-    return false;
-  }
-
-  size_t nrSamplesPresent() const {
-#if FEATURE_PLUGIN_STATS
-
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->nrSamplesPresent();
-    }
-#endif // if FEATURE_PLUGIN_STATS
-    return 0;
-  }
+  size_t nrSamplesPresent() const;
 
   #if FEATURE_PLUGIN_STATS
   void initPluginStats(taskVarIndex_t taskVarIndex);
@@ -72,58 +38,33 @@ struct PluginTaskData_base {
 
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event,
-                             bool                trackPeaks)
-  {
-#if FEATURE_PLUGIN_STATS
-
-    if (_plugin_stats_array != nullptr) {
-      _plugin_stats_array->pushPluginStatsValues(event, trackPeaks);
-    }
-#endif // if FEATURE_PLUGIN_STATS
-  }
+                             bool                trackPeaks);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
   bool plugin_get_config_value_base(struct EventStruct *event,
-                                    String            & string) const
-  {
-#if FEATURE_PLUGIN_STATS
-
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->plugin_get_config_value_base(event, string);
-    }
-#endif // if FEATURE_PLUGIN_STATS
-    return false;
-  }
+                                    String            & string) const;
 
   bool plugin_write_base(struct EventStruct *event,
-                         const String      & string)
-  {
-#if FEATURE_PLUGIN_STATS
-
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->plugin_write_base(event, string);
-    }
-#endif // if FEATURE_PLUGIN_STATS
-    return false;
-  }
+                         const String      & string);
 
 #if FEATURE_PLUGIN_STATS
-  bool webformLoad_show_stats(struct EventStruct *event) const
-  {
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->webformLoad_show_stats(event);
-    }
-    return false;
-  }
+  bool webformLoad_show_stats(struct EventStruct *event) const;
 
 # if FEATURE_CHART_JS
-  void plot_ChartJS() const
-  {
-    if (_plugin_stats_array != nullptr) {
-      _plugin_stats_array->plot_ChartJS();
-    }
-  }
+  void plot_ChartJS(bool onlyJSON = false) const;
+
+  void plot_ChartJS_scatter(
+    taskVarIndex_t                values_X_axis_index,
+    taskVarIndex_t                values_Y_axis_index,
+    const __FlashStringHelper    *id,
+    const ChartJS_title         & chartTitle,
+    const ChartJS_dataset_config& datasetConfig,
+    int                           width,
+    int                           height,
+    bool                          showAverage = true,
+    const String                & options     = EMPTY_STRING,
+    bool                          onlyJSON    = false) const;
 
 # endif // if FEATURE_CHART_JS
 #endif  // if FEATURE_PLUGIN_STATS
@@ -135,21 +76,9 @@ struct PluginTaskData_base {
   pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
 #if FEATURE_PLUGIN_STATS
 
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const
-  {
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->getPluginStats(taskVarIndex);
-    }
-    return nullptr;
-  }
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
 
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex)
-  {
-    if (_plugin_stats_array != nullptr) {
-      return _plugin_stats_array->getPluginStats(taskVarIndex);
-    }
-    return nullptr;
-  }
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
 
 private:
 

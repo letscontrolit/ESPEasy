@@ -1,17 +1,15 @@
 // Shows how to run three Steppers at once with varying speeds
 //
-// Requires the Adafruit_Motorshield v2 library 
+// Requires the Adafruit_Motorshield v2 library
 //   https://github.com/adafruit/Adafruit_Motor_Shield_V2_Library
-// And AccelStepper with AFMotor support 
+// And AccelStepper with AFMotor support
 //   https://github.com/adafruit/AccelStepper
 
 // This tutorial is for Adafruit Motorshield v2 only!
 // Will not work with v1 shields
 
 #include <AccelStepper.h>
-#include <Wire.h>
 #include <Adafruit_MotorShield.h>
-#include "utility/Adafruit_MS_PWMServoDriver.h"
 
 Adafruit_MotorShield AFMSbot(0x61); // Rightmost jumper closed
 Adafruit_MotorShield AFMStop(0x60); // Default address, no jumpers
@@ -27,24 +25,24 @@ Adafruit_StepperMotor *myStepper3 = AFMSbot.getStepper(200, 2);
 
 // you can change these to DOUBLE or INTERLEAVE or MICROSTEP!
 // wrappers for the first motor!
-void forwardstep1() {  
+void forwardstep1() {
   myStepper1->onestep(FORWARD, SINGLE);
 }
-void backwardstep1() {  
+void backwardstep1() {
   myStepper1->onestep(BACKWARD, SINGLE);
 }
 // wrappers for the second motor!
-void forwardstep2() {  
+void forwardstep2() {
   myStepper2->onestep(FORWARD, DOUBLE);
 }
-void backwardstep2() {  
+void backwardstep2() {
   myStepper2->onestep(BACKWARD, DOUBLE);
 }
 // wrappers for the third motor!
-void forwardstep3() {  
+void forwardstep3() {
   myStepper3->onestep(FORWARD, INTERLEAVE);
 }
-void backwardstep3() {  
+void backwardstep3() {
   myStepper3->onestep(BACKWARD, INTERLEAVE);
 }
 
@@ -54,14 +52,14 @@ AccelStepper stepper2(forwardstep2, backwardstep2);
 AccelStepper stepper3(forwardstep3, backwardstep3);
 
 void setup()
-{  
+{
   AFMSbot.begin(); // Start the bottom shield
   AFMStop.begin(); // Start the top shield
-   
+
   stepper1.setMaxSpeed(100.0);
   stepper1.setAcceleration(100.0);
   stepper1.moveTo(24);
-    
+
   stepper2.setMaxSpeed(200.0);
   stepper2.setAcceleration(100.0);
   stepper2.moveTo(50000);

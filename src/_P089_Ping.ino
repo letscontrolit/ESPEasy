@@ -94,7 +94,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
 
       // Reset "Fails" if settings updated
-      UserVar[event->BaseVarIndex] = 0;
+      UserVar.setFloat(event->TaskIndex, 0, 0);
       strncpy(hostname, webArg(F("host")).c_str(), sizeof(hostname));
       SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
       success = true;
@@ -103,9 +103,8 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
-      UserVar[event->BaseVarIndex] = 0;
-      success                      = true;
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
+      UserVar.setFloat(event->TaskIndex, 0, 0);
       break;
     }
 
@@ -119,7 +118,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P089_taskdata->send_ping(event)) {
-        UserVar[event->BaseVarIndex]++;
+        UserVar.setFloat(event->TaskIndex, 0, UserVar.getFloat(event->TaskIndex, 0) + 1);
       }
 
       success = true;
@@ -138,7 +137,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
         if (param1.isEmpty() ||
             (!param1.isEmpty() && (taskIndex != TASKS_MAX) && (taskIndex == event->TaskIndex))) {
-          int val_new;
+          int32_t val_new{};
 
           if (param1.isEmpty()) {
             param1 = taskName;
@@ -147,7 +146,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
           if (validIntFromString(param1, val_new)) {
             // Avoid overflow and weird values
             if ((val_new > -1024) && (val_new < 1024)) {
-              UserVar[event->BaseVarIndex] = val_new;
+              UserVar.setFloat(event->TaskIndex, 0, val_new);
               success                      = true;
             }
           }
