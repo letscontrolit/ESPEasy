@@ -169,7 +169,7 @@ void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
 #if FEATURE_USE_IPV6
-  ETH.enableIpV6();
+  ETH.enableIPv6(true);
 #endif
 
 }

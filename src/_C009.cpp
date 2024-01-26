@@ -135,19 +135,19 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
           // Create nested objects in "ESP":
           jsonString += to_json_object_value(F("name"), Settings.getName());
           jsonString += ',';
-          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
+          jsonString += to_json_object_value(F("unit"), static_cast<int>(Settings.Unit));
           jsonString += ',';
-          jsonString += to_json_object_value(F("version"), String(Settings.Version));
+          jsonString += to_json_object_value(F("version"), static_cast<int>(Settings.Version));
           jsonString += ',';
-          jsonString += to_json_object_value(F("build"), String(Settings.Build));
+          jsonString += to_json_object_value(F("build"), static_cast<int>(Settings.Build));
           jsonString += ',';
           jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
           jsonString += ',';
           jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
           jsonString += ',';
-          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
+          jsonString += to_json_object_value(F("node_type_id"), static_cast<int>(NODE_TYPE_ID));
           jsonString += ',';
-          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
+          jsonString += to_json_object_value(F("sleep"), static_cast<int>(Settings.deepSleep_wakeTime));
 
           // embed IP, important if there is NAT/PAT
           // char ipStr[20];
@@ -180,7 +180,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
               jsonString += ',';
               jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
               jsonString += ',';
-              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
+              jsonString += to_json_object_value(F("type"), static_cast<int>(element.sensorType));
               jsonString += ',';
               jsonString += to_json_object_value(F("value"), element.txt[x]);
             }

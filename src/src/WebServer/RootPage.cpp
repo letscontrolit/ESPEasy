@@ -123,7 +123,7 @@ void handle_root() {
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
-      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal({EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str()}, true);
       return;
     }
   } else {
@@ -198,7 +198,7 @@ void handle_root() {
       addRowLabelValue(LabelType::IP_ADDRESS);
 #if FEATURE_USE_IPV6
       addRowLabelValue(LabelType::IP6_LOCAL);
-      addRowLabelValue(LabelType::IP6_GLOBAL);
+      // Do not show global IPv6 on the root page
 #endif
       addRowLabel(LabelType::WIFI_RSSI);
       addHtml(strformat(
@@ -213,8 +213,8 @@ void handle_root() {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);
 #if FEATURE_USE_IPV6
-      addRowLabelValue(LabelType::IP6_LOCAL);
-      addRowLabelValue(LabelType::IP6_GLOBAL);
+      addRowLabelValue(LabelType::ETH_IP6_LOCAL);
+      // Do not show global IPv6 on the root page
 #endif
     }
   # endif // if FEATURE_ETHERNET
@@ -342,26 +342,46 @@ void handle_root() {
 #endif
         )
         {
-          html_add_wide_button_prefix();
-
-          addHtml(F("http://"));
           IPAddress ip = it->second.IP();
-          #if FEATURE_USE_IPV6
-          bool isIPv6 = false;
-//          if (!it->second.hasIPv4) {
-            if (it->second.hasIPv6_mac_based_link_local) {
-              ip = it->second.IPv6_link_local();
-              if (ip.zone() != 0) {
-                // Clear the zone as it is of no use here.
-                ip = IPAddress(IPv6, &ip[0], 0);
-              }
+          const uint16_t port = it->second.webgui_portnumber;
 
-              isIPv6 = true;
-            } else if (it->second.hasIPv6_mac_based_link_global) {
-              ip = it->second.IPv6_global();
-              isIPv6 = true;
+#if FEATURE_USE_IPV6
+          bool isIPv6 = false;
+          if (it->second.hasIPv6_mac_based_link_local) {
+            ip = it->second.IPv6_link_local(true);
+            isIPv6 = true;
+          } else if (it->second.hasIPv6_mac_based_link_global) {
+            ip = it->second.IPv6_global();
+            isIPv6 = true;
+          }
+          if (it->second.hasIPv4 && it->second.hasIPv6()) {
+            // Add 2 buttons for IPv4 and IPv6 address
+            html_add_wide_button_prefix();
+            addHtml(F("http://"));
+            addHtml(wrap_String(formatIP(ip), '[', ']'));
+            if ((port != 0) && (port != 80)) {
+              addHtml(':');
+              addHtmlInt(port);
             }
-  //        }
+            addHtml('\'', '>');
+            addHtml(formatIP(ip));
+            addHtml(F("</a>"));
+
+            // Now prepare 2nd button prefix
+            addHtml(F("<BR>"));
+            html_add_wide_button_prefix();
+            ip = it->second.IP();
+            isIPv6 = false;
+          } else {
+            // Add single wide button
+            html_add_wide_button_prefix();
+          }
+#else
+          html_add_wide_button_prefix();
+#endif
+          addHtml(F("http://"));
+#if FEATURE_USE_IPV6
+
           if (isIPv6) {
             addHtml(wrap_String(formatIP(ip), '[', ']'));
           } else {
@@ -371,8 +391,6 @@ void handle_root() {
           addHtml(formatIP(ip));
           #endif
           
-          uint16_t port = it->second.webgui_portnumber;
-
           if ((port != 0) && (port != 80)) {
             addHtml(':');
             addHtmlInt(port);

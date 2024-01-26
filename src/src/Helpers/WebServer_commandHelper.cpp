@@ -35,7 +35,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   if (command_e == ESPEasy_cmd_e::NotMatched) {
     // For sure not an internal command, try plugin or remote config
     printToWeb = true;
-    handledCmd = ExecuteCommand_plugin_config(source, webrequest.c_str());
+    handledCmd = ExecuteCommand_plugin_config({source, webrequest.c_str()});
     sendOK     = false;
   } else {
     if ((command_e == ESPEasy_cmd_e::event) || (command_e == ESPEasy_cmd_e::asyncevent))
@@ -43,41 +43,55 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
       eventQueue.addMove(parseStringToEndKeepCase(webrequest, 2));
       handledCmd = true;
       sendOK     = true;
-    } else if (command_e == ESPEasy_cmd_e::taskrun ||
-               command_e == ESPEasy_cmd_e::taskrunat ||
-               command_e == ESPEasy_cmd_e::scheduletaskrun ||
-               command_e == ESPEasy_cmd_e::taskvalueset ||
-               command_e == ESPEasy_cmd_e::taskvaluesetandrun ||
-               command_e == ESPEasy_cmd_e::taskvaluetoggle ||
-               command_e == ESPEasy_cmd_e::let ||
+    } else {
+      switch (command_e) {
+        case ESPEasy_cmd_e::taskrun:
+        case ESPEasy_cmd_e::taskrunat:
+        case ESPEasy_cmd_e::scheduletaskrun:
+        case ESPEasy_cmd_e::taskvalueset:
+        case ESPEasy_cmd_e::taskvaluesetandrun:
+        case ESPEasy_cmd_e::taskvaluetoggle:
+        case ESPEasy_cmd_e::let:
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-               command_e == ESPEasy_cmd_e::logportstatus ||
+        case ESPEasy_cmd_e::logportstatus:
 #endif
-               command_e == ESPEasy_cmd_e::logentry ||
+        case ESPEasy_cmd_e::logentry:
+        case ESPEasy_cmd_e::rules:
+          sendOK = true;
+          break;
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-               command_e == ESPEasy_cmd_e::jsonportstatus ||
+        case ESPEasy_cmd_e::jsonportstatus:
+          sendOK         = true;
+          printToWebJSON = true;
+          break;
 #endif
-               command_e == ESPEasy_cmd_e::rules) {
-      sendOK     = true;
+#if FEATURE_USE_IPV6
+        case ESPEasy_cmd_e::ip6:
+          sendOK         = true;
+          printToWebJSON = true;
+          break;
+#endif
+        default:
+          sendOK = false;
+          break;
+      }
 
       // handledCmd = true;
-    } else {
-      sendOK     = false;
-    }
+    } 
     if (!handledCmd) {
       printToWeb = true;
-      handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
+      handledCmd = ExecuteCommand_internal({source, webrequest.c_str()});
     }
   }
 
   if (handledCmd) {
     if (sendOK) {
       String reply = printWebString.isEmpty() ? F("OK") : printWebString;
-      removeChar(reply, '\n'); // Don't use newline in JSON.
       if (printToWebJSON) {
+        removeChar(reply, '\n'); // Don't use newline in JSON.
         // Format return string of command to JSON format
         printWebString = strformat(
-          F("{\"return\": \"%s\",\"command\": \"%s\"}"),
+          F("{\"return\": %s,\"command\": %s}"),
           to_json_value(reply).c_str(),
           to_json_value(webrequest).c_str());
       } else {
