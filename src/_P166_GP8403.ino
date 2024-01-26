@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-01-26 tonhuisman: Generate PLUGIN_READ when changing output
  * 2024-01-25 tonhuisman: Add I2C enabled check on PLUGIN_INIT
  * 2024-01-24 tonhuisman: Add GET_CONFIG support
  * 2024-01-23 tonhuisman: Add initial value per channel, add some logging, refactoring
