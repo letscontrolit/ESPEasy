@@ -23,6 +23,10 @@
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 
 /** Changelog:
+ * 2024-01-26 uwekaditz:  Decode type UNKNOWN was not added to the web settings
+ *                        Decode types UNKNOWN and UNUSED were mixed up
+ *                        Workaround for decode type UNKNOWN is not necessary
+ *                        Initalisation of the variables with decode type UNUSED
  * 2024-01-23 uwekaditz:  Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
  *                        Using strformat() for the debug messages
  *                        Heap and memory can be reported (P016_CHECK_HEAP)
@@ -373,10 +377,10 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           int protocolCount = 0;
 
-          for (int i = 0; i < size; i++) {
-            const String protocol = typeToString(static_cast<decode_type_t>(i), false);
+          for (int i = static_cast<int>(decode_type_t::UNKNOWN); i < size; i++) {
+              const String protocol = typeToString(static_cast<decode_type_t>(i), false);
 
-            if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == RAW)) {
+            if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == UNKNOWN)) {
               continue;
             }
 
@@ -673,11 +677,6 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             if (strCode.length() <= P16_Cchars) {
               iCode += hexToULL(strCode);
-
-              if (iCodeDecodeType == decode_type_t::UNKNOWN) {
-                // set iCodeDecodeType UNKNOWN to RAW, otherwise AddCode() or ExecuteCode() will fail
-                iCodeDecodeType = decode_type_t::RAW;
-              }
 
               if (bitRead(PCONFIG_LONG(0), P016_BitAddNewCode) && bEnableIRcodeAdding) {
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags); // add code if not saved so far

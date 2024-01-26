@@ -22,8 +22,7 @@
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0        // Add automatically new code into Code of the command structure
 # define P016_BitExecuteCmd  1        // Execute command if received code matches Code or AlternativeCode of the command structure
-# define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (will be set to RAW before calling AddCode() or
-                                      // ExecuteCode())
+# define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (UNKNOWH is only the result of DECODE_HASH)
 
 # define P16_Nlines   10              // The number of different lines which can be displayed - each line is 64 chars max
 # define P16_Nchars   64              // max chars per command line
@@ -72,8 +71,8 @@ struct tCommandLinesV2 {
   char          Command[P16_Nchars]       = { 0 };
   uint64_t      Code                      = 0; // received code (can be added automatically)
   uint64_t      AlternativeCode           = 0; // alternative code fpr the same command
-  decode_type_t CodeDecodeType            = decode_type_t::UNKNOWN;
-  decode_type_t AlternativeCodeDecodeType = decode_type_t::UNKNOWN;
+  decode_type_t CodeDecodeType            = decode_type_t::UNUSED;
+  decode_type_t AlternativeCodeDecodeType = decode_type_t::UNUSED;
   uint16_t      CodeFlags                 = 0;
   uint16_t      AlternativeCodeFlags      = 0;
 };
@@ -104,10 +103,10 @@ public:
                               uint8_t                lineNr);
 
   void AddCode(uint64_t      Code,
-               decode_type_t DecodeType = decode_type_t::UNKNOWN,
+               decode_type_t DecodeType = decode_type_t::UNUSED,
                uint16_t      CodeFlags  = 0u);
   bool ExecuteCode(uint64_t      Code,
-                   decode_type_t DecodeType = decode_type_t::UNKNOWN,
+                   decode_type_t DecodeType = decode_type_t::UNUSED,
                    uint16_t      CodeFlags  = 0u);
 
   // CustomTaskSettings
@@ -126,7 +125,7 @@ private:
 
   uint64_t      iLastCmd        = 0;                      // last command send
   uint32_t      iLastCmdTime    = 0;                      // time while last command was send
-  decode_type_t iLastDecodeType = decode_type_t::UNKNOWN; // last decode_type sent
+  decode_type_t iLastDecodeType = decode_type_t::UNUSED;  // last decode_type sent
   uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
   uint16_t      iLastCodeFlags  = 0;                      // last flags sent
   # endif // if P016_FEATURE_COMMAND_HANDLING
