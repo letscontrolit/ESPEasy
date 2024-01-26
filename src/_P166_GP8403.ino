@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-01-26 tonhuisman: Make 0x5F the default I2C address, as that's how the hardware is configured by default
  * 2024-01-26 tonhuisman: Generate PLUGIN_READ when changing output
  * 2024-01-25 tonhuisman: Add I2C enabled check on PLUGIN_INIT
  * 2024-01-24 tonhuisman: Add GET_CONFIG support
@@ -81,7 +82,7 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F };
+      const uint8_t i2cAddressValues[] = { 0x5F, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E };
 
       if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
         addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, P166_I2C_ADDRESS);
@@ -103,6 +104,7 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
+      P166_I2C_ADDRESS = 0x5F; // Hardware comes configured at this address
       P166_MAX_VOLTAGE = static_cast<int>(DFRobot_GP8403::eOutPutRange_t::eOutputRange10V);
 
       success = true;
