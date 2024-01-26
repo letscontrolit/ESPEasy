@@ -145,17 +145,12 @@ jobs:
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      # FIXME: Workaround for https://github.com/actions/download-artifact/issues/249
-      - name: Download all artifacts with retry
-        uses: Wandalen/wretry.action@master
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          action: actions/download-artifact@v4
-          with: |
-            path: artifacts/Binaries/bin/
-            pattern: Bin-*
-            merge-multiple: true
-          attempt_limit: 5
-          attempt_delay: 2000
+          path: artifacts/Binaries/bin/
+          pattern: Bin-*
+          merge-multiple: true
       - name: Repackage for release upload
         run: |
           ls -R
