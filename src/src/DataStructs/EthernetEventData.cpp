@@ -189,7 +189,7 @@ void EthernetEventData_t::markConnected() {
     while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH)) != ESP_OK) {
       delay(1);
       if (i-- == 0) {
-        addLog(LOG_LEVEL_ERROR, ">>>> HELP");
+//        addLog(LOG_LEVEL_ERROR, ">>>> HELP");
         break;
       }
     }
