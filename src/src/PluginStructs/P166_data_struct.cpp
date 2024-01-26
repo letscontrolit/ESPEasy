@@ -125,7 +125,8 @@ bool P166_data_struct::plugin_write(struct EventStruct *event,
                 setUserVarAndLog(event, 1, voltValue, fValue, subcommand);
               }
 
-              sendData(event); // Send out data for events and to controllers
+              // Send out data for events and to controllers by scheduling a TaskRun/PLUGIN_READ
+              Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
               success = true;
             }
