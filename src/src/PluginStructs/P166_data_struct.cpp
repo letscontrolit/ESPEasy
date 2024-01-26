@@ -124,6 +124,9 @@ bool P166_data_struct::plugin_write(struct EventStruct *event,
               if ((nChannel == 1) || (nChannel == 2)) {
                 setUserVarAndLog(event, 1, voltValue, fValue, subcommand);
               }
+
+              sendData(event); // Send out data for events and to controllers
+
               success = true;
             }
           }
