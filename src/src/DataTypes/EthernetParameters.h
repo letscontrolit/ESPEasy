@@ -22,7 +22,7 @@ bool isGpioUsedInETHClockMode(EthClockMode_t clockMode,
 // Is stored in settings
 enum class EthPhyType_t : uint8_t {
 #if CONFIG_ETH_USE_ESP32_EMAC
-  LAN8710 = 0,
+  LAN8720 = 0,
   TLK110  = 1,
 #if ESP_IDF_VERSION_MAJOR > 3
 

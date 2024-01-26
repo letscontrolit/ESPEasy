@@ -248,7 +248,7 @@ void handle_hardware() {
   {
     const __FlashStringHelper * ethPhyTypes[] = { 
 # if CONFIG_ETH_USE_ESP32_EMAC
-    toString(EthPhyType_t::LAN8710),			  
+    toString(EthPhyType_t::LAN8720),			  
     toString(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
     toString(EthPhyType_t::RTL8201),				
@@ -273,7 +273,7 @@ void handle_hardware() {
       };
     const int ethPhyTypes_index[] = {
 # if CONFIG_ETH_USE_ESP32_EMAC
-    static_cast<int>(EthPhyType_t::LAN8710),			  
+    static_cast<int>(EthPhyType_t::LAN8720),			  
     static_cast<int>(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
     static_cast<int>(EthPhyType_t::RTL8201),				

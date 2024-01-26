@@ -115,7 +115,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 13;
       i2c_scl               = 16;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 12;
@@ -131,7 +131,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 13;
       i2c_scl               = 16;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = -1; // No Ethernet power pin
@@ -146,7 +146,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = -1;
       i2c_scl               = -1;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 5;
@@ -178,7 +178,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 15;
       i2c_scl               = 4;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 16;
       eth_mdio              = 17;
       eth_power             = -1;
@@ -191,7 +191,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 21;
       i2c_scl               = 22;
       eth_phyaddr           = 1;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 12;  // TODO TD-er: Better to use GPIO-16? as shown here: https://letscontrolit.com/forum/viewtopic.php?p=50133#p50133

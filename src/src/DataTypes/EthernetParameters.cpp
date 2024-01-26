@@ -38,7 +38,7 @@ const __FlashStringHelper* toString(EthClockMode_t clockMode) {
 bool isValid(EthPhyType_t phyType) {
   switch (phyType) {
 # if CONFIG_ETH_USE_ESP32_EMAC
-    case EthPhyType_t::LAN8710:
+    case EthPhyType_t::LAN8720:
     case EthPhyType_t::TLK110: 
 #if ESP_IDF_VERSION_MAJOR > 3
     case EthPhyType_t::RTL8201:
@@ -91,11 +91,7 @@ eth_phy_type_t to_ESP_phy_type(EthPhyType_t phyType)
 {
   switch (phyType) {
 # if CONFIG_ETH_USE_ESP32_EMAC
-#if ESP_IDF_VERSION_MAJOR >= 5
-    case EthPhyType_t::LAN8710:  return ETH_PHY_LAN8710;
-#else
-    case EthPhyType_t::LAN8710:  return ETH_PHY_LAN8720;
-#endif
+    case EthPhyType_t::LAN8720:  return ETH_PHY_LAN8720;
     case EthPhyType_t::TLK110:   return ETH_PHY_TLK110;
 #if ESP_IDF_VERSION_MAJOR > 3
     case EthPhyType_t::RTL8201:  return ETH_PHY_RTL8201;
@@ -129,7 +125,7 @@ eth_phy_type_t to_ESP_phy_type(EthPhyType_t phyType)
 const __FlashStringHelper* toString(EthPhyType_t phyType) {
   switch (phyType) {
 # if CONFIG_ETH_USE_ESP32_EMAC
-    case EthPhyType_t::LAN8710:  return F("LAN8710/LAN8720");
+    case EthPhyType_t::LAN8720:  return F("LAN8710/LAN8720");
     case EthPhyType_t::TLK110:   return F("TLK110");
 #if ESP_IDF_VERSION_MAJOR > 3
     case EthPhyType_t::RTL8201:  return F("RTL8201");
