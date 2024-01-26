@@ -148,11 +148,11 @@ void hardwareInit()
         PinBootState bootState = Settings.getPinBootState(gpio);
       #if FEATURE_ETHERNET
 /*
-        if (Settings.ETH_Pin_power == gpio)
+        if (Settings.ETH_Pin_power_rst == gpio)
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("ETH  : Reset ETH module on pin ");
-            log += Settings.ETH_Pin_power;
+            log += Settings.ETH_Pin_power_rst;
             addLog(LOG_LEVEL_INFO, log);
           }
           bootState = PinBootState::Output_low;
@@ -759,6 +759,7 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel::DeviceModel_Sonoff_POWr2:   return F("Sonoff");
     case DeviceModel::DeviceModel_Shelly1:
     case DeviceModel::DeviceModel_ShellyPLUG_S:   return F("Shelly");
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
@@ -773,6 +774,7 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     #ifdef ESP32_CLASSIC
       return F("WT32-ETH01");
     #endif // ifdef ESP32_CLASSIC
+#endif
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:      break;
 
@@ -810,19 +812,13 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
     case DeviceModel::DeviceModel_ShellyPLUG_S:
       return F("default");
 #endif // if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-#ifdef ESP32_CLASSIC
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:      return F(" ESP32-PoE");
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:      return F(" ESP32-EVB");
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  return F(" ESP32-GATEWAY");
     case DeviceModel::DeviceModel_wESP32:                break;
     case DeviceModel::DeviceModel_WT32_ETH01:            return F(" add-on");
-#else // ifdef ESP32_CLASSIC
-    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
-    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
-    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-    case DeviceModel::DeviceModel_wESP32:
-    case DeviceModel::DeviceModel_WT32_ETH01:
-#endif // ifdef ESP32_CLASSIC
+#endif
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:             return F("default");
@@ -875,6 +871,7 @@ bool modelMatchingFlashSize(DeviceModel model) {
 #endif // ifdef ESP8266
 
     // These Olimex boards all have Ethernet
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
@@ -885,7 +882,7 @@ bool modelMatchingFlashSize(DeviceModel model) {
 #else // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return false;
 #endif // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
-
+#endif
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
       return true;

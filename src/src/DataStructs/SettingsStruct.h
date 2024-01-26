@@ -450,10 +450,10 @@ public:
   uint16_t      SyslogPort = DEFAULT_SYSLOG_PORT;
 
   int8_t          ETH_Phy_Addr = -1;
-  int8_t          ETH_Pin_mdc = -1;
-  int8_t          ETH_Pin_mdio = -1;
-  int8_t          ETH_Pin_power = -1;
-  EthPhyType_t    ETH_Phy_Type = EthPhyType_t::LAN8710;
+  int8_t          ETH_Pin_mdc_cs = -1;
+  int8_t          ETH_Pin_mdio_irq = -1;
+  int8_t          ETH_Pin_power_rst = -1;
+  EthPhyType_t    ETH_Phy_Type = EthPhyType_t::notSet;
   EthClockMode_t  ETH_Clock_Mode = EthClockMode_t::Ext_crystal_osc;
   uint8_t         ETH_IP[4] = {0};
   uint8_t         ETH_Gateway[4] = {0};

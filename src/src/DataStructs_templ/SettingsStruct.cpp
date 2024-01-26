@@ -565,9 +565,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
-  ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
-  ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
-  ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
+  ETH_Pin_mdc_cs              = DEFAULT_ETH_PIN_MDC;
+  ETH_Pin_mdio_irq             = DEFAULT_ETH_PIN_MDIO;
+  ETH_Pin_power_rst            = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
 #endif
@@ -938,9 +938,9 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
     if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
-    if (ETH_Pin_mdc == pin) return true;
-    if (ETH_Pin_mdio == pin) return true;
-    if (ETH_Pin_power == pin) return true;
+    if (ETH_Pin_mdc_cs == pin) return true;
+    if (ETH_Pin_mdio_irq == pin) return true;
+    if (ETH_Pin_power_rst == pin) return true;
   }
   #endif // if FEATURE_ETHERNET
   return false;

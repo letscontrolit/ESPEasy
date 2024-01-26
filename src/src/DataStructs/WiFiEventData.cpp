@@ -185,7 +185,7 @@ void WiFiEventData_t::markGotIP() {
   void WiFiEventData_t::markGotIPv6(const IPAddress& ip6) {
     processedGotIP6 = false;
     unprocessed_IP6 = ip6;
-    addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip.toString(true));
+    addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip6.toString(true));
   }
 #endif
 

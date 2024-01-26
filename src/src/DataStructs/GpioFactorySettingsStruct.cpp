@@ -107,7 +107,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
 #endif
 
 
-#ifdef ESP32
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
@@ -199,12 +199,6 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       network_medium = NetworkMedium_t::Ethernet;
       break;
 
-  #else
-      case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
-      case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
-      case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-      case DeviceModel::DeviceModel_wESP32:
-      case DeviceModel::DeviceModel_WT32_ETH01:
   #endif
 
     case DeviceModel::DeviceModel_default:
