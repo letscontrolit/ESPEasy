@@ -20,6 +20,7 @@
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 #include <driver/gpio.h>
+#include "include/esp32x_fixes.h"
 #endif
 
 
@@ -872,6 +873,37 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   }
   return false;
 }
+
+#ifdef ESP32
+template<unsigned int N_TASKS>
+spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
+{
+  if (isSPI_valid()) {
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi_Fspi:
+      {
+        return VSPI_HOST;
+      }
+#ifdef ESP32_CLASSIC
+      case SPI_Options_e::Hspi:
+      {
+        return HSPI_HOST;
+      }
+#endif
+      case SPI_Options_e::UserDefined:
+      {
+        return HSPI_HOST;
+      }
+      case SPI_Options_e::None:
+        break;
+    }
+
+  }
+  return spi_host_device_t::SPI_HOST_MAX;
+}
+#endif
+
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {

@@ -15,6 +15,9 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+#ifdef ESP32
+#include <hal/spi_types.h>
+#endif
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
@@ -284,6 +287,10 @@ public:
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
   bool getSPI_pins(int8_t spi_gpios[3]) const;
+
+  #ifdef ESP32
+  spi_host_device_t getSPI_host() const;
+  #endif
 
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t pin) const;

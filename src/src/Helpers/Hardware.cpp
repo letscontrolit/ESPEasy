@@ -228,8 +228,18 @@ void hardwareInit()
   PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
   #endif // if FEATURE_PLUGIN_PRIORITY
 
+  bool tryInitSPI = true;
+#if FEATURE_ETHERNET
+  if (isValid(Settings.ETH_Phy_Type) && 
+      isSPI_EthernetType(Settings.ETH_Phy_Type)) 
+  {
+      tryInitSPI = false;
+  }
+#endif
+
+
   // SPI Init
-  if (Settings.isSPI_valid())
+  if (tryInitSPI && Settings.isSPI_valid())
   {
     SPI.setHwCs(false);
 
