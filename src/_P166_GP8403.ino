@@ -82,10 +82,10 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x5F, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E };
+      const uint8_t i2cAddressValues[] = { 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F };
 
       if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
-        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, P166_I2C_ADDRESS);
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, P166_I2C_ADDRESS, 7); // Mark last value-index as default
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }

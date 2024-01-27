@@ -45,8 +45,8 @@ private:
                         const String      & subcommand);
 
   DFRobot_GP8403                *sensor = nullptr;
-  DFRobot_GP8403::eOutPutRange_t _range;
   uint8_t                        _address;
+  DFRobot_GP8403::eOutPutRange_t _range;
   bool                           initialized = false;
 
   String  presets[P166_PresetEntries]{};
