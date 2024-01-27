@@ -900,7 +900,11 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
     }
 
   }
+  #if ESP_IDF_VERSION_MAJOR < 5
+  return SPI_HOST;
+  #else
   return spi_host_device_t::SPI_HOST_MAX;
+  #endif
 }
 #endif
 
