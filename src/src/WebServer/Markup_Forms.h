@@ -283,7 +283,7 @@ void addFormSelectorI2C(const String& id,
                         int           addressCount,
                         const uint8_t addresses[],
                         int           selectedIndex,
-                        uint8_t       defaultIndex = 0
+                        uint8_t       defaultAddress = 0 // Address 0 is invalid
                         #if FEATURE_TOOLTIPS
                         ,
                         const String& tooltip = EMPTY_STRING

@@ -467,7 +467,7 @@ void addFormSelectorI2C(const String& id,
                         int           addressCount,
                         const uint8_t addresses[],
                         int           selectedIndex,
-                        uint8_t       defaultIndex
+                        uint8_t       defaultAddress
                         #if FEATURE_TOOLTIPS
                         , const String& tooltip
                         #endif // if FEATURE_TOOLTIPS
@@ -484,7 +484,7 @@ void addFormSelectorI2C(const String& id,
   {
     String option = formatToHex_decimal(addresses[x]);
 
-    if (x == defaultIndex) {
+    if (((x == 0) && (defaultAddress == 0)) || (defaultAddress == addresses[x])) {
       option += F(" - (default)");
     }
     addSelector_Item(option, addresses[x], addresses[x] == selectedIndex);
