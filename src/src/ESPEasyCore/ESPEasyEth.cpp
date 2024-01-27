@@ -156,7 +156,6 @@ bool ETHConnectRelaxed() {
   registerEthEventHandler();
 
   if (!EthEventData.ethInitSuccess) {
-    ethResetGPIOpins();
 #if ESP_IDF_VERSION_MAJOR < 5
     EthEventData.ethInitSuccess = ETH.begin( 
       Settings.ETH_Phy_Addr,
@@ -177,6 +176,7 @@ bool ETHConnectRelaxed() {
         #ifdef ESP32C3
         // FIXME TD-er: Fallback for ETH01-EVO board
         SPI_host = spi_host_device_t::SPI2_HOST;
+        Settings.InitSPI = static_cast<int>(SPI_Options_e::UserDefined);
         Settings.SPI_SCLK_pin = 7;
         Settings.SPI_MISO_pin = 3;
         Settings.SPI_MOSI_pin = 10;
@@ -190,13 +190,14 @@ bool ETHConnectRelaxed() {
           Settings.ETH_Pin_mdc_cs,
           Settings.ETH_Pin_mdio_irq,
           Settings.ETH_Pin_power_rst,
-          SPI2_HOST,
+          SPI_host,
           static_cast<int>(Settings.SPI_SCLK_pin),
           static_cast<int>(Settings.SPI_MISO_pin),
           static_cast<int>(Settings.SPI_MOSI_pin));
       }
     } else {
 # if CONFIG_ETH_USE_ESP32_EMAC
+    ethResetGPIOpins();
     EthEventData.ethInitSuccess = ETH.begin( 
       to_ESP_phy_type(Settings.ETH_Phy_Type),
       Settings.ETH_Phy_Addr,
@@ -213,6 +214,16 @@ bool ETHConnectRelaxed() {
     // FIXME TD-er: Not sure if this is correctly set to false
     //EthEventData.ethConnectAttemptNeeded = false;
 
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("ETH  : MAC: %s phy addr: %d speed: %dM %s Link: %s"),
+      ETH.macAddress().c_str(),
+      ETH.phyAddr(),
+      ETH.linkSpeed(),
+      concat(
+        ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex"),
+        ETH.autoNegotiation() ? F("(auto)") : F("")).c_str(),
+      String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
+    
     if (EthLinkUp()) {
       // We might miss the connected event, since we are already connected.
       EthEventData.markConnected();
