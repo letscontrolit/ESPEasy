@@ -6,10 +6,13 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-01-28 tonhuisman: Add option to restore output values on warm boot (default enabled, using unused 4th value for state)
+ *                        Add command to apply initial value(s) per channel
+ *                        Some code refactoring
  * 2024-01-26 tonhuisman: Make 0x5F the default I2C address, as that's how the hardware is configured by default
  * 2024-01-26 tonhuisman: Generate PLUGIN_READ when changing output
  * 2024-01-25 tonhuisman: Add I2C enabled check on PLUGIN_INIT
- * 2024-01-24 tonhuisman: Add GET_CONFIG support
+ * 2024-01-24 tonhuisman: Add PLUGIN_GET_CONFIG_VALUE support
  * 2024-01-23 tonhuisman: Add initial value per channel, add some logging, refactoring
  * 2024-01-22 tonhuisman: Add named presets (not case-sensitive) and command handling
  * 2024-01-21 tonhuisman: Start plugin for GP8403 DAC 0-10V (12 bit, 2 channels) based on DFRobot_GP8403 library modified for ESPEasy
@@ -22,6 +25,7 @@
  * gp8403,mvolt,<ch>,<value>    : Set the voltage in mV (0..5000/0..10000) value to channel
  * gp8403,range,<5|10>          : Set the range to 5V or 10V (both channels)
  * gp8403,preset,<ch>,<name>    : Set the voltage from preset <name> to channel
+ * gp8403,init,<ch>             : Set the initial voltage to channel
  */
 
 /** Get Config values:
@@ -104,8 +108,9 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P166_I2C_ADDRESS = 0x5F; // Hardware comes configured at this address
-      P166_MAX_VOLTAGE = static_cast<int>(DFRobot_GP8403::eOutPutRange_t::eOutputRange10V);
+      P166_I2C_ADDRESS    = 0x5F; // Hardware comes configured at this address
+      P166_MAX_VOLTAGE    = static_cast<int>(DFRobot_GP8403::eOutPutRange_t::eOutputRange10V);
+      P166_RESTORE_VALUES = 1;    // Enabled by default
 
       success = true;
       break;
@@ -129,8 +134,11 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
                         configurationOptions,
                         P166_MAX_VOLTAGE);
       }
-      addFormFloatNumberBox(F("Initial value output 0"), F("prch0"), P166_PRESET_OUTPUT0, 0.0f, 10.0f, 3);
-      addFormFloatNumberBox(F("Initial value output 1"), F("prch1"), P166_PRESET_OUTPUT1, 0.0f, 10.0f, 3);
+
+      addFormCheckBox(F("Restore output on warm boot"), F("prstr"), P166_RESTORE_VALUES == 1);
+
+      addFormFloatNumberBox(F("Initial value output 0"), F("prch0"), P166_PRESET_OUTPUT(0), 0.0f, 10.0f, 3);
+      addFormFloatNumberBox(F("Initial value output 1"), F("prch1"), P166_PRESET_OUTPUT(1), 0.0f, 10.0f, 3);
 
       addFormSubHeader(F("Preset values"));
 
@@ -172,10 +180,11 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P166_I2C_ADDRESS    = getFormItemInt(F("i2c_addr"));
-      P166_MAX_VOLTAGE    = getFormItemInt(F("range"));
-      P166_PRESET_OUTPUT0 = getFormItemFloat(F("prch0"));
-      P166_PRESET_OUTPUT1 = getFormItemFloat(F("prch1"));
+      P166_I2C_ADDRESS      = getFormItemInt(F("i2c_addr"));
+      P166_MAX_VOLTAGE      = getFormItemInt(F("range"));
+      P166_RESTORE_VALUES   = isFormItemChecked(F("prstr")) ? 1 : 0;
+      P166_PRESET_OUTPUT(0) = getFormItemFloat(F("prch0"));
+      P166_PRESET_OUTPUT(1) = getFormItemFloat(F("prch1"));
 
       String presets[P166_PresetEntries]{};
 

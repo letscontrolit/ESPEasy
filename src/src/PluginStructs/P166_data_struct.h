@@ -6,13 +6,16 @@
 
 # include <DFRobot_GP8403.h>
 
-# define P166_I2C_ADDRESS             PCONFIG(0)
-# define P166_MAX_VOLTAGE             PCONFIG(1)       // 0-5V or 0-10V
-# define P166_PRESET_OUTPUT0          PCONFIG_FLOAT(0) // When changing this, also change init() method!
-# define P166_PRESET_OUTPUT1          PCONFIG_FLOAT(1)
+# define P166_I2C_ADDRESS      PCONFIG(0)
+# define P166_MAX_VOLTAGE      PCONFIG(1) // 0-5V or 0-10V
+# define P166_RESTORE_VALUES   PCONFIG(2)
+# define P166_PRESET_OUTPUT(N) PCONFIG_FLOAT((N))
 
-# define P166_PresetEntries           25               // Should be enough for now
-# define P166_MAX_OUTPUTS             2                // Technical limit
+# define P166_PresetEntries           25      // Should be enough for now
+# define P166_MAX_OUTPUTS             2       // Technical limit
+# define P166_RANGE_5V                5000    // mV
+# define P166_RANGE_10V               10000   // mV
+# define P166_FACTOR_mV               1000.0f // V -> mV
 
 struct P166_data_struct : public PluginTaskData_base {
 public:
@@ -44,7 +47,7 @@ private:
                         const float         fValue,
                         const String      & subcommand);
 
-  DFRobot_GP8403                *sensor = nullptr;
+  DFRobot_GP8403                *gp8403 = nullptr;
   uint8_t                        _address;
   DFRobot_GP8403::eOutPutRange_t _range;
   bool                           initialized = false;
