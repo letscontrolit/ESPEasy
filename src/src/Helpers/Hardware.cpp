@@ -260,7 +260,7 @@ void hardwareInit()
       SPI_initialized = true;
     }
     #else // ifdef ESP32
-    SPI_initialized = SPI.begin();
+    SPI.begin();
     SPI_initialized = true;
     #endif // ifdef ESP32
   }
