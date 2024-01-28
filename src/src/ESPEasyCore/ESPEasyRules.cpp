@@ -979,9 +979,10 @@ void processMatchedRule(String& action, const String& event,
     }
 
     if (executeRestricted) {
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2).c_str());
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2)});
     } else {
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+      // Use action.c_str() here as we need to preserve the action string.
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str()});
     }
     delay(0);
   }

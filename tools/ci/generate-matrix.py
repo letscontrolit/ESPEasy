@@ -7,16 +7,25 @@
 
 import json
 import os
+import re
 from platformio.project.config import ProjectConfig
 
 
 def get_jobs(cfg):
+    regex = re.compile(r".*(ESP[^_]*).*")
     for env in cfg.envs():
         platform = cfg.get("env:{}".format(env), "platform")
+        match = regex.match(env)
+        if type(match) == re.Match:
+            typ = match.group(1)
+            if "ESP8285" == typ:
+                typ = "ESP8266" # Generalize ESP8285 into ESP8266
+        else:
+            typ = "ESP8266" # Catch WROOM02 and some other 'hard_' builds
         if "espressif8266" in platform:
-            yield {"chip": "esp8266", "env": env}
+            yield {"chip": typ.lower(), "env": env}
         elif "espressif32" in platform:
-            yield {"chip": "esp32", "env": env}
+            yield {"chip": typ.lower(), "env": env}
         else:
             raise ValueError(
                 "Unknown `platform = {}` for `[env:{}]`".format(platform, env)

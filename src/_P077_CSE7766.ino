@@ -113,9 +113,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           const float value = P077_data->getValue(query);
           int nrDecimals    = 2;
 
-          if ((query == P077_query::P077_QUERY_PULSES)) {
+          if (query == P077_query::P077_QUERY_PULSES) {
             nrDecimals = 0;
-          } else if ((query == P077_query::P077_QUERY_KWH)) {
+          } else if (query == P077_query::P077_QUERY_KWH) {
             nrDecimals = 3;
           }
 
