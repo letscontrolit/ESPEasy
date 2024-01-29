@@ -308,7 +308,7 @@ void handle_hardware() {
 
 #if CONFIG_ETH_USE_SPI_ETHERNET && CONFIG_ETH_USE_ESP32_EMAC
 #define MDC_CS_PIN_DESCR  "Ethernet MDC/CS pin"
-#define MIO_IRQ_PIN_DESCR  "Ethernet MIO/IRQ pin"
+#define MIO_IRQ_PIN_DESCR  "Ethernet MDIO/IRQ pin"
 #define PWR_RST_PIN_DESCR  "Ethernet Power/RST pin"
 #elif CONFIG_ETH_USE_SPI_ETHERNET
 #define MDC_CS_PIN_DESCR  "Ethernet CS pin"
