@@ -151,5 +151,5 @@ const __FlashStringHelper* toString(EthPhyType_t phyType) {
 
       // Do not use default: as this allows the compiler to detect any missing cases.
   }
-  return F("");
+  return F("- None -");
 }

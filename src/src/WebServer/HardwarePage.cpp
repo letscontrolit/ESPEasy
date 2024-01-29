@@ -244,55 +244,58 @@ void handle_hardware() {
     addSelector(F("ethwifi"), 2, ethWifiOptions, nullptr, nullptr, static_cast<int>(Settings.NetworkMedium), false, true);
   }
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
-  addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
     const __FlashStringHelper * ethPhyTypes[] = { 
+      toString(EthPhyType_t::notSet),			  
+
 # if CONFIG_ETH_USE_ESP32_EMAC
-    toString(EthPhyType_t::LAN8720),			  
-    toString(EthPhyType_t::TLK110),				  
+      toString(EthPhyType_t::LAN8720),			  
+      toString(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
-    toString(EthPhyType_t::RTL8201),				
-    toString(EthPhyType_t::JL1101),				  
-    toString(EthPhyType_t::DP83848),				
-    toString(EthPhyType_t::KSZ8041),				
-    toString(EthPhyType_t::KSZ8081),				
+      toString(EthPhyType_t::RTL8201),				
+      toString(EthPhyType_t::JL1101),				  
+      toString(EthPhyType_t::DP83848),				
+      toString(EthPhyType_t::KSZ8041),				
+      toString(EthPhyType_t::KSZ8081),				
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
-    toString(EthPhyType_t::DM9051),				  
+      toString(EthPhyType_t::DM9051),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
 # if CONFIG_ETH_SPI_ETHERNET_W5500
-    toString(EthPhyType_t::W5500),				  
+      toString(EthPhyType_t::W5500),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_W5500
 # if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
-    toString(EthPhyType_t::KSZ8851),				
+      toString(EthPhyType_t::KSZ8851),				
 # endif // if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
 #endif
       };
     const int ethPhyTypes_index[] = {
+      static_cast<int>(EthPhyType_t::notSet),			  
+
 # if CONFIG_ETH_USE_ESP32_EMAC
-    static_cast<int>(EthPhyType_t::LAN8720),			  
-    static_cast<int>(EthPhyType_t::TLK110),				  
+      static_cast<int>(EthPhyType_t::LAN8720),			  
+      static_cast<int>(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
-    static_cast<int>(EthPhyType_t::RTL8201),				
-    static_cast<int>(EthPhyType_t::JL1101),				  
-    static_cast<int>(EthPhyType_t::DP83848),				
-    static_cast<int>(EthPhyType_t::KSZ8041),				
-    static_cast<int>(EthPhyType_t::KSZ8081),				
+      static_cast<int>(EthPhyType_t::RTL8201),				
+      static_cast<int>(EthPhyType_t::JL1101),				  
+      static_cast<int>(EthPhyType_t::DP83848),				
+      static_cast<int>(EthPhyType_t::KSZ8041),				
+      static_cast<int>(EthPhyType_t::KSZ8081),				
 #endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 # if CONFIG_ETH_SPI_ETHERNET_DM9051
-    static_cast<int>(EthPhyType_t::DM9051),				  
+      static_cast<int>(EthPhyType_t::DM9051),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
 # if CONFIG_ETH_SPI_ETHERNET_W5500
-    static_cast<int>(EthPhyType_t::W5500),				  
+      static_cast<int>(EthPhyType_t::W5500),				  
 # endif // if CONFIG_ETH_SPI_ETHERNET_W5500
 # if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
-    static_cast<int>(EthPhyType_t::KSZ8851),				
+      static_cast<int>(EthPhyType_t::KSZ8851),				
 # endif // if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
 #endif
     };
@@ -303,7 +306,15 @@ void handle_hardware() {
     const int choice = isValid(Settings.ETH_Phy_Type) 
       ? static_cast<int>(Settings.ETH_Phy_Type) 
       : static_cast<int>(EthPhyType_t::notSet);
-    addSelector(F("ethtype"), nrItems, ethPhyTypes, ethPhyTypes_index, nullptr, choice, false, true);
+
+    addFormSelector(
+      F("Ethernet PHY type"), 
+      F("ethtype"),
+      nrItems, 
+      ethPhyTypes, 
+      ethPhyTypes_index, 
+      choice, 
+      false);
   }
 
 #if CONFIG_ETH_USE_SPI_ETHERNET && CONFIG_ETH_USE_ESP32_EMAC
