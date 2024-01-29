@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-01-29 tonhuisman: Fix bug that changed Initial output values are not applied until a reset/power cycle.
+ *                        Disable development-log at Settings Save
  * 2024-01-28 tonhuisman: Add option to restore output values on warm boot (default enabled, using unused 4th value for state)
  *                        Add command to apply initial value(s) per channel
  *                        Some code refactoring
@@ -186,6 +188,8 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
       P166_PRESET_OUTPUT(0) = getFormItemFloat(F("prch0"));
       P166_PRESET_OUTPUT(1) = getFormItemFloat(F("prch1"));
 
+      UserVar.setFloat(event->TaskIndex, 3, 0.0f); // Reset state flag so Initial values will be applied
+
       String presets[P166_PresetEntries]{};
 
       int i = 0;
@@ -198,7 +202,8 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
         if (!entry.isEmpty()) {
           const float value = getFormItemFloat(getPluginCustomArgName((i * 10) + 1));
           presets[j] = strformat(F("%s,%.6g"), wrapWithQuotesIfContainsParameterSeparatorChar(entry).c_str(), value);
-          addLog(LOG_LEVEL_INFO, strformat(F("Saving %d: [%s]"), j + 1, presets[j].c_str()));
+
+          // addLog(LOG_LEVEL_INFO, strformat(F("Saving %d: [%s]"), j + 1, presets[j].c_str()));
           ++j;
         }
         ++i;
