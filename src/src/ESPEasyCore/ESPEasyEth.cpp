@@ -214,24 +214,26 @@ bool ETHConnectRelaxed() {
     // FIXME TD-er: Not sure if this is correctly set to false
     //EthEventData.ethConnectAttemptNeeded = false;
 
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 #if ESP_IDF_VERSION_MAJOR < 5
-    addLog(LOG_LEVEL_INFO, strformat(
-      F("ETH  : MAC: %s speed: %dM %s Link: %s"),
-      ETH.macAddress().c_str(),
-      ETH.linkSpeed(),
-      String(ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")).c_str(),
-      String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("ETH  : MAC: %s speed: %dM %s Link: %s"),
+        ETH.macAddress().c_str(),
+        ETH.linkSpeed(),
+        String(ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")).c_str(),
+        String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
 #else
-    addLog(LOG_LEVEL_INFO, strformat(
-      F("ETH  : MAC: %s phy addr: %d speed: %dM %s Link: %s"),
-      ETH.macAddress().c_str(),
-      ETH.phyAddr(),
-      ETH.linkSpeed(),
-      concat(
-        ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex"),
-        ETH.autoNegotiation() ? F("(auto)") : F("")).c_str(),
-      String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("ETH  : MAC: %s phy addr: %d speed: %dM %s Link: %s"),
+        ETH.macAddress().c_str(),
+        ETH.phyAddr(),
+        ETH.linkSpeed(),
+        concat(
+          ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex"),
+          ETH.autoNegotiation() ? F("(auto)") : F("")).c_str(),
+        String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
 #endif
+    }
     
     if (EthLinkUp()) {
       // We might miss the connected event, since we are already connected.
