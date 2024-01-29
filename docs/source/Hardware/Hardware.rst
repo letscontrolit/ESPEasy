@@ -347,7 +347,7 @@ Some ethernet boards support Power over Ethernet (PoE), so only a single (ethern
 For Olimex boards in the ESP32-POE range, the supplier has documented this warning:
 
 .. warning:: 
-    **Important notice**: Olimex ESP32-PoE has **no galvano isolation** from Ethernet's power supply, when you program the board via the micro USB connector the Ethernet cable should be disconnected (if you have power over the Ethernet cable)!
+    **Important notice**: Olimex ESP32-PoE has **no galvanic isolation** from Ethernet's power supply, when you program the board via the micro USB connector the Ethernet cable should be disconnected (if you have power over the Ethernet cable)!
     
     Consider using Olimex USB-ISO to protect your computer and board from accidental short circuit. Also consider instead using Olimex ESP32-PoE-ISO board, which *is* insulated.
 
@@ -358,7 +358,7 @@ Ethernet Isolation
 ^^^^^^^^^^^^^^^^^^
 
 Most Ethernet RJ45 phy (the connector on the PCB) have isolation transformers in them.
-This does isolate the TX/RX pins to make sure there is no direct connetion between the long cables and the Ethernet controller chip.
+This does isolate the TX/RX pins to make sure there is no direct connection between the long cables and the Ethernet controller chip.
 The isolation does protect the Ethernet chip from picked up high voltage spikes and ESD surges when inserting the Ethernet cable.
 However not all ESP boards with Ethernet have these installed.
 
