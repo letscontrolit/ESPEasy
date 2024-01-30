@@ -305,27 +305,28 @@ String formatSystemBuildNr(uint16_t buildNr) {
 }
 
 String getPluginDescriptionString() {
-  return F(
-    ""
+  String result = F("["
   #ifdef PLUGIN_BUILD_NORMAL
-  "[Normal]"
+    "\"Normal\""
   #endif // ifdef PLUGIN_BUILD_NORMAL
   #ifdef PLUGIN_BUILD_COLLECTION
-  "[Collection]"
+    "\"Collection\""
   #endif // ifdef PLUGIN_BUILD_COLLECTION
   #ifdef PLUGIN_BUILD_DEV
-  "[Development]"
+    "\"Development\""
   #endif // ifdef PLUGIN_BUILD_DEV
   #ifdef PLUGIN_DESCR
-  "[" PLUGIN_DESCR "]"
+    "\"" PLUGIN_DESCR "\""
   #endif // ifdef PLUGIN_DESCR
   #ifdef BUILD_NO_DEBUG
-  "[No Debug Log]"
+    "\"No Debug Log\""
   #endif
   #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
-  "[24tasks]"
+    "\"24tasks\""
   #endif // if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
-  );
+  "]");
+  result.replace("\"\"", "\",\"");
+  return result;
 }
 
 String getSystemLibraryString() {
