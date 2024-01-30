@@ -15,6 +15,9 @@
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 
+#ifdef ESP32
+#include <hal/spi_types.h>
+#endif
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
@@ -285,6 +288,10 @@ public:
 
   bool getSPI_pins(int8_t spi_gpios[3]) const;
 
+  #ifdef ESP32
+  spi_host_device_t getSPI_host() const;
+  #endif
+
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t pin) const;
 
@@ -450,10 +457,10 @@ public:
   uint16_t      SyslogPort = DEFAULT_SYSLOG_PORT;
 
   int8_t          ETH_Phy_Addr = -1;
-  int8_t          ETH_Pin_mdc = -1;
-  int8_t          ETH_Pin_mdio = -1;
-  int8_t          ETH_Pin_power = -1;
-  EthPhyType_t    ETH_Phy_Type = EthPhyType_t::LAN8710;
+  int8_t          ETH_Pin_mdc_cs = -1;
+  int8_t          ETH_Pin_mdio_irq = -1;
+  int8_t          ETH_Pin_power_rst = -1;
+  EthPhyType_t    ETH_Phy_Type = EthPhyType_t::notSet;
   EthClockMode_t  ETH_Clock_Mode = EthClockMode_t::Ext_crystal_osc;
   uint8_t         ETH_IP[4] = {0};
   uint8_t         ETH_Gateway[4] = {0};

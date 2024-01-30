@@ -252,13 +252,21 @@
 #define DEFAULT_ETH_PHY_ADDR             0
 #endif
 #ifndef DEFAULT_ETH_PHY_TYPE
-#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
+#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::notSet
 #endif
 #ifndef DEFAULT_ETH_PIN_MDC
+#ifdef ESP32_CLASSIC
 #define DEFAULT_ETH_PIN_MDC              23
+#else
+#define DEFAULT_ETH_PIN_MDC              -1
+#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_MDIO
+#ifdef ESP32_CLASSIC
 #define DEFAULT_ETH_PIN_MDIO             18
+#else
+#define DEFAULT_ETH_PIN_MDIO             -1
+#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_POWER
 #define DEFAULT_ETH_PIN_POWER            -1
