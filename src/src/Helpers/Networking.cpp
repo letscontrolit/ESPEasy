@@ -1561,7 +1561,38 @@ int http_authenticate(const String& logIdentifier,
     // Generate event with the HTTP return code
     // e.g. http#hostname=401
     eventQueue.addMove(strformat(F("http#%s=%d"), host.c_str(), httpCode));
+    
+    #if FEATURE_THINGSPEAK_EVENT
+      // Generate event with the response of a 
+      // thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html &
+      // https://de.mathworks.com/help/thingspeak/readdata.html)
+      // e.g. command for a specific field: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last.csv"
+      // command for all fields: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/feeds/last.csv"
+      // where first eventvalue is the channel number and the second to the nineth event values 
+      // are the field values
+      // Example of the event: "EVENT: ThingspeakReply=1637928,5,24.2,12,900,..."
+      //                                                  ^    ^ └------┬------┘
+      //                                   channel number ┘    |        └ received values
+      //                                                   field number (only available for a "single-value-event")
+      // In rules you can grep the reply by "On ThingspeakReply Do ..."
+     
+      if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && uri.endsWith(F("/last.csv"))) {
+        String result = http.getString(); 
+        const int posTimestamp = result.lastIndexOf(':');
+        if (posTimestamp >= 0) { 
+          result = parseStringToEndKeepCase(result.substring(posTimestamp), 3);
+          if (uri.indexOf(F("fields")) >= 0) { //when there is a single field call add the field number before the value
+            result = parseStringKeepCase(uri, 4, '/') + "," + result;
+          }
+          eventQueue.addMove(strformat(
+            F("ThingspeakReply=%s,%s"),                                            
+            parseStringKeepCase(uri, 2, '/').c_str(),
+            result.c_str()));
+        }
+      }
+    #endif
   }
+  
 #ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 #endif
