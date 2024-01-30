@@ -338,9 +338,9 @@ bool BuildFixes()
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
     Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
-    Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
-    Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
-    Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
+    Settings.ETH_Pin_mdc_cs    = DEFAULT_ETH_PIN_MDC;
+    Settings.ETH_Pin_mdio_irq   = DEFAULT_ETH_PIN_MDIO;
+    Settings.ETH_Pin_power_rst  = DEFAULT_ETH_PIN_POWER;
     Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
     Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
 #endif

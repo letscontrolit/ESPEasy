@@ -10,10 +10,18 @@ The following PHY connections are required for RMII PHY data connections:
      - RMII Signal
      - ESP32 EMAC Function
      - Notes
-   * - 0
+   * - 0 / 16 / 17
      - REF_CLK
      - EMAC_TX_CLK
      - See desciption about the clock
+   * - 18
+     - MDIO
+     - EMAC_MDIO
+     - In theory user configurable, but almost always used as MDIO pin
+   * - 23
+     - MDC
+     - EMAC_MDC
+     - In theory user configurable, but almost always used as MDC pin
    * - 21
      - TX_EN
      - EMAC_TX_EN
