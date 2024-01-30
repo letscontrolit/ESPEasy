@@ -3319,5 +3319,12 @@ To create/register a plugin, you have to :
 */
 
 
+  #ifndef FEATURE_THINGSPEAK_EVENT
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_THINGSPEAK_EVENT 0
+    #else
+      #define FEATURE_THINGSPEAK_EVENT 1
+    #endif
+  #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

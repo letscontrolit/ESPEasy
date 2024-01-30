@@ -123,7 +123,7 @@ void handle_root() {
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
-      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal({EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str()}, true);
       return;
     }
   } else {
