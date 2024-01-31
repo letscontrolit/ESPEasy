@@ -18,9 +18,11 @@
     Set the output value for the channel(s) in milli volt. The range is determined by the configured Output range setting.
     "
     "
-    ``gp8403,range,<ch>,<5|10>``
+    ``gp8403,range,<5|10>``
     ","
     Set the output range to either 5 (0-5V) or 10 (0-10V). Is also set to the Device configuration, but not saved.
+
+    The range is applied to both channels, no separate configuration per channel supported by the chip.
     "
     "
     ``gp8403,preset,<ch>,<name>``

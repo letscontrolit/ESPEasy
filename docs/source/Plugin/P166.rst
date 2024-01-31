@@ -24,7 +24,11 @@ Used libraries: |P166_usedlibraries|
 Description
 -----------
 
-The GP8403 DAC (Digital Analog Converter) has 2 output channels, can be configured for an output voltage range of 0-10V or 0-5V, has a 12 bit resolution (4096 steps) and works from a single 3.3V power source. The outputs can supply up to 20 mA.
+The GP8403 DAC (Digital Analog Converter) has 2 output channels, can be configured for an output voltage range of 0-10V or 0-5V, has a 12 bit resolution (4096 steps) and works from a single 3.3V or 5V power source. When powering the module with 5V, a level converter should be used on the I2C lines, to protect the ESP and other I2C devices on the same bus. The outputs can supply up to 20 mA.
+
+.. image:: P166_DFRobot_GP8403_board.png
+
+(Image (c) DFRobot)
 
 Configuration
 -------------
