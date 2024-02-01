@@ -610,36 +610,42 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // ok, now we can read the sensor data
-      char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
       UserVar.setFloat(event->TaskIndex, 0, -1);
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata)) {
         String sensorString(boarddata);
         addLog(LOG_LEVEL_INFO, concat(F("P103: READ result: "), sensorString));
 
-        float tmpFloat{};
-        string2float(parseString(sensorString, 1), tmpFloat);
-        UserVar.setFloat(event->TaskIndex, 0, tmpFloat);
+        float sensor_f{};
+
+        if (string2float(parseString(sensorString, 1), sensor_f)) {
+          UserVar.setFloat(event->TaskIndex, 0, sensor_f);
+        }
 
         if (board_type == AtlasEZO_Sensors_e::HUM) { // TODO Fix reading Dew point without Temperature enabled
-          string2float(parseString(sensorString, 2), tmpFloat);
-          UserVar.setFloat(event->TaskIndex, 2, tmpFloat);
+          if (string2float(parseString(sensorString, 2), sensor_f)) {
+            UserVar.setFloat(event->TaskIndex, 2, sensor_f);
+          }
           String dewVal = parseString(sensorString, 3);
 
           if (equals(dewVal, F("dew"))) { // Handle EZO-HUM firmware bug including 'Dew,' in the result string
             dewVal = parseString(sensorString, 4);
           }
-          string2float(dewVal, tmpFloat);
-          UserVar.setFloat(event->TaskIndex, 3, tmpFloat);
+
+          if (string2float(dewVal, sensor_f)) {
+            UserVar.setFloat(event->TaskIndex, 3, sensor_f);
+          }
         }
 
         # if P103_USE_FLOW
 
-        if (board_type == AtlasEZO_Sensors_e::FLOW) {
-          string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
+        if ((board_type == AtlasEZO_Sensors_e::FLOW) &&
+            string2float(parseString(sensorString, 2), sensor_f)) {
+          UserVar.setFloat(event->TaskIndex, 2, sensor_f);
         }
         # endif // if P103_USE_FLOW
-        float sensor_f{};
         string2float(sensorString, sensor_f);
         UserVar.setFloat(event->TaskIndex, 0, sensor_f);
       }
