@@ -2,6 +2,7 @@
 
 
 #include "../../ESPEasy-Globals.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
@@ -162,11 +163,13 @@ void ESPEasy_loop()
   else
   {
     if (!UseRTOSMultitasking) {
-      // On ESP32 the schedule is executed on the 2nd core.
+      // On ESP32, when using RTOS multitasking, the schedule is executed in a separate RTOS task
       Scheduler.handle_schedule();
     }
   }
 
+  // Calls above may have received/generated commands for the command queue, thus need to process them.
+  processExecuteCommandQueue();
   backgroundtasks();
 
   if (readyForSleep()) {
