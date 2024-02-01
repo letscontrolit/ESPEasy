@@ -1,6 +1,6 @@
 #include "../ESPEasyCore/ESPEasy_Console_Port.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 
 #include "../DataStructs/TimingStats.h"
 

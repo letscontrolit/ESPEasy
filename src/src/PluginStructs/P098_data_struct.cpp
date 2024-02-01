@@ -6,8 +6,6 @@
 
 # include "../Commands/GPIO.h" // FIXME TD-er: Only needed till we can call GPIO commands from the ESPEasy core.
 
-# include "../Helpers/Hardware.h"
-
 
 const __FlashStringHelper * P098_config_struct::toString(P098_config_struct::PWM_mode_type PWM_mode) {
   switch (PWM_mode) {

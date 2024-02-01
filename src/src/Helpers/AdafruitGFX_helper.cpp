@@ -4,6 +4,7 @@
 #ifdef PLUGIN_USES_ADAFRUITGFX
 
 # include "../Helpers/StringConverter.h"
+# include "../Helpers/StringGenerator_Web.h"
 # include "../WebServer/Markup_Forms.h"
 
 # if ADAGFX_FONTS_INCLUDED
@@ -864,7 +865,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   String log;
   std::vector<String> sParams;
-  std::vector<int>    nParams;
+  std::vector<int32_t> nParams;
   uint8_t emptyCount = 0;
   int     argCount   = 0;
   bool    loop       = true;
@@ -913,8 +914,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  char tmp[12]{};
-  const int subcommand_i         = GetCommandCode(tmp, sizeof(tmp), subcommand.c_str(), adagfx_commands);
+  const int subcommand_i         = GetCommandCode(subcommand.c_str(), adagfx_commands);
   const adagfx_commands_e subcmd = static_cast<adagfx_commands_e>(subcommand_i);
 
   if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
@@ -1800,8 +1800,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             #  if ADAGFX_ENABLE_BMP_DISPLAY
 
             if (!newString.isEmpty()) {
-              int offX = 0; // Allow optional arguments for x and y offset values, usage:
-              int offY = 0; // [x,[y,]]filename.bmp
+              int32_t offX = 0; // Allow optional arguments for x and y offset values, usage:
+              int32_t offY = 0; // [x,[y,]]filename.bmp
 
               if (newString.indexOf(',') > -1) {
                 String tmp = parseString(newString, 1);
@@ -1935,8 +1935,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  char tmp[12]{};
-  const int command_i            = GetCommandCode(tmp, sizeof(tmp), command.c_str(), adagfx_getcommands);
+  const int command_i            = GetCommandCode(command.c_str(), adagfx_getcommands);
   const adagfx_getcommands_e cmd = static_cast<adagfx_getcommands_e>(command_i);
 
   switch (cmd) {
@@ -1952,7 +1951,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     {                                   // iswin: check if windows exists
       #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
       command = parseString(string, 2);
-      int win = 0;
+      int32_t win = 0;
 
       if (validIntFromString(command, win)) {
         string = validWindow(static_cast<uint8_t>(win));
@@ -2296,8 +2295,7 @@ uint16_t AdaGFXparseColor(String                & s,
                           const bool              emptyIsBlack) {
   s.toLowerCase();
   int32_t   result = -1; // No result yet
-  char      tmp[12]{};
-  const int color_i = GetCommandCode(tmp, sizeof(tmp), s.c_str(), adagfx_colornames);
+  const int color_i = GetCommandCode(s.c_str(), adagfx_colornames);
 
   const adagfx_colornames_e color = static_cast<adagfx_colornames_e>(color_i);
 
@@ -2431,11 +2429,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
   const __FlashStringHelper *clr = AdaGFXcolorToString_internal(color, colorDepth, false);
 
   if (!equals(clr, '*')) {
-    addHtml(F("<option value=\""));
-    addHtml(clr);
-    addHtml(F("\">"));
-    addHtml(clr);
-    addHtml(F("</option>"));
+    datalistAddValue(clr);
   }
 }
 
@@ -2444,9 +2438,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
  ****************************************************************************************/
 void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
                                   const AdaGFXColorDepth   & colorDepth) {
-  addHtml(F("<datalist id=\""));
-  addHtml(id);
-  addHtml(F("\">"));
+  datalistStart(id);
 
   switch (colorDepth) {
     case AdaGFXColorDepth::BlackWhiteRed:
@@ -2502,7 +2494,7 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       break;
     }
   }
-  addHtml(F("</datalist>"));
+  datalistFinish();
 }
 
 /*****************************************************************************************

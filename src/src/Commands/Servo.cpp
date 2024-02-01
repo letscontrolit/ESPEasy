@@ -10,7 +10,7 @@
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/GlobalMapPortStatus.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_PWM.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 

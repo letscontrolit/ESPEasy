@@ -13,12 +13,16 @@ void FactoryDefault_UnitName_NVS::fromSettings() {
   bitWrite(data[1], 0, Settings.appendUnitToHostname());
   data[0] = Settings.Unit;
   memcpy((char *)(data + 2), Settings.Name, sizeof(Settings.Name));
+  data[2 + sizeof(Settings.Name)] = Settings.UDPPort >> 8;
+  data[3 + sizeof(Settings.Name)] = Settings.UDPPort & 0xFF;
 }
 
 void FactoryDefault_UnitName_NVS::applyToSettings() const {
   Settings.appendUnitToHostname(bitRead(data[1], 0));
   Settings.Unit = data[0];
   memcpy(Settings.Name, (char *)(data + 2), sizeof(Settings.Name));
+
+  Settings.UDPPort = data[2 + sizeof(Settings.Name)] << 8 | data[3 + sizeof(Settings.Name)];
 }
 
 bool FactoryDefault_UnitName_NVS::applyToSettings_from_NVS(ESPEasy_NVS_Helper& preferences) {

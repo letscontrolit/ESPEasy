@@ -25,8 +25,12 @@
 //  FSPI_HOST = SPI2_HOST
 //  HSPI_HOST = SPI3_HOST
 // 
+// ESP32-C6:
+//  FSPI_HOST = SPI1_HOST
 // ESP32-C3:
 //  FSPI_HOST = SPI2_HOST
+// ESP32-C2:
+//  FSPI_HOST = SPI1_HOST
 
 
 // SPIx_HOST defined in enum spi_host_device_t in hal/spi_types.h
@@ -43,8 +47,16 @@
 #define VSPI_FSPI_SCK  36
 #define VSPI_FSPI_MISO 37
 #define VSPI_FSPI_MOSI 35
+#  elif CONFIG_IDF_TARGET_ESP32C6 // ESP32-C6
+#define VSPI_FSPI_SCK  21
+#define VSPI_FSPI_MISO 20
+#define VSPI_FSPI_MOSI 19
 #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
 #define VSPI_FSPI_SCK  4
+#define VSPI_FSPI_MISO 5
+#define VSPI_FSPI_MOSI 6
+#  elif CONFIG_IDF_TARGET_ESP32C2 // ESP32-C2
+#define VSPI_FSPI_SCK  4  
 #define VSPI_FSPI_MISO 5
 #define VSPI_FSPI_MOSI 6
 #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4

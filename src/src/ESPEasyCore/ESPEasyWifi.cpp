@@ -17,7 +17,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -28,6 +27,8 @@
 #ifdef ESP32
 #include <WiFiGeneric.h>
 #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
+
+#include <esp_phy_init.h>
 #endif
 
 // FIXME TD-er: Cleanup of WiFi code
@@ -109,7 +110,7 @@ void ESPEasyWiFi_t::startScanning() {
 
 
 bool ESPEasyWiFi_t::connectSTA() {
-  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+  if (!WiFi_AP_Candidates.hasCandidateCredentials()) {
     if (!WiFiEventData.warnedNoValidWiFiSettings) {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
       WiFiEventData.warnedNoValidWiFiSettings = true;
@@ -228,10 +229,21 @@ bool WiFiConnected() {
   static uint32_t lastCheckedTime = 0;
   static bool lastState = false;
 
+#if FEATURE_USE_IPV6
+  if (!WiFiEventData.processedGotIP6) {
+    WiFiEventData.processedGotIP6 = true;
+#if FEATURE_ESPEASY_P2P
+    updateUDPport(true);
+#endif
+  }
+#endif
+
+
   if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
     // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
     return lastState;
   }
+
 
 
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
@@ -303,6 +315,7 @@ bool WiFiConnected() {
           if (!WiFiEventData.wifiConnectAttemptNeeded) {
             addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
             WifiScan(false);
+            setSTA(false); // Force reset WiFi + reduce power consumption
             setAP(true);
           }
         }
@@ -379,6 +392,12 @@ void WiFiConnectRelaxed() {
       if (!WiFiEventData.processedGotIP) {
         log += F(" gotIP");
       }
+#if FEATURE_USE_IPV6
+      if (!WiFiEventData.processedGotIP6) {
+        log += F(" gotIP6");
+      }
+#endif
+
       if (!WiFiEventData.processedDHCPTimeout) {
         log += F(" DHCP_t/o");
       }
@@ -444,11 +463,10 @@ void AttemptWiFiConnect() {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("WIFI : Connecting ");
-      log += candidate.toString();
-      log += F(" attempt #");
-      log += WiFiEventData.wifi_connect_attempt;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("WIFI : Connecting %s attempt #%u"),
+        candidate.toString().c_str(),
+        WiFiEventData.wifi_connect_attempt));
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
@@ -468,6 +486,10 @@ void AttemptWiFiConnect() {
       WiFiEventData.wifiConnectAttemptNeeded = false;
       WiFiEventData.wifiConnectInProgress = true;
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
+
+#if FEATURE_USE_IPV6
+      WiFi.enableIPv6(true);
+#endif
 
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
            && candidate.allowQuickConnect()) {
@@ -507,7 +529,11 @@ void AttemptWiFiConnect() {
 // Set Wifi config
 // ********************************************************************************
 bool prepareWiFi() {
-  if (!WiFi_AP_Candidates.hasKnownCredentials()) {
+  #if defined(ESP32)
+  registerWiFiEventHandler();
+  #endif
+
+  if (!WiFi_AP_Candidates.hasCandidateCredentials()) {
     if (!WiFiEventData.warnedNoValidWiFiSettings) {
       addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
       WiFiEventData.warnedNoValidWiFiSettings = true;
@@ -640,6 +666,10 @@ void initWiFi()
 //  WiFi.~ESP8266WiFiClass();
 //  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
+#ifdef ESP32
+  removeWiFiEventHandler();
+#endif
+
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   // The WiFi.disconnect() ensures that the WiFi is working correctly. If this is not done before receiving WiFi connections,
@@ -753,16 +783,12 @@ void SetWiFiTXpower(float dBm, float rssi) {
       static int last_log = -1;
       if (TX_pwr_int != last_log) {
         last_log = TX_pwr_int;
-        String log = F("WiFi : Set TX power to ");
-        log += toString(dBm, 0);
-        log += F("dBm");
-        log += F(" sensitivity: ");
-        log += toString(threshold, 0);
-        log += F("dBm");
+        String log = strformat(
+          F("WiFi : Set TX power to %ddBm sensitivity: %ddBm"),
+          static_cast<int>(dBm),
+          static_cast<int>(threshold));
         if (rssi < 0) {
-          log += F(" RSSI: ");
-          log += toString(rssi, 0);
-          log += F("dBm");
+          log += strformat(F(" RSSI: %ddBm"), static_cast<int>(rssi));
         }
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
@@ -787,14 +813,34 @@ float GetRSSIthreshold(float& maxTXpwr) {
       threshold = WIFI_SENSITIVITY_54g;
       if (maxTXpwr > MAX_TX_PWR_DBM_54g) maxTXpwr = MAX_TX_PWR_DBM_54g;
       break;
+#ifdef ESP8266
     case WiFiConnectionProtocol::WiFi_Protocol_11n:
+#else
+    case WiFiConnectionProtocol::WiFi_Protocol_HT20:
+    case WiFiConnectionProtocol::WiFi_Protocol_HT40:
+    case WiFiConnectionProtocol::WiFi_Protocol_HE20:
+#endif
+
       threshold = WIFI_SENSITIVITY_n;
       if (maxTXpwr > MAX_TX_PWR_DBM_n) maxTXpwr = MAX_TX_PWR_DBM_n;
       break;
+#ifdef ESP32
+    case WiFiConnectionProtocol::WiFi_Protocol_LR:
+#endif
     case WiFiConnectionProtocol::Unknown:
       break;
   }
   return threshold;
+}
+
+int GetRSSI_quality() {
+  long rssi = WiFi.RSSI();
+
+  if (-50 < rssi) { return 10; }
+
+  if (rssi <= -98) { return 0;  }
+  rssi = rssi + 97; // Range 0..47 => 1..9
+  return (rssi / 5) + 1;
 }
 
 WiFiConnectionProtocol getConnectionProtocol() {
@@ -810,21 +856,29 @@ WiFiConnectionProtocol getConnectionProtocol() {
     }
     #endif
     #ifdef ESP32
-    uint8_t protocol;
-    esp_wifi_get_protocol(WIFI_IF_STA, &protocol);
-    if (protocol & WIFI_PROTOCOL_11N) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11n;
-    }
-    if (protocol & WIFI_PROTOCOL_11G) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11g;
-    }
-    if (protocol & WIFI_PROTOCOL_11B) {
-      return WiFiConnectionProtocol::WiFi_Protocol_11b;
+
+    wifi_phy_mode_t phymode;
+    esp_wifi_sta_get_negotiated_phymode(&phymode);
+    switch (phymode) {
+      case WIFI_PHY_MODE_11B: return WiFiConnectionProtocol::WiFi_Protocol_11b;
+      case WIFI_PHY_MODE_11G: return WiFiConnectionProtocol::WiFi_Protocol_11g;
+      case WIFI_PHY_MODE_HT20: return WiFiConnectionProtocol::WiFi_Protocol_HT20;
+      case WIFI_PHY_MODE_HT40: return WiFiConnectionProtocol::WiFi_Protocol_HT40;
+      case WIFI_PHY_MODE_HE20: return WiFiConnectionProtocol::WiFi_Protocol_HE20;
+      case WIFI_PHY_MODE_LR: return WiFiConnectionProtocol::WiFi_Protocol_LR;
     }
     #endif
   }
   return WiFiConnectionProtocol::Unknown;
 }
+
+#ifdef ESP32
+int64_t WiFi_get_TSF_time()
+{
+  return esp_wifi_get_tsf_time(WIFI_IF_STA);
+}
+#endif
+
 
 // ********************************************************************************
 // Disconnect from Wifi AP
@@ -944,7 +998,7 @@ bool WiFiScanAllowed() {
 
   if (WiFiEventData.lastDisconnectMoment.isSet() && WiFiEventData.lastDisconnectMoment.millisPassedSince() < WIFI_RECONNECT_WAIT) {
     if (!NetworkConnected()) {
-      return true;
+      return WiFiEventData.processedConnect;
     }
   }
   if (WiFiEventData.lastScanMoment.isSet()) {
@@ -953,7 +1007,7 @@ bool WiFiScanAllowed() {
       return false;
     }
   }
-  return true;
+  return WiFiEventData.processedConnect;
 }
 
 
@@ -977,10 +1031,7 @@ void WifiScan(bool async, uint8_t channel) {
     if (channel == 0) {
       addLog(LOG_LEVEL_INFO, F("WiFi : Start network scan all channels"));
     } else {
-      String log;
-      log = F("WiFi : Start network scan channel ");
-      log += channel;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("WiFi : Start network scan ch: %d "), channel));
     }
   }
   #endif
@@ -1048,6 +1099,7 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 
 #ifdef ESP32
+#if ESP_IDF_VERSION_MAJOR<5
   RTC.clearLastWiFi();
   if (WiFiConnected()) {
     # ifndef BUILD_NO_DEBUG
@@ -1058,6 +1110,7 @@ void WifiScan(bool async, uint8_t channel) {
     WifiDisconnect();
     WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
   }
+#endif
 #endif
 
 }
@@ -1165,7 +1218,13 @@ void setAPinternal(bool enable)
     IPAddress subnet(DEFAULT_AP_SUBNET);
 
     if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
-      addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
+      addLog(LOG_LEVEL_ERROR, strformat(
+        ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s"),
+        apIP.toString().c_str(), 
+        apIP.toString().c_str(), 
+        subnet.toString().c_str()
+      )
+      );
     }
 
     int channel = 1;
@@ -1176,21 +1235,18 @@ void setAPinternal(bool enable)
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       eventQueue.add(F("WiFi#APmodeEnabled"));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log(F("WIFI : AP Mode ssid will be "));
-        log += softAPSSID;
-        log += F(" with address ");
-        log += formatIP(WiFi.softAPIP());
-        log += F(" ch: ");
-        log += channel;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(
+          F("WIFI : AP Mode enabled. SSID: %s IP: %s ch: %d"),
+          softAPSSID.c_str(),
+          formatIP(WiFi.softAPIP()).c_str(),
+          channel));
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log(F("WIFI : Error while starting AP Mode with SSID: "));
-        log += softAPSSID;
-        log += F(" IP: ");
-        log += formatIP(apIP);
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+          F("WIFI : Error while starting AP Mode with SSID: %s IP: %s"),
+          softAPSSID.c_str(),
+          formatIP(apIP).c_str()));
       }
     }
     #ifdef ESP32
@@ -1240,14 +1296,13 @@ void setWifiMode(WiFiMode_t new_mode) {
   processing_wifi_mode = new_mode;
 
   if (cur_mode == WIFI_OFF) {
+    #if defined(ESP32)
+    // Needs to be set while WiFi is off
+    WiFi.hostname(NetworkCreateRFCCompliantHostname());
+    #endif
     WiFiEventData.markWiFiTurnOn();
   }
   if (new_mode != WIFI_OFF) {
-    #if defined(ESP32)
-    // Needs to be set before calling WiFi.mode() on ESP32
-    WiFi.hostname(NetworkCreateRFCCompliantHostname());
-    #endif
-
     #ifdef ESP8266
     // See: https://github.com/esp8266/Arduino/issues/6172#issuecomment-500457407
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
@@ -1278,8 +1333,13 @@ void setWifiMode(WiFiMode_t new_mode) {
 
   if (new_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
+    #if defined(ESP32)
+    // Needs to be set while WiFi is off
+    WiFi.hostname(NetworkCreateRFCCompliantHostname());
+    #endif
     delay(100);
     #if defined(ESP32)
+    esp_wifi_set_ps(WIFI_PS_NONE); 
 //    esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
     #endif
     #ifdef ESP8266
@@ -1446,6 +1506,9 @@ void setConnectionSpeed() {
   if (!Settings.ForceWiFi_bg_mode() || (WiFiEventData.connectionFailures > 10)) {
     // Set to use BGN
     protocol |= WIFI_PROTOCOL_11N;
+    #ifdef ESP32C6
+    protocol |= WIFI_PROTOCOL_11AX;
+    #endif
   }
 
   const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
@@ -1453,9 +1516,18 @@ void setConnectionSpeed() {
     // Check to see if the access point is set to "N-only"
     if ((protocol & WIFI_PROTOCOL_11N) == 0) {
       if (!candidate.phy_11b && !candidate.phy_11g && candidate.phy_11n) {
-        // Set to use BGN
-        protocol |= WIFI_PROTOCOL_11N;
-        addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+        if (candidate.phy_11n) {
+          // Set to use BGN
+          protocol |= WIFI_PROTOCOL_11N;
+          addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+        }
+#ifdef ESP32C6
+        if (candidate.phy_11ax) {
+          // Set to use WiFi6
+          protocol |= WIFI_PROTOCOL_11AX;
+          addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11ax"));
+        }
+#endif
       }
     }
   }
@@ -1488,11 +1560,12 @@ void setupStaticIPconfig() {
   WiFi.config(ip, gw, subnet, dns);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("IP   : Static IP : ");
-    log += concat(F(" GW: "), formatIP(gw));
-    log += concat(F(" SN: "), formatIP(subnet));
-    log += concat(F(" DNS: "), getValue(LabelType::DNS));
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("IP   : Static IP : %s GW: %s SN: %s DNS: %s"),
+      formatIP(ip).c_str(),
+      formatIP(gw).c_str(),
+      formatIP(subnet).c_str(),
+      getValue(LabelType::DNS).c_str()));
   }
 }
 
@@ -1535,11 +1608,10 @@ void logConnectionStatus() {
   #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("WIFI : Arduino wifi status: ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    log += F(" ESPeasy internal wifi status: ");
-    log += WiFiEventData.ESPeasyWifiStatusToString();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("WIFI : Arduino wifi status: %s ESPeasy internal wifi status: %s"),
+      ArduinoWifiStatusToString(WiFi.status()).c_str(),
+      WiFiEventData.ESPeasyWifiStatusToString().c_str()));
   }
 /*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

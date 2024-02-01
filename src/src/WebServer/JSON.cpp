@@ -17,7 +17,6 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
@@ -122,21 +121,24 @@ void handle_json()
   #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
   #endif
-  {
-    const String view = webArg(F("view"));
+  #if FEATURE_PLUGIN_STATS
+  bool showPluginStats     = isFormItemChecked(F("showpluginstats"));
+  #endif
 
-    if (equals(view, F("sensorupdate"))) {
-      showSystem = false;
-      showWifi   = false;
-      #if FEATURE_ETHERNET
-      showEthernet = false;
-      #endif // if FEATURE_ETHERNET
-      showDataAcquisition = false;
-      showTaskDetails     = false;
-      #if FEATURE_ESPEASY_P2P
-      showNodes           = false;
-      #endif
-    }
+  if (equals(webArg(F("view")), F("sensorupdate"))) {
+    showSystem = false;
+    showWifi   = false;
+    #if FEATURE_ETHERNET
+    showEthernet = false;
+    #endif // if FEATURE_ETHERNET
+    showDataAcquisition = false;
+    showTaskDetails     = false;
+    #if FEATURE_ESPEASY_P2P
+    showNodes           = false;
+    #endif
+    #if FEATURE_PLUGIN_STATS
+    showPluginStats     = false;
+    #endif
   }
 
   TXBuffer.startJsonStream();
@@ -239,6 +241,10 @@ void handle_json()
         #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
+#if FEATURE_USE_IPV6
+        LabelType::IP6_LOCAL,
+        LabelType::IP6_GLOBAL,
+#endif
         LabelType::IP_SUBNET,
         LabelType::GATEWAY,
         LabelType::STA_MAC,
@@ -338,7 +344,21 @@ void handle_json()
           if (rssi < 0) {
             stream_next_json_object_value(F("rssi"), rssi);
           }
+          if (it->second.build >= 20107) {
+            stream_next_json_object_value(F("load"), toString(it->second.getLoad(), 2));
+            if (it->second.webgui_portnumber != 80) {
+              stream_next_json_object_value(F("webport"), it->second.webgui_portnumber);
+            }
+          }
           stream_next_json_object_value(F("ip"), formatIP(it->second.IP()));
+#if FEATURE_USE_IPV6
+          if (it->second.hasIPv6_mac_based_link_local) {
+            stream_next_json_object_value(F("ipv6local"), formatIP(it->second.IPv6_link_local(true), true));
+          }
+          if (it->second.hasIPv6_mac_based_link_global) {
+            stream_next_json_object_value(F("ipv6global"), formatIP(it->second.IPv6_global()));
+          }
+#endif
           stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
@@ -424,6 +444,18 @@ void handle_json()
         addHtml(F("],\n"));
       }
 
+#if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
+      if (showPluginStats && Device[DeviceIndex].PluginStats) {
+        PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(TaskIndex);
+        if (taskData != nullptr && taskData->nrSamplesPresent() > 0) {
+          addHtml(F("\"PluginStats\":\n"));
+          taskData->plot_ChartJS(true);
+          stream_comma_newline();
+        }
+      }
+#endif
+
+
       if (showSpecificTask) {
         stream_next_json_object_value(F("TTL"), ttl_json * 1000);
       }
@@ -452,7 +484,7 @@ void handle_json()
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.getPluginID_for_task(TaskIndex).value);
         for(int i = 0; i < 3; i++) {
           if (Settings.TaskDevicePin[i][TaskIndex] >= 0) {
-            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , String(Settings.TaskDevicePin[i][TaskIndex]));
+            stream_next_json_object_value(concat(F("TaskDeviceGPIO"), i + 1) , static_cast<int>(Settings.TaskDevicePin[i][TaskIndex]));
           }
         }
 
@@ -622,24 +654,25 @@ void handle_buildinfo() {
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value) {
-  addHtml('\"');
-  addHtml(object);
-  addHtml('"', ':');
-  addHtml(to_json_value(value));
+  stream_to_json_object_value(String(object), value);
 }
 
 void stream_to_json_object_value(const String& object, const String& value) {
-  addHtml('\"');
-  addHtml(object);
-  addHtml('"', ':');
-  addHtml(to_json_value(value));
+  addHtml(strformat(
+    F("\"%s\":%s"),
+    object.c_str(),
+    to_json_value(value).c_str()));
 }
 
 void stream_to_json_object_value(const __FlashStringHelper *  object, int value) {
-  addHtml('\"');
-  addHtml(object);
-  addHtml('"', ':');
-  addHtmlInt(value);
+  stream_to_json_object_value(String(object), value);
+}
+
+void stream_to_json_object_value(const String& object, int value) {
+  addHtml(strformat(
+    F("\"%s\":%d"),
+    object.c_str(),
+    value));
 }
 
 String jsonBool(bool value) {
@@ -664,6 +697,11 @@ void stream_next_json_object_value(const String& object, const String& value) {
 }
 
 void stream_next_json_object_value(const __FlashStringHelper * object, int value) {
+  stream_to_json_object_value(object, value);
+  stream_comma_newline();
+}
+
+void stream_next_json_object_value(const String& object, int value) {
   stream_to_json_object_value(object, value);
   stream_comma_newline();
 }

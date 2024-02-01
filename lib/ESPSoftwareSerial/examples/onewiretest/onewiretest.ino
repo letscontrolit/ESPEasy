@@ -13,6 +13,28 @@
 EspSoftwareSerial::UART swSer1;
 EspSoftwareSerial::UART swSer2;
 
+void checkSwSerial(EspSoftwareSerial::UART* ss) {
+	byte ch;
+	while (!Serial.available());
+	ss->enableTx(true);
+	while (Serial.available()) {
+		ch = Serial.read();
+		ss->write(ch);
+	}
+	ss->enableTx(false);
+	// wait 1 second for the reply from EspSoftwareSerial if any
+	delay(1000);
+	if (ss->available()) {
+		Serial.print(PSTR("\nResult:"));
+		while (ss->available()) {
+			ch = (byte)ss->read();
+			Serial.print(ch < 0x10 ? PSTR(" 0") : PSTR(" "));
+			Serial.print(ch, HEX);
+		}
+		Serial.println();
+	}
+}
+
 void setup() {
 	delay(2000);
 	Serial.begin(115200);
@@ -34,26 +56,4 @@ void loop() {
 	Serial.print(PSTR("Enter something to send using swSer2."));
 	checkSwSerial(&swSer2);
 
-}
-
-void checkSwSerial(EspSoftwareSerial::UART* ss) {
-	byte ch;
-	while (!Serial.available());
-	ss->enableTx(true);
-	while (Serial.available()) {
-		ch = Serial.read();
-		ss->write(ch);
-	}
-	ss->enableTx(false);
-	// wait 1 second for the reply from EspSoftwareSerial if any
-	delay(1000);
-	if (ss->available()) {
-		Serial.print(PSTR("\nResult:"));
-		while (ss->available()) {
-			ch = (byte)ss->read();
-			Serial.print(ch < 0x10 ? PSTR(" 0") : PSTR(" "));
-			Serial.print(ch, HEX);
-		}
-		Serial.println();
-	}
 }

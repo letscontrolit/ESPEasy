@@ -91,11 +91,9 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P032_data_struct(PCONFIG(0)));
-      P032_data_struct *P032_data =
-        static_cast<P032_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P032_data);
+      success = initPluginTaskData(
+        event->TaskIndex, 
+        new (std::nothrow) P032_data_struct(PCONFIG(0)));
       break;
     }
 
@@ -109,15 +107,15 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
           P032_data->read_prom();
           P032_data->readout();
 
-          UserVar[event->BaseVarIndex] = P032_data->ms5611_temperature / 100;
+          UserVar.setFloat(event->TaskIndex, 0, P032_data->ms5611_temperature / 100);
 
           const int elev = PCONFIG(1);
 
           if (elev != 0)
           {
-            UserVar[event->BaseVarIndex + 1] = pressureElevation(P032_data->ms5611_pressure, elev);
+            UserVar.setFloat(event->TaskIndex, 1, pressureElevation(P032_data->ms5611_pressure, elev));
           } else {
-            UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
+            UserVar.setFloat(event->TaskIndex, 1, P032_data->ms5611_pressure);
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

@@ -157,8 +157,12 @@ bool PluginStats::matchedCommand(const String& command, const __FlashStringHelpe
   if (command.startsWith(cmd_match_str)) {
     nrSamples = 0;
 
-    if (validIntFromString(command.substring(cmd_match_str.length()), nrSamples)) {
-      return nrSamples;
+    // FIXME TD-er: ESP_IDF 5.x needs strict matching thus int32_t != int
+    int32_t tmp{};
+
+    if (validIntFromString(command.substring(cmd_match_str.length()), tmp)) {
+      nrSamples = tmp;
+      return true;
     }
   }
   return false;
@@ -241,7 +245,7 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
       } else if (matchedCommand(command, F("sample"), nrSamples)) {
         success = nrSamples != 0;
 
-        if (nrSamples == INT_MIN) { 
+        if (nrSamples == INT_MIN) {
           // [taskname#valuename.sample] Number of samples in memory.
           value   = _samples.size();
           success = true;
@@ -288,11 +292,9 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 {
   if (getNrSamples() > 0) {
-    addRowLabel(getLabel() +  F(" Average"));
+    addRowLabel(concat(getLabel(),  F(" Average")));
     addHtmlFloat(getSampleAvg(), _nrDecimals);
-    addHtml(' ', '(');
-    addHtmlInt(getNrSamples());
-    addHtml(F(" samples)"));
+    addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
   return false;
@@ -303,11 +305,9 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
   const float stdDev = getSampleStdDev();
 
   if (usableValue(stdDev) && (getNrSamples() > 1)) {
-    addRowLabel(getLabel() +  F(" std. dev"));
+    addRowLabel(concat(getLabel(),  F(" std. dev")));
     addHtmlFloat(stdDev, _nrDecimals);
-    addHtml(' ', '(');
-    addHtmlInt(getNrSamples());
-    addHtml(F(" samples)"));
+    addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
   return false;
@@ -316,13 +316,13 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include_peak_to_peak) const
 {
   if (hasPeaks() && (getNrSamples() > 1)) {
-    addRowLabel(getLabel() +  F(" Peak Low/High"));
+    addRowLabel(concat(getLabel(),  F(" Peak Low/High")));
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
     addHtmlFloat(getPeakHigh(), _nrDecimals);
 
     if (include_peak_to_peak) {
-      addRowLabel(getLabel() +  F(" Peak-to-peak"));
+      addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));
       addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
     }
     return true;
@@ -336,7 +336,7 @@ void PluginStats::webformLoad_show_val(
   ESPEASY_RULES_FLOAT_TYPE value,
   const String           & unit) const
 {
-  addRowLabel(getLabel() + label);
+  addRowLabel(concat(getLabel(), label));
   addHtmlFloat(value, _nrDecimals);
 
   if (!unit.isEmpty()) {
@@ -347,7 +347,7 @@ void PluginStats::webformLoad_show_val(
 # if FEATURE_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
 {
-  add_ChartJS_dataset_header(getLabel(), _ChartJS_dataset_config.color);
+  add_ChartJS_dataset_header(_ChartJS_dataset_config);
 
   PluginStatsBuffer_t::index_t i = 0;
 
@@ -363,7 +363,7 @@ void PluginStats::plot_ChartJS_dataset() const
       addHtml(F("null"));
     }
   }
-  add_ChartJS_dataset_footer(_ChartJS_dataset_config.hidden);
+  add_ChartJS_dataset_footer();
 }
 
 # endif // if FEATURE_CHART_JS
@@ -395,6 +395,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
     _plugin_stats[taskVarIndex] = nullptr;
 
     if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       _plugin_stats[taskVarIndex] = new (std::nothrow) PluginStats(
         ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
         ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
@@ -403,7 +407,8 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
         # if FEATURE_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
         # endif // if FEATURE_CHART_JS
       }
     }
@@ -446,6 +451,18 @@ size_t PluginStats_array::nrSamplesPresent() const
     }
   }
   return 0;
+}
+
+size_t PluginStats_array::nrPluginStats() const
+{
+  size_t res{};
+
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      ++res;
+    }
+  }
+  return res;
 }
 
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
@@ -528,32 +545,153 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 }
 
 # if FEATURE_CHART_JS
-void PluginStats_array::plot_ChartJS() const
+void PluginStats_array::plot_ChartJS(bool onlyJSON) const
 {
   const size_t nrSamples = nrSamplesPresent();
 
   if (nrSamples == 0) { return; }
 
   // Chart Header
-  add_ChartJS_chart_header(F("line"), F("TaskStatsChart"), F(""), 500, 500);
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x") });
+
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        ChartJS_options_scale scaleOption(
+          _plugin_stats[i]->_ChartJS_dataset_config.displayConfig,
+          _plugin_stats[i]->getLabel());
+        scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
+        scales.add(scaleOption);
+
+        _plugin_stats[i]->_ChartJS_dataset_config.axisID = scaleOption.axisID;
+      }
+    }
+
+    scales.update_Yaxis_TickCount();
+
+    add_ChartJS_chart_header(
+      F("line"),
+      F("TaskStatsChart"),
+      {},
+      500 + (70 * (scales.nr_Y_scales() - 1)),
+      500,
+      scales.toString(),
+      nrSamples,
+      onlyJSON);
+  }
+
 
   // Add labels
+  addHtml(F("\"labels\":["));
+
   for (size_t i = 0; i < nrSamples; ++i) {
     if (i != 0) {
       addHtml(',');
     }
     addHtmlInt(i);
   }
-  addHtml(F("],datasets: ["));
+  addHtml(F("],\n\"datasets\":["));
 
 
   // Data sets
+  bool first = true;
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
+      if (!first) {
+        addHtml(',');
+      }
+      first = false;
       _plugin_stats[i]->plot_ChartJS_dataset();
     }
   }
-  add_ChartJS_chart_footer();
+  add_ChartJS_chart_footer(onlyJSON);
+}
+
+void PluginStats_array::plot_ChartJS_scatter(
+  taskVarIndex_t                values_X_axis_index,
+  taskVarIndex_t                values_Y_axis_index,
+  const __FlashStringHelper    *id,
+  const ChartJS_title         & chartTitle,
+  const ChartJS_dataset_config& datasetConfig,
+  int                           width,
+  int                           height,
+  bool                          showAverage,
+  const String                & options,
+  bool                          onlyJSON) const
+{
+  const PluginStats *stats_X = getPluginStats(values_X_axis_index);
+  const PluginStats *stats_Y = getPluginStats(values_Y_axis_index);
+
+  if ((stats_X == nullptr) || (stats_Y == nullptr)) {
+    return;
+  }
+
+  if ((stats_X->getNrSamples() < 2) || (stats_Y->getNrSamples() < 2)) {
+    return;
+  }
+
+  String axisOptions;
+
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), stats_X->getLabel() });
+    scales.add({ F("y"), stats_Y->getLabel() });
+    axisOptions = scales.toString();
+  }
+
+
+  const size_t nrSamples = stats_X->getNrSamples();
+
+  add_ChartJS_chart_header(
+    F("scatter"),
+    id,
+    chartTitle,
+    width,
+    height,
+    axisOptions,
+    nrSamples,
+    onlyJSON);
+
+  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
+  addHtml(F("\"labels\":["));
+
+  for (size_t i = 0; i < nrSamples; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(i);
+  }
+  addHtml(F("],\n\"datasets\":["));
+
+  // Long/Lat Coordinates
+  add_ChartJS_dataset_header(datasetConfig);
+
+  // Add scatter data
+  for (size_t i = 0; i < nrSamples; ++i) {
+    const float valX = (*stats_X)[i];
+    const float valY = (*stats_Y)[i];
+    add_ChartJS_scatter_data_point(valX, valY, 6);
+  }
+
+  add_ChartJS_dataset_footer(F("\"showLine\":true"));
+
+  if (showAverage) {
+    // Add single point showing the average
+    addHtml(',');
+    add_ChartJS_dataset_header(
+    {
+      F("Average"),
+      F("#0F4C5C") });
+
+    {
+      const float valX = stats_X->getSampleAvg();
+      const float valY = stats_Y->getSampleAvg();
+      add_ChartJS_scatter_data_point(valX, valY, 6);
+    }
+    add_ChartJS_dataset_footer(F("\"pointRadius\":6,\"pointHoverRadius\":10"));
+  }
+  add_ChartJS_chart_footer(onlyJSON);
 }
 
 # endif // if FEATURE_CHART_JS

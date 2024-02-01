@@ -29,10 +29,10 @@ P133_data_struct::~P133_data_struct() {
 bool P133_data_struct::plugin_read(struct EventStruct *event)           {
   if (initialised) {
     // Last obtained values
-    UserVar[event->BaseVarIndex]     = uvValue;
-    UserVar[event->BaseVarIndex + 1] = uviValue;
-    UserVar[event->BaseVarIndex + 2] = alsValue;
-    UserVar[event->BaseVarIndex + 3] = luxValue;
+    UserVar.setFloat(event->TaskIndex, 0, uvValue);
+    UserVar.setFloat(event->TaskIndex, 1, uviValue);
+    UserVar.setFloat(event->TaskIndex, 2, alsValue);
+    UserVar.setFloat(event->TaskIndex, 3, luxValue);
     sensorRead                       = false;
     return true;
   }

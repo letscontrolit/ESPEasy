@@ -5,6 +5,7 @@
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/SystemVariables.h"
 
 
 #define SECS_PER_MIN  (60UL)
@@ -194,9 +195,27 @@ String timeLong2String(unsigned long lngTime)
   if (x == 0x0f) {
     x = 0;
   }
-  String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
+  const String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
+
   time  = weekDays.substring(x * 3, x * 3 + 3);
   time += ',';
+
+  #ifndef PLUGIN_BUILD_MINIMAL_OTA
+
+  if (bitRead(lngTime, 28) || bitRead(lngTime, 29)) { // Sunrise or Sunset handling
+    time += SystemVariables::toString(bitRead(lngTime, 29) ? SystemVariables::Enum::SUNRISE : SystemVariables::Enum::SUNSET);
+
+    if ((lngTime & 0xffff) > 0) {
+      time += bitRead(lngTime, 30) ? '-' : '+'; // Sign
+      time += lngTime & 0xffff;
+      const String  hms = F("smh");
+      const uint8_t idx = (lngTime >> 26) & 0x3; // 0/1/2 = s/m/h
+      time += hms.substring(idx, idx + 1);
+    }
+    time += '%';
+    return time;
+  }
+  #endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
 
   x = (lngTime >> 12) & 0xf;
 
@@ -254,8 +273,9 @@ String timeLong2String(unsigned long lngTime)
 
 unsigned long string2TimeLong(const String& str)
 {
-  // format 0000WWWWAAAABBBBCCCCDDDD
+  // format 0NRSHM000000WWWWAAAABBBBCCCCDDDD
   // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
+  // N = Negative offset, R = sunRise, S = sunSet, H = offset hours, M = offset minutes -> AAAA..DDDD = offset (default: seconds, binary stored, not bcd)
 
   char command[20];
   int  w, x, y;
@@ -271,8 +291,9 @@ unsigned long string2TimeLong(const String& str)
 
   if (GetArgv(command, TmpStr1, 1))
   {
-    String day      = TmpStr1;
-    String weekDays = F("allsunmontuewedthufrisatwrkwkd");
+    String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd"); // Deduplicated string takes a little less memory...
+    weekDays.toLowerCase();
+
     y = weekDays.indexOf(TmpStr1) / 3;
 
     if (y == 0) {
@@ -284,6 +305,41 @@ unsigned long string2TimeLong(const String& str)
   if (GetArgv(command, TmpStr1, 2))
   {
     y = 0;
+
+    #ifndef PLUGIN_BUILD_MINIMAL_OTA
+
+    uint8_t off = TmpStr1.startsWith(SystemVariables::toString(SystemVariables::Enum::SUNRISE)) ? 8u : 0u;
+
+    if (off || TmpStr1.startsWith(SystemVariables::toString(SystemVariables::Enum::SUNSET))) {
+      if (off == 0) { off = 7; }
+      int lperc = TmpStr1.indexOf('%', off);
+
+      if (lperc >= off) {           // Valid variable used, having a second % sign?
+        bitSet(lngTime, 21u + off); // bit 28 = sunset, bit 29 = sunrise
+        int delta            = ESPEasy_time::getSecOffset(TmpStr1.substring(off, lperc + 1));
+        const bool isSeconds = 's' == TmpStr1[lperc - 1];
+
+        if (delta < 0) {
+          bitSet(lngTime, 30); // bit 30 = negative offset
+          delta *= -1;
+        }
+
+        if (delta > 86400) {                       // > 24 hours = invalid, reset
+          delta = 0;
+          bitClear(lngTime, 30);
+        } else if (isSeconds && (delta < 32768)) { // Seconds, explicitly, max. delta we can store
+        } else if (delta >= 3600) {                // Hours
+          delta /= 3600;
+          bitSet(lngTime, 27);                     // Bit 27: Stored as Hours
+        } else if (delta >= 60) {                  // Minutes
+          delta /= 60;
+          bitSet(lngTime, 26);                     // Bit 26: Stored as Minutes
+        }                                          // else: Stored as seconds
+        lngTime += delta;                          // Store offset
+        return lngTime;
+      }
+    }
+    #endif // ifndef PLUGIN_BUILD_MINIMAL_OTA
 
     for (x = TmpStr1.length() - 1; x >= 0; x--)
     {

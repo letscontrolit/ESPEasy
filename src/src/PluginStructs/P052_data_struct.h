@@ -10,6 +10,7 @@
 
 # define P052_QUERY1_CONFIG_POS  0
 # define P052_SENSOR_TYPE_INDEX  (P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1))
+# define P052_ABC_PERIOD         (P052_SENSOR_TYPE_INDEX + 1)
 # define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX)))
 # define P052_NR_OUTPUT_OPTIONS  8
 
@@ -55,22 +56,33 @@
 # define P052_IR_ERRORSTATUS  0
 # define P052_IR_ALARMSTATUS  1
 # define P052_IR_OUTPUTSTATUS 2
-# define P052_IR_SPACE_CO2    3            // also called CO2 value filtered
-# define P052_IR_TEMPERATURE  4            // Chip temperature in 1/100th degree C
-# define P052_IR_SPACE_HUMIDITY    5
-# define P052_IR_MEASUREMENT_COUNT  6      // Range 0 .. 255, to see if a measurement has been done.
-# define P052_IR_MEASUREMENT_CYCLE_TIME  7 // Time in current cycle (in 2 seconds steps)
-# define P052_IR_CO2_UNFILTERED 8
+# define P052_IR4_MEASURED_FILTERED_CO2    0x03
+# define P052_IR5_TEMPERATURE              0x04 // Chip temperature in 1/100th degree C
+# define P052_IR6_SPACE_HUMIDITY           0x05
+# define P052_IR7_MEASUREMENT_COUNT        0x06 // Range 0 .. 255, to see if a measurement has been done.
+# define P052_IR8_MEASUREMENT_CYCLE_TIME   0x07 // Time in current cycle (in 2 seconds steps)
+# define P052_IR9_MEASURED_UNFILTERED_CO2  0x08
+# define P052_IR11_MEASURED_CONCENTRATION_UNFILTERED  0x0A
 
+# define P052_IR24_FW_TYPE                  0x17
+# define P052_IR29_FW_REV                   0x1C
+# define P052_IR30_SENSOR_ID_HIGH           0x1D
+# define P052_IR31_SENSOR_ID_LOW            0x1E
 
-# define P052_HR_ACK_REG 0
-# define P052_HR_SPACE_CO2 3
-# define P052_HR_ABC_PERIOD 31
+// HR (Holding Register)
+# define P052_HR1_CALIBRATION_STATUS    0
+# define P052_HR2_CALIBRATION_COMMAND   0x01
+# define P052_HR5_ABC_TIME              0x04
+# define P052_HR11_MEASUREMENT_MODE     0x0A
+# define P052_HR12_MEASUREMENT_PERIOD   0x0B // Measurement period in seconds
+# define P052_HR13_NR_OF_SAMPLES        0x0C
+# define P052_HR14_ABC_PERIOD           0x0D
+# define P052_HR19_METER_CONTROL        0x12
 
 // #define P052_MODBUS_SLAVE_ADDRESS 0x68
 # define P052_MODBUS_SLAVE_ADDRESS 0xFE // Modbus "any address"
 
-# define P052_MODBUS_TIMEOUT  180       // 100 msec communication timeout.
+# define P052_MODBUS_TIMEOUT  180       // 180 msec communication timeout.
 
 # include <ESPeasySerial.h>
 
@@ -89,13 +101,27 @@ struct P052_data_struct : public PluginTaskData_base {
             const int16_t           serial_rx,
             const int16_t           serial_tx);
 
-  bool                              isInitialized() const {
-      return modbus.isInitialized();
+  bool isInitialized() const {
+    return modbus.isInitialized();
   }
 
   static const __FlashStringHelper* Plugin_052_valuename(uint8_t value_nr,
                                                          bool    displayString);
 
+  void                              setABCperiod(int hours);
+
+  uint32_t                          getSensorID();
+
+  // Return true, when read was successful
+  bool                              readInputRegister(short addr,
+                                                      int & value);
+
+  // Return true, when read was successful
+  bool readHoldingRegister(short addr,
+                           int & value);
+
+  bool plugin_write(struct EventStruct *event, const String& string);
+  
   ModbusRTU_struct modbus;
 };
 

@@ -435,12 +435,13 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
         const String pooltempString(parseTemplate(deviceTemperatureTemplateString));
 
-        if (Calculate(pooltempString, value) != CalculateReturnCode::OK) {
-          addFormNote(F("It seems I can't parse your formula. Fixed value will be used!"));
+        if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
+        {
+          addFormNote(F("Formula parse error. Using fixed value!"));
           value = P103_FIXED_TEMP_VALUE;
         }
 
-        addFormNote(concat(F("Actual value: "), toString(value, 2)));
+        addFormNote(strformat(F("Actual value: %.2f"), value));
       }
 
       if (AtlasEZO_Sensors_e::HUM == board_type) {
@@ -507,9 +508,13 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         cmd             += F("high,");
         cmd             += P103_CALIBRATION_HIGH;
         triggerCalibrate = true;
-      } else if (isFormItemChecked(F("en_cal_atm"))) {
+      }
+
+      if (isFormItemChecked(F("en_cal_atm"))) {
         triggerCalibrate = true;
-      } else if (isFormItemChecked(F("en_cal_0"))) {
+      }
+
+      if (isFormItemChecked(F("en_cal_0"))) {
         cmd             += '0';
         triggerCalibrate = true;
       }
@@ -605,25 +610,27 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // ok, now we can read the sensor data
-      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
-      UserVar[event->BaseVarIndex]     = -1;
-      UserVar[event->BaseVarIndex + 2] = -1;
-      UserVar[event->BaseVarIndex + 3] = -1;
+      char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+      UserVar.setFloat(event->TaskIndex, 0, -1);
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata)) {
         String sensorString(boarddata);
         addLog(LOG_LEVEL_INFO, concat(F("P103: READ result: "), sensorString));
 
-        string2float(parseString(sensorString, 1), UserVar[event->BaseVarIndex]);
+        float tmpFloat{};
+        string2float(parseString(sensorString, 1), tmpFloat);
+        UserVar.setFloat(event->TaskIndex, 0, tmpFloat);
 
         if (board_type == AtlasEZO_Sensors_e::HUM) { // TODO Fix reading Dew point without Temperature enabled
-          string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
+          string2float(parseString(sensorString, 2), tmpFloat);
+          UserVar.setFloat(event->TaskIndex, 2, tmpFloat);
           String dewVal = parseString(sensorString, 3);
 
           if (equals(dewVal, F("dew"))) { // Handle EZO-HUM firmware bug including 'Dew,' in the result string
             dewVal = parseString(sensorString, 4);
           }
-          string2float(dewVal, UserVar[event->BaseVarIndex + 3]);
+          string2float(dewVal, tmpFloat);
+          UserVar.setFloat(event->TaskIndex, 3, tmpFloat);
         }
 
         # if P103_USE_FLOW
@@ -632,15 +639,20 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           string2float(parseString(sensorString, 2), UserVar[event->BaseVarIndex + 2]);
         }
         # endif // if P103_USE_FLOW
+        float sensor_f{};
+        string2float(sensorString, sensor_f);
+        UserVar.setFloat(event->TaskIndex, 0, sensor_f);
       }
 
       // we read the voltagedata
       memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
-      UserVar[event->BaseVarIndex + 1] = -1;
+      UserVar.setFloat(event->TaskIndex, 1, -1);
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, F("Status"), boarddata)) {
         String voltage(boarddata);
-        string2float(parseString(voltage, 2), UserVar[event->BaseVarIndex + 1]);
+        float  volt_f{};
+        string2float(voltage.substring(voltage.lastIndexOf(',') + 1), volt_f);
+        UserVar.setFloat(event->TaskIndex, 1, volt_f);
       }
 
       success = true;

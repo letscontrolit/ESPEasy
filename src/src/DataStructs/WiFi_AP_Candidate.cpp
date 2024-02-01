@@ -58,6 +58,12 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
     phy_11b = it->phy_11b;
     phy_11g = it->phy_11g;
     phy_11n = it->phy_11n;
+    phy_lr  = it->phy_lr;
+#if ESP_IDF_VERSION_MAJOR >= 5
+    phy_11ax = it->phy_11ax;
+    ftm_initiator = it->ftm_initiator;
+    ftm_responder = it->ftm_responder;
+#endif
     wps = it->wps;
     // FIXME TD-er: Maybe also add other info like 2nd channel, ftm and phy_lr support?
   }
@@ -151,26 +157,36 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   if (isHidden) {
     result += F("#Hidden#");
   }
-  result += separator;
-  result += bssid.toString();
-  result += separator;
-  result += F("Ch:");
-  result += channel;
+  result += strformat(
+    F("%s%s%sCh:%u"),
+    separator.c_str(),
+    bssid.toString().c_str(),
+    separator.c_str(),
+    channel);
 
   if (rssi == -1) {
     result += F(" (RTC) ");
   } else {
-    result += F(" (");
-    result += rssi;
-    result += F("dBm) ");
+    result += strformat(F(" (%ddBm)"), rssi);
   }
 
   result += encryption_type();
   if (phy_known()) {
-    result += ' ';
-    if (phy_11b) result += 'b';
-    if (phy_11g) result += 'g';
-    if (phy_11n) result += 'n';
+    String phy_str;
+    
+    if (phy_11b) phy_str += 'b';
+    if (phy_11g) phy_str += 'g';
+    if (phy_11n) phy_str += 'n';
+#ifdef ESP32
+    if (phy_11ax) phy_str += F("/ax");
+    if (phy_lr) phy_str += F("/lr");
+    if (ftm_initiator) phy_str += F("/FTM_i");
+    if (ftm_responder) phy_str += F("/FTM_r");
+#endif
+
+    if (phy_str.length()) {
+      result += strformat(F(" (%s)"), phy_str.c_str());
+    }
   }
   return result;
 }

@@ -207,7 +207,7 @@ void P103_addClearCalibration()
 
 int P103_addDOCalibration(uint8_t I2Cchoice)
 {
-  int nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
+  const int32_t nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
 
   addRowLabel("Calibrated Points");
   addHtmlInt(nb_calibration_points);
@@ -255,7 +255,7 @@ int P103_addCreateSinglePointCalibration(AtlasEZO_Sensors_e  board_type,
                                          uint8_t             nrDecimals,
                                          float               stepsize)
 {
-  int nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
+  const int32_t nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
 
   addRowLabel("Calibrated Points");
   addHtmlInt(nb_calibration_points);

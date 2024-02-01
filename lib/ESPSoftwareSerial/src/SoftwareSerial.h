@@ -22,11 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __SoftwareSerial_h
 #define __SoftwareSerial_h
 
-#ifndef USES_LATEST_SOFTWARE_SERIAL_LIBRARY
-#define USES_LATEST_SOFTWARE_SERIAL_LIBRARY 1
-#endif
-#if USES_LATEST_SOFTWARE_SERIAL_LIBRARY
-
 #include "circular_queue/circular_queue.h"
 #include <Stream.h>
 
@@ -323,10 +318,10 @@ private:
     static void rxBitISR(UARTBase* self);
     static void rxBitSyncISR(UARTBase* self);
 
-    static inline uint32_t IRAM_ATTR microsToTicks(uint32_t micros) __attribute__((always_inline)) {
+    static inline uint32_t IRAM_ATTR microsToTicks(uint32_t micros) ALWAYS_INLINE_ATTR {
         return micros << 1;
     }
-    static inline uint32_t ticksToMicros(uint32_t ticks) __attribute__((always_inline)) {
+    static inline uint32_t ticksToMicros(uint32_t ticks) ALWAYS_INLINE_ATTR {
         return ticks >> 1;
     }
 
@@ -437,6 +432,7 @@ using UART = BasicUART< GpioCapabilities >;
 using SoftwareSerial = EspSoftwareSerial::UART;
 using namespace EspSoftwareSerial;
 
+#if __GNUC__ < 12
 // The template member functions below must be in IRAM, but due to a bug GCC doesn't currently
 // honor the attribute. Instead, it is possible to do explicit specialization and adorn
 // these with the IRAM attribute:
@@ -447,8 +443,7 @@ extern template void delegate::detail::DelegateImpl<void*, void>::operator()() c
 extern template size_t circular_queue<uint32_t, EspSoftwareSerial::UARTBase*>::available() const;
 extern template bool circular_queue<uint32_t, EspSoftwareSerial::UARTBase*>::push(uint32_t&&);
 extern template bool circular_queue<uint32_t, EspSoftwareSerial::UARTBase*>::push(const uint32_t&);
-
-#endif
+#endif // __GNUC__ < 12
 
 #endif // __SoftwareSerial_h
 

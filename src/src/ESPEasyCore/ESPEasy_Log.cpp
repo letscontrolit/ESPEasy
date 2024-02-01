@@ -8,6 +8,7 @@
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
+#include "../Helpers/StringConverter.h"
 
 #include <FS.h>
 
@@ -175,17 +176,10 @@ void addLog(uint8_t logLevel, const __FlashStringHelper *str)
 {
   if (loglevelActiveFor(logLevel)) {
     String copy;
-    {
-      #ifdef USE_SECOND_HEAP
-      // Allow to store the logs in 2nd heap if present.
-      HeapSelectIram ephemeral;
-      #endif
-
-      if (!copy.reserve(strlen_P((PGM_P)str))) {
-        return;
-      }
-      copy = str;
+    if (!reserve_special(copy, strlen_P((PGM_P)str))) {
+      return;
     }
+    copy = str;
     addToLogMove(logLevel, std::move(copy));
   }
 }
@@ -199,8 +193,6 @@ void addLog(uint8_t logLevel, const char *line)
     #ifdef USE_SECOND_HEAP
     {
       // Allow to store the logs in 2nd heap if present.
-      HeapSelectIram ephemeral;
-
       if (mmu_is_iram(line)) {
         size_t length = 0;
         const char* cur_char = line;
@@ -212,7 +204,7 @@ void addLog(uint8_t logLevel, const char *line)
             if (copying) {
               done = true;
             } else {
-              if (!copy.reserve(length)) {
+              if (!reserve_special(copy, length)) {
                 return;
               }
               copying = true;
@@ -227,7 +219,7 @@ void addLog(uint8_t logLevel, const char *line)
           }
         }
       } else {
-        if (!copy.reserve(strlen_P((PGM_P)line))) {
+        if (!reserve_special(copy, strlen_P((PGM_P)line))) {
           return;
         }
         copy = line;
@@ -248,11 +240,18 @@ void addLog(uint8_t logLevel, String&& string)
   addToLogMove(logLevel, std::move(string));
 }
 
+
+#ifndef LIMIT_BUILD_SIZE
+#include "../Helpers/Memory.h"
+#endif
+
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
-    ESPEasy_Console.addToSerialBuffer(String(millis()));
-    ESPEasy_Console.addToSerialBuffer(F(" : "));
+    ESPEasy_Console.addToSerialBuffer(format_msec_duration(millis()));
+    #ifndef LIMIT_BUILD_SIZE
+    ESPEasy_Console.addToSerialBuffer(strformat(F(" : (%d) "), FreeMem()));
+    #endif
     {
       String loglevelDisplayString = getLogLevelDisplayString(logLevel);
       while (loglevelDisplayString.length() < 6) {
@@ -276,7 +275,7 @@ void addToSysLog(uint8_t logLevel, const String& string)
 void addToSDLog(uint8_t logLevel, const String& string)
 {
 #if FEATURE_SD
-  if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
+  if (!string.isEmpty() && loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     String   logName = patch_fname(F("log.txt"));
     fs::File logFile = SD.open(logName, "a+");
     if (logFile) {
@@ -294,6 +293,7 @@ void addToSDLog(uint8_t logLevel, const String& string)
 
 void addLog(uint8_t logLevel, const String& string)
 {
+  if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);
   addToSDLog(logLevel, string);
@@ -304,6 +304,7 @@ void addLog(uint8_t logLevel, const String& string)
 
 void addToLogMove(uint8_t logLevel, String&& string)
 {
+  if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);
   addToSDLog(logLevel, string);

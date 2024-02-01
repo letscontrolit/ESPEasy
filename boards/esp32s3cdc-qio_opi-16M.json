@@ -18,7 +18,7 @@
     "mcu": "esp32s3",
     "variant": "esp32s3",
     "filesystem": "littlefs",
-    "partitions": "esp32_partition_app4096k_spiffs8124k.csv"
+    "partitions": "boards/partitions/esp32_partition_app4096k_spiffs8124k.csv"
   },
   "connectivity": [
     "wifi",
