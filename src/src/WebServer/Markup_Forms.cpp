@@ -463,7 +463,11 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
   addPinSelect(PinSelectPurpose::I2C, id, choice);
 }
 
-void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addresses[], int selectedIndex
+void addFormSelectorI2C(const String& id,
+                        int           addressCount,
+                        const uint8_t addresses[],
+                        int           selectedIndex,
+                        uint8_t       defaultAddress
                         #if FEATURE_TOOLTIPS
                         , const String& tooltip
                         #endif // if FEATURE_TOOLTIPS
@@ -480,7 +484,7 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
   {
     String option = formatToHex_decimal(addresses[x]);
 
-    if (x == 0) {
+    if (((x == 0) && (defaultAddress == 0)) || (defaultAddress == addresses[x])) {
       option += F(" - (default)");
     }
     addSelector_Item(option, addresses[x], addresses[x] == selectedIndex);

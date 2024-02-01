@@ -65,10 +65,10 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { CDM7160_ADDR, CDM7160_ADDR_0 };
+      const uint8_t i2cAddressValues[] = { CDM7160_ADDR_0, CDM7160_ADDR };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P127_CONFIG_I2C_ADDRESS);
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P127_CONFIG_I2C_ADDRESS, CDM7160_ADDR);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("CAD0 High/open=0x69, Low=0x68"));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -89,6 +89,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
+      P127_CONFIG_I2C_ADDRESS                      = CDM7160_ADDR;
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // No decimals needed
       break;
     }

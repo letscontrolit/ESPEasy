@@ -107,7 +107,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
 #endif
 
 
-#ifdef ESP32
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
       button[0]             = 34; // BUT1 Button
       relais[0]             = -1; // No LED's or relays on board
@@ -115,7 +115,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 13;
       i2c_scl               = 16;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 12;
@@ -131,7 +131,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 13;
       i2c_scl               = 16;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = -1; // No Ethernet power pin
@@ -146,7 +146,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = -1;
       i2c_scl               = -1;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 5;
@@ -178,7 +178,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 15;
       i2c_scl               = 4;
       eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 16;
       eth_mdio              = 17;
       eth_power             = -1;
@@ -191,7 +191,7 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       i2c_sda               = 21;
       i2c_scl               = 22;
       eth_phyaddr           = 1;
-      eth_phytype           = EthPhyType_t::LAN8710;
+      eth_phytype           = EthPhyType_t::LAN8720;
       eth_mdc               = 23;
       eth_mdio              = 18;
       eth_power             = 12;  // TODO TD-er: Better to use GPIO-16? as shown here: https://letscontrolit.com/forum/viewtopic.php?p=50133#p50133
@@ -199,12 +199,6 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       network_medium = NetworkMedium_t::Ethernet;
       break;
 
-  #else
-      case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
-      case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
-      case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-      case DeviceModel::DeviceModel_wESP32:
-      case DeviceModel::DeviceModel_WT32_ETH01:
   #endif
 
     case DeviceModel::DeviceModel_default:

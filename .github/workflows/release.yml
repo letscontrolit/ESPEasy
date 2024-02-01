@@ -22,7 +22,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - id: set-matrix
@@ -37,19 +37,19 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp32') }}
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp8266') }}
         with:
           path: ~/.platformio
@@ -66,9 +66,13 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v3
+      - id: string
+        uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
-          name: Binaries
+          string: ${{ matrix.chip }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
           path: |
             bin
           if-no-files-found: ignore
@@ -78,10 +82,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
@@ -98,7 +102,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Distribution
           path: |
@@ -112,7 +116,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           result-encoding: string
           script: |
@@ -134,23 +138,24 @@ jobs:
     needs: [build, prepare-dist, prepare-notes]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Get current date
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      - uses: actions/download-artifact@v3
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: artifacts/
+          path: artifacts/Binaries/bin/
+          pattern: Bin-*
+          merge-multiple: true
       - name: Repackage for release upload
         run: |
           ls -R
           sudo apt install zipmerge zip
           cd artifacts/Binaries
-          mkdir bin
-          mv *.* bin
           find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
           # ESP32 and derived chips
           # TODO if/when available: ESP32h2

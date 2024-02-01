@@ -115,6 +115,15 @@ void updateLogLevelCache() {
 }
 
 bool loglevelActiveFor(uint8_t logLevel) {
+  #ifdef ESP32
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not send out logs.
+    // Allocating memory from within an ISR is a big no-no.
+    // Also long-time blocking like sending logs (especially to a syslog server) 
+    // is also really not a good idea from an ISR call.
+    return false;
+  }
+  #endif
   return logLevel <= highest_active_log_level;
 }
 
@@ -146,6 +155,16 @@ uint8_t getWebLogLevel() {
 }
 
 bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
+  #ifdef ESP32
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not send out logs.
+    // Allocating memory from within an ISR is a big no-no.
+    // Also long-time blocking like sending logs (especially to a syslog server) 
+    // is also really not a good idea from an ISR call.
+    return false;
+  }
+  #endif
+
   uint8_t logLevelSettings = 0;
   switch (destination) {
     case LOG_TO_SERIAL: {
@@ -293,6 +312,16 @@ void addToSDLog(uint8_t logLevel, const String& string)
 
 void addLog(uint8_t logLevel, const String& string)
 {
+  #ifdef ESP32
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not send out logs.
+    // Allocating memory from within an ISR is a big no-no.
+    // Also long-time blocking like sending logs (especially to a syslog server) 
+    // is also really not a good idea from an ISR call.
+    return;
+  }
+  #endif
+
   if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);
@@ -304,6 +333,16 @@ void addLog(uint8_t logLevel, const String& string)
 
 void addToLogMove(uint8_t logLevel, String&& string)
 {
+  #ifdef ESP32
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not send out logs.
+    // Allocating memory from within an ISR is a big no-no.
+    // Also long-time blocking like sending logs (especially to a syslog server) 
+    // is also really not a good idea from an ISR call.
+    return;
+  }
+  #endif
+
   if (string.isEmpty()) return;
   addToSerialLog(logLevel, string);
   addToSysLog(logLevel, string);

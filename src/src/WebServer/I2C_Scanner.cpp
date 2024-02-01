@@ -195,10 +195,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("I2C_MultiRelay");
       break;
     case 0x1D:
-      result +=  F("ADXL345");
+      result += F("ADXL345");
       break;
     case 0x1E:
-      result +=  F("HMC5883L");
+      result += F("HMC5883L");
       break;
     case 0x20:
     case 0x21:
@@ -206,112 +206,116 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x25:
     case 0x26:
     case 0x27:
-      result +=  F("PCF8574,MCP23017,LCD,PCF8575");
+      result += F("PCF8574,MCP23017,LCD,PCF8575");
       break;
     case 0x23:
-      result +=  F("PCF8574,MCP23017,LCD,BH1750,PCF8575");
+      result += F("PCF8574,MCP23017,LCD,BH1750,PCF8575");
       break;
     case 0x24:
-      result +=  F("PCF8574,MCP23017,LCD,PN532,PCF8575");
+      result += F("PCF8574,MCP23017,LCD,PN532,PCF8575");
       break;
     case 0x29:
-      result +=  F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
+      result += F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
       break;
     case 0x30:
-      result +=  F("VL53L0X,VL53L1X");
+      result += F("VL53L0X,VL53L1X");
       break;
     case 0x34:
-      result +=  F("AXP192");
+      result += F("AXP192");
       break;
     case 0x36:
-      result +=  F("MAX1704x,Adafruit Rotary enc");
+      result += F("MAX1704x,Adafruit Rotary enc");
       break;
     case 0x37:
-      result +=  F("Adafruit Rotary enc");
+      result += F("Adafruit Rotary enc");
       break;
     case 0x38:
-      result +=  F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc");
+      result += F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc");
       break;
     case 0x39:
-      result +=  F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc");
+      result += F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc");
       break;
     case 0x3A:
     case 0x3B:
-      result +=  F("LCD,PCF8574A,Adafruit Rotary enc");
+      result += F("LCD,PCF8574A,Adafruit Rotary enc");
       break;
     case 0x3C:
     case 0x3D:
-      result +=  F("LCD,PCF8574A,OLED,Adafruit Rotary enc");
+      result += F("LCD,PCF8574A,OLED,Adafruit Rotary enc");
       break;
     case 0x3E:
     case 0x3F:
-      result +=  F("LCD,PCF8574A");
+      result += F("LCD,PCF8574A");
       break;
     case 0x40:
-      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
+      result += F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
       break;
     case 0x41:
     case 0x42:
     case 0x43:
-      result +=  F("INA219");
+      result += F("INA219");
       break;
     case 0x44:
     case 0x45:
-      result +=  F("SHT30/31/35,INA219,SHT4x");
+      result += F("SHT30/31/35,INA219,SHT4x");
       break;
     case 0x46:
-      result +=  F("SHT4x");
+      result += F("SHT4x");
       break;
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1x15,LM75A,INA219,TMP117");
+      result += F("PCF8591,ADS1x15,LM75A,INA219,TMP117");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1x15,TSL2561,LM75A,INA219,TMP117");
+      result += F("PCF8591,ADS1x15,TSL2561,LM75A,INA219,TMP117");
       break;
     case 0x4C:
     case 0x4E:
     case 0x4F:
-      result +=  F("PCF8591,LM75A,INA219");
+      result += F("PCF8591,LM75A,INA219");
       break;
     case 0x4D:
-      result +=  F("PCF8591,MCP3221,LM75A,INA219");
+      result += F("PCF8591,MCP3221,LM75A,INA219");
       break;
     case 0x51:
-      result +=  F("PCF8563");
+      result += F("PCF8563");
       break;
     case 0x53:
-      result +=  F("ADXL345,LTR390");
+      result += F("ADXL345,LTR390");
       break;
     case 0x55:
-      result +=  F("DFRobot Rotary enc,BeFlE Moisture");
+      result += F("DFRobot Rotary enc,BeFlE Moisture");
       break;
     case 0x54:
     case 0x56:
     case 0x57:
-      result +=  F("DFRobot Rotary enc");
+      result += F("DFRobot Rotary enc");
       break;
     case 0x58:
-      result +=  F("SGP30");
+      result += F("SGP30,GP8403");
       break;
     case 0x59:
-      result +=  F("SGP4x");
+      result += F("SGP4x,GP8403");
       break;
     case 0x5A:
-      result +=  F("MLX90614,MPR121,CCS811");
+      result += F("MLX90614,MPR121,CCS811,GP8403");
       break;
     case 0x5B:
-      result +=  F("MPR121,CCS811");
+      result += F("MPR121,CCS811,GP8403");
       break;
     case 0x5C:
-      result +=  F("DHT12,AM2320,BH1750,MPR121");
+      result += F("DHT12,AM2320,BH1750,MPR121,GP8403");
       break;
     case 0x5D:
-      result +=  F("MPR121");
+      result += F("MPR121,GP8403");
+      break;
+    case 0x5E:
+    case 0x5F:
+      result += F("GP8403");
       break;
     case 0x60:
-      result +=  F("Adafruit Motorshield v2,SI1145");
+      result += F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x61:
       result += F("Atlas EZO DO,SCD30");
@@ -326,33 +330,33 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
+      result += F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
-      result +=  F("ITG3205,CDM7160");
+      result += F("ITG3205,CDM7160");
       break;
     case 0x70:
-      result +=  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
+      result += F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
       break;
     case 0x71:
     case 0x72:
     case 0x73:
-      result +=  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
+      result += F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
       break;
     case 0x74:
-      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer");
+      result += F("HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x75:
-      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
+      result += F("HT16K33,TCA9546a/8a I2C multiplexer,IP5306");
       break;
     case 0x76:
-      result +=  F("BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result += F("BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result +=  F("BMP085,BMP180,BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result += F("BMP085,BMP180,BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x7f:
-      result +=  F("Arduino PME");
+      result += F("Arduino PME");
       break;
   }
   #endif // LIMIT_BUILD_SIZE
