@@ -592,8 +592,8 @@ void ESPEasy_setup()
   #endif
 
   #if FEATURE_ETHERNET
-  if (Settings.ETH_Pin_power != -1) {
-    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power, 1);
+  if (Settings.ETH_Pin_power_rst != -1) {
+    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power_rst, 1);
   }
 
   #endif

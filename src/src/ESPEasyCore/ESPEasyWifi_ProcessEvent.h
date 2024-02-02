@@ -7,6 +7,9 @@ void handle_unprocessedNetworkEvents();
 void processDisconnect();
 void processConnect();
 void processGotIP();
+#if FEATURE_USE_IPV6
+void processGotIPv6();
+#endif
 void processDisconnectAPmode();
 #ifdef USES_ESPEASY_NOW
 void processProbeRequestAPmode();
