@@ -1910,8 +1910,8 @@ To create/register a plugin, you have to :
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC/eCO2
   #endif
-
-
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
 
   // Controllers
   #ifndef USES_C011
