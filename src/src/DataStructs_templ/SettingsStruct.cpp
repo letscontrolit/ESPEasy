@@ -955,6 +955,9 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
+  if (isSPI_EthernetType(ETH_Phy_Type)) {
+    return false;
+  }
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
     if (19 == pin) return true; // ETH TXD0
     if (21 == pin) return true; // ETH TX EN
