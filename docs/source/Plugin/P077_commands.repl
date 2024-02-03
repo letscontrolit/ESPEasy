@@ -30,4 +30,5 @@
         ","
         (Added: 2024-01-16)
         Will reset the CF-pulse counter.
+        N.B. this also clears the kWh counter as it is derived from the CF-pulse counter.
         "

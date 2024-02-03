@@ -2,7 +2,7 @@
 
 #ifdef PLUGIN_USES_TOUCHHANDLER
 
-# include "src/Commands/ExecuteCommand.h"
+# include "../Commands/ExecuteCommand.h"
 
 /****************************************************************************
  * toString: Display-value for the touch action
@@ -2177,7 +2177,7 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
   } else {
     eventCommand += ',';
     eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].objectName);
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, eventCommand.c_str()); // Simulate like from rules
+    ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_RULES, eventCommand }, true); // Simulate like from rules
     addLogMove(LOG_LEVEL_INFO, eventCommand);
     delay(0);
 
@@ -2185,7 +2185,7 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
     Touch_action_e action = static_cast<Touch_action_e>(get4BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTION));
 
     if ((onOffState >= 0) && (mode >= 0)) {
-      if ((action == Touch_action_e::Default)) {
+      if (action == Touch_action_e::Default) {
         eventQueue.addMove(std::move(extraCommand)); // Issue the extra command for regular button presses
       } else {
         switch (action) {
