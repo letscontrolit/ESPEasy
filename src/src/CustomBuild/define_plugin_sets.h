@@ -1915,6 +1915,7 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
   // Controllers
   #ifndef USES_C011
