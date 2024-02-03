@@ -76,17 +76,17 @@ String Command_ETH_Phy_Addr (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Pin_mdc (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdc),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc_cs:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdc_cs),1);
 }
 
 String Command_ETH_Pin_mdio (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdio),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio_irq:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdio_irq),1);
 }
 
 String Command_ETH_Pin_power (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_power:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_power),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_power_rst:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_power_rst),1);
 }
 
 String Command_ETH_Phy_Type (struct EventStruct *event, const char* Line)
