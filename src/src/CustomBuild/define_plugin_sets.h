@@ -1625,6 +1625,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
 #endif
 
@@ -2301,6 +2304,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
 
   // Controllers
@@ -3259,6 +3265,14 @@ To create/register a plugin, you have to :
 # endif
 #endif
 
+// Make sure CONFIG_ETH_USE_ESP32_EMAC is defined on older SDK versions.
+#if FEATURE_ETHERNET && ESP_IDF_VERSION_MAJOR<5
+#ifndef CONFIG_ETH_USE_ESP32_EMAC
+#ifdef ESP32_CLASSIC
+#define CONFIG_ETH_USE_ESP32_EMAC 1
+#endif
+#endif
+#endif
 
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins
@@ -3322,5 +3336,12 @@ To create/register a plugin, you have to :
 */
 
 
+  #ifndef FEATURE_THINGSPEAK_EVENT
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_THINGSPEAK_EVENT 0
+    #else
+      #define FEATURE_THINGSPEAK_EVENT 1
+    #endif
+  #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

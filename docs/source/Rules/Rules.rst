@@ -1969,6 +1969,48 @@ Added: 2022/07/23
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
 
+Added: 2023/10/26
+
+* ``SendToHTTP`` now generates an event with the response of a thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html & // https://de.mathworks.com/help/thingspeak/readdata.html)
+* There are two options:
+
+  1. Get the value of a single field: 
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last.csv``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=1637928,5,24.2"``
+       
+        | channel number = ``%eventvalue1%``
+        | field number = ``%eventvalue2%``
+        | value = ``%eventvalue3%``
+        
+  2. Get the values of all fields:
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/1637928/feeds/last.csv``
+     - Example of the resulting event:
+     	``"EVENT:ThingspeakReply=1637928,5929,353,42.0,177,19.1,995.6,,"``
+        
+        | channel number = ``%eventvalue1%``
+        | values = ``%eventvalue2%`` to ``%eventvalue9%``
+     
+.. warning:: When using the command for all fields, the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields are filled with very big numbers)
+
+* Example for two single field events in rules:
+
+.. code:: none
+
+  on ThinkspeakReply do
+    LogEntry,'The channel number is: %eventvalue1%'
+    if %eventvalue2% = 5			  //when the field number is 5
+      LogEntry,'%eventvalue3%°C in Berlin'
+    elseif %eventvalue2% = 6		//when the field number is 6
+      LogEntry,'%eventvalue3%°C in Paris'
+    endif
+  endon
+
+
 
 Convert curl POST command to PostToHTTP
 ---------------------------------------

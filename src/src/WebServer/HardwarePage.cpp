@@ -72,11 +72,13 @@ void handle_hardware() {
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
     #if FEATURE_ETHERNET
     Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
-    Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
-    Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
-    Settings.ETH_Pin_power            = getFormItemInt(F("ethpower"));
+    Settings.ETH_Pin_mdc_cs              = getFormItemInt(F("ethmdc"));
+    Settings.ETH_Pin_mdio_irq             = getFormItemInt(F("ethmdio"));
+    Settings.ETH_Pin_power_rst            = getFormItemInt(F("ethpower"));
     Settings.ETH_Phy_Type             = static_cast<EthPhyType_t>(getFormItemInt(F("ethtype")));
+#if CONFIG_ETH_USE_ESP32_EMAC
     Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
+#endif
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
     #endif // if FEATURE_ETHERNET
     int gpio = 0;
@@ -242,41 +244,109 @@ void handle_hardware() {
     addSelector(F("ethwifi"), 2, ethWifiOptions, nullptr, nullptr, static_cast<int>(Settings.NetworkMedium), false, true);
   }
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
-  addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
-  #if ESP_IDF_VERSION_MAJOR > 3
-    const uint32_t nrItems = 5;
-  #else
-    const uint32_t nrItems = 2;
-  #endif
-    const __FlashStringHelper * ethPhyTypes[nrItems] = { 
-      toString(EthPhyType_t::LAN8710), 
-      toString(EthPhyType_t::TLK110)
-  #if ESP_IDF_VERSION_MAJOR > 3
-      ,
-      toString(EthPhyType_t::RTL8201),
-      toString(EthPhyType_t::DP83848),
-      toString(EthPhyType_t::DM9051) 
-  #endif
+    const __FlashStringHelper * ethPhyTypes[] = { 
+      toString(EthPhyType_t::notSet),			  
+
+# if CONFIG_ETH_USE_ESP32_EMAC
+      toString(EthPhyType_t::LAN8720),			  
+      toString(EthPhyType_t::TLK110),				  
+#if ESP_IDF_VERSION_MAJOR > 3
+      toString(EthPhyType_t::RTL8201),				
+      toString(EthPhyType_t::JL1101),				  
+      toString(EthPhyType_t::DP83848),				
+      toString(EthPhyType_t::KSZ8041),				
+      toString(EthPhyType_t::KSZ8081),				
+#endif
+# endif // if CONFIG_ETH_USE_ESP32_EMAC
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+# if CONFIG_ETH_SPI_ETHERNET_DM9051
+      toString(EthPhyType_t::DM9051),				  
+# endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
+# if CONFIG_ETH_SPI_ETHERNET_W5500
+      toString(EthPhyType_t::W5500),				  
+# endif // if CONFIG_ETH_SPI_ETHERNET_W5500
+# if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+      toString(EthPhyType_t::KSZ8851),				
+# endif // if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+#endif
       };
     const int ethPhyTypes_index[] = {
-      static_cast<int>(EthPhyType_t::LAN8710),
-      static_cast<int>(EthPhyType_t::TLK110)
-  #if ESP_IDF_VERSION_MAJOR > 3
-      ,
-      static_cast<int>(EthPhyType_t::RTL8201),
-      static_cast<int>(EthPhyType_t::DP83848),
-      static_cast<int>(EthPhyType_t::DM9051)
-  #endif
+      static_cast<int>(EthPhyType_t::notSet),			  
+
+# if CONFIG_ETH_USE_ESP32_EMAC
+      static_cast<int>(EthPhyType_t::LAN8720),			  
+      static_cast<int>(EthPhyType_t::TLK110),				  
+#if ESP_IDF_VERSION_MAJOR > 3
+      static_cast<int>(EthPhyType_t::RTL8201),				
+      static_cast<int>(EthPhyType_t::JL1101),				  
+      static_cast<int>(EthPhyType_t::DP83848),				
+      static_cast<int>(EthPhyType_t::KSZ8041),				
+      static_cast<int>(EthPhyType_t::KSZ8081),				
+#endif
+# endif // if CONFIG_ETH_USE_ESP32_EMAC
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+# if CONFIG_ETH_SPI_ETHERNET_DM9051
+      static_cast<int>(EthPhyType_t::DM9051),				  
+# endif // if CONFIG_ETH_SPI_ETHERNET_DM9051
+# if CONFIG_ETH_SPI_ETHERNET_W5500
+      static_cast<int>(EthPhyType_t::W5500),				  
+# endif // if CONFIG_ETH_SPI_ETHERNET_W5500
+# if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+      static_cast<int>(EthPhyType_t::KSZ8851),				
+# endif // if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+#endif
     };
 
-    addSelector(F("ethtype"), nrItems, ethPhyTypes, ethPhyTypes_index, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+    constexpr unsigned nrItems = NR_ELEMENTS(ethPhyTypes_index);
+
+
+    const int choice = isValid(Settings.ETH_Phy_Type) 
+      ? static_cast<int>(Settings.ETH_Phy_Type) 
+      : static_cast<int>(EthPhyType_t::notSet);
+
+    addFormSelector(
+      F("Ethernet PHY type"), 
+      F("ethtype"),
+      nrItems, 
+      ethPhyTypes, 
+      ethPhyTypes_index, 
+      choice, 
+      false);
   }
+
+#if CONFIG_ETH_USE_SPI_ETHERNET && CONFIG_ETH_USE_ESP32_EMAC
+#define MDC_CS_PIN_DESCR  "Ethernet MDC/CS pin"
+#define MIO_IRQ_PIN_DESCR  "Ethernet MDIO/IRQ pin"
+#define PWR_RST_PIN_DESCR  "Ethernet Power/RST pin"
+#elif CONFIG_ETH_USE_SPI_ETHERNET
+#define MDC_CS_PIN_DESCR  "Ethernet CS pin"
+#define MIO_IRQ_PIN_DESCR  "Ethernet IRQ pin"
+#define PWR_RST_PIN_DESCR  "Ethernet RST pin"
+#else // #elif CONFIG_ETH_USE_ESP32_EMAC
+#define MDC_CS_PIN_DESCR  "Ethernet MDC pin"
+#define MIO_IRQ_PIN_DESCR  "Ethernet MIO pin"
+#define PWR_RST_PIN_DESCR  "Ethernet Power pin"
+#endif
+
   addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, -1, 127);
-  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110, -1 autodetect)"));
-  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
-  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
-  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
+  addFormNote(F("I&sup2;C-address of Ethernet PHY"
+#if CONFIG_ETH_USE_ESP32_EMAC
+  " (0 or 1 for LAN8720, 31 for TLK110, -1 autodetect)"
+#endif
+  ));
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(
+    F(MDC_CS_PIN_DESCR)), 
+    F("ethmdc"), Settings.ETH_Pin_mdc_cs);
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_input(
+    F(MIO_IRQ_PIN_DESCR)), 
+    F("ethmdio"), Settings.ETH_Pin_mdio_irq);
+  addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(
+    F(PWR_RST_PIN_DESCR)), 
+    F("ethpower"), Settings.ETH_Pin_power_rst);
+#if CONFIG_ETH_USE_ESP32_EMAC
   addRowLabel_tr_id(F("Ethernet Clock"), F("ethclock"));
   {
     const __FlashStringHelper * ethClockOptions[4] = { 
@@ -287,6 +357,7 @@ void handle_hardware() {
       };
     addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
   }
+#endif
 #endif // if FEATURE_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
