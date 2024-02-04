@@ -23,7 +23,6 @@
 #include "include/esp32x_fixes.h"
 #endif
 
-
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -893,7 +892,11 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
 #endif
       case SPI_Options_e::UserDefined:
       {
-        return HSPI_HOST;
+        #if CONFIG_IDF_TARGET_ESP32
+        return VSPI_HOST;
+        #else
+        return FSPI_HOST;
+        #endif
       }
       case SPI_Options_e::None:
         break;
@@ -955,10 +958,8 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
-  if (isSPI_EthernetType(ETH_Phy_Type)) {
-    return false;
-  }
-  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+  if (NetworkMedium == NetworkMedium_t::Ethernet &&
+      !isSPI_EthernetType(ETH_Phy_Type)) {
     if (19 == pin) return true; // ETH TXD0
     if (21 == pin) return true; // ETH TX EN
     if (22 == pin) return true; // ETH TXD1
@@ -976,7 +977,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
-    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
+    if (!isSPI_EthernetType(ETH_Phy_Type) && isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
     if (ETH_Pin_mdc_cs == pin) return true;
     if (ETH_Pin_mdio_irq == pin) return true;
     if (ETH_Pin_power_rst == pin) return true;
