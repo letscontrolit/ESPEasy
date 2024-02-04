@@ -214,6 +214,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
     return false;
   }
   portStatusStruct tempStatus;
+  if (frequency == 0) frequency = 1000;
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
   key = createKey(PLUGIN_GPIO, gpio);
