@@ -23,7 +23,6 @@
 #include "include/esp32x_fixes.h"
 #endif
 
-
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -566,9 +565,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
-  ETH_Pin_mdc_cs              = DEFAULT_ETH_PIN_MDC;
-  ETH_Pin_mdio_irq             = DEFAULT_ETH_PIN_MDIO;
-  ETH_Pin_power_rst            = DEFAULT_ETH_PIN_POWER;
+  ETH_Pin_mdc_cs           = DEFAULT_ETH_PIN_MDC;
+  ETH_Pin_mdio_irq         = DEFAULT_ETH_PIN_MDIO;
+  ETH_Pin_power_rst        = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
 #endif
@@ -883,17 +882,25 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
     switch (SPI_selection) {
       case SPI_Options_e::Vspi_Fspi:
       {
-        return VSPI_HOST;
+        #if CONFIG_IDF_TARGET_ESP32
+        return static_cast<spi_host_device_t>(VSPI);
+        #else
+        return static_cast<spi_host_device_t>(FSPI);
+        #endif
       }
 #ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        return HSPI_HOST;
+        return static_cast<spi_host_device_t>(HSPI);
       }
 #endif
       case SPI_Options_e::UserDefined:
       {
-        return HSPI_HOST;
+        #if CONFIG_IDF_TARGET_ESP32
+        return static_cast<spi_host_device_t>(VSPI);
+        #else
+        return static_cast<spi_host_device_t>(FSPI);
+        #endif
       }
       case SPI_Options_e::None:
         break;
@@ -901,7 +908,11 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
 
   }
   #if ESP_IDF_VERSION_MAJOR < 5
-  return SPI_HOST;
+  #if CONFIG_IDF_TARGET_ESP32
+  return static_cast<spi_host_device_t>(VSPI);
+  #else
+  return static_cast<spi_host_device_t>(FSPI);
+  #endif
   #else
   return spi_host_device_t::SPI_HOST_MAX;
   #endif
@@ -955,10 +966,8 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
-  if (isSPI_EthernetType(ETH_Phy_Type)) {
-    return false;
-  }
-  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+  if (NetworkMedium == NetworkMedium_t::Ethernet &&
+      !isSPI_EthernetType(ETH_Phy_Type)) {
     if (19 == pin) return true; // ETH TXD0
     if (21 == pin) return true; // ETH TX EN
     if (22 == pin) return true; // ETH TXD1
@@ -976,7 +985,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
-    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
+    if (!isSPI_EthernetType(ETH_Phy_Type) && isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
     if (ETH_Pin_mdc_cs == pin) return true;
     if (ETH_Pin_mdio_irq == pin) return true;
     if (ETH_Pin_power_rst == pin) return true;
