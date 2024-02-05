@@ -374,7 +374,7 @@ const __FlashStringHelper* p102_getQueryString(uint8_t query) {
     case 0: return F("Voltage_V");
     case 1: return F("Current_A");
     case 2: return F("Power_W");
-    case 3: return F("Energy_kWH");
+    case 3: return F("Energy_kWh");
     case 4: return F("Power_Factor_cosphi");
     case 5: return F("Frequency Hz");
   }
