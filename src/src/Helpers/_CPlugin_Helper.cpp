@@ -77,7 +77,7 @@ bool safeReadStringUntil(Stream     & input,
     }
   } while (!timeOutReached(timer));
 
-  addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
+  addLog(LOG_LEVEL_ERROR, strformat(F("Timeout while reading input data! str: `%s`"), str.c_str()));
   return false;
 }
 
