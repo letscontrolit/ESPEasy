@@ -1622,6 +1622,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P164
+    #define USES_P164   // Gases - ENS16x TVOC\eCO2
+  #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
@@ -1907,8 +1910,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
-
-
+  #ifndef USES_P164
+    #define USES_P164   // Gases - ENS16x TVOC/eCO2
+  #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
   // Controllers
   #ifndef USES_C011
@@ -2564,10 +2571,12 @@ To create/register a plugin, you have to :
   #endif
   #define FEATURE_SETTINGS_ARCHIVE  0
 
+  #ifndef PLUGIN_BUILD_CUSTOM
   #ifdef FEATURE_SERVO
     #undef FEATURE_SERVO
   #endif
   #define FEATURE_SERVO 0
+  #endif
   #ifdef FEATURE_RTTTL
     #undef FEATURE_RTTTL
   #endif

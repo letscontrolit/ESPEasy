@@ -185,6 +185,15 @@ bool ETHConnectRelaxed() {
       }
       // else 
       {
+#if ETH_SPI_SUPPORTS_CUSTOM
+        EthEventData.ethInitSuccess = ETH.begin( 
+          to_ESP_phy_type(Settings.ETH_Phy_Type),
+          Settings.ETH_Phy_Addr,
+          Settings.ETH_Pin_mdc_cs,
+          Settings.ETH_Pin_mdio_irq,
+          Settings.ETH_Pin_power_rst,
+          SPI);
+#else
         EthEventData.ethInitSuccess = ETH.begin( 
           to_ESP_phy_type(Settings.ETH_Phy_Type),
           Settings.ETH_Phy_Addr,
@@ -195,6 +204,7 @@ bool ETHConnectRelaxed() {
           static_cast<int>(Settings.SPI_SCLK_pin),
           static_cast<int>(Settings.SPI_MISO_pin),
           static_cast<int>(Settings.SPI_MOSI_pin));
+#endif
       }
     } else {
 # if CONFIG_ETH_USE_ESP32_EMAC

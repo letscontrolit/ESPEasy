@@ -267,18 +267,10 @@
 #define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::notSet
 #endif
 #ifndef DEFAULT_ETH_PIN_MDC
-#ifdef ESP32_CLASSIC
-#define DEFAULT_ETH_PIN_MDC              23
-#else
 #define DEFAULT_ETH_PIN_MDC              -1
 #endif
-#endif
 #ifndef DEFAULT_ETH_PIN_MDIO
-#ifdef ESP32_CLASSIC
-#define DEFAULT_ETH_PIN_MDIO             18
-#else
 #define DEFAULT_ETH_PIN_MDIO             -1
-#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_POWER
 #define DEFAULT_ETH_PIN_POWER            -1
@@ -287,11 +279,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #if FEATURE_ETHERNET
-    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
-  #else
-    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
-  #endif
+  #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
 #endif
 #ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
 #define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false

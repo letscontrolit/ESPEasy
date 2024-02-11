@@ -44,7 +44,7 @@ enum class EthPhyType_t : uint8_t {
   KSZ8851 = 12,
 #endif
 #endif
-  notSet = 255
+  notSet = 127   // Might be processed in some code as int, uint8_t and int8_t
 };
 
 bool   isValid(EthPhyType_t phyType);
