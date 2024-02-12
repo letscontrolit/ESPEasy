@@ -113,8 +113,8 @@ public:
     UNIXTIME,
     UPTIME,
     UPTIME_MS,
-    VARIABLE,
     VCC,
+    VARIABLE, // Can not be the first 'v' variable, as the name is only 1 character long
     WI_CH,
 
 
