@@ -2,6 +2,7 @@
 
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/FS_Helper.h"
 
 #ifdef ESP32
   # include <soc/soc.h>
