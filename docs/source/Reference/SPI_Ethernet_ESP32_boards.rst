@@ -36,6 +36,17 @@ N.B. As there is not yet support in ESPEasy for multiple SPI busses, it cannot b
      - 3
      - 10
      - SPI2_HOST
+   * - M5Stack PoECAM
+     - ESP32-classic
+     - W5500
+     - 
+     - 4
+     - 
+     - 
+     - 23
+     - 38
+     - 13
+     - SPI2_HOST
    * - M5Stack Atom PoE Kit (ATOM LITE)
      - ESP32-classic
      - W5500
@@ -46,6 +57,17 @@ N.B. As there is not yet support in ESPEasy for multiple SPI busses, it cannot b
      - 22
      - 23
      - 33
+     - SPI2_HOST
+   * - M5Stack Atom PoE Kit (AtomS3)
+     - ESP32-S3
+     - W5500
+     - 
+     - 6
+     - 
+     - 
+     - 5
+     - 7
+     - 8
      - SPI2_HOST
    * - M5Stack Base LAN (End-of-life)
      - M5Core
@@ -119,8 +141,9 @@ See:
 
 * `M5 Stack Base LAN <https://docs.m5stack.com/en/base/lan_base>`_
 * `M5 Stack LAN Base V12 <https://docs.m5stack.com/en/base/lan_v12>`_
+* `M5 Stack PoECAM <https://docs.m5stack.com/en/unit/poe_cam>`_
 * `M5 Stack LAN PoE Base V12 <https://docs.m5stack.com/en/base/lan_poe_v12>`_
 * `M5 Stack LAN Module V13.2 <https://docs.m5stack.com/en/module/LAN%20Module%2013.2>`_
-* `M5 Stack ATOM PoE <https://docs.m5stack.com/en/atom/atom_poe>`_
+* `M5 Stack ATOM PoE <https://docs.m5stack.com/en/atom/atom_poe>`_ `ATOM Lite <https://docs.m5stack.com/en/core/ATOM%20Lite>`_ `AtomS3 <https://docs.m5stack.com/en/core/AtomS3>`_
 * `M5 Stack Base PoE <https://docs.m5stack.com/en/base/w5500PoE>`_
 * `TTGO/LilyGO Ethernet boards <https://github.com/Xinyuan-LilyGO/LilyGO-T-ETH-Series/blob/dda7a2ad4ab33d550c8dbaff5db1e61a0eda5aad/examples/ETHOTA/utilities.h#L12>`_
