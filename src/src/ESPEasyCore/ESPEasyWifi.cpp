@@ -235,6 +235,11 @@ bool WiFiConnected() {
   }
 #endif
 
+  if (!WifiIsSTA(WiFi.getMode())) {
+    lastState = false;
+    return lastState;
+  }
+
 
   if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
     if (WiFiEventData.lastDisconnectMoment.isSet() &&
