@@ -302,6 +302,7 @@ void handle_json()
       {
         LabelType::ETH_WIFI_MODE,
         LabelType::ETH_CONNECTED,
+        LabelType::ETH_CHIP,
         LabelType::ETH_DUPLEX,
         LabelType::ETH_SPEED,
         LabelType::ETH_STATE,

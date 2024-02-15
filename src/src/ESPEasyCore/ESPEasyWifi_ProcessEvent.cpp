@@ -644,9 +644,10 @@ void processScanDone() {
         addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
       }
       #endif
-
+#ifdef ESP32
 //      setSTA(false);
-//      NetworkConnectRelaxed();
+#endif
+      NetworkConnectRelaxed();
 #ifdef USES_ESPEASY_NOW
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif

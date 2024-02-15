@@ -70,8 +70,11 @@ bool ethCheckSettings() {
 #endif
       && isValid(Settings.NetworkMedium)
       && validGpio(Settings.ETH_Pin_mdc_cs)
-      && validGpio(Settings.ETH_Pin_mdio_irq)
-      && (validGpio(Settings.ETH_Pin_power_rst) || (Settings.ETH_Pin_power_rst == -1)); // Some boards have fixed power
+      && (isSPI_EthernetType(Settings.ETH_Phy_Type) ||
+          ( validGpio(Settings.ETH_Pin_mdio_irq) && 
+            (validGpio(Settings.ETH_Pin_power_rst) || (Settings.ETH_Pin_power_rst == -1))
+          )
+        ); // Some boards have fixed power
 }
 
 bool ethPrepare() {
@@ -250,6 +253,8 @@ bool ETHConnectRelaxed() {
       // We might miss the connected event, since we are already connected.
       EthEventData.markConnected();
     }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("ETH  : Failed to initialize ETH"));
   }
   return EthEventData.ethInitSuccess;
 }
