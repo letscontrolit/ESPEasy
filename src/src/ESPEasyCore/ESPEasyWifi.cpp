@@ -237,8 +237,12 @@ bool WiFiConnected() {
 
 
   if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
-    // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
-    return lastState;
+    if (WiFiEventData.lastDisconnectMoment.isSet() &&
+        WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassedSince(lastCheckedTime))
+    {
+      // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+      return lastState;
+    }
   }
 
 
