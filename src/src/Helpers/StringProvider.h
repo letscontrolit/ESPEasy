@@ -212,6 +212,7 @@ struct LabelType {
     ETH_STATE,
     ETH_SPEED_STATE,
     ETH_CONNECTED,
+    ETH_CHIP,
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     ETH_WIFI_MODE,
