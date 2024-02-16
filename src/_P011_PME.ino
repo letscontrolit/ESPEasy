@@ -50,15 +50,23 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      success = (event->Par1 == 0x7f);
+
+      const uint8_t i2cAddressValues[] = { 0x7f, 0x7e, 0x7d, 0x7c };
+
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, PLUGIN_011_I2C_ADDRESS);
+      } else {
+        success = intArrayContains(4, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = 0x7f;
+      event->Par1 = PLUGIN_011_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -321,7 +329,7 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 // ********************************************************************************
 void Plugin_011_Write(uint8_t Par1, uint8_t Par2)
 {
-  uint8_t address = 0x7f;
+  uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
   Wire.beginTransmission(address);
   Wire.write(1);
