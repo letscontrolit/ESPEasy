@@ -165,19 +165,10 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct());
-      P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P014_data); // Init should return true when successful
-
-      // if (P014_data->init(P014_I2C_ADDRESS, P014_RESOLUTION)) {
-      //  success = true;
-      // }else{
-      UserVar[event->BaseVarIndex]     = NAN;
-      UserVar[event->BaseVarIndex + 1] = NAN;
-      UserVar[event->BaseVarIndex + 2] = NAN;
-
-      // }
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P014_data_struct());
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      UserVar.setFloat(event->TaskIndex, 1, NAN);
+      UserVar.setFloat(event->TaskIndex, 2, NAN);
       break;
     }
 
@@ -194,9 +185,9 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P014_data) {
         if (P014_data->state == P014_state::Error) {
-          UserVar[event->BaseVarIndex]     = NAN;
-          UserVar[event->BaseVarIndex + 1] = NAN;
-          UserVar[event->BaseVarIndex + 2] = NAN;
+          UserVar.setFloat(event->TaskIndex, 0, NAN);
+          UserVar.setFloat(event->TaskIndex, 1, NAN);
+          UserVar.setFloat(event->TaskIndex, 2, NAN);
 
           addLog(LOG_LEVEL_ERROR, F("SI70xx: in Error!"));
 
@@ -210,11 +201,11 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
           return false;                                                                    // we are not ready to read the values
         }
 
-        UserVar[event->BaseVarIndex]     = P014_data->temperature / 100.0f;
-        UserVar[event->BaseVarIndex + 1] = P014_data->humidity / 10.0f;
+        UserVar.setFloat(event->TaskIndex, 0, P014_data->temperature / 100.0f);
+        UserVar.setFloat(event->TaskIndex, 1, P014_data->humidity / 10.0f);
 
         if (P014_data->chip_id == CHIP_ID_SI7013) {
-          UserVar[event->BaseVarIndex + 2] = (P014_data->adc) >> P014_FILTER_POWER;
+          UserVar.setFloat(event->TaskIndex, 2, (P014_data->adc) >> P014_FILTER_POWER);
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {

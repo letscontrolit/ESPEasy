@@ -93,6 +93,7 @@ def parse_filename(file, version, variant, file_suffix):
             elif '_16M8M' in variant:
                 flash_size = '16M8M'
                 main_group = '16M Flash'
+
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
             chipFamily = 'ESP8266'
@@ -195,6 +196,10 @@ def parse_filename(file, version, variant, file_suffix):
             # Thus make a separate group for the solo1
             main_group = '4M Flash ESP32-solo1'
 
+        if 'LittleFS' in variant:
+            main_group += ' LittleFS'
+        else:
+            main_group += ' SPIFFS'
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
@@ -275,6 +280,16 @@ def generate_manifest_files(bin_folder, output_prefix):
         'Custom',
         'Custom Misc',
         'Misc']
+
+    main_group_list_littlefs = []
+    main_group_list_spiffs = []
+    for main_group in main_group_list:
+        main_group_list_littlefs.append("{} {}".format(main_group, 'LittleFS'))
+        main_group_list_spiffs.append("{} {}".format(main_group, 'SPIFFS'))
+
+    main_group_list_littlefs.extend(main_group_list_spiffs)
+    main_group_list = main_group_list_littlefs
+
 
     for main_group in main_group_list:
         if main_group in manifest_binfiles:
@@ -365,6 +380,10 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    <br>\n',
             '    <br>\n',
             '    See <a href="latest/" >latest/</a> for a pre-release test build.\n',
+            '    <br>\n',
+            '    See <a href="../" >../</a> for last official build.\n',
+            '    <br>\n',
+            '    <a href="all.zip" >all.zip</a> containing all bin files in a single zip file.\n',
             '    <script>\n',
             '      const selectEl = document.querySelector(".pick-variant select");\n',
             '      const installEl = document.querySelector("esp-web-install-button");\n',

@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C005
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/Globals/EventQueue.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"
 # include "src/Helpers/PeriodicalActions.h"
@@ -139,7 +139,7 @@ bool C005_parse_command(struct EventStruct *event) {
       }
 
       if (!topic_folder.isEmpty()) {
-        int cmd_arg_nr = -1;
+        int32_t cmd_arg_nr = -1;
 
         if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
           int constructed_cmd_arg_nr = 0;
@@ -180,8 +180,8 @@ bool C005_parse_command(struct EventStruct *event) {
       // Full command:  gpio,14,0
       if (lastindex > 0) {
         // Topic has at least one separator
-        int   lastPartTopic_int;
-        float value_f;
+        int32_t lastPartTopic_int;
+        float   value_f;
 
         if (validFloatFromString(event->String2, value_f) &&
             validIntFromString(lastPartTopic, lastPartTopic_int)) {

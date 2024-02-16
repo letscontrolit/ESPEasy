@@ -11,7 +11,7 @@
 # define CPLUGIN_ID_002         2
 # define CPLUGIN_NAME_002       "Domoticz MQTT"
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"
 # include "src/Globals/Settings.h"
@@ -101,26 +101,21 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               switch (Settings.getPluginID_for_task(x).value) {
                 case 1: // temp solution, if input switch, update state
                 {
-                  action  = F("gpio,"); // FIXME tonhuisman: Was: InputSwitchState
-                  action += x;
-                  action += ',';
-                  action += nvalue;
+                  action = strformat(F("gpio,%u,%.2f"), x, nvalue); // FIXME tonhuisman: Was: InputSwitchState
                   break;
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  const int baseVar = x * VARS_PER_TASK;
-
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
                     mustSendEvent = true;
-                    int pwmValue = UserVar[baseVar];
+                    int32_t pwmValue = UserVar.getFloat(x, 0);
 
                     switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
                         pwmValue         = 0;
-                        UserVar[baseVar] = pwmValue;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                       case 1: // On
                       case 2: // Update dimmer value
@@ -129,31 +124,27 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         if (validIntFromString(svalue1, pwmValue)) {
                           pwmValue *= 10;
                         }
-                        UserVar[baseVar] = pwmValue;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                     }
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = concat(F("pwm,"), Settings.TaskDevicePin1[x]);
-                      action += ',';
-                      action += pwmValue;
+                      action = strformat(F("pwm,%d,%d"), Settings.TaskDevicePin1[x], pwmValue);
                     }
                   } else {
                     mustSendEvent    = true;
-                    UserVar[baseVar] = nvalue;
+                    UserVar.setFloat(x, 0, nvalue);
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = concat(F("gpio,"), Settings.TaskDevicePin1[x]);
-                      action += ',';
-                      action += static_cast<int>(nvalue);
+                      action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], static_cast<int>(nvalue));
                     }
                   }
                   break;
                 }
                 # if defined(USES_P088)
-                case 88:                                      // Send heatpump IR (P088) if IDX matches
+                case 88:                                     // Send heatpump IR (P088) if IDX matches
                 {
-                  action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action = concat(F("heatpumpir,"),svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
                 # endif // if defined(USES_P088)
@@ -165,7 +156,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                 mustSendEvent = true;
 
                 // Try plugin and internal
-                ExecuteCommand(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str(), true, true, false);
+                ExecuteCommandArgs args(
+                  x, 
+                  EventValueSource::Enum::VALUE_SOURCE_MQTT, 
+                  action.c_str(), 
+                  true, 
+                  true, 
+                  false);
+                ExecuteCommand(std::move(args), true);
               }
 
               if (mustSendEvent) {

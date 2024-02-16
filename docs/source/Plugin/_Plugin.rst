@@ -385,6 +385,9 @@ There are different released versions of ESP Easy:
    ":ref:`P152_page`","|P152_status|","P152"
    ":ref:`P153_page`","|P153_status|","P153"
    ":ref:`P154_page`","|P154_status|","P154"
+   ":ref:`P159_page`","|P159_status|","P159"
+   ":ref:`P164_page`","|P164_status|","P164"
+   ":ref:`P166_page`","|P166_status|","P166"
 
 
 Internal GPIO handling
@@ -540,6 +543,11 @@ Power management
 ----------------
 
 Plugins: |Plugin_PowerMgt|
+
+Presence
+---------
+
+Plugins: |Plugin_Presence|
 
 Regulator
 ---------

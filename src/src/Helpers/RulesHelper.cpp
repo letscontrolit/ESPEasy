@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
 /********************************************************************************************\
@@ -209,7 +210,7 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
 
   if (it == _fileHandleMap.end()) {
     // No open file handle found, so try to open it.
-    _fileHandleMap.emplace(filename, tryOpenFile(filename, "r+"));
+    _fileHandleMap.emplace(filename, tryOpenFile(filename, "r"));
     it = _fileHandleMap.find(filename);
   }
 
@@ -281,7 +282,7 @@ String RulesHelperClass::readLn(const String& filename,
 
   if (it == _fileHandleMap.end()) {
     // Read lines from the file
-    fs::File f = tryOpenFile(filename, "r+");
+    fs::File f = tryOpenFile(filename, "r");
 
     if (f) {
       RulesLines lines;
@@ -310,11 +311,10 @@ String RulesHelperClass::readLn(const String& filename,
 # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Rules : Read ");
-        log += lines.size();
-        log += F(" lines from ");
-        log += filename;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(
+          F("Rules : Read %u  lines from %s"), 
+          lines.size(), 
+          filename.c_str()));
       }
 # endif // ifndef BUILD_NO_DEBUG
       _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
@@ -343,6 +343,11 @@ String RulesHelperClass::readLn(const String& filename,
                                 bool        & moreAvailable,
                                 bool          searchNextOnBlock)
 {
+  #ifdef USE_SECOND_HEAP
+  // Do not store in 2nd heap, this is only temporary and needs to be as fast as possible
+  HeapSelectDram ephemeral;
+  #endif // ifdef USE_SECOND_HEAP
+
   std::vector<uint8_t> buf;
 
   buf.resize(RULES_BUFFER_SIZE);

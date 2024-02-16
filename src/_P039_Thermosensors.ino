@@ -110,11 +110,11 @@
 # define P039_TC                     0u
 # define P039_RTD                    1u
 
-# define P039_MAX6675               1u
-# define P039_MAX31855              2u
-# define P039_MAX31856              3u
-# define P039_MAX31865              4u
-# define P039_LM7x                  5u
+# define P039_MAX6675               1
+# define P039_MAX31855              2
+# define P039_MAX31856              3
+# define P039_MAX31865              4
+# define P039_LM7x                  5
 
 // MAX 6675 related defines
 
@@ -302,6 +302,13 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       if (!bitRead(P039_FLAGS, P039_TEMP_THRESHOLD_FLAG)) {
         P039_TEMP_THRESHOLD = P039_TEMP_THRESHOLD_DEFAULT; // 0 K
       }
+
+      if (P039_MAX_TYPE < P039_MAX6675 || P039_MAX_TYPE > P039_LM7x) {
+        break;
+      }
+
+
+
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct());
       P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -314,17 +321,16 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       SPI.setHwCs(false);
       SPI.begin();
 
+      // ensure MODE3 access to SPI device
+      SPI.setDataMode(SPI_MODE3);
+
+/*
       if (P039_MAX_TYPE == P039_MAX6675) {
-        // ensure MODE3 access to SPI device
-        SPI.setDataMode(SPI_MODE3);
 
         // SPI.setBitOrder(MSBFIRST);
       }
-
+*/
       if (P039_MAX_TYPE == P039_MAX31855) {
-        // ensure MODE3 access to SPI device
-        SPI.setDataMode(SPI_MODE3);
-
         // SPI.setBitOrder(MSBFIRST);
 
         if (nullptr != P039_data) {
@@ -335,9 +341,6 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
 
       if (P039_MAX_TYPE == P039_MAX31856) {
-        // ensure MODE3 access to SPI device
-        SPI.setDataMode(SPI_MODE3);
-
         // init string - content accoring to inital implementation of P039 - MAX31856 read function
         // write to Adress 0x80
         // activate 50Hz filter in CR0, choose averaging and TC type from configuration in CR1, activate OV/UV/OC faults, write defaults to
@@ -366,9 +369,6 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         // two step initialization buffer
         uint8_t initSendBufferHFTH[3] = { (MAX31865_WRITE_ADDR_BASE + MAX31865_HFT_MSB), 0xFF, 0xFF };
         uint8_t initSendBufferLFTH[3] = { (MAX31865_WRITE_ADDR_BASE + MAX31865_HFT_MSB), 0xFF, 0xFF };
-
-        // ensure MODE3 access to SPI device
-        SPI.setDataMode(SPI_MODE3);
 
         // write intially 0x00 to CONFIG register
         write8BitRegister(CS_pin_no, (MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), 0x00u);
@@ -410,23 +410,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+/*
       if (P039_MAX_TYPE == P039_LM7x)
       {
-        // ensure MODE3 access to SPI device
-        SPI.setDataMode(SPI_MODE3);
-
         // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
       }
+*/
 #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-
-        if ((log.reserve(80u))) {                     // reserve value derived from example log file
-          log  = F("P039 : ");                        // 7 char
-          log += getTaskDeviceName(event->TaskIndex); // 41 char
-          log += F(" : SPI Init - DONE");             // 18 char
-          addLogMove(LOG_LEVEL_INFO, log);
-        }
+        addLogMove(LOG_LEVEL_INFO, strformat(F("P039 : %s : SPI Init - DONE"), getTaskDeviceName(event->TaskIndex).c_str()));
       }
 #endif
 
@@ -615,26 +607,19 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
       if (isValidFloat(Plugin_039_Celsius))
       {
-        UserVar[event->BaseVarIndex] = Plugin_039_Celsius;
+        UserVar.setFloat(event->TaskIndex, 0, Plugin_039_Celsius);
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-
-          if ((log.reserve(95u))) {                     // reserve value derived from example log file
-            log  = F("P039 : ");                        // 7 char
-            log += getTaskDeviceName(event->TaskIndex); // 41 char
-            log += F(" : ");                            // 3 char
-
-            for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); i++)
-            {
-              log += getTaskValueName(event->TaskIndex, i);     // 41 char
-              log += F(": ");                                   // 2 char
-              log += formatUserVarNoCheck(event->TaskIndex, i); //  char
-              log += ' ';                                       // 1 char
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
+          String log = strformat(F("P039 : %s :"), getTaskDeviceName(event->TaskIndex).c_str());
+          for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); i++)
+          {
+            log += strformat(
+              F(" %s: %s"), 
+              getTaskValueName(event->TaskIndex, i).c_str(),
+              formatUserVarNoCheck(event->TaskIndex, i).c_str());
           }
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 #endif
 
@@ -644,19 +629,11 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       }
       else
       {
-        UserVar[event->BaseVarIndex]     = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-
-          if ((log.reserve(80u))) {                     // reserve value derived from example log file
-            log  = F("P039 :  ");                       // 7 char
-            log += getTaskDeviceName(event->TaskIndex); // 41 char
-            log += F(" : ");                            // 3 char
-            log += F("No Sensor attached !");           // 20 char
-            addLogMove(LOG_LEVEL_ERROR, log);
-          }
+          addLog(LOG_LEVEL_ERROR, strformat(F("P039 : %s : No Sensor attached!"), getTaskDeviceName(event->TaskIndex).c_str()));
         }
         success = false;
       }
@@ -685,27 +662,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  // calc delta since last call
-                  long delta = timePassedSince(P039_data->timer);
-
-                  // save current timer for next calculation
-                  P039_data->timer = millis();
-
-
-                  String log;
-
-                  if ((log.reserve(120u))) {                           // reserve value derived from example log file
-                    log  = F("P039 : ");                               // 7 char
-                    log += getTaskDeviceName(event->TaskIndex);        // 41 char
-                    log += F(" : ");                                   // 3 char
-                    log += F("current state: MAX31865_BIAS_ON_STATE"); // 37 char
-                    log += F("; delta: ");                             // 9 char
-                    log += delta;                                      // 4 char
-                    log += F(" ms");                                   // 3 char
-                    addLogMove(LOG_LEVEL_DEBUG, log);
-                  }
+                  addLogMove(LOG_LEVEL_DEBUG, strformat(
+                    F("P039 : %s : current state: MAX31865_BIAS_ON_STATE; delta: %d ms"),
+                    getTaskDeviceName(event->TaskIndex).c_str(),
+                    timePassedSince(P039_data->timer))); // calc delta since last call
                 }
                 # endif // ifndef BUILD_NO_DEBUG
+
+                // save current timer for next calculation
+                P039_data->timer = millis();
 
                 // activate one shot conversion
                 change8BitRegister(CS_pin_no,
@@ -722,16 +687,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  String log;
-
-                  if ((log.reserve(90u))) {                     // reserve value derived from example log file
-                    log  = F("P039 : ");                        // 7 char
-                    log += getTaskDeviceName(event->TaskIndex); // 41 char
-                    log += F(" : ");                            // 3 char
-                    log += F("Next State: ");                   // 12 char
-                    log += event->Par1;                         // 4 char
-                    addLogMove(LOG_LEVEL_DEBUG, log);
-                  }
+                  addLog(LOG_LEVEL_DEBUG, strformat(
+                    F("P039 : %s : Next State: %d"),
+                    getTaskDeviceName(event->TaskIndex).c_str(),
+                    event->Par1));
                 }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -742,26 +701,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  // calc delta since last call
-                  long delta = timePassedSince(P039_data->timer);
-
-                  // save current timer for next calculation
-                  P039_data->timer = millis();
-
-                  String log;
-
-                  if ((log.reserve(120u))) {                      // reserve value derived from example log file
-                    log  = F("P039 : ");                          // 7 char
-                    log += getTaskDeviceName(event->TaskIndex);   // 41 char ( max length of task device name)
-                    log += F(" : ");                              // 3 char
-                    log += F("current state: MAX31865_RD_STATE"); // 33 char
-                    log += F("; delta: ");                        // 9 char
-                    log += delta;                                 // 4 char - more than 1000ms delta will not occur
-                    log += F(" ms");                              // 2 char
-                    addLogMove(LOG_LEVEL_DEBUG, log);
-                  }
+                  addLogMove(LOG_LEVEL_DEBUG, strformat(
+                    F("P039 : %s : current state: MAX31865_RD_STATE; delta: %d ms"),
+                    getTaskDeviceName(event->TaskIndex).c_str(),
+                    timePassedSince(P039_data->timer))); // calc delta since last call
                 }
                 # endif // ifndef BUILD_NO_DEBUG
+
+                // save current timer for next calculation
+                P039_data->timer = millis();
 
                 // read conversion result
                 P039_data->conversionResult = read16BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_RTD_MSB));

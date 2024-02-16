@@ -27,6 +27,12 @@
 void handle_unprocessedEthEvents() {
   if (EthEventData.unprocessedEthEvents()) {
     // Process disconnect events before connect events.
+#if FEATURE_USE_IPV6
+    if (!EthEventData.processedGotIP6) {
+      processEthernetGotIPv6();
+    }
+#endif
+
     if (!EthEventData.processedDisconnect) {
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
@@ -241,5 +247,19 @@ void processEthernetGotIP() {
   EthEventData.setEthGotIP();
   CheckRunningServices();
 }
+
+#if FEATURE_USE_IPV6
+void processEthernetGotIPv6() {
+  if (!EthEventData.processedGotIP6) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("ETH event: Got IP6 ")) + EthEventData.unprocessed_IP6.toString(true));
+    EthEventData.processedGotIP6 = true;
+#if FEATURE_ESPEASY_P2P
+    updateUDPport(true);
+#endif
+
+  }
+}
+#endif
 
 #endif // if FEATURE_ETHERNET

@@ -12,6 +12,19 @@
 #define ESPEASY_ETH_GOT_IP                  1
 #define ESPEASY_ETH_SERVICES_INITIALIZED    2
 
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
+
 bool EthernetEventData_t::EthConnectAllowed() const {
   if (!ethConnectAttemptNeeded) return false;
   if (last_eth_connect_attempt_moment.isSet()) {
@@ -24,7 +37,11 @@ bool EthernetEventData_t::EthConnectAllowed() const {
 }
 
 bool EthernetEventData_t::unprocessedEthEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }
@@ -44,6 +61,9 @@ void EthernetEventData_t::clearAll() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
   dns0_cache = IPAddress();
@@ -81,6 +101,9 @@ void EthernetEventData_t::setEthDisconnected() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
 
   ethStatus = ESPEASY_ETH_DISCONNECTED;
@@ -127,6 +150,14 @@ void EthernetEventData_t::markGotIP() {
   processedGotIP = false;
 }
 
+#if FEATURE_USE_IPV6
+void EthernetEventData_t::markGotIPv6(const IPAddress& ip6) {
+  processedGotIP6 = false;
+  unprocessed_IP6 = ip6;
+}
+#endif
+
+
 void EthernetEventData_t::markLostIP() {
   bitClear(ethStatus, ESPEASY_ETH_GOT_IP);
   bitClear(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
@@ -150,6 +181,20 @@ void EthernetEventData_t::markDisconnect() {
 void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
+#if FEATURE_USE_IPV6
+  ETH.enableIPv6(true);
+  // workaround for the race condition in LWIP, see https://github.com/espressif/arduino-esp32/pull/9016#discussion_r1451774885
+  {
+    uint32_t i = 5;   // try 5 times only
+    while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH)) != ESP_OK) {
+      delay(1);
+      if (i-- == 0) {
+//        addLog(LOG_LEVEL_ERROR, ">>>> HELP");
+        break;
+      }
+    }
+  }
+#endif
 }
 
 String EthernetEventData_t::ESPEasyEthStatusToString() const {

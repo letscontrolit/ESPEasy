@@ -57,6 +57,11 @@ const __FlashStringHelper * SDKwifiStatusToString(uint8_t sdk_wifistatus)
 const __FlashStringHelper * ArduinoWifiStatusToFlashString(uint8_t arduino_corelib_wifistatus) {
   switch (arduino_corelib_wifistatus) {
     case WL_NO_SHIELD:       return F("WL_NO_SHIELD");
+#ifdef ESP32
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
+    case WL_STOPPED:         return F("WL_STOPPED");
+#endif
+#endif
     case WL_IDLE_STATUS:     return F("WL_IDLE_STATUS");
     case WL_NO_SSID_AVAIL:   return F("WL_NO_SSID_AVAIL");
     case WL_SCAN_COMPLETED:  return F("WL_SCAN_COMPLETED");

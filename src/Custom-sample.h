@@ -22,11 +22,12 @@
 // --- Feature Flagging ---------------------------------------------------------
 // Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
-#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompletion and command suggestions in Rules
-#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
-#define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
-// #define FEATURE_SD                1     // Enable SD card support
-// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
+#define FEATURE_RULES_EASY_COLOR_CODE   1  // Use code highlighting, autocompletion and command suggestions in Rules
+#define FEATURE_ESPEASY_P2P             1  // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA             1  // enables the Arduino OTA capabilities
+#define FEATURE_THINGSPEAK_EVENT        1  // generate an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+// #define FEATURE_SD                   1  // Enable SD card support
+// #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT
@@ -151,6 +152,8 @@
 #define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
+#define DEFAULT_SYSLOG_PORT                     0                 // Standard syslog port: 514
+#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
@@ -159,12 +162,23 @@
 
 #define DEFAULT_USE_SERIAL                      true              // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
-#define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
 #define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
+// Factory Reset defaults
+#define DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME    true
+#define DEFAULT_FACTORY_RESET_KEEP_WIFI         true
+#define DEFAULT_FACTORY_RESET_KEEP_NETWORK      true
+#define DEFAULT_FACTORY_RESET_KEEP_NTP_DST      true
+#define DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG  true
+
+
 #define BUILD_NO_DEBUG
+
+// Custom built-in url for hosting JavaScript and CSS files.
+#define CUSTOM_BUILD_CDN_URL                   "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/"
+
 
 
 // Special SSID/key setup only to be used in custom builds.
@@ -522,6 +536,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P153   // SHT4x
 // #define USES_P154   // BMP3xx
 
+// #define USES_P159   // Presence - LD2410 Radar detection
+
+// #define USES_P164   // Gases - ENS16x TVOC/eCO2
+// #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 /*
  #######################################################################################################
  ###########     Controllers

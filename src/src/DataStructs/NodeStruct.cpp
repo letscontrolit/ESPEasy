@@ -11,7 +11,16 @@
 
 #define NODE_STRUCT_AGE_TIMEOUT 300000  // 5 minutes
 
-NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0)
+NodeStruct::NodeStruct() : 
+  ESPEasyNowPeer(0), 
+  useAP_ESPEasyNow(0), 
+  scaled_rssi(0)
+#if FEATURE_USE_IPV6
+   ,hasIPv4(0)
+   ,hasIPv6_mac_based_link_local(0)
+   ,hasIPv6_mac_based_link_global(0)
+   ,unused(0)
+#endif
 {}
 
 bool NodeStruct::valid() const {
@@ -19,7 +28,7 @@ bool NodeStruct::valid() const {
   return true;
 }
 
-bool NodeStruct::validate() {
+bool NodeStruct::validate(const IPAddress& remoteIP) {
   if (build < 20107) {
     // webserverPort introduced in 20107
     webgui_portnumber = 80;
@@ -37,10 +46,31 @@ bool NodeStruct::validate() {
   }
   if (build < 20253) {
     version = 0;
-    dummy = 0;
+#if FEATURE_USE_IPV6
+    hasIPv4                       = 0;
+    hasIPv6_mac_based_link_local  = 0;
+    hasIPv6_mac_based_link_global = 0;
+
+    unused = 0;
+#else
+    unused = 0;
+#endif
+
     unix_time_frac = 0;
     unix_time_sec = 0;
   }
+
+#if FEATURE_USE_IPV6
+  // Check if we're in the same global subnet
+  if (hasIPv6_mac_based_link_global && remoteIP.type() == IPv6) {
+    const IPAddress this_global = NetworkGlobalIP6();
+    // Check first 64 bit to see if we're in the same global scope
+    for (int i = 0; i < 8 && hasIPv6_mac_based_link_global; ++i) {
+      if (this_global[i] != remoteIP[i])
+        hasIPv6_mac_based_link_global = false;
+    }
+  }
+#endif
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message
   return valid();
@@ -117,6 +147,41 @@ String NodeStruct::getNodeName() const {
 IPAddress NodeStruct::IP() const {
   return IPAddress(ip[0], ip[1], ip[2], ip[3]);
 }
+
+#if FEATURE_USE_IPV6
+IPAddress NodeStruct::IPv6_link_local(bool stripZone) const
+{
+  if (hasIPv6_mac_based_link_local) {
+    // Base IPv6 on MAC address
+    IPAddress ipv6;
+    if (IPv6_link_local_from_MAC(sta_mac, ipv6)) {
+      if (stripZone) {
+        return IPAddress(IPv6, &ipv6[0], 0);
+      }
+      return ipv6;
+    }
+  }
+  return IN6ADDR_ANY;
+}
+
+IPAddress NodeStruct::IPv6_global() const
+{
+  if (hasIPv6_mac_based_link_global) {
+    // Base IPv6 on MAC address
+    IPAddress ipv6;
+    if (IPv6_global_from_MAC(sta_mac, ipv6)) {
+      return ipv6;
+    }
+  }
+  return IN6ADDR_ANY;
+}
+
+bool NodeStruct::hasIPv6() const {
+  return hasIPv6_mac_based_link_local ||
+         hasIPv6_mac_based_link_global;
+}
+#endif
+
 
 MAC_address NodeStruct::STA_MAC() const {
   return MAC_address(sta_mac);

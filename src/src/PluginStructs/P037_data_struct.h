@@ -94,9 +94,11 @@
 # define P037_OPERAND_LIST    F("=%")
 
 # define P037_FILTER_COUNT    3
-# define P037_FILTER_LIST     F("=-:") // Length should at least match P037_FILTER_COUNT
+# define P037_FILTER_LIST     F("=-:")           // Length should at least match P037_FILTER_COUNT
 
-# define P037_VALUE_SEPARATOR '\x02'   // Separator outside of the normal ascii character values
+# define P037_VALUE_SEPARATOR '\x02'             // Separator outside of the normal ascii character values
+
+# define P037_REPLACE_CHAR_SET  "!@$%^&*;:.|/\\" // Allowable set of characters to be replaced by a comma
 
 // Data structure
 struct P037_data_struct : public PluginTaskData_base

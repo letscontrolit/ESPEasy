@@ -473,51 +473,7 @@ void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
   hsv[2] = v * 255.0f;
 }
 
-// Simple bitwise get/set functions
 
-uint8_t get8BitFromUL(uint32_t number, uint8_t bitnr) {
-  return (number >> bitnr) & 0xFF;
-}
-
-void set8BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  const uint32_t mask     = (0xFFUL << bitnr);
-  const uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
-
-uint8_t get4BitFromUL(uint32_t number, uint8_t bitnr) {
-  return (number >> bitnr) &  0x0F;
-}
-
-void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  const uint32_t mask     = (0x0FUL << bitnr);
-  const uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
-
-uint8_t get3BitFromUL(uint32_t number, uint8_t bitnr) {
-  return (number >> bitnr) &  0x07;
-}
-
-void set3BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  const uint32_t mask     = (0x07UL << bitnr);
-  const uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
-
-uint8_t get2BitFromUL(uint32_t number, uint8_t bitnr) {
-  return (number >> bitnr) &  0x03;
-}
-
-void set2BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
-  const uint32_t mask     = (0x03UL << bitnr);
-  const uint32_t newvalue = ((value << bitnr) & mask);
-
-  number = (number & ~mask) | newvalue;
-}
 
 float getCPUload() {
   return 100.0f - Scheduler.getIdleTimePct();

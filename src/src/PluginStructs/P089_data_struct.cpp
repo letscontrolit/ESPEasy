@@ -141,7 +141,7 @@ uint8_t PingReceiver(void *origin, struct raw_pcb *pcb, struct pbuf *packetBuffe
 
       if ((P089_taskdata != nullptr) && (icmp_hdr->id == (uint16_t)((P089_taskdata->idseq & 0xffff0000) >> 16)) &&
           (icmp_hdr->seqno == (uint16_t)(P089_taskdata->idseq & 0xffff))) {
-        UserVar[index * VARS_PER_TASK]    = 0; // Reset "fails", we got reply
+        UserVar.setFloat(index, 0, 0); // Reset "fails", we got reply
         P089_taskdata->idseq              = 0;
         P089_taskdata->destIPAddress.addr = 0;
         is_found                          = true;

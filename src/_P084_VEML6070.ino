@@ -125,14 +125,14 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
       if (isnan(uv_raw) || (uv_raw == 65535) || !read_status) {
         addLog(LOG_LEVEL_INFO, F("VEML6070: no data read!"));
-        UserVar[event->BaseVarIndex + 0] = NAN;
-        UserVar[event->BaseVarIndex + 1] = NAN;
-        UserVar[event->BaseVarIndex + 2] = NAN;
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
+        UserVar.setFloat(event->TaskIndex, 2, NAN);
         success                          = false;
       } else {
-        UserVar[event->BaseVarIndex + 0] = uv_raw;
-        UserVar[event->BaseVarIndex + 1] = uv_risk;
-        UserVar[event->BaseVarIndex + 2] = uv_power;
+        UserVar.setFloat(event->TaskIndex, 0, uv_raw);
+        UserVar.setFloat(event->TaskIndex, 1, uv_risk);
+        UserVar.setFloat(event->TaskIndex, 2, uv_power);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");

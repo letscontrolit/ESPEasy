@@ -51,7 +51,7 @@ bool P154_data_struct::read(float& temp, float& pressure)
 bool P154_data_struct::webformLoad(struct EventStruct *event)
 {
   addRowLabel(F("Detected Sensor Type"));
-  const uint8_t chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
+  const uint32_t chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
 
   if (chipID == P154_BMP3_CHIP_ID) {
     addHtml(F("BMP38x"));

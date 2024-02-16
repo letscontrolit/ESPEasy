@@ -5,6 +5,7 @@
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware_device_info.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_System.h"
 
@@ -103,6 +104,11 @@ void Improv_Helper_t::init()
 
 bool Improv_Helper_t::handle(uint8_t b, Stream *serialForWrite)
 {
+  #ifdef USE_SECOND_HEAP
+  // Do not store in 2nd heap, std::list cannot handle 2nd heap well
+  HeapSelectDram ephemeral;
+  #endif // ifdef USE_SECOND_HEAP
+
   _tmpbuffer.push_back(b);
 
   switch (_improv.handleSerial(b, serialForWrite)) {

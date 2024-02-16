@@ -10,7 +10,8 @@
  * 2023-03-15 tonhuisman: Handle setting payload to (Dummy) Devices via topic SysName/TaskName/ValueName/set
  * 2023-03 Changelog started
  */
-# include "src/Commands/InternalCommands.h"
+// # include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"

@@ -2,7 +2,7 @@
 #include "../Helpers/_CPlugin_Helper_mqtt.h"
 
 #if FEATURE_MQTT
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 
 /***************************************************************************************
  * Parse MQTT topic for /cmd and /set ending to handle commands or TaskValueSet

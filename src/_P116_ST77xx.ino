@@ -80,20 +80,18 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("CS: ");
-      string += formatGpioLabel(PIN(0), false);
-      string += event->String1; // contains the NewLine sequence
-      string += F("DC: ");
-      string += formatGpioLabel(PIN(1), false);
-      string += event->String1;
-      string += F("RES: ");
-      string += formatGpioLabel(PIN(2), false);
-      string += event->String1;
-      string += F("Btn: ");
-      string += formatGpioLabel(P116_CONFIG_BUTTON_PIN, false);
-      string += event->String1;
-      string += F("Bckl: ");
-      string += formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false);
+      const char* separator = event->String1.c_str();  // contains the NewLine sequence
+      string = strformat(
+        F("CS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
+        formatGpioLabel(PIN(0), false).c_str(),
+        separator,
+        formatGpioLabel(PIN(1), false).c_str(),
+        separator,
+        formatGpioLabel(PIN(2), false).c_str(),
+        separator,
+        formatGpioLabel(P116_CONFIG_BUTTON_PIN, false).c_str(),
+        separator,
+        formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false).c_str());
       success = true;
       break;
     }
@@ -223,17 +221,18 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                   P116_CONFIG_GET_COLOR_FOREGROUND,
                                   F("backgroundcolor"),
                                   P116_CONFIG_GET_COLOR_BACKGROUND);
+      {
+        String strings[P116_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      String strings[P116_Nlines];
-      LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
+        uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
 
-      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
-
-      for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
-        remain -= (strings[varNr].length() + 1);
+        for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
+          addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
+          remain -= (strings[varNr].length() + 1);
+        }
+        addUnit(concat(F("Remaining: "), remain));
       }
-      addUnit(concat(F("Remaining: "), remain));
 
       success = true;
       break;
@@ -272,17 +271,18 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
+      {
+        String strings[P116_Nlines];
 
-      String strings[P116_Nlines];
+        for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
+          strings[varNr] = webArg(getPluginCustomArgName(varNr));
+        }
 
-      for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        strings[varNr] = webArg(getPluginCustomArgName(varNr));
-      }
+        const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
-
-      if (!error.isEmpty()) {
-        addHtmlError(error);
+        if (!error.isEmpty()) {
+          addHtmlError(error);
+        }
       }
 
       success = true;

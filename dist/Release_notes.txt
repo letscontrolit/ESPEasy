@@ -1,4 +1,334 @@
 -------------------------------------------------
+Changes in release mega-20231225 (since mega-20231130)
+-------------------------------------------------
+
+Release date: Mon Dec 25 10:28:22 PM CET 2023
+
+TD-er (205):
+      [Cron lib] Update code to latest version
+      [Cron] Fix unintended month rollovers, ported from staticlibs#35
+      [Cron] Prevent warnings in ccronexpr_test.c
+      [Cron] Fix build error (define CRON_INVALID_INSTANT in header)
+      Revert "[Cron lib] Update code to latest version"
+      [ESP_IDF 5.1] Add support for ESP_IDF 5.1 (SP32 Arduino SDK 3.x)
+      [ESP_IDF 5.x] Disable ADC calibration for now
+      [ESP_IDF 5.1] Fix build on ESP32 ETH builds
+      [ESP-IDF 5.1] Fix building ESP32-S3
+      [ESP-IDF 5.1] Split ESP32 variant builds with LittleFS to use ESP-IDF5.1
+      [ESP-IDF 5.1] Fix building ESP32-Solo & ESP32-C3
+      [ESP-IDF 5.1] Fix ESP32-S3 LittleFS build
+      [ESP-IDF 5.1] Fix building custom_IR_ESP32_16M8M_LittleFS_ETH
+      [ESP-IDF 5.1] Fix builds on Custom IR ESP32 LittleFS ETH & MAX ESP32
+      [ESP-IDF 5.1] fix lib_ignore for ESP8266 / ESP32-S3
+      [ESP-IDF 5.1] Fix building ESP8266 3.0.2 builds
+      [ESP-IDF 5.1] Fix ESP8266 builds demanding EspSoftwareSerial SDK3.x
+      [ESP-IDF 5.1] Fix check for IDF major version >= 5
+      [ESP-IDF 5.1] Fix some ESP8266 beta builds
+      [ESP-IDF v5.1] Fix building ESP8266 minimal IRext
+      [ESP32] Update to ESP32 platform 2.0.14 (with SPIFFS)
+      [ESP-IDF 5.1] Fix some warnings on compiling with IDF 5.1
+      [ESP 2.0.14] Fix ESP32-Solo1 build for ESP32 SDK 2.0.14 (SPIFFS)
+      [ESP-IDF 5.1] Fix not always loading correct platform files
+      [ESP-IDF 5.1] Implement ADC support for IDF 5.1
+      [ESP-IDF 5.1] Fix build with ADC on IDF < 5
+      [ESP-IDF 5.1] Remove Hall Effect sensor from ADC selector
+      [ESP-IDF 5.1] Fix ADC calibration & crashes on ESP32-C3
+      [EDP-IDF 5.1] Fix ADC build on ESP8266
+      [ESP-IDF 5.1] Fix crashes on ESP32-S3 & ESP32-S2
+      [ADC] Cleanup code
+      [Controller Settings] Fix inverted Send LWT and Will Retain
+      [Charts] Cleanup code & add option for multiple Y-axis
+      [PluginStats] Add option to hide taskvars in chart
+      [PluginStats] Add option to select chart axis per taskvalue
+      [PluginStats] Cleanup code
+      [Cleanup] Reduce build size
+      [Access Control] Prevent "IP blocked: 0.0.0.0"
+      [Access Controll] Fix using the same WiFiClient
+      [ChartJS] Add scatter plot for GPS longitude/latitude
+      [WiFi] Add proper erase WiFi calib data on ESP32 cmd 'erasesdkwifi'
+      [WiFi] Add more WiFi info for ESP32 + limit bandwidth to HT20
+      [HW detection] Update getChipModel() with new chip IDs
+      [ESP-IDF 5.1] Fix build issues ESP8266 and ESP-IDF4.x
+      [Hardware] Fix build on ESP32-S3 on hardware detection
+      [ESP-IDF5.1] Add internal temperature sensor for all ESP32 variants
+      [ESP-IDF5.1] Add auto range to internal temperature sensor (ESP32-S*/C*)
+      [ESP-IDF5.1] Disable IP subnet check access control (remoteIP() bug)
+      [ESP-IDF5.1] Update to IDF5.1 of 2023-10-10
+      [ESP-IDF5.1] Add normal_ESP32_4M316k_LittleFS_ETH
+      [ESP-IDF5] Add link to Setup page on tools tab (IDF5 remoteIP() issue)
+      [Sysinfo] Only show TSF time on sysinfo page when connected to AP
+      [ESP-IDF5.1] Fix PWM and Servo
+      [Lib Update] Update Adafruit Motor Shield V2 library to v1.1.1
+      [ESP-IDF5.1] Fix PWM using fade & 'tone' upto 20 MHz
+      [ESP-IDF5.1] Move PWM code to separate Hardware_PWM.h/.cpp
+      [ESP-IDF5.1] Move GPIO related code to Hardware_GPIO.h/.cpp
+      [ESP-IDF5.1] Split Hardware device info into Hardware_device_info.h/.cpp
+      [ESP-IDF5.1] Disable option "Try clear I2C bus when stuck" for IDF5.x
+      [ESP-IDF5.1] Move Hardware I2C functions to Hardware_I2C.h/.cpp
+      [Cleanup] Remove unneeded includes to "../Helpers/Hardware.h"
+      [Neopixel] Update Adafruit NeoPixel library to 1.11.0
+      [ESP-IDF5.1] Update NeoPixelBus with Tasmota's patches for ESP-IDF5.1
+      [ESP-IDF5.1] Update P128 to use updated NeoPixelBus library
+      [ESP-IDF5.1] Fix build issue on older IDF based builds
+      [ESP-IDF5.1] Move to latest platform package build 2023-10-24
+      [Cleanup] Reduce build size by compacting logs
+      [Cleanup] Simplify StringConverter::parseHexTextData function
+      [SysInfo] Add PSRAM to P026_sysinfo and cleanup code
+      [Cleanup] Simplify function names for P026_SysInfo
+      [Build] Add missing include for ESP8266 reading ADC
+      [WiFi] Fix force B/G mode on ESP8266
+      [WiFi] Fix ESP32 taking very long time to get (re)connected
+      [ESP-IDF5.1] Fix issues in IPAddress (SDK platform build)
+      [ESP8266] Fix compiler warning in order of member initialization
+      [ESP8266] Extend ESP8285 module detection various built in flash sizes
+      [ESP-IDF5.1] Disable WiFi power save during connect
+      [ESP-IDF5.1] Fix building IR plugins for IDF 5.1 builds
+      [GPS] Fix showing lat/long scatter plot
+      [ESP-IDF5.1] Fix building IR plugins on ESP32-S3
+      [GPS] Cleanup old code
+      [ESP-IDF5.1] Enable NeoPixel plugins for IDF 5.1 builds
+      [GPS] Fix minor issues Position Scatter plot
+      [ESP-IDF5.1] Fix NeoPixel Matrix stability on ESP32-S3 (use DMA)
+      [ESP-IDF5.1] Improve NeoPixel on ESP32 + add LittleFS ESP32-S2 Neo Build
+      [ESP-IDF5.1] Tweak NeoPixel support on ESP32-C3
+      [ESP-IDF5.1] Convert PVS Studio test builds to use IDF5.1
+      [ESP-IDF5.1] Fix freeing RMT assigned channel + tweak ESP32-classic
+      [ESP-IDF5.1] re-enable P088 Heatpump IR for IDF5.1
+      [ESP-IDF5.1] Fix build issues after enabling HeatpumpIR
+      [ESP-IDF5.1] Only use -mtext-section-literals on ESP32-S3 IDF5 builds
+      [ESP-IDF5.1] Fix build issues with "text-section-literals" build flag
+      [ChartJS] Fix GPS position scatter plot + add BME280 scatter plot
+      [SenseAir] Fix reading Temperature from Sunrise (S11)
+      [ESP8285] Fix check for flash interface pin allowing GPIO 9 & 10
+      [Tools] Update script to generate webflasher page to show file system
+      [Build] Fix compile error when using default Custom.h (#4870)
+      [ESP-IDF5.1] Update Arduino ESP32
+      [ESP-IDF5.1] Add hardware specific info on ESP32-C2/ESP32-C6
+      [ESP-IDF5.1] Add initial Custom builds for ESP32-C2 and ESP32-C6
+      [ESP-IDF5.1] Fix build for ESP32-C6
+      [ESP-IDF5.1] Remove ESP32C6-beta chip ID patch for old esptool.py
+      [ESP-IDF5.1] Add 2M ESP32-C2 no-OTA option
+      [ESP-IDF5.1] Fix bootloop on ESP32-C2/C6 in HWRandom() code
+      [ESP-IDF5.1] Enable HWCDC for USB serial console on ESP32-C6
+      [Sysinfo] Fix crash on ESP32-C2/C6 when drawing meminfodetail charts
+      [ESP-IDF5.1] Add WiFi6 (802.11ax) for ESP32-C6 & fix SPI issues C2/C6
+      [ESP-IDF5.1] Fix SPI bus issues for ESP32-C2/C6
+      [WiFi] Bugfix: AP wasn't consistently started on WiFi connection failure
+      [ESP8266 Setup] Fix bootloop during initial setup Custom ESP8266  build
+      [ESP-IDF5.1] Fix build issue ESP32-C3
+      [ESP-IDF5.1] Move ESP32 partition definitions
+      [Setup] Fix load CSS on initial WiFi setup page
+      [ESP8266] Switch to using 2nd heap with Arduino SDK 3.1.2
+      [ESP8266] Fix stability issues when using 2nd heap
+      [ESP8266] Change default platform to not using 2nd heap
+      [ESP8266] On 2nd heap do not keep event queue on 2nd heap
+      [ESP8266] Optimize memory allocations + 2nd heap
+      [Build] Fix building ESP8266 envs
+      [Build] Reduce build size minimal OTA builds (lib_ignore)
+      [Build] Make ESP8266 display build fit (lib_ignore)
+      [Build] Cleanup of platformIO ini files for ESP8266
+      [RAM] Move MQTT buffer and OLED frame buffer to 2nd heap
+      [2nd Heap] Tweak 2nd heap stability + set as ESP8266 regular
+      [ESP-IDF5.1] Update to the latest Arduino/ESP32 commits for IDF5.1.2
+      [ESP-IDF5.1] Fix building ESP32-Solo1 builds
+      [ESP8266] Move 'regular' platform back to ESP8266/Arduino 2.7.4
+      [Cleanup] Free up 1k of RAM when not using MQTT controller
+      [Build] Fix missing include WiFi commands
+      [OLED Framed] Use double buffer for update only changed pixels
+      [WiFi] Fix connect to Hidden SSID on Mikrotik AP (#4885)
+      [Cleanup] Reduce build size for sysvars page
+      [Rules] Speedup parsing system variables
+      [WiFi] Only connect using BSSID when BSSID is available
+      [Variables] Fix bug in parsing incomplete variables + add var nesting
+      [Rules] Add variable offset calculation for shorthand var (%v=1+%v2%%)
+      [ESP-IDF5.1] Change default SPI pins for ESP32-C2/C6
+      [ESP32 WiFi] Fix reconnect issue after WIFI_REASON_AUTH_EXPIRE
+      [ESP-IDF5.1] Update to latest IDF/Arduino code
+      [ESP-IDF5.1] Revert to previous IDF build (SPI registers wrong)
+      [ESP-IDF5.1] Use LTO on ESP32 IDF5.1 builds to reduce build size
+      [Build] Fix building ESP8266 core 2.7.4 minimal builds
+      [ESP-IDF5.1] Fix ESP32-classic and -S3 build become larger using LTO
+      [Docs] Add .readthedocs.yaml to fix auto build
+      [ESP-IDF5.1]  Add SafeBoot minimal image for 4M ESP32-xx nodes
+      [Webserver] Fix storing static content in browser cache
+      [ESP-IDF5.1] Fix crash after scan on setup page with static IP
+      [ESP-IDF5.1] Fix crashes on ESP32-S3/C3/C2 WiFi scan
+      [Cron] Switch ccronexpr lib to supertinycron fork.
+      [Build] Comment  out main function test code supertinycron lib
+      [SuperTinyCron] Fix discard 'const' qualifier warning in lib
+      [Build] Put IR libs in lib_ignore for 'normal' builds to speed up builds
+      [ESP-IDF5.1] Update to latest Arduino/ESP32 and IDF code
+      [ESP-IDF5.1] Speed up WiFi reconnect on ESP32-xx
+      [Setup] Improve Captive portal redirect on Android
+      [Build] Fix build issue for new cron job library
+      [ESP-IDF5.1] Clean up ESP32-C2/C6 PlatformIO ini files
+      [Formula] Fix applying formula & keep raw values in RTC
+      [Formula] Apply formula when updating taskvalues
+      [Formula] Fix build on ESP8266
+      [Formula] Fix build + cleanup UserVarStruct code
+      [Formula] Fix ESP8266 1M build
+      [Formula] Allow computing formula when reading the task values
+      [Formula] Add detection which cached value has been computed
+      [formula] Fix using %pvalue% in formula
+      [Formula] Fix stack overflow parsing %pvalue%
+      [Formula] Disable PlatformIO env normal_alt_wifi_ESP8266_4M1M
+      [Build] Quest for smaller bin files
+      [Build] Fix ESP8266 build consistency in used parameters
+      [Cleanup] Reduce build size
+      [Build] Reduce build size
+      [Cleanup] Reduce build size by simplifying task init success check
+      [Build] Reduce build size
+      [Build] Reduce build size
+      [Build] Reduce build size
+      [Build] Reduce build size (P137)
+      [Build] Reduce build size by turning get/setNbitToUL to macros
+      [Build] Reduce bin size (SenseAir)
+      [Commands] Simplify internal command handling & reduce build size
+      [Cleanup] Simplify calling internal commands
+      [USB CDC] Fix console on ESP32-C6 USB Jtag port & cleanup unused boards
+      [Cleanup] Cleanup internal command parse code
+      [IDF-5.1] Update to latest ESP32 sdk & fix getting remote IP
+      [Build] Fix build with wrong board definition
+      Fix typo in IP Access control compare IPs
+      [IDF-5.1] Update to the latest ESP32 SDK code
+      [ESP-IDF5.1] Add initial support for IPv6
+      [ESP-IDF5.1] Make IPv6 ESP32-only (for now) & list all IPv6 addresses
+      [Build] Fix copy/paste error
+      [ESP-IDF5.1] Fix IPv6 build on ESP32-solo1
+      [ESP-IDF5.1] Add preliminary IPv6 support for Ethernet
+      [IPv6] Fix typo in function name markGotIPv6
+      [ESPEasy p2p] Fix rejecting data from nodes running build < 20230505
+      [ESPEasy p2p] Fix not checking for sensor type from old nodes
+      [ESP-IDF5.1] Add preliminary support for IPv6 for ESPEasy p2p
+      [ESP-IDF5.1] Disable IPv6 default, only for TESTING_FEATURE_USE_IPV6
+      [ESP_IDF5.1] Fix stupid inverse check for testing IPv6 define
+      [Dummy] Fix TaskValueSet command
+      [SysVars] Fix parsing all system variables in a rules line
+      [Web Formatting] Fix showing Note: HTML class
+      [Web commands] Show LogEntry results + speed up  parsing web commands
+      [Build] Fix minimal OTA build
+      [ESP-IDF5.1] Enable IPv6 for ESP32 'custom' builds
+      [Event] Fix duplicate event when sent as web command on tools page
+      [Controller] Fix parsing %valname% and %value% used in some controllers
+
+Ton Huisman (2):
+      [Build] Freeze Python version on 3.11 so pygit2 will run as intended
+      [WiFi] Optimization
+
+
+-------------------------------------------------
+Changes in release mega-20231130 (since mega-20231013)
+-------------------------------------------------
+
+Release date: Thu Nov 30 08:11:17 PM CET 2023
+
+Fabio Ancona (3):
+      Update Custom-sample.h with missing Plugins and update description
+      Update Custom-sample.h after review
+      Details supported hardware
+
+TD-er (18):
+      [WiFi] Fix force B/G mode on ESP8266
+      [WiFi] Limit WiFi speed to HT20 for 802.11n mode on ESP32
+      [Build] Fix compile error when using default Custom.h (#4870)
+      [CDN URL] Add default CDN url with latest tag when no pygit2 installed
+      [WiFi] Fix connect to Hidden SSID on Mikrotik AP (#4885)
+      [WiFi] Only connect using BSSID when BSSID is available
+      [ESP32 WiFi] Fix reconnect issue after WIFI_REASON_AUTH_EXPIRE
+      [FactoryReset] Store settings to keep in ESP32 NVS storage
+      [Custom CDN] Move Custom CDN URL to config.dat
+      [Custom CDN] Move position of where Custom CDN URL is stored in settings
+      [Factory Reset] Use NVS stored defaults on reset
+      [Custom CDN] Fix storing empty CDN url.
+      [Factory Reset] Store WiFi/Eth config in NVS
+      [Factory Reset] Store log/console settings in NVS
+      [Custom CDN] Add checkbox to store Custom CDN to NVS
+      [Custom.h] Update Custom-sample.h with new CUSTOM_BUILD_CDN_URL
+      [Factory Reset] Add new flag to NVS for slow connect to hidden SSID
+      [ESP8266 build] Set all ESP8266 'normal' builds to use CDN for CSS/JS
+
+Ton Huisman (68):
+      [Lib] HeatpumpIR update to 1.0.23
+      [Lib] HeatpumpIR Add compatibility with ESP32 Arduino 3.0/IDF 5.1.x
+      [P023] Bugfix: Template parsing was overwriting the template
+      [P159] Add LD2410 Radar presence detection
+      [P023] Minor performance improvement
+      [P159] Remove copy/paste evidence :-D
+      [P159] Many improvements, add/update settings for sensitivity
+      [P159] Fix compilation on LIMIT_BUILD_SIZE builds
+      [P159] Small improvements
+      [P159] Small improvements
+      [P159] Add command for sensor factoryreset
+      [Lib] LD2410: Fix bug (-1 for uint), add undocumented OutputPinState value
+      [P159] Add OutputPinState option after AmbientLight option (breaking change!)
+      [P159] Minor change to determine how that may influence the build
+      [NEOPIXEL] Add NeoPixelBus_wrapper and implement in NeoPixel plugins
+      [Lib] Adjust Adafruit_NeoMatrix to use NeoPixelBus_wrapper
+      [ESP-IDF5.1] Update NeoPixelBus with Tasmota's patches for ESP-IDF5.1
+      [NeoPixel] Add changelogs for applying NeoPixelBus_wrapper library
+      [Build] Fix pygit2 version
+      [Build] Fix pygit2 version
+      [Build] Restore pygit2 version
+      [Build] Try older/current version of pip
+      [Build] Explicit version of libgit2
+      [Build] Undo changes
+      [ESP-IDF5.1] Fix build issue on older IDF based builds
+      [Neopixel] Fixes and improvements
+      [Build] Freeze pip dependencies
+      [Build] Undo changes
+      [Build] Try fix failing pygit2 install
+      [Build] Try older Python version
+      [Neopixel] Fix fall-through return value
+      [Build] Fix some cherry-pick diffs
+      [Build] Freeze Python to 3.11 to fix pygit2 build issue
+      [P159] Add Gate0 energy values that where missing Add GetConfig support for fetching all available values Add ld2410,logall command for dumping all values in the log (INFO level) Code improvements
+      [NeopixelWrapper] Code optimization
+      [P021] Set Hysteresis value via config command
+      [P021] Update documentation
+      [Build] Freeze Python version to avoid build issue with pygit2
+      [Build] Freeze Python version on 3.11 so pygit2 will run as intended
+      [P021] Change commands SetHysteresis and GetHysteresis for consistency
+      [Lib] LD2410: Read all data that can be read in 5 msec, add errorcount and data_valid checks
+      [P159] Rework processing, now near-instant response Add GetConfig support for sensitivity per gate values
+      [Lib] LD2410: Reformat source (nearly all is changed!) Replace yield() by delay(0)
+      [P159] Fix wrong use of F(""), should be EMPTY_STRING
+      [Lib] IRremoteESP8266 update to v2.8.6, with ESPEasy patches applied - Disable some (more) IR protocols to make 1M build fit - Add IDF 5.x compatibility
+      [Lib] Adafruit_NeoMatrix: Fix includes
+      [Lib] Remove Adafruit_NeoPixel from repo
+      [P131] Fix variable initialization, call begin() to start the NeoPixels
+      [P041] Uncrustify source, minor improvements
+      [P042] Fix initializations to avoid crash at start, minor improvements
+      [P070] Minor improvements
+      [Lib] Update library.properties for local copy of Adafruit_NeoMatrix
+      [Docs] Updates and corrections Nov. 2023
+      [Docs] Updates and corrections Nov. 2023
+      [P159] Add documentation
+      [P159] Update EasyColorMirror
+      [P159] Update comments to explicitly name LD2410
+      [CDN] Set override url for CDN hosted files
+      [CDN] Update documentation
+      [CDN] Code improvements, Add to Provisioning
+      [CDN] Update documentation
+      [Provisioning] Split provisioning commands, add fallback for MAX builds, code cleanup
+      [Provisioning] Update documentation
+      [CDN] Replace system variables in url, update documentation
+      [I2C] Add Device flag for 100 kHz-only devices
+      [I2C] Devices that only support 100 kHz speed
+      [Bugfix] [P159] Saving settings checkbox failed on ESP8266
+      [Docs] Fix some typos Nov. 2023
+
+jfmennedy (8):
+      P093 Mitsubishi HeatPump Add Support for SetRemoteTemperature Resolves P093 - Mitsubishi Heat Pump Add Remote Temperature #4711
+      Modify Changelog Order
+      Help needed here
+      - Fix float initialisaton, - Fix float comparator, - Still trying t get SetRemoteTemperature working...
+      -Fix static const uint8_t RemoteTemperature
+      - Implement remarks from review
+      Documentation
+      Documentation Review
+
+
+-------------------------------------------------
 Changes in release mega-20231013 (since mega-20230930)
 -------------------------------------------------
 
@@ -4196,7 +4526,7 @@ TD-er (106):
       [WiFi] Process Station event Auth Changed
       [Controller] Debug log on remove duplicate queued message
       [GPIO] Fix warning of unused variable
-      [Build] Remove HWL8012 from "energy" build
+      [Build] Remove HLW8012 from "energy" build
       [Energy build] Add P093 Mitsubishi Heat Pump
       [Cleanup] Remove ICACHE_RAM_ATTR on wifi event function
       [Build] LittleFS can only be built on 'beta' builds
@@ -4204,7 +4534,7 @@ TD-er (106):
       [Cleanup] Reduce IRAM usage in Dallas bit read/write code
       [Build] Fix normal_beta_ESP8266_16M_LittleFS build
       [Cleanup] Remove unneeded ICACHE_RAM_ATTR on DHCP timeout callback
-      [Build] Remove P076 HWL8012 from "testing" builds due to build size
+      [Build] Remove P076 HLW8012 from "testing" builds due to build size
       [Build] Disable test_ESP8266_4M1M_VCC_MDNS_SD as it does not fit in IRAM
       [Build] Set normal_IRext_no_rx_ESP8266_4M2M to LIMIT_BUILD_SIZE
       [GPS] Fix running out of memory when no GPS data is received.

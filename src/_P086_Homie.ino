@@ -173,11 +173,9 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
       if (equals(command, F("homievalueset")))
       {
         const taskVarIndex_t taskVarIndex = event->Par2 - 1;
-        const userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
 
         if (validTaskIndex(event->TaskIndex) &&
             validTaskVarIndex(taskVarIndex) &&
-            validUserVarIndex(userVarIndex) &&
             (event->Par1 == (event->TaskIndex + 1))) { // make sure that this instance is the target
           String parameter = parseStringToEndKeepCase(string, 4);
           String log;
@@ -237,7 +235,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                     log += concat(F(" integer/float set to "), floatValue);
                     addLogMove(LOG_LEVEL_INFO, log);
                   }
-                  UserVar[userVarIndex] = floatValue;
+                  UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
                 } else { // float conversion failed!
                   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
                     log += concat(F(" parameter: "), parameter);
@@ -247,7 +245,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 }
               } else {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += concat(F(" value: "), UserVar[userVarIndex]);
+                  log += concat(F(" value: "), UserVar.getFloat(event->TaskIndex, taskVarIndex));
                   addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
@@ -261,7 +259,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               } else {
                 floatValue = 1.0f;
               }
-              UserVar[userVarIndex] = floatValue;
+              UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log += concat(F(" boolean set to "), floatValue);
@@ -294,7 +292,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 i++;
                 enumItem = parseStringKeepCase(enumList, i);
               }
-              UserVar[userVarIndex] = floatValue;
+              UserVar.setFloat(event->TaskIndex, event->Par2 - 1, floatValue);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 log += concat(F(" enum set to "), floatValue);

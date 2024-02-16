@@ -8,7 +8,7 @@ var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "
   "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
-  "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
+  "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "ThingspeakReply", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAPkey", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
   "WiFiKey2", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode", "WiFi#Disconnected",
   "Event", "AsyncEvent",
@@ -104,6 +104,8 @@ var commonPlugins = [
   "dac", "dac,1", "dac,2",
   //P153
   "sht4x", "sht4x,startup",
+  //P159
+  "ld2410", "ld2410,factoryreset", "ld2410,logall",
 ];
 var pluginDispKind = [
   //P095
