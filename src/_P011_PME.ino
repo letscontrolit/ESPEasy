@@ -12,7 +12,7 @@
 #define PLUGIN_NAME_011       "Extra IO - ProMini Extender"
 #define PLUGIN_VALUENAME1_011 "Value"
 
-#define PLUGIN_011_I2C_ADDRESS 0x7f
+#define PLUGIN_011_I2C_ADDRESS (uint8_t)PCONFIG(1) //0x7f //
 
 constexpr pluginID_t P011_PLUGIN_ID{PLUGIN_ID_011};
 
@@ -84,19 +84,21 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("p011"));
+      PCONFIG(1) = getFormItemInt(F("i2c_addr"));
       success    = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
+      const uint8_t i2caddr =  PLUGIN_011_I2C_ADDRESS;
       success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
-      UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(PCONFIG(0), CONFIG_PORT));
+      UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(PCONFIG(0), CONFIG_PORT, PCONFIG(1)));
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
       }
@@ -124,7 +126,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
         savePortStatus(key, tempStatus);
 
-        Plugin_011_Write(event->Par1, event->Par2);
+        Plugin_011_Write(event->Par1, event->Par2,PCONFIG(1));
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         log = F("PME  : GPIO ");
@@ -176,9 +178,9 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= 0) && (event->Par1 <= 13))
         {
-          Plugin_011_Write(event->Par1, event->Par2);
+          Plugin_011_Write(event->Par1, event->Par2,PCONFIG(1));
           delay(event->Par3);
-          Plugin_011_Write(event->Par1, !event->Par2);
+          Plugin_011_Write(event->Par1, !event->Par2,PCONFIG(1));
 
           portStatusStruct tempStatus;
           const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
@@ -210,7 +212,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
         if ((event->Par1 >= 0) && (event->Par1 <= 13))
         {
-          Plugin_011_Write(event->Par1, event->Par2);
+          Plugin_011_Write(event->Par1, event->Par2,PCONFIG(1));
           Scheduler.setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
 
           portStatusStruct tempStatus;
@@ -257,7 +259,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
               type  = 1;
               port -= 20;
             }
-            int state = Plugin_011_Read(type, port); // report as input (todo: analog reading)
+            int state = Plugin_011_Read(type, port, PCONFIG(1)); // report as input (todo: analog reading)
 
             if (state != -1) {
               SendStatusOnlyIfNeeded(event, NO_SEARCH_PIN_STATE, key, dummyString, state);
@@ -272,7 +274,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TASKTIMER_IN:
     {
-      Plugin_011_Write(event->Par1, event->Par2);
+      Plugin_011_Write(event->Par1, event->Par2,PCONFIG(1));
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
@@ -293,10 +295,10 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // PME read
 // ********************************************************************************
-int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
+int Plugin_011_Read(uint8_t Par1, uint8_t Par2, uint8_t address)
 {
   int value       = -1;
-  uint8_t address = PLUGIN_011_I2C_ADDRESS;
+  //uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
   Wire.beginTransmission(address);
 
@@ -327,9 +329,9 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 // ********************************************************************************
 // PME write
 // ********************************************************************************
-void Plugin_011_Write(uint8_t Par1, uint8_t Par2)
+void Plugin_011_Write(uint8_t Par1, uint8_t Par2, uint8_t address)
 {
-  uint8_t address = PLUGIN_011_I2C_ADDRESS;
+  //uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
   Wire.beginTransmission(address);
   Wire.write(1);
