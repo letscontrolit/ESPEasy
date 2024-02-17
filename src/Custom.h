@@ -156,7 +156,7 @@
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
 #define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
-#define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_DEBUG   // Web Log Level
+#define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO   // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL                    0                 // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false             // (true|false) Enable Logging to the SD card
 
@@ -215,6 +215,7 @@
 
 #define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266
+   #define FEATURE_ADC_VCC 1
 #  define PLUGIN_STATS_NR_ELEMENTS 16
 #endif // ifdef ESP8266
 # ifdef ESP32
