@@ -617,12 +617,10 @@ const __FlashStringHelper* getChipModel() {
         EFUSE_RD_MAC_SPI_SYS_3_REG = block1_addr + (4 * num_word)) // (num_word = 3)
 
 */
-#  if (ESP_IDF_VERSION_MAJOR >= 5)
-    pkg_version = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
-#endif
 
 # ifdef CONFIG_IDF_TARGET_ESP32S3
 #  if (ESP_IDF_VERSION_MAJOR >= 5)
+    pkg_version = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
 
     switch (pkg_version) {
       case 0:              return F("ESP32-S3");        // QFN56
