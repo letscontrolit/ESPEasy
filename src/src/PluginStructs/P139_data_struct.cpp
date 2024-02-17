@@ -4,140 +4,6 @@
 
 # ifdef ESP32
 
-// int16_t P139_settingToValue(uint16_t data,
-//                             uint16_t threshold) {
-//   if (data > threshold) {
-//     return threshold - data;
-//   }
-//   return data;
-// }
-
-// uint16_t P139_valueToSetting(int      data,
-//                              uint16_t threshold) {
-//   if (data <= -1) {
-//     return threshold - data;
-//   }
-//   return static_cast<uint16_t>(data);
-// }
-
-/**
- * Apply default parameters based on P139_CONFIG_PREDEFINED setting.
- * This will be 0 by default, so nothing is changed.
- * P139_CONFIG_DISABLEBITS: (set to 1 to disable that setting)
- * Bit = Feature
- * 0   = LDO2
- * 1   = LDO3
- * 2   = LDOIO
- * 3   = GPIO0
- * 4   = GPIO1
- * 5   = GPIO2
- * 6   = GPIO3
- * 7   = GPIO4
- * 8   = DCDC2
- * 9   = DCDC3
- */
-void P139_CheckPredefinedParameters(struct EventStruct *event) {
-  if (P139_CONFIG_PREDEFINED > 0) {
-    P139_CURRENT_PREDEFINED = P139_CONFIG_PREDEFINED;
-
-    //   // Set defaults
-    //   for (int i = 0; i < 5; i++) { // GPI0..4
-    //     P139_SET_GPIO_FLAGS(i, static_cast<uint8_t>(P139_GPIOBootState_e::Default));
-    //   }
-
-    switch (static_cast<AXP2101_device_model_e>(P139_CONFIG_PREDEFINED)) {
-      case AXP2101_device_model_e::M5Stack_Core2_v1_1: // M5Stack Core2 V1.1 and newer
-      {
-        //       P139_REG_DCDC2_LDO2     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC2) << 16) | P139_valueToSetting(3000,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_DCDC3_LDO3     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC) << 16) | P139_valueToSetting(3000,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_LDOIO          =  P139_valueToSetting(2800, P139_CONST_MAX_LDOIO);
-        //       P139_CONFIG_DISABLEBITS = 0b1111110000;     // NC pins disabled
-        break;
-      }
-      case AXP2101_device_model_e::M5Stack_CoreS3: // M5Stack CoreS3
-      {
-        //       P139_REG_DCDC2_LDO2     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC2) << 16) | P139_valueToSetting(3300,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_DCDC3_LDO3     = (P139_valueToSetting(0, P139_CONST_MAX_DCDC) << 16) | P139_valueToSetting(0, P139_CONST_MAX_LDO);
-        //       P139_REG_LDOIO          =  P139_valueToSetting(3300, P139_CONST_MAX_LDOIO);
-        //       P139_CONFIG_DISABLEBITS = 0b0101000000; // NC pins disabled
-        //       // Specials: GPIO1 High = LED off, GPIO4 High = Enable TFT
-        //       P139_SET_GPIO_FLAGS(1, static_cast<uint8_t>(P139_GPIOBootState_e::Output_high));
-        //       P139_SET_GPIO_FLAGS(4, static_cast<uint8_t>(P139_GPIOBootState_e::Output_high));
-        break;
-      }
-      case AXP2101_device_model_e::LilyGO_TBeam_v1_2: // LilyGO T-Beam V1.2 and newer
-      case AXP2101_device_model_e::LilyGO_TBeamS3_v3: // LilyGO T-BeamS3 V3 and newer
-      case AXP2101_device_model_e::LilyGO_TPCie_v1_2: // LilyGO T-PCie V1.2 and newer
-      {
-        //       P139_REG_DCDC2_LDO2     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC2) << 16) | P139_valueToSetting(3300,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_DCDC3_LDO3     = (P139_valueToSetting(3300, P139_CONST_MAX_DCDC) << 16) | P139_valueToSetting(3300,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_LDOIO          =  P139_valueToSetting(3300, P139_CONST_MAX_LDOIO);
-        //       P139_CONFIG_DISABLEBITS = 0b1111111000;   // NC pins disabled
-        break;
-      }
-      case AXP2101_device_model_e::UserDefined: // User defined
-      {
-        //       P139_REG_DCDC2_LDO2     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC2) << 16) | P139_valueToSetting(3300,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_DCDC3_LDO3     = (P139_valueToSetting(-1, P139_CONST_MAX_DCDC) << 16) | P139_valueToSetting(-1,
-        // P139_CONST_MAX_LDO);
-        //       P139_REG_LDOIO          = P139_valueToSetting(-1, P139_CONST_MAX_LDOIO);
-        //       P139_CONFIG_DISABLEBITS = 0b0000000000; // All pins enabled
-        break;
-      }
-      case AXP2101_device_model_e::Unselected:
-      case AXP2101_device_model_e::MAX:
-        // Fall through
-        break;
-    }
-  }
-}
-
-// **************************************************************************/
-// toString: convert P139_valueOptions_e enum to value-name or display-name
-// **************************************************************************/
-const __FlashStringHelper* toString(const P139_valueOptions_e value,
-                                    bool                      displayString) {
-  switch (value) {
-    case P139_valueOptions_e::None: return displayString ? F("None") : F("none");
-    case P139_valueOptions_e::BatteryVoltage: return displayString ? F("Battery voltage") : F("batteryvoltage");
-    case P139_valueOptions_e::BatteryDischargeCurrent: return displayString ? F("Battery discharge current") : F("batterydischargecurrent");
-    case P139_valueOptions_e::BatteryChargeCurrent: return displayString ? F("Battery charge current") : F("batterychargecurrent");
-    case P139_valueOptions_e::BatteryPower: return displayString ? F("Battery power") : F("batterypower");
-    case P139_valueOptions_e::AcinVoltage: return displayString ? F("Input voltage") : F("inputvoltage");
-    case P139_valueOptions_e::AcinCurrent: return displayString ? F("Input current") : F("inputcurrent");
-    case P139_valueOptions_e::VbusVoltage: return displayString ? F("VBus voltage") : F("vbusvoltage");
-    case P139_valueOptions_e::VbusCurrent: return displayString ? F("VBus current") : F("vbuscurrent");
-    case P139_valueOptions_e::InternalTemperature: return displayString ? F("Internal temperature") : F("internaltemperature");
-    case P139_valueOptions_e::ApsVoltage: return displayString ? F("APS Voltage") : F("apsvoltage");
-    case P139_valueOptions_e::LDO2: return displayString ? F("LDO2 Voltage") : F("ldo2voltage");
-    case P139_valueOptions_e::LDO3: return displayString ? F("LDO3 Voltage") : F("ldo3voltage");
-    case P139_valueOptions_e::LDOIO: return displayString ? F("LDOIO Voltage") : F("gpiovoltage");
-    case P139_valueOptions_e::DCDC2: return displayString ? F("DCDC2 Voltage") : F("dcdc2voltage");
-    case P139_valueOptions_e::DCDC3: return displayString ? F("DCDC3 Voltage") : F("dcdc3voltage");
-  }
-  return F("*Undefined*");
-}
-
-// **************************************************************************/
-// toString: convert P139_GPIOBootState_e enum to string
-// **************************************************************************/
-const __FlashStringHelper* toString(const P139_GPIOBootState_e value) {
-  switch (value) {
-    case P139_GPIOBootState_e::Default: return F("Default");
-    case P139_GPIOBootState_e::Output_low: return F("Output, low");
-    case P139_GPIOBootState_e::Output_high: return F("Output, high");
-    case P139_GPIOBootState_e::Input: return F("Input");
-    case P139_GPIOBootState_e::PWM: return F("PWM");
-  }
-  return F("*Undefined*");
-}
-
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
@@ -145,28 +11,6 @@ P139_data_struct::P139_data_struct(struct EventStruct *event) {
   axp2101 = new (std::nothrow) AXP2101(); // Default address and I2C Wire object
 
   if (isInitialized()) {                  // Functions based on:
-    // I2C_AXP192_InitDef initDef = {                         // M5Stack StickC / M5Stack Core2 / LilyGO T-Beam
-    //   .EXTEN  = true,                                      // Enable ESP Power
-    //   .BACKUP = true,                                      // Enable RTC power
-    //   .DCDC1  = 3300,                                      // ESP Power      / ESP Power (Fixed)  / OLed
-    //   .DCDC2  = P139_GET_CONFIG_DCDC2,                     // Unused         / Unused             / Unused
-    //   .DCDC3  = P139_GET_CONFIG_DCDC3,                     // Unused         / LCD Backlight      / ESP Power
-    //   .LDO2   = P139_GET_CONFIG_LDO2,                      // Backlight power (3000 mV) / Periferal VDD   / LoRa
-    //   .LDO3   = P139_GET_CONFIG_LDO3,                      // TFT Power (3000 mV)       / Vibration motor / GPS
-    //   .LDOIO  = P139_GET_CONFIG_LDOIO,                     // LDOIO voltage (2800 mV)
-    //   .GPIO0  = static_cast<int>(P139_GET_FLAG_GPIO0 - 1), // Microphone power / Bus pwr enable / Unused
-    //   .GPIO1  = static_cast<int>(P139_GET_FLAG_GPIO1 - 1), // Unused / Sys Led (green)          / Unused
-    //   .GPIO2  = static_cast<int>(P139_GET_FLAG_GPIO2 - 1), // Unused / Speaker enable           / Unused
-    //   .GPIO3  = static_cast<int>(P139_GET_FLAG_GPIO3 - 1), // Unused / Unused                   / Unused
-    //   .GPIO4  = static_cast<int>(P139_GET_FLAG_GPIO4 - 1), // Unused / TFT Reset                / Unused
-    // };
-    // ldo2_value  = P139_GET_CONFIG_LDO2;
-    // ldo3_value  = P139_GET_CONFIG_LDO3;
-    // ldoio_value = P139_GET_CONFIG_LDOIO;
-    // dcdc2_value = P139_GET_CONFIG_DCDC2;
-    // dcdc3_value = P139_GET_CONFIG_DCDC3;
-
-    // axp2101->begin(initDef);
     axp2101->begin(&Wire, AXP2101_ADDR, static_cast<AXP2101_device_model_e>(P139_CONFIG_PREDEFINED));
     loadSettings(event);
     outputSettings(event);
@@ -267,6 +111,12 @@ bool P139_data_struct::plugin_read(struct EventStruct *event) {
 // **************************************************************************/
 float P139_data_struct::read_value(AXP2101_registers_e value) {
   if (isInitialized()) {
+    if (AXP2101_registers_e::chargeled == value) {
+      return static_cast<float>(axp2101->getChargeLed());
+    } else
+    if (AXP2101_registers_e::batcharge == value) {
+      return static_cast<float>(axp2101->getBatCharge());
+    }
     return static_cast<float>(axp2101->getPortVoltage(value));
   }
   return 0.0f;
@@ -291,7 +141,7 @@ bool P139_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 // **************************************************************************/
 // plugin_write: Process commands
 // **************************************************************************/
-const char P139_subcommands[] PROGMEM = "readchip|voltage|off|on|percentage|range";
+const char P139_subcommands[] PROGMEM = "readchip|voltage|off|on|percentage|range|chargeled";
 
 enum class P139_subcommands_e : int8_t {
   invalid  = -1,
@@ -301,6 +151,7 @@ enum class P139_subcommands_e : int8_t {
   on,
   percentage,
   range,
+  chargeled,
 };
 
 bool P139_data_struct::plugin_write(struct EventStruct *event,
@@ -327,12 +178,24 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, F("AXP2101: Port voltages (mV), state and range:"));
 
-          for (int s = 0; s < AXP2101_settings_count; ++s) {
+          for (int s = 0; s < AXP2101_register_count; ++s) {
             const AXP2101_registers_e reg = AXP2101_intToRegister(s);
+            uint16_t value;
+            uint8_t  state = 0u;
+
+            if (AXP2101_registers_e::chargeled == reg) {
+              value = static_cast<uint16_t>(axp2101->getChargeLed());
+            } else
+            if (AXP2101_registers_e::batcharge == reg) {
+              value = axp2101->getBatCharge();
+            } else {
+              value = axp2101->getPortVoltage(reg);
+              state = axp2101->getPortState(reg);
+            }
             addLog(LOG_LEVEL_INFO, strformat(F("Port: %7s: %4dmV, state: %d, range: %d - %dmV"),
                                              toString(reg),
-                                             axp2101->getPortVoltage(reg),
-                                             axp2101->getPortState(reg),
+                                             value,
+                                             state,
                                              AXP2101_minVoltage(reg),
                                              AXP2101_maxVoltage(reg)));
           }
@@ -435,11 +298,12 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
                 (event->Par4 <= AXP2101_maxVoltage(reg))) {
               _ranges[s][0] = event->Par3;
               _ranges[s][1] = event->Par4;
+              success       = true;
             }
           }
         } else {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            for (int s = 0; s < AXP2101_settings_count && !success; ++s) {
+            for (int s = 0; s < AXP2101_settings_count; ++s) {
               const AXP2101_registers_e reg = AXP2101_intToRegister(s);
               addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: %7s Percentage range: %d - %dmV (State: %s)"),
                                                toString(reg),
@@ -450,6 +314,17 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
           }
         }
         success = true;
+        break;
+
+      case P139_subcommands_e::chargeled:
+
+        if (event->Par2 >= 0 and event->Par2 <= 3) { // Only allowed options
+          AXP2101_chargeled_d led = static_cast<AXP2101_chargeled_d>(event->Par2);
+
+          // axp2101->setChargeLed(led);
+          _settings.setChargeLed(led); // Store in settings, but don't save yet
+          success = true;
+        }
         break;
     } // switch
   }
@@ -468,17 +343,40 @@ bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
   for (int r = 0; r < AXP2101_register_count && !success; ++r) {
     const AXP2101_registers_e reg = AXP2101_intToRegister(r);
 
-    if (equals(command, toString(reg, false))) { // Voltage (mV)
-      string  = axp2101->getPortVoltage(reg);
+    if (equals(command, toString(reg, false))) { // Voltage (mV) / numeric state
+      if (r >= AXP2101_settings_count) {
+        if (AXP2101_registers_e::chargeled == reg) {
+          string = static_cast<uint8_t>(axp2101->getChargeLed());
+        } else
+        if (AXP2101_registers_e::batcharge == reg) {
+          string = axp2101->getBatCharge();
+        }
+      } else {
+        string = axp2101->getPortVoltage(reg);
+      }
       success = true;
     } else
     if (command.equals(concat(toString(reg, false), F(".status")))) { // Status (name)
-      string  = toString(axp2101->getPortState(reg));
-      success = true;
+      if (r >= AXP2101_settings_count) {
+        if (AXP2101_registers_e::chargeled == reg) {
+          string  = toString(axp2101->getChargeLed());
+          success = true;
+        }
+      } else {
+        string  = toString(axp2101->getPortState(reg));
+        success = true;
+      }
     } else
     if (command.equals(concat(toString(reg, false), F(".state")))) { // State (int)
-      string  = static_cast<uint8_t>(axp2101->getPortState(reg));
-      success = true;
+      if (r >= AXP2101_settings_count) {
+        if (AXP2101_registers_e::chargeled == reg) {
+          string  = static_cast<uint8_t>(axp2101->getChargeLed());
+          success = true;
+        }
+      } else {
+        string  = static_cast<uint8_t>(axp2101->getPortState(reg));
+        success = true;
+      }
     }
   }
 

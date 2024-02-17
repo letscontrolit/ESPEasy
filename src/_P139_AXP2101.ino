@@ -9,6 +9,8 @@
 
 /**
  * Changelog:
+ * 2024-02-17 tonhuisman: Add setting for Charge led and battery charge level, fix saving adjusted port settings,
+ *                        set to 0 decimals as we're using mV values
  * 2024-02-15 tonhuisman: First plugin version, in ReadOnly mode only, no data is written to the AXP2101, only the register to read
  * 2024-02-04 tonhuisman: Initial plugin development, only available for ESP32
  **/
@@ -22,6 +24,7 @@
  * axp,percentage,<port>,<percentage> : Set port to percentage of Low to High range (min/max or set range per port)
  * axp,range,<port>,<low>,<high>      : Define low/high range for port. Low and High must be withing technical range of port
  * axp,range                          : List current range configuration (or when providing an out of range low/high argument)
+ * axp,chargeled,<ledstate>           : Set charge-led state, 0 : off, 1 : flash 1Hz, 2 : flash 4Hz, 3 : on
  * TODO: Add more commands?
  **/
 /**
@@ -40,6 +43,8 @@
  * [<taskname>#dldo1]       :
  * [<taskname>#dldo2]       :
  * [<taskname>#cpuldos]     :
+ * [<taskname>#chargeled]   :
+ * [<taskname>#batcharge]   : (Doesn't support the .status and .state variants of the variable)
  * TODO: Define additional values?
  **/
 /**
@@ -100,6 +105,7 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);
         }
+        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0; // No values have decimals
       }
       break;
     }
@@ -172,7 +178,24 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      // addFormNumericBox(F("Decimals for config values"), F("decimals"), P139_CONFIG_DECIMALS, 0, 4);
+      {
+        const __FlashStringHelper *chargeledNames[] = {
+          toString(AXP2101_chargeled_d::Off),
+          toString(AXP2101_chargeled_d::Flash_1Hz),
+          toString(AXP2101_chargeled_d::Flash_4Hz),
+          toString(AXP2101_chargeled_d::Steady_On),
+        };
+        const int chargeledValues[] = {
+          static_cast<int>(AXP2101_chargeled_d::Off),
+          static_cast<int>(AXP2101_chargeled_d::Flash_1Hz),
+          static_cast<int>(AXP2101_chargeled_d::Flash_4Hz),
+          static_cast<int>(AXP2101_chargeled_d::Steady_On),
+        };
+        addFormSelector(F("Charge LED"), F("led"),
+                        NR_ELEMENTS(chargeledValues),
+                        chargeledNames, chargeledValues,
+                        static_cast<int>(P139_data->_settings.getChargeLed()));
+      }
 
       addFormSubHeader(F("Hardware outputs AXP2101"));
 
@@ -320,21 +343,36 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
                                             toString(static_cast<AXP2101_registers_e>(PCONFIG(P139_CONFIG_BASE + i)), false));
       }
 
-      // P139_REG_DCDC2_LDO2 = (P139_valueToSetting(getFormItemInt(F("pdcdc2")), P139_CONST_MAX_DCDC2) << 16) |
-      //                       P139_valueToSetting(getFormItemInt(F("pldo2")), P139_CONST_MAX_LDO);
-      // P139_REG_DCDC3_LDO3 = (P139_valueToSetting(getFormItemInt(F("pdcdc3")), P139_CONST_MAX_DCDC) << 16) |
-      //                       P139_valueToSetting(getFormItemInt(F("pldo3")), P139_CONST_MAX_LDO);
-      // P139_REG_LDOIO = P139_valueToSetting(getFormItemInt(F("ldoiovolt")), P139_CONST_MAX_LDOIO);
-
-      // for (int i = 0; i < 5; i++) { // GPIO0..4
-      //   P139_SET_GPIO_FLAGS(i, getFormItemInt(concat(F("pgpio"), i)));
-      // }
-
-      // P139_CONFIG_DECIMALS   = getFormItemInt(F("decimals"));
       P139_CONFIG_PREDEFINED = getFormItemInt(F("predef"));
 
-      // P139_CONFIG_DISABLEBITS = getFormItemInt(F("pbits"), static_cast<int>(P139_CONFIG_DISABLEBITS)); // Keep previous value if not
-      // found
+      bool created_new            = false;
+      P139_data_struct *P139_data = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P139_data) {
+        P139_data   = new (std::nothrow) P139_data_struct(event);
+        created_new = true;
+      }
+
+      if (nullptr == P139_data) {
+        break;
+      }
+
+      for (int s = 0; s < AXP2101_settings_count; ++s) {
+        const AXP2101_registers_e reg = AXP2101_intToRegister(s);
+
+        if (!AXP2101_isPinProtected(P139_data->_settings.getState(reg))) {
+          P139_data->_settings.setVoltage(reg, getFormItemInt(toString(reg, false)));
+          P139_data->_settings.setState(reg, static_cast<AXP_pin_s>(getFormItemInt(concat(F("ps"), toString(reg, false)))));
+        }
+      }
+
+      P139_data->_settings.setChargeLed(static_cast<AXP2101_chargeled_d>(getFormItemInt(F("led"))));
+
+      P139_data->saveSettings(event);
+
+      if (created_new) {
+        delete P139_data;
+      }
 
       success = true;
       break;

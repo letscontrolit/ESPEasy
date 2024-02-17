@@ -1,5 +1,11 @@
 #include "AXP2101.h"
 
+#ifdef ESP32
+
+// To check if we have implemented all cases of the enums
+# pragma GCC diagnostic push
+# pragma GCC diagnostic warning "-Wswitch-enum"
+
 /**
  * Utility functions
  */
@@ -35,6 +41,8 @@ const __FlashStringHelper* toString(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo1: return displayString ? F("DLDO1") : F("dldo1");
     case AXP2101_registers_e::dldo2: return displayString ? F("DLDO2") : F("dldo2");
     case AXP2101_registers_e::cpuldos: return displayString ? F("CPULDOS") : F("cpuldos");
+    case AXP2101_registers_e::chargeled: return displayString ? F("ChargeLed") : F("chargeled");
+    case AXP2101_registers_e::batcharge: return displayString ? F("BatCharge") : F("batcharge");
   }
   return F("");
 }
@@ -46,6 +54,17 @@ const __FlashStringHelper* toString(AXP_pin_s pin) {
     case AXP_pin_s::Default: return F("Default");
     case AXP_pin_s::Disabled: return F("Disabled");
     case AXP_pin_s::Protected: return F("Protected");
+  }
+  return F("");
+}
+
+const __FlashStringHelper* toString(AXP2101_chargeled_d led) {
+  switch (led) {
+    case AXP2101_chargeled_d::Off: return F("Off");
+    case AXP2101_chargeled_d::Flash_1Hz: return F("Flash 1Hz");
+    case AXP2101_chargeled_d::Flash_4Hz: return F("Flash 4Hz");
+    case AXP2101_chargeled_d::Steady_On: return F("Steady On");
+    case AXP2101_chargeled_d::Protected: return F("Protected");
   }
   return F("");
 }
@@ -66,6 +85,8 @@ AXP2101_registers_e AXP2101_intToRegister(int reg) {
     case 11: return AXP2101_registers_e::dldo1;
     case 12: return AXP2101_registers_e::dldo2;
     case 13: return AXP2101_registers_e::cpuldos;
+    case 14: return AXP2101_registers_e::chargeled;
+    case 15: return AXP2101_registers_e::batcharge;
   }
   return AXP2101_registers_e::dcdc1; // we shouldn't get here
 }
@@ -86,6 +107,10 @@ uint16_t AXP2101_minVoltage(AXP2101_registers_e reg) {
     case AXP2101_registers_e::dldo1:
     case AXP2101_registers_e::dldo2:
     case AXP2101_registers_e::cpuldos: return AXP2101_CPUSLDO_MIN;
+
+    // not a voltage register
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: return 0u;
   }
   return 0u;
 }
@@ -106,6 +131,10 @@ uint16_t AXP2101_maxVoltage(AXP2101_registers_e reg) {
     case AXP2101_registers_e::dldo1: return AXP2101_DLDO1_MAX;
     case AXP2101_registers_e::dldo2:
     case AXP2101_registers_e::cpuldos: return AXP2101_CPUSLDO_MAX;
+
+    // not a voltage register
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: return 0u;
   }
   return 0u;
 }
@@ -137,19 +166,21 @@ AXP2101_settings::AXP2101_settings(uint16_t _dcdc1, uint16_t _dcdc2, uint16_t _d
                                    uint16_t _bldo1, uint16_t _bldo2, uint16_t _dldo1, uint16_t _dldo2, uint16_t _cpuldos,
                                    AXP_pin_s _en_dcdc1, AXP_pin_s _en_dcdc2, AXP_pin_s _en_dcdc3, AXP_pin_s _en_dcdc4, AXP_pin_s _en_dcdc5,
                                    AXP_pin_s _en_aldo1, AXP_pin_s _en_aldo2, AXP_pin_s _en_aldo3, AXP_pin_s _en_aldo4,
-                                   AXP_pin_s _en_bldo1, AXP_pin_s _en_bldo2, AXP_pin_s _en_dldo1, AXP_pin_s _en_dldo2, AXP_pin_s _en_cpuldos)
+                                   AXP_pin_s _en_bldo1, AXP_pin_s _en_bldo2, AXP_pin_s _en_dldo1, AXP_pin_s _en_dldo2, AXP_pin_s _en_cpuldos,
+                                   AXP2101_chargeled_d _chargeled)
 {
   registers.dcdc1 = _dcdc1; registers.dcdc2 = _dcdc2; registers.dcdc3 = _dcdc3; registers.dcdc4 = _dcdc4; registers.dcdc5 = _dcdc5;
   registers.aldo1 = _aldo1; registers.aldo2 = _aldo2; registers.aldo3 = _aldo3; registers.aldo4 = _aldo4;
   registers.bldo1 = _bldo1; registers.bldo1 = _bldo2; registers.dldo1 = _dldo1; registers.dldo2 = _dldo2; registers.cpuldos = _cpuldos;
 
-  pinStates.en_dcdc1 = static_cast<uint8_t>(_en_dcdc1); pinStates.en_dcdc2 = static_cast<uint8_t>(_en_dcdc2);
-  pinStates.en_dcdc3 = static_cast<uint8_t>(_en_dcdc3); pinStates.en_dcdc4 = static_cast<uint8_t>(_en_dcdc4);
-  pinStates.en_dcdc5 = static_cast<uint8_t>(_en_dcdc5); pinStates.en_aldo1 = static_cast<uint8_t>(_en_aldo1);
-  pinStates.en_aldo2 = static_cast<uint8_t>(_en_aldo2); pinStates.en_aldo3 = static_cast<uint8_t>(_en_aldo3);
-  pinStates.en_aldo4 = static_cast<uint8_t>(_en_aldo4); pinStates.en_bldo1 = static_cast<uint8_t>(_en_bldo1);
-  pinStates.en_bldo2 = static_cast<uint8_t>(_en_bldo2); pinStates.en_dldo1 = static_cast<uint8_t>(_en_dldo1);
-  pinStates.en_dldo2 = static_cast<uint8_t>(_en_dldo2); pinStates.en_cpuldos = static_cast<uint8_t>(_en_cpuldos);
+  pinStates.en_dcdc1  = static_cast<uint8_t>(_en_dcdc1); pinStates.en_dcdc2 = static_cast<uint8_t>(_en_dcdc2);
+  pinStates.en_dcdc3  = static_cast<uint8_t>(_en_dcdc3); pinStates.en_dcdc4 = static_cast<uint8_t>(_en_dcdc4);
+  pinStates.en_dcdc5  = static_cast<uint8_t>(_en_dcdc5); pinStates.en_aldo1 = static_cast<uint8_t>(_en_aldo1);
+  pinStates.en_aldo2  = static_cast<uint8_t>(_en_aldo2); pinStates.en_aldo3 = static_cast<uint8_t>(_en_aldo3);
+  pinStates.en_aldo4  = static_cast<uint8_t>(_en_aldo4); pinStates.en_bldo1 = static_cast<uint8_t>(_en_bldo1);
+  pinStates.en_bldo2  = static_cast<uint8_t>(_en_bldo2); pinStates.en_dldo1 = static_cast<uint8_t>(_en_dldo1);
+  pinStates.en_dldo2  = static_cast<uint8_t>(_en_dldo2); pinStates.en_cpuldos = static_cast<uint8_t>(_en_cpuldos);
+  pinStates.chargeled = static_cast<uint8_t>(_chargeled);
 }
 
 void AXP2101_settings::setVoltage(AXP2101_registers_e reg,
@@ -171,6 +202,8 @@ void AXP2101_settings::setVoltage(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo1: registers.dldo1     = voltage; break;
     case AXP2101_registers_e::dldo2: registers.dldo2     = voltage; break;
     case AXP2101_registers_e::cpuldos: registers.cpuldos = voltage; break;
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: break;
   }
 }
 
@@ -193,6 +226,8 @@ int AXP2101_settings::getVoltage(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo1: result   = registers.dldo1; break;
     case AXP2101_registers_e::dldo2: result   = registers.dldo2; break;
     case AXP2101_registers_e::cpuldos: result = registers.cpuldos; break;
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: result = 0; break;
   }
   return 0xFFFFF == result ? (realValue ? 0 : -1) : result;
 }
@@ -216,6 +251,8 @@ void AXP2101_settings::setState(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo1: pinStates.en_dldo1     = value; break;
     case AXP2101_registers_e::dldo2: pinStates.en_dldo2     = value; break;
     case AXP2101_registers_e::cpuldos: pinStates.en_cpuldos = value; break;
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: break;
   }
 }
 
@@ -235,8 +272,18 @@ AXP_pin_s AXP2101_settings::getState(AXP2101_registers_e reg) {
     case AXP2101_registers_e::dldo1: return static_cast<AXP_pin_s>(pinStates.en_dldo1);
     case AXP2101_registers_e::dldo2: return static_cast<AXP_pin_s>(pinStates.en_dldo2);
     case AXP2101_registers_e::cpuldos: return static_cast<AXP_pin_s>(pinStates.en_cpuldos);
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge: return AXP_pin_s::Protected;
   }
   return AXP_pin_s::Default;
+}
+
+void AXP2101_settings::setChargeLed(AXP2101_chargeled_d led) {
+  pinStates.chargeled = static_cast<uint8_t>(led);
+}
+
+AXP2101_chargeled_d AXP2101_settings::getChargeLed() {
+  return static_cast<AXP2101_chargeled_d>(pinStates.chargeled);
 }
 
 /**
@@ -245,14 +292,14 @@ AXP_pin_s AXP2101_settings::getState(AXP2101_registers_e reg) {
 
 // *INDENT-OFF*
 AXP2101_settings AXP2101_deviceSettingsArray[] =
-{             // voltages: dcdc1 | dcdc2 | dcdc3 | dcdc4 | dcdc5 | aldo1 | aldo2 | aldo3 | aldo4| bldo1 | bldo2 | dldo1 | dldo2 | cpuldos | en_dcdc1            | en_dcdc2           | en_dcdc3            | en_dcdc4           | en_dcdc5           | en_aldo1            | en_aldo2            | aldo3              | aldo4               | en_bldo1           | en_bldo2           | en_dldo1           | en_dldo2           | en_cpuldos
-/* Unselected         */ { 0,      0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default   },
-/* M5Stack Core2 v1.1 */ { 3300,   0,      3300,   0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled  },
-/* M5Stack CoreS3     */ { 3300,   0,      3300,   0,      0,      1800,   3300,   3300,   3300,  0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Protected, AXP_pin_s::Default,  AXP_pin_s::Protected, AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled  },
-/* LilyGo TBeam v1.2  */ { 3300,   0,      2500,   0,      0,      0,      3300,   3300,   0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Disabled,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Default   },
-/* LilyGo TBeamS3     */ { 3300,   0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled  },
-/* LilyGo TPCie v1.2  */ { 3300,   0,      3300,   0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled  },
-/* Userdefined        */ { 3300,   0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default   },
+{             // voltages: dcdc1 | dcdc2 | dcdc3 | dcdc4 | dcdc5 | aldo1 | aldo2 | aldo3 | aldo4| bldo1 | bldo2 | dldo1 | dldo2 | cpuldos | en_dcdc1            | en_dcdc2           | en_dcdc3            | en_dcdc4           | en_dcdc5           | en_aldo1            | en_aldo2            | aldo3              | aldo4               | en_bldo1           | en_bldo2           | en_dldo1           | en_dldo2           | en_cpuldos         | chargeled
+/* Unselected         */ { 0,      0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP2101_chargeled_d::Off },
+/* M5Stack Core2 v1.1 */ { 3300,   0,      3300,   0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP2101_chargeled_d::Off },
+/* M5Stack CoreS3     */ { 3300,   0,      3300,   0,      0,      1800,   3300,   3300,   3300,  0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Protected, AXP_pin_s::Default,  AXP_pin_s::Protected, AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP2101_chargeled_d::Off },
+/* LilyGo TBeam v1.2  */ { 3300,   0,      2500,   0,      0,      0,      3300,   3300,   0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Disabled,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Default,  AXP2101_chargeled_d::Off },
+/* LilyGo TBeamS3     */ { 3300,   0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP2101_chargeled_d::Off },
+/* LilyGo TPCie v1.2  */ { 3300,   0,      3300,   0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Protected, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP_pin_s::Disabled, AXP2101_chargeled_d::Off },
+/* Userdefined        */ { 3300,   0,      0,      0,      0,      0,      0,      0,      0,     0,      0,      0,      0,      0,       AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,   AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP_pin_s::Default,  AXP2101_chargeled_d::Off },
 };
 // *INDENT-ON*
 
@@ -425,6 +472,9 @@ uint8_t voltageToRegister(uint16_t            voltage,
       if (voltage > max) { voltage = max; }
 
       return (voltage - min) / 100;
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge:
+      break;
   }
   return 0u;
 }
@@ -475,6 +525,9 @@ uint16_t AXP2101::registerToVoltage(uint8_t             data,
 
       if (0 == off) { off = 500; }
       return off + (data * 100);
+    case AXP2101_registers_e::chargeled:
+    case AXP2101_registers_e::batcharge:
+      return 0u;
   }
   return 0u;
 }
@@ -625,6 +678,25 @@ bool AXP2101::set_sys_led(bool sw) {
   return bitOnOff(sw, AXP2101_CHGLED_REG, 0b00110000);
 }
 
+bool AXP2101::setChargeLed(AXP2101_chargeled_d led) {
+  if (AXP2101_chargeled_d::Protected != led) {
+    const uint8_t temp       = readRegister8(_addr, AXP2101_CHGLED_REG);
+    const uint8_t data       = (static_cast<uint8_t>(led) & 0x03) << 4;
+    const uint8_t write_back = ((temp & 0b11001111) | data);
+
+    return writeRegister8(_addr, AXP2101_CHGLED_REG, write_back);
+  }
+  return false;
+}
+
+AXP2101_chargeled_d AXP2101::getChargeLed() {
+  return static_cast<AXP2101_chargeled_d>((readRegister8(_addr, AXP2101_CHGLED_REG) >> 4) & 0x03);
+}
+
+uint8_t AXP2101::getBatCharge() {
+  return readRegister8(_addr, AXP2101_BAT_CHARGE_REG);
+}
+
 bool AXP2101::set_charger_term_current_to_zero(void) {
   return bitOff(AXP2101_ADDR, AXP2101_CHARGER_SETTING_REG, 0b00001111);
 }
@@ -720,5 +792,17 @@ void AXP2101::getControlRegisterMask(AXP2101_registers_e reg,
       ctrl = AXP2101_LDO_CTRL_REG;
       mask = AXP2101_CPUSLDO_CTRL_MASK;
       break;
+    case AXP2101_registers_e::chargeled:
+      ctrl = AXP2101_CHGLED_REG;
+      mask = AXP2101_CHGLED_CTRL_MASK;
+      break;
+    case AXP2101_registers_e::batcharge:
+      ctrl = AXP2101_BAT_CHARGE_REG;
+      mask = 0xFF;
+      break;
   }
 }
+
+# pragma GCC diagnostic pop
+
+#endif // ifdef ESP32
