@@ -2772,7 +2772,7 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #define FEATURE_MDNS  1
+        #define FEATURE_MDNS  0
       #else
         // Do not use MDNS on ESP8266 due to memory leak
         #define FEATURE_MDNS  0
