@@ -158,6 +158,11 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   */
     #endif // ifndef BUILD_NO_DEBUG
   }
+  // We have sent a lot of data at once.
+  // try to flush it to the connected client to free up some RAM 
+  // from pending transfers
+  TXBuffer.flush();
+  delay(10);
 }
 
 bool captivePortal() {
