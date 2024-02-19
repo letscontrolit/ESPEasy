@@ -43,6 +43,8 @@ const __FlashStringHelper* toString(AXP2101_registers_e reg,
     case AXP2101_registers_e::cpuldos: return displayString ? F("CPULDOS") : F("cpuldos");
     case AXP2101_registers_e::chargeled: return displayString ? F("ChargeLed") : F("chargeled");
     case AXP2101_registers_e::batcharge: return displayString ? F("BatCharge") : F("batcharge");
+    case AXP2101_registers_e::charging: return displayString ? F("ChargingState") : F("chargingstate");
+    case AXP2101_registers_e::batpresent: return displayString ? F("BatPresent") : F("batpresent");
   }
   return F("");
 }
@@ -69,6 +71,15 @@ const __FlashStringHelper* toString(AXP2101_chargeled_d led) {
   return F("");
 }
 
+const __FlashStringHelper* toString(AXP2101_chargingState_e state) {
+  switch (state) {
+    case AXP2101_chargingState_e::Discharging: return F("Discharging");
+    case AXP2101_chargingState_e::Standby: return F("Standby");
+    case AXP2101_chargingState_e::Charging: return F("Charging");
+  }
+  return F("");
+}
+
 AXP2101_registers_e AXP2101_intToRegister(int reg) {
   switch (reg) {
     case 0: return AXP2101_registers_e::dcdc1;
@@ -87,8 +98,10 @@ AXP2101_registers_e AXP2101_intToRegister(int reg) {
     case 13: return AXP2101_registers_e::cpuldos;
     case 14: return AXP2101_registers_e::chargeled;
     case 15: return AXP2101_registers_e::batcharge;
+    case 16: return AXP2101_registers_e::charging;
+    case 17: return AXP2101_registers_e::batpresent;
   }
-  return AXP2101_registers_e::dcdc1; // we shouldn't get here
+  return AXP2101_registers_e::dcdc1; // we shouldn't get here, just defaulting to the first value
 }
 
 uint16_t AXP2101_minVoltage(AXP2101_registers_e reg) {
@@ -110,7 +123,10 @@ uint16_t AXP2101_minVoltage(AXP2101_registers_e reg) {
 
     // not a voltage register
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: return 0u;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      break;
   }
   return 0u;
 }
@@ -134,7 +150,10 @@ uint16_t AXP2101_maxVoltage(AXP2101_registers_e reg) {
 
     // not a voltage register
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: return 0u;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      break;
   }
   return 0u;
 }
@@ -203,7 +222,10 @@ void AXP2101_settings::setVoltage(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo2: registers.dldo2     = voltage; break;
     case AXP2101_registers_e::cpuldos: registers.cpuldos = voltage; break;
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: break;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      break;
   }
 }
 
@@ -227,7 +249,10 @@ int AXP2101_settings::getVoltage(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo2: result   = registers.dldo2; break;
     case AXP2101_registers_e::cpuldos: result = registers.cpuldos; break;
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: result = 0; break;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      return 0;
   }
   return 0xFFFFF == result ? (realValue ? 0 : -1) : result;
 }
@@ -252,7 +277,10 @@ void AXP2101_settings::setState(AXP2101_registers_e reg,
     case AXP2101_registers_e::dldo2: pinStates.en_dldo2     = value; break;
     case AXP2101_registers_e::cpuldos: pinStates.en_cpuldos = value; break;
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: break;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      break;
   }
 }
 
@@ -273,7 +301,10 @@ AXP_pin_s AXP2101_settings::getState(AXP2101_registers_e reg) {
     case AXP2101_registers_e::dldo2: return static_cast<AXP_pin_s>(pinStates.en_dldo2);
     case AXP2101_registers_e::cpuldos: return static_cast<AXP_pin_s>(pinStates.en_cpuldos);
     case AXP2101_registers_e::chargeled:
-    case AXP2101_registers_e::batcharge: return AXP_pin_s::Protected;
+    case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      return AXP_pin_s::Protected;
   }
   return AXP_pin_s::Default;
 }
@@ -474,6 +505,8 @@ uint8_t voltageToRegister(uint16_t            voltage,
       return (voltage - min) / 100;
     case AXP2101_registers_e::chargeled:
     case AXP2101_registers_e::batcharge:
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
       break;
   }
   return 0u;
@@ -527,7 +560,9 @@ uint16_t AXP2101::registerToVoltage(uint8_t             data,
       return off + (data * 100);
     case AXP2101_registers_e::chargeled:
     case AXP2101_registers_e::batcharge:
-      return 0u;
+    case AXP2101_registers_e::charging:
+    case AXP2101_registers_e::batpresent:
+      break;
   }
   return 0u;
 }
@@ -537,10 +572,10 @@ uint16_t AXP2101::registerToVoltage(uint8_t             data,
  */
 bool AXP2101::setPortVoltage(uint16_t            voltage,
                              AXP2101_registers_e reg) {
-  const uint8_t data = voltageToRegister(voltage,            reg);
+  const uint8_t data = voltageToRegister(voltage, reg);
   const uint8_t creg = static_cast<uint8_t>(reg);
 
-  return writeRegister8(AXP2101_ADDR,                        creg,                                                        data);
+  return writeRegister8(AXP2101_ADDR, creg, data);
 }
 
 /**
@@ -690,11 +725,21 @@ bool AXP2101::setChargeLed(AXP2101_chargeled_d led) {
 }
 
 AXP2101_chargeled_d AXP2101::getChargeLed() {
-  return static_cast<AXP2101_chargeled_d>((readRegister8(_addr, AXP2101_CHGLED_REG) >> 4) & 0x03);
+  return static_cast<AXP2101_chargeled_d>((readRegister8(_addr, AXP2101_CHGLED_REG) >> 4) & 0x07);
 }
 
 uint8_t AXP2101::getBatCharge() {
   return readRegister8(_addr, AXP2101_BAT_CHARGE_REG);
+}
+
+AXP2101_chargingState_e AXP2101::getChargingState() {
+  const uint8_t level = (readRegister8(_addr, AXP2101_COM_STAT1_REG) >> 5) & 0x03;
+
+  return static_cast<AXP2101_chargingState_e>(0x01 == level ? 1 : (0x02 == level ? -1 : 0));
+}
+
+bool AXP2101::isBatteryDetected() {
+  return (readRegister8(_addr, AXP2101_COM_STAT0_REG) >> 3) & 0x01;
 }
 
 bool AXP2101::set_charger_term_current_to_zero(void) {
@@ -799,6 +844,14 @@ void AXP2101::getControlRegisterMask(AXP2101_registers_e reg,
     case AXP2101_registers_e::batcharge:
       ctrl = AXP2101_BAT_CHARGE_REG;
       mask = 0xFF;
+      break;
+    case AXP2101_registers_e::charging:
+      ctrl = AXP2101_COM_STAT1_REG;
+      mask = 0b01100000;
+      break;
+    case AXP2101_registers_e::batpresent:
+      ctrl = AXP2101_COM_STAT0_REG;
+      mask = 0b00001000;
       break;
   }
 }

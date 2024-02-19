@@ -5,19 +5,21 @@
 # ifdef ESP32
 
 // **************************************************************************/
-// Constructor
+// Constructors
 // **************************************************************************/
 P139_data_struct::P139_data_struct(struct EventStruct *event) {
   axp2101 = new (std::nothrow) AXP2101(); // Default address and I2C Wire object
 
   if (isInitialized()) {                  // Functions based on:
-    axp2101->begin(&Wire, AXP2101_ADDR, static_cast<AXP2101_device_model_e>(P139_CONFIG_PREDEFINED));
+    axp2101->begin(&Wire, AXP2101_ADDR, static_cast<AXP2101_device_model_e>(P139_CURRENT_PREDEFINED));
     loadSettings(event);
     outputSettings(event);
   } else {
     addLog(LOG_LEVEL_ERROR, F("AXP2101: Initialization failed"));
   }
 }
+
+P139_data_struct::P139_data_struct() {}
 
 // **************************************************************************/
 // Destructor
@@ -33,7 +35,9 @@ String P139_data_struct::loadSettings(struct EventStruct *event) {
   String result;
 
   if (!_settingsLoaded) {
-    result          = LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&_settings), sizeof(_settings));
+    result = LoadCustomTaskSettings(event->TaskIndex,
+                                    reinterpret_cast<uint8_t *>(&_settings),
+                                    sizeof(_settings));
     _settingsLoaded = true;
   }
   return result;
@@ -57,6 +61,15 @@ void P139_data_struct::outputSettings(struct EventStruct *event) {
         // axp2101->setPortState(false, reg); // Turn off
       }
       ++count;
+
+      #  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG,
+               strformat(F("AXP2101: Port: %s, output: %dmV, pin state: %s"),
+                         toString(reg), _settings.getVoltage(reg), toString(pinState)));
+      }
+      #  endif // ifndef BUILD_NO_DEBUG
     }
   }
 
@@ -69,7 +82,9 @@ void P139_data_struct::outputSettings(struct EventStruct *event) {
 // saveSettings: Save the settings to the custom settings area
 // **************************************************************************/
 String P139_data_struct::saveSettings(struct EventStruct *event) {
-  String result = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&_settings), sizeof(_settings));
+  const String result = SaveCustomTaskSettings(event->TaskIndex,
+                                               reinterpret_cast<const uint8_t *>(&_settings),
+                                               sizeof(_settings));
 
   _settingsLoaded = true; // When freshly saved == loaded :-)
   return result;
@@ -79,9 +94,9 @@ String P139_data_struct::saveSettings(struct EventStruct *event) {
 // applySettings: Update settings to defaults for selected device
 // **************************************************************************/
 bool P139_data_struct::applySettings(AXP2101_device_model_e device) {
-  const int idx =  static_cast<int>(AXP2101_device_model_e::UserDefined == device ?
-                                    AXP2101_device_model_e::MAX :
-                                    device);
+  const int idx = static_cast<int>(AXP2101_device_model_e::UserDefined == device ?
+                                   AXP2101_device_model_e::MAX :
+                                   device);
 
   if ((idx > static_cast<int>(AXP2101_device_model_e::Unselected)) &&
       (idx <= static_cast<int>(AXP2101_device_model_e::MAX))) {
@@ -116,6 +131,12 @@ float P139_data_struct::read_value(AXP2101_registers_e value) {
     } else
     if (AXP2101_registers_e::batcharge == value) {
       return static_cast<float>(axp2101->getBatCharge());
+    } else
+    if (AXP2101_registers_e::charging == value) {
+      return static_cast<float>(axp2101->getChargingState());
+    } else
+    if (AXP2101_registers_e::batpresent == value) {
+      return static_cast<float>(axp2101->isBatteryDetected());
     }
     return static_cast<float>(axp2101->getPortVoltage(value));
   }
@@ -125,16 +146,25 @@ float P139_data_struct::read_value(AXP2101_registers_e value) {
 // **************************************************************************/
 // plugin_ten_per_second: Check state and generate events
 // **************************************************************************/
-bool P139_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  // TODO
-  return false;
-}
+// bool P139_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+//   // TODO ?
+//   return false;
+// }
 
 // **************************************************************************/
 // plugin_fifty_per_second: Check state and generate events
 // **************************************************************************/
 bool P139_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  // TODO
+  if (isInitialized() && P139_GET_GENERATE_EVENTS) {
+    const AXP2101_chargingState_e charging = axp2101->getChargingState();
+
+    if (_chargingState != charging) {
+      eventQueue.add(event->TaskIndex, F("ChargingState"), // Event: <taskname>#ChargingState=<new>,<old> (numeric)
+                     strformat(F("%d,%d"), static_cast<int8_t>(charging), static_cast<int8_t>(_chargingState)));
+      _chargingState = charging;
+    }
+    return true;
+  }
   return false;
 }
 
@@ -180,24 +210,33 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
 
           for (int s = 0; s < AXP2101_register_count; ++s) {
             const AXP2101_registers_e reg = AXP2101_intToRegister(s);
-            uint16_t value;
-            uint8_t  state = 0u;
+
+            int32_t value = -1;
+            uint8_t state = 0u;
+            String  data;
 
             if (AXP2101_registers_e::chargeled == reg) {
-              value = static_cast<uint16_t>(axp2101->getChargeLed());
+              data = strformat(F(", Led: %s"), toString(axp2101->getChargeLed()));
             } else
             if (AXP2101_registers_e::batcharge == reg) {
-              value = axp2101->getBatCharge();
+              data = strformat(F(", Battery: %d%%"), axp2101->getBatCharge());
+            } else
+            if (AXP2101_registers_e::charging == reg) {
+              data = strformat(F(", Battery: %s"), toString(axp2101->getChargingState()));
+            } else
+            if (AXP2101_registers_e::batpresent == reg) {
+              data = strformat(F(", Battery: %s"), boolToString(axp2101->isBatteryDetected()));
             } else {
               value = axp2101->getPortVoltage(reg);
               state = axp2101->getPortState(reg);
             }
-            addLog(LOG_LEVEL_INFO, strformat(F("Port: %7s: %4dmV, state: %d, range: %d - %dmV"),
+            addLog(LOG_LEVEL_INFO, strformat(F("Port: %7s: %4dmV, state: %d, range: %d - %dmV%s"),
                                              toString(reg),
                                              value,
                                              state,
                                              AXP2101_minVoltage(reg),
-                                             AXP2101_maxVoltage(reg)));
+                                             AXP2101_maxVoltage(reg),
+                                             data.c_str()));
           }
         } else {
           addLog(LOG_LEVEL_ERROR, F("AXP2101: 'readchip' needs logging level INFO"));
@@ -216,7 +255,7 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
               const int min_ = AXP2101_minVoltage(reg);
 
               if (0 == event->Par3 /* < min_ */) {
-                // TODO Q: Turn off when A) 0 or B) below minimum voltage?
+                // TODO Q: Turn off when A) 0 or B) below minimum voltage? Current answer: A)
                 // axp2101->setPortState(false, reg);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Turn off port %s"), toString(reg)));
@@ -254,7 +293,7 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
               } else {
                 // axp2101->setPortState(stateOn, reg);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Turn %s port %s"), (stateOn ? F("On") : F("Off")), toString(reg)));
+                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Switch port %s: %s"), toString(reg), (stateOn ? F("On") : F("Off"))));
                 }
                 success = true;
               }
@@ -337,6 +376,7 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
  ***************************************************************************/
 bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (!isInitialized()) { return false; }
   bool success         = false;
   const String command = parseString(string, 1);
 
@@ -350,6 +390,12 @@ bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
         } else
         if (AXP2101_registers_e::batcharge == reg) {
           string = axp2101->getBatCharge();
+        } else
+        if (AXP2101_registers_e::charging == reg) {
+          string = static_cast<int8_t>(axp2101->getChargingState());
+        } else
+        if (AXP2101_registers_e::batpresent == reg) {
+          string = axp2101->isBatteryDetected();
         }
       } else {
         string = axp2101->getPortVoltage(reg);
@@ -360,6 +406,10 @@ bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
       if (r >= AXP2101_settings_count) {
         if (AXP2101_registers_e::chargeled == reg) {
           string  = toString(axp2101->getChargeLed());
+          success = true;
+        } else
+        if (AXP2101_registers_e::charging == reg) {
+          string  = toString(axp2101->getChargingState());
           success = true;
         }
       } else {

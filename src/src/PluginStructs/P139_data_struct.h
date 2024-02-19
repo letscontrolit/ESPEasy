@@ -17,6 +17,18 @@
 #  define P139_CONFIG_PREDEFINED  PCONFIG(P139_CONFIG_BASE + VARS_PER_TASK + 2)
 #  define P139_CURRENT_PREDEFINED PCONFIG_FLOAT(0)
 
+#  define P139_FLAGS              PCONFIG_ULONG(0)
+
+#  define P139_FLAG_GENERATE_EVENTS   0
+
+// #  define P139_FLAG_RAW_DATA_ONLY     1
+
+#  define P139_GET_GENERATE_EVENTS    bitRead(P139_FLAGS, P139_FLAG_GENERATE_EVENTS)
+#  define P139_SET_GENERATE_EVENTS(x) bitWrite(P139_FLAGS, P139_FLAG_GENERATE_EVENTS, (x))
+
+// #  define P139_GET_RAW_DATA_ONLY    bitRead(P139_FLAGS, P139_FLAG_RAW_DATA_ONLY)
+// #  define P139_SET_RAW_DATA_ONLY(x) bitWrite(P139_FLAGS, P139_FLAG_RAW_DATA_ONLY, (x))
+
 #  define P139_CONST_1_PERCENT    1    // Lowest used percentage, 0 = off
 #  define P139_CONST_100_PERCENT  100  // Max percentage
 #  define P139_CONST_MIN_LDO      500  // Min. output voltage
@@ -27,15 +39,16 @@ struct P139_data_struct : public PluginTaskData_base {
 public:
 
   P139_data_struct(struct EventStruct *event);
-  P139_data_struct() = delete;
+  P139_data_struct();
   ~P139_data_struct();
 
-  bool   plugin_read(struct EventStruct *event);
-  bool   plugin_write(struct EventStruct *event,
-                      const String      & string);
-  bool   plugin_get_config_value(struct EventStruct *event,
-                                 String            & string);
-  bool   plugin_ten_per_second(struct EventStruct *event);
+  bool plugin_read(struct EventStruct *event);
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
+
+  // bool   plugin_ten_per_second(struct EventStruct *event);
   bool   plugin_fifty_per_second(struct EventStruct *event);
   String loadSettings(struct EventStruct *event);
   String saveSettings(struct EventStruct *event);
@@ -76,6 +89,8 @@ private:
  // *INDENT-ON*
 
   bool _settingsLoaded = false;
+
+  AXP2101_chargingState_e _chargingState = AXP2101_chargingState_e::Standby;
 };
 
 # endif // ifdef ESP32

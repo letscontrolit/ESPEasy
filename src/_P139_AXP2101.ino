@@ -9,6 +9,7 @@
 
 /**
  * Changelog:
+ * 2024-02-18 tonhuisman: Add setting for Generate events, support for chargestate and isBatteryDetected, fix some issues
  * 2024-02-17 tonhuisman: Add setting for Charge led and battery charge level, fix saving adjusted port settings,
  *                        set to 0 decimals as we're using mV values
  * 2024-02-15 tonhuisman: First plugin version, in ReadOnly mode only, no data is written to the AXP2101, only the register to read
@@ -45,10 +46,13 @@
  * [<taskname>#cpuldos]     :
  * [<taskname>#chargeled]   :
  * [<taskname>#batcharge]   : (Doesn't support the .status and .state variants of the variable)
+ * [<taskname>#chargingstate] : Charging state, -1 = discharging, 0 = standby, 1 = charging
+ * [<taskname>#batpresent]  : (Doesn't support the .status and .state variants of the variable)
  * TODO: Define additional values?
  **/
 /**
  * Events:
+ * <taskname>#ChargingState=<new>,<old> : On change of the charging-state, new/old values: -1 = discharging, 0 = standby, 1 = charging
  * TODO: Define events?
  */
 
@@ -147,18 +151,18 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(2)                      = static_cast<int>(AXP2101_registers_e::aldo1);
       PCONFIG(3)                      = static_cast<int>(AXP2101_registers_e::dldo1);
       PCONFIG(P139_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
-      P139_CONFIG_DECIMALS            = 2;               // 2 decimals for all get config values
+      P139_CONFIG_DECIMALS            = 2;                // 2 decimals for all get config values
       AXP2101_device_model_e device = AXP2101_device_model_e::M5Stack_Core2_v1_1;
-      P139_CONFIG_PREDEFINED = static_cast<int>(device); // M5Stack Core2 v1.1
+      P139_CURRENT_PREDEFINED = static_cast<int>(device); // M5Stack Core2 v1.1
+      P139_SET_GENERATE_EVENTS(true);
 
-      P139_data_struct *P139_data = new (std::nothrow) P139_data_struct(event);
+      P139_data_struct *P139_data = new (std::nothrow) P139_data_struct();
 
       if (nullptr != P139_data) {
         P139_data->applySettings(device);
         P139_data->saveSettings(event);
         delete P139_data;
       }
-      P139_CONFIG_PREDEFINED = 0; // Settings applied
 
       break;
     }
@@ -170,7 +174,8 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
       P139_data_struct *P139_data   = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P139_data) {
-        P139_data   = new (std::nothrow) P139_data_struct(event);
+        P139_data = new (std::nothrow) P139_data_struct();
+        P139_data->loadSettings(event);
         created_new = true;
       }
 
@@ -197,12 +202,15 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
                         static_cast<int>(P139_data->_settings.getChargeLed()));
       }
 
+      addFormCheckBox(F("Generate events"), F("events"), P139_GET_GENERATE_EVENTS);
+
       addFormSubHeader(F("Hardware outputs AXP2101"));
 
       {
         if (P139_CONFIG_PREDEFINED > 0) {
           P139_CURRENT_PREDEFINED = P139_CONFIG_PREDEFINED;
-          P139_data->applySettings(static_cast<AXP2101_device_model_e>(P139_CONFIG_PREDEFINED));
+          P139_CONFIG_PREDEFINED  = 0;
+          P139_data->applySettings(static_cast<AXP2101_device_model_e>(P139_CURRENT_PREDEFINED));
         }
         const __FlashStringHelper *predefinedNames[] = {
           toString(AXP2101_device_model_e::Unselected),
@@ -235,8 +243,8 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
           addFormNote(concat(F("Last selected: "), toString(device)));
 
           if (AXP2101_device_model_e::UserDefined == device) {
-            addHtml(F(
-                      "<div class='note'><span style=\"color:red\">Warning: Configuring invalid values can damage your device or render it useless!</span></div>"));
+            addHtml(F("<div class='note'><span style=\"color:red\">Warning: "
+                      "Configuring invalid values can damage your device or render it useless!</span></div>"));
           }
         }
       }
@@ -254,7 +262,7 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
         };
 
         // Don't include Disabled or Protected here, not user-selectable
-        constexpr int bootStatesCount = NR_ELEMENTS(bootStates);
+        constexpr int bootStatesCount = NR_ELEMENTS(bootStateValues);
 
         addRowLabel(F("Output ports"));
 
@@ -290,15 +298,7 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
         }
         html_end_table();
 
-        // addFormNote(F("Values &lt; min. range will switch off the output. Set to -1 to not initialize/unused."));
         addFormNote(F("Check your device documentation for what is connected to each output."));
-      }
-
-      {
-        // Keep this setting hidden from the UI
-        // addHtml(F("<div hidden>"));
-        // addNumericBox(F("pbits"), P139_CONFIG_DISABLEBITS, 0, 0xFFFF);
-        // addHtml(F("</div>"));
       }
 
       if (created_new) {
@@ -344,12 +344,14 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
       }
 
       P139_CONFIG_PREDEFINED = getFormItemInt(F("predef"));
+      P139_SET_GENERATE_EVENTS(isFormItemChecked(F("events")));
 
       bool created_new            = false;
       P139_data_struct *P139_data = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P139_data) {
-        P139_data   = new (std::nothrow) P139_data_struct(event);
+        P139_data = new (std::nothrow) P139_data_struct();
+        P139_data->loadSettings(event);
         created_new = true;
       }
 
@@ -408,15 +410,15 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      P139_data_struct *P139_data = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
+    // case PLUGIN_TEN_PER_SECOND:
+    // {
+    //   P139_data_struct *P139_data = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P139_data) {
-        success = P139_data->plugin_ten_per_second(event);
-      }
-      break;
-    }
+    //   if (nullptr != P139_data) {
+    //     success = P139_data->plugin_ten_per_second(event);
+    //   }
+    //   break;
+    // }
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
