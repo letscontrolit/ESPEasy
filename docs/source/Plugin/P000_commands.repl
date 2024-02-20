@@ -469,9 +469,15 @@
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
+    Send command using MQTT broker service. The 'Will Retain' option as configured in the MQTT Controller settings is used. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PublishR","
+    :green:`Rules`","
+    Send command using MQTT broker service, with the MQTT 'Will Retain' flag enabled. Uses the first enabled MQTT Controller.
+
+    ``PublishR,<topic>[,<payload>]``"
     "
     PutToHTTP","
     :green:`Rules`","
