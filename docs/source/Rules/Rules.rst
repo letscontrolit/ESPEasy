@@ -2020,14 +2020,14 @@ Added 2024/02/05
 
 * Examples:
     
-  Single channel: ``"sendtohttp,api.thingspeak.com,80,channels/1637928/fields/1.csv?end=2024-01-01%2023:59:00&results=1``
-    => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 1637928
+  Single channel: ``SendToHTTP,api.thingspeak.com,80,channels/143789/fields/1.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 143789
   
-  All channels: ``"sendtohttp,api.thingspeak.com,80,channels/1637928/feeds.csv?end=2024-01-01%2023:59:00&results=1``
-    => gets the value of each field of the channel 1637928 at (or the last entry before) 23:59:00 
+  All channels: ``SendToHTTP,api.thingspeak.com,80,channels/143789/feeds.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of each field of the channel 143789 at (or the last entry before) 23:59:00 
 
   .. note::
-    ``csv`` and ``result=1`` are mandatory!
+    ``csv`` and ``results=1`` are mandatory!
 
 Convert curl POST command to PostToHTTP
 ---------------------------------------
