@@ -137,6 +137,12 @@ float P139_data_struct::read_value(AXP2101_registers_e value) {
     } else
     if (AXP2101_registers_e::batpresent == value) {
       return static_cast<float>(axp2101->isBatteryDetected());
+    } else
+    if (AXP2101_registers_e::chipid == value) {
+      return static_cast<float>(axp2101->getChipIDRaw());
+    } else
+    if (AXP2101_registers_e::chargedet == value) {
+      return static_cast<float>(axp2101->getChargingDetail());
     }
     return static_cast<float>(axp2101->getPortVoltage(value));
   }
@@ -226,6 +232,12 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
             } else
             if (AXP2101_registers_e::batpresent == reg) {
               data = strformat(F(", Battery: %s"), boolToString(axp2101->isBatteryDetected()));
+            } else
+            if (AXP2101_registers_e::chipid == reg) {
+              data = strformat(F(", ChipID: %s (0x%02x)"), toString(axp2101->getChipID()), axp2101->getChipIDRaw());
+            } else
+            if (AXP2101_registers_e::chargedet == reg) {
+              data = strformat(F(", ChargingDetail: %s"), toString(axp2101->getChargingDetail()));
             } else {
               value = axp2101->getPortVoltage(reg);
               state = axp2101->getPortState(reg);
@@ -396,6 +408,12 @@ bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
         } else
         if (AXP2101_registers_e::batpresent == reg) {
           string = axp2101->isBatteryDetected();
+        } else
+        if (AXP2101_registers_e::chipid == reg) {
+          string = axp2101->getChipIDRaw();
+        } else
+        if (AXP2101_registers_e::chargedet == reg) {
+          string = static_cast<int8_t>(axp2101->getChargingDetail());
         }
       } else {
         string = axp2101->getPortVoltage(reg);
@@ -410,6 +428,14 @@ bool P139_data_struct::plugin_get_config_value(struct EventStruct *event,
         } else
         if (AXP2101_registers_e::charging == reg) {
           string  = toString(axp2101->getChargingState());
+          success = true;
+        } else
+        if (AXP2101_registers_e::chipid == reg) {
+          string  = toString(axp2101->getChipID());
+          success = true;
+        } else
+        if (AXP2101_registers_e::chargedet == reg) {
+          string  = toString(axp2101->getChargingDetail());
           success = true;
         }
       } else {

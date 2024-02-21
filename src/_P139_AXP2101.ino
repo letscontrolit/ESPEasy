@@ -9,6 +9,7 @@
 
 /**
  * Changelog:
+ * 2024-02-21 tonhuisman: Add support for ChipID and ChargingDetail data supplied by AXP2101
  * 2024-02-18 tonhuisman: Add setting for Generate events, support for chargestate and isBatteryDetected, fix some issues
  * 2024-02-17 tonhuisman: Add setting for Charge led and battery charge level, fix saving adjusted port settings,
  *                        set to 0 decimals as we're using mV values
@@ -48,6 +49,8 @@
  * [<taskname>#batcharge]   : (Doesn't support the .status and .state variants of the variable)
  * [<taskname>#chargingstate] : Charging state, -1 = discharging, 0 = standby, 1 = charging
  * [<taskname>#batpresent]  : (Doesn't support the .status and .state variants of the variable)
+ * [<taskname>#chipid]      : (Doesn't support the .state variant of the variable)
+ * [<taskname>#chargingdet] : (Doesn't support the .state variant of the variable)
  * TODO: Define additional values?
  **/
 /**

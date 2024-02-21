@@ -9,6 +9,7 @@
  */
 
 /** Changelog:
+ * 2024-02-21 tonhuisman: Add support for ChipId and ChargingDetail state
  * 2024-02-18 tonhuisman: Add support for ChargingState, isBatteryDetected
  * 2024-02-17 tonhuisman: Add support for Charge-led and battery charge level, limit to ESP32, as this chip is only available
  *                        on ESP32 based units
@@ -44,6 +45,8 @@
 
 #define AXP2101_COM_STAT0_REG           (0x00)
 #define AXP2101_COM_STAT1_REG           (0x01)
+#define AXP2101_CHIP_ID_REG             (0x03)
+#define AXP2101_CHARGE_DET_REG          (0x04) // Fake, not a usable register!
 #define AXP2101_PMU_CONFIG_REG          (0x10)
 #define AXP2101_CHARG_FGAUG_WDOG_REG    (0x18)
 #define AXP2101_PWROK_PWROFF_REG        (0x25)
@@ -135,9 +138,11 @@ enum class AXP2101_registers_e : uint8_t {
   batcharge  = AXP2101_BAT_CHARGE_REG,
   charging   = AXP2101_COM_STAT1_REG,
   batpresent = AXP2101_COM_STAT0_REG,
+  chipid     = AXP2101_CHIP_ID_REG,
+  chargedet  = AXP2101_CHARGE_DET_REG,
 };
 constexpr int AXP2101_settings_count = 14; // Changeable settings
-constexpr int AXP2101_register_count = 18; // All registers
+constexpr int AXP2101_register_count = 20; // All registers
 
 enum class AXP_pin_s : uint8_t {
   Off       = 0x00,                        // Max. 3 bits can be stored in settings!
@@ -161,6 +166,19 @@ enum class AXP2101_chargingState_e : int8_t {
   Charging    = 1,
 };
 
+enum class AXP2101_chipid_e : uint8_t {
+  axp2101 = 0b01000111, // AXP2101
+};
+
+enum class AXP2101_chargingDetail_e : uint8_t {
+  tricharge    = 0b000,
+  precharge    = 0b001,
+  constcharge  = 0b010,
+  constvoltage = 0b011,
+  done         = 0b100,
+  notcharging  = 0b101,
+};
+
 AXP2101_registers_e        AXP2101_intToRegister(int reg);
 uint16_t                   AXP2101_maxVoltage(AXP2101_registers_e reg);
 uint16_t                   AXP2101_minVoltage(AXP2101_registers_e reg);
@@ -174,6 +192,8 @@ const __FlashStringHelper* toString(AXP2101_device_model_e device,
 const __FlashStringHelper* toString(AXP_pin_s pin);
 const __FlashStringHelper* toString(AXP2101_chargeled_d led);
 const __FlashStringHelper* toString(AXP2101_chargingState_e state);
+const __FlashStringHelper* toString(AXP2101_chipid_e chip);
+const __FlashStringHelper* toString(AXP2101_chargingDetail_e chip);
 
 class AXP2101_settings { // Voltages in mV, range 0..3700, max. depending on the AXP2101 pin/port used.
 public:
@@ -312,38 +332,41 @@ private:
 public:
 
   // Utility
-  uint8_t                 voltageToRegister(uint16_t            voltage,
-                                            AXP2101_registers_e reg);
-  uint16_t                registerToVoltage(uint8_t             data,
-                                            AXP2101_registers_e reg);
-  uint8_t                 get_dcdc_status(void);
-  bool                    setPortVoltage(uint16_t            voltage,
-                                         AXP2101_registers_e reg);
-  uint16_t                getPortVoltage(AXP2101_registers_e reg);
-  bool                    setPortState(bool                sw,
-                                       AXP2101_registers_e reg);
-  bool                    getPortState(AXP2101_registers_e reg);
+  uint8_t                  voltageToRegister(uint16_t            voltage,
+                                             AXP2101_registers_e reg);
+  uint16_t                 registerToVoltage(uint8_t             data,
+                                             AXP2101_registers_e reg);
+  uint8_t                  get_dcdc_status(void);
+  bool                     setPortVoltage(uint16_t            voltage,
+                                          AXP2101_registers_e reg);
+  uint16_t                 getPortVoltage(AXP2101_registers_e reg);
+  bool                     setPortState(bool                sw,
+                                        AXP2101_registers_e reg);
+  bool                     getPortState(AXP2101_registers_e reg);
 
-  bool                    setChargeLed(AXP2101_chargeled_d led);
-  AXP2101_chargeled_d     getChargeLed();
-  uint8_t                 getBatCharge();
-  AXP2101_chargingState_e getChargingState();
-  bool                    isBatteryDetected();
+  bool                     setChargeLed(AXP2101_chargeled_d led);
+  AXP2101_chargeled_d      getChargeLed();
+  uint8_t                  getBatCharge();
+  AXP2101_chargingState_e  getChargingState();
+  bool                     isBatteryDetected();
+  AXP2101_chargingDetail_e getChargingDetail();
+  uint8_t                  getChipIDRaw();
+  AXP2101_chipid_e         getChipID();
 
   // Device common functions
-  void                    set_bus_3v3(uint16_t voltage);
-  void                    set_lcd_back_light_voltage(uint16_t voltage);
-  void                    set_bus_5v(uint8_t sw);
-  bool                    set_sys_led(bool sw);
-  void                    set_spk(bool sw);
-  void                    set_lcd_rst(bool sw);
-  void                    set_lcd_and_tf_voltage(uint16_t voltage);
-  void                    set_vib_motor_voltage(uint16_t voltage);
-  void                    set_bat_charge(bool enable);
-  void                    power_off(void);
-  bool                    set_charger_term_current_to_zero(void);
-  bool                    set_charger_constant_current_to_50mA(void);
-  bool                    enable_pwrok_resets(void);
+  void                     set_bus_3v3(uint16_t voltage);
+  void                     set_lcd_back_light_voltage(uint16_t voltage);
+  void                     set_bus_5v(uint8_t sw);
+  bool                     set_sys_led(bool sw);
+  void                     set_spk(bool sw);
+  void                     set_lcd_rst(bool sw);
+  void                     set_lcd_and_tf_voltage(uint16_t voltage);
+  void                     set_vib_motor_voltage(uint16_t voltage);
+  void                     set_bat_charge(bool enable);
+  void                     power_off(void);
+  bool                     set_charger_term_current_to_zero(void);
+  bool                     set_charger_constant_current_to_50mA(void);
+  bool                     enable_pwrok_resets(void);
 
 
   // Low-level output functions
