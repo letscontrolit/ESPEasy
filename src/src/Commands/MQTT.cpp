@@ -42,7 +42,7 @@ const __FlashStringHelper* Command_MQTT_Publish_handler(struct EventStruct *even
   const String topic = parseStringKeepCase(Line, 2);
   const String value = tolerantParseStringKeepCase(Line, 3);
   # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, strformat(F("Publish%s: %s:%s"), forceRetain ? F("R") : F(""), topic.c_str(), value.c_str()));
+  addLog(LOG_LEVEL_DEBUG, strformat(F("Publish%c: %s:%s"), forceRetain ? 'R' : ' ', topic.c_str(), value.c_str()));
   # endif
 
   if (!topic.isEmpty()) {
