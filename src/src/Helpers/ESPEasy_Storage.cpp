@@ -457,7 +457,7 @@ void fileSystemCheck()
       --retries;
     }
 
-    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), "r");
+    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type), "r");
     if (f) { 
       f.close(); 
     } else {
@@ -474,17 +474,18 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-  #ifdef USE_LITTLEFS
-    #ifdef ESP32
-    const bool res = ESPEASY_FS.begin(true);
-    ESPEASY_FS.end();
-    return res;
-    #else
-    return ESPEASY_FS.format();
-    #endif
-  #else
+  // 'Fix' for IDF 4.4 LittleFS not needed anymore
+  // #ifdef USE_LITTLEFS
+  //   #ifdef ESP32
+  //   const bool res = ESPEASY_FS.begin(true);
+  //   ESPEASY_FS.end();
+  //   return res;
+  //   #else
+  //   return ESPEASY_FS.format();
+  //   #endif
+  // #else
   return ESPEASY_FS.format();
-  #endif
+  // #endif
 }
 
 #ifdef ESP32
@@ -879,10 +880,8 @@ bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = read ? F("Read") : F("Write");
-    log += F(" settings: ");
-    log += SettingsType::getSettingsTypeString(settingsType);
-    log += F(" index: ");
-    log += index;
+    log += concat(F(" settings: "), SettingsType::getSettingsTypeString(settingsType));
+    log += concat(F(" index: "), index);
     addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
@@ -955,8 +954,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   }
 
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
-    result              += F("Incomplete custom settings for index ");
-    result              += (index + 1);
+    result += concat(F("Incomplete custom settings for index "), index + 1);
     move_special(strings[stringCount], std::move(tmpString));
   }
   return result;
@@ -1054,6 +1052,13 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     result   += SaveToFile(settingsType, index, &(buffer[0]), bufpos, writePos);
     writePos += bufpos;
   }
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((writePos - posInBlock) <= DAT_TASKS_CUSTOM_SIZE)) { // Not needed, so can be deleted
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
   if ((writePos >= max_size) && (stringCount < nrStrings)) {
     result += F("Error: Not all strings fit in custom settings.");
@@ -1239,11 +1244,7 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 }
 
 String getCustomTaskSettingsError(uint8_t varNr) {
-  String error = F("Error: Text too long for line ");
-
-  error += varNr + 1;
-  error += '\n';
-  return error;
+  return strformat(F("Error: Text too long for line %d\n"), varNr + 1);
 }
 
 /********************************************************************************************\
@@ -1506,10 +1507,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
 #ifndef ESP32
 
   if (allocatedOnStack(memAddress)) {
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, Data allocated on stack");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, strformat(F("SaveToFile: %s ERROR, Data allocated on stack"), fname));
 
     //    return log;  // FIXME TD-er: Should this be considered a breaking error?
   }
@@ -1518,11 +1516,9 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
 
   if (index < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
+    const String log = strformat(F("SaveToFile: %s ERROR, invalid position in file"), fname);
     #else
-    String log = F("Save error");
+    const String log = F("Save error");
     #endif
     addLog(LOG_LEVEL_ERROR, log);
     return log;
@@ -1569,24 +1565,14 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
     f.close();
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log.reserve(48);
-      log += F("FILE : Saved ");
-      log += fname;
-      log += F(" offset: ");
-      log += index;
-      log += F(" size: ");
-      log += datasize;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("FILE : Saved %s offset: %d size: %d"), fname, index, datasize));
     }
     #endif
   } else {
     #ifndef BUILD_NO_DEBUG
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, Cannot save to file");
+    const String log = strformat(F("SaveToFile: %s ERROR, Cannot save to file"), fname);
     #else
-    String log = F("Save error");
+    const String log = F("Save error");
     #endif
 
     addLog(LOG_LEVEL_ERROR, log);
@@ -1595,9 +1581,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   STOP_TIMER(SAVEFILE_STATS);
   #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack after: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack after: "), getCurrentFreeStack()));
   }
   #endif
 
@@ -1612,11 +1596,9 @@ String ClearInFile(const char *fname, int index, int datasize)
 {
   if (index < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("ClearInFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
+    const String log = strformat(F("ClearInFile: %s ERROR, invalid position in file"), fname);
     #else
-    String log = F("Save error");
+    const String log = F("Save error");
     #endif
 
     addLog(LOG_LEVEL_ERROR, log);
@@ -1642,11 +1624,9 @@ String ClearInFile(const char *fname, int index, int datasize)
     f.close();
   } else {
     #ifndef BUILD_NO_DEBUG
-    String log = F("ClearInFile: ");
-    log += fname;
-    log += F(" ERROR, Cannot save to file");
+    const String log = strformat(F("ClearInFile: %s ERROR, Cannot save to file"), fname);
     #else
-    String log = F("Save error");
+    const String log = F("Save error");
     #endif
     addLog(LOG_LEVEL_ERROR, log);
     return log;
@@ -1663,11 +1643,9 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
 {
   if (offset < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("LoadFromFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
+    const String log = strformat(F("LoadFromFile: %s ERROR, invalid position in file"), fname);
     #else
-    String log = F("Load error");
+    const String log = F("Load error");
     #endif
     addLog(LOG_LEVEL_ERROR, log);
     return log;
@@ -1707,15 +1685,12 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
  \*********************************************************************************************/
 String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType, int index) {
   if (settingsType >= SettingsType::Enum::SettingsType_MAX) {
-    String error = F("Unknown settingsType: ");
-    error += static_cast<int>(settingsType);
-    return error;
+    return concat(F("Unknown settingsType: "), static_cast<int>(settingsType));
   }
   String error = read ? F("Load") : F("Save");
   #ifndef BUILD_NO_DEBUG
   error += SettingsType::getSettingsTypeString(settingsType);
-  error += F(" index out of range: ");
-  error += index;
+  error += concat(F(" index out of range: "), index);
   #else
   error += F(" error");
   #endif
@@ -1726,13 +1701,7 @@ String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, 
   String error = read ? F("Load") : F("Save");
   #ifndef BUILD_NO_DEBUG
   error += SettingsType::getSettingsTypeString(settingsType);
-  error += '(';
-  error += index;
-  error += F(") datasize(");
-  error += datasize;
-  error += F(") > max_size(");
-  error += max_size;
-  error += ')';
+  error += strformat(F("(%d) datasize(%d) > max_size(%d)"), index, datasize, max_size);
   #else
   error += F(" error");
   #endif
@@ -1751,8 +1720,42 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX; // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((offset_in_block + datasize) > DAT_TASKS_CUSTOM_SIZE)) {
+    if (offset_in_block < DAT_TASKS_CUSTOM_SIZE) { // block starts in regular Custom config: Load first part
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = DAT_TASKS_CUSTOM_SIZE - offset_in_block;
+      const String res = LoadFromFile(fname.c_str(), offset + offset_in_block, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred?
+
+      datasize       -= dataOffset;
+      offset_in_block = DAT_TASKS_CUSTOM_SIZE;
+    }
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) { // Do we have a task-specific extension stored?
+      if (offset_in_block >= DAT_TASKS_CUSTOM_SIZE) {
+        offset_in_block -= DAT_TASKS_CUSTOM_SIZE;
+      }
+      offset    = 0;
+      taskIndex = index; // Use task-specific filename
+    }
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                        );
+  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress + dataOffset, datasize);
 }
 
 String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock) {
@@ -1766,14 +1769,61 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  if (!fileExists(fname)) {
-    InitFile(settingsType);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX; // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      (posInBlock + datasize > (DAT_TASKS_CUSTOM_SIZE))) { // max_size already handled above
+    if (posInBlock < DAT_TASKS_CUSTOM_SIZE) {              // Partial in regular config.dat, save that part first
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = (DAT_TASKS_CUSTOM_SIZE - posInBlock);   // Bytes to keep 'local'
+      # ifndef BUILD_NO_DEBUG
+      const String styp = SettingsType::getSettingsTypeString(settingsType);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("ExtraSaveToFile: %s file: %s size: %d pos: %d"), 
+                                         styp.c_str(), fname.c_str(), dataOffset, posInBlock));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+      const String res = SaveToFile(fname.c_str(), offset + posInBlock, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred
+
+      datasize  -= dataOffset;
+      posInBlock = 0;
+    } else {
+      posInBlock -= DAT_TASKS_CUSTOM_SIZE;
+    }
+    offset    = 0;     // Start of the extension file
+    taskIndex = index; // Use task-specific filename
   }
-#ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
-#endif
-  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                        );
+  if (!fileExists(fname)) {
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    if (!validTaskIndex(taskIndex)) {
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+      InitFile(settingsType);
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    } else {
+      InitFile(fname, DAT_TASKS_CUSTOM_EXTENSION_SIZE); // Initialize task-specific file
+    }
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  }
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) +
+           strformat(F(" file: %s task: %d"), fname.c_str(), index + 1));
+  }
+  #endif
+  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress + dataOffset, datasize);
 }
 
 String ClearInFile(SettingsType::Enum settingsType, int index) {
@@ -1783,10 +1833,35 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  if (SettingsType::Enum::CustomTaskSettings_Type == settingsType) {
+    max_size = DAT_TASKS_CUSTOM_SIZE; // Don't also wipe the external size inside the config.dat file...
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
   const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
 
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index) {
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) && validTaskIndex(index)) {
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) {
+      const bool deleted = tryDeleteFile(fname); // Don't need the extension file anymore, so delete it
+      # ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, concat(F("CustomTaskSettings: Removing no longer needed file: "), fname));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+      return deleted;
+    }
+  }
+  return false;
+}
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 /********************************************************************************************\
    Check file system area settings
  \*********************************************************************************************/
@@ -1897,9 +1972,7 @@ String createCacheFilename(unsigned int count) {
   #ifdef ESP32
   fname = '/';
   #endif // ifdef ESP32
-  fname += F("cache_");
-  fname += String(count);
-  fname += F(".bin");
+  fname += strformat(F("cache_%d.bin"), count);
   return fname;
 }
 
@@ -1973,7 +2046,9 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
           }
 #ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
+          }
 #endif
         }
       }
@@ -2002,9 +2077,7 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
   if (partitionType == ESP_PARTITION_TYPE_APP) {
     if ((partitionSubType >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN) &&
         (partitionSubType < ESP_PARTITION_SUBTYPE_APP_OTA_MAX)) {
-      String result = F("OTA partition ");
-      result += (partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
-      return result;
+      return concat(F("OTA partition "), partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
     }
 
     switch (partitionSubType) {
@@ -2035,26 +2108,12 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
       default: break;
     }
   }
-  String result = F("Unknown(");
-  result += partitionSubType;
-  result += ')';
-  return result;
+  return strformat(F("Unknown(%d)"), partitionSubType);
 }
 
 String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
-  String result;
-
-  result += F("Address");
-  result += itemSep;
-  result += F("Size");
-  result += itemSep;
-  result += F("Label");
-  result += itemSep;
-  result += F("Partition Type");
-  result += itemSep;
-  result += F("Encrypted");
-  result += lineEnd;
-  return result;
+  return strformat(F("Address%sSize%sLabel%sPartition Type%sEncrypted%s"),
+                   itemSep.c_str(), itemSep.c_str(), itemSep.c_str(), itemSep.c_str(), lineEnd.c_str());
 }
 
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd) {
@@ -2065,16 +2124,17 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
   if (_mypartiterator) {
     do {
       const esp_partition_t *_mypart = esp_partition_get(_mypartiterator);
-      result += formatToHex(_mypart->address);
-      result += itemSep;
-      result += formatToHex_decimal(_mypart->size, 1024);
-      result += itemSep;
-      result += _mypart->label;
-      result += itemSep;
-      result += getPartitionType(_mypart->type, _mypart->subtype);
-      result += itemSep;
-      result += (_mypart->encrypted ? F("Yes") : F("-"));
-      result += lineEnd;
+      result += strformat(F("%x%s%s%s%s%s%s%s%s%s"),
+                          _mypart->address,
+                          itemSep,
+                          formatToHex_decimal(_mypart->size, 1024),
+                          itemSep,
+                          _mypart->label,
+                          itemSep,
+                          getPartitionType(_mypart->type, _mypart->subtype).c_str(),
+                          itemSep,
+                          String(_mypart->encrypted ? F("Yes") : F("-")).c_str(),
+                          lineEnd);
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
@@ -2105,8 +2165,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
     }
   } else {
     if (fileExists(filename)) {
-      String filename_bak = filename;
-      filename_bak += F("_bak");
+      const String filename_bak = strformat(F("%s_bak"), filename.c_str());
       if (fileExists(filename_bak)) {
         if (!ResetFactoryDefaultPreference.delete_Bak_Files() || !tryDeleteFile(filename_bak)) {
           return F("Could not rename to _bak");
@@ -2114,8 +2173,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
       }
 
       // Must download it to a tmp file.
-      String tmpfile = filename;
-      tmpfile += F("_tmp");
+      const String tmpfile = strformat(F("%s_tmp"),filename.c_str());
 
       if (!downloadFile(fullUrl, tmpfile, user, pass, error)) {
         return error;
