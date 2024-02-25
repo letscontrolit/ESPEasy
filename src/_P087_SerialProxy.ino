@@ -11,6 +11,10 @@
 
 /**
  * Changelog:
+ * 2024-02-25 tonhuisman: Add command serialproxy_test,<testdata> to test as if serial data was received
+ *                        Add Get Config Value support for retrieving the last regex-parsed data:
+ *                        - By group: [<taskname>#group,<groupnr>] (groupnr is 0-base!)
+ *                        - By name: [<taskname>#next,<data>] if the <data> is found, the next group-data is returned
  * 2023-03-25 tonhuisman: Change serialproxy_writemix to handle 0x00 also, by implementing parseHexTextData()
  * 2023-03-22 tonhuisman: Add command serialproxy_writemix to handle mixed hex characters and text to send
  *                        using parseHexTextString()
@@ -240,24 +244,47 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P087_data)) {
-        String cmd = parseString(string, 1);
+      if (nullptr != P087_data) {
+        const String cmd = parseString(string, 1);
 
         if (equals(cmd, F("serialproxy_write"))) {
-          String param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
-          parseSystemVariables(param1, false);                        // FIXME tonhuisman: Doesn't seem to be needed?
+          String param1 = parseStringKeepCaseNoTrim(string, 2); // Don't trim off white-space
+          parseSystemVariables(param1, false);                  // FIXME tonhuisman: Doesn't seem to be needed?
           P087_data->sendString(param1);
-          addLogMove(LOG_LEVEL_INFO, param1);                         // FIXME tonhuisman: Should we always want to write to the log?
+          addLogMove(LOG_LEVEL_INFO, param1);                   // FIXME tonhuisman: Should we always want to write to the log?
           success = true;
         } else
         if (equals(cmd, F("serialproxy_writemix"))) {
           std::vector<uint8_t> param1 = parseHexTextData(string);
-          if (param1.size())
+
+          if (param1.size()) {
             P087_data->sendData(&param1[0], param1.size());
+          }
+          success = true;
+        } else
+        if (equals(cmd, F("serialproxy_test"))) { // Test-parse data as if received via serial
+          const String param1 = parseStringKeepCaseNoTrim(string, 2);
+
+          if (!param1.isEmpty()) {
+            P087_data->setLastSentence(param1);
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+            delay(0); // Processing a full sentence may take a while, run some background tasks.
+          }
           success = true;
         }
       }
 
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P087_data) {
+        P087_data->plugin_get_config_value(event, string);
+      }
       break;
     }
   }

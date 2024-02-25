@@ -109,12 +109,21 @@ Commands available
 .. include:: P087_commands.repl
 
 
+Get Config Values
+^^^^^^^^^^^^^^^^^
+
+Get Config Values retrieves values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
+
+.. include:: P087_config_values.repl
+
 
 Change log
 ----------
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2024-02-25 Add support for ``serialproxy_test`` command and retrieving the separate groups from parsed regex.
 
   |added| 2023-03-22 Add support for writing any binary data out via the serial port.
 

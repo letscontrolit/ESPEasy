@@ -309,7 +309,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
 
   if (globalMatch()) {
     capture_vector.clear();
-    ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
+    ms.GlobalMatch(getRegEx().c_str(), match_callback);
     const uint8_t vectorlength = capture_vector.size();
 
     for (uint8_t i = 0; i < vectorlength; ++i) {
@@ -353,9 +353,10 @@ bool P087_data_struct::matchRegexp(String& received) const {
         }
       }
     }
-    capture_vector.clear();
+
+    // capture_vector.clear(); // KEEP so we can use plugin_get_config_value to retrieve the values
   } else {
-    char result = ms.Match(_lines[P087_REGEX_POS].c_str());
+    char result = ms.Match(getRegEx().c_str());
 
     if (result == REGEXP_MATCHED) {
       # ifndef BUILD_NO_DEBUG
@@ -389,6 +390,64 @@ const __FlashStringHelper * P087_data_struct::MatchType_toString(P087_Match_Type
 bool P087_data_struct::max_length_reached() const {
   if (max_length == 0) { return false; }
   return sentence_part.length() >= max_length;
+}
+
+void P087_data_struct::setLastSentence(String string) {
+  last_sentence = string;
+}
+
+bool P087_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success               = false;
+  const uint8_t vectorlength = capture_vector.size();
+  const String  cmd          = parseString(string, 1);
+
+  # ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("P087: Before GetConfig: "), string));
+  # endif // ifndef BUILD_NO_DEBUG
+
+  if (equals(cmd, F("group"))) {
+    int32_t par2;
+
+    if (validIntFromString(parseString(string, 2), par2) &&
+        (par2 >= 0)) {
+      for (uint8_t i = 0; i < vectorlength && !success; ++i) { // Stop when we find the requested group
+        # ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, strformat(F("P087: get group: %d = %s"),
+                                          capture_vector[i].first,
+                                          capture_vector[i].second.c_str()));
+        # endif // ifndef BUILD_NO_DEBUG
+
+        if (par2 == capture_vector[i].first) {
+          string  = capture_vector[i].second;
+          success = true;
+        }
+      }
+    }
+  }  else
+  if (equals(cmd, F("next"))) {                                    // Get next group value after matching name
+    const String name_ = parseString(string, 2);
+
+    for (uint8_t i = 0; i < (vectorlength - 1) && !success; ++i) { // Stop when we find the requested name
+                                                                   // Loops until 1 BEFORE the end of the vector!
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, strformat(F("P087: get next: %d = %s => %s"),
+                                        capture_vector[i].first,
+                                        capture_vector[i].second.c_str(),
+                                        capture_vector[i + 1].second.c_str()));
+      # endif // ifndef BUILD_NO_DEBUG
+
+      if (name_.equalsIgnoreCase(capture_vector[i].second)) {
+        string  = capture_vector[i + 1].second; // Take NEXT value
+        success = true;
+      }
+    }
+  } // else...
+  # ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("P087: After GetConfig: "), string));
+  # endif // ifndef BUILD_NO_DEBUG
+
+  return success;
 }
 
 #endif // USES_P087
