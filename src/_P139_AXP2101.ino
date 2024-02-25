@@ -9,6 +9,7 @@
 
 /**
  * Changelog:
+ * 2024-02-25 tonhuisman: Add I2C-enabled check on plugin startup, implement FsP macro
  * 2024-02-21 tonhuisman: Add support for ChipID and ChargingDetail data supplied by AXP2101
  * 2024-02-18 tonhuisman: Add setting for Generate events, support for chargestate and isBatteryDetected, fix some issues
  * 2024-02-17 tonhuisman: Add setting for Charge led and battery charge level, fix saving adjusted port settings,
@@ -385,19 +386,23 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      P139_data_struct *P139_init = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (Settings.isI2CEnabled()) {
+        P139_data_struct *P139_init = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P139_init) {
+        if (nullptr != P139_init) {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
+          addLogMove(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
         #  endif // ifndef BUILD_NO_DEBUG
-        // has been initialized so nothing to do here
-        success = true; // Still was successful (to keep plugin enabled!)
+          // has been initialized so nothing to do here
+          success = true; // Still was successful (to keep plugin enabled!)
+        } else {
+        #  ifndef BUILD_NO_DEBUG
+          addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
+        #  endif // ifndef BUILD_NO_DEBUG
+          success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P139_data_struct(event));
+        }
       } else {
-        #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
-        #  endif // ifndef BUILD_NO_DEBUG
-        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P139_data_struct(event));
+        addLog(LOG_LEVEL_ERROR, F("AXP2101: I2C not enabled, initialization failed!"));
       }
 
       break;

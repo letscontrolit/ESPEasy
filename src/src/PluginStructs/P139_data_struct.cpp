@@ -67,7 +67,7 @@ void P139_data_struct::outputSettings(struct EventStruct *event) {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         addLog(LOG_LEVEL_DEBUG,
                strformat(F("AXP2101: Port: %s, output: %dmV, pin state: %s"),
-                         toString(reg), _settings.getVoltage(reg), toString(pinState)));
+                         FsP(toString(reg)), _settings.getVoltage(reg), FsP(toString(pinState))));
       }
       #  endif // ifndef BUILD_NO_DEBUG
     }
@@ -222,28 +222,28 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
             String  data;
 
             if (AXP2101_registers_e::chargeled == reg) {
-              data = strformat(F(", Led: %s"), toString(axp2101->getChargeLed()));
+              data = strformat(F(", Led: %s"), FsP(toString(axp2101->getChargeLed())));
             } else
             if (AXP2101_registers_e::batcharge == reg) {
               data = strformat(F(", Battery: %d%%"), axp2101->getBatCharge());
             } else
             if (AXP2101_registers_e::charging == reg) {
-              data = strformat(F(", Battery: %s"), toString(axp2101->getChargingState()));
+              data = strformat(F(", Battery: %s"), FsP(toString(axp2101->getChargingState())));
             } else
             if (AXP2101_registers_e::batpresent == reg) {
-              data = strformat(F(", Battery: %s"), boolToString(axp2101->isBatteryDetected()));
+              data = strformat(F(", Battery: %s"), FsP(boolToString(axp2101->isBatteryDetected())));
             } else
             if (AXP2101_registers_e::chipid == reg) {
-              data = strformat(F(", ChipID: %s (0x%02x)"), toString(axp2101->getChipID()), axp2101->getChipIDRaw());
+              data = strformat(F(", ChipID: %s (0x%02x)"), FsP(toString(axp2101->getChipID())), axp2101->getChipIDRaw());
             } else
             if (AXP2101_registers_e::chargedet == reg) {
-              data = strformat(F(", ChargingDetail: %s"), toString(axp2101->getChargingDetail()));
+              data = strformat(F(", ChargingDetail: %s"), FsP(toString(axp2101->getChargingDetail())));
             } else {
               value = axp2101->getPortVoltage(reg);
               state = axp2101->getPortState(reg);
             }
             addLog(LOG_LEVEL_INFO, strformat(F("Port: %7s: %4dmV, state: %d, range: %d - %dmV%s"),
-                                             toString(reg),
+                                             FsP(toString(reg)),
                                              value,
                                              state,
                                              AXP2101_minVoltage(reg),
@@ -270,7 +270,7 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
                 // TODO Q: Turn off when A) 0 or B) below minimum voltage? Current answer: A)
                 // axp2101->setPortState(false, reg);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Turn off port %s"), toString(reg)));
+                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Turn off port %s"), FsP(toString(reg))));
                 }
                 success = true;
               } else
@@ -278,7 +278,7 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
                 // axp2101->setPortVoltage(event->Par3, reg);
                 // axp2101->setPortState(true, reg); // Turn on after setting the voltage
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Set port %s to %dmV"), toString(reg), event->Par3));
+                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Set port %s to %dmV"), FsP(toString(reg)), event->Par3));
                 }
                 success = true;
               }
@@ -300,12 +300,12 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
 
               if (AXP2101_isPinProtected(pinState)) {
                 if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                  addLog(LOG_LEVEL_ERROR, strformat(F("AXP2101: Port %s is %s"), toString(reg), toString(pinState)));
+                  addLog(LOG_LEVEL_ERROR, strformat(F("AXP2101: Port %s is %s"), FsP(toString(reg)), FsP(toString(pinState))));
                 }
               } else {
                 // axp2101->setPortState(stateOn, reg);
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Switch port %s: %s"), toString(reg), (stateOn ? F("On") : F("Off"))));
+                  addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: Switch port %s: %s"), FsP(toString(reg)), FsP(stateOn ? F("On") : F("Off"))));
                 }
                 success = true;
               }
@@ -357,10 +357,10 @@ bool P139_data_struct::plugin_write(struct EventStruct *event,
             for (int s = 0; s < AXP2101_settings_count; ++s) {
               const AXP2101_registers_e reg = AXP2101_intToRegister(s);
               addLog(LOG_LEVEL_INFO, strformat(F("AXP2101: %7s Percentage range: %d - %dmV (State: %s)"),
-                                               toString(reg),
+                                               FsP(toString(reg)),
                                                _ranges[s][0],
                                                _ranges[s][1],
-                                               toString(_settings.getState(reg))));
+                                               FsP(toString(_settings.getState(reg)))));
             }
           }
         }
