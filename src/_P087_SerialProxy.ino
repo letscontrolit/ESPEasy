@@ -283,7 +283,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P087_data) {
-        P087_data->plugin_get_config_value(event, string);
+        success = P087_data->plugin_get_config_value(event, string);
       }
       break;
     }
