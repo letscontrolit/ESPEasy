@@ -48,7 +48,7 @@ This section only shows settings when the plugin is configured and enabled.
 
 .. image:: P087_FilteringConfiguration.png
 
-* **RegEx**: Specify a regular expression to apply to the received data before it is accepted as acceptable data.
+* **RegEx**: Specify a regular expression to apply to the received data before it is accepted as acceptable data. This regular expression is based on the Lua script language, and is documented here: http://www.lua.org/manual/5.2/manual.html#6.4.1
 
 * **Nr Chars use in RegEx**: Limit the length of the data to be checked using the **RegEx** regular expression filter. When set to 0 all data is checked.
 
