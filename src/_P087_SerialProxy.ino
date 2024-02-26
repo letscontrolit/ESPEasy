@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2024-02-26 tonhuisman: Apply log-string and other code optimizations
  * 2024-02-25 tonhuisman: Add command serialproxy_test,<testdata> to test as if serial data was received
  *                        Add Get Config Value support for retrieving the last regex-parsed data:
  *                        - By group: [<taskname>#group,<groupnr>] (groupnr is 0-base!)
@@ -148,7 +149,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     {
       addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 300, 115200);
       addUnit(F("baud"));
-      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
+      const uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       break;
     }
@@ -172,7 +173,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P087_data) {
-        for (uint8_t varNr = 0; varNr < P87_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P87_Nlines; ++varNr)
         {
           P087_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
@@ -229,14 +230,13 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P087_data) && P087_data->getSentence(event->String2)) {
         if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
           //          sendData(event);
-# ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, event->String2);
-# endif // ifndef BUILD_NO_DEBUG
+          # endif // ifndef BUILD_NO_DEBUG
           success = true;
         }
       }
 
-      if ((nullptr != P087_data)) {}
       break;
     }
 
@@ -306,7 +306,7 @@ bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
     return true;
   }
 
-  bool res = P087_data->matchRegexp(received);
+  const bool res = P087_data->matchRegexp(received);
 
   if (P087_data->invertMatch()) {
     addLog(LOG_LEVEL_INFO, F("Serial Proxy: invert filter"));
@@ -319,7 +319,7 @@ String Plugin_087_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P087_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 void P087_html_show_matchForms(struct EventStruct *event) {
@@ -369,7 +369,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
 
     for (uint8_t varNr = P087_FIRST_FILTER_POS; varNr < P87_Nlines; ++varNr)
     {
-      String id = getPluginCustomArgName(varNr);
+      const String id = getPluginCustomArgName(varNr);
 
       switch (varNr % 3) {
         case 0:
@@ -377,10 +377,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           // Label + first parameter
           filter = P087_data->getFilter(lineNr, capture, comparator);
           ++lineNr;
-          String label;
-          label  = F("Capture Filter ");
-          label += String(lineNr);
-          addRowLabel_tr_id(label, id);
+          addRowLabel_tr_id(concat(F("Capture Filter "), lineNr), id);
 
           addNumericBox(id, capture, -1, P87_MAX_CAPTURE_INDEX);
           break;
@@ -391,7 +388,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           const __FlashStringHelper *options[2];
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
-          int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
+          const int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
           addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, F(""));
           break;
         }
@@ -422,13 +419,9 @@ void P087_html_show_stats(struct EventStruct *event) {
 
   {
     addRowLabel(F("Sentences (pass/fail)"));
-    String   chksumStats;
     uint32_t success, error, length_last;
     P087_data->getSentencesReceived(success, error, length_last);
-    chksumStats  = success;
-    chksumStats += '/';
-    chksumStats += error;
-    addHtml(chksumStats);
+    addHtml(strformat(F("%d/%d"), success, error));
     addRowLabel(F("Length Last Sentence"));
     addHtmlInt(length_last);
   }
