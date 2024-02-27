@@ -100,7 +100,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         {
           cmd += event->String2; // Par2
         }
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
       }
       break;
     }

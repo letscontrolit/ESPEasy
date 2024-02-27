@@ -269,6 +269,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return F("Eth State");
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
+    case LabelType::ETH_CHIP:               return F("Eth chip");
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
@@ -583,6 +584,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return EthLinkUp() ? F("Link Up") : F("Link Down");
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
+    case LabelType::ETH_CHIP:               return toString(Settings.ETH_Phy_Type);
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);

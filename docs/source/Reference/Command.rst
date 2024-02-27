@@ -795,6 +795,11 @@ P159 :ref:`P159_page`
 
 .. include:: ../Plugin/P159_commands.repl
 
+P166 :ref:`P166_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P166_commands.repl
+
 .. .. *** Insert regular plugin commands above this remark! ***
 
 .. _AdafruitGFX Helper commands:

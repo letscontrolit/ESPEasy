@@ -231,17 +231,23 @@ bool WiFiConnected() {
 
 #if FEATURE_USE_IPV6
   if (!WiFiEventData.processedGotIP6) {
-    WiFiEventData.processedGotIP6 = true;
-#if FEATURE_ESPEASY_P2P
-    updateUDPport(true);
-#endif
+    processGotIPv6();
   }
 #endif
 
+  if (!WifiIsSTA(WiFi.getMode())) {
+    lastState = false;
+    return lastState;
+  }
+
 
   if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
-    // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
-    return lastState;
+    if (WiFiEventData.lastDisconnectMoment.isSet() &&
+        WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassedSince(lastCheckedTime))
+    {
+      // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+      return lastState;
+    }
   }
 
 
@@ -890,16 +896,17 @@ void WifiDisconnect()
     return;
   }
   // Prevent recursion
-  static bool processingDisconnect = false;
-  if (processingDisconnect) return;
-  processingDisconnect = true;
+  static LongTermTimer processingDisconnectTimer;
+  if (processingDisconnectTimer.isSet() && 
+     !processingDisconnectTimer.timeoutReached(200)) return;
+  processingDisconnectTimer.setNow();
   # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
   #endif
   #ifdef ESP32
-  WiFi.disconnect();
-  delay(1);
   removeWiFiEventHandler();
+  WiFi.disconnect();
+  delay(100);
   {
     const IPAddress ip;
     const IPAddress gw;
@@ -930,7 +937,7 @@ void WifiDisconnect()
   WiFiEventData.processingDisconnect.clear();
   WiFiEventData.processedDisconnect = false;
   processDisconnect();
-  processingDisconnect = false;
+  processingDisconnectTimer.clear();
 }
 
 // ********************************************************************************

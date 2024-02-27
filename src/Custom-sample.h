@@ -22,11 +22,12 @@
 // --- Feature Flagging ---------------------------------------------------------
 // Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
-#define FEATURE_RULES_EASY_COLOR_CODE    1   // Use code highlighting, autocompletion and command suggestions in Rules
-#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
-#define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
-// #define FEATURE_SD                1     // Enable SD card support
-// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
+#define FEATURE_RULES_EASY_COLOR_CODE   1  // Use code highlighting, autocompletion and command suggestions in Rules
+#define FEATURE_ESPEASY_P2P             1  // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA             1  // enables the Arduino OTA capabilities
+#define FEATURE_THINGSPEAK_EVENT        1  // generate an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+// #define FEATURE_SD                   1  // Enable SD card support
+// #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT
@@ -537,6 +538,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P159   // Presence - LD2410 Radar detection
 
+// #define USES_P164   // Gases - ENS16x TVOC/eCO2
+// #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 /*
  #######################################################################################################
  ###########     Controllers
