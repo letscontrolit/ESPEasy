@@ -295,9 +295,10 @@ bool P087_data_struct::matchRegexp(String& received) const {
 
   bool match_result = false;
 
+  capture_vector.clear();
+  ms.GlobalMatch(getRegEx().c_str(), match_callback); // To allow the matched values be retrieved also when not using Global Match option
+
   if (globalMatch()) {
-    capture_vector.clear();
-    ms.GlobalMatch(getRegEx().c_str(), match_callback);
     const uint8_t vectorlength = capture_vector.size();
 
     for (uint8_t i = 0; i < vectorlength; ++i) {
@@ -327,10 +328,11 @@ bool P087_data_struct::matchRegexp(String& received) const {
               log += F(" No Match");
 
               if (capture_index_must_not_match[n]) {
-                log += F(" (!=) ");
+                log += F(" (!=)");
               } else {
-                log += F(" (==) ");
+                log += F(" (==)");
               }
+              log += ' ';
               log += _lines[lines_index];
             }
             addLogMove(LOG_LEVEL_INFO, log);

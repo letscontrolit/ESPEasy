@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2024-02-27 tonhuisman: Always process the regular expression like 'Global Match' to enable retrieving the available values
  * 2024-02-26 tonhuisman: Apply log-string and other code optimizations
  * 2024-02-25 tonhuisman: Add command serialproxy_test,<testdata> to test as if serial data was received
  *                        Add Get Config Value support for retrieving the last regex-parsed data:
