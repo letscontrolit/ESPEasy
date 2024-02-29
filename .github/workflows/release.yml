@@ -167,6 +167,7 @@ jobs:
           find . -name '*ESP32solo1*' -print | zip -@ ../../ESPEasy_ESP32solo1.zip 
           find . -name '*ESP32_*' -print | zip -@ ../../ESPEasy_ESP32.zip 
           cd ../..
+          # TD-er: file does not exist?
           mv artifacts/Distribution/ESPEasy_dist* .
           cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
           zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip "bin/blank_8MB.bin"
