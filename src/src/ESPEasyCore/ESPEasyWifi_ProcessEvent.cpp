@@ -466,7 +466,7 @@ void processGotIPv6() {
     if (loglevelActiveFor(LOG_LEVEL_INFO))
       addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + WiFiEventData.unprocessed_IP6.toString(true));
 #if FEATURE_ESPEASY_P2P
-    updateUDPport(true);
+//    updateUDPport(true);
 #endif
   }
 }
@@ -590,9 +590,10 @@ void processScanDone() {
         addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
       }
       #endif
-
+#ifdef ESP32
 //      setSTA(false);
-//      NetworkConnectRelaxed();
+#endif
+      NetworkConnectRelaxed();
 #ifdef USES_ESPEASY_NOW
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif

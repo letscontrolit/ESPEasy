@@ -552,17 +552,9 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<script>initCM();</script>"));
 
   html_TR_TD();
-  {
-    addHtml(F("Current size: <span id='size'>"));
-    addHtmlInt(size);
-    addHtml(F("</span> characters (Max "));
-    addHtmlInt(RULES_MAX_SIZE);
-    addHtml(F(")"));
-  }
-
-  if (size > RULES_MAX_SIZE) {
-    addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
-  }
+  addHtml(F("Current size: <span id='size'>"));
+  addHtmlInt(size);
+  addHtml(F("</span> characters"));
 }
 
 bool Rule_Download(const String& path)
