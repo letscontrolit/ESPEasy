@@ -1,4 +1,294 @@
 -------------------------------------------------
+Changes in release mega-20240229 (since mega-20231225)
+-------------------------------------------------
+
+Release date: Thu Feb 29 03:10:58 PM CET 2024
+
+Fabio Ancona (1):
+      Added missing P166
+
+TD-er (104):
+      [IPv6] Fix node with IPv6 not seen by other p2p nodes with only IPv4
+      [PVS Studio] Fix "dangerous expression" macros.
+      [PVS Studio] Fix missing 'break;' in switch statement
+      [PVS Studio] Fix Not all members of a class are initialized inside the constructor
+      [PluginStats] Add PluginStats chart data to /json
+      [PluginStats] Fix pluginstats via JSON & improve speed
+      [ESPEasy p2p] Fix Ethernet connected nodes not listed on other nodes
+      [Build] Make ESP8266 Energy build fit again
+      [Build] Fix duplicate extra_scripts declaration in some ESP8266 builds
+      [HW CDC] Fix delay when no client connected to read serial logs
+      [UDP] Only process UDP packets while connected
+      [Factory Reset] Fix applying NVS stored settings only when these exist
+      [ESP-IDF5.1] Add custom_ESP32s2_4M316k_LittleFS_CDC
+      [Factory Reset] Add default flags for factory reset
+      [ESP-IDF5.1] Fix starting DHCP on ESP AP during setup
+      [Cleanup] Reduce bin size (NVS storage & P128 NeoPixelBus)
+      [Cleanup] Reduce build size (P128 NeoPixelBus)
+      [Cleanup] Reduce build size (P104/P128)
+      [Cleanup] Reduce build size (P104 load/save functions)
+      [Cleanup] Reduce build size
+      [Cleanup] Reduce build size (AdaFruitGFX_Helper fonts)
+      [ESP32] Disable PSRAM for ESP32 4M builds (WT32-ETH01 issues)
+      [Docs] Add credits to origin of ESP32-S3 flash/PSRAM options
+      [ESP-IDF5.1] Improve IPv6 for ESP32-xx
+      [ESP-IDF5.1] Fix IPv6 for ESP32-S3
+      [Build] Fix build due to typo in source code
+      Fix "Enable SDK WiFi Auto Reconnect" state on sysinfo page (#4935)
+      [build] Fix another build issue due to includes
+      Revert "[Cleanup] Reduce build size (AdaFruitGFX_Helper fonts)"
+      [Factory reset] Fix using factory reset defaults on new devices
+      [ESP-IDF5.1] Update to latest ESP-IDF & Arduino fixes
+      Fix crash in command arg parsing with nullptr string
+      [IPv6] Allow `ip6` command from all command sources
+      [P077] Add `cseclearpulses` command to reset CF pulses counter
+      [Cleanup] Reduce build size by simplifying logs
+      [Provisioning] Show error and event on failed firmware update (#4941)
+      [Build] Fix build error on ESP8266
+      [P077_CSE] Fix cseclearpulses command
+      [P077 CSE7766]  Call PLUGIN_READ right after `cseclearpulses`
+      [P016 IR] Reduce stack usage executing commands
+      [P016 IR] Fix some build mistakes reducing stack usage
+      [P016 IR] Reduce stack usage execute command
+      [P016 IR] Add debug code to reproduce crashes Uwe
+      [Cleanup] Reduce stack usage P036 OLED Framed
+      [P036 Framed OLED] Apply cleanup from Ton's TAR pull request
+      [P036 OLED Framed] Add bound checks when drawing fonts
+      [Commands] Allow commands from external source to be queued (stack)
+      [Cleanup] Reduce stack usage P036 OLED Framed
+      [P036 Framed OLED] Apply cleanup from Ton's TAR pull request
+      [P036 OLED Framed] Add bound checks when drawing fonts
+      [ESP32 IPv6] Fix getting IPv6 address on ESP32 classic
+      [Build] Add ESP8266 custom IR 1M build + IPv6 to custom ESP32 IR build
+      [IPv6] Move log to more logical place
+      [SPI Ethernet] Add support for SPI Ethernet modules
+      [SPI Ethernet] Fix build for pre ESP-IDF5.1
+      [SPI Ethernet] Fix build
+      [SPI Ethernet] Use user configurable SPI bus for SPI Ethernet
+      [SPI Ethernet] Fix build pre-ESP-IDF5.1
+      [SPI Ethernet] Fix detect Link Up/Down + cleanup code
+      [SPI Ethernet] Fix build on ESP-IDF < 5.x
+      [Build] Fix building on ESP8266
+      [SPI Ethernet] Document SPI Ethernet + Eth config for available boards
+      [SPI Ethernet] Fix typo in docs
+      [Cleanup] Fix crashes on ESP32 sending log from ISR callback functions
+      [SPI Ethernet] Add "- None -" Ethernet type option on Hardware Page
+      [ESP-IDF5.1] Update to latest SDK/Arduino commits
+      [IPv6] Fix IPv6 on ESP32-S3
+      [Build] Fix missing #endif
+      [SPI Ethernet] Allow selecting RMII pins for SPI Ethernet
+      [SPI Ethernet] Fix concurrency issue with shared SPI bus for ETH/display
+      [Build] Fix build on ESP32-C3
+      [PWM] Fix ESP32 LittleFS build PWM GPIO : port#2 is out of range (#4962)
+      [SPI Ethernet] Make default Ethernet parameters more neutral
+      [PWM] Fix deadlock on ESP32-classic with PWM fade
+      [ESP32 PWM] Fix calling ledcAttach for Servo and PWM on ESP32 IDF5.1
+      [ESP-IDF5.1] Update to latest Arduino and ESP-IDF commits
+      [Email] Fix sending multiple lines in body (#4967)
+      [ESP-IDF5.1] Fix build ESP32-C2
+      [Build] Test ESP32-solo1 build on CI
+      [ESP-IDF5.1] Update to latest platform build
+      [SPI Eth] Add ESP32-S3 ETH builds
+      [ESP32 WiFi] Fix slow connect after WiFi scan
+      [SPI Eth] Allow SPI Ethernet W5500 to have not connected INT pin
+      [Build] Fix missing include
+      [ESP-IDF5.1] Update to latest IDF and Arduino commits
+      [ESP-IDF5.1] Update platform package for ESP32-solo1
+      [ESP-IDF5.1] Fix renamed platform zip file
+      [ESP32 WiFi] Fix crashing on wifi disconnect
+      [WiFi] Fix crash when calling disconnect or wifimode,off from remote src
+      [WiFi] Fix crash when WiFi was turned off while data is sent
+      [Docs] Add warning changing ECO mode when using SPI Ethernet
+      [GPIO] Add form note setting pull-up on Hardware tab (#4800)
+      [Rules] Remove warning for max size on Rules edit page
+      [Eth] Show Ethernet adapter used in JSON/Sysinfo
+      [ESP-IDF5.x] Add fix to ESP-IDF/Arduino for W5500 without RST (AtomPoE)
+      [HW info] Add checks for properly identify embedded flash/PSRAM
+      [ESP8266] Reduce memory usage by actively flushing webpage buffers
+      [IPv6] Fix slowdown restarting services on receiving IPv6 address
+      [ESP32-C3/C6] Fix web slowdown by reverting Arduino/IDF code
+      [Build] Fix build issue on ESP-IDF4.4
+      [Build] Fix build on non-ESP32-S3
+      [Build] Fix typo in ESP32-S2 code
+      [ESP32-C3/C6] Fix stalling on concurrent connections
+      [Build] Add flag to help not compile/download unused libs
+
+Ton Huisman (116):
+      [P044] Uncrustify format source
+      [P044] Make Led pin configurable
+      [P044] Correct auto-complete typo
+      [Plugins] Call PLUGIN_WEBFORM_PRE_SERIAL_PARAMS before serial settings are displayed to allow settings conversion
+      [Plugins] Call PLUGIN_WEBFORM_PRE_SERIAL_PARAMS before serial settings are displayed to allow settings conversion
+      [P020] Merge [P044] code into [P020], so P020 van emulate P044
+      [P020/P044] Migrate settings also on plugin start without prior save from UI
+      [P020] Code improvement
+      [P020/P044] Add option for including P1 data in #data event
+      [UI] Add Separator character input selector
+      [P020/P044] Add feature to replace spaces and newlines in received data
+      [P020] Add plugin documentation
+      [P037] Implement replacement character input selector, update documentation
+      [UI] Fix unsupported feature compilation error, fix signed/unsigned warning
+      [P044] Only show usable settings
+      [P044] Update plugin documentation (based on P020)
+      [Build] Adjust Custom ESP8266 as already planned to fix build failure
+      [P020/P044] Adjustments to complete the merge
+      [P020] Add extra check before sending P1 data
+      [P020] Revert extra check before sending P1 data, minor improvements
+      [StringConverter] Add parseHexTextString()
+      [P020] Add command `serialsendmix`
+      [StringConverter] Improvements to parseHexTextString()
+      [P020] Add command documentation
+      [P020] Correct some typos in documentation
+      [StringConverter] Add parseHexTextData() to handle 0x00
+      [P020] Use parseHextTextData() to handle 0x00 in data
+      [P020] Update documentation for 0x00..0xFF hex data support in serialsendmix
+      [P020] Update changelog
+      [P020] Unification of Ser2Net log messages
+      [Build] Manually apply WiFi build fixes (missing includes)
+      [ESPEasySerial] Add shortName option to be used as eventname
+      [Helpers] Implement ESPEasySerial shortName option to be used as eventname
+      [P020] Increase max. buffer size [P020] Add options for using Serial Port name as event and/or append the task number [P020/P044] Fix plugin initialization when USB (HW)CDC or I2C Serial is selected
+      [P020] Update documentation for new options
+      [P020] Fix receiving P1 data
+      [P020] Fix merge conflict
+      [P020] Allow some extra time-out while receiving P1 data, add missing CR/LF
+      [P044/P020] Improved defaults for P1 WiFigateway
+      [P020][P044] Minor improvements, update with latest mega changes
+      [Docs] Hardware page: Add missing documentation for new I2C Slow default
+      [P043] Add support for %sunrise% and %sunset% based time-values
+      [Docs] Add missing %syssec_d% variable
+      [P151] Add missing PLUGIN_I2C_GET_ADDRESS function
+      [Docs] Update in Plugin-template embedded documentation
+      [Docs] Add Rules example for registering daily working time
+      [TimeCalc] Fix parse errors
+      [Text input] Add `datalist` support, manually cherry picked from P123 PR
+      [Text input] Implement `datalist` support
+      [P043] Add selection list (datalist) support for input time string
+      [P043] Rework Day,Time inputs, add configurable Day,Time count
+      [P043] Change Value input layout to be on same line as the Day,Time input, code optimization
+      [Docs] Update Commands and Events references
+      [P043] Add option for On/Off value input
+      [P043] Add 'config' command support and get config value support
+      [P043] Add documentation
+      [Build] Disable some failing build envs
+      [Docs] Add P043 to commands and events reference pages
+      [P043] Fix simple Yes/No behavior like GPIO mode
+      [P043] Update documentation
+      [Build] Fix buildscripts for v4 Actions `upload-artifact`, `download-artifact` and `delete-artifact`
+      [Build] GH Actions v4 use unique upload-id
+      [Build] GH Actions use setup-python v5, improved glob for delete-artifact
+      [Build] GH Actions v4 try fix artifact download permissions issue
+      [Docs] Update `README.md` with new builds/ESPs/options
+      [Build] GH Actions v4 Sort builds by ESP, remove repackage step
+      [Build] GH Actions v4 Fix build names vs dependencies, add all-binaries artifact
+      [Build] GH Actions v4 Rename `repackage` job to `combine_package`
+      [Build] GH Actions v4 Apply also to `release.yml`, add ESP32-C2 and ESP32-C6 artifact uploads
+      [Lib] NeoPixelBus_Wrapper: Allow fall-back to Adafruit_NeoPixel lib for ESP8266
+      [Lib] NeoPixelBus_Wrapper: Fix compilation for IR builds
+      [Lib] NeoPixelBus_Wrapper: Correct includes attribute
+      [Docs] Add Rules example for measuring daily used power/energy
+      [Adafruit_NeoPixel] Fix compiler warning
+      [NeoPixelBus_wrapper] Update README.md
+      [NeoPixelBus_wrapper] Correct class inheritance error
+      [Adafruit_NeoPixel] Exclude from ESP32 builds (unused)
+      [Adafruit_NeoPixel] Correct function signature issues causing compiler warnings
+      [P131] Fix compiler warning -Wreorder
+      [SuperTinyCron] Remove unused commandline tool
+      [P020] Replace WiFiServer->available() by accept() (for IDF >= 5)
+      [Build] Combine_package use separate downloads to reduce chance of failure
+      [Build] Combine_package use wretry.action to try and succeed the downloads
+      [Build] Remove RTTTL from `normal_IRext_no_rx` build for size, add some libs to lib_ignore for `custom_IR` builds
+      [P043] Exclude some code that won't work for PLUGIN_BUILD_MINIMAL_OTA builds
+      [Release] Add ESP32-C2 and ESP32-C6 downloads
+      [Build/Release] Fix some issues, apply workarounds where needed
+      [Docs] Update copyright year to 2024
+      [Docs] Update copyright year to 2024
+      [Docs] Update copyright year to 2024
+      [Docs] Update Sphinx tools and configuration
+      [IR] Enable all protocols for ESP32 IR builds
+      [Bugfix] Update bootstrap version for Sphinx to fix documentation menus
+      [P166] Add plugin GP8403 DAC Dual channel 0-10V
+      [P166] Add isI2CEnabled check on PLUGIN_INIT
+      [Build/Release] Update actions/cache to v4
+      [P166] Send out datat for events/controllers when changing output values
+      [Build/Release] Remove Wdalen/retry.action plugin for Node 20 compatibility
+      [P166] Send out data by scheduling a timer
+      [P166] Update changelog
+      [P166] Set default I2C address to 0x5F, as that's how is delivered
+      [UI] Add alternative 'default' selection to `addFormSelectorI2C()`
+      [P166] Restore I2C address selector order, fix compiler warning 're-order'
+      [UI] Add alternative 'default' selection to `addFormSelectorI2C()`, select by address
+      [P166] Adjust I2C address selector default
+      [UI] Update plugin I2C address selectors to normal order, with matching default
+      [P166] Optionally restore last output value on warm boot (setting, default enabled)
+      [P166] Fix bug that Initial values where not applied after settings save
+      [P166] Add documentation
+      [P166] Documentation improvements
+      [Build] Allow FEATURE_SERVO for Custom builds with LIMIT_BUILD_SIZE set
+      [Bugfix] `%vcc%` variable isn't recognized
+      [MQTT] Add PublishR command: publish with will-retain
+      [Docs] Documentation and EasyColorCode updates and fixes, Feb 2024
+      [MQTT] Fix debug strformat message
+      [EasyColorCode] Correction and var rename commonEvents
+
+chromoxdor (30):
+      Update Networking.cpp
+      Update Networking.cpp
+      Update Networking.cpp
+      make thinkspeak event optional
+      compare also the last part of the uri to generate an event
+      add check if we got an answer otherwise we get -1 as a value
+      Update Networking.cpp
+      Update Networking.cpp
+      Update define_plugin_sets.h
+      Update define_plugin_sets.h
+      Update Networking.cpp
+      Add ThingspeakReply to wordlist
+      Update Networking.cpp
+      Update Networking.cpp
+      added documentation
+      Update Rules.rst
+      single + multifield reply combined
+      Update Rules.rst
+      Update Rules.rst
+      a little formatting
+      Update espeasy.min.js
+      Update Rules.rst
+      add %sysec_d% and fix typo
+      remove change since ton already did it :)
+      Update StringGenerator_System.cpp
+      initial changes
+      Update _P102_PZEM004Tv3.ino
+      Update _P102_PZEM004Tv3.ino
+      Update Rules.rst
+      Update codemirror to 5.65.16
+
+flashmark (9):
+      Initial plugin structure
+      Rough, working version
+      Added recovery from communication failures
+      Rework after review, added documentation
+      Fixed compiler issue after rebase
+      Minor cleanup
+      Some fixes after review
+      Added to CLimate and Collection G plugin sets. Removed some leftovers.
+      Merge
+
+uwekaditz (11):
+      [P016] Add protocol RAW to UI if 'Accept DecodeType UNKNOWN' is set
+      uint64ToString() changed to ll2String()
+      Check the vector size when checking for commands, and check that the command is really not empty
+      Reduce code for debug message
+      Revert "Merge branch 'P016]-PullRequest' of https://github.com/uwekaditz/ESPEasy into P016]-PullRequest"
+      Revert "Reduce code for debug message"
+      Reduce code for debug message
+      Use the new property addToQueue in ExecuteCommand_all()
+      Uncrustify
+      Uncrustify #ifdef's
+      [P016] BUG: Decode type UNKNOWN was not added to the web settings
+
+
+-------------------------------------------------
 Changes in release mega-20231225 (since mega-20231130)
 -------------------------------------------------
 
