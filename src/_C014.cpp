@@ -16,6 +16,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-03-02 tonhuisman: Fix using parseSystemVariables() for processing %sysname%. Might still break the same configurations,
+ *                        logging improvements
  * 2023-10-30 tonhuisman: Fix using getHostname() instead of getName() for %sysname%. This might break some configurations!
  *                        minor improvements
  * 2023-08-18 tonhuisman: Clean up source to improve resource usage
@@ -66,7 +68,7 @@ String CPlugin_014_pubname;
 bool   CPlugin_014_mqtt_retainFlag = false;
 
 void C014_replaceSysname(String& var) {
-  var.replace(F("%sysname%"), Settings.getHostname()); // Used to be getName(), but that doesn't include the UnitNr when configured
+  parseSystemVariables(var, false); // Used to be getName(), but that doesn't include the UnitNr when configured
 }
 
 bool CPlugin_014_sendMQTTdevice(String                     tmppubname,
@@ -234,15 +236,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("C014 : $stats information sent with ");
-
-          if (errorCounter > 0) { log += errorCounter; }
-          else { log += F("no"); }
-          log       += strformat(F(" errors! (%d messages)"), msgCounter);
-          msgCounter = 0;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG,
+                 strformat(F("C014 : $stats information sent with %s errors! (%d messages)"),
+                           errorCounter > 0 ? String(errorCounter).c_str() : "no",
+                           msgCounter));
         }
         # endif // ifndef BUILD_NO_DEBUG
+        msgCounter = 0;
       }
       break;
     }
@@ -538,30 +538,31 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                         nodeCount++;
 
-                        /*                          // because values in ESPEasy are unitless lets assume some units by the value name
-                           (still case sensitive)
-                                                  if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr )
-                                                  {
-                                                    unitName = F("°C");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != nullptr )
-                                                  {
-                                                    unitName = F("%");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != nullptr )
-                                                  {
-                                                    unitName = F("Pa");
-                                                  } // ToDo: .... and more
+                        /*
+                           // because values in ESPEasy are unitless lets assume some units by the value name (still case sensitive)
 
-                                                  if (!unitName.isEmpty())  // found a unit match
-                                                  {
-                                                    // $unit	Device → Controller	A string containing the unit of this property. You
-                                                       are not limited to the recommended values, although they are the only well known ones
-                                                       that will have to be recognized by any Homie consumer.	Recommended: Yes	No
-                                                       ("")
-                                                    CPlugin_014_sendMQTTnode(nodename, deviceName,
-                                                       ExtraTaskSettings.TaskDeviceValueNames[varNr], F("/$unit"), unitName,
-                                                       errorCounter);
-                                                  }
-                                                  unitName = F("");
+                           if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr)
+                           {
+                           unitName = F("°C");
+                           } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != nullptr)
+                           {
+                           unitName = F("%");
+                           } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != nullptr)
+                           {
+                           unitName = F("Pa");
+                           }                        // ToDo: .... and more
+
+                           if (!unitName.isEmpty()) // found a unit match
+                           {
+                           // $unit	Device → Controller	A string containing the unit of this property. You
+                           are not limited to the recommended values, although they are the only well known ones
+                           that will have to be recognized by any Homie consumer.Recommended: Yes No
+                            ("")
+                           CPlugin_014_sendMQTTnode(nodename, deviceName,
+                                                   ExtraTaskSettings.TaskDeviceValueNames[varNr], F("/$unit"), unitName,
+                                                   errorCounter);
+                           }
+                           unitName = F("");
                          */
                       }
                     }
@@ -614,8 +615,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               # ifndef BUILD_NO_DEBUG
 
               if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                addLog(LOG_LEVEL_DEBUG, concat(F("C014 : Device Disabled: %s not propagated!"),
-                                               getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x)).c_str()));
+                addLog(LOG_LEVEL_DEBUG, strformat(F("C014 : Device Disabled: %s not propagated!"),
+                                                  getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(x)).c_str()));
               }
               # endif // ifndef BUILD_NO_DEBUG
             }
@@ -641,14 +642,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = concat(F("C014 : autodiscover information of "), deviceCount);
-        log += concat(F(" Devices and "), nodeCount);
-        log += F(" Nodes sent with ");
-
-        if (errorCounter > 0) { log += errorCounter; }
-        else { log += F("no"); }
-        log += strformat(F(" errors! (%d messages)"), msgCounter);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO,
+               strformat(F("C014 : autodiscover information of %d Devices and %d Nodes sent with %s errors! (%d messages)"),
+                         deviceCount,
+                         nodeCount,
+                         errorCounter > 0 ? String(errorCounter).c_str() : "no",
+                         msgCounter)
+               );
       }
       msgCounter   = 0;
       errorCounter = 0;
@@ -672,9 +672,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       success = CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("disconnected"), errorCounter);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = concat(F("C014 : Device: "), Settings.getName());
-        log += F(" got invalid (disconnect");
-        log += success ? F("ed).") : F(") failed!");
+        String log = strformat(F("C014 : Device: %s got invalid (disconnect%s"),
+                               Settings.getHostname().c_str(), String(success ? F("ed).") : F(") failed!")).c_str());
         addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
@@ -719,20 +718,17 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log = strformat(F("C014 : MQTT received: /set: N: %s V: %s"), nodeName.c_str(), valueName.c_str());
           }
 
-          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE)))                                // msg to a system device
+          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE)))                      // msg to a system device
           {
-            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE)))                             // msg to to set gpio values
+            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE)))                   // msg to to set gpio values
             {
-              constexpr size_t gpio_value_tag_length = CPLUGIN_014_GPIO_VALUE_LEN;           // now uses fixed length or constexpr
+              constexpr size_t gpio_value_tag_length = CPLUGIN_014_GPIO_VALUE_LEN; // now uses fixed length or constexpr
 
-              cmd  = concat(F("GPIO,"), valueName.substring(gpio_value_tag_length).toInt()); // get the GPIO
-              cmd += ',';
-
-              if (equals(event->String2, F("true")) || equals(event->String2, '1')) {        // Homie spec says it should be 'true' or
-                cmd += '1';                                                                  // 'false'...
-              } else {
-                cmd += '0';
-              }
+              // get the GPIO
+              // Homie spec says state should be 'true' or 'false'...
+              cmd = strformat(F("GPIO,%d,%c"),
+                              valueName.substring(gpio_value_tag_length).toInt(),
+                              (equals(event->String2, F("true")) || equals(event->String2, '1')) ? '1' : '0');
               validTopic = true;
             } else if (equals(valueName, F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
             {
@@ -740,8 +736,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               validTopic = true;
             } else
             {
-              cmd  = concat(F("SYSTEM/"), valueName);
-              cmd += F(" unknown!");
+              cmd = strformat(F("SYSTEM/%s unknown!"), valueName.c_str());
             }
           } else // msg to a receiving plugin
           {
@@ -875,8 +870,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
           success = MQTTpublish(CPLUGIN_ID_014, INVALID_TASK_INDEX, topic.c_str(), valueBool.c_str(), false);
 
-          String log = concat(F("C014 : Acknowledged GPIO"), port);
-          log += strformat(F(" value:%s (%d)"), valueBool.c_str(), valueInt);
+          String log = strformat(F("C014 : Acknowledged GPIO%d value:%s (%d)"),
+                                 port, valueBool.c_str(), valueInt);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
             log += F(" success!");
@@ -956,21 +951,20 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               String log = concat(F("C014 : homie acknowledge: "), deviceName);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO) && success) {
-                log += concat(F(" taskIndex:"), deviceIndex);
-                log += concat(F(" valueNr:"), event->Par2);
-                log += concat(F(" valueName:"), valueName);
-                log += concat(F(" valueType:"), Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]);
-                log += concat(F(" topic:"), topic);
-                log += concat(F(" valueInt:"), valueInt);
-                log += concat(F(" valueStr:"), valueStr);
-                log += F(" success!");
+                log += strformat(F(" taskIndex:%d valueNr:%d valueName:%s valueType:%d topic:%s valueInt:%d valueStr:%s success!"),
+                                 deviceIndex,
+                                 event->Par2,
+                                 valueName.c_str(),
+                                 Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex],
+                                 topic.c_str(),
+                                 valueInt,
+                                 valueStr.c_str());
                 addLogMove(LOG_LEVEL_INFO, log);
               }
 
               if (loglevelActiveFor(LOG_LEVEL_ERROR) && !success) {
-                log += strformat(F(" var: %s topic: %s value: %s"),
+                log += strformat(F(" var: %s topic: %s value: %s ERROR!"), // was: failed!
                                  valueName.c_str(), topic.c_str(), valueStr.c_str());
-                log += F(" ERROR!"); // was: failed!
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
             } else // Acknowledge not implemented yet
