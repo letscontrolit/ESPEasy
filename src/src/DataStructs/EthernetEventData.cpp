@@ -12,6 +12,19 @@
 #define ESPEASY_ETH_GOT_IP                  1
 #define ESPEASY_ETH_SERVICES_INITIALIZED    2
 
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
+
 bool EthernetEventData_t::EthConnectAllowed() const {
   if (!ethConnectAttemptNeeded) return false;
   if (last_eth_connect_attempt_moment.isSet()) {
@@ -170,8 +183,18 @@ void EthernetEventData_t::markConnected() {
   processedConnect    = false;
 #if FEATURE_USE_IPV6
   ETH.enableIPv6(true);
+  // workaround for the race condition in LWIP, see https://github.com/espressif/arduino-esp32/pull/9016#discussion_r1451774885
+  {
+    uint32_t i = 5;   // try 5 times only
+    while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH)) != ESP_OK) {
+      delay(1);
+      if (i-- == 0) {
+//        addLog(LOG_LEVEL_ERROR, ">>>> HELP");
+        break;
+      }
+    }
+  }
 #endif
-
 }
 
 String EthernetEventData_t::ESPEasyEthStatusToString() const {

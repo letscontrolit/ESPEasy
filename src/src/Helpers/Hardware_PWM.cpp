@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 
 #include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../Globals/GlobalMapPortStatus.h"
 
@@ -158,6 +159,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency, uint8_t resolution)
   if (frequency == 0) {
     frequency = 1000;
   }
+  ledcDetach(pin);  // See: https://github.com/espressif/arduino-esp32/issues/9212
   return ledcAttach(pin, frequency, resolution) ? 0 : -1;
 }
 
@@ -214,6 +216,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
     return false;
   }
   portStatusStruct tempStatus;
+  if (frequency == 0) frequency = 1000;
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
   key = createKey(PLUGIN_GPIO, gpio);
@@ -267,9 +270,20 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
     start_duty  = std::min(start_duty, static_cast<uint32_t>((1 << resolution) - 1));
     target_duty = std::min(target_duty, static_cast<uint32_t>((1 << resolution) - 1));
 
-    ledcAttach(gpio, frequency, resolution);
+    //    ledcDetach(gpio);
+
+    if (!ledcWrite(gpio, start_duty)) {
+      // Pin not yet attached
+      if (!ledcAttach(gpio, frequency, resolution)) {
+        addLog(LOG_LEVEL_ERROR, strformat(
+          F("PWM : ledcAttach failed  gpio:%d freq:%d res:%d"),
+          gpio, frequency, resolution));
+        return false;
+      }
+    }
 
     if (!ledcFade(gpio, start_duty, target_duty, fadeDuration_ms)) {
+      addLog(LOG_LEVEL_ERROR, F("PWM : ledcFade failed"));
       return false;
     }
   }

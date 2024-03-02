@@ -2,6 +2,7 @@
 
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/FS_Helper.h"
 
 #ifdef ESP32
   # include <soc/soc.h>
@@ -248,9 +249,28 @@ String getChipFeaturesString() {
 
   if (getChipFeatures().ieee_802_15_4) { features += F("IEEE 802.15.4 / "); }
 
-  if (getChipFeatures().embeddedFlash) { features += F("Emb. Flash / "); }
+  const int32_t flash_cap = getEmbeddedFlashSize();
 
-  if (getChipFeatures().embeddedPSRAM) { features += F("Emb. PSRAM"); }
+  if (getChipFeatures().embeddedFlash || (flash_cap != 0)) { 
+    if (flash_cap > 0) {
+      features += strformat(F("%dMB "), flash_cap);
+    } else if (flash_cap < 0) {
+      features += strformat(F("(%d) "), flash_cap);
+    }
+    features += F("Emb. Flash"); 
+    features += F(" / "); 
+  }
+
+  const int32_t psram_cap = getEmbeddedPSRAMSize();
+
+  if (getChipFeatures().embeddedPSRAM || (psram_cap != 0)) { 
+    if (psram_cap > 0) {
+      features += strformat(F("%dMB "), psram_cap);
+    } else if (psram_cap < 0) {
+      features += strformat(F("(%d) "), psram_cap);
+    }
+    features += F("Emb. PSRAM"); 
+  }
   features.trim();
 
   if (features.endsWith(F("/"))) { features = features.substring(0, features.length() - 1); }
@@ -589,8 +609,18 @@ const __FlashStringHelper* getChipModel() {
        - Reliable security features ensured by RSA-based secure boot, AES-XTS-based flash encryption, the innovative digital signature and
           the HMAC peripheral, “World Controller”
      */
+
+/*
+
+        efuse_reg.h:
+        EFUSE_RD_MAC_SPI_SYS_0_REG = block1_addr
+        EFUSE_RD_MAC_SPI_SYS_3_REG = block1_addr + (4 * num_word)) // (num_word = 3)
+
+*/
+
 # ifdef CONFIG_IDF_TARGET_ESP32S3
 #  if (ESP_IDF_VERSION_MAJOR >= 5)
+    pkg_version = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
 
     switch (pkg_version) {
       case 0:              return F("ESP32-S3");        // QFN56

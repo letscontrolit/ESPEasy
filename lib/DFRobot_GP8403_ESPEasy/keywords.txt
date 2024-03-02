@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For DFRobot_GP8403
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DFRobot_GP8403	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################	
+
+begin	KEYWORD2
+setDACOutRange	KEYWORD2
+setDACOutVoltage	KEYWORD2
+store	KEYWORD2
+outputSin	KEYWORD2
+outputTriangle	KEYWORD2
+outputSquare	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+eChannel0	LITERAL1
+eChannel1	LITERAL1
+eChannelAll	LITERAL1
+eOutputRange5V	LITERAL1
+eOutputRange10V	LITERAL1
