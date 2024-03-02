@@ -466,7 +466,7 @@ void processGotIPv6() {
     if (loglevelActiveFor(LOG_LEVEL_INFO))
       addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + WiFiEventData.unprocessed_IP6.toString(true));
 #if FEATURE_ESPEASY_P2P
-    updateUDPport(true);
+//    updateUDPport(true);
 #endif
   }
 }

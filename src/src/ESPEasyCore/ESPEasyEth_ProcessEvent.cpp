@@ -255,7 +255,7 @@ void processEthernetGotIPv6() {
       addLog(LOG_LEVEL_INFO, String(F("ETH event: Got IP6 ")) + EthEventData.unprocessed_IP6.toString(true));
     EthEventData.processedGotIP6 = true;
 #if FEATURE_ESPEASY_P2P
-    updateUDPport(true);
+//    updateUDPport(true);
 #endif
 
   }
