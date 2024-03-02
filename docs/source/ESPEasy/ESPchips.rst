@@ -328,7 +328,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
    *  - Ethernet
       - 0
-      - 1 (RMII)
+      - 1 (RMII and SPI)
       - 1 (SPI)
       - 1 (SPI)
       - 1 (SPI)
@@ -700,7 +700,7 @@ Added: 2023/11/10
 
 The ESP32-C6 seems to be aimed at being used as a gateway for the new Thread protocol and Wi-Fi.
 
-It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz and IEEE 802.15.4 (Zigbee/Thread).
+It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz and IEEE 802.15.4 (Zigbee/Thread). Zigbee/Thread not yet supported by ESPEasy (March 2024).
 
 .. note:: Labeled as "unstable" by the Arduino team (as of Nov 2023), preliminary support in ESPEasy
 
