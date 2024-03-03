@@ -102,6 +102,8 @@ P167_data_struct::P167_data_struct()
   _PM4p0                    = 0.0;
   _PM10p0                   = 0.0;
 
+  _devicestatus.val         = (uint32_t)0;
+
   _readingerrcode           = VIND_ERR_NO_ERROR;
   _readingerrcount          = 0;
   _readingsuccesscount      = 0;
@@ -477,9 +479,36 @@ bool P167_data_struct::update()
         }
         else
         {
+          if (!writeCmd(P167_READ_DEVICE_STATUS))
+          {
+            _errCount++;
+            _state = P167_state::Uninitialized;  // Retry
+          }
+          else
+          {
+            _last_action_started = millis();
+            _state = P167_state::Wait_for_read_status;
+          }
+          calculateValue();
+          stable = true;
+        }
+      }
+    break;
+
+    case P167_state::Wait_for_read_status:
+      //make sure we wait for the measurement to complete
+      if (timeOutReached(_last_action_started + P167_READ_DEVICE_STATUS_DELAY)) 
+      {
+        if (!readDeviceStatus()) 
+        {
+          _errCount++;
+          //_state = P167_state::Uninitialized; // Lost connection
+          _state = P167_state::cmdSTARTmeas;
+        }
+        else
+        {
           _last_action_started = millis();
           _state = P167_state::cmdSTARTmeas;
-          calculateValue();
           stable = true;
         }
       }
@@ -487,14 +516,21 @@ bool P167_data_struct::update()
 
     case P167_state::cmdSTARTmeas:
       // Start measuring data
-      if (!writeCmd(P167_START_MEAS))
+      if(_model==0)
       {
-        _errCount++;
-        _state = P167_state::Uninitialized;  // Retry
+        if (!writeCmd(P167_START_MEAS))
+        {
+          _errCount++;
+          _state = P167_state::Uninitialized;  // Retry
+        }
+        else
+        {
+          _last_action_started = millis();
+          _state = P167_state::IDLE;
+        }
       }
       else
       {
-        _last_action_started = millis();
         _state = P167_state::IDLE;
       }
     break;
@@ -612,6 +648,7 @@ bool P167_data_struct::isConnected() const
     case  P167_state::Wait_for_read_meas:
     case  P167_state::Wait_for_read_raw_meas:
     case  P167_state::Wait_for_read_raw_MYS_meas:
+    case  P167_state::Wait_for_read_status:
     case  P167_state::cmdSTARTmeas:
     case  P167_state::New_Values_Available:
     case  P167_state::Read_firm_version:
@@ -681,6 +718,39 @@ bool P167_data_struct::getEID(String &eid_productname, String &eid_serialnumber,
   return true;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Get the status informasion about different part of the sensor
+// Note: The data is read from the device after every measurement read request
+bool  P167_data_struct::getStatusInfo(param_statusinfo param)
+{
+  switch(param)
+  {
+    case sensor_speed:
+      return (bool) _devicestatus.speed;
+      break;
+    
+    case sensor_autoclean:
+      return (bool) _devicestatus.autoclean;
+      break;
+    
+    case sensor_gas:
+      return (bool) _devicestatus.gas;
+      break;
+    
+    case sensor_rht:
+      return (bool) _devicestatus.rht;
+      break;
+
+    case sensor_laser:
+      return (bool) _devicestatus.laser;
+      break;
+    
+    case sensor_fan:
+      return (bool) _devicestatus.fan;
+      break;
+  }
+  return true;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the previously measured raw humidity data [bits]
@@ -689,14 +759,27 @@ float P167_data_struct::getRequestedValue(uint8_t request) const
   //float requested_value=0;
   switch(request)
   {
-    case 0:   return (float) _TemperatureX;
-    case 1:   return (float) _HumidityX;
-    case 2:   return (float) _PM2p5;
-    case 3:   return (float) _tVOC;
+    case 0:   
+    {
+      if(_model==0)
+        return (float) _TemperatureX;
+      else
+        return (float) _Temperature;
+    }
+    case 1:   
+    {
+      if(_model==0)
+        return (float) _HumidityX;
+      else
+        return (float) _Humidity;
+    }
+    case 2:   return (float) _tVOC;
+    case 3:   return (float) _NOx;
     case 4:   return (float) _PM1p0;
-    case 5:   return (float) _PM4p0;
-    case 6:   return (float) _PM10p0;
-    case 7:   return (float) _DewPoint;
+    case 5:   return (float) _PM2p5;
+    case 6:   return (float) _PM4p0;
+    case 7:   return (float) _PM10p0;
+    case 8:   return (float) _DewPoint;
   }
   return -1;
 }
@@ -823,7 +906,9 @@ bool P167_data_struct::readDataRdyFlag()
 bool P167_data_struct::readMeasValue()
 {
   uint16_t value=0;
+  int16_t valuesign=0;
   uint8_t buffer[24];
+  bool condition=true;
 
   _errmeas = false;
   if (!readBytes(24, (uint8_t*) &buffer[0], P167_READ_MEAS_DELAY))
@@ -832,14 +917,19 @@ bool P167_data_struct::readMeasValue()
     return false;
   }
 
-  String log = F("SEN5x : ***meas value ");
+  String log = F("SEN5x : *** meas value ");
   for(int xx=0; xx<24;xx++)
   {
     log += String((int)buffer[xx]);
     log += F(" ");
   }
 
-  if((buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF) || (buffer[9] == 0xFF && buffer[10] == 0xFF) || (buffer[12] == 0xFF && buffer[13] == 0xFF) || (buffer[15] == 0xFF && buffer[16] == 0xFF) || (buffer[18] == 0xFF && buffer[19] == 0xFF) || (buffer[21] == 0xFF && buffer[22] == 0xFF))
+  if(_model==0 || _model==1)
+    condition=(buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF) || (buffer[9] == 0xFF && buffer[10] == 0xFF) || (buffer[12] == 0xFF && buffer[13] == 0xFF) || (buffer[15] == 0xFF && buffer[16] == 0xFF) || (buffer[18] == 0xFF && buffer[19] == 0xFF);
+  if(_model==2)
+    condition=(buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF) || (buffer[9] == 0xFF && buffer[10] == 0xFF) || (buffer[12] == 0xFF && buffer[13] == 0xFF) || (buffer[15] == 0xFF && buffer[16] == 0xFF) || (buffer[18] == 0xFF && buffer[19] == 0xFF) || (buffer[21] == 0xFF && buffer[22] == 0xFF);
+  
+  if(condition)
   {
     log += F("- error");
     addLog(LOG_LEVEL_INFO, log);
@@ -849,85 +939,40 @@ bool P167_data_struct::readMeasValue()
   }
   else
   {
-    if ((crc8(&buffer[0], 2) == buffer[2]) && (buffer[0] != 0xFF || buffer[1] != 0xFF))
+    for(int xx=0; xx<8; xx++)
     {
-      value  = buffer[0] << 8;
-      value += buffer[1];
-      _PM1p0 = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[3], 2) == buffer[5]) && (buffer[3] != 0xFF || buffer[4] != 0xFF))
-    {
-      value  = buffer[3] << 8;
-      value += buffer[4];
-      _PM2p5 = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[6], 2) == buffer[8]) && (buffer[6] != 0xFF || buffer[7] != 0xFF))
-    {
-      value  = buffer[6] << 8;
-      value += buffer[7];
-      _PM4p0 = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[9], 2) == buffer[11]) && (buffer[9] != 0xFF || buffer[10] != 0xFF))
-    {
-      value  = buffer[9] << 8;
-      value += buffer[10];
-      _PM10p0 = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[12], 2) == buffer[14]) && (buffer[12] != 0xFF || buffer[13] != 0xFF))
-    {
-      value  = buffer[12] << 8;
-      value += buffer[13];
-      _Humidity = (float)value/100;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[15], 2) == buffer[17]) && (buffer[15] != 0xFF || buffer[16] != 0xFF))
-    {
-      value  = buffer[15] << 8;
-      value += buffer[16];
-      _Temperature = (float)value/200;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[18], 2) == buffer[20]) && (buffer[18] != 0xFF || buffer[19] != 0xFF))
-    {
-      value  = buffer[18] << 8;
-      value += buffer[19];
-      _tVOC = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
-    }
-    if ((crc8(&buffer[21], 2) == buffer[23]) && (buffer[21] != 0xFF || buffer[22] != 0xFF))
-    {
-      value  = buffer[21] << 8;
-      value += buffer[22];
-      _NOx = (float)value/10;
-    }
-    else
-    {
-      _errmeas = true;
+      if ((crc8(&buffer[xx*3], 2) == buffer[xx*3+2]) && (buffer[xx*3] != 0xFF || buffer[xx*3+1] != 0xFF))
+      {
+        value  = buffer[xx*3] << 8;
+        value += buffer[xx*3+1];
+        valuesign  = buffer[xx*3] << 8;
+        valuesign += buffer[xx*3+1];
+        if(xx==0)
+          _PM1p0 = (float)value/10;
+        if(xx==1)
+          _PM2p5 = (float)value/10;
+        if(xx==2)
+          _PM4p0 = (float)value/10;
+        if(xx==3)
+          _PM10p0 = (float)value/10;
+        if(xx==4)
+          _Humidity = (float)valuesign/100.0;
+        if(xx==5)
+          _Temperature = (float)valuesign/200.0;
+        if(xx==6)
+          _tVOC = (float)valuesign/10.0;
+        if(xx==7)
+        {
+          if(_model==2)
+            _NOx = (float)valuesign/10.0;
+          else
+            _NOx = (float)0.0;
+        }
+      }
+      else
+      {
+        _errmeasrawmys = true;
+      }
     }
 
     if(_errmeas == true)
@@ -953,7 +998,9 @@ bool P167_data_struct::readMeasValue()
 bool P167_data_struct::readMeasRawValue()
 {
   uint16_t value=0;
+  int16_t valuesign=0;
   uint8_t buffer[12];
+  bool condition=true;
 
   _errmeasraw = false;
   if (!readBytes(12, (uint8_t*) &buffer[0], P167_READ_RAW_MEAS_DELAY))
@@ -962,14 +1009,19 @@ bool P167_data_struct::readMeasRawValue()
     return false;
   }
 
-  String log = F("SEN5x : ***meas RAW value ");
+  String log = F("SEN5x : *** meas RAW value ");
   for(int xx=0; xx<12;xx++)
   {
     log += String((int)buffer[xx]);
     log += F(" ");
   }
 
-  if((buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF))// || (buffer_raw[9] == 0xFF && buffer_raw[10] == 0xFF))
+  if(_model==0 || _model==1)
+    condition=(buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF);// || (buffer[9] == 0xFF && buffer[10] == 0xFF))
+  if(_model==2)
+    condition=(buffer[0] == 0xFF && buffer[1] == 0xFF) || (buffer[3] == 0xFF && buffer[4] == 0xFF) || (buffer[6] == 0xFF && buffer[7] == 0xFF) || (buffer[9] == 0xFF && buffer[10] == 0xFF);
+  
+  if(condition)
   {
     log += F("- error");
     addLog(LOG_LEVEL_INFO, log);
@@ -979,45 +1031,32 @@ bool P167_data_struct::readMeasRawValue()
   }
   else
   {
-    if ((crc8(&buffer[0], 2) == buffer[2]) && (buffer[0] != 0xFF || buffer[1] != 0xFF))
+    for(int xx=0; xx<4; xx++)
     {
-      value  = buffer[0] << 8;
-      value += buffer[1];
-      _rawHumidity = (float)value/100.0;
-    }
-    else
-    {
-      _errmeasraw = true;
-    }
-    if ((crc8(&buffer[3], 2) == buffer[5]) && (buffer[3] != 0xFF || buffer[4] != 0xFF))
-    {
-      value  = buffer[3] << 8;
-      value += buffer[4];
-      _rawTemperature = (float)value/200.0;
-    }
-    else
-    {
-      _errmeasraw = true;
-    }
-    if ((crc8(&buffer[6], 2) == buffer[8]) && (buffer[6] != 0xFF || buffer[7] != 0xFF))
-    {
-      value  = buffer[6] << 8;
-      value += buffer[7];
-      _rawtVOC = (float)value/10.0;
-    }
-    else
-    {
-      _errmeasraw = true;
-    }
-    if ((crc8(&buffer[9], 2) == buffer[11]))
-    {
-      value  = buffer[9] << 8;
-      value += buffer[10];
-      _rawNOx = (float)value/10.0;
-    }
-    else
-    {
-      _errmeasraw = true;
+      if ((crc8(&buffer[xx*3], 2) == buffer[xx*3+2]) && (buffer[xx*3] != 0xFF || buffer[xx*3+1] != 0xFF))
+      {
+        value  = buffer[xx*3] << 8;
+        value += buffer[xx*3+1];
+        valuesign  = buffer[xx*3] << 8;
+        valuesign += buffer[xx*3+1];
+        if(xx==0)
+          _rawHumidity = (float)valuesign/100.0;
+        if(xx==1)
+          _rawTemperature = (float)valuesign/200.0;
+        if(xx==2)
+          _rawtVOC = (float)value/10.0;
+        if(xx==3)
+        {
+          if(_model==2)
+            _rawNOx = (float)value/10.0;
+          else
+            _rawNOx = (float)0.0;
+        }
+      }
+      else
+      {
+        _errmeasrawmys = true;
+      }
     }
 
     if(_errmeasraw == true)
@@ -1055,7 +1094,7 @@ bool P167_data_struct::readMeasRawMYSValue()
     return false;
   }
 
-  String log = F("SEN5x : ***meas MYS value ");
+  String log = F("SEN5x : *** meas MYS value ");
   for(int xx=0; xx<9;xx++)
   {
     log += String((int)buffer[xx]);
@@ -1072,35 +1111,25 @@ bool P167_data_struct::readMeasRawMYSValue()
   }
   else
   {
-    if ((crc8(&buffer[0], 2) == buffer[2]) && (buffer[0] != 0xFF || buffer[1] != 0xFF))
+    for(int xx=0; xx<3; xx++)
     {
-      value  = buffer[0] << 8;
-      value += buffer[1];
-      _mysHumidity = (float)value/100.0;
-    }
-    else
-    {
-      _errmeasrawmys = true;
-    }
-    if ((crc8(&buffer[3], 2) == buffer[5]) && (buffer[3] != 0xFF || buffer[4] != 0xFF))
-    {
-      value  = buffer[3] << 8;
-      value += buffer[4];
-      _mysTemperature = (float)value/200.0;
-    }
-    else
-    {
-      _errmeasrawmys = true;
-    }
-    if ((crc8(&buffer[6], 2) == buffer[8]) && (buffer[6] != 0xFF || buffer[7] != 0xFF))
-    {
-      valuesign  = buffer[6] << 8;
-      valuesign += buffer[7];
-      _mysOffset = (float)valuesign/200.0;
-    }
-    else
-    {
-      _errmeasrawmys = true;
+      if ((crc8(&buffer[xx*3], 2) == buffer[xx*3+2]) && (buffer[xx*3] != 0xFF || buffer[xx*3+1] != 0xFF))
+      {
+        value  = buffer[xx*3] << 8;
+        value += buffer[xx*3+1];
+        valuesign  = buffer[xx*3] << 8;
+        valuesign += buffer[xx*3+1];
+        if(xx==0)
+          _mysHumidity = (float)valuesign/100.0;
+        if(xx==1)
+          _mysTemperature = (float)valuesign/200.0;
+        if(xx==2)
+          _mysOffset = (float)valuesign/200.0;
+      }
+      else
+      {
+        _errmeasrawmys = true;
+      }
     }
 
     if(_errmeasrawmys == true)
@@ -1131,27 +1160,43 @@ bool P167_data_struct::calculateValue()
   float aval = 17.62;
   float bval = 243.12;
   float Dp;
-  float eeval;
-  //_TemperatureX = _mysTemperature + _mysOffset - (_mysOffset<0.0?(_mysOffset*(-1.0)):_mysOffset)/2;
-  _TemperatureX = _mysTemperature + 1.5 * _mysOffset;
+  float eeval = 0.0;
 
-  lnval = logf(_mysHumidity/100.0);
-  rapval = (aval * _mysTemperature)/(bval+_mysTemperature);
-  Dp = (bval*(lnval+rapval))/(aval-lnval-rapval);
+  if(_model==0)
+  {
+    //_TemperatureX = _mysTemperature + _mysOffset - (_mysOffset<0.0?(_mysOffset*(-1.0)):_mysOffset)/2;
+    //_TemperatureX = _mysTemperature + _mysOffset*3.0/2.0;
+    _TemperatureX = _mysTemperature + _mysOffset - 2.4; //(2.4 - temperature offset because enclosure and esp8266 power disipation)
+
+    //version formula with DewPoint
+    //lnval = logf(_mysHumidity/100.0);
+    //rapval = (aval * _mysTemperature)/(bval+_mysTemperature);
+    //Dp = (bval*(lnval+rapval))/(aval-lnval-rapval);
+    //eeval = expf((aval*Dp)/(bval+Dp))/expf((aval*_TemperatureX)/(bval+_TemperatureX));
+    //_HumidityX = eeval*100.0;
+
+    //version formula with interpolation
+    _HumidityX = _Humidity+(_TemperatureX-_Temperature)*((_rawHumidity-_Humidity)/(_rawTemperature-_Temperature));
+    lnval = logf(_HumidityX/100.0);
+    rapval = (aval * _TemperatureX)/(bval+_TemperatureX);
+    Dp = (bval*(lnval+rapval))/(aval-lnval-rapval);
+
+    if(_HumidityX < 0.0)
+      _HumidityX = 0.0;
+    if(_HumidityX > 100.0)
+      _HumidityX = 100.0;
+  }
+  else
+  {
+    lnval = logf(_Humidity/100.0);
+    rapval = (aval * _Temperature)/(bval+_Temperature);
+    Dp = (bval*(lnval+rapval))/(aval-lnval-rapval);
+  }
   _DewPoint = Dp;
-
-  eeval = expf((aval*Dp)/(bval+Dp))/expf((aval*_TemperatureX)/(bval+_TemperatureX));
-
-  _HumidityX = eeval*100.0;
-  if(_HumidityX < 0.0)
-    _HumidityX = 0.0;
-  if(_HumidityX > 100.0)
-    _HumidityX = 100.0;
 
   return true;
 }
 
-#ifndef LIMIT_BUILD_SIZE
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //  Retrieve SEN5x identification code
 //  Sensirion_SEN5x
@@ -1178,8 +1223,8 @@ bool P167_data_struct::getProductName()
   }
   _eid_productname=prodname;
 
-  String log = F("SEN5x : ***Product name: ");
-  log += prodname;
+  String log = F("SEN5x : *** Product name: ");
+  log += String(prodname);
   addLog(LOG_LEVEL_INFO, log);
 
   return true;
@@ -1210,8 +1255,8 @@ bool P167_data_struct::getSerialNumber()
   }
   _eid_serialnumber=serno;
 
-  String log = F("SEN5x : ***Serial number: ");
-  log += serno;
+  String log = F("SEN5x : *** Serial number: ");
+  log += String(serno);
   addLog(LOG_LEVEL_INFO, log);
 
   return true;
@@ -1237,9 +1282,67 @@ bool P167_data_struct::getFirmwareVersion()
     version=0;
   }
   _firmware=version;
+
+  String log = F("SEN5x : *** Firmware version: ");
+  log += String((uint8_t)version);
+  addLog(LOG_LEVEL_INFO, log);
+
   return true;
 }
-#endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Retrieve SEN54 Device Status from device
+bool P167_data_struct::readDeviceStatus()
+{
+  uint32_t value=0;
+  uint8_t bufferstatus[6];
+  //writeCmd(P167_READ_FIRM_VER);
+  _errdevicestatus = false;
+  if (!readBytes(6, (uint8_t *) &bufferstatus, P167_READ_DEVICE_STATUS_DELAY))
+  {
+    _errdevicestatus = true;
+    return false;
+  }
+
+  String log = F("SEN5x : *** device status ");
+  for(int xx=0; xx<6;xx++)
+  {
+    log += String((int)bufferstatus[xx]);
+    log += F(" ");
+  }
+  
+  if ((crc8(&bufferstatus[0], 2) == bufferstatus[2]) && (crc8(&bufferstatus[3], 2) == bufferstatus[5]))
+  {
+    value  = bufferstatus[0] << 8;
+    value += bufferstatus[1] << 8;
+    value += bufferstatus[3] << 8;
+    value += bufferstatus[4] << 8;
+    _devicestatus.val = value;
+  }
+  else
+  {
+    _errdevicestatus = true;
+  }
+
+  if(_errdevicestatus == true)
+  {
+    log += F("- crc error");
+    _readingerrcount++;
+  }
+  else
+  {
+    log += String((bool)_devicestatus.speed);
+    log += String((bool)_devicestatus.autoclean);
+    log += String((bool)_devicestatus.gas);
+    log += String((bool)_devicestatus.rht);
+    log += String((bool)_devicestatus.laser);
+    log += String((bool)_devicestatus.fan);
+    log += F(" - pass");
+    _readingsuccesscount++;
+  }
+  addLog(LOG_LEVEL_INFO, log);
+  return !_errdevicestatus;
+}
 
 
 uint16_t P167_data_struct::getErrCode(bool _clear) 

@@ -2,7 +2,7 @@
 #ifdef USES_P167
 
 // #######################################################################################################
-// ########################   Plugin 167 IKEA Vindstyrka I2C  Sensor (SEN54)  ############################
+// ########################   Plugin 167 IKEA Vindstyrka I2C  Sensor (SEN5x)  ############################
 // #######################################################################################################
 // 19-06-2023 AndiBaciu creation based upon https://github.com/RobTillaart/SHT2x
 
@@ -13,12 +13,15 @@
 #define PLUGIN_NAME_167   "Environment - Sensirion SEN5x (IKEA Vindstyrka)" // What will be dislpayed in the selection list
 #define PLUGIN_VALUENAME1_167 "Temperature" // variable output of the plugin. The label is in quotation marks
 #define PLUGIN_VALUENAME2_167 "Humidity"    // multiple outputs are supporte
-#define PLUGIN_VALUENAME3_167 "PM 2.5"    // multiple outputs are supported
-#define PLUGIN_VALUENAME4_167 "tVOC"    // multiple outputs are supported
+#define PLUGIN_VALUENAME3_167 "tVOC"    // multiple outputs are supported
+#define PLUGIN_VALUENAME4_167 "NOx"    // multiple outputs are supported
 #define PLUGIN_VALUENAME5_167 "PM 1.0"    // multiple outputs are supported
-#define PLUGIN_VALUENAME6_167 "PM 4.0"    // multiple outputs are supported
-#define PLUGIN_VALUENAME7_167 "PM 10.0"    // multiple outputs are supported
-#define PLUGIN_VALUENAME8_167 "DewPoint"    // multiple outputs are supported
+#define PLUGIN_VALUENAME6_167 "PM 2.5"    // multiple outputs are supported
+#define PLUGIN_VALUENAME7_167 "PM 4.0"    // multiple outputs are supported
+#define PLUGIN_VALUENAME8_167 "PM 10.0"    // multiple outputs are supported
+#define PLUGIN_VALUENAME9_167 "DewPoint"    // multiple outputs are supported
+#define PLUGIN_DEFAULT_NAME_1    "IKEA_Vindstyrka"
+#define PLUGIN_DEFAULT_NAME_2    "Sensirion_SEN5x"
 
 //   PIN/port configuration is stored in the following:
 //   CONFIG_PIN1 - The first GPIO pin selected within the task
@@ -52,18 +55,16 @@
 
 
 # define P167_I2C_ADDRESS_DFLT      0x69
-# define P167_I2C_ADDRESS_DFLT2     0x69
-# define P167_I2C_ADDRESS_DFLT3     0x69
 # define P167_MON_SCL_PIN_DFLT      13
 # define P167_MODEL_DFLT            0  // Vindstyrka or SEN54
 # define P167_QUERY1_DFLT           0  // Temperature (C)
 # define P167_QUERY2_DFLT           1  // Humidity (%)
-# define P167_QUERY3_DFLT           7  // DewPoint (C)
-# define P167_QUERY4_DFLT           3  // tVOC (index)
+# define P167_QUERY3_DFLT           5  // PM2.5 (ug/m3)
+# define P167_QUERY4_DFLT           2  // tVOC (index)
 
 
 # define P167_NR_OUTPUT_VALUES      4
-# define P167_NR_OUTPUT_OPTIONS     9
+# define P167_NR_OUTPUT_OPTIONS     10
 # define P167_QUERY1_CONFIG_POS     3
 # define P167_MAX_ATTEMPT           3  // Number of tentative before declaring NAN value
 
@@ -176,7 +177,6 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      //const uint8_t i2cAddressValues[] = { P167_I2C_ADDRESS_DFLT, P167_I2C_ADDRESS_DFLT2, P167_I2C_ADDRESS_DFLT3 };
       const uint8_t i2cAddressValues[] = { P167_I2C_ADDRESS_DFLT };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) 
       {
@@ -199,8 +199,11 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P167_SEN_FIRST == event->TaskIndex)                               // If first SEN, serial config available
       {
-        string  = F("MonPin SCL: ");
-        string += formatGpioLabel(P167_MON_SCL_PIN, false);
+        if(P167_MODEL==0)
+        {
+          string  = F("MonPin SCL: ");
+          string += formatGpioLabel(P167_MON_SCL_PIN, false);
+        }
       }
       success = true;
       break;
@@ -219,6 +222,7 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
         const uint8_t pconfigIndex = i + P167_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P167_NR_OUTPUT_OPTIONS, options);
       }
+      addFormNote(F("NOx is available ONLY on Sensirion SEN55 model"));
       break;
     }
 
@@ -243,46 +247,68 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
         
         addFormSelector(F("Model Type"), P167_MODEL_LABEL, 3, options_model, nullptr, P167_MODEL);
 
-        addFormPinSelect(PinSelectPurpose::Generic_input, F("MonPin SCL"), F("taskdevicepin3"), P167_MON_SCL_PIN);
-        addFormNote(F("Pin for monitoring i2c communication between Vindstyrka controller and SEN5x. (Only when Model - IKEA Vindstyrka is selected.)"));
-
-
-        if (Plugin_167_SEN != nullptr) 
+        if(P167_MODEL==0)
         {
-          addRowLabel(F("Check (pass/fail/errCode)"));
-          String chksumStats;
-          chksumStats  = Plugin_167_SEN->getSuccCount();
-          chksumStats += '/';
-          chksumStats += Plugin_167_SEN->getErrCount();
-          chksumStats += '/';
-          chksumStats += Plugin_167_SEN->getErrCode();
-          addHtml(chksumStats);
+          addFormPinSelect(PinSelectPurpose::Generic_input, F("MonPin SCL"), F("taskdevicepin3"), P167_MON_SCL_PIN);
+          addFormNote(F("Pin for monitoring i2c communication between Vindstyrka controller and SEN5x. (Only when Model - IKEA Vindstyrka is selected.)"));
         }
-        #ifndef LIMIT_BUILD_SIZE
+
         if (Plugin_167_SEN != nullptr) 
         {
+          addRowLabel(F("Device info"));
           String prodname;
           String sernum;
           uint8_t firmware;
           Plugin_167_SEN->getEID(prodname, sernum, firmware);
-          String txt = F(".::CHIP ID::. ProdName: ");
+          String txt = F("ProdName: ");
           txt += prodname;
-          txt += F(", Serial Number: ");
+          txt += F("  Serial Number: ");
           txt += sernum;
-          txt += F(" ,Firmware: ");
+          txt += F("  Firmware: ");
           txt += String (firmware);
-          addFormNote(txt);
+          addHtml(txt);
+
+          addRowLabel(F("Device status"));
+          txt  = F("Speed warning: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_speed));
+          txt += F(" , Auto Cleaning: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_autoclean));
+          txt += F(" , GAS Error: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_gas));
+          txt += F(" , RHT Error: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_rht));
+          txt += F(" , LASER Error: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_laser));
+          txt += F(" , FAN Error: ");
+          txt += String((bool)Plugin_167_SEN->getStatusInfo(sensor_fan));
+          addHtml(txt);
+
+          addRowLabel(F("Check (pass/fail/errCode)"));
+          txt  = Plugin_167_SEN->getSuccCount();
+          txt += '/';
+          txt += Plugin_167_SEN->getErrCount();
+          txt += '/';
+          txt += Plugin_167_SEN->getErrCode();
+          addHtml(txt);
+
         }
-        #endif
       }
       else
       {
         addHtml(F("<br><B>This SEN5x is the NOT the first. Model and Pins config are DISABLED. Configuration is available in the first SEN5x plugin.</B>"));
         addHtml(F("<span style=\"color:red\"> <br><B>Only output value can be configured.</B></span>"));
 
-        //looking for FIRST task Named "IKEA_Vindstyrka"
+        //looking for FIRST task Named "IKEA_Vindstyrka or Sensirion_SEN5x"
+        //Cache.taskIndexName
         uint8_t allready_defined=88;
-        allready_defined=findTaskIndexByName("IKEA_Vindstyrka");
+        if(P167_MODEL==0)
+        {
+          allready_defined=findTaskIndexByName(PLUGIN_DEFAULT_NAME_1);
+        }
+        else
+        {
+          allready_defined=findTaskIndexByName(PLUGIN_DEFAULT_NAME_2);
+        }
         P167_SEN_FIRST = allready_defined;
       }
 
@@ -306,8 +332,21 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
       }
       P167_MODEL           = getFormItemInt(P167_MODEL_LABEL);
       P167_I2C_ADDRESS     = P167_I2C_ADDRESS_DFLT;
-      P167_MON_SCL_PIN     = getFormItemInt(F("taskdevicepin3"));
+      if(P167_MODEL==0)
+        P167_MON_SCL_PIN     = getFormItemInt(F("taskdevicepin3"));
       P167_SEN_FIRST       = P167_SEN_FIRST;
+
+      if (P167_SEN_FIRST == event->TaskIndex)                              // For first task set default name
+      {
+        if(P167_MODEL==0)
+        {
+          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEFAULT_NAME_1); // populate default name.
+        }
+        else
+        {
+          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEFAULT_NAME_2); // populate default name.
+        }
+      }
       
       Plugin_167_init = false; // Force device setup next time
       success = true;
@@ -334,19 +373,14 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
         {
           Plugin_167_SEN->setupModel(P167_MODEL);
           Plugin_167_SEN->setupDevice(P167_I2C_ADDRESS);
-          Plugin_167_SEN->setupMonPin(P167_MON_SCL_PIN);
-          Plugin_167_SEN->reset();
-
-          pinMode(P167_MON_SCL_PIN, INPUT_PULLUP);
-          attachInterrupt(P167_MON_SCL_PIN, Plugin_167_interrupt, RISING);
-        }
-      }
-      else
-      {
-          if (Plugin_167_SEN != nullptr) 
+          if(P167_MODEL==0)
           {
-            //
+            Plugin_167_SEN->setupMonPin(P167_MON_SCL_PIN);
+            pinMode(P167_MON_SCL_PIN, INPUT_PULLUP);
+            attachInterrupt(P167_MON_SCL_PIN, Plugin_167_interrupt, RISING);
           }
+          Plugin_167_SEN->reset();
+        }
       }
       
       //UserVar[event->BaseVarIndex]     = NAN;
@@ -371,7 +405,10 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string)
       {
         if (Plugin_167_SEN != nullptr)
         {
-          Plugin_167_SEN->disableInterrupt_monpin();
+          if(P167_MODEL==0)
+          {
+            Plugin_167_SEN->disableInterrupt_monpin();
+          }
           delete Plugin_167_SEN;
           Plugin_167_SEN = nullptr;
         }
@@ -476,12 +513,13 @@ const __FlashStringHelper*  p167_getQueryString(uint8_t query)
   {
     case 0: return F("Temperature (C)");
     case 1: return F("Humidity (% RH)");
-    case 2: return F("PM 2.5 (um)");
-    case 3: return F("tVOC (%)");
-    case 4: return F("PM 1.0 (um)");
-    case 5: return F("PM 4.0 (um)");
-    case 6: return F("PM 10.0 (um)");
-    case 7: return F("DewPoint (C)");
+    case 2: return F("tVOC (VOC index)");
+    case 3: return F("NOx (NOx index)");
+    case 4: return F("PM 1.0 (ug/m3)");
+    case 5: return F("PM 2.5 (ug/m3)");
+    case 6: return F("PM 4.0 (ug/m3)");
+    case 7: return F("PM 10.0 (ug/m3)");
+    case 8: return F("DewPoint (C)");
   }
   return F("");
 }
@@ -495,12 +533,13 @@ const __FlashStringHelper* p167_getQueryValueString(uint8_t query)
   {
     case 0: return F("Temperature");
     case 1: return F("Humidity");
-    case 2: return F("PM2p5");
-    case 3: return F("tVOC");
+    case 2: return F("tVOC");
+    case 3: return F("NOx");
     case 4: return F("PM1p0");
-    case 5: return F("PM4p0");
-    case 6: return F("PM10p0");
-    case 7: return F("DewPoint");
+    case 5: return F("PM2p5");
+    case 6: return F("PM4p0");
+    case 7: return F("PM10p0");
+    case 8: return F("DewPoint");
   }
   return F("");
 }

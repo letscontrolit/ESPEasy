@@ -45,10 +45,22 @@ enum class P167_state {
   Wait_for_read_meas,           // Read meas started
   Wait_for_read_raw_meas,       // RAW Read meas started
   Wait_for_read_raw_MYS_meas,   // RAW Read meas MYSTERY started
+  Wait_for_read_status,         // Read status
   cmdSTARTmeas,                 // send command START meas to leave SEN5x ready flag for Vindstyrka
   IDLE,                         // Sensor device in IDLE mode
   New_Values_Available,         // Acqusition finished, new data available
   Error                         // Sensor device cannot be accessed or in error
+};
+
+
+enum param_statusinfo
+{
+  sensor_speed = 0,
+  sensor_autoclean,
+  sensor_gas,
+  sensor_rht,
+  sensor_laser,
+  sensor_fan
 };
 
 
@@ -66,7 +78,6 @@ public:
 
   void            checkPin_interrupt(void);
 
-  
   /////////////////////////////////////////////////////////
   // This method runs the FSM step by step on each call
   // Returns true when a stable state is reached
@@ -76,14 +87,12 @@ public:
   /////////////////////////////////////////////////////////
   // (re)configure the device properties
   // This will result in resetting and reloading the device
-  //bool setupDevice(uint8_t i2caddr);
   bool            setupDevice(uint8_t i2caddr);
   bool            setupModel(uint8_t model);
   bool            setupMonPin(uint8_t monpin);
   void            enableInterrupt_monpin(void);
   void            disableInterrupt_monpin(void);
   
-
   /////////////////////////////////////////////////////////
   //  check sensor is reachable over I2C
   bool            isConnected() const;
@@ -103,6 +112,7 @@ public:
   // Only perform the measurements with big interval to prevent the sensor from warming up.
   bool            startMeasurements();
   
+  bool            getStatusInfo(param_statusinfo param);
   /////////////////////////////////////////////////////////
   //  Electronic Identification Code
   //  Sensirion_Humidity_SHT2x_Electronic_Identification_Code_V1.1.pdf
@@ -124,7 +134,28 @@ public:
 
 //protected:
 private:
+
+  union devicestatus
+  {
+    uint32_t val;
+    struct
+    {
+      uint16_t dummy1:10;
+      bool speed;
+      bool dummy2;
+      bool autoclean;
+      uint16_t dummy3:11;
+      bool gas;
+      bool rht;
+      bool laser;
+      bool fan;
+      uint16_t dummy4:4;
+    };
+  };
+
+  devicestatus    _devicestatus;
   P167_state      _state;
+  
   uint8_t         crc8(const uint8_t *data, uint8_t len);
   bool            writeCmd(uint16_t cmd);
   bool            writeCmd(uint16_t cmd, uint8_t value);
@@ -135,6 +166,7 @@ private:
   bool            readMeasRawValue();
   bool            readMeasRawMYSValue();
   bool            readDataRdyFlag();
+  bool            readDeviceStatus();
   bool            calculateValue();
 
   bool            getProductName();
@@ -175,6 +207,7 @@ private:
   bool            _errmeas;
   bool            _errmeasraw;
   bool            _errmeasrawmys;
+  bool            _errdevicestatus;
   uint8_t         stepMonitoring;                         // step for Monitorin SCL pin algorithm
   bool            startMonitoringFlag;                    // flag to START/STOP Monitoring algorithm
   bool            statusMonitoring;                       // flag for status return from Monitoring algorithm
