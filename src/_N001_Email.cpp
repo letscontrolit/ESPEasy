@@ -130,17 +130,21 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX); // in msec as it should be!
 # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-  String aHost = notificationsettings.Server;
-
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
+    addLog(LOG_LEVEL_DEBUG, strformat(
+      F("EMAIL: Connecting to %s:%d"),
+      notificationsettings.Server,
+      notificationsettings.Port));
   }
 #endif
 
-  if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
+  if (!connectClient(client, notificationsettings.Server, notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLog(LOG_LEVEL_ERROR, String(F("EMAIL: Error connecting to ")) + aHost + notificationsettings.Port);
+      addLog(LOG_LEVEL_ERROR, strformat(
+        F("EMAIL: Error connecting to %s:%d"),
+        notificationsettings.Server,
+        notificationsettings.Port));
     }
     myStatus = false;
   } else {
@@ -179,10 +183,13 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     mailheader.replace(F("$ato"),            notificationsettings.Receiver);
     mailheader.replace(F("$subject"),        aSub);
     String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
-    String date       = parseTemplate(dateFmtHdr);
-    mailheader.replace(F("$date"),           date);
+    mailheader.replace(F("$date"),           parseTemplate(dateFmtHdr));
     mailheader.replace(F("$espeasyversion"), getSystemBuildString());
-    aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
+
+    // Make sure to replace the char '\r' and not the string "\r"
+    // See: https://github.com/letscontrolit/ESPEasy/issues/4967
+    removeChar(aMesg, '\r');
+    aMesg.replace(String('\n'), F("<br/>")); // re-write line breaks for Content-type: text/html
 
     // Wait for Client to Start Sending
     // The MTA Exchange
@@ -193,7 +200,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
       if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) { break; }
 
-      if (!NPlugin_001_MTA(client, concat(F("MAIL FROM:<"), String(notificationsettings.Sender) + '>') , 250)) { break; }
+      if (!NPlugin_001_MTA(client, concat(F("MAIL FROM:<"), concat(notificationsettings.Sender, '>')) , 250)) { break; }
 
       bool   nextAddressAvailable = true;
       int    i                    = 0;
@@ -268,9 +275,9 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   while (true) {
     if (timeOutReached(timer)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("NPlugin_001_MTA: timeout. ");
-        log += aStr;
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, concat(
+          F("NPlugin_001_MTA: timeout. "), 
+          aStr));
       }
       return false;
     }

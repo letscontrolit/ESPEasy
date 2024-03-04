@@ -175,6 +175,7 @@ const char Internal_commands_p[] PROGMEM =
   "pulse|"
 #if FEATURE_MQTT
   "publish|"
+  "publishr|"
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   "puttohttp|"
