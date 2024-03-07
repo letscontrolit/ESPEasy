@@ -1068,6 +1068,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (device.PullUpOption)
   {
     addFormCheckBox(F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]); // ="taskdevicepin1pullup"
+    addFormNote(F("Best to (also) configure pull-up on Hardware tab under \"GPIO boot states\""));
       # if defined(ESP8266)
 
     if ((Settings.TaskDevicePin1[taskIndex] == 16) || (Settings.TaskDevicePin2[taskIndex] == 16) ||

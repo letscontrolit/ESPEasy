@@ -323,6 +323,8 @@ Currently the default SPI frequency of 20 MHz is used, so not all other SPI devi
 
 Some boards like the ETH01-EVO (ESP32-C3 based) do not even have the SPI bus pins made accesible.
 
+.. note:: Switching to ECO mode can sometimes result in an unreachable node when using SPI Ethernet. After a reboot the node works just fine again (in ECO mode).  This is currently being investigated.
+
 
 GPIO Configuration
 """"""""""""""""""

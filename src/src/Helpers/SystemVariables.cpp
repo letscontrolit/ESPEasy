@@ -481,7 +481,8 @@ SystemVariables::Enum SystemVariables::startIndex_beginWith(char beginchar)
     case 'r': return Enum::S_CR;
     case 's': return Enum::SPACE;
     case 'u': return Enum::UNIT_sysvar;
-    case 'v': return Enum::VARIABLE;
+    // case 'v': return Enum::VARIABLE; // Can not be the first 'v' variable, as the name is only 1 character long
+    case 'v': return Enum::VCC;
     case 'w': return Enum::WI_CH;
   }
 
@@ -596,8 +597,8 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::UNIXTIME:           return F("unixtime");
     case Enum::UPTIME:             return F("uptime");
     case Enum::UPTIME_MS:          return F("uptime_ms");
-    case Enum::VARIABLE:           return F("v");
     case Enum::VCC:                return F("vcc");
+    case Enum::VARIABLE:           return F("v"); // Can not be the first 'v' variable, as the name is only 1 character long
     case Enum::WI_CH:              return F("wi_ch");
 
     case Enum::UNKNOWN: break;

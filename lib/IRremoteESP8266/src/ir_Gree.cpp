@@ -715,7 +715,7 @@ bool IRrecv::decodeGree(decode_results* results, uint16_t offset,
   if (used == 0) return false;
   offset += used;
 
-  // Block #1 footer (3 bits, B010)
+  // Block #1 footer (3 bits, 0b010)
   match_result_t data_result;
   data_result = matchData(&(results->rawbuf[offset]), kGreeBlockFooterBits,
                           kGreeBitMark, kGreeOneSpace, kGreeBitMark,

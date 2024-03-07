@@ -159,6 +159,7 @@ class ServoTemplate : public ServoBase {
         ledcSetup(_channel, frequency, TIMER_RESOLUTION);
         ledcAttachPin(_pin, _channel);
 #else
+        ledcDetach(_pin);  // See: https://github.com/espressif/arduino-esp32/issues/9212
         ledcAttach(_pin, frequency, TIMER_RESOLUTION);
 #endif
         return true;
