@@ -149,29 +149,29 @@ void ZHLT01HeatpumpIR::sendZHLT01(IRSender& IR, uint8_t powerMode,
 
  /********************************************************************************
  * Byte[07]: POWER, FAN, SLEEP, HORIZONTAL, VERTICAL
- * POWER ON:         B0xxxxx1x
- * POWER OFF:        B0xxxxx0x
- * VERTICAL SWING:   B0xxx01xx
- * VERTICAL WIND:    B0xxx00xx
- * VERTICAL FIXED:   B0xxx10xx
- * HORIZONTAL SWING: B0xx0xxxx
- * HORIZONTAL OFF:   B0xx1xxxx
- * FAN AUTO:         B000xxxx0
- * FAN SILENT:       B000xxxx1
- * FAN3:             B001xxxx0
- * FAN2:             B010xxxx0
- * FAN1:             B011xxxx0
+ * POWER ON:         0b0xxxxx1x
+ * POWER OFF:        0b0xxxxx0x
+ * VERTICAL SWING:   0b0xxx01xx
+ * VERTICAL WIND:    0b0xxx00xx
+ * VERTICAL FIXED:   0b0xxx10xx
+ * HORIZONTAL SWING: 0b0xx0xxxx
+ * HORIZONTAL OFF:   0b0xx1xxxx
+ * FAN AUTO:         0b000xxxx0
+ * FAN SILENT:       0b000xxxx1
+ * FAN3:             0b001xxxx0
+ * FAN2:             0b010xxxx0
+ * FAN1:             0b011xxxx0
  *******************************************************************************/
   ZHLT01Template[7] = fanSpeed | powerMode | swingV | swingH;
   ZHLT01Template[6] = ~ ZHLT01Template[7];
   
 /********************************************************************************
  * Byte[09]: Mode, Temperature
- * MODE AUTO: B000xxxxx
- * MODE COOL: B001xxxxx
- * MODE VENT: B011xxxxx
- * MODE DRY:  B010xxxxx
- * MODE HEAT: B100xxxxx
+ * MODE AUTO: 0b000xxxxx
+ * MODE COOL: 0b001xxxxx
+ * MODE VENT: 0b011xxxxx
+ * MODE DRY:  0b010xxxxx
+ * MODE HEAT: 0b100xxxxx
  * Temperature is determined by bit0-4:
  * 0x00 = 16C
  * 0x10 = 32C
