@@ -8,6 +8,9 @@
 
 
 // History:
+// 2024-03-09 tonhuisman: Add support for alternative initialization sequences for ST7789 displays, like used on
+//                        some LilyGO models like the TTGO T-Display (16 MB Flash), and possibly the T-Display S3
+//                        By default only enabled on ESP32 builds
 // 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
 // 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
 // 2021-11-16 tonhuisman: P116: Change state from Development to Testing
@@ -80,16 +83,16 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      const char* separator = event->String1.c_str();  // contains the NewLine sequence
+      const char *separator = event->String1.c_str(); // contains the NewLine sequence
       string = strformat(
         F("CS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
-        formatGpioLabel(PIN(0), false).c_str(),
+        formatGpioLabel(PIN(0),                    false).c_str(),
         separator,
-        formatGpioLabel(PIN(1), false).c_str(),
+        formatGpioLabel(PIN(1),                    false).c_str(),
         separator,
-        formatGpioLabel(PIN(2), false).c_str(),
+        formatGpioLabel(PIN(2),                    false).c_str(),
         separator,
-        formatGpioLabel(P116_CONFIG_BUTTON_PIN, false).c_str(),
+        formatGpioLabel(P116_CONFIG_BUTTON_PIN,    false).c_str(),
         separator,
         formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false).c_str());
       success = true;
@@ -146,6 +149,11 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_135x240),
+          # if P116_EXTRA_ST7789
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw1_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw2_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw3_135x240),
+          # endif // if P116_EXTRA_ST7789
           ST77xx_type_toString(ST77xx_type_e::ST7796s_320x480)
         };
         const int optionValues4[] = {
@@ -157,9 +165,14 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
           static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
+          # if P116_EXTRA_ST7789
+          static_cast<int>(ST77xx_type_e::ST7789vw1_135x240),
+          static_cast<int>(ST77xx_type_e::ST7789vw2_135x240),
+          static_cast<int>(ST77xx_type_e::ST7789vw3_135x240),
+          # endif // if P116_EXTRA_ST7789
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
-        constexpr int optCount4 = sizeof(optionValues4) / sizeof(optionValues4[0]);
+        constexpr int optCount4 = NR_ELEMENTS(optionValues4);
         addFormSelector(F("TFT display model"),
                         F("type"),
                         optCount4,
