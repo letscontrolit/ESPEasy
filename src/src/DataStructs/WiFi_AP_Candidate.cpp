@@ -49,6 +49,12 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
     phy_11n = it->phy_11n;
     wps = it->wps;
   }
+  #else
+  // Need to make sure the phy isn't known as we can't get this information from the AP
+  phy_11b = false;
+  phy_11g = false;
+  phy_11n = false;
+  wps     = false;
   #endif
   #endif // ifdef ESP8266
   #ifdef ESP32
