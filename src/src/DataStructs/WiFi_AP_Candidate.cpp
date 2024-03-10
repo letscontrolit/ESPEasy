@@ -20,8 +20,20 @@
 
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
-  last_seen(0), rssi(0), channel(0), index(index_c), flags(0)
+  last_seen(0), rssi(0), channel(0), index(index_c)
 {
+    lowPriority = false;
+  isEmergencyFallback = false;
+
+  phy_11b = false;
+  phy_11g = false;
+  phy_11n = false;
+  phy_lr  = false;
+  phy_11ax = false;
+  wps     = false;
+  ftm_responder = false;
+  ftm_initiator = false;
+
   const size_t ssid_length = ssid_c.length();
 
   if ((ssid_length == 0) || equals(ssid_c, F("ssid"))) {
@@ -33,7 +45,23 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
   ssid = ssid_c;
 }
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
+
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
+  // Need to make sure the phy isn't known as we can't get this information from the AP
+  // See: https://github.com/letscontrolit/ESPEasy/issues/4996
+  // Not sure why this makes any difference as the flags should already have been set to 0.
+  lowPriority = false;
+  isEmergencyFallback = false;
+
+  phy_11b = false;
+  phy_11g = false;
+  phy_11n = false;
+  phy_lr  = false;
+  phy_11ax = false;
+  wps     = false;
+  ftm_responder = false;
+  ftm_initiator = false;
+
   ssid    = WiFi.SSID(networkItem);
   rssi    = WiFi.RSSI(networkItem);
   channel = WiFi.channel(networkItem);
@@ -49,12 +77,6 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
     phy_11n = it->phy_11n;
     wps = it->wps;
   }
-  #else
-  // Need to make sure the phy isn't known as we can't get this information from the AP
-  phy_11b = false;
-  phy_11g = false;
-  phy_11n = false;
-  wps     = false;
   #endif
   #endif // ifdef ESP8266
   #ifdef ESP32
@@ -77,6 +99,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
   last_seen = millis();
 }
 
+
 #ifdef ESP8266
 #if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
@@ -85,6 +108,13 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
   phy_11b(ap.phy_11b), phy_11g(ap.phy_11g), phy_11n(ap.phy_11n),
   wps(ap.wps)
 {
+  lowPriority = false;
+  isEmergencyFallback = false;
+  phy_lr  = false;
+  phy_11ax = false;
+  ftm_responder = false;
+  ftm_initiator = false;
+
   last_seen = millis();
 
   switch(ap.authmode) {
