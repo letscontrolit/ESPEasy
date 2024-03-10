@@ -75,7 +75,7 @@ void Ac_Activate(unsigned int temperature, unsigned int air_flow,
 
   // calculating using other values
   unsigned int ac_msbits7 = (ac_msbits3 + ac_msbits4 + ac_msbits5 +
-                             ac_msbits6) & B00001111;
+                             ac_msbits6) & 0b00001111;
   ac_code_to_sent = ac_msbits1 << 4;
   ac_code_to_sent = (ac_code_to_sent + ac_msbits2) << 4;
   ac_code_to_sent = (ac_code_to_sent + ac_msbits3) << 4;
