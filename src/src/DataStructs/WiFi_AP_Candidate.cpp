@@ -19,10 +19,28 @@
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
-  last_seen(0), rssi(0), channel(0), index(index_c)
+WiFi_AP_Candidate::WiFi_AP_Candidate() :
+  last_seen(0), rssi(0), channel(0), index(0), enc_type(0)
 {
-    lowPriority = false;
+  lowPriority = false;
+  isEmergencyFallback = false;
+
+  phy_11b = false;
+  phy_11g = false;
+  phy_11n = false;
+  phy_lr  = false;
+  phy_11ax = false;
+  wps     = false;
+  ftm_responder = false;
+  ftm_initiator = false;
+
+}
+
+
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
+  last_seen(0), rssi(0), channel(0), index(index_c), enc_type(0)
+{
+  lowPriority = false;
   isEmergencyFallback = false;
 
   phy_11b = false;

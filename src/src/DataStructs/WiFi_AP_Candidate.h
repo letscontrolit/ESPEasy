@@ -5,6 +5,10 @@
 
 #include "../DataStructs/MAC_address.h"
 struct WiFi_AP_Candidate {
+  WiFi_AP_Candidate();
+  WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
+
+
   // Construct from stored credentials
   // @param index  The index of the stored credentials
   // @param ssid_c SSID of the credentials
@@ -21,9 +25,6 @@ struct WiFi_AP_Candidate {
   #endif
   #endif
 
-
-  WiFi_AP_Candidate() = default;
-  WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
 
 
   // Return true when this one is preferred over 'other'.
