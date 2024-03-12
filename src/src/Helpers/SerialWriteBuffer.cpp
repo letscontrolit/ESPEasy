@@ -57,11 +57,6 @@ void SerialWriteBuffer_t::clear()
   _buffer.clear();
 }
 
-int SerialWriteBuffer_t::availableForWrite() const
-{
-  return _buffer.size();
-}
-
 size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
 {
   size_t bytesWritten     = 0;
@@ -77,14 +72,36 @@ size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
     }
 
     while (nrBytesToWrite > 0 && !_buffer.empty()) {
-      const char c = _buffer.front();
+      #ifdef ESP32
+      uint8_t tmpBuffer[1]{};
+      #else
+      uint8_t tmpBuffer[16]{};
+      #endif
 
-      if (stream.write((uint8_t)c) == 0) {
+      size_t tmpBufferUsed = 0;
+
+      auto it = _buffer.begin();
+
+      for (; tmpBufferUsed < sizeof(tmpBuffer) && tmpBufferUsed < nrBytesToWrite && it != _buffer.end(); ) {
+        tmpBuffer[tmpBufferUsed] = (uint8_t)(*it);
+        ++tmpBufferUsed;
+        ++it;
+      }
+
+      bool done = false;
+      const size_t written = stream.write(tmpBuffer, tmpBufferUsed);
+
+      if (written < tmpBufferUsed) {
+        done = true;
+      }
+      for (size_t i = 0; i < written; ++i) {
+        _buffer.pop_front();
+        --nrBytesToWrite;
+        ++bytesWritten;
+      }
+      if (done) {
         return bytesWritten;
       }
-      _buffer.pop_front();
-      --nrBytesToWrite;
-      ++bytesWritten;
     }
   }
   return bytesWritten;
