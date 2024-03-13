@@ -11,6 +11,8 @@
 
 /*****
  * Changelog:
+ * 2024-03-13 tonhuisman: Change PageUp/PageDown reversed option to Navigation Left/Right/Up/Down menu reversed, to also swap the behavior
+ *                        of the left and right navigation buttons, like the Up/Down navigation already had.
  * 2023-12-31 tonhuisman: Code optimizations reducing .bin size (ESP32) with ~1kB
  * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values not by changing the DeviceVector but using
  *                        PLUGIN_GET_DEVICEVALUECOUNT plugin function.
@@ -71,8 +73,8 @@
  * hasgroup,groupNr             : Check if group exists, ignores group 0
  * enabled,objectName|objectNr  : Check if object is enabled
  * state,objectName|objectNr    : Get current object state (buttons: on = 1, off = 0, sliders: value 0..100 (=percentage) or explicit value)
- * pagemode                     : Get the PageUp/PageDown mode, 0 = up=pgup, 1 = up=pgdown
- * swipedir,directionId         : Get the name for the direction provided in numeric form
+ * pagemode                     : Get the Left/Right/Up/Down menu mode, 0 = normal, 1 = reversed
+ * swipedir,directionId         : Get the name for the swipe direction provided in numeric form
  */
 
 # define TOUCH_DEBUG                    // Additional debugging information
@@ -118,7 +120,7 @@
 # define TOUCH_FLAGS_INITIAL_GROUP      8  // Initial group to activate, 8 bits
 # define TOUCH_FLAGS_DRAWBTN_VIA_RULES  16 // Draw buttons using rule
 # define TOUCH_FLAGS_AUTO_PAGE_ARROWS   17 // Automatically enable/disable paging buttons
-# define TOUCH_FLAGS_PGUP_BELOW_MENU    18 // Group-page below current menu (reverts Up/Down buttons)
+# define TOUCH_FLAGS_PGUP_BELOW_MENU    18 // Group-page below current menu (reverts Left/Right/Up/Down menu buttons)
 # define TOUCH_FLAGS_SWAP_LEFT_RIGHT    19 // Swaps Left and Right, Up and Down swipe directions for menu actions
 # define TOUCH_FLAGS_IGNORE_TOUCH       20 // Disable touch, use for object/button features only
 

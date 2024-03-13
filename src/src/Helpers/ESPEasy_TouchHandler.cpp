@@ -675,10 +675,10 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
       state = 1;                                      // always get ON state!
 
       if (action == Touch_action_e::DecrementGroup) { // Left arrow
-        bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup - 1, true));
+        bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup - (pgupInvert ? -1 : 1), true));
       } else
       if (action == Touch_action_e::IncrementGroup) { // Right arrow
-        bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup + 1, true));
+        bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup + (pgupInvert ? -1 : 1), true));
       } else
       if (action == Touch_action_e::DecrementPage) {  // Down arrow or Up arrow
         bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup + (pgupInvert ? 10 : -10), true));
@@ -791,8 +791,10 @@ bool ESPEasy_TouchHandler::setButtonGroup(struct EventStruct *event,
  * Increment button group if that group exists, if max. group > 0 then min. group = 1
  */
 bool ESPEasy_TouchHandler::incrementButtonGroup(struct EventStruct *event) {
-  if (validButtonGroup(_buttonGroup + 1)) {
-    return setButtonGroup(event, _buttonGroup + 1);
+  const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
+
+  if (validButtonGroup(_buttonGroup + (pgupInvert ? -1 : 1))) {
+    return setButtonGroup(event, _buttonGroup + (pgupInvert ? -1 : 1));
   }
   return false;
 }
@@ -801,8 +803,10 @@ bool ESPEasy_TouchHandler::incrementButtonGroup(struct EventStruct *event) {
  * Decrement button group if that group exists, if max. group > 0 then min. group = 1
  */
 bool ESPEasy_TouchHandler::decrementButtonGroup(struct EventStruct *event) {
-  if (validButtonGroup(_buttonGroup - 1)) {
-    return setButtonGroup(event, _buttonGroup - 1);
+  const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
+
+  if (validButtonGroup(_buttonGroup - (pgupInvert ? -1 : 1))) {
+    return setButtonGroup(event, _buttonGroup - (pgupInvert ? -1 : 1));
   }
   return false;
 }
@@ -1048,7 +1052,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_DRAWBTN_VIA_RULES));
     addFormCheckBox(F("Enable/Disable page buttons"), F("pagebtns"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS));
-    addFormCheckBox(F("PageUp/PageDown reversed"), F("pageblw"),
+    addFormCheckBox(F("Navigation Left/Right/Up/ Down menu reversed"), F("pageblw"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU));
     addFormCheckBox(F("Swipe Left/Right/Up/Down menu reversed"), F("swipeswap"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_SWAP_LEFT_RIGHT));
