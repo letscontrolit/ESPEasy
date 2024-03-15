@@ -67,29 +67,35 @@ size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
   }
 
   if (nrBytesToWrite > 0) {
+    // FIXME TD-er: Work-around for bug in HWCDC when writing exactly the amount of free bytes in the buffer.
+//    --nrBytesToWrite;
     if (nrBytesToWrite > bufferSize) {
       nrBytesToWrite = bufferSize;
     }
 
     while (nrBytesToWrite > 0 && !_buffer.empty()) {
-      #ifdef ESP32
-      uint8_t tmpBuffer[1]{};
-      #else
       uint8_t tmpBuffer[16]{};
-      #endif
 
       size_t tmpBufferUsed = 0;
 
       auto it = _buffer.begin();
 
-      for (; tmpBufferUsed < sizeof(tmpBuffer) && tmpBufferUsed < nrBytesToWrite && it != _buffer.end(); ) {
+      bool done = false;
+
+      for (; tmpBufferUsed < sizeof(tmpBuffer) && 
+             !done &&
+             it != _buffer.end(); ) {
         tmpBuffer[tmpBufferUsed] = (uint8_t)(*it);
+        if (*it == '\n' ||
+            tmpBufferUsed >= nrBytesToWrite) {
+          done = true;
+        }
         ++tmpBufferUsed;
         ++it;
       }
 
-      bool done = false;
-      const size_t written = stream.write(tmpBuffer, tmpBufferUsed);
+//      done = false;
+      const size_t written = (tmpBufferUsed == 0) ? 0 : stream.write(tmpBuffer, tmpBufferUsed);
 
       if (written < tmpBufferUsed) {
         done = true;

@@ -155,7 +155,7 @@ void EspEasy_Console_t::reInit()
 
 #if USES_HWCDC
     if (mainSerialPort == ESPEasySerialPort::usb_hw_cdc) {
-      buffsize = 512;
+      buffsize = 2048;
     }
 #endif // if USES_HWCDC
 
