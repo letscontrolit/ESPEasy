@@ -39,6 +39,7 @@ protected:
 private:
   uint16_t windowWidth;
   uint16_t windowHeight;
+  uint8_t _init_seq = 0u;
 };
 
 #endif // _ADAFRUIT_ST7789H_

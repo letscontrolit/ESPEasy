@@ -11,6 +11,9 @@ const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
     case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
     case ST77xx_type_e::ST7735s_80x160: return F("ST7735 80 x 160px");
     case ST77xx_type_e::ST7735s_80x160_M5: return F("ST7735 80 x 160px (Color inverted)");
+    # if P116_EXTRA_ST7735
+    case ST77xx_type_e::ST7735s_135x240: return F("ST7735 135 x 240px");
+    # endif // if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
@@ -63,6 +66,9 @@ void ST77xx_type_toResolution(const ST77xx_type_e& device,
     case ST77xx_type_e::ST7789vw2_135x240:
     case ST77xx_type_e::ST7789vw3_135x240:
     # endif // if P116_EXTRA_ST7789
+    # if P116_EXTRA_ST7735
+    case ST77xx_type_e::ST7735s_135x240:
+    # endif // if P116_EXTRA_ST7735
       x = 135;
       y = 240;
       break;
@@ -154,7 +160,16 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_GREENTAB160x80; // 80x160px ST7735sv, inverted (M5Stack StickC)
         }
 
-      // fall through
+        // fall through
+      # if P116_EXTRA_ST7735
+      case ST77xx_type_e::ST7735s_135x240:
+
+        if (initRoptions == 0xFF) {
+          initRoptions = INITR_BLACKTAB135x240; // 135x240px
+        }
+
+        // fall through
+      # endif // if P116_EXTRA_ST7735
       case ST77xx_type_e::ST7735s_80x160:
       {
         if (initRoptions == 0xFF) {

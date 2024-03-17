@@ -8,6 +8,10 @@
 
 
 // History:
+// 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
+//                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
+//                        By default (also) only enabled on ESP32 builds
+//                        Disabled the ST7789 alternatives for now, as that's not verified on any hardware
 // 2024-03-09 tonhuisman: Add support for alternative initialization sequences for ST7789 displays, like used on
 //                        some LilyGO models like the TTGO T-Display (16 MB Flash), and possibly the T-Display S3
 //                        By default only enabled on ESP32 builds
@@ -145,6 +149,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160_M5),
+          # if P116_EXTRA_ST7735
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_135x240),
+          # endif // if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
@@ -161,6 +168,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7735s_128x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160_M5),
+          # if P116_EXTRA_ST7735
+          static_cast<int>(ST77xx_type_e::ST7735s_135x240),
+          # endif // if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),

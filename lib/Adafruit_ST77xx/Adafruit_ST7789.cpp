@@ -79,7 +79,7 @@ static const uint8_t PROGMEM
 #if ST7789_EXTRA_INIT
 static const uint8_t PROGMEM        // Source: https://github.com/Xinyuan-LilyGO/TTGO-T-Display
   alt1_st7789[] =  {                // Init commands for 7789 screens Alternative 1
-    20,                             //  20 commands in list:
+    21,                             //  21 commands in list:
     ST77XX_SLPOUT, ST_CMD_DELAY,    //  1: Out of sleep mode, no args, w/delay
       120,                          //      120 ms delay
     ST77XX_NORON, ST_CMD_DELAY,     //  2: Normal display on, no args, w/delay
@@ -125,8 +125,10 @@ static const uint8_t PROGMEM        // Source: https://github.com/Xinyuan-LilyGO
       0,              //     YSTART = 0
       320>>8,
       320&0xFF,       //     YEND = 320
-    ST77XX_DISPON, ST_CMD_DELAY,    // 20: Main screen turn on, no args, delay
-      120                           //     120 ms delay
+    ST77XX_INVON, ST_CMD_DELAY,     // 20: Normal display on, no args, w/delay
+      10,                           //     10 ms delay
+    ST77XX_DISPON, ST_CMD_DELAY,    // 21: Main screen turn on, no args, delay
+      255                           //     120 ms delay
   };
 
 static const uint8_t PROGMEM        // Source: https://github.com/Bodmer/TFT_eSPI (ST7789_init.h, _NOT_ INIT_SEQUENCE_3)
@@ -260,6 +262,8 @@ void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode, uint8_
   // (Might get added similarly to other display types as needed on a
   // case-by-case basis.)
 
+  _init_seq = init_seq;
+
   commonInit(NULL);
 
   if (width < 240) {
@@ -285,11 +289,11 @@ void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode, uint8_
   const uint8_t *init_ = generic_st7789;
 
   #if ST7789_EXTRA_INIT
-  if (1 == init_seq) {
+  if (1 == _init_seq) {
     init_ = alt1_st7789;
-  } else if (2 == init_seq) {
+  } else if (2 == _init_seq) {
     init_ = alt2_st7789;
-  } else if (3 == init_seq) {
+  } else if (3 == _init_seq) {
     init_ = alt3_st7789;
   }
   #endif // if ST7789_EXTRA_INIT
@@ -310,28 +314,64 @@ void Adafruit_ST7789::setRotation(uint8_t m) {
 
   switch (rotation) {
   case 0:
-    madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl    = ST77XX_MADCTL_BGR;
+      _colstart = 52;
+      _rowstart = 40;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+    }
     _xstart = _colstart;
     _ystart = _rowstart;
     _width = windowWidth;
     _height = windowHeight;
     break;
   case 1:
-    madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl    = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_BGR;
+      _colstart = 40;
+      _rowstart = 53;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    }
     _xstart = _rowstart;
     _ystart = _colstart;
     _height = windowWidth;
     _width = windowHeight;
     break;
   case 2:
-    madctl = ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl     = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+      _colstart2 = 53;
+      _rowstart2 = 40;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_RGB;
+    }
     _xstart = _colstart2;
     _ystart = _rowstart2;
     _width = windowWidth;
     _height = windowHeight;
     break;
   case 3:
-    madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl     = ST77XX_MADCTL_MV | ST77XX_MADCTL_MY | ST77XX_MADCTL_BGR;
+      _colstart2 = 40;
+      _rowstart2 = 52;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    }
     _xstart = _rowstart2;
     _ystart = _colstart2;
     _height = windowWidth;
