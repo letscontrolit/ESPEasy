@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -13,6 +14,7 @@
 #include <WString.h>
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
+
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
@@ -70,6 +72,29 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(MQTTLwtTopic);
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
+
+  #if FEATURE_MQTT
+    #if FEATURE_MQTT_TLS
+    if (TLStype() == TLS_types::NoTLS) {
+      if (Port == 8883) {
+        Port = 1883;
+        addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+      }
+    } else {
+      if (Port == 1883) {
+        Port = 8883;
+        addLog(LOG_LEVEL_ERROR, F("Using TLS, but port set to insecure port 1883. Use port 8883 instead"));
+      }
+    }
+    #else
+    if (Port == 8883) {
+      // No TLS support, so when switching builds, make sure it can still work.
+      Port = 1883;
+      addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+    }
+    #endif
+  #endif
+
 }
 
 
@@ -178,6 +203,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   }
   return false;
 }
+
 /*
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
@@ -228,6 +254,7 @@ void ControllerSettingsStruct::mqtt_retainFlag(bool value)
 {
   bitWrite(VariousFlags, 5, value);
 }
+#endif
 
 bool ControllerSettingsStruct::useExtendedCredentials() const
 {
@@ -279,3 +306,56 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
   bitWrite(VariousFlags, 11, value);
 }
 */
+
+#if FEATURE_MQTT_TLS
+TLS_types ControllerSettingsStruct::TLStype() const
+{
+  // Store it in bits 12, 13, 14, 15
+  return static_cast<TLS_types>(get4BitFromUL(VariousFlags, 12));
+}
+
+void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
+{
+  set4BitToUL(VariousFlags, 12, static_cast<uint8_t>(tls_type));
+}
+
+String ControllerSettingsStruct::getCertificateFilename() const
+{
+  return getCertificateFilename(TLStype());
+}
+
+String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) const
+{
+  String certFile = HostName;
+  if (certFile.isEmpty()) {
+    certFile = F("<HostName>");
+  }
+
+  switch (tls_type) {
+    case TLS_types::NoTLS:
+    case TLS_types::TLS_insecure:
+      return EMPTY_STRING;
+    case TLS_types::TLS_PSK:
+      certFile += F(".psk");
+      break;
+    /*
+    case TLS_types::TLS_CA_CLI_CERT:
+      certFile += F(".caclicert");
+      break;
+    */
+    case TLS_types::TLS_CA_CERT:
+      certFile += F(".cacert");
+      break;
+    case TLS_types::TLS_FINGERPRINT:
+      certFile += F(".fp");
+      break;
+  }
+
+  // Only use the last 29 bytes of the filename
+  if (certFile.length() > 28) {
+    certFile = certFile.substring(certFile.length() - 28);
+  }
+  
+  return certFile;
+}
+#endif

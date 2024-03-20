@@ -25,6 +25,7 @@
 #include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
+//#include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
@@ -186,13 +187,178 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
+    # if FEATURE_MQTT_TLS
+    if (mqtt_tls != nullptr) {
+      delete mqtt_tls;
+      mqtt_tls = nullptr;
+    }
+    mqtt_rootCA.clear();
+    #endif
   }
   
   updateMQTTclient_connected();
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
+  uint16_t mqttPort = ControllerSettings->Port;
 
+#if FEATURE_MQTT_TLS
+  mqtt_tls_last_errorstr.clear();
+  mqtt_tls_last_error = 0;
+  const TLS_types TLS_type = ControllerSettings->TLStype();
+  if (TLS_type != TLS_types::NoTLS && nullptr == mqtt_tls) {
+    #ifdef ESP32
+    mqtt_tls = new ESPEasy_WiFiClientSecure;
+    #endif
+    #ifdef ESP8266
+    mqtt_tls = new BearSSL::WiFiClientSecure;
+    #endif
+    mqtt_rootCA.clear();
+
+    if (mqtt_tls == nullptr) {
+      mqtt_tls_last_errorstr = F("MQTT : Could not create TLS client, out of memory");
+      addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
+      return false;
+    }
+  }
+  switch(TLS_type) {
+    case TLS_types::NoTLS:
+    {
+    // Ignoring the ACK from the server is probably set for a reason.
+    // For example because the server does not give an acknowledgement.
+    // This way, we always need the set amount of timeout to handle the request.
+    // Thus we should not make the timeout dynamic here if set to ignore ack.
+    const uint32_t timeout = ControllerSettings->MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
+      : ControllerSettings->ClientTimeout;
+
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+      // See: https://github.com/espressif/arduino-esp32/pull/6676
+      mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+      Client *pClient = &mqtt;
+      pClient->setTimeout(timeout);
+  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      mqtt.setTimeout(timeout);                // in msec as it should be!
+  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      MQTTclient.setClient(mqtt);
+      break;
+    }
+    case TLS_types::TLS_PSK:
+    {
+      //if (mqtt_tls != nullptr)
+      //  mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
+      break;
+    }
+    case TLS_types::TLS_CA_CERT:
+    {
+      mqtt_rootCA.clear();
+      /*
+      {
+        static int previousFree = FreeMem();
+        const int freemem = FreeMem();
+        
+        String analyse = F(" free memory: ");
+        analyse += freemem;
+        analyse += F(" largest free block: ");
+        analyse += getMaxFreeBlock();
+
+        analyse += F(" Difference: ");
+        analyse += previousFree - freemem;
+
+        addLog(LOG_LEVEL_INFO, analyse);
+        previousFree = freemem;
+      }
+      */
+
+      if (mqtt_rootCA.isEmpty() && mqtt_tls != nullptr) {
+        LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_rootCA);
+        if (mqtt_rootCA.isEmpty()) {
+          // Fingerprint must be of some minimal length to continue.
+          mqtt_tls_last_errorstr = F("MQTT : No TLS root CA");
+          addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
+          return false;
+        }
+
+        #ifdef ESP32
+        mqtt_tls->setCACert(mqtt_rootCA.c_str());
+        #endif
+        #ifdef ESP8266
+        mqtt_X509List.append(mqtt_rootCA.c_str());
+        mqtt_tls->setTrustAnchors(&mqtt_X509List);
+        #endif
+      }
+      break;
+    }
+    /*
+    case TLS_types::TLS_CA_CLI_CERT:
+    {
+      //if (mqtt_tls != nullptr)
+      //  mqtt_tls->setCertificate(const char *client_ca);
+      break;
+    }
+    */
+    case TLS_types::TLS_FINGERPRINT:
+    {
+      // Fingerprint is checked when making the connection.
+      mqtt_rootCA.clear();
+      mqtt_fingerprint.clear();
+      LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_fingerprint, false);
+      if (mqtt_fingerprint.length() < 32) {
+        // Fingerprint must be of some minimal length to continue.
+        mqtt_tls_last_errorstr = F("MQTT : Stored TLS fingerprint too small");
+        addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
+        return false;
+      }
+      if (mqtt_tls != nullptr) {
+        mqtt_tls->setInsecure();
+      }
+      break;
+    }
+    case TLS_types::TLS_insecure:
+    {
+      mqtt_rootCA.clear();
+      if (mqtt_tls != nullptr) {
+        mqtt_tls->setInsecure();
+      }
+      break;
+    }
+  }
+  if (TLS_type != TLS_types::NoTLS && mqtt_tls != nullptr) {
+    // Certificate expiry not enabled in Mbed TLS.
+//    mqtt_tls->setX509Time(node_time.getUnixTime());
+    // Ignoring the ACK from the server is probably set for a reason.
+    // For example because the server does not give an acknowledgement.
+    // This way, we always need the set amount of timeout to handle the request.
+    // Thus we should not make the timeout dynamic here if set to ignore ack.
+    const uint32_t timeout = ControllerSettings->MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
+      : ControllerSettings->ClientTimeout;
+
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+      // See: https://github.com/espressif/arduino-esp32/pull/6676
+      mqtt_tls->setTimeout((timeout + 500) / 1000); // in seconds!!!!
+      Client *pClient = mqtt_tls;
+      pClient->setTimeout(timeout);
+#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      mqtt_tls->setTimeout(timeout);                // in msec as it should be!
+#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+#ifdef ESP8266
+    mqtt_tls->setBufferSizes(1024,1024);
+    #endif
+    MQTTclient.setClient(*mqtt_tls);
+    if (mqttPort == 1883) {
+      mqttPort = 8883;
+    }
+  } else {
+    if (mqttPort == 8883) {
+      mqttPort = 1883;
+    }
+  }
+
+#else
   // Ignoring the ACK from the server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
@@ -201,16 +367,18 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
     : ControllerSettings->ClientTimeout;
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  // See: https://github.com/espressif/arduino-esp32/pull/6676
-  mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
-  Client *pClient = &mqtt;
-  pClient->setTimeout(timeout);
-  #else
-  mqtt.setTimeout(timeout); // in msec as it should be!  
-  #endif
-  
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+    Client *pClient = &mqtt;
+    pClient->setTimeout(timeout);
+#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    mqtt.setTimeout(timeout);                // in msec as it should be!
+#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
   MQTTclient.setClient(mqtt);
+#endif
 
   if (ControllerSettings->UseDNS) {
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
@@ -258,28 +426,108 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
+
+  uint8_t controller_number = Settings.Protocol[controller_idx];
+
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, connect_start_time);
+  #if FEATURE_MQTT_TLS
+  if (mqtt_tls != nullptr)
+  {
+    char buf[128] = {0};
+    #ifdef ESP8266
+    mqtt_tls_last_error = mqtt_tls->getLastSSLError(buf,128);
+    #endif
+    #ifdef ESP32
+    mqtt_tls_last_error = mqtt_tls->lastError(buf,128);
+    mqtt_tls->clearLastError();
+    #endif
+    mqtt_tls_last_errorstr = buf;
+  }
+  #ifdef ESP32
+  // FIXME TD-er: There seems to be no verify function in BearSSL used on ESP8266
+  if (TLS_type == TLS_types::TLS_FINGERPRINT)
+  {
+    // Check fingerprint
+    if (MQTTresult) {
+      const int newlinepos = mqtt_fingerprint.indexOf('\n');
+      String fp;
+      String dn;
+      if (ControllerSettings->UseDNS) dn = ControllerSettings->getHost();
+      if (newlinepos == -1) {
+        fp = mqtt_fingerprint;
+      } else {
+        fp = mqtt_fingerprint.substring(0, newlinepos);
+        const int newlinepos2 = mqtt_fingerprint.indexOf('\n', newlinepos);
+        if (newlinepos2 == -1)
+          dn = mqtt_fingerprint.substring(newlinepos + 1);
+        else
+          dn = mqtt_fingerprint.substring(newlinepos + 1, newlinepos2);
+        dn.trim();
+
+      }
+      if (mqtt_tls != nullptr) {
+        if (!mqtt_tls->verify(
+          fp.c_str(), 
+          dn.isEmpty() ? nullptr : dn.c_str())) 
+        {
+          mqtt_tls_last_errorstr += F("TLS Fingerprint does not match");
+          addLog(LOG_LEVEL_INFO, mqtt_fingerprint);
+          MQTTresult = false;
+        }
+      }
+    }
+  }
+  #endif
+
+  #endif
 
   if (!MQTTresult) {
+    #if FEATURE_MQTT_TLS
+    if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("MQTT : TLS error code: ");
+      log += mqtt_tls_last_error;
+      log += ' ';
+      log += mqtt_tls_last_errorstr;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    #endif
+
     MQTTclient.disconnect();
+    #if FEATURE_MQTT_TLS
+    if (mqtt_tls != nullptr) {
+      mqtt_tls->stop();
+    }
+    #endif
+
     updateMQTTclient_connected();
 
     return false;
   }
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log += F("MQTT : Connected to broker with client ID: ");
-    log += clientid;
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    addLogMove(LOG_LEVEL_INFO, concat(F("MQTT : Connected to broker with client ID: "), clientid));
+  }
+
+  #if FEATURE_MQTT_TLS
+  #ifdef ESP32
+  if (mqtt_tls != nullptr && loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    String log = F("MQTT : Peer certificate info: ");
+    log += ControllerSettings->getHost();
+    log += ' ';
+    log += mqtt_tls->getPeerCertificateInfo();
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  #endif
+  #endif
+
   String subscribeTo = ControllerSettings->Subscribe;
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("Subscribed to: ");
-    log += subscribeTo;
-    addLogMove(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
   }
 
   updateMQTTclient_connected();
@@ -360,7 +608,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
          if (ControllerSettings->enableESPEasyNowFallback()) {
           return true;
          }
-         }
+       }
        #endif
        */
 
@@ -601,6 +849,49 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     MQTTpublish(enabledMqttController, event->TaskIndex, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
 }
+
+#if FEATURE_MQTT_TLS
+bool GetTLSfingerprint(String& fp) 
+{
+  #ifdef ESP32
+  if (MQTTclient_connected && mqtt_tls != nullptr) {
+    uint8_t sha256_result[32] = {0};
+    if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
+      fp.reserve(64);
+      for (size_t i = 0; i < 32; ++i) {
+        const String tmp(sha256_result[i], HEX);
+        switch (tmp.length()) {
+          case 0:
+            fp += '0';
+          // fall through
+          case 1:
+            fp += '0';
+            break;
+        }
+        fp += tmp;
+      }
+      fp.toLowerCase();
+      return true;
+    }
+  }
+  #endif
+  return false;
+}
+
+bool GetTLS_Certificate(String& cert, bool caRoot)
+{
+  #ifdef ESP32
+  if (MQTTclient_connected && mqtt_tls != nullptr) {
+    String subject;
+    if (mqtt_tls->getPeerCertificate(cert, subject, caRoot) == 0) {
+      return true;
+    }
+  }
+  #endif
+  return false;
+}
+
+#endif
 
 #endif // if FEATURE_MQTT
 

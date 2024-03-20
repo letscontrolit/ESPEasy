@@ -15,7 +15,6 @@
 #endif // if FEATURE_PLUGIN_STATS
 
 #include "../Globals/Plugins.h"
-
 #include "../Helpers/RulesHelper.h"
 
 #include <map>
@@ -138,7 +137,7 @@ public:
 
   TaskIndexNameMap      taskIndexName;
   TaskIndexValueNameMap taskIndexValueName;
-  FilePresenceMap       fileExistsMap;
+  FilePresenceMap       fileExistsMap;  // Filesize. -1 if not present
   RulesHelperClass      rulesHelper;
 
 private:

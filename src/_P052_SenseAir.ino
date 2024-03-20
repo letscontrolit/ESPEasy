@@ -185,7 +185,6 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             }
           }
 
-
           if (P052_data->readInputRegister(P052_IR7_MEASUREMENT_COUNT, value)) {
             addRowLabel(F("Measurement Count"));
             addHtmlInt(value);
