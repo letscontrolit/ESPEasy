@@ -112,6 +112,25 @@ void P027_data_struct::setCalibration_16V_400mA() {
   wireWriteRegister(INA219_REG_CONFIG, config);
 }
 
+void P027_data_struct::setCalibration_26V_8A() {
+  calValue = 4096;
+
+  // Set multipliers to convert raw current/power values
+  currentDivider_mA = 1;
+
+  // Set Calibration register to 'Cal' calculated above
+  wireWriteRegister(INA219_REG_CALIBRATION, calValue);
+
+  // Set Config register to take into account the settings above
+  uint16_t config = INA219_CONFIG_BVOLTAGERANGE_32V |
+                    INA219_CONFIG_GAIN_8_320MV |
+                    INA219_CONFIG_BADCRES_12BIT |
+                    INA219_CONFIG_SADCRES_12BIT_128S_69MS |
+                    INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
+
+  wireWriteRegister(INA219_REG_CONFIG, config);
+}
+
 int16_t P027_data_struct::getBusVoltage_raw() {
   uint16_t value;
 
