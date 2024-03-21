@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2024-03-21 tonhuisman: Refactor increment/decrement to next/prevButtonGroup/Page functions, to align with ESPEasy_TouchHandler
  * 2023-12-31 tonhuisman: Code optimizations
  * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values using PLUGIN_GET_DEVICEVALUECOUNT, store (also) in task
  *                        settings for speed

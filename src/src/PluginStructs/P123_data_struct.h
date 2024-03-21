@@ -5,8 +5,6 @@
 
 #ifdef USES_P123
 
-# include "../../ESPEasy_common.h"
-# include "../Helpers/AdafruitGFX_helper.h"
 # include "../Helpers/ESPEasy_TouchHandler.h"
 
 # include <Adafruit_FT6206.h>
@@ -98,10 +96,10 @@ struct P123_data_struct : public PluginTaskData_base
                            bool    ignoreZero = false);
   bool    setButtonGroup(struct EventStruct *event,
                          int16_t             buttonGroup);
-  bool    incrementButtonGroup(struct EventStruct *event);
-  bool    decrementButtonGroup(struct EventStruct *event);
-  bool    incrementButtonPage(struct EventStruct *event);
-  bool    decrementButtonPage(struct EventStruct *event);
+  bool    nextButtonGroup(struct EventStruct *event);
+  bool    prevButtonGroup(struct EventStruct *event);
+  bool    nextButtonPage(struct EventStruct *event);
+  bool    prevButtonPage(struct EventStruct *event);
   void    displayButtonGroup(struct EventStruct *event,
                              int16_t             buttonGroup,
                              int8_t              mode = 0);

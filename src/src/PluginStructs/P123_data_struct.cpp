@@ -2,14 +2,7 @@
 
 #ifdef USES_P123
 
-# include "../ESPEasyCore/ESPEasyNetwork.h"
-
-# include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Scheduler.h"
-# include "../Helpers/StringConverter.h"
-# include "../Helpers/SystemVariables.h"
-
-# include "../Commands/InternalCommands.h"
+# include "../Helpers/AdafruitGFX_helper.h"
 
 /**
  * Constructor
@@ -436,11 +429,11 @@ bool P123_data_struct::setButtonGroup(struct EventStruct *event,
 /**
  * Increment button group, if max. group > 0 then min. group = 1
  */
-bool P123_data_struct::incrementButtonGroup(struct EventStruct *event) {
+bool P123_data_struct::nextButtonGroup(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
 
   if (nullptr != touchHandler) {
-    return touchHandler->incrementButtonGroup(event);
+    return touchHandler->nextButtonGroup(event);
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   return false;
@@ -449,11 +442,11 @@ bool P123_data_struct::incrementButtonGroup(struct EventStruct *event) {
 /**
  * Decrement button group, if max. group > 0 then min. group = 1
  */
-bool P123_data_struct::decrementButtonGroup(struct EventStruct *event) {
+bool P123_data_struct::prevButtonGroup(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
 
   if (nullptr != touchHandler) {
-    return touchHandler->decrementButtonGroup(event);
+    return touchHandler->prevButtonGroup(event);
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   return false;
@@ -462,11 +455,11 @@ bool P123_data_struct::decrementButtonGroup(struct EventStruct *event) {
 /**
  * Increment button group page (+10), if max. group > 0 then min. group page (+10) = 1
  */
-bool P123_data_struct::incrementButtonPage(struct EventStruct *event) {
+bool P123_data_struct::nextButtonPage(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
 
   if (nullptr != touchHandler) {
-    return touchHandler->incrementButtonPage(event);
+    return touchHandler->nextButtonPage(event);
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   return false;
@@ -475,11 +468,11 @@ bool P123_data_struct::incrementButtonPage(struct EventStruct *event) {
 /**
  * Decrement button group page (-10), if max. group > 0 then min. group = 1
  */
-bool P123_data_struct::decrementButtonPage(struct EventStruct *event) {
+bool P123_data_struct::prevButtonPage(struct EventStruct *event) {
   # if TOUCH_FEATURE_EXTENDED_TOUCH
 
   if (nullptr != touchHandler) {
-    return touchHandler->decrementButtonPage(event);
+    return touchHandler->prevButtonPage(event);
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   return false;
