@@ -6,7 +6,7 @@
 TaskDeviceTimerID::TaskDeviceTimerID(taskIndex_t taskIndex) :
   SchedulerTimerID(SchedulerTimerType_e::TaskDeviceTimer)
 {
-  id = static_cast<uint32_t>(taskIndex);
+  setId(static_cast<uint32_t>(taskIndex));
 }
 
 #ifndef BUILD_NO_DEBUG
@@ -16,7 +16,7 @@ String TaskDeviceTimerID::decode() const
 
   return concat(F("Task "), validTaskIndex(taskIndex)
         ? getTaskDeviceName(taskIndex)
-        : String(id));
+        : String(getId()));
 }
 
 #endif // ifndef BUILD_NO_DEBUG
