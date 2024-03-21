@@ -147,6 +147,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   pulse,
 #if FEATURE_MQTT
   publish,
+  publishr,
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   puttohttp,

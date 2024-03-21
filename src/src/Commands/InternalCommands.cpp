@@ -389,6 +389,7 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::pulse:                      COMMAND_CASE_A(Command_GPIO_Pulse,        3);                 // GPIO.h
 #if FEATURE_MQTT
     case ESPEasy_cmd_e::publish:                    COMMAND_CASE_A(Command_MQTT_Publish,     -1);                 // MQTT.h
+    case ESPEasy_cmd_e::publishr:                   COMMAND_CASE_A(Command_MQTT_PublishR,    -1);                 // MQTT.h
 #endif // if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::puttohttp:                  COMMAND_CASE_A(Command_HTTP_PutToHTTP,  -1);                  // HTTP.h
