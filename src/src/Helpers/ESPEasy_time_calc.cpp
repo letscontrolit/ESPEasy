@@ -28,6 +28,10 @@ uint8_t getMonthDays(int year, uint8_t month) {
   return monthDays[month];
 }
 
+uint8_t getMonthDays(const struct tm& tm) {
+  return getMonthDays(tm.tm_year + 1900, tm.tm_mon);
+}
+
 /********************************************************************************************\
    Unix Time computations
  \*********************************************************************************************/

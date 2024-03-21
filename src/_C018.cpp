@@ -11,7 +11,6 @@
 # define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903"
 
 
-
 # include <ESPeasySerial.h>
 
 # include "src/ControllerQueue/C018_queue_element.h"

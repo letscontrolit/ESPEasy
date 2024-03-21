@@ -1,0 +1,12 @@
+---
+BasedOnStyle: Mozilla
+AllowShortFunctionsOnASingleLine: Empty
+BinPackArguments: true
+BinPackParameters: true
+ColumnLimit: 100
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+ReflowComments: false
+SortIncludes: true
+SortUsingDeclarations: true
+SpacesInContainerLiterals: false

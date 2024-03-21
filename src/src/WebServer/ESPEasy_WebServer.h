@@ -109,7 +109,8 @@ void json_prop(LabelType::Enum label);
 // PCONFIG() and not in extra settings
 // ********************************************************************************
 void addTaskSelect(const String& name,
-                   taskIndex_t   choice);
+                   taskIndex_t   choice,
+                   bool onChangeReload = true);
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex

@@ -200,6 +200,9 @@ void WebServerInit()
   webserver_init = true;
 
   // Prepare webserver pages
+
+  // FIXME TD-er: The added String() wrapper is needed for the latest ESP32 core lib.
+  // See: https://github.com/espressif/arduino-esp32/issues/4374
   #ifdef WEBSERVER_ROOT
   web_server.on(F("/"),             handle_root);
   // Entries for several captive portal URLs.
@@ -656,14 +659,16 @@ void json_prop(LabelType::Enum label) {
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice)
+void addTaskSelect(const String& name, taskIndex_t choice, bool onChangeReload)
 {
   String deviceName;
 
   addHtml(F("<select "));
   addHtmlAttribute(F("id"),       F("selectwidth"));
   addHtmlAttribute(F("name"),     name);
-  addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
+  if (onChangeReload) {
+    addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
+  }
   addHtml('>');
 
   for (taskIndex_t x = 0; x <= TASKS_MAX; x++)

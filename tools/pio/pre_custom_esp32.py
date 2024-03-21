@@ -47,9 +47,12 @@ else:
 
     "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
-#   "-DUSES_P094",  # CUL Reader
+    "-DUSES_P094",  # CUL Reader
+    "-DP094_DEBUG_OPTIONS=1",
 #   "-DUSES_P095",  # TFT ILI9341
     "-DUSES_P097",  # Touch (ESP32)
+    "-DUSES_P098",  # PWM motor
+    "-DUSES_P100",  # Pulse Counter - DS2423
     "-DUSES_P106",  # BME680
     "-DUSES_P107",  # SI1145 UV index
     "-DUSES_P131",  # NeoPixelMatrix
@@ -57,10 +60,12 @@ else:
     "-DUSES_P146",  # Cache Reader
     
 
+#   "-DUSES_C015",  # Blynk
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
-#   "-DUSES_C015",  # Blynk
+    "-DUSES_C019",  # ESPEasy-NOW
 
+    "-DUSES_ESPEASY_NOW",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",
     "-DFEATURE_I2CMULTIPLEXER=1",

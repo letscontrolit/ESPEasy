@@ -19,6 +19,7 @@ struct __attribute__((__packed__)) NodeStruct
   NodeStruct();
 
   bool          valid() const;
+  bool          validate();
   bool          validate(const IPAddress& remoteIP);
 
   // Compare nodes.

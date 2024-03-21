@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 
 /*********************************************************************************************\
@@ -20,8 +20,8 @@ public:
 
   virtual bool                      isDuplicate(const Queue_element_base& other) const = 0;
 
-  virtual const UnitMessageCount_t* getUnitMessageCount() const = 0;
-  virtual UnitMessageCount_t      * getUnitMessageCount()       = 0;
+  virtual const MessageRouteInfo_t* getMessageRouteInfo() const = 0;
+  virtual MessageRouteInfo_t      * getMessageRouteInfo()       = 0;
 
   unsigned long _timestamp;
   controllerIndex_t _controller_idx;
@@ -34,6 +34,7 @@ public:
   // Some formatting of values can be done when actually sending it.
   // This may require less RAM than keeping formatted strings in memory
   bool _processByController;
+  
 };
 
 #endif // ifndef CONTROLLERQUEUE_QUEUE_ELEMENT_BASE_H

@@ -2,6 +2,7 @@
 #define CONTROLLERQUEUE_C016_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+
 #ifdef USES_C016
 
 
@@ -10,7 +11,7 @@
 # include "../DataTypes/ControllerIndex.h"
 # include "../DataTypes/TaskValues_Data.h"
 # include "../DataStructs/DeviceStruct.h"
-# include "../DataStructs/UnitMessageCount.h"
+# include "../DataStructs/MessageRouteInfo.h"
 # include "../Globals/Plugins.h"
 
 struct EventStruct;
@@ -53,11 +54,11 @@ public:
 
   bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const MessageRouteInfo_t* getMessageRouteInfo() const {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  MessageRouteInfo_t* getMessageRouteInfo() {
     return nullptr;
   }
 

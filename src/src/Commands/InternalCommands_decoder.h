@@ -42,6 +42,10 @@ enum class ESPEasy_cmd_e : uint8_t {
   dst,
 
   erasesdkwifi,
+#ifdef USES_ESPEASY_NOW
+  espeasynowdisable,
+  espeasynowenable,
+#endif
   event,
   executerules,
 #if FEATURE_ETHERNET

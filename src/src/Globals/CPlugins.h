@@ -23,11 +23,19 @@
    - Controller -> A selected instance of a CPlugin (analog to "task" for plugins, shown in the Controllers tab in the web interface)
    - Protocol   -> A CPlugin included in the build.
 
+   Addressing these:
+   - cpluginID_t -> Unique ID of a Cplugin, like '1' for _C001.ino. '0' is the invalid cpluginID_t
+   - protocolIndex_t -> Counter for the included CPlugins in the build. 
+                        Highest used protocolIndex_t will thus always be at most the highest CPluginID.
+
    We have the following one-to-one relations:
-   - CPlugin_id_to_ProtocolIndex - Map from CPlugin ID to Protocol Index.
+   - CPlugin_id_to_ProtocolIndex - Vector from CPlugin ID to Protocol Index.
    - ProtocolIndex_to_CPlugin_id - Vector from ProtocolIndex to CPlugin ID.
    - CPlugin_ptr - Array of function pointers to call Cplugins.
    - Protocol    - Vector of ProtocolStruct containing Cplugin specific information.
+
+   Since we only have a limited nr of CPlugins, and most builds will include almost all of them,
+   thus: CPlugin_id_to_ProtocolIndex is a vector and not a std::map as with the Plugins.
  \*********************************************************************************************/
 
 
