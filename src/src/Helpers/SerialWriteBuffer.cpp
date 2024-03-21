@@ -57,11 +57,6 @@ void SerialWriteBuffer_t::clear()
   _buffer.clear();
 }
 
-int SerialWriteBuffer_t::availableForWrite() const
-{
-  return _buffer.size();
-}
-
 size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
 {
   size_t bytesWritten     = 0;
@@ -72,19 +67,47 @@ size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
   }
 
   if (nrBytesToWrite > 0) {
+    // FIXME TD-er: Work-around for bug in HWCDC when writing exactly the amount of free bytes in the buffer.
+//    --nrBytesToWrite;
     if (nrBytesToWrite > bufferSize) {
       nrBytesToWrite = bufferSize;
     }
 
     while (nrBytesToWrite > 0 && !_buffer.empty()) {
-      const char c = _buffer.front();
+      uint8_t tmpBuffer[16]{};
 
-      if (stream.write((uint8_t)c) == 0) {
+      size_t tmpBufferUsed = 0;
+
+      auto it = _buffer.begin();
+
+      bool done = false;
+
+      for (; tmpBufferUsed < sizeof(tmpBuffer) && 
+             !done &&
+             it != _buffer.end(); ) {
+        tmpBuffer[tmpBufferUsed] = (uint8_t)(*it);
+        if (*it == '\n' ||
+            tmpBufferUsed >= nrBytesToWrite) {
+          done = true;
+        }
+        ++tmpBufferUsed;
+        ++it;
+      }
+
+//      done = false;
+      const size_t written = (tmpBufferUsed == 0) ? 0 : stream.write(tmpBuffer, tmpBufferUsed);
+
+      if (written < tmpBufferUsed) {
+        done = true;
+      }
+      for (size_t i = 0; i < written; ++i) {
+        _buffer.pop_front();
+        --nrBytesToWrite;
+        ++bytesWritten;
+      }
+      if (done) {
         return bytesWritten;
       }
-      _buffer.pop_front();
-      --nrBytesToWrite;
-      ++bytesWritten;
     }
   }
   return bytesWritten;

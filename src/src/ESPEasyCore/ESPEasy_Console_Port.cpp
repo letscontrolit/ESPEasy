@@ -24,10 +24,12 @@
 
 EspEasy_Console_Port::~EspEasy_Console_Port()
 {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if (_serial != nullptr) {
     delete _serial;
     _serial = nullptr;
   }
+#endif
 }
 
 EspEasy_Console_Port::operator bool() const
