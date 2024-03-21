@@ -739,30 +739,30 @@ bool ESPEasy_TouchHandler::handleButtonSwipe(struct EventStruct *event,
 
   if (swipe == Swipe_action_e::Up) {
     if (swapped) {
-      decrementButtonPage(event);
+      prevButtonPage(event);
     } else {
-      incrementButtonPage(event);
+      nextButtonPage(event);
     }
     success = true;
   } else if (swipe == Swipe_action_e::Right) {
     if (swapped) {
-      decrementButtonGroup(event);
+      prevButtonGroup(event);
     } else {
-      incrementButtonGroup(event);
+      nextButtonGroup(event);
     }
     success = true;
   } else if (swipe == Swipe_action_e::Down) {
     if (swapped) {
-      incrementButtonPage(event);
+      nextButtonPage(event);
     } else {
-      decrementButtonPage(event);
+      prevButtonPage(event);
     }
     success = true;
   } else if ((swipe == Swipe_action_e::Left)) {
     if (swapped) {
-      incrementButtonGroup(event);
+      nextButtonGroup(event);
     } else {
-      decrementButtonGroup(event);
+      prevButtonGroup(event);
     }
     success = true;
   }
@@ -790,7 +790,7 @@ bool ESPEasy_TouchHandler::setButtonGroup(struct EventStruct *event,
 /**
  * Increment button group if that group exists, if max. group > 0 then min. group = 1
  */
-bool ESPEasy_TouchHandler::incrementButtonGroup(struct EventStruct *event) {
+bool ESPEasy_TouchHandler::nextButtonGroup(struct EventStruct *event) {
   const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup + (pgupInvert ? -1 : 1))) {
@@ -802,7 +802,7 @@ bool ESPEasy_TouchHandler::incrementButtonGroup(struct EventStruct *event) {
 /**
  * Decrement button group if that group exists, if max. group > 0 then min. group = 1
  */
-bool ESPEasy_TouchHandler::decrementButtonGroup(struct EventStruct *event) {
+bool ESPEasy_TouchHandler::prevButtonGroup(struct EventStruct *event) {
   const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup - (pgupInvert ? -1 : 1))) {
@@ -814,7 +814,7 @@ bool ESPEasy_TouchHandler::decrementButtonGroup(struct EventStruct *event) {
 /**
  * Increment button group by page (+10), if max. group > 0 then min. group = 1
  */
-bool ESPEasy_TouchHandler::incrementButtonPage(struct EventStruct *event) {
+bool ESPEasy_TouchHandler::nextButtonPage(struct EventStruct *event) {
   const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup + (pgupInvert ? -10 : 10))) {
@@ -826,7 +826,7 @@ bool ESPEasy_TouchHandler::incrementButtonPage(struct EventStruct *event) {
 /**
  * Decrement button group by page (+10), if max. group > 0 then min. group = 1
  */
-bool ESPEasy_TouchHandler::decrementButtonPage(struct EventStruct *event) {
+bool ESPEasy_TouchHandler::prevButtonPage(struct EventStruct *event) {
   const bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
 
   if (validButtonGroup(_buttonGroup + (pgupInvert ? 10 : -10))) {
@@ -1948,14 +1948,14 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
     #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
     } else if (equals(subcommand, F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
       success = setButtonGroup(event, event->Par2);
-    } else if (equals(subcommand, F("incgrp"))) {       // touch,incgrp : increment group and Activate
-      success = incrementButtonGroup(event);
-    } else if (equals(subcommand, F("decgrp"))) {       // touch,decgrp : Decrement group and Activate
-      success = decrementButtonGroup(event);
-    } else if (equals(subcommand, F("incpage"))) {      // touch,incpage : increment page and Activate
-      success = incrementButtonPage(event);
-    } else if (equals(subcommand, F("decpage"))) {      // touch,decpage : Decrement page and Activate
-      success = decrementButtonPage(event);
+    } else if (equals(subcommand, F("nextgrp"))) {      // touch,nextgrp : next group and Activate
+      success = nextButtonGroup(event);
+    } else if (equals(subcommand, F("prevgrp"))) {      // touch,prevgrp : previous group and Activate
+      success = prevButtonGroup(event);
+    } else if (equals(subcommand, F("nextpage"))) {     // touch,nextpage : next page and Activate
+      success = nextButtonPage(event);
+    } else if (equals(subcommand, F("prevpage"))) {     // touch,prevpage : previous page and Activate
+      success = prevButtonPage(event);
     } else if (equals(subcommand, F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
       arguments = parseString(string, 3);
 
@@ -2197,16 +2197,16 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
             setButtonGroup(event, get8BitFromUL(TouchObjects[objectIndex].groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP));
             break;
           case Touch_action_e::IncrementGroup:
-            incrementButtonGroup(event);
+            nextButtonGroup(event);
             break;
           case Touch_action_e::DecrementGroup:
-            decrementButtonGroup(event);
+            prevButtonGroup(event);
             break;
           case Touch_action_e::IncrementPage:
-            incrementButtonPage(event);
+            nextButtonPage(event);
             break;
           case Touch_action_e::DecrementPage:
-            decrementButtonPage(event);
+            prevButtonPage(event);
             break;
           case Touch_action_e::Default:
             break;

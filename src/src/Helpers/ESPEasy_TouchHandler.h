@@ -2,15 +2,14 @@
 #define HELPERS_ESPEASY_TOUCHHANDLER_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
 #include "../Helpers/AdafruitGFX_helper.h"
 
 #ifdef PLUGIN_USES_TOUCHHANDLER
-# include "../Commands/InternalCommands.h"
 # include <set>
 
 /*****
  * Changelog:
+ * 2024-03-20 tonhuisman: Change inc/dec* commands to next/prev* commands to more accurately describe their function
  * 2024-03-13 tonhuisman: Change PageUp/PageDown reversed option to Navigation Left/Right/Up/Down menu reversed, to also swap the behavior
  *                        of the left and right navigation buttons, like the Up/Down navigation already had.
  * 2023-12-31 tonhuisman: Code optimizations reducing .bin size (ESP32) with ~1kB
@@ -60,10 +59,10 @@
  * touch,toggle,<buttonObjectName|Nr>[,...] : Switch TouchButton(s) to the other state (must be enabled)
  * touch,swipe,<swipeValue>                 : Switch button group according to swipe direction
  * touch,setgrp,<group>                     : Switch to button group
- * touch,incgrp                             : Switch to next button group
- * touch,decgrp                             : Switch to previous button group
- * touch,incpage                            : Switch to next button group page (+10)
- * touch,decpage                            : Switch to previous button group page (-10)
+ * touch,nextgrp                            : Switch to next button group
+ * touch,prevgrp                            : Switch to previous button group
+ * touch,nextpage                           : Switch to next button group page (+10)
+ * touch,prevpage                           : Switch to previous button group page (-10)
  * touch,updatebutton,<buttonName|Nr>[,<group>[,<mode>]] : Update a button by name or number
  */
 /**
@@ -346,10 +345,10 @@ public:
   #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   bool setButtonGroup(struct EventStruct *event,
                       const int16_t     & buttonGroup);
-  bool incrementButtonGroup(struct EventStruct *event);
-  bool decrementButtonGroup(struct EventStruct *event);
-  bool incrementButtonPage(struct EventStruct *event);
-  bool decrementButtonPage(struct EventStruct *event);
+  bool nextButtonGroup(struct EventStruct *event);
+  bool prevButtonGroup(struct EventStruct *event);
+  bool nextButtonPage(struct EventStruct *event);
+  bool prevButtonPage(struct EventStruct *event);
   void displayButtonGroup(struct EventStruct *event,
                           const int16_t     & buttonGroup,
                           const int8_t      & mode = 0);
