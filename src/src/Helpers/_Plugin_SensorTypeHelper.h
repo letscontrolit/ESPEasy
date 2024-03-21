@@ -23,5 +23,6 @@ void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, int pconfigIndex, uint8_t valuenr,
   int optionCount, const String options[], const int indices[] = nullptr);
 
+String sensorTypeHelper_webformID(int pconfigIndex);
 
 #endif // HELPER_CPLUGIN_SENSORTYPEHELPER_H

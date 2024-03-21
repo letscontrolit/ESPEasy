@@ -318,7 +318,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       Sensor_VType VType = TempEvent.sensorType;
 
       if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
-        VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        VType = static_cast<Sensor_VType>(getFormItemInt(sensorTypeHelper_webformID(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
       }
       ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
