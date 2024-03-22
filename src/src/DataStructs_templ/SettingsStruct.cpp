@@ -450,7 +450,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (getVariousBits1() > (1u << 31)) { setVariousBits1(0); } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -612,13 +612,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_Reset                        = -1;
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
-  VariousBits1                     = 0;
+  setVariousBits1(0);
+  setVariousBits2(0);
 
   console_serial_port              = DEFAULT_CONSOLE_PORT; 
   console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
   console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
   console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
-
 
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);

@@ -5,13 +5,13 @@
 RulesTimerID::RulesTimerID(unsigned int timerIndex) :
   SchedulerTimerID(SchedulerTimerType_e::RulesTimer)
 {
-  id = timerIndex;
+  setId(timerIndex);
 }
 
 #ifndef BUILD_NO_DEBUG
 String RulesTimerID::decode() const
 {
-  return concat(F("Rules#Timer="), id);
+  return concat(F("Rules#Timer="), getId());
 }
 
 #endif // ifndef BUILD_NO_DEBUG

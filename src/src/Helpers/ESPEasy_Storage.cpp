@@ -404,7 +404,7 @@ bool BuildFixes()
     }
     // Remove PeriodicalScanWiFi
     // Reset to default 0 for future use.
-    bitWrite(Settings.VariousBits1, 15, 0);
+    Settings.VariousBits_1.unused_15 = 0;
   }
   #endif
 
