@@ -96,7 +96,7 @@ bool UVlight_LTR390::init(bool doReset) {
 bool UVlight_LTR390::reset(void) {
   uint8_t readData = readRegister(LTR390_MAIN_CTRL);
 
-  readData |= B00010000;
+  readData |= 0b00010000;
 
   writeRegister(LTR390_MAIN_CTRL, readData);
   delay(10);

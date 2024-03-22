@@ -14,9 +14,9 @@ PluginTaskTimerID::PluginTaskTimerID(taskIndex_t       taskIndex,
   constexpr unsigned mask_function        = MASK_BITS(nrBitsPluginFunction);
 
   if (validTaskIndex(taskIndex)) {
-    id = (taskIndex & mask_taskIndex) |
+    setId((taskIndex & mask_taskIndex) |
          ((function & mask_function) << nrBitsTaskIndex) |
-         (Par1 << (nrBitsTaskIndex + nrBitsPluginFunction));
+         (Par1 << (nrBitsTaskIndex + nrBitsPluginFunction)));
   }
 }
 
@@ -25,7 +25,7 @@ taskIndex_t PluginTaskTimerID::getTaskIndex() const
   constexpr unsigned nrBitsTaskIndex = NR_BITS(TASKS_MAX);
   constexpr unsigned mask_taskIndex  = MASK_BITS(nrBitsTaskIndex);
 
-  return static_cast<taskIndex_t>(id & mask_taskIndex);
+  return static_cast<taskIndex_t>(getId() & mask_taskIndex);
 }
 
 PluginFunctions_e PluginTaskTimerID::getFunction() const
@@ -34,7 +34,7 @@ PluginFunctions_e PluginTaskTimerID::getFunction() const
   constexpr unsigned nrBitsPluginFunction = NrBitsPluginFunctions;
   constexpr unsigned mask_function        = MASK_BITS(nrBitsPluginFunction);
 
-  return static_cast<PluginFunctions_e>((id >> nrBitsTaskIndex) & mask_function);
+  return static_cast<PluginFunctions_e>((getId() >> nrBitsTaskIndex) & mask_function);
 }
 
 #ifndef BUILD_NO_DEBUG
@@ -45,7 +45,7 @@ String PluginTaskTimerID::decode() const
   if (validTaskIndex(taskIndex)) {
     return getTaskDeviceName(taskIndex);
   }
-  return String(id);
+  return String(getId());
 }
 
 #endif // ifndef BUILD_NO_DEBUG

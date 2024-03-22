@@ -541,13 +541,10 @@ uint32_t ModbusRTU_struct::read_32b_HoldingRegister(short address) {
 }
 
 float ModbusRTU_struct::read_float_HoldingRegister(short address) {
-  union {
-    uint32_t ival;
-    float    fval;
-  } conversion;
-
-  conversion.ival = read_32b_HoldingRegister(address);
-  return conversion.fval;
+  const uint32_t ival = read_32b_HoldingRegister(address);
+  float    fval{};
+  memcpy(&fval, &ival, sizeof(ival));
+  return fval;
 
   //    uint32_t ival = read_32b_HoldingRegister(address);
   //    float fval = *reinterpret_cast<float*>(&ival);
