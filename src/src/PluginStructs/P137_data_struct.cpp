@@ -135,8 +135,8 @@ const __FlashStringHelper* toString(const P137_PredefinedDevices_e device) {
   switch (device) {
     case P137_PredefinedDevices_e::Unselected: return F("Select an option to set default values");
     case P137_PredefinedDevices_e::M5Stack_StickC: return F("M5Stack StickC");
-    case P137_PredefinedDevices_e::M5Stack_Core2: return F("M5Stack Core2 (Default)");
-    case P137_PredefinedDevices_e::LilyGO_TBeam: return F("LilyGO T-Beam");
+    case P137_PredefinedDevices_e::M5Stack_Core2: return F("M5Stack Core2 v1.0 (Default)");
+    case P137_PredefinedDevices_e::LilyGO_TBeam: return F("LilyGO T-Beam v1.1");
     case P137_PredefinedDevices_e::UserDefined: return F("User defined");
   }
   return F("*Undefined*");
