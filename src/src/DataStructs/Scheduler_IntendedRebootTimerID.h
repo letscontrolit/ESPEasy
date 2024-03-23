@@ -10,7 +10,7 @@ struct IntendedRebootTimerID : SchedulerTimerID {
 
   IntendedRebootReason_e getReason() const
   {
-    return static_cast<IntendedRebootReason_e>(id);
+    return static_cast<IntendedRebootReason_e>(getId());
   }
 
 #ifndef BUILD_NO_DEBUG

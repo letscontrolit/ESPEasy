@@ -19,9 +19,17 @@
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
-  last_seen(0), rssi(0), channel(0), index(index_c), flags(0)
+WiFi_AP_Candidate::WiFi_AP_Candidate() :
+  last_seen(0), rssi(0), channel(0), index(0), enc_type(0)
 {
+  memset(&bits, 0, sizeof(bits));
+}
+
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
+  last_seen(0), rssi(0), channel(0), index(index_c), enc_type(0)
+{
+  memset(&bits, 0, sizeof(bits));
+
   const size_t ssid_length = ssid_c.length();
 
   if ((ssid_length == 0) || equals(ssid_c, F("ssid"))) {
@@ -33,38 +41,46 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
   ssid = ssid_c;
 }
 
-WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
-  ssid    = WiFi.SSID(networkItem);
-  rssi    = WiFi.RSSI(networkItem);
-  channel = WiFi.channel(networkItem);
-  bssid   = WiFi.BSSID(networkItem);
+WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
+  // Need to make sure the phy isn't known as we can't get this information from the AP
+  // See: https://github.com/letscontrolit/ESPEasy/issues/4996
+  // Not sure why this makes any difference as the flags should already have been set to 0.
+  memset(&bits, 0, sizeof(bits));
+
+  ssid     = WiFi.SSID(networkItem);
+  rssi     = WiFi.RSSI(networkItem);
+  channel  = WiFi.channel(networkItem);
+  bssid    = WiFi.BSSID(networkItem);
   enc_type = WiFi.encryptionType(networkItem);
   #ifdef ESP8266
-  isHidden = WiFi.isHidden(networkItem);
-  #ifdef CORE_POST_3_0_0
-  const bss_info* it = reinterpret_cast<const bss_info*>(WiFi.getScanInfoByIndex(networkItem));
+  bits.isHidden = WiFi.isHidden(networkItem);
+  # ifdef CORE_POST_3_0_0
+  const bss_info *it = reinterpret_cast<const bss_info *>(WiFi.getScanInfoByIndex(networkItem));
+
   if (it) {
-    phy_11b = it->phy_11b;
-    phy_11g = it->phy_11g;
-    phy_11n = it->phy_11n;
-    wps = it->wps;
+    bits.phy_11b = it->phy_11b;
+    bits.phy_11g = it->phy_11g;
+    bits.phy_11n = it->phy_11n;
+    bits.wps     = it->wps;
   }
-  #endif
+  # endif // ifdef CORE_POST_3_0_0
   #endif // ifdef ESP8266
   #ifdef ESP32
-  isHidden = ssid.isEmpty();
-  wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(WiFi.getScanInfoByIndex(networkItem));
+  bits.isHidden = ssid.isEmpty();
+  wifi_ap_record_t *it = reinterpret_cast<wifi_ap_record_t *>(WiFi.getScanInfoByIndex(networkItem));
+
   if (it) {
-    phy_11b = it->phy_11b;
-    phy_11g = it->phy_11g;
-    phy_11n = it->phy_11n;
-    phy_lr  = it->phy_lr;
-#if ESP_IDF_VERSION_MAJOR >= 5
-    phy_11ax = it->phy_11ax;
-    ftm_initiator = it->ftm_initiator;
-    ftm_responder = it->ftm_responder;
-#endif
-    wps = it->wps;
+    bits.phy_11b = it->phy_11b;
+    bits.phy_11g = it->phy_11g;
+    bits.phy_11n = it->phy_11n;
+    bits.phy_lr  = it->phy_lr;
+# if ESP_IDF_VERSION_MAJOR >= 5
+    bits.phy_11ax      = it->phy_11ax;
+    bits.ftm_initiator = it->ftm_initiator;
+    bits.ftm_responder = it->ftm_responder;
+# endif // if ESP_IDF_VERSION_MAJOR >= 5
+    bits.wps = it->wps;
+
     // FIXME TD-er: Maybe also add other info like 2nd channel, ftm and phy_lr support?
   }
   #endif // ifdef ESP32
@@ -72,45 +88,51 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0), flags(0) {
 }
 
 #ifdef ESP8266
-#if FEATURE_ESP8266_DIRECT_WIFI_SCAN
+# if FEATURE_ESP8266_DIRECT_WIFI_SCAN
 WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
-  rssi(ap.rssi), channel(ap.channel), bssid(ap.bssid), 
+  rssi(ap.rssi), channel(ap.channel), bssid(ap.bssid),
   index(0), enc_type(0), isHidden(ap.is_hidden),
   phy_11b(ap.phy_11b), phy_11g(ap.phy_11g), phy_11n(ap.phy_11n),
   wps(ap.wps)
 {
+  memset(&bits, 0, sizeof(bits));
+
   last_seen = millis();
 
-  switch(ap.authmode) {
-    case AUTH_OPEN: enc_type = ENC_TYPE_NONE; break;
-    case AUTH_WEP:  enc_type = ENC_TYPE_WEP; break;
-    case AUTH_WPA_PSK: enc_type =  ENC_TYPE_TKIP; break;
-    case AUTH_WPA2_PSK: enc_type =  ENC_TYPE_CCMP; break;
+  switch (ap.authmode) {
+    case AUTH_OPEN: enc_type         = ENC_TYPE_NONE; break;
+    case AUTH_WEP:  enc_type         = ENC_TYPE_WEP; break;
+    case AUTH_WPA_PSK: enc_type      =  ENC_TYPE_TKIP; break;
+    case AUTH_WPA2_PSK: enc_type     =  ENC_TYPE_CCMP; break;
     case AUTH_WPA_WPA2_PSK: enc_type =  ENC_TYPE_AUTO; break;
     case AUTH_MAX: break;
   }
 
-  char tmp[33]; //ssid can be up to 32chars, => plus null term
+  char tmp[33]; // ssid can be up to 32chars, => plus null term
   const size_t ssid_len = std::min(static_cast<size_t>(ap.ssid_len), sizeof(ap.ssid));
+
   memcpy(tmp, ap.ssid, ssid_len);
   tmp[ssid_len] = 0; // nullterm marking end of string
 
-  ssid = String(reinterpret_cast<const char*>(tmp));
+  ssid = String(reinterpret_cast<const char *>(tmp));
 }
-#endif
-#endif
+
+# endif // if FEATURE_ESP8266_DIRECT_WIFI_SCAN
+#endif // ifdef ESP8266
 
 
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
-  if (isEmergencyFallback != other.isEmergencyFallback) {
-    return isEmergencyFallback;
+  if (bits.isEmergencyFallback != other.bits.isEmergencyFallback) {
+    return bits.isEmergencyFallback;
   }
-  if (lowPriority != other.lowPriority) {
-    return !lowPriority;
+
+  if (bits.lowPriority != other.bits.lowPriority) {
+    return !bits.lowPriority;
   }
+
   // Prefer non hidden over hidden.
-  if (isHidden != other.isHidden) {
-    return !isHidden;
+  if (bits.isHidden != other.bits.isHidden) {
+    return !bits.isHidden;
   }
 
   // RSSI values >= 0 are invalid
@@ -125,19 +147,21 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 bool WiFi_AP_Candidate::usable() const {
   // Allow for empty pass
   // if (key.isEmpty()) return false;
-  if (isEmergencyFallback) {
+  if (bits.isEmergencyFallback) {
     int allowedUptimeMinutes = 10;
     #ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
     allowedUptimeMinutes = CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME;
-    #endif
-    if (getUptimeMinutes() > allowedUptimeMinutes || 
-        !SecuritySettings.hasWiFiCredentials() || 
+    #endif // ifdef CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME
+
+    if ((getUptimeMinutes() > allowedUptimeMinutes) ||
+        !SecuritySettings.hasWiFiCredentials() ||
         WiFiEventData.performedClearWiFiCredentials ||
-        lastBootCause != BOOT_CAUSE_COLD_BOOT) {
+        (lastBootCause != BOOT_CAUSE_COLD_BOOT)) {
       return false;
     }
   }
-  if (!isHidden && (ssid.isEmpty())) { return false; }
+
+  if (!bits.isHidden && (ssid.isEmpty())) { return false; }
   return !expired();
 }
 
@@ -149,12 +173,12 @@ bool WiFi_AP_Candidate::expired() const {
   return timePassedSince(last_seen) > WIFI_AP_CANDIDATE_MAX_AGE;
 }
 
-
 String WiFi_AP_Candidate::toString(const String& separator) const {
   String result = ssid;
 
   htmlEscape(result);
-  if (isHidden) {
+
+  if (bits.isHidden) {
     result += F("#Hidden#");
   }
   result += strformat(
@@ -171,18 +195,25 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   }
 
   result += encryption_type();
+
   if (phy_known()) {
     String phy_str;
-    
-    if (phy_11b) phy_str += 'b';
-    if (phy_11g) phy_str += 'g';
-    if (phy_11n) phy_str += 'n';
+
+    if (bits.phy_11b) { phy_str += 'b'; }
+
+    if (bits.phy_11g) { phy_str += 'g'; }
+
+    if (bits.phy_11n) { phy_str += 'n'; }
 #ifdef ESP32
-    if (phy_11ax) phy_str += F("/ax");
-    if (phy_lr) phy_str += F("/lr");
-    if (ftm_initiator) phy_str += F("/FTM_i");
-    if (ftm_responder) phy_str += F("/FTM_r");
-#endif
+
+    if (bits.phy_11ax) { phy_str += F("/ax"); }
+
+    if (bits.phy_lr) { phy_str += F("/lr"); }
+
+    if (bits.ftm_initiator) { phy_str += F("/FTM_i"); }
+
+    if (bits.ftm_responder) { phy_str += F("/FTM_r"); }
+#endif // ifdef ESP32
 
     if (phy_str.length()) {
       result += strformat(F(" (%s)"), phy_str.c_str());

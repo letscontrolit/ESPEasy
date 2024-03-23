@@ -6,7 +6,7 @@
 
 PluginStats_Config_t & PluginStats_Config_t::operator=(const PluginStats_Config_t& other)
 {
-  stored = other.stored;
+  setStored(other.getStored());
   return *this;
 }
 
