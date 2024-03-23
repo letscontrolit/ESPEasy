@@ -11,6 +11,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P145
 
+#include "../Helpers/OversamplingHelper.h"
+
 // Maximum number of types that can be selected from
 #define P145_MAXTYPES  10
 
