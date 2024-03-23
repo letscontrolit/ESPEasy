@@ -2,6 +2,8 @@
 
 #ifdef USES_P153
 
+# include "../Helpers/CRC_functions.h"
+
 /**************************************************************************
 * Constructor
 **************************************************************************/
@@ -31,7 +33,7 @@ bool P153_data_struct::init() {
           data[d] = Wire.read();
         }
 
-        if (CRC8(data[0], data[1], data[2]) && CRC8(data[3], data[4], data[5])) {
+        if (calc_CRC8(data[0], data[1], data[2]) && calc_CRC8(data[3], data[4], data[5])) {
           serialNumber   = data[0];
           serialNumber <<= 8;
           serialNumber  |= data[1];
@@ -144,7 +146,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
       }
 
       // Data valid?
-      if (CRC8(data[0], data[1], data[2]) && CRC8(data[3], data[4], data[5])) {
+      if (calc_CRC8(data[0], data[1], data[2]) && calc_CRC8(data[3], data[4], data[5])) {
         const float temp = static_cast<float>(((uint16_t)data[0] << 8) | (uint16_t)data[1]);
         const float hum  = static_cast<float>(((uint16_t)data[3] << 8) | (uint16_t)data[4]);
         temperature = -45.0f + 175.0f * temp / 65535.0f;
@@ -242,29 +244,6 @@ bool P153_data_struct::plugin_get_config_value(struct EventStruct *event,
     success = true;
   }
   return success;
-}
-
-bool P153_data_struct::CRC8(uint8_t MSB, uint8_t LSB, uint8_t CRC)
-{
-  /*
-   *	Name           : CRC-8
-   * Polynomial     : 0x31 (x8 + x5 + x4 + 1)
-   * Initialization : 0xFF
-   * Reflect input  : False
-   * Reflect output : False
-   * Final          : XOR 0x00
-   *	Example        : CRC8( 0xBE, 0xEF, 0x92) should be true
-   */
-  uint8_t crc = 0xFF;
-
-  for (uint8_t bytenr = 0; bytenr < 2; ++bytenr) {
-    crc ^= (bytenr == 0) ? MSB : LSB;
-
-    for (uint8_t i = 0; i < 8; ++i) {
-      crc = crc & 0x80 ? (crc << 1) ^ 0x31 : crc << 1;
-    }
-  }
-  return crc == CRC;
 }
 
 #endif // ifdef USES_P153

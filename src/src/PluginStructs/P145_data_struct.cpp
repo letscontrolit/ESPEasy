@@ -14,6 +14,8 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"   // Need to know when WiFi is ruining the ADC measurements
 
+#include "../Helpers/OversamplingHelper.h"
+
 // The table sensorDefs[] contains string items for representation. 
 // Storage is in PROGMEM where a (fixed format) C-style string does not fit well
 // An enum like int is used instead, together with a enum to string conversion function
