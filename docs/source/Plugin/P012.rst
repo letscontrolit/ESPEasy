@@ -51,6 +51,8 @@ Device Settings
 
 .. image:: P012_DisplaySize.png
 
+To support an alternative LCD Controller, using the ST7032 chip, an extra selection has been added. This controller uses the (fixed) I2C address ``0x3E``, so that has to be configured as well.
+
 **Line 1..4** Up to 4 lines can be pre-configured with text to display. For the 2x16 device size, only Line 1 and 2 will be used. Variables can be used, f.e. to display values provided by a sensor.
 
 **Display button** A button can be configured to enable the display on demand. This function is enabled by selecting a GPIO pin to monitor. Combined with Inversed login and Display Timeout the display will be automatically turned off after the timeout has expired.

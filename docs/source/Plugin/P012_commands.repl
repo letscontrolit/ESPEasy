@@ -10,6 +10,7 @@
         * ``on`` will turn the display ON.
         * ``off`` will turn the display OFF.
         * ``clear`` will clear any information from the display.
+        * ``contrast,<contrast>`` will set the contrast of the display, valid range: 0..63
 
         ","
         Using these commands, either from rules, via http or mqtt, the state of the display can be controlled.
