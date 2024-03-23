@@ -77,8 +77,7 @@ public:
   void init();
   void setfreq(uint32_t freq);
   void setmotor(uint8_t dir,
-                float   pwm_val);
-  void setmotor(uint8_t dir);
+                float   pwm_val = 100.0f);
 
 private:
 

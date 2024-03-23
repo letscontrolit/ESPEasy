@@ -14,9 +14,7 @@ bool P110_data_struct::begin() {
 
   if (!sensor.init()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("VL53L0X: Sensor not found, init failed for 0x");
-      log += String(i2cAddress, HEX);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Sensor not found, init failed for 0x%02x"), i2cAddress));
       addLog(LOG_LEVEL_INFO, sensor.getInitResult());
     }
     initState = false;
@@ -63,17 +61,10 @@ long P110_data_struct::readDistance() {
 
   if (initPhase != P110_initPhases::Ready) { return dist; }
 
-  # if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
-  String log;
-  # endif // if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
   # ifdef P110_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    log  = F("VL53L0X  : idx: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" init: ");
-    log += String(initState, BIN);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L0X  : idx: 0x%02x init: %d"), i2cAddress, initState ? 1 : 0));
   }
   # endif // P110_DEBUG_LOG
 
@@ -96,15 +87,9 @@ long P110_data_struct::readDistance() {
     # ifdef P110_INFO_LOG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log  = F("VL53L0X: Address: 0x");
-      log += String(i2cAddress, HEX);
-      log += F(" / Timing: ");
-      log += timing;
-      log += F(" / Long Range: ");
-      log += String(range, BIN);
-      log += F(" / Distance: ");
-      log += dist;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO,
+                 strformat(F("VL53L0X: Address: 0x%02x / Timing: %d / Long Range: %d / Distance: %d"),
+                           i2cAddress, timing, range ? 1 : 0, dist));
     }
     # endif // P110_INFO_LOG
   }

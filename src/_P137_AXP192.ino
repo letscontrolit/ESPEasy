@@ -143,14 +143,14 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_I2C_GET_ADDRESS
+    #  if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
       event->Par1 = I2C_AXP192_DEFAULT_ADDRESS;
       success     = true;
       break;
     }
-    # endif // if FEATURE_I2C_GET_ADDRESS
+    #  endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -196,12 +196,10 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           addFormNote(F("Page will reload when selection is changed."));
         }
 
-        if (static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED) != P137_PredefinedDevices_e::Unselected) {
-          String note;
-          note.reserve(55);
-          note += F("Last selected: ");
-          note += toString(static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED));
-          addFormNote(note);
+        const P137_PredefinedDevices_e current_ = static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED);
+
+        if (current_ != P137_PredefinedDevices_e::Unselected) {
+          addFormNote(concat(F("Last selected: "), toString(current_)));
         }
       }
       const __FlashStringHelper *notConnected = F("N/C - Unused");
@@ -260,14 +258,14 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P137_GPIOBootState_e::PWM),
         };
         const String bootStateAttributes[] = {
-          F(""),
-          F(""),
-          F(""),
+          EMPTY_STRING,
+          EMPTY_STRING,
+          EMPTY_STRING,
           F("disabled"),
           F("disabled"),
         };
 
-        for (int i = 0; i < 5; i++) { // GPIO0..4
+        for (int i = 0; i < 5; ++i) { // GPIO0..4
           const String id = concat(F("pgpio"), i);
           addRowLabel(concat(F("Initial state GPIO"), i));
           addSelector(id, sizeof(bootStateValues) / sizeof(int),
@@ -336,7 +334,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         static_cast<int>(P137_valueOptions_e::DCDC3),
       };
 
-      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
+      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; ++i) {
         sensorTypeHelper_loadOutputSelector(event,
                                             P137_CONFIG_BASE + i,
                                             i,
@@ -351,7 +349,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
+      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; ++i) {
         sensorTypeHelper_saveOutputSelector(event, P137_CONFIG_BASE + i, i,
                                             toString(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i)), false));
       }
@@ -362,13 +360,13 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
                             P137_valueToSetting(getFormItemInt(F("pldo3")), P137_CONST_MAX_LDO);
       P137_REG_LDOIO = P137_valueToSetting(getFormItemInt(F("ldoiovolt")), P137_CONST_MAX_LDOIO);
 
-      for (int i = 0; i < 5; i++) { // GPIO0..4
+      for (int i = 0; i < 5; ++i) { // GPIO0..4
         P137_SET_GPIO_FLAGS(i, getFormItemInt(concat(F("pgpio"), i)));
       }
 
       P137_CONFIG_DECIMALS    = getFormItemInt(F("decimals"));
       P137_CONFIG_PREDEFINED  = getFormItemInt(F("predef"));
-      P137_CONFIG_DISABLEBITS = getFormItemInt(F("pbits"), static_cast<int>(P137_CONFIG_DISABLEBITS)); // Keep previous value if not found
+      P137_CONFIG_DISABLEBITS = getFormItemInt(F("pbits"), P137_CONFIG_DISABLEBITS); // Keep previous value if not found
 
       success = true;
       break;

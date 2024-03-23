@@ -109,12 +109,8 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 1, pressure);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("BMP  : Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-            log  = F("BMP  : Barometric Pressure: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, concat(F("BMP  : Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+            addLog(LOG_LEVEL_INFO, concat(F("BMP  : Barometric Pressure: "), formatUserVarNoCheck(event->TaskIndex, 1)));
           }
           success = true;
         }

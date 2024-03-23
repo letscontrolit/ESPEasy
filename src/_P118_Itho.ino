@@ -162,11 +162,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("GDO2: ");
-      string += formatGpioLabel(P118_IRQPIN, false);
-      string += event->String1;
-      string += F("CSN: ");
-      string += formatGpioLabel(P118_CSPIN, false);
+      string = strformat(F("GDO2: %s%sCSN: %s"),
+                         formatGpioLabel(P118_IRQPIN, false).c_str(),
+                         event->String1.c_str(),
+                         formatGpioLabel(P118_CSPIN,  false).c_str());
       success = true;
       break;
     }
@@ -198,8 +197,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
         P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P118_data) && P118_data->plugin_init(event);
+      # ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR, F("ITHO: CS pin not correctly configured, plugin can not start!"));
+      # endif // ifndef BUILD_NO_DEBUG
       }
 
       break;
@@ -283,8 +284,15 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Device ID byte 1"), F("pdevid1"), P118_CONFIG_DEVID1, 0, 255);
       addFormNumericBox(F("Device ID byte 2"), F("pdevid2"), P118_CONFIG_DEVID2, 0, 255);
       addFormNumericBox(F("Device ID byte 3"), F("pdevid3"), P118_CONFIG_DEVID3, 0, 255);
-      addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). "
-                    "Defaults to 10,87,81 which corresponds to the old Itho library"));
+      addFormNote(F("Device ID of your ESP"
+                    # ifndef BUILD_NO_DEBUG
+                    ", should not be the same as your neighbours ;-)"
+                    # endif // ifndef BUILD_NO_DEBUG
+                    ". Defaults to 10,87,81"
+                    # ifndef BUILD_NO_DEBUG
+                    " which corresponds to the old Itho library"
+                    # endif // ifndef BUILD_NO_DEBUG
+                    ));
       # if P118_FEATURE_ORCON
       addFormNote(F("For Orcon: This is the destination ID a.k.a. the ID of the Ventilation unit."));
 

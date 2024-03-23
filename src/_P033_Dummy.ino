@@ -46,6 +46,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Copy names as done in P026_Sysinfo.ino.
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_033));
       const Sensor_VType sensorType = static_cast<Sensor_VType>(PCONFIG(0));
+
       if (isIntegerOutputDataType(sensorType)) {
         for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
@@ -78,25 +79,22 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
-      #ifndef LIMIT_BUILD_SIZE
+      # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        const uint8_t valueCount = 
+        const uint8_t valueCount =
           getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0)));
-        for (uint8_t x = 0; x < valueCount; x++)
+
+        for (uint8_t x = 0; x < valueCount; ++x)
         {
-          String log = F("Dummy: value ");
-          log += x + 1;
-          log += F(": ");
-          log += formatUserVarNoCheck(event->TaskIndex, x);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("Dummy: value %d: %s"), x + 1, formatUserVarNoCheck(event->TaskIndex, x).c_str()));
         }
       }
-      #endif
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
-
   }
   return success;
 }

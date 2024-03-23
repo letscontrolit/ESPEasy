@@ -209,7 +209,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
     // Load color mapping data
     LoadCustomTaskSettings(event->TaskIndex, _colorMapping, P143_STRINGS, 0);
 
-    for (int i = P143_STRINGS - 1; i >= 0; i--) {
+    for (int i = P143_STRINGS - 1; i >= 0; --i) {
       _colorMapping[i].trim();
 
       if ((_colorMaps == -1) && !_colorMapping[i].isEmpty()) {
@@ -221,8 +221,7 @@ bool P143_data_struct::plugin_init(struct EventStruct *event) {
     # endif // if P143_FEATURE_COUNTER_COLORMAPPING
 
     if (loglevelActiveFor(_initialized ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR)) {
-      String log = F("I2CEncoders: INIT ");
-      log += toString(_device);
+      String log = concat(F("I2CEncoders: INIT "), toString(_device));
       log += F(", ");
 
       # if P143_FEATURE_INCLUDE_M5STACK
@@ -312,18 +311,18 @@ bool P143_data_struct::plugin_write(struct EventStruct *event,
   const String cmd = parseString(string, 1);
 
   if (_initialized && equals(cmd, F("i2cencoder"))) {
-    const String sub = parseString(string, 2);
+    const String sub  = parseString(string, 2);
+    const bool   led1 = equals(sub, F("led1"));
 
-    if ((equals(sub, F("led1")) || equals(sub, F("led2"))) // led1,<r>,<g>,<b> (Adafruit and M5Stack)
-        && (event->Par2 >= 0) && (event->Par2 <= 255)    // led2,<r>,<g>,<b> (M5Stack only)
+    if ((led1 || equals(sub, F("led2")))              // led1,<r>,<g>,<b> (Adafruit and M5Stack)
+        && (event->Par2 >= 0) && (event->Par2 <= 255) // led2,<r>,<g>,<b> (M5Stack only)
         && (event->Par3 >= 0) && (event->Par3 <= 255) &&
         (event->Par4 >= 0) && (event->Par4 <= 255)
         # if P143_FEATURE_INCLUDE_DFROBOT
         && _device != P143_DeviceType_e::DFRobotEncoder
         # endif // if P143_FEATURE_INCLUDE_DFROBOT
         ) {
-      const bool led1      = equals(sub, F("led1"));
-      uint32_t   lSettings = 0u;
+      uint32_t lSettings = 0u;
 
       if (led1) {
         _red      = event->Par2;
@@ -557,11 +556,8 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     if (current != _encoderPosition) {
       // Generate event
       if (Settings.UseRules) {
-        String eventvalues;
-        eventvalues += current;              // Position
-        eventvalues += ',';
-        eventvalues += current - _encoderPosition; // Delta, positive = clock-wise
-        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 0), eventvalues);
+        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 0),
+                       strformat(F("%d,%d"), current, current - _encoderPosition)); // Position, Delta (positive = clock-wise)
       }
 
       // Set task value
@@ -579,14 +575,9 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       # if PLUGIN_143_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("I2CEncoder : ");
-        log += toString(_device);
-        log += F(", Changed: ");
-        log += _oldPosition;
-        log += F(" to: ");
-        log += _encoderPosition;
-        log += F(", delta: ");
-        log += _encoderPosition - _oldPosition;
+        String log = concat(F("I2CEncoder : "), toString(_device));
+        log += strformat(F(", Changed: %d to: %d, delta: %d"),
+                         _oldPosition, _encoderPosition, _encoderPosition - _oldPosition);
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // if PLUGIN_143_DEBUG
@@ -614,7 +605,7 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
   switch (_mapping) {
     case P143_CounterMapping_e::ColorMapping:
     {
-      for (int i = 0; i <= _colorMaps; i++) {
+      for (int i = 0; i <= _colorMaps; ++i) {
         if ((!_colorMapping[i].isEmpty()) &&
             (iCount == INT32_MIN) &&
             (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) &&
@@ -630,7 +621,7 @@ void P143_data_struct::counterToColorMapping(struct EventStruct *event) {
 
     case P143_CounterMapping_e::ColorGradient:
     {
-      for (int i = 0; i <= _colorMaps; i++) {
+      for (int i = 0; i <= _colorMaps; ++i) {
         if (!_colorMapping[i].isEmpty()) {
           if ((iCount == INT32_MIN) &&
               (parseColorMapLine(_colorMapping[i], iCount, iRed, iGreen, iBlue)) &&
@@ -882,10 +873,11 @@ void P143_data_struct::m5stack_setPixelColor(uint8_t pixel,
                                              uint8_t green,
                                              uint8_t blue) {
   uint8_t data[4] = {
-   pixel,
-   applyBrightness(red),
-   applyBrightness(green),
-   applyBrightness(blue)};
+    pixel,
+    applyBrightness(red),
+    applyBrightness(green),
+    applyBrightness(blue) };
+
   I2C_writeBytes_reg(_i2cAddress, P143_M5STACK_REG_LED, data, 4);
 }
 

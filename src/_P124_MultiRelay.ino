@@ -88,8 +88,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         addFormSelectorI2C(F("i2caddress"), 8, i2cAddressValues, P124_CONFIG_I2C_ADDRESS);
 
         addFormCheckBox(F("Change I2C address of board"), F("change_i2c"), false);
-        addFormNote(
-          F("Change of address will be stored in the board and retained until changed again. See documentation for change-procedure."));
+        addFormNote(F("Change of address will be stored in the board and retained until changed again. "
+                      "See documentation for change-procedure."));
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }
@@ -117,7 +117,6 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       addFormSelector_YesNo(F("Initialize relays on startup"),
                             getPluginCustomArgName(P124_FLAGS_INIT_RELAYS),
                             bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS) ? 1 : 0, true);
-      String label;
 
       if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS)) {
         addFormCheckBox(F("Apply initial state always"),
@@ -125,10 +124,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
                         bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_ALWAYS));
         addFormNote(F("Disabled: Applied once per restart, Enabled: Applied on every plugin start, like on Submit of this page"));
 
-        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) {
-          label  = F("Relay ");
-          label += i + 1;
-          label += F(" initial state (on/off)");
+        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; ++i) {
+          const String label = strformat(F("Relay %d initial state (on/off)"), i + 1);
           addFormCheckBox(label, getPluginCustomArgName(i), bitRead(P124_CONFIG_FLAGS, i));
         }
       }
@@ -138,10 +135,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
                             bitRead(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_RELAYS) ? 1 : 0, true);
 
       if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_RELAYS)) {
-        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) {
-          label  = F("Relay ");
-          label += i + 1;
-          label += F(" exit-state (on/off)");
+        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; ++i) {
+          const String label = strformat(F("Relay %d exit-state (on/off)"), i + 1);
           addFormCheckBox(label, getPluginCustomArgName(i + P124_FLAGS_EXIT_OFFSET), bitRead(P124_CONFIG_FLAGS, i + P124_FLAGS_EXIT_OFFSET));
         }
         addFormNote(F("ATTENTION: These Relay states will be set when the task is enabled and the settings are saved!"));
@@ -166,7 +161,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P124_FLAGS_LOOP_GET,    isFormItemChecked(getPluginCustomArgName(P124_FLAGS_LOOP_GET)));
 
       if (lSettings != 0) {
-        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) { // INIT and EXIT states
+        for (int i = 0; i < P124_CONFIG_RELAY_COUNT; ++i) { // INIT and EXIT states
           bitWrite(lSettings, i,                          isFormItemChecked(getPluginCustomArgName(i)));
           bitWrite(lSettings, i + P124_FLAGS_EXIT_OFFSET, isFormItemChecked(getPluginCustomArgName(i + P124_FLAGS_EXIT_OFFSET)));
         }
@@ -206,7 +201,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
             (!bitRead(P124_InitializedRelays, event->TaskIndex) ||
              bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_ALWAYS))) {
           P124_data->channelCtrl(get8BitFromUL(P124_CONFIG_FLAGS, P124_FLAGS_INIT_OFFSET)); // Set relays state
-          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());                      // Get relays state
+          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());              // Get relays state
           bitSet(P124_InitializedRelays, event->TaskIndex);                                 // Update initialization status
         }
         P124_data->setLoopState(bitRead(P124_CONFIG_FLAGS, P124_FLAGS_LOOP_GET));           // Loop state
@@ -225,7 +220,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P124_data) {
         if (P124_data->isInitialized()) {
           P124_data->channelCtrl(get8BitFromUL(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_OFFSET)); // Set relays state
-          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());                      // Get relays state
+          UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState());              // Get relays state
         }
         addLog(LOG_LEVEL_INFO, F("MultiRelay: Object still alive."));
       }
@@ -241,8 +236,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 0, P124_data->getChannelState()); // Get relays state
 
         if (P124_data->isLoopEnabled()) {
-          uint8_t chan = P124_data->getNextLoop();
-          uint8_t data = P124_data->getChannelState() & (1 << (chan - 1));
+          const uint8_t chan = P124_data->getNextLoop();
+          const uint8_t data = P124_data->getChannelState() & (1 << (chan - 1));
           UserVar.setFloat(event->TaskIndex, 1, chan);
           UserVar.setFloat(event->TaskIndex, 2, data ? 1 : 0);
         }
@@ -256,13 +251,10 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P124_data) && P124_data->isInitialized()) {
-        uint8_t varNr = 3; // VARS_PER_TASK;
-        String  label = F("Relay state ");
-        label += P124_CONFIG_RELAY_COUNT;
-        label += F("..");
-        label += 1;
-        String   state = F("0b ");
-        uint32_t val   = UserVar[event->BaseVarIndex];
+        uint8_t varNr      = 3; // VARS_PER_TASK;
+        const String label = strformat(F("Relay state %d..1"), P124_CONFIG_RELAY_COUNT);
+        String   state     = F("0b ");
+        uint32_t val       = UserVar[event->BaseVarIndex];
         val   &= 0xff;
         val   |= (0x1 << P124_CONFIG_RELAY_COUNT);
         state += ull2String(val, 2);
@@ -292,13 +284,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       addLog(LOG_LEVEL_INFO, string);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Par1..3:");
-        log += event->Par1;
-        log += ',';
-        log += event->Par2;
-        log += ',';
-        log += event->Par3;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(F("Par1..3:%d,%d,%d"), event->Par1, event->Par2, event->Par3));
       }
       # endif // ifdef P124_DEBUG_LOG
 

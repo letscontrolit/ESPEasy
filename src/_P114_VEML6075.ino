@@ -100,13 +100,11 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *optionsMode3[2];
-        optionsMode3[0] = F("Normal Dynamic");
-        optionsMode3[1] = F("High Dynamic");
-        int optionValuesMode3[2];
-        optionValuesMode3[0] = 0;
-        optionValuesMode3[1] = 1;
-        addFormSelector(F("Dynamic Setting"), F("hd"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
+        const __FlashStringHelper *optionsMode3[] = {
+          F("Normal Dynamic"),
+          F("High Dynamic") }
+        ;
+        addFormSelector(F("Dynamic Setting"), F("hd"), 2, optionsMode3, nullptr, PCONFIG(2));
       }
 
       success = true;
@@ -148,25 +146,12 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 2, UVIndex);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-
-          if (log.reserve(130)) {
-            String log = F("VEML6075: Address: 0x");
-            log += String(PCONFIG(0), HEX);
-            log += F(" / Integration Time: ");
-            log += PCONFIG(1);
-            log += F(" / Dynamic Mode: ");
-            log += PCONFIG(2);
-            log += F(" / divisor: ");
-            log += String(1 << (PCONFIG(1) - 1));
-            log += F(" / UVA: ");
-            log += UserVar[event->BaseVarIndex];
-            log += F(" / UVB: ");
-            log += UserVar[event->BaseVarIndex + 1];
-            log += F(" / UVIndex: ");
-            log += UserVar[event->BaseVarIndex + 2];
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(F("VEML6075: Address: 0x%02x / Integration Time: %d / "
+                                                 "Dynamic Mode: %d / divisor: %d / UVA: %.2f / UVB: %.2f / UVIndex: %.2f"),
+                                               PCONFIG(0), PCONFIG(1), PCONFIG(2), 1 << (PCONFIG(1) - 1),
+                                               UserVar[event->BaseVarIndex],
+                                               UserVar[event->BaseVarIndex + 1],
+                                               UserVar[event->BaseVarIndex + 2]));
         }
 
         success = true;

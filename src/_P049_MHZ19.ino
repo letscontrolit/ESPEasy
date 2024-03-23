@@ -3,6 +3,11 @@
 
 # include "src/PluginStructs/P049_data_struct.h"
 
+/** Changelog:
+ * 2024-01-04 tonhuisman: Add Device[].ExitBeforeSeve = false so ABD can be enabled during settings save
+ * 2024-01-04 tonhuisman: Start changelog, most recent change on top
+ */
+
 /*
 
    This plug in is written by Dmitry (rel22 ___ inbox.ru)
@@ -54,6 +59,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -194,7 +200,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
             UserVar.setFloat(event->TaskIndex, 0, ppm);
             UserVar.setFloat(event->TaskIndex, 1, temp);
             UserVar.setFloat(event->TaskIndex, 2, u);
-            success                          = true;
+            success = true;
           } else {
             success = false;
           }
@@ -220,15 +226,9 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
         if (mustLog) {
           // Log values in all cases
-          log += F("PPM value: ");
-          log += ppm;
-          log += F(" Temp/S/U values: ");
-          log += temp;
-          log += '/';
-          log += s;
-          log += '/';
-          log += u;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("PPM value: %d Temp/S/U values: %d/%d/%.2f"),
+                           ppm, temp, s, u));
         }
         break;
 
@@ -248,9 +248,8 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
         // log verbosely anything else that the sensor reports
       } else {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("MHZ19: Unknown response:");
-          log += P049_data->getBufferHexDump();
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 concat(F("MHZ19: Unknown response:"), P049_data->getBufferHexDump()));
         }
 
         // Check for stable reads and allow unstable reads the first 3 minutes after reset.

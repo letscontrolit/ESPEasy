@@ -150,15 +150,11 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("CDM7160: Address: 0x");
-        log += String(P127_CONFIG_I2C_ADDRESS, HEX);
-        log += F(": CO2 ppm: ");
-        log += UserVar[event->BaseVarIndex];
-        log += F(", alt: ");
-        log += P127_data->getAltitude();
-        log += F(", comp: ");
-        log += P127_data->getCompensation();
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(F("CDM7160: Address: 0x%02x: CO2 ppm: %d, alt: %d, comp: %d"),
+                                             P127_CONFIG_I2C_ADDRESS, 
+                                             UserVar[event->BaseVarIndex], 
+                                             P127_data->getAltitude(),
+                                             P127_data->getCompensation()));
       }
       break;
     }

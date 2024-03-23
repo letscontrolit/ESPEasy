@@ -128,19 +128,16 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 
       sensor.begin(mode, PCONFIG(2) == 1);
 
-      float lux = sensor.readLightLevel();
+      const float lux = sensor.readLightLevel();
 
-      if (lux != -1) {
+      if (lux != -1.0f) {
         UserVar.setFloat(event->TaskIndex, 0, lux);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("BH1750 Address: ");
-          log += formatToHex(PCONFIG(0), 2);
-          log += F(" Mode: ");
-          log += formatToHex(PCONFIG(1), 2);
-          log += F(" : Light intensity: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("BH1750 Address: 0x%02x Mode: 0x%02x : Light intensity: %s"),
+                           PCONFIG(0),  PCONFIG(1),
+                           formatUserVarNoCheck(event->TaskIndex, 0).c_str()));
         }
         success = true;
       }

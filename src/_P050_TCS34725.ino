@@ -111,7 +111,6 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t choiceMode = PCONFIG(0);
       {
         const __FlashStringHelper *optionsMode[] = {
           F("2.4 ms"),
@@ -129,10 +128,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           TCS34725_INTEGRATIONTIME_154MS,
           TCS34725_INTEGRATIONTIME_700MS,
         };
-        addFormSelector(F("Integration Time"), F("inttime"), 6, optionsMode, optionValuesMode, choiceMode);
+        addFormSelector(F("Integration Time"), F("inttime"), 6, optionsMode, optionValuesMode, PCONFIG(0));
       }
 
-      uint8_t choiceMode2 = PCONFIG(1);
       {
         const __FlashStringHelper *optionsMode2[] = {
           F("1x"),
@@ -146,7 +144,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           TCS34725_GAIN_16X,
           TCS34725_GAIN_60X,
         };
-        addFormSelector(F("Gain"), F("gain"), 4, optionsMode2, optionValuesMode2, choiceMode2);
+        addFormSelector(F("Gain"), F("gain"), 4, optionsMode2, optionValuesMode2, PCONFIG(1));
       }
 
       addFormSubHeader(F("Output settings"));
@@ -200,9 +198,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           // Display current settings
           const String RGB = F("RGB");
 
-          for (int i = 0; i < 3; i++) {
+          for (int i = 0; i < 3; ++i) {
             addRowLabel(RGB.substring(i, i + 1));
-            for (int j = 0; j < 3; j++) {
+            for (int j = 0; j < 3; ++j) {
               addHtml(strformat(F("%c<sub>%d</sub>:"), static_cast<char>('a' + i), j + 1));
               addFloatNumberBox(P050_data_struct::generate_cal_id(i, j),
                                 P050_data->TransformationSettings.matrix[i][j],
@@ -246,8 +244,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             P050_data->resetTransformation();
           } else {
             // Save new settings
-            for (int i = 0; i < 3; i++) {
-              for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; ++i) {
+              for (int j = 0; j < 3; ++j) {
                 P050_data->TransformationSettings.matrix[i][j] = 
                   getFormItemFloat(P050_data_struct::generate_cal_id(i, j));
               }
@@ -273,12 +271,6 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         P050_data->resetTransformation();
         success = true;
       }
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      success = true;
       break;
     }
 
@@ -411,7 +403,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
         if ((PCONFIG(5) == 1) && (t != 0)) { // Not if invalid read/data
           float tr, tg, tb, nr, ng, nb;
 
-          for (int i = 0; i < 6; i++) {
+          for (int i = 0; i < 6; ++i) {
             if (i != PCONFIG(2)) { // Skip currently selected RGB output to keep nr. of events a bit limited
               const __FlashStringHelper* varName = F("");
               String eventValues;
@@ -478,7 +470,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         // Then Values #4 events
         if (PCONFIG(4) == 1) {
-          for (int i = 0; i < 4; i++) {
+          for (int i = 0; i < 4; ++i) {
             switch (i) {
               case 0:
                 eventQueue.add(event->TaskIndex, F("CCT"), P050_data->tcs.calculateColorTemperature(r, g, b));

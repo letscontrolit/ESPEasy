@@ -54,19 +54,16 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
         log.reserve(55)) {
       if (i2c_mode) {
         #  ifdef USES_P120
-        log  = F("ADXL345: i2caddress: 0x");
-        log += String(_i2cAddress, HEX);
+        log = strformat(F("ADXL345: i2caddress: 0x%02x"), _i2cAddress);
         #  endif // ifdef USES_P120
       } else {
         #  ifdef USES_P125
-        log  = F("ADXL345: CS-pin: ");
-        log += _cs_pin;
+        log = concat(F("ADXL345: CS-pin: "), _cs_pin);
         #  endif // ifdef USES_P125
       }
-      log += F(", initialized: ");
-      log += String(initialized() ? F("true") : F("false"));
-      log += F(", ID=0x");
-      log += String(adxl345->getDevID(), HEX);
+      log += strformat(F(", initialized: %s, ID=0x%02x"),
+                       String(initialized() ? F("true") : F("false")),
+                       adxl345->getDevID());
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // if PLUGIN_120_DEBUG
@@ -91,15 +88,8 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
 
     # if PLUGIN_120_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
-        log.reserve(40)) {
-      log  = F("ADXL345: X: ");
-      log += _x;
-      log += F(", Y: ");
-      log += _y;
-      log += F(", Z: ");
-      log += _z;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("ADXL345: X: %d, Y: %d, Z: %d"), _x, _y, _z));
     }
     # endif // if PLUGIN_120_DEBUG
 
@@ -173,7 +163,7 @@ bool P120_data_struct::read_data(struct EventStruct *event) const
         case valueType::NR_ValueTypes:
           break;
       }
-      UserVar.setFloat(event->TaskIndex, i,  value);
+      UserVar.setFloat(event->TaskIndex, i, value);
     }
   }
   return true;
@@ -513,8 +503,9 @@ bool P120_data_struct::plugin_webform_loadOutputSelector(struct EventStruct *eve
     for (uint8_t i = 0; i < P120_NR_OUTPUT_OPTIONS; ++i) {
       options[i] = P120_data_struct::valuename(i, true);
     }
-    
+
     const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+
     for (uint8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P120_NR_OUTPUT_OPTIONS, options);
@@ -649,6 +640,7 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
 // *******************************************************************
 bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+
   for (uint8_t i = 0; i < valueCount; ++i) {
     const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
     const uint8_t choice       = PCONFIG(pconfigIndex);
@@ -766,6 +758,7 @@ bool P120_data_struct::plugin_get_config_value(struct EventStruct *event, String
 void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
 {
   const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (i < valueCount) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;

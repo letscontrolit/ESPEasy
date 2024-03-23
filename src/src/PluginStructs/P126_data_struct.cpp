@@ -17,10 +17,8 @@ P126_data_struct::P126_data_struct(int8_t  dataPin,
 // Destructor
 // **************************************************************************/
 P126_data_struct::~P126_data_struct() {
-  if (nullptr != shift) {
-    delete shift;
-    shift = nullptr;
-  }
+  delete shift;
+  shift = nullptr;
 }
 
 bool P126_data_struct::plugin_init(struct EventStruct *event) {
@@ -32,7 +30,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
 
     const uint8_t *pvalue = shift->getAll(); // Get current state
 
-    for (uint8_t i = 0; i < _chipCount; i++) {
+    for (uint8_t i = 0; i < _chipCount; ++i) {
       value[i] = pvalue[i];
     }
 
@@ -40,30 +38,17 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
                                 static_cast<uint8_t>(ceil((P126_CONFIG_CHIP_COUNT - P126_CONFIG_SHOW_OFFSET) / 4.0)));
     uint32_t par;
 
-    for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+    for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
       par = UserVar.getUint32(event->TaskIndex, varNr);
 
-      for (uint8_t n = 0; n < 4 && idx < _chipCount; n++, idx++) {
+      for (uint8_t n = 0; n < 4 && idx < _chipCount; ++n, ++idx) {
         value[idx] = ((par >> (n * 8)) & 0xff);
 
         # ifdef P126_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log;
-          log.reserve(64);
-          log += F("SHIFTOUT: plugin_init: value[");
-          log += idx;
-          log += F("] : ");
-          log += value[idx];
-          log += F("/0x");
-          log += String(value[idx], HEX);
-          log += F(", n * 8: ");
-          log += n;
-          log += '/';
-          log += n * 8;
-          log += F(", varNr: ");
-          log += varNr;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, strformat(F("SHIFTOUT: plugin_init: value[%d] : %d/0x%02x, n * 8: %d/%d, varNr: %d"),
+                                                idx, value[idx], value[idx], n, n * 8, varNr));
         }
         # endif // ifdef P126_DEBUG_LOG
       }
@@ -81,22 +66,15 @@ const uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) c
   if (nullptr != pvalue) {
     uint16_t sft = 0u;
 
-    for (uint8_t ofs = offset; ofs < last; ofs++, sft++) {
+    for (uint8_t ofs = offset; ofs < last; ++ofs, ++sft) {
       result += (pvalue[ofs] << (8 * sft));
     }
 
     # ifdef P126_DEBUG_LOG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("SHIFTOUT: getChannelState offset: ");
-      log += offset;
-      log += F(", size: ");
-      log += size;
-      log += F(", result: ");
-      log += result;
-      log += F("/0x");
-      log += String(result, HEX);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("SHIFTOUT: getChannelState offset: %d, size: %d, result: %d/0x%x"),
+                                            offset, size, result, result));
     }
     # endif // ifdef P126_DEBUG_LOG
   }
@@ -107,8 +85,8 @@ bool P126_data_struct::plugin_read(struct EventStruct *event) {
   const uint16_t last = P126_CONFIG_SHOW_OFFSET + (VARS_PER_TASK * 4);
   uint8_t varNr       = 0;
 
-  for (uint16_t index = P126_CONFIG_SHOW_OFFSET; index < _chipCount && index < last && varNr < VARS_PER_TASK; index += 4, varNr++) {
-    uint32_t result = getChannelState(index, min(VARS_PER_TASK, _chipCount - index));
+  for (uint16_t index = P126_CONFIG_SHOW_OFFSET; index < _chipCount && index < last && varNr < VARS_PER_TASK; index += 4, ++varNr) {
+    const uint32_t result = getChannelState(index, min(VARS_PER_TASK, _chipCount - index));
     UserVar.setUint32(event->TaskIndex, varNr, result);
   }
   return true;
@@ -120,8 +98,8 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
   String command = parseString(string, 1);
 
   if (equals(command, F("shiftout"))) {
-    const String subcommand = parseString(string,2);
-    const bool hc_update = subcommand.indexOf(F("noupdate")) == -1;
+    const String subcommand = parseString(string, 2);
+    const bool   hc_update  = subcommand.indexOf(F("noupdate")) == -1;
 
     if (equals(subcommand, F("set")) || equals(subcommand, F("setnoupdate"))) {
       const uint8_t  pin   = event->Par2;
@@ -133,12 +111,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         # ifdef P126_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = command;
-          log += F(", pin: ");
-          log += pin;
-          log += F(", value: ");
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, strformat(F("%s, pin: %d, value: %d"), command.c_str(), pin, value));
         }
         # endif // ifdef P126_DEBUG_LOG
       }
@@ -152,7 +125,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
 
       const uint8_t *pvalue = shift->getAll(); // Get current state
 
-      for (uint8_t i = 0; i < _chipCount; i++) {
+      for (uint8_t i = 0; i < _chipCount; ++i) {
         value[i] = pvalue[i];
       }
 
@@ -163,11 +136,11 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       String   arg   = parseString(string, param);
 
       while (!arg.isEmpty() && idx < _chipCount && success) {
-        int colon = arg.indexOf(':'); // First colon: Chip-index, range 1.._chipCount
-        int32_t itmp  = 0;
+        int colon    = arg.indexOf(':'); // First colon: Chip-index, range 1.._chipCount
+        int32_t itmp = 0;
 
         if (colon != -1) {
-          String cis = arg.substring(0, colon);
+          const String cis = arg.substring(0, colon);
           arg = arg.substring(colon + 1);
 
           if (!cis.isEmpty() && validIntFromString(cis, itmp) && (itmp > 0) && (itmp <= _chipCount)) {
@@ -180,7 +153,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         width = 4;                // Set default data width to 4 = 32 bits
 
         if (colon != -1) {
-          String lis = arg.substring(0, colon);
+          const String lis = arg.substring(0, colon);
           arg = arg.substring(colon + 1);
 
           if (!lis.isEmpty() && validIntFromString(lis, itmp) && (itmp > 0) && (itmp <= 4)) {
@@ -199,46 +172,24 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         # ifdef P126_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = command;
-          log += F(": arg: ");
-          log += arg;
-          log += F(", tmp: ");
-          log += ull2String(tmp);
-          log += F("/0x");
-          log += ull2String(tmp, HEX);
-          log += F(", par: ");
-          log += par;
-          log += F("/0x");
-          log += ull2String(par, HEX);
-          log += F(", chip:");
-          log += idx;
-          log += F(", width:");
-          log += width;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("%s: arg: %s, tmp: %s/0x%x, par: %d/0x%x, chip:%d, width:%d"),
+                               command.c_str(), arg.c_str(), ull2String(tmp).c_str(), tmp, par, par, idx, width));
         }
         # endif // ifdef P126_DEBUG_LOG
 
         param++; // Process next argument
         arg = parseString(string, param);
 
-        for (uint8_t n = 0; n < width && idx < _chipCount; n++, idx++) {
+        for (uint8_t n = 0; n < width && idx < _chipCount; ++n, ++idx) {
           value[idx] = ((par >> (n * 8)) & 0xff);
 
           # ifdef P126_DEBUG_LOG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = command;
-            log += F(": value[");
-            log += idx;
-            log += F("] : ");
-            log += value[idx];
-            log += F("/0x");
-            log += String(value[idx], HEX);
-            log += F(", n * 8: ");
-            log += n;
-            log += '/';
-            log += n * 8;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("%s: value[%d] : %d/0x%x, n * 8: %d/%d"),
+                                 command.c_str(), idx, value[idx], value[idx], n, n * 8));
           }
           # endif // ifdef P126_DEBUG_LOG
         }
@@ -271,7 +222,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
 
         // Reset State_A..D values when changing the offset
         if ((previousOffset != P126_CONFIG_SHOW_OFFSET) && P126_CONFIG_FLAGS_GET_VALUES_RESTORE) {
-          for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+          for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
             UserVar.setUint32(event->TaskIndex, varNr, 0u);
           }
           # ifdef P126_DEBUG_LOG

@@ -9,15 +9,15 @@
 struct P039_data_struct : public PluginTaskData_base {
 public:
 
-/*
-  P039_data_struct(uint16_t               conversionResult,
-                   uint8_t                deviceFaults,
-                   unsigned long          timer,
-                   bool                   sensorFault,
-                   bool                   convReady);
-*/
+  /*
+     P039_data_struct(uint16_t               conversionResult,
+                     uint8_t                deviceFaults,
+                     unsigned long          timer,
+                     bool                   sensorFault,
+                     bool                   convReady);
+   */
 
-  P039_data_struct() = default;
+  P039_data_struct()          = default;
   virtual ~P039_data_struct() = default;
 
   bool begin();
@@ -30,12 +30,11 @@ public:
 
   // uint8_t mainState = 0x00u;;
   // uint8_t command = 0x00u;
-  uint16_t conversionResult = 0x0000u;
-  uint8_t deviceFaults = 0x00u;
-  unsigned long  timer = 0;
-  bool sensorFault = false;
-  bool convReady = false;
-
+  uint16_t      conversionResult = 0x0000u;
+  uint8_t       deviceFaults     = 0x00u;
+  unsigned long timer            = 0;
+  bool          sensorFault      = false;
+  bool          convReady        = false;
 };
 
 

@@ -118,13 +118,13 @@ private:
     ReadTimeout
   };
 
-  static const uint8_t Temperature        = 0x01;
-  static const uint8_t Power              = 0x02;
-  static const uint8_t Mode               = 0x04;
-  static const uint8_t Fan                = 0x08;
-  static const uint8_t Vane               = 0x10;
-  static const uint8_t WideVane           = 0x20;
-  static const uint8_t RemoteTemperature  = 0x30;
+  static const uint8_t Temperature       = 0x01;
+  static const uint8_t Power             = 0x02;
+  static const uint8_t Mode              = 0x04;
+  static const uint8_t Fan               = 0x08;
+  static const uint8_t Vane              = 0x10;
+  static const uint8_t WideVane          = 0x20;
+  static const uint8_t RemoteTemperature = 0x30;
 
   struct WriteStatus {
     WriteStatus() : _flags(0) {}

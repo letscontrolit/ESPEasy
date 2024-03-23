@@ -125,13 +125,12 @@ void rulesProcessing(const String& event) {
     if (fileExists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     else {
-      addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
-             F(" is ingnored. File ") + fileName +
-             F(" not found."));
+      addLog(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s is ingnored. File %s not found."),
+             event.c_str(), fileName.c_str()));
     }
-# endif    // ifndef BUILD_NO_DEBUG
+    # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
   }
 
@@ -497,7 +496,8 @@ void parse_string_commands(String& line) {
         if (command_i != -1) {
           const string_commands_e command = static_cast<string_commands_e>(command_i);
 
-          //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+              //  addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s %s %s %s"), 
+              // cmd_s_lower.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str()));
 
           switch (command) {
             case string_commands_e::substring:
@@ -625,7 +625,7 @@ void parse_string_commands(String& line) {
 
       /*
          if (replacement.length() > 0) {
-         addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+         addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s -> %s"), fullCommand.c_str(), replacement.c_str());
          }
        */
     }
@@ -826,11 +826,10 @@ void parseCompleteNonCommentLine(String& line, const String& event,
   }
 
   if (isCommand && lineStartsWith_pct_event) {
-    action = String(F("restrict,")) + action;
+    action = concat(F("restrict,"), action);
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Rules : Prefix command with 'restrict': ");
-      log += action;
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, 
+        concat(F("Rules : Prefix command with 'restrict': "), action));
     }
   }
 

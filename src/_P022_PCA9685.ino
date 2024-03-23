@@ -18,7 +18,7 @@
 # define PLUGIN_NAME_022       "Extra IO - PCA9685"
 # define PLUGIN_VALUENAME1_022 "PWM"
 
-constexpr pluginID_t P022_PLUGIN_ID{PLUGIN_ID_022};
+constexpr pluginID_t P022_PLUGIN_ID{ PLUGIN_ID_022 };
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
@@ -84,7 +84,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t optionValues[PCA9685_NUMS_ADDRESS];
 
-      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; ++i)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
@@ -115,7 +115,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         String m2Options[PCA9685_MODE2_VALUES];
         int    m2Values[PCA9685_MODE2_VALUES];
 
-        for (int i = 0; i < PCA9685_MODE2_VALUES; i++)
+        for (int i = 0; i < PCA9685_MODE2_VALUES; ++i)
         {
           m2Values[i]  = i;
           m2Options[i] = formatToHex_decimal(i);
@@ -127,10 +127,10 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("MODE2"), F("pmode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
       }
       addFormNumericBox(
-        strformat(F("Frequency (%d-%d)"), PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY), 
-        F("pfreq"), 
-        freq, 
-        PCA9685_MIN_FREQUENCY, 
+        strformat(F("Frequency (%d-%d)"), PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY),
+        F("pfreq"),
+        freq,
+        PCA9685_MIN_FREQUENCY,
         PCA9685_MAX_FREQUENCY);
       addFormNote(concat(F("default "), PCA9685_MAX_FREQUENCY));
       addFormNumericBox(F("Range (1-10000)"), F("prange"), range, 1, 10000);
@@ -320,11 +320,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          if (loglevelActiveFor(LOG_LEVEL_ERROR))
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             addLog(LOG_LEVEL_ERROR,
-                  P022_data_struct::P022_logPrefix(address) +
-                  strformat(F("frequency %d out of range."), 
-                    event->Par1));
+                   strformat(F("%sfrequency %d out of range."),
+                             P022_data_struct::P022_logPrefix(address).c_str(),
+                             event->Par1));
+          }
         }
       }
 
@@ -341,15 +342,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
 
-          addLog(LOG_LEVEL_INFO, concat(
-            P022_data_struct::P022_logPrefix(address, F("MODE2 0x")),  
-            formatToHex(event->Par1, 2)));
+          addLog(LOG_LEVEL_INFO, strformat(F("%s%s"),
+                                           P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
+                                           formatToHex(event->Par1, 2).c_str()));
         }
         else {
           addLog(LOG_LEVEL_ERROR,
                  strformat(F("%s%s is out of range"),
-                 P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
-                 formatToHex(event->Par1, 2).c_str()));
+                           P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
+                           formatToHex(event->Par1, 2).c_str()));
         }
       }
 
@@ -369,7 +370,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (equals(command, F("gpio"))))
       {
         success = true;
-        log  = P022_data_struct::P022_logPrefix(address, F("GPIO "));
+        log     = P022_data_struct::P022_logPrefix(address, F("GPIO "));
         const bool allPins = equals(parseString(string, 2), F("all"));
 
         if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
@@ -422,8 +423,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (equals(command, F("pulse"))))
       {
         success = true;
-        log  = P022_data_struct::P022_logPrefix(address, F("GPIO "));
-        log += event->Par1;
+        log     = concat(P022_data_struct::P022_logPrefix(address, F("GPIO ")), event->Par1);
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -455,8 +455,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
               if (autoreset > 0)
               {
-                log += F(" for ");
-                log += autoreset;
+                log += concat(F(" for "), autoreset);
               }
             }
           }
@@ -515,8 +514,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         {
           if (autoreset > -1)
           {
-            log += F(" Pulse auto restart for ");
-            log += autoreset;
+            log += concat(F(" Pulse auto restart for "), autoreset);
             autoreset--;
           }
           Scheduler.setPluginTaskTimer(event->Par3

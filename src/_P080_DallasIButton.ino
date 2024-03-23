@@ -15,8 +15,6 @@
 # define PLUGIN_VALUENAME1_080 "iButton"
 
 
-int8_t Plugin_080_DallasPin;
-
 boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -62,7 +60,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("External pull up resistor is needed, see docs!"));
 
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
-      Plugin_080_DallasPin = CONFIG_PIN1;
+      const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
 
       if (validGpio(Plugin_080_DallasPin)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin, Plugin_080_DallasPin);
@@ -89,7 +87,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
-      Plugin_080_DallasPin = CONFIG_PIN1;
+      const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
 
       if (validGpio(Plugin_080_DallasPin)) {
         uint8_t addr[8];
@@ -113,7 +111,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
       if (addr[0] != 0) {
-        Plugin_080_DallasPin = CONFIG_PIN1;
+        const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
 
         if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin))
         {

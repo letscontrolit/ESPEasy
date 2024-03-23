@@ -48,11 +48,12 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
     _rf->init();
 
     const long duration = timePassedSince(startInit);
+
     if (duration > P118_TIMEOUT_LIMIT) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, strformat(
-        F("ITHO: Init duration was: %d msec. suggesting that the CC1101 board is not (correctly) connected."),
-         duration));
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+                     F("ITHO: Init duration was: %d msec. suggesting that the CC1101 board is not (correctly) connected."),
+                     duration));
       }
       success = false;
     }
@@ -63,7 +64,9 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
                            reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
                            this,
                            FALLING);
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("ITHO: Interrupts enabled."));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR, F("ITHO: Interrupt pin disabled, sending is OK, not receiving data!"));
       }
@@ -142,10 +145,10 @@ bool P118_data_struct::plugin_read(struct EventStruct *event) {
 }
 
 bool P118_data_struct::plugin_write(struct EventStruct *event, const String& string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1);
+  bool success     = false;
+  const String cmd = parseString(string, 1);
 
-  bool stateCmd = equals(cmd, F("state"));
+  const bool stateCmd = equals(cmd, F("state"));
 
   if (equals(cmd, F("itho")) || stateCmd) {
     # ifndef BUILD_NO_DEBUG
@@ -411,13 +414,13 @@ void P118_data_struct::ITHOcheck() {
   # endif // ifndef BUILD_NO_DEBUG
 
   if (_rf->checkForNewPacket()) {
-    IthoCommand cmd = _rf->getLastCommand();
-    String Id       = _rf->getLastIDstr();
+    const IthoCommand cmd = _rf->getLastCommand();
+    const String Id       = _rf->getLastIDstr();
 
     if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, strformat(
-        F("ITHO: Received from ID: %s ; raw cmd: %d"), 
-        Id.c_str(),  cmd));
+                   F("ITHO: Received from ID: %s ; raw cmd: %d"),
+                   Id.c_str(),  cmd));
     }
 
     // Move check here to prevent function calling within ISR
@@ -600,9 +603,7 @@ void P118_data_struct::ITHOcheck() {
       }
     } else {
       if (_dbgLog) {
-        log += F("Device-ID: ");
-        log += Id;
-        log += F(" IGNORED");
+        log += strformat(F("Device-ID: %s IGNORED"), Id.c_str());
       }
     }
 
@@ -623,30 +624,19 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("State: ");
-
-    log += UserVar[event->BaseVarIndex];
-    addLog(LOG_LEVEL_DEBUG, log);
-    log.clear();
-    log += F("Timer: ");
-    log += UserVar[event->BaseVarIndex + 1];
-    addLog(LOG_LEVEL_DEBUG, log);
-    log.clear();
-    log += F("LastIDindex: ");
-    log += UserVar[event->BaseVarIndex + 2];
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG, concat(F("State: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("Timer: "), formatUserVarNoCheck(event->TaskIndex, 1)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("LastIDindex: "), formatUserVarNoCheck(event->TaskIndex, 2)));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
 
 void P118_data_struct::PluginWriteLog(const String& command) {
-  String log = F("Send Itho"
-                 # if P118_FEATURE_ORCON
-                 "/Orcon"
-                 # endif // if P118_FEATURE_ORCON
-                 " command for: ");
-
-  log += command;
+  String log = concat(F("Send Itho"
+                        # if P118_FEATURE_ORCON
+                        "/Orcon"
+                        # endif // if P118_FEATURE_ORCON
+                        " command for: "), command);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, log);

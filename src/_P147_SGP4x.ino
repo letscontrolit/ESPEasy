@@ -122,11 +122,15 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP41),
         };
         addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("Page will reload on change."));
+        # endif // ifndef BUILD_NO_DEBUG
       }
 
       addFormSelector_YesNo(F("Use Compensation"), F("comp"), P147_GET_USE_COMPENSATION, true);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Page will reload on change."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       if (P147_GET_USE_COMPENSATION) {
         addRowLabel(F("Temperature Task"));

@@ -231,9 +231,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (state != switchstate[event->TaskIndex])
       {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("LEVEL: State ");
-          log += state;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("LEVEL: State "), state));
         }
         switchstate[event->TaskIndex] = state;
 

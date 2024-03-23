@@ -170,18 +170,15 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           if (P025_data->read(value, i)) {
             success = true;
 
-        # ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
             String log;
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              log  = F("ADS1x15 : Analog value: ");
-              log += value;
-              log += F(" / Channel: ");
-              log += P025_MUX(i);
+              log = strformat(F("ADS1x15 : Analog value: %.2f / Channel: %d"), value, P025_MUX(i));
             }
-        # endif // ifndef BUILD_NO_DEBUG
+            # endif // ifndef BUILD_NO_DEBUG
 
-            UserVar.setFloat(event->TaskIndex, i,  value);
+            UserVar.setFloat(event->TaskIndex, i, value);
 
             const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
@@ -194,23 +191,23 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
               if (adc1 != adc2)
               {
                 const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-                UserVar.setFloat(event->TaskIndex, i,  normalized * (out2 - out1) + out1);
-            # ifndef BUILD_NO_DEBUG
+                UserVar.setFloat(event->TaskIndex, i, normalized * (out2 - out1) + out1);
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   log += ' ';
                   log += formatUserVarNoCheck(event->TaskIndex, i);
                 }
-            # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
               }
             }
 
-        # ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               addLogMove(LOG_LEVEL_DEBUG, log);
             }
-        # endif // ifndef BUILD_NO_DEBUG
+            # endif // ifndef BUILD_NO_DEBUG
           }
         }
       }

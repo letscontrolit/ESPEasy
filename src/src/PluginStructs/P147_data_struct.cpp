@@ -2,6 +2,8 @@
 
 #ifdef USES_P147
 
+# include "../Helpers/CRC_functions.h"
+
 /**************************************************************************
 * Constructor
 **************************************************************************/
@@ -112,7 +114,7 @@ bool P147_data_struct::plugin_tasktimer_in(struct EventStruct *event) {
     {
       case P147_state_e::MeasureTest:
       {
-        uint16_t result = readCheckedWord(is_ok);
+        const uint16_t result = readCheckedWord(is_ok);
 
         // addLog(LOG_LEVEL_INFO, concat(F("P147 : Selftest result: "), formatToHex(result)) + (is_ok ? F(" ok") : F(" error")));
         bool checkOk = false;
@@ -341,11 +343,11 @@ bool P147_data_struct::plugin_write(struct EventStruct *event,
                                     String            & string) {
   bool success = false;
 
-  const String command = parseString(string, 1);
+  // const String command = parseString(string, 1);
 
-  if (equals(command, F("sgp4x"))) {
-    // const String sub = parseString(string, 2);
-  }
+  // if (equals(command, F("sgp4x"))) {
+  //   // const String sub = parseString(string, 2);
+  // }
   return success;
 }
 
@@ -380,9 +382,9 @@ bool P147_data_struct::plugin_get_config_value(struct EventStruct *event,
  * readCheckedWord : Read 2 data bytes from I2C and validate checksum (3rd byte)
  ****************************************************/
 uint16_t P147_data_struct::readCheckedWord(bool& is_ok, long extraDelay) {
-  uint16_t result  = 0;
-  uint8_t  data[3] = { 0 };
-  uint32_t timeOut = millis();
+  uint16_t result        = 0;
+  uint8_t  data[3]       = { 0 };
+  const uint32_t timeOut = millis();
 
   is_ok = false;
   Wire.requestFrom(P147_I2C_ADDRESS, 3);

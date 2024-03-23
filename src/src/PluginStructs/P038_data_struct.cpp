@@ -16,10 +16,8 @@ P038_data_struct::P038_data_struct(int8_t   gpioPin,
 // Destructor
 // **************************************************************************/
 P038_data_struct::~P038_data_struct() {
-  if (Plugin_038_pixels != nullptr) {
-    delete Plugin_038_pixels;
-    Plugin_038_pixels = nullptr;
-  }
+  delete Plugin_038_pixels;
+  Plugin_038_pixels = nullptr;
 }
 
 bool P038_data_struct::plugin_init(struct EventStruct *event) {
@@ -41,10 +39,8 @@ bool P038_data_struct::plugin_init(struct EventStruct *event) {
 }
 
 bool P038_data_struct::plugin_exit(struct EventStruct *event) {
-  if (isInitialized()) {
-    delete Plugin_038_pixels;
-    Plugin_038_pixels = nullptr;
-  }
+  delete Plugin_038_pixels;
+  Plugin_038_pixels = nullptr;
   return true;
 }
 
@@ -58,15 +54,8 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       return success;
     }
 
-    {
-      String log;
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-          log.reserve(64)) {
-        log += F("P038 : write - ");
-        log += string;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("P038 : write - "), string));
     }
 
     success = true;
@@ -94,7 +83,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
     } else
 
     if (equals(cmd, F("neopixelall"))) { // NeoPixelAll
-      for (int i = 0; i < _maxPixels; i++) {
+      for (int i = 0; i < _maxPixels; ++i) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
       }
     } else
@@ -105,7 +94,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
 
       HSV2RGBWorRGBandLog(event->Par1, event->Par2, event->Par3, rgbw);
 
-      for (int i = 0; i < _maxPixels; i++) {
+      for (int i = 0; i < _maxPixels; ++i) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
       }
     } else
@@ -114,7 +103,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       int32_t brightness = 0;
       validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
 
-      for (int i = event->Par1 - 1; i < event->Par2; i++) {
+      for (int i = event->Par1 - 1; i < event->Par2; ++i) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5, brightness));
       }
     } else
@@ -125,7 +114,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
 
       HSV2RGBWorRGBandLog(event->Par3, event->Par4, event->Par5, rgbw);
 
-      for (int i = event->Par1 - 1; i < event->Par2; i++) {
+      for (int i = event->Par1 - 1; i < event->Par2; ++i) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
       }
     } else {
@@ -145,19 +134,10 @@ void P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw[4
   } else {                                  // RGB
     HSV2RGB(H, S, V, rgbw);
   }
-  String log;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(48)) {
-    log += F("P038 HSV converted to RGB(W):");
-    log += rgbw[0];
-    log += ',';
-    log += rgbw[1];
-    log += ',';
-    log += rgbw[2];
-    log += ',';
-    log += rgbw[3];
-    addLogMove(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO,
+           strformat(F("P038 HSV converted to RGB(W):%d,%d,%d,%d"), rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
   }
 }
 

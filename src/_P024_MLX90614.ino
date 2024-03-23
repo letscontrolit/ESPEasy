@@ -114,9 +114,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 0, P024_data->readTemperature(PCONFIG(0)));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("MLX90614  : Temperature: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, concat(F("MLX90614  : Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));
         }
 
         //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors

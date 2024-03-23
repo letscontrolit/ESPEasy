@@ -68,14 +68,15 @@ float p076_hpowfact{};
 # define P076_Gosund       9
 # define P076_Shelly_PLUG_S 10
 
-#if ESP_IDF_VERSION_MAJOR >= 5
+# if ESP_IDF_VERSION_MAJOR >= 5
+
 // FIXME TD-er: Must check if older (and ESP8266) envs need IRAM_ATTR in the function declaration.
-void  p076_hlw8012_cf1_interrupt();
-void  p076_hlw8012_cf_interrupt();
-#else
+void           p076_hlw8012_cf1_interrupt();
+void           p076_hlw8012_cf_interrupt();
+# else // if ESP_IDF_VERSION_MAJOR >= 5
 void IRAM_ATTR p076_hlw8012_cf1_interrupt();
 void IRAM_ATTR p076_hlw8012_cf_interrupt();
-#endif
+# endif // if ESP_IDF_VERSION_MAJOR >= 5
 
 
 bool p076_getDeviceParameters(int      device,
@@ -86,17 +87,17 @@ bool p076_getDeviceParameters(int      device,
                               uint8_t& CF_Trigger,
                               uint8_t& CF1_Trigger) {
   switch (device) {
-    case P076_Custom: SEL_Pin        =  0; CF_Pin =  0; CF1_Pin =  0; Cur_read =  LOW; CF_Trigger =     LOW; CF1_Trigger =    LOW; break;
-    case P076_Sonoff: SEL_Pin        =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_Huafan: SEL_Pin        = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_KMC: SEL_Pin           = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_Aplic: //SEL_Pin       = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_SK03: SEL_Pin          = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
-    case P076_BlitzWolf: //SEL_Pin   = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_TeckinUS: //SEL_Pin    = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Custom: SEL_Pin =  0; CF_Pin =  0; CF1_Pin =  0; Cur_read =  LOW; CF_Trigger =     LOW; CF1_Trigger =    LOW; break;
+    case P076_Sonoff: SEL_Pin =  5; CF_Pin = 14; CF1_Pin = 13; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Huafan: SEL_Pin = 13; CF_Pin = 14; CF1_Pin = 12; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_KMC: SEL_Pin    = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read = HIGH; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_Aplic:     // SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_SK03: SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger =  CHANGE; CF1_Trigger = CHANGE; break;
+    case P076_BlitzWolf: // SEL_Pin   = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_TeckinUS:  // SEL_Pin    = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Shelly_PLUG_S: SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Teckin: //SEL_Pin      = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
-    case P076_Gosund: SEL_Pin        = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Teckin:    // SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    case P076_Gosund: SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     default:
       return false;
   }
@@ -153,7 +154,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       addFormSubHeader(F("Predefined Pin settings"));
       {
         // Place this in a scope, to keep memory usage low.
-        const __FlashStringHelper * predefinedNames[] = {
+        const __FlashStringHelper *predefinedNames[] = {
           F("Custom"),
           F("Sonoff Pow (r1)"),
           F("Huafan SS"),
@@ -232,25 +233,25 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
         addFormSubHeader(F("Calibration Values"));
         addFormTextBox(F("Current Multiplier"), F("currmult"),
-        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        doubleToString(current, 2)
-        #else
+                       # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        floatToString(current, 2)
-        #endif
+                       # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        , 25);
         addFormTextBox(F("Voltage Multiplier"), F("voltmult"),
-        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        doubleToString(voltage, 2)
-        #else
+                       # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        floatToString(voltage, 2)
-        #endif
+                       # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        , 25);
         addFormTextBox(F("Power Multiplier"), F("powmult"),
-        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                       # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        doubleToString(power, 2)
-        #else
+                       # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        floatToString(power, 2)
-        #endif
+                       # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                        , 25);
       }
 
@@ -290,9 +291,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
       if ((hlwMultipliers[0] > 1.0) && (hlwMultipliers[1] > 1.0) && (hlwMultipliers[2] > 1.0)) {
         SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                                sizeof(hlwMultipliers));
-        #if PLUGIN_076_DEBUG
-          addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
-        # endif
+        # if PLUGIN_076_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
+        # endif // if PLUGIN_076_DEBUG
 
         if (Plugin_076_hlw) {
           Plugin_076_hlw->setCurrentMultiplier(hlwMultipliers[0]);
@@ -300,22 +301,15 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           Plugin_076_hlw->setPowerMultiplier(hlwMultipliers[2]);
         }
 
-        #if PLUGIN_076_DEBUG
-          addLog(LOG_LEVEL_INFO, F("P076: Multipliers Reassigned"));
-        #endif
+        # if PLUGIN_076_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P076: Multipliers Reassigned"));
+        # endif // if PLUGIN_076_DEBUG
       }
 
-      #if PLUGIN_076_DEBUG
-        String log = F("P076: PIN Settings ");
-
-        log +=  F(" curr_read: ");
-        log +=  PCONFIG(4);
-        log +=  F(" cf_edge: ");
-        log +=  PCONFIG(5);
-        log +=  F(" cf1_edge: ");
-        log +=  PCONFIG(6);
-        addLogMove(LOG_LEVEL_INFO, log);
-      #endif
+      # if PLUGIN_076_DEBUG
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P076: PIN Settings  curr_read: %d cf_edge: %d cf1_edge: %d")
+                                           PCONFIG(4),  PCONFIG(5),  PCONFIG(6)));
+      # endif // if PLUGIN_076_DEBUG
 
       success = true;
       break;
@@ -325,6 +319,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
 
       if (Plugin_076_hlw) {
         bool valid = false;
+
         switch (p076_read_stage) {
           case 0:
             // The stage where we have to wait for a measurement to be started.
@@ -371,20 +366,24 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           //        ++p076_read_stage;
           //      } else if (p076_read_stage > 3) {
           bool valid = false;
-          p076_hpower   = Plugin_076_hlw->getActivePower(valid);
+          p076_hpower = Plugin_076_hlw->getActivePower(valid);
+
           if (valid) {
             success = true;
           }
 
           p076_hvoltage = Plugin_076_hlw->getVoltage(valid);
+
           if (valid) {
             success = true;
           }
           p076_hcurrent = Plugin_076_hlw->getCurrent(valid);
+
           if (valid) {
             success = true;
           }
           p076_hpowfact = static_cast<int>(100 * Plugin_076_hlw->getPowerFactor(valid));
+
           if (valid) {
             success = true;
           }
@@ -397,21 +396,13 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           // Measurement is complete.
           p076_read_stage = 0;
 
-          #if PLUGIN_076_DEBUG
-            String log = F("P076: Read values");
-            log += F(" - V=");
-            log += p076_hvoltage;
-            log += F(" - A=");
-            log += p076_hcurrent;
-            log += F(" - W=");
-            log += p076_hpower;
-            log += F(" - Pf%=");
-            log += p076_hpowfact;
-            addLogMove(LOG_LEVEL_INFO, log);
-          #endif
-    
+          # if PLUGIN_076_DEBUG
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("P076: Read values - V=%.2f - A=%.2f - W=%.2f - Pf%%=%.2f"),
+                               p076_hvoltage, p076_hcurrent, p076_hpower, p076_hpowfact));
+          # endif // if PLUGIN_076_DEBUG
+
           // Plugin_076_hlw->toggleMode();
-          
         }
       }
       break;
@@ -434,29 +425,29 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
         Plugin_076_hlw = new (std::nothrow) HLW8012;
 
         if (Plugin_076_hlw) {
-          uint8_t currentRead = PCONFIG(4);
-          uint8_t cf_trigger  = PCONFIG(5);
-          uint8_t cf1_trigger = PCONFIG(6);
+          const uint8_t currentRead = PCONFIG(4);
+          const uint8_t cf_trigger  = PCONFIG(5);
+          const uint8_t cf1_trigger = PCONFIG(6);
 
           Plugin_076_hlw->begin(CF_PIN, CF1_PIN, SEL_PIN, currentRead,
                                 true); // set use_interrupts to true to use
                                        // interrupts to monitor pulse widths
-          #if PLUGIN_076_DEBUG
-            addLog(LOG_LEVEL_INFO, F("P076: Init object done"));
-          #endif
+          # if PLUGIN_076_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P076: Init object done"));
+          # endif // if PLUGIN_076_DEBUG
           Plugin_076_hlw->setResistors(HLW_CURRENT_RESISTOR,
                                        HLW_VOLTAGE_RESISTOR_UP,
                                        HLW_VOLTAGE_RESISTOR_DOWN);
-          #if PLUGIN_076_DEBUG
-            addLog(LOG_LEVEL_INFO, F("P076: Init Basic Resistor Values done"));
-          #endif
+          # if PLUGIN_076_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P076: Init Basic Resistor Values done"));
+          # endif // if PLUGIN_076_DEBUG
 
           ESPEASY_RULES_FLOAT_TYPE current, voltage, power;
 
           if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
-            #if PLUGIN_076_DEBUG
-              addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
-            #endif
+            # if PLUGIN_076_DEBUG
+            addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration after INIT"));
+            # endif // if PLUGIN_076_DEBUG
 
             Plugin_076_hlw->setCurrentMultiplier(current);
             Plugin_076_hlw->setVoltageMultiplier(voltage);
@@ -465,9 +456,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             Plugin076_ResetMultipliers();
           }
 
-          #if PLUGIN_076_DEBUG
-            addLog(LOG_LEVEL_INFO, F("P076: Applied Calibration after INIT"));
-          #endif
+          # if PLUGIN_076_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P076: Applied Calibration after INIT"));
+          # endif // if PLUGIN_076_DEBUG
 
           StoredTaskIndex = event->TaskIndex; // store task index value in order to
                                               // use it in the PLUGIN_WRITE routine
@@ -504,16 +495,11 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
               validFloatFromString(parseString(string, 4), CalibAcPwr);
             }
           }
-          #if PLUGIN_076_DEBUG
-            String log = F("P076: Calibration to values");
-            log += F(" - Expected-V=");
-            log += CalibVolt;
-            log += F(" - Expected-A=");
-            log += CalibCurr;
-            log += F(" - Expected-W=");
-            log += CalibAcPwr;
-            addLogMove(LOG_LEVEL_INFO, log);
-          #endif
+          # if PLUGIN_076_DEBUG
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("P076: Calibration to values - Expected-V=%.2f - Expected-A=%.2f - Expected-W=%.2f"),
+                               CalibVolt, CalibCurr, CalibAcPwr));
+          # endif // if PLUGIN_076_DEBUG
           bool changed = false;
 
           if (CalibVolt != 0) {
@@ -526,7 +512,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
             changed = true;
           }
 
-          if (!essentiallyEqual(CalibAcPwr, 0.0f)) {
+          if (!essentiallyZero(CalibAcPwr)) {
             Plugin_076_hlw->expectedActivePower(CalibAcPwr);
             changed = true;
           }
@@ -548,9 +534,9 @@ void Plugin076_ResetMultipliers() {
   if (Plugin_076_hlw) {
     Plugin_076_hlw->resetMultipliers();
     Plugin076_SaveMultipliers();
-    #if PLUGIN_076_DEBUG
-      addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
-    #endif
+    # if PLUGIN_076_DEBUG
+    addLog(LOG_LEVEL_INFO, F("P076: Reset Multipliers to DEFAULT"));
+    # endif // if PLUGIN_076_DEBUG
   }
 }
 
@@ -561,10 +547,10 @@ void Plugin076_SaveMultipliers() {
   ESPEASY_RULES_FLOAT_TYPE hlwMultipliers[3]{};
 
   if (Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2])) {
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                            sizeof(hlwMultipliers));
-#else
+    # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     double hlwMultipliers_d[3]{};
     hlwMultipliers_d[0] = hlwMultipliers[0];
     hlwMultipliers_d[1] = hlwMultipliers[1];
@@ -572,7 +558,7 @@ void Plugin076_SaveMultipliers() {
 
     SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers_d),
                            sizeof(hlwMultipliers_d));
-#endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   }
 }
 
@@ -590,7 +576,10 @@ bool Plugin076_ReadMultipliers(ESPEASY_RULES_FLOAT_TYPE& current, ESPEASY_RULES_
   return false;
 }
 
-bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, ESPEASY_RULES_FLOAT_TYPE& current, ESPEASY_RULES_FLOAT_TYPE& voltage, ESPEASY_RULES_FLOAT_TYPE& power) {
+bool Plugin076_LoadMultipliers(taskIndex_t               TaskIndex,
+                               ESPEASY_RULES_FLOAT_TYPE& current,
+                               ESPEASY_RULES_FLOAT_TYPE& voltage,
+                               ESPEASY_RULES_FLOAT_TYPE& power) {
   // If multipliers are empty load default ones and save all of them as
   // "CustomTaskSettings"
   if (!Plugin076_ReadMultipliers(current, voltage, power)) {

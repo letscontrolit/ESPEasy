@@ -34,11 +34,9 @@ bool P061_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   if (lastScanCode == actScanCode) {   // debounced? - two times the same value?
     if (sentScanCode != actScanCode) { // any change to last sent data?
       UserVar.setFloat(event->TaskIndex, 0, actScanCode);
-      event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
+      event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-      String log = F("KPad : ScanCode=0x");
-      log += String(actScanCode, HEX);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(F("KPad : ScanCode=0x%x"), actScanCode));
 
       sendData(event);
 
@@ -56,8 +54,9 @@ void P061_data_struct::MCP23017_setReg(uint8_t addr, uint8_t reg, uint8_t data) 
 }
 
 uint8_t P061_data_struct::MCP23017_getReg(uint8_t addr, uint8_t reg) {
-  bool success = false;
+  bool success      = false;
   const uint8_t res = I2C_read8_reg(addr, reg, &success);
+
   return success ? res : 0xff;
 }
 
@@ -84,9 +83,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadMatrixScan(uint8_t addr) {
   # if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 MCP23017 matrix, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 MCP23017 matrix, read data: 0x%x"), colData));
   }
   # endif // if P061_DEBUG_LOG
 
@@ -94,7 +91,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadMatrixScan(uint8_t addr) {
     return 0;            // no key pressed!
   }
 
-  for (uint8_t row = 0; row <= 8; row++) {
+  for (uint8_t row = 0; row <= 8; ++row) {
     if (row == 0) {
       MCP23017_setReg(addr, MCP23017_IODIRA, 0xFF);     // no bit of port A to output
     } else {
@@ -107,7 +104,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadMatrixScan(uint8_t addr) {
     if (colData != 0xFF) { // any key pressed?
       uint8_t colMask = 1;
 
-      for (uint8_t col = 1; col <= 8; col++) {
+      for (uint8_t col = 1; col <= 8; ++col) {
         if ((colData & colMask) == 0) {                 // this key pressed?
           MCP23017_setReg(addr, MCP23017_IODIRA, 0x00); // port A to output 0
           return (row << 4) | col;
@@ -129,9 +126,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadDirectScan(uint8_t addr) {
   # if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 MCP23017 direct, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 MCP23017 direct, read data: 0x%x"), colData));
   }
   # endif // if P061_DEBUG_LOG
 
@@ -140,7 +135,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadDirectScan(uint8_t addr) {
   }
   uint16_t colMask = 0x01;
 
-  for (uint8_t col = 1; col <= 16; col++) {
+  for (uint8_t col = 1; col <= 16; ++col) {
     if ((colData & colMask) == 0) { // this key pressed?
       return col;
     }
@@ -157,8 +152,9 @@ void P061_data_struct::PCF8574_setReg(uint8_t addr, uint8_t data) {
 }
 
 uint8_t P061_data_struct::PCF8574_getReg(uint8_t addr) {
-  bool success = false;
+  bool success      = false;
   const uint8_t res = I2C_read8(addr, &success);
+
   return success ? res : 0xff;
 }
 
@@ -174,9 +170,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadMatrixScan(uint8_t addr) {
   # if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 PCF8574 matrix, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 PCF8574 matrix, read data: 0x%x"), colData));
   }
   # endif // if P061_DEBUG_LOG
 
@@ -184,7 +178,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadMatrixScan(uint8_t addr) {
     return 0;            // no key pressed!
   }
 
-  for (uint8_t row = 0; row <= 4; row++) {
+  for (uint8_t row = 0; row <= 4; ++row) {
     if (row == 0) {
       PCF8574_setReg(addr, 0xFF);     // no bit of port A to output
     } else {
@@ -197,7 +191,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadMatrixScan(uint8_t addr) {
     if (colData != 0xF0) { // any key pressed?
       uint8_t colMask = 0x10;
 
-      for (uint8_t col = 1; col <= 4; col++) {
+      for (uint8_t col = 1; col <= 4; ++col) {
         if ((colData & colMask) == 0) { // this key pressed?
           PCF8574_setReg(addr, 0xF0);   // low nibble to output 0
           return (row << 4) | col;
@@ -224,9 +218,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadDirectScan(uint8_t addr) {
   # if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 PCF8574 direct, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 PCF8574 direct, read data: 0x%x"), colData));
   }
   # endif // if P061_DEBUG_LOG
 
@@ -235,7 +227,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadDirectScan(uint8_t addr) {
   }
   uint8_t colMask = 0x01;
 
-  for (uint8_t col = 1; col <= 8; col++) {
+  for (uint8_t col = 1; col <= 8; ++col) {
     if ((colData & colMask) == 0) { // this key pressed?
       return col;
     }
@@ -286,9 +278,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadMatrixScan(uint8_t addr) {
   #  if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 PCF8575 matrix, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 PCF8575 matrix, read data: 0x%x"), colData));
   }
   #  endif // if P061_DEBUG_LOG
 
@@ -296,7 +286,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadMatrixScan(uint8_t addr) {
     return 0;              // no key pressed!
   }
 
-  for (uint8_t row = 0; row <= 8; row++) {
+  for (uint8_t row = 0; row <= 8; ++row) {
     if (row == 0) {
       PCF8575_setReg(addr, 0xFFFF);   // no bit of port A to output
     } else {
@@ -309,7 +299,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadMatrixScan(uint8_t addr) {
     if (colData != 0xFF00) { // any key pressed?
       uint16_t colMask = 0x0100;
 
-      for (uint8_t col = 1; col <= 8; col++) {
+      for (uint8_t col = 1; col <= 8; ++col) {
         if ((colData & colMask) == 0) { // this key pressed?
           PCF8575_setReg(addr, 0xFF00); // low byte to output 00
           return (row << 4) | col;
@@ -337,9 +327,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadDirectScan(uint8_t addr) {
   #  if P061_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
-    String log = F("P061 PCF8575 direct, read data: 0x");
-    log += String(colData, HEX);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, strformat(F("P061 PCF8575 direct, read data: 0x%x"), colData));
   }
   #  endif // if P061_DEBUG_LOG
 
@@ -348,7 +336,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadDirectScan(uint8_t addr) {
   }
   uint16_t colMask = 0x01;
 
-  for (uint8_t col = 1; col <= 16; col++) {
+  for (uint8_t col = 1; col <= 16; ++col) {
     if ((colData & colMask) == 0) { // this key pressed?
       return col;
     }

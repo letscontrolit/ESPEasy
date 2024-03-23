@@ -65,12 +65,12 @@
 // There is no configuration here to set or manipulate the time, only to
 // display it.
 
-#define PLUGIN_057
-#define PLUGIN_ID_057         57
-#define PLUGIN_NAME_057       "Display - HT16K33"
+# define PLUGIN_057
+# define PLUGIN_ID_057         57
+# define PLUGIN_NAME_057       "Display - HT16K33"
 
 
-#include "src/PluginStructs/P057_data_struct.h"
+# include "src/PluginStructs/P057_data_struct.h"
 
 boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -105,6 +105,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
       } else {
@@ -127,19 +128,18 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("7-Seg. Clock"));
 
       {
-        int16_t choice     = PCONFIG(1);
-        const __FlashStringHelper * options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
-        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, nullptr, choice);
+        const __FlashStringHelper *options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, nullptr, PCONFIG(1));
       }
 
-      addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), PCONFIG(2), 0,  7);
-      addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"),  PCONFIG(3), 0,  7);
-      addFormNumericBox(F("Seg. for xx:<b>X</b>x"), F("clocksegm10"), PCONFIG(4), 0,  7);
-      addFormNumericBox(F("Seg. for xx:x<b>X</b>"), F("clocksegm1"),  PCONFIG(5), 0,  7);
+      addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("csh10"), PCONFIG(2), 0,  7);
+      addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("csh1"),  PCONFIG(3), 0,  7);
+      addFormNumericBox(F("Seg. for xx:<b>X</b>x"), F("csm10"), PCONFIG(4), 0,  7);
+      addFormNumericBox(F("Seg. for xx:x<b>X</b>"), F("csm1"),  PCONFIG(5), 0,  7);
 
-      addFormNumericBox(F("Seg. for Colon"),        F("clocksegcol"), PCONFIG(6), -1, 7);
+      addFormNumericBox(F("Seg. for Colon"),        F("cscol"), PCONFIG(6), -1, 7);
       addHtml(F(" Value "));
-      addNumericBox(F("clocksegcolval"), PCONFIG(7), 0, 255);
+      addNumericBox(F("cscolval"), PCONFIG(7), 0, 255);
 
       success = true;
       break;
@@ -151,12 +151,12 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
       PCONFIG(1) = getFormItemInt(F("clocktype"));
 
-      PCONFIG(2) = getFormItemInt(F("clocksegh10"));
-      PCONFIG(3) = getFormItemInt(F("clocksegh1"));
-      PCONFIG(4) = getFormItemInt(F("clocksegm10"));
-      PCONFIG(5) = getFormItemInt(F("clocksegm1"));
-      PCONFIG(6) = getFormItemInt(F("clocksegcol"));
-      PCONFIG(7) = getFormItemInt(F("clocksegcolval"));
+      PCONFIG(2) = getFormItemInt(F("csh10"));
+      PCONFIG(3) = getFormItemInt(F("csh1"));
+      PCONFIG(4) = getFormItemInt(F("csm10"));
+      PCONFIG(5) = getFormItemInt(F("csm1"));
+      PCONFIG(6) = getFormItemInt(F("cscol"));
+      PCONFIG(7) = getFormItemInt(F("cscolval"));
 
       success = true;
       break;
@@ -181,7 +181,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("mprint")))
       {
-        String text = parseStringToEnd(string, 2);
+        const String text = parseStringToEnd(string, 2);
 
         if (!text.isEmpty()) {
           uint8_t seg = 0;
@@ -197,6 +197,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
             P057_data->ledMatrix.SetDigit(seg, c, setDot);
             seg++;
             txt++;
+
             if (setDot) { txt++; } // extra increment to skip past the dot
           }
           P057_data->ledMatrix.TransmitRowBuffer();
@@ -204,8 +205,8 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       else if (equals(command, F("mbr"))) {
-        String param = parseString(string, 2);
-        int32_t    brightness;
+        const String param = parseString(string, 2);
+        int32_t brightness;
 
         if (validIntFromString(param, brightness)) {
           if ((brightness >= 0) && (brightness <= 255)) {
@@ -219,7 +220,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         String   param;
         String   paramKey;
         String   paramVal;
-        uint8_t     paramIdx = 2;
+        uint8_t  paramIdx = 2;
         uint8_t  seg      = 0;
         uint16_t value    = 0;
 
@@ -229,24 +230,24 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         lowerString.replace(F(" ="), F("="));
         lowerString.replace(F("= "), F("="));
 
-        param = parseString(lowerString, paramIdx++);
+        param = parseStringKeepCase(lowerString, paramIdx++);
 
         if (param.length())
         {
           while (param.length())
           {
-            #ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, param);
-            #endif
+            # endif // ifndef BUILD_NO_DEBUG
 
             if (equals(param, F("log")))
             {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("MX   : ");
 
-                for (uint8_t i = 0; i < 8; i++)
+                for (uint8_t i = 0; i < 8; ++i)
                 {
-                  log += String(P057_data->ledMatrix.GetRow(i), 16);
+                  log += formatToHex_no_prefix(P057_data->ledMatrix.GetRow(i));
                   log += F("h, ");
                 }
                 addLogMove(LOG_LEVEL_INFO, log);
@@ -256,7 +257,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
             else if (equals(param, F("test")))
             {
-              for (uint8_t i = 0; i < 8; i++) {
+              for (uint8_t i = 0; i < 8; ++i) {
                 P057_data->ledMatrix.SetRow(i, 1 << i);
               }
               success = true;
@@ -310,7 +311,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
               seg++;
             }
 
-            param = parseString(lowerString, paramIdx++);
+            param = parseStringKeepCase(lowerString, paramIdx++);
           }
         }
         else
@@ -329,15 +330,15 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_CLOCK_IN:
     {
-            P057_data_struct *P057_data =
+      P057_data_struct *P057_data =
         static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P057_data || (PCONFIG(1) == 0)) {
+      if ((nullptr == P057_data) || (PCONFIG(1) == 0)) {
         break;
       }
 
-      uint8_t hours   = node_time.hour();
-      uint8_t minutes = node_time.minute();
+      uint8_t hours         = node_time.hour();
+      const uint8_t minutes = node_time.minute();
 
       // P057_data->ledMatrix.ClearRowBuffer();
       P057_data->ledMatrix.SetDigit(PCONFIG(5), minutes % 10);
@@ -380,16 +381,16 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-                  P057_data_struct *P057_data =
+      P057_data_struct *P057_data =
         static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P057_data || (PCONFIG(1) == 0)) { // clock enabled?
+      if ((nullptr == P057_data) || (PCONFIG(1) == 0)) { // clock enabled?
         break;
       }
 
       if (PCONFIG(6) >= 0)                                   // colon used?
       {
-        uint8_t act         = ((uint16_t)millis() >> 9) & 1; // blink with about 2 Hz
+        const uint8_t  act  = ((uint16_t)millis() >> 9) & 1; // blink with about 2 Hz
         static uint8_t last = 0;
 
         if (act != last)

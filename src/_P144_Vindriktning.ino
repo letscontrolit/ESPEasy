@@ -155,9 +155,9 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // this case defines code to be executed when the plugin is initialised
-      int8_t rxPin = serialHelper_getRxPin(event);
-      int8_t txPin = serialHelper_getTxPin(event);
-      ESPEasySerialPort portType = serialHelper_getSerialType(event); 
+      const int8_t rxPin = serialHelper_getRxPin(event);
+      const int8_t txPin = serialHelper_getTxPin(event);
+      const ESPEasySerialPort portType = serialHelper_getSerialType(event); 
 
       // Create the P144_data_struct object that will do all the sensor interaction
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P144_data_struct());
@@ -183,9 +183,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         #ifdef PLUGIN_144_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {
-          String log = F("P144 : READ ");
-          log += UserVar[event->BaseVarIndex];
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("P144 : READ "), UserVar[event->BaseVarIndex]));
         }
         #endif
       }

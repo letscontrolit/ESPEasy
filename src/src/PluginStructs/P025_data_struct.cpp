@@ -370,7 +370,7 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
 bool P025_data_struct::webformSave(struct EventStruct *event)
 {
-  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; ++i) {
     const uint8_t pconfigIndex = P025_PCONFIG_INDEX(i);
     const uint8_t choice       = PCONFIG(pconfigIndex);
     sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i,
@@ -401,7 +401,7 @@ bool P025_data_struct::webform_showConfig(struct EventStruct *event)
 {
   format_I2C_port_description(event->TaskIndex);
 
-  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; ++i) {
     const uint8_t choice = PCONFIG(P025_PCONFIG_INDEX(i));
 
     if ((choice >= 0) && (choice < 8)) {

@@ -11,26 +11,29 @@
 // Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
 
-#define PLUGIN_084
-#define PLUGIN_ID_084         84
-#define PLUGIN_NAME_084       "UV - VEML6070"
-#define PLUGIN_VALUENAME1_084 "Raw"
-#define PLUGIN_VALUENAME2_084 "Risk"
-#define PLUGIN_VALUENAME3_084 "Power"
+# define PLUGIN_084
+# define PLUGIN_ID_084         84
+# define PLUGIN_NAME_084       "UV - VEML6070"
+# define PLUGIN_VALUENAME1_084 "Raw"
+# define PLUGIN_VALUENAME2_084 "Risk"
+# define PLUGIN_VALUENAME3_084 "Power"
 
-#define VEML6070_ADDR_H             0x39
-#define VEML6070_ADDR_L             0x38
-#define VEML6070_RSET_DEFAULT       270000       // 270K default resistor value 270000 ohm, range from 220K..1Meg
-#define VEML6070_UV_MAX_INDEX       15           // normal 11, internal on weather laboratories and NASA it's 15 so far the sensor is linear
-#define VEML6070_UV_MAX_DEFAULT     11           // 11 = public default table values
-#define VEML6070_POWER_COEFFCIENT   0.025f       // based on calculations from Karel Vanicek and reorder by hand
-#define VEML6070_TABLE_COEFFCIENT   32.86270591f // calculated by hand with help from a friend of mine, a professor which works in aero space
-                                                 // things
-                                                 // (resistor, differences, power coefficients and official UV index calculations (LAT & LONG
-                                                 // will be added later)
+# define VEML6070_ADDR_H             0x39
+# define VEML6070_ADDR_L             0x38
+# define VEML6070_RSET_DEFAULT       270000       // 270K default resistor value 270000 ohm, range from 220K..1Meg
+# define VEML6070_UV_MAX_INDEX       15           // normal 11, internal on weather laboratories and NASA it's 15 so far the sensor is
+                                                  // linear
+# define VEML6070_UV_MAX_DEFAULT     11           // 11 = public default table values
+# define VEML6070_POWER_COEFFCIENT   0.025f       // based on calculations from Karel Vanicek and reorder by hand
+# define VEML6070_TABLE_COEFFCIENT   32.86270591f // calculated by hand with help from a friend of mine, a professor which works in aero
+                                                  // space
+                                                  // things
+                                                  // (resistor, differences, power coefficients and official UV index calculations (LAT &
+                                                  // LONG
+                                                  // will be added later)
 
-#define VEML6070_base_value ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (1)
-#define VEML6070_max_value  ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (VEML6070_UV_MAX_INDEX)
+# define VEML6070_base_value ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (1)
+# define VEML6070_max_value  ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (VEML6070_UV_MAX_INDEX)
 
 boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -87,7 +90,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
+      const __FlashStringHelper *optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
       addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, nullptr, PCONFIG(0));
 
       success = true;
@@ -107,7 +110,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       success = VEML6070_Init(PCONFIG(0));
 
       if (!success) {
-        addLog(LOG_LEVEL_INFO, F("VEML6070: Not available!"));
+        addLog(LOG_LEVEL_ERROR, F("VEML6070: Not available!"));
       }
 
       break;
@@ -116,28 +119,26 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       uint16_t uv_raw;
-      ESPEASY_RULES_FLOAT_TYPE   uv_risk, uv_power;
-      bool     read_status;
+      ESPEASY_RULES_FLOAT_TYPE uv_risk, uv_power;
+      bool read_status;
 
       uv_raw   = VEML6070_ReadUv(&read_status); // get UV raw values
       uv_risk  = VEML6070_UvRiskLevel(uv_raw);  // get UV risk level
       uv_power = VEML6070_UvPower(uv_risk);     // get UV power in W/m2
 
       if (isnan(uv_raw) || (uv_raw == 65535) || !read_status) {
-        addLog(LOG_LEVEL_INFO, F("VEML6070: no data read!"));
+        addLog(LOG_LEVEL_ERROR, F("VEML6070: no data read!"));
         UserVar.setFloat(event->TaskIndex, 0, NAN);
         UserVar.setFloat(event->TaskIndex, 1, NAN);
         UserVar.setFloat(event->TaskIndex, 2, NAN);
-        success                          = false;
+        success = false;
       } else {
         UserVar.setFloat(event->TaskIndex, 0, uv_raw);
         UserVar.setFloat(event->TaskIndex, 1, uv_risk);
         UserVar.setFloat(event->TaskIndex, 2, uv_power);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("VEML6070: UV: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("VEML6070: UV: "), formatUserVarNoCheck(event->TaskIndex, 0)));
         }
 
         success = true;
@@ -170,9 +171,7 @@ uint16_t VEML6070_ReadUv(bool *status)
 
 bool VEML6070_Init(uint8_t it)
 {
-  boolean succes = I2C_write8(VEML6070_ADDR_L, ((it << 2) | 0x02));
-
-  return succes;
+  return I2C_write8(VEML6070_ADDR_L, ((it << 2) | 0x02));
 }
 
 // Definition of risk numbers
@@ -195,12 +194,10 @@ ESPEASY_RULES_FLOAT_TYPE VEML6070_UvRiskLevel(uint16_t uv_level)
   } else {
     // out of range and much to high - it must be outerspace or sensor damaged
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("VEML6070 out of range: ");
-      log += risk;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("VEML6070 out of range: "), risk));
     }
 
-    return 99;
+    return (ESPEASY_RULES_FLOAT_TYPE)99;
   }
 }
 

@@ -8,9 +8,8 @@ struct P032_data_struct : public PluginTaskData_base {
 public:
 
   P032_data_struct(uint8_t i2c_addr);
-  P032_data_struct() = delete;
+  P032_data_struct()          = delete;
   virtual ~P032_data_struct() = default;
-
 
 
   // **************************************************************************/
@@ -38,10 +37,10 @@ public:
   // **************************************************************************/
   void readout();
 
-  uint8_t      i2cAddress;
-  unsigned int ms5611_prom[8]     = { 0 };
-  ESPEASY_RULES_FLOAT_TYPE       ms5611_pressure    = 0;
-  ESPEASY_RULES_FLOAT_TYPE       ms5611_temperature = 0;
+  uint8_t                  i2cAddress;
+  unsigned int             ms5611_prom[8]     = { 0 };
+  ESPEASY_RULES_FLOAT_TYPE ms5611_pressure    = 0;
+  ESPEASY_RULES_FLOAT_TYPE ms5611_temperature = 0;
 };
 #endif // ifdef USES_P032
 #endif // ifndef PLUGINSTRUCTS_P032_DATA_STRUCT_H

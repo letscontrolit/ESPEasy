@@ -33,7 +33,7 @@ bool P133_data_struct::plugin_read(struct EventStruct *event)           {
     UserVar.setFloat(event->TaskIndex, 1, uviValue);
     UserVar.setFloat(event->TaskIndex, 2, alsValue);
     UserVar.setFloat(event->TaskIndex, 3, luxValue);
-    sensorRead                       = false;
+    sensorRead = false;
     return true;
   }
   return false;
@@ -75,17 +75,9 @@ bool P133_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     # if PLUGIN_133_DEBUG
 
     if (!sensorRead && loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("LTR390: data read. Mode: ");
-      log += mode;
-      log += F(", UV: ");
-      log += uvValue;
-      log += F(", UVindex: ");
-      log += uviValue;
-      log += F(", ALS: ");
-      log += alsValue;
-      log += F(", Lux: ");
-      log += luxValue;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO,
+                 strformat(F("LTR390: data read. Mode: %d, UV: %d, UVindex: %.2f, ALS: %d, Lux: %.2f"),
+                           mode, uvValue, uviValue, alsValue, luxValue));
     }
     # endif // if PLUGIN_133_DEBUG
     sensorRead = true;
@@ -121,17 +113,9 @@ bool P133_data_struct::plugin_init(struct EventStruct *event) {
     # if PLUGIN_133_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("LTR390: Configured, mode: ");
-      log += mode;
-      log += F(", UV gain: ");
-      log += _uvGain;
-      log += F(", UV resolution: ");
-      log += _uvResolution;
-      log += F(", ALS gain: ");
-      log += _alsGain;
-      log += F(", ALS resolution: ");
-      log += _alsResolution;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO,
+                 strformat(F("LTR390: Configured, mode: %d, UV gain: %d, UV resolution: %d, ALS gain: %d, ALS resolution: %d"),
+                           mode, _uvGain, _uvResolution, _alsGain, _alsResolution));
     }
     # endif // if PLUGIN_133_DEBUG
   }
@@ -151,10 +135,8 @@ bool P133_data_struct::init_sensor() {
     }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("LTR390: Initialized: ");
-      log += initialised ? F("OK") : F("ERROR");
-      log += F(", chip ID: 0x");
-      log += String(ltr390->getChipID(), HEX);
+      String log = concat(F("LTR390: Initialized: "), initialised ? F("OK") : F("ERROR"));
+      log += strformat(F(", chip ID: 0x%02x"), ltr390->getChipID());
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }

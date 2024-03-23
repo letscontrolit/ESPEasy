@@ -106,9 +106,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           touch_treshold = P062_DEFAULT_TOUCH_TRESHOLD; // default value
         }
         addFormNumericBox(F("Touch treshold (1..255)"), F("touch_treshold"), touch_treshold, 0, 255);
-        String unit_ = F("Default: ");
-        unit_ += P062_DEFAULT_TOUCH_TRESHOLD;
-        addUnit(unit_);
+        addUnit(concat(F("Default: "), P062_DEFAULT_TOUCH_TRESHOLD));
       }
 
       {
@@ -118,9 +116,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           release_treshold = P062_DEFAULT_RELEASE_TRESHOLD; // default value
         }
         addFormNumericBox(F("Release treshold (1..255)"), F("release_treshold"), release_treshold, 0, 255);
-        String unit_ = F("Default: ");
-        unit_ += P062_DEFAULT_RELEASE_TRESHOLD;
-        addUnit(unit_);
+        addUnit(concat(F("Default: "), P062_DEFAULT_RELEASE_TRESHOLD));
       }
       {
         const __FlashStringHelper *sensitivityOptions[] = {
@@ -161,7 +157,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Max"));
         }
 
-        for (int objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
+        for (int objectNr = 0; objectNr < P062_MaxTouchObjects; ++objectNr) {
           html_TR_TD();
           addHtml(F("&nbsp;"));
           addHtmlInt(objectNr + 1);
@@ -228,7 +224,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         }
         P062_data->loadTouchObjects(event->TaskIndex);
 
-        for (int objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
+        for (int objectNr = 0; objectNr < P062_MaxTouchObjects; ++objectNr) {
           P062_data->StoredSettings.TouchObjects[objectNr].touch   = getFormItemIntCustomArgName(objectNr + 100);
           P062_data->StoredSettings.TouchObjects[objectNr].release = getFormItemIntCustomArgName(objectNr + 200);
         }
@@ -290,7 +286,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
             P062_data->setThresholds(touch_treshold, release_treshold); // Set custom tresholds, ignore default values
           }
 
-          for (uint8_t objectNr = 0; objectNr < P062_MaxTouchObjects; objectNr++) {
+          for (uint8_t objectNr = 0; objectNr < P062_MaxTouchObjects; ++objectNr) {
             if ((P062_data->StoredSettings.TouchObjects[objectNr].touch != 0) &&
                 (P062_data->StoredSettings.TouchObjects[objectNr].release != 0)) {
               P062_data->setThreshold(objectNr,
@@ -317,27 +313,27 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         if (P062_data->readKey(key))
         {
           UserVar.setFloat(event->TaskIndex, 0, key);
-          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
+          event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("Tkey : ");
+            log.reserve(22);
 
             if (PCONFIG(1)) {
-              log = F("ScanCode=0x");
+              log += F("ScanCode=");
             }
             else {
-              log = F("KeyMap=0x");
+              log += F("KeyMap=");
             }
-            log += String(key, 16);
+            log += formatToHex(key);
             addLogMove(LOG_LEVEL_INFO, log);
 
             bool tbUseCalibration = bitRead(P062_CONFIG_FLAGS, P062_FLAGS_USE_CALIBRATION);
 
             if (tbUseCalibration) {
               uint16_t colMask = 0x01;
-              log.reserve(55);
 
-              for (uint8_t col = 0; col < P062_MaxTouchObjects; col++)
+              for (uint8_t col = 0; col < P062_MaxTouchObjects; ++col)
               {
                 if (key & colMask) // this key pressed?
                 {
@@ -345,15 +341,9 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
                   uint16_t min     = 0;
                   uint16_t max     = 0;
                   P062_data->getCalibrationData(col, &current, &min, &max);
-                  log  = F("P062 touch #");
-                  log += col;
-                  log += F(" current: ");
-                  log += current;
-                  log += F(" min: ");
-                  log += min;
-                  log += F(" max: ");
-                  log += max;
-                  addLogMove(LOG_LEVEL_INFO, log);
+                  addLog(LOG_LEVEL_INFO,
+                         strformat(F("P062 touch #%d current: %d min: %d max: %d"),
+                                   col, current, min, max));
 
                   if (!PCONFIG(1)) {
                     break;

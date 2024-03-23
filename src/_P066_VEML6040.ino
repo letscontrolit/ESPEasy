@@ -12,17 +12,17 @@
 // Application Note: www.vishay.com/doc?84331
 
 
-#define PLUGIN_066
-#define PLUGIN_ID_066         66
-#define PLUGIN_NAME_066       "Color - VEML6040"
-#define PLUGIN_VALUENAME1_066 "R"
-#define PLUGIN_VALUENAME2_066 "G"
-#define PLUGIN_VALUENAME3_066 "B"
-#define PLUGIN_VALUENAME4_066 "W"
+# define PLUGIN_066
+# define PLUGIN_ID_066         66
+# define PLUGIN_NAME_066       "Color - VEML6040"
+# define PLUGIN_VALUENAME1_066 "R"
+# define PLUGIN_VALUENAME2_066 "G"
+# define PLUGIN_VALUENAME3_066 "B"
+# define PLUGIN_VALUENAME4_066 "W"
 
-#define VEML6040_ADDR 0x10
+# define VEML6040_ADDR 0x10
 
-#include <math.h> 
+# include <math.h>
 
 boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -67,6 +67,7 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { VEML6040_ADDR };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, VEML6040_ADDR); // Only for display I2C address
       } else {
@@ -87,13 +88,14 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper * optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
-                                    "1280ms (515)") };
+        const __FlashStringHelper *optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F(
+                                                        "640ms (1031)"),                                             F(
+                                                        "1280ms (515)") };
         addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, nullptr, PCONFIG(1));
       }
 
       {
-        const __FlashStringHelper * optionsVarMap[6] = {
+        const __FlashStringHelper *optionsVarMap[6] = {
           F("R, G, B, W"),
           F("r, g, b, W - relative rgb [&#37;]"),
           F("r, g, b, W - relative rgb^Gamma [&#37;]"),
@@ -213,8 +215,8 @@ float VEML6040_GetValue(uint8_t reg)
 
   if (Wire.available() == 2)
   {
-    uint16_t lsb = Wire.read();
-    uint16_t msb = Wire.read();
+    const uint16_t lsb = Wire.read();
+    const uint16_t msb = Wire.read();
     return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
@@ -227,19 +229,19 @@ void VEML6040_Init(uint8_t it)
 
 float Plugin_066_CalcCCT(float R, float G, float B)
 {
-  if (G == 0) {
-    return 0;
+  if (essentiallyZero(G)) {
+    return 0.0f;
   }
 
-  float CCTi = (R - B) / G + 0.5f;
-  float CCT  = 4278.6f * powf(CCTi, -1.2455f);
+  const float CCTi = (R - B) / G + 0.5f;
+  const float CCT  = 4278.6f * powf(CCTi, -1.2455f);
 
   return CCT;
 }
 
 float Plugin_066_CalcAmbientLight(float G, uint8_t it)
 {
-  float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f }; //-V624
+  const float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f }; // -V624
 
   return G * Sensitivity[it];
 }

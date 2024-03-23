@@ -41,7 +41,7 @@ void P137_CheckPredefinedParameters(struct EventStruct *event) {
     P137_CURRENT_PREDEFINED = P137_CONFIG_PREDEFINED;
 
     // Set defaults
-    for (int i = 0; i < 5; i++) { // GPI0..4
+    for (int i = 0; i < 5; ++i) { // GPI0..4
       P137_SET_GPIO_FLAGS(i, static_cast<uint8_t>(P137_GPIOBootState_e::Default));
     }
 
@@ -189,7 +189,7 @@ bool P137_data_struct::plugin_read(struct EventStruct *event) {
 
   const uint8_t valueCount = P137_NR_OUTPUT_VALUES;
 
-  for (uint8_t i = 0; i < valueCount; i++) {
+  for (uint8_t i = 0; i < valueCount; ++i) {
     UserVar.setFloat(event->TaskIndex, i, read_value(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i))));
   }
 
@@ -262,10 +262,10 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
     const int subcommand_i          = GetCommandCode(cmd.c_str(), P137_subcommands);
     const P137_subcommands_e subcmd = static_cast<P137_subcommands_e>(subcommand_i);
 
-    String var3       = parseString(string, 3);
-    const bool empty3 = var3.isEmpty();
-    const bool empty4 = parseString(string, 4).isEmpty();
-    const bool state3 = !empty3 && (event->Par2 == 0 || event->Par2 == 1);
+    const String var3   = parseString(string, 3);
+    const bool   empty3 = var3.isEmpty();
+    const bool   empty4 = parseString(string, 4).isEmpty();
+    const bool   state3 = !empty3 && (event->Par2 == 0 || event->Par2 == 1);
     success = true;
 
     if ((event->Par2 >= 0) && (event->Par2 <= P137_CONST_100_PERCENT) && !empty3 && empty4) {

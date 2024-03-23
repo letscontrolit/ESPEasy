@@ -29,13 +29,13 @@
 // Note: The HT16K33-LED-plugin and the HT16K33-key-plugin can be used at the same time with the same I2C address
 
 
-#define PLUGIN_058
-#define PLUGIN_ID_058         58
-#define PLUGIN_NAME_058       "Keypad - HT16K33"
-#define PLUGIN_VALUENAME1_058 "ScanCode"
+# define PLUGIN_058
+# define PLUGIN_ID_058         58
+# define PLUGIN_NAME_058       "Keypad - HT16K33"
+# define PLUGIN_VALUENAME1_058 "ScanCode"
 
 
-#include "src/PluginStructs/P058_data_struct.h"
+# include "src/PluginStructs/P058_data_struct.h"
 
 
 boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
@@ -77,6 +77,7 @@ boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
       } else {
@@ -125,12 +126,10 @@ boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
         if (P058_data->readKey(key))
         {
           UserVar.setFloat(event->TaskIndex, 0, key);
-          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
+          event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("Mkey : key=0x");
-            log += String(key, 16);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, strformat(F("Mkey : key=0x%x"), key));
           }
 
           sendData(event);

@@ -50,48 +50,48 @@
 // ************************************************************************************************
 
 
-#include <WakeOnLan.h>
+# include <WakeOnLan.h>
 
 // Plugin defines
-#define PLUGIN_101
-#define PLUGIN_ID_101      101
-#define PLUGIN_NAME_101    "Communication - Wake On LAN"
+# define PLUGIN_101
+# define PLUGIN_ID_101      101
+# define PLUGIN_NAME_101    "Communication - Wake On LAN"
 
 // Config Setting defines
-#define CUSTOMTASK_STR_SIZE_P101 20
-#define DEF_TASK_NAME_P101 "WAKE_ON_LAN"
-#define SET_UDP_PORT_P101  ExtraTaskSettings.TaskDevicePluginConfigLong[1]
-#define GET_UDP_PORT_P101  Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
-#define FORM_PORT_P101     "pport"
+# define CUSTOMTASK_STR_SIZE_P101 20
+# define DEF_TASK_NAME_P101 "WAKE_ON_LAN"
+# define SET_UDP_PORT_P101  ExtraTaskSettings.TaskDevicePluginConfigLong[1]
+# define GET_UDP_PORT_P101  Cache.getTaskDevicePluginConfigLong(event->TaskIndex, 1)
+# define FORM_PORT_P101     "pport"
 
-// Command keyword defines
-#define CMD_NAME_P101      "WAKEONLAN"
+// Command keyword defines, checked in lowercase
+# define CMD_NAME_P101      "wakeonlan"
 
 // MAC Defines.
-#define MAC_ADDR_SIZE_P101 17  // MAC Addr String size (fixed length). e.g. FA:39:09:67:89:AB
-#define MAC_BUFF_SIZE_P101 18  // MAC Addr Buffer size, including NULL terminator.
-#define MAC_SEP_CHAR_P101  ':' // MAC Addr segments are separated by a colon.
-#define MAC_SEP_CNT_P101   5   // MAC Addr colon separator count for valid address.
-#define MAC_STR_DEF_P101   "00:00:00:00:00:00"
-#define MAC_STR_EXP_P101   "5d:89:22:56:9c:60"
+# define MAC_ADDR_SIZE_P101 17  // MAC Addr String size (fixed length). e.g. FA:39:09:67:89:AB
+# define MAC_BUFF_SIZE_P101 18  // MAC Addr Buffer size, including NULL terminator.
+# define MAC_SEP_CHAR_P101  ':' // MAC Addr segments are separated by a colon.
+# define MAC_SEP_CNT_P101   5   // MAC Addr colon separator count for valid address.
+# define MAC_STR_DEF_P101   "00:00:00:00:00:00"
+# define MAC_STR_EXP_P101   "5d:89:22:56:9c:60"
 
 // IP Defines.
-#define IP_ADDR_SIZE_P101  15  // IPv4 Addr String size (max length). e.g. 192.168.001.255
-#define IP_BUFF_SIZE_P101  16  // IPv4 Addr Buffer size, including NULL terminator.
-#define IP_MIN_SIZE_P101   7   // IPv4 Addr Minimum size, allows IP strings as short as 0.0.0.0
-#define IP_SEP_CHAR_P101   '.' // IPv4 Addr segments are separated by a dot.
-#define IP_SEP_CNT_P101    3   // IPv4 Addr dot separator count for valid address.
-#define IP_STR_DEF_P101    "255.255.255.255"
+# define IP_ADDR_SIZE_P101  15  // IPv4 Addr String size (max length). e.g. 192.168.001.255
+# define IP_BUFF_SIZE_P101  16  // IPv4 Addr Buffer size, including NULL terminator.
+# define IP_MIN_SIZE_P101   7   // IPv4 Addr Minimum size, allows IP strings as short as 0.0.0.0
+# define IP_SEP_CHAR_P101   '.' // IPv4 Addr segments are separated by a dot.
+# define IP_SEP_CNT_P101    3   // IPv4 Addr dot separator count for valid address.
+# define IP_STR_DEF_P101    "255.255.255.255"
 
 // Port Defines.
-#define PORT_DEF_P101      9
-#define PORT_MAX_P101      65535
+# define PORT_DEF_P101      9
+# define PORT_MAX_P101      65535
 
 // Misc Defines
-#define LOG_NAME_P101      "WAKE ON LAN: "
-#define NAME_MISSING       0
-#define NAME_SAFE          1
-#define NAME_UNSAFE        2
+# define LOG_NAME_P101      "WAKE ON LAN: "
+# define NAME_MISSING       0
+# define NAME_SAFE          1
+# define NAME_UNSAFE        2
 
 // ************************************************************************************************
 // WOL Objects
@@ -142,43 +142,35 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      char   ipString[IP_BUFF_SIZE_P101]   = {0};
-      char   macString[MAC_BUFF_SIZE_P101] = {0};
-      addFormSubHeader(""); // Blank line, vertical space.
+      addFormSubHeader(EMPTY_STRING); // Blank line, vertical space.
       addFormHeader(F("Default Settings"));
 
       String strings[2];
       LoadCustomTaskSettings(event->TaskIndex, strings, 2, CUSTOMTASK_STR_SIZE_P101);
 
-      safe_strncpy(macString, strings[1], MAC_BUFF_SIZE_P101);
-      addFormTextBox(F("MAC Address"), getPluginCustomArgName(1), macString, MAC_ADDR_SIZE_P101);
+      addFormTextBox(F("MAC Address"), getPluginCustomArgName(1), strings[1], MAC_ADDR_SIZE_P101);
       addFormNote(F("Format Example, " MAC_STR_EXP_P101));
-      addFormSubHeader(""); // Blank line, vertical space.
+      addFormSubHeader(EMPTY_STRING); // Blank line, vertical space.
 
-      safe_strncpy(ipString, strings[0], IP_BUFF_SIZE_P101);
-      addFormTextBox(F("IPv4 Address"), getPluginCustomArgName(0), ipString, IP_ADDR_SIZE_P101);
+      addFormTextBox(F("IPv4 Address"), getPluginCustomArgName(0), strings[0], IP_ADDR_SIZE_P101);
       addFormNumericBox(F("UDP Port"), F(FORM_PORT_P101), GET_UDP_PORT_P101, 0, PORT_MAX_P101);
       addFormNote(
-        concat(F("Typical Installations use IP Address "),  F(IP_STR_DEF_P101)) +
-        concat(F(", Port "),  PORT_DEF_P101));
+        concat(F("Typical Installations use IP Address " IP_STR_DEF_P101
+                 ", Port "),  PORT_DEF_P101));
 
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      char   ipString[IP_BUFF_SIZE_P101] {0};
-      char   macString[MAC_BUFF_SIZE_P101] {0};
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101] {};
       String errorStr;
-      String msgStr;
-      const String wolStr = F(LOG_NAME_P101);
 
       // Check Task Name.
       uint8_t nameCode = safeName(event->TaskIndex);
 
-      if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {               // Check to see if user submitted safe device name.
-        strcpy(ExtraTaskSettings.TaskDeviceName, String(F(DEF_TASK_NAME_P101)).c_str()); // Use default name.
+      if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {        // Check to see if user submitted safe device name.
+        strcpy(ExtraTaskSettings.TaskDeviceName, PSTR(DEF_TASK_NAME_P101)); // Use default name.
 
         if (nameCode == NAME_UNSAFE) {
           errorStr = F("ALERT, Renamed Unsafe Task Name. ");
@@ -186,75 +178,56 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // Check IP Address.
-      if (!safe_strncpy(ipString, webArg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(deviceTemplate[0], webArg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
         // msgStr = getCustomTaskSettingsError(0); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
         // addLog(LOG_LEVEL_INFO, msgStr);
       }
 
-      if (strlen(ipString) == 0) { // IP Address missing, use default value (without webform warning).
-        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
+      if (strlen(deviceTemplate[0]) == 0) { // IP Address missing, use default value (without webform warning).
+        strcpy_P(deviceTemplate[0], PSTR(IP_STR_DEF_P101));
 
-        msgStr  = wolStr;
-        msgStr += F("Loaded Default IP = ");
-        msgStr += F(IP_STR_DEF_P101);
-        addLogMove(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Loaded Default IP = " IP_STR_DEF_P101));
       }
-      else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
-        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
+      else if (strlen(deviceTemplate[0]) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
+        strcpy_P(deviceTemplate[0], PSTR(IP_STR_DEF_P101));
 
         errorStr += F("Provided IP Invalid (Using Default). ");
-        msgStr    = concat(wolStr, F("Provided IP Invalid (Using Default). "));
-        msgStr   += '[';
-        msgStr   += F(IP_STR_DEF_P101);
-        msgStr   += ']';
-        addLogMove(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Provided IP Invalid (Using Default). [" IP_STR_DEF_P101 "]"));
       }
-      else if (!validateIp(ipString)) { // Unexpected IP Address value. Leave as-is, but Warn User.
+      else if (!validateIp(deviceTemplate[0])) { // Unexpected IP Address value. Leave as-is, but Warn User.
         errorStr += F("WARNING, Please Review IP Address. ");
-        msgStr    = concat(wolStr, F("WARNING, Please Review IP Address. "));
-        msgStr   += '[';
-        msgStr   += ipString;
-        msgStr   += ']';
-        addLogMove(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, strformat(F(LOG_NAME_P101 "WARNING, Please Review IP Address. [%s]"), deviceTemplate[0]));
       }
 
       // Check MAC Address.
-      if (!safe_strncpy(macString, webArg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(deviceTemplate[1], webArg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
         // msgStr += getCustomTaskSettingsError(1); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
         // addLog(LOG_LEVEL_INFO, msgStr);
       }
 
-      if (strlen(macString) == 0) { // MAC Address missing, use default value.
-        strcpy_P(macString, String(F(MAC_STR_DEF_P101)).c_str());
+      if (strlen(deviceTemplate[1]) == 0) { // MAC Address missing, use default value.
+        strcpy_P(deviceTemplate[1], PSTR(MAC_STR_DEF_P101));
 
         errorStr += F("MAC Address Not Provided, Populated with Zero Values. ");
-        addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("MAC Address Not Provided, Populated with Zero Values. ")));
+        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "MAC Address Not Provided, Populated with Zero Values. "));
       }
-      else if (!validateMac(macString)) { // Suspicious MAC Address. Leave as-is, but warn User.
+      else if (!validateMac(deviceTemplate[1])) { // Suspicious MAC Address. Leave as-is, but warn User.
         errorStr += F("ERROR, MAC Address Invalid. ");
-        msgStr    = concat(wolStr, F("ERROR, MAC Address Invalid. "));
-        msgStr   += '[';
-        msgStr   += macString;
-        msgStr   += ']';
-        addLogMove(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, strformat(F(LOG_NAME_P101 "ERROR, MAC Address Invalid. [%s]"), deviceTemplate[1]));
       }
 
-      // Save the user's IP and MAC Address parameters into Custom Settings.
-      safe_strncpy(deviceTemplate[0], ipString,   IP_BUFF_SIZE_P101);
-      safe_strncpy(deviceTemplate[1], macString, MAC_BUFF_SIZE_P101);
-
-      if (errorStr.length() > 0) { // Send error messages (if any) to webform.
+      if (!errorStr.isEmpty()) { // Send error messages (if any) to webform.
         addHtmlError(errorStr);
       }
 
       // Save all the Task parameters.
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       SET_UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
-      success       = true;
+      success           = true;
       break;
     }
 
@@ -269,98 +242,71 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WRITE: {
-      char   ipString[IP_BUFF_SIZE_P101]   = {0};
-      char   macString[MAC_BUFF_SIZE_P101] = {0};
-      uint8_t parse_error                  = false;
-      String msgStr;
       String strings[2];
-      String tmpString    = string;
-      const String wolStr = F(LOG_NAME_P101);
 
-      //  addLog(LOG_LEVEL_INFO, String(F("--> WOL taskIndex= ")) + String(event->TaskIndex)); // Debug
+      //  addLog(LOG_LEVEL_INFO, concat(F("--> WOL taskIndex= "), event->TaskIndex)); // Debug
 
-      String cmd = parseString(tmpString, 1);
+      const String cmd = parseString(string, 1);
 
       //  Warning, event->TaskIndex is invalid in PLUGIN_WRITE during controller ack calls.
       //  So checking the Device Name needs special attention.
       //  See https://github.com/letscontrolit/ESPEasy/issues/3317
       if (validTaskIndex(event->TaskIndex) &&
-          (cmd.equalsIgnoreCase(F(CMD_NAME_P101)) ||
+          (equals(cmd, F(CMD_NAME_P101)) ||
            cmd.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex)))) {
-
-        // Do not process WOL command if plugin disabled. This code is for errant situations which may never occur.
-        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
-          // String ErrorStr = F("Plugin is Disabled, Command Ignored. ");
-          // addLog(LOG_LEVEL_INFO, wolStr + ErrorStr);
-          // SendStatus(event, ErrorStr); // Reply (echo) to sender. This will print message on browser.
-          break;
-        }
-
         success = true;
 
         LoadCustomTaskSettings(event->TaskIndex, strings, 2, CUSTOMTASK_STR_SIZE_P101);
-        safe_strncpy(ipString,  strings[0],  IP_BUFF_SIZE_P101);
-        safe_strncpy(macString, strings[1], MAC_BUFF_SIZE_P101);
 
-        String paramMac  = parseString(tmpString, 2); // MAC Address (optional)
-        String paramIp   = parseString(tmpString, 3); // IP Address (optional)
-        String paramPort = parseString(tmpString, 4); // UDP Port (optional)
+        String paramMac  = parseString(string, 2); // MAC Address (optional)
+        String paramIp   = parseString(string, 3); // IP Address (optional)
+        String paramPort = parseString(string, 4); // UDP Port (optional)
 
         // Populate Parameters with default settings when missing from command line.
-        if (paramMac.isEmpty()) {                         // Missing from command line, use default setting.
-          paramMac = macString;
+        if (paramMac.isEmpty()) {                  // Missing from command line, use default setting.
+          paramMac = strings[1];
         }
 
         if (paramIp.isEmpty()) { // Missing from command line, use default setting.
-          paramIp = ipString;
+          paramIp = strings[0];
         }
 
         if (paramPort.isEmpty()) {
-          LoadTaskSettings(event->TaskIndex);
-          paramPort = GET_UDP_PORT_P101; // Get default Port from user settings.
+          LoadTaskSettings(event->TaskIndex); // FIXME Not sure if this is still needed...
+          paramPort = GET_UDP_PORT_P101;      // Get default Port from user settings.
         }
 
         // Validate the MAC Address.
         if (!validateMac(paramMac)) {
-          parse_error = true;
-          msgStr      = concat(wolStr, F("Error, MAC Addr Invalid ["));
-          msgStr     += paramMac;
-          msgStr     += ']';
-          addLogMove(LOG_LEVEL_INFO, msgStr);
+          success = false;
+          addLogMove(LOG_LEVEL_INFO, strformat(F(LOG_NAME_P101 "Error, MAC Addr Invalid [%s]"), paramMac.c_str()));
         }
 
         // Validate IP Address.
         if (!validateIp(paramIp)) {
-          parse_error = true;
-          msgStr      = concat(wolStr, F("Error, IP Addr Invalid ["));
-          msgStr     += paramIp;
-          msgStr     += ']';
-          addLogMove(LOG_LEVEL_INFO, msgStr);
+          success = false;
+          addLogMove(LOG_LEVEL_INFO, strformat(F(LOG_NAME_P101 "Error, IP Addr Invalid [%s]"), paramIp.c_str()));
         }
 
         // Validate UDP Port.
         if (!validatePort(paramPort)) {
-          parse_error = true;
-          msgStr      = concat(wolStr, F("Error, Port Invalid ["));
-          msgStr     += paramPort;
-          msgStr     += ']';
-          addLogMove(LOG_LEVEL_INFO, msgStr);
+          success = false;
+          addLogMove(LOG_LEVEL_INFO, strformat(F(LOG_NAME_P101 "Error, Port Invalid [%s]"), paramPort.c_str()));
         }
 
         // If no errors we can send Magic Packet.
-        if (parse_error == true) {
-          msgStr = F("CMD Syntax Error");
-          addLogMove(LOG_LEVEL_INFO, concat(wolStr, msgStr));
+        if (!success) {
+          String msgStr = F("CMD Syntax Error");
+          addLogMove(LOG_LEVEL_INFO, concat(F(LOG_NAME_P101), msgStr));
           msgStr += F(" <br>");
           SendStatus(event, msgStr); // Reply (echo) to sender. This will print message on browser.
         }
-        else {                               // No parsing errors, Send Magic Packet (Wake Up the MAC).
+        else {                       // No parsing errors, Send Magic Packet (Wake Up the MAC).
           addLogMove(LOG_LEVEL_INFO, strformat(
-            F("%sMAC= %s, IP= %s, Port= %s"),
-            wolStr.c_str(),
-            paramMac.c_str(),
-            paramIp.c_str(),
-            paramPort.c_str()));
+                       F(LOG_NAME_P101 "MAC= %s, IP= %s, Port= %s"),
+                       paramMac.c_str(),
+                       paramIp.c_str(),
+                       paramPort.c_str()));
 
           // Send Magic Packet.
           if (WiFi.status() == WL_CONNECTED) {
@@ -371,11 +317,11 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
             // WOL.setRepeat(1, 0); // One Magic Packet, No Repeats. (Library default)
 
             if (!WOL.sendMagicPacket(paramMac, paramPort.toInt())) {
-              addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("Error, Magic Packet Failed (check parameters)")));
+              addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, Magic Packet Failed (check parameters)"));
             }
           }
           else {
-            addLogMove(LOG_LEVEL_INFO, concat(wolStr, F("Error, WiFi Off-Line")));
+            addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, WiFi Off-Line"));
           }
         }
       }
@@ -390,7 +336,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 // Arg: task index
 // Returns: NAME_SAFE, NAME_MISSING, or NAME_USAFE.
 uint8_t safeName(taskIndex_t index) {
-  String  devName  = getTaskDeviceName(index);
+  String devName = getTaskDeviceName(index);
 
   if (devName.isEmpty()) {
     return NAME_MISSING;
@@ -429,14 +375,13 @@ bool validateIp(const String& ipStr) {
 // Return true if MAC string appears legit.
 bool validateMac(const String& macStr) {
   uint8_t pos = 0;
-  char    hexChar;
 
   if (macStr.length() != MAC_ADDR_SIZE_P101) {
     return false;
   }
 
-  for (uint8_t strPos = 0; strPos < MAC_ADDR_SIZE_P101; strPos++) {
-    uint8_t mod = strPos % 3;
+  for (uint8_t strPos = 0; strPos < MAC_ADDR_SIZE_P101; ++strPos) {
+    const uint8_t mod = strPos % 3;
 
     if (mod == 2) {
       if (macStr[strPos] == MAC_SEP_CHAR_P101) { // Must be a colon in the third position.
@@ -447,9 +392,7 @@ bool validateMac(const String& macStr) {
       }
     }
     else {
-      hexChar = macStr[strPos];
-
-      if (!isHexadecimalDigit(hexChar)) {
+      if (!isHexadecimalDigit(macStr.charAt(strPos))) {
         return false;
       }
     }

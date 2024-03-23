@@ -13,7 +13,7 @@ uint64_t P008_data_struct::castHexAsDec(uint64_t hexValue) {
 
   uint64_t factor = 1;
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; ++i) {
     digit = (hexValue & 0x0000000F);
 
     if (digit > 10) {
@@ -146,13 +146,11 @@ bool P008_data_struct::plugin_once_a_second(struct EventStruct *event) {
           } else {
             log += F("Old Tag: ");
           }
-          log += (unsigned long)keyBuffer;
-          log += F(", 0x");
-          log += ull2String(keyBuffer, 16);
-          log += F(", mask: 0x");
-          log += ull2String(keyMask, 16);
-          log += F(" Bits: ");
-          log += bitCount;
+          log += strformat(F("%s, 0x%s, mask: 0x%s Bits: %d"),
+                           ull2String(keyBuffer).c_str(),
+                           ull2String(keyBuffer, 16).c_str(),
+                           ull2String(keyMask,   16).c_str(),
+                           static_cast<uint8_t>(bitCount));
           addLogMove(LOG_LEVEL_INFO, log);
         }
 

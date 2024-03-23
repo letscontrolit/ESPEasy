@@ -120,7 +120,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Temperature offset"), F("offset"), P150_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Offset in units of 0.1 degree Celsius!"));
+      # endif // ifndef BUILD_NO_DEBUG
 
       {
         const __FlashStringHelper *averagingCaptions[] = {
@@ -148,7 +150,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CONVERSION_ONE_SHOT,
         };
         addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_CONF_CONVERSION_MODE, true);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("Changing this setting will save and reload this page."));
+        # endif // ifndef BUILD_NO_DEBUG
       }
 
       if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_CONTINUOUS) {
@@ -178,7 +182,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Output"));
 
       addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Changing this setting will save and reload this page."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormCheckBox(F("Log measured values (INFO)"),  F("log"),  P150_GET_OPT_ENABLE_LOG);
 

@@ -6,6 +6,8 @@
 
 #include "../Helpers/FS_Helper.h"
 
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
@@ -194,6 +196,13 @@ String getCustomTaskSettingsError(uint8_t varNr);
 String ClearCustomTaskSettings(taskIndex_t TaskIndex);
 
 /********************************************************************************************\
+   Delete Extended custom task settings file if it exists, with validity checks
+ \*********************************************************************************************/
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index);
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+/********************************************************************************************\
    Load Custom Task settings from file system
  \*********************************************************************************************/
 String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize, int offset_in_block = 0);
@@ -353,6 +362,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 
 #endif // ifdef ESP32
 
+bool validateUploadConfigDat(const uint8_t *buf);
 
 /********************************************************************************************\
    Download ESPEasy file types from HTTP server

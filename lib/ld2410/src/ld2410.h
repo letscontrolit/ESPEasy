@@ -12,6 +12,12 @@
  *	Released under LGPL-2.1 see https://github.com/ncmreynolds/ld2410/LICENSE for full license
  *
  */
+
+/** Changelog:
+ * 2024-01-13 tonhuisman: Replace separate serial->write() commands and c-style casts, by loops using an uint8_t array,
+ *                        saving ca. 1100 bytes on ESP8266 and ca. 700 bytes on ESP32 binaries
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -308,7 +314,11 @@ private:
   /*
    * feature management functions */
   uint16_t serial_to_int_(uint8_t index);             // Unpack bytes
-  bool     debug_command_results_(const char *title);
+  bool     debug_command_results_(
+                  #ifdef LD2410_DEBUG
+                  const char *title
+                  #endif
+                  );
   bool     wait_for_command_ack_(uint8_t command);
   bool     isProtocolDataFrame_();                    // Command -Determine type of Frame
   bool     isReportingDataFrame_();                   // Data - Determine type of Frame
@@ -319,6 +329,9 @@ private:
   void     print_frame_();                            // Print the frame for debugging
   void     send_command_preamble_();                  // Commands have the same preamble
   void     send_command_postamble_();                 // Commands have the same postamble
+  void     send_2byte_command(uint8_t cmd_byte);      // 2-byte commands have a single command byte
+  void     send_4byte_command(uint8_t cmd_byte, 
+                              uint8_t val_byte);      // 4-byte commands have a singel command byte and a single value byte
   bool     enter_configuration_mode_();               // Necessary before sending any command
   bool     leave_configuration_mode_();               // Will not read values without leaving command mode
 };

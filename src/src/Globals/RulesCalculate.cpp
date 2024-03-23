@@ -2,6 +2,7 @@
 
 #include "../DataStructs/TimingStats.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringConverter_Numerical.h"
 
 RulesCalculate_t RulesCalculate{};
@@ -32,11 +33,8 @@ int CalculateParam(const String& TmpStr, int errorValue) {
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CALCULATE PARAM: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += roundf(param);
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG,
+                   strformat(F("CALCULATE PARAM: %s = %.6g"), TmpStr.c_str(), roundf(param)));
       }
 #endif // ifndef BUILD_NO_DEBUG
     } else {
@@ -85,7 +83,7 @@ CalculateReturnCode Calculate(const String& input,
           log += F("Unknown token");
           break;
         case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
-          log += String(F("Exceeded token length (")) + TOKEN_LENGTH + ')';
+          log += strformat(F("Exceeded token length (%d)"), TOKEN_LENGTH);
           break;
         case CalculateReturnCode::OK:
           // Already handled, but need to have all cases here so the compiler can warn if we're missing one.

@@ -115,8 +115,21 @@ void handle_tools() {
   addFormSubHeader(F("Settings"));
 
   addWideButtonPlusDescription(F("upload"), F("Load"), F("Loads a settings file"));
-  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
-  addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
+  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!"
+                #if FEATURE_TARSTREAM_SUPPORT
+                " Or a .tar file containing \"config.dat\" and other files can be uploaded"
+                #endif // if FEATURE_TARSTREAM_SUPPORT
+                ")"));
+  addWideButtonPlusDescription(F("download"), F("Save"),
+                               # if FEATURE_TARSTREAM_SUPPORT
+                               F("Save all configuration in a single .tar archive")
+                               # else // if FEATURE_TARSTREAM_SUPPORT
+                               F("Saves a settings file")
+                               # endif // if FEATURE_TARSTREAM_SUPPORT
+                               );
+  #if FEATURE_TARSTREAM_SUPPORT
+  addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI
   #  if defined(ESP8266)

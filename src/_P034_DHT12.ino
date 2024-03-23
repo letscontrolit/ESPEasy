@@ -6,14 +6,13 @@
 // #######################################################################################################
 
 
+# define PLUGIN_034
+# define PLUGIN_ID_034         34
+# define PLUGIN_NAME_034       "Environment - DHT12 (I2C)"
+# define PLUGIN_VALUENAME1_034 "Temperature"
+# define PLUGIN_VALUENAME2_034 "Humidity"
 
-#define PLUGIN_034
-#define PLUGIN_ID_034         34
-#define PLUGIN_NAME_034       "Environment - DHT12 (I2C)"
-#define PLUGIN_VALUENAME1_034 "Temperature"
-#define PLUGIN_VALUENAME2_034 "Humidity"
-
-#define DHT12_I2C_ADDRESS      0x5C // I2C address for the sensor
+# define DHT12_I2C_ADDRESS      0x5C // I2C address for the sensor
 
 boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -74,19 +73,14 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       uint8_t dht_dat[5];
-
-      // uint8_t dht_in;
-      uint8_t i;
-
-      // uint8_t Retry = 0;
-      boolean error = false;
+      bool    error = false;
 
       Wire.beginTransmission(DHT12_I2C_ADDRESS);         // start transmission to device
       Wire.write(0);                                     // sends register address to read from
       Wire.endTransmission();                            // end transmission
 
       if (Wire.requestFrom(DHT12_I2C_ADDRESS, 5) == 5) { // send data n-bytes read
-        for (i = 0; i < 5; i++)
+        for (uint8_t i = 0; i < 5; ++i)
         {
           dht_dat[i] = Wire.read();                      // receive DATA
         }
@@ -97,24 +91,25 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
       if (!error)
       {
         // Checksum calculation is a Rollover Checksum by design!
-        uint8_t dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
+        const uint8_t dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
 
         if (dht_dat[4] == dht_check_sum)
         {
-          float temperature = float(dht_dat[2] * 10 + (dht_dat[3] & 0x7f)) / 10.0f; // Temperature
+          const float temperature = static_cast<float>(
+            (dht_dat[2] * 10 + (dht_dat[3] & 0x7f)) * (dht_dat[3] & 0x80 ? -1 : 1)) / 10.0f; // Temperature
 
-          if (dht_dat[3] & 0x80) { temperature = -temperature; }
-          float humidity = float(dht_dat[0] * 10 + dht_dat[1]) / 10.0f;             // Humidity
+          const float humidity = float(dht_dat[0] * 10 + dht_dat[1]) / 10.0f;                // Humidity
 
           UserVar.setFloat(event->TaskIndex, 0, temperature);
           UserVar.setFloat(event->TaskIndex, 1, humidity);
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("DHT12: Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-            log  = F("DHT12: Humidity: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO,
+                       concat(F("DHT12: Temperature: "),
+                              formatUserVarNoCheck(event->TaskIndex, 0)));
+            addLogMove(LOG_LEVEL_INFO,
+                       concat(F("DHT12: Humidity: "),
+                              formatUserVarNoCheck(event->TaskIndex, 1)));
 
             /*
                         log = F("DHT12: Data: ");
@@ -124,7 +119,7 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
                           log += ", ";
                         }
                         addLog(LOG_LEVEL_INFO, log);
-            */
+             */
           }
           success = true;
         } // checksum

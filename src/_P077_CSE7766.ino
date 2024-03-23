@@ -293,18 +293,10 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              String log = F("CSE voltage: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_VOLTAGE);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE power: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_ACTIVE_POWER);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE current: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_CURRENT);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE pulses: ");
-              log += P077_data->cf_pulses;
-              addLogMove(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE voltage: "), P077_data->getValue(P077_query::P077_QUERY_VOLTAGE)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE power: "), P077_data->getValue(P077_query::P077_QUERY_ACTIVE_POWER)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE current: "), P077_data->getValue(P077_query::P077_QUERY_CURRENT)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE pulses: "), P077_data->cf_pulses));
             }
             # endif // ifndef BUILD_NO_DEBUG
           }
@@ -312,23 +304,14 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = F("CSE: time ");
-            log += P077_data->t_max;
-            log += '/';
-            log += P077_data->t_pkt;
-            log += '/';
-            log += P077_data->t_all;
-            addLogMove(LOG_LEVEL_DEBUG, log);
-            log  = F("CSE: bytes ");
-            log += P077_data->count_bytes;
-            log += '/';
-            log += P077_data->count_max;
-            log += '/';
-            log += P077_data->serial_Available();
-            addLogMove(LOG_LEVEL_DEBUG, log);
-            log  = F("CSE: nr ");
-            log += P077_data->count_pkt;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("CSE: time %d/%d/%d"),
+                                 P077_data->t_max, P077_data->t_pkt, P077_data->t_all));
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("CSE: bytes %d/%d/%d"),
+                                 P077_data->count_bytes, P077_data->count_max, P077_data->serial_Available()));
+            addLogMove(LOG_LEVEL_DEBUG,
+                       concat(F("CSE: nr "), P077_data->count_pkt));
           }
           # endif // ifndef BUILD_NO_DEBUG
           P077_data->t_all       = 0;

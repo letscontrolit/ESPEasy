@@ -41,13 +41,13 @@
 //
 // Analog input is sampled 10/second and averaged with the same oversampling algoritm of P002_ADC
 // Note: ESP8266 uses hard coded A0 as analog input.
-//       ESP32 provides the standard ESPeasy serial configuration
+//       ESP32 provides the standard ESPeasy Analog input GPIO configuration
 //
 // Conversion algorithm:
 // Sensor resistance is logaritmic to the concentration of a gas. Sensors are not specific to a single
 // gas. Key is the ratio between the measured Rs and a reference resistor Rzero (Rs/Rzero).
 // For each specific gas a somewhat linear relation between gas concentration and the ratio (Rs/Rzero) is
-// show on a log-log chart. Various algorithms are described in above mentioned literature. 
+// shown on a log-log chart. Various algorithms are described in above mentioned literature. 
 // This plugin supports 3, almost similar, algorithms to make it easier to copy a parameter set from the
 // internet for a specific sensor/gas combination.
 // 
@@ -73,7 +73,7 @@
 
 #define PLUGIN_145
 #define PLUGIN_ID_145     145           // plugin id
-#define PLUGIN_NAME_145   "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol) [TESTING]" // "Plugin Name" is what will be dislpayed in the selection list
+#define PLUGIN_NAME_145   "Gases - MQxxx (MQ135 CO2, MQ3 Alcohol)" // "Plugin Name" is what will be displayed in the selection list
 #define PLUGIN_VALUENAME1_145 "level"   // variable output of the plugin. The label is in quotation marks
 #define PLUGIN_145_DEBUG  false         // set to true for extra log info in the debug
 
@@ -171,24 +171,22 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
     // Setup the web form for the task
     case PLUGIN_WEBFORM_LOAD:
     {
-      bool compensate = P145_PCONFIG_FLAGS & 0x0001;        // Compensation enable flag
-      bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;  // Calibreation enable flag
-      bool lowvcc = (P145_PCONFIG_FLAGS >> 2) & 0x0001;     // Low voltage power supply indicator
+      const bool compensate = P145_PCONFIG_FLAGS & 0x0001;        // Compensation enable flag
+      const bool calibrate = (P145_PCONFIG_FLAGS >> 1) & 0x0001;  // Calibration enable flag
+      const bool lowvcc = (P145_PCONFIG_FLAGS >> 2) & 0x0001;     // Low voltage power supply indicator
       
       // FormSelector with all predefined "Sensor - Gas" options
       String options[P145_MAXTYPES] = {};
-      int optionValues[P145_MAXTYPES] = {};
       int x = P145_data_struct::getNbrOfTypes();
       if (x > P145_MAXTYPES) 
       {
         x = P145_MAXTYPES;    // Clip to prevent array boundary out of range access
       }
-      for (int i=0; i<x; i++)
+      for (int i=0; i<x; ++i)
       {
-        options[i] = concat(P145_data_struct::getTypeName(i), F(" - ")) + P145_data_struct::getGasName(i);
-        optionValues[i] = i; 
+        options[i] = concat(concat(P145_data_struct::getTypeName(i), F(" - ")), P145_data_struct::getGasName(i));
       }
-      addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), x, options, optionValues, P145_PCONFIG_SENSORT);
+      addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), x, options, nullptr, P145_PCONFIG_SENSORT);
 
 # ifdef ESP32
       // Analog input selection
@@ -211,9 +209,9 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       if (P145_data != nullptr)
       {
         float calVal = P145_data->getCalibrationValue();
-        if (calVal > 0.0) 
+        if (definitelyGreaterThan(calVal, 0.0f)) 
         {
-          addFormNote(String(F("Current measurement suggests Rzero= ")) + String(calVal));
+          addFormNote(concat(F("Current measurement suggests Rzero= "), calVal));
         }
       }
       addFormCheckBox(F("Low sensor supply voltage"), F(P145_GUID_LOWVCC), lowvcc);
@@ -259,9 +257,9 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_PCONFIG_RLOAD     = getFormItemFloat(F(P145_GUID_RLOAD));
       P145_PCONFIG_RZERO     = getFormItemFloat(F(P145_GUID_RZERO));
       P145_PCONFIG_REF       = getFormItemFloat(F(P145_GUID_RREFLEVEL));
-      bool compensate        = (getFormItemInt(F(P145_GUID_COMP)) == 1);
-      bool calibrate         = isFormItemChecked(F(P145_GUID_CAL));
-      bool lowvcc            = isFormItemChecked(F(P145_GUID_LOWVCC));
+      const bool compensate  = (getFormItemInt(F(P145_GUID_COMP)) == 1);
+      const bool calibrate   = isFormItemChecked(F(P145_GUID_CAL));
+      const bool lowvcc      = isFormItemChecked(F(P145_GUID_LOWVCC));
       P145_PCONFIG_FLAGS     = compensate + (calibrate << 1) + (lowvcc << 2);
       P145_PCONFIG_TEMP_TASK = getFormItemInt(F(P145_GUID_TEMP_T));
       P145_PCONFIG_TEMP_VAL  = getFormItemInt(F(P145_GUID_TEMP_V));
@@ -322,12 +320,12 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       {
         float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
         float humidity = 60.0f;     // A reasonable value in case humidity source task is invalid
-        bool compensate = P145_PCONFIG_FLAGS & 0x0001;
+        const bool compensate = P145_PCONFIG_FLAGS & 0x0001;
         if (compensate && validTaskIndex(P145_PCONFIG_TEMP_TASK) && validTaskIndex(P145_PCONFIG_HUM_TASK))
         {
           // we're checking a var from another task, so calculate that basevar
-          temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
-          humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
+          temperature = UserVar.getFloat(P145_PCONFIG_TEMP_TASK, P145_PCONFIG_TEMP_VAL); // in degrees C
+          humidity = UserVar.getFloat(P145_PCONFIG_HUM_TASK, P145_PCONFIG_HUM_VAL);    // in % relative
         }
         UserVar.setFloat(event->TaskIndex, 0, P145_data->readValue(temperature, humidity));
         success = true;
@@ -341,7 +339,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       P145_data_struct *P145_data = static_cast<P145_data_struct *>(getPluginTaskData(event->TaskIndex));
       if (P145_data != nullptr)
       {
-        if ((P145_PCONFIG_FLAGS >> 1) & 0x0001)   // Calibration fleag
+        if ((P145_PCONFIG_FLAGS >> 1) & 0x0001)   // Calibration flag
         {
           // Update Rzero in case of autocalibration
           // TODO is there an event to signal the plugin code that the value has been updated to prevent polling?

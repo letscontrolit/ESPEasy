@@ -253,7 +253,7 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
   if (_recv_buf_used < 8) {
     // Too small.
     addLog(LOG_LEVEL_INFO,
-           String(F("MEI response too small: ")) + _recv_buf_used);
+           concat(F("MEI response too small: "), _recv_buf_used));
     next_object_id = 0xFF;
     more_follows   = false;
     return result;
@@ -391,7 +391,7 @@ void ModbusRTU_struct::logModbusException(uint8_t value) {
       log += F("Modbus No Data");
       break;
      default:
-      log += String(F("Unknown Exception code: ")) + value;
+      log += concat(F("Unknown Exception code: "), value);
       break;
      }
      log += F(" - sent: ");

@@ -126,9 +126,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
     // There is some offset to apply.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" Apply temp offset: ");
-      log += temp_offset;
-      log += 'C';
+      log += strformat(F(" Apply temp offset: %.2fC"), temp_offset);
     }
     # endif // ifndef LIMIT_BUILD_SIZE
 
@@ -136,8 +134,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F(" humidity: ");
-        log += last_hum_val;
+        log += concat(F(" humidity: "), last_hum_val);
       }
       # endif // ifndef LIMIT_BUILD_SIZE
       last_hum_val = compute_humidity_from_dewpoint(last_temp_val + temp_offset, last_dew_temp_val);
@@ -145,9 +142,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F("% => ");
-        log += last_hum_val;
-        log += F("%");
+        log += strformat(F("%% => %.2f%%"), last_hum_val);
       }
       # endif // ifndef LIMIT_BUILD_SIZE
     } else {
@@ -157,8 +152,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 # ifndef LIMIT_BUILD_SIZE
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log += F(" temperature: ");
-      log += last_temp_val;
+      log += concat(F(" temperature: "), last_temp_val);
     }
 # endif // ifndef LIMIT_BUILD_SIZE
     last_temp_val = last_temp_val + temp_offset;
@@ -166,9 +160,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 # ifndef LIMIT_BUILD_SIZE
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log     += F("C => ");
-      log     += last_temp_val;
-      log     += 'C';
+      log     += strformat(F("C => %.2fC"), last_temp_val);
       logAdded = true;
     }
 # endif // ifndef LIMIT_BUILD_SIZE
@@ -178,9 +170,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
 
   if (hasHumidity()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log     += F(" dew point: ");
-      log     += last_dew_temp_val;
-      log     += 'C';
+      log     += strformat(F(" dew point: %.2fC"), last_dew_temp_val);
       logAdded = true;
     }
   }
@@ -213,9 +203,7 @@ bool P028_data_struct::check() {
           setUninitialized();
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("BMx280: Detected ");
-            log += getDeviceName(sensorID);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, concat(F("BMx280: Detected "), getDeviceName(sensorID)));
           }
         }
       } else {
@@ -230,8 +218,7 @@ bool P028_data_struct::check() {
 
   if (sensorID == Unknown_DEVICE) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("BMx280: Unable to detect chip ID (");
-      log += chip_id;
+      String log = concat(F("BMx280: Unable to detect chip ID ("), chip_id);
 
       if (!wire_status) {
         log += F(", failed");

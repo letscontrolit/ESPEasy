@@ -104,7 +104,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
       // Show current value
       addRowLabel(F("Current Pressure"));
-      addHtml(String(touchRead(CONFIG_PIN1)));
+      addHtmlInt(touchRead(CONFIG_PIN1));
 
       success = true;
       break;
@@ -127,6 +127,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+
     case PLUGIN_TEN_PER_SECOND:
     {
       if ((p097_pinTouched != 0) || (p097_pinTouchedPrev != 0)) {
@@ -179,11 +180,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       UserVar.setFloat(event->TaskIndex, 0, raw_value);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Touch : ");
-        log += formatGpioName_ADC(CONFIG_PIN1);
-        log += F(": ");
-        log += raw_value;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(F("Touch : %s: %d"), formatGpioName_ADC(CONFIG_PIN1).c_str(), raw_value));
       }
       success = true;
       break;
@@ -244,102 +241,78 @@ void P097_got_T12() IRAM_ATTR;
 void P097_got_T13() IRAM_ATTR;
 void P097_got_T14() IRAM_ATTR;
 #endif
+void P097_got_Touched(int pin) IRAM_ATTR;
 
 #if HAS_T0_INPUT
 void P097_got_T0() {
-  bitSet(p097_pinTouched, 0);
-
-  if (p097_timestamp[0] == 0) { p097_timestamp[0] = millis(); }
+  P097_got_Touched(0);
 }
 #endif
 
 void P097_got_T1() {
-  bitSet(p097_pinTouched, 1);
-
-  if (p097_timestamp[1] == 0) { p097_timestamp[1] = millis(); }
+  P097_got_Touched(1);
 }
 
 void P097_got_T2() {
-  bitSet(p097_pinTouched, 2);
-
-  if (p097_timestamp[2] == 0) { p097_timestamp[2] = millis(); }
+  P097_got_Touched(2);
 }
 
 void P097_got_T3() {
-  bitSet(p097_pinTouched, 3);
-
-  if (p097_timestamp[3] == 0) { p097_timestamp[3] = millis(); }
+  P097_got_Touched(3);
 }
 
 void P097_got_T4() {
-  bitSet(p097_pinTouched, 4);
-
-  if (p097_timestamp[4] == 0) { p097_timestamp[4] = millis(); }
+  P097_got_Touched(4);
 }
 
 void P097_got_T5() {
-  bitSet(p097_pinTouched, 5);
-
-  if (p097_timestamp[5] == 0) { p097_timestamp[5] = millis(); }
+  P097_got_Touched(6);
 }
 
 void P097_got_T6() {
-  bitSet(p097_pinTouched, 6);
-
-  if (p097_timestamp[6] == 0) { p097_timestamp[6] = millis(); }
+  P097_got_Touched(6);
 }
 
 void P097_got_T7() {
-  bitSet(p097_pinTouched, 7);
-
-  if (p097_timestamp[7] == 0) { p097_timestamp[7] = millis(); }
+  P097_got_Touched(7);
 }
 
 void P097_got_T8() {
-  bitSet(p097_pinTouched, 8);
-
-  if (p097_timestamp[8] == 0) { p097_timestamp[8] = millis(); }
+  P097_got_Touched(8);
 }
 
 void P097_got_T9() {
-  bitSet(p097_pinTouched, 9);
-
-  if (p097_timestamp[9] == 0) { p097_timestamp[9] = millis(); }
+  P097_got_Touched(9);
 }
 
 #if HAS_T10_TO_T14
 void P097_got_T10() {
-  bitSet(p097_pinTouched, 10);
-
-  if (p097_timestamp[10] == 0) { p097_timestamp[10] = millis(); }
+  P097_got_Touched(10);
 }
 
 void P097_got_T11() {
-  bitSet(p097_pinTouched, 11);
-
-  if (p097_timestamp[11] == 0) { p097_timestamp[11] = millis(); }
+  P097_got_Touched(11);
 }
 
 void P097_got_T12() {
-  bitSet(p097_pinTouched, 12);
-
-  if (p097_timestamp[12] == 0) { p097_timestamp[12] = millis(); }
+  P097_got_Touched(12);
 }
 
 void P097_got_T13() {
-  bitSet(p097_pinTouched, 13);
-
-  if (p097_timestamp[13] == 0) { p097_timestamp[13] = millis(); }
+  P097_got_Touched(13);
 }
 
 void P097_got_T14() {
-  bitSet(p097_pinTouched, 14);
-
-  if (p097_timestamp[14] == 0) { p097_timestamp[14] = millis(); }
+  P097_got_Touched(14);
 }
 
 #endif
 
+void P097_got_Touched(int pin) {
+  bitSet(p097_pinTouched, pin);
+
+  if (p097_timestamp[pin] == 0) { p097_timestamp[pin] = millis(); }
+}
 #endif 
 
 

@@ -16,7 +16,7 @@ P129_data_struct::P129_data_struct(int8_t  dataPin,
 
 bool P129_data_struct::plugin_init(struct EventStruct *event) {
   if (isInitialized()) {
-    for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; i++) { // Clear entire buffer
+    for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) { // Clear entire buffer
       readBuffer[i] = 0;
     }
 
@@ -40,22 +40,16 @@ uint32_t P129_data_struct::getChannelState(uint8_t offset,
   uint16_t sft       = 0u;
   const uint8_t last = offset + size;
 
-  for (uint8_t ofs = offset; ofs < last; ofs++, sft++) {
+  for (uint8_t ofs = offset; ofs < last; ++ofs, ++sft) {
     result += (readBuffer[ofs] << (8 * sft));
   }
 
   # ifdef P129_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("SHIFTIN: getChannelState offset: ");
-    log += offset;
-    log += F(", size: ");
-    log += size;
-    log += F(", result: ");
-    log += result;
-    log += F("/0x");
-    log += String(result, HEX);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("SHIFTIN: getChannelState offset: %d, size: %d, result: %d/0x%x"),
+                         offset, size, result, result));
   }
   # endif // ifdef P129_DEBUG_LOG
 
@@ -66,7 +60,7 @@ bool P129_data_struct::plugin_read(struct EventStruct *event) {
   const uint16_t last = P129_CONFIG_SHOW_OFFSET + (VARS_PER_TASK * 4);
   uint8_t varNr       = 0;
 
-  for (uint16_t index = P129_CONFIG_SHOW_OFFSET; index < _chipCount && index < last && varNr < VARS_PER_TASK; index += 4, varNr++) {
+  for (uint16_t index = P129_CONFIG_SHOW_OFFSET; index < _chipCount && index < last && varNr < VARS_PER_TASK; index += 4, ++varNr) {
     uint32_t result = getChannelState(index, min(VARS_PER_TASK, _chipCount - index));
     UserVar.setUint32(event->TaskIndex, varNr, result);
   }
@@ -90,7 +84,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
 
   if (equals(command, F("shiftin"))) {
     const String subcommand = parseString(string, 2);
-    int  command_i = GetCommandCode(subcommand.c_str(), p129_subcommands);
+    const int    command_i  = GetCommandCode(subcommand.c_str(), p129_subcommands);
 
     if (command_i == -1) {
       // No matching subcommand found
@@ -114,16 +108,9 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         # ifdef P129_DEBUG_LOG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = command;
-            log += F(", pin: ");
-            log += event->Par2;
-            log += F(", value: ");
-            log += value;
-            log += F(", config: ");
-            log += ulong;
-            log += F(", bit: ");
-            log += bit;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("%s, pin: %d, value: %d, config: %u, bit: %u"),
+                                 command.c_str(), event->Par2, value, ulong, bit));
           }
         # endif // ifdef P129_DEBUG_LOG
         }
@@ -145,16 +132,9 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         # ifdef P129_DEBUG_LOG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = command;
-            log += F(", chip: ");
-            log += event->Par2;
-            log += F(", value: ");
-            log += value;
-            log += F(", config: ");
-            log += ulong;
-            log += F(", bit: ");
-            log += bit;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("%s, chip: %d, value: %d, config: %u, bit: %u"),
+                                 command.c_str(), event->Par2, value, ulong, bit));
           }
         # endif // ifdef P129_DEBUG_LOG
         }
@@ -209,7 +189,7 @@ bool P129_data_struct::plugin_readData(struct EventStruct *event) {
 
     if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, LOW); }
 
-    for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
+    for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; ++i) {
       prevBuffer[i] = readBuffer[i];
       readBuffer[i] = shiftIn(static_cast<uint8_t>(_dataPin), static_cast<uint8_t>(_clockPin), MSBFIRST);
     }
@@ -230,7 +210,7 @@ void P129_data_struct::checkDiff(struct EventStruct *event) {
       const uint32_t read = readBuffer[i + 3] << 24 | readBuffer[i + 2] << 16 | readBuffer[i + 1] << 8 | readBuffer[i + 0];
       const uint32_t prev = prevBuffer[i + 3] << 24 | prevBuffer[i + 2] << 16 | prevBuffer[i + 1] << 8 | prevBuffer[i + 0];
 
-      for (uint8_t j = 0; j < 32; j++) {                                                  // Check all 32 bits
+      for (uint8_t j = 0; j < 32; ++j) {                                                  // Check all 32 bits
         if (bitRead(PCONFIG_ULONG(i / 4), j) && (bitRead(read, j) != bitRead(prev, j))) { // Event enabled and bit changed?
           sendInputEvent(event, i, j, bitRead(read, j));                                  // Send out new state
         }
@@ -256,14 +236,7 @@ void P129_data_struct::sendInputEvent(struct EventStruct *event,
     send += '#';
     send += pin;
   }
-  send += '=';
-  send += state;
-  send += ',';
-  send += chip;
-  send += ',';
-  send += port;
-  send += ',';
-  send += pin;
+  send += strformat(F("=%u,%u,%u,%u"), state, chip, port, pin);
   eventQueue.addMove(std::move(send));
 }
 

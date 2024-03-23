@@ -260,7 +260,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     ser2netClient.flush();
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, F("Ser2Net: data send!"));
+    addLog(LOG_LEVEL_DEBUG, F("Ser2Net: data sent!"));
     # endif // ifndef BUILD_NO_DEBUG
   } // done
 }
@@ -444,10 +444,10 @@ bool P020_Task::checkDatagram() const {
 unsigned int P020_Task::CRC16(const String& buf, int len) {
   unsigned int crc = 0;
 
-  for (int pos = 0; pos < len; pos++) {
+  for (int pos = 0; pos < len; ++pos) {
     crc ^= static_cast<const unsigned int>(buf[pos]); // XOR byte into least sig. byte of crc
 
-    for (int i = 8; i != 0; i--) {                    // Loop over each bit
+    for (int i = 8; i != 0; --i) {                    // Loop over each bit
       if ((crc & 0x0001) != 0) {                      // If the LSB is set
         crc >>= 1;                                    // Shift right and XOR 0xA001
         crc  ^= 0xA001;

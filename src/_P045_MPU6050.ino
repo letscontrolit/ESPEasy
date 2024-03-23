@@ -243,7 +243,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
             uint8_t count      = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
             uint8_t threscount = 0; // Counter to check how many tresholds have been exceeded
 
-            for (uint8_t i = 0; i < 3; i++)
+            for (uint8_t i = 0; i < 3; ++i)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) {    // not disabled, check threshold
@@ -271,14 +271,14 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 
               // Did we count more times exceeded then the minimum detection value?
               if (PCONFIG_LONG(0) >= PCONFIG(5)) {
-                UserVar.setFloat(event->TaskIndex, 0, 1); // x times threshold exceeded within window.
+                UserVar.setFloat(event->TaskIndex, 0, 1.0f); // x times threshold exceeded within window.
               } else {
-                UserVar.setFloat(event->TaskIndex, 0, 0); // reset because x times threshold within window not met.
+                UserVar.setFloat(event->TaskIndex, 0, 0.0f); // reset because x times threshold within window not met.
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (PCONFIG(7) != UserVar[event->BaseVarIndex]) {
-                PCONFIG(7) = UserVar[event->BaseVarIndex];
+              if (PCONFIG(7) != UserVar.getFloat(event->TaskIndex, 0)) {
+                PCONFIG(7) = UserVar.getFloat(event->TaskIndex, 0);
                 success    = true;
               } else {
                 success = false;
@@ -297,7 +297,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           {
             uint8_t reqaxis = (_P045_Function - 1) % 3;       // xyz         -> eg: function 5(ay) (5-1) % 3 = 1           (y)
             uint8_t reqvar  = ((_P045_Function - 1) / 3) + 2; // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
-            UserVar.setFloat(event->TaskIndex, 0, float(P045_data->_axis[reqaxis][reqvar]));
+            UserVar.setFloat(event->TaskIndex, 0, P045_data->_axis[reqaxis][reqvar]);
             success                      = true;
             break;
           }

@@ -19,6 +19,7 @@
 // Have fun ... Dominik
 
 /** Changelog:
+ * 2024-01-04 tonhuisman: Minor corrections, formatted source using Uncrustify
  * 2023-01-08 tonhuisman: Add Low temperature threshold setting (default 0 K/-273.15 C) to ignore temperatures below that value
  * 2023-01-02 tonhuisman: Cleanup and uncrustify source
  * 2022-10-22 tonhuisman: Correct CS pin check to allow GPIO0
@@ -247,7 +248,7 @@
 # define LM7x_CONV_RDY               0x02u
 
 
-void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event);
+void    P039_AddMainsFrequencyFilterSelection(struct EventStruct *event);
 
 boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -303,10 +304,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         P039_TEMP_THRESHOLD = P039_TEMP_THRESHOLD_DEFAULT; // 0 K
       }
 
-      if (P039_MAX_TYPE < P039_MAX6675 || P039_MAX_TYPE > P039_LM7x) {
+      if ((P039_MAX_TYPE < P039_MAX6675) || (P039_MAX_TYPE > P039_LM7x)) {
         break;
       }
-
 
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P039_data_struct());
@@ -324,12 +324,12 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       // ensure MODE3 access to SPI device
       SPI.setDataMode(SPI_MODE3);
 
-/*
-      if (P039_MAX_TYPE == P039_MAX6675) {
+      /*
+            if (P039_MAX_TYPE == P039_MAX6675) {
 
-        // SPI.setBitOrder(MSBFIRST);
-      }
-*/
+              // SPI.setBitOrder(MSBFIRST);
+            }
+       */
       if (P039_MAX_TYPE == P039_MAX31855) {
         // SPI.setBitOrder(MSBFIRST);
 
@@ -410,17 +410,18 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-/*
-      if (P039_MAX_TYPE == P039_LM7x)
-      {
-        // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
-      }
-*/
-#ifndef BUILD_NO_DEBUG
+      /*
+            if (P039_MAX_TYPE == P039_LM7x)
+            {
+              // TODO: c.k.i.: more detailed inits depending on the sub devices expected , e.g. TMP 122/124
+            }
+       */
+      # ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, strformat(F("P039 : %s : SPI Init - DONE"), getTaskDeviceName(event->TaskIndex).c_str()));
       }
-#endif
+      # endif // ifndef BUILD_NO_DEBUG
 
       success = true;
       break;
@@ -440,6 +441,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t choice = P039_MAX_TYPE;
 
       addFormSubHeader(F("Device Type Settings"));
+
       if (family == P039_TC) {
         {
           const __FlashStringHelper *options[3] = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
@@ -518,7 +520,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             addUnit('K');
             # ifndef BUILD_NO_DEBUG
             addFormNote(F("Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
-            #endif
+            # endif // ifndef BUILD_NO_DEBUG
           }
         }
 
@@ -538,8 +540,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           {
             addFormCheckBox(F("Enable Shutdown Mode"), F("rtd_lm_shtdwn"), P039_RTD_LM_SHTDWN);
             # ifndef BUILD_NO_DEBUG
-            addFormNote(F("Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.\nWithout LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
-            #endif
+            addFormNote(F("Device is set to shutdown between sample cycles. Useful for very long call cycles, to save power.<BR>"
+                          "Without LM7x device conversion happens in between call cycles. Call Cylces should therefore not become lower than 350ms."));
+            # endif // ifndef BUILD_NO_DEBUG
           }
         }
       }
@@ -609,19 +612,21 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       {
         UserVar.setFloat(event->TaskIndex, 0, Plugin_039_Celsius);
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = strformat(F("P039 : %s :"), getTaskDeviceName(event->TaskIndex).c_str());
-          for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); i++)
+
+          for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i)
           {
             log += strformat(
-              F(" %s: %s"), 
+              F(" %s: %s"),
               getTaskValueName(event->TaskIndex, i).c_str(),
               formatUserVarNoCheck(event->TaskIndex, i).c_str());
           }
           addLogMove(LOG_LEVEL_INFO, log);
         }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
 
         if (definitelyGreaterThan(Plugin_039_Celsius, P039_TEMP_THRESHOLD)) {
           success = true;
@@ -662,10 +667,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  addLogMove(LOG_LEVEL_DEBUG, strformat(
-                    F("P039 : %s : current state: MAX31865_BIAS_ON_STATE; delta: %d ms"),
-                    getTaskDeviceName(event->TaskIndex).c_str(),
-                    timePassedSince(P039_data->timer))); // calc delta since last call
+                  addLog(LOG_LEVEL_DEBUG, strformat(
+                           F("P039 : %s : current state: MAX31865_BIAS_ON_STATE; delta: %d ms"),
+                           getTaskDeviceName(event->TaskIndex).c_str(),
+                           timePassedSince(P039_data->timer))); // calc delta since last call
                 }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -688,9 +693,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   addLog(LOG_LEVEL_DEBUG, strformat(
-                    F("P039 : %s : Next State: %d"),
-                    getTaskDeviceName(event->TaskIndex).c_str(),
-                    event->Par1));
+                           F("P039 : %s : Next State: %d"),
+                           getTaskDeviceName(event->TaskIndex).c_str(),
+                           event->Par1));
                 }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -701,10 +706,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  addLogMove(LOG_LEVEL_DEBUG, strformat(
-                    F("P039 : %s : current state: MAX31865_RD_STATE; delta: %d ms"),
-                    getTaskDeviceName(event->TaskIndex).c_str(),
-                    timePassedSince(P039_data->timer))); // calc delta since last call
+                  addLog(LOG_LEVEL_DEBUG, strformat(
+                           F("P039 : %s : current state: MAX31865_RD_STATE; delta: %d ms"),
+                           getTaskDeviceName(event->TaskIndex).c_str(),
+                           timePassedSince(P039_data->timer))); // calc delta since last call
                 }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -812,6 +817,7 @@ void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event)
 {
   const __FlashStringHelper *FToptions[2] = { F("60"), F("50") };
   const int FToptionValues[2]             = { 0, 1 };
+
   addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
   addUnit(F("Hz"));
   addFormNote(F("Filter power net frequency (50/60 Hz)"));
@@ -909,7 +915,7 @@ float readMax31855(struct EventStruct *event)
       log += rawvalue;                           // 5 char
       log += F(" messageBuffer[],HEX:");         // 21 char
 
-      for (size_t i = 0u; i < 4; i++)
+      for (size_t i = 0u; i < 4; ++i)
       {
         log += ' ';                                   // 1 char
         log += formatToHex_decimal(messageBuffer[i]); // 9 char
