@@ -2,7 +2,7 @@
 #define DATATYPES_SETTINGSTYPE_H
 
 #include "../../ESPEasy_common.h"
-
+#include "../DataTypes/TaskIndex.h"
 
 class SettingsType {
 public:
@@ -50,7 +50,8 @@ public:
 #endif // ifndef BUILD_MINIMAL_OTA
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
-  static String           getSettingsFileName(Enum settingsType);
+  static String           getSettingsFileName(Enum settingsType,
+                                              int  index = INVALID_TASK_INDEX);
   static const __FlashStringHelper * getSettingsFileName(SettingsType::SettingsFileEnum file_type);
   static size_t           getInitFileSize(SettingsType::SettingsFileEnum file_type);
 };

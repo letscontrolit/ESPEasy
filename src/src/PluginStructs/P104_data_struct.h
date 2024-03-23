@@ -36,6 +36,12 @@
 
 # define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
 
+# if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     1      // Only enable saving in storage for ESP32
+# else // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     0
+# endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+
 // To make it fit in the ESP8266 display build
 # if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
@@ -471,6 +477,13 @@ private:
   void createHString(String& string);
   # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   void reverseStr(String& str);
+  union {
+    struct {
+      uint16_t P104_dataSize;
+      char     P104_data[P104_SETTINGS_BUFFER_V2 + 1];
+    };
+    uint8_t P104_storeThis[P104_SETTINGS_BUFFER_V2 + 1 + sizeof(uint16_t)]{};
+  };
 };
 
 #endif // ifdef USES_P104

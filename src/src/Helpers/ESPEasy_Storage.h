@@ -6,6 +6,8 @@
 
 #include "../Helpers/FS_Helper.h"
 
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
@@ -192,6 +194,13 @@ String getCustomTaskSettingsError(uint8_t varNr);
    Clear custom task settings
  \*********************************************************************************************/
 String ClearCustomTaskSettings(taskIndex_t TaskIndex);
+
+/********************************************************************************************\
+   Delete Extended custom task settings file if it exists, with validity checks
+ \*********************************************************************************************/
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index);
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
 /********************************************************************************************\
    Load Custom Task settings from file system
