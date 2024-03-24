@@ -80,16 +80,16 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      const char* separator = event->String1.c_str();  // contains the NewLine sequence
+      const char *separator = event->String1.c_str(); // contains the NewLine sequence
       string = strformat(
         F("CS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
-        formatGpioLabel(PIN(0), false).c_str(),
+        formatGpioLabel(PIN(0),                    false).c_str(),
         separator,
-        formatGpioLabel(PIN(1), false).c_str(),
+        formatGpioLabel(PIN(1),                    false).c_str(),
         separator,
-        formatGpioLabel(PIN(2), false).c_str(),
+        formatGpioLabel(PIN(2),                    false).c_str(),
         separator,
-        formatGpioLabel(P116_CONFIG_BUTTON_PIN, false).c_str(),
+        formatGpioLabel(P116_CONFIG_BUTTON_PIN,    false).c_str(),
         separator,
         formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false).c_str());
       success = true;
@@ -225,13 +225,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
         String strings[P116_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-        uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+        uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
 
         for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
           remain -= (strings[varNr].length() + 1);
         }
-        addUnit(concat(F("Remaining: "), remain));
       }
 
       success = true;

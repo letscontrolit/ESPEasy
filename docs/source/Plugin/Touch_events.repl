@@ -1,0 +1,44 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>#Swiped=<directionId>,<deltaX>,<deltaY>``
+
+    | ``directionId``: The direction that was swiped.
+
+    | ``deltaX``: Difference from previous X position.
+
+    | ``deltaY``: Difference from previous Y position.
+    ","
+    | This event is generated when a swipe-touch is detected. For Slide controls, no Swipe events are generated, but an event with the new value of the control.
+    "
+    "
+    | ``<taskname>#<objectname>=<x>,<y>,<z>``
+
+    | ``x``: The x coordinate for the touched position.
+
+    | ``y``: The y coordinate for the touched position.
+
+    | ``z``: The pressure applied for the touch (when supported by the touch panel).
+    ","
+    | This event is generated on touch actions that do not involve switching a button-state, like non-button controls.
+    "
+    "
+    | ``<taskname>#<objectname>=<state>,<mode>``
+
+    | ``state``: The new state for the button, 0 or 1, or the new value for a Slide control.
+
+    | ``mode``: The mode of the button. (TODO: mode values to be added)
+    ","
+    | This event is generated on state-changing actions for Button and Slide controls.
+    "
+    "
+    | ``<taskname>#Group=<groupNr>,<mode>``
+
+    | ``groupNr``: The new group number that is activated.
+
+    | ``mode``: The mode used for activating the group. (TODO: group-mode values to be added)
+    ","
+    | This event is generated when a group is activated.
+    "

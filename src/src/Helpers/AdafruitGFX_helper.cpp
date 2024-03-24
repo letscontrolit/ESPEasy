@@ -119,7 +119,6 @@ const __FlashStringHelper* toString(const Button_type_e button) {
     case Button_type_e::ArrowUp: return F("Arrow, up");
     case Button_type_e::ArrowRight: return F("Arrow, right");
     case Button_type_e::ArrowDown: return F("Arrow, down");
-    case Button_type_e::Button_MAX: break;
   }
   return F("Unsupported!");
 }
@@ -139,8 +138,12 @@ const __FlashStringHelper* toString(const Button_layout_e layout) {
     case Button_layout_e::RightBottomAligned: return F("Right-Bottom-aligned");
     case Button_layout_e::LeftBottomAligned: return F("Left-Bottom-aligned");
     case Button_layout_e::NoCaption: return F("No Caption");
+    #  if ADAGFX_ENABLE_BMP_DISPLAY
     case Button_layout_e::Bitmap: return F("Bitmap image");
-    case Button_layout_e::Alignment_MAX: break;
+    #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+    #  if ADAGFX_ENABLE_BUTTON_SLIDER
+    case Button_layout_e::Slider: return F("Slide control");
+    #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
   }
   return F("Unsupported!");
 }
@@ -152,21 +155,20 @@ const __FlashStringHelper* toString(const Button_layout_e layout) {
  ****************************************************************************************/
 void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                              uint8_t                    selectedIndex) {
-  const int textModeCount                             = static_cast<int>(AdaGFXTextPrintMode::MAX);
-  const __FlashStringHelper *textModes[textModeCount] = { // Be sure to use all available modes from enum!
+  const __FlashStringHelper *textModes[] = { // Be sure to use all available modes from enum!
     toString(AdaGFXTextPrintMode::ContinueToNextLine),
     toString(AdaGFXTextPrintMode::TruncateExceedingMessage),
     toString(AdaGFXTextPrintMode::ClearThenTruncate),
     toString(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
-  const int textModeOptions[textModeCount] = {
+  const int textModeOptions[] = {
     static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
     static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
 
-  addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
+  addFormSelector(F("Text print Mode"), id, sizeof(textModeOptions) / sizeof(int), textModes, textModeOptions, selectedIndex);
 }
 
 void AdaGFXFormColorDepth(const __FlashStringHelper *id,
@@ -272,9 +274,24 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
                                  AdaGFXColorDepth           colorDepth) {
   String color = AdaGFXcolorToString(foregroundColor, colorDepth);
 
-  addFormTextBox(F("Foreground color"), foregroundId, color, 11);
+  AdaGFXHtmlColorDepthDataList(F("adagfxFGBGcolors"), colorDepth);
+  addRowLabel(F("Foreground color"));
+  addTextBox(foregroundId, color, 11, false, false,
+             EMPTY_STRING, F("")
+             # if FEATURE_TOOLTIPS
+             , F("Foreground color")
+             # endif // if FEATURE_TOOLTIPS
+             , F("adagfxFGBGcolors")
+             );
   color = AdaGFXcolorToString(backgroundColor, colorDepth);
-  addFormTextBox(F("Background color"), backgroundId, color, 11);
+  addRowLabel(F("Background color"));
+  addTextBox(backgroundId, color, 11, false, false,
+             EMPTY_STRING, F("")
+             # if FEATURE_TOOLTIPS
+             , F("Background color")
+             # endif // if FEATURE_TOOLTIPS
+             , F("adagfxFGBGcolors")
+             );
   # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
   addFormNote(F("NB: Colors stored as RGB565 value!"));
@@ -669,6 +686,9 @@ String AdafruitGFX_helper::getFeatures() {
   # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
   log += F(" btn,");
   # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
+  # if (defined(ADAGFX_ENABLE_BUTTON_SLIDER) && ADAGFX_ENABLE_BUTTON_SLIDER)
+  log += F(" slider/gauge,");
+  # endif // if (defined(ADAGFX_ENABLE_BUTTON_SLIDER) && ADAGFX_ENABLE_BUTTON_SLIDER)`
   # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
   log += F(" win,");
   # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
@@ -847,12 +867,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
-  String   cmd        = parseString(string, 1); // lower case
-  String   subcommand = parseString(string, 2);
-  uint16_t res_x      = _res_x;
-  uint16_t res_y      = _res_y;
-  uint16_t _xo        = 0;
-  uint16_t _yo        = 0;
+  String cmd        = parseString(string, 1); // lower case
+  String subcommand = parseString(string, 2);
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW || ADAGFX_ARGUMENT_VALIDATION
+  uint16_t res_x = _res_x;
+  uint16_t res_y = _res_y;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW || ADAGFX_ARGUMENT_VALIDATION
+  uint16_t _xo = 0;
+  uint16_t _yo = 0;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);
@@ -1666,7 +1689,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     // id: < 0 = clear area
     // type & 0x0F: 0 = none, 1 = rectangle, 2 = rounded rect., 3 = circle,
     // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
-    //               RightBottomAligned, LeftBottomAligned, NoCaption
+    //               RightBottomAligned, LeftBottomAligned, NoCaption, Bitmap, Slider (not a button)
     // (*clr = color, TaskIndex, Group and SelGrp are ignored)
     #  if ADAGFX_ARGUMENT_VALIDATION
 
@@ -1709,24 +1732,42 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
 
       // Check mode & state: -2, -1, 0, 1 to select used colors
-      if (nParams[0] == 0) {
-        fillColor = offColor;
-      }
+      #  if ADAGFX_ENABLE_BUTTON_SLIDER
 
-      if ((nParams[1] == -2) || (nParams[0] < 0)) {
-        fillColor = disabledColor;
-        textColor = disabledCaptionColor;
-      } else if (clearArea) {
-        fillColor   = _bgcolor; //
-        borderColor = _bgcolor;
+      if (buttonLayout == Button_layout_e::Slider) {
+        if (nParams[1] == -2) {
+          fillColor = disabledColor;
+          textColor = disabledCaptionColor;
+        } else if (clearArea) {
+          fillColor   = _bgcolor; //
+          borderColor = _bgcolor;
+        }
+      } else
+      #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+      {
+        if (nParams[0] == 0) {
+          fillColor = offColor;
+        }
+
+        if ((nParams[1] == -2) || (nParams[0] < 0)) {
+          fillColor = disabledColor;
+          textColor = disabledCaptionColor;
+        } else if (clearArea) {
+          fillColor   = _bgcolor; //
+          borderColor = _bgcolor;
+        }
       }
 
       // Clear the area?
       if ((buttonType != Button_type_e::None) ||
           clearArea) {
-        drawButtonShape(buttonType,
-                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
-                        _bgcolor, _bgcolor);
+        drawButtonShape(
+          #  if ADAGFX_ENABLE_BUTTON_SLIDER
+          buttonLayout == Button_layout_e::Slider ? Button_type_e::Square :
+          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+          buttonType, // Clear full square for slider
+          nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+          _bgcolor, _bgcolor);
       }
 
       // Check button-type bits (mask: 0x0F) to draw correct shape
@@ -1744,7 +1785,11 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         String   newString;
 
         // Determine alignment parameters
-        if ((nParams[0] == 1) || (nParams[0] == -1)) { // 1 = on+enabled, -1 = on+disabled
+        if ((nParams[0] == 1) || (nParams[0] == -1) // 1 = on+enabled, -1 = on+disabled
+            #  if ADAGFX_ENABLE_BUTTON_SLIDER
+            || (buttonLayout == Button_layout_e::Slider)
+            #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+            ) {
           newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
         } else {
           newString = sParams[13].isEmpty() ? sParams[6] : sParams[13];
@@ -1795,10 +1840,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             nParams[2] += w2 / 2;                     // A little margin from left
             nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
             break;
+          #  if ADAGFX_ENABLE_BMP_DISPLAY
           case Button_layout_e::Bitmap:
-          {                                           // Use ON/OFF caption to specify (full) bitmap filename
-            #  if ADAGFX_ENABLE_BMP_DISPLAY
-
+          {                 // Use ON/OFF caption to specify (full) bitmap filename
             if (!newString.isEmpty()) {
               int32_t offX = 0; // Allow optional arguments for x and y offset values, usage:
               int32_t offY = 0; // [x,[y,]]filename.bmp
@@ -1815,20 +1859,27 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                 }
               }
               success = showBmp(newString, nParams[2] + _xo + offX, nParams[3] + _yo + offY);
-            } else
-            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
-            {
+            } else {
               success = false;
             }
             break;
           }
+          #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
           case Button_layout_e::NoCaption:
-          case Button_layout_e::Alignment_MAX:
+          #  if ADAGFX_ENABLE_BUTTON_SLIDER
+          case Button_layout_e::Slider: // Nothing to do here (yet)
+          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
             break;
         }
 
-        if ((buttonLayout != Button_layout_e::NoCaption) &&
-            (buttonLayout != Button_layout_e::Bitmap)) {
+        if ((buttonLayout != Button_layout_e::NoCaption)
+            #  if ADAGFX_ENABLE_BUTTON_SLIDER
+            && (buttonLayout != Button_layout_e::Slider)
+            #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+            #  if ADAGFX_ENABLE_BMP_DISPLAY
+            && (buttonLayout != Button_layout_e::Bitmap)
+            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+            ) {
           // Set position and colors, then print
           _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
           _display->setTextColor(textColor, textColor); // transparent bg results in button color
@@ -1837,6 +1888,148 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
           // restore colors
           _display->setTextColor(_fgcolor, _bgcolor);
         }
+        #  if ADAGFX_ENABLE_BUTTON_SLIDER
+
+        if (buttonLayout == Button_layout_e::Slider) {
+          // 1) Determine direction from w/h
+          const bool isVertical   = nParams[4] < nParams[5]; // width < height
+          const bool showAsCircle = borderColor == fillColor;
+
+          // determine value and range
+          int16_t offI2            = 5;  // half of indicator width
+          int16_t offG2            = 3;  // half of Gauge width
+          int16_t offP             = 0;  // Offset for indicator
+          int16_t zeroLine         = -1; // Draw a range zero-line at this offset? only when >= 0
+          int     percentage       = 0;
+          float   gaugeValue       = 0.0f;
+          int16_t lowRange         = 0;
+          int16_t highRange        = 100;
+          float   rangeFrom        = 0.0f;
+          float   rangeTo          = 0.0f;
+          float   range            = 100.0f; // For percentage the range is 100
+          bool    useRange         = false;
+          bool    hasRangeReversed = false;  // Range low value left or top, high value right or bottom
+
+          if (!validFloatFromString(newString, gaugeValue)) {
+            percentage = nParams[0];         // Value as provided
+          }
+
+          // Have a range?
+          if (!sParams[13].isEmpty()) { // Off caption can hold range: <from>,<to>
+            String tmp           = parseString(sParams[13], 1);
+            const bool validFrom = validFloatFromString(tmp, rangeFrom);
+            tmp = parseString(sParams[13], 2);
+
+            if (validFrom && validFloatFromString(tmp, rangeTo) &&
+                !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
+              useRange         = true;
+              lowRange         = static_cast<uint16_t>(rangeFrom);
+              highRange        = static_cast<uint16_t>(rangeTo);
+              hasRangeReversed = lowRange > highRange; // Range high value left or top, low value right or bottom?
+            }
+          }
+
+          // 2) Draw center-line from 0 to 100%
+          // 3) Draw gauge for used/filled part
+          // 4) Draw indicator at correct percentage index
+          if (showAsCircle) { // Circle indicator or full width bar indicator
+            offI2 = (isVertical ? nParams[4] : nParams[5]) / 4;
+          }
+
+          if (useRange) { // Calculate range-boundaries
+            range = abs(max(rangeTo, rangeFrom) - min(rangeFrom, rangeTo));
+
+            if (gaugeValue > max(rangeTo, rangeFrom)) {
+              gaugeValue = max(rangeTo, rangeFrom);
+            } else if (gaugeValue < min(rangeFrom, rangeTo)) {
+              gaugeValue = min(rangeFrom, rangeTo);
+            } else {
+              gaugeValue -= min(rangeFrom, rangeTo); // Give it the correct Offset
+            }
+
+            if (((lowRange < 0) && (highRange > 0)) ||
+                ((lowRange > 0) && (highRange < 0))) {
+              zeroLine = map(0, lowRange, highRange, 0, isVertical ? nParams[5] : nParams[4]);
+            }
+          }
+          percentage = static_cast<int>(gaugeValue);
+
+          offP = ((((isVertical ? nParams[5] : nParams[4]) - (2 * offI2)) / range) * percentage) - 1; // keep within button borders
+
+          if (hasRangeReversed) {
+            offP = (isVertical ? nParams[5] : nParams[4]) - (2 * offI2) - offP - 1;                   // flip
+          }
+
+          if (isVertical) {
+            // centerline
+            _display->drawLine(nParams[2] + _xo + nParams[4] / 2, nParams[3] + _yo + (nParams[5] - offI2 - 1),
+                               nParams[2] + _xo + nParams[4] / 2, nParams[3] + _yo + offI2, textColor);
+
+            if (zeroLine > -1) {
+              _display->drawLine(nParams[2] + _xo, nParams[3] + _yo + (nParams[5] - zeroLine - 1),
+                                 nParams[2] + _xo + nParams[4], nParams[3] + _yo + (nParams[5] - zeroLine - 1), textColor);
+            }
+
+            // Gauge
+            if (hasRangeReversed) {
+              int16_t bar = nParams[5] - (2 * offI2);
+              _display->fillRoundRect(nParams[2] + _xo + (nParams[4] / 2) - offG2, nParams[3] + _yo + offI2 + 0,
+                                      2 * offG2, bar - offP, offG2, textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + (nParams[4] / 2) - offG2, nParams[3] + _yo + (nParams[5] - offI2 - offP - 1),
+                                      2 * offG2, offP, offG2, textColor);
+            }
+
+            // Indicator/drag-handle
+            if (showAsCircle) { // Circle indicator
+              _display->fillCircle(nParams[2] + _xo + nParams[4] / 2,
+                                   nParams[3] + _yo + (nParams[5] - offI2 - offP - 2) + (percentage == 100 ? 1 : 0),
+                                   trunc(nParams[4] / 4), textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + 1, nParams[3] + _yo + (nParams[5] - (2 * offI2) - offP - (hasRangeReversed ? 0 : 1)),
+                                      nParams[4] - 2, 2 * offI2, offI2, textColor);
+            }
+          } else { // : if !isVertical -> isHorizontal
+            // centerline
+            _display->drawLine(nParams[2] + _xo + offI2 + 1, nParams[3] + _yo + nParams[5] / 2,
+                               nParams[2] + _xo + nParams[4] - offI2, nParams[3] + _yo + nParams[5] / 2, textColor);
+
+            if (zeroLine > -1) {
+              _display->drawLine(nParams[2] + _xo + zeroLine + 1, nParams[3] + _yo,
+                                 nParams[2] + _xo + zeroLine + 1, nParams[3] + _yo + nParams[5], textColor);
+            }
+
+            // Gauge
+            if (hasRangeReversed) {
+              int16_t bar = nParams[4] - (2 * offI2);
+              _display->fillRoundRect(nParams[2] + _xo + offI2 + offP + 2, nParams[3] + _yo + (nParams[5] / 2) - offG2,
+                                      bar - offP, offG2 * 2, offG2, textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + offI2 + 1, nParams[3] + _yo + (nParams[5] / 2) - offG2,
+                                      offP, offG2 * 2, offG2, textColor);
+            }
+
+            // Indicator/drag-handle
+            if (showAsCircle) { // Circle indicator
+              _display->fillCircle(nParams[2] + _xo + offP + offI2 + 1 - (percentage == 100 ? 1 : 0),
+                                   nParams[3] + _yo + (nParams[5] / 2),
+                                   trunc(nParams[5] / 4), textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + offP + (hasRangeReversed ? 0 : 1), nParams[3] + _yo + 1,
+                                      2 * offI2, nParams[5] - 2, offI2, textColor);
+            }
+          }
+
+          // 5) Draw percentage in center if Fontsize > 0
+          if (fontScale > 0) {
+            nParams[2] += (nParams[4] / 2 - w1 / 2);      // center horizontically
+            nParams[3] += (nParams[5] / 2 - h1 / 2);      // center vertically
+            _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
+            _display->setTextColor(textColor, fillColor); // regular bg color for readability
+            _display->print(newString);
+          }
+        }
+        #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 
         // restore font scaling
         _display->setTextSize(_fontscaling);
@@ -2088,7 +2281,6 @@ void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
       break;
     }
     case Button_type_e::None:
-    case Button_type_e::Button_MAX:
       break;
   }
 }
@@ -2116,13 +2308,16 @@ void AdafruitGFX_helper::printText(const char     *string,
   int16_t  oTop      = 0;
   int16_t  oBottom   = 0;
   int16_t  oLeft     = 0;
-  uint16_t res_x     = _res_x;
-  uint16_t res_y     = _res_y;
   uint16_t xOffset   = 0;
-  uint16_t yOffset   = 0;
   uint16_t hChar1    = 0;
   uint16_t wChar1    = 0;
   String   newString = string;
+  uint16_t res_x     = _res_x;
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  uint16_t res_y   = _res_y;
+  uint16_t yOffset = 0;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);

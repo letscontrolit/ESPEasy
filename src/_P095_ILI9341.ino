@@ -337,7 +337,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                                   F("pbgcolor"),
                                   P095_CONFIG_GET_COLOR_BACKGROUND);
 
-      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+      uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
       {
         String strings[P095_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);

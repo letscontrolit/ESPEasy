@@ -60,7 +60,7 @@ bool P037_data_struct::loadSettings() {
 String P037_data_struct::saveSettings() {
   String res;
 
-  if (_taskIndex < TASKS_MAX) {
+  if (_taskIndex < TASKS_MAX) { // TODO tonhuisman: Combine saving the settings into 1 call
     size_t offset = 0;
     res += SaveCustomTaskSettings(_taskIndex, mqttTopics,
                                   VARS_PER_TASK, 41, offset);

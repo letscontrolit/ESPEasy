@@ -37,6 +37,19 @@
 .. |P122_compileinfo| replace:: `.`
 .. |P122_usedlibraries| replace:: `I2C`
 
+.. |P123_name| replace:: :cyan:`FT62x6`
+.. |P123_type| replace:: :cyan:`Touch`
+.. |P123_typename| replace:: :cyan:`Touch - FT62x6`
+.. |P123_porttype| replace:: `.`
+.. |P123_status| replace:: :yellow:`DISPLAY`
+.. |P123_github| replace:: P123_FT62x6Touch.ino
+.. _P123_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P123_FT62x6Touch.ino
+.. |P123_usedby| replace:: `.`
+.. |P123_shortinfo| replace:: `FT62x6 Display capacitive touch overlay`
+.. |P123_maintainer| replace:: `tonhuisman`
+.. |P123_compileinfo| replace:: `.`
+.. |P123_usedlibraries| replace:: `Adafruit_FT6206_Library (modified)`
+
 .. |P124_name| replace:: :cyan:`MultiRelay`
 .. |P124_type| replace:: :cyan:`Output`
 .. |P124_typename| replace:: :cyan:`Output - I2C Multi Relay`

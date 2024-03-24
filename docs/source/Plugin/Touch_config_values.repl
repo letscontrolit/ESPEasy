@@ -1,0 +1,44 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#buttongroup]``
+    ","
+    | Get the currently active buttongroup.
+    "
+    "
+    | ``[<taskname>#hasgroup,<groupNr>]``
+    ","
+    | Returns ``1`` if ``<groupNr>`` exists, or ``0`` if it doesn't exist.
+    "
+    "
+    | ``[<taskname>#enabled,<objectName|objectNr>]``
+    ","
+    | Returns ``1`` if an object with that ``name`` or ``number`` is enabled, and ``0`` if not.
+    "
+    "
+    | ``[<taskname>#state,<objectName|objectNr>]``
+    ","
+    | Returns the state for an object, by ``name`` or ``number``, ``1`` if ``On`` and ``0`` if ``Off``, or the current value for a Slide control (0..100 or in the range set for the slide control).
+    "
+    "
+    | ``[<taskname>#pagemode]``
+    ","
+    | Returns the Left/Right/Up/Down menu mode, ``0`` = normal, ``1`` = reversed.
+    "
+    "
+    | ``[<taskname>#swipedir,<directionId>]``
+    ","
+    | Returns the name for the provided directionId.
+
+    | 0 = ``None``
+    | 1 = ``Up``
+    | 2 = ``Up-Right``
+    | 3 = ``Right``
+    | 4 = ``Right-Down``
+    | 5 = ``Down``
+    | 6 = ``Down-Left``
+    | 7 = ``Left``
+    | 8 = ``Left-Up``
+    "

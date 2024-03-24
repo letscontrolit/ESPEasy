@@ -291,7 +291,7 @@ void addTextBox(const String& id,
                 const String& tooltip = EMPTY_STRING
                 #endif // if FEATURE_TOOLTIPS
                 ,
-                const String&   datalist = EMPTY_STRING
+                const String& datalist = EMPTY_STRING
                 );
 
 // ********************************************************************************
