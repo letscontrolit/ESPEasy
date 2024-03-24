@@ -308,7 +308,7 @@ void processConnect() {
   WiFiEventData.setWiFiConnected();
   ++WiFiEventData.wifi_reconnects;
 
-  if (WiFi_AP_Candidates.getCurrent().isEmergencyFallback) {
+  if (WiFi_AP_Candidates.getCurrent().bits.isEmergencyFallback) {
     #ifdef CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS
     const bool mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
     #else

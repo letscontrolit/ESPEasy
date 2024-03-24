@@ -28,9 +28,6 @@ public:
 
   void   clear();
 
-
-  int    availableForWrite() const;
-
   size_t write(Stream& stream,
                size_t  nrBytesToWrite);
 
