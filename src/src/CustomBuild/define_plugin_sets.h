@@ -3251,8 +3251,8 @@ To create/register a plugin, you have to :
 # endif
 #endif
 
-// Incompatible plugins with ESP32-C2/C6
-#if defined(ESP32C2) || defined(ESP32C6)
+// Incompatible plugins with ESP32-C2 // (C6 seems to work as intended)
+#if defined(ESP32C2) // || defined(ESP32C6)
  #define DISABLE_NEOPIXEL_PLUGINS 1
 #endif
 
