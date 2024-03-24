@@ -18,7 +18,7 @@
 # define SI70xx_RESOLUTION_13T_10RH 0x80 // 10 bits RH / 13 bits Temp
 # define SI70xx_RESOLUTION_12T_08RH 0x01 //  8 bits RH / 12 bits Temp
 # define SI70xx_RESOLUTION_11T_11RH 0x81 // 11 bits RH / 11 bits Temp
-# define SI70xx_RESOLUTION_MASK B01111110
+# define SI70xx_RESOLUTION_MASK 0b01111110
 
 
 
@@ -40,7 +40,7 @@
 #define SI7013_READ_ADC         0xEE
 #define SI7013_READ_REG2        0x10
 #define SI7013_WRITE_REG2       0x50
-#define SI7013_REG2_DEFAULT     B01000110 // (MeasureMode=10) No-Hold master with no thermistor correction ; 7ms conversion;  (VIN bufered, Vref=VDD, VOUT=GND)
+#define SI7013_REG2_DEFAULT     0b01000110 // (MeasureMode=10) No-Hold master with no thermistor correction ; 7ms conversion;  (VIN bufered, Vref=VDD, VOUT=GND)
 
 #define SI70xx_CMD_ID1          0xFA0F      /**< Read Electronic ID SNA Bytes */
 #define SI70xx_CMD_ID2          0xFCC9      /**< Read Electronic ID SNB Bytes */

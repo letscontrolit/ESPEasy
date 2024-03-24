@@ -266,7 +266,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
       addHtml('>');
 
       addHtml(F("<input type='radio' name='ssid' value='"));
-      if (it->isHidden) {
+      if (it->bits.isHidden) {
         addHtml(F("#Hidden#' disabled"));
       } else {
         String escapeBuffer = it->ssid;
