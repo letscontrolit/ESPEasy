@@ -103,7 +103,7 @@
 
     ``<group>`` The group number for the button.
 
-    ``<mode>`` The mode of the button.
+    ``<mode>`` The mode of the button. Available options: 0 = normal, -1 = initial, -2 = clear button area.
     ","
     Update the button according to the current state, on the display. To update a dynamic caption or external state/value change.
     "
