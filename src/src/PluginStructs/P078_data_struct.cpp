@@ -211,7 +211,7 @@ void SDM_loadOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uin
 {
   const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
   const String    label = concat(F("Value "), valuenr + 1);
-  const String    id    = PCONFIG_LABEL(pconfigIndex);
+  const String    id    = sensorTypeHelper_webformID(pconfigIndex);
 
   addRowLabel_tr_id(label, id);
   do_addSelector_Head(id, F("wide"), EMPTY_STRING, false);
