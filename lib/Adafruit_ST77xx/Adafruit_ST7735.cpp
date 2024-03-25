@@ -326,7 +326,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     } else if (tabcolor == INITR_BLACKTAB135x240) {
       _height = ST7735_TFTHEIGHT_240;
       _width = ST7735_TFTWIDTH_135;
-      _colstart = 52;
+      _colstart = 53;
       _rowstart = 40;
     #endif // if ST7735_EXTRA_INIT
     } else {
@@ -419,7 +419,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     } else if (tabcolor == INITR_BLACKTAB135x240) {
       _width = ST7735_TFTHEIGHT_240;
       _height = ST7735_TFTWIDTH_135;
-      _colstart = 52;
+      _colstart = 53;
       _rowstart = 40;
     #endif // if ST7735_EXTRA_INIT
     } else {
