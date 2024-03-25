@@ -1701,6 +1701,12 @@ To create/register a plugin, you have to :
      #ifndef PLUGIN_BUILD_MAX_ESP32
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
        #define KEEP_I2C_MULTIPLEXER
+       #ifndef P036_LIMIT_BUILD_SIZE
+         #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+       #endif
+       #ifndef P037_LIMIT_BUILD_SIZE
+         #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+       #endif
      #endif
    #endif
    #if defined(ESP8266)
