@@ -11,10 +11,18 @@ const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
     case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
     case ST77xx_type_e::ST7735s_80x160: return F("ST7735 80 x 160px");
     case ST77xx_type_e::ST7735s_80x160_M5: return F("ST7735 80 x 160px (Color inverted)");
+    # if P116_EXTRA_ST7735
+    case ST77xx_type_e::ST7735s_135x240: return F("ST7735 135 x 240px");
+    # endif // if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
     case ST77xx_type_e::ST7789vw_135x240: return F("ST7789 135 x 240px");
+    # if P116_EXTRA_ST7789
+    case ST77xx_type_e::ST7789vw1_135x240: return F("ST7789 135 x 240px (alt1)");
+    case ST77xx_type_e::ST7789vw2_135x240: return F("ST7789 135 x 240px (alt2)");
+    case ST77xx_type_e::ST7789vw3_135x240: return F("ST7789 135 x 240px (alt3)");
+    # endif // if P116_EXTRA_ST7789
     case ST77xx_type_e::ST7796s_320x480: return F("ST7796 320 x 480px");
   }
   return F("Unsupported type!");
@@ -53,6 +61,14 @@ void ST77xx_type_toResolution(const ST77xx_type_e& device,
       y = 280;
       break;
     case ST77xx_type_e::ST7789vw_135x240:
+    # if P116_EXTRA_ST7789
+    case ST77xx_type_e::ST7789vw1_135x240:
+    case ST77xx_type_e::ST7789vw2_135x240:
+    case ST77xx_type_e::ST7789vw3_135x240:
+    # endif // if P116_EXTRA_ST7789
+    # if P116_EXTRA_ST7735
+    case ST77xx_type_e::ST7735s_135x240:
+    # endif // if P116_EXTRA_ST7735
       x = 135;
       y = 240;
       break;
@@ -144,7 +160,16 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_GREENTAB160x80; // 80x160px ST7735sv, inverted (M5Stack StickC)
         }
 
-      // fall through
+        // fall through
+      # if P116_EXTRA_ST7735
+      case ST77xx_type_e::ST7735s_135x240:
+
+        if (initRoptions == 0xFF) {
+          initRoptions = INITR_BLACKTAB135x240; // 135x240px
+        }
+
+        // fall through
+      # endif // if P116_EXTRA_ST7735
       case ST77xx_type_e::ST7735s_80x160:
       {
         if (initRoptions == 0xFF) {
@@ -163,11 +188,28 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       case ST77xx_type_e::ST7789vw_240x240:
       case ST77xx_type_e::ST7789vw_240x280:
       case ST77xx_type_e::ST7789vw_135x240:
+      # if P116_EXTRA_ST7789
+      case ST77xx_type_e::ST7789vw1_135x240:
+      case ST77xx_type_e::ST7789vw2_135x240:
+      case ST77xx_type_e::ST7789vw3_135x240:
+      # endif // if P116_EXTRA_ST7789
       {
         st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));
 
         if (nullptr != st7789) {
-          st7789->init(_xpix, _ypix, SPI_MODE2);
+          uint8_t init_seq = 0; // Default/original initialisation
+
+          # if P116_EXTRA_ST7789
+
+          if (ST77xx_type_e::ST7789vw1_135x240 == _device) {
+            init_seq = 1;
+          } else if (ST77xx_type_e::ST7789vw2_135x240 == _device) {
+            init_seq = 2;
+          } else if (ST77xx_type_e::ST7789vw3_135x240 == _device) {
+            init_seq = 3;
+          }
+          # endif // if P116_EXTRA_ST7789
+          st7789->init(_xpix, _ypix, SPI_MODE2, init_seq);
           st77xx = st7789;
         }
         break;
@@ -330,7 +372,7 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar.setFloat(event->TaskIndex, 0, curX);                                               // and put into Values
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                           // and put into Values
       UserVar.setFloat(event->TaskIndex, 1, curY);
     }
   }
@@ -385,8 +427,8 @@ bool P116_data_struct::plugin_write(struct EventStruct *event,
       st77xx->fillScreen(_bgcolor);
     }
     else if (equals(arg1, F("backlight"))) {
-      String arg2 = parseString(string, 3);
-      int32_t    nArg2{};
+      String  arg2 = parseString(string, 3);
+      int32_t nArg2{};
 
       if ((P116_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
           validIntFromString(arg2, nArg2) &&

@@ -28,7 +28,7 @@ The ST7735, ST7789 and ST7796 chip families drive color TFT displays in various 
 
 This plugin supports these display models:
 
-* **ST7735** with resolutions 128 x 128, 128 x 160 and 80 x 160 pixels
+* **ST7735** with resolutions 128 x 128, 128 x 160, 80 x 160 and 135 x 240 pixels
 * **ST7789** with resolutions 240 x 320, 240 x 240, 240 x 280 and 135 x 240 pixels
 * **ST7796** with resolution of 320 x 480 pixels.
 
@@ -140,6 +140,7 @@ Available options:
 * *ST7735 128 x 160px* Allows 16 lines of text in the smallest font scaling setting.
 * *ST7735 80 x 160px* Allows 16 lines of text in the smallest font scaling setting.
 * *ST7735 80 x 160px (Color inverted)* Special color inverted configuration as used in f.e. M5Stack StickC.
+* *ST7735 135 x 240px* Added to support a revision of the TTGO T-Display 16MB Flash module, that won't work with the ST7789 driver, the seller is claiming to use, but does work with this specially crafted ST7735 driver.
 * *ST7789 240 x 320px* Allows 32 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
 * *ST7789 240 x 240px* Allows 24 lines of text in the smallest font scaling setting.
 * *ST7789 240 x 280px* Allows 28 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
@@ -259,6 +260,10 @@ Change log
 
 .. versionadded:: 2.0
   ...
+
+  |added| 2024-03-26 Add support for ST7735, 135x240 resolution
+
+  |added| 2022-07-06 Add support for ST7735 (Color inverted), for M5StickC support
 
   |added| 2021-11-06 Add support for ST7796 displays
 
