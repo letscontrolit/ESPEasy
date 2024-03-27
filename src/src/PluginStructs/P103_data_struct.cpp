@@ -6,6 +6,24 @@
 // The other containing an allocatted char array for answer
 // Returns true on success, false otherwise
 
+const __FlashStringHelper* toString(AtlasEZO_Sensors_e sensor) {
+  switch (sensor) {
+    case AtlasEZO_Sensors_e::PH: return F("pH");
+    case AtlasEZO_Sensors_e::ORP: return F("Oxidation Reduction Potential");
+    case AtlasEZO_Sensors_e::EC: return F("Electric conductivity");
+    case AtlasEZO_Sensors_e::DO: return F("Dissolved Oxigen");
+    case AtlasEZO_Sensors_e::HUM: return F("Humidity");
+    # if P103_USE_RTD
+    case AtlasEZO_Sensors_e::RTD: return F("Thermosensor");
+    # endif // if P103_USE_RTD
+    # if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::FLOW: return F("Flow meter");
+    # endif // if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::UNKNOWN: break;
+  }
+  return F("Unknown");
+}
+
 bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensordata)
 {
   sensordata[0] = '\0';
@@ -30,7 +48,14 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
 
   if (error != 0)
   {
-    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC and DO are supported."));
+    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC, DO, HUM"
+                              # if P103_USE_RTD
+                              ", RTD"
+                              # endif // if P103_USE_RTD
+                              # if P103_USE_FLOW
+                              ", FLOW"
+                              # endif // if P103_USE_FLOW
+                              " are supported."));
     return false;
   }
 
@@ -311,6 +336,36 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
   addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_H').onclick=disabler(true,true,true,0,true,0,0);</script>"));
 
   return nb_calibration_points;
+}
+
+bool P103_getHUMOutputOptions(struct EventStruct *event,
+                              bool              & _HUMhasHum,
+                              bool              & _HUMhasTemp,
+                              bool              & _HUMhasDew) {
+  bool result = false;
+
+  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+
+  if ((result = P103_send_I2C_command(P103_I2C_ADDRESS, F("O,?"), boarddata))) {
+    String outputs(boarddata);
+    int    o      = 2;
+    String outPar = parseString(outputs, o);
+
+    while (!outPar.isEmpty()) {
+      if (equals(outPar, F("hum"))) {
+        _HUMhasHum = true;
+      } else
+      if (equals(outPar, F("t"))) {
+        _HUMhasTemp = true;
+      } else
+      if (equals(outPar, F("dew"))) {
+        _HUMhasDew = true;
+      }
+      o++;
+      outPar = parseString(outputs, o);
+    }
+  }
+  return result;
 }
 
 #endif  // ifdef USES_P103
