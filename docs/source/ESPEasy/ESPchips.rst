@@ -10,8 +10,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 * **ESP32-S2** Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
 * **ESP32-S3** Support added: 2023-05-03
 * **ESP32-C3 / ESP8685** Support added: 2023-05-03
-* **ESP32-C2 / ESP8684** Not yet supported
-* **ESP32-C6** Not yet supported
+* **ESP32-C2 / ESP8684** Support added: 2023-11-10
+* **ESP32-C6** Support added: 2023-11-10
 * **ESP32-H2** Not yet supported
 
 
@@ -83,7 +83,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2022
       - 2021
       - 2021
-   *  - Status (2023/05)
+   *  - Status (2024/03)
       - NRND
       - Mass Production (solo1: NRND)
       - NRND
@@ -91,7 +91,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - Mass Production
       - Mass Production
       - Mass Production
-      - Sample
+      - Mass Production
    *  - Wi-Fi
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 72 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
@@ -328,12 +328,12 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
    *  - Ethernet
       - 0
-      - 1 (RMII)
-      - 0
-      - 0
-      - 0
-      - 0
-      - 0
+      - 1 (RMII and SPI)
+      - 1 (SPI)
+      - 1 (SPI)
+      - 1 (SPI)
+      - 1 (SPI)
+      - 1 (SPI)
       - 0
    *  - TWAI (CAN)
       - 0
@@ -683,7 +683,7 @@ ESP32-C2/ESP8684
 
 Added: 2023/11/10
 
-The ESP32-C2 is only available with embedded flash and can only be found labelled as "ESP8684".
+The ESP32-C2 is only available with embedded flash and can also be found labeled as "ESP8684".
 
 It looks like it is aimed to be used in single purpose devices, due to its low GPIO count and only requiring a bare minimum of external parts.
 
@@ -700,9 +700,9 @@ Added: 2023/11/10
 
 The ESP32-C6 seems to be aimed at being used as a gateway for the new Thread protocol and Wi-Fi.
 
-It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz.
+It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz and IEEE 802.15.4 (Zigbee/Thread). Zigbee/Thread not yet supported by ESPEasy (March 2024).
 
-.. note:: Labelled as "unstable" by the Arduino team (as of Nov 2023), preliminary support in ESPEasy
+.. note:: Labeled as "unstable" by the Arduino team (as of Nov 2023), preliminary support in ESPEasy
 
 ESP32-H2
 ========
