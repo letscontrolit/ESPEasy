@@ -243,7 +243,7 @@ bool ESPEasy_now_handler_t::do_begin()
 
     // Send discovery announce to all found hidden APs using the current channel
     for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it) {
-      if (it->isHidden && (it->channel == _usedWiFiChannel)) {
+      if (it->bits.isHidden && (it->channel == _usedWiFiChannel)) {
         const MAC_address mac(it->bssid);
         sendDiscoveryAnnounce(mac, _usedWiFiChannel);
 
