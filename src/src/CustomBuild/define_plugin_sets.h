@@ -1467,7 +1467,7 @@ To create/register a plugin, you have to :
       #undef USES_N001   // Email
     #endif
     #ifdef USES_N002
-      #define USES_N002   // Buzzer
+      #undef USES_N002   // Buzzer
     #endif
     
     // Do not include large blobs but fetch them from CDN
@@ -1718,7 +1718,7 @@ To create/register a plugin, you have to :
          #undef USES_N001   // Email
        #endif
        #ifdef USES_N002
-         #define USES_N002   // Buzzer
+         #undef USES_N002   // Buzzer
        #endif
      #endif
    #endif
