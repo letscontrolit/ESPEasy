@@ -189,7 +189,7 @@ struct ControllerSettingsStruct
     uint32_t mqtt_retainFlag                  : 1; // Bit 05
     uint32_t useExtendedCredentials           : 1; // Bit 06
     uint32_t sendBinary                       : 1; // Bit 07
-    uint32_t unused_08                        : 1; // Bit 08
+    uint32_t enableESPEasyNowFallback         : 1; // Bit 08
     uint32_t allowExpire                      : 1; // Bit 09
     uint32_t deduplicate                      : 1; // Bit 10
     uint32_t useLocalSystemTime               : 1; // Bit 11
