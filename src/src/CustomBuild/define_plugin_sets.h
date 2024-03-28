@@ -1468,6 +1468,12 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
+    #ifdef USES_N001
+      #undef USES_N001   // Email
+    #endif
+    #ifdef USES_N002
+      #undef USES_N002   // Buzzer
+    #endif
     
     // Do not include large blobs but fetch them from CDN
     #ifndef WEBSERVER_USE_CDN_JS_CSS
@@ -1711,6 +1717,13 @@ To create/register a plugin, you have to :
        #endif
        #ifndef P037_LIMIT_BUILD_SIZE
          #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+       #endif
+       #define NOTIFIER_SET_NONE
+       #ifdef USES_N001
+         #undef USES_N001   // Email
+       #endif
+       #ifdef USES_N002
+         #undef USES_N002   // Buzzer
        #endif
      #endif
    #endif
