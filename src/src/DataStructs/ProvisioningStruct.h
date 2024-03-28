@@ -39,21 +39,16 @@ struct ProvisioningStruct
   char pass[64] = { 0 };
   char url[128] = { 0 };
 
-  union {
-    uint16_t allowed{};
-    struct {
-      uint16_t allowFetchFirmware :1;
-      uint16_t allowFetchConfigDat :1;
-      uint16_t allowFetchSecurityDat :1;
-      uint16_t allowFetchNotificationDat :1;
-      uint16_t allowFetchProvisioningDat :1;
-      uint16_t allowFetchRules :4;
+  struct {
+    uint16_t allowFetchFirmware :1;
+    uint16_t allowFetchConfigDat :1;
+    uint16_t allowFetchSecurityDat :1;
+    uint16_t allowFetchNotificationDat :1;
+    uint16_t allowFetchProvisioningDat :1;
+    uint16_t allowFetchRules :4;
 
-      uint16_t unused :7;  // Add to use full 16 bit.
-    } allowedFlags;
-  };
-
-
+    uint16_t unused :7;  // Add to use full 16 bit.
+  } allowedFlags;
 };
 
 typedef std::shared_ptr<ProvisioningStruct> ProvisioningStruct_ptr_type;

@@ -318,7 +318,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       Sensor_VType VType = TempEvent.sensorType;
 
       if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
-        VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        VType = static_cast<Sensor_VType>(getFormItemInt(sensorTypeHelper_webformID(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
       }
       ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
@@ -436,8 +436,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   // Store all PCONFIG values on the web page
   // Must be done after PLUGIN_WEBFORM_SAVE, to allow tasks to clear the default task value names
   // Output type selectors are typically stored in PCONFIG 
-  for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
-    pconfig_webformSave(&TempEvent, pconfigIndex);
+  if (device.OutputDataType != Output_Data_type_t::Default) {
+    for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
+      pconfig_webformSave(&TempEvent, pconfigIndex);
+    }
   }
   // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
   Cache.updateExtraTaskSettingsCache();

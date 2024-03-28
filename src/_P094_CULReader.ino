@@ -20,6 +20,7 @@
 # define PLUGIN_094
 # define PLUGIN_ID_094           94
 # define PLUGIN_NAME_094         "Communication - CUL Reader"
+# define PLUGIN_VALUENAME1_094   "v"
 
 
 bool Plugin_094_match_all(taskIndex_t   taskIndex,
@@ -55,6 +56,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       Device[++deviceCount].Number           = PLUGIN_ID_094;
       Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -66,7 +68,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].DuplicateDetection = true;
 
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
-      Device[deviceCount].ExitTaskBeforeSave = false;
+      Device[deviceCount].ExitTaskBeforeSave = true;
       break;
     }
 
@@ -75,16 +77,9 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < P094_NR_OUTPUT_VALUES) {
-          const uint8_t pconfigIndex = i + P094_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
-          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_094_valuename(choice, false));
-        } else {
-          ExtraTaskSettings.clearTaskDeviceValueName(i);
-        }
-      }
+    case PLUGIN_GET_DEVICEVALUENAMES:
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_094));
       break;
     }
 
@@ -167,6 +162,16 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       P094_DISABLE_WINDOW_TIME_MS = getFormItemInt(F("disableTime"));
       P094_NR_FILTERS             = getFormItemInt(F("nrfilters"));
 
+
+      P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
+# if P094_DEBUG_OPTIONS
+      P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
+# endif // if P094_DEBUG_OPTIONS
+      P094_SET_INTERVAL_FILTER(isFormItemChecked(F("interval_filter")));
+      P094_SET_MUTE_MESSAGES(isFormItemChecked(F("mute")));
+      P094_SET_COLLECT_STATS(isFormItemChecked(F("collect_stats")));
+
+
       P094_data_struct *P094_data =
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -185,15 +190,6 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           delete P094_data;
         }
       }
-
-
-      P094_SET_APPEND_RECEIVE_SYSTIME(isFormItemChecked(F("systime")));
-# if P094_DEBUG_OPTIONS
-      P094_SET_GENERATE_DEBUG_CUL_DATA(isFormItemChecked(F("debug_data")));
-# endif // if P094_DEBUG_OPTIONS
-      P094_SET_INTERVAL_FILTER(isFormItemChecked(F("interval_filter")));
-      P094_SET_MUTE_MESSAGES(isFormItemChecked(F("mute")));
-      P094_SET_COLLECT_STATS(isFormItemChecked(F("collect_stats")));
 
       break;
     }
@@ -451,6 +447,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+#ifdef USES_ESPEASY_NOW
     case PLUGIN_FILTEROUT_CONTROLLER_DATA:
     {
       // event->String1 => topic;
@@ -466,6 +463,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
+#endif
   }
   return success;
 }
@@ -486,6 +484,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const S
 
   mBusPacket_t packet;
   bool res = P094_data->parsePacket(received, packet);
+
 
   # ifdef ESP8266
 
@@ -515,13 +514,6 @@ void Plugin_094_setFlags(struct EventStruct *event)
       P094_GET_MUTE_MESSAGES,
       P094_GET_COLLECT_STATS);
   }
-}
-
-String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
-  switch (value_nr) {
-    case P094_QUERY_VALUE: return displayString ? F("Value") : F("v");
-  }
-  return EMPTY_STRING;
 }
 
 void P094_html_show_matchForms(struct EventStruct *event) {

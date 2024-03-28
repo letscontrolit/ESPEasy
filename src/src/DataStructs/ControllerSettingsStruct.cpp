@@ -25,16 +25,25 @@ void ControllerSettingsStruct::reset() {
   // Otherwise the checksum will fail and settings will be saved too often.
   memset(this, 0, sizeof(ControllerSettingsStruct));
 
-  UseDNS                     = DEFAULT_SERVER_USEDNS;
-  Port                       = DEFAULT_PORT;
-  MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
-  MaxQueueDepth              = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-  MaxRetry                   = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  DeleteOldest               = DEFAULT_CONTROLLER_DELETE_OLDEST;
-  ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
-  MustCheckReply             = DEFAULT_CONTROLLER_MUST_CHECK_REPLY ;
-  SampleSetInitiator         = INVALID_TASK_INDEX;
-  VariousFlags               = 0;
+  UseDNS                                        = DEFAULT_SERVER_USEDNS;
+  Port                                          = DEFAULT_PORT;
+  MinimalTimeBetweenMessages                    = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+  MaxQueueDepth                                 = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  MaxRetry                                      = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  DeleteOldest                                  = DEFAULT_CONTROLLER_DELETE_OLDEST;
+  ClientTimeout                                 = CONTROLLER_CLIENTTIMEOUT_DFLT;
+  MustCheckReply                                = DEFAULT_CONTROLLER_MUST_CHECK_REPLY;
+  SampleSetInitiator                            = INVALID_TASK_INDEX;
+  VariousBits1.mqtt_cleanSession                = 0;
+  VariousBits1.mqtt_not_sendLWT                 = 0;
+  VariousBits1.mqtt_not_willRetain              = 0;
+  VariousBits1.mqtt_uniqueMQTTclientIdReconnect = 0;
+  VariousBits1.mqtt_retainFlag                  = 0;
+  VariousBits1.useExtendedCredentials           = 0;
+  VariousBits1.sendBinary                       = 0;
+  VariousBits1.allowExpire                      = 0;
+  VariousBits1.deduplicate                      = 0;
+  VariousBits1.useLocalSystemTime               = 0;
 
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
@@ -72,7 +81,6 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(LWTMessageDisconnect);
 }
 
-
 String ControllerSettingsStruct::getHost() const {
   if (UseDNS) {
     return HostName;
@@ -90,6 +98,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
     // No IP/hostname set
     return false;
   }
+
   if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
@@ -111,7 +120,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
     return false; // Host not reachable
   }
   uint8_t retry     = 2;
-  bool connected = false;
+  bool    connected = false;
 
   while (retry > 0 && !connected) {
     --retry;
@@ -125,16 +134,19 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   }
   return false;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  uint8_t retry     = 2;
+  uint8_t retry = 2;
+
   while (retry > 0) {
     --retry;
     FeedSW_watchdog();
+
     if (client.beginPacket(getIP(), Port) == 1) {
       return true;
     }
