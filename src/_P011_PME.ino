@@ -6,6 +6,11 @@
 // #################################### Plugin 011: Pro Mini Extender ####################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2024-03-29 tonhuisman: Add support for Input (switch) behavior, that only generates an event if the input pin changes state
+ *                        De-duplicate (merge) extpulse and extlongpulse code, and make extpulse only blocking for durations up to 10 msec
+ * 2024-03-28 tonhuisman: Start changelog.
+ */
 
 # define PLUGIN_011
 # define PLUGIN_ID_011         11
@@ -15,6 +20,11 @@
 # define PLUGIN_011_I2C_ADDRESS 0x7f
 
 # define PLUGIN_011_PORTS       14
+
+# define P011_PORT_TYPE         PCONFIG(0)
+# define P011_TYPE_DIGITAL      0
+# define P011_TYPE_ANALOG       1
+# define P011_TYPE_SWITCH       2
 
 constexpr pluginID_t P011_PLUGIN_ID{ PLUGIN_ID_011 };
 
@@ -53,14 +63,14 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success = (event->Par1 == 0x7f);
+      success = (event->Par1 == PLUGIN_011_I2C_ADDRESS);
       break;
     }
 
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = 0x7f;
+      event->Par1 = PLUGIN_011_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -68,8 +78,9 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const __FlashStringHelper *options[2] = { F("Digital"), F("Analog") };
-      addFormSelector(F("Port Type"), F("p011"), 2, options, nullptr, PCONFIG(0));
+      const __FlashStringHelper *options[] = { F("Digital"), F("Analog"), F("Input (switch)") };
+      const int optionValues[]             = { P011_TYPE_DIGITAL, P011_TYPE_ANALOG, P011_TYPE_SWITCH };
+      addFormSelector(F("Port Type"), F("p011"), NR_ELEMENTS(options), options, optionValues, P011_PORT_TYPE);
 
       success = true;
       break;
@@ -77,8 +88,8 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("p011"));
-      success    = true;
+      P011_PORT_TYPE = getFormItemInt(F("p011"));
+      success        = true;
       break;
     }
 
@@ -90,12 +101,33 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(PCONFIG(0), CONFIG_PORT));
+      if (P011_TYPE_SWITCH != P011_PORT_TYPE) { // Not for Switch type
+        UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(P011_PORT_TYPE, CONFIG_PORT));
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+        }
+        success = true;
       }
-      success = true;
+      break;
+    }
+
+    case PLUGIN_FIFTY_PER_SECOND:
+    {
+      if (P011_TYPE_SWITCH == P011_PORT_TYPE) { // Only for Switch type
+        const int oldValue = static_cast<int>(UserVar.getFloat(event->TaskIndex, 0));
+        const int newValue = Plugin_011_Read(P011_TYPE_DIGITAL, CONFIG_PORT);
+
+        if (oldValue != newValue) { // Changed?
+          UserVar.setFloat(event->TaskIndex, 0, newValue);
+          sendData(event);
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLogMove(LOG_LEVEL_INFO, strformat(F("PME  : Switch state: %d"), newValue));
+          }
+          success = true;
+        }
+      }
       break;
     }
 
@@ -159,14 +191,23 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
       else
-      if (equals(command, F("extpulse")))
+      if (equals(command, F("extpulse")) || equals(command, F("extlongpulse"))) // De-duplicated
       {
         if ((event->Par1 >= 0) && (event->Par1 < PLUGIN_011_PORTS))
         {
+          const int factor   = equals(command, F("extlongpulse")) ? 1000 : 1;
+          const int duration = event->Par3 * factor;
           success = true;
           Plugin_011_Write(event->Par1, event->Par2);
-          delay(event->Par3);
-          Plugin_011_Write(event->Par1, !event->Par2);
+
+          if (duration <= 10) { // Short pulses (<= 10 msec) only use direct delay
+            delay(event->Par3);
+            Plugin_011_Write(event->Par1, !event->Par2);
+            log = strformat(F("PME  : GPIO %d Pulsed for %d mS"), event->Par1, duration);
+          } else {
+            Scheduler.setPluginTaskTimer(duration, event->TaskIndex, event->Par1, !event->Par2);
+            log = strformat(F("PME  : GPIO %d Pulse set for %d %cS"), event->Par1, duration, factor == 1 ? 'm' : ' ');
+          }
 
           portStatusStruct tempStatus;
           const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
@@ -180,35 +221,6 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           savePortStatus(key, tempStatus);
 
           // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = strformat(F("PME  : GPIO %d Pulsed for %d mS"), event->Par1, event->Par3);
-          addLog(LOG_LEVEL_INFO, log);
-
-          // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
-          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
-        }
-      }
-      else
-      if (equals(command, F("extlongpulse")))
-      {
-        if ((event->Par1 >= 0) && (event->Par1 < PLUGIN_011_PORTS))
-        {
-          success = true;
-          Plugin_011_Write(event->Par1, event->Par2);
-          Scheduler.setPluginTaskTimer(event->Par3 * 1000, event->TaskIndex, event->Par1, !event->Par2);
-
-          portStatusStruct tempStatus;
-          const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
-
-          // WARNING: operator [] creates an entry in the map if key does not exist
-          // So the next command should be part of each command:
-          tempStatus         = globalMapPortStatus[key];
-          tempStatus.mode    = PIN_MODE_OUTPUT;
-          tempStatus.state   = event->Par2;
-          tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
-          savePortStatus(key, tempStatus);
-
-          // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-          log = strformat(F("PME  : GPIO %d Pulse set for %d S"), event->Par1, event->Par3);
           addLog(LOG_LEVEL_INFO, log);
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_011, event->Par1, log, 0));
@@ -276,7 +288,7 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 
   Wire.beginTransmission(address);
 
-  if (Par1 == 0) {
+  if (Par1 == P011_TYPE_DIGITAL) {
     Wire.write(2); // Digital Read
   }
   else {
@@ -305,13 +317,13 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 // ********************************************************************************
 void Plugin_011_Write(uint8_t Par1, uint8_t Par2)
 {
-  uint8_t address = 0x7f;
+  uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
   Wire.beginTransmission(address);
   Wire.write(1);
   Wire.write(Par1);
   Wire.write(Par2 & 0xff);
-  Wire.write((Par2 >> 8));
+  Wire.write(Par2 >> 8);
   Wire.endTransmission();
 }
 
