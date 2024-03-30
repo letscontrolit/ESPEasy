@@ -1732,9 +1732,9 @@ To create/register a plugin, you have to :
        #undef FEATURE_I2C_DEVICE_CHECK
      #endif
      #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
-     #if !defined(FEATURE_TARSTREAM_SUPPORT)
-       #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
-     #endif // FEATURE_TARSTREAM_SUPPORT
+    //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
+    //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
+    //  #endif // FEATURE_TARSTREAM_SUPPORT
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
