@@ -152,7 +152,10 @@ bool fileExists(const String& fname) {
   if (res || !isCacheFile(patched_fname)) 
   #endif
   {
-    Cache.fileExistsMap[patched_fname] = res;
+    Cache.fileExistsMap.emplace(
+      std::make_pair(
+        patched_fname, 
+        res));
   }
   if (Cache.fileCacheClearMoment == 0) {
     if (node_time.timeSource == timeSource_t::No_time_source) {
@@ -404,7 +407,7 @@ bool BuildFixes()
     }
     // Remove PeriodicalScanWiFi
     // Reset to default 0 for future use.
-    bitWrite(Settings.VariousBits1, 15, 0);
+    Settings.VariousBits_1.unused_15 = 0;
   }
   #endif
 
@@ -1103,6 +1106,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
       err = checkTaskSettings(TaskIndex);
     }
 #endif
+    // FIXME TD-er: Is this still needed as it is also cleared on PLUGIN_INIT and PLUGIN_EXIT?
     UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   } 
 #ifndef LIMIT_BUILD_SIZE
@@ -1163,7 +1167,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
-  UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

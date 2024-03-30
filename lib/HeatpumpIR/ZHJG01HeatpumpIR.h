@@ -22,14 +22,14 @@
  *  Every UNeven Byte (01,03,05,07 and 09)  hold a checksum of the corresponding
  *  command by inverting the bits, for example:
  *
- *  The identifier byte[0] = 0xD5 = B1101 0101
- *  The checksum byte[1]   = 0x2A = B0010 1010
+ *  The identifier byte[0] = 0xD5 = 0b1101 0101
+ *  The checksum byte[1]   = 0x2A = 0b0010 1010
  *
  *  So, you can check the message by:
  *  - inverting the bits of the checksum byte with the corresponding command, they
  *    should be the same, or
  *  - Summing up the checksum byte and the corresponding command,
- *    they should always add up to 0xFF = B11111111 = 255
+ *    they should always add up to 0xFF = 0b11111111 = 255
  *
  * ******************************************************************************
  *  Written by: Abílio Costa
