@@ -1,4 +1,14 @@
 -------------------------------------------------
+Changes in release mega-20240401 (since mega-20240331)
+-------------------------------------------------
+
+Release date: Mon Apr  1 12:13:54 AM CEST 2024
+
+Ton Huisman (1):
+      [Bugfix] Release script fixes and simplifications
+
+
+-------------------------------------------------
 Changes in release mega-20240331 (since mega-20240229)
 -------------------------------------------------
 
