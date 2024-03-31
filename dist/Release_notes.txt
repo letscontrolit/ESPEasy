@@ -1,4 +1,66 @@
 -------------------------------------------------
+Changes in release mega-20240401 (since mega-20240331)
+-------------------------------------------------
+
+Release date: Mon Apr  1 12:13:54 AM CEST 2024
+
+Ton Huisman (1):
+      [Bugfix] Release script fixes and simplifications
+
+
+-------------------------------------------------
+Changes in release mega-20240331 (since mega-20240229)
+-------------------------------------------------
+
+Release date: Sun Mar 31 03:40:08 PM CEST 2024
+
+Ernest (ErNis) (1):
+      INA219 26V 8A range added
+
+Jason2866 (1):
+      small refactor
+
+TD-er (13):
+      [JL1101] Fix JL1101 Ethernet + update to latest ESP-IDF5.1 code
+      [PlatformIO] Fix installing pygit2
+      [ESP8266 WiFi] Initialize flags for AP capabilities
+      [ESP8266] Get rid of several union structs which may cause weird issues
+      [ESP8266] Remove use of union due to issues on ESP8266
+      [ESP-IDF5.1] Revert to older SDK code due to issues with HWCDC
+      [Build] Reduce build size regarding WiFi AP Candidate duplicate code
+      [HWCDC] Test for ESP32-C3/C6/S3 HWCDC issues
+      [CUL Reader] Cherry pick code from ESPEasy_NOW pull request
+      [CUL Reader] Fix not being able to set flags
+      [Save Settings] Fix issue where data may get corrupted saving task
+      [Display] Reduce ESP8266 'display' build size
+      [MQTT] Fix crash and disconnect sending to MQTT using formula
+
+Ton Huisman (22):
+      [P087] Add serialproxy_test command and Get the parsed data
+      [P087] Fix typo
+      [P087] Documentation clarification
+      [P087] Apply log-string and code optimizations
+      [P087] Always process Global Match so values can be retrieved
+      [Bugfix] Release.yml shouldn't try to move a non-existing file
+      [Build] Add ESP32-C6 MAX builds (preliminary)
+      [Docs] Update ESP chip info
+      [Docs] Update ESP chip info
+      [P116] Add alternative model selections for ST7789
+      [Bugfix] Remove duplicate define in Custom-sample.h
+      [Build] Custom IR ESP32 configurations not using the pre_custom_esp32_IR.py Python script
+      [P116] Add alternative model selection for ST7735
+      [P029][C002] Add option Invert On/Off value
+      [Docs] Update P029 documentation with new option
+      [C002] Reduce .bin size (slightly)
+      [P116] Fine-tuning the rotation column-offset for ST7735 135x240 display
+      [P116] Documentation improvement.
+      [P095] Documentation improvement.
+      [P116] Update documentation for supported displays
+      [Build] Disable Notifiers in full binaries
+      [Build] Fix typo
+
+
+-------------------------------------------------
 Changes in release mega-20240229 (since mega-20231225)
 -------------------------------------------------
 
