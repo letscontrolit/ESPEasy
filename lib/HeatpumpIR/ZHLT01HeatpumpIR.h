@@ -41,14 +41,14 @@
  *  Every EVEN Byte (00,02,04,06,08 and 10) holds a checksum of the corresponding 
  *  command-, or identifier-byte by _inverting_ the bits, for example:
  *  
- *  The identifier byte[11] = 0xD5 = B1101 0101
- *  The checksum byte[10]   = 0x2A = B0010 1010
+ *  The identifier byte[11] = 0xD5 = 0b1101 0101
+ *  The checksum byte[10]   = 0x2A = 0b0010 1010
  *  
  *  So, you can check the message by:
  *  - inverting the bits of the checksum byte with the corresponding command-, or 
  *    identifier byte, they should me the same, or
  *  - Summing up the checksum byte and the corresponding command-, or identifier byte,
- *    they should always add up to 0xFF = B11111111 = 255
+ *    they should always add up to 0xFF = 0b11111111 = 255
  *  
  *  Control bytes:
  *  [01] - Timer (1-24 hours, Off)

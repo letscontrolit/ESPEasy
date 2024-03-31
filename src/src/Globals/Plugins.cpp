@@ -283,6 +283,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
       if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
       {
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           LoadTaskSettings(taskIndex);
         }
         TempEvent->setTaskIndex(taskIndex);
@@ -602,6 +603,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
@@ -689,6 +691,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       if (Function == PLUGIN_READ || Function == PLUGIN_INIT || Function == PLUGIN_PROCESS_CONTROLLER_DATA) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
+        }
+        if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(event->TaskIndex);
         }
       }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -818,6 +823,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
           if (Function == PLUGIN_EXIT) {
+            UserVar.clear_computed(event->TaskIndex);
             clearPluginTaskData(event->TaskIndex);
 //            initSerial();
             queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
@@ -854,6 +860,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
     case PLUGIN_INIT_VALUE_RANGES:
+    #ifdef USES_ESPEASY_NOW
+    case PLUGIN_FILTEROUT_CONTROLLER_DATA:
+    #endif
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
@@ -899,7 +908,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
-          UserVar.clear_computed(event->TaskIndex);
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();

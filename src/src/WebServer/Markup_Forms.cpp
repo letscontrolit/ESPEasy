@@ -480,7 +480,7 @@ void addFormSelectorI2C(const String& id,
                       #endif // if FEATURE_TOOLTIPS
                       );
 
-  for (uint8_t x = 0; x < addressCount; x++)
+  for (int x = 0; x < addressCount; x++)
   {
     String option = formatToHex_decimal(addresses[x]);
 
@@ -653,9 +653,9 @@ void addFormSelector_YesNo(const __FlashStringHelper * label,
                            int           selectedIndex,
                            bool       reloadonchange)
 {
-  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
-  int optionValuesNoYes[2]                   = { 0, 1 };
-  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+  const __FlashStringHelper *optionsNoYes[] = { F("No"), F("Yes") };
+  int optionValuesNoYes[]                   = { 0, 1 };
+  addFormSelector(label, id, NR_ELEMENTS(optionValuesNoYes), optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
 }
 
 

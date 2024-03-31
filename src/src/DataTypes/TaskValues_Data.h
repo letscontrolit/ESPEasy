@@ -65,20 +65,7 @@ struct __attribute__((__packed__)) TaskValues_Data_t {
 
   String getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals = 0) const;
 
-
-  union {
-    uint8_t  binary[VARS_PER_TASK * sizeof(float)];
-    float    floats[VARS_PER_TASK];
-    uint32_t uint32s[VARS_PER_TASK];
-#if FEATURE_EXTENDED_TASK_VALUE_TYPES
-    int32_t  int32s[VARS_PER_TASK];
-    uint64_t uint64s[VARS_PER_TASK / 2];
-    int64_t  int64s[VARS_PER_TASK / 2];
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    double   doubles[VARS_PER_TASK / 2];
-#endif
-#endif
-  };
+  uint8_t  binary[VARS_PER_TASK * sizeof(float)]{};
 };
 
 #endif // ifndef DATATYPES_TASKVALUES_DATA_H

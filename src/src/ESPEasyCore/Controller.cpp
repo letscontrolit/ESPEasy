@@ -36,7 +36,7 @@ constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
-void sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event, bool sendEvents)
 {
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
@@ -44,7 +44,7 @@ void sendData(struct EventStruct *event)
   #endif // ifndef BUILD_NO_RAM_TRACKER
 //  LoadTaskSettings(event->TaskIndex);
 
-  if (Settings.UseRules) {
+  if (Settings.UseRules && sendEvents) {
     createRuleEvents(event);
   }
 

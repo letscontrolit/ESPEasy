@@ -329,24 +329,31 @@ uint32_t UserVarStruct::compute_CRC32() const
 
 void UserVarStruct::clear_computed(taskIndex_t taskIndex)
 {
-  if (!Cache.hasFormula(taskIndex)) {
-    auto it = _computed.find(taskIndex);
+  auto it = _computed.find(taskIndex);
 
-    if (it != _computed.end()) {
-      _computed.erase(it);
-    }
+  if (it != _computed.end()) {
+    _computed.erase(it);
   }
-#ifndef LIMIT_BUILD_SIZE
 
   for (taskVarIndex_t varNr = 0; validTaskVarIndex(varNr); ++varNr) {
     const uint16_t key = makeWord(taskIndex, varNr);
-    auto it            = _preprocessedFormula.find(key);
+#ifndef LIMIT_BUILD_SIZE
+    {
+      auto it            = _preprocessedFormula.find(key);
 
-    if (it != _preprocessedFormula.end()) {
-      _preprocessedFormula.erase(it);
+      if (it != _preprocessedFormula.end()) {
+        _preprocessedFormula.erase(it);
+      }
+    }
+#endif // ifndef LIMIT_BUILD_SIZE
+    {
+      auto it            = _prevValue.find(key);
+
+      if (it != _prevValue.end()) {
+        _prevValue.erase(it);
+      }
     }
   }
-#endif // ifndef LIMIT_BUILD_SIZE
 }
 
 void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
@@ -403,7 +410,9 @@ bool UserVarStruct::applyFormula(taskIndex_t    taskIndex,
     return false;
   }
 
-  if (!applyNow && !Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+  const bool formula_has_prevvalue = Cache.hasFormula_with_prevValue(taskIndex, varNr);
+
+  if (!applyNow && !formula_has_prevvalue) {
     // Must check whether we can delay calculations until it is read for the first time.
     auto it = _computed.find(taskIndex);
 
@@ -422,14 +431,22 @@ bool UserVarStruct::applyFormula(taskIndex_t    taskIndex,
   {
     START_TIMER;
 
+    formula.replace(F("%value%"), value);
+
     // TD-er: Should we use the set nr of decimals here, or not round at all?
     // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-    if (formula.indexOf(F("%pvalue%")) != -1) {
+    if (formula_has_prevvalue) {
       const String prev_str = getPreviousValue(taskIndex, varNr, sensorType);
       formula.replace(F("%pvalue%"), prev_str.isEmpty() ? value : prev_str);
+      /*
+      addLog(LOG_LEVEL_INFO, 
+        strformat(
+          F("pvalue: %s, value: %s, formula: %s"), 
+          prev_str.c_str(), 
+          value.c_str(),
+          formula.c_str()));
+      */
     }
-
-    formula.replace(F("%value%"), value);
 
     ESPEASY_RULES_FLOAT_TYPE result{};
 
@@ -482,7 +499,11 @@ String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, taskVarIndex
   auto it            = _preprocessedFormula.find(key);
 
   if (it == _preprocessedFormula.end()) {
-    _preprocessedFormula[key] = RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr));
+    _preprocessedFormula.emplace(
+      std::make_pair(
+        key, 
+        RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr))
+        ));
   }
   return _preprocessedFormula[key];
 #else // ifndef LIMIT_BUILD_SIZE
