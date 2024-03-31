@@ -105,9 +105,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A") };
-        const int optionValuesMode[]             = { 0, 1, 2 };
-        addFormSelector(F("Measure range"), F("range"), 3, optionsMode, optionValuesMode, PCONFIG(0));
+        const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A"), F("26V, 8A") };
+        const int optionValuesMode[]             = { 0, 1, 2, 3 };
+        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, optionValuesMode, PCONFIG(0));
       }
       {
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
@@ -167,6 +167,14 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
               log += F("16V, 400mA");
             }
             P027_data->setCalibration_16V_400mA();
+            break;
+          }
+          case 3:
+          {
+            if (mustLog) {
+              log += F("26V, 8A");
+            }
+            P027_data->setCalibration_26V_8A();
             break;
           }
         }
