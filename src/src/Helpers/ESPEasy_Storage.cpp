@@ -2129,15 +2129,15 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
       const esp_partition_t *_mypart = esp_partition_get(_mypartiterator);
       result += strformat(F("%x%s%s%s%s%s%s%s%s%s"),
                           _mypart->address,
-                          itemSep,
+                          itemSep.c_str(),
                           formatToHex_decimal(_mypart->size, 1024),
-                          itemSep,
+                          itemSep.c_str(),
                           _mypart->label,
-                          itemSep,
+                          itemSep.c_str(),
                           getPartitionType(_mypart->type, _mypart->subtype).c_str(),
-                          itemSep,
+                          itemSep.c_str(),
                           String(_mypart->encrypted ? F("Yes") : F("-")).c_str(),
-                          lineEnd);
+                          lineEnd.c_str());
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
