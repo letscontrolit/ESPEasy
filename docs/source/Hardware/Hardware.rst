@@ -3,8 +3,6 @@
 Hardware page
 *************
 
-Overview
-========
 
 ESPEasy has some centralized hardware configuration settings, shown in this page, and divided in sections.
 
@@ -203,13 +201,34 @@ To activate a new configuration, a reboot is needed.
 Ethernet PHY type
 ^^^^^^^^^^^^^^^^^
 
-Select the used PHY controller type:
+ESP boards can be equiped with Ethernet.
+This is more stable and reliable compared to WiFi and allows for better responsiveness.
 
-* LAN8710  (LAN8720 is also supported, but none of the newer features are supported)
-* TLK110  
-* RTL8201 (since ESP32 IDF 4.4)
-* DP83848 (since ESP32 IDF 4.4)
-* DM9051  (since ESP32 IDF 4.4)
+Actual transfer speed (at least when using RMII) is also higher than can be achieved via WiFi, but this is less of a concern for typical use cases where ESPEasy is used.
+
+Ethernet chips/boards for ESP32-variant boards exist with 2 types of interfaces to the ESP.
+
+* RMII interface - Faster actual transfer speeds possible, uses more GPIO pins, only supported on ESP32-classic (and upcoming ESP32-P4).
+* SPI interface - (Added: 2024/02) Supported on all ESP32-variants (not all tested) on builds based on ESP-IDF 5.1
+  SPI Ethernet adapters do obviously require the SPI interface to be configured.
+
+N.B. Only ESP32-variant builds with LittleFS support SPI Ethernet. (starting February 2024)
+
+Supported Ethernet chips:
+
+* RMII Interface:
+    * LAN8710  (LAN8720 is also supported, but none of the newer features are supported)
+    * TLK110  
+    * RTL8201 (since ESP32 IDF 4.4)
+    * JL1101  (since ESP32 IDF 4.4)
+    * DP83848 (since ESP32 IDF 4.4)
+    * KSZ8041 (since ESP32 IDF 4.4)
+    * KSZ8081 (since ESP32 IDF 4.4)
+
+* SPI Interface: (since ESP32 IDF 5.1)
+    * DM9051 
+    * W5500 
+    * KSZ8851 
 
 .. note:: The LAN8710 and LAN8720 are also available with an "A" suffix.
           These are the same chips, only produced after the brand SMSC was taken over by Microchip Technology.
@@ -219,19 +238,22 @@ Ethernet PHY Address
 
 The PHY address depends on the hardware and the PHY configuration. 
 On some chips, like the LAN8720, the board designer may set this address by pulling some pins either high or low at power on.
-In theory, one could use multiple PHY adapters on the same RMII bus, but this is not supported by ESPEasy.
+In theory, one could use multiple PHY adapters on the same RMII/SPI bus, but this is (currently) not supported by ESPEasy.
 
 * Espressif's Ethernet board with TLK110 PHY use PHY address 31.
 * Common Waveshare LAN8720 PHY breakout board (and clones) use PHY address 1.
 * Olimex ESP32 EVB REV B IoT LAN8710 PHY Board with CAN use PHY address 0.
 * Other LAN8720 breakouts often use PHY address 0.
+* ETH01-EVO (ESP32-C3 based board) uses PHY address 1.
 
 If the PHY address is incorrect then the EMAC will initialise but all attempts to read/write configuration registers on the PHY will fail.
 
 N.B. There is support for an auto detect of this PHY address, by setting it to -1, but at least on the LAN8720 this does not seem to work.
 
-GPIO pins
-^^^^^^^^^
+RMII Ethernet 
+^^^^^^^^^^^^^
+
+As mentioned above, the RMII interface is only present on ESP32-classic (and is mentioned on the announced ESP32-P4).
 
 RMII PHY SMI Wiring
 """""""""""""""""""
@@ -281,7 +303,43 @@ Apart from these GPIO pins, there is a number of other pins reserved on the ESP3
 Since these GPIO pin assignments cannot be changed, it is also not needed to configure them.
 However, they also cannot be used when *RMII PHY* is used.
 
-.. include:: ../Reference/Ethernet_PHY_ESP32.rst
+.. include:: ../Reference/RMII_Ethernet_PHY_ESP32.rst
+
+RMII Ethernet ESP32 Boards
+""""""""""""""""""""""""""
+
+.. include:: ../Reference/RMII_Ethernet_ESP32_boards.rst
+
+
+SPI Ethernet
+^^^^^^^^^^^^
+
+(Added: 2024/02)
+
+As mentioned above, these SPI based Ethernet interfaces require the SPI interface to be configured.
+
+The SPI bus can be shared, but the SPI Ethernet chips are a bit specific about the used frequency.
+Currently the default SPI frequency of 20 MHz is used, so not all other SPI devices may work together with SPI Ethernet.
+
+Some boards like the ETH01-EVO (ESP32-C3 based) do not even have the SPI bus pins made accesible.
+
+.. note:: Switching to ECO mode can sometimes result in an unreachable node when using SPI Ethernet. After a reboot the node works just fine again (in ECO mode).  This is currently being investigated.
+
+
+GPIO Configuration
+""""""""""""""""""
+
+* CS pin: Just as any SPI device, it needs a CS pin to tell the device it is being addressed.
+* IRQ/INT pin: Allows the Ethernet chip to signal the ESP about new data. (Optional for W5500)
+* RST pin: ESP will try to reset the Ethernet adapter during boot. Not all boards may have this wired.
+
+
+SPI Ethernet ESP32 Boards
+"""""""""""""""""""""""""
+
+.. include:: ../Reference/SPI_Ethernet_ESP32_boards.rst
+
+
 
 Ethernet with PoE
 ^^^^^^^^^^^^^^^^^
@@ -291,11 +349,31 @@ Some ethernet boards support Power over Ethernet (PoE), so only a single (ethern
 For Olimex boards in the ESP32-POE range, the supplier has documented this warning:
 
 .. warning:: 
-    **Important notice**: Olimex ESP32-PoE has **no galvano isolation** from Ethernet's power supply, when you program the board via the micro USB connector the Ethernet cable should be disconnected (if you have power over the Ethernet cable)!
+    **Important notice**: Olimex ESP32-PoE has **no galvanic isolation** from Ethernet's power supply, when you program the board via the micro USB connector the Ethernet cable should be disconnected (if you have power over the Ethernet cable)!
     
     Consider using Olimex USB-ISO to protect your computer and board from accidental short circuit. Also consider instead using Olimex ESP32-PoE-ISO board, which *is* insulated.
 
 Most likely, this warning is applicable to other brands as well.
+
+
+Ethernet Isolation
+^^^^^^^^^^^^^^^^^^
+
+Most Ethernet RJ45 phy (the connector on the PCB) have isolation transformers in them.
+This does isolate the TX/RX pins to make sure there is no direct connection between the long cables and the Ethernet controller chip.
+The isolation does protect the Ethernet chip from picked up high voltage spikes and ESD surges when inserting the Ethernet cable.
+However not all ESP boards with Ethernet have these installed.
+
+Apart from the isolation of the TX/RX pins the metallic enclosure of the phy should also be isolated from the rest of the circuit of the ESP board.
+Typically this is done by connecting the metal enclosure of the phy via a capacitor to GND of the rest of the circuit.
+A lot of boards with Ethernet have these directly connected to GND, which may impose a problem when connecting the ESP board to your PC.
+
+.. warning:: 
+    **Important notice**: For ESP boards with Ethernet which need debugging, never use Ethernet cables with metal shielding on the Ethernet connector.
+
+Using shielded Ethernet cable will connect the metal shield of the RJ45 phy to the ground of the switch and this may be connected to other appliances which may be badly grounded.
+This will add a significant voltage offset between the ESP board and your PC while debugging.
+Such a high voltage is very likely to destroy electronics.
 
 
 -------------------

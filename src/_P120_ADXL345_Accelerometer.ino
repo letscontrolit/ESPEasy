@@ -89,10 +89,10 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x53, 0x1D };
+      const uint8_t i2cAddressValues[] = { 0x1D, 0x53 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P120_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P120_I2C_ADDR, 0x53);
         addFormNote(F("AD0 Low=0x53, High=0x1D"));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);

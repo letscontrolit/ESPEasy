@@ -132,10 +132,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *options[2] = { F("Switch"),  F("Dimmer") };
-        int optionValues[2]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const uint8_t switchtype              = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("type"), 2, options, optionValues, switchtype);
+        const __FlashStringHelper *options[] = { F("Switch"),  F("Dimmer") };
+        int optionValues[]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
+        const uint8_t switchtype             = P001_getSwitchType(event);
+        addFormSelector(F("Switch Type"), F("type"), NR_ELEMENTS(optionValues), options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
@@ -145,10 +145,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       {
         uint8_t choice                              = PCONFIG(2);
-        const __FlashStringHelper *buttonOptions[3] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
-        int buttonOptionValues[3]                   =
+        const __FlashStringHelper *buttonOptions[] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
+        int buttonOptionValues[]                   =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(F("Switch Button Type"), F("button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("button"), NR_ELEMENTS(buttonOptionValues), buttonOptions, buttonOptionValues, choice);
       }
 
       SwitchWebformLoad(

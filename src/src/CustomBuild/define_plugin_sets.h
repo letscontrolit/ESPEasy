@@ -1463,6 +1463,12 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
+    #ifdef USES_N001
+      #undef USES_N001   // Email
+    #endif
+    #ifdef USES_N002
+      #undef USES_N002   // Buzzer
+    #endif
     
     // Do not include large blobs but fetch them from CDN
     #ifndef WEBSERVER_USE_CDN_JS_CSS
@@ -1622,6 +1628,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P164
+    #define USES_P164   // Gases - ENS16x TVOC\eCO2
+  #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
 #endif
 
@@ -1695,6 +1707,19 @@ To create/register a plugin, you have to :
      #ifndef PLUGIN_BUILD_MAX_ESP32
        #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
        #define KEEP_I2C_MULTIPLEXER
+       #ifndef P036_LIMIT_BUILD_SIZE
+         #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+       #endif
+       #ifndef P037_LIMIT_BUILD_SIZE
+         #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+       #endif
+       #define NOTIFIER_SET_NONE
+       #ifdef USES_N001
+         #undef USES_N001   // Email
+       #endif
+       #ifdef USES_N002
+         #undef USES_N002   // Buzzer
+       #endif
      #endif
    #endif
    #if defined(ESP8266)
@@ -1904,8 +1929,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
-
-
+  #ifndef USES_P164
+    #define USES_P164   // Gases - ENS16x TVOC/eCO2
+  #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
   // Controllers
   #ifndef USES_C011
@@ -2296,6 +2325,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P166
+    #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -2555,10 +2587,12 @@ To create/register a plugin, you have to :
   #endif
   #define FEATURE_SETTINGS_ARCHIVE  0
 
+  #ifndef PLUGIN_BUILD_CUSTOM
   #ifdef FEATURE_SERVO
     #undef FEATURE_SERVO
   #endif
   #define FEATURE_SERVO 0
+  #endif
   #ifdef FEATURE_RTTTL
     #undef FEATURE_RTTTL
   #endif
@@ -2745,7 +2779,7 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #define FEATURE_MDNS  1
+        #define FEATURE_MDNS  0
       #else
         // Do not use MDNS on ESP8266 due to memory leak
         #define FEATURE_MDNS  0
@@ -3246,8 +3280,8 @@ To create/register a plugin, you have to :
 # endif
 #endif
 
-// Incompatible plugins with ESP32-C2/C6
-#if defined(ESP32C2) || defined(ESP32C6)
+// Incompatible plugins with ESP32-C2 // (C6 seems to work as intended)
+#if defined(ESP32C2) // || defined(ESP32C6)
  #define DISABLE_NEOPIXEL_PLUGINS 1
 #endif
 
@@ -3263,6 +3297,14 @@ To create/register a plugin, you have to :
 # endif
 #endif
 
+// Make sure CONFIG_ETH_USE_ESP32_EMAC is defined on older SDK versions.
+#if FEATURE_ETHERNET && ESP_IDF_VERSION_MAJOR<5
+#ifndef CONFIG_ETH_USE_ESP32_EMAC
+#ifdef ESP32_CLASSIC
+#define CONFIG_ETH_USE_ESP32_EMAC 1
+#endif
+#endif
+#endif
 
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins
@@ -3326,5 +3368,12 @@ To create/register a plugin, you have to :
 */
 
 
+  #ifndef FEATURE_THINGSPEAK_EVENT
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_THINGSPEAK_EVENT 0
+    #else
+      #define FEATURE_THINGSPEAK_EVENT 1
+    #endif
+  #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

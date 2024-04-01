@@ -1969,6 +1969,65 @@ Added: 2022/07/23
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
 
+Added: 2023/10/26
+
+* ``SendToHTTP`` now generates an event with the response of a thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html & // https://de.mathworks.com/help/thingspeak/readdata.html)
+* There are two options:
+
+  1. Get the value of a single field: 
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last.csv``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=143789,5,9.65"``
+       
+        | channel number = ``%eventvalue1%``
+        | field number = ``%eventvalue2%``
+        | value = ``%eventvalue3%``
+        
+  2. Get the values of all fields:
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/143789/feeds/last.csv``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=143789,11.12,9.46,9.55,16.32,9.65,8.81,-1.23,14.76"``
+        
+        | channel number = ``%eventvalue1%``
+        | values = ``%eventvalue2%`` to ``%eventvalue9%``
+
+        .. note::
+          ``last.csv`` is mandatory!
+     
+  .. warning:: When using the command for all fields, the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields are filled with very big numbers)
+
+* Rules example:
+
+  .. code:: none
+
+    On System#Boot Do
+      SendToHTTP,api.thingspeak.com,80,/channels/143789/feeds/last.csv
+    Endon
+
+    On ThinkspeakReply Do
+      LogEntry,'The channel number is: %eventvalue1%'
+      LogEntry,'%eventvalue6%°C in Berlin'
+      LogEntry,'%eventvalue7%°C in Paris'
+    Endon
+
+Added 2024/02/05
+ 
+* Added the option to get a single value of a field or all values of a channel at a certain time (not only the last entry)
+
+* Examples:
+    
+  Single channel: ``SendToHTTP,api.thingspeak.com,80,channels/143789/fields/1.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 143789
+  
+  All channels: ``SendToHTTP,api.thingspeak.com,80,channels/143789/feeds.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of each field of the channel 143789 at (or the last entry before) 23:59:00 
+
+  .. note::
+    ``csv`` and ``results=1`` are mandatory!
 
 Convert curl POST command to PostToHTTP
 ---------------------------------------

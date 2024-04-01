@@ -108,16 +108,16 @@ void ZHJG01HeatpumpIR::sendZHJG01(IRSender& IR,
 
 /********************************************************************************
  * Byte[0]: Turbo, Eco, Fan, Vertical Swing
- * TURBO ON:         B0x1xxxxx
- * ECO ON:           B0x0xxxxx
- * TURBO/ECO OFF:    B1xxxxxxx
- * FAN1:             Bx00xxxxx
- * FAN2:             Bx01xxxxx
- * FAN3:             Bx10xxxxx
- * FAN AUTO:         Bx11xxxxx
- * VERTICAL FIXED:   Bxxx01xxx
- * VERTICAL SWING:   Bxxx10xxx
- * VERTICAL WIND:    Bxxx11xxx
+ * TURBO ON:         0b0x1xxxxx
+ * ECO ON:           0b0x0xxxxx
+ * TURBO/ECO OFF:    0b1xxxxxxx
+ * FAN1:             0bx00xxxxx
+ * FAN2:             0bx01xxxxx
+ * FAN3:             0bx10xxxxx
+ * FAN AUTO:         0bx11xxxxx
+ * VERTICAL FIXED:   0bxxx01xxx
+ * VERTICAL SWING:   0bxxx10xxx
+ * VERTICAL WIND:    0bxxx11xxx
  *******************************************************************************/
   ZHJG01Template[1] = fanSpeed | swingV;
   ZHJG01Template[0] = ~ ZHJG01Template[1];
@@ -125,13 +125,13 @@ void ZHJG01HeatpumpIR::sendZHJG01(IRSender& IR,
 /********************************************************************************
  * Byte[2]: Temp, Power, Mode
  * TEMP:      Bttttxxxx
- * POWER ON:  Bxxxx0xxx
- * POWER OFF: Bxxxx1xxx
- * MODE HEAT: Bxxxxx011
- * MODE VENT: Bxxxxx100
- * MODE DRY:  Bxxxxx101
- * MODE COOL: Bxxxxx110
- * MODE AUTO: Bxxxxx111
+ * POWER ON:  0bxxxx0xxx
+ * POWER OFF: 0bxxxx1xxx
+ * MODE HEAT: 0bxxxxx011
+ * MODE VENT: 0bxxxxx100
+ * MODE DRY:  0bxxxxx101
+ * MODE COOL: 0bxxxxx110
+ * MODE AUTO: 0bxxxxx111
  *******************************************************************************/
 
   uint8_t tempBits = ((temperature - 17) << 4) & 0b11110000;

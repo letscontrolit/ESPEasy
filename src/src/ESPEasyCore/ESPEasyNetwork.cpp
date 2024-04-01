@@ -398,7 +398,7 @@ bool EthFullDuplex()
 bool EthLinkUp()
 {
   if (EthEventData.ethInitSuccess) {
-    #ifdef ESP_IDF_VERSION_MAJOR
+    #if ESP_IDF_VERSION_MAJOR < 5
     // FIXME TD-er: See: https://github.com/espressif/arduino-esp32/issues/6105
     return EthEventData.EthConnected();
     #else

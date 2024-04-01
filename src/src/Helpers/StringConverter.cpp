@@ -117,7 +117,7 @@ String strformat(const String& format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
     va_end(arg);
@@ -147,7 +147,7 @@ String strformat(const __FlashStringHelper * format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
     va_end(arg);
@@ -1083,7 +1083,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
 int GetCommandCode(const char* needle, const char* haystack)
 {
   // Likely long enough to parse any command
-  char temp[32]{};
+  static char temp[32]{};
+  temp[0] = '\0';
   return GetCommandCode(temp, sizeof(temp), needle, haystack);
 }
 

@@ -29,7 +29,7 @@ struct TaskValues_Data_cache {
   }
 
   TaskValues_Data_t values{};
-  uint8_t           values_set_map{};
+  uint32_t          values_set_map{};
 };
 
 struct UserVarStruct {
