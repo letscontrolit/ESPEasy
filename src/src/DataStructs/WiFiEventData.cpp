@@ -13,6 +13,19 @@
 
 #define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
 
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
+
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (WiFi.status() == WL_IDLE_STATUS) {
     // FIXME TD-er: What to do now? Set a timer?
@@ -222,6 +235,19 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
       RTC.lastBSSID[i] = bssid[i];
     }
   }
+#if FEATURE_USE_IPV6
+  WiFi.enableIPv6(true);
+  // workaround for the race condition in LWIP, see https://github.com/espressif/arduino-esp32/pull/9016#discussion_r1451774885
+  {
+    uint32_t i = 5;   // try 5 times only
+    while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA)) != ESP_OK) {
+      delay(1);
+      if (i-- == 0) {
+        break;
+      }
+    }
+  }
+#endif
 }
 
 void WiFiEventData_t::markConnectedAPmode(const uint8_t mac[6]) {

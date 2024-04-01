@@ -152,7 +152,10 @@ bool fileExists(const String& fname) {
   if (res || !isCacheFile(patched_fname)) 
   #endif
   {
-    Cache.fileExistsMap[patched_fname] = res;
+    Cache.fileExistsMap.emplace(
+      std::make_pair(
+        patched_fname, 
+        res));
   }
   if (Cache.fileCacheClearMoment == 0) {
     if (node_time.timeSource == timeSource_t::No_time_source) {
@@ -337,14 +340,14 @@ bool BuildFixes()
   if (Settings.Build < 20108) {
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
-    Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
-    Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
-    Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
-    Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
-    Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
-    Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
+    Settings.ETH_Phy_Addr      = DEFAULT_ETH_PHY_ADDR;
+    Settings.ETH_Pin_mdc_cs    = DEFAULT_ETH_PIN_MDC;
+    Settings.ETH_Pin_mdio_irq  = DEFAULT_ETH_PIN_MDIO;
+    Settings.ETH_Pin_power_rst = DEFAULT_ETH_PIN_POWER;
+    Settings.ETH_Phy_Type      = DEFAULT_ETH_PHY_TYPE;
+    Settings.ETH_Clock_Mode    = DEFAULT_ETH_CLOCK_MODE;
 #endif
-    Settings.NetworkMedium  = DEFAULT_NETWORK_MEDIUM;
+    Settings.NetworkMedium     = DEFAULT_NETWORK_MEDIUM;
   }
   if (Settings.Build < 20109) {
     Settings.SyslogPort = 514;
@@ -404,7 +407,7 @@ bool BuildFixes()
     }
     // Remove PeriodicalScanWiFi
     // Reset to default 0 for future use.
-    bitWrite(Settings.VariousBits1, 15, 0);
+    Settings.VariousBits_1.unused_15 = 0;
   }
   #endif
 
@@ -1108,6 +1111,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
       err = checkTaskSettings(TaskIndex);
     }
 #endif
+    // FIXME TD-er: Is this still needed as it is also cleared on PLUGIN_INIT and PLUGIN_EXIT?
     UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   } 
 #ifndef LIMIT_BUILD_SIZE
@@ -1168,7 +1172,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
-  UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

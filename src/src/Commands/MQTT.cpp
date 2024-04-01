@@ -21,7 +21,15 @@
 #include "../Helpers/StringConverter.h"
 
 
-const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, const char *Line)
+const __FlashStringHelper* Command_MQTT_Publish(struct EventStruct *event, const char *Line) {
+  return Command_MQTT_Publish_handler(event, Line, false);
+}
+
+const __FlashStringHelper* Command_MQTT_PublishR(struct EventStruct *event, const char *Line) {
+  return Command_MQTT_Publish_handler(event, Line, true);
+}
+
+const __FlashStringHelper* Command_MQTT_Publish_handler(struct EventStruct *event, const char *Line, const bool forceRetain)
 {
   // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
@@ -34,13 +42,13 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
   const String topic = parseStringKeepCase(Line, 2);
   const String value = tolerantParseStringKeepCase(Line, 3);
   # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, concat(F("Publish: "), topic) + value);
-  #endif
+  addLog(LOG_LEVEL_DEBUG, strformat(F("Publish%c: %s:%s"), forceRetain ? 'R' : ' ', topic.c_str(), value.c_str()));
+  # endif
 
   if (!topic.isEmpty()) {
 
-    bool mqtt_retainFlag;
-    {
+    bool mqtt_retainFlag = forceRetain;
+    if (!forceRetain) {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
       MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {

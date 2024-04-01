@@ -117,11 +117,15 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
         uint64_t tmpAddr_64 = Dallas_addr_to_uint64(tmpAddress);
 
         if (tmpAddr_64 != 0) {
-          addr_task_map[tmpAddr_64] = strformat(
-            F(" (task %d [%s#%s])")
-          , task + 1
-          , getTaskDeviceName(task).c_str()
-          , getTaskValueName(task, var_index).c_str());
+          addr_task_map.emplace(
+            std::make_pair(
+              tmpAddr_64, 
+              strformat(
+                F(" (task %d [%s#%s])")
+              , task + 1
+              , getTaskDeviceName(task).c_str()
+              , getTaskValueName(task, var_index).c_str())
+          ));
         }
       }
     }

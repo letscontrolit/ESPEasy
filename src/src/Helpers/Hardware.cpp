@@ -148,16 +148,16 @@ void hardwareInit()
         PinBootState bootState = Settings.getPinBootState(gpio);
       #if FEATURE_ETHERNET
 /*
-        if (Settings.ETH_Pin_power == gpio)
+        if (Settings.ETH_Pin_power_rst == gpio)
         {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("ETH  : Reset ETH module on pin ");
-            log += Settings.ETH_Pin_power;
-            addLog(LOG_LEVEL_INFO, log);
-          }
-          bootState = PinBootState::Output_low;
-        }
-*/
+                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                    String log = F("ETH  : Reset ETH module on pin ");
+                    log += Settings.ETH_Pin_power_rst;
+                    addLog(LOG_LEVEL_INFO, log);
+                  }
+                  bootState = PinBootState::Output_low;
+                }
+         */
       #endif // if FEATURE_ETHERNET
 
         #ifdef ESP32
@@ -228,8 +228,22 @@ void hardwareInit()
   PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
   #endif // if FEATURE_PLUGIN_PRIORITY
 
+  bool tryInitSPI = true;
+#if FEATURE_ETHERNET
+  if ((Settings.NetworkMedium == NetworkMedium_t::Ethernet) &&
+      isValid(Settings.ETH_Phy_Type) && 
+      isSPI_EthernetType(Settings.ETH_Phy_Type)) 
+  {
+#if !ETH_SPI_SUPPORTS_CUSTOM
+      tryInitSPI = false;
+#endif
+  }
+#endif
+
+
   // SPI Init
-  if (Settings.isSPI_valid())
+  bool SPI_initialized = false;
+  if (tryInitSPI && Settings.isSPI_valid())
   {
     SPI.setHwCs(false);
 
@@ -237,55 +251,43 @@ void hardwareInit()
     #ifdef ESP32
 
     const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(Settings.InitSPI);
+    int8_t spi_gpios[3]               = {};
 
-    switch (SPI_selection) {
-#ifdef ESP32_CLASSIC
-      case SPI_Options_e::Hspi:
-      {
-        SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
-        break;
-      }
-#endif
-      case SPI_Options_e::UserDefined:
-      {
-        SPI.begin(Settings.SPI_SCLK_pin,
-                  Settings.SPI_MISO_pin,
-                  Settings.SPI_MOSI_pin); // User-defined SPI
-        break;
-      }
-      case SPI_Options_e::Vspi_Fspi:
-      {
+    if (Settings.getSPI_pins(spi_gpios)) {
+      if (SPI_selection == SPI_Options_e::Vspi_Fspi) {
         SPI.begin(); // Default SPI bus
-        break;
+      } else {
+        SPI.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]);
       }
-      case SPI_Options_e::None:
-        break;
+      SPI_initialized = true;
     }
     #else // ifdef ESP32
     SPI.begin();
+    SPI_initialized = true;
     #endif // ifdef ESP32
-    addLog(LOG_LEVEL_INFO, F("INIT : SPI Init (without CS)"));
   }
-  else
+
+  if (SPI_initialized)
   {
+    addLog(LOG_LEVEL_INFO, F("INIT : SPI Init (without CS)"));
+    #if FEATURE_SD
+
+    if (Settings.Pin_sd_cs >= 0)
+    {
+      if (SD.begin(Settings.Pin_sd_cs))
+      {
+        addLog(LOG_LEVEL_INFO, F("SD   : Init OK"));
+      }
+      else
+      {
+        SD.end();
+        addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
+      }
+    }
+#endif // if FEATURE_SD
+  } else {
     addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
-
-#if FEATURE_SD
-
-  if (Settings.Pin_sd_cs >= 0)
-  {
-    if (SD.begin(Settings.Pin_sd_cs))
-    {
-      addLog(LOG_LEVEL_INFO, F("SD   : Init OK"));
-    }
-    else
-    {
-      SD.end();
-      addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
-    }
-  }
-#endif // if FEATURE_SD
 }
 
 
@@ -759,6 +761,7 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel::DeviceModel_Sonoff_POWr2:   return F("Sonoff");
     case DeviceModel::DeviceModel_Shelly1:
     case DeviceModel::DeviceModel_ShellyPLUG_S:   return F("Shelly");
+# if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
@@ -773,6 +776,7 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     #ifdef ESP32_CLASSIC
       return F("WT32-ETH01");
     #endif // ifdef ESP32_CLASSIC
+#endif
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:      break;
 
@@ -810,19 +814,13 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
     case DeviceModel::DeviceModel_ShellyPLUG_S:
       return F("default");
 #endif // if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-#ifdef ESP32_CLASSIC
+#if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:      return F(" ESP32-PoE");
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:      return F(" ESP32-EVB");
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  return F(" ESP32-GATEWAY");
     case DeviceModel::DeviceModel_wESP32:                break;
     case DeviceModel::DeviceModel_WT32_ETH01:            return F(" add-on");
-#else // ifdef ESP32_CLASSIC
-    case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
-    case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
-    case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-    case DeviceModel::DeviceModel_wESP32:
-    case DeviceModel::DeviceModel_WT32_ETH01:
-#endif // ifdef ESP32_CLASSIC
+#endif // if CONFIG_ETH_USE_ESP32_EMAC
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:             return F("default");
@@ -834,7 +832,7 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
 
 String getDeviceModelString(DeviceModel model) {
   return concat(
-    getDeviceModelBrandString(model), 
+    getDeviceModelBrandString(model),
     getDeviceModelTypeString(model));
 }
 
@@ -874,18 +872,19 @@ bool modelMatchingFlashSize(DeviceModel model) {
       return false;
 #endif // ifdef ESP8266
 
-    // These Olimex boards all have Ethernet
+      // These Olimex boards all have Ethernet
+#if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
     case DeviceModel::DeviceModel_wESP32:
     case DeviceModel::DeviceModel_WT32_ETH01:
-#if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
+# if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return size_MB == 4;
-#else // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
+# else // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return false;
-#endif // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
-
+# endif // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
+#endif // if CONFIG_ETH_USE_ESP32_EMAC
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
       return true;
@@ -966,7 +965,6 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-
 // ********************************************************************************
 // change of device: cleanup old device and reset default settings
 // ********************************************************************************
@@ -980,7 +978,8 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
   ClearCustomTaskSettings(taskIndex);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
-//  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
+
+  //  Settings.getPluginID_for_task(taskIndex) = taskdevicenumber;
 
   if (validPluginID_fullcheck(taskdevicenumber)) // set default values if a new device has been selected
   {

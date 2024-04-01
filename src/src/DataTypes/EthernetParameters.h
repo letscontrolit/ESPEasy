@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+
 // Is stored in settings
 enum class EthClockMode_t : uint8_t {
   Ext_crystal_osc       = 0,
@@ -20,15 +21,42 @@ bool isGpioUsedInETHClockMode(EthClockMode_t clockMode,
 
 // Is stored in settings
 enum class EthPhyType_t : uint8_t {
-  LAN8710 = 0,
+#if CONFIG_ETH_USE_ESP32_EMAC
+  LAN8720 = 0,
   TLK110  = 1,
+#if ESP_IDF_VERSION_MAJOR > 3
+
   RTL8201 = 2,
-  DP83848 = 3,
-  DM9051  = 4
-  //,KSZ8081 = 5
+  JL1101 = 3, 
+  DP83848 = 4, 
+  KSZ8041 = 5, 
+  KSZ8081 = 6,
+#endif
+#endif
+#if ESP_IDF_VERSION_MAJOR >= 5
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+  DM9051 = 10, 
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_W5500
+  W5500 = 11, 
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+  KSZ8851 = 12,
+#endif
+#endif
+  notSet = 127   // Might be processed in some code as int, uint8_t and int8_t
 };
 
 bool   isValid(EthPhyType_t phyType);
+
+#if FEATURE_ETHERNET
+#include <ETH.h>
+
+bool isSPI_EthernetType(EthPhyType_t phyType);
+
+// Convert to internal enum type as those enum values may not always be the same int value
+eth_phy_type_t to_ESP_phy_type(EthPhyType_t phyType);
+#endif
 
 const __FlashStringHelper * toString(EthPhyType_t phyType);
 

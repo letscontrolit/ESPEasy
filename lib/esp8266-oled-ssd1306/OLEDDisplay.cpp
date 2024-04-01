@@ -391,9 +391,11 @@ void OLEDDisplay::drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t h
 }
 
 void OLEDDisplay::drawStringInternal(int16_t xMove, int16_t yMove, char* text, uint16_t textLength, uint16_t textWidth) {
-  uint8_t textHeight       = pgm_read_byte(fontData + HEIGHT_POS);
-  uint8_t firstChar        = pgm_read_byte(fontData + FIRST_CHAR_POS);
-  uint16_t sizeOfJumpTable = pgm_read_byte(fontData + CHAR_NUM_POS)  * JUMPTABLE_BYTES;
+  if (fontData == nullptr) return;
+  const uint8_t textHeight       = pgm_read_byte(fontData + HEIGHT_POS);
+  const uint8_t firstChar        = pgm_read_byte(fontData + FIRST_CHAR_POS);
+  const uint8_t numberOfChars    = pgm_read_byte(fontData + CHAR_NUM_POS);
+  const uint16_t sizeOfJumpTable = static_cast<uint16_t>(numberOfChars)  * JUMPTABLE_BYTES;
 
   uint8_t cursorX         = 0;
   uint8_t cursorY         = 0;
@@ -417,33 +419,37 @@ void OLEDDisplay::drawStringInternal(int16_t xMove, int16_t yMove, char* text, u
   if (yMove + textHeight < 0 || yMove > this->width() ) {return;}
 
   for (uint16_t j = 0; j < textLength; j++) {
-    int16_t xPos = xMove + cursorX;
-    int16_t yPos = yMove + cursorY;
+    const int16_t xPos = xMove + cursorX;
+    const int16_t yPos = yMove + cursorY;
 
-    uint8_t code = text[j];
+    const uint8_t code = text[j];
     if (code >= firstChar) {
-      uint8_t charCode = code - firstChar;
+      const uint8_t charCode = code - firstChar;
+      if (charCode < numberOfChars) {
 
-      // 4 Bytes per char code
-      uint8_t msbJumpToChar    = pgm_read_byte( fontData + JUMPTABLE_START + charCode * JUMPTABLE_BYTES );                  // MSB  \ JumpAddress
-      uint8_t lsbJumpToChar    = pgm_read_byte( fontData + JUMPTABLE_START + charCode * JUMPTABLE_BYTES + JUMPTABLE_LSB);   // LSB /
-      uint8_t charByteSize     = pgm_read_byte( fontData + JUMPTABLE_START + charCode * JUMPTABLE_BYTES + JUMPTABLE_SIZE);  // Size
-      uint8_t currentCharWidth = pgm_read_byte( fontData + JUMPTABLE_START + charCode * JUMPTABLE_BYTES + JUMPTABLE_WIDTH); // Width
+        // 4 Bytes per char code
+        const char* charOffset = fontData + JUMPTABLE_START + charCode * JUMPTABLE_BYTES;
+        const uint8_t msbJumpToChar    = pgm_read_byte( charOffset );                  // MSB  \ JumpAddress
+        const uint8_t lsbJumpToChar    = pgm_read_byte( charOffset + JUMPTABLE_LSB);   // LSB /
+        const uint8_t charByteSize     = pgm_read_byte( charOffset + JUMPTABLE_SIZE);  // Size
+        const uint8_t currentCharWidth = pgm_read_byte( charOffset + JUMPTABLE_WIDTH); // Width
 
-      // Test if the char is drawable
-      if (!(msbJumpToChar == 255 && lsbJumpToChar == 255)) {
-        // Get the position of the char data
-        uint16_t charDataPosition = JUMPTABLE_START + sizeOfJumpTable + ((msbJumpToChar << 8) + lsbJumpToChar);
-        drawInternal(xPos, yPos, currentCharWidth, textHeight, fontData, charDataPosition, charByteSize);
+        // Test if the char is drawable
+        if (!(msbJumpToChar == 255 && lsbJumpToChar == 255)) {
+          // Get the position of the char data
+          uint16_t charDataPosition = JUMPTABLE_START + sizeOfJumpTable + ((msbJumpToChar << 8) + lsbJumpToChar);
+          drawInternal(xPos, yPos, currentCharWidth, textHeight, fontData, charDataPosition, charByteSize);
+        }
+
+        cursorX += currentCharWidth;
       }
-
-      cursorX += currentCharWidth;
     }
   }
 }
 
 
 void OLEDDisplay::drawString(int16_t xMove, int16_t yMove, const String& strUser) {
+  if (fontData == nullptr) return;
   uint16_t lineHeight = pgm_read_byte(fontData + HEIGHT_POS);
 
   // char* text must be freed!
@@ -473,6 +479,7 @@ void OLEDDisplay::drawString(int16_t xMove, int16_t yMove, const String& strUser
 }
 
 void OLEDDisplay::drawStringMaxWidth(int16_t xMove, int16_t yMove, uint16_t maxLineWidth, const String& strUser) {
+  if (fontData == nullptr) return;
   uint16_t firstChar  = pgm_read_byte(fontData + FIRST_CHAR_POS);
   uint16_t lineHeight = pgm_read_byte(fontData + HEIGHT_POS);
 
@@ -519,6 +526,7 @@ void OLEDDisplay::drawStringMaxWidth(int16_t xMove, int16_t yMove, uint16_t maxL
 }
 
 uint16_t OLEDDisplay::getStringWidth(const char* text, uint16_t length) {
+  if (fontData == nullptr) return 0;
   uint16_t firstChar        = pgm_read_byte(fontData + FIRST_CHAR_POS);
 
   uint16_t stringWidth = 0;
@@ -544,6 +552,7 @@ uint16_t OLEDDisplay::getStringWidth(const String& strUser) {
 }
 
 uint8_t OLEDDisplay::getCharWidth(const char c) {
+  if (fontData == nullptr) return 0;
   uint8_t firstChar = pgm_read_byte(fontData + FIRST_CHAR_POS);
   if (utf8ascii(c) == 0)
     return 0;
@@ -577,15 +586,20 @@ void OLEDDisplay::normalDisplay(void) {
 }
 
 void OLEDDisplay::setContrast(char contrast, char precharge, char comdetect) {
-  sendCommand(SETPRECHARGE); //0xD9
-  sendCommand(precharge); //0xF1 default, to lower the contrast, put 1-1F
-  sendCommand(SETCONTRAST);
-  sendCommand(contrast); // 0-255
-  sendCommand(SETVCOMDETECT); //0xDB, (additionally needed to lower the contrast)
-  sendCommand(comdetect);	//0x40 default, to lower the contrast, put 0
-  sendCommand(DISPLAYALLON_RESUME);
-  sendCommand(NORMALDISPLAY);
-  sendCommand(DISPLAYON);
+  const uint8_t commands[] = {
+    SETPRECHARGE,     //0xD9
+    precharge,        //0xF1 default, to lower the contrast, put 1-1F
+    SETCONTRAST,
+    contrast,         // 0-255
+    SETVCOMDETECT,    //0xDB, (additionally needed to lower the contrast)
+    comdetect,        //0x40 default, to lower the contrast, put 0
+    DISPLAYALLON_RESUME,
+    NORMALDISPLAY,
+    DISPLAYON
+  };
+  for (uint8_t i = 0; i < sizeof(commands); ++i) {
+    sendCommand(commands[i]);
+  }
 }
 
 void OLEDDisplay::flipScreenVertically() {
@@ -598,6 +612,7 @@ void OLEDDisplay::clear(void) {
 }
 
 void OLEDDisplay::drawLogBuffer(uint16_t xMove, uint16_t yMove) {
+  if (fontData == nullptr) return;
   uint16_t lineHeight = pgm_read_byte(fontData + HEIGHT_POS);
   // Always align left
   setTextAlignment(TEXT_ALIGN_LEFT);
@@ -770,32 +785,36 @@ void OLEDDisplay::SetComPins(uint8_t _compins) {
 
 // Private functions
 void OLEDDisplay::sendInitCommands(void) {
-  sendCommand(DISPLAYOFF);
-  sendCommand(SETDISPLAYCLOCKDIV);
-  sendCommand(0xF0); // Increase speed of the display max ~96Hz
-  sendCommand(SETMULTIPLEX);
-  sendCommand(this->height() - 1);
-  sendCommand(SETDISPLAYOFFSET);
-  sendCommand(0x00);
-  sendCommand(SETSTARTLINE);
-  sendCommand(CHARGEPUMP);
-  sendCommand(0x14);
-  sendCommand(MEMORYMODE);
-  sendCommand(0x00);
-  sendCommand(SEGREMAP);
-  sendCommand(COMSCANINC);
-  sendCommand(SETCOMPINS);
-  sendCommand(0x12); // according to the adafruit lib, sometimes this may need to be 0x02
-  sendCommand(SETCONTRAST);
-  sendCommand(0xCF);
-  sendCommand(SETPRECHARGE);
-  sendCommand(0xF1);
-  sendCommand(SETVCOMDETECT); //0xDB, (additionally needed to lower the contrast)
-  sendCommand(0x40);	        //0x40 default, to lower the contrast, put 0
-  sendCommand(DISPLAYALLON_RESUME);
-  sendCommand(NORMALDISPLAY);
-  sendCommand(0x2e);            // stop scroll
-  sendCommand(DISPLAYON);
+  const uint8_t commands[] = {
+    DISPLAYOFF,
+    SETDISPLAYCLOCKDIV,
+    0xF0,             // Increase speed of the display max ~96Hz
+    SETMULTIPLEX,
+    static_cast<uint8_t>(this->height() - 1),  // FIXME TD-er: should add some checks here?
+    SETDISPLAYOFFSET,
+    0x00,
+    SETSTARTLINE,
+    CHARGEPUMP,
+    0x14,
+    MEMORYMODE,
+    0x00,
+    SEGREMAP,
+    COMSCANINC,
+    SETCOMPINS,
+    0x12,             // according to the adafruit lib, sometimes this may need to be 0x02
+    SETCONTRAST,
+    0xCF,
+    SETPRECHARGE,
+    0xF1,
+    SETVCOMDETECT,    //0xDB, (additionally needed to lower the contrast)
+    0x40,             //0x40 default, to lower the contrast, put 0
+    DISPLAYALLON_RESUME,
+    NORMALDISPLAY,
+    0x2e,             // stop scroll
+    DISPLAYON};
+  for (uint8_t i = 0; i < sizeof(commands); ++i) {
+    sendCommand(commands[i]);
+  }
 }
 
 void inline OLEDDisplay::drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *data, uint16_t offset, uint16_t bytesInData) {
