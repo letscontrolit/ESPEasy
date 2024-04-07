@@ -28,8 +28,7 @@
 
 
 #ifdef ESP32
-void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
-  _useStaticIp = enabled;
+void setUseStaticIP(bool enabled) {
 }
 
 #endif // ifdef ESP32
@@ -37,15 +36,15 @@ void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
   _useStaticIp = enabled;
 }
-
-#endif // ifdef ESP8266
-
-
 void setUseStaticIP(bool enabled) {
   WiFi_Access_Static_IP tmp_wifi;
 
   tmp_wifi.set_use_static_ip(enabled);
 }
+
+#endif // ifdef ESP8266
+
+
 
 
 // ********************************************************************************
@@ -143,7 +142,8 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
         if (info.wifi_sta_disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
           // See: https://github.com/espressif/arduino-esp32/issues/8877#issuecomment-1807677897
-          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+          WiFi.STA._setStatus(WL_CONNECTION_LOST);
+//          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
         }
         #else
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
