@@ -210,6 +210,13 @@ void handle_json()
     #ifdef ESP32
         LabelType::ESP_CHIP_REVISION,
     #endif // ifdef ESP32
+        LabelType::FLASH_CHIP_ID,
+        LabelType::FLASH_CHIP_VENDOR,
+        LabelType::FLASH_CHIP_MODEL,
+        LabelType::FLASH_CHIP_REAL_SIZE,
+        LabelType::FLASH_CHIP_SPEED,
+        LabelType::FLASH_IDE_MODE,
+        LabelType::FS_SIZE,
 
         LabelType::SUNRISE,
         LabelType::SUNSET,
