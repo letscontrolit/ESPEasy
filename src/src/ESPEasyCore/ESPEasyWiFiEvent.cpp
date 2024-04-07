@@ -142,8 +142,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
         if (info.wifi_sta_disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
           // See: https://github.com/espressif/arduino-esp32/issues/8877#issuecomment-1807677897
+          #if ESP_IDF_VERSION_MAJOR >= 5
+          // FIXME TD-er: Should no longer be needed.
           WiFi.STA._setStatus(WL_CONNECTION_LOST);
-//          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+          #else
+          WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+          #endif
         }
         #else
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
