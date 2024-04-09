@@ -184,6 +184,7 @@ void EthernetEventData_t::markConnected() {
 #if FEATURE_USE_IPV6
   ETH.enableIPv6(true);
   // workaround for the race condition in LWIP, see https://github.com/espressif/arduino-esp32/pull/9016#discussion_r1451774885
+  /*
   {
     uint32_t i = 5;   // try 5 times only
     while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH)) != ESP_OK) {
@@ -194,6 +195,7 @@ void EthernetEventData_t::markConnected() {
       }
     }
   }
+  */
 #endif
 }
 
