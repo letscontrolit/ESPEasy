@@ -57,7 +57,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       WiFiEventData.timerAPstart.clear();
       if (new_medium == NetworkMedium_t::Ethernet) {
 #if ESP_IDF_VERSION_MAJOR >= 5
+#if FEATURE_ETHERNET
         ETH.setDefault();
+#endif
 #endif
         WifiDisconnect();
       }
