@@ -883,23 +883,23 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
       case SPI_Options_e::Vspi_Fspi:
       {
         #if CONFIG_IDF_TARGET_ESP32
-        return static_cast<spi_host_device_t>(VSPI);
+        return static_cast<spi_host_device_t>(VSPI_HOST);
         #else
-        return static_cast<spi_host_device_t>(FSPI);
+        return static_cast<spi_host_device_t>(FSPI_HOST);
         #endif
       }
 #ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        return static_cast<spi_host_device_t>(HSPI);
+        return static_cast<spi_host_device_t>(HSPI_HOST);
       }
 #endif
       case SPI_Options_e::UserDefined:
       {
         #if CONFIG_IDF_TARGET_ESP32
-        return static_cast<spi_host_device_t>(VSPI);
+        return static_cast<spi_host_device_t>(VSPI_HOST);
         #else
-        return static_cast<spi_host_device_t>(FSPI);
+        return static_cast<spi_host_device_t>(FSPI_HOST);
         #endif
       }
       case SPI_Options_e::None:
@@ -909,9 +909,9 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
   }
   #if ESP_IDF_VERSION_MAJOR < 5
   #if CONFIG_IDF_TARGET_ESP32
-  return static_cast<spi_host_device_t>(VSPI);
+  return static_cast<spi_host_device_t>(VSPI_HOST);
   #else
-  return static_cast<spi_host_device_t>(FSPI);
+  return static_cast<spi_host_device_t>(FSPI_HOST);
   #endif
   #else
   return spi_host_device_t::SPI_HOST_MAX;
