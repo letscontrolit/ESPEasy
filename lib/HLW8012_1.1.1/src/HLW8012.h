@@ -103,9 +103,14 @@ class HLW8012 {
 
         void setResistors(float current, float voltage_upstream, float voltage_downstream);
 
-        void expectedCurrent(float current);
-        void expectedVoltage(float current);
-        void expectedActivePower(float power);
+        void expectedCurrent(float expected);
+        void expectedVoltage(float expected);
+        void expectedActivePower(float expected);
+
+        void expectedCurrent(float expected, float measured);
+        void expectedVoltage(float expected, float measured);
+        void expectedActivePower(float expected, float measured);
+
 
         float getCurrentMultiplier() { return _current_multiplier; };
         float getVoltageMultiplier() { return _voltage_multiplier; };
