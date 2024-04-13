@@ -176,7 +176,7 @@ private:
                          int month,
                          int day);
 
-  void      calcSunRiseAndSet();
+  void      calcSunRiseAndSet(bool timeSynced);
   struct tm getSunRise(int secOffset) const;
   struct tm getSunSet(int secOffset) const;
 
