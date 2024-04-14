@@ -40,8 +40,9 @@ private:
       uint64_t WaitWiFiConnect                : 1;
       uint64_t SDK_WiFi_autoreconnect         : 1;
       uint64_t HiddenSSID_SlowConnectPerBSSID : 1;
+      uint64_t EnableIPv6                     : 1;
 
-      uint64_t unused : 52;
+      uint64_t unused : 51;
     } bits;
 
     uint64_t data{};
