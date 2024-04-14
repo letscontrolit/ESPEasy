@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-04-14 tonhuisman: Add support for Get Config Values, to obtain a port state/value without instantiating a task for each pin.
+ *                        Only a single, enabled, task is required to handle the Get Config Values.
+ *                        Variables: [<TaskName>#D<port>] and [<TaskName>#A,<port>]
  * 2024-03-29 tonhuisman: Add support for Input (switch) behavior, that only generates an event if the input pin changes state
  *                        De-duplicate (merge) extpulse and extlongpulse code, and make extpulse only blocking for durations up to 10 msec
  * 2024-03-28 tonhuisman: Start changelog.
@@ -20,6 +23,7 @@
 # define PLUGIN_011_I2C_ADDRESS 0x7f
 
 # define PLUGIN_011_PORTS       14
+# define PLUGIN_011_A_PORTS     8
 
 # define P011_PORT_TYPE         PCONFIG(0)
 # define P011_TYPE_DIGITAL      0
@@ -271,6 +275,28 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       tempStatus.state = event->Par2;
       tempStatus.mode  = PIN_MODE_OUTPUT;
       savePortStatus(key, tempStatus);
+
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      const String typ  = parseString(string, 1);
+      const String port = parseString(string, 2);
+      int32_t portnr    = -1;
+      validIntFromString(port, portnr);
+
+      // [<taskname>#D,<port>] : Read Digital value from <port>
+      if (equals(typ, F("d")) && !port.isEmpty() && (portnr >= 0) && (portnr < PLUGIN_011_PORTS)) {
+        string  = Plugin_011_Read(0, portnr);
+        success = true;
+      } else
+
+      // [<taskname>#A,<port>] : Read Analog value from <port>
+      if (equals(typ, F("a")) && !port.isEmpty() && (portnr >= 0) && (portnr < PLUGIN_011_A_PORTS)) {
+        string  = Plugin_011_Read(1, portnr);
+        success = true;
+      }
 
       break;
     }
