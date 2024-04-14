@@ -4,7 +4,7 @@
 
 # include "../PluginStructs/P162_data_struct.h"
 
-#include <SPI.h>
+# include <SPI.h>
 
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
@@ -20,7 +20,7 @@ P162_data_struct::~P162_data_struct() {
 }
 
 bool P162_data_struct::plugin_init(struct EventStruct *event) {
-  if (validGpio(_csPin)) {
+  if (validGpio(_csPin) && Settings.isSPI_valid()) {
     pinMode(_csPin, OUTPUT);
     _initialized = true;
   }
@@ -58,6 +58,8 @@ bool P162_data_struct::plugin_init(struct EventStruct *event) {
         digitalWrite(_shdPin, _shdState);
       }
     }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("Digipot: Initialization failed, SPI/CS not configured."));
   }
 
   return _initialized;
@@ -73,6 +75,7 @@ bool P162_data_struct::hw_reset() {
     digitalWrite(_rstPin, LOW);
     delayMicroseconds(1); // Reset requires low signal for at least 150 nsec, so 1 microsecond should suffice
     digitalWrite(_rstPin, HIGH);
+    addLog(LOG_LEVEL_INFO, F("Digipot: Hardware reset applied."));
     return true;
   }
   return false;
@@ -100,6 +103,7 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
         updateUserVars(event);
         write_pot(P162_BOTH_POT_SEL, _pot0_value); // Single command
         success = true;
+        addLog(LOG_LEVEL_INFO, F("Digipot: Software reset applied."));
       }
     } else
 
@@ -177,6 +181,10 @@ void P162_data_struct::write_pot(uint8_t cmd,
 void P162_data_struct::updateUserVars(struct EventStruct *event) {
   UserVar.setFloat(event->TaskIndex, 0, _pot0_value);
   UserVar.setFloat(event->TaskIndex, 1, _pot1_value);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, strformat(F("Digipot: W0 = %d, W1 = %d"), _pot0_value, _pot1_value));
+  }
 }
 
 #endif // ifdef USES_P162

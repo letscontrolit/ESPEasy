@@ -28,19 +28,17 @@ boolean Plugin_162(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_162;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI3;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_162;
+      Device[deviceCount].Type             = DEVICE_TYPE_SPI3;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_DUAL;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].ValueCount       = 2;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].TimerOptional    = true;
+      Device[deviceCount].GlobalSyncOption = true;
+      Device[deviceCount].FormulaOption    = true;
+      Device[deviceCount].PluginStats      = true;
       break;
     }
 
