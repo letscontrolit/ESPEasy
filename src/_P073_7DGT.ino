@@ -1071,7 +1071,7 @@ void tm1637_i2cWrite(uint8_t clk_pin,
   for (i = 0; i < 8; i++) {
     CLK_LOW();
 
-    if (bytetoprint & B00000001) {
+    if (bytetoprint & 0b00000001) {
       DIO_HIGH();
     } else {
       DIO_LOW();

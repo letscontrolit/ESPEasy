@@ -5,7 +5,7 @@
 #ifdef USES_P025
 
 
-union P025_VARIOUS_BITS_t {
+struct P025_VARIOUS_BITS_t {
   struct {
     uint16_t cal           : 1;
     uint16_t outputVolt    : 1;
@@ -13,9 +13,10 @@ union P025_VARIOUS_BITS_t {
     uint16_t sampleRate    : 3;
     uint16_t unused        : 10;
   };
-  int16_t pconfigvalue{};
 
-  P025_VARIOUS_BITS_t(int16_t value) : pconfigvalue(value) {}
+  P025_VARIOUS_BITS_t(int16_t value);
+
+  int16_t pconfigvalue() const;
 
   uint16_t getSampleRate() const {
     if (sampleRateSet) { return sampleRate; }

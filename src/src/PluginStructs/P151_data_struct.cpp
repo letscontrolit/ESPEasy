@@ -6,6 +6,8 @@
 P151_data_struct::~P151_data_struct() {}
 
 bool P151_data_struct::plugin_read(struct EventStruct *event) {
+  // FIXME TD-er: When used on ESP8266, this conversion union may not work
+  // It might work as it is 32-bit in size.
   union Honeywell_struct {
     struct {
       uint32_t dummy       : 5;

@@ -67,6 +67,7 @@ public:
   // Get the received sentence
   // @retval true when the string is not empty.
   bool getSentence(String& string);
+  void setLastSentence(String string);
 
   void getSentencesReceived(uint32_t& succes,
                             uint32_t& error,
@@ -109,6 +110,10 @@ public:
 
   // Made public so we don't have to copy the values when loading/saving.
   String _lines[P87_Nlines];
+
+  // Plugin handler functions:
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
 
 private:
 
