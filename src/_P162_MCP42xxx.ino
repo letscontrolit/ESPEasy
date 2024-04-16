@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-04-16 tonhuisman: Add Send values on change option, so Interval can be set to 0, and the data will be sent when changed
  * 2024-04-10 tonhuisman: Initial version. Support for Digipot MCP42xxx (dual channel) and MCP41xxx (single channel).
  *                        No support for daisy-chaining (MCP42xxx can do that, but not implemented)
  *                        RST and SHDN pins are not available on all boards, so should be set to none when not available.
@@ -91,6 +92,8 @@ boolean Plugin_162(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Value at Shutdown"), F("shd"), P162_SHUTDOWN_VALUE, -1, 256);
       addUnit(F("-1..256"));
 
+      addFormCheckBox(F("Send values on change"), F("chg"), P162_CHANGED_EVENTS);
+
       success = true;
       break;
     }
@@ -102,6 +105,7 @@ boolean Plugin_162(uint8_t function, struct EventStruct *event, String& string)
       P162_SHUTDOWN_W0    = isFormItemChecked(F("sw0"));
       P162_SHUTDOWN_W1    = isFormItemChecked(F("sw1"));
       P162_SHUTDOWN_VALUE = getFormItemInt(F("shd"));
+      P162_CHANGED_EVENTS = isFormItemChecked(F("chg"));
 
       success = true;
       break;

@@ -179,8 +179,15 @@ void P162_data_struct::write_pot(uint8_t cmd,
  * Set current values to UserVar
  ********************************************************************************/
 void P162_data_struct::updateUserVars(struct EventStruct *event) {
+  const int16_t pot0_old = UserVar.getFloat(event->TaskIndex, 0, true);
+  const int16_t pot1_old = UserVar.getFloat(event->TaskIndex, 1, true);
+
   UserVar.setFloat(event->TaskIndex, 0, _pot0_value);
   UserVar.setFloat(event->TaskIndex, 1, _pot1_value);
+
+  if (P162_CHANGED_EVENTS && ((pot0_old != _pot0_value) || (pot1_old != _pot1_value))) {
+    sendData(event);
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("Digipot: W0 = %d, W1 = %d"), _pot0_value, _pot1_value));
