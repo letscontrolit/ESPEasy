@@ -108,6 +108,8 @@ var commonPlugins = [
   "sht4x", "sht4x,startup",
   //P159
   "ld2410", "ld2410,factoryreset", "ld2410,logall",
+  //P162
+  "digipot", "digipot,reset", "digipot,shutdown", "digipot,",
   //P166
   "gp8403", "gp8403,volt,", "gp8403,mvolt,", "gp8403,range,", "gp8403,preset,", "gp8403,init,",
 ];
