@@ -116,6 +116,7 @@
     * *sevenseg24* A rather large 7-segment 21 * 48 font
     * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
     * *freesans* A sans-serif 10 * 21 font
+    * *tomthumb* A small 3 * 5 font, for use on a 5x29 NeoPixel display. Not available in limited builds.
 
     Usually disabled fonts: (can be enabled in a Custom build, default enabled in the MAX builds)
 

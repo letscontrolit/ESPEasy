@@ -11,6 +11,11 @@
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
 #  include "../Static/Fonts/Seven_Segment18pt7b.h"
 #  include "../Static/Fonts/FreeSans9pt7b.h"
+#  ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#   ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+#    include <Fonts/TomThumb.h> // Available in Adafruit_GFX library
+#   endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+#  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
 #    include "../Static/Fonts/angelina8pt7b.h"
@@ -836,6 +841,11 @@ enum class adagfx_commands_e : int8_t {
 // *** Don't forget to add the | separator at the end of a (new) font-name! (except for the last one in the list)
 const char adagfx_fonts[] PROGMEM =
   "default|sevenseg24|sevenseg18|freesans|"
+  #  ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  "tomthumb|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
   "angelina8prop|"
@@ -956,6 +966,11 @@ constexpr tFontArgs fontargs[] =
   { &Seven_Segment24pt7b,           21,               42,  35,  true  },
   { &Seven_Segment18pt7b,           16,               33,  26,  true  },
   { &FreeSans9pt7b,                 10,               16,  12,  false },
+  # ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  { &TomThumb,                      5,                 6,   5,  false },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  # endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
   { &angelina8pt7b,                 6,                16,  12,  true  },
@@ -1886,7 +1901,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  if ADAGFX_ARGUMENT_VALIDATION
         const int16_t curWin = getWindow();
 
-        if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
         if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 

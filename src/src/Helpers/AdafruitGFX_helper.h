@@ -12,6 +12,8 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
+ *                        This font is already available via the Adafruit_GFX_Library
  * 2023-12-30 tonhuisman: Optimization of font handling, also reducing code-size
  *                        Add some additional 7-segment/LCD-like fonts (18 pt enabled by default for ESP32 builds using this helper)
  *                        - sevenseg18b (7segment 18 pt) (very few non-alphanumeric characters, slightly slanted)
@@ -98,6 +100,7 @@
 #  define ADAGFX_ENABLE_GET_CONFIG_VALUE  1 // Enable getting values features
 # endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
 
+# define ADAGFX_FONTS_EXTRA_5PT_INCLUDED    // 1 extra 5pt font, should only be enabled in non-LIMIT_BUILD_SIZE builds, adds ~0.3 kB
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
 // # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 5 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~19.9 kB
@@ -105,8 +108,11 @@
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 // # define ADAGFX_FONTS_EXTRA_24PT_INCLUDED // 2 extra 24pt fonts, should probably only be enabled in a private custom build, adds ~11.1 kB
 
+// To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_5PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
-# define ADAGFX_FONTS_EXTRA_8PT_ANGELINA  // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
 # define ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACE
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
@@ -181,6 +187,9 @@
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
+#  ifndef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
 #  ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
