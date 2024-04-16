@@ -85,12 +85,6 @@
 # define P36_Nlines 12              // The number of different lines which can be displayed - each line is 64 chars max
 # define P36_NcharsV0 32            // max chars per line up to 22.11.2019 (V0)
 # define P36_NcharsV1 64            // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3        // number of different OLED sizes
-# ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 3        // number of different fonts
-# else // ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 5        // number of different fonts
-# endif // ifdef P036_LIMIT_BUILD_SIZE
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64

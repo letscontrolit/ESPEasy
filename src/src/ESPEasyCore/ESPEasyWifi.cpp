@@ -1396,7 +1396,7 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+//      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
       WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.

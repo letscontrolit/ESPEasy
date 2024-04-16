@@ -146,7 +146,7 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 // This is very precious memory, so we must find something other way to define this.
 
 /* *INDENT-OFF* */
-const tFontSizes FontSizes[P36_MaxFontCount] = {
+const tFontSizes FontSizes[] = {
   { getArialMT_Plain_24(), 24,  28                         }, // 9643
   # ifndef P036_LIMIT_BUILD_SIZE
   { getDialog_plain_18(),  19,  22                         }, // 7399
@@ -159,7 +159,7 @@ const tFontSizes FontSizes[P36_MaxFontCount] = {
 };
 /* *INDENT-ON* */
 
-constexpr tSizeSettings SizeSettings[P36_MaxSizesCount] = {
+constexpr tSizeSettings SizeSettings[] = {
   { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,  // 128x64
     4,                                             // max. line count
     113, 15                                        // WiFi indicator
@@ -178,7 +178,7 @@ constexpr tSizeSettings SizeSettings[P36_MaxSizesCount] = {
 const tSizeSettings& P036_data_struct::getDisplaySizeSettings(p036_resolution disp_resolution) {
   int index = static_cast<int>(disp_resolution);
 
-  if ((index < 0) || (index >= P36_MaxSizesCount)) { index = 0; }
+  if ((index < 0) || (index >= static_cast<int>(NR_ELEMENTS(SizeSettings)))) { index = 0; }
 
   return SizeSettings[index];
 }
@@ -1019,7 +1019,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
   for (uint8_t i = LineNo; i < P36_Nlines; ++i) {
     // calculate individual font settings
-    int8_t lFontIndex             = FontIndex;
+    uint8_t lFontIndex             = FontIndex;
     const eModifyFont iModifyFont =
       static_cast<eModifyFont>(get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font));
 
@@ -1028,9 +1028,11 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
         if (ScrollingPages.linesPerFrameDef > 1) {
           // Font can only be enlarged if more than 1 line is displayed
-          lFontIndex--;
-
-          if (lFontIndex < IdxForBiggestFont) { lFontIndex = IdxForBiggestFont; }
+          if (lFontIndex > IdxForBiggestFont) { 
+            lFontIndex--; 
+          } else {
+            lFontIndex = IdxForBiggestFont;
+          }
           result.IdxForBiggestFontUsed = lFontIndex;
         }
         break;
@@ -1045,12 +1047,12 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
       case eModifyFont::eReduce:
         lFontIndex++;
 
-        if (lFontIndex > (P36_MaxFontCount - 1)) {
-          lFontIndex = P36_MaxFontCount - 1;
+        if (lFontIndex >= NR_ELEMENTS(FontSizes)) {
+          lFontIndex = NR_ELEMENTS(FontSizes) - 1;
         }
         break;
       case eModifyFont::eMinimize:
-        lFontIndex = P36_MaxFontCount - 1;
+        lFontIndex = NR_ELEMENTS(FontSizes) - 1;
         break;
       case eModifyFont::eNone:
         lFontIndex = FontIndex;
@@ -1090,7 +1092,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
       lSpace = -1; // allow overlapping by 1 pix
 
       if (deltaHeight < (-1 * (lLinesPerFrame - 1))) {
-        if ((result.IdxForBiggestFontUsed == (P36_MaxFontCount - 1)) &&
+        if ((result.IdxForBiggestFontUsed == (NR_ELEMENTS(FontSizes) - 1)) &&
             (LinesPerFrame == SizeSettings[static_cast<int>(disp_resolution)].MaxLines)) {
           // max lines for used display and smallest font reached -> use special space between the lines and return 'fits'
           // overlapping (lSpace<0) depends on the absolute display height
@@ -1187,7 +1189,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     log1.reserve(80);
     # endif // ifdef P036_FONT_CALC_LOG
 
-    for (i = 0; i < P36_MaxFontCount - 1; ++i) {
+    for (i = 0; i < NR_ELEMENTS(FontSizes) - 1; ++i) {
       // check available fonts for the line setting
       # ifdef P036_FONT_CALC_LOG
 
@@ -1246,7 +1248,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       case p036_resolution::pix64x48:  result.Space = -1;
         break;
     }
-    iFontIndex = P36_MaxFontCount - 1;
+    iFontIndex = NR_ELEMENTS(FontSizes) - 1;
   }
 
   if (lDefaultLines == 0) {
