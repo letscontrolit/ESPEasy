@@ -2,7 +2,11 @@
 
 #include "../../ESPEasy_common.h"
 
-ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct(uint32_t preference) : _preference(preference) {}
+ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct() : _preference(0)
+{}
+
+ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct(uint32_t preference) : _preference(preference)
+{}
 
 void ResetFactoryDefaultPreference_struct::set(uint32_t preference)
 {
@@ -14,12 +18,10 @@ void ResetFactoryDefaultPreference_struct::set(uint32_t preference)
 // Max. 15 char keys for ESPEasy Factory Default marked keys
 # define FACTORY_DEFAULT_NVS_PREF_KEY       "FacDefPref"
 
-bool ResetFactoryDefaultPreference_struct::init()
+bool ResetFactoryDefaultPreference_struct::init(ESPEasy_NVS_Helper& preferences)
 {
-  ESPEasy_NVS_Helper nvs_helper;
-
-  if (nvs_helper.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE))) {
-    return from_NVS(nvs_helper);
+  if (preferences.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE))) {
+    return from_NVS(preferences);
   }
   return false;
 }

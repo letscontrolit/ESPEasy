@@ -33,7 +33,7 @@ bool P061_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
   if (lastScanCode == actScanCode) {   // debounced? - two times the same value?
     if (sentScanCode != actScanCode) { // any change to last sent data?
-      UserVar[event->BaseVarIndex] = actScanCode;
+      UserVar.setFloat(event->TaskIndex, 0, actScanCode);
       event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
       String log = F("KPad : ScanCode=0x");

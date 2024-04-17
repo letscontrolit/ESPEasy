@@ -17,8 +17,8 @@
 #include <ESPEasySerialType.h>
 
 
-String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
-  return ESPEasySerialPort_toString(serType);
+String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType, bool shortName) {
+  return ESPEasySerialPort_toString(serType, shortName);
 }
 
 void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2) {
@@ -199,9 +199,6 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
                   false);
   #endif // ifdef ESP8266
   #ifdef ESP32
-
-#define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) #s
 
   // Script to show GPIO pins for HW serial ports or I2C addresses for the I2C to UART bridge
   // "function serialPortChanged(elem) {var style = (elem.value == 2 || elem.value == 4 || elem.value == 5) ? '' : 'none';var i2cstyle =

@@ -389,9 +389,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Data is checked and good, fill in output
-  UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
-  UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
-  UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
+  UserVar.setFloat(event->TaskIndex, 0, data[PMS_PM1_0_ug_m3_normal]);
+  UserVar.setFloat(event->TaskIndex, 1, data[PMS_PM2_5_ug_m3_normal]);
+  UserVar.setFloat(event->TaskIndex, 2, data[PMS_PM10_0_ug_m3_normal]);
   _values_received                 = 1;
   # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
@@ -425,34 +425,34 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
   switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
     case PMSx003_output_selection::Particles_ug_m3:
     {
-      UserVar[event->BaseVarIndex]     = getValue(PMS_PM1_0_ug_m3_normal);
-      UserVar[event->BaseVarIndex + 1] = getValue(PMS_PM2_5_ug_m3_normal);
-      UserVar[event->BaseVarIndex + 2] = getValue(PMS_PM10_0_ug_m3_normal);
-      UserVar[event->BaseVarIndex + 3] = 0.0f;
+      UserVar.setFloat(event->TaskIndex, 0, getValue(PMS_PM1_0_ug_m3_normal));
+      UserVar.setFloat(event->TaskIndex, 1, getValue(PMS_PM2_5_ug_m3_normal));
+      UserVar.setFloat(event->TaskIndex, 2, getValue(PMS_PM10_0_ug_m3_normal));
+      UserVar.setFloat(event->TaskIndex, 3, 0.0f);
       break;
     }
     case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
     {
-      UserVar[event->BaseVarIndex]     = getValue(PMS_PM2_5_ug_m3_normal);
-      UserVar[event->BaseVarIndex + 1] = getValue(PMS_Temp_C);
-      UserVar[event->BaseVarIndex + 2] = getValue(PMS_Hum_pct);
-      UserVar[event->BaseVarIndex + 3] = getValue(PMS_Formaldehyde_mg_m3);
+      UserVar.setFloat(event->TaskIndex, 0, getValue(PMS_PM2_5_ug_m3_normal));
+      UserVar.setFloat(event->TaskIndex, 1, getValue(PMS_Temp_C));
+      UserVar.setFloat(event->TaskIndex, 2, getValue(PMS_Hum_pct));
+      UserVar.setFloat(event->TaskIndex, 3, getValue(PMS_Formaldehyde_mg_m3));
       break;
     }
     case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
     {
-      UserVar[event->BaseVarIndex]     = getValue(PMS_cnt0_3_100ml);
-      UserVar[event->BaseVarIndex + 1] = getValue(PMS_cnt0_5_100ml);
-      UserVar[event->BaseVarIndex + 2] = getValue(PMS_cnt1_0_100ml);
-      UserVar[event->BaseVarIndex + 3] = getValue(PMS_cnt2_5_100ml);
+      UserVar.setFloat(event->TaskIndex, 0, getValue(PMS_cnt0_3_100ml));
+      UserVar.setFloat(event->TaskIndex, 1, getValue(PMS_cnt0_5_100ml));
+      UserVar.setFloat(event->TaskIndex, 2, getValue(PMS_cnt1_0_100ml));
+      UserVar.setFloat(event->TaskIndex, 3, getValue(PMS_cnt2_5_100ml));
       break;
     }
     case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
     {
-      UserVar[event->BaseVarIndex]     = getValue(PMS_cnt1_0_100ml);
-      UserVar[event->BaseVarIndex + 1] = getValue(PMS_cnt2_5_100ml);
-      UserVar[event->BaseVarIndex + 2] = getValue(PMS_cnt5_0_100ml);
-      UserVar[event->BaseVarIndex + 3] = getValue(PMS_cnt10_0_100ml);
+      UserVar.setFloat(event->TaskIndex, 0, getValue(PMS_cnt1_0_100ml));
+      UserVar.setFloat(event->TaskIndex, 1, getValue(PMS_cnt2_5_100ml));
+      UserVar.setFloat(event->TaskIndex, 2, getValue(PMS_cnt5_0_100ml));
+      UserVar.setFloat(event->TaskIndex, 3, getValue(PMS_cnt10_0_100ml));
       break;
     }
   }

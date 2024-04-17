@@ -5,7 +5,7 @@
 #ifdef USES_P025
 
 
-union P025_VARIOUS_BITS_t {
+struct P025_VARIOUS_BITS_t {
   struct {
     uint16_t cal           : 1;
     uint16_t outputVolt    : 1;
@@ -13,9 +13,10 @@ union P025_VARIOUS_BITS_t {
     uint16_t sampleRate    : 3;
     uint16_t unused        : 10;
   };
-  int16_t pconfigvalue{};
 
-  P025_VARIOUS_BITS_t(int16_t value) : pconfigvalue(value) {}
+  P025_VARIOUS_BITS_t(int16_t value);
+
+  int16_t pconfigvalue() const;
 
   uint16_t getSampleRate() const {
     if (sampleRateSet) { return sampleRate; }
@@ -35,7 +36,7 @@ union P025_VARIOUS_BITS_t {
 // - PCONFIG(6)
 // - PCONFIG(7)
 # define P025_SENSOR_TYPE_INDEX 4 // Storing the output selector
-# define P025_PCONFIG_INDEX(x) ((x == 0) ? 2 : x + P025_SENSOR_TYPE_INDEX)
+# define P025_PCONFIG_INDEX(x) (((x) == 0) ? 2 : (x) + P025_SENSOR_TYPE_INDEX)
 
 # define P025_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P025_SENSOR_TYPE_INDEX)))
 

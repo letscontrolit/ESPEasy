@@ -446,11 +446,11 @@ IRTEXT_CONST_BLOB_DECL(kAllProtocolNamesStr) {
     #else
     D_STR_UNSUPPORTED "\x0"
     #endif  // if DECODE_NIKAI || SEND_NIKAI
-    #if DECODE_HASH || SEND_RAW  // SEND-ONLY
+    #if SEND_RAW  // SEND-ONLY
     D_STR_RAW "\x0"
     #else
     D_STR_UNSUPPORTED "\x0"
-    #endif  // if DECODE_HASH || SEND_RAW
+    #endif  // if SEND_RAW
     #if SEND_GLOBALCACHE  // SEND-ONLY
     D_STR_GLOBALCACHE "\x0"
     #else

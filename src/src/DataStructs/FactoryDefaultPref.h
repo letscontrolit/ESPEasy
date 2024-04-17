@@ -12,12 +12,13 @@
 #endif // ifdef ESP32
 
 struct ResetFactoryDefaultPreference_struct {
-  ResetFactoryDefaultPreference_struct(uint32_t preference = 0);
+  ResetFactoryDefaultPreference_struct();
+  ResetFactoryDefaultPreference_struct(uint32_t preference);
 
   void set(uint32_t preference);
 
 #ifdef ESP32
-  bool init();
+  bool init(ESPEasy_NVS_Helper& preferences);
   bool from_NVS(ESPEasy_NVS_Helper& preferences);
 
   void to_NVS(ESPEasy_NVS_Helper& preferences) const;

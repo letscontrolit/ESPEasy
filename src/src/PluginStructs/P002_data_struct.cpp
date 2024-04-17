@@ -4,10 +4,19 @@
 
 # include "../Globals/RulesCalculate.h"
 
+# include "../Helpers/Hardware_ADC_cali.h"
 
 # ifndef DEFAULT_VREF
 #  define DEFAULT_VREF 1100
 # endif // ifndef DEFAULT_VREF
+
+# ifndef P002_ADC_ATTEN_MAX
+#  if ESP_IDF_VERSION_MAJOR < 5
+#   define P002_ADC_ATTEN_MAX ADC_ATTEN_MAX
+#  else // if ESP_IDF_VERSION_MAJOR < 5
+#   define P002_ADC_ATTEN_MAX ADC_ATTENDB_MAX
+#  endif // if ESP_IDF_VERSION_MAJOR < 5
+# endif // ifndef P002_ADC_ATTEN_MAX
 
 
 void P002_data_struct::init(struct EventStruct *event)
@@ -21,7 +30,8 @@ void P002_data_struct::init(struct EventStruct *event)
   _pin_analogRead        = CONFIG_PIN1;
   _useFactoryCalibration = useFactoryCalibration(event);
   _attenuation           = getAttenuation(event);
-  const int adc = getADC_num_for_gpio(_pin_analogRead);
+  int channel{};
+  const int adc = getADC_num_for_gpio(_pin_analogRead, channel);
 
   if ((adc == 1) || (adc == 2)) {
     analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
@@ -54,21 +64,31 @@ void P002_data_struct::load(struct EventStruct *event)
     String lines[nr_lines];
     LoadCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
     const int stored_nr_lines = lines[P002_SAVED_NR_LINES].toInt();
-    _formula              = lines[P002_LINE_INDEX_FORMULA];
-    _formula_preprocessed = RulesCalculate_t::preProces(_formula);
+    move_special(_formula,              std::move(lines[P002_LINE_INDEX_FORMULA]));
+    move_special(_formula_preprocessed, RulesCalculate_t::preProces(_formula));
 
     for (size_t i = P002_LINE_IDX_FIRST_MP; i < nr_lines && static_cast<int>(i) < stored_nr_lines; i += P002_STRINGS_PER_MP) {
       float adc, value = 0.0f;
 
       if (validFloatFromString(lines[i], adc) && validFloatFromString(lines[i + 1], value)) {
+        // sizeof() multipoint item is multiple of 4 bytes, so should work just fine on 2nd heap
+        #  ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        #  endif // ifdef USE_SECOND_HEAP
+
         _multipoint.emplace_back(adc, value);
       }
     }
   }
   std::sort(_multipoint.begin(), _multipoint.end());
+  {
+    #  ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #  endif // ifdef USE_SECOND_HEAP
 
-  _binning.resize(_multipoint.size(), 0);
-  _binningRange.resize(_multipoint.size());
+    _binning.resize(_multipoint.size(), 0);
+    _binningRange.resize(_multipoint.size());
+  }
 }
 
 # endif // ifndef LIMIT_BUILD_SIZE
@@ -112,13 +132,17 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
 # ifdef ESP32
   addRowLabel(F("Analog Pin"));
+  #  if HAS_HALL_EFFECT_SENSOR
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
+  #  else // if HAS_HALL_EFFECT_SENSOR
+  addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch,            F("taskdevicepin1"), CONFIG_PIN1);
+  #  endif // if HAS_HALL_EFFECT_SENSOR
 
   addFormNote(F("Do not use ADC2 pins with WiFi active"));
 
   {
     const __FlashStringHelper *outputOptions[] = {
-      F("11 dB"),
+      F("12 dB"),
       F("6 dB"),
       F("2.5 dB"),
       F("0 dB")
@@ -167,13 +191,14 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     #  endif // if FEATURE_CHART_JS
     formatADC_statistics(F("Current ADC to mV"), raw_value);
 
-    for (size_t att = 0; att < ADC_ATTEN_MAX; ++att) {
-      const int   low  = esp_adc_cal_raw_to_voltage(0, &adc_chars[att]);
-      const int   high = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[att]);
-      const float step = static_cast<float>(high - low) / MAX_ADC_VALUE;
+    for (size_t att = 0; att < P002_ADC_ATTEN_MAX; ++att) {
+      const adc_atten_t attenuation = static_cast<adc_atten_t>(att);
+      const int   low               = getADC_factory_calibrated_min(attenuation);
+      const int   high              = getADC_factory_calibrated_max(attenuation);
+      const float step              = static_cast<float>(high - low) / MAX_ADC_VALUE;
 
       String rowlabel = F("Attenuation @");
-      rowlabel += AttenuationToString(static_cast<adc_atten_t>(att));
+      rowlabel += AttenuationToString(attenuation);
       addRowLabel(rowlabel);
       addHtml(F("Range / Step: "));
       addHtmlInt(low);
@@ -195,7 +220,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 #  if FEATURE_ADC_VCC
   addFormNote(F("Measuring ESP VCC, not A0. Unit is 1/1024 V. See documentation."));
 #  endif // if FEATURE_ADC_VCC
-# endif // ifdef ESP8266
+# endif  // ifdef ESP8266
 
 
   webformLoad_2p_calibPoint(
@@ -344,14 +369,15 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
   String axisOptions;
 
   {
-    const ChartJS_title xAxisTitle(F("ADC Value"));
-    const ChartJS_title yAxisTitle(F("Input Voltage (mV)"));
-    axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), F("ADC Value") });
+    scales.add({ F("y"), F("Input Voltage (mV)") });
+    axisOptions = scales.toString();
   }
   add_ChartJS_chart_header(
     F("line"),
     F("fact_cal"),
-    F("Factory Calibration per Attenuation"),
+    { F("Factory Calibration per Attenuation") },
     500,
     500,
     axisOptions);
@@ -364,22 +390,36 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 
   size_t current_attenuation = getAttenuation(event);
 
-  if (current_attenuation >= ADC_ATTEN_MAX) { current_attenuation = ADC_ATTEN_DB_11; }
+  if (current_attenuation >= P002_ADC_ATTEN_MAX) {
+#   if ESP_IDF_VERSION_MAJOR >= 5
+    current_attenuation = ADC_ATTEN_DB_12;
+#   else // if ESP_IDF_VERSION_MAJOR >= 5
+    current_attenuation = ADC_ATTEN_DB_11;
+#   endif // if ESP_IDF_VERSION_MAJOR >= 5
+  }
 
-  for (size_t att = 0; att < ADC_ATTEN_MAX; ++att)
+  for (size_t att = 0; att < P002_ADC_ATTEN_MAX; ++att)
   {
     float values[valueCount];
 
     for (int i = 0; i < valueCount; ++i) {
-      values[i] = applyFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(att));
+      values[i] = applyADCFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(att));
+    }
+
+    ChartJS_dataset_config config(
+      AttenuationToString(static_cast<adc_atten_t>(att)),
+      colors[att]);
+    config.hidden = att != current_attenuation;
+
+    if (att != 0) {
+      addHtml(',');
     }
 
     add_ChartJS_dataset(
-      AttenuationToString(static_cast<adc_atten_t>(att)),
-      colors[att],
+      config,
       values,
       valueCount,
-      att != current_attenuation);
+      Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
   }
   add_ChartJS_chart_footer();
 }
@@ -406,15 +446,16 @@ void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputVal
 {
   minInputValue = 0;
   maxInputValue = MAX_ADC_VALUE;
-  # ifdef ESP32
+# ifdef ESP32
 
   if (useFactoryCalibration(event) && !ignoreCalibration) {
     // reading in mVolt, not ADC
-    const size_t attenuation = getAttenuation(event);
-    minInputValue = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
-    maxInputValue = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[attenuation]);
+    const adc_atten_t attenuation = getAttenuation(event);
+
+    minInputValue = getADC_factory_calibrated_min(attenuation);
+    maxInputValue = getADC_factory_calibrated_max(attenuation);
   }
-  # endif // ifdef ESP32
+# endif // ifdef ESP32
 }
 
 # if FEATURE_CHART_JS
@@ -444,16 +485,17 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
   String axisOptions;
 
   {
-    const ChartJS_title xAxisTitle(getChartXaxisLabel(event));
-    const ChartJS_title yAxisTitle(F("Calibrated Output"));
-    axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), getChartXaxisLabel(event) });
+    scales.add({ F("y"), F("Calibrated Output") });
+    axisOptions = scales.toString();
   }
 
 
   add_ChartJS_chart_header(
     F("line"),
     F("twoPointCurve"),
-    F("Two Point Calibration Curve"),
+    { F("Two Point Calibration Curve") },
     500,
     500,
     axisOptions);
@@ -469,11 +511,16 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
       values[i] = P002_data_struct::applyCalibration(event, xAxisValues[i]);
     }
 
-    add_ChartJS_dataset(
+    const ChartJS_dataset_config config(
       F("2 Point Calibration"),
-      F("rgb(255, 99, 132)"),
+      F("rgb(255, 99, 132)"));
+
+
+    add_ChartJS_dataset(
+      config,
       values,
-      valueCount);
+      valueCount,
+      Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
   }
   add_ChartJS_chart_footer();
 }
@@ -490,7 +537,7 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
-    float_value = applyFactoryCalibration(raw, _attenuation);
+    float_value = applyADCFactoryCalibration(raw, _attenuation);
 
     html_add_estimate_symbol();
     addHtmlFloat(float_value, _nrDecimals);
@@ -540,7 +587,7 @@ void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper 
 
 # ifdef ESP32
 const __FlashStringHelper * P002_data_struct::AttenuationToString(adc_atten_t attenuation) {
-  const __FlashStringHelper *datalabels[] = { F("0 dB"), F("2.5 dB"), F("6 dB"), F("11 dB") };
+  const __FlashStringHelper *datalabels[] = { F("0 dB"), F("2.5 dB"), F("6 dB"), F("12 dB") };
 
   if (attenuation < 4) { return datalabels[attenuation]; }
   return F("Unknown");
@@ -552,7 +599,12 @@ adc_atten_t P002_data_struct::getAttenuation(struct EventStruct *event) {
     return static_cast<adc_atten_t>(P002_ATTENUATION - 10);
   }
   P002_ATTENUATION = P002_ADC_11db;
+
+#  if ESP_IDF_VERSION_MAJOR >= 5
+  return ADC_ATTEN_DB_12;
+#  else // if ESP_IDF_VERSION_MAJOR >= 5
   return ADC_ATTEN_DB_11;
+#  endif // if ESP_IDF_VERSION_MAJOR >= 5
 }
 
 # endif // ifdef ESP32
@@ -568,31 +620,35 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
     String axisOptions;
 
     {
-      const ChartJS_title xAxisTitle(useBinning ? F("Bin Center Value") : F("Input"));
-      const ChartJS_title yAxisTitle(useBinning ? F("Bin Output Value") : F("Output"));
-      axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+      ChartJS_options_scales scales;
+      scales.add({ F("x"), useBinning ? F("Bin Center Value") : F("Input") });
+      scales.add({ F("y"), useBinning ? F("Bin Output Value") : F("Output") });
+      axisOptions = scales.toString();
     }
 
     add_ChartJS_chart_header(
       useBinning ? F("bar") : F("line"),
       F("mpcurve"),
-      useBinning ? F("Bin Values") : F("Multipoint Curve"),
+      { useBinning ? F("Bin Values") : F("Multipoint Curve") },
       500,
       500,
       axisOptions);
 
     // Add labels
+    addHtml(F("\"labels\":["));
+
     for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
         addHtml(',');
       }
       addHtmlFloat(_multipoint[i]._adc, _nrDecimals);
     }
-    addHtml(F("],datasets: ["));
+    addHtml(F("],\n\"datasets\":["));
 
     add_ChartJS_dataset_header(
+    {
       useBinning ? F("Bins") : F("Multipoint Values"),
-      F("rgb(255, 99, 132)"));
+      F("rgb(255, 99, 132)") });
 
     for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
@@ -613,14 +669,15 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       String axisOptions;
 
       {
-        const ChartJS_title xAxisTitle(getChartXaxisLabel(event));
-        const ChartJS_title yAxisTitle(F("Output"));
-        axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+        ChartJS_options_scales scales;
+        scales.add({ F("x"), getChartXaxisLabel(event) });
+        scales.add({ F("y"), F("Output") });
+        axisOptions = scales.toString();
       }
       add_ChartJS_chart_header(
         F("line"),
         F("mpCurveSimulated"),
-        F("Simulated Input to Output Curve"),
+        { F("Simulated Input to Output Curve") },
         500,
         500,
         axisOptions);
@@ -670,12 +727,20 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
           }
         }
 
-        add_ChartJS_dataset(
+        ChartJS_dataset_config config(
           label,
-          color,
+          color);
+        config.hidden = hidden;
+
+        if (step != 0) {
+          addHtml(',');
+        }
+
+        add_ChartJS_dataset(
+          config,
           values,
           valueCount,
-          hidden);
+          Cache.getTaskDeviceValueDecimals(event->TaskIndex, 0));
       }
       add_ChartJS_chart_footer();
     }
@@ -807,7 +872,7 @@ bool P002_data_struct::getValue(float& float_value,
   # ifdef ESP32
 
   if (_useFactoryCalibration) {
-    float_value = applyFactoryCalibration(raw_value, _attenuation);
+    float_value = applyADCFactoryCalibration(raw_value, _attenuation);
   }
   # endif // ifdef ESP32
 
@@ -877,7 +942,7 @@ bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) 
 # ifdef ESP32
 
     if (_useFactoryCalibration) {
-      float_value = applyFactoryCalibration(float_value, _attenuation);
+      float_value = applyADCFactoryCalibration(float_value, _attenuation);
     }
 # endif // ifdef ESP32
 
@@ -928,7 +993,7 @@ int P002_data_struct::computeADC_to_bin(const int& currentValue) const
 #  ifdef ESP32
 
   if (_useFactoryCalibration) {
-    calibrated_value = applyFactoryCalibration(calibrated_value, _attenuation);
+    calibrated_value = applyADCFactoryCalibration(calibrated_value, _attenuation);
   }
 #  endif // ifdef ESP32
 
@@ -1023,7 +1088,7 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
   # ifdef ESP32
 
   if (useFactoryCalibration(event)) {
-    return applyFactoryCalibration(raw_value, getAttenuation(event));
+    return applyADCFactoryCalibration(raw_value, getAttenuation(event));
   }
   # endif // ifdef ESP32
 
@@ -1051,35 +1116,6 @@ bool P002_data_struct::useFactoryCalibration(struct EventStruct *event) {
     }
   }
   return false;
-}
-
-float P002_data_struct::applyFactoryCalibration(float raw_value, adc_atten_t attenuation)
-{
-  if (attenuation == adc_atten_t::ADC_ATTEN_DB_11) {
-    return esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[attenuation]);
-  }
-
-  // All other attenuations do appear to have a straight calibration curve.
-  // But applying the factory calibration then reduces resolution.
-  // So we interpolate using the calibrated extremes
-
-  // Cache the computing of the values.
-  static adc_atten_t last_Attn = ADC_ATTEN_MAX;
-  static float last_out1       = 0.0;
-  static float last_out2       = MAX_ADC_VALUE;
-
-  if (last_Attn != attenuation) {
-    last_Attn = attenuation;
-    last_out1 = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
-    last_out2 = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[attenuation]);
-  }
-
-  return mapADCtoFloat(
-    raw_value,
-    0,
-    MAX_ADC_VALUE,
-    last_out1,
-    last_out2);
 }
 
 # endif // ifdef ESP32
@@ -1157,20 +1193,6 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value, bool for
 }
 
 # endif // ifndef LIMIT_BUILD_SIZE
-
-float P002_data_struct::mapADCtoFloat(float float_value,
-                                      float adc1,
-                                      float adc2,
-                                      float out1,
-                                      float out2)
-{
-  if (!approximatelyEqual(adc1, adc2))
-  {
-    const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
-    float_value = normalized * (out2 - out1) + out1;
-  }
-  return float_value;
-}
 
 void P002_data_struct::setTwoPointCalibration(
   struct EventStruct *event,

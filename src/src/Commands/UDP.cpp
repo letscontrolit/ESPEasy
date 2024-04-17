@@ -51,7 +51,7 @@ const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, con
 {
   if (NetworkConnected()) {
     String ip      = parseString(Line, 2);
-    int port    = parseCommandArgumentInt(Line, 2);
+    int port    = parseCommandArgumentInt(Line, 2, -1);
 
     if (port < 0 || port > 65535) return return_command_failed_flashstr();
     // FIXME TD-er: This command is not using the tolerance setting

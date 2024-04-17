@@ -193,7 +193,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 # ifdef ESP32
       // Analog input selection
       addRowLabel(formatGpioName_input(F("Analog Pin ")));
+#if HAS_HALL_EFFECT_SENSOR
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F(P145_GUID_AINPIN), P145_CONFIG_PIN_AIN);
+#else
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch, F(P145_GUID_AINPIN), P145_CONFIG_PIN_AIN);
+#endif
 # endif // ifdef ESP32
       addFormPinSelect( PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Heater Pin ")), F(P145_GUID_HEATPIN), P145_CONFIG_PIN_HEATER);
 
@@ -325,7 +329,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
           temperature = UserVar[P145_PCONFIG_TEMP_TASK * VARS_PER_TASK + P145_PCONFIG_TEMP_VAL]; // in degrees C
           humidity = UserVar[P145_PCONFIG_HUM_TASK * VARS_PER_TASK + P145_PCONFIG_HUM_VAL];    // in % relative
         }
-        UserVar[event->BaseVarIndex] = P145_data->readValue(temperature, humidity);
+        UserVar.setFloat(event->TaskIndex, 0, P145_data->readValue(temperature, humidity));
         success = true;
       }
       break;

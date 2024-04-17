@@ -33,7 +33,7 @@
 # define P102_QUERY1_DFLT     0 // Voltage (V)
 # define P102_QUERY2_DFLT     1 // Current (A)
 # define P102_QUERY3_DFLT     2 // Power (W)
-# define P102_QUERY4_DFLT     3 // Energy (WH)
+# define P102_QUERY4_DFLT     3 // Energy (kWH)
 # define P102_NR_OUTPUT_VALUES   4
 # define P102_NR_OUTPUT_OPTIONS  6
 # define P102_QUERY1_CONFIG_POS  3
@@ -302,10 +302,10 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
 
         if (P102_PZEM_ATTEMPT == 0)
         {
-          UserVar[event->BaseVarIndex]     = PZEM[P102_QUERY1];
-          UserVar[event->BaseVarIndex + 1] = PZEM[P102_QUERY2];
-          UserVar[event->BaseVarIndex + 2] = PZEM[P102_QUERY3];
-          UserVar[event->BaseVarIndex + 3] = PZEM[P102_QUERY4];
+          UserVar.setFloat(event->TaskIndex, 0, PZEM[P102_QUERY1]);
+          UserVar.setFloat(event->TaskIndex, 1, PZEM[P102_QUERY2]);
+          UserVar.setFloat(event->TaskIndex, 2, PZEM[P102_QUERY3]);
+          UserVar.setFloat(event->TaskIndex, 3, PZEM[P102_QUERY4]);
 
           // sendData(event);   //To send externally from the pluggin (to controller or to rules trigger)
         }
@@ -374,7 +374,7 @@ const __FlashStringHelper* p102_getQueryString(uint8_t query) {
     case 0: return F("Voltage_V");
     case 1: return F("Current_A");
     case 2: return F("Power_W");
-    case 3: return F("Energy_WH");
+    case 3: return F("Energy_kWh");
     case 4: return F("Power_Factor_cosphi");
     case 5: return F("Frequency Hz");
   }

@@ -3,7 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/RTC.h"
-#include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
@@ -13,6 +13,19 @@
 #define WIFI_RECONNECT_WAIT                  30000  // in milliSeconds
 
 #define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
+
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
 
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (WiFi.status() == WL_IDLE_STATUS) {
@@ -42,7 +55,11 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
 }
 
 bool WiFiEventData_t::unprocessedWifiEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }
@@ -90,9 +107,13 @@ void WiFiEventData_t::markWiFiTurnOn() {
 
 void WiFiEventData_t::clear_processed_flags() {
   // Mark all flags to default to prevent handling old events.
+  WiFi.scanDelete();
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
@@ -161,6 +182,14 @@ void WiFiEventData_t::markGotIP() {
   processedGotIP = false;
 }
 
+#if FEATURE_USE_IPV6
+  void WiFiEventData_t::markGotIPv6(const IPAddress& ip6) {
+    processedGotIP6 = false;
+    unprocessed_IP6 = ip6;
+  }
+#endif
+
+
 void WiFiEventData_t::markLostIP() {
   bitClear(wifiStatus, ESPEASY_WIFI_GOT_IP);
   bitClear(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
@@ -207,6 +236,11 @@ void WiFiEventData_t::markConnected(const String& ssid, const uint8_t bssid[6], 
       RTC.lastBSSID[i] = bssid[i];
     }
   }
+#if FEATURE_USE_IPV6
+  if (Settings.EnableIPv6()) {
+    WiFi.enableIPv6(true);
+  }
+#endif
 }
 
 void WiFiEventData_t::markConnectedAPmode(const uint8_t mac[6]) {

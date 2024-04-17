@@ -16,7 +16,7 @@
 
 // Macros
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
-# define P036_SetDisplayOn(_state) (UserVar[event->BaseVarIndex] = _state)
+# define P036_SetDisplayOn(_state) (UserVar.setFloat(event->TaskIndex, 0, _state))
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
@@ -85,12 +85,6 @@
 # define P36_Nlines 12              // The number of different lines which can be displayed - each line is 64 chars max
 # define P36_NcharsV0 32            // max chars per line up to 22.11.2019 (V0)
 # define P36_NcharsV1 64            // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3        // number of different OLED sizes
-# ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 3        // number of different fonts
-# else // ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 5        // number of different fonts
-# endif // ifdef P036_LIMIT_BUILD_SIZE
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
@@ -143,6 +137,16 @@
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
+
+# define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
+# define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
+# define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
+# define P036_EVENT_LINE     3 // event: <taskname>#line=1..n
+# define P036_EVENT_LINECNT  4 // event: <taskname>#linecount=1..4
+# define P036_EVENT_RESTORE  5 // event: <taskname>#restore=1..n
+# define P036_EVENT_SCROLL   6 // event: <taskname>#scroll=ePSS_VerySlow..ePSS_Ticker
+
+
 enum class eHeaderContent : uint8_t {
   eNone     = 0u,
   eSSID     = 1u,
@@ -193,9 +197,9 @@ typedef struct {
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
   uint8_t  SLidx       = 0;    // index to DisplayLinesV1
-  uint8_t  reserved22;         // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t  reserved23;
-  uint8_t  reserved24;
+  uint8_t  reserved22{};         // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t  reserved23{};
+  uint8_t  reserved24{};
 } tScrollLine;
 
 typedef struct {
@@ -206,8 +210,8 @@ typedef struct {
   uint16_t TickerAvgPixPerChar = 0; // max of average pixel per character or pix change per scroll time (100ms)
   int16_t  MaxPixLen           = 0; // Max pix length to display (display width + 2*TickerAvgPixPerChar)
   # ifdef ESP8266                   // Helpful on ESP8266 only, it seems
-  uint8_t reserved15;               // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t reserved16;
+  uint8_t reserved15{};             // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved16{};
   # endif // ifdef ESP8266
 } tTicker;
 
@@ -346,6 +350,10 @@ class P036_LineContent {
 public:
 
   P036_LineContent() {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     DisplayLinesV1.resize(P36_Nlines);
   }
 
@@ -380,8 +388,9 @@ struct P036_data_struct : public PluginTaskData_base {
                                    ePageScrollSpeed ScrollSpeed,
                                    uint8_t          NrLines);
 
-  bool isInitialized() const;
+  bool plugin_write(struct EventStruct *event, const String& string);
 
+  bool isInitialized() const;
 
   // Set the display contrast
   // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
@@ -400,6 +409,11 @@ struct P036_data_struct : public PluginTaskData_base {
   void RestoreLineContent(taskIndex_t taskIndex,
                           uint8_t     LoadVersion,
                           uint8_t     LineNo);
+
+private:
+  String create_display_header_text(eHeaderContent iHeaderContent) const;
+
+public:
 
   // The screen is set up as:
   // - 10 rows at the top for the header
@@ -530,6 +544,13 @@ private:
   # if P036_FEATURE_DISPLAY_PREVIEW
   String currentLines[P36_MAX_LinesPerPage]{};
   # endif // if P036_FEATURE_DISPLAY_PREVIEW
+
+# if P036_SEND_EVENTS
+ 
+public:
+  static void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue);
+#endif
+
 };
 
 #endif // ifdef USES_P036

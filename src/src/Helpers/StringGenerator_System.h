@@ -4,7 +4,6 @@
 
 #include "../../ESPEasy_common.h"
 #include "../Globals/Statistics.h"
-#include "../Helpers/Hardware.h"
 
 /*********************************************************************************************\
    ESPEasy specific strings

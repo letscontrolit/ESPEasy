@@ -17,6 +17,12 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/gpio.h>
+#include "include/esp32x_fixes.h"
+#endif
+
 /*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
@@ -444,7 +450,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (getVariousBits1() > (1u << 31)) { setVariousBits1(0); } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -559,9 +565,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
-  ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
-  ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
-  ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
+  ETH_Pin_mdc_cs           = DEFAULT_ETH_PIN_MDC;
+  ETH_Pin_mdio_irq         = DEFAULT_ETH_PIN_MDIO;
+  ETH_Pin_power_rst        = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
 #endif
@@ -606,13 +612,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_Reset                        = -1;
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
-  VariousBits1                     = 0;
+  setVariousBits1(0);
+  setVariousBits2(0);
 
   console_serial_port              = DEFAULT_CONSOLE_PORT; 
   console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
   console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
   console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
-
 
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
@@ -716,7 +722,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 
   index_high = gpio_pin - maxStates;
 
-#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+#  if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C3)|| defined(ESP32C6)
 
   // These can all store in the PinBootStates_ESP32 array
   return (index_high < maxStatesesp32);
@@ -867,6 +873,53 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   return false;
 }
 
+#ifdef ESP32
+template<unsigned int N_TASKS>
+spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
+{
+  if (isSPI_valid()) {
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi_Fspi:
+      {
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
+        #else
+        return static_cast<spi_host_device_t>(VSPI_HOST);
+        #endif
+      }
+#ifdef ESP32_CLASSIC
+      case SPI_Options_e::Hspi:
+      {
+        return static_cast<spi_host_device_t>(HSPI_HOST);
+      }
+#endif
+      case SPI_Options_e::UserDefined:
+      {
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
+        #else
+        return static_cast<spi_host_device_t>(VSPI_HOST);
+        #endif
+      }
+      case SPI_Options_e::None:
+        break;
+    }
+
+  }
+  #if ESP_IDF_VERSION_MAJOR < 5
+  #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  return static_cast<spi_host_device_t>(FSPI_HOST);
+  #else
+  return static_cast<spi_host_device_t>(VSPI_HOST);
+  #endif
+  #else
+  return spi_host_device_t::SPI_HOST_MAX;
+  #endif
+}
+#endif
+
+
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
   if (pin < 0) { return false; }
@@ -913,7 +966,8 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
-  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+  if (NetworkMedium == NetworkMedium_t::Ethernet &&
+      !isSPI_EthernetType(ETH_Phy_Type)) {
     if (19 == pin) return true; // ETH TXD0
     if (21 == pin) return true; // ETH TX EN
     if (22 == pin) return true; // ETH TXD1
@@ -931,10 +985,10 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
-    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
-    if (ETH_Pin_mdc == pin) return true;
-    if (ETH_Pin_mdio == pin) return true;
-    if (ETH_Pin_power == pin) return true;
+    if (!isSPI_EthernetType(ETH_Phy_Type) && isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
+    if (ETH_Pin_mdc_cs == pin) return true;
+    if (ETH_Pin_mdio_irq == pin) return true;
+    if (ETH_Pin_power_rst == pin) return true;
   }
   #endif // if FEATURE_ETHERNET
   return false;

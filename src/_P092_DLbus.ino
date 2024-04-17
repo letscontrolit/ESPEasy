@@ -262,7 +262,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      UserVar[event->BaseVarIndex] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
 
       success = true;
       break;
@@ -390,7 +390,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // PLUGIN_092_DEBUG
-      UserVar[event->BaseVarIndex] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
       success                      = true;
       break;
     }
@@ -443,7 +443,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 
       success                      = true;
-      UserVar[event->BaseVarIndex] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
       break;
     }
 
@@ -572,7 +572,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         int CurIdx    = PCONFIG(1) & 0x00FF;
 
         if (P092_data->P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
-          UserVar[event->BaseVarIndex] = P092_ReadData.value;
+          UserVar.setFloat(event->TaskIndex, 0, P092_ReadData.value);
         }
         else {
           addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));

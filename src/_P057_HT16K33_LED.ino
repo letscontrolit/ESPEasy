@@ -164,11 +164,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(PCONFIG(0)));
-      P057_data_struct *P057_data =
-        static_cast<P057_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P057_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(PCONFIG(0)));
       break;
     }
 
@@ -209,7 +205,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       }
       else if (equals(command, F("mbr"))) {
         String param = parseString(string, 2);
-        int    brightness;
+        int32_t    brightness;
 
         if (validIntFromString(param, brightness)) {
           if ((brightness >= 0) && (brightness <= 255)) {

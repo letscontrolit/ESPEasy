@@ -9,13 +9,19 @@ RulesCalculate_t RulesCalculate{};
 /*******************************************************************************************
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
-int CalculateParam(const String& TmpStr) {
-  int returnValue = 0;
+int CalculateParam(const String& TmpStr, int errorValue) {
+  int32_t returnValue = errorValue;
+
+  if (TmpStr.length() == 0) {
+    return returnValue;
+  }
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    validIntFromString(TmpStr, returnValue);
+    if (!validIntFromString(TmpStr, returnValue)) {
+      return errorValue;
+    }
   } else {
     ESPEASY_RULES_FLOAT_TYPE param{};
 
@@ -33,20 +39,34 @@ int CalculateParam(const String& TmpStr) {
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
 #endif // ifndef BUILD_NO_DEBUG
+    } else {
+      return errorValue;
     }
     returnValue = roundf(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
 
-CalculateReturnCode Calculate(const String& input,
+CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
                               ESPEASY_RULES_FLOAT_TYPE      & result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
-    RulesCalculate_t::preProces(input).c_str(),
+    preprocessd_input.c_str(),
     &result);
 
+  STOP_TIMER(COMPUTE_STATS);
+  return returnCode;
+}
+
+
+CalculateReturnCode Calculate(const String& input,
+                              ESPEASY_RULES_FLOAT_TYPE      & result)
+{
+  CalculateReturnCode returnCode = Calculate_preProcessed(
+    RulesCalculate_t::preProces(input),
+    result);
+#ifndef LIMIT_BUILD_SIZE
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Calculate: ");
@@ -88,7 +108,7 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
-  STOP_TIMER(COMPUTE_STATS);
+#endif
   return returnCode;
 }
 

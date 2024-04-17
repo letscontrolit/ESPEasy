@@ -246,13 +246,10 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       ESPEasySerialPort portType = serialHelper_getSerialType(event);
 
       // Create the P159_data_struct object that will do all the sensor interaction
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
                                                                                rxPin,
                                                                                txPin,
                                                                                P159_GET_ENGINEERING_MODE == 1));
-      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = nullptr != P159_data;
       addLog(LOG_LEVEL_INFO, concat(F("P159 : INIT, success: "), success ? 1 : 0));
 
       break;

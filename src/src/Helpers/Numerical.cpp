@@ -16,17 +16,17 @@ bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f) {
   return !isnan(f) && !isinf(f);
 }
 
-bool validIntFromString(const String& tBuf, int& result) {
+bool validIntFromString(const String& tBuf, int32_t& result) {
   NumericalType detectedType;
   const String  numerical = getNumerical(tBuf, NumericalType::Integer, detectedType);
 
   if ((detectedType == NumericalType::BinaryUint) ||
       (detectedType == NumericalType::HexadecimalUInt)) {
-    unsigned int tmp;
+    uint32_t tmp;
     bool isvalid = validUIntFromString(numerical, tmp);
 
     // FIXME TD-er: What to do here if the uint value > max_int ?
-    result = static_cast<int>(tmp);
+    result = static_cast<int32_t>(tmp);
     return isvalid;
   }
   const bool isvalid = numerical.length() > 0;
@@ -57,7 +57,7 @@ bool validInt64FromString(const String& tBuf, int64_t& result) {
   return isvalid;
 }
 
-bool validUIntFromString(const String& tBuf, unsigned int& result) {
+bool validUIntFromString(const String& tBuf, uint32_t& result) {
   NumericalType detectedType;
   String numerical   = getNumerical(tBuf, NumericalType::HexadecimalUInt, detectedType);
   const bool isvalid = numerical.length() > 0;
@@ -106,7 +106,7 @@ bool validFloatFromString(const String& tBuf, float& result) {
 
   if ((detectedType == NumericalType::BinaryUint) ||
       (detectedType == NumericalType::HexadecimalUInt)) {
-    unsigned int tmp;
+    uint32_t tmp;
     bool isvalid = validUIntFromString(tBuf, tmp);
     result = static_cast<float>(tmp);
     return isvalid;
@@ -150,6 +150,9 @@ bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result)
 }
 
 bool mustConsiderAsString(NumericalType detectedType) {
+  return detectedType != NumericalType::FloatingPoint &&
+         detectedType != NumericalType::Integer;
+/*
   switch (detectedType) {
     case NumericalType::FloatingPoint:
     case NumericalType::Integer:
@@ -160,6 +163,7 @@ bool mustConsiderAsString(NumericalType detectedType) {
       return true;
   }
   return false;
+*/
 }
 
 bool mustConsiderAsJSONString(const String& value) {
@@ -167,13 +171,22 @@ bool mustConsiderAsJSONString(const String& value) {
     // Empty string
     return true;
   }
+  const char c = value[0];
 
-  NumericalType detectedType;
-  if (isNumerical(value, detectedType)) {
-    return mustConsiderAsString(detectedType);
+  if (isDigit(c) || c == '-' || c == '.' || c == '+' || c == ' ') {
+    NumericalType detectedType;
+    if (isNumerical(value, detectedType)) {
+      return mustConsiderAsString(detectedType);
+    }
   }
-  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-  return !isBool;
+  if (equals(value, F("true")) ||
+      equals(value, F("false")) ||
+      equals(value, F("null"))) 
+  {
+    return !Settings.JSONBoolWithoutQuotes();
+  }
+
+  return true;
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {

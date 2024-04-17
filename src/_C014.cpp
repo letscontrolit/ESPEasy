@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/DataTypes/NodeTypeID.h"
 # include "src/Globals/Device.h"
 # include "src/Globals/MQTT.h"
@@ -862,31 +862,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.addMove(std::move(newEvent));
             }
           } else { // not an event
-            String log;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log = F("C014 :");
-            }
-
             // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-            if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Internal Command: OK!");
-              }
-            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" PluginCall: OK!");
-              }
-            } else {
-              remoteConfig(&TempEvent, cmd);
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Plugin/Internal command failed! remoteConfig?");
-              }
-            }
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
+            ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
           }
         }
       }
@@ -929,11 +906,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("C014 : Sent to ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(F("C014 : Sent to %s %s"),
+            tmppubname.c_str(),
+            value.c_str()));
         }
 #endif
       }

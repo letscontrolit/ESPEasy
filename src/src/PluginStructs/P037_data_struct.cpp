@@ -45,7 +45,7 @@ bool P037_data_struct::loadSettings() {
 
       LoadCustomTaskSettings(_taskIndex, tmp,
                              1, 41, offset);
-      globalTopicPrefix = std::move(tmp[0]);
+      move_special(globalTopicPrefix, std::move(tmp[0]));
       offset           += 41;
     }
 
@@ -525,7 +525,7 @@ bool P037_data_struct::webform_save(
     if (!left.isEmpty() || !right.isEmpty()) {
       valueArray[mappingOffset]  = wrapWithQuotes(left);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
-      uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 1));
+      uint8_t oper = getFormItemIntCustomArgName(idx + 1);
       valueArray[mappingOffset] += operands.substring(oper, oper + 1);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
       valueArray[mappingOffset] += wrapWithQuotes(right);
@@ -571,7 +571,7 @@ bool P037_data_struct::webform_save(
         ) {
       valueArray[filterOffset]  = wrapWithQuotes(left);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
-      uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 100 + 1));
+      uint8_t oper = getFormItemIntCustomArgName(idx + 100 + 1);
       valueArray[filterOffset] += filters.substring(oper, oper + 1);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
       valueArray[filterOffset] += wrapWithQuotes(right);
@@ -958,6 +958,10 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr == root) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
   }
 
@@ -965,6 +969,10 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     deserializeJson(*root, message);
 
     if (!root->isNull()) {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      # endif // ifdef USE_SECOND_HEAP
+
       result = true;
       doc    = root->as<JsonObject>();
       iter   = doc.begin();

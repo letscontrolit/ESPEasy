@@ -23,7 +23,9 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
   }
   # endif // ifndef BUILD_NO_DEBUG
   Wire.beginTransmission(I2Caddress);
-  Wire.write(cmd.c_str());
+  for (size_t i = 0; i < cmd.length(); ++i)  {
+    Wire.write(static_cast<uint8_t>(cmd[i]));
+  }
   error = Wire.endTransmission();
 
   if (error != 0)
@@ -182,7 +184,7 @@ void P103_addClearCalibration()
 
 int P103_addDOCalibration(uint8_t I2Cchoice)
 {
-  int nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
+  const int32_t nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
 
   addRowLabel("Calibrated Points");
   addHtmlInt(nb_calibration_points);
@@ -230,7 +232,7 @@ int P103_addCreateSinglePointCalibration(AtlasEZO_Sensors_e  board_type,
                                          uint8_t             nrDecimals,
                                          float               stepsize)
 {
-  int nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
+  const int32_t nb_calibration_points = P103_getCalibrationPoints(I2Cchoice);
 
   addRowLabel("Calibrated Points");
   addHtmlInt(nb_calibration_points);

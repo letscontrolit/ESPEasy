@@ -388,12 +388,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         #  ifndef BUILD_NO_DEBUG
         addLogMove(LOG_LEVEL_DEBUG, F("P137: PLUGIN_INIT"));
         #  endif // ifndef BUILD_NO_DEBUG
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P137_data_struct(event));
-        P137_data_struct *P137_data = static_cast<P137_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P137_data) {
-          success = true;
-        }
+        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P137_data_struct(event));
       }
 
       break;

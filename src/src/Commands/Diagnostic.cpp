@@ -100,22 +100,25 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
     int max_index, offset, max_size;
     int struct_size = 0;
     serialPrintln();
-    serialPrint(SettingsType::getSettingsTypeString(settingsType));
-    serialPrintln(F(" | start | end | max_size | struct_size"));
-    serialPrintln(F("--- | --- | --- | --- | ---"));
-    SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size);
+    if (SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size))
+    {
+      serialPrint(SettingsType::getSettingsTypeString(settingsType));
+      serialPrintln(F(" | start | end | max_size | struct_size"));
+      serialPrintln(F("--- | --- | --- | --- | ---"));
 
-    for (int i = 0; i < max_index; ++i) {
-      SettingsType::getSettingsParameters(settingsType, i, offset, max_size);
-      serialPrint(String(i));
-      serialPrint("|");
-      serialPrint(String(offset));
-      serialPrint("|");
-      serialPrint(String(offset + max_size - 1));
-      serialPrint("|");
-      serialPrint(String(max_size));
-      serialPrint("|");
-      serialPrintln(String(struct_size));
+      for (int i = 0; i < max_index; ++i) {
+        if (SettingsType::getSettingsParameters(settingsType, i, offset, max_size))
+        {
+          serialPrintln(strformat(
+            F("%d|%d|%d|%d|%d"),
+            i,
+            offset,
+            offset + max_size - 1,
+            max_size,
+            struct_size
+          ));
+        }
+      }
     }
   }
   return return_see_serial(event);
@@ -150,7 +153,7 @@ const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char 
   return return_see_serial(event);
 }
 
-const __FlashStringHelper * Command_logentry(struct EventStruct *event, const char *Line)
+String Command_logentry(struct EventStruct *event, const char *Line)
 {
   uint8_t level = LOG_LEVEL_INFO;
   // An extra optional parameter to set log level.
@@ -161,8 +164,9 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
     LOG_LEVEL_INFO
   #endif
     ) { level = event->Par2; }
-  addLog(level, tolerantParseStringKeepCase(Line, 2));
-  return return_command_success_flashstr();
+  String res = tolerantParseStringKeepCase(Line, 2);
+  addLog(level, res);
+  return res;
 }
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -175,26 +179,17 @@ const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, co
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 {  
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log += F("PortStatus detail: Port=");
-    log += getPortFromKey(it->first);
-    log += F(" State=");
-    log += it->second.getValue();
-    log += F(" Output=");
-    log += it->second.output;
-    log += F(" Mode=");
-    log += it->second.mode;
-    log += F(" Task=");
-    log += it->second.task;
-    log += F(" Monitor=");
-    log += it->second.monitor;
-    log += F(" Command=");
-    log += it->second.command;
-    log += F(" Init=");
-    log += it->second.init;
-    log += F(" PreviousTask=");
-    log += it->second.previousTask;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("PortStatus detail: Port=%u State=%d Output=%d Mode=%u Task=%u Monitor=%u Command=%d Init=%d PreviousTask=%d"),
+      getPortFromKey(it->first),
+      it->second.getValue(),
+      it->second.output,
+      it->second.mode,
+      it->second.task,
+      it->second.monitor,
+      it->second.command,
+      it->second.init,
+      it->second.previousTask));
   }
 }
 

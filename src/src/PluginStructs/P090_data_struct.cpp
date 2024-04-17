@@ -57,8 +57,8 @@ CCS811Core::status CCS811Core::beginCore(void)
     # endif
 
   // Spin for a few ms
-  volatile uint8_t temp = 0;
-
+  ESPEASY_VOLATILE(uint8_t) temp = 0;
+  // FIXME TD-er: This is a rather odd way to avoid calling "delay"
   for (uint16_t i = 0; i < 10000; i++)
   {
     temp++;

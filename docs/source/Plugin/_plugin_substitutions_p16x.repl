@@ -1,0 +1,25 @@
+.. |P164_name| replace:: :cyan:`ENS16x TVOC/eCO2`
+.. |P164_type| replace:: :cyan:`Gases`
+.. |P164_typename| replace:: :cyan:`Gases - ENS16x TVOC/eCO2`
+.. |P164_porttype| replace:: `.`
+.. |P164_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P164_github| replace:: P164_gases_ens160.ino
+.. _P164_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P164_gases_ens160.ino
+.. |P164_usedby| replace:: `.`
+.. |P164_shortinfo| replace:: `ENS16x TVOC/eCO2 sensors`
+.. |P164_maintainer| replace:: `flashmark`
+.. |P164_compileinfo| replace:: `.`
+.. |P164_usedlibraries| replace:: `I2C`
+
+.. |P166_name| replace:: :cyan:`GP8403 Dual channel DAC 0-10V`
+.. |P166_type| replace:: :cyan:`Output`
+.. |P166_typename| replace:: :cyan:`Output - GP8403 Dual channel DAC 0-10V`
+.. |P166_porttype| replace:: `.`
+.. |P166_status| replace:: :yellow:`COLLECTION G`
+.. |P166_github| replace:: P166_GP8403.ino
+.. _P166_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P166_GP8403.ino
+.. |P166_usedby| replace:: `.`
+.. |P166_shortinfo| replace:: `GP8403 Dual channel DAC 0-10V`
+.. |P166_maintainer| replace:: `tonhuisman`
+.. |P166_compileinfo| replace:: `.`
+.. |P166_usedlibraries| replace:: `modified version of DFRobot_GP8403`

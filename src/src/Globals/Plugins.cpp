@@ -27,7 +27,7 @@
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/PortStatus.h"
@@ -212,13 +212,11 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 // Example:  TaskInit#bme=1,0    (taskindex = 0, return value = 0)
 void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, const String& value_str) {
   if (Settings.UseRules) {
-    String event;
-    event.reserve(eventName.length() + 32 + value_str.length());
-    event  = eventName;
-    event += '#';
-    event += getTaskDeviceName(taskIndex);
-    event += '=';
-    event += taskIndex + 1;
+    String event = strformat(
+      F("%s#%s=%d"), 
+      eventName.c_str(), 
+      getTaskDeviceName(taskIndex).c_str(),
+      taskIndex + 1);
     if (value_str.length() > 0) {
       event += ',';
       event += wrapWithQuotesIfContainsParameterSeparatorChar(value_str);
@@ -285,6 +283,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
       if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
       {
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           LoadTaskSettings(taskIndex);
         }
         TempEvent->setTaskIndex(taskIndex);
@@ -351,6 +350,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
 
           START_TIMER;
           retval = (PluginCall(DeviceIndex, Function, TempEvent, command));
+
           STOP_TIMER_TASK(DeviceIndex, Function);
 
           if (Function == PLUGIN_INIT) {
@@ -362,6 +362,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
                 // Create Plugin Task data if it has "Stats" checked.
                 LoadTaskSettings(taskIndex);
                 if (ExtraTaskSettings.anyEnabledPluginStats()) {
+                  # ifdef USE_SECOND_HEAP
+                  HeapSelectIram ephemeral;
+                  # endif // ifdef USE_SECOND_HEAP
+
                   initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
                 }
               }
@@ -384,6 +388,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
             // Create Plugin Task data if it has "Stats" checked.
             LoadTaskSettings(taskIndex);
             if (ExtraTaskSettings.anyEnabledPluginStats()) {
+              # ifdef USE_SECOND_HEAP
+              HeapSelectIram ephemeral;
+              # endif // ifdef USE_SECOND_HEAP
               initPluginTaskData(taskIndex, new (std::nothrow) _StatsOnly_data_struct());
             }
           }
@@ -562,11 +569,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
-          #ifndef BUILD_NO_RAM_TRACKER
-          checkRAM(F("PluginCallUDP"), taskIndex);
-          #endif
-          return true;
+        if (Settings.TaskDeviceEnabled[taskIndex]) {
+          if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
+            #ifndef BUILD_NO_RAM_TRACKER
+            checkRAM(F("PluginCallUDP"), taskIndex);
+            #endif
+            return true;
+          }
         }
       }
       return false;
@@ -594,6 +603,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
@@ -651,7 +661,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           clearPluginTaskData(taskIndex);                       // Make sure any task data is actually cleared.
           if (PluginCallForTask(taskIndex, PLUGIN_INIT, &TempEvent, str, event) &&
               loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("INIT : Started Priority task %d, [%s] %s"),
+            addLog(LOG_LEVEL_INFO, strformat(F("INIT : Started Priority task %d, [%s] %s"),
                                        taskIndex + 1,
                                        getTaskDeviceName(taskIndex).c_str(),
                                        getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex)).c_str()));
@@ -681,6 +691,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       if (Function == PLUGIN_READ || Function == PLUGIN_INIT || Function == PLUGIN_PROCESS_CONTROLLER_DATA) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
+        }
+        if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(event->TaskIndex);
         }
       }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -773,6 +786,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
                 queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
               }
             } else {
+              // Must be done as soon as there are new values, so we can keep a copy of the previous value
+              // This previous value may be needed in formulas using %pvalue%
+              UserVar.markPluginRead(event->TaskIndex);
               #if FEATURE_PLUGIN_STATS
               PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
               if (taskData != nullptr) {
@@ -807,6 +823,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
           if (Function == PLUGIN_EXIT) {
+            UserVar.clear_computed(event->TaskIndex);
             clearPluginTaskData(event->TaskIndex);
 //            initSerial();
             queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
@@ -832,6 +849,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_VALUES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    case PLUGIN_WEBFORM_PRE_SERIAL_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     #if FEATURE_PLUGIN_STATS
@@ -842,6 +860,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
     case PLUGIN_INIT_VALUE_RANGES:
+    #ifdef USES_ESPEASY_NOW
+    case PLUGIN_FILTEROUT_CONTROLLER_DATA:
+    #endif
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
@@ -857,7 +878,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             Function == PLUGIN_WEBFORM_LOAD_ALWAYS ||
             Function == PLUGIN_SET_DEFAULTS ||
             Function == PLUGIN_INIT_VALUE_RANGES ||
-            Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS
+            Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS ||
+            Function == PLUGIN_WEBFORM_PRE_SERIAL_PARAMS
         ) {
           LoadTaskSettings(event->TaskIndex);
         }
@@ -869,7 +891,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
-            UserVar[event->BaseVarIndex + i] = 0.0f;
+            UserVar.setFloat(event->TaskIndex, i,  0.0f);
           }
         }
 

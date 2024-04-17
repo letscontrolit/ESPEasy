@@ -132,10 +132,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *options[2] = { F("Switch"),  F("Dimmer") };
-        int optionValues[2]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const uint8_t switchtype              = P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("type"), 2, options, optionValues, switchtype);
+        const __FlashStringHelper *options[] = { F("Switch"),  F("Dimmer") };
+        int optionValues[]                   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
+        const uint8_t switchtype             = P001_getSwitchType(event);
+        addFormSelector(F("Switch Type"), F("type"), NR_ELEMENTS(optionValues), options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
@@ -145,10 +145,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       {
         uint8_t choice                              = PCONFIG(2);
-        const __FlashStringHelper *buttonOptions[3] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
-        int buttonOptionValues[3]                   =
+        const __FlashStringHelper *buttonOptions[] = { F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
+        int buttonOptionValues[]                   =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(F("Switch Button Type"), F("button"), 3, buttonOptions, buttonOptionValues, choice);
+        addFormSelector(F("Switch Button Type"), F("button"), NR_ELEMENTS(buttonOptionValues), buttonOptions, buttonOptionValues, choice);
       }
 
       SwitchWebformLoad(
@@ -227,9 +227,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
         // set initial UserVar of the switch
         if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-          UserVar[event->BaseVarIndex] = !newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
         } else {
-          UserVar[event->BaseVarIndex] = newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
         }
 
         // counters = 0
@@ -271,7 +271,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               // returns pin value using syntax: [plugin#gpio#pinstate#xx]
               if ((string.length() >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
               {
-                int par1;
+                int32_t par1;
 
                 if (validIntFromString(parseString(string, 3), par1)) {
                   string = digitalRead(par1);
@@ -464,7 +464,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                   event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
                 }
               }
-              UserVar[event->BaseVarIndex] = output_value;
+              UserVar.setFloat(event->TaskIndex, 0, output_value);
 
                 # ifndef BUILD_NO_DEBUG
 
@@ -483,7 +483,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value); }
 
               // reset Userdata so it displays the correct state value in the web page
-              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+              UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
             }
             PCONFIG_LONG(0) = millis();
           }
@@ -558,8 +558,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               output_value = sendState ? 11 : 10;
 
               // output_value = output_value + 10;
-
-              UserVar[event->BaseVarIndex] = output_value;
+              UserVar.setFloat(event->TaskIndex, 0, output_value);
 
                 # ifndef BUILD_NO_DEBUG
 
@@ -578,7 +577,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value); }
 
               // reset Userdata so it displays the correct state value in the web page
-              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+              UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
             }
             savePortStatus(key, currentStatus);
           }
@@ -591,7 +590,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
             // Create EVENT with value = 4 for SafeButton false positive detection
             const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
-            UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
+            UserVar.setFloat(event->TaskIndex, 0, SAFE_BUTTON_EVENT);
 
               # ifndef BUILD_NO_DEBUG
 
@@ -608,7 +607,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, SAFE_BUTTON_EVENT); }
 
             // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = tempUserVar;
+            UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
           }
         }
 
@@ -621,7 +620,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                           // Reset forceEvent
                           currentStatus.forceEvent = 0;
                           currentStatus.state = state;
-                          UserVar[event->BaseVarIndex] = state;
+                          UserVar.setFloat(event->TaskIndex, 0, state);
 
                           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                             String log = F("SW  : GPIO=");

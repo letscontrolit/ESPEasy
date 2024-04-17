@@ -34,6 +34,7 @@ else:
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P037",  # MQTT Import
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
     "-DUSES_P052",  # SenseAir
@@ -43,7 +44,7 @@ else:
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
 #   "-DUSES_P085",  # AcuDC24x
-    "-DUSES_P098",  # PWM motor
+#    "-DUSES_P098",  # PWM motor
 #   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
@@ -54,7 +55,7 @@ else:
     "-DUSES_P146",  # Cache Reader
 
     "-DUSES_C016",  # Cache Controller
-    "-DUSES_C018",  # TTN/RN2483
+#    "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
 #    "-DFEATURE_MDNS=1",
@@ -66,6 +67,13 @@ else:
     "-DFEATURE_DEFINE_SERIAL_CONSOLE_PORT=0",
 
     "-DFEATURE_ESPEASY_P2P=1",
+    "-DEMBED_ESPEASY_DEFAULT_MIN_CSS",
+
+#    "-DPLUGIN_STATS_NR_ELEMENTS=30",
+    "-DFEATURE_PLUGIN_STATS=1",
+    "-DFEATURE_CHART_JS=1",
+
+#    "-DFEATURE_ADC_VCC=1",
 
     "-DFEATURE_SETTINGS_ARCHIVE=1",
     "-DDISABLE_SC16IS752_SPI"

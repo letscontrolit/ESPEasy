@@ -14,6 +14,21 @@
 #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
 #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
 
+// Simple bitwise get/set functions
+
+#define setNBitToUL(N, B, V, M)  N=(((N) & ~((M) << (B))) | (static_cast<uint32_t>((V) & (M)) << (B)))
+#define getNBitFromUL(number, bitnr, mask)  (((number) >> (bitnr)) & (mask))
+
+#define set8BitToUL(N, B, V) setNBitToUL(N, B, V, 0xFFUL)
+#define set4BitToUL(N, B, V) setNBitToUL(N, B, V, 0x0FUL)
+#define set3BitToUL(N, B, V) setNBitToUL(N, B, V, 0x07UL)
+#define set2BitToUL(N, B, V) setNBitToUL(N, B, V, 0x03UL)
+
+#define get8BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0xFFUL)
+#define get4BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x0FUL)
+#define get3BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x07UL)
+#define get2BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x03UL)
+
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
@@ -160,35 +175,6 @@ void RGB2HSV(uint8_t r,
              uint8_t b,
              float   hsv[3]);
 
-// Simple bitwise get/set functions
-
-uint8_t get8BitFromUL(uint32_t number,
-                      uint8_t     bitnr);
-
-void    set8BitToUL(uint32_t& number,
-                    uint8_t      bitnr,
-                    uint8_t   value);
-
-uint8_t get4BitFromUL(uint32_t number,
-                      uint8_t     bitnr);
-
-void    set4BitToUL(uint32_t& number,
-                    uint8_t      bitnr,
-                    uint8_t   value);
-
-uint8_t get3BitFromUL(uint32_t number,
-                      uint8_t     bitnr);
-
-void    set3BitToUL(uint32_t& number,
-                    uint8_t      bitnr,
-                    uint8_t   value);
-
-uint8_t get2BitFromUL(uint32_t number,
-                      uint8_t     bitnr);
-
-void    set2BitToUL(uint32_t& number,
-                    uint8_t      bitnr,
-                    uint8_t   value);
 
 
 float getCPUload();

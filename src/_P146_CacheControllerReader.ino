@@ -105,13 +105,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P146_data_struct(event));
-      P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P146_data) {
-        success = true;
-      }
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P146_data_struct(event));
       break;
     }
 
@@ -145,8 +141,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
         }
       } else {
@@ -183,8 +179,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
           success = true;
         }

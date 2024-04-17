@@ -5,7 +5,7 @@
 // ########################### Controller Plugin 006: PiDome MQTT ########################################
 // #######################################################################################################
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/Network.h"
@@ -100,7 +100,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         {
           cmd += event->String2; // Par2
         }
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
       }
       break;
     }
@@ -131,8 +131,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
           if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
             success = true;
         } else {
-          String value = formatUserVarNoCheck(event, x);
-          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag))
+          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(tmppubname), formatUserVarNoCheck(event, x), mqtt_retainFlag))
             success = true;
         }
       }

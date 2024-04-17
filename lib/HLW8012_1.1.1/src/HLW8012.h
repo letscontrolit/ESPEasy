@@ -57,6 +57,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ICACHE_RAM_ATTR     
 #endif
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 // CF1 mode
 typedef enum {
     MODE_CURRENT,
@@ -67,8 +71,13 @@ class HLW8012 {
 
     public:
 
+    #if ESP_IDF_VERSION_MAJOR >= 5
+        void cf_interrupt();
+        void cf1_interrupt();
+    #else
         void cf_interrupt() IRAM_ATTR;
         void cf1_interrupt() IRAM_ATTR;
+    #endif
 
         void begin(
             unsigned char cf_pin,
@@ -137,17 +146,33 @@ class HLW8012 {
         volatile unsigned char _mode = 0;
 
         bool _use_interrupts = true;
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf_pulse_count_total{};
+        #else
         volatile unsigned long _cf_pulse_count_total = 0;
+        #endif
 
         // CF = Active power
         volatile unsigned long _first_cf_interrupt = 0;
         volatile unsigned long _last_cf_interrupt = 0;
+
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf_pulse_count{};
+        #else
         volatile unsigned long _cf_pulse_count = 0;
+        #endif
+
 
         // CF1 toggles between voltage and current measurement
         volatile unsigned long _first_cf1_interrupt = 0;
         volatile unsigned long _last_cf1_interrupt = 0;
+
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf1_pulse_count{};
+        #else
         volatile unsigned long _cf1_pulse_count = 0;
+        #endif
+
 
         void _checkCFSignal();
         void _checkCF1Signal();

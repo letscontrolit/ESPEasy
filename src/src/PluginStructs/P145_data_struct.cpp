@@ -13,7 +13,6 @@
 //#define P145_CALIBRATION_INTERVAL (5*60*1000)
 
 #include "../Globals/ESPEasyWiFiEvent.h"   // Need to know when WiFi is ruining the ADC measurements
-#include "../Helpers/Hardware.h"           // Need to know the ADC properties
 
 // The table sensorDefs[] contains string items for representation. 
 // Storage is in PROGMEM where a (fixed format) C-style string does not fit well
@@ -283,6 +282,7 @@ float P145_data_struct::getRZero(float rSensor) const
       break;
     case p145AlgNone:
       newValue = rzero;
+      break;
     default:
       if (sensordef.cleanRatio > 0.0f)
       {

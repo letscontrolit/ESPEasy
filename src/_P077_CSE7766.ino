@@ -113,9 +113,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           const float value = P077_data->getValue(query);
           int nrDecimals    = 2;
 
-          if ((query == P077_query::P077_QUERY_PULSES)) {
+          if (query == P077_query::P077_QUERY_PULSES) {
             nrDecimals = 0;
-          } else if ((query == P077_query::P077_QUERY_KWH)) {
+          } else if (query == P077_query::P077_QUERY_KWH) {
             nrDecimals = 3;
           }
 
@@ -219,7 +219,6 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         P077_QUERY3 = static_cast<uint8_t>(P077_QUERY3_DFLT);
         P077_QUERY4 = static_cast<uint8_t>(P077_QUERY4_DFLT);
       }
-
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));

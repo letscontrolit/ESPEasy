@@ -237,7 +237,7 @@ void P131_data_struct::initialize_content(struct EventStruct *event,
   content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0;      // Inverted
   content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1; // Add offset once
   opts                   = parseString(strings[x], 3);
-  int speed = 0;
+  int32_t speed = 0;
 
   validIntFromString(opts, speed);
   content[x].speed = speed;

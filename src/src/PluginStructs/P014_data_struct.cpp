@@ -424,7 +424,7 @@ bool P014_data_struct::enablePowerForADC(uint8_t i2caddr){
     
   
   if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
-    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & 0b11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
   }else{
     ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
   }
@@ -455,7 +455,7 @@ bool P014_data_struct::disablePowerForADC(uint8_t i2caddr){
   if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
     ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
   }else{
-    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & 0b11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
   }
   if (!ok){
     addLog(LOG_LEVEL_ERROR, F("SI7013: Could not write REG2!"));
