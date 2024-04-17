@@ -251,6 +251,7 @@ void handle_json()
 #if FEATURE_USE_IPV6
         LabelType::IP6_LOCAL,
         LabelType::IP6_GLOBAL,
+        LabelType::ENABLE_IPV6,
 #endif
         LabelType::IP_SUBNET,
         LabelType::GATEWAY,
@@ -288,6 +289,10 @@ void handle_json()
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
 
+        LabelType::WAIT_WIFI_CONNECT,
+        LabelType::HIDDEN_SSID_SLOW_CONNECT,
+        LabelType::CONNECT_HIDDEN_SSID,
+        LabelType::SDK_WIFI_AUTORECONNECT,
 
         LabelType::MAX_LABEL
       };
