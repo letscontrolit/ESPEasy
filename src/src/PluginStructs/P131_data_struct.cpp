@@ -307,11 +307,11 @@ void P131_data_struct::display_content(struct EventStruct *event,
                                _bgcolor);
             }
 
-            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth > 1)) {
+            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth >= 1)) {
               // Clear right from text
-              matrix->fillRect(content[x].pixelPos + content[x].length + 1,
+              matrix->fillRect(content[x].pixelPos + content[x].length,
                                yPos,
-                               content[x].stepWidth - 1,
+                               content[x].stepWidth,
                                h,
                                _bgcolor);
             }
