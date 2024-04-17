@@ -617,10 +617,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
                                        const uint16_t             fgcolor,
                                        const uint16_t             bgcolor,
                                        const bool                 useValidation,
-                                       const bool                 textBackFill)
+                                       const bool                 textBackFill,
+                                       const uint8_t              defaultFontId)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _useValidation(useValidation), _textBackFill(textBackFill)
+  _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: GFX Init."));
 }
@@ -636,10 +637,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
                                        const uint16_t             fgcolor,
                                        const uint16_t             bgcolor,
                                        const bool                 useValidation,
-                                       const bool                 textBackFill)
+                                       const bool                 textBackFill,
+                                       const uint8_t              defaultFontId)
   : _tft(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _useValidation(useValidation), _textBackFill(textBackFill)
+  _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
   _display = _tft;
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
@@ -671,6 +673,9 @@ void AdafruitGFX_helper::initialize() {
   if (_fontscaling < 1) { _fontscaling = 1; }
 
   if (nullptr != _display) {
+    # if ADAGFX_FONTS_INCLUDED
+    setFontById(_defaultFontId);
+    # endif // if ADAGFX_FONTS_INCLUDED
     _display->setTextSize(_fontscaling);
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
     _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
@@ -949,126 +954,195 @@ struct tFontArgs {
                       uint8_t        width,
                       uint8_t        height,
                       int8_t         offset,
-                      bool           proportional)
-    : _f(f), _width(width), _height(height), _offset(offset), _proportional(proportional) {}
+                      bool           proportional,
+                      uint8_t        fontId)
+    : _f(f), _width(width), _height(height), _offset(offset),
+    _proportional(proportional), _fontId(fontId) {}
 
   const GFXfont *_f;
   uint8_t        _width;
   uint8_t        _height;
   int8_t         _offset;
   bool           _proportional;
+  uint8_t        _fontId;
 };
 
 /* *INDENT-OFF* */
 constexpr tFontArgs fontargs[] =
 {
-  { nullptr,                        9,                6,   0,   false },
-  { &Seven_Segment24pt7b,           21,               42,  35,  true  },
-  { &Seven_Segment18pt7b,           16,               33,  26,  true  },
-  { &FreeSans9pt7b,                 10,               16,  12,  false },
+  { nullptr,                        9,                6,   0,   false,  0u },
+  { &Seven_Segment24pt7b,           21,               42,  35,  true,   1u },
+  { &Seven_Segment18pt7b,           16,               33,  26,  true,   2u },
+  { &FreeSans9pt7b,                 10,               16,  12,  false,  3u },
   # ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
-  { &TomThumb,                      5,                 6,   5,  false },
+  { &TomThumb,                      5,                 6,   5,  false,  4u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
   # endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-  { &angelina8pt7b,                 6,                16,  12,  true  },
+  { &angelina8pt7b,                 6,                16,  12,  true,   5u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-  { &NovaMono8pt7b,                 9,                16,  12,  false },
+  { &NovaMono8pt7b,                 9,                16,  12,  false,  6u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-  { &unispace8pt7b,                 13,               24,  20,  false },
+  { &unispace8pt7b,                 13,               24,  20,  false,  7u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-  { &unispace_italic8pt7b,          13,               24,  20,  false },
+  { &unispace_italic8pt7b,          13,               24,  20,  false,  8u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-  { &whitrabt8pt7b,                 10,               16,  12,  false },
+  { &whitrabt8pt7b,                 10,               16,  12,  false,  9u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-  { &Roboto_Regular8pt7b,           10,               16,  12,  true  },
+  { &Roboto_Regular8pt7b,           10,               16,  12,  true,  10u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-  { &RobotoCondensed_Regular8pt7b,  9,                16,  12,  true  },
+  { &RobotoCondensed_Regular8pt7b,  9,                16,  12,  true,  11u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
   #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-  { &RobotoMono_Regular8pt7b,       10,               16,  12,  false },
+  { &RobotoMono_Regular8pt7b,       10,               16,  12,  false, 12u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
   # endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-  { &angelina12pt7b,                8,                22,  18,  true  },
+  { &angelina12pt7b,                8,                22,  18,  true,  13u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-  { &NovaMono12pt7b,                13,               26,  22,  false },
+  { &NovaMono12pt7b,                13,               26,  22,  false, 14u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-  { &RepetitionScrolling12pt7b,     13,               22,  18,  false },
+  { &RepetitionScrolling12pt7b,     13,               22,  18,  false, 15u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-  { &unispace12pt7b,                18,               30,  26,  false },
+  { &unispace12pt7b,                18,               30,  26,  false, 16u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-  { &unispace_italic12pt7b,         18,               30,  26,  false },
+  { &unispace_italic12pt7b,         18,               30,  26,  false, 17u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-  { &whitrabt12pt7b,                13,               20,  16,  false },
+  { &whitrabt12pt7b,                13,               20,  16,  false, 18u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-  { &Roboto_Regular12pt7b,          13,               20,  16,  true  },
+  { &Roboto_Regular12pt7b,          13,               20,  16,  true,  19u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-  { &RobotoCondensed_Regular12pt7b, 13,               20,  16,  true  },
+  { &RobotoCondensed_Regular12pt7b, 13,               20,  16,  true,  20u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-  { &RobotoMono_Regular12pt7b,      13,               20,  16,  false },
+  { &RobotoMono_Regular12pt7b,      13,               20,  16,  false, 21u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
   # endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-  { &AmerikaSans16pt7b,             17,               30,  26,  true  },
+  { &AmerikaSans16pt7b,             17,               30,  26,  true,  22u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
   #  ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-  { &whitrabt16pt7b,                18,               26,  22,  false },
+  { &whitrabt16pt7b,                18,               26,  22,  false, 23u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-  { &Roboto_Regular16pt7b,          18,               27,  23,  true  },
+  { &Roboto_Regular16pt7b,          18,               27,  23,  true,  24u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
   #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-  { &RobotoCondensed_Regular16pt7b, 18,               27,  23,  true  },
+  { &RobotoCondensed_Regular16pt7b, 18,               27,  23,  true,  25u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
   #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-  { &RobotoMono_Regular16pt7b,      18,               27,  23,  false },
+  { &RobotoMono_Regular16pt7b,      18,               27,  23,  false, 26u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
   # endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-  { &whitrabt18pt7b,                21,               30,  26,  false },
+  { &whitrabt18pt7b,                21,               30,  26,  false, 27u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
-  { &_7segment18pt7b,               21,               30,  0,   false },
+  { &_7segment18pt7b,               21,               30,  0,   false, 28u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
   #  ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
-  { &LCD14cond18pt7b,               24,               30,  0,   false },
+  { &LCD14cond18pt7b,               24,               30,  0,   false, 29u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
   # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-  { &whitrabt20pt7b,                24,               32,  28,  false },
+  { &whitrabt20pt7b,                24,               32,  28,  false, 30u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
   # endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
-  { &_7segment24pt7b,               26,               34,  0,   false },
+  { &_7segment24pt7b,               26,               34,  0,   false, 31u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
   #  ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
-  { &LCD14cond24pt7b,               26,               34,  0,   false },
+  { &LCD14cond24pt7b,               26,               34,  0,   false, 32u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
   # endif  // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 };
 /* *INDENT-ON* */
+# endif // if ADAGFX_FONTS_INCLUDED
+
+String AdaGFXgetFontName(uint8_t fontId) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  if (fontId < font_max) {
+    const uint32_t idx = AdaGFXgetFontIndexForFontId(fontId);
+    char   tmp[30]{}; // Longest name so far is 23 + \0
+    String fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
+    return fontName;
+  }
+  # endif // if ADAGFX_FONTS_INCLUDED
+  return EMPTY_STRING;
+}
+
+uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  if (fontId < font_max) {
+    for (uint32_t idx = 0; idx < font_max; ++idx) {
+      if (fontargs[idx]._fontId == fontId) {
+        return idx;
+      }
+    }
+  }
+  # endif // if ADAGFX_FONTS_INCLUDED
+  return 0;
+}
+
+void AdaGFXFormDefaultFont(const __FlashStringHelper *id,
+                           uint8_t                    selectedIndex) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  addRowLabel_tr_id(F("Default font"), id);
+  addSelector_Head(id);
+
+  char tmp[30]{}; // Longest name so far is 23 + \0
+
+  for (uint32_t idx = 0; idx < font_max; ++idx) {
+    const bool selected = (fontargs[idx]._fontId == selectedIndex);
+    String     fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
+    addSelector_Item(fontName,
+                     fontargs[idx]._fontId,
+                     selected);
+  }
+  addSelector_Foot();
+  # endif // if ADAGFX_FONTS_INCLUDED
+}
+
+# if ADAGFX_FONTS_INCLUDED
+void AdafruitGFX_helper::setFontById(uint8_t fontId) {
+  constexpr int font_max = NR_ELEMENTS(fontargs);
+  const int     font_i   = AdaGFXgetFontIndexForFontId(fontId);
+
+  if ((font_i >= 0) && (font_i < font_max)) {
+    _display->setFont(fontargs[font_i]._f);
+    calculateTextMetrics(fontargs[font_i]._width,
+                         fontargs[font_i]._height,
+                         fontargs[font_i]._offset,
+                         fontargs[font_i]._proportional);
+  }
+}
+
 # endif // if ADAGFX_FONTS_INCLUDED
 
 bool AdafruitGFX_helper::processCommand(const String& string) {

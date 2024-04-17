@@ -12,6 +12,8 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-04-17 tonhuisman: Add AdaGFXFormDefaultFont() selector and some support functions
+ *                        Add default font selection at initialization
  * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
  *                        This font is already available via the Adafruit_GFX_Library
  * 2023-12-30 tonhuisman: Optimization of font handling, also reducing code-size
@@ -414,6 +416,10 @@ uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to
 # endif // if ADAGFX_SUPPORT_7COLOR
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
+String   AdaGFXgetFontName(uint8_t fontId);
+uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId);
+void     AdaGFXFormDefaultFont(const __FlashStringHelper *id,
+                               uint8_t                    selectedIndex);
 
 class AdafruitGFX_helper {
 public:
@@ -428,7 +434,8 @@ public:
                      const uint16_t             fgcolor       = ADAGFX_WHITE,
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
-                     const bool                 textBackFill  = false);
+                     const bool                 textBackFill  = false,
+                     const uint8_t              defaultFontId = 0);
   # if ADAGFX_ENABLE_BMP_DISPLAY
   AdafruitGFX_helper(Adafruit_SPITFT           *display,
                      const String             & trigger,
@@ -440,7 +447,8 @@ public:
                      const uint16_t             fgcolor       = ADAGFX_WHITE,
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
-                     const bool                 textBackFill  = false);
+                     const bool                 textBackFill  = false,
+                     const uint8_t              defaultFontId = 0);
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
@@ -521,6 +529,10 @@ public:
   bool     deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
+  #if ADAGFX_FONTS_INCLUDED
+  void setFontById(uint8_t fontId);
+  #endif
+
   uint16_t getTextSize(const String& text,
                        uint16_t    & h); // return length and height in pixels using current font
 
@@ -561,6 +573,7 @@ private:
   uint16_t _bgcolor;
   bool _useValidation;
   bool _textBackFill;
+  uint8_t _defaultFontId;
   uint16_t _textcols     = 0;
   uint16_t _textrows     = 0;
   int16_t _lastX         = 0;
