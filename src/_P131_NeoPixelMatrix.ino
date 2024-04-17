@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-04-17 tonhuisman: Add selection of a default font to use.
  * 2023-10-03 tonhuisman: Optimizate alignment of settings struct, exclude some logging if BUILD_NO_DEBUG is defined
  * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
  * 2022-07-30 tonhuisman: Add commands to set scroll-options (settext, setscroll, setstep, setspeed, setempty, setright)
@@ -158,6 +159,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Maximum allowed brightness"), F("maxbright"), P131_CONFIG_FLAG_GET_MAXBRIGHT, 1, 255);
       addUnit(F("1..255"));
 
+      AdaGFXFormDefaultFont(F("deffont"), P131_CONFIG_DEFAULT_FONT);
+
       AdaGFXFormFontScaling(F("fontscale"), P131_CONFIG_FLAG_GET_FONTSCALE, 4);
 
       # ifdef P131_SHOW_SPLASH
@@ -288,6 +291,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       P131_CONFIG_MATRIX_HEIGHT = getFormItemInt(F("mxheight"));
       P131_CONFIG_TILE_WIDTH    = getFormItemInt(F("tlwidth"));
       P131_CONFIG_TILE_HEIGHT   = getFormItemInt(F("tlheight"));
+      P131_CONFIG_DEFAULT_FONT  = getFormItemInt(F("deffont"));
 
       // Bits are already in the correct order/configuration to be passed on to the constructor
       // Matrix bits
@@ -382,7 +386,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                                                                                  P131_CONFIG_FLAG_GET_BRIGHTNESS,
                                                                                  P131_CONFIG_FLAG_GET_MAXBRIGHT,
                                                                                  P131_CONFIG_GET_COLOR_FOREGROUND,
-                                                                                 P131_CONFIG_GET_COLOR_BACKGROUND));
+                                                                                 P131_CONFIG_GET_COLOR_BACKGROUND,
+                                                                                 P131_CONFIG_DEFAULT_FONT));
         P131_data_struct *P131_data = static_cast<P131_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P131_data) && P131_data->plugin_init(event); // Start the display
