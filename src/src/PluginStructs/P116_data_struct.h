@@ -4,11 +4,30 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
-# include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
-# include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
-# include <Adafruit_ST7796S_kbv.h>          // include Adafruit ST7796 TFT library
+# include <Adafruit_GFX.h>         // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>      // include Adafruit ST77xx TFT library
+# include <Adafruit_ST7735.h>      // include Adafruit ST7735 TFT library
+# include <Adafruit_ST7789.h>      // include Adafruit ST7789 TFT library
+# include <Adafruit_ST7796S_kbv.h> // include Adafruit ST7796 TFT library
+
+# if defined(ST7789_EXTRA_INIT) && !ST7789_EXTRA_INIT
+#  define P116_EXTRA_ST7789 0      // This will get disabled for ESP8266 in Adafruit_ST7789.h
+# endif // if defined(ST7789_EXTRA_INIT) && !ST7789_EXTRA_INIT
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+#  define P116_EXTRA_ST7789 0
+# endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+# ifndef P116_EXTRA_ST7789
+#  define P116_EXTRA_ST7789 0 // Disabled by default (not verified on any hardware yet)
+# endif // ifndef P116_EXTRA_ST7789
+# if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
+#  define P116_EXTRA_ST7735 0 // This will get disabled for ESP8266 in Adafruit_ST7735.h
+# endif // if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+#  define P116_EXTRA_ST7735 0
+# endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7735)
+# ifndef P116_EXTRA_ST7735
+#  define P116_EXTRA_ST7735 1
+# endif // ifndef P116_EXTRA_ST7735
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
@@ -74,6 +93,14 @@ enum class ST77xx_type_e : uint8_t {
   ST7789vw_135x240  = 6u,
   ST7796s_320x480   = 7u,
   ST7735s_80x160_M5 = 8u,
+  # if P116_EXTRA_ST7789
+  ST7789vw1_135x240 = 9u,
+  ST7789vw2_135x240 = 10u,
+  ST7789vw3_135x240 = 11u,
+  # endif // if P116_EXTRA_ST7789
+  # if P116_EXTRA_ST7735
+  ST7735s_135x240 = 12u,
+  # endif // if P116_EXTRA_ST7735
 };
 
 enum class P116_CommandTrigger : uint8_t {

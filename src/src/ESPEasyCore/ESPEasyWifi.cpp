@@ -494,7 +494,9 @@ void AttemptWiFiConnect() {
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
 #if FEATURE_USE_IPV6
-      WiFi.enableIPv6(true);
+      if (Settings.EnableIPv6()) {
+        WiFi.enableIPv6(true);
+      }
 #endif
 
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.bits.isHidden)
@@ -1396,7 +1398,7 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+//      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
       WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.

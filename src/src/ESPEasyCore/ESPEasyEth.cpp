@@ -169,7 +169,9 @@ bool ETHConnectRelaxed() {
       (eth_clock_mode_t)Settings.ETH_Clock_Mode);
 #else
 #if FEATURE_USE_IPV6
-    ETH.enableIPv6(true);
+    if (Settings.EnableIPv6()) {
+      ETH.enableIPv6(true);
+    }
 #endif
 
     if (isSPI_EthernetType(Settings.ETH_Phy_Type)) {

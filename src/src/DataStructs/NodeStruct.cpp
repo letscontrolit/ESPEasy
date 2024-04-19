@@ -62,7 +62,9 @@ bool NodeStruct::validate(const IPAddress& remoteIP) {
 
 #if FEATURE_USE_IPV6
   // Check if we're in the same global subnet
-  if (hasIPv6_mac_based_link_global && remoteIP.type() == IPv6) {
+  if (Settings.EnableIPv6() &&
+      hasIPv6_mac_based_link_global && 
+      remoteIP.type() == IPv6) {
     const IPAddress this_global = NetworkGlobalIP6();
     // Check first 64 bit to see if we're in the same global scope
     for (int i = 0; i < 8 && hasIPv6_mac_based_link_global; ++i) {
@@ -151,7 +153,7 @@ IPAddress NodeStruct::IP() const {
 #if FEATURE_USE_IPV6
 IPAddress NodeStruct::IPv6_link_local(bool stripZone) const
 {
-  if (hasIPv6_mac_based_link_local) {
+  if (Settings.EnableIPv6() && hasIPv6_mac_based_link_local) {
     // Base IPv6 on MAC address
     IPAddress ipv6;
     if (IPv6_link_local_from_MAC(sta_mac, ipv6)) {
@@ -166,7 +168,7 @@ IPAddress NodeStruct::IPv6_link_local(bool stripZone) const
 
 IPAddress NodeStruct::IPv6_global() const
 {
-  if (hasIPv6_mac_based_link_global) {
+  if (Settings.EnableIPv6() && hasIPv6_mac_based_link_global) {
     // Base IPv6 on MAC address
     IPAddress ipv6;
     if (IPv6_global_from_MAC(sta_mac, ipv6)) {
@@ -177,6 +179,7 @@ IPAddress NodeStruct::IPv6_global() const
 }
 
 bool NodeStruct::hasIPv6() const {
+  if (!Settings.EnableIPv6()) return false;
   return hasIPv6_mac_based_link_local ||
          hasIPv6_mac_based_link_global;
 }
