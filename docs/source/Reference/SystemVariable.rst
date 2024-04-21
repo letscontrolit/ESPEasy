@@ -370,6 +370,22 @@ The conversion always outputs a string, but not all of these can be converted ba
      - Convert a (known) unit number to its IP Address. (Added: 2020/11/08)
 
        f_opt: for invalid IP: 0 = ``(IP unset)`` 1 = (empty string)  2 = ``0``
+   * - Unit to Name: ``%c_uname%(%unit%)``
+     - Unit to Name: ``ESP32DualR3``
+     - Convert to the name of the remote unit. (Added: 2024/04/21)
+   * - Unit to Age: ``%c_uage%(%unit%)``
+     - Unit to Age: ``11``
+     - Convert to the age (last received update via P2P) of the remote unit in seconds. (Added: 2024/04/21)
+
+       If the unit is not in the list of known nodes, then ``-1`` is returned.
+   * - Unit to Build: ``%c_ubuild%(%unit%)``
+     - Unit to Build: ``20812``
+     - Convert to the buildnr of the remote unit. (Added: 2024/04/21)
+   * - Unit to Build-string: ``%c_ubuildstr%(%unit%)``
+     - Unit to Build-string: ``20240421``
+     - Convert to the buildnr converted to date-format of the remote unit. (Added: 2024/04/21)
+
+       The date-format for buildnrs is available since build 20200, introduced on 2022-08-18. For older builds, the actual buildnumber is returned, f.e. 20117.
 
 
 Task Formulas
