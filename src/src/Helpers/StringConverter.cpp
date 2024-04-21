@@ -1468,6 +1468,9 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
   SMART_CONV(F("%c_ubuild%"), String(getBuildnrForUnit(data.arg1)))
   SMART_CONV(F("%c_ubuildstr%"), formatSystemBuildNr(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_uload%"),  toString(getLoadForUnit(data.arg1)))
+  SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
+  SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
   #endif // if FEATURE_ESPEASY_P2P
   #undef SMART_CONV
 

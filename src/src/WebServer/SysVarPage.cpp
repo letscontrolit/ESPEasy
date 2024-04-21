@@ -383,6 +383,9 @@ void handle_sysvars() {
       F("Unit to Age: %c_uage%(%unit%)"),
       F("Unit to Build: %c_ubuild%(%unit%)"),
       F("Unit to Build-string: %c_ubuildstr%(%unit%)"),
+      F("Unit to Load: %c_uload%(%unit%)"),
+      F("Unit to ESP-type: %c_utype%(%unit%)"),
+      F("Unit to ESP-type-string: %c_utypestr%(%unit%)"),
       #endif // if FEATURE_ESPEASY_P2P
     };
 

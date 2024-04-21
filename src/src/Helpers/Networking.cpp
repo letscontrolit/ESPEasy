@@ -460,6 +460,33 @@ uint16_t getBuildnrForUnit(uint8_t unit) {
   return it->second.build;
 }
 
+float getLoadForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return 0.0f;
+  }
+  return it->second.getLoad();
+}
+
+uint8_t getTypeForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return 0;
+  }
+  return it->second.nodeType;
+}
+
+const __FlashStringHelper* getTypeStringForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return F("");
+  }
+  return it->second.getNodeTypeDisplayString();
+}
+
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
 \*********************************************************************************************/
