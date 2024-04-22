@@ -2005,6 +2005,12 @@ To create/register a plugin, you have to :
   // To be defined
 #endif
 
+// Disable few plugin(s) to make the build fit :/
+#ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
+  #ifdef USES_P039
+    #undef USES_P039  // Environment - Thermocouple
+  #endif
+#endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
 // EXPERIMENTAL (playground) #######################
 #ifdef PLUGIN_SET_EXPERIMENTAL
