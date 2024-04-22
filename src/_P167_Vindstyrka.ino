@@ -335,7 +335,14 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
       if (nullptr != Plugin_167_SEN) {
         for (uint8_t v = 0; v < P167_VALUE_COUNT && !success; ++v) {
           if (string.equalsIgnoreCase(P167_getQueryValueString(v))) {
-            string  = Plugin_167_SEN->getRequestedValue(v);
+            # ifndef BUILD_NO_DEBUG
+
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, strformat(F("SEN5x: Get Config Value: %s: %.2f"),
+                                                string.c_str(), Plugin_167_SEN->getRequestedValue(v)));
+            }
+            # endif // ifndef BUILD_NO_DEBUG
+            string  = toString(Plugin_167_SEN->getRequestedValue(v));
             success = true;
             break;
           }

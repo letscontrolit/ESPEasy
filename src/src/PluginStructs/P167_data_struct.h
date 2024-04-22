@@ -47,7 +47,7 @@
 # define P167_QUERY4_DFLT           2                     // tVOC (index)
 
 
-# define P167_NR_OUTPUT_OPTIONS     10
+# define P167_NR_OUTPUT_OPTIONS     9
 # define P167_QUERY1_CONFIG_POS     3
 # define P167_SENSOR_TYPE_INDEX     (P167_QUERY1_CONFIG_POS + VARS_PER_TASK)
 # define P167_NR_OUTPUT_VALUES      getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P167_SENSOR_TYPE_INDEX)))
@@ -104,12 +104,6 @@ const __FlashStringHelper* toString(P167_model model);
 const __FlashStringHelper* P167_getQueryString(uint8_t query);
 const __FlashStringHelper* P167_getQueryValueString(uint8_t query);
 
-// unsigned int               P167_getRegister(uint8_t    query,
-//                                             P167_model model);
-// float                      P167_readVal(uint8_t    query,
-//                                         uint8_t    node,
-//                                         P167_model model);
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // ESPeasy standard PluginTaskData structure for this plugin
@@ -118,7 +112,6 @@ public:
 
   P167_data_struct();
 
-  // virtual ~P167_data_struct();
   ~P167_data_struct();
 
   void        checkPin_interrupt(void);

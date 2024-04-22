@@ -427,7 +427,6 @@ bool P167_data_struct::update() {
         if (!readDeviceStatus()) {
           _errCount++;
 
-          // _state = P167_state::Uninitialized; // Lost connection
           _state = P167_state::cmdSTARTmeas;
         } else {
           _last_action_started = millis();
