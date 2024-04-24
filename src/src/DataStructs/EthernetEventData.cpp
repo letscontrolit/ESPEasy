@@ -3,6 +3,7 @@
 #if FEATURE_ETHERNET
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
 
 #include <ETH.h>
@@ -176,23 +177,21 @@ void EthernetEventData_t::markDisconnect() {
   }
   lastConnectMoment.clear();
   processedDisconnect  = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  WiFi.STA.setDefault();
+#endif
 }
 
 void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  ETH.setDefault();
+#endif
+
 #if FEATURE_USE_IPV6
-  ETH.enableIPv6(true);
-  // workaround for the race condition in LWIP, see https://github.com/espressif/arduino-esp32/pull/9016#discussion_r1451774885
-  {
-    uint32_t i = 5;   // try 5 times only
-    while (esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH)) != ESP_OK) {
-      delay(1);
-      if (i-- == 0) {
-//        addLog(LOG_LEVEL_ERROR, ">>>> HELP");
-        break;
-      }
-    }
+  if (Settings.EnableIPv6()) {
+    ETH.enableIPv6(true);
   }
 #endif
 }
