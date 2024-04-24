@@ -134,6 +134,11 @@ void handle_advanced() {
     Settings.WaitWiFiConnect(isFormItemChecked(LabelType::WAIT_WIFI_CONNECT));
     Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
     Settings.SDK_WiFi_autoreconnect(isFormItemChecked(LabelType::SDK_WIFI_AUTORECONNECT));
+#if FEATURE_USE_IPV6
+    Settings.EnableIPv6(isFormItemChecked(LabelType::ENABLE_IPV6));
+    addFormNote(F("Toggling IPv6 requires reboot"));
+#endif
+
 
 
 #ifndef BUILD_NO_RAM_TRACKER
@@ -393,6 +398,9 @@ void handle_advanced() {
   addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,      Settings.WaitWiFiConnect());
   addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT, Settings.SDK_WiFi_autoreconnect());
   addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
+#if FEATURE_USE_IPV6
+  addFormCheckBox(LabelType::ENABLE_IPV6,      Settings.EnableIPv6());
+#endif
 
 
 

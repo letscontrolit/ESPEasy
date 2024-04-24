@@ -210,6 +210,25 @@
 
    "
    "
+   ``WiFi#Disconnected``
+   Triggered when the ESP has disconnected from Wi-Fi.
+   ","
+
+   .. code-block:: none
+
+	  On WiFi#Disconnected Do
+	    LongPulse,2,1,1,1,-1 // 0.5 Hz flashing of WiFi led
+	  Endon
+    
+   .. code-block:: none
+
+    On WiFi#Connected Do
+      GPIO,2,1 // Turn off WiFi led
+      SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
+    Endon
+
+   "
+   "
    ``WiFi#ChangedAccesspoint``
    Triggered when the ESP has changed to access point, will also trigger first time the unit connects to the Wi-Fi.
    ","
