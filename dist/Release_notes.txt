@@ -1,4 +1,33 @@
 -------------------------------------------------
+Changes in release mega-20240414 (since mega-20240401)
+-------------------------------------------------
+
+Release date: Sun Apr 14 03:08:46 PM CEST 2024
+
+TD-er (16):
+      [HWCDC] Revert to older ESP-IDF/Arduino build
+      [Time] Fix updating %sunrise% and %sunset% when no NTP available
+      [HWCDC] Fix bootloop on ESP32-C3/C6
+      [HWCDC] Cleanup unused test code
+      [ESP-IDF5.1] Move to newly network refactored code
+      [ESP-IDF5.x] Fix build issue
+      [ESP-IDF5.x] Fix building ESP32-solo1 builds
+      [Ethernet[ Fix crashes when using Ethernet + IPv6 on LittleFS builds
+      [Ethernet] Fix getting DNS from DHCP switch from WiFi to Ethernet
+      [ESP-IDF5.x] Fix LittleFS builds without Ethernet
+      [IMPROV] Fix provisioning WiFi via web flasher
+      [ESP-IDF5.1] Update to latest 2024.04.11 platform build
+      [SPI ETH] Fix SPI selection to actual SPI bus for Ethernet
+      [SPI Eth] Fix build on ESP32-C3
+      [HWCDC] Tweak HWCDC to be more stable
+      [Build] Revert unintended change of default PIO env.
+
+Ton Huisman (2):
+      [Dist] Update Espressif Flash Download tool 3.9.6
+      [JSON] Add extra data in `/json` output
+
+
+-------------------------------------------------
 Changes in release mega-20240401 (since mega-20240331)
 -------------------------------------------------
 
