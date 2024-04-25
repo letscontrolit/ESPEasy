@@ -110,6 +110,8 @@ var commonPlugins = [
   "ld2410", "ld2410,factoryreset", "ld2410,logall",
   //P166
   "gp8403", "gp8403,volt,", "gp8403,mvolt,", "gp8403,range,", "gp8403,preset,", "gp8403,init,",
+  //P167
+  "sen5x", "sen5x,reset",
 ];
 var pluginDispKind = [
   //P095
