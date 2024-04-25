@@ -13,7 +13,7 @@
 class Port_ESPEasySerial_USB_HWCDC_t : public Port_ESPEasySerial_base {
 public:
 
-  Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config);
+  explicit Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config);
 
   virtual ~Port_ESPEasySerial_USB_HWCDC_t();
 
@@ -44,11 +44,7 @@ public:
 
 private:
 
-# if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
-  HWCDC *_hwcdc_serial = &Serial;
-# else // if ARDUINO_USB_CDC_ON_BOOT
-  HWCDC *_hwcdc_serial = &USBSerial;
-# endif // if ARDUINO_USB_CDC_ON_BOOT
+  HWCDC *_hwcdc_serial= nullptr;
 };
 
 
