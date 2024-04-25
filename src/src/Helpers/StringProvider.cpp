@@ -201,6 +201,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:            return F("Enable IPv6");
+#endif
+
 
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
@@ -527,6 +531,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
     case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.SDK_WiFi_autoreconnect());
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:            return jsonBool(Settings.EnableIPv6());
+#endif
+
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:
