@@ -114,6 +114,10 @@
 
 # include "../Helpers/Hardware_ADC_cali.h"
 
+#if FEATURE_ETHERNET
+#include <ETH.h>
+#endif
+
 #endif // ifdef ESP32
 
 
