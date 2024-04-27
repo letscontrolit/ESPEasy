@@ -23,7 +23,7 @@ bool P135_data_struct::init() {
     if (scd4x->begin(false, _autoCalibrate)) {
       const uint16_t orgAltitude = scd4x->getSensorAltitude();
 
-      if ((_altitude != 0) && (_altitude !-orgAltitude)) {
+      if ((_altitude != 0) && (_altitude != orgAltitude)) {
         scd4x->setSensorAltitude(_altitude);
       }
       const float orgTempOffset = scd4x->getTemperatureOffset();
