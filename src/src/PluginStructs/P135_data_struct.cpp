@@ -13,8 +13,8 @@ P135_data_struct::P135_data_struct(taskIndex_t taskIndex,
                                    bool        lowPowerMeasurement,
                                    bool        useSingleShot)
   : _sensorType(sensorType), _altitude(altitude), _tempOffset(tempOffset), _autoCalibrate(autoCalibrate),
-  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false) 
-  {}
+  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false)
+{}
 
 bool P135_data_struct::init() {
   scd4x = new (std::nothrow) SCD4x(static_cast<scd4x_sensor_type_e>(_sensorType)); // Don't start measurement, we want to set arguments
@@ -130,7 +130,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
 
     if (errorCount > P135_MAX_ERRORS) {
       initialized = false;
-      scd4x->stopPeriodicMeasurement(); // Stop measuring, no need to wait for completion
+      scd4x->stopPeriodicMeasurement();         // Stop measuring, no need to wait for completion
       UserVar.setFloat(event->TaskIndex, 0, 0); // Indicate an error state
       addLog(LOG_LEVEL_ERROR, F("SCD4x: Max. read errors reached, plugin stopped."));
     }
@@ -319,23 +319,30 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 *****************************************************/
 bool P135_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (nullptr == scd4x) { return false; } // Safeguard
   bool success = false;
 
   const String var = parseString(string, 1);
 
-  if (equals(var, F("getaltitude"))) {               // [<taskname>#getaltitude] = get sensor altitude
-    string  = scd4x->getSensorAltitude();
+  if (equals(var, F("getaltitude")) &&
+      scd4x->stopPeriodicMeasurement()) { // [<taskname>#getaltitude] = get sensor altitude
+    string = scd4x->getSensorAltitude();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("gettempoffset"))) {      // [<taskname>#gettempoffset] = get sensor temperature offset
-    string  = toString(scd4x->getTemperatureOffset(), 2);
+  } else if (equals(var, F("gettempoffset")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#gettempoffset] = get sensor temperature offset
+    string = toString(scd4x->getTemperatureOffset(), 2);
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("getdataready"))) {       // [<taskname>#getdataready] = is data ready? (1/0)
+  } else if (equals(var, F("getdataready"))) { // [<taskname>#getdataready] = is data ready? (1/0)
     string  = scd4x->getDataReadyStatus();
     success = true;
-  } else if (equals(var, F("getselfcalibration"))) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
-    string  = scd4x->getAutomaticSelfCalibrationEnabled();
+  } else if (equals(var, F("getselfcalibration")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
+    string = scd4x->getAutomaticSelfCalibrationEnabled();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("serialnumber"))) {       // [<taskname>#serialnumber] = the devices electronic serial number
+  } else if (equals(var, F("serialnumber"))) { // [<taskname>#serialnumber] = the devices electronic serial number
     string  = String(serialNumber);
     success = true;
   }
