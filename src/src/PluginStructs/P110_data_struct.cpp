@@ -58,22 +58,20 @@ bool P110_data_struct::plugin_fifty_per_second() {
   return true;
 }
 
-long P110_data_struct::readDistance() {
-  long dist = -1; // Invalid
+uint16_t P110_data_struct::getDistance() {
+  return _distance;
+}
+
+uint16_t P110_data_struct::readDistance() {
+  uint16_t dist = 0xFFFF; // Invalid
 
   if (initPhase != P110_initPhases::Ready) { return dist; }
 
-  # if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
-  String log;
-  # endif // if defined(P110_INFO_LOG) || defined(P110_DEBUG_LOG)
   # ifdef P110_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    log  = F("VL53L0X  : idx: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(" init: ");
-    log += String(initState, BIN);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L0X: idx: 0x%02x init: %d"),
+                                          i2cAddress, initState));
   }
   # endif // P110_DEBUG_LOG
 
@@ -86,25 +84,20 @@ long P110_data_struct::readDistance() {
       addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
       # endif // P110_DEBUG_LOG
       success = false;
-    } else if (dist >= 8190) {
+    } else if (dist >= 8190u) {
       # ifdef P110_DEBUG_LOG
-      addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT"));
+      addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
       # endif // P110_DEBUG_LOG
       success = false;
+    } else {
+      _distance = dist;
     }
 
     # ifdef P110_INFO_LOG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log  = F("VL53L0X: Address: 0x");
-      log += String(i2cAddress, HEX);
-      log += F(" / Timing: ");
-      log += timing;
-      log += F(" / Long Range: ");
-      log += String(range, BIN);
-      log += F(" / Distance: ");
-      log += dist;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Addr: 0x%02x / Timing: %d / Long Range: %d / success: %d / Distance: %d"),
+                                           i2cAddress, timing, range, success, dist));
     }
     # endif // P110_INFO_LOG
   }
