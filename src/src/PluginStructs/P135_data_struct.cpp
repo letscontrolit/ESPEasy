@@ -23,13 +23,12 @@ bool P135_data_struct::init() {
     if (scd4x->begin(false, _autoCalibrate)) {
       const uint16_t orgAltitude = scd4x->getSensorAltitude();
 
-      if (_altitude != 0) {
+      if ((_altitude != 0) && (_altitude !-orgAltitude)) {
         scd4x->setSensorAltitude(_altitude);
       }
       const float orgTempOffset = scd4x->getTemperatureOffset();
 
-      // FIXME TD-er: Is this correct? Checking _tempOffset and not checking orgTempOffset? (same for altitude)
-      if (!essentiallyZero(_tempOffset)) {
+      if (!essentiallyZero(_tempOffset) && !essentiallyEqual(_tempOffset, orgTempOffset)) {
         scd4x->setTemperatureOffset(_tempOffset);
       }
       const bool hasSerial = scd4x->getSerialNumber(serialNumber); // Not yet reading, get serial
