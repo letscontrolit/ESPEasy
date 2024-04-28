@@ -7,6 +7,7 @@
 #include "../DataStructs/SecurityStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/StringConverter.h"
 
 const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {
@@ -63,7 +64,7 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       if (!getSettingsParameters(Enum::TaskSettings_Type, index, max_index, offset, max_size, struct_size))
         return false;
       offset  += (DAT_TASKS_CUSTOM_OFFSET);
-      max_size = DAT_TASKS_CUSTOM_SIZE;
+      max_size = (DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE);
 
       // struct_size may differ.
       struct_size = 0;
@@ -235,7 +236,12 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
   return SettingsFileEnum::FILE_UNKNOWN_type;
 }
 
-String SettingsType::getSettingsFileName(Enum settingsType) {
+String SettingsType::getSettingsFileName(Enum settingsType, int index) {
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  if ((Enum::CustomTaskSettings_Type == settingsType) && validTaskIndex(index)) {
+    return strformat(F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK), index + 1); // Add 0/1 offset to match displayed task ID
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
   return getSettingsFileName(getSettingsFile(settingsType));
 }
 

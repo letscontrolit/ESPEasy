@@ -278,7 +278,7 @@ uint8_t P014_data_struct::checkCRC(uint16_t data, uint8_t check)
 
   // Operate on only 16 positions of max 24.
   // The remaining 8 are our remainder and should be zero when we're done.
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; ++i) {
     // Check if there is a one in the left position
     if (remainder & (uint32_t)1 << (23 - i)) {
       remainder ^= divisor;

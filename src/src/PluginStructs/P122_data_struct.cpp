@@ -54,11 +54,10 @@ bool P122_data_struct::setupDevice(uint8_t i2caddr, uint8_t resolution)
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log = F("SHT2x : Setup Device with address= ");
-    log += formatToHex(_i2caddr);
-    log += F(" resolution= ");
-    log += String(resolution);
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO,
+           strformat(F("SHT2x : Setup Device with address= %x resolution= %d"),
+                     _i2caddr,
+                     resolution));
   }
 # endif // ifdef PLUGIN_122_DEBUG
   return true;
@@ -89,9 +88,7 @@ bool P122_data_struct::update()
       else if (I2C_wakeup(_i2caddr) != 0) // Try to access the I2C device
       {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("SHT2x : Not found at I2C address: ");
-          log += String(_i2caddr, HEX);
-          addLog(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, strformat(F("SHT2x : Not found at I2C address: %x"), _i2caddr));
         }
         _errCount++;
       }
@@ -209,11 +206,7 @@ bool P122_data_struct::update()
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
-      String log = F("SHT2x : ***state transition ");
-      log += String((int)oldState);
-      log += F("-->");
-      log += String((int)_state);
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(F("SHT2x : ***state transition %d-->%d"), static_cast<int>(oldState), static_cast<int>(_state)));
     }
   }
 # endif // ifdef PLUGIN_122_DEBUG

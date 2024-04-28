@@ -92,7 +92,9 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
       if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
         addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P153_I2C_ADDRESS);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("Chip type determines address: SHT-4x-<b>A</b>xxx = 0x44, SHT-4x-<b>B</b>xxx = 0x45, SHT-4x-<b>C</b>xxx = 0x46"));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         success = intArrayContains(3, i2cAddressValues, event->Par1);
       }

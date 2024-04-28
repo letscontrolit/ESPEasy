@@ -12,7 +12,7 @@
 # include "src/PluginStructs/P081_data_struct.h"
 
 # define PLUGIN_081
-# define PLUGIN_ID_081      81                        // plugin id
+# define PLUGIN_ID_081      81              // plugin id
 # define PLUGIN_NAME_081   "Generic - CRON" // "Plugin Name" is what will be displayed in the selection list
 # define PLUGIN_VALUENAME1_081 "LastExecution"
 # define PLUGIN_VALUENAME2_081 "NextExecution"
@@ -28,10 +28,10 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics, edit appropriately
 
-      Device[++deviceCount].Number           = PLUGIN_ID_081;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;              // how the device is connected
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE; // type of value the plugin will return, used only for
-                                                                               // Domoticz
+      Device[++deviceCount].Number = PLUGIN_ID_081;
+      Device[deviceCount].Type     = DEVICE_TYPE_DUMMY;              // how the device is connected
+      Device[deviceCount].VType    = Sensor_VType::SENSOR_TYPE_NONE; // type of value the plugin will return, used only for
+                                                                     // Domoticz
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -66,7 +66,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormSubHeader(F("Schedule"));
       addFormTextBox(F("CRON Expression")
-                     , F("p081_cron_exp")
+                     , F("cron_exp")
                      , P081_getCronExpr(event->TaskIndex)
                      , 39);
 
@@ -80,7 +80,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String expression = webArg(F("p081_cron_exp"));
+      const String expression = webArg(F("cron_exp"));
       String log;
       {
         char expression_c[PLUGIN_081_EXPRESSION_SIZE] = {};
@@ -88,9 +88,9 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
         log = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&expression_c), PLUGIN_081_EXPRESSION_SIZE);
       }
 
-      if (log.length() > 0)
+      if (!log.isEmpty())
       {
-        addLog(LOG_LEVEL_ERROR, String(PSTR(PLUGIN_NAME_081)) + F(": Saving ") + log);
+        addLog(LOG_LEVEL_ERROR, concat(F(PLUGIN_NAME_081 ": Saving "), log));
       }
 
       clearPluginTaskData(event->TaskIndex);
@@ -109,7 +109,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
           string = P081_formatExecTime(event->TaskIndex, NEXTEXECUTION);
           break;
       }
-      success = string.length() > 0;
+      success = !string.isEmpty();
       break;
     }
 
@@ -162,7 +162,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
 
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + formatDateTimeString(*gmtime(&next_exec_time)));
+            addLog(LOG_LEVEL_DEBUG, concat(F("Next execution:"), formatDateTimeString(*gmtime(&next_exec_time))));
             # endif // ifndef BUILD_NO_DEBUG
 
             if (function != PLUGIN_TIME_CHANGE) {
@@ -186,6 +186,5 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
 
   return success;
 }   // function
-
 
 #endif // USES_P081

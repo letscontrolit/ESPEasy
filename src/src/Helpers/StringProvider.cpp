@@ -146,6 +146,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #if FEATURE_RULES_EASY_COLOR_CODE
     case LabelType::DISABLE_RULES_AUTOCOMPLETE:  return F("Disable Rules auto-completion");
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    case LabelType::DISABLE_SAVE_CONFIG_AS_TAR:  return F("Disable Save Config as .tar");
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -439,6 +442,9 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_RULES_EASY_COLOR_CODE
     case LabelType::DISABLE_RULES_AUTOCOMPLETE: return jsonBool(Settings.DisableRulesCodeCompletion());
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    case LabelType::DISABLE_SAVE_CONFIG_AS_TAR: return jsonBool(Settings.DisableSaveConfigAsTar());
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
