@@ -35,7 +35,7 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
         if (!((_sensorVersion == 0x22) || (_sensorVersion == 0x23) || (_sensorVersion == 0x24) || (_sensorVersion == 0x25) ||
               (_sensorVersion == 0x26))) {
           // invalid sensor
-          addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Version, no Sensor?"));
+          addLog(LOG_LEVEL_ERROR, F("SoilMoisture: Bad Version, no Sensor?"));
           resetSensor();
         }
       }
@@ -43,8 +43,7 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
       // check if we want to change the sensor address
       if (P047_CHANGE_ADDR && (P047_I2C_ADDR != P047_NEW_ADDR) && (0 != P047_NEW_ADDR)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLog(LOG_LEVEL_INFO, concat(F("SoilMoisture: Change Address: "), formatToHex(P047_I2C_ADDR, HEX)) +
-                 concat(F(" -> "), formatToHex(P047_NEW_ADDR)));
+          addLog(LOG_LEVEL_INFO, strformat(F("SoilMoisture: Change Address: 0x%02x -> 0x%02x"), P047_I2C_ADDR, P047_NEW_ADDR));
         }
 
         if (changeAddress(P047_NEW_ADDR)) {
@@ -84,14 +83,14 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
         UserVar.setFloat(event->TaskIndex, 2, light);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = concat(F("SoilMoisture: Address: "), formatToHex(P047_I2C_ADDR));
+          String log = strformat(F("SoilMoisture: Address: 0x%02x"), P047_I2C_ADDR);
 
           if (P047_CHECK_VERSION) {
-            log += concat(F(" Version: "), formatToHex(_sensorVersion));
+            log += strformat(F(" Version: 0x%02x"), _sensorVersion);
           }
           addLogMove(LOG_LEVEL_INFO, log);
           addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Temperature: "), formatUserVarNoCheck(event, 0)));
-          addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Moisture: "), static_cast<int>(moisture)));
+          addLogMove(LOG_LEVEL_INFO, strformat(F("SoilMoisture: Moisture: %.0f"), moisture));
 
           if (P047_MODEL_CATNIP == _model) {
             addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Light: "), formatUserVarNoCheck(event, 2)));

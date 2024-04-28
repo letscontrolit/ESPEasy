@@ -141,17 +141,8 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 3, P115_data->changeRate);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(64);
-          log  = F("MAX1704x : Voltage: ");
-          log += P115_data->voltage;
-          log += F(" SoC: ");
-          log += P115_data->soc;
-          log += F(" Alert: ");
-          log += P115_data->alert;
-          log += F(" Rate: ");
-          log += P115_data->changeRate;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("MAX1704x : Voltage: %.2f SoC: %.2f Alert: %d Rate: %.2f"),
+                                               P115_data->voltage, P115_data->soc, P115_data->alert, P115_data->changeRate));
         }
         success = true;
       }
@@ -165,7 +156,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((equals(command, F("max1704xclearalert"))))
+        if (equals(command, F("max1704xclearalert")))
         {
           P115_data->clearAlert();
           success = true;
@@ -190,9 +181,9 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  String eventvalues = formatUserVarNoCheck(event, 0); // Voltage
-                  eventvalues += ',';
-                  eventvalues += formatUserVarNoCheck(event, 1); // State Of Charge
+                  String eventvalues = strformat(F("%s,%s"),
+                                                 formatUserVarNoCheck(event, 0).c_str(),  // Voltage
+                                                 formatUserVarNoCheck(event, 1).c_str()); // State Of Charge
                   eventQueue.add(event->TaskIndex, F("AlertTriggered"), eventvalues);
                 }
               }

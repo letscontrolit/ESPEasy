@@ -1,0 +1,53 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``extgpio,<pin>,<0|1>``
+
+        ``<pin>`` : The IO pin on the PME board, range 0..13 for Digital output.
+
+        ``<0|1>`` : Select 0 for Off (low), and 1 for On (high) level output
+
+        ","
+        Switch the pin to either low or high level output.
+        "
+        "
+        ``extpwm,<pin>,<level>``
+
+        ``<pin>`` : The IO pin on the PME board, range 0..7 for Analog output.
+
+        ``<level>`` : The PWM level, range 0..255
+
+        ","
+        Set the Analog pin (0..7) to the PWM level, where 0 = 0% and 255 = 100% of the VCC voltage the PME is running at.
+        "
+        "
+        ``extpulse,<pin>,<0|1>,<duration>``
+
+        ``<pin>`` : The IO pin on the PME board, range 0..13 for Digital output.
+
+        ``<0|1>`` : Select 0 for Off (low), and 1 for On (high) level output
+
+        ``<duration>`` : The time in milliseconds the IO pin state should be set, after which it is restored in the previous state.
+        ","
+        Switch the pin to either low or high level output, and after the duration has passed, return to the previous state.
+        "
+        "
+        ``extlongpulse,<pin>,<0|1>,<duration>``
+
+        ``<pin>`` : The IO pin on the PME board, range 0..13 for Digital output.
+
+        ``<0|1>`` : Select 0 for Off (low), and 1 for On (high) level output
+
+        ``<duration>`` : The time in **seconds** the IO pin state should be set, after which it is restored in the previous state.
+        ","
+        Switch the pin to either low or high level output, and after the duration (seconds!) has passed, return to the previous state.
+        "
+        "
+        ``status,ext,<pin>``
+
+        ``<pin>`` : The IO pin on the PME board, range 0..13 for Digital output, range 20..27 for the Analog pins A0..A7.
+        ","
+        Report the current state/value for the pin selected.
+        "
