@@ -13,8 +13,8 @@ P135_data_struct::P135_data_struct(taskIndex_t taskIndex,
                                    bool        lowPowerMeasurement,
                                    bool        useSingleShot)
   : _sensorType(sensorType), _altitude(altitude), _tempOffset(tempOffset), _autoCalibrate(autoCalibrate),
-  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false) 
-  {}
+  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false)
+{}
 
 bool P135_data_struct::init() {
   scd4x = new (std::nothrow) SCD4x(static_cast<scd4x_sensor_type_e>(_sensorType)); // Don't start measurement, we want to set arguments
@@ -47,11 +47,7 @@ bool P135_data_struct::init() {
           } else {
             log += F("(unknown)");
           }
-          log += F(", org.alt.comp.: ");
-          log += orgAltitude;
-          log += F(" m, org.temp.offs.: ");
-          log += toString(orgTempOffset, 2);
-          log += 'C';
+          log += strformat(F(", org.alt.comp.: %d m, org.temp.offs.: %.2f C"), orgAltitude, orgTempOffset);
         } else {
           log += F("error");
         }
@@ -130,17 +126,14 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
 
     if (errorCount > P135_MAX_ERRORS) {
       initialized = false;
-      scd4x->stopPeriodicMeasurement(); // Stop measuring, no need to wait for completion
+      scd4x->stopPeriodicMeasurement();         // Stop measuring, no need to wait for completion
       UserVar.setFloat(event->TaskIndex, 0, 0); // Indicate an error state
       addLog(LOG_LEVEL_ERROR, F("SCD4x: Max. read errors reached, plugin stopped."));
     }
 
     if (timerDelay != 0) { // Schedule next PLUGIN_READ
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SCD4x: READ Scheduler started: +");
-        log += timerDelay;
-        log += F(" ms.");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("SCD4x: READ Scheduler started: +%d ms."), timerDelay));
       }
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + timerDelay);
     }
@@ -194,10 +187,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
           if (success) {
             initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            log += F("success. New setting: ");
-            log += frcValue;
-            log += F(", correction: ");
-            log += toString(frcCorrection, 2);
+            log += strformat(F("success. New setting: %d, correction: %.2f"), frcValue, frcCorrection);
           } else {
             lvl  = LOG_LEVEL_ERROR;
             log += F("failed!");
@@ -244,15 +234,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
         if (serialNumber[10] != 0x0) {
           if (doSelftest) {
-            factoryResetCode += char(serialNumber[3]);
-            factoryResetCode += char(serialNumber[1]);
-            factoryResetCode += char(serialNumber[10]);
-            factoryResetCode += char(serialNumber[6]);
+            factoryResetCode += strformat(F("%c%c%c%c"),
+                                          char(serialNumber[3]), char(serialNumber[1]), char(serialNumber[10]), char(serialNumber[6]));
           } else {
-            factoryResetCode += char(serialNumber[1]);
-            factoryResetCode += char(serialNumber[3]);
-            factoryResetCode += char(serialNumber[7]);
-            factoryResetCode += char(serialNumber[10]);
+            factoryResetCode += strformat(F("%c%c%c%c"),
+                                          char(serialNumber[1]), char(serialNumber[3]), char(serialNumber[7]), char(serialNumber[10]));
           }
         } else {
           factoryResetCode += F("2022");
@@ -271,13 +257,12 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
           } else {
             log += F("Factory reset");
           }
-          log += F(" code: ");
-          log += factoryResetCode;
+          log += concat(F(" code: "), factoryResetCode);
           addLog(LOG_LEVEL_ERROR, log);
         }
         success = true;
       } else {
-        String code = parseStringKeepCase(string, 3); // Case sensitive!
+        const String code = parseStringKeepCase(string, 3); // Case sensitive!
 
         if (code.equals(factoryResetCode)) {
           if (doSelftest) {

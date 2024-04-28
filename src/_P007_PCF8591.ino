@@ -179,7 +179,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       uint8_t port          = CONFIG_PORT - (unit * 4);
       const uint8_t address = 0x48 + unit;
 
-      uint8_t var = 0;
+      uint8_t var              = 0;
       const uint8_t valueCount = P007_NR_OUTPUT_VALUES;
 
       for (; var < valueCount; ++port, ++var) {
@@ -196,15 +196,15 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
           if (Wire.available())
           {
-            Wire.read();                                      // Read older value first (stored in chip)
-            UserVar.setFloat(event->TaskIndex, var,  Wire.read()); // now read actual value and store into Value var
+            Wire.read();                                          // Read older value first (stored in chip)
+            UserVar.setFloat(event->TaskIndex, var, Wire.read()); // now read actual value and store into Value var
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLog(LOG_LEVEL_INFO, strformat(
-                F("PCF  : Analog port: A%d value %d: %s"),
-                port - 1,
-                var + 1,
-                formatUserVarNoCheck(event->TaskIndex, var).c_str()));
+                       F("PCF  : Analog port: A%d value %d: %s"),
+                       port - 1,
+                       var + 1,
+                       formatUserVarNoCheck(event->TaskIndex, var).c_str()));
             }
             success = true;
           }
@@ -226,8 +226,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       if ((P007_OUTPUT_MODE == P007_OUTPUT_ENABLED) &&
           equals(command, F("analogout")) &&
           (event->Par1 >= 0) && (event->Par1 <= 255)) {
-        uint8_t unit    = (CONFIG_PORT - 1) / 4;
-        uint8_t address = 0x48 + unit;
+        const uint8_t unit    = (CONFIG_PORT - 1) / 4;
+        const uint8_t address = 0x48 + unit;
 
         // Setup all required bits to the config register
         uint8_t configRegister = 0;

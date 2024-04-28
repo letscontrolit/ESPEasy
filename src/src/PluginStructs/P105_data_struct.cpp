@@ -111,18 +111,11 @@ bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
   const unsigned long current_time = millis();
 
   if (!initialized()) {
-    String log;
-    log.reserve(30);
-
     if (!device.initialize()) {
-      log += getDeviceName();
-      log += F(" : unable to initialize");
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("%s : unable to initialize"), getDeviceName().c_str()));
       return false;
     }
-    log  = getDeviceName();
-    log += F(" : initialized");
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("%s : initialized"), getDeviceName().c_str()));
 
     trigger_time = current_time;
     state        = AHTx_state::AHTx_Trigger_measurement;
@@ -158,30 +151,22 @@ bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
     last_measurement = current_time;
     state            = AHTx_state::AHTx_New_values;
 
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
-      String log;
-      log.reserve(50);                        // Prevent re-allocation
-      log += getDeviceName();
-      log += F(" : humidity ");
-      log += device.getHumidity();
-      log += F("% temperature ");
-      log += device.getTemperature();
-      log += 'C';
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("%s : humidity %.2f%% temperature %.2fC"),
+                                            getDeviceName().c_str(),
+                                            device.getHumidity(),
+                                            device.getTemperature()));
     }
-    #endif
+    # endif // ifndef BUILD_NO_DEBUG
 
     return true;
   }
 
   if (timePassedSince(trigger_time) > 1000) {
     // should not happen
-    String log;
-    log.reserve(15); // Prevent re-allocation
-    log += getDeviceName();
-    log += F(" : reset");
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, strformat(F("%s : reset"), getDeviceName().c_str()));
     device.softReset();
 
     state = AHTx_state::AHTx_Uninitialized;

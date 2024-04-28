@@ -44,7 +44,7 @@ P159_data_struct::P159_data_struct(ESPEasySerialPort portType,
 
     if (nullptr != radar) {
       if (radar->begin(*easySerial, false)) {
-        bool rst = radar->requestRestart();
+        const bool rst = radar->requestRestart();
 
         // start initiated, now wait, next step: request configuration
         milestone = millis();
@@ -60,23 +60,19 @@ P159_data_struct::P159_data_struct(ESPEasySerialPort portType,
 } // constructor
 
 void P159_data_struct::disconnectSerial() {
-  if (nullptr != easySerial) {
-    delete easySerial;
-    easySerial = nullptr;
-  }
+  delete easySerial;
+  easySerial = nullptr;
 
-  if (nullptr != radar) {
-    delete radar;
-    radar = nullptr;
-  }
+  delete radar;
+  radar = nullptr;
 } // disconnectSerial()
 
 bool P159_data_struct::processSensor(struct EventStruct *event) {
   bool new_data = false;
 
   if (isValid()) {
-    uint32_t iStart     = millis(); // FIXME Remove log
-    P159_state_e sState = state;
+    const uint32_t iStart = millis();
+    P159_state_e   sState = state;
 
     switch (state) {
       case P159_state_e::Initializing:
@@ -144,7 +140,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
           for (int8_t i = 0; i < valueCount; ++i) {
             const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
             bool isChanged             = false;
-            UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
+            UserVar.setFloat(event->TaskIndex, i, getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
             result |= isChanged;
           }
@@ -181,7 +177,7 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
     for (int8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
       bool isChanged             = false;
-      UserVar.setFloat(event->TaskIndex, i,  getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
+      UserVar.setFloat(event->TaskIndex, i, getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
       result |= isChanged;
     }

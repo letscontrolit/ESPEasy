@@ -198,7 +198,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         String strings[P131_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P131_Nlines, 0);
 
-        uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+        uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
 
         addFormSubHeader(F("Lines"));
         addRowLabel(F("Lines"));
