@@ -185,10 +185,10 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      String command = parseString(string, 1);
-      String param   = parseString(string, 2);
-      int32_t    value;
-      bool   valueValid = validIntFromString(param, value);
+      const String command = parseString(string, 1);
+      const String param   = parseString(string, 2);
+      int32_t value;
+      const bool valueValid = validIntFromString(param, value);
 
       if (valueValid && equals(command, F("play")))
       {
@@ -231,8 +231,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         log.reserve(20);
-        log  = F("MP3  : ");
-        log += command;
+        log = concat(F("MP3  : "), command);
 
         if (!equals(command, F("stop"))) {
           log += '=';
@@ -310,6 +309,7 @@ void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MP3  : Send Cmd ");
+    log.reserve(46);
 
     for (uint8_t i = 0; i < 10; i++) {
       log += String(buffer[i], 16);

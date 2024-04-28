@@ -57,12 +57,13 @@ CCS811Core::status CCS811Core::beginCore(void)
     # endif
 
   // Spin for a few ms
-  ESPEASY_VOLATILE(uint8_t) temp = 0;
+  // ESPEASY_VOLATILE(uint8_t) temp = 0;
   // FIXME TD-er: This is a rather odd way to avoid calling "delay"
-  for (uint16_t i = 0; i < 10000; i++)
-  {
-    temp++;
-  }
+  // for (uint16_t i = 0; i < 10000; i++)
+  // {
+  //   temp++;
+  // }
+  // FIX tonhuisman: No need to 'wait' if no action has been started yet
 
   while (Wire.available()) // Clear wire as a precaution
   {
@@ -223,7 +224,7 @@ CCS811Core::status CCS811::begin(void)
     return SENSOR_I2C_ERROR;
   }
 
-  delay(200);
+  delay(200); // FIXME OOPS?
 
   // returnError = setDriveMode(1); //Read every second
   //    ESPEASY_SERIAL_0.println();

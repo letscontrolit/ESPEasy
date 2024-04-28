@@ -143,14 +143,10 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
         P074_data->setGain(PCONFIG(2));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("TSL2591: Address: 0x");
-          log += String(TSL2591_ADDR, HEX);
-          log += F(": Integration Time: ");
-          log += String((P074_data->tsl.getTiming() + 1) * 100, DEC);
-          log += F(" ms");
+          String log = strformat(F("TSL2591: Address: 0x%02x: Integration Time: %d ms Gain: "),
+                                 TSL2591_ADDR, (P074_data->tsl.getTiming() + 1) * 100);
 
           /* Display the gain and integration time for reference sake */
-          log += (F(" Gain: "));
 
           switch (P074_data->tsl.getGain()) {
             default:
@@ -196,13 +192,9 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
           UserVar.setFloat(event->TaskIndex, 3, ir);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-            log += concat(F("TSL2591: Lux: "), toString(lux));
-            log += concat(F(" Full: "), static_cast<int>(full));
-            log += concat(F(" Visible: "), static_cast<int>(visible));
-            log += concat(F(" IR: "), static_cast<int>(ir));
-            log += concat(F(" duration: "), static_cast<int>(P074_data->duration));
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO,
+                       strformat(F("TSL2591: Lux: %.2f Full: %d Visible: %d IR: %d duration: %d"),
+                                 lux, full, visible, ir, P074_data->duration));
           }
 
           // Update was succesfull, schedule a read.

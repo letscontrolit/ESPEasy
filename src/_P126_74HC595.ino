@@ -148,9 +148,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
                         P126_CONFIG_CHIP_COUNT,
                         1,                    // Minimum is 1 chip
                         P126_MAX_CHIP_COUNT); // Max chip count
-      String unit = F("Daisychained 1..");
-      unit += P126_MAX_CHIP_COUNT;
-      addUnit(unit);
+      addUnit(concat(F("Daisychained 1.."), P126_MAX_CHIP_COUNT));
 
       addFormNumericBox(F("Offset for display"),
                         F("offset"),
@@ -207,7 +205,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 
       // Reset State_A..D values when changing the offset
       if ((previousOffset != P126_CONFIG_SHOW_OFFSET) && P126_CONFIG_FLAGS_GET_VALUES_RESTORE) {
-        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
           UserVar.setUint32(event->TaskIndex, varNr, 0u);
         }
         # ifdef P126_DEBUG_LOG
@@ -256,7 +254,6 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         success = P126_data->plugin_read(event); // Get state
       }
 
-
       break;
     }
 
@@ -296,14 +293,14 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       {
         String state, label;
         state.reserve(40);
-        String abcd = F("ABCDEFGH");                                                                // In case anyone dares to extend
+        const String abcd = F("ABCDEFGH");                                                          // In case anyone dares to extend
                                                                                                     // VARS_PER_TASK to 8...
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
         const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
         uint8_t dotInsert;
         uint8_t dotOffset;
 
-        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+        for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
@@ -315,9 +312,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
             dotInsert = 4;
             dotOffset = 3;
           }
-          label += F(" State_");
-          label += abcd.substring(varNr, varNr + 1);
-          label += ' ';
+          label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
           label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
           label += '_';
@@ -326,7 +321,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
             state += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
 
-            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
               state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
