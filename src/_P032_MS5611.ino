@@ -100,7 +100,7 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       success = initPluginTaskData(
-        event->TaskIndex, 
+        event->TaskIndex,
         new (std::nothrow) P032_data_struct(PCONFIG(0)));
       break;
     }
@@ -127,12 +127,10 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("MS5611  : Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-            log  = F("MS5611  : Barometric Pressure: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO,
+                   concat(F("MS5611  : Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+            addLog(LOG_LEVEL_INFO,
+                   concat(F("MS5611  : Barometric Pressure: "), formatUserVarNoCheck(event->TaskIndex, 1)));
           }
           success = true;
         }

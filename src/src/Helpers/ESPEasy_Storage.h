@@ -362,6 +362,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 
 #endif // ifdef ESP32
 
+bool validateUploadConfigDat(const uint8_t *buf);
 
 /********************************************************************************************\
    Download ESPEasy file types from HTTP server

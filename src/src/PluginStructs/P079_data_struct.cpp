@@ -3,7 +3,6 @@
 #ifdef USES_P079
 
 
-
 WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq)
   : _address(address), _freq(freq), _use_STBY_IO(false)
 {
@@ -28,6 +27,7 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t ST
 
 void WemosMotor::init() {
   setfreq(_freq);
+
   if (_use_STBY_IO) {
     pinMode(_STBY_IO, OUTPUT);
     digitalWrite(_STBY_IO, LOW);
@@ -103,11 +103,6 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
   Wire.endTransmission(); // stop transmitting
 
   delay(0);
-}
-
-void WemosMotor::setmotor(uint8_t dir)
-{
-  setmotor(dir, 100);
 }
 
 LOLIN_I2C_MOTOR::LOLIN_I2C_MOTOR(uint8_t address) : _address(address) {}

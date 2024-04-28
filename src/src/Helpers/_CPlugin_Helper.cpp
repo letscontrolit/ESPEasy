@@ -84,11 +84,11 @@ bool safeReadStringUntil(Stream     & input,
 #ifndef BUILD_NO_DEBUG
 void log_connecting_to(const __FlashStringHelper *prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = prefix;
-    log += get_formatted_Controller_number(controller_number);
-    log += F(" connecting to ");
-    log += ControllerSettings.getHostPortString();
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("%s%s connecting to %s"),
+                         prefix,
+                         get_formatted_Controller_number(controller_number).c_str(),
+                         ControllerSettings.getHostPortString().c_str()));
   }
 }
 
@@ -96,14 +96,12 @@ void log_connecting_to(const __FlashStringHelper *prefix, int controller_number,
 
 void log_connecting_fail(const __FlashStringHelper *prefix, int controller_number) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log = prefix;
-    log += get_formatted_Controller_number(controller_number);
-    log += F(" connection failed (");
-    log += WiFiEventData.connectionFailures;
-    log += F("/");
-    log += Settings.ConnectionFailuresThreshold;
-    log += F(")");
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR,
+               strformat(F("%s%s connection failed (%d/%d)"),
+                         prefix,
+                         get_formatted_Controller_number(controller_number).c_str(),
+                         WiFiEventData.connectionFailures,
+                         Settings.ConnectionFailuresThreshold));
   }
 }
 

@@ -309,15 +309,13 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
             case DIR_FAR:     log += F("FAR");     break;
             default:          log += F("NONE");    break;
           }
-          log += F(" (");
-          log += gesture;
-          log += ')';
+          log += strformat(F(" (%d)"), gesture);
           addLogMove(LOG_LEVEL_DEBUG, log);
         }
         # endif // ifndef BUILD_NO_DEBUG
 
         UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(gesture));
-        event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event); // Process immediately
         success = true;
@@ -336,11 +334,11 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           uint8_t proximity_data = 0;
-          success                          = success && P064_data->sensor.readProximity(proximity_data);
+          success = success && P064_data->sensor.readProximity(proximity_data);
           UserVar.setFloat(event->TaskIndex, 1, static_cast<float>(proximity_data));
 
           uint16_t ambient_light = 0;
-          success                          = success && P064_data->sensor.readAmbientLight(ambient_light);
+          success = success && P064_data->sensor.readAmbientLight(ambient_light);
           UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(ambient_light));
         } else {
           uint16_t red_light   = 0;
