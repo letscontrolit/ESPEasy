@@ -82,7 +82,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // FIXME TD-er:  Whether TX pin is connected should be set somewhere
-      if (Plugin_056_hasTxPin(event)) {
+      if (validGpio(CONFIG_PIN2)) {
         addFormNumericBox(F("Sleep time"), F("sleeptime"),
                           PCONFIG(0),
                           0, 30);
@@ -93,7 +93,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_SAVE:
     {
-      if (Plugin_056_hasTxPin(event)) {
+      if (validGpio(CONFIG_PIN2)) {
         // Communications to device should work.
         const int newsleeptime = getFormItemInt(F("sleeptime"));
 
@@ -116,11 +116,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
       Plugin_056_SDS = new (std::nothrow) CjkSDS011(port, CONFIG_PIN1, CONFIG_PIN2);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
-        log += CONFIG_PIN1;
-        log += F(" TX:");
-        log += CONFIG_PIN2;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("SDS  : Init OK  ESP GPIO-pin RX:%d TX:%d"), CONFIG_PIN1, CONFIG_PIN2));
       }
 
       success = true;
@@ -151,22 +147,18 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
       {
         const float pm2_5 = Plugin_056_SDS->GetPM2_5();
         const float pm10  = Plugin_056_SDS->GetPM10_();
-          # ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("SDS  : act ");
-          log += pm2_5;
-          log += ' ';
-          log += pm10;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLog(LOG_LEVEL_DEBUG, strformat(F("SDS  : act %.2f %.2f"), pm2_5, pm10));
         }
-          # endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
         if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
         {
           UserVar.setFloat(event->TaskIndex, 0, pm2_5);
           UserVar.setFloat(event->TaskIndex, 1, pm10);
-          event->sensorType                = Sensor_VType::SENSOR_TYPE_DUAL;
+          event->sensorType = Sensor_VType::SENSOR_TYPE_DUAL;
           sendData(event);
         }
       }
@@ -186,7 +178,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
       if (Plugin_056_SDS->ReadAverage(pm25, pm10)) {
         UserVar.setFloat(event->TaskIndex, 0, pm25);
         UserVar.setFloat(event->TaskIndex, 1, pm10);
-        success                          = true;
+        success = true;
       }
       break;
     }
@@ -195,18 +187,11 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-boolean Plugin_056_hasTxPin(struct EventStruct *event) {
-  const int16_t serial_tx = CONFIG_PIN2;
-
-  return serial_tx >= 0;
-}
-
 String Plugin_056_ErrorToString(int error) {
   String log;
 
   if (error < 0) {
-    log  =  F("comm error: ");
-    log += error;
+    log  =  concat(F("comm error: "), error);
   }
   return log;
 }
@@ -218,10 +203,9 @@ String Plugin_056_WorkingPeriodToString(int workingPeriod) {
   String log;
 
   if (workingPeriod > 0) {
-    log += workingPeriod;
-    log += F(" minutes");
+    log = strformat(F("%d minutes"), workingPeriod);
   } else {
-    log += F(" continuous");
+    log = F(" continuous");
   }
   return log;
 }
@@ -233,9 +217,7 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   Plugin_056_SDS->SetWorkingPeriod(minutes);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SDS  : Working Period set to: ");
-    log += Plugin_056_WorkingPeriodToString(minutes);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("SDS  : Working Period set to: "), Plugin_056_WorkingPeriodToString(minutes)));
   }
 }
 

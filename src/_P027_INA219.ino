@@ -214,10 +214,11 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
         // for backward compability we allow the user to select if only one measurement should be returned
         // or all 3 measurements at once
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
+
         switch (PCONFIG(2)) {
           case 0:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar.setFloat(event->TaskIndex, 0, voltage);
 
             if (mustLog) {
@@ -228,7 +229,6 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 1:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar.setFloat(event->TaskIndex, 0, current);
 
             if (mustLog) {
@@ -239,7 +239,6 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 2:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar.setFloat(event->TaskIndex, 0, power);
 
             if (mustLog) {
@@ -250,7 +249,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 3:
           {
-            event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
             UserVar.setFloat(event->TaskIndex, 0, voltage);
             UserVar.setFloat(event->TaskIndex, 1, current);
             UserVar.setFloat(event->TaskIndex, 2, power);
