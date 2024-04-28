@@ -64,16 +64,12 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(90);
-      log += F("PCD8544: Init done, address: 0x");
-      log += String(reinterpret_cast<ulong>(pcd8544), HEX);
-      log += ' ';
+      log += strformat(F("PCD8544: Init done, address: 0x%x "), reinterpret_cast<ulong>(pcd8544));
 
       if (nullptr == pcd8544) {
         log += F("in");
       }
-      log += F("valid, commands: ");
-      log += _commandTrigger;
-      log += F(", display: PCD8544");
+      log += strformat(F("valid, commands: %s, display: PCD8544"), _commandTrigger.c_str());
       addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
@@ -121,7 +117,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
         LoadCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
         stringsLoaded = true;
 
-        for (uint8_t x = 0; x < P141_Nlines && !stringsHasContent; x++) {
+        for (uint8_t x = 0; x < P141_Nlines && !stringsHasContent; ++x) {
           stringsHasContent = !strings[x].isEmpty();
         }
       }
@@ -167,10 +163,10 @@ bool P141_data_struct::plugin_exit(struct EventStruct *event) {
  * cleanup: De-initialize pointers
  ***************************************************************************/
 void P141_data_struct::cleanup() {
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != pcd8544) { delete pcd8544; }
+  delete pcd8544;
   pcd8544 = nullptr;
 }
 
@@ -186,7 +182,7 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
       uint16_t udum  = 0;
       uint16_t hText = 0;
 
-      for (uint8_t x = 0; x < P141_Nlines; x++) {
+      for (uint8_t x = 0; x < P141_Nlines; ++x) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
         # if ADAGFX_PARSE_SUBCOMMAND
@@ -246,24 +242,24 @@ bool P141_data_struct::plugin_once_a_second(struct EventStruct *event) {
  ***************************************************************************/
 bool P141_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1);
+  bool success     = false;
+  const String cmd = parseString(string, 1);
 
   if ((nullptr != pcd8544) && cmd.equals(_commandTriggerCmd)) {
-    String arg1 = parseString(string, 2);
+    const String arg1 = parseString(string, 2);
     success = true;
 
-    if (equals(arg1, F("off"))) {               // Screen off
+    if (equals(arg1, F("off"))) {              // Screen off
       displayOnOff(false);
     }
-    else if (equals(arg1, F("on"))) {           // Screen on
+    else if (equals(arg1, F("on"))) {          // Screen on
       displayOnOff(true);
     }
-    else if (equals(arg1, F("clear"))) {        // Empty screen
+    else if (equals(arg1, F("clear"))) {       // Empty screen
       pcd8544->fillScreen(_bgcolor);
       pcd8544->display();                      // Put on display
     }
-    else if (equals(arg1, F("inv")) &&          // Invert display
+    else if (equals(arg1, F("inv")) &&         // Invert display
              (event->Par2 >= 0) && (event->Par2 <= 1)) {
       if (parseString(string, 3).isEmpty()) {  // No argument: flip previous state
         _displayInverted = !_displayInverted;
@@ -281,7 +277,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       }
       pcd8544->display();                            // Put on display
     }
-    else if (equals(arg1, F("backlight"))) {          // Backlight percentage
+    else if (equals(arg1, F("backlight"))) {         // Backlight percentage
       if ((P141_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
           (event->Par2 >= 0) &&
           (event->Par2 <= 100)) {
@@ -295,8 +291,8 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
     else if (equals(arg1, F("contrast")) && // Display contrast
              (event->Par2 >= 0) &&
              (event->Par2 <= 100)) {
-      P141_CONFIG_CONTRAST = event->Par2;  // Set but don't store
-      _contrast            = event->Par2;  // Also set to current
+      P141_CONFIG_CONTRAST = event->Par2;   // Set but don't store
+      _contrast            = event->Par2;   // Also set to current
       pcd8544->setContrast(_contrast);
     } else {
       success = false;

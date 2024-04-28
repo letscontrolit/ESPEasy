@@ -122,9 +122,11 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
               taskIndex_t index = INVALID_TASK_INDEX;
               constexpr pluginID_t PLUGIN_ID_P040_ID12(PLUGIN_ID_040);
 
-              for (taskIndex_t y = 0; y < TASKS_MAX; y++)
-                if (Settings.getPluginID_for_task(y) == PLUGIN_ID_P040_ID12)
+              for (taskIndex_t y = 0; y < TASKS_MAX; ++y) {
+                if (Settings.getPluginID_for_task(y) == PLUGIN_ID_P040_ID12) {
                   index = y;
+                }
+              }
               const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(index);
               if (!validDeviceIndex(DeviceIndex)) {
                 break;
@@ -138,7 +140,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
 
               unsigned long key = 0, old_key = 0;
               old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-              for (uint8_t i = 1; i < 5; i++) key = key | (((unsigned long) code[i] << ((4 - i) * 8)));
+              for (uint8_t i = 1; i < 5; ++i) { key = key | (((unsigned long) code[i] << ((4 - i) * 8))); }
               bool new_key = false;              
               if (old_key != key) {
                 UserVar.setSensorTypeLong(event->TaskIndex, key);
