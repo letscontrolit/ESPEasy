@@ -3245,6 +3245,16 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+// Check for plugins that will use Extended Custom Settings storage when available
+#ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
+  #if defined(USES_P094) || defined(USES_P095) || defined(USES_P096) || defined(USES_P099) || defined(USES_P104) || defined(USES_P116) || defined(USES_P123) || defined(USES_P131)
+    #define FEATURE_EXTENDED_CUSTOM_SETTINGS 1
+  #else
+    #define FEATURE_EXTENDED_CUSTOM_SETTINGS 0
+  #endif
+#endif // ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+    
 
 #ifndef FEATURE_CLEAR_I2C_STUCK
   #ifdef ESP8266
