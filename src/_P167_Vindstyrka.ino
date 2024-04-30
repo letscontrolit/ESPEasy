@@ -219,7 +219,7 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
                           ));
       }
 
-      addFormCheckBox(F("Technical logging"), P167_ENABLE_LOG_LABEL, P167_ENABLE_LOG);
+      addFormCheckBox(F("Technical logging"), P167_ENABLE_LOG_LABEL, P167_ENABLE_LOG == 1);
       success = true;
       break;
     }
@@ -234,7 +234,7 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, P167_getQueryValueString(choice));
       }
       P167_MODEL      = getFormItemInt(P167_MODEL_LABEL);
-      P167_ENABLE_LOG = isFormItemChecked(P167_ENABLE_LOG_LABEL);
+      P167_ENABLE_LOG = isFormItemChecked(P167_ENABLE_LOG_LABEL) ? 1 : 0;
 
       if (P167_MODEL == P167_MODEL_VINDSTYRKA) {
         P167_MON_SCL_PIN = getFormItemInt(F("taskdevicepin3"));
@@ -259,7 +259,7 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
       if (Plugin_167_SEN != nullptr) {
         Plugin_167_SEN->setupModel(static_cast<P167_model>(P167_MODEL));
         Plugin_167_SEN->setupDevice(P167_I2C_ADDRESS_DFLT);
-        Plugin_167_SEN->setLogging(P167_ENABLE_LOG);
+        Plugin_167_SEN->setLogging(P167_ENABLE_LOG == 1);
 
         if (P167_MODEL == P167_MODEL_VINDSTYRKA) {
           Plugin_167_SEN->setupMonPin(P167_MON_SCL_PIN);
