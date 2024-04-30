@@ -157,7 +157,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
         F("PCF8575 (Direct 16)")
         # endif // ifdef P061_ENABLE_PCF8575
       };
-      int optionsCount =
+      const int optionsCount =
       # ifdef P061_ENABLE_PCF8575
         6;
       # else // ifdef P061_ENABLE_PCF8575

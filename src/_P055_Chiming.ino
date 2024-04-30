@@ -117,8 +117,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Driver#8: ");
-      string += formatGpioLabel(static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]), false);
+      string  = concat(F("Driver#8: "), formatGpioLabel(static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]), false));
       success = true;
       break;
     }
@@ -182,7 +181,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           Plugin_055_Data->chimeClock = PCONFIG(2);
 
           String log = F("Chime: GPIO: ");
-          for (uint8_t i=0; i<4; i++)
+          for (uint8_t i = 0; i < 4; ++i)
           {
             int pin = Settings.TaskDevicePin[i][event->TaskIndex];
             Plugin_055_Data->pin[i] = pin;
@@ -258,13 +257,11 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
 
           String tokens;
           uint8_t hours = node_time.hour();
-          uint8_t minutes = node_time.minute();
+          const uint8_t minutes = node_time.minute();
 
           if (Plugin_055_Data->chimeClock)
           {
-            char tmpString[8] = {0};
-
-            sprintf_P(tmpString, PSTR("%02d%02d"), hours, minutes);
+            const String tmpString = strformat(F("%02d%02d"), hours, minutes);
             if (Plugin_055_ReadChime(tmpString, tokens))
               Plugin_055_AddStringFIFO(tokens);
 
@@ -278,9 +275,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
               if (hours == 0)
                 hours = 12;
 
-              uint8_t index = hours;
-
-              tokens = parseString(tokens, index);
+              tokens = parseString(tokens, hours);
               Plugin_055_AddStringFIFO(tokens);
             }
           }
@@ -302,7 +297,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
         {
           if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0)   // end reached?
           {
-            for (uint8_t i=0; i<4; i++)
+            for (uint8_t i = 0; i < 4; ++i)
             {
               if (Plugin_055_Data->pin[i] >= 0)
                 digitalWrite(Plugin_055_Data->pin[i], Plugin_055_Data->lowActive);
@@ -318,10 +313,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
             char c = Plugin_055_ReadFIFO();
             # ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              String log = F("Chime: Process '");
-              log += c;
-              log += '\'';
-              addLogMove(LOG_LEVEL_DEBUG, log);
+              addLog(LOG_LEVEL_DEBUG, strformat(F("Chime: Process '%c'"), c));
             }
             #endif
 
@@ -354,7 +346,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
               case '9':
               {
                 uint8_t mask = 1;
-                for (uint8_t i=0; i<4; i++)
+                for (uint8_t i = 0; i < 4; ++i)
                 {
                   if (Plugin_055_Data->pin[i] >= 0)
                     if (c & mask)

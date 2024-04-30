@@ -8,7 +8,7 @@
 P124_data_struct::P124_data_struct(int8_t  i2c_address,
                                    uint8_t relayCount,
                                    bool    changeAddress)
-  : _i2c_address(i2c_address), _relayCount(relayCount), _changeAddress(changeAddress) 
+  : _i2c_address(i2c_address), _relayCount(relayCount), _changeAddress(changeAddress)
 {}
 
 // **************************************************************************/
@@ -29,15 +29,12 @@ bool P124_data_struct::init() {
 
     if (_changeAddress) {
       // This increment shpould match with the range of addresses in _P124_MultiRelay.ino PLUGIN_I2C_HAS_ADDRESS
-      uint8_t _new_address = _i2c_address == 0x18 ? 0x11 : _i2c_address + 1; // Set to next address
+      const uint8_t _new_address = _i2c_address == 0x18 ? 0x11 : _i2c_address + 1; // Set to next address
       relay->changeI2CAddress(_new_address, _i2c_address);
       # ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("MultiRelay: Change I2C address 0x");
-        log += String(_i2c_address, HEX);
-        log += F(" to 0x");
-        log += String(_new_address, HEX);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, strformat(F("MultiRelay: Change I2C address 0x%02x to 0x%02x"), _i2c_address, _new_address));
       }
       # endif // ifndef BUILD_NO_DEBUG
     }

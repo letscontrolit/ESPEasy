@@ -11,7 +11,7 @@
 # define P138_CONFIG_BASE         0 // Uses PCONFIG(0)..PCONFIG(3) to store the selection for 4 output values
 # define P138_SENSOR_TYPE_INDEX   (P138_CONFIG_BASE + VARS_PER_TASK)
 # define P138_NR_OUTPUT_VALUES    getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P138_SENSOR_TYPE_INDEX)))
-# define P138_CONFIG_DECIMALS     PCONFIG(P138_CONFIG_BASE + VARS_PER_TASK + 1)
+# define P138_CONFIG_DECIMALS     PCONFIG(P138_SENSOR_TYPE_INDEX + 1)
 
 # define P138_CONFIG_FLAGS        PCONFIG_ULONG(0)
 # define P138_FLAG_POWERCHANGE    0 // Flag 0: Send event on PowerChange event
@@ -47,7 +47,7 @@ private:
 
   arduino::ip5306 *_ip5306 = nullptr;
 
-  bool isInitialized() {
+  bool isInitialized() const {
     return nullptr != _ip5306;
   }
 

@@ -31,7 +31,7 @@ DLBus::DLBus()
     ISR_PtrChangeBitStream = DLbus_ChangeBitStream;
 # ifndef P092_LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Class DLBus created"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   }
 }
 
@@ -43,7 +43,7 @@ DLBus::~DLBus()
     ISR_PtrChangeBitStream = nullptr;
 # ifndef P092_LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   }
 }
 
@@ -54,7 +54,8 @@ void DLBus::AddToInfoLog(const String& string)
     addLog(LogLevelInfo, string);
   }
 }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
 void DLBus::AddToErrorLog(const String& string)
 {
@@ -154,7 +155,7 @@ boolean DLBus::CheckTimings(void) {
 
   ISR_PulseCount = 0;
 
-  for (i = 0; i <= ISR_PulseNumber; i++) {
+  for (i = 0; i <= ISR_PulseNumber; ++i) {
     // store DLbus_ChangeBitStream into ByteStream
     rawval = *(ISR_PtrChangeBitStream + i);
 
@@ -214,7 +215,7 @@ boolean DLBus::CheckTimings(void) {
       String log = F("Wrong Timings: ");
       AddToInfoLog(log);
 
-      for (i = 0; i < WrongTimeCnt; i++) {
+      for (i = 0; i < WrongTimeCnt; ++i) {
         log  = i + 1;
         log += F(": PulseCount:");
         log += WrongTimingArray[i][1];
@@ -267,7 +268,7 @@ boolean DLBus::Processing(void) {
 
 # ifndef P092_LIMIT_BUILD_SIZE
   AddToInfoLog(F("Processing..."));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   StartBit = Analyze(); // find the data frame's beginning
 
   // inverted signal?
@@ -291,25 +292,27 @@ boolean DLBus::Processing(void) {
       AddToErrorLog(F("Start bit too close to end of stream!"));
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
       if (IsLogLevelInfo) {
         AddToInfoLog(strformat(
-          F("# Required bits: %d StartBit: %d / EndBit: %d"), 
-          RequiredBitStreamLength, 
-          StartBit, 
-          BitNumber));
+                       F("# Required bits: %d StartBit: %d / EndBit: %d"),
+                       RequiredBitStreamLength,
+                       StartBit,
+                       BitNumber));
       }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
       return false;
     }
   }
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
   if (IsLogLevelInfo) {
     AddToInfoLog(strformat(
-      F("StartBit: %d / EndBit: %d"),
-       StartBit, BitNumber));
+                   F("StartBit: %d / EndBit: %d"),
+                   StartBit, BitNumber));
   }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   Trim(StartBit);      // remove start and stop bits
 
   if (CheckDevice()) { // check connected device
@@ -325,7 +328,7 @@ int DLBus::Analyze(void) {
   uint8_t sync = 0;
 
   // find SYNC (16 * sequential 1)
-  for (int i = 0; i < BitNumber; i++) {
+  for (int i = 0; i < BitNumber; ++i) {
     if (ReadBit(i)) {
       sync++;
     }
@@ -349,9 +352,9 @@ int DLBus::Analyze(void) {
 void DLBus::Invert(void) {
 # ifndef P092_LIMIT_BUILD_SIZE
   AddToInfoLog(F("Invert bit stream..."));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
-  for (int i = 0; i < BitNumber; i++) {
+  for (int i = 0; i < BitNumber; ++i) {
     WriteBit(i, ReadBit(i) ? 0 : 1); // invert every bit
   }
 }
@@ -376,7 +379,7 @@ void DLBus::WriteBit(int pos, uint8_t set) {
 }
 
 void DLBus::Trim(int start_bit) {
-  for (int i = start_bit, bit = 0; i < BitNumber; i++) {
+  for (int i = start_bit, bit = 0; i < BitNumber; ++i) {
     int offset = i - start_bit;
 
     // ignore start and stop bits:
@@ -398,22 +401,21 @@ boolean DLBus::CheckDevice(void) {
   }
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
   if (IsLogLevelInfo) {
-    String log = F("# Received DeviceByte(s): 0x");
-    log += String(ByteStream[0], HEX);
+    String log = strformat(F("# Received DeviceByte(s): 0x%02x"), ByteStream[0]);
 
     if (DeviceBytes[1] != 0) {
-      log += String(ByteStream[1], HEX);
+      log += strformat(F("%02x"), ByteStream[1]);
     }
-    log += F(" Requested: 0x");
-    log += String(DeviceBytes[0], HEX);
+    log += strformat(F(" Requested: 0x%02x"), DeviceBytes[0]);
 
     if (DeviceBytes[1] != 0) {
-      log += String(DeviceBytes[1], HEX);
+      log += strformat(F("%02x"), DeviceBytes[1]);
     }
     AddToInfoLog(log);
   }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   return false;
 }
 
@@ -424,10 +426,10 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
   }
 # ifndef P092_LIMIT_BUILD_SIZE
   AddToInfoLog(F("Check CRC..."));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   uint16_t dataSum = 0;
 
-  for (int i = 0; i < IdxCRC; i++) {
+  for (int i = 0; i < IdxCRC; ++i) {
     dataSum = dataSum + ByteStream[i];
   }
   dataSum = dataSum & 0xff;
@@ -438,13 +440,14 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
   AddToErrorLog(F("Check CRC failed!"));
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
   if (IsLogLevelInfo) {
     AddToInfoLog(strformat(
-      F("# Calculated CRC: 0x%x Received: 0x%x"), 
-      dataSum, 
-      ByteStream[IdxCRC]));
+                   F("# Calculated CRC: 0x%x Received: 0x%x"),
+                   dataSum,
+                   ByteStream[IdxCRC]));
   }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   return false;
 }
 
@@ -493,13 +496,13 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092p
     case eP092pinmode::ePPM_InputPullUp:
 # ifndef P092_LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pullup"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
       pinMode(pin1, INPUT_PULLUP);
-    break;
+      break;
     default:
 # ifndef P092_LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
       pinMode(pin1, INPUT);
   }
 
@@ -647,12 +650,11 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   uint32_t start = millis();
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("P092_receiving ... TaskIndex:");
-    log += taskindex;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("P092_receiving ... TaskIndex:"), taskindex));
   }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
     // wait for first pulse received (timeout 100ms)
@@ -672,16 +674,15 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
 \****************/
 boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData *ReadData) {
 # ifndef P092_LIMIT_BUILD_SIZE
-  String  log;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+  String log;
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   boolean result = false;
 
   switch (OptionIdx) {
     case 1: // F("Sensor")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get Sensor");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get Sensor");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.MaxSensors) {
         result = false;
@@ -692,9 +693,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 2: // F("Sensor")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get ExtSensor");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get ExtSensor");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.MaxExtSensors) {
         result = false;
@@ -705,9 +705,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 3: // F("Digital output")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get DigitalOutput");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get DigitalOutput");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > (8 * P092_DataSettings.OutputBytes)) {
         result = false;
@@ -717,9 +716,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 4: // F("Speed step")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get SpeedStep");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get SpeedStep");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.SpeedBytes) {
         result = false;
@@ -729,9 +727,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 5: // F("Analog output")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get AnalogOutput");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get AnalogOutput");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.AnalogBytes) {
         result = false;
@@ -741,9 +738,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 6: // F("Heat power (kW)")
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get HeatPower");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get HeatPower");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.MaxHeatMeters) {
         result = false;
@@ -753,9 +749,8 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
       break;
     case 7: // F("Heat meter (MWh)"
 # ifndef P092_LIMIT_BUILD_SIZE
-      log  = F("Get HeatMeter");
-      log += CurIdx;
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+      log = F("Get HeatMeter");
+# endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (CurIdx > P092_DataSettings.MaxHeatMeters) {
         result = false;
@@ -766,8 +761,9 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
   }
 
 # ifndef P092_LIMIT_BUILD_SIZE
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log += F(": ");
+    log += strformat(F("%d: "), CurIdx);
 
     if (result) {
       log += String(ReadData->value, 1);
@@ -777,7 +773,7 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
-#endif // ifndef P092_LIMIT_BUILD_SIZE
+# endif // ifndef P092_LIMIT_BUILD_SIZE
   return result;
 }
 

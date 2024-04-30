@@ -161,6 +161,9 @@ void handle_advanced() {
 #if FEATURE_RULES_EASY_COLOR_CODE
     Settings.DisableRulesCodeCompletion(isFormItemChecked(LabelType::DISABLE_RULES_AUTOCOMPLETE));
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    Settings.DisableSaveConfigAsTar(isFormItemChecked(LabelType::DISABLE_SAVE_CONFIG_AS_TAR));
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     addHtmlError(SaveSettings());
 
@@ -343,6 +346,9 @@ void handle_advanced() {
   addFormCheckBox(LabelType::DISABLE_RULES_AUTOCOMPLETE, Settings.DisableRulesCodeCompletion());
   addFormNote(F("Also disables Rules syntax highlighting!"));
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
+  #if FEATURE_TARSTREAM_SUPPORT
+  addFormCheckBox(LabelType::DISABLE_SAVE_CONFIG_AS_TAR, Settings.DisableSaveConfigAsTar());
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
