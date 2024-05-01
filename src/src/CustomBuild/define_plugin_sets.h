@@ -1975,6 +1975,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
+    #ifdef ESP32
+      #define TOMTHUMB_USE_EXTENDED 1
+    #endif
+  #endif
+  #if !defined(USES_P105) && defined(ESP32)
+    #define USES_P105   // AHT10/20/21  (used in TinyTronics Smart Home RGB LED Matrix)
   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192

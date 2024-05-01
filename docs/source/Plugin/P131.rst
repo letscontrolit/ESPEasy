@@ -193,6 +193,14 @@ Default setting is *Continue to next line*.
 
 * **Maximum allowed brightness**: The brightness that is the maximum it can be set to, either from UI or via the ``brightness`` command, to optionally help protect both the eyes and the power-supply powering the display. Default is 255. Range: 1..255.
 
+* **Default font**: Select from the currently available fonts, the font that will be active when the plugin is started.
+
+Available fonts are depending on the build used, some builds don't show this option, as then only the ``default`` font is included:
+
+.. image:: P131_DefaultFontOptions.png
+
+The complete list of possible fonts is available at the ``font`` subcommand, below. (This screenshot is taken from a MAX build)
+
 * **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 4.
 
 * **Clear display on exit** When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. This will fill the display with black pixels, turning all NeoPixels off.
