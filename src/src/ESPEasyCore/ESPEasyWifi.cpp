@@ -504,7 +504,7 @@ void AttemptWiFiConnect() {
         wifi_country_t config = {
           .cc = "01",
           .schan = 1,
-          .nchan = 13,
+          .nchan = 14,
           .policy = WIFI_COUNTRY_POLICY_MANUAL,
         };
         esp_wifi_set_country(&config);
@@ -1049,7 +1049,7 @@ void WifiScan(bool async, uint8_t channel) {
     wifi_country_t config = {
       .cc = "01",
       .schan = 1,
-      .nchan = 13,
+      .nchan = 14,
       .policy = WIFI_COUNTRY_POLICY_MANUAL,
     };
     esp_wifi_set_country(&config);

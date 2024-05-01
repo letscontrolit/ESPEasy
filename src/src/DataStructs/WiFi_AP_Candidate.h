@@ -72,6 +72,10 @@ struct WiFi_AP_Candidate {
 
   //  String  key;
 
+  #ifdef ESP32
+  wifi_country_t country;
+  #endif
+
   unsigned long last_seen = 0u;
   MAC_address   bssid;
   int8_t        rssi{};
