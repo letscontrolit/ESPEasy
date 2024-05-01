@@ -112,8 +112,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
   _commandTrigger.toLowerCase();
-  _commandTriggerCmd  = _commandTrigger;
-  _commandTriggerCmd += F("cmd");
+  _commandTriggerCmd = concat(_commandTrigger, F("cmd"));
 }
 
 /****************************************************************************
@@ -231,16 +230,12 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(90);
-      log += F("ST77xx: Init done, address: 0x");
-      log += String(reinterpret_cast<ulong>(st77xx), HEX);
-      log += ' ';
+      log += strformat(F("ST77xx: Init done, address: 0x%x "), reinterpret_cast<ulong>(st77xx));
 
       if (nullptr == st77xx) {
         log += F("in");
       }
-      log += F("valid, commands: ");
-      log += _commandTrigger;
-      log += F(", display: ");
+      log += strformat(F("valid, commands: %s, display: "), _commandTrigger.c_str());
       log += ST77xx_type_toString(_device);
       addLogMove(LOG_LEVEL_INFO, log);
     }
@@ -292,7 +287,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
         stringsLoaded = true;
 
-        for (uint8_t x = 0; x < P116_Nlines && !stringsHasContent; x++) {
+        for (uint8_t x = 0; x < P116_Nlines && !stringsHasContent; ++x) {
           stringsHasContent = !strings[x].isEmpty();
         }
       }
@@ -356,8 +351,8 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
 
       int yPos = 0;
 
-      for (uint8_t x = 0; x < P116_Nlines; x++) {
-        String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
+      for (uint8_t x = 0; x < P116_Nlines; ++x) {
+        const String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
         # if ADAGFX_PARSE_SUBCOMMAND
         updateFontMetrics();
@@ -384,7 +379,7 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P116_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if ((P116_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != st77xx)) {
+  if ((P116_CONFIG_BUTTON_PIN != -1) && getButtonState() && (nullptr != st77xx)) {
     displayOnOff(true);
     markButtonStateProcessed();
   }
@@ -410,11 +405,11 @@ bool P116_data_struct::plugin_once_a_second(struct EventStruct *event) {
  ***************************************************************************/
 bool P116_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1);
+  bool success     = false;
+  const String cmd = parseString(string, 1);
 
   if ((nullptr != st77xx) && cmd.equals(_commandTriggerCmd)) {
-    String arg1 = parseString(string, 2);
+    const String arg1 = parseString(string, 2);
     success = true;
 
     if (equals(arg1, F("off"))) {
@@ -427,14 +422,11 @@ bool P116_data_struct::plugin_write(struct EventStruct *event,
       st77xx->fillScreen(_bgcolor);
     }
     else if (equals(arg1, F("backlight"))) {
-      String  arg2 = parseString(string, 3);
-      int32_t nArg2{};
-
-      if ((P116_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
-          validIntFromString(arg2, nArg2) &&
-          (nArg2 > 0) &&
-          (nArg2 <= 100)) {
-        P116_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
+      if ((P116_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
+          (event->Par2 >= 0) &&
+          (event->Par2 <= 100)) {
+        P116_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
+        _backlightPercentage          = event->Par2; // Also set to current
         displayOnOff(true);
       } else {
         success = false;

@@ -347,7 +347,7 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::name:                       COMMAND_CASE_R(Command_Settings_Name,        1);         // Settings.h
     case ESPEasy_cmd_e::nosleep:                    COMMAND_CASE_R(Command_System_NoSleep,       1);         // System.h
 #if FEATURE_NOTIFIER
-    case ESPEasy_cmd_e::notify:                     COMMAND_CASE_R(Command_Notifications_Notify, 2);         // Notifications.h
+    case ESPEasy_cmd_e::notify:                     COMMAND_CASE_R(Command_Notifications_Notify, -1);        // Notifications.h
 #endif // if FEATURE_NOTIFIER
     case ESPEasy_cmd_e::ntphost:                    COMMAND_CASE_R(Command_NTPHost,              1);         // Time.h
 #ifdef USES_P019

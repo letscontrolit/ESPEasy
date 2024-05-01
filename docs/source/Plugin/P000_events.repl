@@ -198,6 +198,50 @@
 
    "
    "
+   ``p2pNode#Connected``
+
+   Added: 2024-05-01
+
+   Triggered when a new ESPEasy p2p node has been seen.
+   N.B. Only for nodes with a valid unit ID (not 0)
+
+   Eventvalues:
+
+   - Unit ID
+
+   - Node name
+
+   - Build number/date
+   ","
+
+   .. code-block:: none
+
+	   on p2pNode#Connected do
+	     LogEntry,'ESPEasy p2p node %eventvalue1% added: %eventvalue2% with build %eventvalue3%'
+	   endon
+
+   "
+   "
+   ``p2pNode#Disconnected``
+
+   Added: 2024-05-01
+  
+   Triggered when a ESPEasy p2p node has been removed from the nodes list.
+   N.B. Only for nodes with a valid unit ID (not 0)   
+
+   Eventvalues:
+
+   - Unit ID
+   ","
+
+   .. code-block:: none
+
+	   on p2pNode#Disconnected do
+	     LogEntry,`ESPEasy p2p node %eventvalue1% not seen for a while`
+	   endon
+
+   "
+   "
    ``WiFi#Connected``
    Triggered when the ESP has connected to Wi-Fi.
    ","

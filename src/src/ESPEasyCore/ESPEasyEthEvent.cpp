@@ -9,7 +9,7 @@
 
 
 // ********************************************************************************
-// Functions called on events.
+// Functions called on events.  ** WARNING **
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 
