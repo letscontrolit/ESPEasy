@@ -11,12 +11,27 @@
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
 #  include "../Static/Fonts/Seven_Segment18pt7b.h"
 #  include "../Static/Fonts/FreeSans9pt7b.h"
+#  ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#   ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+#    include <Fonts/TomThumb.h> // Available in Adafruit_GFX library
+#   endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+#  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   include "../Static/Fonts/angelina8pt7b.h"
-#   include "../Static/Fonts/NovaMono8pt7b.h"
-#   include "../Static/Fonts/unispace8pt7b.h"
-#   include "../Static/Fonts/unispace_italic8pt7b.h"
-#   include "../Static/Fonts/whitrabt8pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+#    include "../Static/Fonts/angelina8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+#    include "../Static/Fonts/NovaMono8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+#    include "../Static/Fonts/unispace8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+#    include "../Static/Fonts/unispace_italic8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular8pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
@@ -28,12 +43,24 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   include "../Static/Fonts/angelina12pt7b.h"
-#   include "../Static/Fonts/NovaMono12pt7b.h"
-#   include "../Static/Fonts/RepetitionScrolling12pt7b.h"
-#   include "../Static/Fonts/unispace12pt7b.h"
-#   include "../Static/Fonts/unispace_italic12pt7b.h"
-#   include "../Static/Fonts/whitrabt12pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+#    include "../Static/Fonts/angelina12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+#    include "../Static/Fonts/NovaMono12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+#    include "../Static/Fonts/RepetitionScrolling12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+#    include "../Static/Fonts/unispace12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+#    include "../Static/Fonts/unispace_italic12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular12pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
@@ -45,8 +72,12 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   include "../Static/Fonts/AmerikaSans16pt7b.h"
-#   include "../Static/Fonts/whitrabt16pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+#    include "../Static/Fonts/AmerikaSans16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
 #    include "../Static/Fonts/Roboto_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
@@ -58,11 +89,29 @@
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   include "../Static/Fonts/whitrabt18pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+#    include "../Static/Fonts/7segment18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+#   ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+#    include "../Static/Fonts/LCD14cond18pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
 #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   include "../Static/Fonts/whitrabt20pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+#    include "../Static/Fonts/whitrabt20pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#   ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+#    include "../Static/Fonts/7segment24pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+#   ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+#    include "../Static/Fonts/LCD14cond24pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+#  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
 # if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
@@ -335,13 +384,13 @@ void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
   String lineSpacings[16];
   int    lineSpacingOptions[16];
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; ++i) {
     if (15 == i) {
-            # ifndef LIMIT_BUILD_SIZE
+      # ifndef LIMIT_BUILD_SIZE
       lineSpacings[i] = F("Auto, using font height * scaling");
-            # else // ifndef LIMIT_BUILD_SIZE
+      # else // ifndef LIMIT_BUILD_SIZE
       lineSpacings[i] = F("Auto");
-            # endif // ifndef LIMIT_BUILD_SIZE
+      # endif // ifndef LIMIT_BUILD_SIZE
     } else {
       lineSpacings[i] = i;
     }
@@ -372,20 +421,12 @@ String AdaGFXparseTemplate(const String      & tmpString,
         String subcommand = result.substring(prefixTrigger + ADAGFX_PARSE_POSTFIX_LEN, postfixTrigger);
 
         if (!subcommand.isEmpty()) {
-          String command;
-          command.reserve(trigger.length() + 1 + subcommand.length());
-          command += trigger;
-          command += ',';
-          command += subcommand;
+          const String command = strformat(F("%s,%s"), trigger.c_str(), subcommand.c_str());
 
           #  ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-            String log;
-            log.reserve(command.length() + 20);
-            log += F("AdaGFX: inline cmd: ");
-            log += command;
-            addLogMove(ADAGFX_LOG_LEVEL, log);
+            addLogMove(ADAGFX_LOG_LEVEL, concat(F("AdaGFX: inline cmd: "), command));
           }
           #  endif // ifndef BUILD_NO_DEBUG
 
@@ -548,19 +589,14 @@ String AdaGFXparseTemplate(const String      & tmpString,
     }
   }
 
-  for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); l--) { // Right-trim
+  for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); --l) { // Right-trim
     result.remove(l - 1);
   }
 
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(result.length() + 24);
-    log += F("AdaGFX: parse result: '");
-    log += result;
-    log += '\'';
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: parse result: '%s'"), result.c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
   return result;
@@ -581,10 +617,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
                                        const uint16_t             fgcolor,
                                        const uint16_t             bgcolor,
                                        const bool                 useValidation,
-                                       const bool                 textBackFill)
+                                       const bool                 textBackFill,
+                                       const uint8_t              defaultFontId)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _useValidation(useValidation), _textBackFill(textBackFill)
+  _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: GFX Init."));
 }
@@ -600,10 +637,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
                                        const uint16_t             fgcolor,
                                        const uint16_t             bgcolor,
                                        const bool                 useValidation,
-                                       const bool                 textBackFill)
+                                       const bool                 textBackFill,
+                                       const uint8_t              defaultFontId)
   : _tft(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _useValidation(useValidation), _textBackFill(textBackFill)
+  _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
   _display = _tft;
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
@@ -619,19 +657,9 @@ void AdafruitGFX_helper::initialize() {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(65);
-    log += F("AdaGFX: Init, x: ");
-    log += _res_x;
-    log += F(", y: ");
-    log += _res_y;
-    log += F(", colors: ");
-    log += static_cast<uint16_t>(_colorDepth);
-    log += F(", trigger: ");
-    log += _trigger;
-    log += F(", ");
-    log += getFeatures();
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: Init, x: %d, y: %d, colors: %d, trigger: %s, %s"),
+                                           _res_x, _res_y, static_cast<uint16_t>(_colorDepth),
+                                           _trigger.c_str(), getFeatures().c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -645,6 +673,9 @@ void AdafruitGFX_helper::initialize() {
   if (_fontscaling < 1) { _fontscaling = 1; }
 
   if (nullptr != _display) {
+    # if ADAGFX_FONTS_INCLUDED
+    setFontById(_defaultFontId);
+    # endif // if ADAGFX_FONTS_INCLUDED
     _display->setTextSize(_fontscaling);
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
     _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
@@ -655,26 +686,26 @@ void AdafruitGFX_helper::initialize() {
  * Show enabled features of the helper
  ***************************************************************************/
 String AdafruitGFX_helper::getFeatures() {
-  String log = F("Features:");
-
-  # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
-  log += F(" asciitable,");
-  # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
-  # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
-  log += F(" lm/lmr,");
-  # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
-  # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
-  log += F(" bmp,");
-  # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
-  # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
-  log += F(" btn,");
-  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
-  # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
-  log += F(" win,");
-  # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
-  # if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
-  log += F(" getconf,");
-  # endif // if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+  String log = F("Features:"
+                 # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+                 " asciitable,"
+                 # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+                 # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+                 " lm/lmr,"
+                 # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+                 # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+                 " bmp,"
+                 # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+                 # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+                 " btn,"
+                 # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
+                 # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+                 " win,"
+                 # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+                 # if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+                 " getconf,"
+                 # endif // if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+                 );
 
   if (log.endsWith(F(","))) {
     log.remove(log.length() - 1);
@@ -743,13 +774,30 @@ void AdafruitGFX_helper::invertDisplay(bool i) {
 /****************************************************************************
  * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
-const char adagfx_commands[] PROGMEM = "txt|txp|txz|txl|txc|txs|txtfull|clear|rot|tpm|" // 0..9
-                                       "asciitable|font|l|lh|lv|lm|lmr|r|rf|c|"         // 10..19
-                                       "cf|t|tf|rr|rrf|px|pxh|pxv|bmp|btn|"             // 20..29
-                                       "win|defwin|delwin";                             // 30..
+const char adagfx_commands[] PROGMEM =
+  "txt|txp|txz|txl|txc|txs|txtfull|clear|rot|tpm|" // 0..9
+  # if ADAGFX_USE_ASCIITABLE
+  "asciitable|"
+  # endif // if ADAGFX_USE_ASCIITABLE
+  "font|l|lh|lv|"
+  # if ADAGFX_ENABLE_EXTRA_CMDS
+  "lm|lmr|"
+  # endif // if ADAGFX_ENABLE_EXTRA_CMDS
+  "r|rf|c|" // 10..19
+  "cf|t|tf|rr|rrf|px|pxh|pxv|"
+  # if ADAGFX_ENABLE_BMP_DISPLAY
+  "bmp|"
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BUTTON_DRAW
+  "btn|"              // 20..29
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  "win|defwin|delwin" // 30..
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+;
 enum class adagfx_commands_e : int8_t {
   invalid = -1,
-  txt     = 0,                                                                          // 0
+  txt     = 0, // 0
   txp,
   txz,
   txl,
@@ -759,13 +807,17 @@ enum class adagfx_commands_e : int8_t {
   clear,
   rot,
   tpm,        // 9
+  # if ADAGFX_USE_ASCIITABLE
   asciitable, // 10
+  # endif // if ADAGFX_USE_ASCIITABLE
   font,
   l,
   lh,
   lv,
+  # if ADAGFX_ENABLE_EXTRA_CMDS
   lm,
   lmr,
+  # endif // if ADAGFX_ENABLE_EXTRA_CMDS
   r,
   rf,
   c,  // 19
@@ -777,82 +829,333 @@ enum class adagfx_commands_e : int8_t {
   px,
   pxh,
   pxv,
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   bmp,
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BUTTON_DRAW
   btn, // 29
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
   win, // 30
   defwin,
   delwin,
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 };
-const char adagfx_fonts[] PROGMEM = "default|sevenseg24|sevenseg18|freesans|"
-                                    # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-                                    "angelina8prop|novamono8pt|unispace8pt|unispaceitalic8pt|whiterabbit8pt|roboto8pt|robotocond8pt|robotomono8pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-                                    "angelina12prop|novamono12pt|repetitionscrolling12pt|unispace12pt|unispaceitalic12pt|whiterabbit12pt|roboto12pt|robotocond12pt|robotomono12pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-                                    "amerikasans16pt|whiterabbit16pt|roboto16pt|robotocond16pt|robotomono16pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-                                    "whiterabbit18pt|"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-                                    # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-                                    "whiterabbit20pt"
-                                    # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-                                    "";
-enum class adagfx_fonts_e : int8_t {
-  invalid      = -1,
-  default_font = 0,
-  sevenseg24,
-  sevenseg18,
-  freesans,
+# if ADAGFX_FONTS_INCLUDED
+
+// *** Don't forget to add the | separator at the end of a (new) font-name! (except for the last one in the list)
+const char adagfx_fonts[] PROGMEM =
+  "default|sevenseg24|sevenseg18|freesans|"
+  #  ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  "tomthumb|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  "angelina8prop|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  "novamono8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  "unispace8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  "unispaceitalic8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  "whiterabbit8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  "roboto8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  "robotocond8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  "robotomono8pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  "angelina12prop|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  "novamono12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  "repetitionscrolling12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  "unispace12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  "unispaceitalic12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  "whiterabbit12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  "roboto12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  "robotocond12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  "robotomono12pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  "amerikasans16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  "whiterabbit16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  "roboto16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  "robotocond16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  "robotomono16pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  "whiterabbit18pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  "sevenseg18b|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  #   ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  "lcd14cond18pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  "whiterabbit20pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  #   ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  "sevenseg24b|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  #   ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  "lcd14cond24pt|"
+  #   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  "";
+
+struct tFontArgs {
+  constexpr tFontArgs(const GFXfont *f,
+                      uint8_t        width,
+                      uint8_t        height,
+                      int8_t         offset,
+                      bool           proportional,
+                      uint8_t        fontId)
+    : _f(f), _width(width), _height(height), _offset(offset),
+    _proportional(proportional), _fontId(fontId) {}
+
+  const GFXfont *_f;
+  uint8_t        _width;
+  uint8_t        _height;
+  int8_t         _offset;
+  bool           _proportional;
+  uint8_t        _fontId;
+};
+
+/* *INDENT-OFF* */
+constexpr tFontArgs fontargs[] =
+{
+  { nullptr,                        9,                6,   0,   false,  0u },
+  { &Seven_Segment24pt7b,           21,               42,  35,  true,   1u },
+  { &Seven_Segment18pt7b,           16,               33,  26,  true,   2u },
+  { &FreeSans9pt7b,                 10,               16,  12,  false,  3u },
+  # ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  { &TomThumb,                      5,                 6,   5,  false,  4u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
+  # endif // ifdef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-  angelina8prop,
-  novamono8pt, // 8pt
-  unispace8pt,
-  unispaceitalic8pt,
-  whiterabbit8pt,
-  roboto8pt,
-  robotocond8pt,
-  robotomono8pt,  // 8pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  { &angelina8pt7b,                 6,                16,  12,  true,   5u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  { &NovaMono8pt7b,                 9,                16,  12,  false,  6u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  { &unispace8pt7b,                 13,               24,  20,  false,  7u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  { &unispace_italic8pt7b,          13,               24,  20,  false,  8u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  { &whitrabt8pt7b,                 10,               16,  12,  false,  9u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  { &Roboto_Regular8pt7b,           10,               16,  12,  true,  10u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular8pt7b,  9,                16,  12,  true,  11u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  { &RobotoMono_Regular8pt7b,       10,               16,  12,  false, 12u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-  angelina12prop, // 12pt
-  novamono12pt,
-  repetitionscrolling12pt,
-  unispace12pt,
-  unispaceitalic12pt,
-  whiterabbit12pt,
-  roboto12pt,
-  robotocond12pt,
-  robotomono12pt,  // 12pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  { &angelina12pt7b,                8,                22,  18,  true,  13u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  { &NovaMono12pt7b,                13,               26,  22,  false, 14u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  { &RepetitionScrolling12pt7b,     13,               22,  18,  false, 15u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  { &unispace12pt7b,                18,               30,  26,  false, 16u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  { &unispace_italic12pt7b,         18,               30,  26,  false, 17u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  { &whitrabt12pt7b,                13,               20,  16,  false, 18u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  { &Roboto_Regular12pt7b,          13,               20,  16,  true,  19u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular12pt7b, 13,               20,  16,  true,  20u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  { &RobotoMono_Regular12pt7b,      13,               20,  16,  false, 21u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-  amerikasans16pt, // 16pt
-  whiterabbit16pt,
-  roboto16pt,
-  robotocond16pt,
-  robotomono16pt,  // 16pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  { &AmerikaSans16pt7b,             17,               30,  26,  true,  22u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  { &whitrabt16pt7b,                18,               26,  22,  false, 23u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  { &Roboto_Regular16pt7b,          18,               27,  23,  true,  24u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  { &RobotoCondensed_Regular16pt7b, 18,               27,  23,  true,  25u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+  #  ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  { &RobotoMono_Regular16pt7b,      18,               27,  23,  false, 26u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-  whiterabbit18pt, // 18pt
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  { &whitrabt18pt7b,                21,               30,  26,  false, 27u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  { &_7segment18pt7b,               21,               30,  0,   false, 28u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+  #  ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+  { &LCD14cond18pt7b,               24,               30,  0,   false, 29u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
   # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-  whiterabbit20pt, // 20pt
-  # endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  { &whitrabt20pt7b,                24,               32,  28,  false, 30u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+  # ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  { &_7segment24pt7b,               26,               34,  0,   false, 31u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+  #  ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  { &LCD14cond24pt7b,               26,               34,  0,   false, 32u },
+  #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+  # endif  // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 };
+/* *INDENT-ON* */
+# endif // if ADAGFX_FONTS_INCLUDED
+
+String AdaGFXgetFontName(uint8_t fontId) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  if (fontId < font_max) {
+    const uint32_t idx = AdaGFXgetFontIndexForFontId(fontId);
+    char   tmp[30]{}; // Longest name so far is 23 + \0
+    String fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
+    return fontName;
+  }
+  # endif // if ADAGFX_FONTS_INCLUDED
+  return EMPTY_STRING;
+}
+
+uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  if (fontId < font_max) {
+    for (uint32_t idx = 0; idx < font_max; ++idx) {
+      if (fontargs[idx]._fontId == fontId) {
+        return idx;
+      }
+    }
+  }
+  # endif // if ADAGFX_FONTS_INCLUDED
+  return 0;
+}
+
+void AdaGFXFormDefaultFont(const __FlashStringHelper *id,
+                           uint8_t                    selectedIndex) {
+  # if ADAGFX_FONTS_INCLUDED
+  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+
+  addRowLabel_tr_id(F("Default font"), id);
+  addSelector_Head(id);
+
+  char tmp[30]{}; // Longest name so far is 23 + \0
+
+  for (uint32_t idx = 0; idx < font_max; ++idx) {
+    const bool selected = (fontargs[idx]._fontId == selectedIndex);
+    String     fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
+    addSelector_Item(fontName,
+                     fontargs[idx]._fontId,
+                     selected);
+  }
+  addSelector_Foot();
+  # endif // if ADAGFX_FONTS_INCLUDED
+}
+
+# if ADAGFX_FONTS_INCLUDED
+void AdafruitGFX_helper::setFontById(uint8_t fontId) {
+  constexpr int font_max = NR_ELEMENTS(fontargs);
+  const int     font_i   = AdaGFXgetFontIndexForFontId(fontId);
+
+  if ((font_i >= 0) && (font_i < font_max)) {
+    _display->setFont(fontargs[font_i]._f);
+    calculateTextMetrics(fontargs[font_i]._width,
+                         fontargs[font_i]._height,
+                         fontargs[font_i]._offset,
+                         fontargs[font_i]._proportional);
+  }
+}
+
+# endif // if ADAGFX_FONTS_INCLUDED
 
 bool AdafruitGFX_helper::processCommand(const String& string) {
   bool success = false;
 
   if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
-  String   cmd        = parseString(string, 1); // lower case
-  String   subcommand = parseString(string, 2);
-  uint16_t res_x      = _res_x;
-  uint16_t res_y      = _res_y;
-  uint16_t _xo        = 0;
-  uint16_t _yo        = 0;
+  const String cmd        = parseString(string, 1); // lower case
+  const String subcommand = parseString(string, 2);
+  uint16_t     res_x      = _res_x;
+  uint16_t     res_y      = _res_y;
+  uint16_t     _xo        = 0;
+  uint16_t     _yo        = 0;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);
@@ -863,8 +1166,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         isAdaGFXTrigger(cmd)) ||
       subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
-  String log;
-  std::vector<String> sParams;
+  std::vector<String>  sParams;
   std::vector<int32_t> nParams;
   uint8_t emptyCount = 0;
   int     argCount   = 0;
@@ -886,1028 +1188,846 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-      log  = ':';
-      log += argCount;
-      log += ' ';
-      log += sParams[argCount];
-      addLog(LOG_LEVEL_DEBUG_DEV, log);
+      addLog(LOG_LEVEL_DEBUG_DEV, strformat(F(":%d %s"), argCount, sParams[argCount].c_str()));
     }
     # endif // ifndef BUILD_NO_DEBUG
 
     argCount++;
   }
   argCount -= emptyCount; // Not counting the empty arguments
-  success   = true;       // If we get this far, we'll flip the flag if something wrong is found
 
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    log.reserve(90);
-    log.clear();
-    log += F("AdaGFX: command: ");
-    log += _trigger;
-    log += F(" argCount: ");
-    log += argCount;
-    log += ':';
-    log += string;
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLog(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: command: %s argCount: %d:%s"), _trigger.c_str(), argCount, string.c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  const int subcommand_i         = GetCommandCode(subcommand.c_str(), adagfx_commands);
+  const int subcommand_i = GetCommandCode(subcommand.c_str(), adagfx_commands);
+
+  if (subcommand_i < 0) { return false; } // Fail fast
+
   const adagfx_commands_e subcmd = static_cast<adagfx_commands_e>(subcommand_i);
+  const bool currentColRowState  = _columnRowMode;
 
-  if (adagfx_commands_e::txt == subcmd)                           // txt: Print text at last cursor position, ends at next line!
-  {
-    _display->println(parseStringToEndKeepCaseNoTrim(string, 3)); // Print entire rest of provided line
-  }
-  else if ((adagfx_commands_e::txp == subcmd) && (argCount == 2)) // txp: Text position
-  {
-    # if ADAGFX_ARGUMENT_VALIDATION
+  # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1], _columnRowMode)) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
-      } else {
-        _display->setCursor(nParams[0] + _xo - _x_compensation, nParams[1] + _yo - _y_compensation);
-      }
-    }
-  }
-  else if ((adagfx_commands_e::txz == subcmd) && (argCount >= 3)) // txz: Text at position
-  {
-    # if ADAGFX_ARGUMENT_VALIDATION
+  // Optimize some coordinate checks, with less than 3 occurrences there is no gain
+  const bool invCoord_0_1     = argCount >= 2 && invalidCoordinates(nParams[0], nParams[1]);
+  const bool invCoord_2_3     = argCount >= 4 && invalidCoordinates(nParams[2], nParams[3]);
+  const bool invCoord_0_2_1_3 = argCount >= 4 && invalidCoordinates(nParams[0] + nParams[2],
+                                                                    nParams[1] + nParams[3]);
+  # endif // if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1], _columnRowMode)) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
-      } else {
-        _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
-      }
-      _display->println(parseStringToEndKeepCaseNoTrim(string, 5)); // Print entire rest of provided line
-    }
-  }
-  else if ((adagfx_commands_e::txl == subcmd) && (argCount >= 2))   // txl: Text at line(s)
+  switch (subcmd)
   {
-    uint8_t _line              = 0;
-    uint8_t _column            = 0;
-    uint8_t idx                = 0;
-    bool    currentColRowState = _columnRowMode;
-    setColumnRowMode(true); // this command is by default set to Column/Row mode
+    case adagfx_commands_e::invalid:
+      break;
+    case adagfx_commands_e::txt:                                    // txt: Print text at last cursor position, ends at next line!
+      _display->println(parseStringToEndKeepCaseNoTrim(string, 3)); // Print entire rest of provided line
+      success = true;
+      break;
+    case adagfx_commands_e::txp:                                    // txp: Text position
 
-    while (idx < argCount && !sParams[idx + 1].isEmpty()) {
-      if (nParams[idx] > 0) {
-        _line = nParams[idx];
-      } else {
-        _line++;
-      }
-      printText(sParams[idx + 1].c_str(), _column, _line - 1, _fontscaling, _fgcolor, _bgcolor);
-      idx += 2;
-    }
-    setColumnRowMode(currentColRowState);
-  }
-  else if ((adagfx_commands_e::txc == subcmd) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
-  {
-    _fgcolor = AdaGFXparseColor(sParams[0], _colorDepth);
-
-    if (argCount == 1) {
-      _bgcolor = _fgcolor; // Transparent background
-      _display->setTextColor(_fgcolor);
-    } else {               // argCount=2
-      _bgcolor = AdaGFXparseColor(sParams[1], _colorDepth);
-      _display->setTextColor(_fgcolor, _bgcolor);
-    }
-  }
-  else if ((adagfx_commands_e::txs == subcmd) && (argCount == 1)) // txs: Text size = font scaling, 1..10
-  {
-    if ((nParams[0] >= 0) && (nParams[0] <= 10)) {
-      _fontscaling = nParams[0];
-      _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
-    } else {
-      success = false;
-    }
-  }
-  else if ((adagfx_commands_e::txtfull == subcmd) && (argCount >= 3) && (argCount <= 8)) { // txtfull: Text at position, with size and color
-    switch (argCount) {
-      case 3:                                                                              // single text
-
+      if (argCount == 2) {
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
-          success = false;
-        } else
+        if (!invalidCoordinates(nParams[0], nParams[1], _columnRowMode))
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
-          printText(sParams[2].c_str(),
-                    nParams[0] - _x_compensation,
-                    nParams[1] - _y_compensation,
+          if (_columnRowMode) {
+            _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
+          } else {
+            _display->setCursor(nParams[0] + _xo - _x_compensation, nParams[1] + _yo - _y_compensation);
+          }
+        }
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::txz: // txz: Text at position
+
+      if (argCount >= 3) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!invalidCoordinates(nParams[0], nParams[1], _columnRowMode))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          printText(parseStringToEndKeepCaseNoTrim(string, 5).c_str(),
+                    nParams[0] + _xo - _x_compensation,
+                    nParams[1] + _yo - _y_compensation,
                     _fontscaling,
                     _fgcolor,
-                    _fgcolor); // transparent bg
+                    _bgcolor);
         }
-        break;
-      case 4:                  // text + size
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::txl: // txl: Text at line(s)
 
-        # if ADAGFX_ARGUMENT_VALIDATION
+      if (argCount >= 2) {
+        uint8_t _line   = 0;
+        uint8_t _column = 0;
+        uint8_t idx     = 0;
+        setColumnRowMode(true); // this command is by default set to Column/Row mode
 
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
-          printText(sParams[3].c_str(),
-                    nParams[0] - _x_compensation,
-                    nParams[1] - _y_compensation,
-                    nParams[2],
-                    _fgcolor,
-                    _fgcolor); // transparent bg
-        }
-        break;
-      case 5:                  // text + size + color
-
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
-          uint16_t color = AdaGFXparseColor(sParams[3], _colorDepth);
-          printText(sParams[4].c_str(),
-                    nParams[0] - _x_compensation,
-                    nParams[1] - _y_compensation,
-                    nParams[2],
-                    color,
-                    color); // transparent bg
-        }
-        break;
-      case 6:               // text + size + color + bkcolor
-
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
-          printText(sParams[5].c_str(),
-                    nParams[0] - _x_compensation,
-                    nParams[1] - _y_compensation,
-                    nParams[2],
-                    AdaGFXparseColor(sParams[3], _colorDepth),
-                    AdaGFXparseColor(sParams[4], _colorDepth));
-        }
-        break;
-      case 7: // 7: text + size + color + bkcolor + printmode
-      case 8: // as 7 but: + maxwidth
-
-        # if ADAGFX_ARGUMENT_VALIDATION
-
-        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
-          success = false;
-        } else
-        # endif // if ADAGFX_ARGUMENT_VALIDATION
-        {
-          AdaGFXTextPrintMode tmpPrintMode = _textPrintMode;
-
-          if ((nParams[5] >= 0) && (nParams[5] < static_cast<int>(AdaGFXTextPrintMode::MAX))) {
-            _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[5]);
-            _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+        while (idx < argCount && !sParams[idx + 1].isEmpty()) {
+          if (nParams[idx] > 0) {
+            _line = nParams[idx];
+          } else {
+            _line++;
           }
-          printText(sParams[argCount - 1].c_str(),
-                    nParams[0] - _x_compensation,
-                    nParams[1] - _y_compensation,
-                    nParams[2],
-                    AdaGFXparseColor(sParams[3], _colorDepth),
-                    AdaGFXparseColor(sParams[4], _colorDepth),
-                    argCount == 8 ? nParams[argCount - 2] : 0);
+          printText(sParams[idx + 1].c_str(), _column, _line - 1, _fontscaling, _fgcolor, _bgcolor);
+          idx += 2;
+        }
+        setColumnRowMode(currentColRowState);
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::txc: // txc: Textcolor, fg and opt. bg colors
 
-          if (_textPrintMode != tmpPrintMode) {
-            _textPrintMode = tmpPrintMode;
-            _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+      if ((argCount == 1) || (argCount == 2)) {
+        _fgcolor = AdaGFXparseColor(sParams[0], _colorDepth);
+
+        if (argCount == 1) {
+          _bgcolor = _fgcolor; // Transparent background
+          _display->setTextColor(_fgcolor);
+        } else {               // argCount=2
+          _bgcolor = AdaGFXparseColor(sParams[1], _colorDepth);
+          _display->setTextColor(_fgcolor, _bgcolor);
+        }
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::txs: // txs: Text size = font scaling, 1..10
+
+      if ((argCount == 1) && (nParams[0] >= 0) && (nParams[0] <= 10)) {
+        _fontscaling = nParams[0];
+        _display->setTextSize(_fontscaling);
+        calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::txtfull: // txtfull: Text at position, with size and color
+
+      if ((argCount >= 3) && (argCount <= 8)) {
+        uint16_t par3color = argCount < 5 || sParams[3].isEmpty() ? _fgcolor : AdaGFXparseColor(sParams[3], _colorDepth);
+        uint16_t par4color = argCount < 6 || sParams[4].isEmpty() ? _bgcolor : AdaGFXparseColor(sParams[4], _colorDepth);
+
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!invalidCoordinates(nParams[0] - _x_compensation,
+                                nParams[1] - _y_compensation,
+                                _columnRowMode))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          success = true;
+
+          switch (argCount) {
+            case 3: // single text
+
+              printText(sParams[2].c_str(),
+                        nParams[0] - _x_compensation,
+                        nParams[1] - _y_compensation,
+                        _fontscaling,
+                        _fgcolor,
+                        _bgcolor);
+              break;
+            case 4: // text + size
+
+              printText(sParams[3].c_str(),
+                        nParams[0] - _x_compensation,
+                        nParams[1] - _y_compensation,
+                        nParams[2],
+                        _fgcolor,
+                        _bgcolor);
+              break;
+            case 5: // text + size + color
+
+              printText(sParams[4].c_str(),
+                        nParams[0] - _x_compensation,
+                        nParams[1] - _y_compensation,
+                        nParams[2],
+                        par3color,
+                        par3color); // transparent bg
+              break;
+            case 6:                 // text + size + color + bkcolor
+
+              printText(sParams[5].c_str(),
+                        nParams[0] - _x_compensation,
+                        nParams[1] - _y_compensation,
+                        nParams[2],
+                        par3color,
+                        par4color);
+              break;
+            case 7: // 7: text + size + color + bkcolor + printmode
+            case 8: // as 7 but: + maxwidth
+
+            {
+              AdaGFXTextPrintMode tmpPrintMode = _textPrintMode;
+
+              if ((nParams[5] >= 0) && (nParams[5] < static_cast<int>(AdaGFXTextPrintMode::MAX))) {
+                _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[5]);
+                _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+              }
+              printText(sParams[argCount - 1].c_str(),
+                        nParams[0] - _x_compensation,
+                        nParams[1] - _y_compensation,
+                        nParams[2],
+                        par3color,
+                        par4color,
+                        argCount == 8 ? nParams[argCount - 2] : 0);
+
+              if (_textPrintMode != tmpPrintMode) {
+                _textPrintMode = tmpPrintMode;
+                _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+              }
+              break;
+            }
+            default:
+              success = false;
+              break;
           }
         }
-        break;
-      default:
-        success = false;
-        break;
-    }
-  }
-  else if (adagfx_commands_e::clear == subcmd) // clear: Clear display
-  {
-    # if ADAGFX_ENABLE_FRAMED_WINDOW
+      }
+      break;
+    case adagfx_commands_e::clear: // clear: Clear display
+      # if ADAGFX_ENABLE_FRAMED_WINDOW
 
-    if (_window == 0)
-    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      if (_window == 0)
+      # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      {
+        _display->fillScreen(argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
+      }
+      # if ADAGFX_ENABLE_FRAMED_WINDOW
+      else {
+        // logWindows(F("clear ")); // Use for debugging only
+        uint16_t _w = 0, _h = 0;
+        getWindowLimits(_w, _h);
+        _display->fillRect(_xo, _yo, _w, _h,
+                           argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
+      }
+      # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+      success = true;
+      break;
+    case adagfx_commands_e::rot: // rot: Rotation
+
+      if ((argCount == 1) && (nParams[0] >= 0) && (nParams[0] <= 3)) {
+        setRotation(nParams[0]);
+        success = true;
+      }
+      break;
+    case adagfx_commands_e::tpm: // tpm: Text Print Mode
+
+      if ((argCount == 1) && ((nParams[0] < 0) || (nParams[0] >= static_cast<int>(AdaGFXTextPrintMode::MAX)))) {
+        _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[0]);
+        _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+        success = true;
+      }
+      break;
+    # if ADAGFX_USE_ASCIITABLE
+    case adagfx_commands_e::asciitable: // Show ASCII table
     {
-      _display->fillScreen(argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
-    }
-    # if ADAGFX_ENABLE_FRAMED_WINDOW
-    else {
-      // logWindows(F("clear ")); // Use for debugging only
-      uint16_t _w = 0, _h = 0;
-      getWindowLimits(_w, _h);
-      _display->fillRect(_xo, _yo, _w, _h,
-                         argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
-    }
-    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  }
-  else if ((adagfx_commands_e::rot == subcmd) && (argCount == 1)) // rot: Rotation
-  {
-    if ((nParams[0] < 0) || (nParams[0] > 3)) {
-      success = false;
-    } else {
-      setRotation(nParams[0]);
-    }
-  }
-  else if ((adagfx_commands_e::tpm == subcmd) && (argCount == 1)) // tpm: Text Print Mode
-  {
-    if ((nParams[0] < 0) || (nParams[0] >= static_cast<int>(AdaGFXTextPrintMode::MAX))) {
-      success = false;
-    } else {
-      _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[0]);
-      _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
-    }
-  }
-  # if ADAGFX_USE_ASCIITABLE
-  else if (adagfx_commands_e::asciitable == subcmd) // Show ASCII table
-  {
-    String line;
-    const int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
-    const uint8_t scale        = (argCount == 2 && nParams[1] > 0 && nParams[1] <= 10 ? nParams[1] : 2);
-    const uint8_t currentScale = _fontscaling;
+      String line;
+      const int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
+      const uint8_t scale        = (argCount == 2 && nParams[1] > 0 && nParams[1] <= 10 ? nParams[1] : 2);
+      const uint8_t currentScale = _fontscaling;
 
-    if (_fontscaling != scale) { // Set fontscaling
-      _fontscaling = scale;
-      _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
-    }
-    line.reserve(_textcols);
-    _display->setCursor(0, 0);
-    int16_t row        = 0;
-    const bool colMode = _columnRowMode;
-    _columnRowMode = true;
+      if (_fontscaling != scale) { // Set fontscaling
+        _fontscaling = scale;
+        _display->setTextSize(_fontscaling);
+        calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
+      }
+      line.reserve(_textcols);
+      _display->setCursor(0, 0);
+      int16_t row = 0;
+      setColumnRowMode(true);
 
-    for (int16_t i = start; i <= 0xFF && row < _textrows; i++) {
-      if ((i % 4 == 0) && (line.length() > (_textcols - 8u))) { // 8 = 4x space + char
+      for (int16_t i = start; i <= 0xFF && row < _textrows; ++i) {
+        if ((i % 4 == 0) && (line.length() > (_textcols - 8u))) { // 8 = 4x space + char
+          printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
+          line.clear();
+          row++;
+        }
+
+        if (line.isEmpty()) {
+          line += formatToHex(i, 2);
+        }
+        line += ' ';
+        line += static_cast<char>(((i == 0x0A) || (i == 0x0D) ? 0x20 : i)); // Show a space instead of CR/LF
+      }
+
+      if (row < _textrows) {
         printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
-        line.clear();
-        row++;
       }
 
-      if (line.isEmpty()) {
-        line += F("0x");
+      setColumnRowMode(currentColRowState); // Restore
 
-        if (i < 0x10) { line += '0'; }
-        line += String(i, HEX);
+      if (_fontscaling != currentScale) {   // Restore if needed
+        _fontscaling = currentScale;
+        _display->setTextSize(_fontscaling);
+        calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
       }
-      line += ' ';
-      line += static_cast<char>(((i == 0x0A) || (i == 0x0D) ? 0x20 : i)); // Show a space instead of CR/LF
+      success = true;
+      break;
     }
+    # endif // if ADAGFX_USE_ASCIITABLE
+    case adagfx_commands_e::font: // font: Change font
 
-    if (row < _textrows) {
-      printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
-    }
+      # if ADAGFX_FONTS_INCLUDED
 
-    _columnRowMode = colMode;           // Restore
+      if (argCount == 1) {
+        sParams[0].toLowerCase();
 
-    if (_fontscaling != currentScale) { // Restore if needed
-      _fontscaling = currentScale;
-      _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
-    }
-  }
-  # endif // if ADAGFX_USE_ASCIITABLE
-  else if ((adagfx_commands_e::font == subcmd) && (argCount == 1)) { // font: Change font
-    # if ADAGFX_FONTS_INCLUDED
-    sParams[0].toLowerCase();
+        constexpr int font_max = NR_ELEMENTS(fontargs);
+        const int     font_i   = GetCommandCode(sParams[0].c_str(), adagfx_fonts);
 
-    char ftmp[24]{};
-    const int font_i          = GetCommandCode(ftmp, sizeof(ftmp), sParams[0].c_str(), adagfx_fonts);
-    const adagfx_fonts_e font = static_cast<adagfx_fonts_e>(font_i);
-
-    if (adagfx_fonts_e::sevenseg24 == font) {
-      _display->setFont(&Seven_Segment24pt7b);
-      calculateTextMetrics(21, 42, 35, true);
-    } else if (adagfx_fonts_e::sevenseg18 == font) {
-      _display->setFont(&Seven_Segment18pt7b);
-      calculateTextMetrics(16, 33, 26, true);
-    } else if (adagfx_fonts_e::freesans == font) {
-      _display->setFont(&FreeSans9pt7b);
-      calculateTextMetrics(10, 16, 12);
-
-      // Extra 8pt fonts:
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    } else if (adagfx_fonts_e::angelina8prop == font) { // Proportional font!
-      _display->setFont(&angelina8pt7b);
-      calculateTextMetrics(6, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    } else if (adagfx_fonts_e::novamono8pt == font) {
-      _display->setFont(&NovaMono8pt7b);
-      calculateTextMetrics(9, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    } else if (adagfx_fonts_e::unispace8pt == font) {
-      _display->setFont(&unispace8pt7b);
-      calculateTextMetrics(13, 24, 20);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    } else if (adagfx_fonts_e::unispaceitalic8pt == font) {
-      _display->setFont(&unispace_italic8pt7b);
-      calculateTextMetrics(13, 24, 20);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit8pt == font) {
-      _display->setFont(&whitrabt8pt7b);
-      calculateTextMetrics(10, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto8pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular8pt7b);
-      calculateTextMetrics(10, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond8pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular8pt7b);
-      calculateTextMetrics(9, 16, 12, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono8pt == font) {
-      _display->setFont(&RobotoMono_Regular8pt7b);
-      calculateTextMetrics(10, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-      // Extra 12pt fonts:
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    } else if (adagfx_fonts_e::angelina12prop == font) { // Proportional font!
-      _display->setFont(&angelina12pt7b);
-      calculateTextMetrics(8, 22, 18, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    } else if (adagfx_fonts_e::novamono12pt == font) {
-      _display->setFont(&NovaMono12pt7b);
-      calculateTextMetrics(13, 26, 22);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    } else if (adagfx_fonts_e::repetitionscrolling12pt == font) {
-      _display->setFont(&RepetitionScrolling12pt7b);
-      calculateTextMetrics(13, 22, 18);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    } else if (adagfx_fonts_e::unispace12pt == font) {
-      _display->setFont(&unispace12pt7b);
-      calculateTextMetrics(18, 30, 26);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    } else if (adagfx_fonts_e::unispaceitalic12pt == font) {
-      _display->setFont(&unispace_italic12pt7b);
-      calculateTextMetrics(18, 30, 26);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit12pt == font) {
-      _display->setFont(&whitrabt12pt7b);
-      calculateTextMetrics(13, 20, 16);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto12pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond12pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono12pt == font) {
-      _display->setFont(&RobotoMono_Regular12pt7b);
-      calculateTextMetrics(13, 20, 16);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    } else if (adagfx_fonts_e::amerikasans16pt == font) { // Proportional font!
-      _display->setFont(&AmerikaSans16pt7b);
-      calculateTextMetrics(17, 30, 26, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit16pt == font) {
-      _display->setFont(&whitrabt16pt7b);
-      calculateTextMetrics(18, 26, 22);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-    } else if (adagfx_fonts_e::roboto16pt == font) { // Proportional font!
-      _display->setFont(&Roboto_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-    } else if (adagfx_fonts_e::robotocond16pt == font) { // Proportional font!
-      _display->setFont(&RobotoCondensed_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23, true);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-    } else if (adagfx_fonts_e::robotomono16pt == font) {
-      _display->setFont(&RobotoMono_Regular16pt7b);
-      calculateTextMetrics(18, 27, 23);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit18pt == font) {
-      _display->setFont(&whitrabt18pt7b);
-      calculateTextMetrics(21, 30, 26);
-      #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    #  endif    // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
-    #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-    #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-    } else if (adagfx_fonts_e::whiterabbit20pt == font) {
-      _display->setFont(&whitrabt20pt7b);
-      calculateTextMetrics(24, 32, 28);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
-    #  endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-    } else if (adagfx_fonts_e::default_font == font) { // font,default is always available!
-      _display->setFont();
-      calculateTextMetrics(6, 9);
-    } else {
-      success = false;
-    }
-    # else // if ADAGFX_FONTS_INCLUDED
-    success = false;
-    # endif  // if ADAGFX_FONTS_INCLUDED
-  }
-  else if ((adagfx_commands_e::l == subcmd) && (argCount == 5)) { // l: Line
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, AdaGFXparseColor(sParams[4], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::lh == subcmd) && (argCount == 3)) { // lh: Horizontal line
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if ((nParams[0] < 0) || (nParams[0] > res_x)) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawFastHLine(_xo, nParams[0] + _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::lv == subcmd) && (argCount == 3)) { // lv: Vertical line
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if ((nParams[0] < 0) || (nParams[0] > res_y)) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawFastVLine(nParams[0] + _xo, _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
-    }
-  }
-  # if ADAGFX_ENABLE_EXTRA_CMDS
-  else if (((adagfx_commands_e::lm == subcmd) || (adagfx_commands_e::lmr == subcmd)) && (argCount >= 5)) { // lm/lmr: Multi-line, multiple
-                                                                                                           // coordinates
-    uint16_t mcolor   = AdaGFXparseColor(sParams[0], _colorDepth);
-    bool     mloop    = true;
-    uint8_t  parCount = 0;
-    uint8_t  optCount = 0;
-    int  cx           = -1;
-    int  cy           = -1;
-    bool closeLine    = false;
-    bool relativeMode = (adagfx_commands_e::lmr == subcmd); // Use Relative mode
-    #  ifndef BUILD_NO_DEBUG
-    String log;
-    log.reserve(40);
-    #  endif // ifndef BUILD_NO_DEBUG
-
-    while (mloop) {
-      sParams[optCount] = parseString(string, parCount + 4);       // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
-
-      if (!validIntFromString(sParams[optCount], nParams[optCount]) && !sParams[optCount].isEmpty()) {
-        mcolor = AdaGFXparseColor(sParams[optCount], _colorDepth); // Interpret as a color
-
-        if (optCount > 0) { optCount--; }
-      }
-      mloop     = !sParams[optCount].isEmpty();
-      closeLine = equals(sParams[optCount], 'c');
-
-      if (mloop) { parCount++; optCount++; } // Next argument
-
-      if ((optCount == 4) || closeLine) {    // 0..3 = 4th argument or close the line
-        if (relativeMode) {
-          nParams[2] += nParams[0];
-          nParams[3] += nParams[1];
+        if ((font_i >= 0) && (font_i < font_max)) {
+          _display->setFont(fontargs[font_i]._f);
+          calculateTextMetrics(fontargs[font_i]._width,
+                               fontargs[font_i]._height,
+                               fontargs[font_i]._offset,
+                               fontargs[font_i]._proportional);
+          success = true;
         }
-        #  if ADAGFX_ARGUMENT_VALIDATION
+      }
+      # endif  // if ADAGFX_FONTS_INCLUDED
+      break;
+    case adagfx_commands_e::l: // l: Line
 
-        if (invalidCoordinates(nParams[0], nParams[1]) ||
-            invalidCoordinates(nParams[2], nParams[3])) {
-          success = false;
-          mloop   = false; // break out
-        } else
-        #  endif // if ADAGFX_ARGUMENT_VALIDATION
+      if (argCount == 5) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!(invCoord_0_1 ||
+              invCoord_2_3))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
-          if (closeLine) {
-            nParams[2] = cx;
-            nParams[3] = cy;
-            mloop      = false; // Exit after closing the line
-          }
-          #  ifndef BUILD_NO_DEBUG
-          log.clear();
-          log += F("AdaGFX: cmd: lm x/y/x1/y1:");
-          log += nParams[0];
-          log += '/';
-          log += nParams[1];
-          log += '/';
-          log += nParams[2];
-          log += '/';
-          log += nParams[3];
-          log += F(" loop:");
-          log += mloop ? 'T' : 'f';
-          log += F(" color:");
-          log += AdaGFXcolorToString(mcolor, _colorDepth);
-          addLog(LOG_LEVEL_INFO, log);
-          #  endif // ifndef BUILD_NO_DEBUG
-          _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, mcolor);
-
-          if ((cx == -1) && (cy == -1)) {
-            cx = nParams[0];
-            cy = nParams[1];
-          }
-          nParams[0] = nParams[2]; // Move second set to first set
-          nParams[1] = nParams[3];
-          optCount   = 2;          // Get second set of arguments only
+          _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo,
+                             AdaGFXparseColor(sParams[4], _colorDepth));
+          success = true;
         }
       }
-    }
-  }
-  # endif // if ADAGFX_ENABLE_EXTRA_CMDS
-  else if ((adagfx_commands_e::r == subcmd) && (argCount == 5)) { // r: Rectangle
-    # if ADAGFX_ARGUMENT_VALIDATION
+      break;
+    case adagfx_commands_e::lh: // lh: Horizontal line
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::rf == subcmd) && (argCount == 6)) { // rf: Rectangled, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
+      if (argCount == 3) {
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
-      _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::c == subcmd) && (argCount == 4)) { // c: Circle
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], 0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::cf == subcmd) && (argCount == 5)) { // cf: Circle, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], 0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
-      _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::t == subcmd) && (argCount == 7)) { // t: Triangle
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[4], nParams[5])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawTriangle(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, nParams[4] + _xo, nParams[5] + _yo,
-                             AdaGFXparseColor(sParams[6], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::tf == subcmd) && (argCount == 8)) { // tf: Triangle, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[4], nParams[5])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillTriangle(nParams[0] + _xo,
-                             nParams[1] + _yo,
-                             nParams[2] + _xo,
-                             nParams[3] + _yo,
-                             nParams[4] + _xo,
-                             nParams[5] + _yo,
-                             AdaGFXparseColor(sParams[7], _colorDepth));
-      _display->drawTriangle(nParams[0] + _xo,
-                             nParams[1] + _yo,
-                             nParams[2] + _xo,
-                             nParams[3] + _yo,
-                             nParams[4] + _xo,
-                             nParams[5] + _yo,
-                             AdaGFXparseColor(sParams[6], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::rr == subcmd) && (argCount == 6)) { // rr: Rounded rectangle
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
-        invalidCoordinates(nParams[4],              0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawRoundRect(nParams[0] + _xo,
-                              nParams[1] + _yo,
-                              nParams[2],
-                              nParams[3],
-                              nParams[4],
-                              AdaGFXparseColor(sParams[5], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::rrf == subcmd) && (argCount == 7)) { // rrf: Rounded rectangle, filled
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
-        invalidCoordinates(nParams[4],              0)) { // Also check radius
-      success = false;
-    } else
-    # endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->fillRoundRect(nParams[0] + _xo,
-                              nParams[1] + _yo,
-                              nParams[2],
-                              nParams[3],
-                              nParams[4],
-                              AdaGFXparseColor(sParams[6], _colorDepth));
-      _display->drawRoundRect(nParams[0] + _xo,
-                              nParams[1] + _yo,
-                              nParams[2],
-                              nParams[3],
-                              nParams[4],
-                              AdaGFXparseColor(sParams[5], _colorDepth));
-    }
-  }
-  else if ((adagfx_commands_e::px == subcmd) && (argCount == 3)) { // px: Pixel
-    # if ADAGFX_ARGUMENT_VALIDATION
-
-    if (invalidCoordinates(nParams[0], nParams[1])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->drawPixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
-    }
-  }
-  else if (((adagfx_commands_e::pxh == subcmd) || (adagfx_commands_e::pxv == subcmd)) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert.
-                                                                                                           // incremented merged loop is
-    # if ADAGFX_ARGUMENT_VALIDATION                                                                        // smaller than 2 separate loops
-
-    if (invalidCoordinates(nParams[0], nParams[1])) {
-      success = false;
-    } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      _display->startWrite();
-      _display->writePixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
-      loop = true;
-      uint8_t h     = 0;
-      uint8_t v     = 0;
-      bool    isPxh = (adagfx_commands_e::pxh == subcmd);
-
-      if (isPxh) {
-        h++;
-      } else {
-        v++;
+        if (!((nParams[0] < 0) || (nParams[0] > res_x)))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          _display->drawFastHLine(_xo, nParams[0] + _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+          success = true;
+        }
       }
+      break;
+    case adagfx_commands_e::lv: // lv: Vertical line
 
-      while (loop) {
-        String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed merged loop is smaller than 2 separate loops
+      if (argCount == 3)
+      {
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (color.isEmpty()
-            # if ADAGFX_ARGUMENT_VALIDATION
-            || invalidCoordinates(nParams[0] + h + _xo, nParams[1] + v + _yo)
-            # endif // if ADAGFX_ARGUMENT_VALIDATION
-            ) {
-          loop = false;
-        } else {
-          _display->writePixel(nParams[0] + h + _xo, nParams[1] + v + _yo, AdaGFXparseColor(color, _colorDepth));
+        if (!((nParams[0] < 0) || (nParams[0] > res_y)))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          _display->drawFastVLine(nParams[0] + _xo, _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    # if ADAGFX_ENABLE_EXTRA_CMDS
+    case adagfx_commands_e::lm:
+    case adagfx_commands_e::lmr: // lm/lmr: Multi-line, multiple coordinates
+
+      if (argCount >= 5) {
+        uint16_t mcolor         = AdaGFXparseColor(sParams[0], _colorDepth);
+        bool     mloop          = true;
+        uint8_t  parCount       = 0;
+        uint8_t  optCount       = 0;
+        int  cx                 = -1;
+        int  cy                 = -1;
+        bool closeLine          = false;
+        const bool relativeMode = (adagfx_commands_e::lmr == subcmd); // Use Relative mode
+        success = true;
+
+        while (mloop) {
+          sParams[optCount] = parseString(string, parCount + 4);       // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
+
+          if (!validIntFromString(sParams[optCount], nParams[optCount]) && !sParams[optCount].isEmpty()) {
+            mcolor = AdaGFXparseColor(sParams[optCount], _colorDepth); // Interpret as a color
+
+            if (optCount > 0) { optCount--; }
+          }
+          mloop     = !sParams[optCount].isEmpty();
+          closeLine = equals(sParams[optCount], 'c');
+
+          if (mloop) { parCount++; optCount++; } // Next argument
+
+          if ((optCount == 4) || closeLine) { // 0..3 = 4th argument or close the line
+            if (relativeMode) {
+              nParams[2] += nParams[0];
+              nParams[3] += nParams[1];
+            }
+            #  if ADAGFX_ARGUMENT_VALIDATION
+
+            if (invalidCoordinates(nParams[0], nParams[1]) ||
+                invalidCoordinates(nParams[2], nParams[3])) {
+              success = false;
+              mloop   = false; // break out
+            } else
+            #  endif // if ADAGFX_ARGUMENT_VALIDATION
+            {
+              if (closeLine) {
+                nParams[2] = cx;
+                nParams[3] = cy;
+                mloop      = false; // Exit after closing the line
+              }
+              #  ifndef BUILD_NO_DEBUG
+              addLog(LOG_LEVEL_INFO, strformat(F("AdaGFX: cmd: lm x/y/x1/y1:%d/%d/%d/%d loop:%c color:%s"),
+                                               nParams[0], nParams[1], nParams[2], nParams[3],
+                                               mloop ? 'T' : 'f', AdaGFXcolorToString(mcolor, _colorDepth).c_str()));
+              #  endif // ifndef BUILD_NO_DEBUG
+              _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, mcolor);
+
+              if ((cx == -1) && (cy == -1)) {
+                cx = nParams[0];
+                cy = nParams[1];
+              }
+              nParams[0] = nParams[2]; // Move second set to first set
+              nParams[1] = nParams[3];
+              optCount   = 2;          // Get second set of arguments only
+            }
+          }
+        }
+      }
+      break;
+    # endif // if ADAGFX_ENABLE_EXTRA_CMDS
+    case adagfx_commands_e::r:  // r: Rectangle
+    case adagfx_commands_e::rf: // rf: Rectangled, filled
+
+      if ((argCount == 5) ||
+          (argCount == 6)) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!(invCoord_0_1 ||
+              invCoord_0_2_1_3))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          if ((adagfx_commands_e::rf == subcmd) && (argCount == 6)) {
+            _display->fillRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
+          }
+          _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    case adagfx_commands_e::c:  // c: Circle
+    case adagfx_commands_e::cf: // cf: Circle, filled
+
+      if ((argCount == 4) ||
+          (argCount == 5)) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!(invCoord_0_1 ||
+              invalidCoordinates(nParams[2], 0))) // Also check radius
+        # endif  // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          if ((adagfx_commands_e::cf == subcmd) && (argCount == 5)) {
+            _display->fillCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
+          }
+          _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    case adagfx_commands_e::t:  // t: Triangle
+    case adagfx_commands_e::tf: // tf: Triangle, filled
+
+      if ((argCount == 7) ||
+          (argCount == 8)) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!(invCoord_0_1 ||
+              invCoord_2_3 ||
+              invalidCoordinates(nParams[4], nParams[5])))
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          if ((adagfx_commands_e::tf == subcmd) && (argCount == 8)) {
+            _display->fillTriangle(nParams[0] + _xo,
+                                   nParams[1] + _yo,
+                                   nParams[2] + _xo,
+                                   nParams[3] + _yo,
+                                   nParams[4] + _xo,
+                                   nParams[5] + _yo,
+                                   AdaGFXparseColor(sParams[7], _colorDepth));
+          }
+          _display->drawTriangle(nParams[0] + _xo,
+                                 nParams[1] + _yo,
+                                 nParams[2] + _xo,
+                                 nParams[3] + _yo,
+                                 nParams[4] + _xo,
+                                 nParams[5] + _yo,
+                                 AdaGFXparseColor(sParams[6], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    case adagfx_commands_e::rr:  // rr: Rounded rectangle
+    case adagfx_commands_e::rrf: // rrf: Rounded rectangle, filled
+
+      if ((argCount == 6) ||
+          (argCount == 7)) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!(invCoord_0_1 ||
+              invCoord_0_2_1_3 ||
+              invalidCoordinates(nParams[4], 0))) // Also check radius
+        # endif  // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          if ((adagfx_commands_e::rrf == subcmd) && (argCount == 7)) {
+            _display->fillRoundRect(nParams[0] + _xo,
+                                    nParams[1] + _yo,
+                                    nParams[2],
+                                    nParams[3],
+                                    nParams[4],
+                                    AdaGFXparseColor(sParams[6], _colorDepth));
+          }
+          _display->drawRoundRect(nParams[0] + _xo,
+                                  nParams[1] + _yo,
+                                  nParams[2],
+                                  nParams[3],
+                                  nParams[4],
+                                  AdaGFXparseColor(sParams[5], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    case adagfx_commands_e::px: // px: Pixel
+
+      if (argCount == 3) {
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!invCoord_0_1)
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          _display->drawPixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
+          success = true;
+        }
+      }
+      break;
+    case adagfx_commands_e::pxh:
+    case adagfx_commands_e::pxv: // pxh/pxv: Pixels, hor./vert.
+
+      if (argCount > 2) {
+        // incremented merged loop is smaller than 2 separate loops
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (!invCoord_0_1)
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          _display->startWrite();
+          _display->writePixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
+          loop = true;
+          uint8_t h     = 0;
+          uint8_t v     = 0;
+          bool    isPxh = (adagfx_commands_e::pxh == subcmd);
 
           if (isPxh) {
             h++;
           } else {
             v++;
           }
-        }
-        delay(0);
-      }
-      _display->endWrite();
-    }
-  }
-  # if ADAGFX_ENABLE_BMP_DISPLAY
-  else if ((adagfx_commands_e::bmp == subcmd) && (argCount == 3)) { // bmp,x,y,filename.bmp : show bmp from file
-    if (!sParams[2].isEmpty()) {
-      success = showBmp(sParams[2], nParams[0] + _xo, nParams[1] + _yo);
-    } else {
-      success = false;
-    }
-  }
-  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
-  # if ADAGFX_ENABLE_BUTTON_DRAW
-  else if ((adagfx_commands_e::btn == subcmd) && (argCount >= 8) && (nParams[7] != 0))
-  { // btn,state,m,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
-    // ev: 1     2 3 4 5 6 7  8     9     10     11         12        13        14      15        16       17,18,19,20,21
-    // nP: 0     1 2 3 4 5 6  7     8     9      10         11        12        13      14        15       16,17,18,19,20
-    // : Draw a button
-    // m=mode: -2 = disabled, -1 = initial, 0 = default
-    // state:  0 = off, 1 = on, -2 = off + disabled, -1 = on + disabled
-    // id: < 0 = clear area
-    // type & 0x0F: 0 = none, 1 = rectangle, 2 = rounded rect., 3 = circle,
-    // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
-    //               RightBottomAligned, LeftBottomAligned, NoCaption
-    // (*clr = color, TaskIndex, Group and SelGrp are ignored)
-    #  if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[2] + nParams[4], nParams[3] + nParams[5])) {
-      success = false;
-    } else
-    #  endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      // All checked out OK
-      // Default values
-      uint16_t onColor              = ADAGFX_BLUE;
-      uint16_t offColor             = ADAGFX_RED;
-      uint16_t captionColor         = ADAGFX_WHITE;
-      uint8_t  fontScale            = 0;
-      uint16_t borderColor          = ADAGFX_WHITE;
-      uint16_t disabledColor        = 0x9410; // Medium grey
-      uint16_t disabledCaptionColor = 0x5A69; // Dark grey
+          while (loop) {
+            String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed merged loop is smaller than 2 separate loops
 
-      if (!sParams[8].isEmpty()) { onColor = AdaGFXparseColor(sParams[8], _colorDepth); }
+            if (color.isEmpty()
+            # if ADAGFX_ARGUMENT_VALIDATION
+                || invalidCoordinates(nParams[0] + h + _xo, nParams[1] + v + _yo)
+            # endif // if ADAGFX_ARGUMENT_VALIDATION
+                ) {
+              loop = false;
+            } else {
+              _display->writePixel(nParams[0] + h + _xo, nParams[1] + v + _yo, AdaGFXparseColor(color, _colorDepth));
 
-      if (!sParams[9].isEmpty()) { offColor = AdaGFXparseColor(sParams[9], _colorDepth); }
-
-      if (!sParams[10].isEmpty()) { captionColor = AdaGFXparseColor(sParams[10], _colorDepth); }
-
-      if ((nParams[11] > 0) && (nParams[11] <= 10)) { fontScale = nParams[11]; }
-
-      if (!sParams[14].isEmpty()) { borderColor = AdaGFXparseColor(sParams[14], _colorDepth); }
-
-      if (!sParams[15].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[15], _colorDepth); }
-
-      if (!sParams[16].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[16], _colorDepth); }
-
-      uint16_t fillColor = onColor;
-      uint16_t textColor = captionColor;
-      bool     clearArea = nParams[7] < 0;
-      nParams[7] = std::abs(nParams[7]);
-
-      Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
-      Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
-
-      // Check mode & state: -2, -1, 0, 1 to select used colors
-      if (nParams[0] == 0) {
-        fillColor = offColor;
-      }
-
-      if ((nParams[1] == -2) || (nParams[0] < 0)) {
-        fillColor = disabledColor;
-        textColor = disabledCaptionColor;
-      } else if (clearArea) {
-        fillColor   = _bgcolor; //
-        borderColor = _bgcolor;
-      }
-
-      // Clear the area?
-      if ((buttonType != Button_type_e::None) ||
-          clearArea) {
-        drawButtonShape(buttonType,
-                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
-                        _bgcolor, _bgcolor);
-      }
-
-      // Check button-type bits (mask: 0x0F) to draw correct shape
-      if (!clearArea) {
-        drawButtonShape(buttonType,
-                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
-                        fillColor, borderColor);
-      }
-
-      // Display caption? (or bitmap)
-      if (!clearArea &&
-          (buttonLayout != Button_layout_e::NoCaption)) {
-        int16_t  x1, y1;
-        uint16_t w1, h1, w2, h2;
-        String   newString;
-
-        // Determine alignment parameters
-        if ((nParams[0] == 1) || (nParams[0] == -1)) { // 1 = on+enabled, -1 = on+disabled
-          newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
-        } else {
-          newString = sParams[13].isEmpty() ? sParams[6] : sParams[13];
-        }
-        newString = AdaGFXparseTemplate(newString, 20);
-
-        _display->setTextSize(fontScale);                             // set scaling
-        _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // get caption length and height in pixels
-        _display->getTextBounds(F(" "),    0, 0, &x1, &y1, &w2, &h2); // measure space width for little margins
-
-        // Check button-alignment bits (mask 0xF0) for caption placement, modifies the x/y arguments passed!
-        // Little margin is: from left/right: half of the width of a space, from top/bottom: half of height of the font used
-
-        switch (buttonLayout) {
-          case Button_layout_e::CenterAligned:
-            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
-            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
-            break;
-          case Button_layout_e::LeftAligned:
-            nParams[2] += w2 / 2;                     // A little margin from left
-            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
-            break;
-          case Button_layout_e::TopAligned:
-            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
-            nParams[3] += h1 / 2;                     // A little margin from top
-            break;
-          case Button_layout_e::RightAligned:
-            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
-            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
-            break;
-          case Button_layout_e::BottomAligned:
-            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
-            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
-            break;
-          case Button_layout_e::LeftTopAligned:
-            nParams[2] += w2 / 2;                     // A little margin from left
-            nParams[3] += h1 / 2;                     // A little margin from top
-            break;
-          case Button_layout_e::RightTopAligned:
-            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
-            nParams[3] += h1 / 2;                     // A little margin from top
-            break;
-          case Button_layout_e::RightBottomAligned:
-            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
-            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
-            break;
-          case Button_layout_e::LeftBottomAligned:
-            nParams[2] += w2 / 2;                     // A little margin from left
-            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
-            break;
-          case Button_layout_e::Bitmap:
-          {                                           // Use ON/OFF caption to specify (full) bitmap filename
-            #  if ADAGFX_ENABLE_BMP_DISPLAY
-
-            if (!newString.isEmpty()) {
-              int32_t offX = 0; // Allow optional arguments for x and y offset values, usage:
-              int32_t offY = 0; // [x,[y,]]filename.bmp
-
-              if (newString.indexOf(',') > -1) {
-                String tmp = parseString(newString, 1);
-                validIntFromString(tmp, offX);
-                newString = parseStringToEndKeepCase(newString, 2);
-
-                if (newString.indexOf(',') > -1) {
-                  tmp = parseString(newString, 1);
-                  validIntFromString(tmp, offY);
-                  newString = parseStringToEndKeepCase(newString, 2);
-                }
+              if (isPxh) {
+                h++;
+              } else {
+                v++;
               }
-              success = showBmp(newString, nParams[2] + _xo + offX, nParams[3] + _yo + offY);
-            } else
-            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
-            {
-              success = false;
             }
-            break;
+            delay(0);
           }
-          case Button_layout_e::NoCaption:
-          case Button_layout_e::Alignment_MAX:
-            break;
+          _display->endWrite();
+          success = true;
         }
-
-        if ((buttonLayout != Button_layout_e::NoCaption) &&
-            (buttonLayout != Button_layout_e::Bitmap)) {
-          // Set position and colors, then print
-          _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
-          _display->setTextColor(textColor, textColor); // transparent bg results in button color
-          _display->print(newString);
-
-          // restore colors
-          _display->setTextColor(_fgcolor, _bgcolor);
-        }
-
-        // restore font scaling
-        _display->setTextSize(_fontscaling);
       }
-    }
-  }
-  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
-  # if ADAGFX_ENABLE_FRAMED_WINDOW
-  else if ((adagfx_commands_e::win == subcmd) && (argCount >= 1) && (argCount <= 2)) {    // win: select window by id
-    success = selectWindow(nParams[0], nParams[1]);
-  }
-  else if ((adagfx_commands_e::defwin == subcmd) && (argCount >= 5) && (argCount <= 6)) { // defwin: define window
-    const int8_t rot = _rotation;
-    #  if ADAGFX_ARGUMENT_VALIDATION
-    const int16_t curWin = getWindow();
+      break;
+    # if ADAGFX_ENABLE_BMP_DISPLAY
+    case adagfx_commands_e::bmp: // bmp,x,y,filename.bmp : show bmp from file
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
-
-    if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
-
-    if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
-      success = false;
-
-      if (curWin != 0) { selectWindow(curWin); }  // restore current window
-
-      if (rot != _rotation) { setRotation(rot); } // Restore rotation
-    } else
-    #  endif  // if ADAGFX_ARGUMENT_VALIDATION
-    {
-      #  if ADAGFX_ARGUMENT_VALIDATION
-
-      if (curWin != 0) { selectWindow(curWin); } // restore current window
-      #  endif // if ADAGFX_ARGUMENT_VALIDATION
-
-      if (nParams[4] > 0) {                      // Window 0 is the raw window, having the full size, created at initialization of this
-                                                 // helper instance
-        #  ifndef BUILD_NO_DEBUG
-        int16_t win = // avoid compiler warning
-        #  endif // ifndef BUILD_NO_DEBUG
-        defineWindow(nParams[0],
-                     nParams[1],
-                     nParams[2],
-                     nParams[3],
-                     nParams[4],
-                     argCount == 6 ? nParams[5] : _rotation);
-        #  ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, concat(F("AdaGFX defined window id: "), static_cast<int>(win)));
-        }
-        #  endif // ifndef BUILD_NO_DEBUG
-
-        if (rot != _rotation) { setRotation(rot); } // Restore rotation, also update new window
-      } else {
-        success = false;
+      if ((argCount == 3) && !sParams[2].isEmpty()) {
+        success = showBmp(sParams[2], nParams[0] + _xo, nParams[1] + _yo);
       }
+      break;
+    # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+    # if ADAGFX_ENABLE_BUTTON_DRAW
+    case adagfx_commands_e::btn:
 
-      // logWindows(F(" deFwin ")); // Use for debugging only?
-    }
-  }
-  else if ((adagfx_commands_e::delwin == subcmd) && (argCount == 1)) { // delwin: delete window
-    // logWindows(F(" deLwin ")); // use for debugging only
+      if ((argCount >= 8) && (nParams[7] != 0)) {
+        // btn,state,m,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
+        // ev: 1     2 3 4 5 6 7  8     9     10     11         12        13        14      15        16       17,18,19,20,21
+        // nP: 0     1 2 3 4 5 6  7     8     9      10         11        12        13      14        15       16,17,18,19,20
+        // : Draw a button
+        // m=mode: -2 = disabled, -1 = initial, 0 = default
+        // state:  0 = off, 1 = on, -2 = off + disabled, -1 = on + disabled
+        // id: < 0 = clear area
+        // type & 0x0F: 0 = none, 1 = rectangle, 2 = rounded rect., 3 = circle,
+        // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
+        //               RightBottomAligned, LeftBottomAligned, NoCaption
+        // (*clr = color, TaskIndex, Group and SelGrp are ignored)
+        #  if ADAGFX_ARGUMENT_VALIDATION
 
-    if (nParams[0] > 0) {                                              // don't delete window 0
-      success = deleteWindow(nParams[0]);
-    }
-  }
-  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  else {
-    success = false;
+        if (!(invCoord_2_3 ||
+              invalidCoordinates(nParams[2] + nParams[4], nParams[3] + nParams[5])))
+        #  endif  // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          // All checked out OK
+          // Default values
+          uint16_t onColor              = ADAGFX_BLUE;
+          uint16_t offColor             = ADAGFX_RED;
+          uint16_t captionColor         = ADAGFX_WHITE;
+          uint8_t  fontScale            = 0;
+          uint16_t borderColor          = ADAGFX_WHITE;
+          uint16_t disabledColor        = 0x9410; // Medium grey
+          uint16_t disabledCaptionColor = 0x5A69; // Dark grey
+          success = true;
+
+          if (!sParams[8].isEmpty()) { onColor = AdaGFXparseColor(sParams[8], _colorDepth); }
+
+          if (!sParams[9].isEmpty()) { offColor = AdaGFXparseColor(sParams[9], _colorDepth); }
+
+          if (!sParams[10].isEmpty()) { captionColor = AdaGFXparseColor(sParams[10], _colorDepth); }
+
+          if ((nParams[11] > 0) && (nParams[11] <= 10)) { fontScale = nParams[11]; }
+
+          if (!sParams[14].isEmpty()) { borderColor = AdaGFXparseColor(sParams[14], _colorDepth); }
+
+          if (!sParams[15].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[15], _colorDepth); }
+
+          if (!sParams[16].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[16], _colorDepth); }
+
+          uint16_t   fillColor = onColor;
+          uint16_t   textColor = captionColor;
+          const bool clearArea = nParams[7] < 0;
+          nParams[7] = std::abs(nParams[7]);
+
+          const Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
+          const Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
+
+          // Check mode & state: -2, -1, 0, 1 to select used colors
+          if (nParams[0] == 0) {
+            fillColor = offColor;
+          }
+
+          if ((nParams[1] == -2) || (nParams[0] < 0)) {
+            fillColor = disabledColor;
+            textColor = disabledCaptionColor;
+          } else if (clearArea) {
+            fillColor   = _bgcolor; //
+            borderColor = _bgcolor;
+          }
+
+          // Clear the area?
+          if ((buttonType != Button_type_e::None) ||
+              clearArea) {
+            drawButtonShape(buttonType,
+                            nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+                            _bgcolor, _bgcolor);
+          }
+
+          // Check button-type bits (mask: 0x0F) to draw correct shape
+          if (!clearArea) {
+            drawButtonShape(buttonType,
+                            nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+                            fillColor, borderColor);
+          }
+
+          // Display caption? (or bitmap)
+          if (!clearArea &&
+              (buttonLayout != Button_layout_e::NoCaption)) {
+            int16_t  x1, y1;
+            uint16_t w1, h1, w2, h2;
+            String   newString;
+
+            // Determine alignment parameters
+            if ((nParams[0] == 1) || (nParams[0] == -1)) { // 1 = on+enabled, -1 = on+disabled
+              newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
+            } else {
+              newString = sParams[13].isEmpty() ? sParams[6] : sParams[13];
+            }
+            newString = AdaGFXparseTemplate(newString, 20);
+
+            _display->setTextSize(fontScale);                             // set scaling
+            _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // get caption length and height in pixels
+            _display->getTextBounds(F(" "),    0, 0, &x1, &y1, &w2, &h2); // measure space width for little margins
+
+            // Check button-alignment bits (mask 0xF0) for caption placement, modifies the x/y arguments passed!
+            // Little margin is: from left/right: half of the width of a space, from top/bottom: half of height of the font used
+
+            switch (buttonLayout) {
+              case Button_layout_e::CenterAligned:
+                nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+                nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+                break;
+              case Button_layout_e::LeftAligned:
+                nParams[2] += w2 / 2;                     // A little margin from left
+                nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+                break;
+              case Button_layout_e::TopAligned:
+                nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+                nParams[3] += h1 / 2;                     // A little margin from top
+                break;
+              case Button_layout_e::RightAligned:
+                nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+                nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+                break;
+              case Button_layout_e::BottomAligned:
+                nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+                nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+                break;
+              case Button_layout_e::LeftTopAligned:
+                nParams[2] += w2 / 2;                     // A little margin from left
+                nParams[3] += h1 / 2;                     // A little margin from top
+                break;
+              case Button_layout_e::RightTopAligned:
+                nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+                nParams[3] += h1 / 2;                     // A little margin from top
+                break;
+              case Button_layout_e::RightBottomAligned:
+                nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+                nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+                break;
+              case Button_layout_e::LeftBottomAligned:
+                nParams[2] += w2 / 2;                     // A little margin from left
+                nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+                break;
+              case Button_layout_e::Bitmap:
+              {                                           // Use ON/OFF caption to specify (full) bitmap filename
+                #  if ADAGFX_ENABLE_BMP_DISPLAY
+
+                if (!newString.isEmpty()) {
+                  int32_t offX = 0; // Allow optional arguments for x and y offset values, usage:
+                  int32_t offY = 0; // [x,[y,]]filename.bmp
+
+                  if (newString.indexOf(',') > -1) {
+                    String tmp = parseString(newString, 1);
+                    validIntFromString(tmp, offX);
+                    newString = parseStringToEndKeepCase(newString, 2);
+
+                    if (newString.indexOf(',') > -1) {
+                      tmp = parseString(newString, 1);
+                      validIntFromString(tmp, offY);
+                      newString = parseStringToEndKeepCase(newString, 2);
+                    }
+                  }
+                  success = showBmp(newString, nParams[2] + _xo + offX, nParams[3] + _yo + offY);
+                }
+                #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+                {
+                  success = false;
+                }
+                break;
+              }
+              case Button_layout_e::NoCaption:
+              case Button_layout_e::Alignment_MAX:
+                break;
+            }
+
+            if ((buttonLayout != Button_layout_e::NoCaption) &&
+                (buttonLayout != Button_layout_e::Bitmap)) {
+              // Set position and colors, then print
+              _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
+              _display->setTextColor(textColor, textColor); // transparent bg results in button color
+              _display->print(newString);
+
+              // restore colors
+              _display->setTextColor(_fgcolor, _bgcolor);
+            }
+
+            // restore font scaling
+            _display->setTextSize(_fontscaling);
+          }
+        }
+      }
+      break;
+    # endif // if ADAGFX_ENABLE_BUTTON_DRAW
+    # if ADAGFX_ENABLE_FRAMED_WINDOW
+    case adagfx_commands_e::win: // win: select window by id
+
+      if ((argCount >= 1) && (argCount <= 2)) {
+        success = selectWindow(nParams[0], nParams[1]);
+      }
+      break;
+    case adagfx_commands_e::defwin: // defwin: define window
+
+      if ((argCount >= 5) && (argCount <= 6)) {
+        const int8_t rot = _rotation;
+        #  if ADAGFX_ARGUMENT_VALIDATION
+        const int16_t curWin = getWindow();
+
+        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+
+        if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
+
+        if (invCoord_0_1 ||
+            invCoord_0_2_1_3) {
+          if (curWin != 0) { selectWindow(curWin); }  // restore current window
+
+          if (rot != _rotation) { setRotation(rot); } // Restore rotation
+        } else
+        #  endif  // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          #  if ADAGFX_ARGUMENT_VALIDATION
+
+          if (curWin != 0) { selectWindow(curWin); } // restore current window
+          #  endif // if ADAGFX_ARGUMENT_VALIDATION
+
+          if (nParams[4] > 0) {                  // Window 0 is the raw window, having the full size, created at initialization of this
+            success = true;
+
+            // helper instance
+            #  ifndef BUILD_NO_DEBUG
+            int16_t win = // avoid compiler warning
+            #  endif // ifndef BUILD_NO_DEBUG
+            defineWindow(nParams[0],
+                         nParams[1],
+                         nParams[2],
+                         nParams[3],
+                         nParams[4],
+                         argCount == 6 ? nParams[5] : _rotation);
+            #  ifndef BUILD_NO_DEBUG
+
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              addLogMove(LOG_LEVEL_INFO, strformat(F("AdaGFX defined window id: %d"), win));
+            }
+            #  endif // ifndef BUILD_NO_DEBUG
+
+            if (rot != _rotation) { setRotation(rot); } // Restore rotation, also update new window
+          }
+
+          // logWindows(F(" deFwin ")); // Use for debugging only?
+        }
+      }
+      break;
+    case adagfx_commands_e::delwin: // delwin: delete window, don't delete window 0
+
+      if ((argCount == 1) && (nParams[0] > 0)) {
+        // logWindows(F(" deLwin ")); // use for debugging only
+
+        success = deleteWindow(nParams[0]);
+      }
+      break;
+    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   }
 
   return success;
@@ -2188,29 +2308,10 @@ void AdafruitGFX_helper::printText(const char     *string,
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("printText: clear: _x:");
-      log += _x;
-      log += F(", oTop:");
-      log += oTop;
-      log += F(", _y:");
-      log += _y;
-      log += F(", xTx:");
-      log += xText;
-      log += F(", yTx:");
-      log += yText;
-      log += F(", wTx:");
-      log += wText;
-      log += F(", hTx:");
-      log += hText;
-      log += F(", oBot:");
-      log += oBottom;
-      log += F(", _res_x/max:");
-      log += _res_x;
-      log += '/';
-      log += res_x;
-      log += F(", str:");
-      log += newString;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("printText: clear: _x:%d, oTop:%d, _y:%d, xTx:%d, yTx:%d, wTx:%d,"
+                                              " hTx:%d, oBot:%d, _res_x/max:%d/%d, str:%s"),
+                                            _x, oTop, _y, xText, yText, wText,
+                                            hText, oBottom, _res_x, res_x, newString.c_str()));
     }
     # endif // ifndef BUILD_NO_DEBUG
 
@@ -2294,7 +2395,7 @@ uint16_t AdaGFXparseColor(String                & s,
                           const AdaGFXColorDepth& colorDepth,
                           const bool              emptyIsBlack) {
   s.toLowerCase();
-  int32_t   result = -1; // No result yet
+  int32_t   result  = -1; // No result yet
   const int color_i = GetCommandCode(s.c_str(), adagfx_colornames);
 
   const adagfx_colornames_e color = static_cast<adagfx_colornames_e>(color_i);
@@ -2700,23 +2801,8 @@ void AdafruitGFX_helper::calculateTextMetrics(const uint8_t fontwidth,
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-    log.reserve(60);
-    log += F("AdaGFX:");
-
-    if (!_trigger.isEmpty()) {
-      log += F(" tr: ");
-      log += _trigger;
-    }
-    log += F(" x: ");
-    log += res_x;
-    log += F(", y: ");
-    log += res_y;
-    log += F(", text columns: ");
-    log += _textcols;
-    log += F(" rows: ");
-    log += _textrows;
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("AdaGFX: tr: %s x: %d, y: %d, text columns: %d rows: %d"),
+                                           _trigger.c_str(), res_x, res_y, _textcols, _textrows));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
@@ -2742,18 +2828,8 @@ bool AdafruitGFX_helper::invalidCoordinates(const int  X,
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
-    String log;
-
-    log.reserve(49);
-    log += F("invalidCoordinates: X:");
-    log += X;
-    log += '/';
-    log += (colRowMode ? _textcols : res_x);
-    log += F(" Y:");
-    log += Y;
-    log += '/';
-    log += (colRowMode ? _textrows : res_y);
-    addLogMove(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, strformat(F("invalidCoordinates: X:%d/%d Y:%d/%d"),
+                                           X, colRowMode ? _textcols : res_x, Y, colRowMode ? _textrows : res_y));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
@@ -2801,7 +2877,7 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
   }
   # if ADAGFX_ENABLE_FRAMED_WINDOW
 
-  for (uint8_t i = 0; i < _windows.size(); i++) {                // Swap x/y for all matching windows
+  for (uint8_t i = 0; i < _windows.size(); ++i) {                // Swap x/y for all matching windows
     switch (rotation) {
       case 0:                                                    // 0 degrees
         _windows[i].top_left.x     = _windows[i].org_top_left.x; // All original
@@ -2940,27 +3016,10 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       colors = 1 << depth;
     }
     #  ifndef BUILD_NO_DEBUG
-    String log;
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log.reserve(80);
-      log += F("showBmp: bitmap w:");
-      log += bmpWidth;
-      log += F(", h:");
-      log += bmpHeight;
-      log += F(", dpt:");
-      log += depth;
-      log += F(", colors:");
-      log += colors;
-      log += F(", cmp:");
-      log += compression;
-      log += F(", pl:");
-      log += planes;
-      log += F(", x:");
-      log += x;
-      log += F(", y:");
-      log += y;
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(F("showBmp: bitmap w:%d, h:%d, dpt:%d, colors:%d, cmp:%d, pl:%d, x:%d, y:%d"),
+                                       bmpWidth, bmpHeight, depth, colors, compression, planes, x, y));
     }
     #  endif // ifndef BUILD_NO_DEBUG
 
@@ -2994,16 +3053,8 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     #  ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log.clear();
-      log += F("showBmp: x:");
-      log += x;
-      log += F(", y:");
-      log += y;
-      log += F(", dw:");
-      log += _display->width();
-      log += F(", dh:");
-      log += _display->height();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("showBmp: x:%d, y:%d, dw:%d, dh:%d"),
+                                           x, y, _display->width(), _display->height()));
     }
     #  endif // ifndef BUILD_NO_DEBUG
 
@@ -3026,7 +3077,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
             if (depth < 16) {
               // Load and quantize color table
-              for (uint16_t c = 0; c < colors; c++) {
+              for (uint16_t c = 0; c < colors; ++c) {
                 b = file.read();
                 g = file.read();
                 r = file.read();
@@ -3036,7 +3087,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               }
             }
 
-            for (row = 0; row < loadHeight; row++) { // For each scanline...
+            for (row = 0; row < loadHeight; ++row) { // For each scanline...
               delay(0);                              // Keep ESP8266 happy
 
               // Seek to start of scan line.  It might seem labor-intensive
@@ -3067,7 +3118,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 srcidx = sizeof sdbuf;                // Force buffer reload
               }
 
-              for (col = 0; col < loadWidth; col++) { // For each pixel...
+              for (col = 0; col < loadWidth; ++col) { // For each pixel...
                 if (srcidx >= sizeof sdbuf) {         // Time to load more?
                   if (transact && canTransact) {
                     _tft->dmaWait();
@@ -3092,7 +3143,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                     } else {
                       // loop over buffer
 
-                      for (uint16_t p = 0; p < destidx; p++) {
+                      for (uint16_t p = 0; p < destidx; ++p) {
                         _display->drawPixel(x + p, y + drow, dest[p]);
                       }
                     }
@@ -3141,7 +3192,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               } else {
                 // loop over buffer
                 if (destidx) {
-                  for (uint16_t p = 0; p < destidx; p++) {
+                  for (uint16_t p = 0; p < destidx; ++p) {
                     _display->drawPixel(x + p, y + drow, dest[p]);
 
                     if (p % 100 == 0) { delay(0); }
@@ -3235,7 +3286,7 @@ bool AdafruitGFX_helper::selectWindow(const uint8_t& windowId,
 int16_t AdafruitGFX_helper::getWindowIndex(const int16_t& windowId) {
   size_t result = 0;
 
-  for (auto win = _windows.begin(); win != _windows.end(); win++, result++) {
+  for (auto win = _windows.begin(); win != _windows.end(); win++, ++result) {
     if ((*win).id == windowId) {
       break;
     }
@@ -3345,37 +3396,14 @@ bool AdafruitGFX_helper::deleteWindow(const uint8_t& windowId) {
  ***************************************************************************/
 void AdafruitGFX_helper::logWindows(const String& prefix) {
   #  ifndef BUILD_NO_DEBUG
-  String log;
-
-  log.reserve(50);
 
   for (auto it = _windows.begin(); it != _windows.end(); it++) {
-    log.clear();
-    log += F("AdaGFX window ");
-    log += prefix;
-    log += F(": ");
-    log += (*it).id;
-    log += F(", x:");
-    log += (*it).top_left.x;
-    log += F(", y:");
-    log += (*it).top_left.y;
-    log += F(", w:");
-    log += (*it).width_height.x;
-    log += F(", h:");
-    log += (*it).width_height.y;
-    log += F(", rot:");
-    log += (*it).rotation;
-    log += F(", current: ");
-    log += getWindow();
-    log += F(", org x:");
-    log += (*it).org_top_left.x;
-    log += F(", y:");
-    log += (*it).org_top_left.y;
-    log += F(", w:");
-    log += (*it).org_width_height.x;
-    log += F(", h:");
-    log += (*it).org_width_height.y;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("AdaGFX window %s: %d, x:%d, y:%d, w:%d, h:%d"
+                                           ", rot%d, current: %d, org x:%d, y:%d, w:%d, h:%d"),
+                                         prefix.c_str(), (*it).id, (*it).top_left.x, (*it).top_left.y,
+                                         (*it).width_height.x, (*it).width_height.y,
+                                         (*it).rotation, getWindow(), (*it).org_top_left.x, (*it).org_top_left.y,
+                                         (*it).org_width_height.x, (*it).org_width_height.y));
   }
   #  endif // ifndef BUILD_NO_DEBUG
 }
