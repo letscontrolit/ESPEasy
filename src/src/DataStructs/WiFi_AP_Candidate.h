@@ -73,7 +73,9 @@ struct WiFi_AP_Candidate {
   //  String  key;
 
   #ifdef ESP32
+  # if ESP_IDF_VERSION_MAJOR >= 5
   wifi_country_t country;
+  #endif
   #endif
 
   unsigned long last_seen = 0u;
