@@ -1633,6 +1633,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -2338,6 +2341,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
