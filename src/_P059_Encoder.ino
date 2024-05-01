@@ -117,7 +117,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
       String log = F("QEI  : GPIO: ");
 
-      for (uint8_t i = 0; i < 3; i++)
+      for (uint8_t i = 0; i < 3; ++i)
       {
         int pin = PIN(i);
 
@@ -163,9 +163,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("QEI  : ");
-            log += c;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), c));
           }
 
           sendData(event);
@@ -196,9 +194,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0)
           {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("QEI  : ");
-              log += string;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), string));
             }
             P_059_sensordefs[event->TaskIndex]->write(event->Par1);
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis());

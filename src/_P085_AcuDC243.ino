@@ -131,13 +131,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-        String chksumStats;
-        chksumStats  = reads_pass;
-        chksumStats += '/';
-        chksumStats += reads_crc_failed;
-        chksumStats += '/';
-        chksumStats += reads_nodata;
-        addHtml(chksumStats);
+        addHtml(strformat(F("%d/%d/%d"), reads_pass, reads_crc_failed, reads_nodata));
 
         addFormSubHeader(F("Calibration"));
 
@@ -218,24 +212,24 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P085_data) && P085_data->isInitialized()) {
-        uint16_t log_enabled = isFormItemChecked(F("en_log")) ? 1 : 0;
-        P085_data->modbus.writeMultipleRegisters(0x500, log_enabled);
+        uint16_t value = isFormItemChecked(F("en_log")) ? 1 : 0;
+        P085_data->modbus.writeMultipleRegisters(0x500, value);
         delay(1);
 
-        uint16_t log_int = getFormItemInt(F("log_int"));
-        P085_data->modbus.writeMultipleRegisters(0x502, log_int);
+        value = getFormItemInt(F("log_int"));
+        P085_data->modbus.writeMultipleRegisters(0x502, value);
         delay(1);
 
-        uint16_t current = getFormItemInt(F("fr_curr"));
-        P085_data->modbus.writeMultipleRegisters(0x104, current);
+        value = getFormItemInt(F("fr_curr"));
+        P085_data->modbus.writeMultipleRegisters(0x104, value);
         delay(1);
 
-        uint16_t shunt = getFormItemInt(F("fr_shunt"));
-        P085_data->modbus.writeMultipleRegisters(0x105, shunt);
+        value = getFormItemInt(F("fr_shunt"));
+        P085_data->modbus.writeMultipleRegisters(0x105, value);
         delay(1);
 
-        uint16_t voltage = getFormItemInt(F("fr_volt"));
-        P085_data->modbus.writeMultipleRegisters(0x107, voltage);
+        value = getFormItemInt(F("fr_volt"));
+        P085_data->modbus.writeMultipleRegisters(0x107, value);
 
         if (isFormItemChecked(F("clear_log")))
         {
@@ -288,7 +282,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P085_data) && P085_data->isInitialized()) {
         for (int i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
-          UserVar.setFloat(event->TaskIndex, i,  p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event));
+          UserVar.setFloat(event->TaskIndex, i, p085_readValue(PCONFIG(i + P085_QUERY1_CONFIG_POS), event));
           delay(1);
         }
 

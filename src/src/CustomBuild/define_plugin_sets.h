@@ -500,6 +500,11 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching I2C device address
 
+    #ifdef FEATURE_TARSTREAM_SUPPORT
+      #undef FEATURE_TARSTREAM_SUPPORT
+    #endif
+    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarFile support for size
+
     #ifndef USES_P001
         #define USES_P001   // switch
     #endif
@@ -1628,6 +1633,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -1727,6 +1735,9 @@ To create/register a plugin, you have to :
        #undef FEATURE_I2C_DEVICE_CHECK
      #endif
      #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+    //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
+    //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
+    //  #endif // FEATURE_TARSTREAM_SUPPORT
    #endif
    #if !defined(FEATURE_SD) && !defined(ESP8266)
      #define FEATURE_SD 1
@@ -1967,6 +1978,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
+    #ifdef ESP32
+      #define TOMTHUMB_USE_EXTENDED 1
+    #endif
+  #endif
+  #if !defined(USES_P105) && defined(ESP32)
+    #define USES_P105   // AHT10/20/21  (used in TinyTronics Smart Home RGB LED Matrix)
   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -2005,6 +2022,12 @@ To create/register a plugin, you have to :
   // To be defined
 #endif
 
+// Disable few plugin(s) to make the build fit :/
+#ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
+  #ifdef USES_P039
+    #undef USES_P039  // Environment - Thermocouple
+  #endif
+#endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
 // EXPERIMENTAL (playground) #######################
 #ifdef PLUGIN_SET_EXPERIMENTAL
@@ -2324,6 +2347,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
@@ -3245,6 +3271,20 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_TARSTREAM_SUPPORT
+  #define FEATURE_TARSTREAM_SUPPORT   1
+#endif // FEATURE_TARSTREAM_SUPPORT
+
+// Check for plugins that will use Extended Custom Settings storage when available
+#ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
+  #if defined(USES_P094) || defined(USES_P095) || defined(USES_P096) || defined(USES_P099) || defined(USES_P104) || defined(USES_P116) || defined(USES_P123) || defined(USES_P131)
+    #define FEATURE_EXTENDED_CUSTOM_SETTINGS 1
+  #else
+    #define FEATURE_EXTENDED_CUSTOM_SETTINGS 0
+  #endif
+#endif // ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+    
 
 #ifndef FEATURE_CLEAR_I2C_STUCK
   #ifdef ESP8266

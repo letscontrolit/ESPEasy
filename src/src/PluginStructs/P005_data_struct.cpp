@@ -4,7 +4,7 @@
 
 
 // DEBUG code using logic analyzer for timings
-// #define DEBUG_LOGIC_ANALYZER_PIN  27 
+// #define DEBUG_LOGIC_ANALYZER_PIN  27
 
 
 // Macros to perform direct access on GPIOs
@@ -53,9 +53,8 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
   }
 
   if (loglevelActiveFor(isError ? LOG_LEVEL_ERROR : LOG_LEVEL_INFO)) {
-    String text;
-    text  = F("DHT  : ");
-    text += P005_logString(logNr);
+    String text = concat(F("DHT  : "),
+                         P005_logString(logNr));
 
     if (logNr == P005_logNr::P005_info_temperature) {
       text += formatUserVarNoCheck(event->TaskIndex, 0);
@@ -69,7 +68,7 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
 
 P005_data_struct::P005_data_struct(struct EventStruct *event) {
   SensorModel = PCONFIG(0);
-  DHT_pin = CONFIG_PIN1;
+  DHT_pin     = CONFIG_PIN1;
 }
 
 /*********************************************************************************************\
@@ -77,21 +76,22 @@ P005_data_struct::P005_data_struct(struct EventStruct *event) {
 \*********************************************************************************************/
 bool P005_data_struct::waitState(uint32_t state)
 {
-  const uint64_t   timeout          = getMicros64() + 100;
+  const uint64_t timeout = getMicros64() + 100;
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
   // DEBUG code using logic analyzer for timings
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
   while (DIRECT_pinRead(DHT_pin) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
   }
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
   return true;
 }
 
@@ -104,11 +104,12 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   // With the direct pinmode calls we don't set the pull-up or -down resistors.
   pinMode(DHT_pin, INPUT_PULLUP);
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
   // DEBUG code using logic analyzer for timings
   DIRECT_PINMODE_OUTPUT(DEBUG_LOGIC_ANALYZER_PIN);
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
   // To begin asking the DHT22 for humidity and temperature data,
   // Start sequence to get data from a DHTxx sensor:
@@ -127,16 +128,17 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   }
 
   {
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
     DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
     DIRECT_PINMODE_INPUT(DHT_pin);
+
     // pinMode(DHT_pin, INPUT_PULLUP);  // Way too slow, takes upto 227 usec
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
     DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
   }
 
   bool readingAborted = false;
@@ -158,9 +160,9 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   ISR_noInterrupts();
   receive_start = waitState(0) && waitState(1) && waitState(0);
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
   if (receive_start) {
     // We know we're now at a "low" state.
@@ -170,9 +172,10 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     for (dht_byte = 0; dht_byte < 5 && !readingAborted; ++dht_byte)
     {
       // Start reading next byte
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
       DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
       for (uint8_t t = 0; t < 16 && !readingAborted; ++t) {
         // "even" index = "low" duration
         // "odd"  index = "high" duration
@@ -199,9 +202,9 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           timings[t] = 255;
         }
       }
-#ifdef DEBUG_LOGIC_ANALYZER_PIN
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
       DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
       if (!readingAborted) {
         // Evaluate the timings
@@ -251,17 +254,14 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
 
   if (dht_byte != 0) {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("DHT  : ");
-      log += F("Avg Low: ");
-      log += static_cast<float>(avg_low_total) / dht_byte;
-      log += F(" usec ");
-      log += dht_byte;
-      log += F(" bytes:");
+      String log = strformat(F("DHT  : Avg Low: %.2f usec %d bytes:"), static_cast<float>(avg_low_total) / dht_byte, dht_byte);
+
       for (int i = 0; i < dht_byte; ++i) {
         log += ' ';
         log += formatToHex_no_prefix(dht_dat[i], 2);
       }
       log += F(" timings:");
+
       for (int i = 0; i < 16; ++i) {
         log += ' ';
         log += timings[i];
@@ -311,44 +311,44 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       break;
 
     case P005_MS01:
-      {
-        // Conversion from Tasmota:
-        // https://github.com/arendst/Tasmota/blob/0ea36d996c2b8b519ae5aa127f1a5fea354706af/tasmota/tasmota_xsns_sensor/xsns_06_dht_v7.ino#L297
+    {
+      // Conversion from Tasmota:
+      // https://github.com/arendst/Tasmota/blob/0ea36d996c2b8b519ae5aa127f1a5fea354706af/tasmota/tasmota_xsns_sensor/xsns_06_dht_v7.ino#L297
 
 
-        const int16_t voltage = ((dht_dat[0] << 8) | dht_dat[1]);
+      const int16_t voltage = ((dht_dat[0] << 8) | dht_dat[1]);
 
-        // Rough approximate of soil moisture % (based on values observed in the eWeLink app)
-        // Observed values are available here: https://gist.github.com/minovap/654cdcd8bc37bb0d2ff338f8d144a509
+      // Rough approximate of soil moisture % (based on values observed in the eWeLink app)
+      // Observed values are available here: https://gist.github.com/minovap/654cdcd8bc37bb0d2ff338f8d144a509
 
 
-        // Info on capacitive soil moisture sensors:
-        // https://makersportal.com/blog/2020/5/26/capacitive-soil-moisture-calibration-with-arduino
+      // Info on capacitive soil moisture sensors:
+      // https://makersportal.com/blog/2020/5/26/capacitive-soil-moisture-calibration-with-arduino
 
-        if (voltage < 15037) {
-          const float x = voltage - 15200;
-          humidity = - powf(0.0024f * x, 3) - 0.0004f * x + 20.1f;
-        }
-        else if (voltage < 22300) {
-          humidity = - 0.00069f * voltage + 30.6f;
-        }
-        else {
-          const float x = voltage - 22800;
-          humidity = - powf(0.00046f * x, 3) - 0.0004f * x + 15;
-        }
-
-        if (definitelyLessThan(humidity, 0.0f)) {
-          humidity = 0.0f;
-        }
-
-        temperature = voltage;
-        break;
+      if (voltage < 15037) {
+        const float x = voltage - 15200;
+        humidity = -powf(0.0024f * x, 3) - 0.0004f * x + 20.1f;
       }
+      else if (voltage < 22300) {
+        humidity = -0.00069f * voltage + 30.6f;
+      }
+      else {
+        const float x = voltage - 22800;
+        humidity = -powf(0.00046f * x, 3) - 0.0004f * x + 15;
+      }
+
+      if (definitelyLessThan(humidity, 0.0f)) {
+        humidity = 0.0f;
+      }
+
+      temperature = voltage;
+      break;
+    }
   }
 
   if (isnan(temperature) || isnan(humidity)) {
     P005_log(event, P005_logNr::P005_error_invalid_NAN_reading);
-    return false; 
+    return false;
   }
 
   UserVar.setFloat(event->TaskIndex, 0, temperature);

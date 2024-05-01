@@ -410,7 +410,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       String strings[P096_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
 
-      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+      uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
 
       for (uint8_t varNr = 0; varNr < P096_Nlines; varNr++) {
         addFormTextBox(concat(F("Line "), (varNr + 1)), getPluginCustomArgName(varNr), strings[varNr], P096_Nchars);

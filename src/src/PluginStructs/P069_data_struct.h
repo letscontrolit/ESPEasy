@@ -8,16 +8,10 @@
 struct P069_data_struct : public PluginTaskData_base {
 public:
 
-  P069_data_struct(bool A0_value = false,
-                   bool A1_value = false,
-                   bool A2_value = false);
-
   P069_data_struct(uint8_t addr);
 
   P069_data_struct() = delete;
   virtual ~P069_data_struct() = default;
-
-  void  setAddress(uint8_t addr);
 
   float getTemperatureInDegrees() const;
 

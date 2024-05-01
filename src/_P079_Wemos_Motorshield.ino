@@ -274,19 +274,19 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             parse_error  = true;
           }
 
-          if (paramDirection.equalsIgnoreCase(F("Stop"))) {
+          if (equals(paramDirection, F("stop"))) {
             motor_dir = MOTOR_STATES::MOTOR_STOP;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Forward"))) {
+          else if (equals(paramDirection, F("forward"))) {
             motor_dir = MOTOR_STATES::MOTOR_FWD;
           }
-          else if ((paramDirection.equalsIgnoreCase(F("Backward")))) {
+          else if (equals(paramDirection, F("backward"))) {
             motor_dir = MOTOR_STATES::MOTOR_REV;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Standby"))) {
+          else if (equals(paramDirection, F("standby"))) {
             motor_dir = MOTOR_STATES::MOTOR_STBY;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Brake"))) {
+          else if (equals(paramDirection, F("brake"))) {
             motor_dir = MOTOR_STATES::MOTOR_BRAKE;
           }
           else {
@@ -315,7 +315,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             if ((motor_speed < 0) || (motor_speed > 100)) {
               motor_speed = 100;
               # ifdef VERBOSE_P079
-              addLog(LOG_LEVEL_INFO, ModeStr + F(": Warning, invalid speed: Now using 100"));
+              addLog(LOG_LEVEL_INFO, strformat(F("%s: Warning, invalid speed: Now using 100"), ModeStr));
               # endif // ifdef VERBOSE_P079
             }
           }
@@ -393,15 +393,10 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          ModeStr += F(": Addr=");
-          ModeStr += formatToHex(I2C_ADDR_PCFG_P079);
-          ModeStr += F(": Mtr=");
-          ModeStr += paramMotor;
-          ModeStr += F(", Dir=");
-          ModeStr += paramDirection;
-          ModeStr += F(", Spd=");
-          ModeStr += paramSpeed;
-          addLogMove(LOG_LEVEL_INFO, ModeStr);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("%s: Addr=0x%02x: Mtr=%s, Dir=%s, Spd=%s"),
+                           ModeStr.c_str(), I2C_ADDR_PCFG_P079, paramMotor.c_str(),
+                           paramDirection.c_str(), paramSpeed.c_str()));
         }
 
         success = true;
