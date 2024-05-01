@@ -188,6 +188,9 @@ class SettingsStruct_tmpl
   bool HiddenSSID_SlowConnectPerBSSID() const { return !VariousBits_2.HiddenSSID_SlowConnectPerBSSID; }
   void HiddenSSID_SlowConnectPerBSSID(bool value) { VariousBits_2.HiddenSSID_SlowConnectPerBSSID = !value; }
 
+  bool EnableIPv6() const { return !VariousBits_2.EnableIPv6; }
+  void EnableIPv6(bool value) { VariousBits_2.EnableIPv6 = !value; }
+
   // Use Espressif's auto reconnect.
   bool SDK_WiFi_autoreconnect() const { return VariousBits_2.SDK_WiFi_autoreconnect; }
   void SDK_WiFi_autoreconnect(bool value) { VariousBits_2.SDK_WiFi_autoreconnect = value; }
@@ -198,6 +201,10 @@ class SettingsStruct_tmpl
   void DisableRulesCodeCompletion(bool value) { VariousBits_2.DisableRulesCodeCompletion = value; }
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
+  #if FEATURE_TARSTREAM_SUPPORT
+  bool DisableSaveConfigAsTar() const { return VariousBits_2.DisableSaveConfigAsTar; }
+  void DisableSaveConfigAsTar(bool value) { VariousBits_2.DisableSaveConfigAsTar = value; }
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
@@ -519,8 +526,8 @@ public:
     uint32_t SDK_WiFi_autoreconnect           : 1; // Bit 01
     uint32_t DisableRulesCodeCompletion       : 1; // Bit 02
     uint32_t HiddenSSID_SlowConnectPerBSSID   : 1; // Bit 03  // inverted
-    uint32_t unused_04                        : 1; // Bit 04
-    uint32_t unused_05                        : 1; // Bit 05
+    uint32_t EnableIPv6                       : 1; // Bit 04  // inverted
+    uint32_t DisableSaveConfigAsTar           : 1; // Bit 05
     uint32_t unused_06                        : 1; // Bit 06
     uint32_t unused_07                        : 1; // Bit 07
     uint32_t unused_08                        : 1; // Bit 08

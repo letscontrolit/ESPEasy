@@ -20,6 +20,16 @@
 
 
 WiFi_AP_Candidate::WiFi_AP_Candidate() :
+#ifdef ESP32
+# if ESP_IDF_VERSION_MAJOR >= 5
+country({
+    .cc = "01",
+    .schan = 1,
+    .nchan = 11,
+    .policy = WIFI_COUNTRY_POLICY_AUTO,
+}),
+#endif
+#endif
   last_seen(0), rssi(0), channel(0), index(0), enc_type(0)
 {
   memset(&bits, 0, sizeof(bits));
@@ -82,6 +92,9 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
     bits.wps = it->wps;
 
     // FIXME TD-er: Maybe also add other info like 2nd channel, ftm and phy_lr support?
+# if ESP_IDF_VERSION_MAJOR >= 5
+    memcpy(&country, &(it->country), sizeof(wifi_country_t));
+#endif
   }
   #endif // ifdef ESP32
   last_seen = millis();
@@ -195,6 +208,25 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   }
 
   result += encryption_type();
+
+#ifdef ESP32
+# if ESP_IDF_VERSION_MAJOR >= 5
+  // Country code string
+  if (country.cc[0] != '\0' && country.cc[1] != '\0') {
+    result += strformat(F(" '%c%c'"), country.cc[0], country.cc[1]);
+    switch (country.cc[2]) {
+      case 'O': // Outdoor
+      case 'I': // Indoor
+      case 'X': // "non-country"
+        result += strformat(F("(%c)"), country.cc[2]);
+        break;
+    }
+  }
+  if (country.nchan > 0) {
+    result += strformat(F(" ch: %d..%d"), country.schan, country.schan + country.nchan - 1);
+  }
+#endif
+#endif
 
   if (phy_known()) {
     String phy_str;

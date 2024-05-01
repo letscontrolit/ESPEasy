@@ -17,13 +17,14 @@ void OnImprovError(ImprovTypes::Error error)
     String log = F("IMPROV : ");
 
     switch (error) {
+      case ImprovTypes::Error::ERROR_NONE: return;
       case ImprovTypes::Error::ERROR_INVALID_RPC:       log += F("Invalid RPC"); break;
       case ImprovTypes::Error::ERROR_UNKNOWN_RPC:       log += F("Unkown RPC"); break;
       case ImprovTypes::Error::ERROR_UNABLE_TO_CONNECT: log += F("Unable to connect"); break;
       case ImprovTypes::Error::ERROR_NOT_AUTHORIZED:    log += F("Not Authorized"); break;
+      case ImprovTypes::Error::ERROR_INVALID_CHECKSUM:  log += F("Invalid Checksum"); break;
+      case ImprovTypes::Error::ERROR_EMPTY_SSID:        log += F("Empty SSID"); break;
       case ImprovTypes::Error::ERROR_UNKNOWN:           log += F("Unknown"); break;
-      default:
-        return;
     }
     addLogMove(LOG_LEVEL_ERROR, log);
   }
@@ -34,16 +35,28 @@ void OnImprovConnected(const char *ssid, const char *password)
   safe_strncpy(
     SecuritySettings.WifiSSID,
     ssid,
-    sizeof(SecuritySettings.WifiSSID2));
+    sizeof(SecuritySettings.WifiSSID));
   safe_strncpy(
     SecuritySettings.WifiKey,
     password,
     sizeof(SecuritySettings.WifiKey));
-  SaveSettings();
+  SaveSecuritySettings();
 }
 
 bool OnImprovESPEasyConnectWiFi(const char *ssid, const char *password)
 {
+//  addLog(LOG_LEVEL_INFO, strformat(F("IMPROV WiFi connect: SSID: %s, Pass: %s"), ssid, password));
+/*
+  safe_strncpy(
+    SecuritySettings.WifiSSID,
+    ssid,
+    sizeof(SecuritySettings.WifiSSID));
+  safe_strncpy(
+    SecuritySettings.WifiKey,
+    password,
+    sizeof(SecuritySettings.WifiKey));
+  */
+
   return false;
 }
 
@@ -56,7 +69,7 @@ void Improv_Helper_t::init()
   _improv.onImprovConnected(OnImprovConnected);
 
   // FIXME TD-er: Implement callback to use ESPEasy functions to connect to WiFi
-  //  _improv.setCustomTryConnectToWiFi(OnImprovESPEasyConnectWiFi);
+//  _improv.setCustomTryConnectToWiFi(OnImprovESPEasyConnectWiFi);
 
   String firmwareName      = get_binary_filename();
   const String buildString = getSystemBuildString();
@@ -111,7 +124,29 @@ bool Improv_Helper_t::handle(uint8_t b, Stream *serialForWrite)
 
   _tmpbuffer.push_back(b);
 
-  switch (_improv.handleSerial(b, serialForWrite)) {
+  const ImprovTypes::ParseState state = _improv.handleSerial(b, serialForWrite);
+
+#ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
+      state != ImprovTypes::ParseState::VALID_INCOMPLETE)
+  {
+    String log = F("IMPROVDEBUG: ");
+    for (auto it = _tmpbuffer.begin(); it != _tmpbuffer.end(); ++it) {
+      if (isAlphaNumeric(*it))
+        log += static_cast<char>(*it);
+      else {
+        log += strformat(F("_%d_"), *it);
+      }          
+    }
+    if (state == ImprovTypes::ParseState::INVALID) {
+      log += F(" (invalid)");
+    }
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+#endif
+
+  switch (state) {
     case ImprovTypes::ParseState::VALID_INCOMPLETE:
       _mustDumpBuffer = false;
       return true;

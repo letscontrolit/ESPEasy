@@ -12,6 +12,19 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-04-17 tonhuisman: Add AdaGFXFormDefaultFont() selector and some support functions
+ *                        Add default font selection at initialization
+ * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
+ *                        This font is already available via the Adafruit_GFX_Library
+ * 2023-12-30 tonhuisman: Optimization of font handling, also reducing code-size
+ *                        Add some additional 7-segment/LCD-like fonts (18 pt enabled by default for ESP32 builds using this helper)
+ *                        - sevenseg18b (7segment 18 pt) (very few non-alphanumeric characters, slightly slanted)
+ *                        - sevenseg24b (7segment 24 pt)
+ *                        - lcd14cond18pt (LCD 14 segment, condensed, 18 pt)
+ *                        - lcd14cond24pt (LCD 14 segment, condensed, 24 pt)
+ *                        as sevenseg18 and sevenseg24 are partially proportionally spaced, even in the numeric characters :-(
+ * 2023-12-29 tonhuisman: Bugfixes: txz and txtfull subcommands didn't properly use the last set FG/BG colors
+ * 2023-12-12 tonhuisman: Code deduplication and string optimizations to reduce build size
  * 2023-02-26 tonhuisman: Use GetCommandCode() / PROGMEM for parsing of commands and colors to reduce .bin size.
  * 2022-10-05 tonhuisman: No longer trim off spaces from arguments to commands
  * 2022-09-23 tonhuisman: Allow backlight percentage from 0% instead of from 1% to be able to completely turn it off
@@ -50,7 +63,7 @@
 # include <vector>
 
 // Used for bmp support
-# define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
+# define BUFPIXELS 200                  ///< 200 * 5 = 1000 bytes
 
 # define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
@@ -89,11 +102,16 @@
 #  define ADAGFX_ENABLE_GET_CONFIG_VALUE  1 // Enable getting values features
 # endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
 
+# define ADAGFX_FONTS_EXTRA_5PT_INCLUDED    // 1 extra 5pt font, should only be enabled in non-LIMIT_BUILD_SIZE builds, adds ~0.3 kB
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
 // # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 5 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~19.9 kB
-// # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
+// # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 3 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~13.8 kB
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
+// # define ADAGFX_FONTS_EXTRA_24PT_INCLUDED // 2 extra 24pt fonts, should probably only be enabled in a private custom build, adds ~11.1 kB
+
+// To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_5PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
 
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
@@ -128,9 +146,20 @@
 
 // To enable/disable 18pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_18PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+# define ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
+# define ADAGFX_FONTS_EXTRA_18PT_LCD14COND
+# ifndef ESP8266
+#  ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+# endif // ifndef ESP8266
 
 // To enable/disable 20pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_20PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+
+// To enable/disable 24pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_24PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_24PT_LCD14COND
+# define ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
 
 # ifdef LIMIT_BUILD_SIZE
 #  ifdef ADAGFX_FONTS_INCLUDED
@@ -160,6 +189,9 @@
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
+#  ifndef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_5PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_5PT_INCLUDED
 #  ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
@@ -175,6 +207,9 @@
 #  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_24PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 #  ifndef ADAGFX_SUPPORT_7COLOR
 #   define ADAGFX_SUPPORT_7COLOR       1
 #  endif // ifndef ADAGFX_SUPPORT_7COLOR
@@ -381,6 +416,10 @@ uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to
 # endif // if ADAGFX_SUPPORT_7COLOR
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
+String   AdaGFXgetFontName(uint8_t fontId);
+uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId);
+void     AdaGFXFormDefaultFont(const __FlashStringHelper *id,
+                               uint8_t                    selectedIndex);
 
 class AdafruitGFX_helper {
 public:
@@ -395,7 +434,8 @@ public:
                      const uint16_t             fgcolor       = ADAGFX_WHITE,
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
-                     const bool                 textBackFill  = false);
+                     const bool                 textBackFill  = false,
+                     const uint8_t              defaultFontId = 0);
   # if ADAGFX_ENABLE_BMP_DISPLAY
   AdafruitGFX_helper(Adafruit_SPITFT           *display,
                      const String             & trigger,
@@ -407,7 +447,8 @@ public:
                      const uint16_t             fgcolor       = ADAGFX_WHITE,
                      const uint16_t             bgcolor       = ADAGFX_BLACK,
                      const bool                 useValidation = true,
-                     const bool                 textBackFill  = false);
+                     const bool                 textBackFill  = false,
+                     const uint8_t              defaultFontId = 0);
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
@@ -472,7 +513,7 @@ public:
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
-  uint8_t getWindow() {
+  uint8_t getWindow() const {
     return _window;
   }
 
@@ -487,6 +528,10 @@ public:
                        const int8_t & rotation = -1);
   bool     deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+
+  #if ADAGFX_FONTS_INCLUDED
+  void setFontById(uint8_t fontId);
+  #endif
 
   uint16_t getTextSize(const String& text,
                        uint16_t    & h); // return length and height in pixels using current font
@@ -528,6 +573,7 @@ private:
   uint16_t _bgcolor;
   bool _useValidation;
   bool _textBackFill;
+  uint8_t _defaultFontId;
   uint16_t _textcols     = 0;
   uint16_t _textrows     = 0;
   int16_t _lastX         = 0;
