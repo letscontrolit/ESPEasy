@@ -125,7 +125,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P047_MODEL_CATNIP),
           static_cast<int>(P047_MODEL_BEFLE),
         };
-        constexpr size_t P047_MODEL_OPTIONS = sizeof(SensorModelIds) / sizeof(SensorModelIds[0]);
+        constexpr size_t P047_MODEL_OPTIONS = NR_ELEMENTS(SensorModelIds);
         addFormSelector(F("Sensor model"), F("model"), P047_MODEL_OPTIONS, SensorModels, SensorModelIds, P047_MODEL, true);
         addFormNote(F("Changing the Sensor model will reload the page."));
       }

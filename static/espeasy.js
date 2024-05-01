@@ -24,6 +24,8 @@ var commonPlugins = [
   //P009
   "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP",
   "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
+  //P011
+  "ExtGpio", "ExtPwm", "ExtPulse", "ExtLongPulse", "Status,EXT,",
   //P012
   "LCDCmd", "LCD",
   //P019

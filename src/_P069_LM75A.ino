@@ -107,11 +107,9 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      P069_data->setAddress((uint8_t)PCONFIG(0));
-
       const float tempC = P069_data->getTemperatureInDegrees();
       UserVar.setFloat(event->TaskIndex, 0, tempC);
-      success                      = !isnan(tempC);
+      success = !isnan(tempC);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
@@ -119,9 +117,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         }
         else
         {
-          String log = F("LM75A: Temperature: ");
-          log += tempC;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event->TaskIndex,0)));
         }
       }
       break;
