@@ -22,6 +22,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
@@ -1462,6 +1463,15 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
+  #if FEATURE_ESPEASY_P2P
+  SMART_CONV(F("%c_uname%"),  getNameForUnit(data.arg1))
+  SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
+  SMART_CONV(F("%c_ubuild%"), String(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_ubuildstr%"), formatSystemBuildNr(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_uload%"),  toString(getLoadForUnit(data.arg1)))
+  SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
+  SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
+  #endif // if FEATURE_ESPEASY_P2P
   #undef SMART_CONV
 
   // Conversions with 2 parameters

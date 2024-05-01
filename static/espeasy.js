@@ -110,6 +110,8 @@ var commonPlugins = [
   "sht4x", "sht4x,startup",
   //P159
   "ld2410", "ld2410,factoryreset", "ld2410,logall",
+  //P162
+  "digipot", "digipot,reset", "digipot,shutdown", "digipot,",
   //P166
   "gp8403", "gp8403,volt,", "gp8403,mvolt,", "gp8403,range,", "gp8403,preset,", "gp8403,init,",
 ];
@@ -117,7 +119,7 @@ var pluginDispKind = [
   //P095
   "tft", "ili9341", "ili9342", "ili9481", "ili9486", "ili9488",
   //P096
-  "eink", "epaper", "il3897", "uc8151d", "ssd1680", "ws2in7", "ws1in54",
+  "epd", "eink", "epaper", "il3897", "uc8151d", "ssd1680", "ws2in7", "ws1in54",
   //P116
   /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
   //P131
@@ -141,10 +143,10 @@ var taskSpecifics = [
   "settings.Controller1.Enabled", "settings.Controller2.Enabled", "settings.Controller3.Enabled",
   "settings.Controller1.Idx", "settings.Controller2.Idx", "settings.Controller3.Idx"
 ];
-//things that does not fit in any other catergory (for now)
+//things that do not fit in any other catergory (for now)
 var AnythingElse = [
   //System Variables
-  "%eventvalue%", "%eventpar%", "%eventname%", "substring", "%sysname%", "%bootcause%", "%systime%", "%systm_hm%",
+  "%eventvalue%", "%eventpar%", "%eventname%", "%sysname%", "%bootcause%", "%systime%", "%systm_hm%",
   "%systm_hm_0%", "%systm_hm_sp%", "%systime_am%", "%systime_am_0%", "%systime_am_sp%", "%systm_hm_am%", "%systm_hm_am_0%", "%systm_hm_am_sp%",
   "%lcltime%", "%sunrise%", "%s_sunrise%", "%m_sunrise%", "%sunset%", "%s_sunset%", "%m_sunset%", "%lcltime_am%",
   "%syshour%", "%syshour_0%", "%sysmin%", "%sysmin_0%", "%syssec%", "%syssec_0%", "%sysday%", "%sysday_0%", "%sysmonth%",
@@ -152,11 +154,14 @@ var AnythingElse = [
   "%rssi%", "%ip%", "%unit%", "%unit_0%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
   "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%", "%inttemp%",
+  //String Functions
+  "substring", "indexOf", "indexOf_ci", "equals", "equals_ci", "strtol", "timeToMin", "timeToSec",
   //Ethernet
   "%ethwifimode%", "%ethconnected%", "%ethduplex%", "%ethspeed%", "%ethstate%", "%ethspeedstate%",
   //Standard Conversions
   "%c_w_dir%", "%c_c2f%", "%c_ms2Bft%", "%c_dew_th%", "%c_alt_pres_sea%", "%c_sea_pres_alt%", "%c_cm2imp%", "%c_mm2imp%",
-  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%",
+  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%", "%c_uname%", "%c_uage%", "%c_ubuild%", "%c_ubuildstr%",
+  "%c_uload%", "%c_utype%", "%c_utypestr%",
   //Variables
   "var", "int"
 ];
