@@ -29,7 +29,7 @@
 // History:
 // 2021-08-01 tonhuisman: Plugin migrated from ESPEsyPluginPlayground repository
 //                        Minor adjustments, changed castings to use static_cast<type>(var) method,
-//                        Added check for other I2C devoces configured on ESPEasy tasks to give a warning
+//                        Added check for other I2C devices configured on ESPEasy tasks to give a warning
 //                        about I2C incmopatibility, for AHT10 device only
 // 2021-03 sakinit:       Initial plugin, added on ESPEasyPluginPlayground
 
@@ -107,7 +107,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
       if (static_cast<AHTx_device_type>(PCONFIG(1)) ==  AHTx_device_type::AHT10_DEVICE) {
         bool hasOtherI2CDevices = false;
 
-        for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; x++) {
+        for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; ++x) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
           if (validDeviceIndex(DeviceIndex)
@@ -192,18 +192,12 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity());
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(60); // Prevent re-allocation
-          log  = P105_data->getDeviceName();
-          log += F(" : Addr: 0x");
-          log += String(PCONFIG(0), HEX);
-          addLogMove(LOG_LEVEL_INFO, log);
-          log  = P105_data->getDeviceName();
-          log += F(" : Temperature: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += F(" : Humidity: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), PCONFIG(0)));
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("%s : Temperature: %s : Humidity: %s"),
+                               P105_data->getDeviceName().c_str(),
+                               formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
         }
         success = true;
       }

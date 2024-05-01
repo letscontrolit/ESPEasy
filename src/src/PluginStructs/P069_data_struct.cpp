@@ -10,30 +10,8 @@
 # define LM75A_REG_ADDR_TEMP     0
 
 
-P069_data_struct::P069_data_struct(bool A0_value, bool A1_value, bool A2_value)
-{
-  _i2c_device_address = LM75A_BASE_ADDRESS;
-
-  if (A0_value) {
-    _i2c_device_address += 1;
-  }
-
-  if (A1_value) {
-    _i2c_device_address += 2;
-  }
-
-  if (A2_value) {
-    _i2c_device_address += 4;
-  }
-}
-
 P069_data_struct::P069_data_struct(uint8_t addr) :
   _i2c_device_address(addr) {}
-
-void P069_data_struct::setAddress(uint8_t addr)
-{
-  _i2c_device_address = addr;
-}
 
 float P069_data_struct::getTemperatureInDegrees() const
 {

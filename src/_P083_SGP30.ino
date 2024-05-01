@@ -9,19 +9,19 @@
 \*********************************************************************************************/
 
 
-#include "src/PluginStructs/P083_data_struct.h"
+# include "src/PluginStructs/P083_data_struct.h"
 
-#define PLUGIN_083
-#define PLUGIN_ID_083        83
-#define PLUGIN_NAME_083       "Gases - SGP30 TVOC/eCO2"
-#define PLUGIN_VALUENAME1_083 "TVOC"
-#define PLUGIN_VALUENAME2_083 "eCO2"
+# define PLUGIN_083
+# define PLUGIN_ID_083        83
+# define PLUGIN_NAME_083       "Gases - SGP30 TVOC/eCO2"
+# define PLUGIN_VALUENAME1_083 "TVOC"
+# define PLUGIN_VALUENAME2_083 "eCO2"
 
 
-#define P083_TVOC event->TaskIndex, 0
-#define P083_ECO2 event->TaskIndex, 1
-#define P083_TVOC_BASELINE event->TaskIndex, 2
-#define P083_ECO2_BASELINE event->TaskIndex, 3
+# define P083_TVOC event->TaskIndex, 0
+# define P083_ECO2 event->TaskIndex, 1
+# define P083_TVOC_BASELINE event->TaskIndex, 2
+# define P083_ECO2_BASELINE event->TaskIndex, 3
 
 
 boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
@@ -134,7 +134,7 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
           {
             UserVar.setFloat(P083_TVOC, P083_data->sgp.TVOC);
             UserVar.setFloat(P083_ECO2, P083_data->sgp.eCO2);
-            success            = true;
+            success = true;
 
             // For the first 15s after the sgp30_iaq_init command the sensor is
             // in an initialization phase during which a sgp30_measure_iaq command
@@ -171,12 +171,8 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("SGP30: TVOC: ");
-              log += UserVar.getFloat(P083_TVOC);
-              addLogMove(LOG_LEVEL_INFO, log);
-              log  = F("SGP30: eCO2: ");
-              log += UserVar.getFloat(P083_ECO2);
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, concat(F("SGP30: TVOC: "), formatUserVarNoCheck(P083_TVOC)));
+              addLogMove(LOG_LEVEL_INFO, concat(F("SGP30: eCO2: "), formatUserVarNoCheck(P083_ECO2)));
             }
             success = true;
             break;
