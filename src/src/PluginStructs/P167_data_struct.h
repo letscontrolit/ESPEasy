@@ -28,9 +28,9 @@
 
 // Make accessing specific parameters more readable in the code
 # define P167_ENABLE_LOG            PCONFIG(0)
-# define P167_ENABLE_LOG_LABEL      PCONFIG_LABEL(0)
+# define P167_ENABLE_LOG_LABEL      F("enlg")
 # define P167_MODEL                 PCONFIG(1)
-# define P167_MODEL_LABEL           PCONFIG_LABEL(1)
+# define P167_MODEL_LABEL           F("mdl")
 # define P167_MON_SCL_PIN           PCONFIG(2)
 # define P167_QUERY1                PCONFIG(3)
 # define P167_QUERY2                PCONFIG(4)
