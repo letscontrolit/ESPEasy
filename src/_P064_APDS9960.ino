@@ -17,6 +17,8 @@
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
+// 2024-03-30 tonhuisman: Add 'Separate Gesture event' option (<taskname>#Swipe=<gesture>) so it doesn't interfere with light/color
+//                        measurement
 // 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2022-08-05 tonhuisman: Remove [TESTING] tag, Improvement: INIT, 10/sec and READ events now return false if errors occur during processing
 // 2022-06-17 tonhuisman: Remove I2C address selector, as there is nothing to choose...
@@ -29,7 +31,7 @@
 //   Added settings for Gain (Gesture, Proximity, Ambient Light Sensor), Led Power (Gesture and Proximity/ALS) and Led Boost (Gesture)
 //   to allow better tuning for use of the sensor. Also adapted the SparkFun_APDS9960 driver for enabling this.
 //   R/G/B Colors mode has it's settings shared with the Gesture/Proximity/ALS as they are the exact same parameters, but with different
-// labels only.
+//   labels only.
 
 
 # define PLUGIN_064
@@ -45,7 +47,9 @@
 
 # define PLUGIN_MODE_GPL_064       0 // GPL = Gesture/Proximity/(Ambient) Light Sensor mode
 # define PLUGIN_MODE_RGB_064       1 // RGB = R/G/B Colors mode
+# define P064_I2C_ADDRESS          0x39
 
+# define P064_GESTURE_EVENT        PCONFIG(0)
 # define P064_MODE                 PCONFIG(1)
 # define P064_GGAIN                PCONFIG(2)
 # define P064_GLDRIVE              PCONFIG(3)
@@ -107,7 +111,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success = (event->Par1 == 0x39);
+      success = (event->Par1 == P064_I2C_ADDRESS);
 
       break;
     }
@@ -115,7 +119,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = 0x39;
+      event->Par1 = P064_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -164,20 +168,20 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
       {
         // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        const __FlashStringHelper *optionsGain[4] = {
+        const __FlashStringHelper *optionsGain[] = {
           F("1x"),
           F("2x"),
           F("4x (default)"),
           F("8x") };
-        const int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
+        const int optionsGainValues[] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        const __FlashStringHelper *optionsLedDrive[4] = {
+        const __FlashStringHelper *optionsLedDrive[] = {
           F("100 mA (default)"),
           F("50 mA"),
           F("25 mA"),
           F("12.5 mA") };
-        const int optionsLedDriveValues[4] = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
+        const int optionsLedDriveValues[] = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
 
 
         String lightSensorGainLabel;
@@ -186,23 +190,38 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           addFormSubHeader(F("Gesture parameters"));
 
-          addFormSelector(F("Gesture Gain"),      F("ggain"),   4, optionsGain,     optionsGainValues,     P064_GGAIN);
+          addFormSelector(F("Gesture Gain"),
+                          F("ggain"),
+                          NR_ELEMENTS(optionsGainValues),
+                          optionsGain,
+                          optionsGainValues,
+                          P064_GGAIN);
 
-          addFormSelector(F("Gesture LED Drive"), F("gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
+          addFormSelector(F("Gesture LED Drive"),
+                          F("gldrive"),
+                          NR_ELEMENTS(optionsLedDriveValues),
+                          optionsLedDrive,
+                          optionsLedDriveValues,
+                          P064_GLDRIVE);
           {
             // Gesture Led-boost values
-            const __FlashStringHelper *optionsLedBoost[4] = {
+            const __FlashStringHelper *optionsLedBoost[] = {
               F("100 %"),
               F("150 %"),
               F("200 %"),
               F("300 % (default)") };
-            const int optionsLedBoostValues[4] = { LED_BOOST_100, LED_BOOST_150, LED_BOOST_200, LED_BOOST_300 };
-            addFormSelector(F("Gesture LED Boost"), F("lboost"), 4, optionsLedBoost, optionsLedBoostValues, P064_LED_BOOST);
+            const int optionsLedBoostValues[] = { LED_BOOST_100, LED_BOOST_150, LED_BOOST_200, LED_BOOST_300 };
+            addFormSelector(F("Gesture LED Boost"),
+                            F("lboost"),
+                            NR_ELEMENTS(optionsLedBoostValues),
+                            optionsLedBoost,
+                            optionsLedBoostValues,
+                            P064_LED_BOOST);
           }
 
           addFormSubHeader(F("Proximity & Ambient Light Sensor parameters"));
 
-          addFormSelector(F("Proximity Gain"), F("pgain"), 4, optionsGain, optionsGainValues, P064_PGAIN);
+          addFormSelector(F("Proximity Gain"), F("pgain"), NR_ELEMENTS(optionsGainValues), optionsGain, optionsGainValues, P064_PGAIN);
 
           lightSensorGainLabel  = F("Ambient Light Sensor Gain");
           lightSensorDriveLabel = F("Proximity & ALS LED Drive");
@@ -214,15 +233,26 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         }
         {
           // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
-          const __FlashStringHelper *optionsALSGain[4] = {
+          const __FlashStringHelper *optionsALSGain[] = {
             F("1x"),
             F("4x (default)"),
             F("16x"),
             F("64x") };
-          addFormSelector(lightSensorGainLabel, F("again"), 4, optionsALSGain, optionsGainValues, P064_AGAIN);
+          addFormSelector(lightSensorGainLabel, F("again"), NR_ELEMENTS(optionsGainValues), optionsALSGain, optionsGainValues, P064_AGAIN);
         }
-        addFormSelector(lightSensorDriveLabel, F("ldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_LDRIVE);
+        addFormSelector(lightSensorDriveLabel,
+                        F("ldrive"),
+                        NR_ELEMENTS(optionsLedDriveValues),
+                        optionsLedDrive,
+                        optionsLedDriveValues,
+                        P064_LDRIVE);
       }
+
+      addFormSubHeader(F("Event generation"));
+
+      addFormCheckBox(F("Separate Gesture events"), F("gevent"), P064_GESTURE_EVENT == 1);
+      addFormNote(F("Generates event: &lt;Taskname&gt;#Swipe=&lt;gesture&gt;"));
+
       success = true;
       break;
     }
@@ -239,6 +269,8 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       }
       P064_AGAIN  = getFormItemInt(F("again"));
       P064_LDRIVE = getFormItemInt(F("ldrive"));
+
+      P064_GESTURE_EVENT = isFormItemChecked(F("gevent")) ? 1 : 0;
 
       success = true;
       break;
@@ -259,27 +291,26 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           P064_data->sensor.enablePower();
 
           if (!P064_data->sensor.enableLightSensor(false)) {
-            log    += F("Error during light sensor init!");
+            log    += F(" Error during light sensor init!");
             success = false;
           }
 
-          if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
-            if (!P064_data->sensor.enableProximitySensor(false)) {
-              log    += F("Error during proximity sensor init!");
-              success = false;
-            }
+          // Always enable the proximity/gesture sensor.
+          if (!P064_data->sensor.enableProximitySensor(false)) {
+            log    += F(" Error during proximity sensor init!");
+            success = false;
+          }
 
-            if (!P064_data->sensor.enableGestureSensor(false, P064_LED_BOOST)) {
-              log    += F("Error during gesture sensor init!");
-              success = false;
-            }
+          if (!P064_data->sensor.enableGestureSensor(false, P064_LED_BOOST)) {
+            log    += F(" Error during gesture sensor init!");
+            success = false;
           }
         } else {
           log    += F("Error during APDS-9960 init!");
           success = false;
         }
 
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(success ? LOG_LEVEL_INFO : LOG_LEVEL_ERROR, log);
       }
       break;
     }
@@ -288,7 +319,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
     {
       P064_data_struct *P064_data = static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr == P064_data) || (P064_MODE != PLUGIN_MODE_GPL_064) || !P064_data->sensor.isGestureAvailable()) {
+      if ((nullptr == P064_data) || !P064_data->sensor.isGestureAvailable()) {
         break;
       }
 
@@ -314,10 +345,17 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         }
         # endif // ifndef BUILD_NO_DEBUG
 
-        UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(gesture));
-        event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
+        if (P064_MODE == PLUGIN_MODE_GPL_064) {
+          UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(gesture));
+        }
 
-        sendData(event); // Process immediately
+        if (P064_GESTURE_EVENT == 1) {
+          const String eventvalues = strformat(F("%d"), gesture);
+          eventQueue.add(event->TaskIndex, F("Swipe"), eventvalues);
+        } else if (P064_MODE == PLUGIN_MODE_GPL_064) {
+          sendData(event); // Process immediately
+        }
+
         success = true;
       }
 
