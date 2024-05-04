@@ -12,7 +12,6 @@
 
 
 struct EventStruct;
-struct UnitMessageCount_t;
 
 /*********************************************************************************************\
 * C018_queue_element for queueing requests for C018: TTN/RN2483
