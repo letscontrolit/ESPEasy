@@ -391,6 +391,11 @@ There are different released versions of ESP Easy:
    ":ref:`P166_page`","|P166_status|","P166"
 
 
+.. include:: _plugin_sets_overview.repl
+
+Plugins per Category
+====================
+
 Internal GPIO handling
 ----------------------
 
