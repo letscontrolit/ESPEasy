@@ -69,7 +69,7 @@ const uint8_t TomThumbBitmaps[] PROGMEM = {
     0x80,             /* 0x2E period */
     0x25, 0x48,       /* 0x2F slash */
     0x76, 0xDC,       /* 0x30 zero */
-    0x75, 0x40,       /* 0x31 one */
+    0x59, 0x2E,       /* 0x31 one */
     0xC5, 0x4E,       /* 0x32 two */
     0xC5, 0x1C,       /* 0x33 three */
     0xB7, 0x92,       /* 0x34 four */
@@ -279,7 +279,7 @@ const GFXglyph TomThumbGlyphs[] PROGMEM = {
     {22, 1, 1, 2, 0, -1},  /* 0x2E period */
     {23, 3, 5, 4, 0, -5},  /* 0x2F slash */
     {25, 3, 5, 4, 0, -5},  /* 0x30 zero */
-    {27, 2, 5, 3, 0, -5},  /* 0x31 one */
+    {27, 3, 5, 4, 0, -5},  /* 0x31 one */
     {29, 3, 5, 4, 0, -5},  /* 0x32 two */
     {31, 3, 5, 4, 0, -5},  /* 0x33 three */
     {33, 3, 5, 4, 0, -5},  /* 0x34 four */

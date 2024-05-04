@@ -7,9 +7,12 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-04-06 tonhuisman: Add support for (also) supplying a custom subject when sending an email notification via the notify command
+ *                        Log reply from mailserver at DEBUG level
+ *                        Code improvements
  * 2022-12-29 tonhuisman: Add Date: field to email header to reduce spam score, see https://github.com/letscontrolit/ESPEasy/issues/3865
  * 2022-12-29 tonhuisman: Start changelog
-*/
+ */
 
 # define NPLUGIN_001
 # define NPLUGIN_ID_001         1
@@ -42,7 +45,7 @@ bool NPlugin_001_Auth(WiFiClient  & client,
                       const String& pass);
 bool NPlugin_001_MTA(WiFiClient  & client,
                      const String& aStr,
-                     uint16_t aWaitForPattern);
+                     uint16_t      aWaitForPattern);
 bool getNextMailAddress(const String& data,
                         String      & address,
                         int           index);
@@ -91,13 +94,14 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
       LoadNotificationSettings(event->NotificationIndex, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
       String subject = NotificationSettings.Subject;
-      String body;
+      String body    = NotificationSettings.Body;
 
-      if (event->String1.length() > 0) {
+      if (!event->String1.isEmpty()) {
         body = event->String1;
       }
-      else {
-        body = NotificationSettings.Body;
+
+      if (!event->String2.isEmpty()) {
+        subject = event->String2;
       }
       subject = parseTemplate(subject);
       body    = parseTemplate(body);
@@ -120,31 +124,32 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
 
-# ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((CONTROLLER_CLIENTTIMEOUT_MAX + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
   pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
-# else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX); // in msec as it should be!
-# endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-#ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, strformat(
-      F("EMAIL: Connecting to %s:%d"),
-      notificationsettings.Server,
-      notificationsettings.Port));
+             F("EMAIL: Connecting to %s:%d"),
+             notificationsettings.Server,
+             notificationsettings.Port));
   }
-#endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (!connectClient(client, notificationsettings.Server, notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR, strformat(
-        F("EMAIL: Error connecting to %s:%d"),
-        notificationsettings.Server,
-        notificationsettings.Port));
+               F("EMAIL: Error connecting to %s:%d"),
+               notificationsettings.Server,
+               notificationsettings.Port));
     }
     myStatus = false;
   } else {
@@ -159,27 +164,22 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
       );
 
-    String email_address = notificationsettings.Sender;
-    int    pos_less      = email_address.indexOf('<');
+    String email_address(notificationsettings.Sender);
+    int    pos_less   = email_address.indexOf('<');
+    String senderName = Settings.getHostname();
 
-    if (pos_less == -1) {
-      // No email address markup
-      mailheader.replace(F("$nodename"),  Settings.getHostname());
-      mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
-    } else {
-      String senderName = email_address.substring(0, pos_less);
-      removeChar(senderName, '"'); // Remove quotes
-      String address = email_address.substring(pos_less + 1);
-      removeChar(address, '<');
-      removeChar(address, '>');
-      address.trim();
+    if (pos_less > -1) {
+      senderName = email_address.substring(0, pos_less);
+      removeChar(senderName,    '"'); // Remove quotes
+      email_address = email_address.substring(pos_less + 1);
+      removeChar(email_address, '<');
+      removeChar(email_address, '>');
+      email_address.trim();
       senderName.trim();
-      mailheader.replace(F("$nodename"),  senderName);
-      mailheader.replace(F("$emailfrom"), address);
     }
 
-    mailheader.replace(F("$nodename"),       Settings.getHostname());
-    mailheader.replace(F("$emailfrom"),      notificationsettings.Sender);
+    mailheader.replace(F("$nodename"),       senderName);
+    mailheader.replace(F("$emailfrom"),      email_address);
     mailheader.replace(F("$ato"),            notificationsettings.Receiver);
     mailheader.replace(F("$subject"),        aSub);
     String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
@@ -196,16 +196,17 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     while (true) {
       if (!NPlugin_001_MTA(client, EMPTY_STRING, 220)) { break; }
 
-      if (!NPlugin_001_MTA(client, concat(F("EHLO "), String(notificationsettings.Domain)), 250)) { break; }
+      if (!NPlugin_001_MTA(client, strformat(F("EHLO %s"), notificationsettings.Domain), 250)) { break; }
 
       if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) { break; }
 
-      if (!NPlugin_001_MTA(client, concat(F("MAIL FROM:<"), concat(notificationsettings.Sender, '>')) , 250)) { break; }
+      if (!NPlugin_001_MTA(client, strformat(F("MAIL FROM:<%s>"), email_address.c_str()), 250)) { break; }
 
       bool   nextAddressAvailable = true;
       int    i                    = 0;
       String emailTo;
       const String receiver(notificationsettings.Receiver);
+
       if (!getNextMailAddress(receiver, emailTo, i)) {
         addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
         break;
@@ -216,16 +217,18 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           addLogMove(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
         }
 
-        if (!NPlugin_001_MTA(client, concat(F("RCPT TO:<"), emailTo + '>'), 250)) { break; }
+        if (!NPlugin_001_MTA(client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250)) { break; }
         ++i;
         nextAddressAvailable = getNextMailAddress(receiver, emailTo, i);
       }
 
       if (!NPlugin_001_MTA(client, F("DATA"), 354)) { break; }
 
-      if (!NPlugin_001_MTA(client, mailheader + aMesg + F("\r\n.\r\n"), 250)) { break; }
+      if (!NPlugin_001_MTA(client, strformat(F("%s%s\r\n.\r\n"), mailheader.c_str(), aMesg.c_str()), 250)) { break; }
 
       myStatus = true;
+
+      NPlugin_001_MTA(client, F("QUIT"), 221); // Sent successfully, close SMTP protocol, ignore failure
       break;
     }
 
@@ -250,6 +253,7 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
     return true;
   }
   base64 encoder;
+
   return NPlugin_001_MTA(client, F("AUTH LOGIN"), 334) &&
          NPlugin_001_MTA(client, encoder.encode(user), 334) &&
          NPlugin_001_MTA(client, encoder.encode(pass), 235);
@@ -257,11 +261,9 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
 
 bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern)
 {
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, aStr);
-  }
-#endif
+  # ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, aStr);
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (aStr.length()) { client.println(aStr); }
 
@@ -270,36 +272,29 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
 
   backgroundtasks();
 
-  const String aWaitForPattern_str = String(aWaitForPattern) + ' ';
+  const String aWaitForPattern_str = strformat(F("%d "), aWaitForPattern);
 
   while (true) {
     if (timeOutReached(timer)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, concat(
-          F("NPlugin_001_MTA: timeout. "), 
-          aStr));
+        addLogMove(LOG_LEVEL_ERROR,
+                   concat(F("NPlugin_001_MTA: timeout. "), aStr));
       }
-      return false;
+      break;
     }
 
     delay(0);
 
-    // String line = client.readStringUntil('\n');
     String line;
     safeReadStringUntil(client, line, '\n');
 
     const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
 
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+    addLogMove(LOG_LEVEL_DEBUG, line);
+    # endif // ifndef BUILD_NO_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      addLogMove(LOG_LEVEL_DEBUG, line);
-    }
-# endif // ifndef BUILD_NO_DEBUG
-
-    if (patternFound) {
-      return true;
-    }
+    return patternFound;
   }
 
   return false;
