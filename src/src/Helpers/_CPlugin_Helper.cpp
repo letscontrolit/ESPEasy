@@ -107,6 +107,7 @@ void log_connecting_fail(const __FlashStringHelper *prefix, int controller_numbe
 
 bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, unsigned long connect_start_time) {
   WiFiEventData.connectDurations[controller_number] = timePassedSince(connect_start_time);
+
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -124,15 +125,16 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!NetworkConnected()) { 
+  if (!NetworkConnected()) {
     client.stop();
-    return false; 
+    return false;
   }
+
   // Ignoring the ACK from the server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
+  const uint32_t timeout = ControllerSettings.MustCheckReply
     ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
@@ -142,14 +144,15 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-  const unsigned long connect_start_time = millis();  
-  bool success      = ControllerSettings.beginPacket(client);
+  const unsigned long connect_start_time = millis();
+  bool success                           = ControllerSettings.beginPacket(client);
+
   if (!success) {
     client.stop();
   }
   const bool result = count_connection_results(
     success,
-    F("UDP  : "), 
+    F("UDP  : "),
     controller_number,
     connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
@@ -167,7 +170,7 @@ bool try_connect_host(int                        controller_number,
                       const __FlashStringHelper *loglabel) {
   START_TIMER;
 
-  if (!NetworkConnected()) { 
+  if (!NetworkConnected()) {
     client.stop();
     return false;
   }
@@ -179,33 +182,34 @@ bool try_connect_host(int                        controller_number,
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
+  const uint32_t timeout = ControllerSettings.MustCheckReply
     ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
   pClient->setTimeout(timeout);
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(timeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout); // in msec as it should be!
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
   const unsigned long connect_start_time = millis();
 
   const bool success = ControllerSettings.connectToHost(client);
+
   if (!success) {
     client.stop();
   }
-  const bool result  = count_connection_results(
+  const bool result = count_connection_results(
     success,
-    loglabel, 
+    loglabel,
     controller_number,
     connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
@@ -228,17 +232,16 @@ String send_via_http(int                             controller_number,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode) {
-
   // Ignoring the ACK from the HTTP server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
+  const uint32_t timeout = ControllerSettings.MustCheckReply
     ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
   const unsigned long connect_start_time = millis();
-  const String result = send_via_http(
+  const String result                    = send_via_http(
     get_formatted_Controller_number(controller_number),
     timeout,
     getControllerUser(controller_idx, ControllerSettings),
@@ -264,10 +267,8 @@ String send_via_http(int                             controller_number,
 
   return result;
 }
+
 #endif // FEATURE_HTTP_CLIENT
-
-
-
 
 
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool doParseTemplate)
@@ -275,12 +276,14 @@ String getControllerUser(controllerIndex_t controller_idx, const ControllerSetti
   if (!validControllerIndex(controller_idx)) { return EMPTY_STRING; }
 
   String res;
+
   if (ControllerSettings.useExtendedCredentials()) {
     res = ExtendedControllerCredentials.getControllerUser(controller_idx);
   } else {
     res = String(SecuritySettings.ControllerUser[controller_idx]);
   }
   res.trim();
+
   if (doParseTemplate) {
     res = parseTemplate(res);
   }
@@ -295,6 +298,7 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
   String res(SecuritySettings.ControllerPassword[controller_idx]);
+
   res.trim();
   return res;
 }

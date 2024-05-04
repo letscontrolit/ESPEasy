@@ -433,6 +433,60 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
 }
 
 
+String getNameForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end() || it->second.getNodeName().isEmpty()) {
+    return EMPTY_STRING;
+  }
+  return it->second.getNodeName();
+}
+
+long getAgeForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return -1000; // milliseconds, negative == unknown
+  }
+  return static_cast<long>(it->second.getAge());
+}
+
+uint16_t getBuildnrForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end() || it->second.build == 0) {
+    return 0;
+  }
+  return it->second.build;
+}
+
+float getLoadForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return 0.0f;
+  }
+  return it->second.getLoad();
+}
+
+uint8_t getTypeForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return 0;
+  }
+  return it->second.nodeType;
+}
+
+const __FlashStringHelper* getTypeStringForUnit(uint8_t unit) {
+  auto it = Nodes.find(unit);
+
+  if (it == Nodes.end()) {
+    return F("");
+  }
+  return it->second.getNodeTypeDisplayString();
+}
+
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
 \*********************************************************************************************/

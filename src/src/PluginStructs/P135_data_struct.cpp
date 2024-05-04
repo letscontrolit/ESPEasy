@@ -23,13 +23,12 @@ bool P135_data_struct::init() {
     if (scd4x->begin(false, _autoCalibrate)) {
       const uint16_t orgAltitude = scd4x->getSensorAltitude();
 
-      if (_altitude != 0) {
+      if ((_altitude != 0) && (_altitude != orgAltitude)) {
         scd4x->setSensorAltitude(_altitude);
       }
       const float orgTempOffset = scd4x->getTemperatureOffset();
 
-      // FIXME TD-er: Is this correct? Checking _tempOffset and not checking orgTempOffset? (same for altitude)
-      if (!essentiallyZero(_tempOffset)) {
+      if (!essentiallyZero(_tempOffset) && !essentiallyEqual(_tempOffset, orgTempOffset)) {
         scd4x->setTemperatureOffset(_tempOffset);
       }
       const bool hasSerial = scd4x->getSerialNumber(serialNumber); // Not yet reading, get serial
@@ -304,23 +303,30 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 *****************************************************/
 bool P135_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (nullptr == scd4x) { return false; } // Safeguard
   bool success = false;
 
   const String var = parseString(string, 1);
 
-  if (equals(var, F("getaltitude"))) {               // [<taskname>#getaltitude] = get sensor altitude
-    string  = scd4x->getSensorAltitude();
+  if (equals(var, F("getaltitude")) &&
+      scd4x->stopPeriodicMeasurement()) { // [<taskname>#getaltitude] = get sensor altitude
+    string = scd4x->getSensorAltitude();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("gettempoffset"))) {      // [<taskname>#gettempoffset] = get sensor temperature offset
-    string  = toString(scd4x->getTemperatureOffset(), 2);
+  } else if (equals(var, F("gettempoffset")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#gettempoffset] = get sensor temperature offset
+    string = toString(scd4x->getTemperatureOffset(), 2);
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("getdataready"))) {       // [<taskname>#getdataready] = is data ready? (1/0)
+  } else if (equals(var, F("getdataready"))) { // [<taskname>#getdataready] = is data ready? (1/0)
     string  = scd4x->getDataReadyStatus();
     success = true;
-  } else if (equals(var, F("getselfcalibration"))) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
-    string  = scd4x->getAutomaticSelfCalibrationEnabled();
+  } else if (equals(var, F("getselfcalibration")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
+    string = scd4x->getAutomaticSelfCalibrationEnabled();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("serialnumber"))) {       // [<taskname>#serialnumber] = the devices electronic serial number
+  } else if (equals(var, F("serialnumber"))) { // [<taskname>#serialnumber] = the devices electronic serial number
     string  = String(serialNumber);
     success = true;
   }
