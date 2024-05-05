@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2024-04-27 tonhuisman: Fix bug that sensor settings can only be retrieved if measuring is stopped
  * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-08-28 tonhuisman: Include 'CO2' in plugin name, to be in line with other CO2 plugins
  * 2022-08-24 tonhuisman: Removed [TESTING] tag

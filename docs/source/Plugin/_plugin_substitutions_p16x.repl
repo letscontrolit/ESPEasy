@@ -1,3 +1,16 @@
+.. |P162_name| replace:: :cyan:`MCP42xxx Digipot`
+.. |P162_type| replace:: :cyan:`Output`
+.. |P162_typename| replace:: :cyan:`Output - MCP42xxx Digipot`
+.. |P162_porttype| replace:: `.`
+.. |P162_status| replace:: :yellow:`COLLECTION G`
+.. |P162_github| replace:: P162_MCP42xxx.ino
+.. _P162_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P162_MCP42xxx.ino
+.. |P162_usedby| replace:: `.`
+.. |P162_shortinfo| replace:: `MCP42xxx/MCP41xxx Digital potentiometers`
+.. |P162_maintainer| replace:: `tonhuisman`
+.. |P162_compileinfo| replace:: `.`
+.. |P162_usedlibraries| replace:: `SPI`
+
 .. |P164_name| replace:: :cyan:`ENS16x TVOC/eCO2`
 .. |P164_type| replace:: :cyan:`Gases`
 .. |P164_typename| replace:: :cyan:`Gases - ENS16x TVOC/eCO2`

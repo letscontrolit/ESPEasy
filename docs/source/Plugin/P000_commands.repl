@@ -363,6 +363,18 @@
 
     ``Name,<new name>``"
     "
+    Notify","
+    :green:`Rules`","
+    Trigger a notification. Requires the notifier at the numbered index (1..3) to be enabled.
+
+    Optionally include the message body (quoted) and subject (quoted) to be passed. NB: The buzzer doesn't support a message body or subject.
+
+    Syntax: ``Notify,<notifier>[,<message>[,<subject>]]``
+
+    Example:
+
+    ``Notify,1,'The temperature is currently [ds#temp] degrees!','Temperature warning'``"
+    "
     NTPHost[,<host-name_or_ip>]","
     :red:`Internal`","
     Set the name of the NTP-host
