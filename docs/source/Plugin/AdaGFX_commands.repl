@@ -116,6 +116,7 @@
     * *sevenseg24* A rather large 7-segment 21 * 48 font
     * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
     * *freesans* A sans-serif 10 * 21 font
+    * *tomthumb* A small 3 * 5 font, for use on a 5x29 NeoPixel display. Not available in limited builds.
 
     Usually disabled fonts: (can be enabled in a Custom build, default enabled in the MAX builds)
 
@@ -136,7 +137,11 @@
     * *whiterabbit16pt* A modern 16 * 20 font
     * *robotomono16pt* A modern 16 * 20 font
     * *whiterabbit18pt* A modern 18 * 22 font
+    * *sevenseg18b* A better 18 * 22 font, where the 1 isn't proportionally spaced, but doesn't have much non-alphanumeric characters
+    * *lcd14cond18pt* A 14 segment, 18pt, LCD-like font
     * *whiterabbit20pt* A modern 20 * 24 font
+    * *sevenseg24b* A better 24 * 34 font, where the 1 isn't proportionally spaced, but doesn't have much non-alphanumeric characters
+    * *lcd14cond24pt* A 14 segment, 24pt, LCD-like font
 
     Standard disabled fonts (even on MAX builds), that can be enabled in a custom build:
 
@@ -148,6 +153,8 @@
     * *robotocond16pt* A modern 16 * 20 font (Roboto Condensed, proportionally spaced)
 
     NB: Roboto is used as the default Android font since Android 4.1, and very readable, even when using small fonts on a small display.
+
+    NB2: The 18pt fonts are included by default in the ESP32 builds, using this helper.
     "
     "
     ``<trigger>,l,<x1>,<y1>,<x2>,<y2>,<color>``
