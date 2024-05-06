@@ -39,11 +39,11 @@ P138_data_struct::~P138_data_struct() {
 // plugin_read: Read the values and send to controller(s)
 // **************************************************************************/
 bool P138_data_struct::plugin_read(struct EventStruct *event) {
-  bool success = true;
+  bool success             = true;
   const uint8_t valueCount = P138_NR_OUTPUT_VALUES;
 
   for (uint8_t i = 0; i < valueCount; i++) {
-    UserVar.setFloat(event->TaskIndex, i,  read_value(static_cast<P138_valueOptions_e>(PCONFIG(P138_CONFIG_BASE + i))));
+    UserVar.setFloat(event->TaskIndex, i, read_value(static_cast<P138_valueOptions_e>(PCONFIG(P138_CONFIG_BASE + i))));
   }
 
   return success;
@@ -58,9 +58,9 @@ bool P138_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   if (bitRead(P138_CONFIG_FLAGS, P138_FLAG_POWERCHANGE) && isInitialized()) {
     int8_t src = static_cast<int8_t>(_ip5306->power_source());
 
-    if (_lastPowerSource != src) { // Changed?
+    if (_lastPowerSource != src) {                              // Changed?
       eventQueue.add(event->TaskIndex, F("PowerChanged"), src); // 0 = battery, 1 = Vin
-      _lastPowerSource = src;      // Keep current
+      _lastPowerSource = src;                                   // Keep current
     }
   }
   return success;
@@ -114,34 +114,24 @@ bool P138_data_struct::plugin_write(struct EventStruct *event,
   return success;
 }
 
+const char p138_getcommands[] PROGMEM = "none|batcurrent|chundervolt|stopvolt|inpcurrent|chargelvl|pwrsource";
+
 /****************************************************************************
  * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
  ***************************************************************************/
 bool P138_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
-  bool   success = true;
-  String command = parseString(string, 1);
-  float  value;
+  bool success           = true;
+  const String command   = parseString(string, 1);
+  const int    command_i = GetCommandCode(command.c_str(), p138_getcommands);
 
-  if (equals(command, F("batcurrent"))) {         // batcurrent
-    value = read_value(P138_valueOptions_e::BatteryCurrent);
-  } else if (equals(command, F("chundervolt"))) { // chundervolt
-    value = read_value(P138_valueOptions_e::ChargeUnderVoltage);
-  } else if (equals(command, F("stopvolt"))) {  // stopvolt
-    value = read_value(P138_valueOptions_e::StopVoltage);
-  } else if (equals(command, F("inpcurrent"))) {  // inpcurrent
-    value = read_value(P138_valueOptions_e::InCurrent);
-  } else if (equals(command, F("chargelvl"))) {   // chargelvl
-    value = read_value(P138_valueOptions_e::ChargeLevel);
-  } else if (equals(command, F("pwrsource"))) {   // pwrsource
-    value = read_value(P138_valueOptions_e::PowerSource);
+  if (command_i > 0) { // Ignore 'None'
+    const float value = read_value(static_cast<P138_valueOptions_e>(command_i));
+    string = toString(value, static_cast<unsigned int>(P138_CONFIG_DECIMALS));
   } else {
     success = false;
   }
 
-  if (success) {
-    string = toString(value, static_cast<unsigned int>(P138_CONFIG_DECIMALS));
-  }
   return success;
 }
 

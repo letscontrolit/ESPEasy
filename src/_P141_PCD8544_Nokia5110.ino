@@ -147,7 +147,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Write Command trigger"),
                         F("pcmdtrigger"),
-                        sizeof(commandTriggerOptions) / sizeof(int),
+                        NR_ELEMENTS(commandTriggerOptions),
                         commandTriggers,
                         commandTriggerOptions,
                         P141_CONFIG_FLAG_GET_CMD_TRIGGER);
@@ -175,7 +175,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       uint16_t remain = P141_Nlines * (P141_Nchars + 1); // DAT_TASKS_CUSTOM_SIZE;
       # endif // ifndef LIMIT_BUILD_SIZE
 
-      for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P141_Nlines; ++varNr) {
         addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P141_Nchars);
         # ifndef LIMIT_BUILD_SIZE
         remain -= (strings[varNr].length() + 1);
@@ -219,7 +219,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       String strings[P141_Nlines];
       String error;
 
-      for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P141_Nlines; ++varNr) {
         strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
       }
 

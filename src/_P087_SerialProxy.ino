@@ -318,7 +318,7 @@ bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
 
 String Plugin_087_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
-    case P087_QUERY_VALUE: return displayString ? F("Value")          : F("v");
+    case P087_QUERY_VALUE: return displayString ? F("Value") : F("v");
   }
   return EMPTY_STRING;
 }

@@ -499,6 +499,19 @@ void AttemptWiFiConnect() {
       }
 #endif
 
+#ifdef ESP32
+      if (Settings.IncludeHiddenSSID()) {
+        wifi_country_t config = {
+          .cc = "01",
+          .schan = 1,
+          .nchan = 14,
+          .policy = WIFI_COUNTRY_POLICY_MANUAL,
+        };
+        esp_wifi_set_country(&config);
+      }
+#endif
+
+
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.bits.isHidden)
            && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
@@ -1031,6 +1044,18 @@ void WifiScan(bool async, uint8_t channel) {
   // Perform a disconnect after scanning.
   // See: https://github.com/letscontrolit/ESPEasy/pull/3579#issuecomment-967021347
   async = false;
+
+  if (Settings.IncludeHiddenSSID()) {
+    wifi_country_t config = {
+      .cc = "01",
+      .schan = 1,
+      .nchan = 14,
+      .policy = WIFI_COUNTRY_POLICY_MANUAL,
+    };
+    esp_wifi_set_country(&config);
+  }
+
+
 #endif
 
   START_TIMER;

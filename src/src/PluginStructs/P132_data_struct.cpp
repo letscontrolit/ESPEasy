@@ -20,11 +20,9 @@ int16_t P132_data_struct::getBusVoltage_raw(byte reg) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("INA3221: get raw bus ");
-    log += value;
-    log += F(" reg - ");
-    log += reg;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG,
+           strformat(F("INA3221: get raw bus %d reg - %d"),
+                     value, reg));
   }
   # endif // ifndef BUILD_NO_DEBUG
   return (int16_t)((value >> 3) * 8);
@@ -37,29 +35,24 @@ int16_t P132_data_struct::getShuntVoltage_raw(byte reg) {
   uint16_t value = I2C_read16_reg(_i2c_address, reg);
 
   # ifndef BUILD_NO_DEBUG
-  String log = F("INA3221: get raw shunt voltage ");
-  log += value;
-  log += F(" value2 - ");
+  String log = strformat(F("INA3221: get raw shunt voltage %d value2 - "), value);
   # endif // ifndef BUILD_NO_DEBUG
 
   // Shift to the right 3 to drop CNVR and OVF and multiply by LSB
-  if (value > 32767) {              // check value is negative
+  if (value > 32767) {               // check value is negative
     //		value = 0;  // no negative measure
-    value = ((value >> 3) | 57344); // correct int16_t value
+    value = ((value >> 3) | 0xE000); // correct int16_t value
     # ifndef BUILD_NO_DEBUG
-    log += F(" value_neg - ");
-    log += value;
+    log += concat(F(" value_neg - "), value);
     # endif // ifndef BUILD_NO_DEBUG
   } else {
     value = (value >> 3);
     # ifndef BUILD_NO_DEBUG
-    log += F(" value_pos - ");
-    log += value;
+    log += concat(F(" value_pos - "), value);
     # endif // ifndef BUILD_NO_DEBUG
   }
   # ifndef BUILD_NO_DEBUG
-  log += F(" reg - ");
-  log += reg;
+  log += concat(F(" reg - "), reg);
   addLog(LOG_LEVEL_DEBUG, log);
   # endif // ifndef BUILD_NO_DEBUG
   return value;
@@ -74,11 +67,9 @@ float P132_data_struct::getShuntVoltage_mV(byte reg) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("INA3221: shunt voltage in mV * 0.04 ");
-    log += value;
-    log += F(" reg - ");
-    log += reg;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG,
+           strformat(F("INA3221: shunt voltage in mV * 0.04 %d reg - %d"),
+                     value, reg));
   }
   # endif // ifndef BUILD_NO_DEBUG
   return value * 0.04f;
@@ -93,11 +84,9 @@ float P132_data_struct::getBusVoltage_V(byte reg) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("INA3221: get bus voltage ");
-    log += value;
-    log += F(" reg - ");
-    log += reg;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG,
+           strformat(F("INA3221: get bus voltage %d reg - %d"),
+                     value, reg));
   }
   # endif // ifndef BUILD_NO_DEBUG
   return value * 0.001f;
@@ -118,15 +107,9 @@ void P132_data_struct::setCalibration_INA3221(struct EventStruct *event) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("INA3221: init I2C: 0x");
-    log += String(_i2c_address, HEX);
-    log += F(" mfg: 0x");
-    log += String(mfgid, HEX);
-    log += F(", config: 0x");
-    log += String(config, HEX);
-    log += F(", 0b");
-    log += String(config, BIN);
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO,
+           strformat(F("INA3221: init I2C: 0x%02x mfg: 0x%x, config: 0x%x, 0b%s"),
+                     _i2c_address, mfgid, config, String(config, BIN).c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 

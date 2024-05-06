@@ -36,6 +36,7 @@ jobs:
           cd docs
           sudo apt install imagemagick zip
           pip install -r requirements.txt
+          python ./builds_overview.py
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
