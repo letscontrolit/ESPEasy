@@ -1633,6 +1633,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
   #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -1975,6 +1978,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
+    #ifdef ESP32
+      #define TOMTHUMB_USE_EXTENDED 1
+    #endif
+  #endif
+  #if !defined(USES_P105) && defined(ESP32)
+    #define USES_P105   // AHT10/20/21  (used in TinyTronics Smart Home RGB LED Matrix)
   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -2013,6 +2022,12 @@ To create/register a plugin, you have to :
   // To be defined
 #endif
 
+// Disable few plugin(s) to make the build fit :/
+#ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
+  #ifdef USES_P039
+    #undef USES_P039  // Environment - Thermocouple
+  #endif
+#endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
 // EXPERIMENTAL (playground) #######################
 #ifdef PLUGIN_SET_EXPERIMENTAL
@@ -2332,6 +2347,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
+  #endif
+  #ifndef USES_P162
+    #define USES_P162   // Output - MCP42xxx Digipot
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V

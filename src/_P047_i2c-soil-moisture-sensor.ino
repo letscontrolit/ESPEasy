@@ -12,6 +12,10 @@
 //
 
 /** Changelog:
+ * 2024-04-05 tonhuisman: Complete implementation for Afafruit I2C Capacitive Moisture sensor.
+ *                        Log sensor name and version (or 0 when not available) at plugin startup.
+ * 2024-03-23 tonhuisman: Start implementation of Adafruit I2C Capacitive Moisture Sensor (product ID 4026)
+ *                        From a forum request: https://www.letscontrolit.com/forum/viewtopic.php?t=10107
  * 2023-04-07 tonhuisman: Correct typo BelFlE to BeFlE
  * 2023-04-01 tonhuisman: Implement staged reading instead of a fixed delay during PLUGIN_READ
  *                        Add range-check on save for I2C address inputs (0x01..0x7F)
@@ -91,11 +95,20 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
-                     formatToHex_decimal(P047_I2C_ADDR), 4);
-      addUnit(F("0x01..0x7F"));
+      # if P047_FEATURE_ADAFRUIT
 
-      // FIXME TD-er: Why not using addFormSelectorI2C here?
+      if (P047_MODEL_ADAFRUIT == static_cast<P047_SensorModels>(P047_MODEL)) {
+        const uint8_t i2cAddressValues[] = { P047_ADAFRUIT_DEFAULT_ADDR, 0x37, 0x38, 0x39 };
+
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P047_I2C_ADDR);
+      } else
+      # endif // if P047_FEATURE_ADAFRUIT
+      {
+        addFormTextBox(F("I2C Address (Hex)"), F("i2c_addr"),
+                       formatToHex_decimal(P047_I2C_ADDR), 4);
+        addUnit(F("0x01..0x7F"));
+      }
+
       break;
     }
 
@@ -118,12 +131,18 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *SensorModels[] = {
-          F("Catnip electronics/miceuz (default)"),
-          F("BeFlE"),
+          toString(P047_MODEL_CATNIP),
+          toString(P047_MODEL_BEFLE),
+          # if P047_FEATURE_ADAFRUIT
+          toString(P047_MODEL_ADAFRUIT),
+          # endif // if P047_FEATURE_ADAFRUIT
         };
         const int SensorModelIds[] = {
           static_cast<int>(P047_MODEL_CATNIP),
           static_cast<int>(P047_MODEL_BEFLE),
+          # if P047_FEATURE_ADAFRUIT
+          static_cast<int>(P047_MODEL_ADAFRUIT),
+          # endif // if P047_FEATURE_ADAFRUIT
         };
         constexpr size_t P047_MODEL_OPTIONS = NR_ELEMENTS(SensorModelIds);
         addFormSelector(F("Sensor model"), F("model"), P047_MODEL_OPTIONS, SensorModels, SensorModelIds, P047_MODEL, true);
@@ -138,12 +157,18 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Check sensor version"), F("version"), P047_CHECK_VERSION);
       }
 
-      addFormSeparator(2);
+      # if P047_FEATURE_ADAFRUIT
 
-      addFormCheckBox(F("Change Sensor address"), F("changeAddr"), false);
-      addFormTextBox(F("Change I2C Addr. to (Hex)"), F("newAddr"),
-                     formatToHex_decimal(P047_I2C_ADDR), 4);
-      addUnit(F("0x01..0x7F"));
+      if (P047_MODEL_ADAFRUIT != static_cast<P047_SensorModels>(P047_MODEL))
+      # endif // if P047_FEATURE_ADAFRUIT
+      {
+        addFormSeparator(2);
+
+        addFormCheckBox(F("Change Sensor address"), F("changeAddr"), false);
+        addFormTextBox(F("Change I2C Addr. to (Hex)"), F("newAddr"),
+                       formatToHex_decimal(P047_I2C_ADDR), 4);
+        addUnit(F("0x01..0x7F"));
+      }
 
       success = true;
       break;
@@ -152,14 +177,25 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       success = true;
-      String webarg = webArg(F("i2c_addr"));
-      int    addr   = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+      String webarg;
+      int    addr;
 
-      if ((addr > 0x00) && (addr < 0x80)) {
-        P047_I2C_ADDR = addr;
-      } else {
-        addHtmlError(F("I2C Address (Hex) error, range: 0x01..0x7F"));
-        success = false;
+      # if P047_FEATURE_ADAFRUIT
+
+      if (P047_MODEL_ADAFRUIT == static_cast<P047_SensorModels>(P047_MODEL)) {
+        P047_I2C_ADDR = getFormItemInt(F("i2c_addr"));
+      } else
+      # endif // if P047_FEATURE_ADAFRUIT
+      {
+        webarg = webArg(F("i2c_addr"));
+        addr   = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+
+        if ((addr > 0x00) && (addr < 0x80)) {
+          P047_I2C_ADDR = addr;
+        } else {
+          addHtmlError(F("I2C Address (Hex) error, range: 0x01..0x7F"));
+          success = false;
+        }
       }
 
       uint8_t model = getFormItemInt(F("model"));
@@ -170,8 +206,12 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         if (P047_MODEL_CATNIP == static_cast<P047_SensorModels>(model)) {
           P047_I2C_ADDR = P047_CATNIP_DEFAULT_ADDR;
           strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_047)); // Gets wiped when switching nr. of values
-        } else {
+        } else if (P047_MODEL_BEFLE == static_cast<P047_SensorModels>(model)) {
           P047_I2C_ADDR = P047_BEFLE_DEFAULT_ADDR;
+          # if P047_FEATURE_ADAFRUIT
+        } else {
+          P047_I2C_ADDR = P047_ADAFRUIT_DEFAULT_ADDR;
+          # endif // if P047_FEATURE_ADAFRUIT
         }
       }
 
@@ -179,16 +219,25 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 
       P047_CHECK_VERSION = isFormItemChecked(F("version"));
 
-      webarg = webArg(F("newAddr"));
-      addr   = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+      # if P047_FEATURE_ADAFRUIT
 
-      if ((addr > 0x00) && (addr < 0x80)) {
-        P047_NEW_ADDR = addr;
-      } else {
-        addHtmlError(F("Change I2C Addr. to (Hex) error, range: 0x01..0x7F"));
-        success = false;
+      if (P047_MODEL_ADAFRUIT != static_cast<P047_SensorModels>(P047_MODEL))
+      # endif // if P047_FEATURE_ADAFRUIT
+      {
+        webarg = webArg(F("newAddr"));
+
+        if (!webarg.isEmpty()) {
+          addr = static_cast<int>(strtol(webarg.c_str(), 0, 16));
+
+          if ((addr > 0x00) && (addr < 0x80)) {
+            P047_NEW_ADDR    = addr;
+            P047_CHANGE_ADDR = isFormItemChecked(F("changeAddr"));
+          } else {
+            addHtmlError(F("Change I2C Addr. to (Hex) error, range: 0x01..0x7F"));
+            success = false;
+          }
+        }
       }
-      P047_CHANGE_ADDR = isFormItemChecked(F("changeAddr"));
 
       break;
     }

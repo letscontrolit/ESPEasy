@@ -2,6 +2,11 @@
 
 #ifdef USES_C018
 
+
+# include <rn2xx3.h>
+# include <ESPeasySerial.h>
+
+
 C018_data_struct::C018_data_struct() :
   C018_easySerial(nullptr),
   myLora(nullptr) {}
