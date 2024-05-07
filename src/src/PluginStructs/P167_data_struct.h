@@ -1,3 +1,7 @@
+#ifndef PLUGINSTRUCTS_P167_DATA_STRUCT_H
+#define PLUGINSTRUCTS_P167_DATA_STRUCT_H
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // P167 device class for IKEA Vindstyrka SEN54 temperature , humidity and air quality sensors 
 // See datasheet https://sensirion.com/media/documents/6791EFA0/62A1F68F/Sensirion_Datasheet_Environmental_Node_SEN5x.pdf
@@ -220,3 +224,4 @@ private:
   
 };
 #endif // USES_P167
+#endif
