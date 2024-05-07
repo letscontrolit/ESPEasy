@@ -970,7 +970,7 @@ struct tFontArgs {
 /* *INDENT-OFF* */
 constexpr tFontArgs fontargs[] =
 {
-  { nullptr,                        9,                6,   0,   false,  0u },
+  { nullptr,                        6,                9,   0,   false,  0u },
   { &Seven_Segment24pt7b,           21,               42,  35,  true,   1u },
   { &Seven_Segment18pt7b,           16,               33,  26,  true,   2u },
   { &FreeSans9pt7b,                 10,               16,  12,  false,  3u },
