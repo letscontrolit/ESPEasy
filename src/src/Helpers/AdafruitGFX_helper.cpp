@@ -2211,6 +2211,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         }
       }
       break;
+    case adagfx_commands_e::delwin: // delwin: delete window, don't delete window 0
+
+      if ((argCount == 1) && (nParams[0] > 0)) {
+        // logWindows(F(" deLwin ")); // use for debugging only
+
+        success = deleteWindow(nParams[0]);
+      }
+      break;
       # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   }
   return success;
