@@ -12,6 +12,9 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-05-07 tonhuisman: Correct font related functions, add [<taskname>#font] to return the currently selected fontname
+ *                        Accept numeric font Ids to select a different font: <trigger>,font,<fontId>
+ *                        Show font ID in Default font selector
  * 2024-04-17 tonhuisman: Add AdaGFXFormDefaultFont() selector and some support functions
  *                        Add default font selection at initialization
  * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
@@ -438,7 +441,8 @@ uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to
 # endif // if ADAGFX_SUPPORT_7COLOR
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
-String   AdaGFXgetFontName(uint8_t fontId);
+String   AdaGFXgetFontName(uint8_t fontId,
+                           bool    includeFontId = false);
 uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId);
 void     AdaGFXFormDefaultFont(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
@@ -610,6 +614,7 @@ private:
   int8_t _rotation       = 0;
   bool _displayInverted  = false;
   int8_t _lineSpacing    = 15; // Default fontheight * fontsize
+  uint8_t _fontId        = 0;
 
   uint16_t _display_x = 0;
   uint16_t _display_y = 0;

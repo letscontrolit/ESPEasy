@@ -1042,13 +1042,13 @@ constexpr tFontArgs fontargs[] =
   { &whitrabt12pt7b,                13,               20,  16,  false, 18u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-  { &Roboto_Regular12pt7b,          13,               20,  16,  true,  19u },
+  { &Roboto_Regular12pt7b,          13,               20,  20,  true,  19u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-  { &RobotoCondensed_Regular12pt7b, 13,               20,  16,  true,  20u },
+  { &RobotoCondensed_Regular12pt7b, 13,               20,  20,  true,  20u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
   #  ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-  { &RobotoMono_Regular12pt7b,      13,               20,  16,  false, 21u },
+  { &RobotoMono_Regular12pt7b,      13,               20,  20,  false, 21u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
   # endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
@@ -1073,10 +1073,10 @@ constexpr tFontArgs fontargs[] =
   { &whitrabt18pt7b,                21,               30,  26,  false, 27u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
   #  ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
-  { &_7segment18pt7b,               21,               30,  0,   false, 28u },
+  { &_7segment18pt7b,               21,               30,  30,  false, 28u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_SEVENSEG_B
   #  ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
-  { &LCD14cond18pt7b,               24,               30,  0,   false, 29u },
+  { &LCD14cond18pt7b,               24,               30,  30,  false, 29u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_LCD14COND
   # endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
@@ -1086,39 +1086,38 @@ constexpr tFontArgs fontargs[] =
   # endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
   # ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
   #  ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
-  { &_7segment24pt7b,               26,               34,  0,   false, 31u },
+  { &_7segment24pt7b,               26,               34,  38,  false, 31u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
   #  ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
-  { &LCD14cond24pt7b,               26,               34,  0,   false, 32u },
+  { &LCD14cond24pt7b,               26,               34,  38,  false, 32u },
   #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
   # endif  // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 };
 /* *INDENT-ON* */
 # endif // if ADAGFX_FONTS_INCLUDED
 
-String AdaGFXgetFontName(uint8_t fontId) {
+String AdaGFXgetFontName(uint8_t fontId, bool includeFontId) {
   # if ADAGFX_FONTS_INCLUDED
-  constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
+  const uint32_t idx = AdaGFXgetFontIndexForFontId(fontId);
+  char   tmp[30]{}; // Longest name so far is 23 + \0
+  String fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
 
-  if (fontId < font_max) {
-    const uint32_t idx = AdaGFXgetFontIndexForFontId(fontId);
-    char   tmp[30]{}; // Longest name so far is 23 + \0
-    String fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
-    return fontName;
+  if (includeFontId) {
+    fontName = strformat(F("%s (%d)"), tmp, fontargs[idx]._fontId);
   }
-  # endif // if ADAGFX_FONTS_INCLUDED
+  return fontName;
+  # else // if ADAGFX_FONTS_INCLUDED
   return EMPTY_STRING;
+  # endif // if ADAGFX_FONTS_INCLUDED
 }
 
 uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId) {
   # if ADAGFX_FONTS_INCLUDED
   constexpr uint32_t font_max = NR_ELEMENTS(fontargs);
 
-  if (fontId < font_max) {
-    for (uint32_t idx = 0; idx < font_max; ++idx) {
-      if (fontargs[idx]._fontId == fontId) {
-        return idx;
-      }
+  for (uint32_t idx = 0; idx < font_max; ++idx) {
+    if (fontargs[idx]._fontId == fontId) {
+      return idx;
     }
   }
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -1137,8 +1136,8 @@ void AdaGFXFormDefaultFont(const __FlashStringHelper *id,
 
   for (uint32_t idx = 0; idx < font_max; ++idx) {
     const bool selected = (fontargs[idx]._fontId == selectedIndex);
-    String     fontName(GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts));
-    addSelector_Item(fontName,
+    GetTextIndexed(tmp, sizeof(tmp), idx, adagfx_fonts);
+    addSelector_Item(strformat(F("%s (%d)"), tmp, fontargs[idx]._fontId),
                      fontargs[idx]._fontId,
                      selected);
   }
@@ -1152,6 +1151,7 @@ void AdafruitGFX_helper::setFontById(uint8_t fontId) {
   const int     font_i   = AdaGFXgetFontIndexForFontId(fontId);
 
   if ((font_i >= 0) && (font_i < font_max)) {
+    _fontId = fontargs[font_i]._fontId;
     _display->setFont(fontargs[font_i]._f);
     calculateTextMetrics(fontargs[font_i]._width,
                          fontargs[font_i]._height,
@@ -1496,12 +1496,19 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       # if ADAGFX_FONTS_INCLUDED
 
       if (argCount == 1) {
+        int font_i = 0;
         sParams[0].toLowerCase();
 
         constexpr int font_max = NR_ELEMENTS(fontargs);
-        const int     font_i   = GetCommandCode(sParams[0].c_str(), adagfx_fonts);
+
+        if ((nParams[0] > 0) || equals(sParams[0], F("0"))) {
+          font_i = AdaGFXgetFontIndexForFontId(nParams[0]); // Set font by fontId
+        } else {
+          font_i = GetCommandCode(sParams[0].c_str(), adagfx_fonts);
+        }
 
         if ((font_i >= 0) && (font_i < font_max)) {
+          _fontId = fontargs[font_i]._fontId;
           _display->setFont(fontargs[font_i]._f);
           calculateTextMetrics(fontargs[font_i]._width,
                                fontargs[font_i]._height,
@@ -1848,7 +1855,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
           const Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
 
           // Check mode & state: -2, -1, 0, 1 to select used colors
-      #  if ADAGFX_ENABLE_BUTTON_SLIDER
+          #  if ADAGFX_ENABLE_BUTTON_SLIDER
 
           if (buttonLayout == Button_layout_e::Slider) {
             if (nParams[1] == -2) {
@@ -1859,7 +1866,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
               borderColor = _bgcolor;
             }
           } else
-      #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
           {
             if (nParams[0] == 0) {
               fillColor = offColor;
@@ -1878,9 +1885,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
           if ((buttonType != Button_type_e::None) ||
               clearArea) {
             drawButtonShape(
-          #  if ADAGFX_ENABLE_BUTTON_SLIDER
+              #  if ADAGFX_ENABLE_BUTTON_SLIDER
               buttonLayout == Button_layout_e::Slider ? Button_type_e::Square :
-          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+              #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
               buttonType, // Clear full square for slider
               nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
               _bgcolor, _bgcolor);
@@ -1902,9 +1909,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
             // Determine alignment parameters
             if ((nParams[0] == 1) || (nParams[0] == -1) // 1 = on+enabled, -1 = on+disabled
-            #  if ADAGFX_ENABLE_BUTTON_SLIDER
+                #  if ADAGFX_ENABLE_BUTTON_SLIDER
                 || (buttonLayout == Button_layout_e::Slider)
-            #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+                #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
                 ) {
               newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
             } else {
@@ -1956,7 +1963,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                 nParams[2] += w2 / 2;                     // A little margin from left
                 nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
                 break;
-          #  if ADAGFX_ENABLE_BMP_DISPLAY
+              #  if ADAGFX_ENABLE_BMP_DISPLAY
               case Button_layout_e::Bitmap:
               {                     // Use ON/OFF caption to specify (full) bitmap filename
                 if (!newString.isEmpty()) {
@@ -1980,21 +1987,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                 }
                 break;
               }
-          #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+              #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
               case Button_layout_e::NoCaption:
-          #  if ADAGFX_ENABLE_BUTTON_SLIDER
+              #  if ADAGFX_ENABLE_BUTTON_SLIDER
               case Button_layout_e::Slider: // Nothing to do here (yet)
-          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+              #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
                 break;
             }
 
             if ((buttonLayout != Button_layout_e::NoCaption)
-            #  if ADAGFX_ENABLE_BUTTON_SLIDER
+                #  if ADAGFX_ENABLE_BUTTON_SLIDER
                 && (buttonLayout != Button_layout_e::Slider)
-            #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
-            #  if ADAGFX_ENABLE_BMP_DISPLAY
+                #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+                #  if ADAGFX_ENABLE_BMP_DISPLAY
                 && (buttonLayout != Button_layout_e::Bitmap)
-            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+                #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
                 ) {
               // Set position and colors, then print
               _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
@@ -2004,7 +2011,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
               // restore colors
               _display->setTextColor(_fgcolor, _bgcolor);
             }
-        #  if ADAGFX_ENABLE_BUTTON_SLIDER
+            #  if ADAGFX_ENABLE_BUTTON_SLIDER
 
             if (buttonLayout == Button_layout_e::Slider) {
               // 1) Determine direction from w/h
@@ -2146,7 +2153,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                 _display->print(newString);
               }
             }
-        #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+            #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 
             // restore font scaling
             _display->setTextSize(_fontscaling);
@@ -2228,7 +2235,11 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
  * Get a config value from the plugin
  ***************************************************************************/
 # if ADAGFX_ENABLE_GET_CONFIG_VALUE
-const char adagfx_getcommands[] PROGMEM = "win|iswin|width|height|length|textheight|rot|txs|tpm";
+const char adagfx_getcommands[] PROGMEM = "win|iswin|width|height|length|textheight|rot|txs|tpm"
+                                          #  if ADAGFX_FONTS_INCLUDED
+                                          "|font"
+                                          #  endif // if ADAGFX_FONTS_INCLUDED
+;
 enum class adagfx_getcommands_e : int8_t {
   invalid = -1,
   win     = 0,
@@ -2240,6 +2251,9 @@ enum class adagfx_getcommands_e : int8_t {
   rot,
   txs,
   tpm,
+  #  if ADAGFX_FONTS_INCLUDED
+  font,
+  #  endif // if ADAGFX_FONTS_INCLUDED
 };
 
 bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
@@ -2325,6 +2339,12 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
       success = true;
       break;
     }
+    #  if ADAGFX_FONTS_INCLUDED
+    case adagfx_getcommands_e::font:
+      string  = AdaGFXgetFontName(_fontId);
+      success = true;
+      break;
+    #  endif // if ADAGFX_FONTS_INCLUDED
     case adagfx_getcommands_e::invalid:
       break;
   }
