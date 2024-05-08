@@ -18,7 +18,7 @@
 
 # include <AS3935I2C.h>
 
-# define DEFAULT_SENSE_INCREASE_INTERVAL   15000  // 15 s sensitivity increase interval
+# define DEFAULT_SENSE_INCREASE_INTERVAL   15000 // 15 s sensitivity increase interval
 
 // IRQ pin: CONFIG_PIN1
 
@@ -34,9 +34,9 @@
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(4)
 
 # define P169_GET_INDOOR                bitRead(PCONFIG(5), 0)
-# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(5), 0, X)
+# define P169_SET_INDOOR(X) bitWrite(PCONFIG(5), 0, X)
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(5), 1)
-# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(5), 1, X)
+# define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(5), 1, X)
 
 // The device addresses for the AS3935 in read or write mode are defined by:
 // 0-0-0-0-0-a1-a0-0: write mode device address (DW)
@@ -65,9 +65,20 @@ public:
 
 private:
 
-  static void IRAM_ATTR P169_interrupt_ISR(P169_data_struct *self);
+  enum class P169_InterruptMode {
+    detached,
+    normal,
+    calibration
+  };
 
-  void                  set_P169_interrupt(uint8_t irqPin);
+  static void IRAM_ATTR P169_interrupt_ISR(P169_data_struct *self);
+  static void IRAM_ATTR P169_calibrate_ISR(P169_data_struct *self);
+
+  uint32_t              computeCalibratedFrequency(int32_t divider);
+
+  bool                  calibrateResonanceFrequency(int32_t& frequency);
+
+  void                  set_P169_interruptMode(P169_InterruptMode mode);
 
   void                  adjustForNoise();
 
@@ -75,15 +86,23 @@ private:
 
   void                  tryIncreasedSensitivity();
 
+
   AS3935I2C _sensor;
   uint8_t   _irqPin;
 
-  std::atomic<uint32_t>P169_interrupt_timestamp = 0;
-  std::atomic<uint32_t>P169_interrupt_count     = 0;
+  std::atomic<uint32_t>_interrupt_timestamp = 0;
+  std::atomic<uint32_t>_interrupt_count     = 0;
+
+  // Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
+  // Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
+  std::atomic<uint32_t>_calibration_start_micros = 0;
+  std::atomic<uint32_t>_calibration_end_micros   = 0;
 
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
+
+  P169_InterruptMode _mode = P169_InterruptMode::detached;
 };
 
 #endif // ifdef USES_P169

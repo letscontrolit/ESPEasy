@@ -13,71 +13,221 @@
 #  endif // ifdef ESP8266
 # endif  // ifndef CORE_POST_3_0_0
 
+# define P169_AS3935_TIMEOUT_USEC  2000
+
+# ifdef ESP32
+
+// Expected frequency for DR_16 = 31250 Hz
+#  define P169_CALIBRATION_DIVISION_RATIO AS3935MI::AS3935_DR_16
+#  define P169_NR_CALIBRATION_SAMPLES 1000ul
+# else // ifdef ESP32
+
+// Expected frequency for DR_32 = 15625 Hz
+#  define P169_CALIBRATION_DIVISION_RATIO AS3935MI::AS3935_DR_32
+#  define P169_NR_CALIBRATION_SAMPLES  500ul
+# endif // ifdef ESP32
 
 void IRAM_ATTR P169_data_struct::P169_interrupt_ISR(P169_data_struct *self) {
-  self->P169_interrupt_timestamp = millis();
-  ++self->P169_interrupt_count;
+  self->_interrupt_timestamp = millis();
 }
 
-void P169_data_struct::set_P169_interrupt(uint8_t irqPin) {
+void IRAM_ATTR P169_data_struct::P169_calibrate_ISR(P169_data_struct *self) {
+  if (self->_calibration_start_micros == 0ul) {
+    self->_calibration_start_micros = static_cast<uint32_t>(getMicros64());
+    self->_calibration_end_micros   = 0ul;
+    self->_interrupt_count          = 0ul;
+  }
+
+  // _interrupt_count is volatile, so we can miss when it is exactly P169_NR_CALIBRATION_SAMPLES
+  if (self->_interrupt_count < P169_NR_CALIBRATION_SAMPLES) {
+    ++self->_interrupt_count;
+  }
+  else if (self->_calibration_end_micros == 0ul) {
+    self->_calibration_end_micros = static_cast<uint32_t>(getMicros64());
+  }
+}
+
+uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
+{
+  if ((divider < 16) || (divider > 128)) {
+    return 0ul;
+  }
+
+  // Need to copy the timestamps first as they are volatile
+  const uint32_t start = _calibration_start_micros;
+  const uint32_t end   = _calibration_end_micros;
+
+  if ((start == 0ul) || (end == 0ul)) {
+    return 0ul;
+  }
+
+  const int32_t duration_usec = timeDiff(start, end);
+
+  if (duration_usec <= 0ul) {
+    return 0ul;
+  }
+
+  // Compute measured frequency
+  // we have duration of P169_NR_CALIBRATION_SAMPLES pulses in usec, thus measured frequency is:
+  // (P169_NR_CALIBRATION_SAMPLES * 1000'000) / duration in usec.
+  // Actual frequency should take the division ratio into account.
+  uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * P169_NR_CALIBRATION_SAMPLES);
+
+  freq /=  duration_usec;
+  return static_cast<uint32_t>(freq);
+}
+
+bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
+{
+  const AS3935MI::division_ratio_t division_ratio = P169_CALIBRATION_DIVISION_RATIO;
+  const int32_t divider                           = 16 << static_cast<uint32_t>(division_ratio);
+
+  set_P169_interruptMode(P169_InterruptMode::detached);
+  _sensor.writeDivisionRatio(division_ratio);
+
+  int32_t best_diff = 500000;
+  int8_t  best_i    = -1;
+
+  frequency = 0;
+
+  for (uint8_t i = 0; i < 16; i++)
+  {
+    // set tuning capacitors
+    _sensor.writeAntennaTuning(i);
+
+    // display LCO on IRQ
+    _sensor.displayLCO_on_IRQ(true);
+
+    delayMicroseconds(P169_AS3935_TIMEOUT_USEC);
+    set_P169_interruptMode(P169_InterruptMode::calibration);
+    const uint32_t timeout = millis() + 500;
+    uint32_t freq          = 0;
+
+    while (freq == 0 && !timeOutReached(timeout)) {
+      delay(1);
+      freq = computeCalibratedFrequency(divider);
+    }
+
+    if (freq == 0) {
+      return false;
+    }
+    const int32_t freq_diff = 500000 - freq;
+
+    // stop displaying LCO on IRQ
+    _sensor.displayLCO_on_IRQ(false);
+    set_P169_interruptMode(P169_InterruptMode::detached);
+
+    if (abs(freq_diff) < abs(best_diff)) {
+      best_diff = freq_diff;
+      best_i    = i;
+      frequency = freq;
+    }
+  }
+
+  if (best_i < 0) {
+    frequency = 0;
+    return false;
+  }
+
+  _sensor.writeAntennaTuning(best_i);
+
+  // Allow for 3.5% deviation
+  constexpr int allowedDeviation = 500000 * 0.035f;
+
+  return abs(best_diff) < allowedDeviation;
+}
+
+void P169_data_struct::set_P169_interruptMode(P169_InterruptMode mode) {
+  if (_mode == mode) {
+    return;
+  }
+
   // set the IRQ pin as an input pin. do not use INPUT_PULLUP - the AS3935 will pull the pin
   // high if an event is registered.
-  pinMode(irqPin, INPUT);
-  P169_interrupt_timestamp = 0;
-  P169_interrupt_count     = 0;
-  attachInterruptArg(digitalPinToInterrupt(irqPin),
-                     reinterpret_cast<void (*)(void *)>(P169_interrupt_ISR),
-                     this,
-                     RISING);
+  pinMode(_irqPin, INPUT);
+
+  if (_mode != P169_InterruptMode::detached) {
+    detachInterrupt(_irqPin);
+  }
+
+  switch (mode) {
+    case P169_InterruptMode::detached:
+      detachInterrupt(_irqPin);
+      break;
+    case P169_InterruptMode::normal:
+      _interrupt_timestamp = 0;
+      _interrupt_count     = 0;
+      attachInterruptArg(digitalPinToInterrupt(_irqPin),
+                         reinterpret_cast<void (*)(void *)>(P169_interrupt_ISR),
+                         this,
+                         RISING);
+      break;
+    case P169_InterruptMode::calibration:
+      _interrupt_timestamp      = 0;
+      _interrupt_count          = 0;
+      _calibration_start_micros = 0;
+      _calibration_end_micros   = 0;
+      attachInterruptArg(digitalPinToInterrupt(_irqPin),
+                         reinterpret_cast<void (*)(void *)>(P169_calibrate_ISR),
+                         this,
+                         RISING);
+      break;
+  }
+  _mode = mode;
 }
 
-void clear_P169_interrupt(uint8_t irqPin) {
-  detachInterrupt(irqPin);
+P169_data_struct::P169_data_struct(struct EventStruct *event) :
+  _sensor(P169_I2C_ADDRESS, CONFIG_PIN1),
+  _irqPin(CONFIG_PIN1),
+  _mode(P169_InterruptMode::detached)
+{
+  _sensor.writePowerDown(false);
 }
-
-P169_data_struct::P169_data_struct(struct EventStruct *event)
-  : _sensor(P169_I2C_ADDRESS, CONFIG_PIN1), _irqPin(CONFIG_PIN1)
-{}
 
 P169_data_struct::~P169_data_struct()
 {
-  clear_P169_interrupt(_irqPin);
+  if (_mode != P169_InterruptMode::detached) {
+    detachInterrupt(_irqPin);
+  }
+  _sensor.writePowerDown(true);
 }
 
 bool P169_data_struct::loop()
 {
-  if (P169_interrupt_timestamp != 0) {
-    if (timePassedSince(P169_interrupt_timestamp) < 2) {
-      // Sensor not yet ready to report what
-      return false;
-    }
-    P169_interrupt_timestamp = 0;
+  if (_mode == P169_InterruptMode::normal) {
+    if (_interrupt_timestamp != 0) {
+      if (timePassedSince(_interrupt_timestamp) < 2) {
+        // Sensor not yet ready to report what
+        return false;
+      }
+      _interrupt_timestamp = 0;
 
-    // query the interrupt source from the AS3935
-    switch (_sensor.readInterruptSource()) {
-      case AS3935MI::AS3935_INT_NH:
-        // Noise floor too high
-        adjustForNoise();
-        break;
-      case AS3935MI::AS3935_INT_D:
-        // Disturbance detected
-        // N.B. can be disabled with _sensor.writeMaskDisturbers(true);
-        adjustForDisturbances();
-        break;
-      case AS3935MI::AS3935_INT_L:
-        // Lightning detected
-        addLog(LOG_LEVEL_INFO, F("AS3935: Lightning detected"));
+      // query the interrupt source from the AS3935
+      switch (_sensor.readInterruptSource()) {
+        case AS3935MI::AS3935_INT_NH:
+          // Noise floor too high
+          adjustForNoise();
+          break;
+        case AS3935MI::AS3935_INT_D:
+          // Disturbance detected
+          // N.B. can be disabled with _sensor.writeMaskDisturbers(true);
+          adjustForDisturbances();
+          break;
+        case AS3935MI::AS3935_INT_L:
+          // Lightning detected
+          addLog(LOG_LEVEL_INFO, F("AS3935: Lightning detected"));
 
-        return true;
+          return true;
+      }
     }
+    tryIncreasedSensitivity();
   }
-  tryIncreasedSensitivity();
   return false;
 }
 
 bool P169_data_struct::plugin_init(struct EventStruct *event)
 {
-  clear_P169_interrupt(_irqPin);
+  set_P169_interruptMode(P169_InterruptMode::detached);
 
   if (!(_sensor.begin() && _sensor.checkConnection()))
   {
@@ -92,10 +242,10 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   }
 
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
-  // of the sensor. resonance frequency calibration will take about 1.7 seconds to complete.
+  // of the sensor. resonance frequency calibration will take about 600 msec to complete.
   int32_t frequency = 0;
 
-  if (!_sensor.calibrateResonanceFrequency(frequency))
+  if (!calibrateResonanceFrequency(frequency))
   {
     addLog(LOG_LEVEL_ERROR,
            strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
@@ -150,7 +300,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
   _sensor.writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
 
-  set_P169_interrupt(_irqPin);
+  set_P169_interruptMode(P169_InterruptMode::normal);
 }
 
 bool P169_data_struct::plugin_write(struct EventStruct *event, String& string)
