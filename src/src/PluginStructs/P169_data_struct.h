@@ -20,7 +20,8 @@
 
 # define DEFAULT_SENSE_INCREASE_INTERVAL   15000 // 15 s sensitivity increase interval
 
-// IRQ pin: CONFIG_PIN1
+# define P169_IRQ_PIN                   CONFIG_PIN1
+# define P169_IRQ_PIN_LABEL             "taskdevicepin1"
 
 # define P169_I2C_ADDRESS               PCONFIG(0)
 # define P169_I2C_ADDRESS_LABEL         PCONFIG_LABEL(0)
@@ -34,9 +35,11 @@
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(4)
 
 # define P169_GET_INDOOR                bitRead(PCONFIG(5), 0)
-# define P169_SET_INDOOR(X) bitWrite(PCONFIG(5), 0, X)
+# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(5), 0, X)
+# define P169_INDOOR_LABEL              "mode"
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(5), 1)
-# define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(5), 1, X)
+# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(5), 1, X)
+# define P169_MASK_DISTURBANCE_LABEL    "maskdist"
 
 // The device addresses for the AS3935 in read or write mode are defined by:
 // 0-0-0-0-0-a1-a0-0: write mode device address (DW)
@@ -63,6 +66,15 @@ public:
   bool plugin_write(struct EventStruct *event,
                     String            & string);
 
+  bool validateCurrentResonanceFrequency(int32_t& frequency);
+
+  // Read distance in km
+  int getDistance();
+
+  // Get lightning strike energy in some raw value (no unit)
+  uint32_t getEnergy();
+
+
 private:
 
   enum class P169_InterruptMode {
@@ -76,7 +88,12 @@ private:
 
   uint32_t              computeCalibratedFrequency(int32_t divider);
 
+
+  // Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
+  uint32_t              measureResonanceFrequency(uint8_t tuningCapacitance);
+
   bool                  calibrateResonanceFrequency(int32_t& frequency);
+
 
   void                  set_P169_interruptMode(P169_InterruptMode mode);
 

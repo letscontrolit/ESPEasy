@@ -263,6 +263,8 @@ public:
 	@return true on success, false otherwis. */
 	bool increaseSpikeRejection();
 
+	void displayLCO_on_IRQ(bool enable);
+
 private:
 	enum AS3935_registers_t : uint8_t
 	{

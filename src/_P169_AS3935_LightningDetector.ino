@@ -51,21 +51,9 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      // called when the user opens the module configuration page
-      // it allows to add a new row for each output variable of the plugin
-      // For plugins able to choose output types, see P026_Sysinfo.ino.
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) 
-      {
-        if ( i < P169_NR_OUTPUT_VALUES) 
-        {
-          uint8_t choice = PCONFIG(i + P169_QUERY1_CONFIG_POS);
-          safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], p169_getQueryValueString(choice), sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
-        }
-        else
-        {
-          ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
-        }
-      }
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_169));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_169));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_169));
       break;
     }
 
@@ -74,13 +62,12 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
       P169_I2C_ADDRESS = P169_I2C_ADDRESS_DFLT;
-      P169_MODEL = P169_MODEL_DFLT;
-      P169_QUERY1 = P169_QUERY1_DFLT;
-      P169_QUERY2 = P169_QUERY2_DFLT;
-      P169_QUERY3 = P169_QUERY3_DFLT;
-      P169_QUERY4 = P169_QUERY4_DFLT;
-      P169_MON_SCL_PIN = P169_MON_SCL_PIN_DFLT;
-      P169_SEN_FIRST = 99;
+      P169_NOISE = AS3935MI::AS3935_NFL_2;
+      P169_WATCHDOG = AS3935MI::AS3935_WDTH_2;
+      P169_SPIKE_REJECTION = AS3935MI::AS3935_SREJ_2;
+      P169_LIGHTNING_THRESHOLD = AS3935MI::AS3935_MNL_1;
+      P169_SET_INDOOR(true);
+      P169_SET_MASK_DISTURBANCE(false);
       success = true;
       break;
     }
@@ -89,7 +76,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = P169_I2C_ADDRESS_DFLT;
+      event->Par1 = P169_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -99,19 +86,16 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { P169_I2C_ADDRESS_DFLT };
+      const uint8_t i2cAddressValues[] = { 0x01, 0x02, 0x03 };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) 
       {
-        if (P169_SEN_FIRST == event->TaskIndex)                               // If first SEN, serial config available
-        {
-          //addFormSelectorI2C(P169_I2C_ADDRESS_LABEL, 3, i2cAddressValues, P169_I2C_ADDRESS);
-          addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, P169_I2C_ADDRESS);
-          addFormNote(F("Vindstyrka, SEN54, SEN55 default i2c address: 0x69"));
-        }
+        //addFormSelectorI2C(P169_I2C_ADDRESS_LABEL, 3, i2cAddressValues, P169_I2C_ADDRESS);
+        addFormSelectorI2C(F("i2c_addr"), NR_ELEMENTS(i2cAddressValues), i2cAddressValues, P169_I2C_ADDRESS);
+        addFormNote(F("Addr: 0-0-0-0-0-A1-A0. Both A0 & A1 low is not valid."));
       } 
       else 
       {
-        success = intArrayContains(1, i2cAddressValues, event->Par1);
+        success = intArrayContains(NR_ELEMENTS(i2cAddressValues), i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -119,102 +103,38 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      if (P169_SEN_FIRST == event->TaskIndex)                               // If first SEN, serial config available
-      {
-        if(P169_MODEL==0)
-        {
-          string  = F("MonPin SCL: ");
-          string += formatGpioLabel(P169_MON_SCL_PIN, false);
-        }
-      }
+      string  = F("IRQ: ");
+      string += formatGpioLabel(P169_IRQ_PIN, false);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      // this case defines what should be displayed on the web form, when this plugin is selected
-      // The user's selection will be stored in
-      // PCONFIG(x) (custom configuration)
+      addFormPinSelect(PinSelectPurpose::Generic, F("IRQ"), F(P169_IRQ_PIN_LABEL), P169_IRQ_PIN);
 
-      if (Plugin_169_SEN == nullptr) 
+      addFormNumericBox(F("Noise Floor Threshold"), P169_NOISE_LABEL, P169_NOISE, 0, AS3935MI::AS3935_NFL_7);
+      addFormNumericBox(F("Watchdog Threshold"), P169_WATCHDOG_LABEL, P169_WATCHDOG, 0, AS3935MI::AS3935_WDTH_15);
+      addFormNumericBox(F("Spike Rejection"), P169_SPIKE_REJECTION_LABEL, P169_SPIKE_REJECTION, 0, AS3935MI::AS3935_SREJ_15);
+
       {
-        P169_SEN_FIRST = event->TaskIndex; // To detect if first SEN or not
+        const __FlashStringHelper *options[] = { F("1"), F("5"), F("9"), F("16")};
+        int optionValues[]                   = { 
+          AS3935MI::AS3935_MNL_1,
+          AS3935MI::AS3935_MNL_5,
+          AS3935MI::AS3935_MNL_9,
+          AS3935MI::AS3935_MNL_16 };
+        addFormSelector(F("Lightning Threshold"), P169_LIGHTNING_THRESHOLD_LABEL, NR_ELEMENTS(optionValues), options, optionValues, P169_LIGHTNING_THRESHOLD);
+        addFormNote(F("Minimum number of lightning strikes in the last 15 minutes"));
+      }
+      {
+        const __FlashStringHelper *options[] = { F("Indoor"), F("Outdoor")};
+        int optionValues[]                   = { 0, 1 };
+        addFormSelector(F("Mode"), F(P169_INDOOR_LABEL), NR_ELEMENTS(optionValues), options, optionValues, P169_GET_INDOOR);
       }
 
-      if (P169_SEN_FIRST == event->TaskIndex)                               // If first SEN, serial config available
-      {
-        addHtml(F("<br><B>This SEN5x is the first. Its configuration of Pins will affect next SEN5x.</B>"));
-        addHtml(F("<span style=\"color:red\"> <br><B>If several SEN5x's foreseen, don't use other pins.</B></span>"));
-        
-        const __FlashStringHelper *options_model[3] = { F("IKEA Vindstyrka"), F("Sensirion SEN54"), F("Sensirion SEN55")};
-        
-        addFormSelector(F("Model Type"), P169_MODEL_LABEL, 3, options_model, nullptr, P169_MODEL);
 
-        if(P169_MODEL==0)
-        {
-          addFormPinSelect(PinSelectPurpose::Generic_input, F("MonPin SCL"), F("taskdevicepin3"), P169_MON_SCL_PIN);
-          addFormNote(F("Pin for monitoring i2c communication between Vindstyrka controller and SEN5x. (Only when Model - IKEA Vindstyrka is selected.)"));
-        }
-
-        if (Plugin_169_SEN != nullptr) 
-        {
-          addRowLabel(F("Device info"));
-          String prodname;
-          String sernum;
-          uint8_t firmware;
-          Plugin_169_SEN->getEID(prodname, sernum, firmware);
-          String txt = F("ProdName: ");
-          txt += prodname;
-          txt += F("  Serial Number: ");
-          txt += sernum;
-          txt += F("  Firmware: ");
-          txt += String (firmware);
-          addHtml(txt);
-
-          addRowLabel(F("Device status"));
-          txt  = F("Speed warning: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_speed));
-          txt += F(" , Auto Cleaning: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_autoclean));
-          txt += F(" , GAS Error: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_gas));
-          txt += F(" , RHT Error: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_rht));
-          txt += F(" , LASER Error: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_laser));
-          txt += F(" , FAN Error: ");
-          txt += String((bool)Plugin_169_SEN->getStatusInfo(sensor_fan));
-          addHtml(txt);
-
-          addRowLabel(F("Check (pass/fail/errCode)"));
-          txt  = Plugin_169_SEN->getSuccCount();
-          txt += '/';
-          txt += Plugin_169_SEN->getErrCount();
-          txt += '/';
-          txt += Plugin_169_SEN->getErrCode();
-          addHtml(txt);
-
-        }
-      }
-      else
-      {
-        addHtml(F("<br><B>This SEN5x is the NOT the first. Model and Pins config are DISABLED. Configuration is available in the first SEN5x plugin.</B>"));
-        addHtml(F("<span style=\"color:red\"> <br><B>Only output value can be configured.</B></span>"));
-
-        //looking for FIRST task Named "IKEA_Vindstyrka or Sensirion_SEN5x"
-        //Cache.taskIndexName
-        uint8_t allready_defined=88;
-        if(P169_MODEL==0)
-        {
-          allready_defined=findTaskIndexByName(PLUGIN_DEFAULT_NAME_1);
-        }
-        else
-        {
-          allready_defined=findTaskIndexByName(PLUGIN_DEFAULT_NAME_2);
-        }
-        P169_SEN_FIRST = allready_defined;
-      }
+      addFormCheckBox(F("Ignore Disturbance"), F(P169_MASK_DISTURBANCE_LABEL), P169_GET_MASK_DISTURBANCE);
 
       success = true;
       break;
@@ -223,36 +143,14 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      // this case defines the code to be executed when the form is submitted
-      // the plugin settings should be saved to PCONFIG(x)
-      // ping configuration should be read from CONFIG_PIN1 and stored
+      P169_I2C_ADDRESS = getFormItemInt(F("i2c_addr"));
 
-      // Save output selector parameters.
-      for (uint8_t i = 0; i < P169_NR_OUTPUT_VALUES; ++i) 
-      {
-        const uint8_t pconfigIndex = i + P169_QUERY1_CONFIG_POS;
-        const uint8_t choice = PCONFIG(pconfigIndex);
-        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, p169_getQueryValueString(choice));
-      }
-      P169_MODEL           = getFormItemInt(P169_MODEL_LABEL);
-      P169_I2C_ADDRESS     = P169_I2C_ADDRESS_DFLT;
-      if(P169_MODEL==0)
-        P169_MON_SCL_PIN     = getFormItemInt(F("taskdevicepin3"));
-      P169_SEN_FIRST       = P169_SEN_FIRST;
-
-      if (P169_SEN_FIRST == event->TaskIndex)                              // For first task set default name
-      {
-        if(P169_MODEL==0)
-        {
-          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEFAULT_NAME_1); // populate default name.
-        }
-        else
-        {
-          strcpy(ExtraTaskSettings.TaskDeviceName, PLUGIN_DEFAULT_NAME_2); // populate default name.
-        }
-      }
-      
-      Plugin_169_init = false; // Force device setup next time
+      P169_NOISE = getFormItemInt(P169_NOISE_LABEL);
+      P169_WATCHDOG = getFormItemInt(P169_WATCHDOG_LABEL);
+      P169_SPIKE_REJECTION = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
+      P169_LIGHTNING_THRESHOLD = getFormItemInt(P169_LIGHTNING_THRESHOLD_LABEL);
+      P169_SET_INDOOR(getFormItemInt(F(P169_INDOOR_LABEL)) == 0);
+      P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       success = true;
       break;
     }
@@ -260,164 +158,55 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // this case defines code to be executed when the plugin is initialised
-      // This will fail if the set to be first taskindex is no longer enabled
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P169_data_struct(event));
+      P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P169_SEN_FIRST == event->TaskIndex) // If first SEN5x, config available
-      {
-        if (Plugin_169_SEN != nullptr) 
-        {
-          delete Plugin_169_SEN;
-          Plugin_169_SEN = nullptr;
-        }
-
-        Plugin_169_SEN = new (std::nothrow) P169_data_struct();
-
-        if (Plugin_169_SEN != nullptr) 
-        {
-          Plugin_169_SEN->setupModel(P169_MODEL);
-          Plugin_169_SEN->setupDevice(P169_I2C_ADDRESS);
-          if(P169_MODEL==0)
-          {
-            Plugin_169_SEN->setupMonPin(P169_MON_SCL_PIN);
-            pinMode(P169_MON_SCL_PIN, INPUT_PULLUP);
-            attachInterrupt(P169_MON_SCL_PIN, Plugin_169_interrupt, RISING);
-          }
-          Plugin_169_SEN->reset();
-        }
+      if (nullptr != P169_data) {
+        success = P169_data->plugin_init(event);
       }
-      
-      //UserVar[event->BaseVarIndex]     = NAN;
-      //UserVar[event->BaseVarIndex + 1] = NAN;
-      //UserVar[event->BaseVarIndex + 2] = NAN;
-      //UserVar[event->BaseVarIndex + 3] = NAN;
-      UserVar.setFloat(event->BaseVarIndex, 0, NAN);
-      UserVar.setFloat(event->BaseVarIndex, 1, NAN);
-      UserVar.setFloat(event->BaseVarIndex, 2, NAN);
-      UserVar.setFloat(event->BaseVarIndex, 3, NAN);
 
-      success = true;
-      Plugin_169_init = true;
 
       break;
     }
-
-
-    case PLUGIN_EXIT:
-    {
-      if (P169_SEN_FIRST == event->TaskIndex) // If first SEN5x, config available
-      {
-        if (Plugin_169_SEN != nullptr)
-        {
-          if(P169_MODEL==0)
-          {
-            Plugin_169_SEN->disableInterrupt_monpin();
-          }
-          delete Plugin_169_SEN;
-          Plugin_169_SEN = nullptr;
-        }
-      }
-
-      success = true;
-      break;
-    }
-
 
     case PLUGIN_READ:
     {
-      // code to be executed to read data
-      // It is executed according to the delay configured on the device configuration page, only once
+      P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if(event->TaskIndex!=P169_SEN_FIRST)
-      {
-        //All the DATA are in the first task of IKEA_Vindstyrka
-        //so all you have to do is to load this data in the current taskindex data
-        initPluginTaskData(event->TaskIndex, getPluginTaskData(P169_SEN_FIRST) );
-      }
+      if (nullptr != P169_data) {
+        const int distance = P169_data->getDistance();
+        UserVar.setFloat(event->TaskIndex, 0, distance);
+        UserVar.setFloat(event->TaskIndex, 1, P169_data->getEnergy());
+        // FIXME TD-er: Must add some counter of nr of lightning strikes per time unit
 
-      if (nullptr != Plugin_169_SEN) 
-      {
-        if (Plugin_169_SEN->inError()) 
-        {
-          //UserVar[event->BaseVarIndex]     = NAN;
-          //UserVar[event->BaseVarIndex + 1] = NAN;
-          //UserVar[event->BaseVarIndex + 2] = NAN;
-          //UserVar[event->BaseVarIndex + 3] = NAN;
-          UserVar.setFloat(event->BaseVarIndex, 0, NAN);
-          UserVar.setFloat(event->BaseVarIndex, 1, NAN);
-          UserVar.setFloat(event->BaseVarIndex, 2, NAN);
-          UserVar.setFloat(event->BaseVarIndex, 3, NAN);
-          addLog(LOG_LEVEL_ERROR, F("Vindstyrka / SEN5X: in Error!"));
-        }
-        else
-        {
-          if(event->TaskIndex==P169_SEN_FIRST)
-          {
-            Plugin_169_SEN->startMeasurements(); // getting ready for another read cycle
-          }
-
-          //UserVar[event->BaseVarIndex]         = Plugin_169_SEN->getRequestedValue(P169_QUERY1);
-          //UserVar[event->BaseVarIndex + 1]     = Plugin_169_SEN->getRequestedValue(P169_QUERY2);
-          //UserVar[event->BaseVarIndex + 2]     = Plugin_169_SEN->getRequestedValue(P169_QUERY3);
-          //UserVar[event->BaseVarIndex + 3]     = Plugin_169_SEN->getRequestedValue(P169_QUERY4);
-          UserVar.setFloat(event->BaseVarIndex, 0, Plugin_169_SEN->getRequestedValue(P169_QUERY1));
-          UserVar.setFloat(event->BaseVarIndex, 1, Plugin_169_SEN->getRequestedValue(P169_QUERY2));
-          UserVar.setFloat(event->BaseVarIndex, 2, Plugin_169_SEN->getRequestedValue(P169_QUERY3));
-          UserVar.setFloat(event->BaseVarIndex, 3, Plugin_169_SEN->getRequestedValue(P169_QUERY4));
+        if (distance > 0) {
+          success = true;
         }
       }
 
-      success = true;
       break;
-    }
-
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      // code to be executed once a second. Tasks which do not require fast response can be added here
-      success = true;
     }
 
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      // code to be executed 10 times per second. Tasks which require fast response can be added here
-      // be careful on what is added here. Heavy processing will result in slowing the module down!
-      success = true;
-    }
+      P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-
-    case PLUGIN_FIFTY_PER_SECOND:
-    {
-      // code to be executed 10 times per second. Tasks which require fast response can be added here
-      // be careful on what is added here. Heavy processing will result in slowing the module down!
-      if(event->TaskIndex==P169_SEN_FIRST)
-      {
-        if (nullptr != Plugin_169_SEN) 
-        {
-          Plugin_169_SEN->monitorSCL();    // Vind / SEN5X FSM evaluation
-          Plugin_169_SEN->update();
+      if (nullptr != P169_data) {
+        if (P169_data->loop()) {
+          // Lightning detected, schedule PLUGIN_READ
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
+        success = true;
       }
-      success = true;
+      break;
     }
-  } // switch
+
+
+  } 
 
   return success;
 }   // function
-
-
-// When using interrupts we have to call the library entry point
-// whenever an interrupt is triggered
-void IRAM_ATTR Plugin_169_interrupt() 
-{
-  //addLog(LOG_LEVEL_ERROR, F("********* SEN5X: interrupt apear!"));
-  if (Plugin_169_SEN) 
-  {
-    Plugin_169_SEN->checkPin_interrupt();
-  }
-}
-
 
 
 #endif  //USES_P169

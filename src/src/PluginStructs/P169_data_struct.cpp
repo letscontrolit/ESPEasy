@@ -15,6 +15,12 @@
 
 # define P169_AS3935_TIMEOUT_USEC  2000
 
+// Allow for 3.5% deviation
+# define P169_ALLOWED_DEVIATION    0.035f
+
+// Division ratio and nr of samples chosen so we expect a measurement to
+// take about 31.25 msec.
+// ESP8266 can't handle > 20 kHz interrupt calls very well, therefore set to DR_32
 # ifdef ESP32
 
 // Expected frequency for DR_16 = 31250 Hz
@@ -32,13 +38,7 @@ void IRAM_ATTR P169_data_struct::P169_interrupt_ISR(P169_data_struct *self) {
 }
 
 void IRAM_ATTR P169_data_struct::P169_calibrate_ISR(P169_data_struct *self) {
-  if (self->_calibration_start_micros == 0ul) {
-    self->_calibration_start_micros = static_cast<uint32_t>(getMicros64());
-    self->_calibration_end_micros   = 0ul;
-    self->_interrupt_count          = 0ul;
-  }
-
-  // _interrupt_count is volatile, so we can miss when it is exactly P169_NR_CALIBRATION_SAMPLES
+  // _interrupt_count is volatile, so we can miss when testing for exactly P169_NR_CALIBRATION_SAMPLES
   if (self->_interrupt_count < P169_NR_CALIBRATION_SAMPLES) {
     ++self->_interrupt_count;
   }
@@ -77,7 +77,17 @@ uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
   return static_cast<uint32_t>(freq);
 }
 
-bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
+bool P169_data_struct::validateCurrentResonanceFrequency(int32_t& frequency)
+{
+  frequency = measureResonanceFrequency(_sensor.readAntennaTuning());
+
+  // Check for allowed deviation
+  constexpr int allowedDeviation = 500000 * P169_ALLOWED_DEVIATION;
+
+  return abs(500000 - frequency) < allowedDeviation;
+}
+
+uint32_t P169_data_struct::measureResonanceFrequency(uint8_t tuningCapacitance)
 {
   const AS3935MI::division_ratio_t division_ratio = P169_CALIBRATION_DIVISION_RATIO;
   const int32_t divider                           = 16 << static_cast<uint32_t>(division_ratio);
@@ -85,6 +95,40 @@ bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
   set_P169_interruptMode(P169_InterruptMode::detached);
   _sensor.writeDivisionRatio(division_ratio);
 
+  // set tuning capacitors
+  _sensor.writeAntennaTuning(tuningCapacitance);
+
+  // display LCO on IRQ
+  _sensor.displayLCO_on_IRQ(true);
+  set_P169_interruptMode(P169_InterruptMode::calibration);
+
+  // Need to give enough time for the sensor to set the LCO signal on the IRQ pin
+  delayMicroseconds(P169_AS3935_TIMEOUT_USEC);
+  _calibration_start_micros = static_cast<uint32_t>(getMicros64());
+  _calibration_end_micros   = 0ul;
+  _interrupt_count          = 0ul;
+
+  // Wait for the amount of samples to be counted (or timeout)
+  // Typically this takes 32 msec.
+  constexpr unsigned expectedDuration = (divider * P169_NR_CALIBRATION_SAMPLES) / 500;
+  const uint32_t     timeout          = millis() + (2 * expectedDuration);
+  uint32_t freq                       = 0;
+
+  while (freq == 0 && !timeOutReached(timeout)) {
+    delay(1);
+    freq = computeCalibratedFrequency(divider);
+  }
+
+  set_P169_interruptMode(P169_InterruptMode::detached);
+
+  // stop displaying LCO on IRQ
+  _sensor.displayLCO_on_IRQ(false);
+
+  return freq;
+}
+
+bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
+{
   int32_t best_diff = 500000;
   int8_t  best_i    = -1;
 
@@ -92,30 +136,12 @@ bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
 
   for (uint8_t i = 0; i < 16; i++)
   {
-    // set tuning capacitors
-    _sensor.writeAntennaTuning(i);
-
-    // display LCO on IRQ
-    _sensor.displayLCO_on_IRQ(true);
-
-    delayMicroseconds(P169_AS3935_TIMEOUT_USEC);
-    set_P169_interruptMode(P169_InterruptMode::calibration);
-    const uint32_t timeout = millis() + 500;
-    uint32_t freq          = 0;
-
-    while (freq == 0 && !timeOutReached(timeout)) {
-      delay(1);
-      freq = computeCalibratedFrequency(divider);
-    }
+    const uint32_t freq = measureResonanceFrequency(i);
 
     if (freq == 0) {
       return false;
     }
     const int32_t freq_diff = 500000 - freq;
-
-    // stop displaying LCO on IRQ
-    _sensor.displayLCO_on_IRQ(false);
-    set_P169_interruptMode(P169_InterruptMode::detached);
 
     if (abs(freq_diff) < abs(best_diff)) {
       best_diff = freq_diff;
@@ -131,8 +157,8 @@ bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
 
   _sensor.writeAntennaTuning(best_i);
 
-  // Allow for 3.5% deviation
-  constexpr int allowedDeviation = 500000 * 0.035f;
+  // Check for allowed deviation
+  constexpr int allowedDeviation = 500000 * P169_ALLOWED_DEVIATION;
 
   return abs(best_diff) < allowedDeviation;
 }
@@ -149,22 +175,21 @@ void P169_data_struct::set_P169_interruptMode(P169_InterruptMode mode) {
   if (_mode != P169_InterruptMode::detached) {
     detachInterrupt(_irqPin);
   }
+  _interrupt_timestamp = 0;
+  _interrupt_count     = 0;
+  _mode                = mode;
 
   switch (mode) {
     case P169_InterruptMode::detached:
       detachInterrupt(_irqPin);
       break;
     case P169_InterruptMode::normal:
-      _interrupt_timestamp = 0;
-      _interrupt_count     = 0;
       attachInterruptArg(digitalPinToInterrupt(_irqPin),
                          reinterpret_cast<void (*)(void *)>(P169_interrupt_ISR),
                          this,
                          RISING);
       break;
     case P169_InterruptMode::calibration:
-      _interrupt_timestamp      = 0;
-      _interrupt_count          = 0;
       _calibration_start_micros = 0;
       _calibration_end_micros   = 0;
       attachInterruptArg(digitalPinToInterrupt(_irqPin),
@@ -173,12 +198,11 @@ void P169_data_struct::set_P169_interruptMode(P169_InterruptMode mode) {
                          RISING);
       break;
   }
-  _mode = mode;
 }
 
 P169_data_struct::P169_data_struct(struct EventStruct *event) :
-  _sensor(P169_I2C_ADDRESS, CONFIG_PIN1),
-  _irqPin(CONFIG_PIN1),
+  _sensor(P169_I2C_ADDRESS, P169_IRQ_PIN),
+  _irqPin(P169_IRQ_PIN),
   _mode(P169_InterruptMode::detached)
 {
   _sensor.writePowerDown(false);
@@ -195,8 +219,9 @@ P169_data_struct::~P169_data_struct()
 bool P169_data_struct::loop()
 {
   if (_mode == P169_InterruptMode::normal) {
-    if (_interrupt_timestamp != 0) {
-      if (timePassedSince(_interrupt_timestamp) < 2) {
+    // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
+    if ((_interrupt_timestamp != 0) || DIRECT_pinRead(_irqPin)) {
+      if ((_interrupt_timestamp != 0) && (timePassedSince(_interrupt_timestamp) < 2)) {
         // Sensor not yet ready to report what
         return false;
       }
@@ -306,6 +331,19 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 bool P169_data_struct::plugin_write(struct EventStruct *event, String& string)
 {}
 
+int  P169_data_struct::getDistance()
+{
+  const uint8_t dist =  _sensor.readStormDistance();
+
+  if (dist == AS3935MI::AS3935_DST_OOR) { return -1; }
+  return dist;
+}
+
+uint32_t P169_data_struct::getEnergy()
+{
+  return _sensor.readEnergy();
+}
+
 void P169_data_struct::adjustForNoise()
 {
   // if the noise floor threshold setting is not yet maxed out, increase the setting.
@@ -326,6 +364,8 @@ void P169_data_struct::adjustForDisturbances()
   const uint8_t wdth = _sensor.readWatchdogThreshold();
   const uint8_t srej = _sensor.readSpikeRejection();
 
+
+  // FIXME TD-er: Is this a good threshold for auto adjust algorithm?
   if ((wdth < AS3935MI::AS3935_WDTH_10) || (srej < AS3935MI::AS3935_SREJ_10))
   {
     _sense_adj_last = millis();
@@ -352,7 +392,35 @@ void P169_data_struct::adjustForDisturbances()
   }
   else
   {
-    addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out."));
+    int32_t frequency{};
+
+    if (validateCurrentResonanceFrequency(frequency)) {
+      // Resonance frequency is still OK, so not much we can do here.
+      addLog(LOG_LEVEL_ERROR, strformat(
+               F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
+               frequency));
+    } else {
+      addLog(LOG_LEVEL_INFO, strformat(
+               F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
+               frequency));
+
+      if (calibrateResonanceFrequency(frequency)) {
+        addLog(LOG_LEVEL_INFO, strformat(
+                 F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
+                 frequency));
+
+        // calibrate the RCO.
+        if (!_sensor.calibrateRCO())
+        {
+          addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
+        } else {
+          addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
+        }
+      }
+
+      // FIXME TD-er: Should we do anything else here?
+    }
+    set_P169_interruptMode(P169_InterruptMode::normal);
   }
 }
 
@@ -371,24 +439,28 @@ void P169_data_struct::tryIncreasedSensitivity()
 
     if ((wdth > AS3935MI::AS3935_WDTH_0) || (srej > AS3935MI::AS3935_SREJ_0))
     {
-      // alternatively derease spike rejection and watchdog threshold
+      // alternatively decrease spike rejection and watchdog threshold
       if (srej > wdth)
       {
         if (_sensor.decreaseSpikeRejection()) {
           addLog(LOG_LEVEL_INFO, F("AS3935: Decreased spike rejection ratio"));
         }
+        # ifndef BUILD_NO_DEBUG
         else {
-          addLog(LOG_LEVEL_ERROR, F("AS3935: Spike rejection ratio already at minimum"));
+          addLog(LOG_LEVEL_DEBUG, F("AS3935: Spike rejection ratio already at minimum"));
         }
+        # endif // ifndef BUILD_NO_DEBUG
       }
       else
       {
         if (_sensor.decreaseWatchdogThreshold()) {
           addLog(LOG_LEVEL_INFO, F("AS3935: Decreased watchdog threshold"));
         }
+        # ifndef BUILD_NO_DEBUG
         else {
-          addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog threshold already at minimum"));
+          addLog(LOG_LEVEL_DEBUG, F("AS3935: Watchdog threshold already at minimum"));
         }
+        # endif // ifndef BUILD_NO_DEBUG
       }
     }
   }

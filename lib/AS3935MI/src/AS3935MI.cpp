@@ -187,7 +187,10 @@ bool AS3935MI::calibrateRCO()
 		return false;
 
 	//issue calibration command
+	// FIXME TD-er: Where does AS3935_DIRECT_CMD come from?
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
+
+	// FIXME TD-er: Should write to AS3935_REGISTER_DISP_SRCO bit 6...
 
 	//expose clock on IRQ pin (necessary?)
 	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
@@ -419,6 +422,11 @@ bool AS3935MI::increaseSpikeRejection()
 	writeSpikeRejection(++srej);
 
 	return true;
+}
+
+void AS3935MI::displayLCO_on_IRQ(bool enable)
+{
+	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, enable ? 1 : 0);
 }
 
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
