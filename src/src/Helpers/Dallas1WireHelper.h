@@ -124,7 +124,8 @@ bool Dallas_readTemp(const uint8_t ROM[8],
 #ifdef USES_P080
 bool Dallas_readiButton(const uint8_t addr[8],
                         int8_t     gpio_pin_rx,
-                        int8_t     gpio_pin_tx);
+                        int8_t     gpio_pin_tx,
+                        int8_t     lastState = -1);
 #endif
 
 #ifdef USES_P100

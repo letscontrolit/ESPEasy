@@ -415,7 +415,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
 }
 
 #ifdef USES_P080
-bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, int8_t lastState)
 {
   // maybe this is needed to trigger the reading
   //    uint8_t ScratchPad[12];
@@ -461,7 +461,9 @@ bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_p
       found = true;
     }
   }
-  addLogMove(LOG_LEVEL_INFO, log);
+  if ((-1 == lastState) || (lastState != found)) {
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   return found;
 }
 
