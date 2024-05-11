@@ -8,6 +8,8 @@
 // Maxim Integrated
 
 /** Changelog:
+ * 2024-05-11 tonhuisman: Dallas_StartConversion() call not needed for iButton.
+ *                        Reduce logging in Dallas_readiButton() function to on-change (only used for this plugin)
  * 2024-05-10 tonhuisman: Add support for Event with iButton address,
  *                        generating event: <taskname>#Address=<state>[,<buttonaddress_high4byte>,<buttonaddress_low4byte>],
  *                        enabling address to be processed in rules
@@ -116,12 +118,6 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
         Dallas_plugin_get_addr(addr, event->TaskIndex);
 
-        if (0 != addr[0]) {
-          Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
-
-          delay(800); // give it time to do intial conversion
-        }
-
         if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) { // Trigger at least once a PLUGIN_READ
           UserVar.setFloat(event->TaskIndex, 2, -1);
         }
@@ -172,13 +168,12 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
       } else
 
       if (0 != addr[0]) {
-        if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin)) {
+        if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin, UserVar.getFloat(event->TaskIndex, 0))) {
           UserVar.setFloat(event->TaskIndex, 0, 1);
           success = true;
         } else {
           UserVar.setFloat(event->TaskIndex, 0, 0);
         }
-        Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         # ifndef BUILD_NO_DEBUG
 
