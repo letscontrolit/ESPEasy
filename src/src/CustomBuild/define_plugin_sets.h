@@ -3388,6 +3388,22 @@ To create/register a plugin, you have to :
 #endif
 
 
+#if defined(USES_P004) || defined(USES_P080) || defined(USES_P100)
+  #define FEATURE_DALLAS_HELPER   1
+#endif
+#ifndef FEATURE_DALLAS_HELPER
+  #define FEATURE_DALLAS_HELPER   0 // Only when Dallas/Maxim 1-wire plugins are included
+#endif
+#if FEATURE_DALLAS_HELPER && !defined(FEATURE_COMMAND_OWSCAN)
+  #ifdef MINIMAL_OTA
+    #define FEATURE_COMMAND_OWSCAN  0 // Exclude owscan command for minimal-OTA builds
+  #else // ifdef MINIMAL_OTA
+    #define FEATURE_COMMAND_OWSCAN  1
+  #endif // ifdef MINIMAL_OTA
+#endif
+#ifndef FEATURE_COMMAND_OWSCAN
+  #define FEATURE_COMMAND_OWSCAN  0 // Remaining cases: disable command
+#endif // ifndef FEATURE_COMMAND_OWSCAN
 
 // TODO TD-er: Test feature, must remove
 /*

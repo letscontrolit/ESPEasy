@@ -1,5 +1,7 @@
 #include "../Helpers/Dallas1WireHelper.h"
 
+#if FEATURE_DALLAS_HELPER
+
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -1266,3 +1268,5 @@ bool Dallas_SensorData::check_sensor(int8_t gpio_rx, int8_t gpio_tx, int8_t res)
   parasitePowered = Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx);
   return true;
 }
+
+#endif // if FEATURE_DALLAS_HELPER
