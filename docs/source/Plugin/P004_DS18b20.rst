@@ -227,7 +227,8 @@ Data Acquisition
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
 
 Values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+
 * **Name**: Value Name of temperature indicator.
 * **Formula**: Optional math conversion. The measured temperature defaults to Celsius. It can be converted to Fahrenheit by entering this formula:
 
@@ -251,7 +252,7 @@ Rules examples
 .. code-block:: none
 
     On Temperature1#Celsius Do
-     If [Temperature1#Celsius]>37
+     If %eventvalue1%>37
        NeoPixelAll,255,0,0 //Your body temperature is too high!
      Else
        NeoPixelAll,0,255,0 //Body temperature is OK.
