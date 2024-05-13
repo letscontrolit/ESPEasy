@@ -187,19 +187,16 @@ bool AS3935MI::calibrateRCO()
 		return false;
 
 	//issue calibration command
-	// FIXME TD-er: Where does AS3935_DIRECT_CMD come from?
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
-	// FIXME TD-er: Should write to AS3935_REGISTER_DISP_SRCO bit 6...
-
-	//expose clock on IRQ pin (necessary?)
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
+	//expose 1.1 MHz SRCO clock on IRQ pin
+	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, static_cast<uint8_t>(1));
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
+	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, static_cast<uint8_t>(0));
 
 	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
@@ -251,7 +248,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display LCO on IRQ
-		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+		displayLCO_on_IRQ(true);
 
 		bool irq_current = DIRECT_pinRead(irq_);
 		bool irq_last = irq_current;
@@ -272,7 +269,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		}
 
 		//stop displaying LCO on IRQ
-		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
+		displayLCO_on_IRQ(false);
 
 		//remember if the current setting was better than the previous
 		if (abs(counts - target) < abs(best_diff))
@@ -316,7 +313,7 @@ bool AS3935MI::checkIRQ()
 	uint8_t best_i = 0;
 
 	//display LCO on IRQ
-	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+    displayLCO_on_IRQ(true);
 
 	bool irq_current = DIRECT_pinRead(irq_);
 	bool irq_last = irq_current;
@@ -337,7 +334,7 @@ bool AS3935MI::checkIRQ()
 	}
 
 	//stop displaying LCO on IRQ
-	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
+	displayLCO_on_IRQ(false);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 
@@ -426,8 +423,20 @@ bool AS3935MI::increaseSpikeRejection()
 
 void AS3935MI::displayLCO_on_IRQ(bool enable)
 {
-	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, enable ? 1 : 0);
+	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b100 : 0);
 }
+
+void AS3935MI::displaySRCO_on_IRQ(bool enable)
+{
+	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b010 : 0);
+}
+
+
+void AS3935MI::displayTRCO_on_IRQ(bool enable)
+{
+	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b001 : 0);
+}
+
 
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {

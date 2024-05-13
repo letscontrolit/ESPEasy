@@ -57,6 +57,12 @@ struct P169_data_struct : public PluginTaskData_base
 {
 public:
 
+  enum class P169_IRQ_frequency_source {
+    LCO, // 500 kHz resonance freq
+    SRCO, // 1.1 MHz signal
+    TRCO // 32768 Hz signal
+  };
+
   P169_data_struct(struct EventStruct *event);
   virtual ~P169_data_struct();
 
@@ -67,6 +73,8 @@ public:
                     String            & string);
 
   bool validateCurrentResonanceFrequency(int32_t& frequency);
+
+  int32_t measureResonanceFrequency(P169_IRQ_frequency_source source);
 
   // Read distance in km
   int getDistance();
@@ -90,7 +98,7 @@ private:
 
 
   // Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
-  uint32_t              measureResonanceFrequency(uint8_t tuningCapacitance);
+  uint32_t              measureResonanceFrequency(P169_IRQ_frequency_source source, uint8_t tuningCapacitance);
 
   bool                  calibrateResonanceFrequency(int32_t& frequency);
 

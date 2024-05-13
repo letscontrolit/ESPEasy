@@ -18,18 +18,32 @@
 // Allow for 3.5% deviation
 # define P169_ALLOWED_DEVIATION    0.035f
 
-// Division ratio and nr of samples chosen so we expect a measurement to
-// take about 31.25 msec.
+// Division ratio and nr of samples chosen so we expect a
+// 500 kHz LCO measurement to take about 31.25 msec.
 // ESP8266 can't handle > 20 kHz interrupt calls very well, therefore set to DR_32
 # ifdef ESP32
 
-// Expected frequency for DR_16 = 31250 Hz
-#  define P169_CALIBRATION_DIVISION_RATIO AS3935MI::AS3935_DR_16
+// Expected LCO frequency for DR_16 = 31250 Hz
+#  define P169_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
+
+// Expected SRCO frequency for DR_32 = 34375 Hz
+#  define P169_SRCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
+
+// Expected SRCO frequency for DR_16 = 2048 Hz
+#  define P169_TRCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
+
 #  define P169_NR_CALIBRATION_SAMPLES 1000ul
 # else // ifdef ESP32
 
-// Expected frequency for DR_32 = 15625 Hz
-#  define P169_CALIBRATION_DIVISION_RATIO AS3935MI::AS3935_DR_32
+// Expected LCO frequency for DR_32 = 15625 Hz
+#  define P169_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
+
+// Expected SRCO frequency for DR_64 = 17187 Hz
+#  define P169_SRCO_DIVISION_RATIO AS3935MI::AS3935_DR_64
+
+// Expected SRCO frequency for DR_16 = 2048 Hz
+#  define P169_TRCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
+
 #  define P169_NR_CALIBRATION_SAMPLES  500ul
 # endif // ifdef ESP32
 
@@ -79,7 +93,9 @@ uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
 
 bool P169_data_struct::validateCurrentResonanceFrequency(int32_t& frequency)
 {
-  frequency = measureResonanceFrequency(_sensor.readAntennaTuning());
+  frequency = measureResonanceFrequency(
+    P169_IRQ_frequency_source::LCO,
+    _sensor.readAntennaTuning());
 
   // Check for allowed deviation
   constexpr int allowedDeviation = 500000 * P169_ALLOWED_DEVIATION;
@@ -87,19 +103,46 @@ bool P169_data_struct::validateCurrentResonanceFrequency(int32_t& frequency)
   return abs(500000 - frequency) < allowedDeviation;
 }
 
-uint32_t P169_data_struct::measureResonanceFrequency(uint8_t tuningCapacitance)
+int32_t P169_data_struct::measureResonanceFrequency(P169_IRQ_frequency_source source)
 {
-  const AS3935MI::division_ratio_t division_ratio = P169_CALIBRATION_DIVISION_RATIO;
-  const int32_t divider                           = 16 << static_cast<uint32_t>(division_ratio);
+  return measureResonanceFrequency(
+    source,
+    _sensor.readAntennaTuning());
+}
+
+uint32_t P169_data_struct::measureResonanceFrequency(P169_IRQ_frequency_source source, uint8_t tuningCapacitance)
+{
+  AS3935MI::division_ratio_t division_ratio = P169_LCO_DIVISION_RATIO;
 
   set_P169_interruptMode(P169_InterruptMode::detached);
-  _sensor.writeDivisionRatio(division_ratio);
 
   // set tuning capacitors
   _sensor.writeAntennaTuning(tuningCapacitance);
 
+  unsigned sourceFreq_kHz = 500;
+
   // display LCO on IRQ
-  _sensor.displayLCO_on_IRQ(true);
+  switch (source) {
+    case P169_IRQ_frequency_source::LCO:
+      _sensor.displayLCO_on_IRQ(true);
+      division_ratio = P169_LCO_DIVISION_RATIO;
+      sourceFreq_kHz = 500;
+      break;
+    case P169_IRQ_frequency_source::SRCO:
+      _sensor.displaySRCO_on_IRQ(true);
+      division_ratio = P169_SRCO_DIVISION_RATIO;
+      sourceFreq_kHz = 1100;
+      break;
+    case P169_IRQ_frequency_source::TRCO:
+      _sensor.displayTRCO_on_IRQ(true);
+      division_ratio = P169_TRCO_DIVISION_RATIO;
+      sourceFreq_kHz = 33;
+      break;
+  }
+
+  _sensor.writeDivisionRatio(division_ratio);
+  const int32_t divider = 16 << static_cast<uint32_t>(division_ratio);
+
   set_P169_interruptMode(P169_InterruptMode::calibration);
 
   // Need to give enough time for the sensor to set the LCO signal on the IRQ pin
@@ -109,10 +152,10 @@ uint32_t P169_data_struct::measureResonanceFrequency(uint8_t tuningCapacitance)
   _interrupt_count          = 0ul;
 
   // Wait for the amount of samples to be counted (or timeout)
-  // Typically this takes 32 msec.
-  constexpr unsigned expectedDuration = (divider * P169_NR_CALIBRATION_SAMPLES) / 500;
-  const uint32_t     timeout          = millis() + (2 * expectedDuration);
-  uint32_t freq                       = 0;
+  // Typically this takes 32 msec for the 500 kHz LCO
+  const unsigned expectedDuration = (divider * P169_NR_CALIBRATION_SAMPLES) / sourceFreq_kHz;
+  const uint32_t timeout          = millis() + (2 * expectedDuration);
+  uint32_t freq                   = 0;
 
   while (freq == 0 && !timeOutReached(timeout)) {
     delay(1);
@@ -136,7 +179,8 @@ bool P169_data_struct::calibrateResonanceFrequency(int32_t& frequency)
 
   for (uint8_t i = 0; i < 16; i++)
   {
-    const uint32_t freq = measureResonanceFrequency(i);
+    const uint32_t freq = measureResonanceFrequency(
+      P169_IRQ_frequency_source::LCO, i);
 
     if (freq == 0) {
       return false;
