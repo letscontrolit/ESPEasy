@@ -88,6 +88,9 @@ uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
   uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * P169_NR_CALIBRATION_SAMPLES);
 
   freq /=  duration_usec;
+
+  addLog(LOG_LEVEL_INFO, strformat(F("AS3935: IRQ pin frequency measured: %u Hz"), static_cast<uint32_t>(freq) / divider));
+
   return static_cast<uint32_t>(freq);
 }
 
@@ -307,7 +310,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   if (!_sensor.checkIRQ())
   {
     addLog(LOG_LEVEL_ERROR, F("AS3935: IRQ pin connection check failed"));
-    return false;
+//    return false;
   }
 
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
@@ -370,10 +373,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   _sensor.writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
 
   set_P169_interruptMode(P169_InterruptMode::normal);
+  return true;
 }
 
 bool P169_data_struct::plugin_write(struct EventStruct *event, String& string)
-{}
+{
+  return true;
+}
 
 int  P169_data_struct::getDistance()
 {
