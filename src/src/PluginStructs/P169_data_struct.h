@@ -115,7 +115,7 @@ private:
   AS3935I2C _sensor;
   uint8_t   _irqPin;
 
-  #ifdef ESP32
+  #if ESP_IDF_VERSION_MAJOR >= 5
   #define P169_VOLATILE_TYPE std::atomic<uint32_t>
   #else
   #define P169_VOLATILE_TYPE volatile uint32_t
