@@ -46,7 +46,7 @@
 // 0-0-0-0-0-a1-a0-1: read mode device address (DR)
 // Where a0 and a1 are defined by the pins 5 (ADD0) and 6 (ADD1).
 // The combination a0 = 0 (low) and a1 =0 (low) is explicitly not allowed for I²C communication.
-# define P169_I2C_ADDRESS_DFLT      0x01
+# define P169_I2C_ADDRESS_DFLT      0x03
 
 // Franklin AS3935 has 10k pull-up on the SDA line.
 // When no other I2C devices used:      Max 400 kHz I2C clock, add 10k as pull-up on SCL.

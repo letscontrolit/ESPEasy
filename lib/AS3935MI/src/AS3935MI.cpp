@@ -150,6 +150,7 @@ uint8_t AS3935MI::readAntennaTuning()
 
 void AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
+	tuning_cap_cache_ = tuning;
 	writeRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
 }
 
@@ -423,18 +424,32 @@ bool AS3935MI::increaseSpikeRejection()
 
 void AS3935MI::displayLCO_on_IRQ(bool enable)
 {
-	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b100 : 0);
+	// With display of any frequency, the device may sometimes report NAK when reading registers
+	// So for this reason we're now writing directly and not try to read first, patch bits, write
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b10000000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
 }
 
 void AS3935MI::displaySRCO_on_IRQ(bool enable)
 {
-	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b010 : 0);
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b01000000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
 }
 
 
 void AS3935MI::displayTRCO_on_IRQ(bool enable)
 {
-	writeRegisterValue(AS3935_REGISTER_DISP_XXX, AS3935_MASK_DISP_XXX, enable ? 0b001 : 0);
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b00100000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
 }
 
 

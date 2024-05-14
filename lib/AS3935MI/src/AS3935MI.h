@@ -383,6 +383,8 @@ private:
 	static const uint32_t AS3935_TIMEOUT = 2000;
 
 	uint8_t irq_;				//interrupt pin
+
+	uint8_t tuning_cap_cache_ = 0;
 };
 
 #endif /* AS3935_H_ */

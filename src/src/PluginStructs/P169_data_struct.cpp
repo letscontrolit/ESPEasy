@@ -25,25 +25,11 @@
 
 // Expected LCO frequency for DR_16 = 31250 Hz
 #  define P169_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
-
-// Expected SRCO frequency for DR_32 = 34375 Hz
-#  define P169_SRCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
-
-// Expected SRCO frequency for DR_16 = 2048 Hz
-#  define P169_TRCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
-
 #  define P169_NR_CALIBRATION_SAMPLES 1000ul
 # else // ifdef ESP32
 
 // Expected LCO frequency for DR_32 = 15625 Hz
 #  define P169_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
-
-// Expected SRCO frequency for DR_64 = 17187 Hz
-#  define P169_SRCO_DIVISION_RATIO AS3935MI::AS3935_DR_64
-
-// Expected SRCO frequency for DR_16 = 2048 Hz
-#  define P169_TRCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
-
 #  define P169_NR_CALIBRATION_SAMPLES  500ul
 # endif // ifdef ESP32
 
@@ -63,9 +49,11 @@ void IRAM_ATTR P169_data_struct::P169_calibrate_ISR(P169_data_struct *self) {
 
 uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
 {
+  /*
   if ((divider < 16) || (divider > 128)) {
     return 0ul;
   }
+  */
 
   // Need to copy the timestamps first as they are volatile
   const uint32_t start = _calibration_start_micros;
@@ -85,11 +73,11 @@ uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
   // we have duration of P169_NR_CALIBRATION_SAMPLES pulses in usec, thus measured frequency is:
   // (P169_NR_CALIBRATION_SAMPLES * 1000'000) / duration in usec.
   // Actual frequency should take the division ratio into account.
-  uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * P169_NR_CALIBRATION_SAMPLES);
+  uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * (P169_NR_CALIBRATION_SAMPLES + 1));
 
   freq /=  duration_usec;
 
-  addLog(LOG_LEVEL_INFO, strformat(F("AS3935: IRQ pin frequency measured: %u Hz"), static_cast<uint32_t>(freq) / divider));
+  addLog(LOG_LEVEL_INFO, strformat(F("AS3935: IRQ pin frequency measured: %u Hz, source freq: %.3f kHz"), static_cast<uint32_t>(freq) / divider, (freq)/1000.0f));
 
   return static_cast<uint32_t>(freq);
 }
@@ -115,44 +103,41 @@ int32_t P169_data_struct::measureResonanceFrequency(P169_IRQ_frequency_source so
 
 uint32_t P169_data_struct::measureResonanceFrequency(P169_IRQ_frequency_source source, uint8_t tuningCapacitance)
 {
-  AS3935MI::division_ratio_t division_ratio = P169_LCO_DIVISION_RATIO;
-
   set_P169_interruptMode(P169_InterruptMode::detached);
 
   // set tuning capacitors
   _sensor.writeAntennaTuning(tuningCapacitance);
+//  delayMicroseconds(P169_AS3935_TIMEOUT_USEC);
+
 
   unsigned sourceFreq_kHz = 500;
+  int32_t divider = 1;
 
   // display LCO on IRQ
   switch (source) {
     case P169_IRQ_frequency_source::LCO:
       _sensor.displayLCO_on_IRQ(true);
-      division_ratio = P169_LCO_DIVISION_RATIO;
+      _sensor.writeDivisionRatio(P169_LCO_DIVISION_RATIO);
+      divider = 16 << static_cast<uint32_t>(P169_LCO_DIVISION_RATIO);
       sourceFreq_kHz = 500;
       break;
     case P169_IRQ_frequency_source::SRCO:
       _sensor.displaySRCO_on_IRQ(true);
-      division_ratio = P169_SRCO_DIVISION_RATIO;
       sourceFreq_kHz = 1100;
       break;
     case P169_IRQ_frequency_source::TRCO:
       _sensor.displayTRCO_on_IRQ(true);
-      division_ratio = P169_TRCO_DIVISION_RATIO;
       sourceFreq_kHz = 33;
       break;
   }
-
-  _sensor.writeDivisionRatio(division_ratio);
-  const int32_t divider = 16 << static_cast<uint32_t>(division_ratio);
 
   set_P169_interruptMode(P169_InterruptMode::calibration);
 
   // Need to give enough time for the sensor to set the LCO signal on the IRQ pin
   delayMicroseconds(P169_AS3935_TIMEOUT_USEC);
-  _calibration_start_micros = static_cast<uint32_t>(getMicros64());
   _calibration_end_micros   = 0ul;
   _interrupt_count          = 0ul;
+  _calibration_start_micros = static_cast<uint32_t>(getMicros64());
 
   // Wait for the amount of samples to be counted (or timeout)
   // Typically this takes 32 msec for the 500 kHz LCO
@@ -310,7 +295,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   if (!_sensor.checkIRQ())
   {
     addLog(LOG_LEVEL_ERROR, F("AS3935: IRQ pin connection check failed"));
-//    return false;
+
+    //    return false;
   }
 
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
@@ -328,10 +314,32 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // calibrate the RCO.
   if (!_sensor.calibrateRCO())
   {
+    // stop displaying LCO on IRQ
+    _sensor.displayLCO_on_IRQ(false);
     addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
     return false;
   }
+
+  // stop displaying LCO on IRQ
+  _sensor.displayLCO_on_IRQ(false);
   addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
+
+  {
+    // Short test outputting TRCO on IRQ pin
+    const uint32_t freq = measureResonanceFrequency(P169_IRQ_frequency_source::TRCO);
+    if (freq > 0) 
+      addLog(LOG_LEVEL_INFO, strformat(F("AS3935: TRCO frequency: %u Hz"), freq));
+  }
+#ifdef ESP32
+/*
+  {
+    // Short test outputting SRCO on IRQ pin
+    const uint32_t freq = measureResonanceFrequency(P169_IRQ_frequency_source::SRCO);
+    if (freq > 0) 
+      addLog(LOG_LEVEL_INFO, strformat(F("AS3935: SRCO frequency: %u Hz"), freq));
+  }
+  */
+#endif
 
   // set the analog front end to 'indoors' or 'outdoors'
   _sensor.writeAFE(P169_GET_INDOOR ? AS3935MI::AS3935_INDOORS : AS3935MI::AS3935_OUTDOORS);
@@ -381,7 +389,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event, String& string)
   return true;
 }
 
-int  P169_data_struct::getDistance()
+int P169_data_struct::getDistance()
 {
   const uint8_t dist =  _sensor.readStormDistance();
 
