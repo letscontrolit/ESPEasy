@@ -367,7 +367,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
           if (validIntFromString(par1, nPar1) && (nPar1 > 0) && (nPar1 <= P004_NR_OUTPUT_VALUES)) {
             nPar1--; // From DeviceNr to array index
-            const String subcmd          = parseString(string, 2);
+            const String subcmd          = parseString(string, 3);
             Dallas_SensorData sensorData = P004_data->get_sensor_data(nPar1);
             success = true;
 
