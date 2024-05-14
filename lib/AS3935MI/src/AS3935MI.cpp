@@ -307,14 +307,9 @@ bool AS3935MI::checkIRQ()
 {
 	writeDivisionRatio(AS3935_DR_16);
 
-	delayMicroseconds(AS3935_TIMEOUT);
-
-	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
-	int16_t best_diff_abs = 32767;
-	uint8_t best_i = 0;
-
 	//display LCO on IRQ
     displayLCO_on_IRQ(true);
+	delayMicroseconds(AS3935_TIMEOUT);
 
 	bool irq_current = DIRECT_pinRead(irq_);
 	bool irq_last = irq_current;
@@ -336,8 +331,6 @@ bool AS3935MI::checkIRQ()
 
 	//stop displaying LCO on IRQ
 	displayLCO_on_IRQ(false);
-
-	delayMicroseconds(AS3935_TIMEOUT);
 
 	//return true if at least 100 transition was detected (to prevent false positives). 
 	return (counts > 100);

@@ -65,7 +65,7 @@ uint32_t P169_data_struct::computeCalibratedFrequency(int32_t divider)
 
   const int32_t duration_usec = timeDiff(start, end);
 
-  if (duration_usec <= 0ul) {
+  if (duration_usec <= 0l) {
     return 0ul;
   }
 
@@ -121,6 +121,8 @@ uint32_t P169_data_struct::measureResonanceFrequency(P169_IRQ_frequency_source s
       divider = 16 << static_cast<uint32_t>(P169_LCO_DIVISION_RATIO);
       sourceFreq_kHz = 500;
       break;
+
+      // TD-er: Do not try to measure the 1.1 MHz signal as the ESP32 will not be able to keep up with all the interrupts.
     case P169_IRQ_frequency_source::SRCO:
       _sensor.displaySRCO_on_IRQ(true);
       sourceFreq_kHz = 1100;
@@ -252,8 +254,9 @@ bool P169_data_struct::loop()
 {
   if (_mode == P169_InterruptMode::normal) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
-    if ((_interrupt_timestamp != 0) || DIRECT_pinRead(_irqPin)) {
-      if ((_interrupt_timestamp != 0) && (timePassedSince(_interrupt_timestamp) < 2)) {
+    const uint32_t timestamp = _interrupt_timestamp;
+    if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
+      if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
         // Sensor not yet ready to report what
         return false;
       }
@@ -323,14 +326,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // stop displaying LCO on IRQ
   _sensor.displayLCO_on_IRQ(false);
   addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
-
+#ifdef ESP32
   {
     // Short test outputting TRCO on IRQ pin
     const uint32_t freq = measureResonanceFrequency(P169_IRQ_frequency_source::TRCO);
     if (freq > 0) 
       addLog(LOG_LEVEL_INFO, strformat(F("AS3935: TRCO frequency: %u Hz"), freq));
   }
-#ifdef ESP32
 /*
   {
     // Short test outputting SRCO on IRQ pin
@@ -432,7 +434,7 @@ void P169_data_struct::adjustForDisturbances()
     if (srej < wdth)
     {
       if (_sensor.increaseSpikeRejection()) {
-        addLog(LOG_LEVEL_INFO, F("AS3935: Increased spike rejection ratio"));
+        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased spike rejection ratio to: %d"), (srej + 1)));
       }
       else {
         addLog(LOG_LEVEL_ERROR, F("AS3935: Spike rejection ratio already at maximum"));
@@ -441,7 +443,7 @@ void P169_data_struct::adjustForDisturbances()
     else
     {
       if (_sensor.increaseWatchdogThreshold()) {
-        addLog(LOG_LEVEL_INFO, F("AS3935: Increased watchdog threshold"));
+        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased watchdog threshold to %d"), (wdth + 1)));
       }
       else {
         addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog threshold already at maximum"));
@@ -486,7 +488,7 @@ void P169_data_struct::tryIncreasedSensitivity()
 {
   // increase sensor sensitivity every once in a while. _sense_increase_interval controls how quickly the code
   // attempts to increase sensitivity.
-  if (timePassedSince(_sense_adj_last) > _sense_increase_interval)
+  if (timePassedSince(_sense_adj_last) > static_cast<long>(_sense_increase_interval))
   {
     _sense_adj_last = millis();
 
@@ -501,7 +503,7 @@ void P169_data_struct::tryIncreasedSensitivity()
       if (srej > wdth)
       {
         if (_sensor.decreaseSpikeRejection()) {
-          addLog(LOG_LEVEL_INFO, F("AS3935: Decreased spike rejection ratio"));
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased spike rejection ratio to %d"), (srej - 1)));
         }
         # ifndef BUILD_NO_DEBUG
         else {
@@ -512,7 +514,7 @@ void P169_data_struct::tryIncreasedSensitivity()
       else
       {
         if (_sensor.decreaseWatchdogThreshold()) {
-          addLog(LOG_LEVEL_INFO, F("AS3935: Decreased watchdog threshold"));
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased watchdog threshold to: %d"), (wdth - 1)));
         }
         # ifndef BUILD_NO_DEBUG
         else {

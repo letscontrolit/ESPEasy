@@ -115,14 +115,20 @@ private:
   AS3935I2C _sensor;
   uint8_t   _irqPin;
 
-  std::atomic<uint32_t>_interrupt_timestamp = 0;
-  std::atomic<uint32_t>_interrupt_count     = 0;
+  #ifdef ESP32
+  #define P169_VOLATILE_TYPE std::atomic<uint32_t>
+  #else
+  #define P169_VOLATILE_TYPE volatile uint32_t
+  #endif
+
+
+  P169_VOLATILE_TYPE _interrupt_timestamp = 0;
+  P169_VOLATILE_TYPE _interrupt_count     = 0;
 
   // Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
   // Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
-  std::atomic<uint32_t>_calibration_start_micros = 0;
-  std::atomic<uint32_t>_calibration_end_micros   = 0;
-
+  P169_VOLATILE_TYPE _calibration_start_micros = 0;
+  P169_VOLATILE_TYPE _calibration_end_micros   = 0;
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
