@@ -16,8 +16,6 @@
 # define P169_AS3935_TIMEOUT_USEC  2000
 
 
-
-
 P169_data_struct::P169_data_struct(struct EventStruct *event) :
   _sensor(P169_I2C_ADDRESS, P169_IRQ_PIN),
   _irqPin(P169_IRQ_PIN)
@@ -33,6 +31,7 @@ bool P169_data_struct::loop()
   if (_sensor.get_interruptMode() == AS3935MI::interrupt_mode_t::normal) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
     const uint32_t timestamp = _sensor.get_interruptTimestamp();
+
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
       if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
         // Sensor not yet ready to report what
@@ -89,7 +88,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
            strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
     return false;
   }
-  addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Resonance Frequency Calibration passed: %d Hz"), frequency));
+  const float deviation_pct = (frequency / 5000.0f) - 100.0f;
+  addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Resonance Frequency Calibration passed: %d Hz, deviation: %.2f%%"), frequency, deviation_pct));
 
   // calibrate the RCO.
   if (!_sensor.calibrateRCO())
@@ -103,22 +103,25 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // stop displaying LCO on IRQ
   _sensor.displayLCO_on_IRQ(false);
   addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
-#ifdef ESP32
+# ifdef ESP32
   {
     // Short test outputting TRCO on IRQ pin
     const uint32_t freq = _sensor.measureResonanceFrequency(AS3935MI::display_frequency_source_t::TRCO);
-    if (freq > 0) 
+
+    if (freq > 0) {
       addLog(LOG_LEVEL_INFO, strformat(F("AS3935: TRCO frequency: %u Hz"), freq));
+    }
   }
-/*
-  {
-    // Short test outputting SRCO on IRQ pin
-    const uint32_t freq = measureResonanceFrequency(display_frequency_source_t::SRCO);
-    if (freq > 0) 
-      addLog(LOG_LEVEL_INFO, strformat(F("AS3935: SRCO frequency: %u Hz"), freq));
-  }
-  */
-#endif
+
+  /*
+     {
+      // Short test outputting SRCO on IRQ pin
+      const uint32_t freq = measureResonanceFrequency(display_frequency_source_t::SRCO);
+      if (freq > 0)
+        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: SRCO frequency: %u Hz"), freq));
+     }
+   */
+# endif // ifdef ESP32
 
   // set the analog front end to 'indoors' or 'outdoors'
   _sensor.writeAFE(P169_GET_INDOOR ? AS3935MI::AS3935_INDOORS : AS3935MI::AS3935_OUTDOORS);

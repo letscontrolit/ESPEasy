@@ -28,6 +28,18 @@
 #endif
 
 
+// When we can't use attachInterruptArg to directly access volatile members,
+// we must use static variables in the .cpp file
+#ifndef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
+	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
+
+	// Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
+	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
+	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
+	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+#endif
+
 AS3935MI::AS3935MI(uint8_t irq) :
 	irq_(irq),
 	tuning_cap_cache_(0),
@@ -462,21 +474,6 @@ void AS3935MI::writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value)
 }
 
 
-
-void IRAM_ATTR AS3935MI::interrupt_ISR(AS3935MI *self) {
-	self->interrupt_timestamp_ = millis();
-}
-
-void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
-	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
-	if (self->interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
-		++self->interrupt_count_;
-	}
-	else if (self->calibration_end_micros_ == 0ul) {
-		self->calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
-	}
-}
-
 uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 {
 	/*
@@ -570,6 +567,9 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	return freq;
 }
 
+uint32_t AS3935MI::get_interruptTimestamp() const { 
+	return interrupt_timestamp_; 
+}
 
 void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 	if (mode_ == mode) {
@@ -592,18 +592,60 @@ void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 			detachInterrupt(irq_);
 			break;
 		case interrupt_mode_t::normal:
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 			attachInterruptArg(digitalPinToInterrupt(irq_),
 							   reinterpret_cast<void (*)(void *)>(interrupt_ISR),
 							   this,
 							   RISING);
+#else
+			attachInterrupt(digitalPinToInterrupt(irq_),
+							interrupt_ISR,
+					   		RISING);
+#endif
 			break;
 		case interrupt_mode_t::calibration:
 			calibration_start_micros_ = 0;
 			calibration_end_micros_	 = 0;
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 			attachInterruptArg(digitalPinToInterrupt(irq_),
 							   reinterpret_cast<void (*)(void *)>(calibrate_ISR),
 							   this,
 							   RISING);
+#else
+			attachInterrupt(digitalPinToInterrupt(irq_),
+							calibrate_ISR,
+					   		RISING);
+#endif
 			break;
 	}
 }
+
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+void IRAM_ATTR AS3935MI::interrupt_ISR(AS3935MI *self) {
+	self->interrupt_timestamp_ = millis();
+}
+
+void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
+	if (self->interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+		++self->interrupt_count_;
+	}
+	else if (self->calibration_end_micros_ == 0ul) {
+		self->calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
+	}
+}
+#else
+void IRAM_ATTR AS3935MI::interrupt_ISR() {
+	interrupt_timestamp_ = millis();
+}
+
+void IRAM_ATTR AS3935MI::calibrate_ISR() {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
+	if (interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+		++interrupt_count_;
+	}
+	else if (calibration_end_micros_ == 0ul) {
+		calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
+	}
+}
+#endif

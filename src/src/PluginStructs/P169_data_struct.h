@@ -33,10 +33,10 @@
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(4)
 
 # define P169_GET_INDOOR                bitRead(PCONFIG(5), 0)
-# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(5), 0, X)
+# define P169_SET_INDOOR(X) bitWrite(PCONFIG(5), 0, X)
 # define P169_INDOOR_LABEL              "mode"
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(5), 1)
-# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(5), 1, X)
+# define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(5), 1, X)
 # define P169_MASK_DISTURBANCE_LABEL    "maskdist"
 
 // The device addresses for the AS3935 in read or write mode are defined by:
@@ -55,7 +55,6 @@ struct P169_data_struct : public PluginTaskData_base
 {
 public:
 
-
   P169_data_struct(struct EventStruct *event);
   virtual ~P169_data_struct();
 
@@ -66,21 +65,18 @@ public:
                     String            & string);
 
   // Read distance in km
-  int getDistance();
+  int      getDistance();
 
   // Get lightning strike energy in some raw value (no unit)
   uint32_t getEnergy();
 
-
 private:
 
+  void adjustForNoise();
 
+  void adjustForDisturbances();
 
-  void                  adjustForNoise();
-
-  void                  adjustForDisturbances();
-
-  void                  tryIncreasedSensitivity();
+  void tryIncreasedSensitivity();
 
 
   AS3935I2C _sensor;
@@ -89,7 +85,6 @@ private:
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
-
 };
 
 #endif // ifdef USES_P169

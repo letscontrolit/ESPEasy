@@ -21,6 +21,18 @@
 
 #include <Arduino.h>
 
+#if defined(ESP8266) || defined(ESP32)
+// When we can't use attachInterruptArg to directly access volatile members,
+// we must use static variables in the .cpp file
+// This means only a single instance of this class can be used.
+//
+// When we can use attachInterruptArg, we can use volatile members 
+// and thus have multiple instances of this class without jumping through hoops
+// to avoid issues sharing volatile variables
+
+#define AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+#endif
+
 #if ESP_IDF_VERSION_MAJOR >= 5
 # include <atomic>
 #endif
@@ -416,10 +428,6 @@ private:
 	virtual void writeRegister(uint8_t reg, uint8_t value) = 0;	
 
 
-
-	static void IRAM_ATTR interrupt_ISR(AS3935MI *self);
-	static void IRAM_ATTR calibrate_ISR(AS3935MI *self);
-
 	uint32_t              computeCalibratedFrequency(int32_t divider);
 
 
@@ -434,12 +442,11 @@ public:
 		calibration
 	};
 
-	void                  set_interruptMode(interrupt_mode_t mode);
-
 	interrupt_mode_t      get_interruptMode() const { return mode_; }
 
-	uint32_t              get_interruptTimestamp() const { return interrupt_timestamp_; }
+	uint32_t              get_interruptTimestamp() const;
 
+	void                  set_interruptMode(interrupt_mode_t mode);
 
 private:
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
@@ -455,7 +462,6 @@ private:
 	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
 
-
 	AS3935MI::interrupt_mode_t mode_ = AS3935MI::interrupt_mode_t::detached;
 
 
@@ -466,6 +472,10 @@ private:
 #endif
 
 
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+	static void IRAM_ATTR interrupt_ISR(AS3935MI *self);
+	static void IRAM_ATTR calibrate_ISR(AS3935MI *self);
+
 	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
 	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
 
@@ -473,6 +483,10 @@ private:
 	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
 	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
 	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+#else
+	static void IRAM_ATTR interrupt_ISR();
+	static void IRAM_ATTR calibrate_ISR();
+#endif
 
 };
 
