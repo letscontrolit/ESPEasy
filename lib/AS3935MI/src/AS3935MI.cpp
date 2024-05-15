@@ -18,8 +18,6 @@
 
 #include "AS3935MI.h"
 
-#include <GPIO_Direct_Access.h>
-
 AS3935MI::AS3935MI(uint8_t irq) :
 	irq_(irq)
 {
@@ -144,6 +142,12 @@ uint32_t AS3935MI::readEnergy()
 uint8_t AS3935MI::readAntennaTuning()
 {
 	uint8_t return_value = readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	if (return_value != static_cast<uint8_t>(-1)) {
+		// No read error, so update the tuning_cap_cache_
+		tuning_cap_cache_ = return_value;
+	} else {
+		return tuning_cap_cache_;
+	}
 
 	return return_value;
 }
@@ -191,13 +195,13 @@ bool AS3935MI::calibrateRCO()
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
 	//expose 1.1 MHz SRCO clock on IRQ pin
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, static_cast<uint8_t>(1));
+	displaySRCO_on_IRQ(true);
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, static_cast<uint8_t>(0));
+	displaySRCO_on_IRQ(false);
 
 	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
@@ -251,7 +255,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		//display LCO on IRQ
 		displayLCO_on_IRQ(true);
 
-		bool irq_current = DIRECT_pinRead(irq_);
+		bool irq_current = digitalRead(irq_);
 		bool irq_last = irq_current;
 
 		int16_t counts = 0;
@@ -261,7 +265,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		//count transitions for 100ms
 		while ((millis() - time_start) < 100)
 		{
-			irq_current = DIRECT_pinRead(irq_);
+			irq_current = digitalRead(irq_);
 
 			if (irq_current != irq_last)
 				counts++;
@@ -311,7 +315,7 @@ bool AS3935MI::checkIRQ()
     displayLCO_on_IRQ(true);
 	delayMicroseconds(AS3935_TIMEOUT);
 
-	bool irq_current = DIRECT_pinRead(irq_);
+	bool irq_current = digitalRead(irq_);
 	bool irq_last = irq_current;
 
 	int16_t counts = 0;
@@ -321,7 +325,7 @@ bool AS3935MI::checkIRQ()
 	//count transitions for 10ms
 	while ((millis() - time_start) < 10)
 	{
-		irq_current = DIRECT_pinRead(irq_);
+		irq_current = digitalRead(irq_);
 
 		if (irq_current != irq_last)
 			counts++;
