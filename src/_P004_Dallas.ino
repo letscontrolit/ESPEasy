@@ -359,15 +359,15 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P004_data) {
-        const String cmd = parseString(string, 1);
+        const String cmd = parseString(string, 1, '.');
 
         if (equals(cmd, F("sensorstats"))) { // To distinguish from 'DeviceStats'
-          const String par1 = parseString(string, 2);
+          const String par1 = parseString(string, 2, '.');
           int32_t nPar1;
 
           if (validIntFromString(par1, nPar1) && (nPar1 > 0) && (nPar1 <= P004_NR_OUTPUT_VALUES)) {
             nPar1--; // From DeviceNr to array index
-            const String subcmd          = parseString(string, 3);
+            const String subcmd          = parseString(string, 3, '.');
             Dallas_SensorData sensorData = P004_data->get_sensor_data(nPar1);
             success = true;
 
