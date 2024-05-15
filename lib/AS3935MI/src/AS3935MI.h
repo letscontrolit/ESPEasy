@@ -21,6 +21,29 @@
 
 #include <Arduino.h>
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+# include <atomic>
+#endif
+
+
+// Allow for 3.5% deviation
+# define AS3935MI_ALLOWED_DEVIATION    0.035f
+
+// Division ratio and nr of samples chosen so we expect a
+// 500 kHz LCO measurement to take about 31.25 msec.
+// ESP8266 can't handle > 20 kHz interrupt calls very well, therefore set to DR_32
+# ifdef ESP32
+
+// Expected LCO frequency for DR_16 = 31250 Hz
+#  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
+#  define AS3935MI_NR_CALIBRATION_SAMPLES 1000ul
+# else // ifdef ESP32
+
+// Expected LCO frequency for DR_32 = 15625 Hz
+#  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
+#  define AS3935MI_NR_CALIBRATION_SAMPLES  500ul
+# endif // ifdef ESP32
+
 class AS3935MI
 {
 public:
@@ -103,6 +126,13 @@ public:
 		AS3935_DR_32 = 0b01,
 		AS3935_DR_64 = 0b10,
 		AS3935_DR_128 = 0b11
+	};
+
+	
+	enum class display_frequency_source_t {
+		LCO, // 500 kHz resonance freq
+		SRCO, // 1.1 MHz signal
+		TRCO // 32768 Hz signal
 	};
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
@@ -212,7 +242,7 @@ public:
 	has been calibrated to. 
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
-	bool calibrateResonanceFrequency(int32_t& frequency, uint8_t division_ratio = AS3935_DR_16);
+	bool calibrateResonanceFrequency(int32_t& frequency);
 	bool calibrateResonanceFrequency();
 
 	/*
@@ -272,6 +302,12 @@ public:
     // Ideally 32.768 kHz signal
 	void displayTRCO_on_IRQ(bool enable);
 
+
+	bool validateCurrentResonanceFrequency(int32_t& frequency);
+
+	int32_t measureResonanceFrequency(display_frequency_source_t source);
+
+
 private:
 	enum AS3935_registers_t : uint8_t
 	{
@@ -327,9 +363,10 @@ private:
 		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
 		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
 		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
-		AS3935_MASK_PRESET_DEFAULT =	0b11111111,	//Sets all registers in default mode
-		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
+		AS3935_MASK_PRESET_DEFAULT =	    0b11111111,	//Sets all registers in default mode
+		AS3935_MASK_CALIB_RCO =			    0b11111111	//Sets all registers in default mode
 	};
+
 
 	virtual bool beginInterface() = 0;
 
@@ -378,6 +415,33 @@ private:
 	@param value value writeRegister write to register. */
 	virtual void writeRegister(uint8_t reg, uint8_t value) = 0;	
 
+
+
+	static void IRAM_ATTR interrupt_ISR(AS3935MI *self);
+	static void IRAM_ATTR calibrate_ISR(AS3935MI *self);
+
+	uint32_t              computeCalibratedFrequency(int32_t divider);
+
+
+	// Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
+	uint32_t              measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance);
+
+public:
+
+	enum class interrupt_mode_t {
+		detached,
+		normal,
+		calibration
+	};
+
+	void                  set_interruptMode(interrupt_mode_t mode);
+
+	interrupt_mode_t      get_interruptMode() const { return mode_; }
+
+	uint32_t              get_interruptTimestamp() const { return interrupt_timestamp_; }
+
+
+private:
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
 
 	static const uint32_t AS3935_TIMEOUT = 2000;
@@ -390,6 +454,26 @@ private:
 	// To overcome this issue, we keep a cache of the tuning cap parameter 
 	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
+
+
+	AS3935MI::interrupt_mode_t mode_ = AS3935MI::interrupt_mode_t::detached;
+
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#define AS3935MI_VOLATILE_TYPE std::atomic<uint32_t>
+#else
+#define AS3935MI_VOLATILE_TYPE volatile uint32_t
+#endif
+
+
+	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
+	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
+
+	// Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
+	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
+	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
+	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+
 };
 
 #endif /* AS3935_H_ */

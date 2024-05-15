@@ -14,8 +14,6 @@
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
 
-# include <atomic>
-
 # include <AS3935I2C.h>
 
 # define DEFAULT_SENSE_INCREASE_INTERVAL   15000 // 15 s sensitivity increase interval
@@ -57,11 +55,6 @@ struct P169_data_struct : public PluginTaskData_base
 {
 public:
 
-  enum class P169_IRQ_frequency_source {
-    LCO, // 500 kHz resonance freq
-    SRCO, // 1.1 MHz signal
-    TRCO // 32768 Hz signal
-  };
 
   P169_data_struct(struct EventStruct *event);
   virtual ~P169_data_struct();
@@ -72,10 +65,6 @@ public:
   bool plugin_write(struct EventStruct *event,
                     String            & string);
 
-  bool validateCurrentResonanceFrequency(int32_t& frequency);
-
-  int32_t measureResonanceFrequency(P169_IRQ_frequency_source source);
-
   // Read distance in km
   int getDistance();
 
@@ -85,25 +74,7 @@ public:
 
 private:
 
-  enum class P169_InterruptMode {
-    detached,
-    normal,
-    calibration
-  };
 
-  static void IRAM_ATTR P169_interrupt_ISR(P169_data_struct *self);
-  static void IRAM_ATTR P169_calibrate_ISR(P169_data_struct *self);
-
-  uint32_t              computeCalibratedFrequency(int32_t divider);
-
-
-  // Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
-  uint32_t              measureResonanceFrequency(P169_IRQ_frequency_source source, uint8_t tuningCapacitance);
-
-  bool                  calibrateResonanceFrequency(int32_t& frequency);
-
-
-  void                  set_P169_interruptMode(P169_InterruptMode mode);
 
   void                  adjustForNoise();
 
@@ -115,25 +86,10 @@ private:
   AS3935I2C _sensor;
   uint8_t   _irqPin;
 
-  #if ESP_IDF_VERSION_MAJOR >= 5
-  #define P169_VOLATILE_TYPE std::atomic<uint32_t>
-  #else
-  #define P169_VOLATILE_TYPE volatile uint32_t
-  #endif
-
-
-  P169_VOLATILE_TYPE _interrupt_timestamp = 0;
-  P169_VOLATILE_TYPE _interrupt_count     = 0;
-
-  // Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
-  // Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
-  P169_VOLATILE_TYPE _calibration_start_micros = 0;
-  P169_VOLATILE_TYPE _calibration_end_micros   = 0;
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
 
-  P169_InterruptMode _mode = P169_InterruptMode::detached;
 };
 
 #endif // ifdef USES_P169

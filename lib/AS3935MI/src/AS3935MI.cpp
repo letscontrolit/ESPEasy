@@ -9,22 +9,37 @@
 
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
 // Lesser General Public License for more details.
 
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301	USA
 
 #include "AS3935MI.h"
 
+
+#ifdef ESP8266
+#define getMicros64 micros64
+#elif defined(ESP32)
+#define getMicros64 esp_timer_get_time
+#else
+#define getMicros64 micros
+#endif
+
+
 AS3935MI::AS3935MI(uint8_t irq) :
-	irq_(irq)
+	irq_(irq),
+	tuning_cap_cache_(0),
+	mode_(AS3935MI::interrupt_mode_t::detached)
 {
 }
 
 AS3935MI::~AS3935MI()
 {
+	if (mode_ != AS3935MI::interrupt_mode_t::detached) {
+		detachInterrupt(irq_);
+	}
 }
 
 bool AS3935MI::begin()
@@ -32,6 +47,9 @@ bool AS3935MI::begin()
 	if (!beginInterface())
 		return false;
 
+	writePowerDown(false);
+
+	set_interruptMode(AS3935MI::interrupt_mode_t::detached);
 	resetToDefaults();
 
 	return true;
@@ -44,6 +62,7 @@ uint8_t AS3935MI::readStormDistance()
 
 uint8_t AS3935MI::readInterruptSource()
 {
+	interrupt_timestamp_ = 0;
 	return readRegisterValue(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
@@ -210,88 +229,44 @@ bool AS3935MI::calibrateRCO()
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_ratio)
+bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency)
 {
 	if (readPowerDown())
 		return false;
 
-	int32_t divider = 16;
+	int32_t best_diff = 500000;
+	int8_t	best_i	  = -1;
 
-	switch (division_ratio)
-	{
-		case AS3935_DR_16:
-			divider = 16;
-			break;
-		case AS3935_DR_32:
-			divider = 32;
-			break;
-		case AS3935_DR_64:
-			divider = 64;
-			break;
-		case AS3935_DR_128:
-			divider = 128;
-			break;
-		default:
-			division_ratio = AS3935_DR_16;
-			divider = 16;
-		break;
-	}
-
-	writeDivisionRatio(division_ratio);
-
-	delayMicroseconds(AS3935_TIMEOUT);
-
-	int16_t target = static_cast<int16_t>(500000 * 2 / divider / 10); //500kHz * 2 (counting each high-low / low-high transition) / divider * 0.1s 
-	int16_t best_diff = 32767;
-	uint8_t best_i = 0;
+	frequency = 0;
 
 	for (uint8_t i = 0; i < 16; i++)
 	{
-		//set tuning capacitors
-		writeAntennaTuning(i);
+		const uint32_t freq = measureResonanceFrequency(
+			display_frequency_source_t::LCO, i);
 
-		delayMicroseconds(AS3935_TIMEOUT);
-
-		//display LCO on IRQ
-		displayLCO_on_IRQ(true);
-
-		bool irq_current = digitalRead(irq_);
-		bool irq_last = irq_current;
-
-		int16_t counts = 0;
-
-		uint32_t time_start = millis();
-
-		//count transitions for 100ms
-		while ((millis() - time_start) < 100)
-		{
-			irq_current = digitalRead(irq_);
-
-			if (irq_current != irq_last)
-				counts++;
-
-			irq_last = irq_current;
+		if (freq == 0) {
+			return false;
 		}
+		const int32_t freq_diff = 500000 - freq;
 
-		//stop displaying LCO on IRQ
-		displayLCO_on_IRQ(false);
-
-		//remember if the current setting was better than the previous
-		if (abs(counts - target) < abs(best_diff))
-		{
-			best_diff = counts - target;
-			best_i = i;
+		if (abs(freq_diff) < abs(best_diff)) {
+			best_diff = freq_diff;
+			best_i	  = i;
+			frequency = freq;
 		}
+	}
+
+	if (best_i < 0) {
+		frequency = 0;
+		return false;
 	}
 
 	writeAntennaTuning(best_i);
 
-	//calculate frequency the sensor has been tuned to
-	frequency = (static_cast<int32_t>(target) + static_cast<int32_t>(best_diff));
-	frequency *= (divider * 10 / 2);
+	// Check for allowed deviation
+	constexpr int allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
 
-	//return true if the absolute difference between best value and target value is < 3.5% of target value
-	return (abs(best_diff) < (static_cast<int32_t>(target) * 35 / 1000) ? true : false);
+	return abs(best_diff) < allowedDeviation;
 }
 
 bool AS3935MI::calibrateResonanceFrequency()
@@ -309,35 +284,8 @@ bool AS3935MI::checkConnection()
 
 bool AS3935MI::checkIRQ()
 {
-	writeDivisionRatio(AS3935_DR_16);
-
-	//display LCO on IRQ
-    displayLCO_on_IRQ(true);
-	delayMicroseconds(AS3935_TIMEOUT);
-
-	bool irq_current = digitalRead(irq_);
-	bool irq_last = irq_current;
-
-	int16_t counts = 0;
-
-	uint32_t time_start = millis();
-
-	//count transitions for 10ms
-	while ((millis() - time_start) < 10)
-	{
-		irq_current = digitalRead(irq_);
-
-		if (irq_current != irq_last)
-			counts++;
-
-		irq_last = irq_current;
-	}
-
-	//stop displaying LCO on IRQ
-	displayLCO_on_IRQ(false);
-
-	//return true if at least 100 transition was detected (to prevent false positives). 
-	return (counts > 100);
+	// Expected frequency is roughly 500 kHz, so we should see at the very least see 100 kHz
+	return measureResonanceFrequency(display_frequency_source_t::LCO) > 100000;
 }
 
 void AS3935MI::clearStatistics()
@@ -450,6 +398,26 @@ void AS3935MI::displayTRCO_on_IRQ(bool enable)
 }
 
 
+bool AS3935MI::validateCurrentResonanceFrequency(int32_t& frequency)
+{
+	frequency = measureResonanceFrequency(
+		display_frequency_source_t::LCO,
+		readAntennaTuning());
+
+	// Check for allowed deviation
+	constexpr int allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
+
+	return abs(500000 - frequency) < allowedDeviation;
+}
+
+int32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source)
+{
+	return measureResonanceFrequency(
+		source,
+		readAntennaTuning());
+}
+
+
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {
 	uint8_t return_value = 0;
@@ -491,4 +459,151 @@ void AS3935MI::writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value)
 {
 	uint8_t reg_val = readRegister(reg);
 	writeRegister(reg, setMaskedBits(reg_val, mask, value));
+}
+
+
+
+void IRAM_ATTR AS3935MI::interrupt_ISR(AS3935MI *self) {
+	self->interrupt_timestamp_ = millis();
+}
+
+void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
+	if (self->interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+		++self->interrupt_count_;
+	}
+	else if (self->calibration_end_micros_ == 0ul) {
+		self->calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
+	}
+}
+
+uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
+{
+	/*
+	if ((divider < 16) || (divider > 128)) {
+		return 0ul;
+	}
+	*/
+
+	// Need to copy the timestamps first as they are volatile
+	const uint32_t start = calibration_start_micros_;
+	const uint32_t end	 = calibration_end_micros_;
+
+	if ((start == 0ul) || (end == 0ul)) {
+		return 0ul;
+	}
+
+	const int32_t duration_usec = (int32_t) (end - start);
+
+	if (duration_usec <= 0l) {
+		return 0ul;
+	}
+
+	// Compute measured frequency
+	// we have duration of AS3935MI_NR_CALIBRATION_SAMPLES pulses in usec, thus measured frequency is:
+	// (AS3935MI_NR_CALIBRATION_SAMPLES * 1000'000) / duration in usec.
+	// Actual frequency should take the division ratio into account.
+	uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * (AS3935MI_NR_CALIBRATION_SAMPLES + 1));
+
+	freq /=	duration_usec;
+
+	return static_cast<uint32_t>(freq);
+}
+
+
+uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance)
+{
+	set_interruptMode(interrupt_mode_t::detached);
+
+	// set tuning capacitors
+	writeAntennaTuning(tuningCapacitance);
+//	delayMicroseconds(AS3935_TIMEOUT);
+
+
+	unsigned sourceFreq_kHz = 500;
+	int32_t divider = 1;
+
+	// display LCO on IRQ
+	switch (source) {
+		case display_frequency_source_t::LCO:
+			displayLCO_on_IRQ(true);
+			writeDivisionRatio(AS3935MI_LCO_DIVISION_RATIO);
+			divider = 16 << static_cast<uint32_t>(AS3935MI_LCO_DIVISION_RATIO);
+			sourceFreq_kHz = 500;
+			break;
+
+			// TD-er: Do not try to measure the 1.1 MHz signal as the ESP32 will not be able to keep up with all the interrupts.
+		case display_frequency_source_t::SRCO:
+			displaySRCO_on_IRQ(true);
+			sourceFreq_kHz = 1100;
+			break;
+		case display_frequency_source_t::TRCO:
+			displayTRCO_on_IRQ(true);
+			sourceFreq_kHz = 33;
+			break;
+	}
+
+	set_interruptMode(interrupt_mode_t::calibration);
+
+	// Need to give enough time for the sensor to set the LCO signal on the IRQ pin
+	delayMicroseconds(AS3935_TIMEOUT);
+	calibration_end_micros_	  = 0ul;
+	interrupt_count_		  = 0ul;
+	calibration_start_micros_ = static_cast<uint32_t>(getMicros64());
+
+	// Wait for the amount of samples to be counted (or timeout)
+	// Typically this takes 32 msec for the 500 kHz LCO
+	const unsigned expectedDuration = (divider * AS3935MI_NR_CALIBRATION_SAMPLES) / sourceFreq_kHz;
+	const uint32_t timeout			= millis() + (2 * expectedDuration);
+	uint32_t freq					= 0;
+
+	while (freq == 0 && (((int32_t)(millis() - timeout)) < 0)) {
+		delay(1);
+		freq = computeCalibratedFrequency(divider);
+	}
+
+	set_interruptMode(interrupt_mode_t::detached);
+
+	// stop displaying LCO on IRQ
+	displayLCO_on_IRQ(false);
+
+	return freq;
+}
+
+
+void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
+	if (mode_ == mode) {
+		return;
+	}
+
+	// set the IRQ pin as an input pin. do not use INPUT_PULLUP - the AS3935 will pull the pin
+	// high if an event is registered.
+	pinMode(irq_, INPUT);
+
+	if (mode_ != interrupt_mode_t::detached) {
+		detachInterrupt(irq_);
+	}
+	interrupt_timestamp_ = 0;
+	interrupt_count_	 = 0;
+	mode_				 = mode;
+
+	switch (mode) {
+		case interrupt_mode_t::detached:
+			detachInterrupt(irq_);
+			break;
+		case interrupt_mode_t::normal:
+			attachInterruptArg(digitalPinToInterrupt(irq_),
+							   reinterpret_cast<void (*)(void *)>(interrupt_ISR),
+							   this,
+							   RISING);
+			break;
+		case interrupt_mode_t::calibration:
+			calibration_start_micros_ = 0;
+			calibration_end_micros_	 = 0;
+			attachInterruptArg(digitalPinToInterrupt(irq_),
+							   reinterpret_cast<void (*)(void *)>(calibrate_ISR),
+							   this,
+							   RISING);
+			break;
+	}
 }
