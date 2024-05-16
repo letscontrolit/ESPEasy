@@ -56,7 +56,7 @@ const __FlashStringHelper* Dallas_getModel(uint8_t family, const bool hasFixedRe
     case 0x1D: return F("DS2423");  // 4k RAM with counter
     case 0x01: return F("DS1990A"); // Serial Number iButton
   }
-  return F("");
+  return F("Unknown");
 }
 
 String Dallas_format_address(const uint8_t addr[], const bool hasFixedResolution) {
