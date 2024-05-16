@@ -38,6 +38,8 @@
 	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
 	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
 	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+
+	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
 #endif
 
 AS3935MI::AS3935MI(uint8_t irq) :
@@ -241,27 +243,48 @@ bool AS3935MI::calibrateRCO()
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency)
+void AS3935MI::setFrequencyMeasureNrSamples(uint32_t nrSamples)
+{
+  nr_calibration_samples_ = nrSamples;
+}
+
+void AS3935MI::setFrequencyMeasureEdgeChange(bool triggerRisingAndFalling)
+{
+	calibration_mode_edgetrigger_trigger_ = triggerRisingAndFalling ? CHANGE : RISING;
+}
+
+void AS3935MI::setCalibrationDivisionRatio(uint8_t division_ratio)
+{
+    if (division_ratio <= AS3935MI::division_ratio_t::AS3935_DR_128) {
+		calibration_mode_division_ratio_ = static_cast<AS3935MI::division_ratio_t>(division_ratio);
+	} else {
+		calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
+	}
+}
+
+bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_ratio)
 {
 	if (readPowerDown())
 		return false;
 
-	int32_t best_diff = 500000;
-	int8_t	best_i	  = -1;
+	setCalibrationDivisionRatio(division_ratio);
+
+	uint32_t best_diff = 500000;
+	int8_t	 best_i    = -1;
 
 	frequency = 0;
 
 	for (uint8_t i = 0; i < 16; i++)
 	{
-		const uint32_t freq = measureResonanceFrequency(
+		const int32_t freq = measureResonanceFrequency(
 			display_frequency_source_t::LCO, i);
 
 		if (freq == 0) {
 			return false;
 		}
-		const int32_t freq_diff = 500000 - freq;
+		const uint32_t freq_diff = abs(500000 - freq);
 
-		if (abs(freq_diff) < abs(best_diff)) {
+		if (freq_diff < best_diff) {
 			best_diff = freq_diff;
 			best_i	  = i;
 			frequency = freq;
@@ -272,19 +295,38 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency)
 		frequency = 0;
 		return false;
 	}
+	// Check for allowed deviation
+	constexpr uint32_t allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
+
+    if (best_diff > allowedDeviation) {
+		// Extra check to make sure we measure with the best i a bit longer
+		const uint32_t cur_nr_samples = nr_calibration_samples_;
+		setFrequencyMeasureNrSamples(cur_nr_samples * 4);
+		const int32_t freq = measureResonanceFrequency(
+			display_frequency_source_t::LCO, best_i);
+		setFrequencyMeasureNrSamples(cur_nr_samples);
+		const uint32_t freq_diff = abs(500000 - freq);
+
+		if (freq_diff < best_diff) {
+			best_diff = freq_diff;
+			frequency = freq;
+		}
+	}
 
 	writeAntennaTuning(best_i);
 
-	// Check for allowed deviation
-	constexpr int allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
+	return best_diff < allowedDeviation;
+}
 
-	return abs(best_diff) < allowedDeviation;
+bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency)
+{
+	return calibrateResonanceFrequency(frequency, calibration_mode_division_ratio_);
 }
 
 bool AS3935MI::calibrateResonanceFrequency()
 {
 	int32_t frequency = 0;
-	return calibrateResonanceFrequency(frequency);
+	return calibrateResonanceFrequency(frequency, calibration_mode_division_ratio_);
 }
 
 bool AS3935MI::checkConnection()
@@ -296,8 +338,14 @@ bool AS3935MI::checkConnection()
 
 bool AS3935MI::checkIRQ()
 {
-	// Expected frequency is roughly 500 kHz, so we should see at the very least see 100 kHz
-	return measureResonanceFrequency(display_frequency_source_t::LCO) > 100000;
+	// Only need a quick check, so set nr of samples low as we're not yet interested in an accurate measurement
+	const uint32_t cur_nr_samples = nr_calibration_samples_;
+	setFrequencyMeasureNrSamples(128);
+	const uint32_t freq = measureResonanceFrequency(display_frequency_source_t::TRCO);
+	setFrequencyMeasureNrSamples(cur_nr_samples);
+
+	// Expected TRCO frequency is roughly 32 kHz, so we should see at the very least see 10 kHz
+    return freq > 10000;
 }
 
 void AS3935MI::clearStatistics()
@@ -497,10 +545,14 @@ uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 	}
 
 	// Compute measured frequency
-	// we have duration of AS3935MI_NR_CALIBRATION_SAMPLES pulses in usec, thus measured frequency is:
-	// (AS3935MI_NR_CALIBRATION_SAMPLES * 1000'000) / duration in usec.
+	// we have duration of nr_calibration_samples_ pulses in usec, thus measured frequency is:
+	// (nr_calibration_samples_ * 1000'000) / duration in usec.
 	// Actual frequency should take the division ratio into account.
-	uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * (AS3935MI_NR_CALIBRATION_SAMPLES + 1));
+	uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * (nr_calibration_samples_ + 1));
+	if (calibration_mode_edgetrigger_trigger_ == CHANGE) {
+		// Counting on both rising and falling edge, so actual frequency is half
+		freq /= 2ull;
+	}
 
 	freq /=	duration_usec;
 
@@ -512,10 +564,7 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 {
 	set_interruptMode(interrupt_mode_t::detached);
 
-	// set tuning capacitors
-	writeAntennaTuning(tuningCapacitance);
 //	delayMicroseconds(AS3935_TIMEOUT);
-
 
 	unsigned sourceFreq_kHz = 500;
 	int32_t divider = 1;
@@ -523,9 +572,11 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	// display LCO on IRQ
 	switch (source) {
 		case display_frequency_source_t::LCO:
+			// set tuning capacitors
+			writeAntennaTuning(tuningCapacitance);
 			displayLCO_on_IRQ(true);
-			writeDivisionRatio(AS3935MI_LCO_DIVISION_RATIO);
-			divider = 16 << static_cast<uint32_t>(AS3935MI_LCO_DIVISION_RATIO);
+			writeDivisionRatio(calibration_mode_division_ratio_);
+			divider = 16 << static_cast<uint32_t>(calibration_mode_division_ratio_);
 			sourceFreq_kHz = 500;
 			break;
 
@@ -549,8 +600,13 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	calibration_start_micros_ = static_cast<uint32_t>(getMicros64());
 
 	// Wait for the amount of samples to be counted (or timeout)
-	// Typically this takes 32 msec for the 500 kHz LCO
-	const unsigned expectedDuration = (divider * AS3935MI_NR_CALIBRATION_SAMPLES) / sourceFreq_kHz;
+	// Typically this takes 32 msec for the 500 kHz LCO when taking 1000 samples
+	unsigned expectedDuration = (divider * nr_calibration_samples_) / sourceFreq_kHz;
+	if (expectedDuration < 10) {
+		// For low nr of samples, we should still keep some minimum timeout of 10 msec.
+		expectedDuration = 10;
+	}
+
 	const uint32_t timeout			= millis() + (2 * expectedDuration);
 	uint32_t freq					= 0;
 
@@ -559,6 +615,7 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 		freq = computeCalibratedFrequency(divider);
 	}
 
+	// Need to disable interrupts first or else sending I2C commands may fail
 	set_interruptMode(interrupt_mode_t::detached);
 
 	// stop displaying LCO on IRQ
@@ -610,11 +667,11 @@ void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 			attachInterruptArg(digitalPinToInterrupt(irq_),
 							   reinterpret_cast<void (*)(void *)>(calibrate_ISR),
 							   this,
-							   RISING);
+							   calibration_mode_edgetrigger_trigger_);
 #else
 			attachInterrupt(digitalPinToInterrupt(irq_),
 							calibrate_ISR,
-					   		RISING);
+					   		calibration_mode_edgetrigger_trigger_);
 #endif
 			break;
 	}
@@ -626,8 +683,8 @@ void IRAM_ATTR AS3935MI::interrupt_ISR(AS3935MI *self) {
 }
 
 void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
-	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
-	if (self->interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
+	if (self->interrupt_count_ < self->nr_calibration_samples_) {
 		++self->interrupt_count_;
 	}
 	else if (self->calibration_end_micros_ == 0ul) {
@@ -640,8 +697,8 @@ void IRAM_ATTR AS3935MI::interrupt_ISR() {
 }
 
 void IRAM_ATTR AS3935MI::calibrate_ISR() {
-	// interrupt_count_ is volatile, so we can miss when testing for exactly AS3935MI_NR_CALIBRATION_SAMPLES
-	if (interrupt_count_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
+	if (interrupt_count_ < nr_calibration_samples_) {
 		++interrupt_count_;
 	}
 	else if (calibration_end_micros_ == 0ul) {

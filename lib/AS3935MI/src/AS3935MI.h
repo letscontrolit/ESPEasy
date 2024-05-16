@@ -49,11 +49,13 @@
 // Expected LCO frequency for DR_16 = 31250 Hz
 #  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
 #  define AS3935MI_NR_CALIBRATION_SAMPLES 1000ul
+#  define AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER  CHANGE
 # else // ifdef ESP32
 
 // Expected LCO frequency for DR_32 = 15625 Hz
 #  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
 #  define AS3935MI_NR_CALIBRATION_SAMPLES  500ul
+#  define AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER  RISING
 # endif // ifdef ESP32
 
 class AS3935MI
@@ -248,13 +250,26 @@ public:
 	@return true on success, false otherwise. */
 	bool calibrateRCO();
 
+    // Set the number of samples counted during frequency measurements.
+	void setFrequencyMeasureNrSamples(uint32_t nrSamples);
+
+	// Set the edge mode trigger for any frequency measurement to either RISING or CHANGE
+	void setFrequencyMeasureEdgeChange(bool triggerRisingAndFalling);
+
+    // Set the division ratio, only used when measuring LCO (thus only during calibration)
+	void setCalibrationDivisionRatio(uint8_t division_ratio);
+
 	/*
 	calibrates the AS3935 antenna's resonance frequency. 
 	@param (by reference, write only) frequency: after return, will hold the frequency the AS3935 
 	has been calibrated to. 
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
-	bool calibrateResonanceFrequency(int32_t& frequency);
+	bool calibrateResonanceFrequency(
+		int32_t& frequency, 
+	    uint8_t division_ratio);
+	bool calibrateResonanceFrequency(
+		int32_t& frequency);
 	bool calibrateResonanceFrequency();
 
 	/*
@@ -430,11 +445,11 @@ private:
 
 	uint32_t              computeCalibratedFrequency(int32_t divider);
 
+public:
 
 	// Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
 	uint32_t              measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance);
 
-public:
 
 	enum class interrupt_mode_t {
 		detached,
@@ -483,10 +498,16 @@ private:
 	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
 	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
 	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+
+	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
+
 #else
 	static void IRAM_ATTR interrupt_ISR();
 	static void IRAM_ATTR calibrate_ISR();
 #endif
+    
+	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
+	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
 
 };
 
