@@ -269,8 +269,9 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 
 	setCalibrationDivisionRatio(division_ratio);
 
-	uint32_t best_diff = 500000;
-	int8_t	 best_i    = -1;
+	uint32_t best_diff  = 500000;
+	int8_t	 best_i     = -1;
+	int8_t	 best_i_alt = -1; // runner-up to maybe test later for longer runs
 
 	frequency = 0;
 
@@ -285,9 +286,10 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 		const uint32_t freq_diff = abs(500000 - freq);
 
 		if (freq_diff < best_diff) {
-			best_diff = freq_diff;
-			best_i	  = i;
-			frequency = freq;
+			best_diff  = freq_diff;
+			best_i_alt = best_i;
+			best_i	   = i;
+			frequency  = freq;
 		}
 	}
 
@@ -299,17 +301,23 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 	constexpr uint32_t allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
 
     if (best_diff > allowedDeviation) {
-		// Extra check to make sure we measure with the best i a bit longer
-		const uint32_t cur_nr_samples = nr_calibration_samples_;
-		setFrequencyMeasureNrSamples(cur_nr_samples * 4);
-		const int32_t freq = measureResonanceFrequency(
-			display_frequency_source_t::LCO, best_i);
-		setFrequencyMeasureNrSamples(cur_nr_samples);
-		const uint32_t freq_diff = abs(500000 - freq);
+		uint8_t tests = (best_i_alt == -1) ? 1 : 2;
+		while (tests > 0) {
+			// Extra check to make sure we measure with the 'best_i'
+			// or its runner-up 'best_i_alt' a bit longer
+			const uint32_t cur_nr_samples = nr_calibration_samples_;
+			setFrequencyMeasureNrSamples(AS3935MI_NR_CALIBRATION_SAMPLES);
+			const int32_t freq = measureResonanceFrequency(
+				display_frequency_source_t::LCO, 
+				(tests == 1) ? best_i : best_i_alt);
+			setFrequencyMeasureNrSamples(cur_nr_samples);
+			const uint32_t freq_diff = abs(500000 - freq);
 
-		if (freq_diff < best_diff) {
-			best_diff = freq_diff;
-			frequency = freq;
+			if (freq_diff < best_diff) {
+				best_diff = freq_diff;
+				frequency = freq;
+			}
+			--tests;
 		}
 	}
 

@@ -42,8 +42,10 @@
 # define AS3935MI_ALLOWED_DEVIATION    0.035f
 
 // Division ratio and nr of samples chosen so we expect a
-// 500 kHz LCO measurement to take about 31.25 msec.
-// ESP8266 can't handle > 20 kHz interrupt calls very well, therefore set to DR_32
+// 500 kHz LCO measurement to take about 18 msec on ESP32
+// On others it will take about 32 msec.
+// ESP8266 can't handle > 20 kHz interrupt calls very well, 
+// therefore set to DR_32 and edge trigger to "RISING"
 # ifdef ESP32
 
 // Expected LCO frequency for DR_16 = 31250 Hz
