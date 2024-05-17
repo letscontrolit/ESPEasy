@@ -13,6 +13,7 @@
 # define PLUGIN_VALUENAME1_169 "Distance"
 # define PLUGIN_VALUENAME2_169 "Energy"
 # define PLUGIN_VALUENAME3_169 "Lightning"
+# define PLUGIN_VALUENAME4_169 "Total"
 
 
 boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
@@ -30,7 +31,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
+      Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].I2CNoDeviceCheck   = true;
@@ -52,6 +53,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_169));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_169));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_169));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_169));
       break;
     }
 
@@ -60,14 +62,15 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
       P169_I2C_ADDRESS         = P169_I2C_ADDRESS_DFLT;
-      P169_NOISE               = AS3935MI::AS3935_NFL_2;
-      P169_WATCHDOG            = AS3935MI::AS3935_WDTH_2;
-      P169_SPIKE_REJECTION     = AS3935MI::AS3935_SREJ_2;
       P169_LIGHTNING_THRESHOLD = AS3935MI::AS3935_MNL_1;
       P169_SET_INDOOR(true);
       P169_SET_MASK_DISTURBANCE(false);
       P169_SET_SEND_ONLY_ON_LIGHTNING(true);
-      success = true;
+
+      ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // Energy
+      ExtraTaskSettings.TaskDeviceValueDecimals[2] = 0; // Lightning count since last PLUGIN_READ
+      ExtraTaskSettings.TaskDeviceValueDecimals[3] = 0; // Total lightning count
+      success                                      = true;
       break;
     }
 
@@ -112,10 +115,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormPinSelect(PinSelectPurpose::Generic, F("IRQ"), F(P169_IRQ_PIN_LABEL), P169_IRQ_PIN);
 
-      addFormNumericBox(F("Noise Floor Threshold"), P169_NOISE_LABEL,           P169_NOISE,           0, AS3935MI::AS3935_NFL_7);
-      addFormNumericBox(F("Watchdog Threshold"),    P169_WATCHDOG_LABEL,        P169_WATCHDOG,        0, AS3935MI::AS3935_WDTH_15);
-      addFormNumericBox(F("Spike Rejection"),       P169_SPIKE_REJECTION_LABEL, P169_SPIKE_REJECTION, 0, AS3935MI::AS3935_SREJ_15);
-
       {
         const __FlashStringHelper *options[] = { F("1"), F("5"), F("9"), F("16") };
         const int optionValues[]             = {
@@ -137,11 +136,18 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Mode"), F(P169_INDOOR_LABEL), NR_ELEMENTS(optionValues), options, optionValues, P169_GET_INDOOR);
       }
 
-
-      addFormCheckBox(F("Ignore Disturbance"),     F(P169_MASK_DISTURBANCE_LABEL),       P169_GET_MASK_DISTURBANCE);
-
+      addFormCheckBox(F("Ignore Disturbance"),                F(P169_MASK_DISTURBANCE_LABEL),           P169_GET_MASK_DISTURBANCE);
+      addFormCheckBox(F("Tolerate out-of-range calibration"), F(P169_TOLERANT_CALIBRATION_RANGE_LABEL), P169_GET_TOLERANT_CALIBRATION_RANGE);
+      addFormNote(F("When checked, allow for more than 3.5% deviation for the 500 kHz LCO resonance frequency"));
       addFormCheckBox(F("Send Only On Lightning"), F(P169_SEND_ONLY_ON_LIGHTNING_LABEL), P169_GET_SEND_ONLY_ON_LIGHTNING);
       addFormNote(F("Only send to controller when lightning detected since last taskrun"));
+
+      P169_data_struct *P169_data =
+        static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P169_data != nullptr)  {
+        P169_data->html_show_sensor_info(event);
+      }
 
       success = true;
       break;
@@ -152,13 +158,16 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
     {
       P169_I2C_ADDRESS = getFormItemInt(F("i2c_addr"));
 
-      P169_NOISE               = getFormItemInt(P169_NOISE_LABEL);
-      P169_WATCHDOG            = getFormItemInt(P169_WATCHDOG_LABEL);
-      P169_SPIKE_REJECTION     = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
+      /*
+            P169_NOISE               = getFormItemInt(P169_NOISE_LABEL);
+            P169_WATCHDOG            = getFormItemInt(P169_WATCHDOG_LABEL);
+            P169_SPIKE_REJECTION     = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
+       */
       P169_LIGHTNING_THRESHOLD = getFormItemInt(P169_LIGHTNING_THRESHOLD_LABEL);
       P169_SET_INDOOR(getFormItemInt(F(P169_INDOOR_LABEL)) == 0);
       P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       P169_SET_SEND_ONLY_ON_LIGHTNING(isFormItemChecked(F(P169_SEND_ONLY_ON_LIGHTNING_LABEL)));
+      P169_SET_TOLERANT_CALIBRATION_RANGE(isFormItemChecked(F(P169_TOLERANT_CALIBRATION_RANGE_LABEL)));
       success = true;
       break;
     }
@@ -183,10 +192,14 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P169_data) {
         if (P169_data->getAndClearLightningCount() > 0) {
           success = true;
-        }
+        } else {
+          UserVar.setFloat(event->TaskIndex, 0, -1.0f);
+          UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 2, 0.0f);
 
-        if (!P169_GET_SEND_ONLY_ON_LIGHTNING) {
-          success = true;
+          if (!P169_GET_SEND_ONLY_ON_LIGHTNING) {
+            success = true;
+          }
         }
       }
 
@@ -202,12 +215,18 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
         if (P169_data->loop(event)) {
           if (Settings.UseRules) {
             // Lightning detected, Send event
+            // Eventvalues:
+            // - Distance
+            // - Energy
+            // - Lightning count since last PLUGIN_READ
+            // - Total Lightning count since this was reset (or power cycle of ESP)
             eventQueue.addMove(strformat(
-                                 F("%s#LightningDetected=%d,%u,%u"),
+                                 F("%s#LightningDetected=%d,%u,%u,%d"),
                                  getTaskDeviceName(event->TaskIndex).c_str(),
                                  P169_data->getDistance(),
                                  P169_data->getEnergy(),
-                                 P169_data->getLightningCount()));
+                                 P169_data->getLightningCount(),
+                                 static_cast<int>(UserVar.getFloat(event->TaskIndex, 3))));
           }
         }
         success = true;

@@ -225,7 +225,7 @@ public:
 
 	/*
 	writes an antenna tuning setting to the sensor. */
-	void writeAntennaTuning(uint8_t tuning);
+	bool writeAntennaTuning(uint8_t tuning);
 
 	/*
 	read the currently set antenna tuning division ratio from the sensor. */
@@ -510,6 +510,21 @@ private:
     
 	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
 	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
+
+public:
+    // Return the result of the last frequency measurement of the given tuning cap index
+	// @retval -1 when tuningCapacitance is out of range
+	int32_t get_ant_cap_frequency(uint8_t tuningCapacitance) const;
+
+	// Return the best ant_cap found during last LCO calibration
+	// @retval -1 when no LCO calibration was performed
+	int8_t  get_calibrated_ant_cap() const {
+		return calibrated_ant_cap_;
+	}
+
+private:
+    int32_t calibration_frequencies_[16]{};
+	int8_t calibrated_ant_cap_ = -1;
 
 };
 

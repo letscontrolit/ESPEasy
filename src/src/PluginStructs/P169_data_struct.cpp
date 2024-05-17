@@ -50,25 +50,72 @@ bool P169_data_struct::loop(struct EventStruct *event)
           adjustForDisturbances();
           break;
         case AS3935MI::AS3935_INT_L:
+        {
           // Lightning detected
           ++_lightningCount;
+          const int totalStrikes = UserVar.getFloat(event->TaskIndex, 3) + 1;
           UserVar.setFloat(event->TaskIndex, 0, getDistance());
           UserVar.setFloat(event->TaskIndex, 1, getEnergy());
           UserVar.setFloat(event->TaskIndex, 2, _lightningCount);
+          UserVar.setFloat(event->TaskIndex, 3, totalStrikes);
 
           addLog(LOG_LEVEL_INFO, strformat(
-                   F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u"),
+                   F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u, Total: %d"),
                    getDistance(),
                    getEnergy(),
-                   _lightningCount));
-
+                   _lightningCount,
+                   totalStrikes));
 
           return true;
+        }
       }
     }
     tryIncreasedSensitivity();
   }
   return false;
+}
+
+void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
+{
+  addFormSubHeader(F("Current Sensor Data"));
+  addRowLabel(F("Calibration"));
+  const int8_t ant_cap = _sensor.get_calibrated_ant_cap();
+
+  addEnabled(ant_cap != -1);
+
+  addRowLabel(F("Best Antenna cap"));
+
+  if (ant_cap != -1) {
+    addHtmlInt(ant_cap);
+  } else {
+    addHtml('-');
+  }
+
+  addRowLabel(F("Error % per cap"));
+
+  for (uint8_t i = 0; i < 16; ++i) {
+    const int32_t freq = _sensor.get_ant_cap_frequency(i);
+
+    if (i != 0) {
+      addHtml(',');
+      addHtml(' ');
+    }
+
+    if (freq > 0) {
+      addHtml(strformat(F("%.2f%%"), (freq / 5000.0f) - 100.0f));
+    } else {
+      addHtml('-');
+    }
+  }
+
+  addRowLabel(F("Current Noise Floor Threshold"));
+  addHtmlInt(_sensor.readNoiseFloorThreshold());
+
+  addRowLabel(F("Current Watchdog Threshold"));
+  addHtmlInt(_sensor.readWatchdogThreshold());
+
+  addRowLabel(F("Current Spike Rejection"));
+  addHtmlInt(_sensor.readSpikeRejection());
 }
 
 bool P169_data_struct::plugin_init(struct EventStruct *event)
@@ -98,14 +145,17 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   {
     addLog(LOG_LEVEL_ERROR,
            strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
-    return false;
+
+    if (!P169_GET_TOLERANT_CALIBRATION_RANGE) {
+      return false;
+    }
+  } else {
+    const float deviation_pct = (frequency / 5000.0f) - 100.0f;
+
+    addLog(LOG_LEVEL_INFO,
+           strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"), _sensor.readAntennaTuning(),
+                     frequency, deviation_pct));
   }
-
-  const float deviation_pct = (frequency / 5000.0f) - 100.0f;
-
-  addLog(LOG_LEVEL_INFO,
-         strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"), _sensor.readAntennaTuning(),
-                   frequency, deviation_pct));
 
   // calibrate the RCO.
   if (!_sensor.calibrateRCO())
@@ -161,31 +211,9 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // set the analog front end to 'indoors' or 'outdoors'
   _sensor.writeAFE(P169_GET_INDOOR ? AS3935MI::AS3935_INDOORS : AS3935MI::AS3935_OUTDOORS);
 
-  {
-    AS3935MI::noise_floor_threshold_t noise_floor_threshold = AS3935MI::AS3935_NFL_2;
-
-    if ((P169_NOISE >= AS3935MI::AS3935_NFL_0) && (P169_NOISE <= AS3935MI::AS3935_NFL_7)) {
-      noise_floor_threshold = static_cast<AS3935MI::noise_floor_threshold_t>(P169_NOISE);
-    }
-
-    _sensor.writeNoiseFloorThreshold(noise_floor_threshold);
-  }
-  {
-    AS3935MI::wdth_setting_t wdth_setting = AS3935MI::AS3935_WDTH_2;
-
-    if ((P169_WATCHDOG >= AS3935MI::AS3935_WDTH_0) && (P169_WATCHDOG <= AS3935MI::AS3935_WDTH_15)) {
-      wdth_setting = static_cast<AS3935MI::wdth_setting_t>(P169_WATCHDOG);
-    }
-    _sensor.writeWatchdogThreshold(wdth_setting);
-  }
-  {
-    AS3935MI::srej_setting_t srej_setting = AS3935MI::AS3935_SREJ_2;
-
-    if ((P169_SPIKE_REJECTION >= AS3935MI::AS3935_SREJ_0) && (P169_SPIKE_REJECTION <= AS3935MI::AS3935_SREJ_15)) {
-      srej_setting = static_cast<AS3935MI::srej_setting_t>(P169_SPIKE_REJECTION);
-    }
-    _sensor.writeSpikeRejection(srej_setting);
-  }
+  _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+  _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+  _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
   {
     AS3935MI::min_num_lightnings_t min_num_lightnings = AS3935MI::AS3935_MNL_1;
 

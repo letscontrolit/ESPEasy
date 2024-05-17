@@ -23,26 +23,25 @@
 
 # define P169_I2C_ADDRESS               PCONFIG(0)
 # define P169_I2C_ADDRESS_LABEL         PCONFIG_LABEL(0)
-# define P169_NOISE                     PCONFIG(1)
-# define P169_NOISE_LABEL               PCONFIG_LABEL(1)
-# define P169_WATCHDOG                  PCONFIG(2)
-# define P169_WATCHDOG_LABEL            PCONFIG_LABEL(2)
-# define P169_SPIKE_REJECTION           PCONFIG(3)
-# define P169_SPIKE_REJECTION_LABEL     PCONFIG_LABEL(3)
-# define P169_LIGHTNING_THRESHOLD       PCONFIG(4)
-# define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(4)
 
-# define P169_GET_INDOOR                bitRead(PCONFIG(5), 0)
-# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(5), 0, X)
+# define P169_LIGHTNING_THRESHOLD       PCONFIG(1)
+# define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(1)
+
+# define P169_GET_INDOOR                bitRead(PCONFIG(2), 0)
+# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(2), 0, X)
 # define P169_INDOOR_LABEL              "mode"
 
-# define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(5), 1)
-# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(5), 1, X)
+# define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(2), 1)
+# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(2), 1, X)
 # define P169_MASK_DISTURBANCE_LABEL    "maskdist"
 
-# define P169_GET_SEND_ONLY_ON_LIGHTNING    bitRead(PCONFIG(5), 2)
-# define P169_SET_SEND_ONLY_ON_LIGHTNING(X) bitWrite(PCONFIG(5), 2, X)
+# define P169_GET_SEND_ONLY_ON_LIGHTNING    bitRead(PCONFIG(2), 2)
+# define P169_SET_SEND_ONLY_ON_LIGHTNING(X) bitWrite(PCONFIG(2), 2, X)
 # define P169_SEND_ONLY_ON_LIGHTNING_LABEL  "sendonlightning"
+
+# define P169_GET_TOLERANT_CALIBRATION_RANGE    bitRead(PCONFIG(2), 3)
+# define P169_SET_TOLERANT_CALIBRATION_RANGE(X) bitWrite(PCONFIG(2), 3, X)
+# define P169_TOLERANT_CALIBRATION_RANGE_LABEL  "tolerantcalib"
 
 // The device addresses for the AS3935 in read or write mode are defined by:
 // 0-0-0-0-0-a1-a0-0: write mode device address (DW)
@@ -63,11 +62,13 @@ public:
   P169_data_struct(struct EventStruct *event);
   virtual ~P169_data_struct();
 
-  bool loop(struct EventStruct *event);
+  bool     loop(struct EventStruct *event);
 
-  bool plugin_init(struct EventStruct *event);
-  bool plugin_write(struct EventStruct *event,
-                    String            & string);
+  bool     plugin_init(struct EventStruct *event);
+  bool     plugin_write(struct EventStruct *event,
+                        String            & string);
+
+  void     html_show_sensor_info(struct EventStruct *event);
 
   // Read distance in km
   int      getDistance();

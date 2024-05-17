@@ -185,10 +185,14 @@ uint8_t AS3935MI::readAntennaTuning()
 	return return_value;
 }
 
-void AS3935MI::writeAntennaTuning(uint8_t tuning)
+bool AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
+	if (tuning >= 16) {
+		return false;
+	}
 	tuning_cap_cache_ = tuning;
 	writeRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
+	return true;
 }
 
 uint8_t AS3935MI::readDivisionRatio()
@@ -269,6 +273,8 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 
 	setCalibrationDivisionRatio(division_ratio);
 
+	calibrated_ant_cap_ = -1;
+
 	uint32_t best_diff  = 500000;
 	int8_t	 best_i     = -1;
 	int8_t	 best_i_alt = -1; // runner-up to maybe test later for longer runs
@@ -297,6 +303,9 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 		frequency = 0;
 		return false;
 	}
+
+    calibrated_ant_cap_ = best_i;
+
 	// Check for allowed deviation
 	constexpr uint32_t allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
 
@@ -306,14 +315,17 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 			// Extra check to make sure we measure with the 'best_i'
 			// or its runner-up 'best_i_alt' a bit longer
 			const uint32_t cur_nr_samples = nr_calibration_samples_;
+			const int8_t cur_ant_cap = (tests == 1) ? best_i : best_i_alt;
+
 			setFrequencyMeasureNrSamples(AS3935MI_NR_CALIBRATION_SAMPLES);
 			const int32_t freq = measureResonanceFrequency(
 				display_frequency_source_t::LCO, 
-				(tests == 1) ? best_i : best_i_alt);
+				cur_ant_cap);
 			setFrequencyMeasureNrSamples(cur_nr_samples);
 			const uint32_t freq_diff = abs(500000 - freq);
 
 			if (freq_diff < best_diff) {
+				calibrated_ant_cap_ = cur_ant_cap;
 				best_diff = freq_diff;
 				frequency = freq;
 			}
@@ -321,7 +333,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 		}
 	}
 
-	writeAntennaTuning(best_i);
+	writeAntennaTuning(calibrated_ant_cap_);
 
 	return best_diff < allowedDeviation;
 }
@@ -581,7 +593,9 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	switch (source) {
 		case display_frequency_source_t::LCO:
 			// set tuning capacitors
-			writeAntennaTuning(tuningCapacitance);
+			if (!writeAntennaTuning(tuningCapacitance)) {
+				return 0u;
+			}
 			displayLCO_on_IRQ(true);
 			writeDivisionRatio(calibration_mode_division_ratio_);
 			divider = 16 << static_cast<uint32_t>(calibration_mode_division_ratio_);
@@ -628,6 +642,10 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 
 	// stop displaying LCO on IRQ
 	displayLCO_on_IRQ(false);
+
+	if (source == display_frequency_source_t::LCO) {
+		calibration_frequencies_[tuningCapacitance] = freq;
+	}
 
 	return freq;
 }
@@ -714,3 +732,12 @@ void IRAM_ATTR AS3935MI::calibrate_ISR() {
 	}
 }
 #endif
+
+int32_t  AS3935MI::get_ant_cap_frequency(uint8_t tuningCapacitance) const
+{
+	constexpr unsigned int nrElements = sizeof(calibration_frequencies_) / sizeof(calibration_frequencies_[0]);
+	if (tuningCapacitance < nrElements) {
+		return calibration_frequencies_[tuningCapacitance];
+	}
+	return -1;
+}
