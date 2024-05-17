@@ -26,7 +26,7 @@ P169_data_struct::~P169_data_struct()
   _sensor.writePowerDown(true);
 }
 
-bool P169_data_struct::loop()
+bool P169_data_struct::loop(struct EventStruct *event)
 {
   if (_sensor.get_interruptMode() == AS3935MI::interrupt_mode_t::normal) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
@@ -34,7 +34,7 @@ bool P169_data_struct::loop()
 
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
       if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
-        // Sensor not yet ready to report what
+        // Sensor not yet ready to report some data
         return false;
       }
 
@@ -51,7 +51,17 @@ bool P169_data_struct::loop()
           break;
         case AS3935MI::AS3935_INT_L:
           // Lightning detected
-          addLog(LOG_LEVEL_INFO, F("AS3935: Lightning detected"));
+          ++_lightningCount;
+          UserVar.setFloat(event->TaskIndex, 0, getDistance());
+          UserVar.setFloat(event->TaskIndex, 1, getEnergy());
+          UserVar.setFloat(event->TaskIndex, 2, _lightningCount);
+
+          addLog(LOG_LEVEL_INFO, strformat(
+                   F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u"),
+                   getDistance(),
+                   getEnergy(),
+                   _lightningCount));
+
 
           return true;
       }
@@ -207,6 +217,14 @@ int P169_data_struct::getDistance()
 uint32_t P169_data_struct::getEnergy()
 {
   return _sensor.readEnergy();
+}
+
+uint32_t P169_data_struct::getAndClearLightningCount()
+{
+  const uint32_t res = _lightningCount;
+
+  _lightningCount = 0;
+  return res;
 }
 
 void P169_data_struct::adjustForNoise()

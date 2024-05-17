@@ -33,11 +33,16 @@
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(4)
 
 # define P169_GET_INDOOR                bitRead(PCONFIG(5), 0)
-# define P169_SET_INDOOR(X) bitWrite(PCONFIG(5), 0, X)
+# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(5), 0, X)
 # define P169_INDOOR_LABEL              "mode"
+
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(5), 1)
-# define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(5), 1, X)
+# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(5), 1, X)
 # define P169_MASK_DISTURBANCE_LABEL    "maskdist"
+
+# define P169_GET_SEND_ONLY_ON_LIGHTNING    bitRead(PCONFIG(5), 2)
+# define P169_SET_SEND_ONLY_ON_LIGHTNING(X) bitWrite(PCONFIG(5), 2, X)
+# define P169_SEND_ONLY_ON_LIGHTNING_LABEL  "sendonlightning"
 
 // The device addresses for the AS3935 in read or write mode are defined by:
 // 0-0-0-0-0-a1-a0-0: write mode device address (DW)
@@ -58,7 +63,7 @@ public:
   P169_data_struct(struct EventStruct *event);
   virtual ~P169_data_struct();
 
-  bool loop();
+  bool loop(struct EventStruct *event);
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
@@ -69,6 +74,12 @@ public:
 
   // Get lightning strike energy in some raw value (no unit)
   uint32_t getEnergy();
+
+  uint32_t getLightningCount() const {
+    return _lightningCount;
+  }
+
+  uint32_t getAndClearLightningCount();
 
 private:
 
@@ -85,6 +96,8 @@ private:
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
+
+  uint32_t _lightningCount = 0;
 };
 
 #endif // ifdef USES_P169
