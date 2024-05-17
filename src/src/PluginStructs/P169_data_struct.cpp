@@ -86,13 +86,65 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
   addRowLabel(F("Best Antenna cap"));
 
   if (ant_cap != -1) {
-    addHtmlInt(ant_cap);
+    const int32_t freq = _sensor.get_ant_cap_frequency(ant_cap);
+    addHtml(strformat(F("%d (%.2f%%)"), ant_cap, (freq / 5000.0f) - 100.0f));
   } else {
     addHtml('-');
   }
 
   addRowLabel(F("Error % per cap"));
+#if FEATURE_CHART_JS
 
+  const int valueCount = 16;
+  int xAxisValues[valueCount];
+  for (int i = 0; i < valueCount; ++i) {
+    xAxisValues[i] = i;
+  }
+
+  String axisOptions;
+
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), F("Ant_cap") });
+    scales.add({ F("y"), F("Error %") });
+    axisOptions = scales.toString();
+  }
+
+
+  add_ChartJS_chart_header(
+    F("line"),
+    F("lcoCapErrorCurve"),
+    { F("LCO Resonance Frequency") },
+    500,
+    500,
+    axisOptions);
+
+  add_ChartJS_chart_labels(
+    valueCount,
+    xAxisValues);
+
+  {
+    float values[valueCount];
+
+    for (int i = 0; i < valueCount; ++i) {
+      const int32_t freq = _sensor.get_ant_cap_frequency(i);
+      values[i] = (freq / 5000.0f) - 100.0f;
+    }
+
+    const ChartJS_dataset_config config(
+      F("Error % per cap"),
+      F("rgb(255, 99, 132)"));
+
+
+    add_ChartJS_dataset(
+      config,
+      values,
+      valueCount,
+      2);
+  }
+  add_ChartJS_chart_footer();
+
+#else
   for (uint8_t i = 0; i < 16; ++i) {
     const int32_t freq = _sensor.get_ant_cap_frequency(i);
 
@@ -107,6 +159,7 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
       addHtml('-');
     }
   }
+#endif
 
   addRowLabel(F("Current Noise Floor Threshold"));
   addHtmlInt(_sensor.readNoiseFloorThreshold());
@@ -138,7 +191,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
   // of the sensor. resonance frequency calibration will take about 600 msec to complete.
   int32_t frequency = 0;
-
+  if (!P169_GET_SLOW_LCO_CALIBRATION)
   _sensor.setFrequencyMeasureNrSamples(256);
 
   if (!_sensor.calibrateResonanceFrequency(frequency))

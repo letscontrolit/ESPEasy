@@ -310,18 +310,17 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 	constexpr uint32_t allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
 
     if (best_diff > allowedDeviation) {
+		const uint32_t cur_nr_samples = nr_calibration_samples_;
+		setFrequencyMeasureNrSamples(AS3935MI_NR_CALIBRATION_SAMPLES);
+
 		uint8_t tests = (best_i_alt == -1) ? 1 : 2;
 		while (tests > 0) {
 			// Extra check to make sure we measure with the 'best_i'
 			// or its runner-up 'best_i_alt' a bit longer
-			const uint32_t cur_nr_samples = nr_calibration_samples_;
 			const int8_t cur_ant_cap = (tests == 1) ? best_i : best_i_alt;
-
-			setFrequencyMeasureNrSamples(AS3935MI_NR_CALIBRATION_SAMPLES);
 			const int32_t freq = measureResonanceFrequency(
 				display_frequency_source_t::LCO, 
 				cur_ant_cap);
-			setFrequencyMeasureNrSamples(cur_nr_samples);
 			const uint32_t freq_diff = abs(500000 - freq);
 
 			if (freq_diff < best_diff) {
@@ -331,6 +330,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_
 			}
 			--tests;
 		}
+		setFrequencyMeasureNrSamples(cur_nr_samples);
 	}
 
 	writeAntennaTuning(calibrated_ant_cap_);

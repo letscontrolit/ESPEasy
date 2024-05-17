@@ -43,6 +43,10 @@
 # define P169_SET_TOLERANT_CALIBRATION_RANGE(X) bitWrite(PCONFIG(2), 3, X)
 # define P169_TOLERANT_CALIBRATION_RANGE_LABEL  "tolerantcalib"
 
+# define P169_GET_SLOW_LCO_CALIBRATION    bitRead(PCONFIG(2), 4)
+# define P169_SET_SLOW_LCO_CALIBRATION(X) bitWrite(PCONFIG(2), 4, X)
+# define P169_SLOW_LCO_CALIBRATION_LABEL  "slowcalib"
+
 // The device addresses for the AS3935 in read or write mode are defined by:
 // 0-0-0-0-0-a1-a0-0: write mode device address (DW)
 // 0-0-0-0-0-a1-a0-1: read mode device address (DR)

@@ -139,6 +139,8 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Ignore Disturbance"),                F(P169_MASK_DISTURBANCE_LABEL),           P169_GET_MASK_DISTURBANCE);
       addFormCheckBox(F("Tolerate out-of-range calibration"), F(P169_TOLERANT_CALIBRATION_RANGE_LABEL), P169_GET_TOLERANT_CALIBRATION_RANGE);
       addFormNote(F("When checked, allow for more than 3.5% deviation for the 500 kHz LCO resonance frequency"));
+      addFormCheckBox(F("Slow LCO Calibration"), F(P169_SLOW_LCO_CALIBRATION_LABEL), P169_GET_SLOW_LCO_CALIBRATION);
+      addFormNote(F("Slow Calibration may improve accuracy of measured resonance frequency"));
       addFormCheckBox(F("Send Only On Lightning"), F(P169_SEND_ONLY_ON_LIGHTNING_LABEL), P169_GET_SEND_ONLY_ON_LIGHTNING);
       addFormNote(F("Only send to controller when lightning detected since last taskrun"));
 
@@ -168,6 +170,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       P169_SET_SEND_ONLY_ON_LIGHTNING(isFormItemChecked(F(P169_SEND_ONLY_ON_LIGHTNING_LABEL)));
       P169_SET_TOLERANT_CALIBRATION_RANGE(isFormItemChecked(F(P169_TOLERANT_CALIBRATION_RANGE_LABEL)));
+      P169_SET_SLOW_LCO_CALIBRATION(isFormItemChecked(F(P169_SLOW_LCO_CALIBRATION_LABEL)));
       success = true;
       break;
     }
