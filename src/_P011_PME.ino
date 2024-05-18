@@ -281,18 +281,23 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_CONFIG_VALUE:
     {
-      const String typ  = parseString(string, 1);
-      const String port = parseString(string, 2);
+      char sep = '.';
+
+      if ((-1 == string.indexOf(sep)) && (string.indexOf(',') >= 0)) {
+        sep = ',';
+      }
+      const String typ  = parseString(string, 1, sep);
+      const String port = parseString(string, 2, sep);
       int32_t portnr    = -1;
       validIntFromString(port, portnr);
 
-      // [<taskname>#D,<port>] : Read Digital value from <port>
+      // [<taskname>#D.<port>] : Read Digital value from <port>
       if (equals(typ, F("d")) && !port.isEmpty() && (portnr >= 0) && (portnr < PLUGIN_011_PORTS)) {
         string  = Plugin_011_Read(0, portnr);
         success = true;
       } else
 
-      // [<taskname>#A,<port>] : Read Analog value from <port>
+      // [<taskname>#A.<port>] : Read Analog value from <port>
       if (equals(typ, F("a")) && !port.isEmpty() && (portnr >= 0) && (portnr < PLUGIN_011_A_PORTS)) {
         string  = Plugin_011_Read(1, portnr);
         success = true;

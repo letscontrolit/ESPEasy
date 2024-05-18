@@ -2019,7 +2019,9 @@ To create/register a plugin, you have to :
     #define USES_C014   // homie 3 & 4dev MQTT
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
-    // #define USES_C018 // TTN RN2483
+    #ifdef ESP32
+      #define USES_C018 // TTN RN2483
+    #endif
     // #define USES_C019   // ESPEasy-NOW
 #endif
 
