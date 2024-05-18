@@ -215,23 +215,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P169_data) {
-        if (P169_data->loop(event)) {
-          if (Settings.UseRules) {
-            // Lightning detected, Send event
-            // Eventvalues:
-            // - Distance
-            // - Energy
-            // - Lightning count since last PLUGIN_READ
-            // - Total Lightning count since this was reset (or power cycle of ESP)
-            eventQueue.addMove(strformat(
-                                 F("%s#LightningDetected=%d,%u,%u,%d"),
-                                 getTaskDeviceName(event->TaskIndex).c_str(),
-                                 P169_data->getDistance(),
-                                 P169_data->getEnergy(),
-                                 P169_data->getLightningCount(),
-                                 static_cast<int>(UserVar.getFloat(event->TaskIndex, 3))));
-          }
-        }
+        if (P169_data->loop(event)) {}
         success = true;
       }
       break;

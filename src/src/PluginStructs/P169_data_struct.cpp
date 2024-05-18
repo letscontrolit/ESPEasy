@@ -42,35 +42,75 @@ bool P169_data_struct::loop(struct EventStruct *event)
       switch (_sensor.readInterruptSource()) {
         case AS3935MI::AS3935_INT_NH:
           // Noise floor too high
-          adjustForNoise();
+          adjustForNoise(event);
           break;
         case AS3935MI::AS3935_INT_D:
           // Disturbance detected
           // N.B. can be disabled with _sensor.writeMaskDisturbers(true);
-          adjustForDisturbances();
+          adjustForDisturbances(event);
           break;
         case AS3935MI::AS3935_INT_L:
         {
           // Lightning detected
           ++_lightningCount;
           const int totalStrikes = UserVar.getFloat(event->TaskIndex, 3) + 1;
-          UserVar.setFloat(event->TaskIndex, 0, getDistance());
-          UserVar.setFloat(event->TaskIndex, 1, getEnergy());
+          const int distance     = getDistance();
+          const uint32_t energy  = getEnergy();
+          UserVar.setFloat(event->TaskIndex, 0, distance);
+          UserVar.setFloat(event->TaskIndex, 1, energy);
           UserVar.setFloat(event->TaskIndex, 2, _lightningCount);
           UserVar.setFloat(event->TaskIndex, 3, totalStrikes);
 
-          addLog(LOG_LEVEL_INFO, strformat(
-                   F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u, Total: %d"),
-                   getDistance(),
-                   getEnergy(),
-                   _lightningCount,
-                   totalStrikes));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(
+                     F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u, Total: %d"),
+                     distance,
+                     energy,
+                     _lightningCount,
+                     totalStrikes));
+          }
+
+          if (Settings.UseRules) {
+            // Lightning detected, Send event
+            // Eventvalues:
+            // - Distance
+            // - Energy
+            // - Lightning count since last PLUGIN_READ
+            // - Total Lightning count since this was reset (or power cycle of ESP)
+            eventQueue.addMove(
+              strformat(
+                F("%s#LightningDetected=%d,%u,%u,%d"),
+                getTaskDeviceName(event->TaskIndex).c_str(),
+                distance,
+                energy,
+                _lightningCount,
+                totalStrikes));
+          }
 
           return true;
         }
+        case AS3935MI::AS3935_INT_DUPDATE:
+        {
+          // Distance updated
+          const int distance = getDistance();
+          UserVar.setFloat(event->TaskIndex, 0, distance);
+
+          if (Settings.UseRules) {
+            // Distance updated, Send event
+            // Eventvalue:
+            // - Distance
+            eventQueue.addMove(
+              strformat(
+                F("%s#DistanceUpdated=%d"),
+                getTaskDeviceName(event->TaskIndex).c_str(),
+                distance));
+          }
+
+          break;
+        }
       }
     }
-    tryIncreasedSensitivity();
+    tryIncreasedSensitivity(event);
   }
   return false;
 }
@@ -81,70 +121,31 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
   addRowLabel(F("Calibration"));
   const int8_t ant_cap = _sensor.get_calibrated_ant_cap();
 
-  addEnabled(ant_cap != -1);
-
-  addRowLabel(F("Best Antenna cap"));
-
   if (ant_cap != -1) {
-    const int32_t freq = _sensor.get_ant_cap_frequency(ant_cap);
-    addHtml(strformat(F("%d (%.2f%%)"), ant_cap, (freq / 5000.0f) - 100.0f));
+    const float deviation_pct = computeDeviationPct(_sensor.get_ant_cap_frequency(ant_cap));
+
+    if (fabs(deviation_pct) < (100 * AS3935MI_ALLOWED_DEVIATION)) {
+      addEnabled(true);
+    } else {
+      if (P169_GET_TOLERANT_CALIBRATION_RANGE) {
+        addEnabled(true);
+        addHtml(F(HTML_SYMBOL_WARNING));
+      } else {
+        addEnabled(false);
+      }
+    }
+
+    addRowLabel(F("Best Antenna cap"));
+    addHtml(strformat(F("%d (%.2f%%)"), ant_cap, deviation_pct));
   } else {
-    addHtml('-');
+    addEnabled(false);
   }
 
   addRowLabel(F("Error % per cap"));
-#if FEATURE_CHART_JS
+# if FEATURE_CHART_JS
+  addCalibrationChart(event);
+# else // if FEATURE_CHART_JS
 
-  const int valueCount = 16;
-  int xAxisValues[valueCount];
-  for (int i = 0; i < valueCount; ++i) {
-    xAxisValues[i] = i;
-  }
-
-  String axisOptions;
-
-  {
-    ChartJS_options_scales scales;
-    scales.add({ F("x"), F("Ant_cap") });
-    scales.add({ F("y"), F("Error %") });
-    axisOptions = scales.toString();
-  }
-
-
-  add_ChartJS_chart_header(
-    F("line"),
-    F("lcoCapErrorCurve"),
-    { F("LCO Resonance Frequency") },
-    500,
-    500,
-    axisOptions);
-
-  add_ChartJS_chart_labels(
-    valueCount,
-    xAxisValues);
-
-  {
-    float values[valueCount];
-
-    for (int i = 0; i < valueCount; ++i) {
-      const int32_t freq = _sensor.get_ant_cap_frequency(i);
-      values[i] = (freq / 5000.0f) - 100.0f;
-    }
-
-    const ChartJS_dataset_config config(
-      F("Error % per cap"),
-      F("rgb(255, 99, 132)"));
-
-
-    add_ChartJS_dataset(
-      config,
-      values,
-      valueCount,
-      2);
-  }
-  add_ChartJS_chart_footer();
-
-#else
   for (uint8_t i = 0; i < 16; ++i) {
     const int32_t freq = _sensor.get_ant_cap_frequency(i);
 
@@ -154,12 +155,12 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
     }
 
     if (freq > 0) {
-      addHtml(strformat(F("%.2f%%"), (freq / 5000.0f) - 100.0f));
+      addHtml(strformat(F("%.2f%%"), computeDeviationPct(freq)));
     } else {
       addHtml('-');
     }
   }
-#endif
+# endif // if FEATURE_CHART_JS
 
   addRowLabel(F("Current Noise Floor Threshold"));
   addHtmlInt(_sensor.readNoiseFloorThreshold());
@@ -180,34 +181,44 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("AS3935: Sensor not detected"));
     return false;
   }
+  addLog(LOG_LEVEL_INFO, F("AS3935: Sensor detected"));
 
-  if (!_sensor.checkIRQ())
-  {
-    addLog(LOG_LEVEL_ERROR, F("AS3935: IRQ pin connection check failed"));
+  /*
+     if (!_sensor.checkIRQ())
+     {
+      addLog(LOG_LEVEL_ERROR, F("AS3935: IRQ pin connection check failed"));
 
-    //    return false;
-  }
+      //    return false;
+     }
+   */
 
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
-  // of the sensor. resonance frequency calibration will take about 600 msec to complete.
+  // of the sensor.
   int32_t frequency = 0;
-  if (!P169_GET_SLOW_LCO_CALIBRATION)
-  _sensor.setFrequencyMeasureNrSamples(256);
+
+  _sensor.set_calibrate_all_ant_cap(P169_GET_SLOW_LCO_CALIBRATION);
+
+  if (!P169_GET_SLOW_LCO_CALIBRATION) {
+    _sensor.setFrequencyMeasureNrSamples(256);
+  }
 
   if (!_sensor.calibrateResonanceFrequency(frequency))
   {
-    addLog(LOG_LEVEL_ERROR,
-           strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLog(LOG_LEVEL_ERROR,
+             strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
+    }
 
     if (!P169_GET_TOLERANT_CALIBRATION_RANGE) {
       return false;
     }
   } else {
-    const float deviation_pct = (frequency / 5000.0f) - 100.0f;
-
-    addLog(LOG_LEVEL_INFO,
-           strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"), _sensor.readAntennaTuning(),
-                     frequency, deviation_pct));
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO,
+             strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"),
+                       _sensor.readAntennaTuning(),
+                       frequency, computeDeviationPct(frequency)));
+    }
   }
 
   // calibrate the RCO.
@@ -224,6 +235,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
 
 # ifdef ESP32
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
     // Short test checking effect of nr samples during calibration
     {
@@ -231,9 +244,9 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
       for (size_t i = 0; i < 7; ++i) {
         const uint32_t nrSamples = 2048 >> i;
-        log                     += strformat(F(",%d samples"), nrSamples);
+        log += strformat(F(",%d samples"), nrSamples);
       }
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 
     for (int antcap = 0; antcap < 16; ++antcap) {
@@ -245,7 +258,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
         const uint32_t freq = _sensor.measureResonanceFrequency(AS3935MI::display_frequency_source_t::LCO, antcap);
 
         if (freq > 0) {
-          deviation_pct[i] = (freq / 5000.0f) - 100.0f;
+          deviation_pct[i] = computeDeviationPct(freq);
         } else {
           deviation_pct[i] = 0.0f;
         }
@@ -255,7 +268,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
       for (size_t i = 0; i < 7; ++i) {
         log += strformat(F(",%.2f%%"), deviation_pct[i]);
       }
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 # endif // ifdef ESP32
@@ -308,20 +321,38 @@ uint32_t P169_data_struct::getAndClearLightningCount()
   return res;
 }
 
-void P169_data_struct::adjustForNoise()
+float P169_data_struct::computeDeviationPct(uint32_t LCO_freq)
+{
+  return (LCO_freq / 5000.0f) - 100.0f;
+}
+
+void P169_data_struct::adjustForNoise(struct EventStruct *event)
 {
   // if the noise floor threshold setting is not yet maxed out, increase the setting.
   // note that noise floor threshold events can also be triggered by an incorrect
   // analog front end setting.
-  if (_sensor.increaseNoiseFloorThreshold()) {
+  const uint8_t nf_lev = _sensor.increaseNoiseFloorThreshold();
+
+  if (nf_lev) {
     addLog(LOG_LEVEL_INFO, F("AS3935: Increased noise floor threshold"));
+
+    if (Settings.UseRules) {
+      // Adjust for noise, Send event
+      // Eventvalue:
+      // - new noise level
+      eventQueue.addMove(
+        strformat(
+          F("%s#AdustForNoise=%d"),
+          getTaskDeviceName(event->TaskIndex).c_str(),
+          nf_lev));
+    }
   }
   else {
     addLog(LOG_LEVEL_ERROR, F("AS3935: Noise floor threshold already at maximum"));
   }
 }
 
-void P169_data_struct::adjustForDisturbances()
+void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 {
   // increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance
   // against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
@@ -338,7 +369,9 @@ void P169_data_struct::adjustForDisturbances()
     if (srej < wdth)
     {
       if (_sensor.increaseSpikeRejection()) {
-        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased spike rejection ratio to: %d"), (srej + 1)));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased spike rejection ratio to: %d"), (srej + 1)));
+        }
       }
       else {
         addLog(LOG_LEVEL_ERROR, F("AS3935: Spike rejection ratio already at maximum"));
@@ -347,7 +380,9 @@ void P169_data_struct::adjustForDisturbances()
     else
     {
       if (_sensor.increaseWatchdogThreshold()) {
-        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased watchdog threshold to %d"), (wdth + 1)));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased watchdog threshold to %d"), (wdth + 1)));
+        }
       }
       else {
         addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog threshold already at maximum"));
@@ -360,18 +395,24 @@ void P169_data_struct::adjustForDisturbances()
 
     if (_sensor.validateCurrentResonanceFrequency(frequency)) {
       // Resonance frequency is still OK, so not much we can do here.
-      addLog(LOG_LEVEL_ERROR, strformat(
-               F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
-               frequency));
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        addLog(LOG_LEVEL_ERROR, strformat(
+                 F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
+                 frequency));
+      }
     } else {
-      addLog(LOG_LEVEL_INFO, strformat(
-               F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
-               frequency));
-
-      if (_sensor.calibrateResonanceFrequency(frequency)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
                  frequency));
+      }
+
+      if (_sensor.calibrateResonanceFrequency(frequency)) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(
+                   F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
+                   frequency));
+        }
 
         // calibrate the RCO.
         if (!_sensor.calibrateRCO())
@@ -388,7 +429,7 @@ void P169_data_struct::adjustForDisturbances()
   }
 }
 
-void P169_data_struct::tryIncreasedSensitivity()
+void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 {
   // increase sensor sensitivity every once in a while. _sense_increase_interval controls how quickly the code
   // attempts to increase sensitivity.
@@ -407,7 +448,9 @@ void P169_data_struct::tryIncreasedSensitivity()
       if (srej > wdth)
       {
         if (_sensor.decreaseSpikeRejection()) {
-          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased spike rejection ratio to %d"), (srej - 1)));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased spike rejection ratio to %d"), (srej - 1)));
+          }
         }
         # ifndef BUILD_NO_DEBUG
         else {
@@ -418,7 +461,9 @@ void P169_data_struct::tryIncreasedSensitivity()
       else
       {
         if (_sensor.decreaseWatchdogThreshold()) {
-          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased watchdog threshold to: %d"), (wdth - 1)));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased watchdog threshold to: %d"), (wdth - 1)));
+          }
         }
         # ifndef BUILD_NO_DEBUG
         else {
@@ -430,4 +475,63 @@ void P169_data_struct::tryIncreasedSensitivity()
   }
 }
 
-#endif // ifdef USES_P169
+# if FEATURE_CHART_JS
+void P169_data_struct::addCalibrationChart(struct EventStruct *event)
+{
+  const int valueCount = 16;
+  int   xAxisValues[valueCount]{};
+  float values[valueCount]{};
+
+  int actualValueCount = 0;
+
+  for (int i = 0; i < valueCount; ++i) {
+    const int32_t freq = _sensor.get_ant_cap_frequency(i);
+
+    if (freq > 0) {
+      values[actualValueCount]      = computeDeviationPct(freq);
+      xAxisValues[actualValueCount] = i;
+      ++actualValueCount;
+    }
+  }
+
+  String axisOptions;
+
+  {
+    ChartJS_options_scales scales;
+    scales.add({ F("x"), F("Ant_cap") });
+    scales.add({ F("y"), F("Error %") });
+    axisOptions = scales.toString();
+  }
+
+
+  add_ChartJS_chart_header(
+    F("line"),
+    F("lcoCapErrorCurve"),
+    { F("LCO Resonance Frequency") },
+    500,
+    500,
+    axisOptions);
+
+  add_ChartJS_chart_labels(
+    actualValueCount,
+    xAxisValues);
+
+  {
+    const ChartJS_dataset_config config(
+      F("Error % per cap"),
+      F("rgb(255, 99, 132)"));
+
+
+    add_ChartJS_dataset(
+      config,
+      values,
+      actualValueCount,
+      2);
+  }
+  add_ChartJS_chart_footer();
+}
+
+# endif // if FEATURE_CHART_JS
+
+
+#endif  // ifdef USES_P169
