@@ -1975,7 +1975,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  if ADAGFX_ARGUMENT_VALIDATION
         const int16_t curWin = getWindow();
 
-        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+        if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
         if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -2052,8 +2052,13 @@ enum class adagfx_getcommands_e : int8_t {
 };
 
 bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
-  bool   success = false;
-  String command = parseString(string, 1);
+  bool success = false;
+  char sep     = '.';
+
+  if ((-1 == string.indexOf(sep)) && (string.indexOf(',') >= 0)) {
+    sep = ',';
+  }
+  String command = parseString(string, 1, sep);
 
   const int command_i            = GetCommandCode(command.c_str(), adagfx_getcommands);
   const adagfx_getcommands_e cmd = static_cast<adagfx_getcommands_e>(command_i);
@@ -2070,7 +2075,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     case adagfx_getcommands_e::iswin:
     {                                   // iswin: check if windows exists
       #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
-      command = parseString(string, 2);
+      command = parseString(string, 2, sep);
       int32_t win = 0;
 
       if (validIntFromString(command, win)) {

@@ -383,7 +383,12 @@ bool P087_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
   bool success               = false;
   const uint8_t vectorlength = capture_vector.size();
-  const String  cmd          = parseString(string, 1);
+  char sep                   = '.';
+
+  if ((-1 == string.indexOf(sep)) && (string.indexOf(',') >= 0)) {
+    sep = ',';
+  }
+  const String cmd = parseString(string, 1, sep);
 
   # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, concat(F("P087: Before GetConfig: "), string));
@@ -392,7 +397,7 @@ bool P087_data_struct::plugin_get_config_value(struct EventStruct *event,
   if (equals(cmd, F("group"))) {
     int32_t par2;
 
-    if (validIntFromString(parseString(string, 2), par2) &&
+    if (validIntFromString(parseString(string, 2, sep), par2) &&
         (par2 >= 0)) {
       for (uint8_t i = 0; i < vectorlength && !success; ++i) { // Stop when we find the requested group
         # ifndef BUILD_NO_DEBUG
@@ -409,7 +414,7 @@ bool P087_data_struct::plugin_get_config_value(struct EventStruct *event,
     }
   }  else
   if (equals(cmd, F("next"))) {                                    // Get next group value after matching name
-    const String name_ = parseString(string, 2);
+    const String name_ = parseString(string, 2, sep);
 
     for (uint8_t i = 0; i < (vectorlength - 1) && !success; ++i) { // Stop when we find the requested name
                                                                    // Loops until 1 BEFORE the end of the vector!
