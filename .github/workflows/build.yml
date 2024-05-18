@@ -85,7 +85,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt-get update
-          sudo apt install binutils build-essential libffi-dev libgit2-dev setuptools
+          sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip3 install --upgrade pip
           pip install wheel
           pip install -r requirements.txt
