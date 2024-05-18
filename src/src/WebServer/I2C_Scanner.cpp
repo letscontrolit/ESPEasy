@@ -180,7 +180,7 @@ String getKnownI2Cdevice(uint8_t address) {
   switch (address)
   {
     case 0x10:
-      result += F("VEML6075");
+      result += F("VEML6075,VEML6040,VEML6030,VEML7700");
       break;
     case 0x11:
       result += F("VEML6075,I2C_MultiRelay");
@@ -263,6 +263,8 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("SHT4x");
       break;
     case 0x48:
+      result += F("PCF8591,ADS1x15,LM75A,INA219,TMP117,VEML6030");
+      break;
     case 0x4A:
     case 0x4B:
       result += F("PCF8591,ADS1x15,LM75A,INA219,TMP117");
