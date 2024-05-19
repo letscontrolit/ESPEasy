@@ -1,5 +1,7 @@
 #include "../DataStructs/PluginStats_timestamp.h"
 
+#if FEATURE_PLUGIN_STATS
+
 PluginStats_timestamp::~PluginStats_timestamp()
 {}
 
@@ -36,3 +38,5 @@ uint32_t PluginStats_timestamp::operator[](PluginStatsTimestamps_t::index_t inde
   if (index < _timestamps.size()) { return _timestamps[index]; }
   return 0u;
 }
+
+#endif // if FEATURE_PLUGIN_STATS
