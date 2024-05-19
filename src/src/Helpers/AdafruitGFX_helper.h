@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-05-18 tonhuisman: Change default argument separator for Get Config Value from comma (,) to period (.), with fall-back.
  * 2024-04-17 tonhuisman: Add AdaGFXFormDefaultFont() selector and some support functions
  *                        Add default font selection at initialization
  * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
