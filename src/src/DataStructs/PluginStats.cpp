@@ -319,7 +319,7 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 {
   if (getNrSamples() > 0) {
     addRowLabel(concat(getLabel(),  F(" Average")));
-    addHtmlFloat(getSampleAvg(), _nrDecimals);
+    addHtmlFloat(getSampleAvg(), (_nrDecimals == 0) ? 1 : _nrDecimals);
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
@@ -332,7 +332,7 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 
   if (usableValue(stdDev) && (getNrSamples() > 1)) {
     addRowLabel(concat(getLabel(),  F(" std. dev")));
-    addHtmlFloat(stdDev, _nrDecimals);
+    addHtmlFloat(stdDev, (_nrDecimals == 0) ? 1 : _nrDecimals);
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
     return true;
   }
