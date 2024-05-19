@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-05-18 tonhuisman: Change default argument separator for Get Config Value from comma (,) to period (.), with fall-back.
  * 2024-05-07 tonhuisman: Correct font related functions, add [<taskname>#font] to return the currently selected fontname
  *                        Accept numeric font Ids to select a different font: <trigger>,font,<fontId>
  *                        Show font ID in Default font selector

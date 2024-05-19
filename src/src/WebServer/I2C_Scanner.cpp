@@ -230,7 +230,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Adafruit Rotary enc, Adafruit Soil moisture");
       break;
     case 0x38:
-      result += F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc,FT62x6,Adafruit Soil moisture");
+      result += F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc,FT62x6,Adafruit Soil moisture,DHT20,AM2301B");
       break;
     case 0x39:
       result += F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc,Adafruit Soil moisture");
