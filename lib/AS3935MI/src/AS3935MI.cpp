@@ -49,7 +49,7 @@ AS3935MI::AS3935MI(uint8_t irq) :
 	calibration_mode_edgetrigger_trigger_(AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER),
 	calibration_mode_division_ratio_(AS3935MI_LCO_DIVISION_RATIO),
 	calibrated_ant_cap_(-1),
-	calibrate_all_ant_cap_(false)
+	calibrate_all_ant_cap_(true)
 {
 	// Setup these in the constructor body as these might not be a member 
 	// if AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION is not defined.

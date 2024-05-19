@@ -6,27 +6,13 @@
 #if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
+# include "../DataStructs/PluginStats_size.h"
 # include "../DataTypes/TaskIndex.h"
 
 
 # if FEATURE_CHART_JS
 #  include "../WebServer/Chart_JS_title.h"
 # endif // if FEATURE_CHART_JS
-
-# include <CircularBuffer.h>
-
-# ifndef PLUGIN_STATS_NR_ELEMENTS
-#  ifdef ESP8266
-#   ifdef USE_SECOND_HEAP
-#    define PLUGIN_STATS_NR_ELEMENTS 50
-#   else // ifdef USE_SECOND_HEAP
-#    define PLUGIN_STATS_NR_ELEMENTS 16
-#   endif // ifdef USE_SECOND_HEAP
-#  endif // ifdef ESP8266
-#  ifdef ESP32
-#   define PLUGIN_STATS_NR_ELEMENTS 250
-#  endif // ifdef ESP32
-# endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
 
 class PluginStats {
 public:
@@ -57,6 +43,18 @@ public:
     return hasPeaks() ? _maxValue : _errorValue;
   }
 
+  uint32_t getPeakLowTimestamp() const {
+    return hasPeaks() ? _minValueTimestamp : 0;
+  }
+
+  uint32_t getPeakHighTimestamp() const {
+    return hasPeaks() ? _maxValueTimestamp : 0;
+  }
+
+  uint32_t getPeakLowLocalTimestamp() const;
+
+  uint32_t getPeakHighLocalTimestamp() const;
+
   bool hasPeaks() const {
     return _maxValue >= _minValue;
   }
@@ -64,9 +62,7 @@ public:
   // Set the peaks to unset values
   void resetPeaks();
 
-  void clearSamples() {
-    _samples.clear();
-  }
+  void clearSamples();
 
   size_t getNrSamples() const {
     return _samples.size();
@@ -116,6 +112,9 @@ public:
   bool webformLoad_show_stdev(struct EventStruct *event) const;
   bool webformLoad_show_peaks(struct EventStruct *event,
                               bool                include_peak_to_peak = true) const;
+  bool webformLoad_show_peaks_timestamp(struct EventStruct *event,
+  const String& labelPrefix) const;
+
   void webformLoad_show_val(
     struct EventStruct      *event,
     const String           & label,
@@ -164,6 +163,8 @@ private:
 
   float _minValue;
   float _maxValue;
+  uint32_t _minValueTimestamp;
+  uint32_t _maxValueTimestamp;
 
   PluginStatsBuffer_t _samples;
   float _errorValue;
@@ -172,59 +173,6 @@ private:
   uint8_t _nrDecimals = 3u;
 };
 
-class PluginStats_array {
-public:
-
-  PluginStats_array() = default;
-  ~PluginStats_array();
-
-  void   initPluginStats(taskVarIndex_t taskVarIndex);
-  void   clearPluginStats(taskVarIndex_t taskVarIndex);
-
-  bool   hasStats() const;
-  bool   hasPeaks() const;
-
-  size_t nrSamplesPresent() const;
-  size_t nrPluginStats() const;
-
-  void   pushPluginStatsValues(struct EventStruct *event,
-                               bool                trackPeaks);
-
-  bool   plugin_get_config_value_base(struct EventStruct *event,
-                                      String            & string) const;
-
-  bool   plugin_write_base(struct EventStruct *event,
-                           const String      & string);
-
-  bool   webformLoad_show_stats(struct EventStruct *event) const;
-
-# if FEATURE_CHART_JS
-  void   plot_ChartJS(bool onlyJSON = false) const;
-
-  void   plot_ChartJS_scatter(
-    taskVarIndex_t                values_X_axis_index,
-    taskVarIndex_t                values_Y_axis_index,
-    const __FlashStringHelper    *id,
-    const ChartJS_title         & chartTitle,
-    const ChartJS_dataset_config& datasetConfig,
-    int                           width,
-    int                           height,
-    bool                          showAverage = true,
-    const String                & options     = EMPTY_STRING,
-    bool                          onlyJSON    = false) const;
-
-
-# endif // if FEATURE_CHART_JS
-
-
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
-
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
-
-private:
-
-  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
-};
 
 #endif // if FEATURE_PLUGIN_STATS
 #endif // ifndef HELPERS_PLUGINSTATS_H

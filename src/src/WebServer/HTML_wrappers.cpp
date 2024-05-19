@@ -283,7 +283,13 @@ void html_add_ChartJS_script() {
   #ifndef CDN_URL_CHART_JS
     #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
   #endif // ifndef CDN_URL_CHART_JS
+
+  #ifndef CDN_URL_CHART_JS_ADAPTER_DATE
+    #define CDN_URL_CHART_JS_ADAPTER_DATE "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
+  #endif
+
   addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS_ADAPTER_DATE "\"></script>"));
 }
 #endif // if FEATURE_CHART_JS
 

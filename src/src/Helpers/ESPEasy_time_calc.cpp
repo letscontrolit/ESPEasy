@@ -116,6 +116,10 @@ String formatDateString(const struct tm& ts, char delimiter) {
   return DateString;
 }
 
+String formatTimeString(const struct tm& ts)
+{
+  return formatTimeString(ts, ':', false, true);
+}
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)

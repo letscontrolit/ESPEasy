@@ -176,11 +176,11 @@ public:
 	void writePowerDown(bool enabled);
 
 	/*
-	@return true if disturbers are masked, false otherwisee. */
+	@return true if disturbers are masked, false otherwise. */
 	bool readMaskDisturbers();
 
 	/*
-	@param enabled true to mask disturbers, false otherwisee. */
+	@param enabled true to mask disturbers, false otherwise. */
 	void writeMaskDisturbers(bool enabled);
 
 	/*
@@ -250,7 +250,7 @@ public:
 
 	/*
 	calibrates the AS3935 TCRO accordingto procedure in AS3935 datasheet p36. must be done *after* calibrating the resonance frequency.
-	@return true on success, false otherwisee. */
+	@return true on success, false otherwise. */
 	bool calibrateRCO();
 
     // Set the number of samples counted during frequency measurements.
@@ -277,7 +277,7 @@ public:
 
 	/*
 	checks if the sensor is connected by attempting to read the AFE gain boost setting. 
-	@return true if the AFE gain boost setting is 0b10010 or 0b01110, false otherwisee. */
+	@return true if the AFE gain boost setting is 0b10010 or 0b01110, false otherwise. */
 	bool checkConnection();
 
 	/*
@@ -285,7 +285,7 @@ public:
 	and monitoring the pin for changing levels. IRQ pin interrupt must not be enabled during this test. 
 	The test takes approximately 14ms. the test is considered successful if more than 100 transitions have 
 	been detected (to prevent false positives). 
-	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwisee. */
+	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwise. */
 	bool checkIRQ();
 	
 	/*
@@ -541,7 +541,7 @@ public:
 private:
     int32_t calibration_frequencies_[16]{};
 	int8_t calibrated_ant_cap_ = -1;
-	bool calibrate_all_ant_cap_ = false;
+	bool calibrate_all_ant_cap_ = true;
 
 };
 

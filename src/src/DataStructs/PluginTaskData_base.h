@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/PluginStats.h"
+#include "../DataStructs/PluginStats_array.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/TaskIndex.h"

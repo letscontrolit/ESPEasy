@@ -3,6 +3,8 @@
 #if FEATURE_PLUGIN_STATS
 # include "../../_Plugin_Helper.h"
 
+# include "../Globals/TimeZone.h"
+
 # include "../Helpers/ESPEasy_math.h"
 
 # include "../WebServer/Chart_JS.h"
@@ -12,9 +14,11 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _nrDecimals(nrDecimals)
 
 {
-  _errorValueIsNaN = isnan(_errorValue);
-  _minValue        = std::numeric_limits<float>::max();
-  _maxValue        = std::numeric_limits<float>::lowest();
+  _errorValueIsNaN   = isnan(_errorValue);
+  _minValue          = std::numeric_limits<float>::max();
+  _maxValue          = std::numeric_limits<float>::lowest();
+  _minValueTimestamp = 0;
+  _maxValueTimestamp = 0;
 }
 
 bool PluginStats::push(float value)
@@ -24,15 +28,37 @@ bool PluginStats::push(float value)
 
 void PluginStats::trackPeak(float value)
 {
-  if (value > _maxValue) { _maxValue = value; }
+  if (value > _maxValue) {
+    _maxValueTimestamp = node_time.getUnixTime();
+    _maxValue          = value;
+  }
 
-  if (value < _minValue) { _minValue = value; }
+  if (value < _minValue) {
+    _minValueTimestamp = node_time.getUnixTime();
+    _minValue          = value;
+  }
+}
+
+uint32_t PluginStats::getPeakLowLocalTimestamp() const
+{
+  return time_zone.toLocal(getPeakLowTimestamp());
+}
+
+uint32_t PluginStats::getPeakHighLocalTimestamp() const
+{
+  return time_zone.toLocal(getPeakHighTimestamp());
 }
 
 void PluginStats::resetPeaks()
 {
-  _minValue = std::numeric_limits<float>::max();
-  _maxValue = std::numeric_limits<float>::lowest();
+  _minValue          = std::numeric_limits<float>::max();
+  _maxValue          = std::numeric_limits<float>::lowest();
+  _minValueTimestamp = 0;
+  _maxValueTimestamp = 0;
+}
+
+void PluginStats::clearSamples() {
+  _samples.clear();
 }
 
 float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
@@ -318,13 +344,34 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include
   if (hasPeaks() && (getNrSamples() > 1)) {
     addRowLabel(concat(getLabel(),  F(" Peak Low/High")));
     addHtmlFloat(getPeakLow(), _nrDecimals);
-    addHtml('/');
+    addHtml(F(" / "));
     addHtmlFloat(getPeakHigh(), _nrDecimals);
+
+    webformLoad_show_peaks_timestamp(event, getLabel());
 
     if (include_peak_to_peak) {
       addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));
       addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
     }
+    return true;
+  }
+  return false;
+}
+
+bool PluginStats::webformLoad_show_peaks_timestamp(struct EventStruct *event, const String& labelPrefix) const
+{
+  if (hasPeaks() && (getNrSamples() > 1)) {
+    addRowLabel(concat(labelPrefix,  F(" Peak Low/High TimeStamp")));
+    const uint32_t peakLow     = getPeakLowTimestamp();
+    const uint32_t peakHigh    = getPeakHighTimestamp();
+    const uint32_t current     = node_time.getUnixTime();
+    const bool     useTimeOnly = (current - peakLow) < 86400 && (current - peakHigh) < 86400;
+    struct tm ts;
+    breakTime(time_zone.toLocal(peakLow), ts);
+    addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
+    addHtml(F(" / "));
+    breakTime(time_zone.toLocal(peakHigh), ts);
+    addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
     return true;
   }
   return false;
@@ -376,341 +423,6 @@ bool PluginStats::usableValue(float value) const
     }
   }
   return false;
-}
-
-PluginStats_array::~PluginStats_array()
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      delete _plugin_stats[i];
-      _plugin_stats[i] = nullptr;
-    }
-  }
-}
-
-void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
-{
-  if (taskVarIndex < VARS_PER_TASK) {
-    delete _plugin_stats[taskVarIndex];
-    _plugin_stats[taskVarIndex] = nullptr;
-
-    if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
-      _plugin_stats[taskVarIndex] = new (std::nothrow) PluginStats(
-        ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
-        ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
-
-      if (_plugin_stats[taskVarIndex] != nullptr) {
-        _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
-        # if FEATURE_CHART_JS
-        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
-        # endif // if FEATURE_CHART_JS
-      }
-    }
-  }
-}
-
-void PluginStats_array::clearPluginStats(taskVarIndex_t taskVarIndex)
-{
-  if (taskVarIndex < VARS_PER_TASK) {
-    if (_plugin_stats[taskVarIndex] != nullptr) {
-      delete _plugin_stats[taskVarIndex];
-      _plugin_stats[taskVarIndex] = nullptr;
-    }
-  }
-}
-
-bool PluginStats_array::hasStats() const
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) { return true; }
-  }
-  return false;
-}
-
-bool PluginStats_array::hasPeaks() const
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if ((_plugin_stats[i] != nullptr) && _plugin_stats[i]->hasPeaks()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-size_t PluginStats_array::nrSamplesPresent() const
-{
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      return _plugin_stats[i]->getNrSamples();
-    }
-  }
-  return 0;
-}
-
-size_t PluginStats_array::nrPluginStats() const
-{
-  size_t res{};
-
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      ++res;
-    }
-  }
-  return res;
-}
-
-void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
-{
-  if (validTaskIndex(event->TaskIndex)) {
-    const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
-    const Sensor_VType sensorType = event->getSensorType();
-
-    for (size_t i = 0; i < valueCount; ++i) {
-      if (_plugin_stats[i] != nullptr) {
-        const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
-        _plugin_stats[i]->push(value);
-
-        if (trackPeaks) {
-          _plugin_stats[i]->trackPeak(value);
-        }
-      }
-    }
-  }
-}
-
-bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
-                                                     String            & string) const
-{
-  // Full value name is something like "taskvaluename.avg"
-  const String fullValueName = parseString(string, 1);
-  const String valueName     = parseString(fullValueName, 1, '.');
-
-  for (taskVarIndex_t i = 0; i < VARS_PER_TASK; i++)
-  {
-    if (_plugin_stats[i] != nullptr) {
-      // Check case insensitive, since the user entered value name can have any case.
-      if (valueName.equalsIgnoreCase(getTaskValueName(event->TaskIndex, i)))
-      {
-        return _plugin_stats[i]->plugin_get_config_value_base(event, string);
-      }
-    }
-  }
-  return false;
-}
-
-bool PluginStats_array::plugin_write_base(struct EventStruct *event, const String& string)
-{
-  bool success     = false;
-  const String cmd = parseString(string, 1);                // command
-
-  const bool resetPeaks   = equals(cmd, F("resetpeaks"));   // Command: "taskname.resetPeaks"
-  const bool clearSamples = equals(cmd, F("clearsamples")); // Command: "taskname.clearSamples"
-
-  if (resetPeaks || clearSamples) {
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-      if (_plugin_stats[i] != nullptr) {
-        if (resetPeaks) {
-          success = true;
-          _plugin_stats[i]->resetPeaks();
-        }
-
-        if (clearSamples) {
-          success = true;
-          _plugin_stats[i]->clearSamples();
-        }
-      }
-    }
-  }
-  return success;
-}
-
-bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
-{
-  bool somethingAdded = false;
-
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      if (_plugin_stats[i]->webformLoad_show_stats(event)) {
-        somethingAdded = true;
-      }
-    }
-  }
-  return somethingAdded;
-}
-
-# if FEATURE_CHART_JS
-void PluginStats_array::plot_ChartJS(bool onlyJSON) const
-{
-  const size_t nrSamples = nrSamplesPresent();
-
-  if (nrSamples == 0) { return; }
-
-  // Chart Header
-  {
-    ChartJS_options_scales scales;
-    scales.add({ F("x") });
-
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-      if (_plugin_stats[i] != nullptr) {
-        ChartJS_options_scale scaleOption(
-          _plugin_stats[i]->_ChartJS_dataset_config.displayConfig,
-          _plugin_stats[i]->getLabel());
-        scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
-        scales.add(scaleOption);
-
-        _plugin_stats[i]->_ChartJS_dataset_config.axisID = scaleOption.axisID;
-      }
-    }
-
-    scales.update_Yaxis_TickCount();
-
-    add_ChartJS_chart_header(
-      F("line"),
-      F("TaskStatsChart"),
-      {},
-      500 + (70 * (scales.nr_Y_scales() - 1)),
-      500,
-      scales.toString(),
-      nrSamples,
-      onlyJSON);
-  }
-
-
-  // Add labels
-  addHtml(F("\"labels\":["));
-
-  for (size_t i = 0; i < nrSamples; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtmlInt(i);
-  }
-  addHtml(F("],\n\"datasets\":["));
-
-
-  // Data sets
-  bool first = true;
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      if (!first) {
-        addHtml(',');
-      }
-      first = false;
-      _plugin_stats[i]->plot_ChartJS_dataset();
-    }
-  }
-  add_ChartJS_chart_footer(onlyJSON);
-}
-
-void PluginStats_array::plot_ChartJS_scatter(
-  taskVarIndex_t                values_X_axis_index,
-  taskVarIndex_t                values_Y_axis_index,
-  const __FlashStringHelper    *id,
-  const ChartJS_title         & chartTitle,
-  const ChartJS_dataset_config& datasetConfig,
-  int                           width,
-  int                           height,
-  bool                          showAverage,
-  const String                & options,
-  bool                          onlyJSON) const
-{
-  const PluginStats *stats_X = getPluginStats(values_X_axis_index);
-  const PluginStats *stats_Y = getPluginStats(values_Y_axis_index);
-
-  if ((stats_X == nullptr) || (stats_Y == nullptr)) {
-    return;
-  }
-
-  if ((stats_X->getNrSamples() < 2) || (stats_Y->getNrSamples() < 2)) {
-    return;
-  }
-
-  String axisOptions;
-
-  {
-    ChartJS_options_scales scales;
-    scales.add({ F("x"), stats_X->getLabel() });
-    scales.add({ F("y"), stats_Y->getLabel() });
-    axisOptions = scales.toString();
-  }
-
-
-  const size_t nrSamples = stats_X->getNrSamples();
-
-  add_ChartJS_chart_header(
-    F("scatter"),
-    id,
-    chartTitle,
-    width,
-    height,
-    axisOptions,
-    nrSamples,
-    onlyJSON);
-
-  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
-  addHtml(F("\"labels\":["));
-
-  for (size_t i = 0; i < nrSamples; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtmlInt(i);
-  }
-  addHtml(F("],\n\"datasets\":["));
-
-  // Long/Lat Coordinates
-  add_ChartJS_dataset_header(datasetConfig);
-
-  // Add scatter data
-  for (size_t i = 0; i < nrSamples; ++i) {
-    const float valX = (*stats_X)[i];
-    const float valY = (*stats_Y)[i];
-    add_ChartJS_scatter_data_point(valX, valY, 6);
-  }
-
-  add_ChartJS_dataset_footer(F("\"showLine\":true"));
-
-  if (showAverage) {
-    // Add single point showing the average
-    addHtml(',');
-    add_ChartJS_dataset_header(
-    {
-      F("Average"),
-      F("#0F4C5C") });
-
-    {
-      const float valX = stats_X->getSampleAvg();
-      const float valY = stats_Y->getSampleAvg();
-      add_ChartJS_scatter_data_point(valX, valY, 6);
-    }
-    add_ChartJS_dataset_footer(F("\"pointRadius\":6,\"pointHoverRadius\":10"));
-  }
-  add_ChartJS_chart_footer(onlyJSON);
-}
-
-# endif // if FEATURE_CHART_JS
-
-
-PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex) const
-{
-  if ((taskVarIndex < VARS_PER_TASK)) {
-    return _plugin_stats[taskVarIndex];
-  }
-  return nullptr;
-}
-
-PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex)
-{
-  if ((taskVarIndex < VARS_PER_TASK)) {
-    return _plugin_stats[taskVarIndex];
-  }
-  return nullptr;
 }
 
 #endif // if FEATURE_PLUGIN_STATS

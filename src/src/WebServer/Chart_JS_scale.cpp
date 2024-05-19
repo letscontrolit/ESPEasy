@@ -54,10 +54,15 @@ String ChartJS_options_scale::toString() const
       case Position::Left:   positionStr = F("left"); break;
     }
 
-    String ticksStr;
+    String extraOptions;
+    if (typeStr.equalsIgnoreCase(F("time")) || typeStr.equalsIgnoreCase(F("timeseries"))) {
+      // Make sure to use 24h time notation.
+      extraOptions += F(",\"time\":{\"displayFormats\":{\"millisecond\":'HH:mm:ss.SSS',\"second\":'HH:mm:ss',\"minute\":'HH:mm:ss',\"hour\":'HH:mm',\"day\":'dd-MMM',\"month\":'MMM-yyyy',\"year\":'yyyy'},\"tooltipFormat\":'yyyy-MM-dd HH:mm:ss'}");
+//      extraOptions += F(",\"time\":{\"displayFormats\":{\"hour\": 'HH'}}");
+    }
 
     if (tickCount > 0) {
-      ticksStr = strformat(F(",\"ticks\":{\"count\":%d}"), tickCount);
+      extraOptions += strformat(F(",\"ticks\":{\"count\":%d}"), tickCount);
     }
     return strformat(
       F("\"%s\":{\"display\":%s,\"type\":\"%s\",\"position\":\"%s\",\"title\":%s,\"weight\":%d%s}"),
@@ -67,7 +72,7 @@ String ChartJS_options_scale::toString() const
       positionStr.c_str(),
       axisTitle.toString().c_str(),
       weight,
-      ticksStr.c_str());
+      extraOptions.c_str());
   }
   return EMPTY_STRING;
 }

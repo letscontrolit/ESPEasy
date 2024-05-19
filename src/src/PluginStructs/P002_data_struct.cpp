@@ -342,6 +342,9 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
     if (stats->hasPeaks()) {
       formatADC_statistics(F("ADC Peak Low"),  stats->getPeakLow(),  true);
       formatADC_statistics(F("ADC Peak High"), stats->getPeakHigh(), true);
+
+      stats->webformLoad_show_peaks_timestamp(event, F("ADC"));
+
       somethingAdded = true;
     }
   }

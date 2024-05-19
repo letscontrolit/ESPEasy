@@ -103,7 +103,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = concat(F("IRQ: "),  formatGpioLabel(P169_IRQ_PIN, false));
@@ -155,7 +154,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_WEBFORM_SAVE:
     {
       P169_I2C_ADDRESS = getFormItemInt(F("i2c_addr"));
@@ -174,7 +172,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-
 
     case PLUGIN_INIT:
     {
@@ -199,6 +196,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 0, -1.0f);
           UserVar.setFloat(event->TaskIndex, 1, 0.0f);
           UserVar.setFloat(event->TaskIndex, 2, 0.0f);
+          P169_data->clearStatistics();
 
           if (!P169_GET_SEND_ONLY_ON_LIGHTNING) {
             success = true;

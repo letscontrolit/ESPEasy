@@ -86,6 +86,10 @@ public:
 
   uint32_t getAndClearLightningCount();
 
+
+  // Clear lightning distance estimation statistics
+	void clearStatistics();
+
 private:
 
   static float computeDeviationPct(uint32_t LCO_freq);

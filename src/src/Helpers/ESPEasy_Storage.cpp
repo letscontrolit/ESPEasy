@@ -770,6 +770,7 @@ void afterloadSettings() {
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
+  node_time.applyTimeZone();
   CheckRunningServices(); // To update changes in hostname.
 }
 

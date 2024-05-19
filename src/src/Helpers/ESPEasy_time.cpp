@@ -585,6 +585,12 @@ String ESPEasy_time::getTimeZoneOffsetString() {
   tzoffset += String(valueString);
   return tzoffset;
 }
+
+ void ESPEasy_time::applyTimeZone()
+ {
+   time_zone.applyTimeZone(getUnixTime());
+ }
+
 /********************************************************************************************\
    Date/Time string formatters
  \*********************************************************************************************/

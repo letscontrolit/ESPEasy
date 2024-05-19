@@ -321,6 +321,11 @@ uint32_t P169_data_struct::getAndClearLightningCount()
   return res;
 }
 
+void P169_data_struct::clearStatistics()
+{
+  _sensor.clearStatistics();
+}
+
 float P169_data_struct::computeDeviationPct(uint32_t LCO_freq)
 {
   return (LCO_freq / 5000.0f) - 100.0f;
@@ -498,11 +503,10 @@ void P169_data_struct::addCalibrationChart(struct EventStruct *event)
 
   {
     ChartJS_options_scales scales;
-    scales.add({ F("x"), F("Ant_cap") });
-    scales.add({ F("y"), F("Error %") });
+    scales.add({ F("x"), F("Antenna capacitor") });
+    scales.add({ F("y"), F("Error (%)") });
     axisOptions = scales.toString();
   }
-
 
   add_ChartJS_chart_header(
     F("line"),
@@ -518,7 +522,7 @@ void P169_data_struct::addCalibrationChart(struct EventStruct *event)
 
   {
     const ChartJS_dataset_config config(
-      F("Error % per cap"),
+      F("Error %"),
       F("rgb(255, 99, 132)"));
 
 
