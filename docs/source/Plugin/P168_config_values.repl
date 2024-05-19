@@ -1,0 +1,14 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#Gain]``
+    ","
+    | Returns the current **Gain factor** of the sensor, not reflected in the settings. Useful when the **Lux Read-method** is set to *Auto*.
+    "
+    "
+    | ``[<taskname>#Integration]``
+    ","
+    | Returns the current **Integration time** of the sensor, not reflected in the settings. Useful when the **Lux Read-method** is set to *Auto*.
+    "

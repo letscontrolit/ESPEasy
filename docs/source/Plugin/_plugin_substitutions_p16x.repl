@@ -36,3 +36,16 @@
 .. |P166_maintainer| replace:: `tonhuisman`
 .. |P166_compileinfo| replace:: `.`
 .. |P166_usedlibraries| replace:: `modified version of DFRobot_GP8403`
+
+.. |P168_name| replace:: :cyan:`VEML6030/VEML7700`
+.. |P168_type| replace:: :cyan:`Light/Lux`
+.. |P168_typename| replace:: :cyan:`Light/Lux - VEML6030/VEML7700`
+.. |P168_porttype| replace:: `.`
+.. |P168_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P168_github| replace:: P168_VEML6030_7700.ino
+.. _P168_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P168_VEML6030_7700.ino
+.. |P168_usedby| replace:: `.`
+.. |P168_shortinfo| replace:: `VEML6030/VEML7700 Light/Lux sensor`
+.. |P168_maintainer| replace:: `tonhuisman`
+.. |P168_compileinfo| replace:: `.`
+.. |P168_usedlibraries| replace:: `modified version of Adafruit_VEML7700`
