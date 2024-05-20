@@ -114,8 +114,8 @@ public:
 
   ~P167_data_struct();
 
-  void        checkPin_interrupt(void);
-  static void Plugin_167_interrupt(P167_data_struct *self);
+  void IRAM_ATTR        checkPin_interrupt(void);
+  static void IRAM_ATTR Plugin_167_interrupt(P167_data_struct *self);
 
   /////////////////////////////////////////////////////////
   // This method runs the FSM step by step on each call

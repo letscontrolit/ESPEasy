@@ -1217,7 +1217,7 @@ void P167_data_struct::clearSuccCount() {
   _readingsuccesscount = 0;
 }
 
-void IRAM_ATTR P167_data_struct::checkPin_interrupt() {
+void P167_data_struct::checkPin_interrupt() {
   monpinValue              = monpinValue + 1; // volatile
   monpinLastTransitionTime = getMicros64();
 
@@ -1239,7 +1239,7 @@ void P167_data_struct::startCleaning() {
 
 // When using interrupts we have to call the library entry point
 // whenever an interrupt is triggered
-void IRAM_ATTR P167_data_struct::Plugin_167_interrupt(P167_data_struct *self) {
+void P167_data_struct::Plugin_167_interrupt(P167_data_struct *self) {
   // addLog(LOG_LEVEL_ERROR, F("********* SEN5X: interrupt apear!"));
   if (self) {
     self->checkPin_interrupt();
