@@ -324,13 +324,13 @@ public:
 	bool increaseSpikeRejection();
 
     // Ideally 500 kHz signal divided by the set division ratio
-	void displayLCO_on_IRQ(bool enable);
+	void displayLcoOnIrq(bool enable);
 
     // Ideally 1.1 MHz signal
-	void displaySRCO_on_IRQ(bool enable);
+	void displaySrcoOnIrq(bool enable);
 
     // Ideally 32.768 kHz signal
-	void displayTRCO_on_IRQ(bool enable);
+	void displayTrcoOnIrq(bool enable);
 
 
 	bool validateCurrentResonanceFrequency(int32_t& frequency);
@@ -463,11 +463,11 @@ public:
 		calibration
 	};
 
-	interrupt_mode_t      get_interruptMode() const { return mode_; }
+	interrupt_mode_t      getInterruptMode() const { return mode_; }
 
-	uint32_t              get_interruptTimestamp() const;
+	uint32_t              getInterruptTimestamp() const;
 
-	void                  set_interruptMode(interrupt_mode_t mode);
+	void                  setInterruptMode(interrupt_mode_t mode);
 
 private:
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
@@ -497,8 +497,8 @@ private:
 
 
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
-	static void IRAM_ATTR interrupt_ISR(AS3935MI *self);
-	static void IRAM_ATTR calibrate_ISR(AS3935MI *self);
+	static void IRAM_ATTR interruptISR(AS3935MI *self);
+	static void IRAM_ATTR calibrateISR(AS3935MI *self);
 
 	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
 	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
@@ -511,30 +511,30 @@ private:
 	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
 
 #else
-	static void IRAM_ATTR interrupt_ISR();
-	static void IRAM_ATTR calibrate_ISR();
+	static void IRAM_ATTR interruptISR();
+	static void IRAM_ATTR calibrateISR();
 #endif
     
 
 public:
     // Return the result of the last frequency measurement of the given tuning cap index
 	// @retval -1 when tuningCapacitance is out of range
-	int32_t get_ant_cap_frequency(uint8_t tuningCapacitance) const;
+	int32_t getAntCapFrequency(uint8_t tuningCapacitance) const;
 
 	// Return the best ant_cap found during last LCO calibration
 	// @retval -1 when no LCO calibration was performed
-	int8_t  get_calibrated_ant_cap() const {
+	int8_t  getCalibratedAntCap() const {
 		return calibrated_ant_cap_;
 	}
 
     // When set to calibrate all ant_cap indices, the LCO calibration is 
 	// effectively set to perform a 'slow' calibration.
 	// All caps will be tried and also using more samples.
-	void set_calibrate_all_ant_cap(bool calibrate_all) {
+	void setCalibrateAllAntCap(bool calibrate_all) {
 		calibrate_all_ant_cap_ = calibrate_all;
 	}
 
-	bool get_calibrate_all_ant_cap() const {
+	bool getCalibrateAllAntCap() const {
 		return calibrate_all_ant_cap_;
 	}
 

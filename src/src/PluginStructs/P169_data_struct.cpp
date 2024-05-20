@@ -28,9 +28,9 @@ P169_data_struct::~P169_data_struct()
 
 bool P169_data_struct::loop(struct EventStruct *event)
 {
-  if (_sensor.get_interruptMode() == AS3935MI::interrupt_mode_t::normal) {
+  if (_sensor.getInterruptMode() == AS3935MI::interrupt_mode_t::normal) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
-    const uint32_t timestamp = _sensor.get_interruptTimestamp();
+    const uint32_t timestamp = _sensor.getInterruptTimestamp();
 
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
       if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
@@ -119,10 +119,10 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 {
   addFormSubHeader(F("Current Sensor Data"));
   addRowLabel(F("Calibration"));
-  const int8_t ant_cap = _sensor.get_calibrated_ant_cap();
+  const int8_t ant_cap = _sensor.getCalibratedAntCap();
 
   if (ant_cap != -1) {
-    const float deviation_pct = computeDeviationPct(_sensor.get_ant_cap_frequency(ant_cap));
+    const float deviation_pct = computeDeviationPct(_sensor.getAntCapFrequency(ant_cap));
 
     if (fabs(deviation_pct) < (100 * AS3935MI_ALLOWED_DEVIATION)) {
       addEnabled(true);
@@ -147,7 +147,7 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 # else // if FEATURE_CHART_JS
 
   for (uint8_t i = 0; i < 16; ++i) {
-    const int32_t freq = _sensor.get_ant_cap_frequency(i);
+    const int32_t freq = _sensor.getAntCapFrequency(i);
 
     if (i != 0) {
       addHtml(',');
@@ -174,7 +174,7 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 
 bool P169_data_struct::plugin_init(struct EventStruct *event)
 {
-  _sensor.set_interruptMode(AS3935MI::interrupt_mode_t::detached);
+  _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::detached);
 
   if (!(_sensor.begin() && _sensor.checkConnection()))
   {
@@ -196,7 +196,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // of the sensor.
   int32_t frequency = 0;
 
-  _sensor.set_calibrate_all_ant_cap(P169_GET_SLOW_LCO_CALIBRATION);
+  _sensor.setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
 
   if (!P169_GET_SLOW_LCO_CALIBRATION) {
     _sensor.setFrequencyMeasureNrSamples(256);
@@ -225,13 +225,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   if (!_sensor.calibrateRCO())
   {
     // stop displaying LCO on IRQ
-    _sensor.displayLCO_on_IRQ(false);
+    _sensor.displayLcoOnIrq(false);
     addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
     return false;
   }
 
   // stop displaying LCO on IRQ
-  _sensor.displayLCO_on_IRQ(false);
+  _sensor.displayLcoOnIrq(false);
   addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
 
 # ifdef ESP32
@@ -291,7 +291,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
   _sensor.writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
 
-  _sensor.set_interruptMode(AS3935MI::interrupt_mode_t::normal);
+  _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::normal);
   return true;
 }
 
@@ -430,7 +430,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 
       // FIXME TD-er: Should we do anything else here?
     }
-    _sensor.set_interruptMode(AS3935MI::interrupt_mode_t::normal);
+    _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::normal);
   }
 }
 
@@ -490,7 +490,7 @@ void P169_data_struct::addCalibrationChart(struct EventStruct *event)
   int actualValueCount = 0;
 
   for (int i = 0; i < valueCount; ++i) {
-    const int32_t freq = _sensor.get_ant_cap_frequency(i);
+    const int32_t freq = _sensor.getAntCapFrequency(i);
 
     if (freq > 0) {
       values[actualValueCount]      = computeDeviationPct(freq);

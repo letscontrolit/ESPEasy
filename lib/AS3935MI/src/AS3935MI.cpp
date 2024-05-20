@@ -79,7 +79,7 @@ bool AS3935MI::begin()
 
 	writePowerDown(false);
 
-	set_interruptMode(AS3935MI::interrupt_mode_t::detached);
+	setInterruptMode(AS3935MI::interrupt_mode_t::detached);
 	resetToDefaults();
 
 	return true;
@@ -251,13 +251,13 @@ bool AS3935MI::calibrateRCO()
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
 	//expose 1.1 MHz SRCO clock on IRQ pin
-	displaySRCO_on_IRQ(true);
+	displaySrcoOnIrq(true);
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	displaySRCO_on_IRQ(false);
+	displaySrcoOnIrq(false);
 
 	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = (readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_ALL) == 0b10);
@@ -485,7 +485,7 @@ bool AS3935MI::increaseSpikeRejection()
 	return true;
 }
 
-void AS3935MI::displayLCO_on_IRQ(bool enable)
+void AS3935MI::displayLcoOnIrq(bool enable)
 {
 	// With display of any frequency, the device may sometimes report NAK when reading registers
 	// So for this reason we're now writing directly and not try to read first, patch bits, write
@@ -496,7 +496,7 @@ void AS3935MI::displayLCO_on_IRQ(bool enable)
 	writeRegister(AS3935_REGISTER_DISP_XXX, value);
 }
 
-void AS3935MI::displaySRCO_on_IRQ(bool enable)
+void AS3935MI::displaySrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
@@ -506,7 +506,7 @@ void AS3935MI::displaySRCO_on_IRQ(bool enable)
 }
 
 
-void AS3935MI::displayTRCO_on_IRQ(bool enable)
+void AS3935MI::displayTrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
@@ -620,7 +620,7 @@ uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 
 uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance)
 {
-	set_interruptMode(interrupt_mode_t::detached);
+	setInterruptMode(interrupt_mode_t::detached);
 
 //	delayMicroseconds(AS3935_TIMEOUT);
 
@@ -634,7 +634,7 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 			if (!writeAntennaTuning(tuningCapacitance)) {
 				return 0u;
 			}
-			displayLCO_on_IRQ(true);
+			displayLcoOnIrq(true);
 			writeDivisionRatio(calibration_mode_division_ratio_);
 			divider = 16 << static_cast<uint32_t>(calibration_mode_division_ratio_);
 			sourceFreq_kHz = 500;
@@ -642,16 +642,16 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 
 			// TD-er: Do not try to measure the 1.1 MHz signal as the ESP32 will not be able to keep up with all the interrupts.
 		case display_frequency_source_t::SRCO:
-			displaySRCO_on_IRQ(true);
+			displaySrcoOnIrq(true);
 			sourceFreq_kHz = 1100;
 			break;
 		case display_frequency_source_t::TRCO:
-			displayTRCO_on_IRQ(true);
+			displayTrcoOnIrq(true);
 			sourceFreq_kHz = 33;
 			break;
 	}
 
-	set_interruptMode(interrupt_mode_t::calibration);
+	setInterruptMode(interrupt_mode_t::calibration);
 
 	// Need to give enough time for the sensor to set the LCO signal on the IRQ pin
 	delayMicroseconds(AS3935_TIMEOUT);
@@ -676,10 +676,10 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	}
 
 	// Need to disable interrupts first or else sending I2C commands may fail
-	set_interruptMode(interrupt_mode_t::detached);
+	setInterruptMode(interrupt_mode_t::detached);
 
 	// stop displaying LCO on IRQ
-	displayLCO_on_IRQ(false);
+	displayLcoOnIrq(false);
 
 	if (source == display_frequency_source_t::LCO) {
 		calibration_frequencies_[tuningCapacitance] = freq;
@@ -688,11 +688,11 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	return freq;
 }
 
-uint32_t AS3935MI::get_interruptTimestamp() const { 
+uint32_t AS3935MI::getInterruptTimestamp() const { 
 	return interrupt_timestamp_; 
 }
 
-void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
+void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 	if (mode_ == mode) {
 		return;
 	}
@@ -717,12 +717,12 @@ void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 		case interrupt_mode_t::normal:
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 			attachInterruptArg(digitalPinToInterrupt(irq_),
-							   reinterpret_cast<void (*)(void *)>(interrupt_ISR),
+							   reinterpret_cast<void (*)(void *)>(interruptISR),
 							   this,
 							   RISING);
 #else
 			attachInterrupt(digitalPinToInterrupt(irq_),
-							interrupt_ISR,
+							interruptISR,
 					   		RISING);
 #endif
 			break;
@@ -731,12 +731,12 @@ void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 			calibration_end_micros_	 = 0;
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 			attachInterruptArg(digitalPinToInterrupt(irq_),
-							   reinterpret_cast<void (*)(void *)>(calibrate_ISR),
+							   reinterpret_cast<void (*)(void *)>(calibrateISR),
 							   this,
 							   calibration_mode_edgetrigger_trigger_);
 #else
 			attachInterrupt(digitalPinToInterrupt(irq_),
-							calibrate_ISR,
+							calibrateISR,
 					   		calibration_mode_edgetrigger_trigger_);
 #endif
 			break;
@@ -744,11 +744,11 @@ void AS3935MI::set_interruptMode(interrupt_mode_t mode) {
 }
 
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
-void IRAM_ATTR AS3935MI::interrupt_ISR(AS3935MI *self) {
+void IRAM_ATTR AS3935MI::interruptISR(AS3935MI *self) {
 	self->interrupt_timestamp_ = millis();
 }
 
-void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
+void IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
 	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
 	if (self->interrupt_count_ < self->nr_calibration_samples_) {
 		++self->interrupt_count_;
@@ -758,11 +758,11 @@ void IRAM_ATTR AS3935MI::calibrate_ISR(AS3935MI *self) {
 	}
 }
 #else
-void IRAM_ATTR AS3935MI::interrupt_ISR() {
+void IRAM_ATTR AS3935MI::interruptISR() {
 	interrupt_timestamp_ = millis();
 }
 
-void IRAM_ATTR AS3935MI::calibrate_ISR() {
+void IRAM_ATTR AS3935MI::calibrateISR() {
 	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
 	if (interrupt_count_ < nr_calibration_samples_) {
 		++interrupt_count_;
@@ -773,7 +773,7 @@ void IRAM_ATTR AS3935MI::calibrate_ISR() {
 }
 #endif
 
-int32_t  AS3935MI::get_ant_cap_frequency(uint8_t tuningCapacitance) const
+int32_t  AS3935MI::getAntCapFrequency(uint8_t tuningCapacitance) const
 {
 	constexpr unsigned int nrElements = sizeof(calibration_frequencies_) / sizeof(calibration_frequencies_[0]);
 	if (tuningCapacitance < nrElements) {
