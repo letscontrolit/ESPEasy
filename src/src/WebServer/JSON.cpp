@@ -122,7 +122,7 @@ void handle_json()
   bool showNodes           = true;
   #endif
   #if FEATURE_PLUGIN_STATS
-  bool showPluginStats     = isFormItemChecked(F("showpluginstats"));
+  bool showPluginStats     = getFormItemInt(F("showpluginstats"), 0) != 0;
   #endif
 
   if (equals(webArg(F("view")), F("sensorupdate"))) {
@@ -137,7 +137,7 @@ void handle_json()
     showNodes           = false;
     #endif
     #if FEATURE_PLUGIN_STATS
-    showPluginStats     = false;
+    showPluginStats     = hasArg(F("showpluginstats"));
     #endif
   }
 

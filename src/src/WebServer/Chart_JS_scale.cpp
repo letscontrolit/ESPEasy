@@ -57,8 +57,7 @@ String ChartJS_options_scale::toString() const
     String extraOptions;
     if (typeStr.equalsIgnoreCase(F("time")) || typeStr.equalsIgnoreCase(F("timeseries"))) {
       // Make sure to use 24h time notation.
-      extraOptions += F(",\"time\":{\"displayFormats\":{\"millisecond\":'HH:mm:ss.SSS',\"second\":'HH:mm:ss',\"minute\":'HH:mm:ss',\"hour\":'HH:mm',\"day\":'dd-MMM',\"month\":'MMM-yyyy',\"year\":'yyyy'},\"tooltipFormat\":'yyyy-MM-dd HH:mm:ss'}");
-//      extraOptions += F(",\"time\":{\"displayFormats\":{\"hour\": 'HH'}}");
+      extraOptions += F(",\"time\":{\"displayFormats\":{\"millisecond\":\"HH:mm:ss.SSS\",\"second\":\"HH:mm:ss\",\"minute\":\"HH:mm:ss\",\"hour\":\"HH:mm\",\"day\":\"dd-MMM\",\"month\":\"MMM-yyyy\",\"year\":\"yyyy\"},\"tooltipFormat\":\"yyyy-MM-dd HH:mm:ss\"}");
     }
 
     if (tickCount > 0) {
