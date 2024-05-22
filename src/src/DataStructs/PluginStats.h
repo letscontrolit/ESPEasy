@@ -7,6 +7,7 @@
 
 # include "../DataStructs/ChartJS_dataset_config.h"
 # include "../DataStructs/PluginStats_size.h"
+# include "../DataStructs/PluginStats_timestamp.h"
 # include "../DataTypes/TaskIndex.h"
 
 
@@ -22,6 +23,13 @@ public:
   PluginStats() = delete;
   PluginStats(uint8_t nrDecimals,
               float   errorValue);
+
+  ~PluginStats();
+
+  void setPluginStats_timestamp(PluginStats_timestamp *plugin_stats_timestamps)
+  {
+    _plugin_stats_timestamps = plugin_stats_timestamps;
+  }
 
 
   // Add a sample to the _sample buffer
@@ -80,6 +88,16 @@ public:
   float getSampleStdDev() const {
     return getSampleStdDev(_samples.size());
   }
+
+  // Compute average over all stored values, taking timestamp into account.
+  // Returns average per second.
+  float getSampleAvg_time(uint32_t& totalDuration) const {
+    return getSampleAvg_time(_samples.size(), totalDuration);
+  }
+
+  // Compute average over last N stored values, taking timestamp into account.
+  // Returns average per second.
+  float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration) const;
 
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
@@ -171,6 +189,8 @@ private:
   bool _errorValueIsNaN;
 
   uint8_t _nrDecimals = 3u;
+
+  PluginStats_timestamp *_plugin_stats_timestamps = nullptr;
 };
 
 

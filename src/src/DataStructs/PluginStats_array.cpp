@@ -55,6 +55,9 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
         # endif // if FEATURE_CHART_JS
+        if (_plugin_stats_timestamps != nullptr) {
+            _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
+        }
       }
     }
   }
@@ -62,6 +65,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
   if (hasStats()) {
     if (_plugin_stats_timestamps == nullptr) {
       _plugin_stats_timestamps = new (std::nothrow) PluginStats_timestamp();
+      for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+            _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
+        }
+  
     }
   }
 }

@@ -11,7 +11,8 @@
 
 PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _errorValue(errorValue),
-  _nrDecimals(nrDecimals)
+  _nrDecimals(nrDecimals),
+  _plugin_stats_timestamps(nullptr)
 
 {
   _errorValueIsNaN   = isnan(_errorValue);
@@ -19,6 +20,11 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _maxValue          = std::numeric_limits<float>::lowest();
   _minValueTimestamp = 0;
   _maxValueTimestamp = 0;
+}
+
+PluginStats::~PluginStats()
+{
+  _plugin_stats_timestamps = nullptr;
 }
 
 bool PluginStats::push(float value)
@@ -84,6 +90,52 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
 
   if (samplesUsed == 0) { return _errorValue; }
   return sum / samplesUsed;
+}
+
+float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration) const
+{
+  totalDuration = 0u;
+
+  if ((_samples.size() == 0) || (_plugin_stats_timestamps == nullptr)) {
+    return _errorValue;
+  }
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  if (lastNrSamples < _samples.size()) {
+    i = _samples.size() - lastNrSamples;
+  }
+
+  uint32_t lastTimestamp   = 0;
+  float    lastValue       = 0.0f;
+  bool     lastValueUsable = false;
+  float    sum             = 0.0f;
+
+  for (; i < _samples.size(); ++i) {
+    const float sample(_samples[i]);
+    const uint32_t curTimestamp   = (*_plugin_stats_timestamps)[i];
+    const bool     curValueUsable = usableValue(sample);
+
+    if ((lastTimestamp != 0) && lastValueUsable) {
+      const uint32_t duration = abs(timeDiff(lastTimestamp, curTimestamp));
+
+      if (curValueUsable) {
+        // Old and new value usable, take average of this period.
+        sum += ((lastValue + sample) / 2.0f) * duration;
+      } else {
+        // New value is not usable, so just add the last value for the duration.
+        sum += lastValue * duration;
+      }
+      totalDuration += duration;
+    }
+
+    lastValueUsable = curValueUsable;
+    lastTimestamp   = curTimestamp;
+    lastValue       = sample;
+  }
+
+  if (totalDuration == 0) { return _errorValue; }
+  return sum / totalDuration;
 }
 
 float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
@@ -321,6 +373,17 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
     addRowLabel(concat(getLabel(),  F(" Average")));
     addHtmlFloat(getSampleAvg(), (_nrDecimals == 0) ? 1 : _nrDecimals);
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
+
+    if (_plugin_stats_timestamps != nullptr) {
+      uint32_t totalDuration  = 0u;
+      const float avg_per_sec = getSampleAvg_time(totalDuration);
+
+      if (totalDuration > 0) {
+        addRowLabel(concat(getLabel(),  F(" Average / sec")));
+        addHtmlFloat(avg_per_sec, (_nrDecimals == 0) ? 1 : _nrDecimals);
+        addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond(totalDuration).c_str()));
+      }
+    }
     return true;
   }
   return false;

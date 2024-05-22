@@ -1947,6 +1947,10 @@ To create/register a plugin, you have to :
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
 
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -2008,15 +2012,29 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef CONTROLLER_SET_COLLECTION
+  #ifndef USES_C011
     #define USES_C011   // Generic HTTP Advanced
+  #endif
+  #ifndef USES_C012
     #define USES_C012   // Blynk HTTP
+  #endif
+  #ifndef USES_C014
     #define USES_C014   // homie 3 & 4dev MQTT
+  #endif
+  #ifndef USES_C015
     //#define USES_C015   // Blynk
+  #endif
+  #ifndef USES_C017
     #define USES_C017   // Zabbix
-    #ifdef ESP32
+  #endif
+  #ifdef ESP32
+    #ifndef USES_C018
       #define USES_C018 // TTN RN2483
     #endif
+  #endif
+  #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
+  #endif
 #endif
 
 
