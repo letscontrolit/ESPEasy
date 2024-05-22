@@ -1291,6 +1291,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
+        
       }
       #endif // if FEATURE_CHART_JS
 

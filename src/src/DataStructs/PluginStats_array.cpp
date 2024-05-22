@@ -55,8 +55,9 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
         # endif // if FEATURE_CHART_JS
+
         if (_plugin_stats_timestamps != nullptr) {
-            _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
+          _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
         }
       }
     }
@@ -65,10 +66,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
   if (hasStats()) {
     if (_plugin_stats_timestamps == nullptr) {
       _plugin_stats_timestamps = new (std::nothrow) PluginStats_timestamp();
+
       for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-            _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
-        }
-  
+        _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
+      }
     }
   }
 }
@@ -128,6 +129,14 @@ size_t PluginStats_array::nrPluginStats() const
     }
   }
   return res;
+}
+
+uint32_t PluginStats_array::getFullPeriodInSec() const
+{
+  if (_plugin_stats_timestamps == nullptr) {
+    return 0u;
+  }
+  return _plugin_stats_timestamps->getFullPeriodInSec();
 }
 
 void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
@@ -204,6 +213,19 @@ bool PluginStats_array::plugin_write_base(struct EventStruct *event, const Strin
 bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
 {
   bool somethingAdded = false;
+
+  const uint32_t duration  = getFullPeriodInSec();
+  const uint32_t nrSamples = nrSamplesPresent();
+
+  if ((duration > 0) && (nrSamples > 1)) {
+    addRowLabel(F("Total Duration"));
+    addHtml(strformat(F("%s (%u sec)"), secondsToDayHourMinuteSecond(duration).c_str(), duration));
+    addRowLabel(F("Avg Rate"));
+    addHtmlFloat(static_cast<float>(duration) / static_cast<float>(nrSamples - 1), 2);
+    addUnit(F("sec/sample"));
+    addFormSeparator(4);
+    somethingAdded = true;
+  }
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {

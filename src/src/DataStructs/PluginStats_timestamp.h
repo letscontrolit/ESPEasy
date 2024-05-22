@@ -22,6 +22,10 @@ public:
 
   uint32_t getTimestamp(int lastNrSamples) const;
 
+  // Compute the duration between first and last sample in seconds
+  // For 0 or 1 samples, the period will be 0 seconds.
+  uint32_t getFullPeriodInSec() const;
+
   uint32_t operator[](PluginStatsTimestamps_t::index_t index) const;
 
 private:

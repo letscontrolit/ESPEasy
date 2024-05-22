@@ -33,6 +33,21 @@ uint32_t PluginStats_timestamp::getTimestamp(int lastNrSamples) const
   return 0u;
 }
 
+uint32_t PluginStats_timestamp::getFullPeriodInSec() const
+{
+  const size_t nrSamples = _timestamps.size();
+
+  if (nrSamples <= 1) {
+    return 0u;
+  }
+
+  const uint32_t start = _timestamps[0];
+  const uint32_t end   = _timestamps[nrSamples - 1];
+
+  if (end < start) { return start - end; }
+  return end - start;
+}
+
 uint32_t PluginStats_timestamp::operator[](PluginStatsTimestamps_t::index_t index) const
 {
   if (index < _timestamps.size()) { return _timestamps[index]; }

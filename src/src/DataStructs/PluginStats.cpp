@@ -370,7 +370,7 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 {
   if (getNrSamples() > 0) {
-    addRowLabel(concat(getLabel(),  F(" Average")));
+    addRowLabel(concat(getLabel(),  F(" Average / sample")));
     addHtmlFloat(getSampleAvg(), (_nrDecimals == 0) ? 1 : _nrDecimals);
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
 
@@ -381,6 +381,9 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
       if (totalDuration > 0) {
         addRowLabel(concat(getLabel(),  F(" Average / sec")));
         addHtmlFloat(avg_per_sec, (_nrDecimals == 0) ? 1 : _nrDecimals);
+
+        //        addHtml(strformat(F(" (%s duration = %u sec)"), secondsToDayHourMinuteSecond(totalDuration).c_str(), totalDuration));
+
         addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond(totalDuration).c_str()));
       }
     }
@@ -432,7 +435,7 @@ bool PluginStats::webformLoad_show_peaks_timestamp(struct EventStruct *event, co
     struct tm ts;
     breakTime(time_zone.toLocal(peakLow), ts);
     addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
-    addHtml(F(" / "));
+    addHtml(          F(" / "));
     breakTime(time_zone.toLocal(peakHigh), ts);
     addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
     return true;

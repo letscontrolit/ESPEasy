@@ -32,6 +32,10 @@ public:
   size_t nrSamplesPresent() const;
   size_t nrPluginStats() const;
 
+  // Compute the duration between first and last sample in seconds
+  // For 0 or 1 samples, the period will be 0 seconds.
+  uint32_t getFullPeriodInSec() const;
+  
   void   pushPluginStatsValues(struct EventStruct *event,
                                bool                trackPeaks);
 
