@@ -1950,6 +1950,7 @@ To create/register a plugin, you have to :
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
+  
 
   // Controllers
   #ifndef USES_C011

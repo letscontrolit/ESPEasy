@@ -3,7 +3,6 @@
 #ifdef USES_P169
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
-
 # include <GPIO_Direct_Access.h>
 
 

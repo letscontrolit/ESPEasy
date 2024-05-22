@@ -53,7 +53,7 @@ else:
 #    "-DUSES_P107",  # SI1145 UV index
 
     "-DUSES_P146",  # Cache Reader
-    "-DUSES_P169",  # AS3935 Lightning Detector
+    "-DUSES_P169",  # AS3935 Lightning Detector 
 
     "-DUSES_C016",  # Cache Controller
 #    "-DUSES_C018",  # TTN/RN2483
