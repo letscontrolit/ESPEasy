@@ -5,8 +5,8 @@
 
 #if FEATURE_PLUGIN_STATS
 
-#include "../DataStructs/PluginStats.h"
-#include "../DataStructs/PluginStats_timestamp.h"
+# include "../DataStructs/PluginStats.h"
+# include "../DataStructs/PluginStats_timestamp.h"
 
 # include "../DataStructs/ChartJS_dataset_config.h"
 # include "../DataTypes/TaskIndex.h"
@@ -35,22 +35,22 @@ public:
   // Compute the duration between first and last sample in seconds
   // For 0 or 1 samples, the period will be 0 seconds.
   uint32_t getFullPeriodInSec() const;
-  
-  void   pushPluginStatsValues(struct EventStruct *event,
-                               bool                trackPeaks);
 
-  bool   plugin_get_config_value_base(struct EventStruct *event,
-                                      String            & string) const;
+  void     pushPluginStatsValues(struct EventStruct *event,
+                                 bool                trackPeaks);
 
-  bool   plugin_write_base(struct EventStruct *event,
-                           const String      & string);
+  bool     plugin_get_config_value_base(struct EventStruct *event,
+                                        String            & string) const;
 
-  bool   webformLoad_show_stats(struct EventStruct *event) const;
+  bool     plugin_write_base(struct EventStruct *event,
+                             const String      & string);
+
+  bool     webformLoad_show_stats(struct EventStruct *event) const;
 
 # if FEATURE_CHART_JS
-  void   plot_ChartJS(bool onlyJSON = false) const;
+  void     plot_ChartJS(bool onlyJSON = false) const;
 
-  void   plot_ChartJS_scatter(
+  void     plot_ChartJS_scatter(
     taskVarIndex_t                values_X_axis_index,
     taskVarIndex_t                values_Y_axis_index,
     const __FlashStringHelper    *id,
@@ -72,7 +72,7 @@ public:
 
 private:
 
-  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
+  PluginStats *_plugin_stats[VARS_PER_TASK]       = {};
   PluginStats_timestamp *_plugin_stats_timestamps = nullptr;
 };
 

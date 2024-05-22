@@ -21,5 +21,5 @@
 # endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
 
 
-#endif
-#endif
+#endif // if FEATURE_PLUGIN_STATS
+#endif // ifndef HELPERS_PLUGINSTATS_SIZE_H

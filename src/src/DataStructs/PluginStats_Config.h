@@ -26,7 +26,9 @@ struct PluginStats_Config_t {
     return static_cast<AxisPosition>(bits.chartAxisPosition);
   }
 
-  bool isLeft() const { return AxisPosition::Left == getAxisPosition(); }
+  bool isLeft() const {
+    return AxisPosition::Left == getAxisPosition();
+  }
 
   void setAxisPosition(AxisPosition position) {
     bits.chartAxisPosition = static_cast<uint8_t>(position);
@@ -64,6 +66,7 @@ private:
 
   uint8_t getStored() const {
     uint8_t res{};
+
     memcpy(&res, &bits, sizeof(uint8_t));
     return res;
   }
@@ -81,8 +84,7 @@ private:
     uint8_t chartAxisPosition : 1; // Bit 05
     uint8_t unused_06         : 1; // Bit 06
     uint8_t unused_07         : 1; // Bit 07
-  }       bits;
-  
+  } bits;
 };
 
 #endif // if FEATURE_PLUGIN_STATS

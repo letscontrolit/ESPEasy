@@ -25,15 +25,15 @@ struct PluginTaskData_base {
     return _baseClassOnly;
   }
 
-  bool hasPluginStats() const;
+  bool   hasPluginStats() const;
 
-  bool hasPeaks() const;
+  bool   hasPeaks() const;
 
   size_t nrSamplesPresent() const;
 
   #if FEATURE_PLUGIN_STATS
-  void initPluginStats(taskVarIndex_t taskVarIndex);
-  void clearPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskVarIndex_t taskVarIndex);
+  void   clearPluginStats(taskVarIndex_t taskVarIndex);
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values

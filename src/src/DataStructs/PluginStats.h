@@ -31,7 +31,6 @@ public:
     _plugin_stats_timestamps = plugin_stats_timestamps;
   }
 
-
   // Add a sample to the _sample buffer
   // This does not also track peaks as the peaks could be raw sensor data and the samples processed data.
   bool push(float value);
@@ -63,14 +62,14 @@ public:
 
   uint32_t getPeakHighLocalTimestamp() const;
 
-  bool hasPeaks() const {
+  bool     hasPeaks() const {
     return _maxValue >= _minValue;
   }
 
   // Set the peaks to unset values
-  void resetPeaks();
+  void   resetPeaks();
 
-  void clearSamples();
+  void   clearSamples();
 
   size_t getNrSamples() const {
     return _samples.size();
@@ -97,7 +96,8 @@ public:
 
   // Compute average over last N stored values, taking timestamp into account.
   // Returns average per second.
-  float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration) const;
+  float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
+                          uint32_t                   & totalDuration) const;
 
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
@@ -131,7 +131,7 @@ public:
   bool webformLoad_show_peaks(struct EventStruct *event,
                               bool                include_peak_to_peak = true) const;
   bool webformLoad_show_peaks_timestamp(struct EventStruct *event,
-  const String& labelPrefix) const;
+                                        const String      & labelPrefix) const;
 
   void webformLoad_show_val(
     struct EventStruct      *event,
