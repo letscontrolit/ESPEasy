@@ -220,6 +220,8 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
   if ((duration > 0) && (nrSamples > 1)) {
     addRowLabel(F("Total Duration"));
     addHtml(strformat(F("%s (%u sec)"), secondsToDayHourMinuteSecond(duration).c_str(), duration));
+    addRowLabel(F("Total Nr Samples"));
+    addHtmlInt(nrSamples);
     addRowLabel(F("Avg Rate"));
     addHtmlFloat(static_cast<float>(duration) / static_cast<float>(nrSamples - 1), 2);
     addUnit(F("sec/sample"));
