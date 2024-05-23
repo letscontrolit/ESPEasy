@@ -3,6 +3,7 @@
 #ifdef USES_P169
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
+
 # include <GPIO_Direct_Access.h>
 
 
@@ -27,7 +28,7 @@ P169_data_struct::~P169_data_struct()
 
 bool P169_data_struct::loop(struct EventStruct *event)
 {
-  if (_sensor.getInterruptMode() == AS3935MI::interrupt_mode_t::normal) {
+  if (_sensor.getInterruptMode() == AS3935MI::AS3935_INTERRUPT_NORMAL) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
     const uint32_t timestamp = _sensor.getInterruptTimestamp();
 
@@ -173,7 +174,7 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 
 bool P169_data_struct::plugin_init(struct EventStruct *event)
 {
-  _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::detached);
+  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
 
   if (!(_sensor.begin() && _sensor.checkConnection()))
   {
@@ -290,7 +291,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
   _sensor.writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
 
-  _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::normal);
+  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
   return true;
 }
 
@@ -429,7 +430,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 
       // FIXME TD-er: Should we do anything else here?
     }
-    _sensor.setInterruptMode(AS3935MI::interrupt_mode_t::normal);
+    _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
   }
 }
 

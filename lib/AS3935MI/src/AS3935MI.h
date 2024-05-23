@@ -456,11 +456,11 @@ public:
 	uint32_t              measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance);
 
 
-	enum class interrupt_mode_t {
-		uninitialized,
-		detached,
-		normal,
-		calibration
+	enum interrupt_mode_t {
+		AS3935_INTERRUPT_UNINITIALIZED,
+		AS3935_INTERRUPT_DETACHED,
+		AS3935_INTERRUPT_NORMAL,
+		AS3935_INTERRUPT_CALIBRATION
 	};
 
 	interrupt_mode_t      getInterruptMode() const { return mode_; }
@@ -483,7 +483,7 @@ private:
 	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
 
-	AS3935MI::interrupt_mode_t mode_ = AS3935MI::interrupt_mode_t::uninitialized;
+	AS3935MI::interrupt_mode_t mode_ = AS3935MI::AS3935_INTERRUPT_UNINITIALIZED;
 
 	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
 	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;

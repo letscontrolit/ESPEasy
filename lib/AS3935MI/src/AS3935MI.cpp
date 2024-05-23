@@ -45,7 +45,7 @@
 AS3935MI::AS3935MI(uint8_t irq) :
 	irq_(irq),
 	tuning_cap_cache_(0),
-	mode_(AS3935MI::interrupt_mode_t::uninitialized),
+	mode_(AS3935MI::AS3935_INTERRUPT_UNINITIALIZED),
 	calibration_mode_edgetrigger_trigger_(AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER),
 	calibration_mode_division_ratio_(AS3935MI_LCO_DIVISION_RATIO),
 	calibrated_ant_cap_(-1),
@@ -66,8 +66,8 @@ AS3935MI::AS3935MI(uint8_t irq) :
 
 AS3935MI::~AS3935MI()
 {
-	if (mode_ == AS3935MI::interrupt_mode_t::normal ||
-	    mode_ == AS3935MI::interrupt_mode_t::calibration) {
+	if (mode_ == AS3935MI::AS3935_INTERRUPT_NORMAL ||
+	    mode_ == AS3935MI::AS3935_INTERRUPT_CALIBRATION) {
 		detachInterrupt(irq_);
 	}
 }
@@ -79,7 +79,7 @@ bool AS3935MI::begin()
 
 	writePowerDown(false);
 
-	setInterruptMode(AS3935MI::interrupt_mode_t::detached);
+	setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
 	resetToDefaults();
 
 	return true;
@@ -620,7 +620,7 @@ uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 
 uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance)
 {
-	setInterruptMode(interrupt_mode_t::detached);
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_DETACHED);
 
 //	delayMicroseconds(AS3935_TIMEOUT);
 
@@ -651,7 +651,7 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 			break;
 	}
 
-	setInterruptMode(interrupt_mode_t::calibration);
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_CALIBRATION);
 
 	// Need to give enough time for the sensor to set the LCO signal on the IRQ pin
 	delayMicroseconds(AS3935_TIMEOUT);
@@ -676,7 +676,7 @@ uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, 
 	}
 
 	// Need to disable interrupts first or else sending I2C commands may fail
-	setInterruptMode(interrupt_mode_t::detached);
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_DETACHED);
 
 	// stop displaying LCO on IRQ
 	displayLcoOnIrq(false);
@@ -697,8 +697,8 @@ void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 		return;
 	}
 
-	if (mode_ == AS3935MI::interrupt_mode_t::normal ||
-	    mode_ == AS3935MI::interrupt_mode_t::calibration) {
+	if (mode_ == AS3935MI::AS3935_INTERRUPT_NORMAL ||
+	    mode_ == AS3935MI::AS3935_INTERRUPT_CALIBRATION) {
 		detachInterrupt(irq_);
 	}
 
@@ -711,10 +711,10 @@ void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 	mode_				 = mode;
 
 	switch (mode) {
-		case interrupt_mode_t::uninitialized:
-		case interrupt_mode_t::detached:
+		case interrupt_mode_t::AS3935_INTERRUPT_UNINITIALIZED:
+		case interrupt_mode_t::AS3935_INTERRUPT_DETACHED:
 			break;
-		case interrupt_mode_t::normal:
+		case interrupt_mode_t::AS3935_INTERRUPT_NORMAL:
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 			attachInterruptArg(digitalPinToInterrupt(irq_),
 							   reinterpret_cast<void (*)(void *)>(interruptISR),
@@ -726,7 +726,7 @@ void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 					   		RISING);
 #endif
 			break;
-		case interrupt_mode_t::calibration:
+		case interrupt_mode_t::AS3935_INTERRUPT_CALIBRATION:
 			calibration_start_micros_ = 0;
 			calibration_end_micros_	 = 0;
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
