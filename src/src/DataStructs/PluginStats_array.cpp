@@ -7,6 +7,7 @@
 # include "../Globals/TimeZone.h"
 
 # include "../Helpers/ESPEasy_math.h"
+# include "../Helpers/Memory.h"
 
 # include "../WebServer/Chart_JS.h"
 
@@ -20,7 +21,7 @@ PluginStats_array::~PluginStats_array()
   }
 
   if (_plugin_stats_timestamps != nullptr) {
-    delete _plugin_stats_timestamps;
+    free(_plugin_stats_timestamps);
     _plugin_stats_timestamps = nullptr;
   }
 }
@@ -33,7 +34,7 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
 
     if (!hasStats()) {
       if (_plugin_stats_timestamps != nullptr) {
-        delete _plugin_stats_timestamps;
+        free(_plugin_stats_timestamps);
         _plugin_stats_timestamps = nullptr;
       }
     }
@@ -65,7 +66,14 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
 
   if (hasStats()) {
     if (_plugin_stats_timestamps == nullptr) {
-      _plugin_stats_timestamps = new (std::nothrow) PluginStats_timestamp();
+      // Try to allocate in PSRAM if possible
+      constexpr unsigned size = sizeof(PluginStats_timestamp);
+      void *ptr               = special_calloc(1, sizeof(PluginStats_timestamp));
+
+      if (ptr == nullptr) { _plugin_stats_timestamps = nullptr; }
+      else {
+        _plugin_stats_timestamps = new (ptr) PluginStats_timestamp();
+      }
 
       for (size_t i = 0; i < VARS_PER_TASK; ++i) {
         _plugin_stats[taskVarIndex]->setPluginStats_timestamp(_plugin_stats_timestamps);
@@ -85,7 +93,7 @@ void PluginStats_array::clearPluginStats(taskVarIndex_t taskVarIndex)
 
   if (!hasStats()) {
     if (_plugin_stats_timestamps != nullptr) {
-      delete _plugin_stats_timestamps;
+      free(_plugin_stats_timestamps);
       _plugin_stats_timestamps = nullptr;
     }
   }

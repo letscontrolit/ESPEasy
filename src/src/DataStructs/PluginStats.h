@@ -71,27 +71,23 @@ public:
 
   void   clearSamples();
 
-  size_t getNrSamples() const {
-    return _samples.size();
-  }
+  size_t getNrSamples() const;
 
   // Compute average over all stored values
-  float getSampleAvg() const {
-    return getSampleAvg(_samples.size());
-  }
+  float  getSampleAvg() const;
 
   // Compute average over last N stored values
-  float getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  float  getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute the standard deviation over all stored values
-  float getSampleStdDev() const {
-    return getSampleStdDev(_samples.size());
+  float  getSampleStdDev() const {
+    return getSampleStdDev(getNrSamples());
   }
 
   // Compute average over all stored values, taking timestamp into account.
   // Returns average per second.
   float getSampleAvg_time(uint32_t& totalDuration) const {
-    return getSampleAvg_time(_samples.size(), totalDuration);
+    return getSampleAvg_time(getNrSamples(), totalDuration);
   }
 
   // Compute average over last N stored values, taking timestamp into account.
@@ -184,7 +180,7 @@ private:
   uint32_t _minValueTimestamp;
   uint32_t _maxValueTimestamp;
 
-  PluginStatsBuffer_t _samples;
+  PluginStatsBuffer_t *_samples = nullptr;
   float _errorValue;
   bool _errorValueIsNaN;
 

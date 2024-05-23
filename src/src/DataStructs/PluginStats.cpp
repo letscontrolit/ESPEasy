@@ -6,8 +6,10 @@
 # include "../Globals/TimeZone.h"
 
 # include "../Helpers/ESPEasy_math.h"
+# include "../Helpers/Memory.h"
 
 # include "../WebServer/Chart_JS.h"
+
 
 PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _errorValue(errorValue),
@@ -15,6 +17,14 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _plugin_stats_timestamps(nullptr)
 
 {
+  // Try to allocate in PSRAM if possible
+  constexpr unsigned size = sizeof(PluginStatsBuffer_t);
+  void *ptr               = special_calloc(1, sizeof(PluginStatsBuffer_t));
+
+  if (ptr == nullptr) { _samples = nullptr; }
+  else {
+    _samples = new (ptr) PluginStatsBuffer_t();
+  }
   _errorValueIsNaN   = isnan(_errorValue);
   _minValue          = std::numeric_limits<float>::max();
   _maxValue          = std::numeric_limits<float>::lowest();
@@ -24,12 +34,19 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
 
 PluginStats::~PluginStats()
 {
+  if (_samples != nullptr) {
+    free(_samples);
+
+    //    delete _samples;
+  }
+  _samples                 = nullptr;
   _plugin_stats_timestamps = nullptr;
 }
 
 bool PluginStats::push(float value)
 {
-  return _samples.push(value);
+  if (_samples == nullptr) { return false; }
+  return _samples->push(value);
 }
 
 void PluginStats::trackPeak(float value)
@@ -64,23 +81,36 @@ void PluginStats::resetPeaks()
 }
 
 void PluginStats::clearSamples() {
-  _samples.clear();
+  if (_samples == nullptr) {
+    _samples->clear();
+  }
+}
+
+size_t PluginStats::getNrSamples() const {
+  if (_samples == nullptr) { return 0u; }
+  return _samples->size();
+}
+
+float PluginStats::getSampleAvg() const {
+  return getSampleAvg(getNrSamples());
 }
 
 float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
-  if (_samples.size() == 0) { return _errorValue; }
+  const size_t nrSamples = getNrSamples();
+
+  if (nrSamples == 0) { return _errorValue; }
   float sum = 0.0f;
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples < _samples.size()) {
-    i = _samples.size() - lastNrSamples;
+  if (lastNrSamples < nrSamples) {
+    i = nrSamples - lastNrSamples;
   }
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
-  for (; i < _samples.size(); ++i) {
-    const float sample(_samples[i]);
+  for (; i < nrSamples; ++i) {
+    const float sample((*_samples)[i]);
 
     if (usableValue(sample)) {
       ++samplesUsed;
@@ -94,16 +124,18 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
 
 float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration) const
 {
+  const size_t nrSamples = getNrSamples();
+
   totalDuration = 0u;
 
-  if ((_samples.size() == 0) || (_plugin_stats_timestamps == nullptr)) {
+  if ((nrSamples == 0) || (_plugin_stats_timestamps == nullptr)) {
     return _errorValue;
   }
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples < _samples.size()) {
-    i = _samples.size() - lastNrSamples;
+  if (lastNrSamples < nrSamples) {
+    i = nrSamples - lastNrSamples;
   }
 
   uint32_t lastTimestamp   = 0;
@@ -111,8 +143,8 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
   bool     lastValueUsable = false;
   float    sum             = 0.0f;
 
-  for (; i < _samples.size(); ++i) {
-    const float sample(_samples[i]);
+  for (; i < nrSamples; ++i) {
+    const float sample((*_samples)[i]);
     const uint32_t curTimestamp   = (*_plugin_stats_timestamps)[i];
     const bool     curValueUsable = usableValue(sample);
 
@@ -140,20 +172,21 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
 
 float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
-  float variance      = 0.0f;
-  const float average = getSampleAvg(lastNrSamples);
+  const size_t nrSamples = getNrSamples();
+  float variance         = 0.0f;
+  const float average    = getSampleAvg(lastNrSamples);
 
   if (!usableValue(average)) { return 0.0f; }
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples < _samples.size()) {
-    i = _samples.size() - lastNrSamples;
+  if (lastNrSamples < nrSamples) {
+    i = nrSamples - lastNrSamples;
   }
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
-  for (; i < _samples.size(); ++i) {
-    const float sample(_samples[i]);
+  for (; i < nrSamples; ++i) {
+    const float sample((*_samples)[i]);
 
     if (usableValue(sample)) {
       ++samplesUsed;
@@ -170,20 +203,22 @@ float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) c
 
 float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const
 {
-  if (_samples.size() == 0) { return _errorValue; }
+  const size_t nrSamples = getNrSamples();
+
+  if (nrSamples == 0) { return _errorValue; }
 
   PluginStatsBuffer_t::index_t i = 0;
 
-  if (lastNrSamples < _samples.size()) {
-    i = _samples.size() - lastNrSamples;
+  if (lastNrSamples < nrSamples) {
+    i = nrSamples - lastNrSamples;
   }
 
   bool changed = false;
 
   float res = getMax ? INT_MIN : INT_MAX;
 
-  for (; i < _samples.size(); ++i) {
-    const float sample(_samples[i]);
+  for (; i < nrSamples; ++i) {
+    const float sample((*_samples)[i]);
 
     if (usableValue(sample)) {
       if ((getMax && (sample > res)) ||
@@ -201,25 +236,29 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
 
 float PluginStats::getSample(int lastNrSamples) const
 {
-  if ((_samples.size() == 0) || (_samples.size() < abs(lastNrSamples))) { return _errorValue; }
+  const size_t nrSamples = getNrSamples();
+
+  if ((nrSamples == 0) || (nrSamples < abs(lastNrSamples))) { return _errorValue; }
 
   PluginStatsBuffer_t::index_t i = 0;
 
   if (lastNrSamples > 0) {
-    i = _samples.size() - lastNrSamples;
+    i = nrSamples - lastNrSamples;
   } else if (lastNrSamples < 0) {
     i = abs(lastNrSamples) - 1;
   }
 
-  if (i < _samples.size()) {
-    return _samples[i];
+  if (i < nrSamples) {
+    return (*_samples)[i];
   }
   return _errorValue;
 }
 
 float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
 {
-  if (index < _samples.size()) { return _samples[index]; }
+  const size_t nrSamples = getNrSamples();
+
+  if (index < nrSamples) { return (*_samples)[index]; }
   return _errorValue;
 }
 
@@ -318,14 +357,14 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
         }
       } else if (matchedCommand(command, F("size"), nrSamples)) {
         // [taskname#valuename.size] Number of samples in memory
-        value   = _samples.size();
+        value   = getNrSamples();
         success = true;
       } else if (matchedCommand(command, F("sample"), nrSamples)) {
         success = nrSamples != 0;
 
         if (nrSamples == INT_MIN) {
           // [taskname#valuename.sample] Number of samples in memory.
-          value   = _samples.size();
+          value   = getNrSamples();
           success = true;
         } else {
           if (nrSamples != 0) {
@@ -435,7 +474,7 @@ bool PluginStats::webformLoad_show_peaks_timestamp(struct EventStruct *event, co
     struct tm ts;
     breakTime(time_zone.toLocal(peakLow), ts);
     addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
-    addHtml(          F(" / "));
+    addHtml(F(" / "));
     breakTime(time_zone.toLocal(peakHigh), ts);
     addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
     return true;
@@ -463,14 +502,15 @@ void PluginStats::plot_ChartJS_dataset() const
   add_ChartJS_dataset_header(_ChartJS_dataset_config);
 
   PluginStatsBuffer_t::index_t i = 0;
+  const size_t nrSamples         = getNrSamples();
 
-  for (; i < _samples.size(); ++i) {
+  for (; i < nrSamples; ++i) {
     if (i != 0) {
       addHtml(',');
     }
 
-    if (!isnan(_samples[i])) {
-      addHtmlFloat(_samples[i], _nrDecimals);
+    if (!isnan((*_samples)[i])) {
+      addHtmlFloat((*_samples)[i], _nrDecimals);
     }
     else {
       addHtml(F("null"));
