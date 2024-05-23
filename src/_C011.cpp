@@ -246,7 +246,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
-  std::unique_ptr<C011_queue_element> element(new C011_queue_element(event));
+  std::unique_ptr<C011_queue_element> element(new (std::nothrow) C011_queue_element(event));
   bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {
