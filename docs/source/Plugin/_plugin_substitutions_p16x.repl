@@ -36,3 +36,16 @@
 .. |P166_maintainer| replace:: `tonhuisman`
 .. |P166_compileinfo| replace:: `.`
 .. |P166_usedlibraries| replace:: `modified version of DFRobot_GP8403`
+
+.. |P169_name| replace:: :cyan:`AS3935 Lightning Detector`
+.. |P169_type| replace:: :cyan:`Environment`
+.. |P169_typename| replace:: :cyan:`Environment - AS3935 Lightning Detector`
+.. |P169_porttype| replace:: `.`
+.. |P169_status| replace:: :yellow:`CLIMATE`
+.. |P169_github| replace:: P169_AS3935_LightningDetector.ino
+.. _P169_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P169_AS3935_LightningDetector.ino
+.. |P169_usedby| replace:: `.`
+.. |P169_shortinfo| replace:: `AS3935 Franklin Lightning Sensor IC / Lightning Detector`
+.. |P169_maintainer| replace:: `TD-er`
+.. |P169_compileinfo| replace:: `.`
+.. |P169_usedlibraries| replace:: `https://bitbucket.org/christandlg/as3935mi/src/master/`
