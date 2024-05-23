@@ -113,7 +113,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(PinSelectPurpose::Generic, F("IRQ"), F(P169_IRQ_PIN_LABEL), P169_IRQ_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("IRQ"), F(P169_IRQ_PIN_LABEL), P169_IRQ_PIN);
 
       {
         const __FlashStringHelper *options[] = { F("1"), F("5"), F("9"), F("16") };

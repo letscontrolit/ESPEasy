@@ -18,7 +18,6 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
 
 {
   // Try to allocate in PSRAM if possible
-  constexpr unsigned size = sizeof(PluginStatsBuffer_t);
   void *ptr               = special_calloc(1, sizeof(PluginStatsBuffer_t));
 
   if (ptr == nullptr) { _samples = nullptr; }

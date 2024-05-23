@@ -39,7 +39,6 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
       }
     }
 
-
     if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
       # ifdef USE_SECOND_HEAP
       HeapSelectIram ephemeral;
