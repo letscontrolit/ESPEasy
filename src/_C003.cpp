@@ -59,7 +59,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
         event->idx,
         formatUserVarNoCheck(event, 0).c_str());
       std::unique_ptr<C003_queue_element> element(
-        new C003_queue_element(
+        new (std::nothrow) C003_queue_element(
           event->ControllerIndex, 
           event->TaskIndex, 
           std::move(url)));

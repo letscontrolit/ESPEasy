@@ -100,7 +100,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           url += mapVccToDomoticz();
             # endif // if FEATURE_ADC_VCC
 
-          std::unique_ptr<C001_queue_element> element(new C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+          std::unique_ptr<C001_queue_element> element(new (std::nothrow) C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
 
           success = C001_DelayHandler->addToQueue(std::move(element));
           Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C001_DELAY_QUEUE,
