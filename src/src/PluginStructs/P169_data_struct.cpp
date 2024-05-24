@@ -33,7 +33,7 @@ bool P169_data_struct::loop(struct EventStruct *event)
     const uint32_t timestamp = _sensor.getInterruptTimestamp();
 
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
-      if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
+      if ((timestamp != 0ul) && (timePassedSince(timestamp) < 10)) {
         // Sensor not yet ready to report some data
         return false;
       }
@@ -93,7 +93,11 @@ bool P169_data_struct::loop(struct EventStruct *event)
         {
           // Distance updated
           const int distance = getDistance();
-          UserVar.setFloat(event->TaskIndex, 0, distance);
+
+          if (_lightningCount > 0) {
+            // Do not update until after this task interval or else the reported distance will be too low.
+            UserVar.setFloat(event->TaskIndex, 0, distance);
+          }
 
           if (Settings.UseRules) {
             // Distance updated, Send event
@@ -105,7 +109,6 @@ bool P169_data_struct::loop(struct EventStruct *event)
                 getTaskDeviceName(event->TaskIndex).c_str(),
                 distance));
           }
-
           break;
         }
       }
@@ -198,19 +201,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
   _sensor.setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
 
-  if (!P169_GET_SLOW_LCO_CALIBRATION) {
-    _sensor.setFrequencyMeasureNrSamples(256);
-  }
+  _sensor.setFrequencyMeasureNrSamples(P169_GET_SLOW_LCO_CALIBRATION ? AS3935MI_NR_CALIBRATION_SAMPLES : (AS3935MI_NR_CALIBRATION_SAMPLES / 2));
 
   if (!_sensor.calibrateResonanceFrequency(frequency))
   {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR,
              strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
-    }
-
-    if (!P169_GET_TOLERANT_CALIBRATION_RANGE) {
-      return false;
     }
   } else {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -224,15 +221,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   // calibrate the RCO.
   if (!_sensor.calibrateRCO())
   {
-    // stop displaying LCO on IRQ
-    _sensor.displayLcoOnIrq(false);
     addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
-    return false;
+  } else {
+    addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
   }
 
   // stop displaying LCO on IRQ
   _sensor.displayLcoOnIrq(false);
-  addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
 
 # ifdef ESP32
 
@@ -405,7 +400,8 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
                  F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
                  frequency));
       }
-    } else {
+    } else if (timePassedSince(_sense_adj_last) > static_cast<long>(_sense_increase_interval))
+    {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("AS3935: Calibrate Resonance freq. Current frequency: %d"),

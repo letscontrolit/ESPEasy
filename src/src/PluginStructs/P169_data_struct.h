@@ -27,11 +27,11 @@
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(1)
 
 # define P169_GET_INDOOR                bitRead(PCONFIG(2), 0)
-# define P169_SET_INDOOR(X) bitWrite(PCONFIG(2), 0, X)
+# define P169_SET_INDOOR(X)             bitWrite(PCONFIG(2), 0, X)
 # define P169_INDOOR_LABEL              "mode"
 
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(2), 1)
-# define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(2), 1, X)
+# define P169_SET_MASK_DISTURBANCE(X)   bitWrite(PCONFIG(2), 1, X)
 # define P169_MASK_DISTURBANCE_LABEL    "maskdist"
 
 # define P169_GET_SEND_ONLY_ON_LIGHTNING    bitRead(PCONFIG(2), 2)

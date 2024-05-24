@@ -16,7 +16,6 @@
 # define PLUGIN_VALUENAME4_169 "Total"
 
 
-
 boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -35,7 +34,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].I2CNoDeviceCheck   = true;
+      Device[deviceCount].I2CNoDeviceCheck   = true; // Sensor may sometimes not respond immediately
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
       break;
@@ -67,6 +66,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       P169_SET_INDOOR(true);
       P169_SET_MASK_DISTURBANCE(false);
       P169_SET_SEND_ONLY_ON_LIGHTNING(true);
+      P169_SET_TOLERANT_CALIBRATION_RANGE(true);
 
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // Energy
       ExtraTaskSettings.TaskDeviceValueDecimals[2] = 0; // Lightning count since last PLUGIN_READ
@@ -113,7 +113,11 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(PinSelectPurpose::Generic_input, F("IRQ"), F(P169_IRQ_PIN_LABEL), P169_IRQ_PIN);
+      addFormPinSelect(
+        PinSelectPurpose::Generic_input,
+        formatGpioName_input(F("IRQ")),
+        F(P169_IRQ_PIN_LABEL),
+        P169_IRQ_PIN);
 
       {
         const __FlashStringHelper *options[] = { F("1"), F("5"), F("9"), F("16") };
@@ -131,7 +135,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Minimum number of lightning strikes in the last 15 minutes"));
       }
       {
-        const __FlashStringHelper *options[] = { F("Indoor"), F("Outdoor") };
+        const __FlashStringHelper *options[] = { F("Outdoor"), F("Indoor") };
         const int optionValues[]             = { 0, 1 };
         addFormSelector(F("Mode"), F(P169_INDOOR_LABEL), NR_ELEMENTS(optionValues), options, optionValues, P169_GET_INDOOR);
       }
@@ -165,7 +169,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
             P169_SPIKE_REJECTION     = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
        */
       P169_LIGHTNING_THRESHOLD = getFormItemInt(P169_LIGHTNING_THRESHOLD_LABEL);
-      P169_SET_INDOOR(getFormItemInt(F(P169_INDOOR_LABEL)) == 0);
+      P169_SET_INDOOR(getFormItemInt(F(P169_INDOOR_LABEL)) == 1);
       P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       P169_SET_SEND_ONLY_ON_LIGHTNING(isFormItemChecked(F(P169_SEND_ONLY_ON_LIGHTNING_LABEL)));
       P169_SET_TOLERANT_CALIBRATION_RANGE(isFormItemChecked(F(P169_TOLERANT_CALIBRATION_RANGE_LABEL)));
@@ -197,7 +201,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 0, -1.0f);
           UserVar.setFloat(event->TaskIndex, 1, 0.0f);
           UserVar.setFloat(event->TaskIndex, 2, 0.0f);
-          P169_data->clearStatistics();
+//          P169_data->clearStatistics();
 
           if (!P169_GET_SEND_ONLY_ON_LIGHTNING) {
             success = true;
