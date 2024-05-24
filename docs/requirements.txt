@@ -4,3 +4,4 @@ sphinx-bootstrap-theme==0.8.1
 recommonmark==0.7.1
 sphinxcontrib-htmlhelp>=2.0.5
 sphinxcontrib-applehelp>=1.0.8
+sphinx-toolbox>=3.5.0

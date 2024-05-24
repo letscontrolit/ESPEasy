@@ -494,8 +494,23 @@ void AttemptWiFiConnect() {
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
 #if FEATURE_USE_IPV6
-      WiFi.enableIPv6(true);
+      if (Settings.EnableIPv6()) {
+        WiFi.enableIPv6(true);
+      }
 #endif
+
+#ifdef ESP32
+      if (Settings.IncludeHiddenSSID()) {
+        wifi_country_t config = {
+          .cc = "01",
+          .schan = 1,
+          .nchan = 14,
+          .policy = WIFI_COUNTRY_POLICY_MANUAL,
+        };
+        esp_wifi_set_country(&config);
+      }
+#endif
+
 
       if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.bits.isHidden)
            && candidate.allowQuickConnect()) {
@@ -1029,6 +1044,18 @@ void WifiScan(bool async, uint8_t channel) {
   // Perform a disconnect after scanning.
   // See: https://github.com/letscontrolit/ESPEasy/pull/3579#issuecomment-967021347
   async = false;
+
+  if (Settings.IncludeHiddenSSID()) {
+    wifi_country_t config = {
+      .cc = "01",
+      .schan = 1,
+      .nchan = 14,
+      .policy = WIFI_COUNTRY_POLICY_MANUAL,
+    };
+    esp_wifi_set_country(&config);
+  }
+
+
 #endif
 
   START_TIMER;
@@ -1396,7 +1423,7 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+//      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
       WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.

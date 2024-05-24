@@ -24,7 +24,7 @@
 
     @tonhuisman 2022-09-24 Optimizations, suppress some logging for stressed builds
 
-    @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
+    @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed
     @uwekaditz 2022-05-04 CHG: Logging reduced for LIMIT_BUILD_SIZE
 
     @tonhuisman 2022-03-26 Add support for UVR42 (Very similar to an UVR31, has 1 extra sensor value and 1 extra digital value)
@@ -391,13 +391,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // PLUGIN_092_DEBUG
       UserVar.setFloat(event->TaskIndex, 0, NAN);
-      success                      = true;
+      success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
 # ifndef P092_LIMIT_BUILD_SIZE
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_INIT Task:"), event->TaskIndex));
       }
@@ -442,22 +443,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_init = true;
       }
 
-      success                      = true;
+      success = true;
       UserVar.setFloat(event->TaskIndex, 0, NAN);
       break;
     }
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      if (!NetworkConnected()) {
-        return false;
-      }
-
-      if (!P092_init) {
-        return false;
-      }
-
-      if (nullptr == P092_data) {
+      if (!NetworkConnected()
+          || !P092_init
+          || (nullptr == P092_data)) {
         return false;
       }
 
@@ -465,7 +460,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         // on a CHANGE on the data pin P092_Pin_changed is called
         P092_data->DLbus_Data->attachDLBusInterrupt();
 # ifndef P092_LIMIT_BUILD_SIZE
-       addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+        addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
       }
 
@@ -490,6 +485,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         if (success) {
           P092_data->P092_LastReceived = millis();
 # ifndef P092_LIMIT_BUILD_SIZE
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, concat(F("Received data OK TI:"), event->TaskIndex));
           }
@@ -513,6 +509,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
 # ifndef P092_LIMIT_BUILD_SIZE
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_READ Task:"), event->TaskIndex));
       }
@@ -536,12 +533,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
       if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-          log += F("## P092_read: Error DL-Bus: Device Pin setting not correct! DLB_Pin:");
-          log += P092_data->DLbus_Data->ISR_DLB_Pin;
-          log += F(" Setting:");
-          log += CONFIG_PIN1;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR,
+                     strformat(F("## P092_read: Error DL-Bus: Device Pin setting not correct! DLB_Pin:%d Setting:%d"),
+                               P092_data->DLbus_Data->ISR_DLB_Pin, CONFIG_PIN1));
         }
         return false;
       }

@@ -192,7 +192,7 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
     }
   }
 
-  // addLog(LOG_LEVEL_INFO, String(F("7dgt format")) + format);
+  // addLog(LOG_LEVEL_INFO, concat(F("7dgt format: "), format));
 }
 
 # endif // ifdef P073_7DDT_COMMAND

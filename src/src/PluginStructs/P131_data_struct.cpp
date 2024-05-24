@@ -31,10 +31,12 @@ P131_data_struct::P131_data_struct(uint8_t             matrixWidth,
                                    uint8_t             brightness,
                                    uint8_t             maxbright,
                                    uint16_t            fgcolor,
-                                   uint16_t            bgcolor)
+                                   uint16_t            bgcolor,
+                                   const uint8_t       defaultFontId)
   :  _matrixWidth(matrixWidth),  _matrixHeight(matrixHeight),  _tileWidth(tileWidth),  _tileHeight(tileHeight),
   _pin(pin),  _matrixType(matrixType),  _ledType(ledType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
-  _commandTrigger(commandTrigger), _brightness(brightness), _maxbright(maxbright), _fgcolor(fgcolor), _bgcolor(bgcolor) {
+  _commandTrigger(commandTrigger), _brightness(brightness), _maxbright(maxbright), _fgcolor(fgcolor), _bgcolor(bgcolor),
+  _defaultFontId(defaultFontId) {
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
   _commandTriggerCmd += F("cmd");
@@ -112,7 +114,8 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
                                                       _fgcolor,
                                                       _bgcolor,
                                                       true,
-                                                      _textBackFill);
+                                                      _textBackFill,
+                                                      _defaultFontId);
 
     success = (nullptr != gfxHelper);
 
@@ -307,11 +310,11 @@ void P131_data_struct::display_content(struct EventStruct *event,
                                _bgcolor);
             }
 
-            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth > 1)) {
+            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth >= 1)) {
               // Clear right from text
-              matrix->fillRect(content[x].pixelPos + content[x].length + 1,
+              matrix->fillRect(content[x].pixelPos + content[x].length,
                                yPos,
-                               content[x].stepWidth - 1,
+                               content[x].stepWidth,
                                h,
                                _bgcolor);
             }

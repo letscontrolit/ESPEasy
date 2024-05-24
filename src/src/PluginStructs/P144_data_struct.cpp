@@ -35,10 +35,7 @@ bool P144_data_struct::setSerial(ESPEasySerialPort portType, int8_t rxPin, int8_
     String log = F("P144 : Init: ");
     if (success)
     {
-      log += F("  ESP GPIO-pin RX:");
-      log += rxPin;
-      log += F(" TX:");
-      log += txPin;  
+      log += strformat(F("  ESP GPIO-pin RX:%d TX:%d"), rxPin, txPin);  
     }
     else
     {
@@ -47,7 +44,7 @@ bool P144_data_struct::setSerial(ESPEasySerialPort portType, int8_t rxPin, int8_
     addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
-  return(success);
+  return success;
 }
 
 // ----------------------------------------------------------------------------
@@ -56,11 +53,8 @@ bool P144_data_struct::setSerial(ESPEasySerialPort portType, int8_t rxPin, int8_
 // ----------------------------------------------------------------------------
 void P144_data_struct::disconnectSerial() 
 {
-  if (easySerial != nullptr) 
-  {
-    delete(easySerial);
-    easySerial = nullptr;
-  }
+  delete easySerial;
+  easySerial = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -84,14 +78,12 @@ bool P144_data_struct::processSensor() {
         #ifdef PLUGIN_144_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {
-          String log = F("P144 : New value received ");
-          log += pm25Value;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("P144 : New value received "), pm25Value));
         }
         #endif
       }
     }
-    return(true);
+    return true ;
 }
 
 // ----------------------------------------------------------------------------
@@ -165,18 +157,6 @@ bool P144_data_struct::processRx(char c)
 
 #ifdef PLUGIN_144_DEBUG
 // ----------------------------------------------------------------------------
-// Function toHex
-// Helper to convert uint8/char to HEX representation
-// ----------------------------------------------------------------------------
-char * P144_data_struct::toHex(char c, char * ptr)
-{
-  static const char hex[] = "0123456789ABCDEF";
-  *ptr++ = hex[c>>4];
-  *ptr++ = hex[c&0x7];
-  return ptr;
-}
-
-// ----------------------------------------------------------------------------
 // Function dump
 // Dump the received buffer
 // Note: Contents may be inconsistent unless alingned with the decoder
@@ -186,18 +166,13 @@ void P144_data_struct::dump()
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("P144 : Dump message: ");
-    char *ptr = debugBuffer;
-    for (int n=0; n< rxlen; n++)
+    log.reserve(100);
+    for (int n = 0; n < rxlen; ++n)
     {
-      ptr = toHex(serialRxBuffer[n], ptr);
-      *ptr++ = ' ';
+      log += formatToHex_no_prefix(serialRxBuffer[n]);
+      log += ' ';
     }
-    *ptr++ = '\0';
-    log += debugBuffer;
-    log += " size ";
-    log += rxlen;
-    log += " csum ";
-    log += (rxChecksum & 0xFF);
+    log += strformat(F(" size %d csum %d"), rxlen, rxChecksum & 0xFF);
     addLogMove(LOG_LEVEL_INFO, log);
   }
 }

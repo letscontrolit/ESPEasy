@@ -15,10 +15,8 @@ P062_data_struct::P062_data_struct() {
 }
 
 P062_data_struct::~P062_data_struct() {
-  if (keypad != nullptr) {
-    delete keypad;
-    keypad = nullptr;
-  }
+  delete keypad;
+  keypad = nullptr;
 }
 
 bool P062_data_struct::init(taskIndex_t taskIndex,
@@ -71,14 +69,14 @@ bool P062_data_struct::readKey(uint16_t& key) {
   {
     uint16_t colMask = 0x01;
 
-    for (uint8_t col = 1; col <= 12; col++)
+    for (uint8_t col = 0; col < P062_MaxTouchObjects; ++col)
     {
       if (key & colMask) // this key pressed?
       {
-        updateCalibration(col - 1);
+        updateCalibration(col);
 
         if (_use_scancode) {
-          key = col;
+          key = col + 1;
           break;
         }
       }
@@ -113,9 +111,7 @@ void P062_data_struct::setThreshold(uint8_t t, uint8_t touch, uint8_t release) {
  */
 void P062_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
   # ifdef PLUGIN_062_DEBUG
-  String log = F("P062 DEBUG loadTouchObjects size: ");
-  log += sizeof(StoredSettings);
-  addLogMove(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, concat(F("P062 DEBUG loadTouchObjects size: "), sizeof(StoredSettings)));
   # endif // PLUGIN_062_DEBUG
   LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 }
@@ -135,7 +131,7 @@ bool P062_data_struct::getCalibrationData(uint8_t t, uint16_t *current, uint16_t
  * Reset the touch data.
  */
 void P062_data_struct::clearCalibrationData() {
-  for (uint8_t t = 0; t < P062_MaxTouchObjects; t++) {
+  for (uint8_t t = 0; t < P062_MaxTouchObjects; ++t) {
     CalibrationData.CalibrationValues[t].current = 0;
     CalibrationData.CalibrationValues[t].min     = 0;
     CalibrationData.CalibrationValues[t].max     = 0;

@@ -174,7 +174,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       , P002_USE_BINNING
 # endif // ifndef LIMIT_BUILD_SIZE
     };
-    const int nrOptions = NR_ELEMENTS(outputOptionValues);
+    constexpr int nrOptions = NR_ELEMENTS(outputOptionValues);
     addFormSelector(F("Oversampling"), F("oversampling"), nrOptions, outputOptions, outputOptionValues, P002_OVERSAMPLING);
   }
 
@@ -197,9 +197,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       const int   high              = getADC_factory_calibrated_max(attenuation);
       const float step              = static_cast<float>(high - low) / MAX_ADC_VALUE;
 
-      String rowlabel = F("Attenuation @");
-      rowlabel += AttenuationToString(attenuation);
-      addRowLabel(rowlabel);
+      addRowLabel(concat(F("Attenuation @"), AttenuationToString(attenuation)));
       addHtml(F("Range / Step: "));
       addHtmlInt(low);
       addHtml(F(" ... "));

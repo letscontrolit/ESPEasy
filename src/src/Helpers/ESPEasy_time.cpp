@@ -304,9 +304,8 @@ unsigned long ESPEasy_time::now() {
   uint32_t localSystime = time_zone.toLocal(sysTime);
   breakTime(localSystime, local_tm);
 
+  calcSunRiseAndSet(timeSynced);
   if (timeSynced) {
-    calcSunRiseAndSet();
-
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
         F("Local time: %s"),
@@ -451,7 +450,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   udp.endPacket();
 
 
-  uint32_t beginWait = millis();
+  const uint32_t beginWait = millis();
 
   while (!timeOutReached(beginWait + 1000)) {
     int size       = udp.parsePacket();
@@ -749,13 +748,19 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
   return j - k + 1;
 }
 
-void ESPEasy_time::calcSunRiseAndSet() {
-  int   doy  = dayOfYear(local_tm.tm_year, local_tm.tm_mon + 1, local_tm.tm_mday);
-  float eqt  = equationOfTime(doy);
-  float dec  = sunDeclination(doy);
-  float da   = diurnalArc(dec, Settings.Latitude);
-  float rise = 12 - da - eqt;
-  float set  = 12 + da - eqt;
+void ESPEasy_time::calcSunRiseAndSet(bool timeSynced) {
+  if (!timeSynced && 
+      (tsSet.tm_mday == local_tm.tm_mday)) {
+    // No need to recalculate if already calculated for this day
+    return;
+  }
+
+  const int   doy  = dayOfYear(local_tm.tm_year, local_tm.tm_mon + 1, local_tm.tm_mday);
+  const float eqt  = equationOfTime(doy);
+  const float dec  = sunDeclination(doy);
+  const float da   = diurnalArc(dec, Settings.Latitude);
+  const float rise = 12 - da - eqt;
+  const float set  = 12 + da - eqt;
 
   tsRise.tm_hour = rise;
   tsRise.tm_min  = (rise - static_cast<int>(rise)) * 60.0f;
@@ -766,7 +771,7 @@ void ESPEasy_time::calcSunRiseAndSet() {
   tsRise.tm_year = tsSet.tm_year = local_tm.tm_year;
 
   // Now apply the longitude
-  int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
+  const int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
 
   tsSet  = addSeconds(tsSet, secOffset_longitude, false);
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
@@ -860,9 +865,9 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
   }
 
   if (unixtime != 0) {
-    String log = F("ExtRTC: Read external time source: ");
-    log += unixtime;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(
+      F("ExtRTC: Read external time source: "), 
+      unixtime));
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
