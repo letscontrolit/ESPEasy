@@ -3,14 +3,14 @@
     :widths: 20, 30
 
     "
-    ``[<taskname>#group,<groupnr>]``
+    ``[<taskname>#group.<groupnr>]``
     ","
     Get the contents from groupnr after processing received data.
 
     NB: The regular expression parsen uses 0-based group numbers (where most other regex parsers use 1-based group numbers!)
     "
     "
-    ``[<taskname>#next,<groupvalue>]``
+    ``[<taskname>#next.<groupvalue>]``
     ","
     Get the value of the next group that holds ``<groupvalue>``.
 
@@ -66,5 +66,5 @@
           - -30
           -
 
-    Requesting ``[SerialProxy#next,weight]`` will return the value ``40``.
+    Requesting ``[SerialProxy#next.weight]`` will return the value ``40``.
     "

@@ -3,14 +3,14 @@
     :widths: 20, 30
 
     "
-    ``[<taskname>#D,<port>]``
+    ``[<taskname>#D.<port>]``
 
     ``<port>`` : Range 0..13, corresponding with D0..D13 on the PME.
     ","
     Returns the current status (0/1) from the requested Digital port (pin) of the Pro Mini Extender.
     "
     "
-    ``[<taskname>#A,<port>]``
+    ``[<taskname>#A.<port>]``
 
     ``<port>`` : Range 0..3 and 6..7, corresponding with A0..A7 on the PME.
     ","

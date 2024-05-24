@@ -18,7 +18,7 @@
     Get the currently active Window Id, expected range: 0..255.
     "
     "
-    ``[<taskname>#iswin,<windowId>]``
+    ``[<taskname>#iswin.<windowId>]``
     ","
     Is the request Window Id valid, expected result: 1 = true, 0 = false.
     "
@@ -33,12 +33,12 @@
     Get the height of the currently active Window and rotation, expected range 0..<largest display dimension>.
     "
     "
-    ``[<taskname>#length,^"<text to measure>^"]``
+    ``[<taskname>#length.^"<text to measure>^"]``
     ","
     Get the length of the text in pixels for the current font and text scaling. Needs quotes if text contains space(s), comma(s) or quote(s).
     "
     "
-    ``[<taskname>#textheight,^"<text to measure>^"]``
+    ``[<taskname>#textheight.^"<text to measure>^"]``
     ","
     Get the height of the text in pixels for the current font and text scaling. Needs quotes if the text contains space(s), comma(s) or quote(s).
     "
@@ -68,15 +68,15 @@
     .. code:: none
 
       on centertime do  // NB: Comments & extra spaces should be removed to reduce rules size!
-        if [st7796#iswin,%eventvalue1|2%]=1 // default window: 2
+        if [st7796#iswin.%eventvalue1|2%]=1 // default window: 2
           let,120,[st7796#win]              // store current window
           st77xx,win,%eventvalue1|2%        // switch to window
           let,121,[st7796#txs]              // store textscaling
           st77xx,txs,3                      // set text scaling
           let,122,[st7796#rot]              // store rotation
           st77xx,rot,%eventvalue2|0%        // set rotation, default: 0
-          let,123,([st7796#width]-[st7796#length,%systm_hm%])/2      // (width - textlength)/2
-          let,124,([st7796#height]-[st7796#textheight,%systm_hm%])/2 // (height - textheight)/2
+          let,123,([st7796#width]-[st7796#length.%systm_hm%])/2      // (width - textlength)/2
+          let,124,([st7796#height]-[st7796#textheight.%systm_hm%])/2 // (height - textheight)/2
           st77xx,txtfull,[int#123],[int#124],3,red,black,%systm_hm%  // Display time red on black
           st77xx,rot,%v122%                 // restore rotation
           st77xx,txs,%v121%                 // restore text scaling
