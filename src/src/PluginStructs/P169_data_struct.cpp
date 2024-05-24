@@ -264,9 +264,9 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   return true;
 }
 
-const char subcommands[] PROGMEM = "clearstats|calibrate|setnf|setwd|setsrej";
+const char P169_subcommands[] PROGMEM = "clearstats|calibrate|setnf|setwd|setsrej";
 
-enum class subcmd_e : int8_t {
+enum class P169_subcmd_e : int8_t {
   invalid    = -1,
   clearstats = 0,
   calibrate,
@@ -286,38 +286,38 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
 
   if (equals(command, F("as3935"))) {
     const String subcommand   = parseString(string, 2);
-    const int    subcommand_i = GetCommandCode(subcommand.c_str(), subcommands);
+    const int    subcommand_i = GetCommandCode(subcommand.c_str(), P169_subcommands);
 
     if (subcommand_i < 0) { return false; } // Fail fast
 
-    const subcmd_e subcmd = static_cast<subcmd_e>(subcommand_i);
+    const P169_subcmd_e subcmd = static_cast<P169_subcmd_e>(subcommand_i);
     uint32_t   value{};
     const bool hasValue = validUIntFromString(parseString(string, 3), value);
 
     switch (subcmd) {
-      case subcmd_e::invalid:
+      case P169_subcmd_e::invalid:
         break;
-      case subcmd_e::clearstats:
+      case P169_subcmd_e::clearstats:
         clearStatistics();
         success = true;
         break;
-      case subcmd_e::calibrate:
+      case P169_subcmd_e::calibrate:
         calibrate(event);
         success = true;
         break;
-      case subcmd_e::setnf:
+      case P169_subcmd_e::setnf:
         if (hasValue) {
           success = true;
           _sensor.writeNoiseFloorThreshold(value);
         }
         break;
-      case subcmd_e::setwd:
+      case P169_subcmd_e::setwd:
         if (hasValue) {
           success = true;
           _sensor.writeWatchdogThreshold(value);
         }
         break;
-      case subcmd_e::setsrej:
+      case P169_subcmd_e::setsrej:
         if (hasValue) {
           success = true;
           _sensor.writeSpikeRejection(value);
