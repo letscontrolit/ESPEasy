@@ -41,10 +41,12 @@ bool P169_data_struct::loop(struct EventStruct *event)
       // query the interrupt source from the AS3935
       switch (_sensor.readInterruptSource()) {
         case AS3935MI::AS3935_INT_NH:
+
           // Noise floor too high
           adjustForNoise(event);
           break;
         case AS3935MI::AS3935_INT_D:
+
           // Disturbance detected
           // N.B. can be disabled with _sensor.writeMaskDisturbers(true);
           adjustForDisturbances(event);
@@ -303,21 +305,26 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
         break;
       case P169_subcmd_e::calibrate:
         calibrate(event);
+        _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
+
         success = true;
         break;
       case P169_subcmd_e::setnf:
+
         if (hasValue) {
           success = true;
           _sensor.writeNoiseFloorThreshold(value);
         }
         break;
       case P169_subcmd_e::setwd:
+
         if (hasValue) {
           success = true;
           _sensor.writeWatchdogThreshold(value);
         }
         break;
       case P169_subcmd_e::setsrej:
+
         if (hasValue) {
           success = true;
           _sensor.writeSpikeRejection(value);

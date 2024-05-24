@@ -293,7 +293,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-* **I2C Address**: The device supports 8 addresses, and by default comes configured for address ``0x03``.
+* **I2C Address**: The device supports 83 addresses, and by default comes configured for address ``0x03``.
 
 Available addresses are in the range ``0x01`` to ``0x03``.
 
