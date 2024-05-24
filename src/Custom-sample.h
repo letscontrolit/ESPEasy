@@ -212,7 +212,7 @@
 // Chart.js: (only used when FEATURE_CHART_JS is enabled)
 // #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.1.2/dist/chart.umd.min.js"
 // JQuery:
-// #define CDN_URL_JQUERY "https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+// #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.0.min.js"
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
@@ -223,8 +223,10 @@
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 // #define FEATURE_SEND_TO_HTTP 1 // Enable availability of the SendToHTTP command
 // #define FEATURE_POST_TO_HTTP 1 // Enable availability of the PostToHTTP command
+// #define FEATURE_PUT_TO_HTTP 1 // Enable availability of the PutToHTTP command
 // #define FEATURE_I2C_DEVICE_CHECK 0 // Disable the I2C Device check feature
 // #define FEATURE_I2C_GET_ADDRESS 0 // Disable fetching the I2C address from I2C plugins. Will be enabled when FEATURE_I2C_DEVICE_CHECK is enabled
+// #define FEATURE_RTTTL 1   // Enable rtttl command
 
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -282,7 +284,9 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
-// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
+// #define FEATURE_AUTO_DARK_MODE           0                // 0 = Disable auto-dark mode
+// #define FEATURE_EXTENDED_TASK_VALUE_TYPES 0               // 0 = Disable extra task value types like 64 bit ints, double, etc. in Dummy tasks
+// #define FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE 0  // 0 = switch to float as floating point type for rules/formula processing.
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
@@ -453,6 +457,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P105   // AHT10/20/21
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P108   // DDS238-x ZN Modbus energy meters
 // #define USES_P109   // ThermoOLED
 
 // #define USES_P110   // VL53L0X Time of Flight sensor
@@ -465,37 +470,40 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P117   // SCD30
 // #define USES_P118   // Itho
 // #define USES_P119   // ITG3205 Gyro
+
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
+// #define USES_P128   // NeoPixelBusFX
+//   #define P128_USES_GRB  // Default
+//   #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
+//   #define P128_USES_RGB
+//   #define P128_USES_RGBW
+//   #define P128_USES_BRG
+//   #define P128_USES_BGR
+//   #define P128_USES_RBG
+//   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters
+
 // #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
-// #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+//   #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
 // #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
+
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P143   // I2C Rotary encoders
-// #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
-// #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
-// #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
+//   #define P143_FEATURE_COUNTER_COLORMAPPING 0 // Enabled by default, can be turned off here
+// #define USES_P147   // SGP4x
+//   #define P147_FEATURE_GASINDEXALGORITHM    0 // Enabled by default, can be turned off here
 
-// #define USES_P128   // NeoPixelBusFX
-// #define P128_USES_GRB  // Default
-// #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
-// #define P128_USES_RGB
-// #define P128_USES_RGBW
-// #define P128_USES_BRG
-// #define P128_USES_RBG
-// #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
-
-
-// #define USES_P108   // DDS238-x ZN Modbus energy meters
 
 
 /*

@@ -11,6 +11,7 @@
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/Networking.h"
 
@@ -21,6 +22,8 @@
 #else
  #include <eth_phy/phy.h>
 #endif
+
+#include <WiFi.h>
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
@@ -63,9 +66,9 @@ bool ethCheckSettings() {
   return isValid(Settings.ETH_Phy_Type) 
       && isValid(Settings.ETH_Clock_Mode)
       && isValid(Settings.NetworkMedium)
-      && (Settings.ETH_Pin_mdc   <= MAX_GPIO)
-      && (Settings.ETH_Pin_mdio  <= MAX_GPIO)
-      && (Settings.ETH_Pin_power <= MAX_GPIO);
+      && validGpio(Settings.ETH_Pin_mdc)
+      && validGpio(Settings.ETH_Pin_mdio)
+      && (validGpio(Settings.ETH_Pin_power) || (Settings.ETH_Pin_power == -1)); // Some boards have fixed power
 }
 
 bool ethPrepare() {

@@ -1,7 +1,7 @@
 #ifndef GLOBALS_NETWORKSTATE_H
 #define GLOBALS_NETWORKSTATE_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include <IPAddress.h>
 #include <WiFiUdp.h>
@@ -14,7 +14,9 @@ extern NetworkMedium_t active_network_medium;
 
 extern bool webserverRunning;
 extern bool webserver_init;
+#if FEATURE_MDNS
 extern bool mDNS_init;
+#endif
 
 
 // NTP status

@@ -20,7 +20,7 @@
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
 
-#include <Arduino.h>
+
 #include <list>
 #include <memory> // For std::shared_ptr
 #include <new>    // std::nothrow
@@ -39,8 +39,8 @@ typedef bool (*do_process_function)(int,
 struct ControllerDelayHandlerStruct {
   ControllerDelayHandlerStruct();
 
-  bool configureControllerSettings(controllerIndex_t ControllerIndex);
-  void configureControllerSettings(const ControllerSettingsStruct& settings);
+  bool cacheControllerSettings(controllerIndex_t ControllerIndex);
+  void cacheControllerSettings(const ControllerSettingsStruct& settings);
 
   bool readyToProcess(const Queue_element_base& element) const;
 

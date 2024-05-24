@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -12,19 +12,19 @@
 #include <ArduinoJson/Serialization/serialize.hpp>
 #include <ArduinoJson/Variant/VariantData.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 template <typename TWriter>
 class MsgPackSerializer : public Visitor<size_t> {
  public:
   static const bool producesText = false;
 
-  MsgPackSerializer(TWriter writer) : _writer(writer) {}
+  MsgPackSerializer(TWriter writer) : writer_(writer) {}
 
   template <typename T>
   typename enable_if<sizeof(T) == 4, size_t>::type visitFloat(T value32) {
-    if (canConvertNumber<Integer>(value32)) {
-      Integer truncatedValue = Integer(value32);
+    if (canConvertNumber<JsonInteger>(value32)) {
+      JsonInteger truncatedValue = JsonInteger(value32);
       if (value32 == T(truncatedValue))
         return visitSignedInteger(truncatedValue);
     }
@@ -55,7 +55,7 @@ class MsgPackSerializer : public Visitor<size_t> {
       writeByte(0xDD);
       writeInteger(uint32_t(n));
     }
-    for (VariantSlot* slot = array.head(); slot; slot = slot->next()) {
+    for (const VariantSlot* slot = array.head(); slot; slot = slot->next()) {
       slot->data()->accept(*this);
     }
     return bytesWritten();
@@ -72,7 +72,7 @@ class MsgPackSerializer : public Visitor<size_t> {
       writeByte(0xDF);
       writeInteger(uint32_t(n));
     }
-    for (VariantSlot* slot = object.head(); slot; slot = slot->next()) {
+    for (const VariantSlot* slot = object.head(); slot; slot = slot->next()) {
       visitString(slot->key());
       slot->data()->accept(*this);
     }
@@ -107,9 +107,9 @@ class MsgPackSerializer : public Visitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visitSignedInteger(Integer value) {
+  size_t visitSignedInteger(JsonInteger value) {
     if (value > 0) {
-      visitUnsignedInteger(static_cast<UInt>(value));
+      visitUnsignedInteger(static_cast<JsonUInt>(value));
     } else if (value >= -0x20) {
       writeInteger(int8_t(value));
     } else if (value >= -0x80) {
@@ -137,7 +137,7 @@ class MsgPackSerializer : public Visitor<size_t> {
     return bytesWritten();
   }
 
-  size_t visitUnsignedInteger(UInt value) {
+  size_t visitUnsignedInteger(JsonUInt value) {
     if (value <= 0x7F) {
       writeInteger(uint8_t(value));
     } else if (value <= 0xFF) {
@@ -177,15 +177,15 @@ class MsgPackSerializer : public Visitor<size_t> {
 
  private:
   size_t bytesWritten() const {
-    return _writer.count();
+    return writer_.count();
   }
 
   void writeByte(uint8_t c) {
-    _writer.write(c);
+    writer_.write(c);
   }
 
   void writeBytes(const uint8_t* p, size_t n) {
-    _writer.write(p, n);
+    writer_.write(p, n);
   }
 
   template <typename T>
@@ -194,23 +194,34 @@ class MsgPackSerializer : public Visitor<size_t> {
     writeBytes(reinterpret_cast<uint8_t*>(&value), sizeof(value));
   }
 
-  CountingDecorator<TWriter> _writer;
+  CountingDecorator<TWriter> writer_;
 };
 
-template <typename TSource, typename TDestination>
-inline size_t serializeMsgPack(const TSource& source, TDestination& output) {
+ARDUINOJSON_END_PRIVATE_NAMESPACE
+
+ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
+
+// Produces a MessagePack document.
+// https://arduinojson.org/v6/api/msgpack/serializemsgpack/
+template <typename TDestination>
+inline size_t serializeMsgPack(JsonVariantConst source, TDestination& output) {
+  using namespace ArduinoJson::detail;
   return serialize<MsgPackSerializer>(source, output);
 }
 
-template <typename TSource>
-inline size_t serializeMsgPack(const TSource& source, void* output,
+// Produces a MessagePack document.
+// https://arduinojson.org/v6/api/msgpack/serializemsgpack/
+inline size_t serializeMsgPack(JsonVariantConst source, void* output,
                                size_t size) {
+  using namespace ArduinoJson::detail;
   return serialize<MsgPackSerializer>(source, output, size);
 }
 
-template <typename TSource>
-inline size_t measureMsgPack(const TSource& source) {
+// Computes the length of the document that serializeMsgPack() produces.
+// https://arduinojson.org/v6/api/msgpack/measuremsgpack/
+inline size_t measureMsgPack(JsonVariantConst source) {
+  using namespace ArduinoJson::detail;
   return measure<MsgPackSerializer>(source);
 }
 
-}  // namespace ARDUINOJSON_NAMESPACE
+ARDUINOJSON_END_PUBLIC_NAMESPACE

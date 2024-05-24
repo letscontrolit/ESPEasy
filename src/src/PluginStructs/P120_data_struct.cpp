@@ -136,8 +136,10 @@ bool P120_data_struct::read_data(struct EventStruct *event) const
   }
   last_scale_factor_g = scaleFactor_g;
 
+  const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (i < P120_NR_OUTPUT_VALUES) {
+    if (i < valueCount) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       float value                = 0.0f;
 
@@ -511,8 +513,9 @@ bool P120_data_struct::plugin_webform_loadOutputSelector(struct EventStruct *eve
     for (uint8_t i = 0; i < P120_NR_OUTPUT_OPTIONS; ++i) {
       options[i] = P120_data_struct::valuename(i, true);
     }
-
-    for (uint8_t i = 0; i < P120_NR_OUTPUT_VALUES; ++i) {
+    
+    const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+    for (uint8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P120_NR_OUTPUT_OPTIONS, options);
     }
@@ -645,7 +648,8 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
 // Save the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
-  for (uint8_t i = 0; i < P120_NR_OUTPUT_VALUES; ++i) {
+  const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
+  for (uint8_t i = 0; i < valueCount; ++i) {
     const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
     const uint8_t choice       = PCONFIG(pconfigIndex);
     sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, P120_data_struct::valuename(choice, false));
@@ -761,21 +765,19 @@ bool P120_data_struct::plugin_get_config_value(struct EventStruct *event, String
 
 void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
 {
+  const uint8_t valueCount = P120_NR_OUTPUT_VALUES;
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (i < P120_NR_OUTPUT_VALUES) {
+    if (i < valueCount) {
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       uint8_t choice             = PCONFIG(pconfigIndex);
-      safe_strncpy(
-        ExtraTaskSettings.TaskDeviceValueNames[i],
-        P120_data_struct::valuename(choice, false),
-        sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
+      ExtraTaskSettings.setTaskDeviceValueName(i, P120_data_struct::valuename(choice, false));
 
       // Set decimals for RAW values to 0, Others to 2 decimals
       if (choice <= 3) {
         ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
       }
     } else {
-      ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
+      ExtraTaskSettings.clearTaskDeviceValueName(i);
     }
   }
 }

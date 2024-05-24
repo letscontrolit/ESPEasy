@@ -10,6 +10,7 @@
 // based on this library: https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library
 // this code is based on 29 Mar 2019-03-29 version of the above library
 //
+// 2023-04-28 tonhuisman: Remove [Development] tag
 // 2021-03-29 heinemannj: Initial commit
 //
 
@@ -17,7 +18,7 @@
 
 # define PLUGIN_112
 # define PLUGIN_ID_112         112
-# define PLUGIN_NAME_112       "Color - AS7265X [DEVELOPMENT]"
+# define PLUGIN_NAME_112       "Color - AS7265X"
 # define PLUGIN_VALUENAME1_112 "TempMaster"
 # define PLUGIN_VALUENAME2_112 "TempAverage"
 # define PLUGIN_VALUENAME3_112 "State"

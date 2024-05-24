@@ -76,10 +76,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (336 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (340 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();  
@@ -102,9 +102,9 @@ void run_compiletime_checks() {
   // Has to be round up to multiple of 4.
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  const unsigned int LogStructSize = ((13u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 24 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #else
-  const unsigned int LogStructSize = ((13u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 20 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          9u>(); // Is not stored
@@ -124,7 +124,7 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 137u>();
+  check_size<C013_SensorInfoStruct,                 138u>();
   check_size<C013_SensorDataStruct,                 24u>();
   #endif
   #ifdef USES_C016

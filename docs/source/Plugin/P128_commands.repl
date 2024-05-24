@@ -88,12 +88,12 @@
     | Run a theatre effect across the pixels, using optional backgroundcolor, count (default: 1) and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
     "
     "
-    | ``nfx,scan,<color>[,backgroundcolor[,speed]]``
+    | ``nfx,scan,<color>[,backgroundcolor[,speed[,startpixel[,endpixel]]]]``
     ","
     | Run a scan effect across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
     "
     "
-    | ``nfx,dualscan,<color>[,backgroundcolor[,speed]]``
+    | ``nfx,dualscan,<color>[,backgroundcolor[,speed[,startpixel[,endpixel]]]]``
     ","
     | Run a dual scan effect, 2 scans in opposite direction, across the pixels, using optional backgroundcolor and speed values (range: -50..50, default: 25, negative = reverse). Colors are to be specified in a hex RRGGBB value.
     "

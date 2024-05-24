@@ -10,7 +10,7 @@
 
 # define PLUGIN_031
 # define PLUGIN_ID_031         31
-# define PLUGIN_NAME_031       "Environment - SHT1X"
+# define PLUGIN_NAME_031       "Environment - SHT1x"
 # define PLUGIN_VALUENAME1_031 "Temperature"
 # define PLUGIN_VALUENAME2_031 "Humidity"
 
@@ -92,7 +92,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
         # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("SHT1X : Status uint8_t: ");
+        String log = F("SHT1x : Status uint8_t: ");
         log += String(status, HEX);
         log += F(" - resolution: ");
         log += ((status & 1) ? F("low") : F("high"));
@@ -140,10 +140,10 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             switch (P031_data->state) {
               case P031_COMMAND_NO_ACK:
-                addLog(LOG_LEVEL_ERROR, F("SHT1X : Sensor did not ACK command"));
+                addLog(LOG_LEVEL_ERROR, F("SHT1x : Sensor did not ACK command"));
                 break;
               case P031_NO_DATA:
-                addLog(LOG_LEVEL_ERROR, F("SHT1X : Data not ready"));
+                addLog(LOG_LEVEL_ERROR, F("SHT1x : Data not ready"));
                 break;
               default:
                 break;

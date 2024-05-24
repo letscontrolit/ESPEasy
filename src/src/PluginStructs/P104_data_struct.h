@@ -338,9 +338,9 @@ struct P104_bargraph_struct {
   P104_bargraph_struct() = delete; // Not used, so leave out explicitly
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
-  double  value = 0.0;
-  double  max   = 0.0;
-  double  min   = 0.0;
+  ESPEASY_RULES_FLOAT_TYPE  value{};
+  ESPEASY_RULES_FLOAT_TYPE  max{};
+  ESPEASY_RULES_FLOAT_TYPE  min{};
   uint8_t graph;
   uint8_t barType   = 0u;
   uint8_t direction = 0u;

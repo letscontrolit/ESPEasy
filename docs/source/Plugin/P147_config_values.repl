@@ -1,0 +1,19 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#Serialnumber]``
+    ","
+    | Returns the unique serial number of the connected sensor.
+    "
+    "
+    | ``[<taskname>#RawVOC]``
+    ","
+    | Returns the current (last) raw VOC value retrieved from the sensor. This is a 16 bit unsigned integer value, range 0..65535.
+    "
+    "
+    | ``[<taskname>#RawNOx]``
+    ","
+    | Returns the current (last) raw NOx value retrieved from the SGP41 sensor. This is a 16 bit unsigned integer value, range 0..65535.
+    "

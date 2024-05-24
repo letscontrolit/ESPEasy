@@ -1,7 +1,8 @@
 #ifndef DATASTRUCTS_I2C_TYPES_H
 #define DATASTRUCTS_I2C_TYPES_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
+
 #include <vector>
 
 // **************************************************************************/

@@ -1,35 +1,38 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
 
 #include <ArduinoJson/Document/JsonDocument.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PUBLIC_NAMESPACE
 
+// A JsonDocument with a memory pool on the stack.
 template <size_t desiredCapacity>
 class StaticJsonDocument : public JsonDocument {
-  static const size_t _capacity =
-      AddPadding<Max<1, desiredCapacity>::value>::value;
+  static const size_t capacity_ =
+      detail::AddPadding<detail::Max<1, desiredCapacity>::value>::value;
 
  public:
-  StaticJsonDocument() : JsonDocument(_buffer, _capacity) {}
+  StaticJsonDocument() : JsonDocument(buffer_, capacity_) {}
 
   StaticJsonDocument(const StaticJsonDocument& src)
-      : JsonDocument(_buffer, _capacity) {
+      : JsonDocument(buffer_, capacity_) {
     set(src);
   }
 
   template <typename T>
-  StaticJsonDocument(const T& src,
-                     typename enable_if<IsVisitable<T>::value>::type* = 0)
-      : JsonDocument(_buffer, _capacity) {
+  StaticJsonDocument(
+      const T& src,
+      typename detail::enable_if<
+          detail::is_convertible<T, JsonVariantConst>::value>::type* = 0)
+      : JsonDocument(buffer_, capacity_) {
     set(src);
   }
 
   // disambiguate
-  StaticJsonDocument(VariantRef src) : JsonDocument(_buffer, _capacity) {
+  StaticJsonDocument(JsonVariant src) : JsonDocument(buffer_, capacity_) {
     set(src);
   }
 
@@ -44,13 +47,15 @@ class StaticJsonDocument : public JsonDocument {
     return *this;
   }
 
+  // Reclaims the memory leaked when removing and replacing values.
+  // https://arduinojson.org/v6/api/jsondocument/garbagecollect/
   void garbageCollect() {
     StaticJsonDocument tmp(*this);
     set(tmp);
   }
 
  private:
-  char _buffer[_capacity];
+  char buffer_[capacity_];
 };
 
-}  // namespace ARDUINOJSON_NAMESPACE
+ARDUINOJSON_END_PUBLIC_NAMESPACE

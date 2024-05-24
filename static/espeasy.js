@@ -36,7 +36,7 @@ var commonPlugins = [
   //P035
   "IRSEND", "IRSENDAC",
   //P036
-  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
+  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,low", "OledFramedCmd,med", "OledFramedCmd,high", /*"OledFramedCmd,user",*/ "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign", "OledFramedCmd,align", "OledFramedCmd,userDef1", "OledFramedCmd,userDef2",
   //P038
   "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
@@ -52,7 +52,7 @@ var commonPlugins = [
   //P067
   "tareChanA", "tareChanB",
   //P073
-  "7dn", "7dst", "7dsd", "7dtext", "7dtt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
+  "7dn", "7dst", "7dsd", "7dtext", "7ddt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
   //P076
   "HLWCalibrate", "HLWReset",
   //P079
@@ -68,7 +68,7 @@ var commonPlugins = [
   //P094
   "Culreader_Write",
   //P099 & P123
-  "Touch", "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Ingrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
+  "Touch", "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Incgrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
   //P101
   "WakeOnLan",
   //P104
@@ -84,14 +84,26 @@ var commonPlugins = [
   "multirelay", "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
   //P126
   "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetAllHigh", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
-  //P129
-  "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
   //P127
   "cdmrst",
+  //P128
+  "nfx", "nfx,off", "nfx,on", "nfx,dim", "nfx,line,", "nfx,hsvline,", "nfx,one,", "nfx,hsvone,", "nfx,all,", "nfx,rgb,", "nfx,fade,", "nfx,hsv,", "nfx,colorfade,", "nfx,rainbow", "nfx,kitt,", "nfx,comet,", "nfx,theatre,", "nfx,scan,", "nfx,dualscan,", "nfx,twinkle,", "nfx,twinklefade,", "nfx,sparkle,", "nfx,wipe,", "nfx,dualwipe", "nfx,fire", "nfx,fireflicker", "nfx,faketv", "nfx,simpleclock", "nfx,stop", "nfx,statusrequest", "nfx,fadetime,", "nfx,fadedelay,", "nfx,speed,", "nfx,count,", "nfx,bgcolor",
+  //P129
+  "ShiftIn", "ShiftIn,PinEvent", "ShiftIn,ChipEvent", "ShiftIn,SetChipCount", "ShiftIn,SampleFrequency", "ShiftIn,EventPerPin",
+  //P135
+  "scd4x", "scd4x,storesettings", "scd4x,facoryreset", "scd4x,selftest", "scd4x,setfrc,",
   //P137
-  "axp,ldo2", "axp,ldo3", "axp,ldoio", "axp,gpio0", "axp,gpio1", "axp,gpio2", "axp,gpio3", "axp,gpio4", "axp,dcdc2", "axp,dcdc3", "axp,ldo2map", "axp,ldo3map", "axp,ldoiomap", "axp,dcdc2map", "axp,dcdc3map", "axp,ldo2perc", "axp,ldo3perc", "axp,ldoioperc", "axp,dcdc2perc", "axp,dcdc3perc",
+  "axp", "axp,ldo2", "axp,ldo3", "axp,ldoio", "axp,gpio0", "axp,gpio1", "axp,gpio2", "axp,gpio3", "axp,gpio4", "axp,dcdc2", "axp,dcdc3", "axp,ldo2map", "axp,ldo3map", "axp,ldoiomap", "axp,dcdc2map", "axp,dcdc3map", "axp,ldo2perc", "axp,ldo3perc", "axp,ldoioperc", "axp,dcdc2perc", "axp,dcdc3perc",
   //P143
-  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain", "I2CEncoder,set"
+  "I2CEncoder", "I2CEncoder,bright", "I2CEncoder,led1", "I2CEncoder,led2", "I2CEncoder,gain", "I2CEncoder,set",
+  //P146
+  "cachereader", "cachereader,readpos", "cachereader,sendtaskinfo", "cachereader,flush",
+  //P148
+  "tm1621", "tm1621,write,", "tm1621,writerow,", "tm1621,voltamp,", "tm1621,energy,", "tm1621,celcius,", "tm1621,fahrenheit,", "tm1621,humidity,", "tm1621,raw,",
+  //P152
+  "dac", "dac,1", "dac,2",
+  //P153
+  "sht4x", "sht4x,startup",
 ];
 var pluginDispKind = [
   //P095

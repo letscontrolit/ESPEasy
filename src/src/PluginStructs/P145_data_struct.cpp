@@ -47,167 +47,167 @@
 // This table is stored in PROGMEM to save space in RAM
 // The data for the selected sensor type is copied to RAM, see P145_data_struct
 /******************************************************************************/
-const struct P145_SENSORDEF sensorDefs[] PROGMEM =
+const P145_SENSORDEF sensorDefs[] PROGMEM 
 {
   // User defined, output plain ratio (Rsensor/Rzero)
   {     
-      0.0f,         // cleanRatio
-      0.0f,         // PARA scaling factor value
-      0.0f,         // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgNone,  // preferred/tuned algorithm
-      P145_SENSUSER, // Name
-      P145_GASUSER, // gas
+      .cleanRatio = 0.0f,
+      .para       = 0.0f,
+      .parb       = 0.0f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgNone,
+      .name       = P145_SENSUSER,
+      .gas        = P145_GASUSER,
   },
   // *** MQ-135 - CO2 ***
   {
-      0.0f,         // cleanRatio
-      116.6020682f, // PARA scaling factor value
-      2.769034857f, // PARB exponent value
-      0.00035f,     // CORA
-      0.02718f,     // CORB
-      1.39538f,     // CORC
-      0.0018f,      // CORD
-      -0.003333333f,// CORE
-      -0.001923077f,// CORF
-      1.130128205f, // CORG
-      p145AlgA,     // preferred/tuned algorithm
-      P145_SENSMQ135,  // Name
-      P145_GASCO2,  // gas
+      .cleanRatio = 0.0f,
+      .para       = 116.6020682f,
+      .parb       = 2.769034857f,
+      .cora       = 0.00035f,
+      .corb       = 0.02718f,
+      .corc       = 1.39538f,
+      .cord       = 0.0018f,
+      .core       = -0.003333333f,
+      .corf       = -0.001923077f,
+      .corg       = 1.130128205f,
+      .alg        = p145AlgA,
+      .name       = P145_SENSMQ135,
+      .gas        = P145_GASCO2,
   },
     // *** MQ-2 - H2 ***
   {
-      9.83f,        // cleanRatio
-      987.99f,      // PARA scaling factor
-      -2.162f,      // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ2, // Name
-      P145_GASH2,   // gas
+      .cleanRatio = 9.83f,
+      .para       = 987.99f,
+      .parb       = -2.162f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ2,
+      .gas        = P145_GASH2,
   },
   // *** MQ-3 - alcohol ***
   {
-      60.0f,        // cleanRatio
-      0.3934f,      // PARA scaling factor
-      -1.504f,      // PARB exponent value
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ3, // Name
-      P145_GASALCOHOL,  // gas
+      .cleanRatio = 60.0f,
+      .para       = 0.3934f,
+      .parb       = -1.504f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ3,
+      .gas        = P145_GASALCOHOL,
   },
   // *** MQ-4 - CH4 ***
   {
-      4.4f,         // cleanRatio
-      1012.7f,      // PARA scaling
-      -2.786f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ4, // Name
-      P145_GASCH4,  // gas
+      .cleanRatio = 4.4f,
+      .para       = 1012.7f,
+      .parb       = -2.786f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ4,
+      .gas        = P145_GASCH4,
   },
     // *** MQ-5 - H2 ***
   {
-      5.5f,         // cleanRatio
-      1163.8f,      // PARA scaling
-      -3.874f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ5, // Name
-      P145_GASCH4,  // gas
+      .cleanRatio = 5.5f,
+      .para       = 1163.8f,
+      .parb       = -3.874f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ5,
+      .gas        = P145_GASCH4,
   },
      // *** MQ-5 - LPG ***
   {
-      5.5f,         // cleanRatio
-      80.897f,      // PARA scaling
-      -2.431f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ5, // Name
-      P145_GASLPG,  // gas
+      .cleanRatio = 5.5f,
+      .para       = 80.897f,
+      .parb       = -2.431f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ5,
+      .gas        = P145_GASLPG,
   },
   // *** MQ-6 - LPG ***
   {
-      10.0f,        // cleanRatio
-      1009.2f,      // PARA scaling
-      -2.35f,       // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ6, // Name
-      P145_GASLPG,  // gas
+      .cleanRatio = 10.0f,
+      .para       = 1009.2f,
+      .parb       = -2.35f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ6,
+      .gas        = P145_GASLPG,
   },
   // *** MQ-7 - CO ***
   {
-      27.5f,        // cleanRatio
-      491204.0f,    // PARA scaling
-      -5.826f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG   
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ7, // Name
-      P145_GASCO,   // gas
+      .cleanRatio = 27.5f,
+      .para       = 491204.0f,
+      .parb       = -5.826f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ7,
+      .gas        = P145_GASCO,
   },
   // *** MQ-8 - H2 ***
   {
-      70.0f,        // cleanRatio
-      976.97f,      // PARA scaling
-      -0.688f,      // PARB exponent
-      0.0f,         // CORA
-      0.0f,         // CORB
-      0.0f,         // CORC
-      0.0f,         // CORD
-      0.0f,         // CORE
-      0.0f,         // CORF
-      0.0f,         // CORG   
-      p145AlgB,     // preferred/tuned algorithm
-      P145_SENSMQ8, // Name
-      P145_GASH2,   // gas
+      .cleanRatio = 70.0f,
+      .para       = 976.97f,
+      .parb       = -0.688f,
+      .cora       = 0.0f,
+      .corb       = 0.0f,
+      .corc       = 0.0f,
+      .cord       = 0.0f,
+      .core       = 0.0f,
+      .corf       = 0.0f,
+      .corg       = 0.0f,
+      .alg        = p145AlgB,
+      .name       = P145_SENSMQ8,
+      .gas        = P145_GASH2,
   }
 };
 /// @brief The number of types stored in the sensorDefs[] table
@@ -419,21 +419,10 @@ float P145_data_struct::getTempHumCorrection(float temperature, float humidity) 
 /*****************************************************************************/
 float P145_data_struct::getAnalogValue()
 {
-  float ain = last_ain;                        // Build result, start with previous
-  float sum = (float)(ovs_value);              // OversamplingValue
-  int count = ovs_cnt;                         // OversamplingCount
-  if (count > 0)                               // Any samples gathered?
-  {
-    if (count >= 3)
-    {
-      sum -= (float)ovs_max;                   // remove OversamplingMaxVal
-      sum -= (float)ovs_min;                   // remove OversamplingMinVal
-      count -= 2;
-    }
-    ain = sum / (float)count;                  // Scale to single sample value
-    last_ain = (unsigned long)(sum / 100);     // Remember result
-  }
-  return ain;
+  float value{};
+  ovs.peek(value);
+  ovs.resetKeepLast();
+  return value;
 }
 
 /*****************************************************************************/
@@ -501,7 +490,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     float rSensor = 0.0f;         // Sensor resistance Rs
     float value = 0.0f;           // Return value
 #ifdef P145_DEBUG
-    uint  ovs = 0;                // Oversampling count (for debugging)
+    uint32_t  ovs_cnt = 0;                // Oversampling count (for debugging)
 #endif
 #ifdef P145_TEST
     static float injector = 50.0f;
@@ -525,7 +514,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
     {
       ain = getAnalogValue();     // Use acually being measured value
 #ifdef P145_DEBUG
-      ovs = ovs_cnt;
+      ovs_cnt = ovs.getCount();
 #endif
       resetOversampling();        // Reset the oversampling variables.
     }
@@ -555,7 +544,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Temp= "), temperature));    // Temperature for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: Hum= "), humidity));        // Humidity for compensation algorithm
       addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ain= "), ain));             // Measured analog input value
-      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs));             // Oversampling count
+      addLog(LOG_LEVEL_INFO, concat(F("MQ-xx: ovs= "), ovs_cnt));         // Oversampling count
       if (calibration)
       {
         addLog(LOG_LEVEL_INFO, F("MQ-xx: Calibration enabled"));
@@ -575,10 +564,7 @@ float P145_data_struct::readValue(float temperature, float humidity)
 /*****************************************************************************/
 void P145_data_struct::resetOversampling()
 {
-    ovs_value = 0;                    // OversamplingValue
-    ovs_cnt = 0;                      // OversamplingCount
-    ovs_min = MAX_ADC_VALUE;          // OversamplingMinVal
-    ovs_max = 0;                      // OversamplingMaxVal
+  ovs.reset();
 }
 /*****************************************************************************/
 /*!
@@ -591,7 +577,6 @@ void P145_data_struct::resetOversampling()
 bool P145_data_struct::plugin_init()
 {
   resetOversampling();
-  last_ain = 0;                   // No measured analog input value yet
   last_cal = millis();            // Initialise the calibration interval
   return true;
 }
@@ -606,26 +591,13 @@ bool P145_data_struct::plugin_init()
 /*****************************************************************************/
 bool P145_data_struct::plugin_ten_per_second()
 {
-    uint16_t currentValue;
-
     // Measure the analog input value for oversampling
     // Algorithm uses mean value with exeption of max and min values
     // See declaraion of the global variables for their usage
     // Skip measurement in analog input is used to calibrate WiFi
     if (!WiFiEventData.wifiConnectInProgress)
     {
-      currentValue = espeasy_analogRead(analogPin);
-      ovs_value += currentValue;
-      ovs_cnt++;
-
-      if (currentValue > ovs_max)
-      {
-        ovs_max = currentValue;
-      }
-      if (currentValue < ovs_min)
-      {
-        ovs_min = currentValue;
-      }
+      ovs.add(espeasy_analogRead(analogPin));
     }
     return true;
 }
@@ -800,7 +772,9 @@ void P145_data_struct::heaterControl(void)
 {
   unsigned long now = millis();
   long time = timePassedSince(heaterChangeTime);  // Time a state is active
+  # ifdef P145_DEBUG
   P145_heaterState lastState = heaterState;       // To detect a state change
+  # endif // ifdef P145_DEBUG
 
   // Check if the heaterPin has been changed => change in controller
   if (heaterPin != lastHeaterPin)

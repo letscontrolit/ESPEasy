@@ -339,10 +339,10 @@ P022 :ref:`P022_page`
 .. .. include:: ../Plugin/P034_commands.repl
 
 
-.. P035 :ref:`P035_page`
-.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+P035 :ref:`P035_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. .. include:: ../Plugin/P035_commands.repl
+.. include:: ../Plugin/P035_commands.repl
 
 
 P036 :ref:`P036_page`
@@ -660,6 +660,12 @@ P095 :ref:`P095_page`
 
 See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
 
+P098 :ref:`P098_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P098_commands.repl
+
+
 P099 :ref:`P099_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -758,10 +764,25 @@ P143 :ref:`P143_page`
 
 .. include:: ../Plugin/P143_commands.repl
 
+P146 :ref:`P146_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P146_commands.repl
+
 P148 :ref:`P148_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P148_commands.repl
+
+P152 :ref:`P152_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P152_commands.repl
+
+P153 :ref:`P153_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P153_commands.repl
 
 .. .. *** Insert regular plugin commands above this remark! ***
 

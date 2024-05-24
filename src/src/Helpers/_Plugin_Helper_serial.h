@@ -2,9 +2,12 @@
 #define HELPERS__PLUGIN_HELPER_SERIAL_H
 
 
+#include "../../ESPEasy_common.h"
+
+#ifdef PLUGIN_USES_SERIAL
+
 #include <ESPeasySerial.h>
 
-#include "../../ESPEasy_common.h"
 
 struct ESPeasySerialType;
 
@@ -22,6 +25,11 @@ String serialHelper_getGpioDescription(ESPEasySerialPort typeHint,
 void serialHelper_getGpioNames(struct EventStruct *event,
                                bool                rxOptional = false,
                                bool                txOptional = false);
+
+void serialHelper_modbus_getGpioNames(struct EventStruct *event,
+                               bool                rxOptional = false,
+                               bool                txOptional = false,
+                               bool                DE_RE_optional = true);
 
 int8_t            serialHelper_getRxPin(struct EventStruct *event);
 
@@ -65,5 +73,6 @@ uint8_t serialHelper_serialconfig_webformSave();
 // Used by some plugins, which used several TaskDevicePluginConfigLong
 uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig);
 
+#endif // ifdef PLUGIN_USES_SERIAL
 
 #endif // ifndef HELPERS__PLUGIN_HELPER_SERIAL_H

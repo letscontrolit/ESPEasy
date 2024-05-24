@@ -65,6 +65,41 @@
 
     ``ClearRTCram``"
     "
+    ClearSdkWifi","
+    :red:`Internal`","
+    ESP8266 only (added: 2022/11/11)
+    
+    Clear the 12k SDK WiFi partition at the end of the flash memory.
+    This data is used by the ESP8266 Arduino SDK to keep some persistent WiFi settings.
+    
+    When WiFi is performing badly, it might be useful to clear this section. 
+    Especially when switching SDK build revisions, like when switching between regular builds and 'beta' or 'alt.WiFi' builds.
+    
+    Please reboot after clearing this partition.
+    
+    See also ``ClearWifiRFcal`` command.
+
+    ``ClearSdkWifi``"
+    "
+    ClearWifiRFcal","
+    :red:`Internal`","
+    ESP8266 only (added: 2022/11/11)
+    
+    Clear the 4k RFcal partition near the end of the flash memory.
+    This data is used by the ESP8266 Arduino SDK to keep store WiFi RF calibration data.
+    
+    When WiFi is performing badly, it might be useful to clear this section. 
+    Especially when switching SDK build revisions, like when switching between regular builds and 'beta' or 'alt.WiFi' builds.
+    
+    Another reason to clear the RF calibration is when initial RF calibration was done with a different power supply, or when WiFi performs badly after placing the ESP in a different enclosure which may de-tune the antenna.
+    
+    Please reboot after clearing this partition.
+    
+    See also ``ClearSdkWifi`` command.
+
+    ``ClearWifiRFcal``"
+
+    "
     Config","
     :red:`Internal`","
     Remote config of a task. 
@@ -180,7 +215,18 @@
 
     ``Gateway,192.168.1.1``
     
-    Example output: ``Gateway:192.168.10.254(DHCP)``"
+    Example output: ``Gateway:192.168.10.254(DHCP)``
+    "
+    "
+    HiddenSSID","
+    :red:`Internal`","
+    Get or set the Include Hidden SSID setting
+
+    ``HiddenSSID``
+
+    ``HiddenSSID,true`` (can use ``1``, ``true`` or ``on`` to enable, and ``0``, ``false`` or ``off`` to disable)
+    
+    Example output: ``Include Hidden SSID:true``"
     "
     I2Cscanner","
     :red:`Internal`","
@@ -386,6 +432,8 @@
     
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
 
+    See also: ``PutToHTTP`` and ``SendToHTTP``
+
     Added: 2023-01-15
     "
     "
@@ -424,6 +472,65 @@
     Send command using MQTT broker service. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PutToHTTP","
+    :green:`Rules`","
+    *Syntax format 1:*
+
+    ``PutToHTTP,[<user>:<password>@]<host>,<port>,<uri>,[<headers>][,<putdata>]``
+
+    Send a command to another network device via HTTP using the http ``PUT`` method.
+
+    ``<host>`` can be either a domain name or IP address.
+
+    ``<port>`` is the port to connect to, usually 80 for a HTTP site.
+
+    ``<uri>`` the path on the server to put the message to.
+
+    *Syntax format 2:*
+
+    ``PutToHTTP,http://[<user>:<password>@]<url>,[<headers>][,<putdata>]``
+
+    ``<url>`` is the full hostname (or IP address) and path on the server to put the content to.
+
+    *For both syntax formats:*
+
+    ``<user>`` is an optional user to supply for Basic authentication.
+
+    ``<password>`` is an optional password to supply for Basic authentication.
+
+    ``<headers>`` when provided will be added to the header of the ``PUT`` message, has to be in ``<name>:<value>`` format. Can be used to supply a ``Authorization: Bearer <token>`` and/or ``api-key:<key>`` (instead of a user/password Basic authentication) and a ``Content-Type: <content-type>``. Multiple entries have to be separated by a NewLine (``%LF%``) to be processed correctly. When not used (empty) and ``<putdata>`` *is used*, the comma should still be included!
+
+    ``<putdata>`` is the optional content to include in the ``PUT`` message. Can be anything, f.e. a JSON formatted string, like in the example below.
+
+    Syntax examples:
+
+    ``PutToHTTP,<host>,<Portnumber>,<uri>,[<headers>][,<putdata>]``
+
+    ``PutToHTTP,<user>:<pass>@<host>,<Portnumber>,<uri>,[<headers>][,<putdata>]``
+
+    ``PutToHTTP,http://<host>/<url>,[<headers>][,<putdata>]``
+
+    ``PutToHTTP,http://<user>:<pass>@<host>/<url>,[<headers>][,<putdata>]``
+
+    ``PutToHTTP,http://<host>:<Portnumber>/<url>,[<headers>][,<putdata>]``
+    
+    ``PutToHTTP,http://<user>:<pass>@<host>:<Portnumber>/<url>,[<headers>][,<putdata>]``
+
+    Example using syntax format 1:
+
+    ``PutToHTTP,user:password@192.168.1.100,8888,/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+
+    Example using syntax format 2:
+
+    ``PutToHTTP,http://user:password@192.168.1.100:8888/someurl,'header1:value1%LF%header2:value2',`{'this':{'string':'can','be':'JSON','data':{'one':1,'two':2.0,'bool':true}}}```
+    
+    On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
+
+    See also: ``PostToHTTP`` and ``SendToHTTP``
+
+    Added: 2023-04-17
+    "
     "
     Reboot","
     :red:`Internal`","
@@ -761,6 +868,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
         on SingleEvent do
           Publish,%sysname%/Info,A single event has been triggered!
         endon
+
     "
     "
     ``Event,SingleValue=123``
@@ -774,6 +882,7 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
       on SingleValue do
         Publish,%sysname%/Info,An event has been sent (%eventvalue%)!
       endon
+
     "
     "
     ``Event,Multi=1,2,3,99``
@@ -792,5 +901,6 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
           TaskValueSet,12,1,[%eventvalue3%-%eventvalue2%]
         endif
       endon
+
     "
 

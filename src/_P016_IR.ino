@@ -185,7 +185,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       if (P016_SEND_IR_TO_CONTROLLER) {
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
       } else {
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_LONG;
+        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
       }
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = true;
@@ -493,7 +493,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       # if P016_FEATURE_COMMAND_HANDLING
       P016_CMDINHIBIT = getFormItemInt(F("pcmdinhibit"));
       # endif // if P016_FEATURE_COMMAND_HANDLING
-      P016_BUFFERSIZE = ceil(getFormItemInt(F("pbuffersize")) / 2.0f); // UI shows bytes, we store buffer unit = uint16_t
+      P016_BUFFERSIZE = (getFormItemInt(F("pbuffersize")) + 1) >> 1; // UI shows bytes, we store buffer unit = uint16_t
 
       # if P016_FEATURE_COMMAND_HANDLING
 

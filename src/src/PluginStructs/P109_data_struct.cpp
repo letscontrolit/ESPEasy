@@ -289,10 +289,7 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
  * Save thermo settings unconditionally
  *************************************************************************/
 void P109_data_struct::saveThermoSettings(struct EventStruct *event) {
-  String fileName;
-
-  fileName += concat(F("thermo"), static_cast<int>(event->TaskIndex + 1));
-  fileName += F(".dat");
+  const String fileName(strformat(F("thermo%d.dat"), static_cast<int>(event->TaskIndex + 1)));
   fs::File f = tryOpenFile(fileName, F("w"));
 
   if (f) {
@@ -301,11 +298,8 @@ void P109_data_struct::saveThermoSettings(struct EventStruct *event) {
     flashCount();
   }
   # ifndef BUILD_NO_DEBUG
-  String log;
-  log.reserve(fileName.length() + 36);
-  log += F("Thermo : (delayed) Save UserVars to ");
-  log += fileName;
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, strformat(
+     F("Thermo : (delayed) Save UserVars to %s"),  fileName.c_str()));
   # endif // ifndef BUILD_NO_DEBUG
 }
 

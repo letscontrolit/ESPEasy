@@ -10,6 +10,7 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -25,6 +26,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
@@ -36,6 +38,8 @@
 #include <IPAddress.h>
 #include <base64.h>
 #include <MD5Builder.h> // for getDigestAuth
+
+#include <WiFiUdp.h>
 
 #include <lwip/dns.h>
 
@@ -52,6 +56,12 @@
 
 #include <lwip/netif.h>
 
+#ifdef ESP8266
+#include <lwip/opt.h>
+#include <lwip/udp.h>
+#include <lwip/igmp.h>
+#include <include/UdpContext.h>
+#endif
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -99,7 +109,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
       // problem resolving the hostname or port
       return;
     }
-    uint8_t prio = Settings.SyslogFacility * 8;
+    unsigned int prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
       prio += 3; // syslog error
@@ -116,15 +126,14 @@ void sendSyslog(uint8_t logLevel, const String& message)
     // Using Settings.Name as the Hostname (Hostname must NOT content space)
     {
       String header;
-      String hostname = NetworkCreateRFCCompliantHostname(true);
-      hostname.trim();
-      hostname.replace(' ', '_');
-      header.reserve(16 + hostname.length());
-      char str[8] = { 0 };
-      snprintf_P(str, sizeof(str), PSTR("<%u>"), prio);
-      header  = str;
-      header += hostname;
+      header += '<';
+      header += prio;
+      header += '>';
+      header += NetworkCreateRFCCompliantHostname(true);
       header += F(" EspEasy: ");
+      header.trim();
+      header.replace(' ', '_');
+      
       #ifdef ESP8266
       portUDP.write(header.c_str(),                                    header.length());
       #endif // ifdef ESP8266
@@ -133,16 +142,13 @@ void sendSyslog(uint8_t logLevel, const String& message)
       #endif // ifdef ESP32
     }
 
-    const size_t messageLength = message.length();
+    #ifdef ESP8266
+    portUDP.write(message.c_str(), message.length());
+    #endif // ifdef ESP8266
+    #ifdef ESP32
+    portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
+    #endif // ifdef ESP32
 
-    for (size_t i = 0; i < messageLength; ++i) {
-      #ifdef ESP8266
-      portUDP.write(message[i]);
-      #endif // ifdef ESP8266
-      #ifdef ESP32
-      portUDP.write((uint8_t)message[i]);
-      #endif // ifdef ESP32
-    }
     portUDP.endPacket();
     FeedSW_watchdog();
     delay(0);
@@ -336,15 +342,11 @@ void checkUDP()
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                    String log;
-                    log.reserve(64);
-                    log  = F("UDP  : ");
-                    log += received.STA_MAC().toString();
-                    log += ',';
-                    log += received.IP().toString();
-                    log += ',';
-                    log += received.unit;
-                    addLog(LOG_LEVEL_DEBUG_MORE, log);
+                    addLogMove(LOG_LEVEL_DEBUG_MORE,  
+                      strformat(F("UDP  : %s,%s,%d"), 
+                        received.STA_MAC().toString().c_str(), 
+                        formatIP(received.IP()).c_str(), 
+                        received.unit));
                   }
 
 #endif // ifndef BUILD_NO_DEBUG
@@ -397,7 +399,7 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
       }
     }
   }
-  return unitIPAddress.toString();
+  return formatIP(unitIPAddress);
 }
 
 /*********************************************************************************************\
@@ -813,7 +815,7 @@ void SSDP_update() {
                 }
                 break;
               case MX:
-                _delay = random(0, atoi(buffer)) * 1000L;
+                _delay = HwRandom(0, atoi(buffer)) * 1000L;
                 break;
             }
 
@@ -904,7 +906,7 @@ bool hasIPaddr() {
   for (auto addr : addrList) {
     if ((configured = (!addr.isLocal() && (addr.ifnumber() == STATION_IF)))) {
       /*
-         Serial.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+         ESPEASY_SERIAL_CONSOLE_PORT.printf("STA: IF='%s' hostname='%s' addr= %s\n",
                     addr.ifname().c_str(),
                     addr.ifhostname(),
                     addr.toString().c_str());
@@ -1051,8 +1053,13 @@ void scrubDNS() {
 }
 
 bool valid_DNS_address(const IPAddress& dns) {
-  return (dns.v4() != (uint32_t)0x00000000 && 
+  return (/*dns.v4() != (uint32_t)0x00000000 && */
           dns.v4() != (uint32_t)0xFD000000 && 
+#ifdef ESP32
+          // Bug where IPv6 global prefix is set as DNS
+          // Global IPv6 prefixes currently start with 2xxx::
+          (dns.v4() & (uint32_t)0xF0000000) != (uint32_t)0x20000000 && 
+#endif
           dns != INADDR_NONE);
 }
 
@@ -1073,7 +1080,7 @@ bool setDNS(int index, const IPAddress& dns) {
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (valid_DNS_address(dns)) {
+  if (valid_DNS_address(dns) || dns.v4() == (uint32_t)0x00000000) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
     const ip_addr_t* cur_dns = dns_getserver(index);
@@ -1144,7 +1151,7 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 
   while (attempts > 0) {
     --attempts;
-    long port = random(1025, 65535);
+    long port = HwRandom(1025, 65535);
 
     if (udp.begin(port) != 0) {
       return true;
@@ -1345,7 +1352,7 @@ String getDigestAuth(const String& authReq,
     F("\", response=\"") + response +
     '"';
 
-  //  Serial.println(authorization);
+  //  ESPEASY_SERIAL_CONSOLE_PORT.println(authorization);
 
   return authorization;
 }
@@ -1464,7 +1471,7 @@ int http_authenticate(const String& logIdentifier,
   http.addHeader(F("Accept"), F("*/*;q=0.1"));
 
   // Add client IP
-  http.addHeader(F("X-Forwarded-For"), NetworkLocalIP().toString());
+  http.addHeader(F("X-Forwarded-For"), formatIP(NetworkLocalIP()));
 
   delay(0);
   scrubDNS();
@@ -1517,7 +1524,7 @@ int http_authenticate(const String& logIdentifier,
 #ifdef ESP32
       http.setAuthorizationType(""); // Default type is "Basic" and "Digest" is already part of the string generated by getDigestAuth()
 #endif
-      const String authorization = getDigestAuth(authReq, user, pass, "GET", uri, 1);
+      const String authorization = getDigestAuth(authReq, user, pass, F("GET"), uri, 1);
 
       http.end();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -1683,10 +1690,7 @@ bool start_downloadFile(WiFiClient  & client,
     );
 
   if (httpCode != HTTP_CODE_OK) {
-    error  = F("HTTP code: ");
-    error += httpCode;
-    error += ' ';
-    error += url;
+    error  = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
 
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
@@ -1792,14 +1796,14 @@ bool downloadFirmware(String filename, String& error)
 # if FEATURE_CUSTOM_PROVISIONING
   MakeProvisioningSettings(ProvisioningSettings);
 
-  if (AllocatedProvisioningSettings()) {
-    loadProvisioningSettings(ProvisioningSettings);
-    if (!ProvisioningSettings.allowedFlags.allowFetchFirmware) {
+  if (ProvisioningSettings.get()) {
+    loadProvisioningSettings(*ProvisioningSettings);
+    if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
       return false;
     }
-    baseurl = ProvisioningSettings.url;
-    user = ProvisioningSettings.user;
-    pass = ProvisioningSettings.pass;
+    baseurl = ProvisioningSettings->url;
+    user = ProvisioningSettings->user;
+    pass = ProvisioningSettings->pass;
   }
 # endif // if FEATURE_CUSTOM_PROVISIONING
 

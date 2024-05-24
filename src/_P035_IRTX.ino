@@ -6,7 +6,10 @@
 // #######################################################################################################
 //
 // Changelog:
-// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names 
+// 2023-07-25, tonhuisman:  Code optimization and deduplication, remove some commented code
+// 2023-07-22, tonhuisman:  Minor code improvements, show IRSENDAC command only in config page if included in build
+// 2023-07-21, tonhuisman:  Add 'Inverted output' option, as supported by the IRsend class.
+// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names
 // 2022-01-11, tonhuisman:  Move all code and globals to PluginStructs/P035_data_struct to enable multi-instance use
 // No previous changelog recorded.
 
@@ -75,35 +78,33 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormCheckBox(F("Inverted output"), F("invert"), PCONFIG(0) == 1);
+
       addRowLabel(F("Command"));
       addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0<BR/>"));
-      addHtml(F("IRSENDAC,{JSON formated AC command}"));
+      # ifdef P016_P035_Extended_AC
+      addHtml(F("IRSENDAC,{JSON formatted AC command}"));
+      # endif // ifdef P016_P035_Extended_AC
 
       success = true;
       break;
     }
 
-    case PLUGIN_INIT:
+    case PLUGIN_WEBFORM_SAVE:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P035_data_struct(CONFIG_PIN1));
-      P035_data_struct *P035_data = static_cast<P035_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P035_data) {
-        return success;
-      }
-      success = P035_data->plugin_init(event);
+      PCONFIG(0) = isFormItemChecked(F("invert")) ? 1 : 0;
+      success    = true;
       break;
     }
 
-    case PLUGIN_EXIT:
+    case PLUGIN_INIT:
     {
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P035_data_struct(CONFIG_PIN1, PCONFIG(0) == 1));
       P035_data_struct *P035_data = static_cast<P035_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P035_data) {
-        return success;
+      if (nullptr != P035_data) {
+        success = P035_data->plugin_init(event);
       }
-      success = P035_data->plugin_exit(event);
-
       break;
     }
 
@@ -111,10 +112,9 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
     {
       P035_data_struct *P035_data = static_cast<P035_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P035_data) {
-        return success;
+      if (nullptr != P035_data) {
+        success = P035_data->plugin_write(event, string);
       }
-      success = P035_data->plugin_write(event, string);
 
       break;
     } // PLUGIN_WRITE END

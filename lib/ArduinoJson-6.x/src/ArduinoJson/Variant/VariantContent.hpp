@@ -1,5 +1,5 @@
 // ArduinoJson - https://arduinojson.org
-// Copyright © 2014-2022, Benoit BLANCHON
+// Copyright © 2014-2023, Benoit BLANCHON
 // MIT License
 
 #pragma once
@@ -7,10 +7,10 @@
 #include <stddef.h>  // size_t
 
 #include <ArduinoJson/Collection/CollectionData.hpp>
-#include <ArduinoJson/Numbers/Float.hpp>
-#include <ArduinoJson/Numbers/Integer.hpp>
+#include <ArduinoJson/Numbers/JsonFloat.hpp>
+#include <ArduinoJson/Numbers/JsonInteger.hpp>
 
-namespace ARDUINOJSON_NAMESPACE {
+ARDUINOJSON_BEGIN_PRIVATE_NAMESPACE
 
 enum {
   VALUE_MASK = 0x7F,
@@ -39,19 +39,20 @@ enum {
 };
 
 struct RawData {
-  const char *data;
+  const char* data;
   size_t size;
 };
 
 union VariantContent {
-  Float asFloat;
+  JsonFloat asFloat;
   bool asBoolean;
-  UInt asUnsignedInteger;
-  Integer asSignedInteger;
+  JsonUInt asUnsignedInteger;
+  JsonInteger asSignedInteger;
   CollectionData asCollection;
   struct {
-    const char *data;
+    const char* data;
     size_t size;
   } asString;
 };
-}  // namespace ARDUINOJSON_NAMESPACE
+
+ARDUINOJSON_END_PRIVATE_NAMESPACE

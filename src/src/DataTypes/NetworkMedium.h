@@ -1,8 +1,6 @@
 #ifndef DATATYPES_NETWORKMEDIUM_H
 #define DATATYPES_NETWORKMEDIUM_H
 
-#include <Arduino.h>
-
 #include "../../ESPEasy_common.h"
 
 // Is stored in settings

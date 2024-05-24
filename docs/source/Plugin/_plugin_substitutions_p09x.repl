@@ -47,9 +47,9 @@
 .. |P093_compileinfo| replace:: `.`
 .. |P093_usedlibraries| replace:: `.`
 
-.. |P094_name| replace:: :cyan:`Communication - CUL Reader`
+.. |P094_name| replace:: :cyan:`CUL Reader`
 .. |P094_type| replace:: :cyan:`Communication`
-.. |P094_typename| replace:: :cyan:`CUL Reader`
+.. |P094_typename| replace:: :cyan:`Communication - CUL Reader`
 .. |P094_status| replace:: :yellow:`COLLECTION D`
 .. |P094_github| replace:: P094_CULReader.ino
 .. _P094_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P094_CULReader.ino
@@ -84,6 +84,19 @@
 .. |P097_maintainer| replace:: `TD-er`
 .. |P097_compileinfo| replace:: `.`
 .. |P097_usedlibraries| replace:: `.`
+
+.. |P098_name| replace:: :cyan:`PWM Motor`
+.. |P098_type| replace:: :cyan:`Motor`
+.. |P098_typename| replace:: :cyan:`Motor - PWM Motor`
+.. |P098_porttype| replace:: `.`
+.. |P098_status| replace:: :yellow:`COLLECTION A` :yellow:`COLLECTION D`
+.. |P098_github| replace:: _P098_PWM_motor.ino
+.. _P098_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P098_PWM_motor.ino
+.. |P098_usedby| replace:: `.`
+.. |P098_shortinfo| replace:: `.`
+.. |P098_maintainer| replace:: `TD-er`
+.. |P098_compileinfo| replace:: `.`
+.. |P098_usedlibraries| replace:: `.`
 
 .. |P099_name| replace:: :cyan:`XPT2046 touchscreen on TFT display`
 .. |P099_type| replace:: :cyan:`Touch`

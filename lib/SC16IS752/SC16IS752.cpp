@@ -22,7 +22,9 @@
 
 // #define SC16IS750_DEBUG_PRINT
 #include <SC16IS752.h>
+#ifndef DISABLE_SC16IS752_SPI
 #include <SPI.h>
+#endif
 #include <Wire.h>
 
 
@@ -47,8 +49,10 @@ SC16IS752::SC16IS752(uint8_t prtcl, uint8_t addr_sspin) : initialized(false)
     } else {
       device_address_sspin = (addr_sspin >> 1);
     }
+#ifndef DISABLE_SC16IS752_SPI
   } else {
     device_address_sspin = addr_sspin;
+#endif
   }
   peek_flag[SC16IS752_CHANNEL_A] = 0;
   peek_flag[SC16IS752_CHANNEL_B] = 0;
@@ -128,6 +132,7 @@ uint8_t SC16IS752::ReadRegister(uint8_t channel, uint8_t reg_addr)
     WIRE.endTransmission(0);
     WIRE.requestFrom(device_address_sspin, (uint8_t)1);
     result = WIRE.read();
+#ifndef DISABLE_SC16IS752_SPI
   } else if (protocol == SC16IS750_PROTOCOL_SPI) { // register read operation via SPI
     ::digitalWrite(device_address_sspin, LOW);
     delayMicroseconds(10);
@@ -135,6 +140,7 @@ uint8_t SC16IS752::ReadRegister(uint8_t channel, uint8_t reg_addr)
     result = SPI.transfer(0xff);
     delayMicroseconds(10);
     ::digitalWrite(device_address_sspin, HIGH);
+#endif
   }
 
 #ifdef  SC16IS750_DEBUG_PRINT
@@ -164,6 +170,7 @@ void SC16IS752::WriteRegister(uint8_t channel, uint8_t reg_addr, uint8_t val)
     WIRE.write((reg_addr << 3 | channel << 1));
     WIRE.write(val);
     WIRE.endTransmission(1);
+#ifndef DISABLE_SC16IS752_SPI
   } else {
     ::digitalWrite(device_address_sspin, LOW);
     delayMicroseconds(10);
@@ -171,6 +178,7 @@ void SC16IS752::WriteRegister(uint8_t channel, uint8_t reg_addr, uint8_t val)
     SPI.transfer(val);
     delayMicroseconds(10);
     ::digitalWrite(device_address_sspin, HIGH);
+#endif
   }
 }
 
@@ -178,6 +186,7 @@ void SC16IS752::Initialize()
 {
   if (protocol == SC16IS750_PROTOCOL_I2C) {
     WIRE.begin();
+#ifndef DISABLE_SC16IS752_SPI
   } else {
     ::pinMode(device_address_sspin, OUTPUT);
     ::digitalWrite(device_address_sspin, HIGH);
@@ -187,6 +196,7 @@ void SC16IS752::Initialize()
     SPI.begin();
 
     // SPI.setClockDivider(32);
+#endif
   }
   ResetDevice();
   initialized = true;

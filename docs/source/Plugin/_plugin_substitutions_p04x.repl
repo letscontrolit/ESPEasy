@@ -83,7 +83,7 @@
 .. |P046_status| replace:: :yellow:`COLLECTION`
 .. |P046_github| replace:: P046_VentusW266.ino
 .. _P046_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P046_VentusW266.ino
-.. |P046_usedby| replace:: :ref:`P046_Ventus_W266_page`
+.. |P046_usedby| replace:: `.`
 .. |P046_shortinfo| replace:: The weather station Ventus W266 is a indoor + outdoor unit which can detect many weather related values.
 .. |P046_maintainer| replace:: `.`
 .. |P046_compileinfo| replace:: This one is suppressed by default, you need to compile your own version if you want to use it.

@@ -3,162 +3,452 @@ Supported ESP Chips
 
 ESPEasy does support a number of variants of the processors manufactured by Espressif.
 
-* ESP8266 The original ESP processor, with external flash.
-* ESP8285 Mainly found in "Chinese" products. Has flash built in the processor. (almost always 1MByte flash)
-* ESP32 The first successor of the ESP82xx, supporting 2 CPU cores, Bluetooth and more RAM and more GPIO pins. (and other new features)
-* ESP32-S2 Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
-* ESP32-S3 Not yet available to buy. (as of September 2021)
-* ESP32-C3 Support in ESPeasy will be added soon.
+* **ESP8266** The original ESP processor, with external flash.
+* **ESP8285** Mainly found in "Chinese" products. Has flash built in the processor. (almost always 1MByte flash)
+* **ESP32** The first successor of the ESP82xx, supporting 2 CPU cores, Bluetooth and more RAM and more GPIO pins. (and other new features)
+* **ESP32-solo1** Same as ESP32, but with 1 core, running at 160 MHz. Used in some commercially sold devices like the early editions of the orange Shelly modules.
+* **ESP32-S2** Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
+* **ESP32-S3** Support added: 2023-05-03
+* **ESP32-C3 / ESP8685** Support added: 2023-05-03
+* **ESP32-C2 / ESP8684** Not yet supported
+* **ESP32-C6** Not yet supported
+* **ESP32-H2** Not yet supported
 
 
 .. list-table:: Espressif platforms
    :header-rows: 1
-   :widths: 7 7 7 7
+   :widths: 7 7 7 7 7 7 7 7 7
    :stub-columns: 1
 
    *  - 
-      - ESP8266
-      - ESP32
+      - ESP8266 (ESP8285)
+      - ESP32 (ESP32solo1)
       - ESP32-S2
-   *  - release Year
+      - ESP32-S3
+      - ESP32-C3 (ESP8685)
+      - ESP32-C2 (ESP8684)
+      - ESP32-C6
+      - ESP32-H2
+   *  - CPU
+      - Xtensa® single-core 32-bit L106
+      - Xtensa® dual-core 32-bit LX6 (solo1:single core)
+      - Xtensa® single-core 32-bit LX7
+      - Xtensa® dual-core 32-bit LX7
+      - 32-bit RISC-V single-core processor
+      - 32-bit RISC-V single-core processor
+      - 32-bit RISC-V single-core processor
+      - 32-bit RISC-V single-core processor
+   *  - Core
+      - 1
+      - 2 (solo1:1)
+      - 1
+      - 2
+      - 1
+      - 1
+      - 1
+      - 1
+   *  - Freq. (MHz)
+      - 80
+      - 240 (solo1:160)
+      - 240
+      - 240
+      - 160
+      - 120
+      - 160
+      - 96
+   *  - Voltage (V)
+      - 2.5 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.0 ~ 3.6
+      - 3.3 ~ 3.6
+   *  - ESPEasy supported since
+      - 2015/05
+      - 2017/12 (solo1:2023/05)
+      - 2021/09
+      - 2023/05
+      - 2023/05
+      - 
+      - 
+      - 
+   *  - Introduction
       - 2014
       - 2016
       - 2019
-   *  - Microcontroller
-      - Xtensa single-core 32-bit L106
-      - Xtensa single/dual-core 32-bit LX6
-      - Xtensa single-core 32-bit LX7
-   *  - Clock Frequency
-      - 80 MHz
-      - 160/240 MHz
-      - 240 MHz
-   *  - Co-processor
-      - No
-      - ULP
-      - ULP (RISC-V)
-   *  - SRAM
-      - 160 KB
-      - 520 KB
-      - 320 KB
-   *  - ROM
-      - No
-      - 448 KB
-      - 128 KB
-   *  - RTC Memory
-      - No
-      - 16 KB
-      - 16 KB
-   *  - External SPIRAM
-      - No
-      - Up to 16MB
-      - Up to 128MB
-   *  - External Flash
-      - Up to 16MB
-      - Up to 16MB
-      - Up to 1GB
-   *  - Wi-Fi (802.11 b/g/n)
-      - HT20
-      - HT20
-      - HT20
-   *  - ESP-MESH
-      - Yes
-      - Yes
-      - Yes
+      - 2021
+      - 2020
+      - 2022
+      - 2021
+      - 2021
+   *  - Status (2023/05)
+      - NRND
+      - Mass Production (solo1: NRND)
+      - NRND
+      - Mass Production
+      - Mass Production
+      - Mass Production
+      - Mass Production
+      - Sample
+   *  - Wi-Fi
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 72 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 150 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
+      - No Wi-Fi
+   *  - Wi-Fi 6
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - IEEE 802.11 ax; 2.4 GHz; HT20; up to 150 Mbps
+      - 
+   *  - Zigbee / Thread (802.15.4)
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - Available
+      - Available
    *  - Bluetooth
-      - No
-      - BT 4.2 BR/EDR & BLE
-      - No
-   *  - Ethernet
-      - No
-      - 10/100 Mbps
-      - No
-   *  - CAN
-      - No
-      - 2.0
-      - No
-   *  - Time of Flight
-      - No
-      - No
-      - Yes
-   *  - GPIO (total)
+      - N/A
+      - BR/EDR + Bluetooth LE v4.2
+      - N/A
+      - Bluetooth LE v5.0
+      - Bluetooth LE v5.0
+      - Bluetooth LE v5.0
+      - Bluetooth LE v5.3
+      - Bluetooth LE v5.0
+   *  - SRAM (KB)
+      - 160
+      - 520
+      - 320
+      - 512
+      - 400
+      - 272
+      - 512
+      - 320
+   *  - ROM (KB)
+      - 
+      - 448
+      - 128
+      - 384
+      - 384
+      - 576
+      - 320
+      - 128
+   *  - RTC SRAM (KB)
+      - 1
       - 16
-      - 34
-      - 43
-   *  - Touch Sensors
-      - No
+      - 16
+      - 16
+      - 8
+      - 0
+      - 16
+      - 4
+   *  - ADC
+      - 1*10-bit ADC, 1 channel
+      - 2*12-bit ADC, 18 channels
+      - 2*13-bit ADC, 20 channels
+      - 2*12-bit ADC, 20 channels
+      - 2*12-bit ADC, 6 channels
+      - 1*12-bit ADC, 5 channels
+      - 1*12-bit ADC, 7 channels
+      - 1*12-bit ADC, 5 channels
+   *  - DAC
+      - 0
+      - 2*8-bit DAC
+      - 2*8-bit DAC
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - Touch
+      - 0
       - 10
       - 14
+      - 14
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - Temp Sensor
+      - 
+      - 0
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+   *  - GPIO
+      - 16
+      - 26
+      - 37
+      - 36
+      - 15
+      - 14
+      - 23
+      - 19
+   *  - Strapping GPIO
+      - 0, 2, 15
+      - 0, 2, 5, 12, 15
+      - 0, 45, 46
+      - 0, 3, 45, 46
+      - 2, 8, 9
+      - 8, 9
+      - 4, 5, 8, 9, 15
+      - 8, 9
+   *  - GPIO for flash/PSRAM
+      - 6, 7, 8, 9, 10, 11
+      - 6, 7, 8, 9, 10, 11 (PSRAM or embedded flash: 16, 17)
+      - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
+      - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
+      - 11, 12, 13, 14, 15, 16, 17
+      - 11, 12, 13, 14, 15, 16, 17
+      - 20, 21, 22, 24, 25, 26
+      - 
+   *  - UART
+      - 1.5 (Serial1 out only)
+      - 3
+      - 2
+      - 3
+      - 2
+      - 2
+      - 3
+      - 2
    *  - SPI
       - 2
       - 4
-      - 4 (OSPI)
+      - 4
+      - 4
+      - 3
+      - 3
+      - 1
+      - 3
+   *  - SDIO HOST
+      - 
+      - 1
+      - 0
+      - 2
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - SDIO SLAVE
+      - 
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 1
+      - 0
    *  - I2C
-      - 1 (soft)
+      - 1(soft)
       - 2
-      - 2
-   *  - I2S
       - 2
       - 2
       - 1
-   *  - UART
-      - 2 (1 ½ actually)
-      - 3
+      - 1
       - 2
-   *  - ADC
-      - 1 (10-bit)
-      - 18 (12-bit)
-      - 20 (12-bit)
-   *  - DAC
-      - No
-      - 2 (8-bit)
-      - 2 (8-bit)
-   *  - PWM (soft)
-      - 8
-      - 16
-      - 8
-   *  - SDMMC
-      - No
-      - Yes
-      - No
-   *  - RMT (remote control)
-      - No
-      - Yes
-      - Yes
+      - 2
+   *  - I2S
+      - 1
+      - 2
+      - 1
+      - 2
+      - 1
+      - 0
+      - 1
+      - 1
+   *  - RMT
+      - 0
+      - 1*8 channels
+      - 1*4 channels
+      - 1*4 channels
+      - 1*4 channels
+      - 0
+      - 1*4 channels
+      - 1*2 channels
+   *  - LED PWM
+      - 0
+      - 2*8 channels
+      - 1*8 channels
+      - 1*8 channels
+      - 1*6 channels
+      - 1*6 channels
+      - 1*6 channels
+      - 1*6 channels
+   *  - MCPWM
+      - 0
+      - 2
+      - 0
+      - 2
+      - 0
+      - 0
+      - 1
+      - 1
    *  - USB OTG
-      - No
-      - No
-      - Yes
-   *  - LCD Interface
-      - No
-      - No
-      - Yes
-   *  - Camera Interface
-      - No
-      - No
-      - Yes
-   *  - Temperature sensor
-      - No
-      - Yes
-      - Yes
-   *  - Hall sensor
-      - No
-      - Yes
-      - No
-   *  - Security
-      - No
-      - Secure boot Flash encryption 1024-bit OTP
-      - Secure boot Flash encryption 4096-bit OTP
-   *  - Crypto
-      - No
-      - AES, SHA-2, RSA, ECC, RNG
-      - AES-128/192/256, SHA-2, RSA, RNG, HMAC, Digital Signature
-   *  - Low Power Consumption
-      - 20uA
-      - 10uA deep sleep
-      - Automatic RF power management 5uA in idle mode 24uA at 1% duty cycle
+      - 0
+      - 0
+      - 1
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - USB Serial / JTAG
+      - N/A
+      - N/A
+      - YES
+      - YES
+      - YES
+      - N/A
+      - YES
+      - YES
+   *  - Hall
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - Ethernet
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+   *  - TWAI (CAN)
+      - 0
+      - 1
+      - 1
+      - 1
+      - 1
+      - 0
+      - 2
+      - 1
+   *  - JTAG
+      - 
+      - YES
+      - YES
+      - YES
+      - YES
+      - YES
+      - YES
+      - YES
+   *  - Camera
+      - N/A
+      - 1*DVP 8/16-bit
+      - 1*DVP 8/16-bit
+      - 1*DVP 8/16-bit
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+   *  - TOF
+      - N/A
+      - N/A
+      - YES
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+   *  - BT Certification
+      - 
+      - BT SIG
+      - 
+      - BT SIG
+      - BT SIG
+      - 
+      - 
+      - 
+   *  - Wi-Fi Certification
+      - WPA 2
+      - Wi-Fi Alliance/WPA 3
+      - Wi-Fi Alliance/WPA 3
+      - 
+      - 
+      - WFA
+      - 
+      - 
+   *  - Green Certification
+      - 
+      - RoHS/REACH
+      - RoHS/REACH
+      - RoHS/REACH
+      - RoHS/REACH
+      - RoHS/REACH
+      - 
+      - 
+   *  - RF Certification
+      - 
+      - FCC / CE-RED / IC / TELEC / KCC / SRRC / NCC
+      - FCC / CE-RED / SRRC / IC
+      - SRRC / CE / FCC / IC / MIC / NCC / KCC
+      - FCC / CE-RED / SRRC / IC
+      - SRRC
+      - 
+      - 
+   *  - Sleep Power Consumption 
+      - 900 µA light sleep, 20 µA deep sleep
+      - 800 µA light sleep, 10 µA deep sleep
+      - 750 µA light sleep, 25 µA deep sleep
+      - 240 µA light sleep, 8 µA deep sleep
+      - 130 µA light sleep, 5 µA deep sleep
+      - 140 µA light sleep, 5 µA deep sleep
+      - 180 µA / 35 µA light sleep, 7 µA deep sleep
+      - 
 
 
-`Table content source <https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32>`_
+Sources:
+
+* `Table content source <https://maker.pro/esp8266/tutorial/a-comparison-of-the-new-esp32-s2-to-the-esp32>`_
+* `Espressif docs <https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32c2/hw-reference/chip-series-comparison.html>`_
+* `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
+* `Espressif ESP32-xx modules overview <https://www.espressif.com/en/products/modules>`_
+
+Datasheets
+==========
+
+* `DS:ESP8266 (ESP8285) <https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf>`_
+* `DS:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_ / `DS:ESP32-solo1 <https://www.espressif.com/sites/default/files/documentation/esp32-solo-1_datasheet_en.pdf>`_ 
+* `DS:ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf>`_
+* `DS:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf>`_
+* `DS:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_ / `DS:ESP8685 <https://www.espressif.com/sites/default/files/documentation/esp8685_datasheet_en.pdf>`_ 
+* `DS:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ / `DS:ESP8684 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ 
+* `DS:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf>`_
+* `DS:ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
+
+
+Technical Reference Manuals
+===========================
+
+* `TR:ESP8266 <https://www.espressif.com/sites/default/files/documentation/esp8266-technical_reference_en.pdf>`_
+* `TR:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-H2 <https://www.espressif.com/sites/default/files/documentation/esp32-h2_technical_reference_manual_en.pdf>`_
 
 
 ESP8266/ESP8285
@@ -179,12 +469,12 @@ Otherwise the only way to upgrade to a newer build is by flashing using the seri
 
 
 
-ESP32
-=====
+ESP32/ESP32-solo1
+=================
 
 The most important new features of the ESP32, compared to ESP82xx are:
 
-- Dual core CPU @ 240 MHz
+- Dual core CPU @ 240 MHz (solo1: Single core CPU @ 160 MHz)
 - Upto 320 kByte of RAM
 - 3 Hardware serial ports
 - Bluetooth (not supported yet in ESPEasy)
@@ -193,15 +483,26 @@ The most important new features of the ESP32, compared to ESP82xx are:
 - Upto 10 touch pins
 - Support for Ethernet
 
+.. note:: Use ESP32-solo1 build for unknown ESP32-based devices, or when flashing an "ESP32-classic" build results in a boot-loop.
 
+The ESP32-solo1 is known to be used in:
 
+* Shelly Plus 1
+* Shelly Plus 1PM
+* Shelly Plus 2PM
+* Shelly Plus i4 (only early shipped units)
+* Most Xiaomi devices seem to have an OEM ESP32-solo1
+
+Support for the ESP32-solo1 is only added because some vendors have used it in their products. 
+Since there is only a very limited set of devices using a single core ESP32, we only provide the basic versions of ESPEasy builds for this platform.
+
+The "solo1" variant does not add any extras compared to the ESP32 dual core and thus should not be used in new products.
 
 
 ESP32-S2
 ========
 
-.. note:: Support for the ESP32-S2 is very preliminary, as in it is hardly tested (as of September 2021)
-
+Added: 2021/09
 
 The ESP32-S2 is a bit strange when looking at its features and taking into account it was introduced about 3 years after the ESP32.
 
@@ -227,3 +528,178 @@ The only advantages of the ESP32-S2 compared to its predecessor are:
 - Time of Flight (TOF) support that would (theoretically) allow indoor positioning
 
 
+ESP32-S3
+========
+
+Added: 2023/05/09
+
+The most powerful and versatile ESP32 variant currently available.
+
+It outperforms the classic ESP32 in almost any way.
+
+The only drawback is that it doesn't support a RMII ethernet interface.
+
+.. note:: Support for the ESP32-S3 is very preliminary, as in it is hardly tested (as of May 2023)
+
+
+Quad/Octal SPI mode
+^^^^^^^^^^^^^^^^^^^
+
+SPI wiring to flash/PSRAM on ESP32-S3 is a bit of a mess.
+
+Some ESP32-S3 chips have embedded PSRAM.
+When they do, you may need to have the SPI bus for memory/flash set to QIO/OPI mode.
+
+Flash and PSRAM can be wired using 4 (quad/QIO/QSPI mode) or 8 (octal/OPI mode) lines to the SPI bus.
+However a device intended for octal mode cannot work in quad mode and vice verse.
+
+* 2 MB PSRAM typically operates in quad mode.
+* 8 MB PSRAM typically needs octal (OPI) mode.
+
+8 MB PSRAM addressed in quad (QIO/QSPI) mode, will simply not be detected.
+
+Using the wrong SPI mode to address flash is even worse as it isn't really clear which flash sizes may use quad and which use octal wired flash.
+Also it is impossible to simply detect how it is wired at runtime and change these access modes when booting the device.
+
+To support all modes, we simply need to make several versions
+
+.. list-table:: ESP32-S3 variants
+   :header-rows: 1
+   :widths: 7 7 7 7 7
+   :stub-columns: 1
+
+   *  - Module
+      - Chip
+      - Flash (Mode)
+      - SPI RAM (Mode)
+      - Build memory_type
+   *  - ESP32-S3-WROOM-1x-N4
+      - ESP32-S3
+      - 4 MB (Quad SPI)
+      - -
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N8
+      - ESP32-S3
+      - 8 MB (Quad SPI)
+      - -
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N16
+      - ESP32-S3
+      - 16 MB (Quad SPI)
+      - -
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-H4
+      - ESP32-S3
+      - 4 MB (Quad SPI)
+      - -
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N4R2
+      - ESP32-S3R2
+      - 4 MB (Quad SPI)
+      - 2 MB (Quad SPI)
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N8R2
+      - ESP32-S3R2
+      - 8 MB (Quad SPI)
+      - 2 MB (Quad SPI)
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N16R2
+      - ESP32-S3R2
+      - 16 MB (Quad SPI)
+      - 2 MB (Quad SPI)
+      - ``qio_qspi``
+   *  - ESP32-S3-WROOM-1x-N4R8
+      - ESP32-S3R8
+      - 4 MB (Quad SPI)
+      - 8 MB (Octal SPI)
+      - ``qio_opi``
+   *  - ESP32-S3-WROOM-1x-N8R8
+      - ESP32-S3R8
+      - 8 MB (Quad SPI)
+      - 8 MB (Octal SPI)
+      - ``qio_opi``
+   *  - ESP32-S3-WROOM-1x-N16R8
+      - ESP32-S3R8
+      - 16 MB (Quad SPI)
+      - 8 MB (Octal SPI)
+      - ``qio_opi``
+   *  - ESP32-S3-WROOM-2-N16R8V
+      - ESP32-S3R8V
+      - 16 MB (Octal SPI)
+      - 8 MB (Octal SPI)
+      - ``opi_opi``
+   *  - ESP32-S3-WROOM-2-N32R8V
+      - ESP32-S3R8V
+      - 32 MB (Octal SPI)
+      - 8 MB (Octal SPI)
+      - ``opi_opi``
+   *  - ESP32-S3-MINI-1x-N8
+      - ESP32-S3FN8
+      - 8 MB (Quad SPI)
+      - -
+      - ``qio_qspi``
+   *  - ESP32-S3-MINI-1x-N4R2
+      - ESP32-S3FH4R2
+      - 4 MB (Quad SPI)
+      - 2 MB (Quad SPI)
+      - ``qio_qspi``
+   *  - ESP32-S3-MINI-1x-H4R2
+      - ESP32-S3FH4R2
+      - 4 MB (Quad SPI)
+      - 2 MB (Quad SPI)
+      - ``qio_qspi``
+
+
+Build versions:
+
+* All ESP32-S3 builds have PSRAM enabled.
+* The default SPI mode will be quad mode for both flash and PSRAM
+* ``max_ESP32s3_16M8M_LittleFS_OPI_PSRAM_CDC`` will have quad mode for flash and octal (OPI) mode for PSRAM. (typical 8MB PSRAM)
+
+
+
+ESP32-C3/ESP8685
+================
+
+Added: 2023/05/09
+
+The ESP32-C3 is available in various versions.
+
+For example there is an ESP32-C3-12F module made by Espressif clearly aimed to be a 1-to-1 replacement of the ESP12-F, which uses the ESP8266.
+
+The ESP8685 seems to be low budget alternative for the ESP32-C3 with only difference being the embedded flash inside the ESP chip and slightly smaller dimensions as the GPIO pins for flash are not made available outside the chip.
+
+Due to the RISC-V core used in the ESP32-C3, this is a very 'snappy' device and the SDK support appears to be far more mature then what one might expect given its relative recent introduction.
+
+.. note:: Support for the ESP32-C3 is very preliminary, as in it is hardly tested (as of May 2023)
+
+
+ESP32-C2/ESP8684
+================
+
+The ESP32-C2 is only available with embedded flash and can only be found labelled as "ESP8684".
+
+It looks like it is aimed to be used in single purpose devices, due to its low GPIO count and only requiring a bare minimum of external parts.
+
+It is yet unclear whether the ESP8684 and ESP32-C2 are exchangable, like with the ESP32-C3 and the ESP8685.
+
+.. note:: Not yet supported (as of May 2023)
+
+ESP32-C6
+========
+
+The ESP32-C6 seems to be aimed at being used as a gateway for the new Thread protocol and Wi-Fi.
+
+It is the more powerful version of the ESP32-H2 and also includes not only the traditional 2.4 GHz Wi-Fi, but also the new Wi-Fi6 standard on 2.4 GHz.
+
+.. note:: Not yet supported (as of May 2023)
+
+ESP32-H2
+========
+
+This is a rather strange product as it does not support any Wi-Fi.
+However it is the first device aimed at the new Thread standard.
+
+Since it does not support any Wi-Fi, it is unsure if there will be ESPEasy support for it in the near future.
+
+.. note:: Not yet supported (as of May 2023)

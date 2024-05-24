@@ -4,6 +4,7 @@
 #include "../../_Plugin_Helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -45,65 +46,68 @@ bool equals(const String& str, const char& c) {
   return str.equals(String(c));
 }
 
+
 /********************************************************************************************\
-   Convert a char string to integer
+   Format string using vsnprintf
  \*********************************************************************************************/
 
-// FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
+String strformat(const String& format, ...)
 {
-  unsigned int temp = 0;
-
-  validUIntFromString(string, temp);
-
-  return static_cast<unsigned long>(temp);
-}
-
-String ull2String(uint64_t value, uint8_t base) {
   String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, format.c_str(), arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
   }
-
-  while (value > 0) {
-    res   += String(static_cast<uint32_t>(value % base), base);
-    value /= base;
-  }
-
-  int endpos   = res.length() - 1;
-  int beginpos = 0;
-
-  while (endpos > beginpos) {
-    const char c = res[beginpos];
-    res[beginpos] = res[endpos];
-    res[endpos]   = c;
-    ++beginpos;
-    --endpos;
-  }
-
   return res;
 }
 
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    String res;
-    res = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
-  } else {
-    return ull2String(value, base);
+String strformat(const __FlashStringHelper * format, ...)
+{
+  String res;
+  {
+    va_list arg;
+    va_start(arg, format); // variable args start after parameter 'format'
+    char temp[64];
+    char* buffer = temp;
+    int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
+    va_end(arg);
+    if (len > static_cast<int>(sizeof(temp) - 1)) {
+        buffer = new (std::nothrow) char[len + 1];
+        if (!buffer) {
+            return res;
+        }
+        va_start(arg, format);
+        vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
+        va_end(arg);
+    }
+    res.reserve(len + 1);
+    res = buffer;
+    if (buffer != temp) {
+        delete[] buffer;
+    }
   }
+  return res;
 }
 
 
-/********************************************************************************************\
-   Check if valid float and convert string to float.
- \*********************************************************************************************/
-bool string2float(const String& string, float& floatvalue) {
-  return validFloatFromString(string, floatvalue);
-}
 
 /********************************************************************************************\
    Convert a char string to IP uint8_t array
@@ -132,12 +136,24 @@ bool str2ip(const char *string, uint8_t *IP)
 }
 
 String formatIP(const IPAddress& ip) {
+#ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
   return tmp.toString();
 #else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   return ip.toString();
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+#endif
+#ifdef ESP32
+  #if LWIP_IPV6
+  if (ip.isAny()) {
+    IPAddress tmp;
+    tmp.setV4();
+    return tmp.toString();
+  }
+  #endif
+  return ip.toString();
+#endif
 }
 
 
@@ -204,18 +220,7 @@ String formatToHex_array(const uint8_t* data, size_t size)
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
-  String result = prefix;
-  String hex(value, HEX);
-
-  hex.toUpperCase();
-  if (hex.length() < minimal_hex_digits) {
-    const size_t leading_zeros = minimal_hex_digits - hex.length();
-    for (size_t i = 0; i < leading_zeros; ++i) {
-      result += '0';
-    }
-  }
-  result += hex;
-  return result;
+  return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
 }
 
 String formatToHex(unsigned long value,
@@ -228,7 +233,8 @@ String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
 }
 
 String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
-  return formatToHex(value, F(""), minimal_hex_digits);
+  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
+  return strformat(fmt, value);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -351,6 +357,7 @@ void replaceUnicodeByChar(String& line, char replChar) {
 \*********************************************************************************************/
 String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCheck, bool& isvalid) {
   if (event == nullptr) return EMPTY_STRING;
+  START_TIMER;
   isvalid = true;
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -372,9 +379,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     }
   }
 
-
-  const uint8_t   valueCount = getValueCountForTask(event->TaskIndex);
-  Sensor_VType sensorType = event->getSensorType();
+  const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType sensorType = event->getSensorType();
 
   if (valueCount <= rel_index) {
     isvalid = false;
@@ -394,31 +400,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  switch (sensorType) {
-    case Sensor_VType::SENSOR_TYPE_LONG:
-      return String(UserVar.getSensorTypeLong(event->TaskIndex));
-    case Sensor_VType::SENSOR_TYPE_STRING:
-      return event->String2;
-
-    default:
-      break;
-  }
-
-  float f(UserVar[event->BaseVarIndex + rel_index]);
-
-  if (mustCheck && !isValidFloat(f)) {
-    isvalid = false;
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("Invalid float value for TaskIndex: ");
-      log += event->TaskIndex;
-      log += F(" varnumber: ");
-      log += rel_index;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-    f = 0;
+  if (sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+    return event->String2;
   }
 
   uint8_t nrDecimals = 0;
@@ -426,9 +409,26 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
-  String result = toString(f, nrDecimals);
-  result.trim();
-  return result;
+  if (mustCheck) {
+    if (!UserVar.isValid(event->TaskIndex, rel_index, sensorType)) {
+      isvalid = false;
+#ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("Invalid float value for TaskIndex: ");
+        log += event->TaskIndex;
+        log += F(" varnumber: ");
+        log += rel_index;
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+#endif // ifndef BUILD_NO_DEBUG
+      const float f = 0.0f;
+      return toString(f, nrDecimals);
+    }
+  }
+  String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
+  STOP_TIMER(FORMAT_USER_VAR);
+  return res;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -465,12 +465,39 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   }
   String result;
   result += 'C';
-
-  if (cpluginID < 100) { result += '0'; }
-
-  if (cpluginID < 10) { result += '0'; }
-  result += cpluginID;
+  result += formatIntLeadingZeroes(cpluginID, 3);
   return result;
+}
+
+String get_formatted_Plugin_number(pluginID_t pluginID)
+{
+  if (!validPluginID(pluginID)) {
+    return F("P---");
+  }
+  String result;
+  result += 'P';
+  result += formatIntLeadingZeroes(pluginID, 3);
+  return result;
+}
+
+String formatIntLeadingZeroes(int value, int nrDigits)
+{
+  const String fmt = strformat(F("%%0%dd"), nrDigits);
+  return strformat(fmt, value);
+//  return formatIntLeadingZeroes(String(value), nrDigits);
+}
+
+String formatIntLeadingZeroes(const String& value, int nrDigits)
+{
+  String res;
+  res.reserve(nrDigits);
+  int nrZeroes = nrDigits - value.length();
+  while (nrZeroes > 0) {
+    --nrZeroes;
+    res += '0';
+  }
+  res += value;
+  return res;
 }
 
 /*********************************************************************************************\
@@ -577,34 +604,25 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // First we check for not allowed special characters.
     const size_t val_length = value.length();
     for (size_t i = 0; i < val_length; ++i) {
-      switch (value[i]) {
-        case '\n':
-        case '\r':
-        case '\t':
-        case '\\':
-        case '\b':
-        case '\f':
-        case '"':
-        {
-          // Special characters not allowed in JSON:
-          //  \b  Backspace (ascii code 08)
-          //  \f  Form feed (ascii code 0C)
-          //  \n  New line
-          //  \r  Carriage return
-          //  \t  Tab
-          //  \"  Double quote
-          //  \\  Backslash character
-          // Must replace characters, so make a deepcopy
-          String tmpValue(value);
-          tmpValue.replace('\n', '^');
-          tmpValue.replace('\r', '^');
-          tmpValue.replace('\t', ' ');
-          tmpValue.replace('\\', '^');
-          tmpValue.replace('\b', '^');
-          tmpValue.replace('\f', '^');
-          tmpValue.replace('"',  '\'');
-          return wrap_String(tmpValue, '"');
-        }
+      const char c = value[i];
+      // Special characters not allowed in JSON:
+      if (c == '\n'|| //  \n  New line
+          c == '\r'|| //  \r  Carriage return
+          c == '\t'|| //  \t  Tab
+          c == '\\'|| //  \\  Backslash character
+          c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\f'|| //  \f  Form feed (ascii code 0C)
+          c == '"') { //  \"  Double quote
+        // Must replace characters, so make a deepcopy
+        String tmpValue(value);
+        tmpValue.replace('\n', '^');
+        tmpValue.replace('\r', '^');
+        tmpValue.replace('\t', ' ');
+        tmpValue.replace('\\', '^');
+        tmpValue.replace('\b', '^');
+        tmpValue.replace('\f', '^');
+        tmpValue.replace('"',  '\'');
+        return wrap_String(tmpValue, '"');
       }
     }
     return wrap_String(value, '"');
@@ -1174,10 +1192,12 @@ void parseSingleControllerVariable(String            & s,
                                    struct EventStruct *event,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
-  if (validTaskIndex(event->TaskIndex)) {
-    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
-  } else {
-    repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
+  if (s.indexOf('%') != -1) {
+    String str;
+    if (validTaskIndex(event->TaskIndex)) {
+      str = getTaskValueName(event->TaskIndex, taskValueIndex);
+    }
+    repl(F("%valname%"), str, s, useURLencode);
   }
 }
 
@@ -1201,15 +1221,12 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
   if (validTaskIndex(event->TaskIndex)) {
     if (s.indexOf(F("%val")) != -1) {
-      if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_LONG) {
-        SMART_REPL(F("%val1%"), String(UserVar.getSensorTypeLong(event->TaskIndex)))
-      } else {
-        for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i) {
-          String valstr = F("%val");
-          valstr += (i + 1);
-          valstr += '%';
-          SMART_REPL(valstr, formatUserVarNoCheck(event, i));
-        }
+      const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
+      for (uint8_t i = 0; i < valueCount; ++i) {
+        String valstr = F("%val");
+        valstr += (i + 1);
+        valstr += '%';
+        SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
     }
   }

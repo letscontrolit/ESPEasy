@@ -103,6 +103,28 @@ bool ExtraTaskSettingsStruct::validCharForNames(char c) {
   return c != ' ' && getInvalidCharsForNames().indexOf(c) == -1;
 }
 
+void ExtraTaskSettingsStruct::setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const String& str)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    safe_strncpy(
+      TaskDeviceValueNames[taskVarIndex],
+      str,
+      sizeof(TaskDeviceValueNames[taskVarIndex]));
+  }
+}
+
+void ExtraTaskSettingsStruct::setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str)
+{
+  setTaskDeviceValueName(taskVarIndex, String(str));
+}
+
+void ExtraTaskSettingsStruct::clearTaskDeviceValueName(taskVarIndex_t taskVarIndex)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    ZERO_FILL(TaskDeviceValueNames[taskVarIndex]);
+  }
+}
+
 void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
 {
   if (validTaskVarIndex(taskVarIndex)) {

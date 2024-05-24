@@ -1,9 +1,7 @@
 #ifndef PLUGIN_HELPER_H
 #define PLUGIN_HELPER_H
 
-#include <Arduino.h>
-
-#include "include/ESPEasy_config.h"
+#include "ESPEasy_common.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 
@@ -16,6 +14,7 @@
 
 #include "src/ESPEasyCore/Controller.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/ESPEasyCore/Serial.h"
 
 #include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
@@ -88,6 +87,8 @@
 #ifndef CONFIG_PORT
   # define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif // ifndef CONFIG_PORT
+
+extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
 
 String PCONFIG_LABEL(int n);
 

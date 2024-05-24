@@ -8,7 +8,8 @@ assignees: ''
 ---
 
 ### STOP
-If you are seeking support, then please use the gitter channel by following this link.
-[NeoPixelBus Gitter Channel](https://gitter.im/Makuna/NeoPixelBus)
+If you are seeking support, then please use the Discussions feature or gitter channel by following one of these links.  
+[NeoPixelBus Discussions](https://github.com/Makuna/NeoPixelBus/discussions)  
+[NeoPixelBus Gitter Channel](https://gitter.im/Makuna/NeoPixelBus)  
 
-If you submit issues that are not traceable bugs or feature requests, it will get closed and you will be directed to the gitter channel.
+If you submit issues that are not traceable bugs or feature requests, it will just get closed.

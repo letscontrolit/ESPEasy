@@ -23,7 +23,7 @@
   **-1** (OFFLINE, disconnected)
   ","
   **Basic on/off.**.
-  We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting PCFGPIO to **2** means
+  We can control a pin with simple http URL commands. To change the pin to high or low steady output. Setting MCPGPIO to **2** means
   that it will be able to detect low level relays (with high impedance, Z).
   "
   "
