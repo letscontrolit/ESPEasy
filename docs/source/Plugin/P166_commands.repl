@@ -1,0 +1,40 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``<ch>`` = Output channel, 0, 1 or 2 (both channels)
+    ","
+    When successfully changing an output value, the data will be sent to any configured Controller, and an event will also be generated when the Rules are enabled (Tools/Advanced).
+    "
+    "
+    ``gp8403,volt,<ch>,<value>``
+    ","
+    Set the output value for the channel(s) in volt. The range is determined by the configured Output range setting.
+    "
+    "
+    ``gp8403,mvolt,<ch>,<value>``
+    ","
+    Set the output value for the channel(s) in milli volt. The range is determined by the configured Output range setting.
+    "
+    "
+    ``gp8403,range,<5|10>``
+    ","
+    Set the output range to either 5 (0-5V) or 10 (0-10V). Is also set to the Device configuration, but not saved.
+
+    The range is applied to both channels, no separate configuration per channel supported by the chip.
+    "
+    "
+    ``gp8403,preset,<ch>,<name>``
+    ","
+    Set the output value for the channel(s) to the value configured for the preset stored with ``<name>``.
+    
+    The value is range-checked before it is applied, so when configured for Output range 0-5V, a preset of 7V will be ignored.
+
+    When using duplicate names, the first matched preset will be used.
+    "
+    "
+    ``gp8403,init,<ch>``
+    ","
+    Set the output value for the channel(s) to the configured initial value(s). When both channels are addressed (2), each will get its own configured value.
+    "

@@ -105,9 +105,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A") };
-        const int optionValuesMode[]             = { 0, 1, 2 };
-        addFormSelector(F("Measure range"), F("range"), 3, optionsMode, optionValuesMode, PCONFIG(0));
+        const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A"), F("26V, 8A") };
+        const int optionValuesMode[]             = { 0, 1, 2, 3 };
+        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, optionValuesMode, PCONFIG(0));
       }
       {
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
@@ -169,6 +169,14 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             P027_data->setCalibration_16V_400mA();
             break;
           }
+          case 3:
+          {
+            if (mustLog) {
+              log += F("26V, 8A");
+            }
+            P027_data->setCalibration_26V_8A();
+            break;
+          }
         }
 
         if (mustLog) {
@@ -193,9 +201,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         float current = P027_data->getCurrent_mA() / 1000;
         float power   = voltage * current;
 
-        UserVar[event->BaseVarIndex]     = voltage;
-        UserVar[event->BaseVarIndex + 1] = current;
-        UserVar[event->BaseVarIndex + 2] = power;
+        UserVar.setFloat(event->TaskIndex, 0, voltage);
+        UserVar.setFloat(event->TaskIndex, 1, current);
+        UserVar.setFloat(event->TaskIndex, 2, power);
 
         const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
         String     log;
@@ -206,11 +214,12 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
         // for backward compability we allow the user to select if only one measurement should be returned
         // or all 3 measurements at once
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
+
         switch (PCONFIG(2)) {
           case 0:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = voltage;
+            UserVar.setFloat(event->TaskIndex, 0, voltage);
 
             if (mustLog) {
               log += F(": Voltage: ");
@@ -220,8 +229,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 1:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = current;
+            UserVar.setFloat(event->TaskIndex, 0, current);
 
             if (mustLog) {
               log += F(" Current: ");
@@ -231,8 +239,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 2:
           {
-            event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-            UserVar[event->BaseVarIndex] = power;
+            UserVar.setFloat(event->TaskIndex, 0, power);
 
             if (mustLog) {
               log += F(" Power: ");
@@ -242,10 +249,10 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 3:
           {
-            event->sensorType                = Sensor_VType::SENSOR_TYPE_TRIPLE;
-            UserVar[event->BaseVarIndex]     = voltage;
-            UserVar[event->BaseVarIndex + 1] = current;
-            UserVar[event->BaseVarIndex + 2] = power;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
+            UserVar.setFloat(event->TaskIndex, 0, voltage);
+            UserVar.setFloat(event->TaskIndex, 1, current);
+            UserVar.setFloat(event->TaskIndex, 2, power);
 
             if (mustLog) {
               log += F(": Voltage: ");

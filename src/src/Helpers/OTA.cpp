@@ -6,7 +6,7 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/FS_Helper.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 
@@ -114,7 +114,7 @@ void ArduinoOTAInit()
       else if (error == OTA_END_ERROR) { serialPrintln(F("End Failed")); }
 
       delay(100);
-      reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
+      reboot(IntendedRebootReason_e::OTA_error);
     });
 
     #if defined(ESP8266) && FEATURE_MDNS

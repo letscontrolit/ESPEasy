@@ -15,8 +15,8 @@
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
-# if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32) \
-  || (defined(PLUGIN_SET_STABLE) && !(defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_ENERGY_COLLECTION)))
+# if (defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32) || defined(ESP32) \
+  || (defined(PLUGIN_SET_STABLE)) && !((defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_ENERGY_COLLECTION)) && defined(ESP8266)))
 #  ifndef P037_MAPPING_SUPPORT
 #   define P037_MAPPING_SUPPORT 1           // Enable Value mapping support
 #  endif // ifndef P037_MAPPING_SUPPORT
@@ -52,7 +52,7 @@
 #   if (defined(FEATURE_ADC_VCC) || defined(P037_LIMIT_BUILD_SIZE)) && P037_FILTER_SUPPORT
 #    undef P037_FILTER_SUPPORT
 #    define P037_FILTER_SUPPORT 0
-#   endif
+#   endif // if (defined(FEATURE_ADC_VCC) || defined(P037_LIMIT_BUILD_SIZE)) && P037_FILTER_SUPPORT
 
 // #if P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
@@ -94,9 +94,11 @@
 # define P037_OPERAND_LIST    F("=%")
 
 # define P037_FILTER_COUNT    3
-# define P037_FILTER_LIST     F("=-:") // Length should at least match P037_FILTER_COUNT
+# define P037_FILTER_LIST     F("=-:")           // Length should at least match P037_FILTER_COUNT
 
-# define P037_VALUE_SEPARATOR '\x02'   // Separator outside of the normal ascii character values
+# define P037_VALUE_SEPARATOR '\x02'             // Separator outside of the normal ascii character values
+
+# define P037_REPLACE_CHAR_SET  "!@$%^&*;:.|/\\" // Allowable set of characters to be replaced by a comma
 
 // Data structure
 struct P037_data_struct : public PluginTaskData_base
@@ -167,11 +169,11 @@ struct P037_data_struct : public PluginTaskData_base
 
   // The settings structures
   // The stuff we want to save between settings
-  String mqttTopics[VARS_PER_TASK] = {};
+  String mqttTopics[VARS_PER_TASK]     = {};
   String jsonAttributes[VARS_PER_TASK] = {};
-  String globalTopicPrefix = {};
-  String valueArray[P037_ARRAY_SIZE] = {}; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
-                                           // P037_START_FILTERS..P037_END_FILTERS = filters
+  String globalTopicPrefix             = {};
+  String valueArray[P037_ARRAY_SIZE]   = {}; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
+                                             // P037_START_FILTERS..P037_END_FILTERS = filters
 
   String getFullMQTTTopic(uint8_t taskValueIndex) const;
 

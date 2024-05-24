@@ -155,7 +155,7 @@ All these values are described in great detail in the Advanced section, where th
 * **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
 * **Extra Wait WiFi Connect**: ``true`` means there is an extra wait upto 1000 msec after initiating a connection to an access point. This can be useful when connecting to some FritzBox access points or routers. (Added: 2023/04/05)
 * **Enable SDK WiFi Auto Reconnect**: ``true`` means the Espressif SDK will automatically attempt a reconnect when a connection is briefly lost. Access points (like TP-Link Omada) with "Band Steering" enabled may trigger a quick disconnect to force nodes to connect on the 5 GHz band. (Added: 2023/04/05)
-
+* **Hidden SSID Slow Connect**: ``true`` Connect per found hidden SSID to an access point. Needed for some APs like Mikrotik. This may slow down connecting to the AP significantly. (Added: 2023/11/20)
 
 
 
@@ -233,9 +233,7 @@ Rules Settings
 --------------
 
 * Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
-* Old Engine - Default checked.
 * Enable Rules Cache - Rules cache will keep track of where in the rules files each ``on ... do`` block is located. This significantly improves the time it takes to handle events. (Enabled by default, Added 2022/04/17)
-* Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17, disabled 2022/06/24)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 * SendToHTTP Follow Redirects - When checked, HTTP calls may follow redirects. Strict RFC2616, only requests using GET or HEAD methods will be redirected (using the same method), since the RFC requires end-user confirmation in other cases.
@@ -468,6 +466,19 @@ Disable Rules auto-completion
 Added: 2023-07-20
 
 When Rules auto-completion, also including syntax highlighting, is available in the build, some users have difficulty working with the auto-completion. This option disables the auto-completion, and that also inhibits the syntax highlighting as these 2 features are closely integrated.
+
+Disable Save Config as .tar
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-08-25
+
+Only available in builds that have .tar support included!
+
+By default, using the Tools/Save button, the complete configuration will be downloaded as a single .tar archive, that includes all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``).
+
+Enabling this option allows to download *only* the ``config.dat`` file (renamed to include unit name, unit number, buildnumber and current date/time), to accommodate external systems/scripts that expect only the .dat file.
+
+The Tools/Backup files feature will still download all files stored on the Flash file system, independent of this setting, and also the Tools/Load and Tools/File browser/Upload buttons will extract the included files from an uploaded .tar file.
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -759,6 +770,18 @@ This will act much faster on these disconnect events. However it also seems to s
 Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
 
 
+Hidden SSID Slow Connect
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-11-20
+
+Some access points with hidden SSID do not react to a broadcast connect attempt with a given SSID.
+For example Mikrotik routers and access points only allow connecting to a hidden SSID when specifically addressed.
+This may cause a significant slow down connecting to a hidden AP when there are lots of hidden access points with a relative strong signal.
+
+This is enabled by default.
+
+
 Show JSON
 =========
 
@@ -876,6 +899,56 @@ Then it does not make sense to have the client timeout of that controller set to
 System Variables
 ================
 
+Interfaces
+==========
+
+I2C Scan
+========
+
+To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional busses provided via an I2C multiplexer, for available devices.
+
+The scan is performed if the I2C ``SDA`` and ``SCL`` GPIO pins are configured on the Hardware page, and will use the configured ``Slow device Clock Speed`` setting (default: 100 kHz) during the scan, as that should be supported by any I2C device available.
+
+The output is a list of all addresses, in hexadecimal notation, and, when included in the build, the known device name(s) supported at that address. On the same condition, and when the plugin for the detected device is included in the build, the name of the plugin is also listed:
+
+Example scan showing a single device, with the Plugin included in the build:
+
+.. image:: images/Tools_I2Cscan_single_bus.png
+
+Example scan using an I2C multiplexer, showing multiple devices across multiple channels, with the plugins included in the (MAX) build:
+
+.. image:: images/Tools_I2Cscan_multiplexer.png
+
+
+.. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
+
+
+Settings
+========
+
+The :cyan:`Load` button will allow to load files onto the Flash file system. If you want to restore a previously saved ``config.dat``, the downloaded file has to be renamed to exactly ``config.dat`` and uploaded.
+
+Since 2023-08-25, .tar archive support has been added and made available in most builds, allowing to download and upload the complete configuration, and even all files on the flash file system, as a single archive, for backup and restore/clone purposes. This makes it possible to more easily deploy a unit using a pre-configured configuration.
+
+Uploading an earlier created backup as a .tar file, will unpack all files in the root of the archive to the flash file system, *overwriting* any files that already exist. If the archive includes ``config.dat`` and the Extended CustomTaskSettings feature is available, any already existing ``extcfg<NN>.dat`` file that's not included in the archive will be removed, as that is part of the configuration, and these files can not be deleted manually.
+
+Any files in subdirectories in the archive will be ignored, as directories are not supported on the flash filesystem.
+
+The :cyan:`Save` button offers to download the configuration of the unit. If .tar file support is included in the build, by default all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``) will be included, if they exist, in the .tar archive that can be downloaded.
+
+If .tar file support is not included, or the Tools/Advanced option **Disable Save Config as .tar** is enabled, only the ``config.dat`` file will be downloaded.
+
+The :cyan:`Backup files` button is only available if .tar file support is included in the build, and offers to download a .tar archive containing all files on the flash file system. These can be stored as a backup and restored in case of some configuration or system failure, or used to create 1 or multiple clones of the unit for multi-deployment. Uploading can also be started from an automation system or script, POST-ing the .tar archive from an external source.
+
+Firmware update
+===============
+
+Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, downloaded from the Releases page, an Actions run, or self-built, and install that. When using the same flash configuration (``4M1M``, ``4M316k``, ``8M1M``, etc.) all settings will be preserved. When uncertain, the configuration can be saved using either the Save (or Backup files if available) button above.
+
+File system
+===========
+
+Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
 
 Factory Reset
 =============
@@ -1022,20 +1095,73 @@ See the ``Custom-sample.h`` file for some examples.
 Allow Fetch by Command
 ----------------------
 
-This checkbox allows provisioning via commands.
-These commands are not restricted, so they can also be given via HTTP or MQTT.
+This list of checkboxes per file allows provisioning via commands.
+These ``Provision*`` commands are not restricted, so they can also be given via HTTP or MQTT.
 
 However, they can only be executed when:
 
-* Allow Fetch by Command is enabled
-* the file to download is checked
+* the file at Allow Fetch by Command is checked
+* the file at Files to Download is *also* checked
 * URL (+ optional credentials) is stored
 
 The commands are:
 
+Changed: 2023-11-18: Single-word commands split into 2 words: ``Provision,<subcmd>[,<params>]``
 
-* ``ProvisionConfig`` Fetch ``config.dat``
-* ``ProvisionSecurity`` Fetch ``security.dat``
-* ``ProvisionNotification`` Fetch ``notification.dat``
-* ``ProvisionProvision`` Fetch ``provisioning.dat``
-* ``ProvisionRules,1`` Fetch ``rules1.txt``
+* ``Provision,Config`` Fetch ``config.dat``
+* ``Provision,Security`` Fetch ``security.dat``
+* ``Provision,Notification`` Fetch ``notification.dat``
+* ``Provision,Provision`` Fetch ``provisioning.dat``
+* ``Provision,Rules,1`` Fetch ``rules1.txt``
+* ``Provision,CustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)
+
+* ``Provision,Firmware,<FirmwareBinary.bin>`` Fetch and install ``FirmwareBinary.bin`` on the unit
+
+Once the Firmware download & install is finished the outcome is completed by a generated event (gets the download filename as an argument):
+
+* ``ProvisionFirmware#Success=<FirmwareBinary.bin>`` When download and install where succesfull
+* ``ProvisionFirmware#Failed=<FirmwareBinary.bin>`` When something went wrong during download or install
+
+These events can be handled in rules, an provisioning support script could look like this:
+
+.. code-block:: none
+
+  On updateSettings Do
+    provision,provision
+    provision,config
+  Endon
+
+  On updateCredentials Do
+    provision,security  
+  Endon
+
+  On updateRules Do
+    provision,rules,1
+    provision,rules,2
+    provision,rules,3
+  Endon
+
+  On updateRulesSettings Do
+    AsyncEvent,updateSettings
+    AsyncEvent,updateRules
+    Reboot
+  Endon
+
+  // e.g.
+  // event,PerformFirmwareUpdate=firmware_max_ESP32_16M8M_LittleFS.bin
+  On PerformFirmwareUpdate=* Do
+    pwm,2,100,0,8
+    provision,firmware,%eventvalue1%
+  Endon
+
+  On provisionfirmware#success=* Do
+    gpio,2,0
+    Reboot
+  Endon
+
+  On provisionfirmware#failure Do
+    gpio,2,0
+    Reboot  
+  Endon
+
+

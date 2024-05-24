@@ -14,6 +14,12 @@ Plugin based events
 
 Besides the internal events there's also plugin specific events. These are listed here below.
 
+P000 (core) :ref:`P000_Buzzer_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../Plugin/P001_events_RTTTL.repl
+
+
 .. P001 :ref:`P001_page`
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -224,16 +230,16 @@ Besides the internal events there's also plugin specific events. These are liste
 .. .. include:: ../Plugin/P035_events.repl
 
 
-.. P036 :ref:`P036_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P036 :ref:`P036_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P036_events.repl
+.. include:: ../Plugin/P036_events.repl
 
 
-.. P037 :ref:`P037_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P037 :ref:`P037_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P037_events.repl
+.. include:: ../Plugin/P037_events.repl
 
 
 .. P038 :ref:`P038_page`
@@ -266,10 +272,10 @@ Besides the internal events there's also plugin specific events. These are liste
 .. .. include:: ../Plugin/P042_events.repl
 
 
-.. P043 :ref:`P043_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P043 :ref:`P043_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P043_events.repl
+.. include:: ../Plugin/P043_events.repl
 
 
 .. P044 :ref:`P044_page`
@@ -392,10 +398,10 @@ P053 :ref:`P053_page`
 .. .. include:: ../Plugin/P063_events.repl
 
 
-.. P064 :ref:`P064_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P064 :ref:`P064_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P064_events.repl
+.. include:: ../Plugin/P064_events.repl
 
 
 .. P065 :ref:`P065_page`
@@ -538,6 +544,7 @@ P138 :ref:`P138_page`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../Plugin/P138_events.repl
+
 P143 :ref:`P143_page`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

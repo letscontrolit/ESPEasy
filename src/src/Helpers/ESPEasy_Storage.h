@@ -6,6 +6,8 @@
 
 #include "../Helpers/FS_Helper.h"
 
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
@@ -168,6 +170,14 @@ String SaveTaskSettings(taskIndex_t TaskIndex);
 String LoadTaskSettings(taskIndex_t TaskIndex);
 
 /********************************************************************************************\
+   Load/Save CDN custom setting from file system
+ \*********************************************************************************************/
+#if FEATURE_ALTERNATIVE_CDN_URL
+String get_CDN_url_custom();
+void set_CDN_url_custom(const String &url);
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
+
+/********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize, uint32_t posInBlock = 0);
@@ -184,6 +194,13 @@ String getCustomTaskSettingsError(uint8_t varNr);
    Clear custom task settings
  \*********************************************************************************************/
 String ClearCustomTaskSettings(taskIndex_t TaskIndex);
+
+/********************************************************************************************\
+   Delete Extended custom task settings file if it exists, with validity checks
+ \*********************************************************************************************/
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index);
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
 /********************************************************************************************\
    Load Custom Task settings from file system
@@ -345,6 +362,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 
 #endif // ifdef ESP32
 
+bool validateUploadConfigDat(const uint8_t *buf);
 
 /********************************************************************************************\
    Download ESPEasy file types from HTTP server

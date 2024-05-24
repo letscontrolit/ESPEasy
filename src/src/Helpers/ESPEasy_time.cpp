@@ -17,8 +17,14 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
+
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
@@ -298,13 +304,12 @@ unsigned long ESPEasy_time::now() {
   uint32_t localSystime = time_zone.toLocal(sysTime);
   breakTime(localSystime, local_tm);
 
+  calcSunRiseAndSet(timeSynced);
   if (timeSynced) {
-    calcSunRiseAndSet();
-
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Local time: ");
-      log += getDateTimeString('-', ':', ' ');
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("Local time: %s"),
+       getDateTimeString('-', ':', ' ').c_str()));
     }
     {
       // Notify plugins the time has been set.
@@ -387,8 +392,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     nextSyncTime = sysTime + HwRandom(20, 60);
   } else  {
     // Have to do a lookup each time, since the NTP pool always returns another IP
-    String ntpServerName = String(HwRandom(0, 3));
-    ntpServerName += F(".pool.ntp.org");
+    const String ntpServerName = strformat(
+      F("%d.pool.ntp.org"), HwRandom(0, 3));
     resolveHostByName(ntpServerName.c_str(), timeServerIP);
     log += ntpServerName;
 
@@ -415,7 +420,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   }
 
   const int NTP_PACKET_SIZE = 48;          // NTP time is in the first 48 bytes of message
-  uint8_t   packetBuffer[NTP_PACKET_SIZE]; // buffer to hold incoming & outgoing packets
+  uint8_t   packetBuffer[NTP_PACKET_SIZE]{}; // buffer to hold incoming & outgoing packets
 
   log += F(" queried");
 #ifndef BUILD_NO_DEBUG
@@ -424,7 +429,6 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   while (udp.parsePacket() > 0) { // discard any previously received packets
   }
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
   packetBuffer[0]  = 0b11100011; // LI, Version, Mode
   packetBuffer[1]  = 0;          // Stratum, or type of clock
   packetBuffer[2]  = 6;          // Polling Interval
@@ -446,7 +450,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   udp.endPacket();
 
 
-  uint32_t beginWait = millis();
+  const uint32_t beginWait = millis();
 
   while (!timeOutReached(beginWait + 1000)) {
     int size       = udp.parsePacket();
@@ -459,10 +463,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // Leap-Indicator: unknown (clock unsynchronized)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("NTP  : NTP host (");
-          log += formatIP(timeServerIP);
-          log += F(") unsynchronized");
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, strformat(
+            F("NTP  : NTP host (%s) unsynchronized"),
+            formatIP(timeServerIP).c_str()));
         }
 
         if (!useNTPpool) {
@@ -524,6 +527,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         String log = F("NTP  : NTP replied: delay ");
         log += total_delay;
         log += F(" mSec");
+#ifndef LIMIT_BUILD_SIZE
         log += F(" Accuracy increased by ");
         double fractpart, intpart;
         fractpart = modf(unixTime_d, &intpart);
@@ -534,6 +538,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         }
         log += static_cast<int>(fractpart * 1000.0);
         log += F(" msec");
+#endif
         addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
@@ -666,7 +671,7 @@ int ESPEasy_time::getSecOffset(const String& format) {
     return 0;
   }
 
-  int value;
+  int32_t value;
 
   if (!validIntFromString(format.substring(sign_position, position_percent), value)) {
     return 0;
@@ -743,13 +748,19 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
   return j - k + 1;
 }
 
-void ESPEasy_time::calcSunRiseAndSet() {
-  int   doy  = dayOfYear(local_tm.tm_year, local_tm.tm_mon + 1, local_tm.tm_mday);
-  float eqt  = equationOfTime(doy);
-  float dec  = sunDeclination(doy);
-  float da   = diurnalArc(dec, Settings.Latitude);
-  float rise = 12 - da - eqt;
-  float set  = 12 + da - eqt;
+void ESPEasy_time::calcSunRiseAndSet(bool timeSynced) {
+  if (!timeSynced && 
+      (tsSet.tm_mday == local_tm.tm_mday)) {
+    // No need to recalculate if already calculated for this day
+    return;
+  }
+
+  const int   doy  = dayOfYear(local_tm.tm_year, local_tm.tm_mon + 1, local_tm.tm_mday);
+  const float eqt  = equationOfTime(doy);
+  const float dec  = sunDeclination(doy);
+  const float da   = diurnalArc(dec, Settings.Latitude);
+  const float rise = 12 - da - eqt;
+  const float set  = 12 + da - eqt;
 
   tsRise.tm_hour = rise;
   tsRise.tm_min  = (rise - static_cast<int>(rise)) * 60.0f;
@@ -760,7 +771,7 @@ void ESPEasy_time::calcSunRiseAndSet() {
   tsRise.tm_year = tsSet.tm_year = local_tm.tm_year;
 
   // Now apply the longitude
-  int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
+  const int secOffset_longitude = -1.0f * (Settings.Longitude / 15.0f) * 3600;
 
   tsSet  = addSeconds(tsSet, secOffset_longitude, false);
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
@@ -854,9 +865,9 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
   }
 
   if (unixtime != 0) {
-    String log = F("ExtRTC: Read external time source: ");
-    log += unixtime;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(
+      F("ExtRTC: Read external time source: "), 
+      unixtime));
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));

@@ -58,10 +58,6 @@ void systemTimerStruct::fromEvent(taskIndex_t taskIndex,
   _loopCount      = Par5;
 }
 
-bool systemTimerStruct::isRecurring() const {
-  return _recurringCount != 0;
-}
-
 void systemTimerStruct::markNextRecurring() {
   toggleAlternateState(); // Will only toggle if it has an alternate state
 
@@ -74,31 +70,6 @@ void systemTimerStruct::markNextRecurring() {
     // This one should be executed, so increase the count.
     _loopCount++;
   }
-}
-
-unsigned long systemTimerStruct::getInterval() const {
-  return _alternateState ? _alternateInterval : _interval;
-}
-
-unsigned int systemTimerStruct::getTimerIndex() const {
-  return _timerIndex;
-}
-
-bool systemTimerStruct::isPaused() const {
-  return _remainder != 0;
-}
-
-int systemTimerStruct::getRemainder() const {
-  return _remainder;
-}
-
-void systemTimerStruct::setRemainder(int timeLeft) {
-  _remainder = timeLeft;
-}
-
-int systemTimerStruct::getLoopCount() const {
-  if (hasAlternateInterval()) { return _loopCount / 2; }
-  return _loopCount;
 }
 
 void systemTimerStruct::toggleAlternateState() {

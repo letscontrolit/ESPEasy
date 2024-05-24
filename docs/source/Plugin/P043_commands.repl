@@ -1,0 +1,33 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 30, 20
+
+    "
+    | ``config,task,<taskName>,SetTime,<timeIndex>,<timeString>[,<value>]``
+
+    Change the configuration of the plugin for the timeIndex provided:
+
+    ``config,task``: The Config command to change a setting for a task. Not case-sensitive.
+
+    ``<taskName>``: The name of the task to be changed.
+
+    ``SetTime``: Literal command-text recognized by the plugin to set the time and optional value. Not case-sensitive.
+
+    ``<timeIndex>``: The Day,Time fields *number* as shown in the UI. Has to be within the allowed range 1..Nr. of Day,Time field setting.
+
+    ``<timeString>``: A time string as can be entered in the UI, a day (All,Sun, Mon,Tue,Wed,Thu,Fri,Sat,Wrk (workday),Wkd (weekend)) and a time (HH:MM or %Sunrise%/%Sunset%). When configuring for sunrise of sunset, an offset in hours, minutes or seconds can be provided by using ``%sunrise-1h%`` or ``%sunset+30m%`` etc. To avoid the sunrise or sunset time of today to be inserted, instead of ``%`` a ``$`` must be used! If an invalid ``<timeString>`` is provided, ``All,00:00`` will be stored!
+
+    ``<value>``: The value to be set. If a GPIO is configured or the setting 'Value input On/Off only' is enabled, a 0 will configure Off and 1 will configure On. When not using a GPIO or the 'Value input On/Off only' setting is unchecked, the value will be stored as provided. When having value 0 set, **no event will be generated** when this time is triggered!
+    ","
+    This (generic) command allows to update the configuration.
+
+    .. warning:: Every time this command is used, the configuration is saved to flash storage. When changing this often, the flash memory may wear out quickly!
+
+
+
+    Example command to use, when using ``%Sunrise%``/``%Sunset%``:
+
+    - ``config,task,Clock,settime,1,Wrk,$sunrise-1h$,1``
+    
+    Will be stored like ``Wrk,%sunrise-1h%`` in Day,Time field 1, and Value set to 1, or ``On`` when having a GPIO configured or **Value input On/Off only** enabled.
+    "

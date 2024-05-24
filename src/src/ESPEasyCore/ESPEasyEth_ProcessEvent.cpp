@@ -17,6 +17,7 @@
 # include "../Globals/NetworkState.h"
 # include "../Globals/Settings.h"
 
+# include "../Helpers/LongTermTimer.h"
 # include "../Helpers/Network.h"
 # include "../Helpers/Networking.h"
 # include "../Helpers/PeriodicalActions.h"
@@ -27,6 +28,12 @@
 void handle_unprocessedEthEvents() {
   if (EthEventData.unprocessedEthEvents()) {
     // Process disconnect events before connect events.
+#if FEATURE_USE_IPV6
+    if (!EthEventData.processedGotIP6) {
+      processEthernetGotIPv6();
+    }
+#endif
+
     if (!EthEventData.processedDisconnect) {
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Eth  : Entering processDisconnect()"));
@@ -158,14 +165,19 @@ void processEthernetGotIP() {
   IPAddress dns0                              = ETH.dnsIP(0);
   IPAddress dns1                              = ETH.dnsIP(1);
   const LongTermTimer::Duration dhcp_duration = EthEventData.lastConnectMoment.timeDiff(EthEventData.lastGetIPmoment);
+  #if ESP_IDF_VERSION_MAJOR >= 5
+  const bool mustRequestDHCP = (!dns0 && !dns1) && !ethUseStaticIP();
+  #endif
 
-  if (!dns0 && !dns1) {
-    addLog(LOG_LEVEL_ERROR, F("ETH  : No DNS server received via DHCP, use cached DNS IP"));
-    setDNS(0, EthEventData.dns0_cache);
-    setDNS(1, EthEventData.dns1_cache);
-  } else {
-    EthEventData.dns0_cache = dns0;
-    EthEventData.dns1_cache = dns1;
+  if (!ethUseStaticIP()) {
+    if (!dns0 && !dns1) {
+      addLog(LOG_LEVEL_ERROR, F("ETH  : No DNS server received via DHCP, use cached DNS IP"));
+      if (EthEventData.dns0_cache) setDNS(0, EthEventData.dns0_cache);
+      if (EthEventData.dns1_cache) setDNS(1, EthEventData.dns1_cache);
+    } else {
+      EthEventData.dns0_cache = dns0;
+      EthEventData.dns1_cache = dns1;
+    }
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
@@ -225,7 +237,7 @@ void processEthernetGotIP() {
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
-  Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  Scheduler.setIntervalTimer(SchedulerIntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
 # endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
@@ -238,8 +250,30 @@ void processEthernetGotIP() {
   logConnectionStatus();
 
   EthEventData.processedGotIP = true;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  if (mustRequestDHCP /*&& EthEventData.lastConnectMoment.millisPassedSince() < 10000*/) {
+    // FIXME TD-er: Must add some check other than fixed timeout here to not constantly make DHCP requests.
+    // Force new DHCP request.
+    ETH.config();
+  }
+#endif
+
   EthEventData.setEthGotIP();
   CheckRunningServices();
 }
+
+#if FEATURE_USE_IPV6
+void processEthernetGotIPv6() {
+  if (!EthEventData.processedGotIP6) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("ETH event: Got IP6 ")) + EthEventData.unprocessed_IP6.toString(true));
+    EthEventData.processedGotIP6 = true;
+#if FEATURE_ESPEASY_P2P
+//    updateUDPport(true);
+#endif
+
+  }
+}
+#endif
 
 #endif // if FEATURE_ETHERNET

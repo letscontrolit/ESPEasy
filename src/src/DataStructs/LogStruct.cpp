@@ -41,13 +41,6 @@ bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, Strin
   return true;
 }
 
-bool LogStruct::isEmpty() const {
-  return !is_full && (write_idx == read_idx);
-}
-
-bool LogStruct::isFull() const {
-  return is_full;
-}
 
 bool LogStruct::logActiveRead() {
   clearExpiredEntries();

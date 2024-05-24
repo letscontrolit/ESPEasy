@@ -62,7 +62,9 @@ void HLW8012::setMode(hlw8012_mode_t mode) {
     _mode = (mode == MODE_CURRENT) ? _current_mode : 1 - _current_mode;
     digitalWrite(_sel_pin, _mode);
     if (_use_interrupts) {
-        _last_cf1_interrupt = _first_cf1_interrupt = micros();
+        const unsigned long now = micros();
+        _last_cf1_interrupt = now;
+        _first_cf1_interrupt = now;
     }
 }
 
@@ -329,7 +331,8 @@ void HLW8012::_checkCFSignal() {
     const long time_since_last = (long) (now - _last_cf_interrupt);
     if (time_since_last > (2 * _pulse_timeout)) {
         if (_use_interrupts) {
-            _last_cf_interrupt = _first_cf_interrupt = now;
+            _last_cf_interrupt = now;
+            _first_cf_interrupt = now;
             _cf_pulse_count = 0;
         }
         _power_pulse_width = 0;
@@ -341,7 +344,8 @@ void HLW8012::_checkCF1Signal() {
     const long time_since_last = (long) (now - _last_cf1_interrupt);
     if (time_since_last > _pulse_timeout) {
         if (_use_interrupts) {
-            _last_cf1_interrupt = _first_cf1_interrupt = now;
+            _last_cf1_interrupt = now;
+            _first_cf1_interrupt = now;
             _cf1_pulse_count = 0;
         }
         if (_mode == _current_mode) {

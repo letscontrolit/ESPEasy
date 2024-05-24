@@ -171,6 +171,8 @@ void addFormTextBox(const String& label,
                     ,
                     const String& tooltip = EMPTY_STRING
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist = EMPTY_STRING
                     );
 
 void addFormTextBox(const __FlashStringHelper * classname,
@@ -185,6 +187,8 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     ,
                     const String& tooltip = EMPTY_STRING
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist  = EMPTY_STRING
                     );
 
 
@@ -244,6 +248,15 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label,
                                   int           choice);
 
 // ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText);
+
+// ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 
@@ -269,7 +282,8 @@ void addFormPinSelectI2C(const String& label,
 void addFormSelectorI2C(const String& id,
                         int           addressCount,
                         const uint8_t addresses[],
-                        int           selectedIndex
+                        int           selectedIndex,
+                        uint8_t       defaultAddress = 0 // Address 0 is invalid
                         #if FEATURE_TOOLTIPS
                         ,
                         const String& tooltip = EMPTY_STRING

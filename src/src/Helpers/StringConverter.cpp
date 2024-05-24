@@ -22,6 +22,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
@@ -29,8 +30,16 @@
 // -V::569
 
 String concat(const __FlashStringHelper * str, const String &val) {
-  String res(str);
+  String res;
+  reserve_special(res, strlen_P((PGM_P)str) + val.length());
+  res.concat(str);
   res.concat(val);
+
+  /*
+  String res(str);
+  reserve_special(res, res.length() + val.length());
+  res.concat(val);
+  */
   return res;
 }
 
@@ -38,12 +47,64 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
   return concat(str, String(val));
 }
 
+String concat(const char& str, const String &val)
+{
+  String res(str);
+  reserve_special(res, res.length() + val.length());
+  res.concat(val);
+  return res;
+}
+
 bool equals(const String& str, const __FlashStringHelper * f_str) {
   return str.equals(String(f_str));
 }
 
 bool equals(const String& str, const char& c) {
-  return str.equals(String(c));
+  return str.length() == 1 && str[0] == c;
+}
+
+void move_special(String& dest, String&& source) {
+  #ifdef USE_SECOND_HEAP
+  // Only try to store larger strings here as those tend to be kept for a longer period.
+  if ((source.length() >= 32) && mmu_is_dram(&(source[0]))) {
+    // The string was not allocated on the 2nd heap, so copy instead of move
+    HeapSelectIram ephemeral;
+    if (dest.reserve(source.length())) {
+      dest = source;
+      source = String();
+      return;
+    }
+    // Could not allocate on 2nd heap, so just move existing string
+  }
+  #endif // ifdef USE_SECOND_HEAP
+  dest = std::move(source);
+}
+
+String move_special(String&& source) {
+  String dest;
+  move_special(dest, std::move(source));
+  return dest;
+}
+
+
+bool reserve_special(String& str, size_t size) {
+  if (str.length() >= size) {
+    // Nothing needs to be done
+    return true;
+  }
+  // FIXME TD-er: Should also use this for ESP32 with PSRAM to allocate on PSRAM
+  #ifdef USE_SECOND_HEAP
+  if (size >= 32) {
+    // Only try to store larger strings here as those tend to be kept for a longer period.
+    HeapSelectIram ephemeral;
+    // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
+    if (str.reserve(size)) {
+      return true;
+    }
+  }
+  #endif
+  return str.reserve(size);
+  // TD-er: should we also log here?
 }
 
 
@@ -57,7 +118,7 @@ String strformat(const String& format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
     va_end(arg);
@@ -70,7 +131,9 @@ String strformat(const String& format, ...)
         vsnprintf_P(buffer, len + 1, format.c_str(), arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -85,7 +148,7 @@ String strformat(const __FlashStringHelper * format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
     va_end(arg);
@@ -98,7 +161,9 @@ String strformat(const __FlashStringHelper * format, ...)
         vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -135,7 +200,7 @@ bool str2ip(const char *string, uint8_t *IP)
   return false;
 }
 
-String formatIP(const IPAddress& ip) {
+String formatIP(const IPAddress& ip, bool includeZone) {
 #ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
@@ -145,6 +210,7 @@ String formatIP(const IPAddress& ip) {
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 #endif
 #ifdef ESP32
+/*
   #if LWIP_IPV6
   if (ip.isAny()) {
     IPAddress tmp;
@@ -152,7 +218,12 @@ String formatIP(const IPAddress& ip) {
     return tmp.toString();
   }
   #endif
+*/
+#if FEATURE_USE_IPV6
+  return ip.toString(includeZone);
+#else
   return ip.toString();
+#endif
 #endif
 }
 
@@ -388,13 +459,11 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No sensor value for TaskIndex: ");
-      log += event->TaskIndex + 1;
-      log += F(" varnumber: ");
-      log += rel_index + 1;
-      log += F(" type: ");
-      log += getSensorTypeLabel(sensorType);
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No sensor value for TaskIndex: %d varnumber: %d type: %s"),
+        event->TaskIndex + 1,
+        rel_index + 1,
+        String(getSensorTypeLabel(sensorType)).c_str()));
     }
     #endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
@@ -415,14 +484,13 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Invalid float value for TaskIndex: ");
-        log += event->TaskIndex;
-        log += F(" varnumber: ");
-        log += rel_index;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(
+          F("Invalid float value for TaskIndex: %d varnumber: %d"),
+          event->TaskIndex + 1,
+          rel_index + 1));
       }
 #endif // ifndef BUILD_NO_DEBUG
-      const float f = 0.0f;
+      const float f{};
       return toString(f, nrDecimals);
     }
   }
@@ -471,13 +539,7 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
 
 String get_formatted_Plugin_number(pluginID_t pluginID)
 {
-  if (!validPluginID(pluginID)) {
-    return F("P---");
-  }
-  String result;
-  result += 'P';
-  result += formatIntLeadingZeroes(pluginID, 3);
-  return result;
+  return pluginID.toDisplayString();
 }
 
 String formatIntLeadingZeroes(int value, int nrDigits)
@@ -508,21 +570,11 @@ String wrap_braces(const String& string) {
 }
 
 String wrap_String(const String& string, char wrap) {
-  String result;
-  result.reserve(string.length() + 2);
-  result += wrap;
-  result += string;
-  result += wrap;
-  return result;
+  return wrap_String(string, wrap, wrap);
 }
 
 String wrap_String(const String& string, char char1, char char2) {
-  String result;
-  result.reserve(string.length() + 2);
-  result += char1;
-  result += string;
-  result += char2;
-  return result;
+  return strformat(F("%c%s%c"), char1, string.c_str(), char2);
 }
 
 String wrapIfContains(const String& value, char contains, char wrap) {
@@ -540,10 +592,9 @@ String wrapWithQuotes(const String& text) {
   char quotechar = '_';
   if (!findUnusedQuoteChar(text, quotechar)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No unused quote to wrap: _");
-      log += text;
-      log += '_';
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No unused quote to wrap: _%s_"), 
+        text.c_str()));
     }
   }
   return wrap_String(text, quotechar);
@@ -584,13 +635,35 @@ String to_json_object_value(const __FlashStringHelper * object,
   return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  return to_json_object_value(String(object), value, wrapInQuotes);
+}
+
+String to_json_object_value(const String& object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  if (wrapInQuotes) {
+    return strformat(
+      F("\"%s\":\"%d\""),
+      object.c_str(),
+      value);
+  }
+    
+  return strformat(
+    F("\"%s\":%d"), 
+    object.c_str(),
+    value);
+}
+
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
-  String result;
-  result.reserve(object.length() + value.length() + 6);
-  result = wrap_String(object, '"');
-  result += ':';
-  result += to_json_value(value, wrapInQuotes);
-  return result;
+  return strformat(
+    F("\"%s\":%s"), 
+    object.c_str(),
+    to_json_value(value, wrapInQuotes).c_str());
 }
 
 String to_json_value(const String& value, bool wrapInQuotes) {
@@ -598,6 +671,18 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Empty string
     return F("\"\"");
   }
+  if (value.length() > 2) {
+    // Check for JSON objects or arrays
+    const char firstchar = value[0];
+    const char lastchar = value[value.length() - 1];
+    if ((firstchar == '[' && lastchar == ']') ||
+        (firstchar == '{' && lastchar == '}')) 
+    {
+      return value;
+    }
+  }
+
+
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
 
@@ -639,6 +724,10 @@ String stripWrappingChar(const String& text, char wrappingChar) {
   const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     return text.substring(1, length - 1);
   }
   return text;
@@ -725,6 +814,7 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 
 // Convert a string to lower case and replace spaces with underscores.
 String to_internal_string(const String& input, char replaceSpace) {
+  // Do not set to 2nd heap as it is only used temporarily so prefer speed over mem usage
   String result = input;
 
   result.trim();
@@ -801,7 +891,9 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   if (!hasArgument || (pos_begin < 0) || (pos_begin == pos_end)) {
     return EMPTY_STRING;
   }
-  String result = string.substring(pos_begin, pos_end);
+
+  String result;
+  move_special(result, string.substring(pos_begin, pos_end));
 
   if (trimResult) {
     result.trim();
@@ -831,11 +923,10 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
  ****************************************************************************/
 String parseHexTextString(const String& argument, int index) {
   String result;
+  result.reserve(argument.length()); // longer than needed, most likely
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
-
-  result.reserve(argument.length()); // longer than needed, most likely
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -844,7 +935,7 @@ String parseHexTextString(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
           result += char(hex);
@@ -876,7 +967,8 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
 
-  result.reserve(argument.length()); // longer than needed, most likely
+  result.reserve(argument.length() / 2); // longer than needed, most likely
+
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -885,18 +977,19 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
           result.push_back(char(hex));
         }
         j += 2;
-        int c = skipChars.indexOf(arg.substring(j, j + 1));
 
-        while (j < arg.length() && c > -1) {
-          j++;
-          c = skipChars.indexOf(arg.substring(j, j + 1));
-        }
+        // Skip characters we need to ignore
+        int c = -1;
+        do {
+          ++j;
+          c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
+        } while (c > -1);
       }
     } else {
       for (size_t s = 0; s < arg.length(); s++) {
@@ -921,25 +1014,27 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
   // Returns empty string if not found
   // Returns text of found
   char* write = destination;
-  const char* read = haystack;
 
-  index++;
-  while (index--) {
-    size_t size = destination_size -1;
-    write = destination;
-    char ch = '.';
-    while ((ch != '\0') && (ch != '|')) {
-      ch = pgm_read_byte(read++);
-      if (size && (ch != '|'))  {
-        *write++ = ch;
-        size--;
+  if (haystack != nullptr) {
+    const char* read = haystack;
+    index++;
+    while (index--) {
+      size_t size = destination_size -1;
+      write = destination;
+      char ch = '.';
+      while ((ch != '\0') && (ch != '|')) {
+        ch = pgm_read_byte(read++);
+        if (size && (ch != '|'))  {
+          *write++ = ch;
+          size--;
+        }
       }
-    }
-    if (0 == ch) {
-      if (index) {
-        write = destination;
+      if (0 == ch) {
+        if (index) {
+          write = destination;
+        }
+        break;
       }
-      break;
     }
   }
   *write = '\0';
@@ -957,6 +1052,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   // Returns -1 of not found
   // Returns index and command if found
   int result = -1;
+  if (haystack == nullptr) 
+    return result;
   const char* read = haystack;
   char* write = destination;
 
@@ -984,6 +1081,13 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   return result;
 }
 
+int GetCommandCode(const char* needle, const char* haystack)
+{
+  // Likely long enough to parse any command
+  static char temp[32]{};
+  temp[0] = '\0';
+  return GetCommandCode(temp, sizeof(temp), needle, haystack);
+}
 
 
 // escapes special characters in strings for use in html-forms
@@ -1039,12 +1143,7 @@ void htmlStrongEscape(String& html)
     }
     else
     {
-      char s[4] = {0};
-      sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
-      escaped += '&';
-      escaped += '#';
-      escaped += s;
-      escaped += ';';
+      escaped += strformat(F("&#%03d;"), static_cast<int>(html[i]));
     }
   }
   html = escaped;
@@ -1055,6 +1154,10 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
+  // Only used for temporary strings, so keep on default heap for speed
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -1075,42 +1178,50 @@ String URLEncode(const String& msg)
   return encodedMsg;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode)
 {
-  repl(String(key), val, s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    return repl(String(key), val, s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
           const char* val,
           String      & s,
           bool       useURLencode)
 {
-  repl(String(key), String(val), s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    return repl(String(key), String(val), s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key1,
+bool repl(const __FlashStringHelper * key1,
            const __FlashStringHelper * key2,
            const char* val,
            String      & s,
            bool       useURLencode)
 {
-  repl(key1, val, s, useURLencode);
-  repl(key2, val, s, useURLencode);
+  bool somethingReplaced = false;
+  if (repl(key1, val, s, useURLencode)) somethingReplaced = true;
+  if (repl(key2, val, s, useURLencode)) somethingReplaced = true;
+  return somethingReplaced;
 }
 
 
-void repl(const String& key, const String& val, String& s, bool useURLencode)
+bool repl(const String& key, const String& val, String& s, bool useURLencode)
 {
+  if (s.indexOf(key) == -1) { return false; }
   if (useURLencode) {
-    // URLEncode does take resources, so check first if needed.
-    if (s.indexOf(key) == -1) { return; }
     s.replace(key, URLEncode(val));
   } else {
     s.replace(key, val);
   }
+  return true;
 }
 
 void parseSpecialCharacters(String& s, bool useURLencode)
@@ -1126,8 +1237,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     const char degree[3]   = { 0xc2, 0xb0, 0 };       // Unicode degree symbol
     const char degreeC[4]  = { 0xe2, 0x84, 0x83, 0 }; // Unicode degreeC symbol
     const char degree_C[4] = { 0xc2, 0xb0, 'C', 0 };  // Unicode degree symbol + captial C
-    repl(F("{D}"),   degree,   s, useURLencode);
-    repl(F("&deg;"), degree,   s, useURLencode);
+    if (!no_accolades)   repl(F("{D}"),   degree,   s, useURLencode);
+    if (!no_html_entity) repl(F("&deg;"), degree,   s, useURLencode);
     repl(degreeC,    degree_C, s, useURLencode);
   }
   // Degree symbol is often used on displays, so still support that one.
@@ -1188,23 +1299,18 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
   parseEventVariables(s, event, useURLencode);
 }
 
-void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode) {
-  if (s.indexOf('%') != -1) {
-    String str;
-    if (validTaskIndex(event->TaskIndex)) {
-      str = getTaskValueName(event->TaskIndex, taskValueIndex);
-    }
-    repl(F("%valname%"), str, s, useURLencode);
-  }
-}
-
 // FIXME TD-er: These macros really increase build size.
 // Simple macro to create the replacement string only when needed.
 #define SMART_REPL(T, S) \
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
+
+void parseSingleControllerVariable(String            & s,
+                                   struct EventStruct *event,
+                                   uint8_t                taskValueIndex,
+                                   bool             useURLencode) {
+  SMART_REPL(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex));
+}
+
 void parseSystemVariables(String& s, bool useURLencode)
 {
   parseSpecialCharacters(s, useURLencode);
@@ -1231,13 +1337,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
     }
   }
 
-  if (s.indexOf(F("%tskname%")) != -1) {
-    if (validTaskIndex(event->TaskIndex)) {
-      repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
-    } else {
-      repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
-    }
-  }
+  SMART_REPL(F("%tskname%"), getTaskDeviceName(event->TaskIndex));
 
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
@@ -1247,11 +1347,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += (i + 1);
       vname += '%';
 
-      if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
-      } else {
-        repl(vname, EMPTY_STRING, s, useURLencode);
-      }
+      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
     }
   }
 }
@@ -1330,8 +1426,8 @@ struct ConvertArgumentData {
   bool  URLencode;
 };
 
-void repl(ConvertArgumentData& data, const String& repl_str) {
-  repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
+bool repl(ConvertArgumentData& data, const String& repl_str) {
+  return repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
 }
 
 bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData& data) {
@@ -1367,6 +1463,15 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
+  #if FEATURE_ESPEASY_P2P
+  SMART_CONV(F("%c_uname%"),  getNameForUnit(data.arg1))
+  SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
+  SMART_CONV(F("%c_ubuild%"), String(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_ubuildstr%"), formatSystemBuildNr(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_uload%"),  toString(getLoadForUnit(data.arg1)))
+  SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
+  SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
+  #endif // if FEATURE_ESPEASY_P2P
   #undef SMART_CONV
 
   // Conversions with 2 parameters
@@ -1400,10 +1505,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 
   if ((pos_begin >= 0) && (pos_end >= 0) && (pos_end > pos_begin)) {
     argvString.reserve(pos_end - pos_begin);
-
-    for (int i = pos_begin; i < pos_end; ++i) {
-      argvString += string[i];
-    }
+    argvString.concat(string + pos_begin, pos_end - pos_begin);
     argvString.trim();
     argvString = stripQuotes(argvString);
   }
@@ -1413,6 +1515,9 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
   pos_begin = -1;
   pos_end   = -1;
+  if (string == nullptr) {
+    return false;
+  }
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
   bool parenthesis          = false;

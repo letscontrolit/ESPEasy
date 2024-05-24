@@ -44,13 +44,14 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
   delayMicroseconds(10);
 
   pinMode(pinSDO, INPUT);
-  for (uint8_t i = 0; i < 16; i++)
+  for (uint8_t i = 0; i < 16; ++i)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
     digitalWrite(pinSCL, LOW);
-    if (!digitalRead(pinSDO))
+    if (!digitalRead(pinSDO)) {
       value |= mask;
+    }
     delayMicroseconds(1);
     mask <<= 1;
   }
@@ -125,18 +126,17 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
         int16_t pinSDO = CONFIG_PIN2;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("Tkey : GPIO: ");
-          log += pinSCL;
-          log += ' ';
-          log += pinSDO;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("Tkey : GPIO: %d %d"), pinSCL, pinSDO));
         }
 
-        if (pinSCL >= 0 && pinSDO >= 0)
+        if (validGpio(pinSCL) && validGpio(pinSDO))
         {
           pinMode(pinSCL, OUTPUT);
           digitalWrite(pinSCL, LOW);
-          uint32_t key = createKey(PLUGIN_ID_063,pinSCL);
+
+          constexpr pluginID_t P063_PLUGIN_ID{PLUGIN_ID_063};
+
+          uint32_t key = createKey(P063_PLUGIN_ID, pinSCL);
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];
           newStatus.task++; // add this GPIO/port as a task
@@ -147,7 +147,7 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
           pinMode(pinSDO, OUTPUT);
           digitalWrite(pinSDO, LOW);
-          key = createKey(PLUGIN_ID_063,pinSDO);
+          key = createKey(P063_PLUGIN_ID, pinSDO);
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];
           newStatus.task++; // add this GPIO/port as a task
@@ -155,9 +155,9 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
           newStatus.state = 0;
           savePortStatus(key,newStatus);
           //setPinState(PLUGIN_ID_063, pinSDO, PIN_MODE_INPUT, 0);
+          success = true;
         }
 
-        success = true;
         break;
       }
 
@@ -167,42 +167,39 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
         int16_t pinSCL = CONFIG_PIN1;
         int16_t pinSDO = CONFIG_PIN2;
 
-        if (pinSCL >= 0 && pinSDO >= 0)
+        uint16_t key = readTTP229(pinSCL, pinSDO);
+
+        if (key && PCONFIG(1))
         {
-          uint16_t key = readTTP229(pinSCL, pinSDO);
-
-          if (key && PCONFIG(1))
+          uint16_t colMask = 0x01;
+          for (uint8_t col = 1; col <= 16; ++col)
           {
-            uint16_t colMask = 0x01;
-            for (uint8_t col = 1; col <= 16; col++)
+            if (key & colMask)   // this key pressed?
             {
-              if (key & colMask)   // this key pressed?
-              {
-                key = col;
-                break;
-              }
-              colMask <<= 1;
+              key = col;
+              break;
             }
+            colMask <<= 1;
+          }
+        }
+
+        if (keyLast != key)
+        {
+          keyLast = key;
+          UserVar.setFloat(event->TaskIndex, 0, key);
+          event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Tkey : ");
+            if (PCONFIG(1))
+              log = F("ScanCode=");
+            else
+              log = F("KeyMap=");
+            log += formatToHex(key);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
-          if (keyLast != key)
-          {
-            keyLast = key;
-            UserVar[event->BaseVarIndex] = key;
-            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("Tkey : ");
-              if (PCONFIG(1))
-                log = F("ScanCode=0x");
-              else
-                log = F("KeyMap=0x");
-              log += String(key, 16);
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-
-            sendData(event);
-          }
+          sendData(event);
         }
 
         success = true;

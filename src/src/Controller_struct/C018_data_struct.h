@@ -5,7 +5,10 @@
 
 #ifdef USES_C018
 
-# include <rn2xx3.h>
+#include <rn2xx3_status.h>
+
+class rn2xx3;
+class ESPeasySerial;
 
 
 struct C018_data_struct {
@@ -30,7 +33,9 @@ public:
             taskIndex_t   sampleSet_Initiator,
             int8_t        reset_pin);
 
-  bool isInitialized() const;
+  bool isInitialized() const {
+    return ((C018_easySerial != nullptr) && (myLora != nullptr) && autobaud_success);
+  }
 
   bool hasJoined() const;
 

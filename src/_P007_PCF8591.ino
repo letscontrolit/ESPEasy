@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-05-08 tonhuisman: Use ESPEasy core I2C functions where possible
  *                        Add support for use of the Analog output pin and 'analogout,<value>' command
  *                        Add configuration of all possible analog input modes
@@ -47,6 +48,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 
@@ -177,7 +179,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       uint8_t port          = CONFIG_PORT - (unit * 4);
       const uint8_t address = 0x48 + unit;
 
-      uint8_t var = 0;
+      uint8_t var              = 0;
       const uint8_t valueCount = P007_NR_OUTPUT_VALUES;
 
       for (; var < valueCount; ++port, ++var) {
@@ -194,32 +196,25 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
           if (Wire.available())
           {
-            Wire.read();                                      // Read older value first (stored in chip)
-            UserVar[event->BaseVarIndex + var] = Wire.read(); // now read actual value and store into Value var
+            Wire.read();                                          // Read older value first (stored in chip)
+            UserVar.setFloat(event->TaskIndex, var, Wire.read()); // now read actual value and store into Value var
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log;
-
-              if (log.reserve(40)) {
-                log += F("PCF  : Analog port: A");
-                log += port - 1;
-                log += F(" value ");
-                log += var + 1;
-                log += ':';
-                log += ' ';
-                log += formatUserVarNoCheck(event->TaskIndex, var);
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
+              addLog(LOG_LEVEL_INFO, strformat(
+                       F("PCF  : Analog port: A%d value %d: %s"),
+                       port - 1,
+                       var + 1,
+                       formatUserVarNoCheck(event->TaskIndex, var).c_str()));
             }
             success = true;
           }
         } else {
-          UserVar[event->BaseVarIndex + var] = 0;
+          UserVar.setFloat(event->TaskIndex, var, 0);
         }
       }
 
       for (; var < VARS_PER_TASK; ++var) {
-        UserVar[event->BaseVarIndex + var] = 0;
+        UserVar.setFloat(event->TaskIndex, var, 0);
       }
       break;
     }
@@ -231,8 +226,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       if ((P007_OUTPUT_MODE == P007_OUTPUT_ENABLED) &&
           equals(command, F("analogout")) &&
           (event->Par1 >= 0) && (event->Par1 <= 255)) {
-        uint8_t unit    = (CONFIG_PORT - 1) / 4;
-        uint8_t address = 0x48 + unit;
+        const uint8_t unit    = (CONFIG_PORT - 1) / 4;
+        const uint8_t address = 0x48 + unit;
 
         // Setup all required bits to the config register
         uint8_t configRegister = 0;

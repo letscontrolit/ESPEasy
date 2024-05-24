@@ -99,7 +99,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         const uint8_t port    = CONFIG_PORT - (unit * 16);
         const uint8_t address = 0x20 + unit;
 
-        for (uint8_t x = 0; x < 16; x++) {
+        for (uint8_t x = 0; x < 16; ++x) {
           portValues[x] = x + 1;
           portNames[x]  = 'P';
           portNames[x] += (x < 8 ? 'A' : 'B');
@@ -126,7 +126,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes
-      const uint32_t key = createKey(PLUGIN_ID_009, CONFIG_PORT);
+      const uint32_t key = createKey(PLUGIN_MCP, CONFIG_PORT);
 
       auto it = globalMapPortStatus.find(key);
 
@@ -155,7 +155,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
       SwitchWebformSave(
         event->TaskIndex,
-        PLUGIN_ID_009,
+        PLUGIN_MCP,
         P009_BOOTSTATE,
         P009_DEBOUNCE,
         P009_DOUBLECLICK,
@@ -177,7 +177,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       if (CONFIG_PORT >= 0)
       {
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_009, CONFIG_PORT);
+        const uint32_t   key = createKey(PLUGIN_MCP, CONFIG_PORT);
 
         // Read current status or create empty if it does not exist
         newStatus = globalMapPortStatus[key];
@@ -187,9 +187,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         newStatus.state = GPIO_MCP_Read(CONFIG_PORT);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("MCP INIT=");
-          log += newStatus.state;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 concat(F("MCP INIT="), newStatus.state));
         }
         newStatus.output = newStatus.state;
         newStatus.mode   = (newStatus.state == -1) ?  PIN_MODE_OFFLINE : PIN_MODE_INPUT_PULLUP;
@@ -199,9 +198,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // @giig1967g-20181022: set initial UserVar of the switch
         if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-          UserVar[event->BaseVarIndex] = !newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
         } else {
-          UserVar[event->BaseVarIndex] = newStatus.state;
+          UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
         }
 
         // if boot state must be send, inverse default state
@@ -247,7 +246,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t address = 0x20 + unit;
 
       if (!I2C_deviceCheck(address, event->TaskIndex, 10, PLUGIN_I2C_GET_ADDRESS)) { // Generate stats
-        break; // Will return the default false for success
+        break;                                                                       // Will return the default false for success
       }
       # endif // if FEATURE_I2C_DEVICE_CHECK
       const int8_t state                            = GPIO_MCP_Read(CONFIG_PORT);
@@ -267,7 +266,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
          on Button#State=3 do //will fire if doubleclick
       \**************************************************************************/
       portStatusStruct currentStatus;
-      const uint32_t   key = createKey(PLUGIN_ID_009, CONFIG_PORT);
+      const uint32_t   key = createKey(PLUGIN_MCP, CONFIG_PORT);
 
       // WARNING operator [],creates an entry in map if key doesn't exist:
       currentStatus = globalMapPortStatus[key];
@@ -340,13 +339,10 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               output_value = sendState ? 1 : 0; // single click
             }
 
-            UserVar[event->BaseVarIndex] = output_value;
+            UserVar.setFloat(event->TaskIndex, 0, output_value);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("MCP  : Port=");
-              log += CONFIG_PORT;
-              log += F(" State=");
-              log += state;
+              String log = strformat(F("MCP  : Port=%d State=%d"), CONFIG_PORT, state);
               log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
               log += output_value;
               addLogMove(LOG_LEVEL_INFO, log);
@@ -407,16 +403,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             output_value = sendState ? 1 : 0;
             output_value = output_value + 10;
 
-            UserVar[event->BaseVarIndex] = output_value;
+            UserVar.setFloat(event->TaskIndex, 0, output_value);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("MCP  : LongPress: Port=");
-              log += CONFIG_PORT;
-              log += F(" State=");
-              log += state ? '1' : '0';
-              log += F(" Output value=");
-              log += output_value;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO,
+                     strformat(F("MCP  : LongPress: Port=%d State=%d Output value=%d"), CONFIG_PORT, state ? 1 : 0, output_value));
             }
 
             // send task event
@@ -426,7 +417,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value); }
 
             // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
           }
         } else {
           if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
@@ -435,14 +426,11 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
             // Create EVENT with value = 4 for SafeButton false positive detection
             const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
-            UserVar[event->BaseVarIndex] = 4;
+            UserVar.setFloat(event->TaskIndex, 0, 4);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("MCP : SafeButton: false positive detected. GPIO= ");
-              log += CONFIG_PORT;
-              log += F(" State=");
-              log += tempUserVar;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO,
+                     strformat(F("MCP : SafeButton: false positive detected. GPIO= %d State=%d"), CONFIG_PORT, tempUserVar));
             }
 
             // send task event: DO NOT SEND TASK EVENT
@@ -451,20 +439,18 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PORT, 4); }
 
             // reset Userdata so it displays the correct state value in the web page
-            UserVar[event->BaseVarIndex] = tempUserVar;
+            UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
           }
         }
       } else if ((state != currentStatus.state) && (state == -1)) {
         // set UserVar and switchState = -1 and send EVENT to notify user
-        UserVar[event->BaseVarIndex] = state;
-        currentStatus.mode           = PIN_MODE_OFFLINE;
+        UserVar.setFloat(event->TaskIndex, 0, state);
+        currentStatus.mode = PIN_MODE_OFFLINE;
 
         // switchstate[event->TaskIndex] = state;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("MCP  : Port=");
-          log += CONFIG_PORT;
-          log += F(" is offline (EVENT= -1)");
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("MCP  : Port=%d is offline (EVENT= -1)"), CONFIG_PORT));
         }
 
         // send task event
@@ -482,7 +468,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     // giig1967g: Added EXIT function
     case PLUGIN_EXIT:
     {
-      removeTaskFromPort(createKey(PLUGIN_ID_009, CONFIG_PORT));
+      removeTaskFromPort(createKey(PLUGIN_MCP, CONFIG_PORT));
       break;
     }
 
@@ -491,11 +477,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // We do not actually read the pin state as this is already done 10x/second
       // Instead we just send the last known state stored in Uservar
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("MCP   : Port=");
-        log += CONFIG_PORT;
-        log += F(" State=");
-        log += UserVar[event->BaseVarIndex];
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO,
+               strformat(F("MCP   : Port=%d State=%d"), CONFIG_PORT, UserVar[event->BaseVarIndex]));
       }
       success = true;
       break;
@@ -510,21 +493,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // returns pin value using syntax: [plugin#mcpgpio#pinstate#xx]
       if ((string.length() >= 16) && string.substring(0, 16).equalsIgnoreCase(F("mcpgpio,pinstate")))
       {
-        int par1;
+        int32_t par1;
 
         if (validIntFromString(parseString(string, 3), par1)) {
           string = GPIO_MCP_Read(par1);
         }
         success = true;
       }
-      break;
-    }
-
-    case PLUGIN_WRITE:
-    {
-      // String log;
-      // String command = parseString(string, 1);
-
       break;
     }
 
@@ -538,7 +513,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
+      const uint32_t key = createKey(PLUGIN_MCP, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
       tempStatus.state        = event->Par2;
@@ -551,150 +526,4 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-// ********************************************************************************
-// MCP23017 read
-// ********************************************************************************
-
-/*
-   int8_t Plugin_009_Read(uint8_t Par1)
-   {
-   int8_t state        = -1;
-   uint8_t unit           = (Par1 - 1) / 16;
-   uint8_t port           = Par1 - (unit * 16);
-   uint8_t address     = 0x20 + unit;
-   uint8_t IOBankValueReg = 0x12;
-
-   if (port > 8)
-   {
-    port = port - 8;
-    IOBankValueReg++;
-   }
-
-   // get the current pin status
-   Wire.beginTransmission(address);
-   Wire.write(IOBankValueReg); // IO data register
-   Wire.endTransmission();
-   Wire.requestFrom(address, (uint8_t)0x1);
-
-   if (Wire.available())
-   {
-    state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
-   }
-   return state;
-   }
- */
-
-// ********************************************************************************
-// MCP23017 write
-// ********************************************************************************
-
-/*
-   boolean Plugin_009_Write(uint8_t Par1, uint8_t Par2)
-   {
-   boolean success      = false;
-   uint8_t portvalue       = 0;
-   uint8_t unit            = (Par1 - 1) / 16;
-   uint8_t port            = Par1 - (unit * 16);
-   uint8_t address      = 0x20 + unit;
-   uint8_t IOBankConfigReg = 0;
-   uint8_t IOBankValueReg  = 0x12;
-
-   if (port > 8)
-   {
-    port = port - 8;
-    IOBankConfigReg++;
-    IOBankValueReg++;
-   }
-
-   // turn this port into output, first read current config
-   Wire.beginTransmission(address);
-   Wire.write(IOBankConfigReg); // IO config register
-   Wire.endTransmission();
-   Wire.requestFrom(address, (uint8_t)0x1);
-
-   if (Wire.available())
-   {
-    portvalue  = Wire.read();
-    portvalue &= ~(1 << (port - 1)); // change pin from (default) input to output
-
-    // write new IO config
-    Wire.beginTransmission(address);
-    Wire.write(IOBankConfigReg); // IO config register
-    Wire.write(portvalue);
-    Wire.endTransmission();
-   }
-
-   // get the current pin status
-   Wire.beginTransmission(address);
-   Wire.write(IOBankValueReg); // IO data register
-   Wire.endTransmission();
-   Wire.requestFrom(address, (uint8_t)0x1);
-
-   if (Wire.available())
-   {
-    portvalue = Wire.read();
-
-    if (Par2 == 1) {
-      portvalue |= (1 << (port - 1));
-    }
-    else {
-      portvalue &= ~(1 << (port - 1));
-    }
-
-    // write back new data
-    Wire.beginTransmission(address);
-    Wire.write(IOBankValueReg);
-    Wire.write(portvalue);
-    Wire.endTransmission();
-    success = true;
-   }
-   return success;
-   }
- */
-
-// ********************************************************************************
-// MCP23017 config
-// ********************************************************************************
-
-/*
-   void Plugin_009_Config(uint8_t Par1, uint8_t Par2)
-   {
-   // boolean success = false;
-   uint8_t portvalue       = 0;
-   uint8_t unit            = (Par1 - 1) / 16;
-   uint8_t port            = Par1 - (unit * 16);
-   uint8_t address      = 0x20 + unit;
-   uint8_t IOBankConfigReg = 0xC;
-
-   if (port > 8)
-   {
-    port = port - 8;
-    IOBankConfigReg++;
-   }
-
-   // turn this port pullup on
-   Wire.beginTransmission(address);
-   Wire.write(IOBankConfigReg);
-   Wire.endTransmission();
-   Wire.requestFrom(address, (uint8_t)0x1);
-
-   if (Wire.available())
-   {
-    portvalue = Wire.read();
-
-    if (Par2 == 1) {
-      portvalue |= (1 << (port - 1));
-    }
-    else {
-      portvalue &= ~(1 << (port - 1));
-    }
-
-    // write new IO config
-    Wire.beginTransmission(address);
-    Wire.write(IOBankConfigReg); // IO config register
-    Wire.write(portvalue);
-    Wire.endTransmission();
-   }
-   }
- */
 #endif // USES_P009

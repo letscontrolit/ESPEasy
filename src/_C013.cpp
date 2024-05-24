@@ -20,7 +20,6 @@
 # define CPLUGIN_ID_013         13
 # define CPLUGIN_NAME_013       "ESPEasy P2P Networking"
 
-WiFiUDP C013_portUDP;
 
 // Forward declarations
 void C013_SendUDPTaskInfo(uint8_t destUnit,
@@ -43,14 +42,15 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_013;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 8266;
-      Protocol[protocolCount].usesID       = false;
-      Protocol[protocolCount].Custom       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_013;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.usesHost     = false;
+      proto.defaultPort  = 8266;
+      proto.usesID       = false;
+      proto.Custom       = true;
       break;
     }
 
@@ -76,6 +76,12 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_UDP_IN:
     {
       C013_Receive(event);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    {
+      string = F("-");
       break;
     }
 
@@ -106,7 +112,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (!validTaskIndex(sourceTaskIndex) || !validTaskIndex(destTaskIndex)) {
     return;
   }
-  pluginID_t pluginID = Settings.TaskDeviceNumber[sourceTaskIndex];
+  pluginID_t pluginID = Settings.getPluginID_for_task(sourceTaskIndex);
 
   if (!validPluginID_fullcheck(pluginID)) {
     return;
@@ -148,13 +154,14 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   dataReply.sourceUnit      = Settings.Unit;
   dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
-  dataReply.deviceNumber    = Settings.TaskDeviceNumber[event->TaskIndex];
+  dataReply.deviceNumber    = Settings.getPluginID_for_task(event->TaskIndex);
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
   dataReply.sensorType = event->getSensorType();
 
-  const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(event->TaskIndex);
+  const TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(event->TaskIndex);
+
   if (taskValues != nullptr) {
     for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
     {
@@ -185,19 +192,26 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
     return;
   }
 
+  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+
+
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE, concat(F("C013 : Send UDP message to "), unit));
+    addLogMove(LOG_LEVEL_DEBUG_MORE, strformat(
+      F("C013 : Send UDP message to %d (%s)"), 
+      unit, 
+      remoteNodeIP.toString().c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
 
+  WiFiUDP C013_portUDP;
+
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 
   FeedSW_watchdog();
-  const IPAddress remoteNodeIP = getIPAddressForUnit(unit);
 
   if (C013_portUDP.beginPacket(remoteNodeIP, Settings.UDPPort) == 0) { return; }
   C013_portUDP.write(data, size);
@@ -247,14 +261,15 @@ void C013_Receive(struct EventStruct *event) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
         // so it will write only once and has to be cleared manually through webgui
         // Also check the receiving end does support the plugin ID.
-        if (!validPluginID_fullcheck(Settings.TaskDeviceNumber[infoReply.destTaskIndex]) &&
+        if (!validPluginID_fullcheck(Settings.getPluginID_for_task(infoReply.destTaskIndex)) &&
             supportedPluginID(infoReply.deviceNumber))
         {
           taskClear(infoReply.destTaskIndex, false);
-          Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber;
+          Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber.value;
           Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
-          if ((infoReply.deviceNumber == 33) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+          constexpr pluginID_t DUMMY_PLUGIN_ID{33};
+          if ((infoReply.deviceNumber == DUMMY_PLUGIN_ID) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
             // Received a dummy device and the sensor type is actually set
             Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
           }
@@ -297,13 +312,25 @@ void C013_Receive(struct EventStruct *event) {
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          if (!dataReply.matchesPluginID(Settings.TaskDeviceNumber[dataReply.destTaskIndex])) {
+          // deviceNumber and sensorType were not present before build 2023-05-05. (build NR 20460)
+          // See: https://github.com/letscontrolit/ESPEasy/commit/cf791527eeaf31ca98b07c45c1b64e2561a7b041#diff-86b42dd78398b103e272503f05f55ee0870ae5fb907d713c2505d63279bb0321
+          // Thus should not be checked
+          //
+          // If the node is not present in the nodes list (e.g. it had not announced itself in the last 10 minutes or announcement was missed)
+          // Then we cannot be sure about its build.
+          bool mustMatch = false;
+          NodeStruct *sourceNode = Nodes.getNode(dataReply.sourceUnit);
+          if (sourceNode != nullptr) {
+            mustMatch = sourceNode->build >= 20460;
+          }
+
+          if (mustMatch && !dataReply.matchesPluginID(Settings.getPluginID_for_task(dataReply.destTaskIndex))) {
             // Mismatch in plugin ID from sending node
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
-              log += concat(F(" remote: "), dataReply.deviceNumber);
-              log += concat(F(" local: "), Settings.TaskDeviceNumber[dataReply.destTaskIndex]);
+              log += concat(F(" remote: "), dataReply.deviceNumber.value);
+              log += concat(F(" local: "), Settings.getPluginID_for_task(dataReply.destTaskIndex).value);
               addLogMove(LOG_LEVEL_ERROR, log);
             }
           } else {
@@ -312,8 +339,9 @@ void C013_Receive(struct EventStruct *event) {
 
             const Sensor_VType sensorType = TempEvent.getSensorType();
 
-            if (dataReply.matchesSensorType(sensorType)) {
-              TaskValues_Data_t * taskValues = UserVar.getTaskValues_Data(dataReply.destTaskIndex);
+            if (!mustMatch || dataReply.matchesSensorType(sensorType)) {
+              TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(dataReply.destTaskIndex);
+
               if (taskValues != nullptr) {
                 for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
                 {

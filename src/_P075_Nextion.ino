@@ -3,6 +3,8 @@
 
 # include "src/PluginStructs/P075_data_struct.h"
 
+# include "src/ESPEasyCore/ESPEasyWifi.h"
+
 // #######################################################################################################
 // #######################################################################################################
 // ################################### Plugin 075: Nextion <info@sensorio.cz>  ###########################
@@ -126,7 +128,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) { // Is interval timer disabled?
-        addFormNote(concat(F("Interval Timer OFF, Nextion Lines (above)"), P075_IncludeValues 
+        addFormNote(concat(F("Interval Timer OFF, Nextion Lines (above)"), P075_IncludeValues
           ? F(" and Values (below) <b>NOT</b> scheduled for updates")
           : F(" <b>NOT</b> scheduled for updates")));
       }
@@ -201,72 +203,31 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P075_data) {
-        int RssiIndex;
         String newString;
-        String UcTmpString;
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
         for (uint8_t x = 0; x < P75_Nlines; x++) {
           if (P075_data->displayLines[x].length()) {
-            String tmpString = P075_data->displayLines[x];
-            UcTmpString = P075_data->displayLines[x];
-            UcTmpString.toUpperCase();
-            RssiIndex = UcTmpString.indexOf(F("RSSIBAR")); // RSSI bargraph Keyword found, wifi value in dBm.
+            int RssiIndex;
+            {
+              String UcTmpString(P075_data->displayLines[x]);
+              UcTmpString.toUpperCase();
+              RssiIndex = UcTmpString.indexOf(F("RSSIBAR")); // RSSI bargraph Keyword found, wifi value in dBm.
+            }
 
             if (RssiIndex >= 0) {
-              int barVal = 0;
-              newString.reserve(P75_Nchars + 10); // Prevent re-allocation
-              newString.clear();
-              newString += P075_data->displayLines[x].substring(0, RssiIndex);
-              int nbars = WiFi.RSSI();
-
-              if ((nbars < -100) || (nbars >= 0)) {
-                barVal = 0;
-              }
-              else if ((nbars < -95)) {
-                barVal = 5;
-              }
-              else if ((nbars < -90)) {
-                barVal = 10;
-              }
-              else if ((nbars < -85)) {
-                barVal = 20;
-              }
-              else if ((nbars < -80)) {
-                barVal = 30;
-              }
-              else if ((nbars < -75)) {
-                barVal = 45;
-              }
-              else if ((nbars < -70)) {
-                barVal = 60;
-              }
-              else if ((nbars < -65)) {
-                barVal = 70;
-              }
-              else if ((nbars < -55)) {
-                barVal = 80;
-              }
-              else if ((nbars < -50)) {
-                barVal = 90;
-              }
-              else {
-                barVal = 100;
-              }
-
-              newString += barVal;
+              newString = concat(
+                P075_data->displayLines[x].substring(0, RssiIndex),
+                GetRSSI_quality() * 10);
             }
             else {
+              String tmpString(P075_data->displayLines[x]);
               newString = parseTemplate(tmpString);
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());
             # ifdef P075_DEBUG_LOG
-            String log;
-            log.reserve(P75_Nchars + 50); // Prevent re-allocation
-            log += concat(F("NEXTION075 : Cmd Statement Line-"), x + 1);
-            log += concat(F(" Sent: "), newString);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, strformat(F("NEXTION075 : Cmd Statement Line-%d Sent: %s"), x + 1, newString.c_str()));
             # endif // ifdef P075_DEBUG_LOG
           }
         }
@@ -274,11 +235,10 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if (P075_IncludeValues) {
           # ifdef P075_DEBUG_LOG
-          String log;
-          log.reserve(120); // Prevent re-allocation
-          log += concat(F("NEXTION075: Interval values data enabled, resending idx="), formatUserVarNoCheck(event->TaskIndex, 0));
-          log += concat(F(", value="), formatUserVarNoCheck(event->TaskIndex, 1));
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("NEXTION075: Interval values data enabled, resending idx=%s, value=%s"),
+                               formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
           # endif // ifdef P075_DEBUG_LOG
 
           success = true;
@@ -305,9 +265,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         const String nextionArguments = parseStringToEndKeepCase(string, 2);
         P075_sendCommand(event->TaskIndex, nextionArguments.c_str());
         {
-          String log;
-          log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
-          log += concat(F("NEXTION075 : WRITE = "), nextionArguments);
+          const String log = concat(F("NEXTION075 : WRITE = "), nextionArguments);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, log);
           # endif // ifndef BUILD_NO_DEBUG
@@ -333,12 +291,6 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND: {
-      success = true;
-      break;
-    }
-
-
     case PLUGIN_TEN_PER_SECOND: {
       P075_data_struct *P075_data = static_cast<P075_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -351,7 +303,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (P075_data->easySerial == nullptr) { 
+      if (P075_data->easySerial == nullptr) {
         break; // P075_data->easySerial missing, exit.
       }
       {
@@ -365,11 +317,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         uint8_t  charCount = P075_data->easySerial->available(); // Prime the Soft Serial engine.
 
         if (charCount >= RXBUFFWARN) {
-          String log;
-          log.reserve(70); // Prevent re-allocation
-          log += concat(F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, "), charCount);
-          log += F(" bytes");
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, %d bytes"), charCount));
         }
         uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
 
@@ -394,21 +342,19 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
               __buffer[i] = 0x00;
 
+              // FIXME TD-er: (PVS Studio) A part of conditional expression is always false: (0xFF == __buffer[4]). The value range of char
+              // type: [-128, 127].
               if ((0xFF == __buffer[4]) && (0xFF == __buffer[5]) && (0xFF == __buffer[6])) {
-                UserVar[event->BaseVarIndex]     = (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE;
-                UserVar[event->BaseVarIndex + 1] = __buffer[3];
+                UserVar.setFloat(event->TaskIndex, 0, (__buffer[1] * 256) + __buffer[2] + TOUCH_BASE);
+                UserVar.setFloat(event->TaskIndex, 1, __buffer[3]);
                 sendData(event);
 
                 # ifdef P075_DEBUG_LOG
-                String log;
-                log.reserve(70); // Prevent re-allocation
-                log += F("NEXTION075 : code: ");
-                log += __buffer[1];
-                log += ',';
-                log += __buffer[2];
-                log += ',';
-                log += __buffer[3];
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO,
+                           strformat(F("NEXTION075 : code: %c,%c,%c"),
+                                     __buffer[1],
+                                     __buffer[2],
+                                     __buffer[3]));
                 # endif // ifdef P075_DEBUG_LOG
               }
             }
@@ -437,10 +383,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               String tmpString = __buffer;
 
               # ifdef P075_DEBUG_LOG
-              String log;
-              log.reserve(50); // Prevent re-allocation
-              log += concat(F("NEXTION075 : Code = "), tmpString);
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO,  concat(F("NEXTION075 : Code = "), tmpString));
               # endif // ifdef P075_DEBUG_LOG
 
               int argIndex = tmpString.indexOf(F(",i"));
@@ -448,7 +391,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
               if (argIndex) { Vidx = tmpString.substring(argIndex + 2, argEnd); }
 
-              boolean GotPipeCmd = false;
+              bool GotPipeCmd = false;
 
               switch (__buffer[1]) {
                 case 'u':
@@ -476,10 +419,13 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
               }
 
               if (GotPipeCmd) {
-                UserVar[event->BaseVarIndex]     = 0.0f;
-                UserVar[event->BaseVarIndex + 1] = 0.0f;
-                validFloatFromString(Vidx,   UserVar[event->BaseVarIndex]);
-                validFloatFromString(Svalue, UserVar[event->BaseVarIndex + 1]);
+                float Vidx_f{};
+                float Svalue_f{};
+
+                validFloatFromString(Vidx,   Vidx_f);
+                validFloatFromString(Svalue, Svalue_f);
+                UserVar.setFloat(event->TaskIndex, 0, Vidx_f);
+                UserVar.setFloat(event->TaskIndex, 1, Svalue_f);
                 sendData(event);
 
                 # ifdef P075_DEBUG_LOG
@@ -515,7 +461,7 @@ void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
 
   if (!P075_data) { return; }
 
-  if (P075_data->txPin < 0) {
+  if (!validGpio(P075_data->txPin)) {
     addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand"));
   }
   else

@@ -401,6 +401,8 @@ void PZEM004Tv30::setCRC(uint8_t *buf, uint16_t len){
 }
 
 
+// FIXME TD-er: Should consider using ModbusRTU_struct::ModRTU_CRC  (crcTable alone: 512 bytes, ModRTU_CRC: 56 bytes)
+
 /*! * PZEM004Tv30::CRC16 *
  * Calculate the CRC16-Modbus for a buffer
  * Based on https://www.modbustools.com/modbus_crc16.html *

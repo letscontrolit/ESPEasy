@@ -19,13 +19,13 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_012;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_012;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = true;
       break;
     }
 
@@ -67,10 +67,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         const String formattedValue = formatUserVar(event, x, isvalid);
 
         if (isvalid) {
-          element->txt[x]  = F("update/V");
-          element->txt[x] += event->idx + x;
-          element->txt[x] += F("?value=");
-          element->txt[x] += formattedValue;
+          move_special(element->txt[x], strformat(
+            F("update/V%d?value=%s"), 
+            event->idx + x, 
+            formattedValue.c_str()));
+
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
             addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
@@ -81,7 +82,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
       
       success = C012_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C012_DELAY_QUEUE, C012_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C012_DELAY_QUEUE, C012_DelayHandler->getNextScheduleTime());
       break;
     }
 

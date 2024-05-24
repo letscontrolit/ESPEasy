@@ -18,6 +18,7 @@
 # define PLUGIN_NAME_022       "Extra IO - PCA9685"
 # define PLUGIN_VALUENAME1_022 "PWM"
 
+constexpr pluginID_t P022_PLUGIN_ID{ PLUGIN_ID_022 };
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
@@ -83,7 +84,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t optionValues[PCA9685_NUMS_ADDRESS];
 
-      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; ++i)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
@@ -114,7 +115,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         String m2Options[PCA9685_MODE2_VALUES];
         int    m2Values[PCA9685_MODE2_VALUES];
 
-        for (int i = 0; i < PCA9685_MODE2_VALUES; i++)
+        for (int i = 0; i < PCA9685_MODE2_VALUES; ++i)
         {
           m2Values[i]  = i;
           m2Options[i] = formatToHex_decimal(i);
@@ -125,25 +126,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormSelector(F("MODE2"), F("pmode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
       }
-      {
-        String freqString = F("Frequency (");
-        freqString += PCA9685_MIN_FREQUENCY;
-        freqString += '-';
-        freqString += PCA9685_MAX_FREQUENCY;
-        freqString += ')';
-        addFormNumericBox(freqString, F("pfreq"), freq, PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY);
-      }
-      {
-        String funitString = F("default ");
-        funitString += PCA9685_MAX_FREQUENCY;
-        addUnit(funitString);
-      }
-      {
-        addFormNumericBox(F("Range (1-10000)"), F("prange"), range, 1, 10000);
-        String runitString = F("default ");
-        runitString += PCA9685_MAX_PWM;
-        addUnit(runitString);
-      }
+      addFormNumericBox(
+        strformat(F("Frequency (%d-%d)"), PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY),
+        F("pfreq"),
+        freq,
+        PCA9685_MIN_FREQUENCY,
+        PCA9685_MAX_FREQUENCY);
+      addFormNote(concat(F("default "), PCA9685_MAX_FREQUENCY));
+      addFormNumericBox(F("Range (1-10000)"), F("prange"), range, 1, 10000);
+      addFormNote(concat(F("default "), PCA9685_MAX_PWM));
       success = true;
       break;
     }
@@ -182,11 +173,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P022_data_struct());
-      P022_data_struct *P022_data =
-        static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P022_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P022_data_struct());
       break;
     }
 
@@ -228,8 +215,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         success = true;
 
         // "log" is also sent along with the SendStatusOnlyIfNeeded
-        log  = P022_data_struct::P022_logPrefix(address);
-        log += F("PWM ");
+        log  = P022_data_struct::P022_logPrefix(address, F("PWM "));
         log += event->Par1;
         const uint32_t dutyCycle       = event->Par2;
         const uint32_t fadeDuration_ms = event->Par3;
@@ -238,16 +224,11 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         {
           if ((dutyCycle >= 0) && (dutyCycle <= range))
           {
-            if (!P022_data->p022_is_init(address))
-            {
-              P022_data->Plugin_022_initialize(address);
-              P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
-              P022_data->Plugin_022_Frequency(address, freq);
-            }
+            P022_data->initModeFreq(address, mode2, freq);
 
-            // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
+            // setPinState(P022_PLUGIN_ID, event->Par1, PIN_MODE_PWM, event->Par2);
             portStatusStruct newStatus;
-            const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+            const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
             // WARNING: operator [] creates an entry in the map if key does not exist
             newStatus = globalMapPortStatus[key];
@@ -296,13 +277,13 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           else {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-              addLog(LOG_LEVEL_ERROR, log + strformat(F(" the pwm value %d  is invalid value."), event->Par2));
+              addLog(LOG_LEVEL_ERROR, concat(log, strformat(F(" the pwm value %d  is invalid value."), event->Par2)));
             }
           }
         }
         else {
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+            addLog(LOG_LEVEL_ERROR, concat(log, F(" is invalid value.")));
           }
         }
       }
@@ -322,7 +303,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, 99, PIN_MODE_UNDEFINED, event->Par1);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, 99);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, 99);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -331,8 +312,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par1;
           savePortStatus(key, newStatus);
 
-          log  = P022_data_struct::P022_logPrefix(address);
-          log += F("FREQ ");
+          log  = P022_data_struct::P022_logPrefix(address, F("FREQ "));
           log += event->Par1;
           addLog(LOG_LEVEL_INFO, log);
 
@@ -340,11 +320,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          if (loglevelActiveFor(LOG_LEVEL_ERROR))
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             addLog(LOG_LEVEL_ERROR,
-                  P022_data_struct::P022_logPrefix(address) +
-                  strformat(F("frequency %d out of range."), 
-                    event->Par1));
+                   strformat(F("%sfrequency %d out of range."),
+                             P022_data_struct::P022_logPrefix(address).c_str(),
+                             event->Par1));
+          }
         }
       }
 
@@ -360,15 +341,16 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log  = P022_data_struct::P022_logPrefix(address);
-          log += F("MODE2 0x");
-          log += formatToHex(event->Par1, 2);
-          addLog(LOG_LEVEL_INFO, log);
+
+          addLog(LOG_LEVEL_INFO, strformat(F("%s%s"),
+                                           P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
+                                           formatToHex(event->Par1, 2).c_str()));
         }
         else {
           addLog(LOG_LEVEL_ERROR,
-                 P022_data_struct::P022_logPrefix(address) +
-                 concat(formatToHex(event->Par1, F(" MODE2 0x"), 2), F(" is out of range.")));
+                 strformat(F("%s%s is out of range"),
+                           P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
+                           formatToHex(event->Par1, 2).c_str()));
         }
       }
 
@@ -376,36 +358,25 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       {
         if (equals(parseString(string, 2), F("pca")))
         {
-          if (!P022_data->p022_is_init(address))
-          {
-            P022_data->Plugin_022_initialize(address);
-            P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
-            P022_data->Plugin_022_Frequency(address, freq);
-          }
+          P022_data->initModeFreq(address, mode2, freq);
           success = true;
           String dummyString;
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
-          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
+          SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(P022_PLUGIN_ID, event->Par2), dummyString, 0);
         }
       }
 
       if (instanceCommand && (equals(command, F("gpio"))))
       {
         success = true;
-        log  = P022_data_struct::P022_logPrefix(address);
-        log += F(": GPIO ");
+        log     = P022_data_struct::P022_logPrefix(address, F("GPIO "));
         const bool allPins = equals(parseString(string, 2), F("all"));
 
         if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
             allPins)
         {
-          if (!P022_data->p022_is_init(address))
-          {
-            P022_data->Plugin_022_initialize(address);
-            P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
-            P022_data->Plugin_022_Frequency(address, freq);
-          }
+          P022_data->initModeFreq(address, mode2, freq);
           int pin = event->Par1;
 
           if (allPins)
@@ -432,7 +403,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, pin, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, pin);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, pin);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -445,25 +416,18 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+          addLog(LOG_LEVEL_ERROR, concat(log, F(" is invalid value.")));
         }
       }
 
       if (instanceCommand && (equals(command, F("pulse"))))
       {
         success = true;
-        log  = P022_data_struct::P022_logPrefix(address);
-        log += F("GPIO ");
-        log += event->Par1;
+        log     = concat(P022_data_struct::P022_logPrefix(address, F("GPIO ")), event->Par1);
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
-          if (!P022_data->p022_is_init(address))
-          {
-            P022_data->Plugin_022_initialize(address);
-            P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
-            P022_data->Plugin_022_Frequency(address, freq);
-          }
+          P022_data->initModeFreq(address, mode2, freq);
 
           if (event->Par2 == 0)
           {
@@ -475,9 +439,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             log += F(" on");
             P022_data->Plugin_022_On(address, event->Par1);
           }
-          log += F(" Pulse set for ");
-          log += event->Par3;
-          log += F("ms");
+          log += strformat(F(" Pulse set for %dms"), event->Par3);
           int autoreset = 0;
 
           if (event->Par3 > 0)
@@ -493,8 +455,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
               if (autoreset > 0)
               {
-                log += F(" for ");
-                log += autoreset;
+                log += concat(F(" for "), autoreset);
               }
             }
           }
@@ -507,7 +468,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
           portStatusStruct newStatus;
-          const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+          const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus         = globalMapPortStatus[key];
@@ -522,7 +483,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+          addLog(LOG_LEVEL_ERROR, concat(log, F(" is invalid value.")));
         }
       }
 
@@ -534,8 +495,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P022_data) {
-        String log = P022_data_struct::P022_logPrefix(address);
-        log += F("GPIO ");
+        String log = P022_data_struct::P022_logPrefix(address, F("GPIO "));
         log += event->Par1;
         int autoreset = event->Par4;
 
@@ -554,8 +514,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         {
           if (autoreset > -1)
           {
-            log += F(" Pulse auto restart for ");
-            log += autoreset;
+            log += concat(F(" Pulse auto restart for "), autoreset);
             autoreset--;
           }
           Scheduler.setPluginTaskTimer(event->Par3
@@ -568,7 +527,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
         // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         portStatusStruct newStatus;
-        const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
+        const uint32_t   key = createKey(P022_PLUGIN_ID, event->Par1);
 
         // WARNING: operator [] creates an entry in the map if key does not exist
         newStatus         = globalMapPortStatus[key];

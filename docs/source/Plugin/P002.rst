@@ -36,6 +36,8 @@ See below for the limitations on sampling analog values with WiFi active.
 
 See the `ESP32 API reference <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html>`_ for more detailed information on the features and limitations of these pins.
 
+When using an analog input for connecting an Analog Soil-moisture sensor, `this Youtube video <https://www.youtube.com/watch?v=IGP38bz-K48>`_ has very usable tips on finding a reliable sensor.
+
 Range and Calibration
 ---------------------
 
@@ -72,7 +74,7 @@ ESP32
 ^^^^^
 
 All ESP32 versions allow for changing the range per pin (channel) by setting some attentuation resistor active.
-The default active attentuation is 11 dB, which allows for a maximum input voltage of 3.1V
+The default active attentuation is 12 dB, which allows for a maximum input voltage of 3.1V
 Upto roughly 2.5V the ADC does show a nearly linear response.
 
 Suggested ranges ESP32:
@@ -89,7 +91,7 @@ Suggested ranges ESP32:
   |   ESP32  +-------------+-----------------+
   |          |       6     |    150 ~ 1750   |
   |          +-------------+-----------------+
-  |          |      11     |    150 ~ 2450   |
+  |          |      12     |    150 ~ 2450   |
   +----------+-------------+-----------------+
   |          |       0     |      0 ~  750   |
   |          +-------------+-----------------+
@@ -97,7 +99,7 @@ Suggested ranges ESP32:
   | ESP32-S2 +-------------+-----------------+
   |          |       6     |      0 ~ 1300   |
   |          +-------------+-----------------+
-  |          |      11     |      0 ~ 2500   |
+  |          |      12     |      0 ~ 2500   |
   +----------+-------------+-----------------+
 
 N.B. The ESP32 cannot measure down to 0V. The minimum Voltage depends on the set attenuation.

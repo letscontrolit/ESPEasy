@@ -363,6 +363,18 @@
 
     ``Name,<new name>``"
     "
+    Notify","
+    :green:`Rules`","
+    Trigger a notification. Requires the notifier at the numbered index (1..3) to be enabled.
+
+    Optionally include the message body (quoted) and subject (quoted) to be passed. NB: The buzzer doesn't support a message body or subject.
+
+    Syntax: ``Notify,<notifier>[,<message>[,<subject>]]``
+
+    Example:
+
+    ``Notify,1,'The temperature is currently [ds#temp] degrees!','Temperature warning'``"
+    "
     NTPHost[,<host-name_or_ip>]","
     :red:`Internal`","
     Set the name of the NTP-host
@@ -469,9 +481,15 @@
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
+    Send command using MQTT broker service. The 'Will Retain' option as configured in the MQTT Controller settings is used. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PublishR","
+    :green:`Rules`","
+    Send command using MQTT broker service, with the MQTT 'Will Retain' flag enabled. Uses the first enabled MQTT Controller.
+
+    ``PublishR,<topic>[,<payload>]``"
     "
     PutToHTTP","
     :green:`Rules`","

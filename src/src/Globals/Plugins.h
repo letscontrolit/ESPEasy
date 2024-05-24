@@ -41,19 +41,25 @@
 
 struct EventStruct;
 
-extern int deviceCount;
-
-
-// Array containing "DeviceIndex" alfabetically sorted.
-extern std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index);
-bool validTaskIndex(taskIndex_t index);
-bool validPluginID(pluginID_t pluginID);
+
+// TD-er: Converted simple functions to defines to reduce bin size
+
+// bool validTaskIndex(taskIndex_t index);
+#define validTaskIndex(X) ((X) < (TASKS_MAX))
+
+// bool validPluginID(pluginID_t pluginID);
+#define validPluginID(P_ID) ((P_ID) != (INVALID_PLUGIN_ID))
+
 bool validPluginID_fullcheck(pluginID_t pluginID);
-bool validUserVarIndex(userVarIndex_t index);
-bool validTaskVarIndex(taskVarIndex_t index);
+
+// bool validUserVarIndex(userVarIndex_t index);
+#define validUserVarIndex(U_VAR_X)  ((U_VAR_X) < (USERVAR_MAX_INDEX))
+
+// bool validTaskVarIndex(taskVarIndex_t index);
+#define validTaskVarIndex(T_VAR_X)  ((T_VAR_X) < (VARS_PER_TASK))
 
 // Check if plugin is included in build.
 // N.B. Invalid plugin is also not considered supported.
@@ -90,6 +96,8 @@ String        getPluginNameFromPluginID(pluginID_t pluginID);
 // Return false if task is I2C, but I2C bus is not ready
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+
+void loadDefaultTaskValueNames_ifEmpty(taskIndex_t TaskIndex);
 
 /*********************************************************************************************\
 * Function call to all or specific plugins

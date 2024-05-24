@@ -1,6 +1,6 @@
 #include "../ESPEasyCore/ESPEasy_Console_Port.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -24,10 +24,12 @@
 
 EspEasy_Console_Port::~EspEasy_Console_Port()
 {
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   if (_serial != nullptr) {
     delete _serial;
     _serial = nullptr;
   }
+#endif
 }
 
 EspEasy_Console_Port::operator bool() const
@@ -142,9 +144,10 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
     if (SerialInByteCounter != 0) {
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
       addToSerialBuffer('>');
-      addToSerialBuffer(String(InputBuffer_Serial));
+      String cmd(InputBuffer_Serial);
+      addToSerialBuffer(cmd);
       addToSerialBuffer('\n');
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SERIAL, InputBuffer_Serial);
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd)}, true);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
       return true;

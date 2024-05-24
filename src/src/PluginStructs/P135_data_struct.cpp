@@ -13,8 +13,8 @@ P135_data_struct::P135_data_struct(taskIndex_t taskIndex,
                                    bool        lowPowerMeasurement,
                                    bool        useSingleShot)
   : _sensorType(sensorType), _altitude(altitude), _tempOffset(tempOffset), _autoCalibrate(autoCalibrate),
-  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false) 
-  {}
+  _lowPowerMeasurement(lowPowerMeasurement), _useSingleShot(useSingleShot), initialized(false)
+{}
 
 bool P135_data_struct::init() {
   scd4x = new (std::nothrow) SCD4x(static_cast<scd4x_sensor_type_e>(_sensorType)); // Don't start measurement, we want to set arguments
@@ -23,13 +23,12 @@ bool P135_data_struct::init() {
     if (scd4x->begin(false, _autoCalibrate)) {
       const uint16_t orgAltitude = scd4x->getSensorAltitude();
 
-      if (_altitude != 0) {
+      if ((_altitude != 0) && (_altitude != orgAltitude)) {
         scd4x->setSensorAltitude(_altitude);
       }
       const float orgTempOffset = scd4x->getTemperatureOffset();
 
-      // FIXME TD-er: Is this correct? Checking _tempOffset and not checking orgTempOffset? (same for altitude)
-      if (!essentiallyZero(_tempOffset)) {
+      if (!essentiallyZero(_tempOffset) && !essentiallyEqual(_tempOffset, orgTempOffset)) {
         scd4x->setTemperatureOffset(_tempOffset);
       }
       const bool hasSerial = scd4x->getSerialNumber(serialNumber); // Not yet reading, get serial
@@ -47,11 +46,7 @@ bool P135_data_struct::init() {
           } else {
             log += F("(unknown)");
           }
-          log += F(", org.alt.comp.: ");
-          log += orgAltitude;
-          log += F(" m, org.temp.offs.: ");
-          log += toString(orgTempOffset, 2);
-          log += 'C';
+          log += strformat(F(", org.alt.comp.: %d m, org.temp.offs.: %.2f C"), orgAltitude, orgTempOffset);
         } else {
           log += F("error");
         }
@@ -104,9 +99,9 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
     }
 
     if (getMeasure && scd4x->readMeasurement()) {
-      UserVar[event->BaseVarIndex]     = scd4x->getCO2();
-      UserVar[event->BaseVarIndex + 1] = scd4x->getHumidity();
-      UserVar[event->BaseVarIndex + 2] = scd4x->getTemperature();
+      UserVar.setFloat(event->TaskIndex, 0, scd4x->getCO2());
+      UserVar.setFloat(event->TaskIndex, 1, scd4x->getHumidity());
+      UserVar.setFloat(event->TaskIndex, 2, scd4x->getTemperature());
 
       success = !firstRead;           // Discard first measurement
 
@@ -130,17 +125,14 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
 
     if (errorCount > P135_MAX_ERRORS) {
       initialized = false;
-      scd4x->stopPeriodicMeasurement(); // Stop measuring, no need to wait for completion
-      UserVar[event->BaseVarIndex] = 0; // Indicate an error state
+      scd4x->stopPeriodicMeasurement();         // Stop measuring, no need to wait for completion
+      UserVar.setFloat(event->TaskIndex, 0, 0); // Indicate an error state
       addLog(LOG_LEVEL_ERROR, F("SCD4x: Max. read errors reached, plugin stopped."));
     }
 
     if (timerDelay != 0) { // Schedule next PLUGIN_READ
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SCD4x: READ Scheduler started: +");
-        log += timerDelay;
-        log += F(" ms.");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("SCD4x: READ Scheduler started: +%d ms."), timerDelay));
       }
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + timerDelay);
     }
@@ -194,10 +186,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
           if (success) {
             initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            log += F("success. New setting: ");
-            log += frcValue;
-            log += F(", correction: ");
-            log += toString(frcCorrection, 2);
+            log += strformat(F("success. New setting: %d, correction: %.2f"), frcValue, frcCorrection);
           } else {
             lvl  = LOG_LEVEL_ERROR;
             log += F("failed!");
@@ -244,15 +233,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
         if (serialNumber[10] != 0x0) {
           if (doSelftest) {
-            factoryResetCode += char(serialNumber[3]);
-            factoryResetCode += char(serialNumber[1]);
-            factoryResetCode += char(serialNumber[10]);
-            factoryResetCode += char(serialNumber[6]);
+            factoryResetCode += strformat(F("%c%c%c%c"),
+                                          char(serialNumber[3]), char(serialNumber[1]), char(serialNumber[10]), char(serialNumber[6]));
           } else {
-            factoryResetCode += char(serialNumber[1]);
-            factoryResetCode += char(serialNumber[3]);
-            factoryResetCode += char(serialNumber[7]);
-            factoryResetCode += char(serialNumber[10]);
+            factoryResetCode += strformat(F("%c%c%c%c"),
+                                          char(serialNumber[1]), char(serialNumber[3]), char(serialNumber[7]), char(serialNumber[10]));
           }
         } else {
           factoryResetCode += F("2022");
@@ -271,13 +256,12 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
           } else {
             log += F("Factory reset");
           }
-          log += F(" code: ");
-          log += factoryResetCode;
+          log += concat(F(" code: "), factoryResetCode);
           addLog(LOG_LEVEL_ERROR, log);
         }
         success = true;
       } else {
-        String code = parseStringKeepCase(string, 3); // Case sensitive!
+        const String code = parseStringKeepCase(string, 3); // Case sensitive!
 
         if (code.equals(factoryResetCode)) {
           if (doSelftest) {
@@ -319,23 +303,30 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 *****************************************************/
 bool P135_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (nullptr == scd4x) { return false; } // Safeguard
   bool success = false;
 
   const String var = parseString(string, 1);
 
-  if (equals(var, F("getaltitude"))) {               // [<taskname>#getaltitude] = get sensor altitude
-    string  = scd4x->getSensorAltitude();
+  if (equals(var, F("getaltitude")) &&
+      scd4x->stopPeriodicMeasurement()) { // [<taskname>#getaltitude] = get sensor altitude
+    string = scd4x->getSensorAltitude();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("gettempoffset"))) {      // [<taskname>#gettempoffset] = get sensor temperature offset
-    string  = toString(scd4x->getTemperatureOffset(), 2);
+  } else if (equals(var, F("gettempoffset")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#gettempoffset] = get sensor temperature offset
+    string = toString(scd4x->getTemperatureOffset(), 2);
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("getdataready"))) {       // [<taskname>#getdataready] = is data ready? (1/0)
+  } else if (equals(var, F("getdataready"))) { // [<taskname>#getdataready] = is data ready? (1/0)
     string  = scd4x->getDataReadyStatus();
     success = true;
-  } else if (equals(var, F("getselfcalibration"))) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
-    string  = scd4x->getAutomaticSelfCalibrationEnabled();
+  } else if (equals(var, F("getselfcalibration")) &&
+             scd4x->stopPeriodicMeasurement()) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
+    string = scd4x->getAutomaticSelfCalibrationEnabled();
+    startPeriodicMeasurements();
     success = true;
-  } else if (equals(var, F("serialnumber"))) {       // [<taskname>#serialnumber] = the devices electronic serial number
+  } else if (equals(var, F("serialnumber"))) { // [<taskname>#serialnumber] = the devices electronic serial number
     string  = String(serialNumber);
     success = true;
   }

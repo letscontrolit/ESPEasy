@@ -22,7 +22,6 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
@@ -32,12 +31,12 @@
 #include "../Helpers/PortStatus.h"
 
 
-#define PLUGIN_ID_MQTT_IMPORT         37
+constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
-void sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event, bool sendEvents)
 {
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
@@ -45,7 +44,7 @@ void sendData(struct EventStruct *event)
   #endif // ifndef BUILD_NO_RAM_TRACKER
 //  LoadTaskSettings(event->TaskIndex);
 
-  if (Settings.UseRules) {
+  if (Settings.UseRules && sendEvents) {
     createRuleEvents(event);
   }
 
@@ -140,7 +139,7 @@ void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int leng
     //  Here we loop over all tasks and call each 037 plugin with function PLUGIN_MQTT_IMPORT
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
     {
-      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.TaskDeviceNumber[taskIndex] == PLUGIN_ID_MQTT_IMPORT))
+      if (Settings.TaskDeviceEnabled[taskIndex] && (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_MQTT_IMPORT))
       {
         Scheduler.schedule_mqtt_plugin_import_event_timer(
           DeviceIndex, taskIndex, PLUGIN_MQTT_IMPORT,
@@ -338,7 +337,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     return false;
   }
 
-  if (Protocol[ProtocolIndex].usesMQTT)
+  if (getProtocolStruct(ProtocolIndex).usesMQTT)
   {
     bool   mqtt_sendLWT = false;
     String LWTTopic, LWTMessageConnect;
@@ -506,7 +505,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
     if (validProtocolIndex(ProtocolIndex)) {
-      if (Protocol[ProtocolIndex].usesMQTT && Settings.ControllerEnabled[i]) {
+      if (getProtocolStruct(ProtocolIndex).usesMQTT && Settings.ControllerEnabled[i]) {
         return i;
       }
     }
@@ -550,6 +549,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
+
   const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
@@ -624,7 +624,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
-    bool success                    = false;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -634,52 +633,8 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     TempEvent.timestamp = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
-
-    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-    // Store the previous value, in case %pvalue% is used in the formula
-    String preValue[VARS_PER_TASK];
-    if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
-      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-      {
-        const String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
-        if (!formula.isEmpty())
-        {
-          if (formula.indexOf(F("%pvalue%")) != -1) {
-            preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
-          }
-        }
-      }
-    }
-
-    {
-      String dummy;
-      success = PluginCall(PLUGIN_READ, &TempEvent, dummy);
-    }
-
-    if (success)
-    {
-      if (Device[DeviceIndex].FormulaOption && Cache.hasFormula(event->TaskIndex)) {
-        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-        {
-          String formula = Cache.getTaskDeviceFormula(event->TaskIndex, varNr);
-          if (!formula.isEmpty())
-          {
-            START_TIMER;
-
-            // TD-er: Should we use the set nr of decimals here, or not round at all?
-            // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-            formula.replace(F("%pvalue%"), preValue[varNr]);
-            formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
-            ESPEASY_RULES_FLOAT_TYPE result{};
-
-            if (!isError(Calculate(parseTemplate(formula), result))) {
-              UserVar.set(event->TaskIndex, varNr, result, TempEvent.sensorType);
-            }
-
-            STOP_TIMER(COMPUTE_FORMULA_STATS);
-          }
-        }
-      }
+    String dummy;
+    if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
   }

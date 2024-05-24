@@ -1,7 +1,8 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 #include "../../ESPEasy_common.h"
 
@@ -170,15 +171,14 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (gpio == PIN_USB_D_PLUS) { return F("USB_D+"); }
 #endif
 
-  if (isFlashInterfacePin(gpio)) {
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
     return F("Flash");
   }
 
-#ifdef isPSRAMInterfacePin
+#ifdef ESP32
   if (isPSRAMInterfacePin(gpio)) {
     return F("PSRAM");
   }
-
 #endif
 
   # ifdef ESP32S2
@@ -188,7 +188,15 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   // See Appendix A, page 71: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 
-  #elif defined(ESP32C3)
+  #elif defined(ESP32C6) 
+
+  if (gpio == 27) {
+    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO
+    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
+    return F("Flash Vdd"); 
+  }
+
+  #elif defined(ESP32C2) || defined(ESP32C3) 
 
   if (gpio == 11) {
     // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
@@ -207,6 +215,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
   bool includeI2C = true;
   bool includeSPI = true;
+  #if FEATURE_SD
+  bool includeSDCard = true;
+  #endif
   #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   // FIXME TD-er: Must check whether this can be a conflict.
   bool includeSerial = false;
@@ -241,6 +252,11 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::Generic_bidir:
     case PinSelectPurpose::DAC:
       break;
+    #if FEATURE_SD
+    case PinSelectPurpose::SD_Card:
+      includeSDCard = false;
+      break;
+    #endif
   }
 
   if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -265,23 +281,36 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     }
   }
 
+  #if FEATURE_SD
+  if (validGpio(gpio) && Settings.Pin_sd_cs == gpio && includeSDCard) { return F("SD-Card CS"); }
+  #endif // if FEATURE_SD
+
 
   #if FEATURE_ETHERNET
+  if (isSPI_EthernetType(Settings.ETH_Phy_Type)) {
+    if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+      if (Settings.ETH_Pin_mdc_cs == gpio) { return F("Eth SPI CS"); }
 
-  if (Settings.isEthernetPin(gpio)) {
-    return F("Eth");
-  }
+      if (Settings.ETH_Pin_mdio_irq == gpio) { return F("Eth SPI IRQ"); }
 
-  if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
-    if (isGpioUsedInETHClockMode(Settings.ETH_Clock_Mode, gpio)) { return F("Eth Clock"); }
+      if (Settings.ETH_Pin_power_rst == gpio) { return F("Eth SPI RST"); }
+    }
+  } else {
+    if (Settings.isEthernetPin(gpio)) {
+      return F("Eth");
+    }
 
-    if (Settings.ETH_Pin_mdc == gpio) { return F("Eth MDC"); }
+    if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+      if (isGpioUsedInETHClockMode(Settings.ETH_Clock_Mode, gpio)) { return F("Eth Clock"); }
 
-    if (Settings.ETH_Pin_mdio == gpio) { return F("Eth MDIO"); }
+      if (Settings.ETH_Pin_mdc_cs == gpio) { return F("Eth MDC"); }
 
-    if (Settings.ETH_Pin_power == gpio) { return F("Eth Pwr"); }
+      if (Settings.ETH_Pin_mdio_irq == gpio) { return F("Eth MDIO"); }
 
-    return F("Eth");
+      if (Settings.ETH_Pin_power_rst == gpio) { return F("Eth Pwr"); }
+
+      return F("Eth");
+    }
   }
   #endif // if FEATURE_ETHERNET
 

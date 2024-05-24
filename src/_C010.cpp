@@ -17,13 +17,13 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_010;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 514;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_010;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = true;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.defaultPort  = 514;
+      proto.usesID       = false;
       break;
     }
 
@@ -92,9 +92,11 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element->txt[x] = pubname;
-            parseSingleControllerVariable(element->txt[x], event, x, false);
-            element->txt[x].replace(F("%value%"), formattedValue);
+            String txt;
+            txt = pubname;
+            parseSingleControllerVariable(txt, event, x, false);
+            txt.replace(F("%value%"), formattedValue);
+            move_special(element->txt[x], std::move(txt));
 #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
               addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
@@ -103,9 +105,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         }
       }
 
-      
       success = C010_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
       break;
     }
 

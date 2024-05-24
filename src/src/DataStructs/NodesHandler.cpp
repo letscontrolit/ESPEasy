@@ -10,6 +10,8 @@
 #include "../Globals/ESPEasy_now_state.h"
 #endif
 
+#include "../Globals/EventQueue.h"
+
 #include "../DataTypes/NodeTypeID.h"
 
 #if FEATURE_MQTT
@@ -28,6 +30,8 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
@@ -65,7 +69,13 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
   {
     _nodes_mutex.lock();
-    _nodes[node.unit] = node;
+    {
+      #ifdef USE_SECOND_HEAP
+      // FIXME TD-er: Must check whether this is working well as the NodesMap is a std::map
+      HeapSelectIram ephemeral;
+      #endif
+      _nodes[node.unit] = node;
+    }
     _ntp_candidate.set(node);
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
@@ -90,6 +100,20 @@ bool NodesHandler::addNode(const NodeStruct& node)
     uint8_t unit;
     if (_ntp_candidate.getUnixTime(unixTime, unit)) {
       node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
+    }
+  }
+
+  if (isNewNode) {
+    if (Settings.UseRules && node.unit != 0)
+    {
+      // Generate event announcing new p2p node
+      // TODO TD-er: Maybe also add other info like ESP type, IP-address, etc?
+      eventQueue.addMove(strformat(
+        F("p2pNode#Connected=%d,'%s','%s'"), 
+        node.unit,
+        node.getNodeName().c_str(),
+        formatSystemBuildNr(node.build).c_str()
+      ));
     }
   }
 
@@ -224,9 +248,7 @@ const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) co
 }
 
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
-  MAC_address this_mac;
-
-  WiFi.macAddress(this_mac.mac);
+  MAC_address this_mac = NetworkMacAddress();
   const NodeStruct *thisNode = getNodeByMac(this_mac);
   const NodeStruct *reject   = getNodeByMac(not_matching);
 
@@ -347,7 +369,10 @@ void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
 
   // Set local data
-  WiFi.macAddress(thisNode.sta_mac);
+  {
+    MAC_address mac = NetworkMacAddress();
+    mac.get(thisNode.sta_mac);
+  }
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
     const bool addIP = NetworkConnected();
@@ -461,6 +486,12 @@ void NodesHandler::updateThisNode() {
   }
   thisNode.distance = _distance;
 
+  #if FEATURE_USE_IPV6
+  thisNode.hasIPv4 = thisNode.IP() != INADDR_NONE;
+  thisNode.hasIPv6_mac_based_link_local = is_IPv6_link_local_from_MAC(thisNode.sta_mac);
+  thisNode.hasIPv6_mac_based_link_global = is_IPv6_global_from_MAC(thisNode.sta_mac);
+  #endif
+
   #ifdef USES_ESPEASY_NOW
   addNode(thisNode, thisTraceRoute);
   if (thisNode.distance == 0) {
@@ -475,8 +506,7 @@ void NodesHandler::updateThisNode() {
 const NodeStruct * NodesHandler::getThisNode() {
   node_time.now();
   updateThisNode();
-  MAC_address this_mac;
-  WiFi.macAddress(this_mac.mac);
+  MAC_address this_mac = NetworkMacAddress();
   return getNodeByMac(this_mac.mac);
 }
 
@@ -527,6 +557,11 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
       }
       #endif
       if (mustErase) {
+        if (Settings.UseRules && it->second.unit != 0)
+        {
+          // Add event about removing node from nodeslist.
+          eventQueue.addMove(strformat(F("p2pNode#Disconnected=%d"), it->second.unit));
+        }
         {
           _nodes_mutex.lock();
           it          = _nodes.erase(it);

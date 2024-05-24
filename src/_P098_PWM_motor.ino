@@ -379,10 +379,10 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         // }
         int limitApos, limitBpos;
         P098_data->getLimitSwitchPositions(limitApos, limitBpos);
-        UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
-        UserVar[event->BaseVarIndex + 1] = limitA_triggered ? 1 : 0;
-        UserVar[event->BaseVarIndex + 2] = limitB_triggered ? 1 : 0;
-        UserVar[event->BaseVarIndex + 3] = limitApos;
+        UserVar.setFloat(event->TaskIndex, 0, P098_data->getPosition());
+        UserVar.setFloat(event->TaskIndex, 1, limitA_triggered ? 1 : 0);
+        UserVar.setFloat(event->TaskIndex, 2, limitB_triggered ? 1 : 0);
+        UserVar.setFloat(event->TaskIndex, 3, limitApos);
 
         success = true;
       }
@@ -401,10 +401,10 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         int limitApos, limitBpos;
         P098_data->getLimitSwitchPositions(limitApos, limitBpos);
 
-        UserVar[event->BaseVarIndex + 0] = P098_data->getPosition();
-        UserVar[event->BaseVarIndex + 1] = limitA_triggered ? 1 : 0;
-        UserVar[event->BaseVarIndex + 2] = limitB_triggered ? 1 : 0;
-        UserVar[event->BaseVarIndex + 3] = limitApos;
+        UserVar.setFloat(event->TaskIndex, 0, P098_data->getPosition());
+        UserVar.setFloat(event->TaskIndex, 1, limitA_triggered ? 1 : 0);
+        UserVar.setFloat(event->TaskIndex, 2, limitB_triggered ? 1 : 0);
+        UserVar.setFloat(event->TaskIndex, 3, limitApos);
 
         success = true;
       }

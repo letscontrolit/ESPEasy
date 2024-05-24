@@ -7,11 +7,11 @@
 
 # include "../ControllerQueue/Queue_element_base.h"
 # include "../CustomBuild/ESPEasyLimits.h"
-# include "../DataStructs/UnitMessageCount.h"
 # include "../Globals/CPlugins.h"
 
 
 struct EventStruct;
+struct UnitMessageCount_t;
 
 /*********************************************************************************************\
 * C018_queue_element for queueing requests for C018: TTN/RN2483
@@ -23,11 +23,7 @@ public:
 
   C018_queue_element() = default;
 
-# ifdef USE_SECOND_HEAP
-  C018_queue_element(const C018_queue_element& other) = default;
-# else // ifdef USE_SECOND_HEAP
   C018_queue_element(const C018_queue_element& other) = delete;
-# endif // ifdef USE_SECOND_HEAP
 
   C018_queue_element(C018_queue_element&& other) = default;
 

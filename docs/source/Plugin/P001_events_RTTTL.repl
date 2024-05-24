@@ -1,0 +1,41 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``RTTTL#Started``
+   Event generated when a melody/song is played using the Async RTTTL method.
+   ","
+
+   .. code-block:: none
+
+        on RTTTL#Started do
+         GPIO,13,1 // Turn on LED while playing a song
+        endon
+
+   "
+   "
+   ``RTTTL#Finished``
+   Event generated when the playback of a melody/song is finished using the Async RTTTL method.
+   ","
+
+   .. code-block:: none
+
+        on RTTTL#Finished do
+         GPIO,13,0 // Turn off LED after playing a song
+         event,nextSong // Select the next song to play
+        endon
+
+   "
+   "
+   ``RTTTL#Cancelled``
+   Event generated when the currently playing melody/song is cancelled by starting a new song using the Async RTTTL method.
+   ","
+
+   .. code-block:: none
+
+        on RTTTL#Cancelled do
+         GPIO,13,0 // Turn off LED
+        endon
+
+   "

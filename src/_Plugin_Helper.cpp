@@ -9,7 +9,6 @@
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-#include "src/Globals/SecuritySettings.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
@@ -39,20 +38,26 @@ void clearPluginTaskData(taskIndex_t taskIndex) {
   }
 }
 
-void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
+bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (!validTaskIndex(taskIndex)) {
     if (data != nullptr) {
       delete data;
     }
-    return;
+    return false;
   }
+
+  // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
 
   clearPluginTaskData(taskIndex);
 
   if (data != nullptr) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       Plugin_task_data[taskIndex]                     = data;
-      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+      Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.getPluginID_for_task(taskIndex);
 
   #if FEATURE_PLUGIN_STATS
       const uint8_t valueCount = getValueCountForTask(taskIndex);
@@ -71,6 +76,7 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
       delete data;
     }
   }
+  return getPluginTaskData(taskIndex) != nullptr;
 }
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
@@ -96,7 +102,7 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
     return false;
   }
   return Plugin_task_data[taskIndex] != nullptr &&
-         (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.TaskDeviceNumber[taskIndex]);
+         (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
 String getPluginCustomArgName(int varNr) {
@@ -192,6 +198,7 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
     if (validTaskIndex(event->TaskIndex)) {
       String dummy;
 
+      event->idx = -1;
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }

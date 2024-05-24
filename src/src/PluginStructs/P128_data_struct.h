@@ -2209,8 +2209,10 @@ const uint8_t PROGMEM ftv_colors[] = {
   0X20, 0XE4, 0X21, 0XA6, 0X29, 0XE7, 0X32, 0X28 };
 # endif // if P128_ENABLE_FAKETV
 
+# include <NeoPixelBus.h>
 # include <NeoPixelBrightnessBus.h> // Be sure to keep this header file when upgrading the NeoPixelBus library,
                                     // and remove the deprecation warning if needed
+
 # include "../../ESPEasy-Globals.h"
 
 # define P128_CONFIG_LED_COUNT  PCONFIG(0)
@@ -2247,7 +2249,7 @@ const uint8_t PROGMEM ftv_colors[] = {
 // # define BRG   //A three element color in the order of Blue, Red, and then Green.
 // # define RBG   //A three element color in the order of Red, Blue, and then Green.
 
-# define NEOPIXEL_LIB NeoPixelBrightnessBus  // Neopixel library type
+# define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
 # if defined(ESP32)
 #  define METHOD NeoWs2812xMethod             // Automatic method, user selected pin
 # endif // if defined(ESP32)
@@ -2429,27 +2431,29 @@ private:
 
   /// random number seed
   uint16_t rand16seed; // = RAND16_SEED; // leave uninitialized //-V457
-  uint8_t random8();
-  uint8_t random8(uint8_t lim);
-  uint8_t random8(uint8_t min,
-                  uint8_t lim);
-  uint8_t qsub8(uint8_t i,
-                uint8_t j);
-  uint8_t qadd8(uint8_t i,
-                uint8_t j);
-  uint8_t scale8_video(uint8_t i,
-                       uint8_t scale);
+  uint8_t        random8();
+  uint8_t        random8(uint8_t lim);
+  uint8_t        random8(uint8_t min,
+                         uint8_t lim);
+  static uint8_t qsub8(uint8_t i,
+                       uint8_t j);
+  static uint8_t qadd8(uint8_t i,
+                       uint8_t j);
+  static uint8_t scale8_video(uint8_t i,
+                              uint8_t scale);
 
   // Fire2012: Array of temperature readings at each simulation cell
   byte heat[ARRAYSIZE] = { 0 };
-  void     Fire2012(void);
-  void     fire_flicker();
-  void     Plugin_128_simpleclock();
-  uint32_t rgbStr2Num(String rgbStr);
-  void     hex2rgb(const String& hexcolor);
-  void     hex2rrggbb(const String& hexcolor);
-  void     hex2rgb_pixel(const String& hexcolor);
-  void     NeoPixelSendStatus(struct EventStruct *eventSource);
+  void             Fire2012(void);
+  void             fire_flicker();
+  void             Plugin_128_simpleclock();
+  static uint32_t  rgbStr2Num(const String& rgbStr);
+  static RgbColor  rgbStr2RgbColor(const String& str);
+  static RgbwColor rgbStr2RgbWColor(const String& str);
+  void             hex2rgb(const String& hexcolor);
+  void             hex2rrggbb(const String& hexcolor);
+  void             hex2rgb_pixel(const String& hexcolor);
+  void             NeoPixelSendStatus(struct EventStruct *eventSource);
 };
 #endif // ifdef USES_P128
 

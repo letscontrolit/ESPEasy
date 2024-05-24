@@ -2,6 +2,9 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/PluginStats_Config.h"
+
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_Plugin.h"
 
@@ -125,6 +128,15 @@ void ExtraTaskSettingsStruct::clearTaskDeviceValueName(taskVarIndex_t taskVarInd
   }
 }
 
+void ExtraTaskSettingsStruct::clearDefaultTaskDeviceValueNames()
+{
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
+    if (isDefaultTaskVarName(i)) {
+      clearTaskDeviceValueName(i);
+    }
+  }
+}
+
 void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
 {
   if (validTaskVarIndex(taskVarIndex)) {
@@ -205,7 +217,39 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
   return false;
 }
 
+PluginStats_Config_t ExtraTaskSettingsStruct::getPluginStatsConfig(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return PluginStats_Config_t(); }
+
+  PluginStats_Config_t res(get8BitFromUL(VariousBits[taskVarIndex], 0));
+  return res;
+}
+
+void ExtraTaskSettingsStruct::setPluginStatsConfig(taskVarIndex_t taskVarIndex, PluginStats_Config_t config)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    uint8_t value = config.getStoredBits();
+    bitWrite(value, 1, bitRead(VariousBits[taskVarIndex], 1));
+    set8BitToUL(VariousBits[taskVarIndex], 0, value);
+  }
+}
+
+
 #endif // if FEATURE_PLUGIN_STATS
+
+bool ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return false; }
+  return bitRead(VariousBits[taskVarIndex], 1);
+}
+
+void ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex, bool isDefault)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    bitWrite(VariousBits[taskVarIndex], 1, isDefault);
+  }
+}
+
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,

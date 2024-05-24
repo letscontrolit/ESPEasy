@@ -97,9 +97,9 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      UserVar[event->BaseVarIndex]     = 0;
-      UserVar[event->BaseVarIndex + 1] = 0;
-      UserVar[event->BaseVarIndex + 2] = 0;
+      UserVar.setFloat(event->TaskIndex, 0, 0);
+      UserVar.setFloat(event->TaskIndex, 1, 0);
+      UserVar.setFloat(event->TaskIndex, 2, 0);
 
       if (validGpio(CONFIG_PIN1)) {
         // Explicitly set the pinMode using the "slow" pinMode function
@@ -118,35 +118,31 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 
       if (addr[0] != 0) {
         if (validGpio(CONFIG_PIN1)) {
-          float value = 0;
+          float value = 0.0f;
 
           if (Dallas_readCounter(addr, &value, CONFIG_PIN1, CONFIG_PIN1, PCONFIG(0)))
           {
-            UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] != 0
+            UserVar.setFloat(event->TaskIndex, 0, UserVar[event->BaseVarIndex + 2] != 0
               ? value - UserVar[event->BaseVarIndex + 1]
-              : 0;
-            UserVar[event->BaseVarIndex + 2] = 1;
-            UserVar[event->BaseVarIndex + 1] = value;
-            success                          = true;
+              : 0);
+            UserVar.setFloat(event->TaskIndex, 2, 1);
+            UserVar.setFloat(event->TaskIndex, 1, value);
+            success = true;
           }
           else
           {
-            UserVar[event->BaseVarIndex] = NAN;
+            UserVar.setFloat(event->TaskIndex, 0, NAN);
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("[P100]DS   : Counter ");
-            log += PCONFIG(0) == 0 ? F("A") : F("B");
-            log += F(": ");
+            String log = strformat(F("[P100]DS   : Counter %c :"), PCONFIG(0) == 0 ? 'A' : 'B');
 
             if (success) {
               log += formatUserVarNoCheck(event->TaskIndex, 0);
             } else {
               log += F("Error!");
             }
-            log += F(" (");
-            log += Dallas_format_address(addr);
-            log += ')';
+            log += concat(F(" (%s)"), Dallas_format_address(addr).c_str());
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }

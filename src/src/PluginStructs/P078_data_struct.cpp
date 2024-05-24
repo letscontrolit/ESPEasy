@@ -130,7 +130,7 @@ constexpr p078_register_description register_description_list[] = {
 };
 // *INDENT-ON*
 
-constexpr int register_description_list_size = sizeof(register_description_list) / sizeof(register_description_list[0]);
+constexpr int register_description_list_size = NR_ELEMENTS(register_description_list);
 
 const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
   const __FlashStringHelper *strings[] = {
@@ -148,7 +148,7 @@ const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
     F("Apparent Energy"), F("kVAh"),
     F("Reactive Energy"), F("kVArh")
   };
-  constexpr size_t nrStrings = sizeof(strings) / sizeof(strings[0]);
+  constexpr size_t nrStrings = NR_ELEMENTS(strings);
   size_t index               = 2 * static_cast<size_t>(uom);
 
   if (!display) { ++index; }
@@ -211,7 +211,7 @@ void SDM_loadOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uin
 {
   const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
   const String    label = concat(F("Value "), valuenr + 1);
-  const String    id    = PCONFIG_LABEL(pconfigIndex);
+  const String    id    = sensorTypeHelper_webformID(pconfigIndex);
 
   addRowLabel_tr_id(label, id);
   do_addSelector_Head(id, F("wide"), EMPTY_STRING, false);
@@ -270,12 +270,13 @@ String p078_register_description::getDescription(SDM_MODEL model) const
 {
   String res;
   const SDM_DIRECTION direction = getDirection();
-  const SDM_UOM uom             = getUnitOfMeasure();
+  const SDM_UOM  uom            = getUnitOfMeasure();
+  const uint16_t reg            = getRegister();
   bool showFullUnitOfMeasure    = true;
 
   // Check first for specific strings not generated using the description bitmap
 
-  switch (getRegister())
+  switch (reg)
   {
     case SDM_MAXIMUM_TOTAL_SYSTEM_POWER_DEMAND:
     case SDM_MAXIMUM_TOTAL_SYSTEM_VA_DEMAND:
@@ -317,7 +318,7 @@ String p078_register_description::getDescription(SDM_MODEL model) const
       break;
   }
 
-  switch (getRegister())
+  switch (reg)
   {
     case SDM_NEUTRAL_CURRENT_DEMAND:
     case SDM_MAXIMUM_NEUTRAL_CURRENT:
@@ -365,7 +366,7 @@ String p078_register_description::getDescription(SDM_MODEL model) const
     res += SDM_UOMtoString(uom, true);
   }
 
-  switch (getRegister())
+  switch (reg)
   {
     case SDM_TOTAL_SYSTEM_POWER_DEMAND:
     case SDM_MAXIMUM_TOTAL_SYSTEM_POWER_DEMAND:
@@ -390,7 +391,7 @@ String p078_register_description::getDescription(SDM_MODEL model) const
       break;
   }
 
-  switch (getRegister())
+  switch (reg)
   {
     case SDM_VAH_SINCE_LAST_RESET:
     case SDM_AH_SINCE_LAST_RESET:
@@ -399,11 +400,8 @@ String p078_register_description::getDescription(SDM_MODEL model) const
       break;
   }
 
-  res += ' ';
-  res += '(';
-  res += SDM_UOMtoString(uom, false);
-  res += ')';
-  res += getPhaseDescription(model, ' ');
+  res += concat(F(" ("), SDM_UOMtoString(uom, false));
+  res += concat(F(")"), getPhaseDescription(model, ' '));
   return res;
 }
 
@@ -468,7 +466,7 @@ void SDM_loopRegisterReadQueue(SDM *sdm)
       const float value = sdm->decodeFloatValue();
       UserVar.setFloat(it->taskIndex, it->taskVarIndex, value);
 
-# if FEATURE_PLUGIN_STATS
+      # if FEATURE_PLUGIN_STATS
       PluginTaskData_base *taskdata = getPluginTaskDataBaseClassOnly(it->taskIndex);
 
       if (taskdata != nullptr) {
@@ -478,7 +476,7 @@ void SDM_loopRegisterReadQueue(SDM *sdm)
           stats->trackPeak(value);
         }
       }
-# endif // if FEATURE_PLUGIN_STATS
+      # endif // if FEATURE_PLUGIN_STATS
     } else {
       sdm->clearErrCode();
     }

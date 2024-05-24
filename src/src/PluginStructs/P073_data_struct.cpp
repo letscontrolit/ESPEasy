@@ -192,7 +192,7 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
     }
   }
 
-  // addLog(LOG_LEVEL_INFO, String(F("7dgt format")) + format);
+  // addLog(LOG_LEVEL_INFO, concat(F("7dgt format: "), format));
 }
 
 # endif // ifdef P073_7DDT_COMMAND
@@ -415,8 +415,7 @@ void P073_data_struct::LogBufferContent(String prefix) {
 
     for (uint8_t i = 0; i < 8; i++) {
       if (i > 0) { log += ','; }
-      log += F("0x");
-      log += String(showbuffer[i], HEX);
+      log += formatToHex(showbuffer[i]);
       log += ',';
       log += showperiods[i] ? F(".") : F("");
     }

@@ -19,39 +19,34 @@
 
 #if FEATURE_CHART_JS
 
-struct ChartJS_title {
-  ChartJS_title();
-  ChartJS_title(const String& titleText);
-
-  String align;
-  String text;
-
-  String toString() const;
-};
-
-String   make_ChartJS_scale_options(
-  const ChartJS_title& xAxisTitle,
-  const ChartJS_title& yAxisTitle,
-  const String       & xAxisType = EMPTY_STRING,
-  const String       & yAxisType = EMPTY_STRING);
-
+# include "../WebServer/Chart_JS_scale.h"
+# include "../DataStructs/ChartJS_dataset_config.h"
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const __FlashStringHelper *id,
-  const __FlashStringHelper *chartTitle,
+  const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING);
+  const String             & options   = EMPTY_STRING,
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON  = false);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const String             & id,
-  const String             & chartTitle,
+  const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING);
+  const String             & options   = EMPTY_STRING,
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON  = false);
 
+void add_ChartJS_chart_JSON_header(
+  const __FlashStringHelper *chartType,
+  const ChartJS_title      & chartTitle,
+  const String             & options,
+  size_t                     nrSamples);
 
 void add_ChartJS_chart_labels(
   int       valueCount,
@@ -62,35 +57,23 @@ void add_ChartJS_chart_labels(
   const String labels[]);
 
 
-void add_ChartJS_dataset(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color,
-  const float                values[],
-  int                        valueCount,
-  bool                       hidden  = false,
-  const String             & options = EMPTY_STRING);
+void add_ChartJS_scatter_data_point(float x,
+                                    float y,
+                                    int   nrDecimals);
 
 void add_ChartJS_dataset(
-  const String&              label,
-  const String&              color,
-  const float                values[],
-  int                        valueCount,
-  bool                       hidden  = false,
-  const String             & options = EMPTY_STRING);
+  const ChartJS_dataset_config& config,
+  const float                   values[],
+  int                           valueCount,
+  unsigned int                  nrDecimals = 3,
+  const String                & options    = EMPTY_STRING);
 
-void add_ChartJS_dataset_header(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color);
+void add_ChartJS_dataset_header(const ChartJS_dataset_config& config);
 
-void add_ChartJS_dataset_header(
-  const String& label,
-  const String& color);
-
-void add_ChartJS_dataset_footer(bool          hidden  = false,
-                                const String& options = EMPTY_STRING);
+void add_ChartJS_dataset_footer(const String& options = EMPTY_STRING);
 
 
-void add_ChartJS_chart_footer();
+void add_ChartJS_chart_footer(bool onlyJSON = false);
 #endif // if FEATURE_CHART_JS
 
 #endif // ifndef WEBSERVER_CHART_JS_H

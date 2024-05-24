@@ -9,6 +9,9 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ChecksumType.h"
+#if FEATURE_PLUGIN_STATS
+#include "../DataStructs/PluginStats_Config.h"
+#endif
 #include "../Globals/Plugins.h"
 
 // This is only used by some plugins to store extra settings like formula descriptions.
@@ -40,6 +43,7 @@ struct ExtraTaskSettingsStruct
   void          setTaskDeviceValueName(taskVarIndex_t taskVarIndex, const __FlashStringHelper * str);
 
   void          clearTaskDeviceValueName(taskVarIndex_t taskVarIndex);
+  void          clearDefaultTaskDeviceValueNames();
 
   void          setAllowedRange(taskVarIndex_t taskVarIndex,
                                 const float  & minValue,
@@ -58,7 +62,16 @@ struct ExtraTaskSettingsStruct
   void          enablePluginStats(taskVarIndex_t taskVarIndex,
                                   bool           enabled);
   bool          anyEnabledPluginStats() const;
+
+  PluginStats_Config_t getPluginStatsConfig(taskVarIndex_t taskVarIndex) const;
+  void setPluginStatsConfig(taskVarIndex_t taskVarIndex, PluginStats_Config_t config);
+
 #endif // if FEATURE_PLUGIN_STATS
+
+  bool          isDefaultTaskVarName(taskVarIndex_t taskVarIndex) const;
+  void          isDefaultTaskVarName(taskVarIndex_t taskVarIndex,
+                                     bool           isDefault);
+
 
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,

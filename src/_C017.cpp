@@ -30,13 +30,13 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_017;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].usesID       = false;
-      Protocol[protocolCount].defaultPort  = 10051;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_017;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.usesID       = false;
+      proto.defaultPort  = 10051;
       break;
     }
 
@@ -69,7 +69,7 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
 
       std::unique_ptr<C017_queue_element> element(new C017_queue_element(event));
       success = C017_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -139,7 +139,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
 
   uint64_t payload_len = JSON_packet_content.length();
 
-  // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + JSON_packet_content);
+  // addLog(LOG_LEVEL_INFO, concat(F("ZBX: "), JSON_packet_content));
   // Send the packet
   client.write(packet_header,               sizeof(packet_header) - 1);
   client.write(reinterpret_cast<const char *>(&payload_len),        sizeof(payload_len));

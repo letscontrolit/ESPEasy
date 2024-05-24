@@ -1,0 +1,411 @@
+{
+    "frameEnd": "*/",
+    "frameParser": "/* \n * @brief Frame parsing function, you can modify this to suit your needs.\n * \n * By customizing this code, you can use a single JSON project file to \n * process different kinds of frames that are sent by the microcontroller \n * or any data source that is connected to Serial Studio. Frame parsing code\n * is specific to every JSON project that you create.\n *\n * @param frame      string with the latest received frame.\n * @param separator  data separator sequence defined by the JSON project.\n *\n * @note.            only data that is *inside* the data delimiters will\n *                   be processed by the frame parser.\n *\n * @note             you can safely declare global variables outside the\n *                   @c parse() function.\n */\nfunction parse(frame, separator) {\n    return frame.split(separator);\n}",
+    "frameStart": "/*",
+    "groups": [
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Moving",
+                    "units": "cm",
+                    "value": "%2",
+                    "widget": ""
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Detection",
+                    "units": "cm",
+                    "value": "%3",
+                    "widget": ""
+                },
+                {
+                    "alarm": 50,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Energy",
+                    "units": "dBZ",
+                    "value": "%4",
+                    "widget": ""
+                }
+            ],
+            "title": "Moving Target",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Stationary",
+                    "units": "cm",
+                    "value": "%5",
+                    "widget": ""
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Detection",
+                    "units": "cm",
+                    "value": "%6",
+                    "widget": ""
+                },
+                {
+                    "alarm": 50,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Energy",
+                    "units": "dBZ",
+                    "value": "%7",
+                    "widget": ""
+                }
+            ],
+            "title": "Stationary Target",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%8",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%9",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%10",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%11",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 0",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%12",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%13",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%14",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%15",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 1",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%16",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%17",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%18",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%19",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 2",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%20",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%21",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%22",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%23",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 3",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%24",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%25",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%26",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%27",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 4",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%28",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%29",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%30",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%31",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 5",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%32",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%33",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%34",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%35",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 6",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%36",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%37",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%38",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%39",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 7",
+            "widget": "multiplot"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": "%40",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Movement Energy",
+                    "units": "dBZ",
+                    "value": "%41",
+                    "widget": "gauge"
+                },
+                {
+                    "alarm": "%42",
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Static Energy",
+                    "units": "dBZ",
+                    "value": "%43",
+                    "widget": "gauge"
+                }
+            ],
+            "title": "Gate 8",
+            "widget": "multiplot"
+        }
+    ],
+    "separator": ",",
+    "title": "%1"
+}

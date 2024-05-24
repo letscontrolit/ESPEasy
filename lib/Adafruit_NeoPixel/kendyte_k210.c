@@ -11,7 +11,7 @@
 #include "sysctl.h"
 
 void  k210Show(
-    uint8_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz)
+    int16_t pin, uint8_t *pixels, uint32_t numBytes, boolean is800KHz)
 {
 
 #define CYCLES_800_T0H (sysctl_clock_get_freq(SYSCTL_CLOCK_CPU) / 2500000) // 0.4us

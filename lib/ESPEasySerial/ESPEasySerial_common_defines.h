@@ -8,7 +8,7 @@
 #ifndef SOC_UART_NUM
 # ifdef ESP8266
 #  define SOC_UART_NUM 2
-# elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C3)
+# elif defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
 #  include <soc/soc_caps.h>
 # else // ifdef ESP8266
 static_assert(false, "Implement processor architecture");
@@ -19,11 +19,12 @@ static_assert(false, "Implement processor architecture");
 #ifdef ESP32
 
 /*
- #if CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
+ #if CONFIG_IDF_TARGET_ESP32C6 ||  // support USB via HWCDC using JTAG interface
+     CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
      CONFIG_IDF_TARGET_ESP32S2 ||  // support USB via USBCDC
      CONFIG_IDF_TARGET_ESP32S3     // support USB via HWCDC using JTAG interface or USBCDC
  */
-# if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+# if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 
 // #if CONFIG_TINYUSB_CDC_ENABLED              // This define is not recognized here so use USE_USB_CDC_CONSOLE
 #  ifdef USE_USB_CDC_CONSOLE

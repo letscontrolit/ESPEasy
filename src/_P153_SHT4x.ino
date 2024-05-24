@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2023-08-26 tonhuisman: BUGFIX: Fixed wrong VType to correctly use SENSOR_TYPE_TEMP_HUM, so it will send data correctly to Domoticz
  * 2023-06-10 tonhuisman: Return NaN values if there is an error connecting to the sensor, or a checksum error is reported
  * 2023-06-10 tonhuisman: BUGFIX: The switch to Normal configuration wasn't working, resulting in checksum errors
  * 2023-04-24 tonhuisman: Rename Boot configuration to Startup configuration, add PLUGIN_WRITE support for commands
@@ -55,7 +56,7 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_153;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -91,7 +92,9 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
       if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
         addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P153_I2C_ADDRESS);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("Chip type determines address: SHT-4x-<b>A</b>xxx = 0x44, SHT-4x-<b>B</b>xxx = 0x45, SHT-4x-<b>C</b>xxx = 0x46"));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         success = intArrayContains(3, i2cAddressValues, event->Par1);
       }

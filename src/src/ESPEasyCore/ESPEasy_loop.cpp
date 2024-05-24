@@ -2,6 +2,7 @@
 
 
 #include "../../ESPEasy-Globals.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
@@ -16,11 +17,13 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/I2C_access.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
+
+
+#include "../Commands/InternalCommands_decoder.h"
 
 void updateLoopStats() {
   ++loopCounter;
@@ -86,13 +89,18 @@ void ESPEasy_loop()
       eventQueue.addMove(std::move(event));
     }
 
+#ifndef BUILD_NO_DEBUG
+    checkAll_internalCommands();
+#endif
+
+
     RTC.bootFailedCount = 0;
     saveToRTC();
     #if FEATURE_ESPEASY_P2P
     sendSysInfoUDP(1);
     #endif
   }
-
+#if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus())
   {
     // Check I2C bus to see if it needs to be cleared.
@@ -126,6 +134,7 @@ void ESPEasy_loop()
         break;
     }
   }
+#endif
 
 
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
@@ -154,11 +163,13 @@ void ESPEasy_loop()
   else
   {
     if (!UseRTOSMultitasking) {
-      // On ESP32 the schedule is executed on the 2nd core.
+      // On ESP32, when using RTOS multitasking, the schedule is executed in a separate RTOS task
       Scheduler.handle_schedule();
     }
   }
 
+  // Calls above may have received/generated commands for the command queue, thus need to process them.
+  processExecuteCommandQueue();
   backgroundtasks();
 
   if (readyForSleep()) {

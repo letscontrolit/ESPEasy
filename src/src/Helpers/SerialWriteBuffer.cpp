@@ -9,8 +9,8 @@ void SerialWriteBuffer_t::add(const String& line)
   {
     #ifdef USE_SECOND_HEAP
 
-    // Allow to store the logs in 2nd heap if present.
-    HeapSelectIram ephemeral;
+    // Do not store in 2nd heap, std::dequeue cannot handle 2nd heap well
+    HeapSelectDram ephemeral;
     #endif // ifdef USE_SECOND_HEAP
     int roomLeft = getRoomLeft();
 
@@ -34,6 +34,12 @@ void SerialWriteBuffer_t::add(const __FlashStringHelper *line)
 
 void SerialWriteBuffer_t::add(char c)
 {
+  #ifdef USE_SECOND_HEAP
+
+  // Do not store in 2nd heap, std::dequeue cannot handle 2nd heap well
+  HeapSelectDram ephemeral;
+  #endif // ifdef USE_SECOND_HEAP
+
   if (_buffer.size() > _maxSize) {
     _buffer.pop_front();
   }
@@ -51,11 +57,6 @@ void SerialWriteBuffer_t::clear()
   _buffer.clear();
 }
 
-int SerialWriteBuffer_t::availableForWrite() const
-{
-  return _buffer.size();
-}
-
 size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
 {
   size_t bytesWritten     = 0;
@@ -71,14 +72,43 @@ size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
     }
 
     while (nrBytesToWrite > 0 && !_buffer.empty()) {
-      const char c = _buffer.front();
+      uint8_t tmpBuffer[16]{};
 
-      if (stream.write((uint8_t)c) == 0) {
+      size_t tmpBufferUsed = 0;
+
+      auto it = _buffer.begin();
+
+      bool done = false;
+
+      for (; tmpBufferUsed < sizeof(tmpBuffer) &&
+           !done &&
+           it != _buffer.end();) {
+        tmpBuffer[tmpBufferUsed] = (uint8_t)(*it);
+
+        if ((*it == '\n') ||
+            (tmpBufferUsed >= nrBytesToWrite)) {
+          done = true;
+        }
+        ++tmpBufferUsed;
+        ++it;
+      }
+
+      //      done = false;
+      const size_t written = (tmpBufferUsed == 0) ? 0 : stream.write(tmpBuffer, tmpBufferUsed);
+
+      if (written < tmpBufferUsed) {
+        done = true;
+      }
+
+      for (size_t i = 0; i < written; ++i) {
+        _buffer.pop_front();
+        --nrBytesToWrite;
+        ++bytesWritten;
+      }
+
+      if (done) {
         return bytesWritten;
       }
-      _buffer.pop_front();
-      --nrBytesToWrite;
-      ++bytesWritten;
     }
   }
   return bytesWritten;
@@ -87,8 +117,8 @@ size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
 int SerialWriteBuffer_t::getRoomLeft() const {
   #ifdef USE_SECOND_HEAP
 
-  // If stored in 2nd heap, we must check this for space
-  HeapSelectIram ephemeral;
+  // Do not store in 2nd heap, std::dequeue cannot handle 2nd heap well
+  HeapSelectDram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
 
   int roomLeft = getMaxFreeBlock();

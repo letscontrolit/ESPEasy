@@ -51,7 +51,7 @@ uint32_t createTaskInfoJson(bool send) {
       }
       expected_size += writeToMqtt(concat(F("{\"taskName\":\""), getTaskDeviceName(task)), send);
       expected_size += writeToMqtt(concat(F("\",\"taskIndex\":"), task), send);
-      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task)), send);
+      expected_size += writeToMqtt(concat(F(",\"pluginId\":"), getPluginID_from_TaskIndex(task).value), send);
       expected_size += writeToMqtt(F(",\"taskValues\":["), send);
     }
 
@@ -363,7 +363,9 @@ bool P146_data_struct::sendViaOriginalTask(
   // - Call CPLUGIN_PROTOCOL_SEND
   // - Restore the values
   for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-    std::swap(taskValues[valIndex], UserVar[tmpEvent.BaseVarIndex + valIndex]);
+    const float tmp = UserVar.getFloat(tmpEvent.TaskIndex, valIndex);
+    UserVar.setFloat(tmpEvent.TaskIndex, valIndex, taskValues[valIndex]);
+    taskValues[valIndex] = tmp;
   }
 
   for (controllerIndex_t x = 0; !unusableSample && x < CONTROLLER_MAX; x++)
@@ -396,7 +398,9 @@ bool P146_data_struct::sendViaOriginalTask(
   }
 
   for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-    std::swap(taskValues[valIndex], UserVar[tmpEvent.BaseVarIndex + valIndex]);
+    const float tmp = UserVar.getFloat(tmpEvent.TaskIndex, valIndex);
+    UserVar.setFloat(tmpEvent.TaskIndex, valIndex, taskValues[valIndex]);
+    taskValues[valIndex] = tmp;
   }
 
   if (!success && !unusableSample) {

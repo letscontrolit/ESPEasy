@@ -122,6 +122,18 @@ void addHtml(const char& char1, const char& char2);
 void addHtml(const __FlashStringHelper * html);
 void addHtml(const String& html);
 void addHtml(String&& html);
+void addHtmlInt(int8_t int_val);
+void addHtmlInt(int16_t int_val);
+void addHtmlInt(uint8_t int_val);
+
+// FIXME TD-er: ESP_IDF 5.1 for all non-RISC-V treat int as different from int32_t
+// See: esp32x_fixes.h
+#if ESP_IDF_VERSION_MAJOR >= 5
+#ifndef __riscv
+void addHtmlInt(int int_val);
+void addHtmlInt(unsigned int int_val);
+#endif
+#endif
 void addHtmlInt(int32_t int_val);
 void addHtmlInt(uint32_t int_val);
 void addHtmlInt(int64_t int_val);
@@ -147,11 +159,11 @@ void addDisabled();
 
 void addHtmlLink(const String& htmlclass, const String& url, const String& label);
 
-void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content = EMPTY_STRING, const String& id = EMPTY_STRING);
+void addHtmlDiv(const __FlashStringHelper * htmlclass, const String& content = EMPTY_STRING, const String& id = EMPTY_STRING, const String& attribute = EMPTY_STRING);
 
 void addHtmlDiv(const String& htmlclass);
 void addHtmlDiv(const String& htmlclass, const String& content);
-void addHtmlDiv(const String& htmlclass, const String& content, const String& id);
+void addHtmlDiv(const String& htmlclass, const String& content, const String& id, const String& attribute = EMPTY_STRING);
 
 void addEnabled(boolean enabled);
 

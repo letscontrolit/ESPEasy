@@ -11,12 +11,17 @@
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
+#include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/StringConverter.h"
 
 
 #define WIFI_MODE_MAX (WiFiMode_t)4
+
+#ifdef ESP32
+#include <esp_phy_init.h>
+#endif
 
 
 String Command_Wifi_SSID(struct EventStruct *event, const char *Line)
@@ -72,13 +77,13 @@ String Command_Wifi_HiddenSSID(struct EventStruct *event, const char *Line)
 const __FlashStringHelper* Command_Wifi_Scan(struct EventStruct *event, const char *Line)
 {
   WiFiScan_log_to_serial();
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
   WiFiEventData.wifiConnectAttemptNeeded = true;
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, const char *Line)
@@ -86,19 +91,19 @@ const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, co
   RTC.clearLastWiFi(); // Force a WiFi scan
   WifiDisconnect();
 
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const char *Line)
 {
   setAP(true);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_STAMode(struct EventStruct *event, const char *Line)
 {
   setSTA(true);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
@@ -127,21 +132,37 @@ String Command_Wifi_Mode(struct EventStruct *event, const char *Line)
   } else {
     return return_result(event, concat(F("WiFi Mode:"),  getWifiModeString(WiFi.getMode())));
   }
-  return return_command_success_str();
+  return return_command_success();
 }
 
 const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const char *Line)
 {
   Settings.DoNotStartAP(false);
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 // FIXME: TD-er This is not an erase, but actually storing the current settings
 // in the wifi settings of the core library
 const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const char *Line)
 {
-  WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
-  WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
-  WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
-  return return_command_success();
+  #ifdef ESP8266
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  if (!ESP.eraseConfig())
+    return return_command_failed_flashstr();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  #endif
+
+  #ifdef ESP32
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  delay(100);
+  esp_phy_erase_cal_data_in_nvs();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  delay(100);
+  esp_phy_load_cal_and_init();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
+  delay(100);  
+  #endif
+  return return_command_success_flashstr();
 }

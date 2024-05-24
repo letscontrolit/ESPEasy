@@ -2,6 +2,8 @@
 
 #include "../Helpers/Numerical.h"
 
+#include "../Helpers/StringConverter.h"
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -9,7 +11,7 @@
 // FIXME: change original code so it uses String and String.toInt()
 unsigned long str2int(const char *string)
 {
-  unsigned int temp = 0;
+  uint32_t temp = 0;
 
   validUIntFromString(string, temp);
 
@@ -21,7 +23,6 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
-  /*
   #ifndef LIMIT_BUILD_SIZE
 
   if (decimalPlaces == 0) {
@@ -36,13 +37,18 @@ String toString(const float& value, unsigned int decimalPlaces)
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
-  */
 // #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
+
   char buf[decimalPlaces + 42];
+  #ifdef USE_SECOND_HEAP
+  String sValue;
+  move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
+  #else
   String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  #endif
 
 /*
 #else
@@ -116,6 +122,17 @@ String trimTrailingZeros(const String& value) {
 
 }
 
+/**
+ * Helper: Convert an integer to string, but return an empty string for 0, to save a little space in settings
+ */
+String toStringNoZero(int64_t value) {
+  if (value != 0) {
+    return ll2String(value);
+  } else {
+    return EMPTY_STRING;
+  }
+}
+
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
@@ -133,7 +150,8 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (nullptr == buf) {
     return F("nan");
   }
-  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  String res;
+  move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
   free(buf);
 

@@ -265,6 +265,17 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
   return value;
 }
 
+uint16_t I2C_read16(uint8_t i2caddr, bool *is_ok) {
+  uint16_t value{};
+
+  if (I2C_requestFrom(i2caddr, 2, is_ok)) {
+    value = (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+
 // **************************************************************************/
 // Reads an 8 bit value from a register over I2C
 // **************************************************************************/
@@ -372,6 +383,8 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
         deviceCheckI2C[taskIndex]++;
 
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
+          // Disable temporarily as device check failed
+          // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
           Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));

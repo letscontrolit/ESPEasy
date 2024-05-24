@@ -10,7 +10,7 @@
 
 
 
-void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pconfigIndex)
+void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, int pconfigIndex)
 {
   const uint8_t optionValues[] {
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE),
@@ -43,12 +43,12 @@ void sensorTypeHelper_webformLoad_allTypes(struct EventStruct *event, uint8_t pc
 #endif
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_STRING)
   };
-  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  constexpr int optionCount = NR_ELEMENTS(optionValues);
 
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
-void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pconfigIndex)
+void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, int pconfigIndex)
 {
   const uint8_t optionValues[] {
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE),
@@ -56,34 +56,36 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, uint8_t pcon
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_TRIPLE),
     static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD)
   };
-  constexpr int optionCount = sizeof(optionValues) / sizeof(optionValues[0]);
+  constexpr int optionCount = NR_ELEMENTS(optionValues);
 
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
-void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigIndex, int optionCount, const uint8_t options[])
+void sensorTypeHelper_webformLoad(struct EventStruct *event, int pconfigIndex, int optionCount, const uint8_t options[])
 {
   addFormSubHeader(F("Output Configuration"));
 
-  if (pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
+  if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
   }
   Sensor_VType choice             = static_cast<Sensor_VType>(PCONFIG(pconfigIndex));
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) {
+    // FIXME TD-er: Should we even continue here?
     choice                = Sensor_VType::SENSOR_TYPE_NONE;
     PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
   } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
     // Invalid value
-    checkDeviceVTypeForTask(event);
-    choice                = event->sensorType;
-    PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
+    if (checkDeviceVTypeForTask(event) >= 0) {
+      choice                = event->sensorType;
+      PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
+    }
   }
 
   const __FlashStringHelper *outputTypeLabel = F("Output Data Type");
 
-  if (Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
+  if (validDeviceIndex(DeviceIndex) && Device[DeviceIndex].OutputDataType ==  Output_Data_type_t::Simple) {
     if (!isSimpleOutputDataType(event->sensorType))
     {
       choice                = Device[DeviceIndex].VType;
@@ -92,7 +94,7 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
     outputTypeLabel = F("Number Output Values");
   }
   addRowLabel(outputTypeLabel);
-  addSelector_Head(PCONFIG_LABEL(pconfigIndex));
+  addSelector_Head(sensorTypeHelper_webformID(pconfigIndex));
 
   for (uint8_t x = 0; x < optionCount; x++)
   {
@@ -114,26 +116,36 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, uint8_t pconfigInde
   PluginCall(PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, event, dummy);
 }
 
-void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valueIndex, const String& defaultValueName)
+void sensorTypeHelper_saveOutputSelector(struct EventStruct *event, int pconfigIndex, uint8_t valueIndex, const String& defaultValueName)
 {
-  if (defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex])) {
+  const bool isDefault = defaultValueName.equals(ExtraTaskSettings.TaskDeviceValueNames[valueIndex]);
+  if (isDefault) {
     ExtraTaskSettings.clearTaskDeviceValueName(valueIndex);
   }
+  ExtraTaskSettings.isDefaultTaskVarName(valueIndex, isDefault);
   pconfig_webformSave(event, pconfigIndex);
 }
 
-void pconfig_webformSave(struct EventStruct *event, uint8_t pconfigIndex)
+void pconfig_webformSave(struct EventStruct *event, int pconfigIndex)
 {
-  PCONFIG(pconfigIndex) = getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0);
+  if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
+    return;
+  }
+
+  PCONFIG(pconfigIndex) = getFormItemInt(sensorTypeHelper_webformID(pconfigIndex), PCONFIG(pconfigIndex));
 }
 
 void sensorTypeHelper_loadOutputSelector(
-  struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
+  struct EventStruct *event, int pconfigIndex, uint8_t valuenr,
   int optionCount, const __FlashStringHelper *options[], const int indices[])
 {
+  if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
+    return;
+  }
+
   addFormSelector(
     concat(F("Value "), valuenr + 1),
-    PCONFIG_LABEL(pconfigIndex),
+    sensorTypeHelper_webformID(pconfigIndex),
     optionCount,
     options,
     indices,
@@ -141,14 +153,26 @@ void sensorTypeHelper_loadOutputSelector(
 }
 
 void sensorTypeHelper_loadOutputSelector(
-  struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
+  struct EventStruct *event, int pconfigIndex, uint8_t valuenr,
   int optionCount, const String options[], const int indices[])
 {
+  if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
+    return;
+  }
+
   addFormSelector(
     concat(F("Value "), valuenr + 1),
-    PCONFIG_LABEL(pconfigIndex),
+    sensorTypeHelper_webformID(pconfigIndex),
     optionCount,
     options,
     indices,
     PCONFIG(pconfigIndex));
+}
+
+String sensorTypeHelper_webformID(int pconfigIndex)
+{
+  if (pconfigIndex >= 0 && pconfigIndex < PLUGIN_CONFIGVAR_MAX) {
+    return concat(F("pconfigIndex_"), pconfigIndex);
+  }
+  return F("error");
 }

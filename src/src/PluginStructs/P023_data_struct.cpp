@@ -247,13 +247,105 @@ void P023_data_struct::resetDisplay() {
   displayOn();
 }
 
-void P023_data_struct::StartUp_OLED() {
+void P023_data_struct::StartUp_OLED(struct EventStruct *event) {
   init_OLED();
   resetDisplay();
-  displayOff();
+
+  // displayOff();
   setXY(0, 0);
-  clearDisplay();
-  displayOn();
+
+  // clearDisplay(); // Why clear twice?
+  // displayOn();
+
+  LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
+}
+
+bool P023_data_struct::plugin_read(struct EventStruct *event) {
+  for (uint8_t x = 0; x < 8; ++x) {
+    if (strings[x].length()) {
+      String tmp             = strings[x];
+      const String newString = parseTemplate(tmp, 16);
+
+      sendStrXY(newString.c_str(), x, 0);
+      currentLines[x] = newString;
+    }
+  }
+  return true;
+}
+
+bool P023_data_struct::plugin_write(struct EventStruct *event,
+                                    String            & string) {
+  bool   success = false;
+  String cmd     = parseString(string, 1); // Changes to lowercase
+
+  if (equals(cmd, F("oledcmd"))) {
+    const String param = parseString(string, 2);
+
+    if (equals(param, F("off"))) {
+      displayOff();
+      success = true;
+    }
+    else if (equals(param, F("on"))) {
+      displayOn();
+      success = true;
+    }
+    else if (equals(param, F("clear"))) {
+      clearDisplay();
+      success = true;
+    }
+  }
+  else if (equals(cmd, F("oled"))) {
+    success = true;
+    String text = parseStringToEndKeepCase(string, 4);
+    text = parseTemplate(text, 16);
+    sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
+    setCurrentText(text, event->Par1 - 1, event->Par2 - 1);
+  }
+  return success;
+}
+
+/**
+ * Update the buffer that is used for PLUGIN_WEB_SHOW_VALUES function
+ */
+void P023_data_struct::setCurrentText(const String& string, int X, int Y) {
+  if ((X < 0) || (Y < 0) || (X >= P23_Nlines)) { return; } // Sanity check
+
+  if (Y > 0) {
+    if (currentLines[X].length() >= static_cast<size_t>(Y)) {
+      currentLines[X] = currentLines[X].substring(0, Y + 1) + string;
+    } else {
+      for (size_t i = currentLines[X].length(); i < static_cast<size_t>(Y); ++i) {
+        currentLines[X] += ' ';
+      }
+      currentLines[X] += string;
+    }
+  } else {
+    currentLines[X] = string;
+  }
+}
+
+bool P023_data_struct::web_show_values() {
+  bool result     = true;
+  uint8_t maxLine = P23_Nlines;
+
+  for (; maxLine > 0; --maxLine) { // Don't show trailing empty lines
+    String tmp = currentLines[maxLine - 1];
+    tmp.trim();
+
+    if (!tmp.isEmpty()) { break; }
+  }
+
+  addHtml(F("<pre>")); // To keep spaces etc. in the shown output
+
+  for (uint8_t i = 0; i < maxLine; ++i) {
+    addHtmlDiv(F("div_l"), currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"));
+
+    if (i != maxLine - 1) {
+      addHtmlDiv(F("div_br"));
+    }
+  }
+  addHtml(F("</pre>"));
+  return result;
 }
 
 void P023_data_struct::displayOn() {
@@ -267,10 +359,10 @@ void P023_data_struct::displayOff() {
 void P023_data_struct::clearDisplay() {
   unsigned char i, k;
 
-  for (k = 0; k < 8; k++) {
+  for (k = 0; k < 8; ++k) {
     setXY(k, 0);
 
-    for (i = 0; i < 128; i++) { // clear all COL
+    for (i = 0; i < 128; ++i) { // clear all COL
       sendChar(0);              // clear all COL
     }
   }
@@ -280,22 +372,6 @@ void P023_data_struct::clearDisplay() {
 void P023_data_struct::sendChar(unsigned char data) {
   I2C_write8_reg(address, P023_DATA_MODE_REG, data);
 }
-
-// Prints a display char (not just a byte) in coordinates X Y,
-// currently unused:
-// void P023_data_struct::Plugin_023_sendCharXY(unsigned char data, int X, int Y)
-// {
-//   //if (interrupt && !doing_menu) return; // Stop printing only if interrupt is call but not in button functions
-//   setXY(X, Y);
-//   Wire.beginTransmission(Plugin_023_OLED_address); // begin transmitting
-//   Wire.write(0x40);//data mode
-//
-//   for (int i = 0; i < 8; i++)
-//     Wire.write(pgm_read_byte(Plugin_023_myFont[data - 0x20] + i));
-//
-//   Wire.endTransmission();    // stop transmitting
-// }
-
 
 void P023_data_struct::sendCommand(unsigned char com) {
   I2C_write8_reg(address, P023_COMMAND_MODE_REG, com);
@@ -310,13 +386,11 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col) {
     col_offset = 0x02; // offset of 2 when using SSH1106 controller
   }
 
-  switch (type) {
-    case OLED_64x48:
-      col += 4;
-      break;
-    case OLED_64x48 | OLED_rotated:
-      col += 4;
-      row += 2;
+  if (type == OLED_64x48) {
+    col += 4;
+  } else if (type == (OLED_64x48 | OLED_rotated)) {
+    col += 4;
+    row += 2;
   }
 
   sendCommand(0xb0 + row);                             // set page address
@@ -324,48 +398,26 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col) {
   sendCommand(0x10 + (((8 * col) >> 4) & 0x0f));       // set high col address
 }
 
-// Prints a string regardless the cursor position.
-// unused:
-// void P023_data_struct::Plugin_023_sendStr(unsigned char *string)
-// {
-//   unsigned char i = 0;
-//   while (*string)
-//   {
-//     for (i = 0; i < 8; i++)
-//     {
-//       sendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
-//     }
-//     string++;
-//   }
-// }
-
-
 // Prints a string in coordinates X Y, being multiples of 8.
 // This means we have 16 COLS (0-15) and 8 ROWS (0-7).
 void P023_data_struct::sendStrXY(const char *string, int X, int Y) {
   setXY(X, Y);
-  unsigned char i             = 0;
-  unsigned char char_width    = 0;
-  unsigned char currentPixels = Y * 8; // setXY always uses char_width = 8, Y = 0-based
-  unsigned char maxPixels     = 128;   // Assumed default display width
+  uint16_t i             = 0;
+  uint16_t char_width    = 8;
+  uint16_t maxPixels     = 128;   // Assumed default display width
+  uint16_t currentPixels = Y * 8; // setXY always uses char_width = 8, Y = 0-based
 
-  switch (type) {                      // Cater for that 1 smaller size display
-    case OLED_64x48:
-    case OLED_64x48 | OLED_rotated:
-      maxPixels = 64;
-      break;
+  if ((type == OLED_64x48) ||     // Cater for that 1 smaller size display
+      (type == (OLED_64x48 | OLED_rotated))) {
+    maxPixels = 64;
   }
 
   while (*string && currentPixels < maxPixels) { // Prevent display overflow on the character level
-    switch (font_spacing) {
-      case Spacing::optimized:
-        char_width = pgm_read_byte(&(Plugin_023_myFont_Size[*string - 0x20]));
-        break;
-      default:
-        char_width = 8;
+    if (font_spacing == Spacing::optimized) {
+      char_width = pgm_read_byte(&(Plugin_023_myFont_Size[*string - 0x20]));
     }
 
-    for (i = 0; i < char_width && currentPixels + i < maxPixels; i++) { // Prevent display overflow on the pixel-level
+    for (i = 0; i < char_width && currentPixels + i < maxPixels; ++i) { // Prevent display overflow on the pixel-level
       sendChar(pgm_read_byte(Plugin_023_myFont[*string - 0x20] + i));
     }
     currentPixels += char_width;
@@ -377,14 +429,12 @@ void P023_data_struct::init_OLED() {
   unsigned char multiplex;
   unsigned char compins;
 
-  switch (type) {
-    case OLED_128x32:
-      multiplex = 0x1F;
-      compins   = 0x02;
-      break;
-    default:
-      multiplex = 0x3F;
-      compins   = 0x12;
+  if (type == OLED_128x32) {
+    multiplex = 0x1F;
+    compins   = 0x02;
+  } else {
+    multiplex = 0x3F;
+    compins   = 0x12;
   }
 
   sendCommand(0xAE);       // display off

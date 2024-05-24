@@ -18,7 +18,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
 
   if (MQTTDelayHandler == nullptr) {
     # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
 
     MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct;
@@ -30,7 +30,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
   MQTTDelayHandler->cacheControllerSettings(*ControllerSettings);
   pubname    = ControllerSettings->Publish;
   retainFlag = ControllerSettings->mqtt_retainFlag();
-  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon
                                                                                           // as possible.
   scheduleNextMQTTdelayQueue();
   return true;

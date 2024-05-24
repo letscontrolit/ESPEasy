@@ -18,9 +18,14 @@
 
 boolean ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
-  unsigned long u_ip = ((unsigned long )ip[0] << 24) | ((unsigned long )ip[1] << 16) | ((unsigned long )ip[2] << 8) | ip[3];
-  unsigned long u_high = ((unsigned long )high[0] << 24) | ((unsigned long )high[1] << 16) | ((unsigned long )high[2] << 8) | high[3];
-  return u_ip <= u_high;
+  // FIXME TD-er: Must check whether both are of same type and check full range IPv6
+  for (int i = 0; i < 4; ++i) {
+    if (ip[i] != high[i]) {
+      return ip[i] < high[i];
+    }
+  }
+  // Is equal
+  return true;
 }
 
 boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high)
@@ -81,6 +86,10 @@ bool clientIPinSubnet() {
 
 boolean clientIPallowed()
 {
+  #if ESP_IDF_VERSION_MAJOR>=5
+  // FIXME TD-er: remoteIP() is reporting incorrect value
+  return true;
+  #endif
   // TD-er Must implement "safe time after boot"
   IPAddress low, high;
 
@@ -90,6 +99,16 @@ boolean clientIPallowed()
     return true;
   }
   const IPAddress remoteIP = web_server.client().remoteIP();
+  if (remoteIP == IPAddress(0, 0, 0, 0) 
+  #if ESP_IDF_VERSION_MAJOR>=5
+  || remoteIP.type() == IPv6
+  #else
+  || !remoteIP.isV4()
+  #endif
+  ) {
+    // FIXME TD-er: Must see what's going on here, why the client doesn't send remote IP for some reason
+    return true;
+  }
 
   if (ipInRange(remoteIP, low, high)) {
     return true;

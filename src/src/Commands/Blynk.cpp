@@ -6,7 +6,6 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -20,7 +19,9 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
 
     if (validProtocolIndex(ProtocolIndex)) {
-      if ((Protocol[ProtocolIndex].Number == 12) && Settings.ControllerEnabled[i]) {
+      const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
+
+      if ((number == 12) && Settings.ControllerEnabled[i]) {
         return i;
       }
     }
@@ -48,7 +49,7 @@ const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const c
 
       if (Blynk_get(blynkcommand, first_enabled_blynk_controller, &value))
       {
-        UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = value;
+        UserVar.setFloat((event->Par1 - 1), event->Par2 - 1, value);
       }
       else {
         return F("Error getting data");
@@ -62,7 +63,7 @@ const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const c
       }
     }
   }
-  return return_command_success();
+  return return_command_success_flashstr();
 }
 
 bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *data)

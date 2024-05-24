@@ -591,6 +591,8 @@ stdAc::state_t IRGreeAC::toCommon(void) {
   result.mode = toCommonMode(_.Mode);
   result.celsius = !_.UseFahrenheit;
   result.degrees = getTemp();
+  // no support for Sensor temp.
+  result.iFeel = getIFeel();
   result.fanspeed = toCommonFanSpeed(_.Fan);
   if (_.SwingAuto)
     result.swingv = stdAc::swingv_t::kAuto;
@@ -713,7 +715,7 @@ bool IRrecv::decodeGree(decode_results* results, uint16_t offset,
   if (used == 0) return false;
   offset += used;
 
-  // Block #1 footer (3 bits, B010)
+  // Block #1 footer (3 bits, 0b010)
   match_result_t data_result;
   data_result = matchData(&(results->rawbuf[offset]), kGreeBlockFooterBits,
                           kGreeBitMark, kGreeOneSpace, kGreeBitMark,

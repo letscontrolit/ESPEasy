@@ -180,12 +180,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log; 
-          if (log.reserve(20)) {
-            log += F("INIT : PulsePin: "); 
-            log += CONFIG_PIN1;
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(F("INIT : PulsePin: %d"), CONFIG_PIN1));
         }
 
         // set up device pin and estabish interupt handlers
@@ -208,13 +203,14 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
         // store the current counter values into UserVar (RTC-memory)
         // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
-        UserVar[event->BaseVarIndex + P003_IDX_pulseCounter]      = pulseCounter;
-        UserVar[event->BaseVarIndex + P003_IDX_pulseTotalCounter] = pulseCounterTotal;
-        UserVar[event->BaseVarIndex + P003_IDX_pulseTime]         = pulseTime_msec;
+        // FIXME TD-er: Must check we're interacting with the raw values in this PulseCounter plugin
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter      , pulseCounter);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter , pulseCounterTotal);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTime         , pulseTime_msec);
 
         // Store the raw value in the unused 4th position.
         // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
-        UserVar[event->BaseVarIndex + P003_IDX_persistedTotalCounter] = pulseCounterTotal;
+        UserVar.setFloat(event->TaskIndex, P003_IDX_persistedTotalCounter, pulseCounterTotal);
 
         switch (PCONFIG(P003_IDX_COUNTERTYPE))
         {
@@ -271,7 +267,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
 
-          int par1 = 0;
+          int32_t par1 = 0;
 
           if (cmd_setpulsecountertotal) {
             if (!validIntFromString(parseString(string, 2), par1)) { break; }

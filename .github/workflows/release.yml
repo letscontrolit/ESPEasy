@@ -21,8 +21,8 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - id: set-matrix
@@ -36,20 +36,20 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp32') }}
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         if: ${{ contains(matrix.env, 'esp8266') }}
         with:
           path: ~/.platformio
@@ -66,9 +66,13 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v3
+      - id: string
+        uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
-          name: Binaries
+          string: ${{ matrix.chip }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
           path: |
             bin
           if-no-files-found: ignore
@@ -77,11 +81,11 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
@@ -98,7 +102,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Distribution
           path: |
@@ -112,7 +116,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           result-encoding: string
           script: |
@@ -134,47 +138,61 @@ jobs:
     needs: [build, prepare-dist, prepare-notes]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Get current date
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      - uses: actions/download-artifact@v3
+      - name: Download all successfully compiled artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: artifacts/
+          path: artifacts/bin/
+          pattern: Bin-*
+          merge-multiple: true
+      - name: Download dist and docs zip files
+        uses: actions/download-artifact@v4
+        with:
+          path: distribution/
+          name: Distribution
       - name: Repackage for release upload
         run: |
           ls -R
           sudo apt install zipmerge zip
-          cd artifacts/Binaries
-          mkdir bin
-          mv *.* bin
-          find . -not -name '*ESP32*' -print | zip -@ ../../ESPEasy_ESP82xx.zip
+          cd artifacts
+          # ESP8266 and ESP8285
+          find . -not -name '*ESP32*' -print | zip -@ ../ESPEasy_ESP82xx.zip
           # ESP32 and derived chips
-          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
-          find . -name '*ESP32s2*' -print | zip -@ ../../ESPEasy_ESP32s2.zip 
-          find . -name '*ESP32c3*' -print | zip -@ ../../ESPEasy_ESP32c3.zip 
-          find . -name '*ESP32s3*' -print | zip -@ ../../ESPEasy_ESP32s3.zip 
-          find . -name '*ESP32solo1*' -print | zip -@ ../../ESPEasy_ESP32solo1.zip 
-          find . -name '*ESP32_*' -print | zip -@ ../../ESPEasy_ESP32.zip 
-          cd ../..
-          mv artifacts/Distribution/ESPEasy_dist* .
-          cp ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
-          mv ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
-          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "ESP.Easy.Flasher.exe" "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
+          # TODO if/when available: ESP32h2
+          find . -name '*ESP32s2*' -print | zip -@ ../ESPEasy_ESP32s2.zip 
+          find . -name '*ESP32c3*' -print | zip -@ ../ESPEasy_ESP32c3.zip 
+          find . -name '*ESP32s3*' -print | zip -@ ../ESPEasy_ESP32s3.zip 
+          find . -name '*ESP32c2*' -print | zip -@ ../ESPEasy_ESP32c2.zip 
+          find . -name '*ESP32c6*' -print | zip -@ ../ESPEasy_ESP32c6.zip 
+          find . -name '*ESP32solo1*' -print | zip -@ ../ESPEasy_ESP32solo1.zip 
+          find . -name '*ESP32_*' -print | zip -@ ../ESPEasy_ESP32.zip 
+          cd ..
+          # Add dist tools to each package, after removing some unneeded files
+          # Copy dist zip for ESP82xx use
+          cp distribution/ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip "bin/blank_8MB.bin"
+          # Move dist zip for ESP32 use
+          mv distribution/ESPEasy_dist.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip
+          zip -d ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip "bin/blank_1MB.bin" "bin/blank_2MB.bin" "bin/ESPEasy_2step_UploaderMega_1024.bin"
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip ESPEasy_ESP82xx.zip
-          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
+          # TODO if/when available: ESP32h2
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s2.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c3.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s3.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c2.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c6.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32solo1.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: ncipollo/release-action@v1
         with:
-          # Include all separately supported CPU models
-          # TODO if/when available: ESP32c2 ESP32c6 ESP32h2
-          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,artifacts/Distribution/*.zip"
+          # Upload all separately supported CPU models and the docs zip
+          # TODO if/when available: ESP32h2
+          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_binaries.zip,distribution/*.zip"
           body: ${{ needs.prepare-notes.outputs.notes }}
           token: ${{ secrets.GITHUB_TOKEN }}

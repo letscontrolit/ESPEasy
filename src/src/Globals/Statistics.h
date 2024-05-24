@@ -7,6 +7,9 @@
 
 #include "../DataStructs/I2CTypes.h"
 
+#include "../DataStructs/SchedulerTimerID.h"
+
+
 class String;
 
 
@@ -27,7 +30,7 @@ extern String   lowestFreeStackfunction;
 #endif
 
 extern uint8_t lastBootCause;
-extern unsigned long lastMixedSchedulerId_beforereboot;
+extern SchedulerTimerID lastMixedSchedulerId_beforereboot;
 
 extern unsigned long loopCounter;
 extern unsigned long loopCounterLast;
@@ -39,7 +42,7 @@ extern unsigned long loopCounter_full;
 extern float loop_usec_duration_total;
 
 extern unsigned long dailyResetCounter;
-extern volatile unsigned long sw_watchdog_callback_count;
+extern ESPEASY_VOLATILE(unsigned long) sw_watchdog_callback_count;
 
 
 extern I2C_bus_state I2C_state;

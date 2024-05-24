@@ -18,16 +18,22 @@
 //      This is a compile time check.
 struct PluginTaskData_base {
   PluginTaskData_base();
+
   virtual ~PluginTaskData_base();
 
-  bool    baseClassOnly() const { return _baseClassOnly; }
+  bool baseClassOnly() const {
+    return _baseClassOnly;
+  }
 
-  bool    hasPluginStats() const;
-  bool    hasPeaks() const;
-  uint8_t nrSamplesPresent() const;
+  bool hasPluginStats() const;
+
+  bool hasPeaks() const;
+
+  size_t nrSamplesPresent() const;
+
   #if FEATURE_PLUGIN_STATS
-  void    initPluginStats(taskVarIndex_t taskVarIndex);
-  void    clearPluginStats(taskVarIndex_t taskVarIndex);
+  void initPluginStats(taskVarIndex_t taskVarIndex);
+  void clearPluginStats(taskVarIndex_t taskVarIndex);
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
@@ -44,8 +50,22 @@ struct PluginTaskData_base {
 
 #if FEATURE_PLUGIN_STATS
   bool webformLoad_show_stats(struct EventStruct *event) const;
+
 # if FEATURE_CHART_JS
-  void plot_ChartJS() const;
+  void plot_ChartJS(bool onlyJSON = false) const;
+
+  void plot_ChartJS_scatter(
+    taskVarIndex_t                values_X_axis_index,
+    taskVarIndex_t                values_Y_axis_index,
+    const __FlashStringHelper    *id,
+    const ChartJS_title         & chartTitle,
+    const ChartJS_dataset_config& datasetConfig,
+    int                           width,
+    int                           height,
+    bool                          showAverage = true,
+    const String                & options     = EMPTY_STRING,
+    bool                          onlyJSON    = false) const;
+
 # endif // if FEATURE_CHART_JS
 #endif  // if FEATURE_PLUGIN_STATS
 
@@ -67,8 +87,8 @@ private:
 #endif // if FEATURE_PLUGIN_STATS
 
 protected:
-  bool _baseClassOnly = false;
 
+  bool _baseClassOnly = false;
 };
 
 #endif // ifndef DATASTRUCTS_PLUGINTASKDATA_BASE_H

@@ -52,7 +52,7 @@ void handle_filelist_json() {
     # endif // if defined(ESP8266)
   }
 
-  int startIdx       = 0;
+  int32_t startIdx       = 0;
 
   String fstart = webArg(F("start"));
 
@@ -148,9 +148,7 @@ void handle_filelist() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  String fdelete = webArg(F("delete"));
-
-  if (tryDeleteFile(fdelete))
+  if (tryDeleteFile(webArg(F("delete"))))
   {
     checkRuleSets();
   }
@@ -165,14 +163,14 @@ void handle_filelist() {
     }
   }
   # endif // ifdef USES_C016
-  int startIdx       = 0;
-  String fstart      = webArg(F("start"));
+  int32_t startIdx       = 0;
+  const String fstart    = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
     validIntFromString(fstart, startIdx);
   }
-  int endIdx = startIdx + FILES_PER_PAGE - 1;
+  const int endIdx = startIdx + FILES_PER_PAGE - 1;
   html_table_class_multirow();
   html_table_header(F(""),        50);
   html_table_header(F("Filename"));
@@ -413,12 +411,9 @@ void handle_SDfilelist() {
     // size_t entrynameLength = strlen(entry.name());
     if (entry.isDirectory())
     {
-      char SDcardChildDir[80];
-
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
-      child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
-      fs::File child         = SD.open(SDcardChildDir);
+      fs::File child         = SD.open(child_dir.c_str());
       fs::File dir_has_entry = child.openNextFile();
 
       // when the directory is empty, display the button to delete them

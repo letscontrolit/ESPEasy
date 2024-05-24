@@ -1,7 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C014
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/DataTypes/NodeTypeID.h"
 # include "src/Globals/Device.h"
 # include "src/Globals/MQTT.h"
@@ -181,14 +181,14 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_014;
-      Protocol[protocolCount].usesMQTT     = true;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 1883;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_014;
+      proto.usesMQTT     = true;
+      proto.usesTemplate = true;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 1883;
+      proto.usesID       = false;
       break;
     }
 
@@ -398,7 +398,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         // SECOND Plugins
         for (taskIndex_t x = 0; x < TASKS_MAX; x++)
         {
-          if (validPluginID_fullcheck((Settings.TaskDeviceNumber[x])))
+          const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+          if (validPluginID_fullcheck(pluginID))
           {
             LoadTaskSettings(x);
             deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -413,10 +414,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
               if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
               {
-                if (Device[DeviceIndex].Number == 86)  // Homie receiver
+                constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
+                if (pluginID == HOMIE_RECEIVER_PLUGIN_ID)
                 {
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+                    if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) { // do not send if Value Name is empty!
                         CPLUGIN_014_addToList(valuesList, ExtraTaskSettings.TaskDeviceValueNames[varNr]);
 
@@ -502,7 +504,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 { // standard Values
                   for (uint8_t varNr = 0; varNr < valueCount; varNr++)
                   {
-                    if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
+                    const pluginID_t pluginID = Settings.getPluginID_for_task(x);
+                    if (validPluginID_fullcheck(pluginID))
                     {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) // do not send if Value Name is empty!
                       {
@@ -524,7 +527,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  F("float"),
                                                  errorCounter);
 
-                        if (Device[DeviceIndex].Number == 33) { // Dummy Device can send AND receive Data
+                        constexpr pluginID_t DUMMY_PLUGIN_ID(33);
+                        if (pluginID == DUMMY_PLUGIN_ID) { // Dummy Device can send AND receive Data
                           CPlugin_014_sendMQTTnode(nodename,
                                                    deviceName,
                                                    ExtraTaskSettings.TaskDeviceValueNames[varNr],
@@ -761,9 +765,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             taskVarIndex_t taskVarIndex = event->Par2 - 1;
 
             if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex)) {
-              int pluginID = Device[deviceIndex].Number;
+              const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+              constexpr pluginID_t DUMMY_PLUGIN_ID(33);
+              constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
 
-              if (pluginID == 33)                   // Plugin 33 Dummy Device
+              if (pluginID == DUMMY_PLUGIN_ID)
               {                                     // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with
                                                     // new version of P033!
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
@@ -778,7 +784,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                   cmd       += event->String2;      // expect float as payload!
                   validTopic = true;
                 }
-              } else if (pluginID == 86) {          // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the
+              } else if (pluginID == HOMIE_RECEIVER_PLUGIN_ID) {          // Plugin Homie receiver. Schedules the event defined in the plugin. Does NOT store the
                                                     // value. Use HomieValueSet to save the value. This will acknowledge back to the
                                                     // controller too.
                 valueNr = findDeviceValueIndexByName(valueName, taskIndex);
@@ -856,31 +862,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.addMove(std::move(newEvent));
             }
           } else { // not an event
-            String log;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log = F("C014 :");
-            }
-
             // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-            if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Internal Command: OK!");
-              }
-            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" PluginCall: OK!");
-              }
-            } else {
-              remoteConfig(&TempEvent, cmd);
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Plugin/Internal command failed! remoteConfig?");
-              }
-            }
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
+            ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
           }
         }
       }
@@ -923,11 +906,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
 #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("C014 : Sent to ");
-          log += tmppubname;
-          log += ' ';
-          log += value;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, 
+            strformat(F("C014 : Sent to %s %s"),
+            tmppubname.c_str(),
+            value.c_str()));
         }
 #endif
       }

@@ -57,14 +57,14 @@ def get_cdn_url_prefix():
                 tag = tags[0]
                 # work-around to allow users to use files not yet available on a tagged version
                 if '20220809' in tag:
-                    return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+                    return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/'
                     
                 tag = tag.replace('refs/tags/','@')
                 return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
         except:
-            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/'
     except ImportError:
-        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/'
 
 
 def get_git_description():
@@ -72,7 +72,9 @@ def get_git_description():
         from pygit2 import Repository
         try:
             repo = Repository('.')
-            return "{0}_{1}".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
+            return "{0}_{1}".format(repo.head.name
+                                    .replace("refs/heads/","",1)
+                                    .replace("refs/tags/","",1), repo.revparse_single('HEAD').short_id)
         except:
             return 'No_.git_dir'
     except ImportError:

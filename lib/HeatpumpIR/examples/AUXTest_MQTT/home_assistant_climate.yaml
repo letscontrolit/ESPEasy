@@ -1,0 +1,10 @@
+climate:
+  - platform: mqtt
+    min_temp: 16
+    max_temp: 30
+    precision: 1.0
+    power_command_topic: "homeassistant/ac/{GET IT FROM SERIAL OUTPUT}/switch"
+    mode_command_topic: "homeassistant/ac/{GET IT FROM SERIAL OUTPUT}/mode/set"
+    temperature_command_topic: "homeassistant/ac/{GET IT FROM SERIAL OUTPUT}/temperature/set"
+    fan_mode_command_topic: "homeassistant/ac/{GET IT FROM SERIAL OUTPUT}/fan_speed/set"
+    swing_mode_command_topic: "homeassistant/ac/{GET IT FROM SERIAL OUTPUT}/swing/set"

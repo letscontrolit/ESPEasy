@@ -44,14 +44,14 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_009;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = false;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].usesID       = false;
-      Protocol[protocolCount].defaultPort  = 8383;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_009;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = false;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.usesID       = false;
+      proto.defaultPort  = 8383;
       break;
     }
 
@@ -82,7 +82,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
         std::unique_ptr<C009_queue_element> element(new C009_queue_element(event));
         success = C009_DelayHandler->addToQueue(std::move(element));
-        Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
+        Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       }
       break;
     }
@@ -113,11 +113,8 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
   // Make an educated guess on the actual length, based on earlier requests.
   static size_t expectedJsonLength = 100;
   {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    // Reserve on the 2nd heap
-    if (!jsonString.reserve(expectedJsonLength)) {
+    // Reserve on the heap with most space
+    if (!reserve_special(jsonString, expectedJsonLength)) {
       // Not enough free memory
       return false;
     }
@@ -138,19 +135,19 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
           // Create nested objects in "ESP":
           jsonString += to_json_object_value(F("name"), Settings.getName());
           jsonString += ',';
-          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
+          jsonString += to_json_object_value(F("unit"), static_cast<int>(Settings.Unit));
           jsonString += ',';
-          jsonString += to_json_object_value(F("version"), String(Settings.Version));
+          jsonString += to_json_object_value(F("version"), static_cast<int>(Settings.Version));
           jsonString += ',';
-          jsonString += to_json_object_value(F("build"), String(Settings.Build));
+          jsonString += to_json_object_value(F("build"), static_cast<int>(Settings.Build));
           jsonString += ',';
           jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
           jsonString += ',';
           jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
           jsonString += ',';
-          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
+          jsonString += to_json_object_value(F("node_type_id"), static_cast<int>(NODE_TYPE_ID));
           jsonString += ',';
-          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
+          jsonString += to_json_object_value(F("sleep"), static_cast<int>(Settings.deepSleep_wakeTime));
 
           // embed IP, important if there is NAT/PAT
           // char ipStr[20];
@@ -183,7 +180,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
               jsonString += ',';
               jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
               jsonString += ',';
-              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
+              jsonString += to_json_object_value(F("type"), static_cast<int>(element.sensorType));
               jsonString += ',';
               jsonString += to_json_object_value(F("value"), element.txt[x]);
             }

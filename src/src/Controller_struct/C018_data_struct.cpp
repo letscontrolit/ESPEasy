@@ -2,6 +2,11 @@
 
 #ifdef USES_C018
 
+
+# include <rn2xx3.h>
+# include <ESPeasySerial.h>
+
+
 C018_data_struct::C018_data_struct() :
   C018_easySerial(nullptr),
   myLora(nullptr) {}
@@ -76,15 +81,6 @@ bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const in
     }
   }
   return isInitialized();
-}
-
-bool C018_data_struct::isInitialized() const {
-  if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
-    if (autobaud_success) {
-      return true;
-    }
-  }
-  return false;
 }
 
 bool C018_data_struct::hasJoined() const {

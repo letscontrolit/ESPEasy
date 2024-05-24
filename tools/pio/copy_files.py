@@ -11,7 +11,7 @@ OUTPUT_DIR = "build_output{}".format(os.path.sep)
 def get_max_bin_size(env_name, file_suffix):
     # FIXME TD-er: Must determine the max size for .bin.gz files
 
-    max_bin_size = 1044464
+    max_bin_size = 1024*1024 # 1044464
     if "_1M" in env_name:
         # max 872 kiB - 16 bytes
         max_bin_size = 892912
@@ -21,11 +21,11 @@ def get_max_bin_size(env_name, file_suffix):
     if "4M316k" in env_name or "_ESP32_4M2M" in env_name:
         # ESP32 with 1800k of sketch space.
         max_bin_size = 1900544
-    if "_ESP32_" in env_name or "_ESP32s2_" in env_name or "_ESP32s3_" in env_name:
+    if "_ESP32_" in env_name or "_ESP32c6_" in env_name or "_ESP32s2_" in env_name or "_ESP32s3_" in env_name:
         if "_8M1M" in env_name:
             # ESP32 with 3520k of sketch space.
             max_bin_size = 3604480
-    if "_ESP32_" in env_name or "_ESP32c3_" in env_name or "_ESP32s2_" in env_name or "_ESP32s3_" in env_name:
+    if "_ESP32_" in env_name or "_ESP32c3_" in env_name or "_ESP32c6_" in env_name or "_ESP32s2_" in env_name or "_ESP32s3_" in env_name:
         if "_16M8M" in env_name or "_16M2M" in env_name or "_16M1M" in env_name:
             # ESP32 with 4096k of sketch space.
             max_bin_size = 4194304
