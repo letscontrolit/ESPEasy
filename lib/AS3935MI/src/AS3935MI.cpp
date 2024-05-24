@@ -193,20 +193,22 @@ uint32_t AS3935MI::readEnergy()
 
 uint8_t AS3935MI::readAntennaTuning()
 {
-	uint8_t return_value = readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	// Do not call readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP)
+	// here as we need to be able to detect read errors.
+	const uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP);
 	if (return_value != static_cast<uint8_t>(-1)) {
 		// No read error, so update the tuning_cap_cache_
-		tuning_cap_cache_ = return_value;
+		tuning_cap_cache_ = return_value & AS3935_MASK_TUN_CAP;
 	} else {
-		return tuning_cap_cache_;
+		return tuning_cap_cache_ & AS3935_MASK_TUN_CAP;
 	}
 
-	return return_value;
+	return return_value & AS3935_MASK_TUN_CAP;
 }
 
 bool AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
-	if (tuning >= 16) {
+	if ((tuning & ~AS3935_MASK_TUN_CAP) != 0) {
 		return false;
 	}
 	tuning_cap_cache_ = tuning;
@@ -491,18 +493,18 @@ void AS3935MI::displayLcoOnIrq(bool enable)
 	// So for this reason we're now writing directly and not try to read first, patch bits, write
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b10000000;
+		value |= AS3935_MASK_DISP_LCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_LCO, value);
 }
 
 void AS3935MI::displaySrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b01000000;
+		value |= AS3935_MASK_DISP_SRCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_SRCO, value);
 }
 
 
@@ -510,9 +512,9 @@ void AS3935MI::displayTrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b00100000;
+		value |= AS3935_MASK_DISP_TRCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_TRCO, value);
 }
 
 
