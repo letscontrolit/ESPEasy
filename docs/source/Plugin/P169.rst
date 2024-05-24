@@ -331,13 +331,13 @@ In selected builds, per Value is a **Stats** checkbox available, that when check
 Commands available
 ^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P169_commands.repl
+.. include:: P169_commands.repl
 
 Get Config Values
 ^^^^^^^^^^^^^^^^^
 
 
-.. .. include:: P169_config_values.repl
+.. include:: P169_config_values.repl
 
 Change log
 ----------
