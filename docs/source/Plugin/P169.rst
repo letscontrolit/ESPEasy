@@ -90,7 +90,7 @@ On the other hand, if the best calibration is significantly further off from the
 For example:
 
 * Metal parts mounted close to the antenna.
-* Noisy environment.
+* Noisy environment. (See also the reported noise level, as this should be around 2 or 3)
 * Unstable power supplied to the sensor.
 
 See the Wiring section below for more tips.
@@ -161,6 +161,8 @@ The sensor can differentiate between signals that show the pattern characteristi
 Noise Floor
 ^^^^^^^^^^^
 
+Range: ``0`` .. ``7`` (default: ``2``)
+
 The noise floor acts as a threshold to differentiate real signals from noise.
 
 When an interrupt signal for "noise floor threshold exceeded" is received, ESPEasy will increase the noise floor.
@@ -169,12 +171,16 @@ When an interrupt signal for "noise floor threshold exceeded" is received, ESPEa
 Watchdog
 ^^^^^^^^
 
+Range: ``0`` .. ``15`` (default: ``2``)
+
 This sets the duration for a signal to last before entering "Signal Validation" mode.
 
 Spike Rejection
 ^^^^^^^^^^^^^^^
 
-can be used to increase the robustness against false alarms from such disturbers. 
+Range: ``0`` .. ``15`` (default: ``2``)
+
+Can be used to increase the robustness against false alarms from such disturbers. 
 Larger values correspond to more robust disturber rejection, yet with the
 drawback of a decrease in detection efficiency.
 
@@ -190,6 +196,15 @@ Upon interrupt signals for either noise floor exceeded or disturbance detected, 
 After 15 seconds ESPEasy will try to lower these values again to get as close as possible to the optimal settings.
 
 
+Lightning Threshold
+^^^^^^^^^^^^^^^^^^^
+
+Values: ``1``, ``5``, ``9``, ``16`` (default: ``1``)
+
+This set minimum number of lightning events counted within 15 minutes must occur before the first "Lightning detected" interrupt is sent.
+Once this threshold is passed, the sensor will resume its normal interrupt handling with an interrupt per detected lightning.
+
+This internal count will also be cleared when the internal statistics are cleared or when the sensor is put to sleep. (when the ESPEasy task is ended, the sensor is put to sleep)
 
 
 Wiring

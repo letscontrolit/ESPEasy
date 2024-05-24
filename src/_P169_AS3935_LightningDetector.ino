@@ -212,7 +212,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_TEN_PER_SECOND:
     {
       P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -223,6 +222,29 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    case PLUGIN_WRITE:
+    {
+      P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P169_data) {
+        success = P169_data->plugin_write(event, string);
+      }
+
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P169_data_struct *P169_data = static_cast<P169_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P169_data) {
+        success = P169_data->plugin_get_config_value(event, string);
+      }
+
+      break;
+    }
+
   }
 
   return success;

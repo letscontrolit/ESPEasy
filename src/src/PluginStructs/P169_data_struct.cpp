@@ -53,6 +53,12 @@ bool P169_data_struct::loop(struct EventStruct *event)
         {
           // Lightning detected
           ++_lightningCount;
+
+          // FIXME TD-er: What to do with the "Lightning Threshold" ?
+          // If it was > 15 minutes ago since the last detected lightning,
+          // or cleared statistics, then we should set _lightningCount to this
+          // threshold value and also increment the total counter accordingly.
+
           const int totalStrikes = UserVar.getFloat(event->TaskIndex, 3) + 1;
           const int distance     = getDistance();
           const uint32_t energy  = getEnergy();
@@ -195,39 +201,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
      }
    */
 
-  // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
-  // of the sensor.
-  int32_t frequency = 0;
-
-  _sensor.setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
-
-  _sensor.setFrequencyMeasureNrSamples(P169_GET_SLOW_LCO_CALIBRATION ? AS3935MI_NR_CALIBRATION_SAMPLES : (AS3935MI_NR_CALIBRATION_SAMPLES / 2));
-
-  if (!_sensor.calibrateResonanceFrequency(frequency))
-  {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLog(LOG_LEVEL_ERROR,
-             strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
-    }
-  } else {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO,
-             strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"),
-                       _sensor.readAntennaTuning(),
-                       frequency, computeDeviationPct(frequency)));
-    }
-  }
-
-  // calibrate the RCO.
-  if (!_sensor.calibrateRCO())
-  {
-    addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
-  } else {
-    addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
-  }
-
-  // stop displaying LCO on IRQ
-  _sensor.displayLcoOnIrq(false);
+  calibrate(event);
 
 # ifdef ESP32
 
@@ -290,9 +264,90 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   return true;
 }
 
-bool P169_data_struct::plugin_write(struct EventStruct *event, String& string)
-{
-  return true;
+const char subcommands[] PROGMEM = "clearstats|calibrate|setnf|setwd|setsrej";
+
+enum class subcmd_e : int8_t {
+  invalid    = -1,
+  clearstats = 0,
+  calibrate,
+  setnf,  // Set noise floor
+  setwd,  // Set Watchdog Threshold
+  setsrej // Set Spike Rejection
+};
+
+/*****************************************************
+* plugin_write
+*****************************************************/
+bool P169_data_struct::plugin_write(struct EventStruct *event,
+                                    String            & string) {
+  bool success = false;
+
+  const String command = parseString(string, 1);
+
+  if (equals(command, F("as3935"))) {
+    const String subcommand   = parseString(string, 2);
+    const int    subcommand_i = GetCommandCode(subcommand.c_str(), subcommands);
+
+    if (subcommand_i < 0) { return false; } // Fail fast
+
+    const subcmd_e subcmd = static_cast<subcmd_e>(subcommand_i);
+    uint32_t   value{};
+    const bool hasValue = validUIntFromString(parseString(string, 3), value);
+
+    switch (subcmd) {
+      case subcmd_e::invalid:
+        break;
+      case subcmd_e::clearstats:
+        clearStatistics();
+        success = true;
+        break;
+      case subcmd_e::calibrate:
+        calibrate(event);
+        success = true;
+        break;
+      case subcmd_e::setnf:
+        if (hasValue) {
+          success = true;
+          _sensor.writeNoiseFloorThreshold(value);
+        }
+        break;
+      case subcmd_e::setwd:
+        if (hasValue) {
+          success = true;
+          _sensor.writeWatchdogThreshold(value);
+        }
+        break;
+      case subcmd_e::setsrej:
+        if (hasValue) {
+          success = true;
+          _sensor.writeSpikeRejection(value);
+        }
+        break;
+    }
+  }
+  return success;
+}
+
+/*****************************************************
+* plugin_get_config_value
+*****************************************************/
+bool P169_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  const String var = parseString(string, 1);
+
+  if (equals(var, F("noisefloor"))) {      // [<taskname>#noisefloor]
+    string  = _sensor.readNoiseFloorThreshold();
+    success = true;
+  } else if (equals(var, F("watchdog"))) { // [<taskname>#watchdog]
+    string  = _sensor.readWatchdogThreshold();
+    success = true;
+  } else if (equals(var, F("srej"))) {     // [<taskname>#srej] = current spike rejection
+    string  = _sensor.readSpikeRejection();
+    success = true;
+  }
+  return success;
 }
 
 int P169_data_struct::getDistance()
@@ -324,6 +379,49 @@ void P169_data_struct::clearStatistics()
 float P169_data_struct::computeDeviationPct(uint32_t LCO_freq)
 {
   return (LCO_freq / 5000.0f) - 100.0f;
+}
+
+bool P169_data_struct::calibrate(struct EventStruct *event)
+{
+  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
+
+
+  // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
+  // of the sensor.
+  int32_t frequency = 0;
+
+  _sensor.setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
+
+  _sensor.setFrequencyMeasureNrSamples(P169_GET_SLOW_LCO_CALIBRATION ? AS3935MI_NR_CALIBRATION_SAMPLES : (AS3935MI_NR_CALIBRATION_SAMPLES /
+                                                                                                          2));
+
+  if (!_sensor.calibrateResonanceFrequency(frequency))
+  {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLog(LOG_LEVEL_ERROR,
+             strformat(F("AS3935: Resonance Frequency Calibration failed: %d Hz not in range 482500 Hz ... 517500 Hz"), frequency));
+    }
+  } else {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO,
+             strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"),
+                       _sensor.readAntennaTuning(),
+                       frequency, computeDeviationPct(frequency)));
+    }
+  }
+
+  // calibrate the RCO.
+  if (!_sensor.calibrateRCO())
+  {
+    addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
+  } else {
+    addLog(LOG_LEVEL_INFO, F("AS3935: RCO Calibration passed."));
+  }
+
+  // stop displaying LCO on IRQ
+  _sensor.displayLcoOnIrq(false);
+
+  return frequency != 0;
 }
 
 void P169_data_struct::adjustForNoise(struct EventStruct *event)
