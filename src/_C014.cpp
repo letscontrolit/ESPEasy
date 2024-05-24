@@ -111,8 +111,7 @@ bool CPlugin_014_sendMQTTdevice(const String             & tmppubname,
                                 taskIndex_t                taskIndex,
                                 const __FlashStringHelper *topic,
                                 const __FlashStringHelper *payload,
-                                int                      & errorCounter)
-{
+                                int                      & errorCounter) {
   return CPlugin_014_sendMQTTdevice(tmppubname, taskIndex, topic, String(payload), errorCounter);
 }
 
@@ -153,9 +152,10 @@ bool CPlugin_014_sendMQTTnode(String        tmppubname,
 }
 
 // and String to a comma separated list
-void C014_addToList(String& valuesList, const String& node)
-{
-  if (valuesList.length() > 0) { valuesList += ','; }
+void C014_addToList(String& valuesList, const String& node) {
+  if (valuesList.length() > 0) {
+    valuesList += ',';
+  }
   valuesList += node;
 }
 
@@ -201,11 +201,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INTERVAL:
     {
-      if (MQTTclient.connected())
-      {
+      if (MQTTclient.connected()) {
         errorCounter = 0;
 
-        pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
+        pubname = F(CPLUGIN_014_BASE_TOPIC); // Scheme to form device messages
         C014_replaceSysname(pubname);
 
         # ifdef CPLUGIN_014_V3
@@ -221,8 +220,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$stats/signal"), toString(RssI, 1), errorCounter);
         # endif // ifdef CPLUGIN_014_V3
 
-        if (errorCounter > 0)
-        {
+        if (errorCounter > 0) {
           // alert: this is the state the device is when connected to the MQTT broker, but something wrong is happening. E.g. a sensor is
           // not providing data and needs human intervention. You have to send this message when something is wrong.
           CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("alert"), errorCounter);
@@ -252,21 +250,20 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       statusLED(true);
 
       // send autodiscover header
-      pubname = CPLUGIN_014_BASE_TOPIC;           // Scheme to form device messages
+      pubname = F(CPLUGIN_014_BASE_TOPIC);           // Scheme to form device messages
       C014_replaceSysname(pubname);
-      int deviceCount = 1;                        // minimum the SYSTEM device exists
-      int nodeCount   = 1;                        // minimum the cmd node exists
+      int deviceCount = 1;                           // minimum the SYSTEM device exists
+      int nodeCount   = 1;                           // minimum the cmd node exists
       errorCounter = 0;
 
-      if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP) // skip sending autodiscover data when returning from deep sleep
-      {
-        String nodename = CPLUGIN_014_BASE_VALUE; // Scheme to form node messages
+      if (lastBootCause != BOOT_CAUSE_DEEP_SLEEP) {  // skip sending autodiscover data when returning from deep sleep
+        String nodename = F(CPLUGIN_014_BASE_VALUE); // Scheme to form node messages
         C014_replaceSysname(nodename);
-        String nodesList;                         // build comma separated List for nodes
-        String valuesList;                        // build comma separated List for values
-        String deviceName;                        // current Device Name nr:name
-        String valueName;                         // current Value Name
-        String unitName;                          // estimate Units
+        String nodesList;                            // build comma separated List for nodes
+        String valuesList;                           // build comma separated List for values
+        String deviceName;                           // current Device Name nr:name
+        String valueName;                            // current Value Name
+        String unitName;                             // estimate Units
 
         // init: this is the state the device is in when it is connected to the MQTT broker, but has not yet sent all Homie messages and is
         // not yet ready to operate. This is the first message that must that must be sent.
@@ -357,8 +354,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         while (gpio <= MAX_GPIO) {
           const PinBootState pinBootState = Settings.getPinBootState(gpio);
 
-          if (pinBootState != PinBootState::Default_state) // anything but default
-          {
+          if (pinBootState != PinBootState::Default_state) { // anything but default
             nodeCount++;
             valueName = concat(F(CPLUGIN_014_GPIO_VALUE), gpio);
             C014_addToList(valuesList, valueName);
@@ -369,8 +365,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             // $datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
             CPlugin_014_sendMQTTnode(nodename, F(CPLUGIN_014_SYSTEM_DEVICE), valueName, F("/$datatype"), F("boolean"), errorCounter);
 
-            if (pinBootState != PinBootState::Input) // defined as output
-            {
+            if (pinBootState != PinBootState::Input) { // defined as output
               // $settable	Device → Controller	Specifies whether the property is settable (true) or readonly (false)	true or
               // false	Yes	No (false)
               CPlugin_014_sendMQTTnode(nodename, F(CPLUGIN_014_SYSTEM_DEVICE), valueName, F("/$settable"), F("true"), errorCounter);
@@ -385,30 +380,26 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         deviceCount++;
 
         // SECOND Plugins
-        for (taskIndex_t x = 0; x < TASKS_MAX; x++)
-        {
+        for (taskIndex_t x = 0; x < TASKS_MAX; ++x) {
           const pluginID_t pluginID = Settings.getPluginID_for_task(x);
 
-          if (validPluginID_fullcheck(pluginID))
-          {
+          if (validPluginID_fullcheck(pluginID)) {
             LoadTaskSettings(x);
             const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
             deviceName = getTaskDeviceName(x);
 
-            if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x]) // Device is enabled so send information
-            {                                                                   // device enabled
+            if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x]) { // Device is enabled so send information
+                                                                                  // device enabled
               valuesList = EMPTY_STRING;
 
               const uint8_t valueCount = getValueCountForTask(x);
 
-              if (!Device[DeviceIndex].SendDataOption) // check if device is not sending data = assume that it can receive.
-              {
+              if (!Device[DeviceIndex].SendDataOption) { // check if device is not sending data = assume that it can receive.
                 constexpr pluginID_t HOMIE_RECEIVER_PLUGIN_ID(86);
 
-                if (pluginID == HOMIE_RECEIVER_PLUGIN_ID)
-                {
-                  for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
+                if (pluginID == HOMIE_RECEIVER_PLUGIN_ID) {
+                  for (uint8_t varNr = 0; varNr < valueCount; ++varNr) {
                     if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                       if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) { // do not send if Value Name is empty!
                         C014_addToList(valuesList, ExtraTaskSettings.TaskDeviceValueNames[varNr]);
@@ -433,7 +424,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  errorCounter);
 
                         // $datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
-                        unitName = F("");
+                        unitName = EMPTY_STRING;
 
                         switch (Settings.TaskDevicePluginConfig[x][varNr]) {
                           case 0:
@@ -451,9 +442,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                             if ((ExtraTaskSettings.TaskDevicePluginConfig[varNr] != 0) ||
                                 (ExtraTaskSettings.TaskDevicePluginConfig[varNr + 5] != 0)) {
-                              unitName  = ExtraTaskSettings.TaskDevicePluginConfig[varNr];
-                              unitName += ':';
-                              unitName += ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount];
+                              unitName = strformat(F("%d:%d"),
+                                                   ExtraTaskSettings.TaskDevicePluginConfig[varNr],
+                                                   ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount]);
                             }
                             break;
                           case 2: valueName = F("boolean"); break;
@@ -497,16 +488,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 // customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesStr);
                 uint8_t customValues = false;
 
-                if (!customValues)
-                { // standard Values
-                  for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-                  {
+                if (!customValues) { // standard Values
+                  for (uint8_t varNr = 0; varNr < valueCount; ++varNr) {
                     const pluginID_t pluginID = Settings.getPluginID_for_task(x);
 
-                    if (validPluginID_fullcheck(pluginID))
-                    {
-                      if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) // do not send if Value Name is empty!
-                      {
+                    if (validPluginID_fullcheck(pluginID)) {
+                      if (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0) { // do not send if Value Name is empty!
                         C014_addToList(valuesList, ExtraTaskSettings.TaskDeviceValueNames[varNr]);
 
                         // $name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
@@ -538,7 +525,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                         nodeCount++;
 
-                        /*
+                        /* TODO Fix units?
                            // because values in ESPEasy are unitless lets assume some units by the value name (still case sensitive)
 
                            if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr)
@@ -578,8 +565,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 }
               }
 
-              if (!valuesList.isEmpty())
-              {
+              if (!valuesList.isEmpty()) {
                 // only add device to list if it has nodes!
                 // $name	Device → Controller	Friendly name of the Node	Yes	Yes
                 CPlugin_014_sendMQTTnode(nodename,
@@ -629,8 +615,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$nodes"), nodesList, errorCounter);
       }
 
-      if (errorCounter > 0)
-      {
+      if (errorCounter > 0) {
         // alert: this is the state the device is when connected to the MQTT broker, but something wrong is happening. E.g. a sensor is not
         // providing data and needs human intervention. You have to send this message when something is wrong.
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("alert"), errorCounter);
@@ -664,7 +649,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
     {
-      pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
+      pubname = F(CPLUGIN_014_BASE_TOPIC); // Scheme to form device messages
       C014_replaceSysname(pubname);
 
       // disconnected: this is the state the device is in when it is cleanly disconnected from the MQTT broker. You must send this message
@@ -681,7 +666,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_FLUSH:
     {
-      pubname = CPLUGIN_014_BASE_TOPIC; // Scheme to form device messages
+      pubname = F(CPLUGIN_014_BASE_TOPIC); // Scheme to form device messages
       C014_replaceSysname(pubname);
 
       // sleeping: this is the state the device is in when the device is sleeping. You have to send this message before sleeping.
@@ -691,9 +676,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-      controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
-      bool validTopic                = false;
-      bool cmdExecuted               = false;
+      const controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_014);
+      bool validTopic                      = false;
+      bool cmdExecuted                     = false;
 
       if (!validControllerIndex(ControllerID)) {
         // Controller is not enabled.
@@ -703,12 +688,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         int    lastindex = event->String1.lastIndexOf('/');
         errorCounter = 0;
 
-        if (equals(event->String1.substring(lastindex + 1), F("set")))
-        {
+        if (equals(event->String1.substring(lastindex + 1), F("set"))) {
           pubname   = event->String1.substring(0, lastindex);
           lastindex = pubname.lastIndexOf('/');
-          String nodeName  = pubname.substring(0, lastindex);
-          String valueName = pubname.substring(lastindex + 1);
+          String nodeName        = pubname.substring(0, lastindex);
+          const String valueName = pubname.substring(lastindex + 1);
           lastindex = nodeName.lastIndexOf('/');
           nodeName  = nodeName.substring(lastindex + 1);
 
@@ -718,10 +702,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log = strformat(F("C014 : MQTT received: /set: N: %s V: %s"), nodeName.c_str(), valueName.c_str());
           }
 
-          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE)))                      // msg to a system device
-          {
-            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE)))                   // msg to to set gpio values
-            {
+          if (equals(nodeName, F(CPLUGIN_014_SYSTEM_DEVICE))) {                    // msg to a system device
+            if (valueName.startsWith(F(CPLUGIN_014_GPIO_VALUE))) {                 // msg to to set gpio values
               constexpr size_t gpio_value_tag_length = CPLUGIN_014_GPIO_VALUE_LEN; // now uses fixed length or constexpr
 
               // get the GPIO
@@ -730,16 +712,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                               valueName.substring(gpio_value_tag_length).toInt(),
                               (equals(event->String2, F("true")) || equals(event->String2, '1')) ? '1' : '0');
               validTopic = true;
-            } else if (equals(valueName, F(CPLUGIN_014_CMD_VALUE))) // msg to send a command
-            {
+            } else if (equals(valueName, F(CPLUGIN_014_CMD_VALUE))) { // msg to send a command
               cmd        = event->String2;
               validTopic = true;
-            } else
-            {
+            } else {
               cmd = strformat(F("SYSTEM/%s unknown!"), valueName.c_str());
             }
-          } else // msg to a receiving plugin
-          {
+          } else {              // msg to a receiving plugin
             // Only handle /set case that supports P033 Dummy device and P086 Homie receiver
             cmdExecuted = MQTT_handle_topic_commands(event, false, true);
             validTopic  = true; // Avoid error messages
@@ -772,98 +751,58 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       success = MQTT_protocol_send(event, CPlugin_014_pubname, CPlugin_014_mqtt_retainFlag);
 
-      // String pubname         = CPlugin_014_pubname;
-      // bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
-
-      // statusLED(true);
-
-      // parseControllerVariables(pubname, event, false);
-      // LoadTaskSettings(event->TaskIndex);
-
-      // uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-
-      // for (uint8_t x = 0; x < valueCount; x++)
-      // {
-      //   String tmppubname = pubname;
-      //   String value;
-      //   parseSingleControllerVariable(tmppubname, event, x, false);
-
-      //   // Small optimization so we don't try to copy potentially large strings
-      //   if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
-      //     if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag)) {
-      //       success = true;
-      //     }
-      //     value = event->String2.substring(0, 20); // For the log
-      //   } else {
-      //     value = formatUserVarNoCheck(event, x);
-
-      //     if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), value.c_str(), mqtt_retainFlag)) {
-      //       success = true;
-      //     }
-      //   }
-
-      //   # ifndef BUILD_NO_DEBUG
-
-      //   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      //     String log = concat(F("C014 : Sent to "), tmppubname);
-      //     log += ' ';
-      //     log += value;
-      //     addLogMove(LOG_LEVEL_DEBUG, log);
-      //   }
-      //   # endif // ifndef BUILD_NO_DEBUG
-      // }
       break;
     }
 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     {
-      /*        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                String log = F("CPLUGIN_ACKNOWLEDGE: ");
-                log += string;
-                log += F(" / ");
-                log += getTaskDeviceName(event->TaskIndex);
-                log += F(" / ");
-                log += ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1];
-                log += F(" sensorType:");
-                log += event->sensorType;
-                log += F(" Source:");
-                log += event->Source;
-                log += F(" idx:");
-                log += event->idx;
-                log += F(" S1:");
-                log += event->String1;
-                log += F(" S2:");
-                log += event->String2;
-                log += F(" S3:");
-                log += event->String3;
-                log += F(" S4:");
-                log += event->String4;
-                log += F(" S5:");
-                log += event->String5;
-                log += F(" P1:");
-                log += event->Par1;
-                log += F(" P2:");
-                log += event->Par2;
-                log += F(" P3:");
-                log += event->Par3;
-                log += F(" P4:");
-                log += event->Par4;
-                log += F(" P5:");
-                log += event->Par5;
-                addLog(LOG_LEVEL_DEBUG, log);
-              } */
+      /* if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+         String log = F("CPLUGIN_ACKNOWLEDGE: ");
+         log += string;
+         log += F(" / ");
+         log += getTaskDeviceName(event->TaskIndex);
+         log += F(" / ");
+         log += ExtraTaskSettings.TaskDeviceValueNames[event->Par2-1];
+         log += F(" sensorType:");
+         log += event->sensorType;
+         log += F(" Source:");
+         log += event->Source;
+         log += F(" idx:");
+         log += event->idx;
+         log += F(" S1:");
+         log += event->String1;
+         log += F(" S2:");
+         log += event->String2;
+         log += F(" S3:");
+         log += event->String3;
+         log += F(" S4:");
+         log += event->String4;
+         log += F(" S5:");
+         log += event->String5;
+         log += F(" P1:");
+         log += event->Par1;
+         log += F(" P2:");
+         log += event->Par2;
+         log += F(" P3:");
+         log += event->Par3;
+         log += F(" P4:");
+         log += event->Par4;
+         log += F(" P5:");
+         log += event->Par5;
+         addLog(LOG_LEVEL_DEBUG, log);
+         } */
 
       if (!string.isEmpty()) {
-        String commandName = parseString(string, 1);          // could not find a way to get the command out of the event structure.
+        const String commandName = parseString(string, 1);    // could not find a way to get the command out of the event structure.
 
         if (equals(commandName, F(CPLUGIN_014_GPIO_COMMAND))) // !ToDo : As gpio is like any other plugin commands should be integrated
                                                               // below!
         {
-          int port               = event->Par1;               // parseString(string, 2).toInt();
-          int valueInt           = event->Par2;               // parseString(string, 3).toInt();
+          const int port         = event->Par1;               // parseString(string, 2).toInt();
+          const int valueInt     = event->Par2;               // parseString(string, 3).toInt();
           const String valueBool = boolToString(valueInt == 1);
 
-          String topic = CPLUGIN_014_PUBLISH;                 // ControllerSettings.Publish not used because it can be modified by the user!
+          String topic = F(CPLUGIN_014_PUBLISH);              // ControllerSettings.Publish not used because it can be modified by the user!
           C014_replaceSysname(topic);
           topic.replace(F("%tskname%"), F(CPLUGIN_014_SYSTEM_DEVICE));
           topic.replace(F("%valname%"), concat(F(CPLUGIN_014_GPIO_VALUE), port));
@@ -882,13 +821,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += F(" ERROR!");
             addLogMove(LOG_LEVEL_ERROR, log);
           }
-        } else // not gpio
-        {
+        } else { // not gpio
           const taskVarIndex_t taskVarIndex = event->Par2 - 1;
 
           if (validTaskVarIndex(taskVarIndex)) {
             userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
-            String topic                = CPLUGIN_014_PUBLISH;
+            String topic                = F(CPLUGIN_014_PUBLISH);
             C014_replaceSysname(topic);
             const int deviceIndex = event->Par1; // parseString(string, 2).toInt();
             LoadTaskSettings(deviceIndex - 1);
@@ -899,9 +837,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             String valueStr;
             int    valueInt = 0;
 
-            if (equals(commandName, F(CPLUGIN_014_TASKVALUESET_COMMAND))) // removed dummyvalueset command some time ago...
-            {
-              valueStr = formatUserVarNoCheck(event, taskVarIndex);       // parseString(string, 4);
+            if (equals(commandName, F(CPLUGIN_014_TASKVALUESET_COMMAND))) { // removed dummyvalueset command some time ago...
+              valueStr = formatUserVarNoCheck(event, taskVarIndex);         // parseString(string, 4);
               success  = MQTTpublish(CPLUGIN_ID_014, INVALID_TASK_INDEX, topic.c_str(), valueStr.c_str(), false);
 
               String log = strformat(F("C014 : Acknowledged: %s var: %s topic: %s value: %s"),
@@ -967,18 +904,17 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                  valueName.c_str(), topic.c_str(), valueStr.c_str());
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
-            } else // Acknowledge not implemented yet
-            {
-              /*              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                              String log = F("C014 : Plugin acknowledged: ");
-                              log+=function;
-                              log+=F(" / ");
-                              log+=commandName;
-                              log+=F(" cmd: ");
-                              log+=string;
-                              log+=F(" not implemented!");
-                              addLog(LOG_LEVEL_ERROR, log);
-                            } */
+            } else { // Acknowledge not implemented yet
+              /* if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                 String log = F("C014 : Plugin acknowledged: ");
+                 log+=function;
+                 log+=F(" / ");
+                 log+=commandName;
+                 log+=F(" cmd: ");
+                 log+=string;
+                 log+=F(" not implemented!");
+                 addLog(LOG_LEVEL_ERROR, log);
+                 } */
               success = false;
             }
           }

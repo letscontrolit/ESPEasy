@@ -105,12 +105,12 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               bool   mustSendEvent = false;
 
               switch (Settings.getPluginID_for_task(x).value) {
-                case 1: // temp solution, if input switch, update state
+                case 1:                                             // temp solution, if input switch, update state
                 {
                   action = strformat(F("gpio,%u,%.2f"), x, nvalue); // FIXME tonhuisman: Was: InputSwitchState
                   break;
                 }
-                case 29: // temp solution, if plugin 029, set gpio
+                case 29:                                            // temp solution, if plugin 029, set gpio
                 {
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
@@ -153,9 +153,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   break;
                 }
                 # if defined(USES_P088)
-                case 88:                                     // Send heatpump IR (P088) if IDX matches
+                case 88:                                      // Send heatpump IR (P088) if IDX matches
                 {
-                  action = concat(F("heatpumpir,"),svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
                 # endif // if defined(USES_P088)

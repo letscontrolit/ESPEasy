@@ -41,8 +41,8 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
     lastindex = topic.lastIndexOf('/');
 
     if (lastindex > -1) {
-      String taskName  = topic.substring(0, lastindex);
-      String valueName = topic.substring(lastindex + 1);
+      String taskName        = topic.substring(0, lastindex);
+      const String valueName = topic.substring(lastindex + 1);
       lastindex = taskName.lastIndexOf('/');
 
       if (lastindex > -1) {
@@ -58,15 +58,13 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
 
           # ifdef USES_P033
 
-          if ((pluginID == 33) ||           // Plugin 33 Dummy Device,
+          if ((pluginID == 33) || // Plugin 33 Dummy Device,
               // backward compatible behavior: if handleCmd = true then execute TaskValueSet regardless of AllowTaskValueSetAllPlugins
-              ((handleCmd || Settings.AllowTaskValueSetAllPlugins()) && (pluginID != 86)))
-          {                                 // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new
-                                            // version of P033!
+              ((handleCmd || Settings.AllowTaskValueSetAllPlugins()) && (pluginID != 86))) {
+            // TaskValueSet,<task/device nr>,<value nr>,<value/formula (!ToDo) >, works only with new version of P033!
             valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
-            if (validTaskVarIndex(valueNr)) // value Name identified
-            {
+            if (validTaskVarIndex(valueNr)) { // value Name identified
               // Set a Dummy Device Value, device Number, var number and argument
               cmd     = strformat(F("TaskValueSet,%d,%d,%s"), taskIndex + 1, valueNr + 1, event->String2.c_str());
               handled = true;
@@ -196,8 +194,7 @@ bool MQTT_protocol_send(EventStruct *event,
 
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-  for (uint8_t x = 0; x < valueCount; x++)
-  {
+  for (uint8_t x = 0; x < valueCount; ++x) {
     // MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
     if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
       continue; // we skip values with empty labels

@@ -16,9 +16,6 @@
 
 // empty default names because settings will be ignored / not used if value name is empty
 # define PLUGIN_VALUENAME1_086 ""
-# define PLUGIN_VALUENAME2_086 ""
-# define PLUGIN_VALUENAME3_086 ""
-# define PLUGIN_VALUENAME4_086 ""
 
 # define PLUGIN_086_VALUE_INTEGER    0
 # define PLUGIN_086_VALUE_FLOAT      1
@@ -45,19 +42,13 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_086;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].ValueCount         = PLUGIN_086_VALUE_MAX;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = false;
-      Device[deviceCount].Custom             = true;
+      Device[++deviceCount].Number     = PLUGIN_ID_086;
+      Device[deviceCount].Type         = DEVICE_TYPE_DUMMY;
+      Device[deviceCount].VType        = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports        = 0;
+      Device[deviceCount].DecimalsOnly = true;
+      Device[deviceCount].ValueCount   = PLUGIN_086_VALUE_MAX;
+      Device[deviceCount].Custom       = true;
       break;
     }
 
@@ -70,9 +61,6 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_086));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_086));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_086));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_086));
 
       break;
     }
@@ -103,7 +91,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
       };
       constexpr int PLUGIN_086_VALUE_TYPES = NR_ELEMENTS(optionValues);
 
-      for (int i = 0; i < PLUGIN_086_VALUE_MAX; i++) {
+      for (int i = 0; i < PLUGIN_086_VALUE_MAX; ++i) {
         addFormSubHeader(concat(F("Function #"), i + 1));
 
         if (i == 0) { addFormNote(F("Triggers an event when a ../%taskname%/%event%/set MQTT topic arrives")); }
@@ -136,7 +124,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      for (int i = 0; i < PLUGIN_086_VALUE_MAX; i++) {
+      for (int i = 0; i < PLUGIN_086_VALUE_MAX; ++i) {
         strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], getPluginCustomArgName((i * 10) + 0));
         PCONFIG(i)                                                         = getFormItemInt(getPluginCustomArgName((i * 10) + 1));
         ExtraTaskSettings.TaskDevicePluginConfig[i]                        = getFormItemInt(getPluginCustomArgName((i * 10) + 2));
@@ -158,7 +146,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        for (uint8_t x = 0; x < PLUGIN_086_VALUE_MAX; x++) {
+        for (uint8_t x = 0; x < PLUGIN_086_VALUE_MAX; ++x) {
           addLogMove(LOG_LEVEL_INFO, strformat(F("P086 : Value %d: %s"), x + 1, formatUserVarNoCheck(event->TaskIndex, x).c_str()));
         }
       }
@@ -168,16 +156,15 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command = parseString(string, 1);
+      const String command = parseString(string, 1);
 
-      if (equals(command, F("homievalueset")))
-      {
+      if (equals(command, F("homievalueset"))) {
         const taskVarIndex_t taskVarIndex = event->Par2 - 1;
 
         if (validTaskIndex(event->TaskIndex) &&
             validTaskVarIndex(taskVarIndex) &&
             (event->Par1 == (event->TaskIndex + 1))) { // make sure that this instance is the target
-          String parameter = parseStringToEndKeepCase(string, 4);
+          const String parameter = parseStringToEndKeepCase(string, 4);
           String log;
 
           /*
@@ -238,8 +225,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                   UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
                 } else { // float conversion failed!
                   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                    log += concat(F(" parameter: "), parameter);
-                    log += F(" not a float value!");
+                    log += strformat(F(" parameter: %s not a float value!"), parameter.c_str());
                     addLogMove(LOG_LEVEL_ERROR, log);
                   }
                 }
@@ -295,9 +281,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               UserVar.setFloat(event->TaskIndex, event->Par2 - 1, floatValue);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += concat(F(" enum set to "), floatValue);
-                log += ' ';
-                log += wrap_braces(parameter);
+                log += strformat(F(" enum set to %.2f %s"), floatValue, wrap_braces(parameter).c_str());
                 addLogMove(LOG_LEVEL_INFO, log);
               }
               break;
