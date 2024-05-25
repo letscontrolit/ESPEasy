@@ -138,14 +138,16 @@ event is classified as disturber.
 If the signal is classified as disturber the chip immediately aborts the signal processing and goes back into the "Listening Mode". 
 Otherwise, the energy calculation is performed and the distance estimate provided.
 
-.. note:: The calculated energy does not reflect any physical unit of measure. It is just a number.
+.. note:: The calculated energy does not reflect any physical unit of measure. It is just a number. However it seems the sensor does use it internally to estimate the distance.
 
-It takes roughly 1 second to classify an event as a lightning strike.
+The received signal of a typical lightning strike consists of 3 .. 4 pulses about 40 msec apart.
+
+According to the datasheet, the sensor needs roughly 1 second to classify an event as a lightning strike.
+However tests have shown the sensor might be able to classify _some_ lightning strikes in as little as 250 msec.
 
 If the classification takes longer than 1.5 seconds, it will be classified as a disturber.
 
-This implies the shortest time span between two lightning strikes that the sensor can resolve is approximately one second.
-
+This implies the practial shortest time span between two lightning strikes that the sensor can resolve is approximately one second.
 
 .. note:: Sometimes during intense thunderstorms there might be several lightning strikes in short succession. This sensor might classify those as disturbances as the total evaluation time might exceed 1.5 seconds.
 

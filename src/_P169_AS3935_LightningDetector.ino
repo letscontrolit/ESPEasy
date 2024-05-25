@@ -10,8 +10,8 @@
 # define PLUGIN_169
 # define PLUGIN_ID_169     169
 # define PLUGIN_NAME_169   "Environment - AS3935 Lightning Detector"
-# define PLUGIN_VALUENAME1_169 "Distance"
-# define PLUGIN_VALUENAME2_169 "Energy"
+# define PLUGIN_VALUENAME1_169 "DistanceNear"
+# define PLUGIN_VALUENAME2_169 "DistanceFar"
 # define PLUGIN_VALUENAME3_169 "Lightning"
 # define PLUGIN_VALUENAME4_169 "Total"
 
@@ -63,12 +63,13 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       // Set a default config here, which will be called when a plugin is assigned to a task.
       P169_I2C_ADDRESS         = P169_I2C_ADDRESS_DFLT;
       P169_LIGHTNING_THRESHOLD = AS3935MI::AS3935_MNL_1;
-      P169_SET_INDOOR(true);
+      P169_AFE_GAIN            = AS3935MI::AS3935_OUTDOORS;
       P169_SET_MASK_DISTURBANCE(false);
       P169_SET_SEND_ONLY_ON_LIGHTNING(true);
       P169_SET_TOLERANT_CALIBRATION_RANGE(true);
 
-      ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // Energy
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 1; // Distance Near
+      ExtraTaskSettings.TaskDeviceValueDecimals[1] = 1; // Distance Far
       ExtraTaskSettings.TaskDeviceValueDecimals[2] = 0; // Lightning count since last PLUGIN_READ
       ExtraTaskSettings.TaskDeviceValueDecimals[3] = 0; // Total lightning count
       success                                      = true;
@@ -135,9 +136,29 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Minimum number of lightning strikes in the last 15 minutes"));
       }
       {
-        const __FlashStringHelper *options[] = { F("Outdoor"), F("Indoor") };
-        const int optionValues[]             = { 0, 1 };
-        addFormSelector(F("Mode"), F(P169_INDOOR_LABEL), NR_ELEMENTS(optionValues), options, optionValues, P169_GET_INDOOR);
+        const __FlashStringHelper *options[] = {
+          F("0.30x"),
+          F("0.40x"),
+          F("0.55x"),
+          F("0.74x"),
+          F("1.00x (Outdoor)"),
+          F("1.35x"),
+          F("1.83x"),
+          F("2.47x"),
+          F("3.34x (Indoor)")
+        };
+        const int optionValues[] = {
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        };
+        addFormSelector(F("AFE Gain"), P169_AFE_GAIN_LABEL, NR_ELEMENTS(optionValues), options, optionValues, P169_AFE_GAIN);
       }
 
       addFormCheckBox(F("Ignore Disturbance"),                F(P169_MASK_DISTURBANCE_LABEL),           P169_GET_MASK_DISTURBANCE);
@@ -169,7 +190,7 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
             P169_SPIKE_REJECTION     = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
        */
       P169_LIGHTNING_THRESHOLD = getFormItemInt(P169_LIGHTNING_THRESHOLD_LABEL);
-      P169_SET_INDOOR(getFormItemInt(F(P169_INDOOR_LABEL)) == 1);
+      P169_AFE_GAIN            = getFormItemInt(P169_AFE_GAIN_LABEL);
       P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       P169_SET_SEND_ONLY_ON_LIGHTNING(isFormItemChecked(F(P169_SEND_ONLY_ON_LIGHTNING_LABEL)));
       P169_SET_TOLERANT_CALIBRATION_RANGE(isFormItemChecked(F(P169_TOLERANT_CALIBRATION_RANGE_LABEL)));
@@ -199,9 +220,9 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         } else {
           UserVar.setFloat(event->TaskIndex, 0, -1.0f);
-          UserVar.setFloat(event->TaskIndex, 1, 0.0f);
+          UserVar.setFloat(event->TaskIndex, 1, -1.0f);
           UserVar.setFloat(event->TaskIndex, 2, 0.0f);
-//          P169_data->clearStatistics();
+          P169_data->clearStatistics();
 
           if (!P169_GET_SEND_ONLY_ON_LIGHTNING) {
             success = true;
@@ -244,7 +265,6 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-
   }
 
   return success;

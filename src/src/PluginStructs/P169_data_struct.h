@@ -26,9 +26,13 @@
 # define P169_LIGHTNING_THRESHOLD       PCONFIG(1)
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(1)
 
-# define P169_GET_INDOOR                bitRead(PCONFIG(2), 0)
-# define P169_SET_INDOOR(X) bitWrite(PCONFIG(2), 0, X)
-# define P169_INDOOR_LABEL              "mode"
+# define P169_AFE_GAIN                  PCONFIG(3)
+# define P169_AFE_GAIN_LABEL            PCONFIG_LABEL(3)
+
+
+// # define P169_GET_INDOOR                bitRead(PCONFIG(2), 0)
+// # define P169_SET_INDOOR(X) bitWrite(PCONFIG(2), 0, X)
+// # define P169_INDOOR_LABEL              "mode"
 
 # define P169_GET_MASK_DISTURBANCE      bitRead(PCONFIG(2), 1)
 # define P169_SET_MASK_DISTURBANCE(X) bitWrite(PCONFIG(2), 1, X)
@@ -77,7 +81,7 @@ public:
   void     html_show_sensor_info(struct EventStruct *event);
 
   // Read distance in km
-  int      getDistance();
+  float    getDistance();
 
   // Get lightning strike energy in some raw value (no unit)
   uint32_t getEnergy();
@@ -96,6 +100,9 @@ private:
 
   static float computeDeviationPct(uint32_t LCO_freq);
 
+  static float computeDistanceFromEnergy(uint32_t energy,
+                                         float    errorValue);
+
   bool         calibrate(struct EventStruct *event);
 
   void         adjustForNoise(struct EventStruct *event);
@@ -104,6 +111,8 @@ private:
 
   void         tryIncreasedSensitivity(struct EventStruct *event);
 
+  void         setAFE_gain(uint8_t gain);
+
 # if FEATURE_CHART_JS
   void         addCalibrationChart(struct EventStruct *event);
 # endif // if FEATURE_CHART_JS
@@ -111,12 +120,15 @@ private:
 
   AS3935I2C _sensor;
   uint8_t   _irqPin;
+  float     _afeGain = 1.0f;
 
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
 
   uint32_t _lightningCount = 0;
+  uint32_t  _highestEnergy = 0;
+  uint32_t  _lowestEnergy = 0xFFFFFFFF;  
 };
 
 #endif // ifdef USES_P169

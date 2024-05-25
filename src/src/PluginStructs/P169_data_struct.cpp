@@ -62,18 +62,21 @@ bool P169_data_struct::loop(struct EventStruct *event)
           // threshold value and also increment the total counter accordingly.
 
           const int totalStrikes = UserVar.getFloat(event->TaskIndex, 3) + 1;
-          const int distance     = getDistance();
           const uint32_t energy  = getEnergy();
-          UserVar.setFloat(event->TaskIndex, 0, distance);
-          UserVar.setFloat(event->TaskIndex, 1, energy);
+
+          if (energy > _highestEnergy) { _highestEnergy = energy; }
+
+          if (energy < _lowestEnergy) { _lowestEnergy = energy; }
+          UserVar.setFloat(event->TaskIndex, 0, computeDistanceFromEnergy(_highestEnergy, NAN));
+          UserVar.setFloat(event->TaskIndex, 1, computeDistanceFromEnergy(_lowestEnergy, NAN));
           UserVar.setFloat(event->TaskIndex, 2, _lightningCount);
           UserVar.setFloat(event->TaskIndex, 3, totalStrikes);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, strformat(
-                     F("AS3935: Lightning detected. Dist: %d, Energy:%u, Count: %u, Total: %d"),
-                     distance,
-                     energy,
+                     F("AS3935: Lightning detected. DistNear: %.1f, DistFar: %.1f, Count: %u, Total: %d"),
+                     computeDistanceFromEnergy(_highestEnergy, -1.0f),
+                     computeDistanceFromEnergy(_lowestEnergy,  -1.0f),
                      _lightningCount,
                      totalStrikes));
           }
@@ -87,10 +90,10 @@ bool P169_data_struct::loop(struct EventStruct *event)
             // - Total Lightning count since this was reset (or power cycle of ESP)
             eventQueue.addMove(
               strformat(
-                F("%s#LightningDetected=%d,%u,%u,%d"),
+                F("%s#LightningDetected=%.1f,%.1f,%u,%d"),
                 getTaskDeviceName(event->TaskIndex).c_str(),
-                distance,
-                energy,
+                computeDistanceFromEnergy(_highestEnergy, -1.0f),
+                computeDistanceFromEnergy(_lowestEnergy,  -1.0f),
                 _lightningCount,
                 totalStrikes));
           }
@@ -99,12 +102,17 @@ bool P169_data_struct::loop(struct EventStruct *event)
         }
         case AS3935MI::AS3935_INT_DUPDATE:
         {
+          // FIXME TD-er: No longer needed?
+
+
           // Distance updated
-          const int distance = getDistance();
+          const float distance = getDistance();
 
           if (_lightningCount > 0) {
             // Do not update until after this task interval or else the reported distance will be too low.
             UserVar.setFloat(event->TaskIndex, 0, distance);
+          } else {
+            _sensor.clearStatistics();
           }
 
           if (Settings.UseRules) {
@@ -113,7 +121,7 @@ bool P169_data_struct::loop(struct EventStruct *event)
             // - Distance
             eventQueue.addMove(
               strformat(
-                F("%s#DistanceUpdated=%d"),
+                F("%s#DistanceUpdated=%.2f"),
                 getTaskDeviceName(event->TaskIndex).c_str(),
                 distance));
           }
@@ -245,9 +253,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 # endif // ifdef ESP32
 
 
-  // set the analog front end to 'indoors' or 'outdoors'
-  _sensor.writeAFE(P169_GET_INDOOR ? AS3935MI::AS3935_INDOORS : AS3935MI::AS3935_OUTDOORS);
-
+  // set the analog front end gain
+  setAFE_gain(P169_AFE_GAIN);
   _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
   _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
   _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
@@ -357,17 +364,17 @@ bool P169_data_struct::plugin_get_config_value(struct EventStruct *event,
   return success;
 }
 
-int P169_data_struct::getDistance()
+float P169_data_struct::getDistance()
 {
-  const uint8_t dist =  _sensor.readStormDistance();
-
-  if (dist == AS3935MI::AS3935_DST_OOR) { return -1; }
-  return dist;
+  return computeDistanceFromEnergy(getEnergy(), -1.0f);
 }
 
 uint32_t P169_data_struct::getEnergy()
 {
-  return _sensor.readEnergy();
+  // Source: https://sites.google.com/view/as3935workbook/home
+  const float rawEnergy = _sensor.readEnergy();
+
+  return static_cast<uint32_t>(rawEnergy / _afeGain);
 }
 
 uint32_t P169_data_struct::getAndClearLightningCount()
@@ -375,6 +382,8 @@ uint32_t P169_data_struct::getAndClearLightningCount()
   const uint32_t res = _lightningCount;
 
   _lightningCount = 0;
+  _highestEnergy  = 0;
+  _lowestEnergy   = 0xFFFFFFFF;
   return res;
 }
 
@@ -386,6 +395,16 @@ void P169_data_struct::clearStatistics()
 float P169_data_struct::computeDeviationPct(uint32_t LCO_freq)
 {
   return (LCO_freq / 5000.0f) - 100.0f;
+}
+
+float P169_data_struct::computeDistanceFromEnergy(uint32_t energy, float errorValue)
+{
+  if ((energy == 0) || (energy == 0xFFFFFFFF)) { return errorValue; }
+
+  // TD-er: Distance vs Energy attenuation is roughly X / sqrt(energy) for some factor X.
+  // Factor of 3000 was determined experimentally evaluating a number of thunder storms
+  // mapped on https://map.blitzortung.org/
+  return 3000.0f / sqrtf(energy);
 }
 
 bool P169_data_struct::calibrate(struct EventStruct *event)
@@ -579,6 +598,28 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
       }
     }
   }
+}
+
+void P169_data_struct::setAFE_gain(uint8_t gain)
+{
+  // Source: https://sites.google.com/view/as3935workbook/home
+  _afeGain = 1.0f;
+
+  switch (gain)
+  {
+    case 10: _afeGain = 0.30f; break;
+    case 11: _afeGain = 0.40f; break;
+    case 12: _afeGain = 0.55f; break;
+    case 13: _afeGain = 0.74f; break;
+    case 14: _afeGain = 1.00f; break; // Datasheet: "Outdoor"
+    case 15: _afeGain = 1.35f; break;
+    case 16: _afeGain = 1.83f; break;
+    case 17: _afeGain = 2.47f; break;
+    case 18: _afeGain = 3.34f; break; // Datasheet: "Indoor"
+  }
+
+
+  _sensor.writeAFE(gain);
 }
 
 # if FEATURE_CHART_JS
