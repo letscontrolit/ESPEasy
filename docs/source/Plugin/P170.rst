@@ -63,6 +63,8 @@ When a Trigger is set to 0 it will be disabled. Rules have to be enabled to be a
 
 * **Trigger only once**: When enabled, only a single event will be generated for a High or Low level trigger, until that state is reset and again passes the trigger level.
 
+* **Log signal level**: When enabled will log at Info level the received data from the sensor after reading. Can be used to find a suitable **Sensitivity** setting when the default doesn't work as expected. Should best be disabled during normal operation.
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 

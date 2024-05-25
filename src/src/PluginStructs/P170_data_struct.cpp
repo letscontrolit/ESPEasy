@@ -5,7 +5,9 @@
 /**************************************************************************
 * Constructor
 **************************************************************************/
-P170_data_struct::P170_data_struct(uint8_t level) : _level(level) {}
+P170_data_struct::P170_data_struct(uint8_t level,
+                                   bool    log)
+  : _level(level), _log(log) {}
 
 /**************************************************************************
 * Start the plugin
@@ -80,11 +82,27 @@ bool P170_data_struct::plugin_read(struct EventStruct *event)           {
 *****************************************************/
 uint8_t P170_data_struct::getSteps() {
   uint8_t result = 0;
+  uint8_t max    = 0;
 
   for (int i = 0; i < P170_TOTAL_STEPS; ++i) {
     if (data[i] >= _level) {
       ++result;
     }
+
+    if (data[i] > max) {
+      max = data[i];
+    }
+  }
+
+  if (_log) {
+    String log;
+    log.reserve(80);
+
+    for (int i = 0; i < P170_TOTAL_STEPS; ++i) {
+      log += data[i];
+      log += ',';
+    }
+    addLog(LOG_LEVEL_INFO, strformat(F("LQLVL: Max level: %d, data: %s result: %d"), max, log.c_str(), result));
   }
 
   return result;

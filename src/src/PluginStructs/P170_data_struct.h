@@ -20,11 +20,13 @@
 # define P170_TRIGGER_HIGH_LEVEL      PCONFIG(1)
 # define P170_TRIGGER_ONCE            PCONFIG(2)
 # define P170_STEP_ACTIVE_LEVEL       PCONFIG(3)
+# define P170_ENABLE_LOG              PCONFIG(4)
 
 struct P170_data_struct : public PluginTaskData_base {
 public:
 
-  P170_data_struct(uint8_t level);
+  P170_data_struct(uint8_t level,
+                   bool    log);
 
   P170_data_struct() = delete;
   virtual ~P170_data_struct() {}
@@ -43,6 +45,7 @@ private:
   bool    readLowSteps();
 
   uint8_t _level;
+  bool    _log;
 
   uint8_t data[P170_TOTAL_STEPS]{};
   uint8_t level;

@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2024-05-25 tonhuisman: Add optional logging at info level with received data
  * 2024-05-20 tonhuisman: Add low- and high-level trigger checks (0 = disabled), and trigger-once option with auto-reset
  *                        Trigger is checked at Interval setting, or once per second if Interval = 0.
  *                        Add sensitivity setting, to compensate for different liquids.
@@ -97,6 +98,8 @@ boolean Plugin_170(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Trigger level 0 = Disabled, step size: " P170_MM_PER_STEP_STR "mm, (rounded down)"));
       addFormCheckBox(F("Trigger only once"), F("once"), P170_TRIGGER_ONCE);
       addFormNote(F("Auto-reset when level is correct again, separate for Low and High level."));
+
+      addFormCheckBox(F("Log signal level"), F("log"), P170_ENABLE_LOG);
       success = true;
       break;
     }
@@ -107,6 +110,7 @@ boolean Plugin_170(uint8_t function, struct EventStruct *event, String& string)
       P170_TRIGGER_LOW_LEVEL  = (getFormItemInt(F("low")) / P170_MM_PER_STEP) * P170_MM_PER_STEP;
       P170_TRIGGER_HIGH_LEVEL = (getFormItemInt(F("high")) / P170_MM_PER_STEP) * P170_MM_PER_STEP;
       P170_TRIGGER_ONCE       = isFormItemChecked(F("once"));
+      P170_ENABLE_LOG         = isFormItemChecked(F("log"));
 
       success = true;
       break;
@@ -114,7 +118,7 @@ boolean Plugin_170(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P170_data_struct(P170_STEP_ACTIVE_LEVEL));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P170_data_struct(P170_STEP_ACTIVE_LEVEL, P170_ENABLE_LOG));
       P170_data_struct *P170_data = static_cast<P170_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P170_data) && P170_data->init(event);
