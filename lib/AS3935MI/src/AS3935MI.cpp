@@ -591,7 +591,7 @@ uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 		case AS3935_DIVIDER_32:
 		case AS3935_DIVIDER_64:
 		case AS3935_DIVIDER_128:
-		break;
+			break;
 		default:
 			return 0ul;
 	}
@@ -752,11 +752,11 @@ void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 }
 
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
-void IRAM_ATTR AS3935MI::interruptISR(AS3935MI *self) {
+void AS3935MI_IRAM_ATTR AS3935MI::interruptISR(AS3935MI *self) {
 	self->interrupt_timestamp_ = millis();
 }
 
-void IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
+void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
 	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
 	if (self->interrupt_count_ < self->nr_calibration_samples_) {
 		++self->interrupt_count_;
@@ -766,11 +766,11 @@ void IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
 	}
 }
 #else
-void IRAM_ATTR AS3935MI::interruptISR() {
+void AS3935MI_IRAM_ATTR AS3935MI::interruptISR() {
 	interrupt_timestamp_ = millis();
 }
 
-void IRAM_ATTR AS3935MI::calibrateISR() {
+void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR() {
 	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
 	if (interrupt_count_ < nr_calibration_samples_) {
 		++interrupt_count_;

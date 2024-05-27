@@ -31,12 +31,19 @@
 // to avoid issues sharing volatile variables
 
 #define AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+
+#define AS3935MI_IRAM_ATTR IRAM_ATTR
 #endif
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 # include <atomic>
 #endif
 
+#ifndef AS3935MI_IRAM_ATTR 
+// Define this attribute as empty for platforms that don't need a special
+// IRAM_ATTR for ISR callback functions
+#define AS3935MI_IRAM_ATTR 
+#endif
 
 // Allow for 3.5% deviation
 # define AS3935MI_ALLOWED_DEVIATION    0.035f
@@ -504,8 +511,8 @@ private:
 
 
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
-	static void IRAM_ATTR interruptISR(AS3935MI *self);
-	static void IRAM_ATTR calibrateISR(AS3935MI *self);
+	static void AS3935MI_IRAM_ATTR interruptISR(AS3935MI *self);
+	static void AS3935MI_IRAM_ATTR calibrateISR(AS3935MI *self);
 
 	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
 	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
@@ -518,8 +525,8 @@ private:
 	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
 
 #else
-	static void IRAM_ATTR interruptISR();
-	static void IRAM_ATTR calibrateISR();
+	static void AS3935MI_IRAM_ATTR interruptISR();
+	static void AS3935MI_IRAM_ATTR calibrateISR();
 #endif
     
 
