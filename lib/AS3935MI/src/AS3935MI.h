@@ -397,6 +397,15 @@ private:
 		AS3935_MASK_CALIB_RCO =			    0b11111111	//Sets all registers in default mode
 	};
 
+	enum co_divider_t 
+	{
+		AS3935_DIVIDER_1 = 1,
+		AS3935_DIVIDER_16 = 16,
+		AS3935_DIVIDER_32 = 32,
+		AS3935_DIVIDER_64 = 64,
+		AS3935_DIVIDER_128 = 128,
+	};
+
 
 	virtual bool beginInterface() = 0;
 

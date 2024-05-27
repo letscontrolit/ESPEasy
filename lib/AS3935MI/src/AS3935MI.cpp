@@ -584,11 +584,17 @@ void AS3935MI::writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value)
 
 uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
 {
-	/*
-	if ((divider < 16) || (divider > 128)) {
-		return 0ul;
+	switch (divider)
+	{
+		case AS3935_DIVIDER_1:
+		case AS3935_DIVIDER_16:
+		case AS3935_DIVIDER_32:
+		case AS3935_DIVIDER_64:
+		case AS3935_DIVIDER_128:
+		break;
+		default:
+			return 0ul;
 	}
-	*/
 
 	// Need to copy the timestamps first as they are volatile
 	const uint32_t start = calibration_start_micros_;
