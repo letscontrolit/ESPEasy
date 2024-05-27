@@ -81,6 +81,13 @@ void PluginTaskData_base::clearPluginStats(taskVarIndex_t taskVarIndex)
   }
 }
 
+void PluginTaskData_base::processTimeSet()
+{
+  if (_plugin_stats_array != nullptr) {
+    _plugin_stats_array->processTimeSet();
+  }
+}
+
 #endif // if FEATURE_PLUGIN_STATS
 
 void PluginTaskData_base::pushPluginStatsValues(struct EventStruct *event,

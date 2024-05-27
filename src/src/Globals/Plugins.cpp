@@ -18,6 +18,7 @@
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
@@ -601,6 +602,18 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         #endif
 
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+
+#if FEATURE_PLUGIN_STATS
+        if (Function == PLUGIN_TIME_CHANGE) {
+          if (!statusNTPInitialized) {
+            // Update recorded plugin stats timestamps
+            PluginTaskData_base* taskData = getPluginTaskData(taskIndex);
+            if (taskData != nullptr) {
+              taskData->processTimeSet();
+            }
+          }
+        }
+#endif
 
         if (Function == PLUGIN_INIT) {
           UserVar.clear_computed(taskIndex);

@@ -19,6 +19,8 @@ public:
 
   void     clear();
 
+  // Update any logged timestamp with this newly set system time.
+  void   processTimeSet();
 
   uint32_t getTimestamp(int lastNrSamples) const;
 

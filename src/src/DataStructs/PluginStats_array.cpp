@@ -98,6 +98,13 @@ void PluginStats_array::clearPluginStats(taskVarIndex_t taskVarIndex)
   }
 }
 
+void PluginStats_array::processTimeSet()
+{
+  if (_plugin_stats_timestamps != nullptr) {
+    _plugin_stats_timestamps->processTimeSet();
+  }
+}
+
 bool PluginStats_array::hasStats() const
 {
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {

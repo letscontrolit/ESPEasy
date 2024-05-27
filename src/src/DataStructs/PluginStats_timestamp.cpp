@@ -2,6 +2,8 @@
 
 #if FEATURE_PLUGIN_STATS
 
+# include "../Globals/ESPEasy_time.h"
+
 PluginStats_timestamp::~PluginStats_timestamp()
 {}
 
@@ -13,6 +15,26 @@ bool PluginStats_timestamp::push(uint32_t unixTime)
 void PluginStats_timestamp::clear()
 {
   _timestamps.clear();
+}
+
+void PluginStats_timestamp::processTimeSet()
+{
+  const size_t nrSamples = _timestamps.size();
+
+  const uint32_t unixTime   = node_time.getUnixTime();
+  const uint32_t uptime_sec = (millis() / 1000);
+
+  if (unixTime < uptime_sec) {
+    return;
+  }
+  const uint32_t timeOffset = unixTime - uptime_sec;
+
+  for (PluginStatsTimestamps_t::index_t i = 0; i < nrSamples; ++i) {
+    if (_timestamps[i] > uptime_sec) {
+      return;
+    }
+    _timestamps[i] += timeOffset;
+  }
 }
 
 uint32_t PluginStats_timestamp::getTimestamp(int lastNrSamples) const

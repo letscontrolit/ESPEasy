@@ -34,6 +34,9 @@ struct PluginTaskData_base {
   #if FEATURE_PLUGIN_STATS
   void   initPluginStats(taskVarIndex_t taskVarIndex);
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
+
+  // Update any logged timestamp with this newly set system time.
+  void   processTimeSet();
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
