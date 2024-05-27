@@ -181,6 +181,10 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
   }
 # endif // if FEATURE_CHART_JS
 
+  addRowLabel(F("Current AFE gain"));
+  addHtmlFloat(_afeGain, 2);
+  addHtml('x');
+
   addRowLabel(F("Current Noise Floor Threshold"));
   addHtmlInt(_sensor.readNoiseFloorThreshold());
 
@@ -254,10 +258,10 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
 
   // set the analog front end gain
-  setAFE_gain(P169_AFE_GAIN);
   _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
   _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
   _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+  setAFE_gain(event, P169_AFE_GAIN);
   {
     AS3935MI::min_num_lightnings_t min_num_lightnings = AS3935MI::AS3935_MNL_1;
 
@@ -273,12 +277,13 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   return true;
 }
 
-const char P169_subcommands[] PROGMEM = "clearstats|calibrate|setnf|setwd|setsrej";
+const char P169_subcommands[] PROGMEM = "clearstats|calibrate|setgain|setnf|setwd|setsrej";
 
 enum class P169_subcmd_e : int8_t {
   invalid    = -1,
   clearstats = 0,
   calibrate,
+  setgain,
   setnf,  // Set noise floor
   setwd,  // Set Watchdog Threshold
   setsrej // Set Spike Rejection
@@ -316,11 +321,20 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
 
         success = true;
         break;
+      case P169_subcmd_e::setgain:
+
+        if (hasValue) {
+          success = true;
+
+          // First check if it is a register value or gain factor.
+          setAFE_gain(event, AFE_gain_to_regValue(value));
+        }
+        break;
       case P169_subcmd_e::setnf:
 
         if (hasValue) {
           success = true;
-          _sensor.writeNoiseFloorThreshold(value);
+          setNoiseFloorThreshold(event, value);
         }
         break;
       case P169_subcmd_e::setwd:
@@ -328,6 +342,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
         if (hasValue) {
           success = true;
           _sensor.writeWatchdogThreshold(value);
+          sendChangeEvent(event);
         }
         break;
       case P169_subcmd_e::setsrej:
@@ -335,6 +350,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
         if (hasValue) {
           success = true;
           _sensor.writeSpikeRejection(value);
+          sendChangeEvent(event);
         }
         break;
     }
@@ -342,26 +358,46 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
   return success;
 }
 
+const char P169_get_config[] PROGMEM = "noisefloor|watchdog|srej|gain";
+
+enum class P169_get_config_e : int8_t {
+  invalid    = -1,
+  noisefloor = 0, // [<taskname>#noisefloor]
+  watchdog,       // [<taskname>#watchdog]
+  srej,           // [<taskname>#srej] = current spike rejection
+  gain            // [<taskname>#gain]
+};
+
+
 /*****************************************************
 * plugin_get_config_value
 *****************************************************/
 bool P169_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
-  bool success = false;
+  const String var      = parseString(string, 1);
+  const int    config_i = GetCommandCode(var.c_str(), P169_get_config);
 
-  const String var = parseString(string, 1);
+  if (config_i < 0) { return false; } // Fail fast
+  const P169_get_config_e config = static_cast<P169_get_config_e>(config_i);
 
-  if (equals(var, F("noisefloor"))) {      // [<taskname>#noisefloor]
-    string  = _sensor.readNoiseFloorThreshold();
-    success = true;
-  } else if (equals(var, F("watchdog"))) { // [<taskname>#watchdog]
-    string  = _sensor.readWatchdogThreshold();
-    success = true;
-  } else if (equals(var, F("srej"))) {     // [<taskname>#srej] = current spike rejection
-    string  = _sensor.readSpikeRejection();
-    success = true;
+  switch (config)
+  {
+    case P169_get_config_e::invalid:
+      return false;
+    case P169_get_config_e::noisefloor:
+      string = _sensor.readNoiseFloorThreshold();
+      break;
+    case P169_get_config_e::watchdog:
+      string = _sensor.readWatchdogThreshold();
+      break;
+    case P169_get_config_e::srej:
+      string = _sensor.readSpikeRejection();
+      break;
+    case P169_get_config_e::gain:
+      string = toString(_afeGain, 2);
+      break;
   }
-  return success;
+  return true;
 }
 
 float P169_data_struct::getDistance()
@@ -371,9 +407,29 @@ float P169_data_struct::getDistance()
 
 uint32_t P169_data_struct::getEnergy()
 {
-  // Source: https://sites.google.com/view/as3935workbook/home
-  const float rawEnergy = _sensor.readEnergy();
+  const uint32_t rawEnergy = _sensor.readEnergy();
 
+  if ((rawEnergy == 0) || (rawEnergy == 0xFFFFFFFF)) {
+    return 0u;
+  }
+
+  const int8_t ant_cap = _sensor.getCalibratedAntCap();
+
+  if (ant_cap != -1) {
+    const float deviation_pct = computeDeviationPct(_sensor.getAntCapFrequency(ant_cap));
+
+    // Compute correction factor for loss in reported energy due to offset from perfect calibration.
+    // Formula derived by TD-er using chart on this site: (section "Is Tuning Important?")
+    // https://sites.google.com/view/as3935workbook/home#h.n9qonjaydsbd
+    const float loss =
+      (0.0321f * deviation_pct * deviation_pct) +
+      (0.0279f * deviation_pct) +
+      1.0f;
+
+    return static_cast<uint32_t>((rawEnergy * loss) / _afeGain);
+  }
+
+  // No antenna calibration present, so no compensation possible
   return static_cast<uint32_t>(rawEnergy / _afeGain);
 }
 
@@ -402,9 +458,11 @@ float P169_data_struct::computeDistanceFromEnergy(uint32_t energy, float errorVa
   if ((energy == 0) || (energy == 0xFFFFFFFF)) { return errorValue; }
 
   // TD-er: Distance vs Energy attenuation is roughly X / sqrt(energy) for some factor X.
-  // Factor of 3000 was determined experimentally evaluating a number of thunder storms
-  // mapped on https://map.blitzortung.org/
-  return 3000.0f / sqrtf(energy);
+  // Factor of 2100 was determined experimentally evaluating a number of thunder storms
+  // by Michael Gasperi, the author of this site: https://sites.google.com/view/as3935workbook/home
+  // Verified by TD-er comparing live data mapped on https://map.blitzortung.org/ and the sensor.
+  // LCO calibration offset was taken into account.
+  return 2100.0f / sqrtf(energy);
 }
 
 bool P169_data_struct::calibrate(struct EventStruct *event)
@@ -459,17 +517,7 @@ void P169_data_struct::adjustForNoise(struct EventStruct *event)
 
   if (nf_lev) {
     addLog(LOG_LEVEL_INFO, F("AS3935: Increased noise floor threshold"));
-
-    if (Settings.UseRules) {
-      // Adjust for noise, Send event
-      // Eventvalue:
-      // - new noise level
-      eventQueue.addMove(
-        strformat(
-          F("%s#AdustForNoise=%d"),
-          getTaskDeviceName(event->TaskIndex).c_str(),
-          nf_lev));
-    }
+    sendChangeEvent(event);
   }
   else {
     addLog(LOG_LEVEL_ERROR, F("AS3935: Noise floor threshold already at maximum"));
@@ -480,45 +528,31 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 {
   // increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance
   // against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
-  const uint8_t wdth = _sensor.readWatchdogThreshold();
-  const uint8_t srej = _sensor.readSpikeRejection();
+  const uint8_t wdth  = _sensor.readWatchdogThreshold();
+  const uint8_t srej  = _sensor.readSpikeRejection();
+  const uint8_t noise = _sensor.readNoiseFloorThreshold();
 
-
-  // FIXME TD-er: Is this a good threshold for auto adjust algorithm?
-  if ((wdth < AS3935MI::AS3935_WDTH_10) || (srej < AS3935MI::AS3935_SREJ_10))
-  {
-    _sense_adj_last = millis();
-
-    // alternatively increase spike rejection and watchdog threshold
-    if (srej < wdth)
-    {
-      if (_sensor.increaseSpikeRejection()) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased spike rejection ratio to: %d"), (srej + 1)));
-        }
-      }
-      else {
-        addLog(LOG_LEVEL_ERROR, F("AS3935: Spike rejection ratio already at maximum"));
-      }
-    }
-    else
-    {
-      if (_sensor.increaseWatchdogThreshold()) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased watchdog threshold to %d"), (wdth + 1)));
-        }
-      }
-      else {
-        addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog threshold already at maximum"));
-      }
-    }
-  }
-  else
+  if ((wdth == AS3935MI::AS3935_WDTH_5) ||
+      (srej == AS3935MI::AS3935_SREJ_5) ||
+      (noise == AS3935MI::AS3935_NFL_5))
   {
     int32_t frequency{};
+    const bool valid = _sensor.validateCurrentResonanceFrequency(frequency);
 
-    if (_sensor.validateCurrentResonanceFrequency(frequency)) {
-      // Resonance frequency is still OK, so not much we can do here.
+    if (valid || P169_GET_TOLERANT_CALIBRATION_RANGE) {
+      // Resonance frequency is still OK, try lowering gain
+      uint8_t curGain = _sensor.readAFE();
+
+      if (curGain > AS3935MI::AS3935_OUTDOORS) {
+        --curGain;
+
+        // Since we change the gain, reset the other values to default
+        _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+        _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+        _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+        setAFE_gain(event, curGain);
+        _sense_adj_last = millis();
+      } else
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLog(LOG_LEVEL_ERROR, strformat(
                  F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
@@ -552,6 +586,44 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
     }
     _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
   }
+
+  // FIXME TD-er: Is this a good threshold for auto adjust algorithm?
+  if ((wdth < AS3935MI::AS3935_WDTH_5) ||
+      (srej < AS3935MI::AS3935_SREJ_5)
+
+      //      || (noise < AS3935MI::AS3935_NFL_5)
+      )
+  {
+    _sense_adj_last = millis();
+
+    // alternatively increase spike rejection and watchdog threshold
+    if (srej < wdth)
+    {
+      if (_sensor.increaseSpikeRejection()) {
+        sendChangeEvent(event);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased spike rejection ratio to: %d"), (srej + 1)));
+        }
+      }
+      else {
+        addLog(LOG_LEVEL_ERROR, F("AS3935: Spike rejection ratio already at maximum"));
+      }
+    }
+    else
+    {
+      if (_sensor.increaseWatchdogThreshold()) {
+        sendChangeEvent(event);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased watchdog threshold to %d"), (wdth + 1)));
+        }
+      }
+      else {
+        addLog(LOG_LEVEL_ERROR, F("AS3935: Watchdog threshold already at maximum"));
+      }
+    }
+  }
 }
 
 void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
@@ -564,62 +636,174 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 
     addLog(LOG_LEVEL_INFO, F("AS3935: No disturber detected, attempting to decrease noise floor threshold."));
 
-    const uint8_t wdth = _sensor.readWatchdogThreshold();
-    const uint8_t srej = _sensor.readSpikeRejection();
+    const uint8_t wdth  = _sensor.readWatchdogThreshold();
+    const uint8_t srej  = _sensor.readSpikeRejection();
+    const uint8_t noise = _sensor.readNoiseFloorThreshold();
 
-    if ((wdth > AS3935MI::AS3935_WDTH_0) || (srej > AS3935MI::AS3935_SREJ_0))
+    if ((wdth == AS3935MI::AS3935_WDTH_0) ||
+        (srej == AS3935MI::AS3935_SREJ_0) ||
+        (noise == AS3935MI::AS3935_NFL_0))
     {
-      // alternatively decrease spike rejection and watchdog threshold
-      if (srej > wdth)
-      {
-        if (_sensor.decreaseSpikeRejection()) {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased spike rejection ratio to %d"), (srej - 1)));
-          }
-        }
-        # ifndef BUILD_NO_DEBUG
-        else {
-          addLog(LOG_LEVEL_DEBUG, F("AS3935: Spike rejection ratio already at minimum"));
-        }
-        # endif // ifndef BUILD_NO_DEBUG
+      uint8_t curGain = _sensor.readAFE();
+
+      if (curGain < AS3935MI::AS3935_INDOORS) {
+        ++curGain;
+
+        // Since we change the gain, reset the other values to default
+        _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+        _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+        _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+
+        setAFE_gain(event, curGain);
+        return;
       }
-      else
-      {
-        if (_sensor.decreaseWatchdogThreshold()) {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased watchdog threshold to: %d"), (wdth - 1)));
-          }
-        }
-        # ifndef BUILD_NO_DEBUG
-        else {
-          addLog(LOG_LEVEL_DEBUG, F("AS3935: Watchdog threshold already at minimum"));
-        }
-        # endif // ifndef BUILD_NO_DEBUG
+    }
+
+    if ((noise > srej) && (noise > wdth) && _sensor.decreaseNoiseFloorThreshold()) {
+      sendChangeEvent(event);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased noise floor to %d"), (noise - 1)));
       }
+    }
+
+    // alternatively decrease spike rejection and watchdog threshold
+    if (srej > wdth)
+    {
+      if (_sensor.decreaseSpikeRejection()) {
+        sendChangeEvent(event);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased spike rejection ratio to %d"), (srej - 1)));
+        }
+      }
+        # ifndef BUILD_NO_DEBUG
+      else {
+        addLog(LOG_LEVEL_DEBUG, F("AS3935: Spike rejection ratio already at minimum"));
+      }
+        # endif // ifndef BUILD_NO_DEBUG
+    }
+    else
+    {
+      if (_sensor.decreaseWatchdogThreshold()) {
+        sendChangeEvent(event);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Decreased watchdog threshold to: %d"), (wdth - 1)));
+        }
+      }
+        # ifndef BUILD_NO_DEBUG
+      else {
+        addLog(LOG_LEVEL_DEBUG, F("AS3935: Watchdog threshold already at minimum"));
+      }
+        # endif // ifndef BUILD_NO_DEBUG
     }
   }
 }
 
-void P169_data_struct::setAFE_gain(uint8_t gain)
+void P169_data_struct::setAFE_gain(struct EventStruct *event, uint8_t gain)
+{
+  _afeGain       = regValue_AFE_gain_toFloat(gain);
+  _afeGainRegval = gain;
+  _sensor.writeAFE(gain);
+
+  sendChangeEvent(event);
+}
+
+void P169_data_struct::setNoiseFloorThreshold(struct EventStruct *event, uint8_t noiseFloor)
+{
+  _sensor.writeNoiseFloorThreshold(noiseFloor);
+  sendChangeEvent(event);
+}
+
+float P169_data_struct::regValue_AFE_gain_toFloat(uint8_t gain)
 {
   // Source: https://sites.google.com/view/as3935workbook/home
-  _afeGain = 1.0f;
+  float afeGain = 1.0f;
 
   switch (gain)
   {
-    case 10: _afeGain = 0.30f; break;
-    case 11: _afeGain = 0.40f; break;
-    case 12: _afeGain = 0.55f; break;
-    case 13: _afeGain = 0.74f; break;
-    case 14: _afeGain = 1.00f; break; // Datasheet: "Outdoor"
-    case 15: _afeGain = 1.35f; break;
-    case 16: _afeGain = 1.83f; break;
-    case 17: _afeGain = 2.47f; break;
-    case 18: _afeGain = 3.34f; break; // Datasheet: "Indoor"
+    case 10: afeGain = 0.30f; break;
+    case 11: afeGain = 0.40f; break;
+    case 12: afeGain = 0.55f; break;
+    case 13: afeGain = 0.74f; break;
+    case 14: afeGain = 1.00f; break; // Datasheet: "Outdoor"
+    case 15: afeGain = 1.35f; break;
+    case 16: afeGain = 1.83f; break;
+    case 17: afeGain = 2.47f; break;
+    case 18: afeGain = 3.34f; break; // Datasheet: "Indoor"
+  }
+  return afeGain;
+}
+
+uint8_t P169_data_struct::AFE_gain_to_regValue(float gain)
+{
+  {
+    uint8_t regval = static_cast<uint8_t>(roundf(gain));
+
+    if (regval >= 10) {
+      if (regval <= 18) {
+        return regval;
+      }
+      return AS3935MI::AS3935_OUTDOORS;
+    }
   }
 
+  float prevAFE_Gain = regValue_AFE_gain_toFloat(10);
 
-  _sensor.writeAFE(gain);
+  if (gain < prevAFE_Gain) {
+    return 10;
+  }
+
+  for (uint8_t regval = 11; regval <= 18; ++regval)
+  {
+    const float afeGain = regValue_AFE_gain_toFloat(regval);
+
+    if (gain < afeGain) {
+      // See which is closest, prev or current
+      if ((gain - prevAFE_Gain) < (afeGain - gain)) {
+        return regval - 1;
+      }
+      return regval;
+    }
+    prevAFE_Gain = afeGain;
+  }
+
+  return AS3935MI::AS3935_INDOORS;
+}
+
+void P169_data_struct::sendChangeEvent(struct EventStruct *event)
+{
+  if (Settings.UseRules) {
+    const   uint8_t noiseFloor = _sensor.readNoiseFloorThreshold();
+    const   uint8_t watchdog   = _sensor.readWatchdogThreshold();
+    const   uint8_t srej       = _sensor.readSpikeRejection();
+
+    if ((_lastEvent_noiseFloor != noiseFloor) ||
+        ((_lastEvent_watchdog != watchdog) && ((_lastEvent_watchdog > 1) || (watchdog > 1))) ||
+        (_lastEvent_srej != srej) ||
+        (_lastEvent_gain != _afeGainRegval)) {
+      // Some value was updated, send event
+      // Eventvalue:
+      // - Gain
+      // - Noise Level
+      // - Watchdog Threshold
+      // - Spike Rejection
+      eventQueue.addMove(
+        strformat(
+          F("%s#ParamUpdate=%.2f,%u,%u,%u"),
+          getTaskDeviceName(event->TaskIndex).c_str(),
+          _afeGain,
+          noiseFloor,
+          watchdog,
+          srej));
+    }
+
+    _lastEvent_noiseFloor = noiseFloor;
+    _lastEvent_watchdog   = watchdog;
+    _lastEvent_srej       = srej;
+    _lastEvent_gain       = _afeGainRegval;
+  }
 }
 
 # if FEATURE_CHART_JS

@@ -111,7 +111,20 @@ private:
 
   void         tryIncreasedSensitivity(struct EventStruct *event);
 
-  void         setAFE_gain(uint8_t gain);
+  void         setAFE_gain(struct EventStruct *event, uint8_t gain);
+
+  void         setNoiseFloorThreshold(struct EventStruct *event, uint8_t noiseFloor);
+
+  // Convert internal register value for AFE gain to gain factor
+  static float regValue_AFE_gain_toFloat(uint8_t gain);
+
+  // Convert AFE gain factor to internal register value.
+  // Register values range from 10 .. 18, gain factor from 0.3x .. 3.34x
+  // If given value is in range 10 .. 18, this value wil be returned.
+  // For out of range values, the default of gain factor 1.0x will be used.
+  static uint8_t AFE_gain_to_regValue(float gain);
+
+  void sendChangeEvent(struct EventStruct *event);
 
 # if FEATURE_CHART_JS
   void         addCalibrationChart(struct EventStruct *event);
@@ -121,14 +134,21 @@ private:
   AS3935I2C _sensor;
   uint8_t   _irqPin;
   float     _afeGain = 1.0f;
+  uint8_t   _afeGainRegval = 0;
 
   uint32_t _sense_adj_last = 0;
 
   uint32_t _sense_increase_interval = DEFAULT_SENSE_INCREASE_INTERVAL;
 
-  uint32_t _lightningCount = 0;
+  uint32_t  _lightningCount = 0;
   uint32_t  _highestEnergy = 0;
   uint32_t  _lowestEnergy = 0xFFFFFFFF;  
+
+  uint8_t _lastEvent_noiseFloor = 255;
+  uint8_t _lastEvent_watchdog = 255;
+  uint8_t _lastEvent_srej = 255;
+  uint8_t _lastEvent_gain = 0;
+
 };
 
 #endif // ifdef USES_P169
