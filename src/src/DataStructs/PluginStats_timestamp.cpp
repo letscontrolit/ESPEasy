@@ -22,6 +22,7 @@ void PluginStats_timestamp::processTimeSet(const double& time_offset)
   const size_t nrSamples = _timestamps.size();
 
   const uint32_t unixTime_20200101 = 1577836800;
+
   // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
 
   for (PluginStatsTimestamps_t::index_t i = 0; i < nrSamples; ++i) {

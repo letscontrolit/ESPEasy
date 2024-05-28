@@ -20,7 +20,7 @@ public:
   void     clear();
 
   // Update any logged timestamp with this newly set system time.
-  void   processTimeSet(const double& time_offset);
+  void     processTimeSet(const double& time_offset);
 
   uint32_t getTimestamp(int lastNrSamples) const;
 

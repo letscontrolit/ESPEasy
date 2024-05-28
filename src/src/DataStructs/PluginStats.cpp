@@ -18,7 +18,7 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
 
 {
   // Try to allocate in PSRAM if possible
-  void *ptr               = special_calloc(1, sizeof(PluginStatsBuffer_t));
+  void *ptr = special_calloc(1, sizeof(PluginStatsBuffer_t));
 
   if (ptr == nullptr) { _samples = nullptr; }
   else {
@@ -44,10 +44,11 @@ PluginStats::~PluginStats()
 
 void PluginStats::processTimeSet(const double& time_offset)
 {
-  if (_maxValueTimestamp != 0 && _maxValueTimestamp < 1000000000) {
+  if (_maxValueTimestamp < 1000000000) {
     _maxValueTimestamp += time_offset;
   }
-  if (_minValueTimestamp != 0 && _minValueTimestamp < 1000000000) {
+
+  if (_minValueTimestamp < 1000000000) {
     _minValueTimestamp += time_offset;
   }
 }

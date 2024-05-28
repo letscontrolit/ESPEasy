@@ -20,8 +20,8 @@
 #include "../Globals/TimeZone.h"
 
 #ifdef USES_ESPEASY_NOW
-#include "../Globals/ESPEasy_now_handler.h"
-#endif
+# include "../Globals/ESPEasy_now_handler.h"
+#endif // ifdef USES_ESPEASY_NOW
 
 
 #include "../Helpers/Convert.h"
@@ -72,13 +72,14 @@ void ESPEasy_time::restoreFromRTC()
   static bool firstCall = true;
 
 #if FEATURE_EXT_RTC
-  uint32_t    unixtime  = 0;
+  uint32_t unixtime = 0;
+
   if (ExtRTC_get(unixtime)) {
     setExternalTimeSource(unixtime, timeSource_t::External_RTC_time_source);
     firstCall = false;
     return;
   }
-#endif
+#endif // if FEATURE_EXT_RTC
 
   if (firstCall && (RTC.lastSysTime != 0) && (RTC.deepSleepState != 1)) {
     firstCall = false;
@@ -202,6 +203,7 @@ unsigned long ESPEasy_time::now() {
 
         #if FEATURE_EXT_RTC
         uint32_t tmp_unixtime = 0;
+
         if (!updatedTime &&
             (timeSource > timeSource_t::External_RTC_time_source) && // No need to set from ext RTC more than once.
             ExtRTC_get(tmp_unixtime)) {
@@ -210,7 +212,7 @@ unsigned long ESPEasy_time::now() {
           updatedTime  = true;
           syncInterval = 120; // Allow sync in 2 minutes to see if we get some better options from p2p nodes.
         }
-        #endif
+        #endif // if FEATURE_EXT_RTC
       }
     }
 
@@ -237,28 +239,32 @@ unsigned long ESPEasy_time::now() {
       sysTime = unixTime_d;
 
       #if FEATURE_PLUGIN_STATS
-      if (!statusNTPInitialized && time_offset > 0) {
+
+      if (!statusNTPInitialized && (time_offset > 0)) {
         // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
         const uint32_t unixTime_20200101 = 1577836800;
+
         if (sysTime > unixTime_20200101) {
           // Update recorded plugin stats timestamps
           for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
           {
-              PluginTaskData_base* taskData = getPluginTaskData(taskIndex);
-              if (taskData != nullptr) {
-                taskData->processTimeSet(time_offset);
-              }
+            PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(taskIndex);
+
+            if (taskData != nullptr) {
+              taskData->processTimeSet(time_offset);
+            }
           }
         }
       }
 
-      #endif
+      #endif // if FEATURE_PLUGIN_STATS
 
       #if FEATURE_EXT_RTC
+
       // External RTC only stores with second resolution.
       // Thus to limit the error to +/- 500 ms, round the sysTime instead of just casting it.
-      ExtRTC_set(static_cast<uint32_t>(sysTime + 0.5)); 
-      #endif
+      ExtRTC_set(static_cast<uint32_t>(sysTime + 0.5));
+      #endif // if FEATURE_EXT_RTC
       {
         const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;
 
@@ -291,9 +297,9 @@ unsigned long ESPEasy_time::now() {
         String log = F("Time set to ");
         #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         log += doubleToString(unixTime_d, 3);
-        #else
+        #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         log += static_cast<uint32_t>(unixTime_d);
-        #endif
+        #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
@@ -325,11 +331,12 @@ unsigned long ESPEasy_time::now() {
   breakTime(localSystime, local_tm);
 
   calcSunRiseAndSet(timeSynced);
+
   if (timeSynced) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
-        F("Local time: %s"),
-       getDateTimeString('-', ':', ' ').c_str()));
+               F("Local time: %s"),
+               getDateTimeString('-', ':', ' ').c_str()));
     }
     {
       // Notify plugins the time has been set.
@@ -439,7 +446,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     return false;
   }
 
-  const int NTP_PACKET_SIZE = 48;          // NTP time is in the first 48 bytes of message
+  const int NTP_PACKET_SIZE = 48;            // NTP time is in the first 48 bytes of message
   uint8_t   packetBuffer[NTP_PACKET_SIZE]{}; // buffer to hold incoming & outgoing packets
 
   log += F(" queried");
@@ -484,8 +491,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           addLog(LOG_LEVEL_ERROR, strformat(
-            F("NTP  : NTP host (%s) unsynchronized"),
-            formatIP(timeServerIP).c_str()));
+                   F("NTP  : NTP host (%s) unsynchronized"),
+                   formatIP(timeServerIP).c_str()));
         }
 
         if (!useNTPpool) {
@@ -558,7 +565,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         }
         log += static_cast<int>(fractpart * 1000.0);
         log += F(" msec");
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
@@ -589,8 +596,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 * get the timezone-offset string in +/-0000 format
 **************************************************/
 String ESPEasy_time::getTimeZoneOffsetString() {
-  int dif = static_cast<int>((static_cast<int64_t>(now()) - static_cast<int64_t>(getUnixTime())) / 60); // Minutes
-  char valueString[6] = { 0 };
+  int    dif            = static_cast<int>((static_cast<int64_t>(now()) - static_cast<int64_t>(getUnixTime())) / 60); // Minutes
+  char   valueString[6] = { 0 };
   String tzoffset;
 
   // Formatting the timezone-offset string as [+|-]HHMM
@@ -606,10 +613,10 @@ String ESPEasy_time::getTimeZoneOffsetString() {
   return tzoffset;
 }
 
- void ESPEasy_time::applyTimeZone()
- {
-   time_zone.applyTimeZone(getUnixTime());
- }
+void ESPEasy_time::applyTimeZone()
+{
+  time_zone.applyTimeZone(getUnixTime());
+}
 
 /********************************************************************************************\
    Date/Time string formatters
@@ -775,7 +782,7 @@ int ESPEasy_time::dayOfYear(int year, int month, int day) {
 }
 
 void ESPEasy_time::calcSunRiseAndSet(bool timeSynced) {
-  if (!timeSynced && 
+  if (!timeSynced &&
       (tsSet.tm_mday == local_tm.tm_mday)) {
     // No need to recalculate if already calculated for this day
     return;
@@ -803,7 +810,7 @@ void ESPEasy_time::calcSunRiseAndSet(bool timeSynced) {
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
 
   breakTime(time_zone.toLocal(makeTime(tsRise)), sunRise);
-  breakTime(time_zone.toLocal(makeTime(tsSet)),  sunSet);
+  breakTime(time_zone.toLocal(makeTime(tsSet)),   sunSet);
 }
 
 struct tm ESPEasy_time::getSunRise(int secOffset) const {
@@ -892,14 +899,15 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
 
   if (unixtime != 0) {
     addLogMove(LOG_LEVEL_INFO, concat(
-      F("ExtRTC: Read external time source: "), 
-      unixtime));
+                 F("ExtRTC: Read external time source: "),
+                 unixtime));
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
   return false;
 }
-#endif
+
+#endif // if FEATURE_EXT_RTC
 
 #if FEATURE_EXT_RTC
 bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
@@ -969,4 +977,5 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
   return false;
 }
-#endif
+
+#endif // if FEATURE_EXT_RTC
