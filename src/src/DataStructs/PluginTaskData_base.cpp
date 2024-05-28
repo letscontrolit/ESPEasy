@@ -81,10 +81,10 @@ void PluginTaskData_base::clearPluginStats(taskVarIndex_t taskVarIndex)
   }
 }
 
-void PluginTaskData_base::processTimeSet()
+void PluginTaskData_base::processTimeSet(const double& time_offset)
 {
   if (_plugin_stats_array != nullptr) {
-    _plugin_stats_array->processTimeSet();
+    _plugin_stats_array->processTimeSet(time_offset);
   }
 }
 

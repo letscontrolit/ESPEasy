@@ -60,6 +60,15 @@ bool CircularBuffer<T,S,IT>::push(T value) {
 }
 
 template<typename T, size_t S, typename IT>
+bool CircularBuffer<T,S,IT>::set(IT index, T value) {
+	if (index >= count) return false;
+
+	*(buffer + ((head - buffer + index) % capacity)) = value;
+	return true;
+}
+
+
+template<typename T, size_t S, typename IT>
 T CircularBuffer<T,S,IT>::shift() {
 	if (count == 0) return *head;
 	T result = *head++;
@@ -93,12 +102,6 @@ T inline CircularBuffer<T,S,IT>::last() const {
 
 template<typename T, size_t S, typename IT>
 T CircularBuffer<T,S,IT>::operator [](IT index) const {
-	if (index >= count) return *tail;
-	return *(buffer + ((head - buffer + index) % capacity));
-}
-
-template<typename T, size_t S, typename IT>
-T& CircularBuffer<T,S,IT>::operator [](IT index) {
 	if (index >= count) return *tail;
 	return *(buffer + ((head - buffer + index) % capacity));
 }

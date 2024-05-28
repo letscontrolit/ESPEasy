@@ -74,6 +74,8 @@ public:
 	 */
 	bool push(T value);
 
+	bool set(IT index, T value);
+
 	/**
 	 * Removes an element from the beginning of the buffer.
 	 * *WARNING* Calling this operation on an empty buffer has an unpredictable behaviour.
@@ -102,8 +104,6 @@ public:
 	 * *WARNING* Calling this operation on an empty buffer has an unpredictable behaviour.
 	 */
 	T operator [] (IT index) const;
-
-	T& operator [] (IT index);
 
 	/**
 	 * Returns how many elements are actually stored in the buffer.

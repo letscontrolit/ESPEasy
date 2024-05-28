@@ -144,6 +144,7 @@ private:
   uint32_t  _highestEnergy = 0;
   uint32_t  _lowestEnergy = 0xFFFFFFFF;  
 
+  // Keep track of previous value to only send <taskname>#ParamUpdate events when changed.
   uint8_t _lastEvent_noiseFloor = 255;
   uint8_t _lastEvent_watchdog = 255;
   uint8_t _lastEvent_srej = 255;

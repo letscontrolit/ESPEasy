@@ -2,6 +2,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../../_Plugin_Helper.h"
+
 #include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../DataStructs/TimingStats.h"
@@ -233,6 +235,24 @@ unsigned long ESPEasy_time::now() {
       timeSynced = true;
 
       sysTime = unixTime_d;
+
+      #if FEATURE_PLUGIN_STATS
+      if (!statusNTPInitialized && time_offset > 0) {
+        // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
+        const uint32_t unixTime_20200101 = 1577836800;
+        if (sysTime > unixTime_20200101) {
+          // Update recorded plugin stats timestamps
+          for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
+          {
+              PluginTaskData_base* taskData = getPluginTaskData(taskIndex);
+              if (taskData != nullptr) {
+                taskData->processTimeSet(time_offset);
+              }
+          }
+        }
+      }
+
+      #endif
 
       #if FEATURE_EXT_RTC
       // External RTC only stores with second resolution.

@@ -98,10 +98,18 @@ void PluginStats_array::clearPluginStats(taskVarIndex_t taskVarIndex)
   }
 }
 
-void PluginStats_array::processTimeSet()
+void PluginStats_array::processTimeSet(const double& time_offset)
 {
   if (_plugin_stats_timestamps != nullptr) {
-    _plugin_stats_timestamps->processTimeSet();
+    _plugin_stats_timestamps->processTimeSet(time_offset);
+
+    // Also update timestamps of peaks
+    for (taskVarIndex_t taskVarIndex = 0; taskVarIndex < VARS_PER_TASK; ++taskVarIndex) {
+      PluginStats* stats = getPluginStats(taskVarIndex);
+      if (stats != nullptr) {
+        stats->processTimeSet(time_offset);
+      }
+    }
   }
 }
 

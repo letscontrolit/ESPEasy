@@ -42,6 +42,16 @@ PluginStats::~PluginStats()
   _plugin_stats_timestamps = nullptr;
 }
 
+void PluginStats::processTimeSet(const double& time_offset)
+{
+  if (_maxValueTimestamp != 0 && _maxValueTimestamp < 1000000000) {
+    _maxValueTimestamp += time_offset;
+  }
+  if (_minValueTimestamp != 0 && _minValueTimestamp < 1000000000) {
+    _minValueTimestamp += time_offset;
+  }
+}
+
 bool PluginStats::push(float value)
 {
   if (_samples == nullptr) { return false; }

@@ -17,23 +17,17 @@ void PluginStats_timestamp::clear()
   _timestamps.clear();
 }
 
-void PluginStats_timestamp::processTimeSet()
+void PluginStats_timestamp::processTimeSet(const double& time_offset)
 {
   const size_t nrSamples = _timestamps.size();
 
-  const uint32_t unixTime   = node_time.getUnixTime();
-  const uint32_t uptime_sec = (millis() / 1000);
-
-  if (unixTime < uptime_sec) {
-    return;
-  }
-  const uint32_t timeOffset = unixTime - uptime_sec;
+  const uint32_t unixTime_20200101 = 1577836800;
+  // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
 
   for (PluginStatsTimestamps_t::index_t i = 0; i < nrSamples; ++i) {
-    if (_timestamps[i] > uptime_sec) {
-      return;
+    if (_timestamps[i] < unixTime_20200101) {
+      _timestamps.set(i, _timestamps[i] + time_offset);
     }
-    _timestamps[i] += timeOffset;
   }
 }
 

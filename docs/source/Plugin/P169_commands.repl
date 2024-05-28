@@ -13,6 +13,14 @@
     Perform calibration of all oscillators in the sensor.
     "
     "
+    ``as3935,setgain,<value>``
+    ","
+    Set the AFE gain to given value.
+    Input can either be the internal sensor register value of ``10`` ... ``18`` or a floating point value signifying the gain factor.
+    This latter one will then be matched to the closest matching internal register value. 
+    The floating point factor values range from ``0.30x`` ... ``3.34x`` .
+    "
+    "
     ``as3935,setnf,<value>``
     ","
     Set the Noise Floor threshold to given value.

@@ -646,7 +646,9 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     {
       uint8_t curGain = _sensor.readAFE();
 
-      if (curGain < AS3935MI::AS3935_INDOORS) {
+//      if (curGain < AS3935MI::AS3935_INDOORS) {
+      if (curGain < AS3935MI::AS3935_OUTDOORS) {
+
         ++curGain;
 
         // Since we change the gain, reset the other values to default
@@ -779,8 +781,8 @@ void P169_data_struct::sendChangeEvent(struct EventStruct *event)
     const   uint8_t watchdog   = _sensor.readWatchdogThreshold();
     const   uint8_t srej       = _sensor.readSpikeRejection();
 
-    if ((_lastEvent_noiseFloor != noiseFloor) ||
-        ((_lastEvent_watchdog != watchdog) && ((_lastEvent_watchdog > 1) || (watchdog > 1))) ||
+    if (((_lastEvent_noiseFloor != noiseFloor)  && ((_lastEvent_noiseFloor > 1) || (noiseFloor > 1))) ||
+        ((_lastEvent_watchdog != watchdog) /* && ((_lastEvent_watchdog > 1) || (watchdog > 1)) */ ) ||
         (_lastEvent_srej != srej) ||
         (_lastEvent_gain != _afeGainRegval)) {
       // Some value was updated, send event

@@ -36,7 +36,7 @@ struct PluginTaskData_base {
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Update any logged timestamp with this newly set system time.
-  void   processTimeSet();
+  void   processTimeSet(const double& time_offset);
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values

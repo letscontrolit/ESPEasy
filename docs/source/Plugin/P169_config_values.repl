@@ -17,4 +17,9 @@
     ","
     Returns the current set Spike Rejection threshold of the sensor.
     "
+    "
+    ``[<taskname>#gain]``
+    ","
+    Returns the current active AFE gain factor of the sensor. (``0.30x`` ... ``3.34x``)
+    "
 

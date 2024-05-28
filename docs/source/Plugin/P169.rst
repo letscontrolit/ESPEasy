@@ -189,6 +189,16 @@ drawback of a decrease in detection efficiency.
 When an "disturber detected" event is triggered, ESPEasy will try to increase either the Spike Rejection setting or Watchdog.
 
 
+AFE gain and Energy level
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The AS3935 sensor does have an amplifier with an adjustable gain factor which amplifies the incoming signal.
+This amplified signal is then used to estimate the "Energy" value.
+
+Tests have shown the AS3935 sensor does use a lookup table to estimate the distance based on this energy level.
+
+
+
 Dynamic Adjustment
 ^^^^^^^^^^^^^^^^^^
 

@@ -26,6 +26,8 @@ public:
 
   ~PluginStats();
 
+  void processTimeSet(const double& time_offset);
+
   void setPluginStats_timestamp(PluginStats_timestamp *plugin_stats_timestamps)
   {
     _plugin_stats_timestamps = plugin_stats_timestamps;

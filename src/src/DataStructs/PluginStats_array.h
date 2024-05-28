@@ -27,7 +27,7 @@ public:
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Update any logged timestamp with this newly set system time.
-  void   processTimeSet();
+  void   processTimeSet(const double& time_offset);
 
   bool   hasStats() const;
   bool   hasPeaks() const;
