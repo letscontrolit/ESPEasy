@@ -174,7 +174,7 @@ void handleFileUploadBase(bool toSDcard) {
         # if FEATURE_TARSTREAM_SUPPORT
 
         if ((upload.filename.length() > 3) && upload.filename.substring(upload.filename.length() - 4).equalsIgnoreCase(F(".tar"))) {
-          tarStream = new TarStream(upload.filename, destination);
+          tarStream = new (std::nothrow) TarStream(upload.filename, destination);
           #  ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

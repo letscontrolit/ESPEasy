@@ -69,7 +69,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
-      std::unique_ptr<C010_queue_element> element(new C010_queue_element(event, valueCount));
+      std::unique_ptr<C010_queue_element> element(new (std::nothrow) C010_queue_element(event, valueCount));
 
 
       {

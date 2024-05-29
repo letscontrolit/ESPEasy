@@ -636,11 +636,11 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
       #define PLUGIN_DESCR  "IR"
     #endif
-    #ifndef USES_P016    
+    #ifndef USES_P016
       #define USES_P016      // IR
     #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #ifndef USES_P035    
+    #ifndef USES_P035
       #define USES_P035      // IRTX
     #endif
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
@@ -650,11 +650,11 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
-    #ifndef USES_P016    
+    #ifndef USES_P016
       #define USES_P016      // IR
     #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #ifndef USES_P035    
+    #ifndef USES_P035
       #define USES_P035      // IRTX
     #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
@@ -673,7 +673,7 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
-    #ifndef USES_P035    
+    #ifndef USES_P035
       #define USES_P035      // IRTX
     #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
@@ -836,7 +836,7 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_MAGICHOME_IR
     #define PLUGIN_SET_ONLY_LEDSTRIP
-    #ifndef USES_P016    
+    #ifndef USES_P016
       #define USES_P016      // IR
     #endif
 
@@ -1588,7 +1588,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_COLLECTION_E
     #define USES_P119   // ITG3205 Gyro
     #define USES_P120   // ADXL345 I2C
-    #define USES_P121   // HMC5883L 
+    #define USES_P121   // HMC5883L
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
@@ -1791,6 +1791,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+   #if !defined(USES_P123) && defined(ESP32)
+     #define USES_P123   // FT6206
+   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
   #endif
@@ -1948,6 +1951,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
+  #ifndef USES_P167
+    #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
   #endif
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
@@ -2252,13 +2258,13 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C Acceleration / Gravity
   #endif
   #ifndef USES_P121
-    #define USES_P121   // HMC5883L 
+    #define USES_P121   // HMC5883L
   #endif
   #ifndef USES_P122
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-//    #define USES_P123   // FT62x6
+    #define USES_P123   // FT6206
   #endif
   #ifndef USES_P124
     #define USES_P124   // I2C Multi relay
@@ -2362,6 +2368,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
+  #ifndef USES_P167
+    #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+  #endif
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
@@ -2426,9 +2435,15 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) // Add any plugin that uses AdafruitGFX_Helper
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
+
+#if defined(USES_P099) || defined(USES_P123)
+  #ifndef PLUGIN_USES_TOUCHHANDLER
+    #define PLUGIN_USES_TOUCHHANDLER
   #endif
 #endif
 
@@ -2902,11 +2917,11 @@ To create/register a plugin, you have to :
 // This should be done at the end of this file.
 // Keep them alfabetically sorted so it is easier to add new ones
 
-#ifndef FEATURE_BLYNK                         
+#ifndef FEATURE_BLYNK
 #define FEATURE_BLYNK                         0
 #endif
 
-#ifndef FEATURE_CHART_JS                      
+#ifndef FEATURE_CHART_JS
 #define FEATURE_CHART_JS                      0
 #endif
 
@@ -2915,7 +2930,7 @@ To create/register a plugin, you have to :
 #endif
 
 
-#ifndef FEATURE_CUSTOM_PROVISIONING           
+#ifndef FEATURE_CUSTOM_PROVISIONING
 #define FEATURE_CUSTOM_PROVISIONING           0
 #endif
 
@@ -2927,27 +2942,27 @@ To create/register a plugin, you have to :
 #define FEATURE_DNS_SERVER                    0
 #endif
 
-#ifndef FEATURE_DOMOTICZ                      
+#ifndef FEATURE_DOMOTICZ
 #define FEATURE_DOMOTICZ                      0
 #endif
 
-#ifndef FEATURE_DOWNLOAD                      
+#ifndef FEATURE_DOWNLOAD
 #define FEATURE_DOWNLOAD                      0
 #endif
 
-#ifndef FEATURE_ESPEASY_P2P                      
+#ifndef FEATURE_ESPEASY_P2P
 #define FEATURE_ESPEASY_P2P                   0
 #endif
 
-#ifndef FEATURE_ETHERNET                      
+#ifndef FEATURE_ETHERNET
 #define FEATURE_ETHERNET                      0
 #endif
 
-#ifndef FEATURE_EXT_RTC                       
+#ifndef FEATURE_EXT_RTC
 #define FEATURE_EXT_RTC                       0
 #endif
 
-#ifndef FEATURE_FHEM                          
+#ifndef FEATURE_FHEM
 #define FEATURE_FHEM                          0
 #endif
 
@@ -2963,11 +2978,11 @@ To create/register a plugin, you have to :
 #define FEATURE_HOMEASSISTANT_OPENHAB         0
 #endif
 
-#ifndef FEATURE_I2CMULTIPLEXER                
+#ifndef FEATURE_I2CMULTIPLEXER
 #define FEATURE_I2CMULTIPLEXER                0
 #endif
 
-#ifndef FEATURE_I2C_DEVICE_SCAN               
+#ifndef FEATURE_I2C_DEVICE_SCAN
   #ifdef ESP32
     #define FEATURE_I2C_DEVICE_SCAN           1
   #else
@@ -2975,39 +2990,39 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifndef FEATURE_MDNS                          
+#ifndef FEATURE_MDNS
 #define FEATURE_MDNS                          0
 #endif
 
-#ifndef FEATURE_MODBUS                        
+#ifndef FEATURE_MODBUS
 #define FEATURE_MODBUS                        0
 #endif
 
-#ifndef FEATURE_MQTT                        
+#ifndef FEATURE_MQTT
 #define FEATURE_MQTT                          0
 #endif
 
-#ifndef FEATURE_NON_STANDARD_24_TASKS         
+#ifndef FEATURE_NON_STANDARD_24_TASKS
 #define FEATURE_NON_STANDARD_24_TASKS         0
 #endif
 
-#ifndef FEATURE_NOTIFIER                      
+#ifndef FEATURE_NOTIFIER
 #define FEATURE_NOTIFIER                      0
 #endif
 
-#ifndef FEATURE_PACKED_RAW_DATA               
+#ifndef FEATURE_PACKED_RAW_DATA
 #define FEATURE_PACKED_RAW_DATA               0
 #endif
 
-#ifndef FEATURE_PLUGIN_STATS                  
+#ifndef FEATURE_PLUGIN_STATS
 #define FEATURE_PLUGIN_STATS                  0
 #endif
 
-#ifndef FEATURE_REPORTING                     
+#ifndef FEATURE_REPORTING
 #define FEATURE_REPORTING                     0
 #endif
 
-#ifndef FEATURE_RTTTL                         
+#ifndef FEATURE_RTTTL
 #define FEATURE_RTTTL                         0
 #endif
 #if defined(FEATURE_RTTTL) && !FEATURE_RTTTL && defined(KEEP_RTTTL)
@@ -3027,11 +3042,11 @@ To create/register a plugin, you have to :
   #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
 #endif
 
-#ifndef FEATURE_SD                         
+#ifndef FEATURE_SD
 #define FEATURE_SD                            0
 #endif
 
-#ifndef FEATURE_SERVO                         
+#ifndef FEATURE_SERVO
 #define FEATURE_SERVO                         0
 #endif
 
@@ -3053,19 +3068,19 @@ To create/register a plugin, you have to :
 #endif
 #endif
 
-#ifndef FEATURE_SSDP                          
+#ifndef FEATURE_SSDP
 #define FEATURE_SSDP                          0
 #endif
 
-#ifndef FEATURE_TIMING_STATS                  
+#ifndef FEATURE_TIMING_STATS
 #define FEATURE_TIMING_STATS                  0
 #endif
 
-#ifndef FEATURE_TOOLTIPS                      
+#ifndef FEATURE_TOOLTIPS
 #define FEATURE_TOOLTIPS                      0
 #endif
 
-#ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 
+#ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
 #endif
 
@@ -3399,6 +3414,22 @@ To create/register a plugin, you have to :
 #endif
 
 
+#if defined(USES_P004) || defined(USES_P080) || defined(USES_P100)
+  #define FEATURE_DALLAS_HELPER   1
+#endif
+#ifndef FEATURE_DALLAS_HELPER
+  #define FEATURE_DALLAS_HELPER   0 // Only when Dallas/Maxim 1-wire plugins are included
+#endif
+#if FEATURE_DALLAS_HELPER && !defined(FEATURE_COMMAND_OWSCAN)
+  #ifdef MINIMAL_OTA
+    #define FEATURE_COMMAND_OWSCAN  0 // Exclude owscan command for minimal-OTA builds
+  #else // ifdef MINIMAL_OTA
+    #define FEATURE_COMMAND_OWSCAN  1
+  #endif // ifdef MINIMAL_OTA
+#endif
+#ifndef FEATURE_COMMAND_OWSCAN
+  #define FEATURE_COMMAND_OWSCAN  0 // Remaining cases: disable command
+#endif // ifndef FEATURE_COMMAND_OWSCAN
 
 // TODO TD-er: Test feature, must remove
 /*
