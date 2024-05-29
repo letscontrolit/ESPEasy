@@ -495,7 +495,11 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         } else if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
           task->ser2netClient.print(string.substring(18));
+#if ESP_IDF_VERSION_MAJOR>=5
+          task->ser2netClient.clear();
+#else
           task->ser2netClient.flush();
+#endif
           success = true;
         }
         break;
