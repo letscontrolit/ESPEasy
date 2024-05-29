@@ -114,7 +114,7 @@
 .. |C011_name| replace:: :cyan:`Generic HTTP Advanced`
 .. |C011_type| replace:: :cyan:`Controller`
 .. |C011_typename| replace:: :cyan:`Controller - Generic HTTP Advanced`
-.. |C011_status| replace:: :yellow:`COLLECTION`
+.. |C011_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE`
 .. |C011_github| replace:: C011.cpp
 .. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.cpp
 .. |C011_usedby| replace:: `.`

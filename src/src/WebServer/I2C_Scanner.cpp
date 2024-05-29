@@ -230,7 +230,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Adafruit Rotary enc, Adafruit Soil moisture");
       break;
     case 0x38:
-      result += F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc,Adafruit Soil moisture,DHT20,AM2301B");
+      result += F("LCD,PCF8574A,AHT10/20/21,VEML6070,Adafruit Rotary enc,FT62x6,Adafruit Soil moisture,DHT20,AM2301B");
       break;
     case 0x39:
       result += F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc,Adafruit Soil moisture");
@@ -333,7 +333,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("MPU6050,DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
-      result += F("ITG3205,CDM7160");
+      result += F("ITG3205,CDM7160,SEN5x");
       break;
     case 0x70:
       result += F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
