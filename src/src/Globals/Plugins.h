@@ -85,6 +85,11 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 #if FEATURE_I2C_DEVICE_SCAN
 bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
 #endif // if FEATURE_I2C_DEVICE_SCAN
+bool          getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex,
+                                                      uint16_t  & x,
+                                                      uint16_t  & y,
+                                                      uint16_t  & r,
+                                                      uint16_t  & colorDepth);
 #if FEATURE_I2C_GET_ADDRESS
 uint8_t getTaskI2CAddress(taskIndex_t taskIndex);
 #endif // if FEATURE_I2C_GET_ADDRESS

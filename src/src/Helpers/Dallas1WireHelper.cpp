@@ -1,5 +1,7 @@
 #include "../Helpers/Dallas1WireHelper.h"
 
+#if FEATURE_DALLAS_HELPER
+
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -54,7 +56,7 @@ const __FlashStringHelper* Dallas_getModel(uint8_t family, const bool hasFixedRe
     case 0x1D: return F("DS2423");  // 4k RAM with counter
     case 0x01: return F("DS1990A"); // Serial Number iButton
   }
-  return F("");
+  return F("Unknown");
 }
 
 String Dallas_format_address(const uint8_t addr[], const bool hasFixedResolution) {
@@ -415,7 +417,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
 }
 
 #ifdef USES_P080
-bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, int8_t lastState)
 {
   // maybe this is needed to trigger the reading
   //    uint8_t ScratchPad[12];
@@ -461,7 +463,9 @@ bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_p
       found = true;
     }
   }
-  addLogMove(LOG_LEVEL_INFO, log);
+  if ((-1 == lastState) || (lastState != found)) {
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   return found;
 }
 
@@ -1266,3 +1270,5 @@ bool Dallas_SensorData::check_sensor(int8_t gpio_rx, int8_t gpio_tx, int8_t res)
   parasitePowered = Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx);
   return true;
 }
+
+#endif // if FEATURE_DALLAS_HELPER
