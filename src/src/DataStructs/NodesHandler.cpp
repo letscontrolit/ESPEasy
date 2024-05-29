@@ -10,6 +10,8 @@
 #include "../Globals/ESPEasy_now_state.h"
 #endif
 
+#include "../Globals/EventQueue.h"
+
 #include "../DataTypes/NodeTypeID.h"
 
 #if FEATURE_MQTT
@@ -28,6 +30,8 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
@@ -96,6 +100,20 @@ bool NodesHandler::addNode(const NodeStruct& node)
     uint8_t unit;
     if (_ntp_candidate.getUnixTime(unixTime, unit)) {
       node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
+    }
+  }
+
+  if (isNewNode) {
+    if (Settings.UseRules && node.unit != 0)
+    {
+      // Generate event announcing new p2p node
+      // TODO TD-er: Maybe also add other info like ESP type, IP-address, etc?
+      eventQueue.addMove(strformat(
+        F("p2pNode#Connected=%d,'%s','%s'"), 
+        node.unit,
+        node.getNodeName().c_str(),
+        formatSystemBuildNr(node.build).c_str()
+      ));
     }
   }
 
@@ -539,6 +557,11 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
       }
       #endif
       if (mustErase) {
+        if (Settings.UseRules && it->second.unit != 0)
+        {
+          // Add event about removing node from nodeslist.
+          eventQueue.addMove(strformat(F("p2pNode#Disconnected=%d"), it->second.unit));
+        }
         {
           _nodes_mutex.lock();
           it          = _nodes.erase(it);

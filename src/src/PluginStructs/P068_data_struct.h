@@ -16,9 +16,6 @@ public:
   virtual ~P068_SHT3X() = default;
 
   void        readFromSensor(void);
-  static bool CRC8(uint8_t MSB,
-                   uint8_t LSB,
-                   uint8_t CRC);
 
   float tmp    = 0.0f;
   float hum    = 0.0f;

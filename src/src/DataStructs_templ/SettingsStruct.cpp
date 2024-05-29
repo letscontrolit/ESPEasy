@@ -374,6 +374,18 @@ void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) {
   bitWrite(VariousBits2, 2, value);
 }
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+
+#if FEATURE_TARSTREAM_SUPPORT
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar() const { 
+  return bitRead(VariousBits2, 3); // Using bit 4 now...
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar(bool value) { 
+  bitWrite(VariousBits2, 3, value); // Using bit 4 now...
+}
+#endif // if FEATURE_TARSTREAM_SUPPORT
 */
 
 
@@ -450,7 +462,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (getVariousBits1() > (1u << 31)) { setVariousBits1(0); } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -612,13 +624,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_Reset                        = -1;
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
-  VariousBits1                     = 0;
+  setVariousBits1(0);
+  setVariousBits2(0);
 
   console_serial_port              = DEFAULT_CONSOLE_PORT; 
   console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
   console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
   console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
-
 
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
@@ -882,24 +894,24 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
     switch (SPI_selection) {
       case SPI_Options_e::Vspi_Fspi:
       {
-        #if CONFIG_IDF_TARGET_ESP32
-        return static_cast<spi_host_device_t>(VSPI);
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
         #else
-        return static_cast<spi_host_device_t>(FSPI);
+        return static_cast<spi_host_device_t>(VSPI_HOST);
         #endif
       }
 #ifdef ESP32_CLASSIC
       case SPI_Options_e::Hspi:
       {
-        return static_cast<spi_host_device_t>(HSPI);
+        return static_cast<spi_host_device_t>(HSPI_HOST);
       }
 #endif
       case SPI_Options_e::UserDefined:
       {
-        #if CONFIG_IDF_TARGET_ESP32
-        return static_cast<spi_host_device_t>(VSPI);
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
         #else
-        return static_cast<spi_host_device_t>(FSPI);
+        return static_cast<spi_host_device_t>(VSPI_HOST);
         #endif
       }
       case SPI_Options_e::None:
@@ -908,10 +920,10 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
 
   }
   #if ESP_IDF_VERSION_MAJOR < 5
-  #if CONFIG_IDF_TARGET_ESP32
-  return static_cast<spi_host_device_t>(VSPI);
+  #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  return static_cast<spi_host_device_t>(FSPI_HOST);
   #else
-  return static_cast<spi_host_device_t>(FSPI);
+  return static_cast<spi_host_device_t>(VSPI_HOST);
   #endif
   #else
   return spi_host_device_t::SPI_HOST_MAX;

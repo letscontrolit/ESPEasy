@@ -15,7 +15,9 @@
 const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *event, const char* Line)
 {
 	String message;
+	String subject;
 	GetArgv(Line, message, 3);
+	GetArgv(Line, subject, 4);
 
 	if (event->Par1 > 0) {
 		int index = event->Par1 - 1;
@@ -27,6 +29,7 @@ const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *eve
 				// TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
 				TempEvent.NotificationIndex = index;
 				TempEvent.String1 = message;
+				TempEvent.String2 = subject;
 				Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, std::move(TempEvent));
 			}
 		}

@@ -169,7 +169,7 @@ void P049_data_struct::setABCmode(int abcDisableSetting) {
 uint8_t P049_data_struct::calculateChecksum() const {
   uint8_t checksum = 0;
 
-  for (uint8_t i = 1; i < 8; i++) {
+  for (uint8_t i = 1; i < 8; ++i) {
     checksum += mhzResp[i];
   }
   checksum = 0xFF - checksum;
@@ -347,9 +347,7 @@ bool Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int& newVal
   }
 
   if (filterApplied) {
-    log += F("Raw PPM: ");
-    log += newVal;
-    log += F(" Filtered ");
+    log += strformat(F("Raw PPM: %d Filtered "), newVal);
   }
   newVal = static_cast<unsigned int>(prevVal + difference);
   return true;

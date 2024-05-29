@@ -12,9 +12,13 @@ struct PluginStats_Config_t {
     Right
   };
 
-  PluginStats_Config_t() : stored(0) {}
+  PluginStats_Config_t() {
+    setStored(0);
+  }
 
-  PluginStats_Config_t(uint8_t stored_value) : stored(stored_value) {}
+  PluginStats_Config_t(uint8_t stored_value) {
+    setStored(stored_value);
+  }
 
   PluginStats_Config_t& operator=(const PluginStats_Config_t& other);
 
@@ -37,7 +41,7 @@ struct PluginStats_Config_t {
   }
 
   uint8_t getStoredBits() const {
-    return stored & ~0x02; // Mask unused_01
+    return getStored() & ~0x02; // Mask unused_01
   }
 
   bool isEnabled() const {
@@ -58,18 +62,27 @@ struct PluginStats_Config_t {
 
 private:
 
-  union {
-    struct {
-      uint8_t enabled           : 1; // Bit 00
-      uint8_t unused_01         : 1; // Bit 01  Used by isDefaultTaskVarName in ExtraTaskSettingsStruct
-      uint8_t hidden            : 1; // Bit 02  Hidden/Displayed state on initial showing of the chart
-      uint8_t chartAxisIndex    : 2; // Bit 03 ... 04
-      uint8_t chartAxisPosition : 1; // Bit 05
-      uint8_t unused_06         : 1; // Bit 06
-      uint8_t unused_07         : 1; // Bit 07
-    }       bits;
-    uint8_t stored{};
-  };
+  uint8_t getStored() const {
+    uint8_t res{};
+    memcpy(&res, &bits, sizeof(uint8_t));
+    return res;
+  }
+
+  // Needs to be inline in the header file as it is used in the constructor
+  void setStored(uint8_t value) {
+    memcpy(&bits, &value, sizeof(uint8_t));
+  }
+
+  struct {
+    uint8_t enabled           : 1; // Bit 00
+    uint8_t unused_01         : 1; // Bit 01  Used by isDefaultTaskVarName in ExtraTaskSettingsStruct
+    uint8_t hidden            : 1; // Bit 02  Hidden/Displayed state on initial showing of the chart
+    uint8_t chartAxisIndex    : 2; // Bit 03 ... 04
+    uint8_t chartAxisPosition : 1; // Bit 05
+    uint8_t unused_06         : 1; // Bit 06
+    uint8_t unused_07         : 1; // Bit 07
+  }       bits;
+  
 };
 
 #endif // if FEATURE_PLUGIN_STATS

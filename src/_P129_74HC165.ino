@@ -47,8 +47,9 @@ String P129_ul2stringFixed(uint32_t value, uint8_t base) {
   const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
 
   String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
+
   if (base == HEX) {
-    valStr.toUpperCase(); // uppercase hex for readability
+    valStr.toUpperCase();                             // uppercase hex for readability
   }
   return valStr;
 }
@@ -158,8 +159,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         String chipCount[P129_MAX_CHIP_COUNT];
         int    chipOption[P129_MAX_CHIP_COUNT];
 
-        for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; i++) {
-          chipCount[i]  = String(i + 1);
+        for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) {
+          chipCount[i]  = i + 1;
           chipOption[i] = i + 1;
         }
         addFormSelector(F("Number of chips (Q7 &rarr; DS)"),
@@ -215,18 +216,14 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         uint64_t bits = 0;
         uint8_t  off  = 0;
 
-        for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
+        for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; ++i) {
           if (i % 4 == 0) {
             bits = PCONFIG_ULONG(i / 4) & 0x0ffffffff;
             off  = 0;
             # ifndef P129_DEBUG_LOG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("74HC165 Reading from: ");
-              log += (i / 4);
-              log += F(", bits: ");
-              log += P129_ul2stringFixed(bits, BIN);
-              addLog(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, P129_ul2stringFixed(bits, BIN).c_str()));
             }
             # endif // ifndef P129_DEBUG_LOG
           }
@@ -235,13 +232,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           addHtmlInt(i + 1);
           html_TD();
 
-          for (uint8_t j = 0; j < 8; j++) {
+          for (uint8_t j = 0; j < 8; ++j) {
             html_TD();
             # if FEATURE_TOOLTIPS
             const String toolTip = strformat(
-              F("Chip %d port D %d, pin %d"), 
-              (i + 1), 
-              (7 - j), 
+              F("Chip %d port D %d, pin %d"),
+              (i + 1),
+              (7 - j),
               i * 8 + (8 - j));
             # endif // if FEATURE_TOOLTIPS
             addCheckBox(getPluginCustomArgName((i * 8 + (7 - j)) + 1), bitRead(bits, off * 8 + (7 - j)) == 1
@@ -282,13 +279,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       uint64_t bits = 0;
       uint8_t  off  = 0;
 
-      for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
+      for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; ++i) {
         if (i % 4 == 0) {
           bits = 0;
           off  = 0;
         }
 
-        for (uint8_t j = 0; j < 8; j++) {
+        for (uint8_t j = 0; j < 8; ++j) {
           bitWriteULL(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V629
         }
         PCONFIG_ULONG(i / 4) = bits;
@@ -396,13 +393,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       {
         String state, label;
         state.reserve(40);
-        String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
+        const String   abcd     = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
         const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
         const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
         uint8_t dotInsert;
         uint8_t dotOffset;
 
-        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+        for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
@@ -414,9 +411,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
             dotInsert = 4;
             dotOffset = 3;
           }
-          label += F(" State_");
-          label += abcd.substring(varNr, varNr + 1);
-          label += ' ';
+          label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
           label += min(255, P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
           label += '_';
@@ -425,7 +420,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
             state += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
 
-            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
               state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);

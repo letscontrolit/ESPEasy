@@ -1,0 +1,32 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 30
+
+   "
+   ``<taskName>#Address=<state>[,<iButtonAddress_high>,<iButtonAddress_low>]``
+   
+   ``<state>``: 0 or 1, depending on wether the iButton is on the receiver (1) or not (0).
+
+   ``<iButtonAddress_high>``: The high 4 bytes of the (64 bit) iButton address in hexadecimal presentation, with a ``0x`` prefix. The address parts are only included if the iButton is detected by the receiver.
+   
+   ``<iButtonAddress_low>``: The low 4 bytes of the iButton address in hexadecimal presentation.
+
+   ","
+
+   This event is generated when the **Event with iButton address** setting is *enabled*, and no **Device Address** is selected (*None*).
+
+   As the iButton address is in fact a 64 bit value (though only 57 bits are used), this value is too large to be stored in a regular variable in the rules, so they are split into 2 parts, as often sets of iButtons are produced in the same batch, where the higher bits are the same, and only the lower bits vary.
+
+   These numbers can be processed, f.e. in a lookup table, similar to the example `Validate a RFID tag against a sorted list <../Rules/Rules.html#validate-a-rfid-tag-against-a-sorted-list>`_ (though somewhat different...)
+
+   Simply logging the data could look like this:
+
+   .. code-block:: none
+
+      On iButton#Address Do
+        Let,1,%eventvalue2%
+        Let,2,%eventvalue3%
+        LogEntry,'iButton %eventvalue2%_%eventvalue3% = %eventvalue1% (%v1% / %v2%)'
+      Endon
+
+   "

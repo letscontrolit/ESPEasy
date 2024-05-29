@@ -28,22 +28,25 @@ void TaskValues_Data_t::copyValue(const TaskValues_Data_t& other, uint8_t varNr,
   if (sensorType != Sensor_VType::SENSOR_TYPE_STRING) {
     if (is32bitOutputDataType(sensorType)) {
       if (varNr < VARS_PER_TASK) {
-        uint32s[varNr] = other.uint32s[varNr];
+        constexpr unsigned int size_32bit = sizeof(float);
+        memcpy(binary + (varNr * size_32bit), other.binary + (varNr * size_32bit), size_32bit);
       }
-#if FEATURE_EXTENDED_TASK_VALUE_TYPES
-    } else {
-      if ((varNr < (VARS_PER_TASK / 2))) {
-        uint64s[varNr] = other.uint64s[varNr];
-      }
-#endif
     }
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    else {
+      if ((varNr < (VARS_PER_TASK / 2))) {
+        constexpr unsigned int size_64bit = sizeof(uint64_t);
+        memcpy(binary + (varNr * size_64bit), other.binary + (varNr * size_64bit), size_64bit);
+      }
+    }
+#endif
   }
 }
 
 unsigned long TaskValues_Data_t::getSensorTypeLong() const
 {
-  const uint16_t low   = floats[0];
-  const uint16_t high  = floats[1];
+  const uint16_t low   = getFloat(0);
+  const uint16_t high  = getFloat(1);
   unsigned long  value = high;
 
   value <<= 16;
@@ -53,8 +56,8 @@ unsigned long TaskValues_Data_t::getSensorTypeLong() const
 
 void TaskValues_Data_t::setSensorTypeLong(unsigned long value)
 {
-  floats[0] = value & 0xFFFF;
-  floats[1] = (value >> 16) & 0xFFFF;
+  setFloat(0, value & 0xFFFF);
+  setFloat(1, (value >> 16) & 0xFFFF);
 }
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
@@ -62,7 +65,10 @@ void TaskValues_Data_t::setSensorTypeLong(unsigned long value)
 int32_t TaskValues_Data_t::getInt32(uint8_t varNr) const
 {
   if (varNr < VARS_PER_TASK) {
-    return int32s[varNr];
+    int32_t res{};
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(&res, binary + (varNr * size_32bit), size_32bit);
+    return res;
   }
   return 0;
 }
@@ -70,7 +76,8 @@ int32_t TaskValues_Data_t::getInt32(uint8_t varNr) const
 void TaskValues_Data_t::setInt32(uint8_t varNr, int32_t value)
 {
   if (varNr < VARS_PER_TASK) {
-    int32s[varNr] = value;
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(binary + (varNr * size_32bit), &value, size_32bit);
   }
 }
 #endif
@@ -78,7 +85,10 @@ void TaskValues_Data_t::setInt32(uint8_t varNr, int32_t value)
 uint32_t TaskValues_Data_t::getUint32(uint8_t varNr) const
 {
   if (varNr < VARS_PER_TASK) {
-    return uint32s[varNr];
+    uint32_t res{};
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(&res, binary + (varNr * size_32bit), size_32bit);
+    return res;
   }
   return 0u;
 }
@@ -86,7 +96,8 @@ uint32_t TaskValues_Data_t::getUint32(uint8_t varNr) const
 void TaskValues_Data_t::setUint32(uint8_t varNr, uint32_t value)
 {
   if (varNr < VARS_PER_TASK) {
-    uint32s[varNr] = value;
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(binary + (varNr * size_32bit), &value, size_32bit);
   }
 }
 
@@ -95,7 +106,10 @@ void TaskValues_Data_t::setUint32(uint8_t varNr, uint32_t value)
 int64_t TaskValues_Data_t::getInt64(uint8_t varNr) const
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    return int64s[varNr];
+    int64_t res{};
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(&res, binary + (varNr * size_64bit), size_64bit);
+    return res;
   }
   return 0;
 }
@@ -103,14 +117,18 @@ int64_t TaskValues_Data_t::getInt64(uint8_t varNr) const
 void TaskValues_Data_t::setInt64(uint8_t varNr, int64_t value)
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    int64s[varNr] = value;
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(binary + (varNr * size_64bit), &value, size_64bit);
   }
 }
 
 uint64_t TaskValues_Data_t::getUint64(uint8_t varNr) const
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    return uint64s[varNr];
+    uint64_t res{};
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(&res, binary + (varNr * size_64bit), size_64bit);
+    return res;
   }
   return 0u;
 }
@@ -118,7 +136,8 @@ uint64_t TaskValues_Data_t::getUint64(uint8_t varNr) const
 void TaskValues_Data_t::setUint64(uint8_t varNr, uint64_t value)
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    uint64s[varNr] = value;
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(binary + (varNr * size_64bit), &value, size_64bit);
   }
 }
 #endif
@@ -126,7 +145,10 @@ void TaskValues_Data_t::setUint64(uint8_t varNr, uint64_t value)
 float TaskValues_Data_t::getFloat(uint8_t varNr) const
 {
   if (varNr < VARS_PER_TASK) {
-    return floats[varNr];
+    float res{};
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(&res, binary + (varNr * size_32bit), size_32bit);
+    return res;
   }
   return 0.0f;
 }
@@ -134,7 +156,8 @@ float TaskValues_Data_t::getFloat(uint8_t varNr) const
 void TaskValues_Data_t::setFloat(uint8_t varNr, float  value)
 {
   if (varNr < VARS_PER_TASK) {
-    floats[varNr] = value;
+    constexpr unsigned int size_32bit = sizeof(float);
+    memcpy(binary + (varNr * size_32bit), &value, size_32bit);
   }
 }
 
@@ -143,7 +166,10 @@ void TaskValues_Data_t::setFloat(uint8_t varNr, float  value)
 double TaskValues_Data_t::getDouble(uint8_t varNr) const
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    return doubles[varNr];
+    double res{};
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(&res, binary + (varNr * size_64bit), size_64bit);
+    return res;
   }
   return 0.0;
 }
@@ -151,7 +177,8 @@ double TaskValues_Data_t::getDouble(uint8_t varNr) const
 void TaskValues_Data_t::setDouble(uint8_t varNr, double  value)
 {
   if ((varNr < (VARS_PER_TASK / 2))) {
-    doubles[varNr] = value;
+    constexpr unsigned int size_64bit = sizeof(uint64_t);
+    memcpy(binary + (varNr * size_64bit), &value, size_64bit);
   }
 }
 #endif

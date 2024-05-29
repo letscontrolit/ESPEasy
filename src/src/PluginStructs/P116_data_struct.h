@@ -4,11 +4,30 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
-# include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
-# include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
-# include <Adafruit_ST7796S_kbv.h>          // include Adafruit ST7796 TFT library
+# include <Adafruit_GFX.h>         // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>      // include Adafruit ST77xx TFT library
+# include <Adafruit_ST7735.h>      // include Adafruit ST7735 TFT library
+# include <Adafruit_ST7789.h>      // include Adafruit ST7789 TFT library
+# include <Adafruit_ST7796S_kbv.h> // include Adafruit ST7796 TFT library
+
+# if defined(ST7789_EXTRA_INIT) && !ST7789_EXTRA_INIT
+#  define P116_EXTRA_ST7789 0      // This will get disabled for ESP8266 in Adafruit_ST7789.h
+# endif // if defined(ST7789_EXTRA_INIT) && !ST7789_EXTRA_INIT
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+#  define P116_EXTRA_ST7789 0
+# endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+# ifndef P116_EXTRA_ST7789
+#  define P116_EXTRA_ST7789 0 // Disabled by default (not verified on any hardware yet)
+# endif // ifndef P116_EXTRA_ST7789
+# if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
+#  define P116_EXTRA_ST7735 0 // This will get disabled for ESP8266 in Adafruit_ST7735.h
+# endif // if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+#  define P116_EXTRA_ST7735 0
+# endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7735)
+# ifndef P116_EXTRA_ST7735
+#  define P116_EXTRA_ST7735 1
+# endif // ifndef P116_EXTRA_ST7735
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
@@ -24,6 +43,7 @@
 # define P116_CONFIG_TYPE               PCONFIG(2)      // Type of device
 # define P116_CONFIG_BACKLIGHT_PIN      PCONFIG(3)      // Backlight pin
 # define P116_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)      // Backlight percentage
+# define P116_CONFIG_DEFAULT_FONT       PCONFIG(5)      // Default font
 # define P116_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
 # define P116_CONFIG_FLAGS             PCONFIG_ULONG(0) // All flags
@@ -74,6 +94,14 @@ enum class ST77xx_type_e : uint8_t {
   ST7789vw_135x240  = 6u,
   ST7796s_320x480   = 7u,
   ST7735s_80x160_M5 = 8u,
+  # if P116_EXTRA_ST7789
+  ST7789vw1_135x240 = 9u,
+  ST7789vw2_135x240 = 10u,
+  ST7789vw3_135x240 = 11u,
+  # endif // if P116_EXTRA_ST7789
+  # if P116_EXTRA_ST7735
+  ST7735s_135x240 = 12u,
+  # endif // if P116_EXTRA_ST7735
 };
 
 enum class P116_CommandTrigger : uint8_t {
@@ -103,8 +131,13 @@ public:
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true);
-  P116_data_struct()                                = delete;
+                   bool                textBackFill = true
+                   # if                ADAGFX_FONTS_INCLUDED
+                   ,
+                   const uint8_t       defaultFontId = 0
+                   # endif // if ADAGFX_FONTS_INCLUDED
+                   );
+  P116_data_struct() = delete;
   virtual ~P116_data_struct();
 
   bool plugin_init(struct EventStruct *event);
@@ -158,6 +191,9 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   bool                _textBackFill;
+  # if ADAGFX_FONTS_INCLUDED
+  uint8_t _defaultFontId;
+  # endif // if ADAGFX_FONTS_INCLUDED
 
   String _commandTriggerCmd;
 

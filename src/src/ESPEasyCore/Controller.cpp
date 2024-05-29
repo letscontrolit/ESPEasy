@@ -36,7 +36,7 @@ constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 // ********************************************************************************
 // Interface for Sending to Controllers
 // ********************************************************************************
-void sendData(struct EventStruct *event)
+void sendData(struct EventStruct *event, bool sendEvents)
 {
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
@@ -44,7 +44,7 @@ void sendData(struct EventStruct *event)
   #endif // ifndef BUILD_NO_RAM_TRACKER
 //  LoadTaskSettings(event->TaskIndex);
 
-  if (Settings.UseRules) {
+  if (Settings.UseRules && sendEvents) {
     createRuleEvents(event);
   }
 
@@ -535,7 +535,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -550,7 +550,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
     return false;
   }
 
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;

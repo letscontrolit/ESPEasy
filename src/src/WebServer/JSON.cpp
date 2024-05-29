@@ -210,6 +210,13 @@ void handle_json()
     #ifdef ESP32
         LabelType::ESP_CHIP_REVISION,
     #endif // ifdef ESP32
+        LabelType::FLASH_CHIP_ID,
+        LabelType::FLASH_CHIP_VENDOR,
+        LabelType::FLASH_CHIP_MODEL,
+        LabelType::FLASH_CHIP_REAL_SIZE,
+        LabelType::FLASH_CHIP_SPEED,
+        LabelType::FLASH_IDE_MODE,
+        LabelType::FS_SIZE,
 
         LabelType::SUNRISE,
         LabelType::SUNSET,
@@ -244,6 +251,7 @@ void handle_json()
 #if FEATURE_USE_IPV6
         LabelType::IP6_LOCAL,
         LabelType::IP6_GLOBAL,
+        LabelType::ENABLE_IPV6,
 #endif
         LabelType::IP_SUBNET,
         LabelType::GATEWAY,
@@ -281,6 +289,10 @@ void handle_json()
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
 
+        LabelType::WAIT_WIFI_CONNECT,
+        LabelType::HIDDEN_SSID_SLOW_CONNECT,
+        LabelType::CONNECT_HIDDEN_SSID,
+        LabelType::SDK_WIFI_AUTORECONNECT,
 
         LabelType::MAX_LABEL
       };

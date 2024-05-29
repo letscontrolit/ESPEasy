@@ -32,6 +32,8 @@ enum Error : uint8_t {
   ERROR_UNKNOWN_RPC       = 0x02,
   ERROR_UNABLE_TO_CONNECT = 0x03,
   ERROR_NOT_AUTHORIZED    = 0x04,
+  ERROR_INVALID_CHECKSUM  = 0x05,
+  ERROR_EMPTY_SSID        = 0x06,
   ERROR_UNKNOWN           = 0xFF,
 };
 

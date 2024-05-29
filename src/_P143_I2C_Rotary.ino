@@ -135,11 +135,8 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Encoder: ");
-      string += toString(static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE));
-      string += F(" (");
-      string += formatToHex(P143_I2C_ADDR);
-      string += ')';
+      string  = concat(F("Encoder: "), toString(static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE)));
+      string += strformat(F(" (%s)"), formatToHex(P143_I2C_ADDR).c_str());
       success = true;
       break;
     }
@@ -200,7 +197,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
         # endif // if P143_FEATURE_INCLUDE_M5STACK
         {
           {
-            addRowLabel(F("Neopixel 1 initial color"));
+            addRowLabel(strformat(F("Neopixel %d initial color"), 1));
             addHtml(F("<table style='padding:0;'>")); // remove padding to align vertically with other inputs
             html_TD(F("padding:0"));
             addHtml('R');
@@ -216,7 +213,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
             # if P143_FEATURE_INCLUDE_M5STACK
 
             if (device == P143_DeviceType_e::M5StackEncoder) {
-              addRowLabel(F("Neopixel 2 initial color"));
+              addRowLabel(strformat(F("Neopixel %d initial color"), 2));
               addHtml(F("<table style='padding:0;'>")); // remove padding to align vertically with other inputs
               html_TD(F("padding:0"));
               addHtml('R');

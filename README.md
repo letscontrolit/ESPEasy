@@ -140,7 +140,7 @@ ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_CDC.bin | ESP32-S3 8MB
 ESPEasy_mega-20230822_max_ESP32_16M1M.bin                         | ESP32 with 16MB flash                 | All available plugins            |
 ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS.bin                | ESP32 with 16MB flash                 | All available plugins            |
 
-NB: Since 2023-05-10 the binary files for the different ESP32 variants (S2, C3, S3, 'Classic') are available in separate archives.
+The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, 'Classic') are available in separate archives.
 
 To see what plugins are included in which collection set, you can find that on the [ESPEasy Plugin overview page](https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html)
 
