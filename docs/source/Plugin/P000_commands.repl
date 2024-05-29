@@ -383,6 +383,23 @@
     
     ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
     "
+    OWScan","
+    :red:`Internal`","
+    Scan for & list 1-wire (One Wire = OW) devices on a GPIO pin.
+
+    Syntax: ``owscan,<rx-pin>[,<txpin>]``
+
+    If no separate TX pin is provided, the RX pin will be used as the TX pin too, as is the normal behavior for 1-wire communication. The separate TX pin is used on a Shelly device when adding the Shelly Temperature add-on (RX = GPIO-0 and TX = GPIO-3).
+
+    Example:
+
+    .. code-block:: none
+
+      >owscan,5
+      01-6e-56-8c-01-00-00-84 [DS1990A]    
+
+    "
+    "
     Password","
     :red:`Internal`","
     Set the password of the unit.
