@@ -71,7 +71,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C004_queue_element> element(new C004_queue_element(event));
+      std::unique_ptr<C004_queue_element> element(new (std::nothrow) C004_queue_element(event));
 
       success = C004_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());

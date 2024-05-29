@@ -26,18 +26,22 @@
  * on I2C Bus
  */
 
-// History:
-// 2021-08-01 tonhuisman: Plugin migrated from ESPEsyPluginPlayground repository
-//                        Minor adjustments, changed castings to use static_cast<type>(var) method,
-//                        Added check for other I2C devices configured on ESPEasy tasks to give a warning
-//                        about I2C incmopatibility, for AHT10 device only
-// 2021-03 sakinit:       Initial plugin, added on ESPEasyPluginPlayground
+/** History:
+ * 2024-04-28 tonhuisman: Update plugin name and documentation as DHT20 and AM2301B actually contain an AHT20!
+ *                        DHT20: https://www.adafruit.com/product/5183 (Description)
+ *                        AM2301B: https://www.adafruit.com/product/5181 (Description)
+ * 2021-08-01 tonhuisman: Plugin migrated from ESPEsyPluginPlayground repository
+ *                        Minor adjustments, changed castings to use static_cast<type>(var) method,
+ *                        Added check for other I2C devices configured on ESPEasy tasks to give a warning
+ *                        about I2C incompatibility, for AHT10/AHT15 device only
+ * 2021-03 sakinit:       Initial plugin, added on ESPEasyPluginPlayground
+ */
 
 # include "src/PluginStructs/P105_data_struct.h"
 
 # define PLUGIN_105
 # define PLUGIN_ID_105         105
-# define PLUGIN_NAME_105       "Environment - AHT10/AHT2x"
+# define PLUGIN_NAME_105       "Environment - AHT1x/AHT2x/DHT20/AM2301B"
 # define PLUGIN_VALUENAME1_105 "Temperature"
 # define PLUGIN_VALUENAME2_105 "Humidity"
 
@@ -85,7 +89,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
-        addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT10 sensors."));
+        addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT1x sensors."));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -101,6 +105,12 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(1) = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -126,11 +136,11 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         if (hasOtherI2CDevices) {
           addRowLabel(EMPTY_STRING, EMPTY_STRING);
           addHtmlDiv(F("note warning"),
-                     F("Attention: Sensor model AHT10 may cause I2C issues when combined with other I2C devices on the same bus!"));
+                     F("Attention: Sensor model AHT1x may cause I2C issues when combined with other I2C devices on the same bus!"));
         }
       }
       {
-        const __FlashStringHelper *options[] = { F("AHT10"), F("AHT20"), F("AHT21") };
+        const __FlashStringHelper *options[] = { F("AHT1x"), F("AHT20"), F("AHT21") };
         const int indices[]                  = { static_cast<int>(AHTx_device_type::AHT10_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT20_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
