@@ -415,12 +415,12 @@ void AS3935MI::clearStatistics()
 	writeRegisterValue(AS3935_REGISTER_CL_STAT, AS3935_MASK_CL_STAT, 1);
 }
 
-bool AS3935MI::decreaseNoiseFloorThreshold()
+uint8_t AS3935MI::decreaseNoiseFloorThreshold()
 {
 	uint8_t nf_lev = readNoiseFloorThreshold();
 
 	if (nf_lev == AS3935_NFL_0)
-		return false;
+		return AS3935_NFL_7;
 
 	writeNoiseFloorThreshold(--nf_lev);
 
@@ -432,59 +432,59 @@ uint8_t AS3935MI::increaseNoiseFloorThreshold()
 	uint8_t nf_lev = readNoiseFloorThreshold();
 
 	if (nf_lev >= AS3935_NFL_7)
-		return 0;
+		return AS3935_NFL_0;
 
 	writeNoiseFloorThreshold(++nf_lev);
 
 	return nf_lev;
 }
 
-bool AS3935MI::decreaseWatchdogThreshold()
+uint8_t AS3935MI::decreaseWatchdogThreshold()
 {
 	uint8_t wdth = readWatchdogThreshold();
 
 	if (wdth == AS3935_WDTH_0)
-		return false;
+		return AS3935_WDTH_15;
 
 	writeWatchdogThreshold(--wdth);
 
-	return true;
+	return wdth;
 }
 
-bool AS3935MI::increaseWatchdogThreshold()
+uint8_t AS3935MI::increaseWatchdogThreshold()
 {
 	uint8_t wdth = readWatchdogThreshold();
 
 	if (wdth >= AS3935_WDTH_15)
-		return false;
+		return AS3935_WDTH_0;
 
 	writeWatchdogThreshold(++wdth);
 
-	return true;
+	return wdth;
 }
 
-bool AS3935MI::decreaseSpikeRejection()
+uint8_t AS3935MI::decreaseSpikeRejection()
 {
 	uint8_t srej = readSpikeRejection();
 
 	if (srej == AS3935_SREJ_0)
-		return false;
+		return AS3935_SREJ_15;
 
 	writeSpikeRejection(--srej);
 
-	return true;
+	return srej;
 }
 
-bool AS3935MI::increaseSpikeRejection()
+uint8_t AS3935MI::increaseSpikeRejection()
 {
 	uint8_t srej = readSpikeRejection();
 
 	if (srej >= AS3935_SREJ_15)
-		return false;
+		return AS3935_SREJ_0;
 
 	writeSpikeRejection(++srej);
 
-	return true;
+	return srej;
 }
 
 void AS3935MI::displayLcoOnIrq(bool enable)

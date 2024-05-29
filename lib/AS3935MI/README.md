@@ -8,16 +8,30 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.3.5
+	- fixed #50
+	- implemented a more robust, interrupt based calibration procedure that is also faster. thanks to @td-er for reporting and impementing this. 
+	- updated increase / decrease function signatures (should be backwards compatible)
+	- updated examples
+	
+- 1.3.4
+	- partially fixed https://bitbucket.org/christandlg/as3935mi/issues/50/resonance-frequency-calibration-inaccurate : fixed a bug where occasionally I2C comms will silently fail during oscillator calibration - thanks to @td-er for reporting and fixing this issue
+
 - 1.3.3
-	fixed https://bitbucket.org/christandlg/as3935mi/issues/49/class-spiclass-has-no-member-named
+	- fixed https://bitbucket.org/christandlg/as3935mi/issues/49/class-spiclass-has-no-member-named
+	
 - 1.3.2
-	fixed https://bitbucket.org/christandlg/as3935mi/issues/47/need-help-using-as3935spiclass
+	- fixed https://bitbucket.org/christandlg/as3935mi/issues/47/need-help-using-as3935spiclass
+	
 - 1.3.1
-	fixed https://bitbucket.org/christandlg/as3935mi/issues/48/clear-statistics-function-to-be-added
+	- fixed https://bitbucket.org/christandlg/as3935mi/issues/48/clear-statistics-function-to-be-added
+	
 - 1.3.0
-	fixed https://bitbucket.org/christandlg/as3935mi/issues/12/autocalibrate-no-longer-working
+	- fixed https://bitbucket.org/christandlg/as3935mi/issues/12/autocalibrate-no-longer-working
+	
 - 1.2.1
-	Merged PR by Hernán Freschi https://bitbucket.org/christandlg/as3935mi/pull-requests/2
+	- Merged PR by Hernán Freschi https://bitbucket.org/christandlg/as3935mi/pull-requests/2
+	
 - 1.2.0
 	- extended examples to include increasing sensitivity if no disturbances are detected. 
 

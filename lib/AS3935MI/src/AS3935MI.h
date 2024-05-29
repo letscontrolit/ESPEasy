@@ -303,7 +303,7 @@ public:
 	/*
 	increases the noise floor threshold setting, if possible.
 	@return true on success, false otherwise. */
-	bool decreaseNoiseFloorThreshold();
+	uint8_t decreaseNoiseFloorThreshold();
 
 	/*
 	increases the noise floor threshold setting, if possible.
@@ -313,22 +313,22 @@ public:
 	/*
 	increases the watchdog threshold setting, if possible.
 	@return true on success, false otherwise. */
-	bool decreaseWatchdogThreshold();
+	uint8_t decreaseWatchdogThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
 	@return true on success, false otherwise. */
-	bool increaseWatchdogThreshold();
+	uint8_t increaseWatchdogThreshold();
 
 	/*
 	increases the spike rejection setting, if possible.
 	@return true on success, false otherwise. */
-	bool decreaseSpikeRejection();
+	uint8_t decreaseSpikeRejection();
 
 	/*
 	increases the spike rejection setting, if possible.
 	@return true on success, false otherwise. */
-	bool increaseSpikeRejection();
+	uint8_t increaseSpikeRejection();
 
     // Ideally 500 kHz signal divided by the set division ratio
 	void displayLcoOnIrq(bool enable);
