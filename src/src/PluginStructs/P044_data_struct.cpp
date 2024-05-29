@@ -299,7 +299,11 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
   if (done) {
     P1GatewayClient.print(serial_buffer);
+#if ESP_IDF_VERSION_MAJOR>=5
+    P1GatewayClient.clear();
+#else
     P1GatewayClient.flush();
+#endif
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
     # endif // ifndef BUILD_NO_DEBUG
