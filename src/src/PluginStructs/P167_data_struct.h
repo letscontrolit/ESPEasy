@@ -272,3 +272,5 @@ private:
   volatile uint64_t monpinLastTransitionTime = 0;
 };
 #endif // USES_P167
+
+#endif // ifndef PLUGINSTRUCTS_P167_DATA_STRUCT_H

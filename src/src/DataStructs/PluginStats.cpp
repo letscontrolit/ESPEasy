@@ -91,7 +91,7 @@ void PluginStats::resetPeaks()
 }
 
 void PluginStats::clearSamples() {
-  if (_samples == nullptr) {
+  if (_samples != nullptr) {
     _samples->clear();
   }
 }
