@@ -209,14 +209,12 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("P014: Temperature: ");
-          log += UserVar[event->BaseVarIndex + 0];
-          log += F(" Humidity: ");
-          log += UserVar[event->BaseVarIndex + 1];
+          String log = strformat(F("P014: Temperature: %.2f Humidity: %.2f"),
+                                 UserVar[event->BaseVarIndex + 0],
+                                 UserVar[event->BaseVarIndex + 1]);
 
           if (P014_data->chip_id == CHIP_ID_SI7013) {
-            log += F(" ADC: ");
-            log += UserVar[event->BaseVarIndex + 2];
+            log += strformat(F(" ADC: %.2f"), UserVar[event->BaseVarIndex + 2]);
           }
           addLog(LOG_LEVEL_INFO, log);
         }

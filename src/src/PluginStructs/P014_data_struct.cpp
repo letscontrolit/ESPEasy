@@ -278,7 +278,7 @@ uint8_t P014_data_struct::checkCRC(uint16_t data, uint8_t check)
 
   // Operate on only 16 positions of max 24.
   // The remaining 8 are our remainder and should be zero when we're done.
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; ++i) {
     // Check if there is a one in the left position
     if (remainder & (uint32_t)1 << (23 - i)) {
       remainder ^= divisor;
@@ -424,7 +424,7 @@ bool P014_data_struct::enablePowerForADC(uint8_t i2caddr){
     
   
   if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
-    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & 0b11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
   }else{
     ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
   }
@@ -455,7 +455,7 @@ bool P014_data_struct::disablePowerForADC(uint8_t i2caddr){
   if (i2caddr == SI7013_I2C_ADDRESS_AD0_1){
     ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2,reg | (1+2+4+64) );//set last three bits to 1 (VIN bufered, Vref=VDD, VOUT=VDD) and No-Hold for bit 6
   }else{
-    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & B11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
+    ok = I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, (reg & 0b11111000) | (2+4+64) );//set last three bits (VIN bufered, Vref=VDD, VOUT=GND) and No-Hold for bit 6
   }
   if (!ok){
     addLog(LOG_LEVEL_ERROR, F("SI7013: Could not write REG2!"));

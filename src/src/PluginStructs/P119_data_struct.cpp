@@ -29,24 +29,19 @@ P119_data_struct::~P119_data_struct() {
 // Initialize sensor and read data from ITG3205
 // **************************************************************************/
 bool P119_data_struct::read_sensor() {
-  #ifdef PLUGIN_119_DEBUG
+  # ifdef PLUGIN_119_DEBUG
   String log;
   # endif // if PLUGIN_119_DEBUG
 
   if (!initialized()) {
     init_sensor();
 
-    #ifdef PLUGIN_119_DEBUG
+    # ifdef PLUGIN_119_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
-        log.reserve(55)) {
-      log  = F("ITG3205: i2caddress: 0x");
-      log += String(_i2cAddress, HEX);
-      log += F(", initialized: ");
-      log += initialized() ? F("true") : F("false");
-      log += F(", ID=0x");
-      log += String(itg3205->readWhoAmI(), HEX);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG,
+                 strformat(F("ITG3205: i2caddress: 0x%02x, initialized: %d, ID=0x%02x"),
+                           _i2cAddress, initialized(), itg3205->readWhoAmI()));
     }
     # endif // if PLUGIN_119_DEBUG
   }
@@ -71,19 +66,12 @@ bool P119_data_struct::read_sensor() {
       _aUsed = 0;
     }
 
-    #ifdef PLUGIN_119_DEBUG
+    # ifdef PLUGIN_119_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
-        log.reserve(40)) {
-      log  = F("ITG3205: ");
-      log += _rawData ? F("raw ") : F("");
-      log += F(", X: ");
-      log += itg3205->g.x;
-      log += F(", Y: ");
-      log += itg3205->g.y;
-      log += F(", Z: ");
-      log += itg3205->g.z;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("ITG3205: %s, X: %d, Y: %d, Z: %d"),
+                                            String(_rawData ? F("raw ") : F("")).c_str(),
+                                            itg3205->g.x, itg3205->g.y, itg3205->g.z));
     }
     # endif // if PLUGIN_119_DEBUG
     return true;
@@ -100,7 +88,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
   Z = 0;
 
   if (initialized()) {
-    for (uint8_t n = 0; n <= _aMax; n++) {
+    for (uint8_t n = 0; n <= _aMax; ++n) {
       X += _XA[n];
       Y += _YA[n];
       Z += _ZA[n];
@@ -110,20 +98,10 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
     Y /= _aMax;
     Z /= _aMax;
 
-    #ifdef PLUGIN_119_DEBUG
+    # ifdef PLUGIN_119_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log;
-
-      if (log.reserve(40)) {
-        log  = F("ITG3205: averages, X: ");
-        log += X;
-        log += F(", Y: ");
-        log += Y;
-        log += F(", Z: ");
-        log += Z;
-        addLogMove(LOG_LEVEL_DEBUG, log);
-      }
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("ITG3205: averages, X: %d, Y: %d, Z: %d"), X, Y, Z));
     }
     # endif // if PLUGIN_119_DEBUG
   }
@@ -147,17 +125,12 @@ bool P119_data_struct::init_sensor() {
     return false;
   }
 
-  #ifdef PLUGIN_119_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log;
+  # ifdef PLUGIN_119_DEBUG
 
-    if (log.reserve(25)) {
-      log  = F("ITG3205: Address: 0x");
-      log += String(_i2cAddress, HEX);
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("ITG3205: Address: 0x%02x"), _i2cAddress));
   }
-  #endif
+  # endif // ifdef PLUGIN_119_DEBUG
 
   return true;
 }

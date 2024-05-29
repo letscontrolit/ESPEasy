@@ -625,7 +625,10 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
         {
-          Cache.taskIndexName[deviceName] = taskIndex;
+          Cache.taskIndexName.emplace(
+            std::make_pair(
+              std::move(deviceName), 
+              taskIndex));
           return taskIndex;
         }
       }
@@ -668,7 +671,10 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
     {
-      Cache.taskIndexValueName[cache_valueName] = valueNr;
+      Cache.taskIndexValueName.emplace(
+        std::make_pair(
+          std::move(cache_valueName), 
+          valueNr));
       return valueNr;
     }
   }

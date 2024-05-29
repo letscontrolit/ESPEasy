@@ -17,15 +17,15 @@
 
 
 /*
-  The settings files have some reserved space for each struct stored in there.
+   The settings files have some reserved space for each struct stored in there.
 
     CONFIG_FILE_SIZE        File size of config.dat
 
-  Settings struct is positioned at the start of the settings file Config.dat
-    
+   Settings struct is positioned at the start of the settings file Config.dat
+
     DAT_BASIC_SETTINGS_SIZE Reserved size for Settings struct
 
-  Parameters used for locating the task data:
+   Parameters used for locating the task data:
 
     DAT_OFFSET_TASKS        Position of first TaskSettings in the Settings file
     DAT_TASKS_SIZE          Reserved size for TaskSettings
@@ -36,8 +36,8 @@
 
     DAT_TASKS_DISTANCE  =   DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE
 
-  Parameters used for locating the controller data:
-    
+   Parameters used for locating the controller data:
+
     DAT_OFFSET_CONTROLLER         Position of first ControllerSettings in the Settings file
     DAT_CONTROLLER_SIZE           Reserved size for ControllerSettings
 
@@ -47,12 +47,12 @@
     ControllerSettings and CustomControllerSettings are not located interleaved in the settings file.
     So there is no distance value for controller settings.  (equal to the controller size)
 
-  Notification settings are located in a different file.
+   Notification settings are located in a different file.
 
-    DAT_NOTIFICATION_SIZE         Reserved size for NotificationSettings 
+    DAT_NOTIFICATION_SIZE         Reserved size for NotificationSettings
 
 
-*/
+ */
 
 #ifndef DAT_BASIC_SETTINGS_SIZE
 // For size of SettingsStruct stored at this area in config.dat
@@ -79,6 +79,25 @@
 #ifndef DAT_TASKS_CUSTOM_SIZE
 # define DAT_TASKS_CUSTOM_SIZE            1024
 #endif // ifndef DAT_TASKS_CUSTOM_SIZE
+// FEATURE_EXTENDED_CUSTOM_SETTINGS: Default will be determined in define_plugin_sets.h, based on used plugins
+#ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
+# ifdef BUILD_MINIMAL_OTA
+#  define FEATURE_EXTENDED_CUSTOM_SETTINGS  0 // Never on minimal builds?
+# else // ifdef BUILD_MINIMAL_OTA
+#  define FEATURE_EXTENDED_CUSTOM_SETTINGS  1
+# endif // ifdef BUILD_MINIMAL_OTA
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+#ifndef DAT_TASKS_CUSTOM_EXTENSION_SIZE
+# if FEATURE_EXTENDED_CUSTOM_SETTINGS
+#  define DAT_TASKS_CUSTOM_EXTENSION_SIZE  4096 // 4kB extension with external file extcfg<tasknr>.dat
+# else // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+#  define DAT_TASKS_CUSTOM_EXTENSION_SIZE  0    // No extension, but defined to avoid #if checks all over the code
+# endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+#endif // ifndef DAT_TASKS_CUSTOM_EXTENSION_SIZE
+// Filename _must_ include the task number (1-based, as shown in the UI) and the % is also used elsewhere, so keep the %02d !
+#ifndef DAT_TASKS_CUSTOM_EXTENSION_FILEMASK
+# define DAT_TASKS_CUSTOM_EXTENSION_FILEMASK "extcfg%02d.dat"
+#endif // ifndef DAT_TASKS_CUSTOM_EXTENSION_FILEMASK
 #ifndef DAT_TASKS_DISTANCE
 # define DAT_TASKS_DISTANCE               2048 // DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE
 #endif // ifndef DAT_TASKS_DISTANCE
@@ -119,7 +138,8 @@
  #define TASKS_MAX                          24
  #define DAT_OFFSET_CONTROLLER            (DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX))                        // each controller =
    1k, 4 max
- #define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CUSTOM_CONTROLLER_SIZE * CONTROLLER_MAX))  // each custom controller config =
+ #define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CUSTOM_CONTROLLER_SIZE * CONTROLLER_MAX))  // each custom controller
+   config =
    1k, 4 max
 
 
@@ -136,7 +156,9 @@
 #if defined(ESP8266)
   # if FEATURE_NON_STANDARD_24_TASKS
   #  ifndef DAT_OFFSET_TASKS
-  #   define DAT_OFFSET_TASKS                 4096 // 0x1000 each task = 2k, (1024 basic + 1024 bytes custom)
+  #   define DAT_OFFSET_TASKS                 4096                                                             // 0x1000 each task = 2k,
+                                                                                                               // (1024 basic + 1024 bytes
+                                                                                                               // custom)
   #  endif // ifndef DAT_OFFSET_TASKS
   #  ifndef DAT_OFFSET_CONTROLLER
   #   define DAT_OFFSET_CONTROLLER            (DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX))  // each controller = 1k, 3 max, DAT_OFFSET_CDN is at position of any 4th controller.
@@ -167,24 +189,25 @@
   #  define DAT_OFFSET_CDN                   (DAT_OFFSET_TASKS - DAT_CDN_SIZE)  // single CDN settings block of 1k
   # endif 
   #  ifdef LIMIT_BUILD_SIZE
-  // Limit the config size for 1M builds, since their file system is also quite small
+
+// Limit the config size for 1M builds, since their file system is also quite small
   #   ifndef CONFIG_FILE_SIZE
   #    define CONFIG_FILE_SIZE               36864 // DAT_OFFSET_CUSTOM_CONTROLLER + 4x DAT_CUSTOM_CONTROLLER_SIZE
   #   endif // ifndef CONFIG_FILE_SIZE
-  #  else
+  #  else // ifdef LIMIT_BUILD_SIZE
   #   ifndef CONFIG_FILE_SIZE
   #    define CONFIG_FILE_SIZE               65536
   #   endif // ifndef CONFIG_FILE_SIZE
-  #  endif
+  #  endif // ifdef LIMIT_BUILD_SIZE
   # endif // if FEATURE_NON_STANDARD_24_TASKS
 #endif     // if defined(ESP8266)
 
 #if defined(ESP32)
   # ifndef DAT_OFFSET_TASKS
-  #  define DAT_OFFSET_TASKS                 32768  // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
+  #  define DAT_OFFSET_TASKS                 32768 // each task = 2k, (1024 basic + 1024 bytes custom), 32 max
   # endif // ifndef DAT_OFFSET_TASKS
   # ifndef DAT_OFFSET_CONTROLLER
-  #  define DAT_OFFSET_CONTROLLER           8192  // each controller = 1k, 4 max
+  #  define DAT_OFFSET_CONTROLLER           8192   // each controller = 1k, 4 max
   # endif // ifndef DAT_OFFSET_CONTROLLER
   # ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   #  define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.

@@ -103,7 +103,7 @@ The plugin provides the ``TVOC`` and ``eCO2`` values. A formula can be set to re
 
 In selected builds, per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
-Currently the extra features offered by the sensore are not configurable in this plugin.
+Currently the extra features offered by the sensor are not configurable in this plugin.
 These may be added later.
 
 Change log

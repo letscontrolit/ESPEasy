@@ -7,6 +7,11 @@
 // ########################### Controller Plugin 002: Domoticz MQTT ######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2024-03-24 tonhuisman: Add support for 'Invert On/Off value' in P029 - Domoticz MQTT Helper
+ * 2024-03-24 tonhuisman: Start Changelog (newest on top)
+ */
+
 # define CPLUGIN_002
 # define CPLUGIN_ID_002         2
 # define CPLUGIN_NAME_002       "Domoticz MQTT"
@@ -85,15 +90,16 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             constexpr pluginID_t PLUGIN_ID_DOMOTICZ_HELPER(29);
             # if defined(USES_P088)
             constexpr pluginID_t PLUGIN_ID_HEATPUMP_IR(88);
-            # endif
+            # endif // if defined(USES_P088)
+
             if (Settings.TaskDeviceEnabled[x] &&
                 (Settings.TaskDeviceSendData[ControllerID][x]
-                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER)         // Domoticz helper doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER) // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
-                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)         // Heatpump IR doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)     // Heatpump IR doesn't have controller checkboxes...
                  # endif // if defined(USES_P088)
                 ) &&
-                (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
+                (Settings.TaskDeviceID[ControllerID][x] == idx))                    // get idx for our controller index
             {
               String action;
               bool   mustSendEvent = false;
@@ -101,7 +107,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               switch (Settings.getPluginID_for_task(x).value) {
                 case 1: // temp solution, if input switch, update state
                 {
-                  action = strformat(F("inputSwitchState,%u,%.2f"), x, nvalue);
+                  action = strformat(F("gpio,%d,%d"), x, static_cast<int>(nvalue));
                   break;
                 }
                 case 29: // temp solution, if plugin 029, set gpio
@@ -114,7 +120,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
-                        pwmValue         = 0;
+                        pwmValue = 0;
                         UserVar.setFloat(x, 0, pwmValue);
                         break;
                       case 1: // On
@@ -132,20 +138,25 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                       action = strformat(F("pwm,%d,%d"), Settings.TaskDevicePin1[x], pwmValue);
                     }
                   } else {
-                    mustSendEvent    = true;
-                    UserVar.setFloat(x, 0, nvalue);
+                    mustSendEvent = true;
+                    int ivalue = static_cast<int>(nvalue);
+
+                    if (1 == Settings.TaskDevicePluginConfig[x][0]) { // PCONFIG(0) = Invert On/Off value
+                      ivalue = (1 == ivalue ? 0 : 1);
+                    }
+                    UserVar.setFloat(x, 0, ivalue);
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], static_cast<int>(nvalue));
+                      action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], ivalue);
                     }
                   }
                   break;
                 }
-# if defined(USES_P088)  // || defined(USES_P115)
-                case 88: // Send heatpump IR (P088) if IDX matches
+# if defined(USES_P088)                                       // || defined(USES_P115)
+                case 88:                                      // Send heatpump IR (P088) if IDX matches
                   //                case 115:            // Send heatpump IR (P115) if IDX matches
                 {
-                  action  = concat(F("heatpumpir,"),svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
 # endif // USES_P088 || USES_P115
@@ -160,11 +171,11 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
                 // Try plugin and internal
                 ExecuteCommandArgs args(
-                  x, 
-                  EventValueSource::Enum::VALUE_SOURCE_MQTT, 
-                  action.c_str(), 
-                  true, 
-                  true, 
+                  x,
+                  EventValueSource::Enum::VALUE_SOURCE_MQTT,
+                  action.c_str(),
+                  true,
+                  true,
                   false);
                 ExecuteCommand(std::move(args), true);
               }

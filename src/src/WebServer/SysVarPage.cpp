@@ -376,15 +376,27 @@ void handle_sysvars() {
       // addFormSeparator(3,
       F("To HEX: %c_2hex%(100000)"),
 
+      #if FEATURE_ESPEASY_P2P
       // addFormSeparator(3,
-      F("Unit to IP: %c_u2ip%(%unit%, 2)")
+      F("Unit to IP: %c_u2ip%(%unit%, 2)"),
+      F("Unit to Name: %c_uname%(%unit%)"),
+      F("Unit to Age: %c_uage%(%unit%)"),
+      F("Unit to Build: %c_ubuild%(%unit%)"),
+      F("Unit to Build-string: %c_ubuildstr%(%unit%)"),
+      F("Unit to Load: %c_uload%(%unit%)"),
+      F("Unit to ESP-type: %c_utype%(%unit%)"),
+      F("Unit to ESP-type-string: %c_utypestr%(%unit%)"),
+      #endif // if FEATURE_ESPEASY_P2P
     };
 
     for (unsigned int i = 0; i < NR_ELEMENTS(StdConversions); ++i) {
       if ((i == 6) ||
-          (i == 9) ||
-          (i == 15) ||
-          (i == 17)) {
+          (i == 8) ||
+          (i == 13)
+          #if FEATURE_ESPEASY_P2P
+          || (i == 14)
+          #endif // if FEATURE_ESPEASY_P2P
+          ) {
         addFormSeparator(3);
       }
       addSysVar_html(StdConversions[i]);

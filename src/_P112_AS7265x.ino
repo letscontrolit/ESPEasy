@@ -144,7 +144,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Integration Time"), F("IntegrationTime"), 6, optionsMode2, optionValuesMode2, PCONFIG_LONG(1));
       }
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Raw Readings shall not reach the upper limit of 65535 (Sensor Saturation)."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormSubHeader(F("LED settings"));
       addFormCheckBox(F("Blue"), PCONFIG_LABEL(0), PCONFIG(0));
@@ -169,7 +171,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(EMPTY_STRING, PCONFIG_LABEL(1), 4, optionsMode3, optionValuesMode3, PCONFIG(1));
       }
       addHtml(F(" Current Limit"));
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Activate Status LEDs only for debugging purpose."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       {
         // White LED has max forward current of 120mA
@@ -239,12 +243,13 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(0) = getFormItemInt(F("Gain"));
       PCONFIG_LONG(1) = getFormItemInt(F("IntegrationTime"));
       PCONFIG(0)      = isFormItemChecked(PCONFIG_LABEL(0));
+
       for (int i = 1; i <= 4; ++i) {
-        PCONFIG(i)      = getFormItemInt(PCONFIG_LABEL(i));
+        PCONFIG(i) = getFormItemInt(PCONFIG_LABEL(i));
       }
-      PCONFIG(5)      = isFormItemChecked(PCONFIG_LABEL(5));
-      PCONFIG(6)      = isFormItemChecked(PCONFIG_LABEL(6));
-      success         = true;
+      PCONFIG(5) = isFormItemChecked(PCONFIG_LABEL(5));
+      PCONFIG(6) = isFormItemChecked(PCONFIG_LABEL(6));
+      success    = true;
       break;
     }
 
@@ -281,12 +286,12 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, strformat(
-              F("AS7265X: AMS Device Type: 0x%X HW ver: 0x%X FW ver: %X.%X.%X"),
-              P112_data->sensor.getDeviceType(),
-              P112_data->sensor.getHardwareVersion(),
-              P112_data->sensor.getMajorFirmwareVersion(),
-              P112_data->sensor.getPatchFirmwareVersion(),
-              P112_data->sensor.getBuildFirmwareVersion()));
+                         F("AS7265X: AMS Device Type: 0x%X HW ver: 0x%X FW ver: %X.%X.%X"),
+                         P112_data->sensor.getDeviceType(),
+                         P112_data->sensor.getHardwareVersion(),
+                         P112_data->sensor.getMajorFirmwareVersion(),
+                         P112_data->sensor.getPatchFirmwareVersion(),
+                         P112_data->sensor.getBuildFirmwareVersion()));
           }
 
           success = true;
@@ -369,10 +374,10 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
             case 18:
               queueEvent(event->TaskIndex, 940, PCONFIG(6) ? P112_data->sensor.getCalibratedL() : P112_data->sensor.getL());
 
-              P112_data->MeasurementStatus     = 0; // FIXME Why is this only executed for case 18?
+              P112_data->MeasurementStatus = 0; // FIXME Why is this only executed for case 18?
               UserVar.setFloat(event->TaskIndex, 2, 0);
 
-              if (PCONFIG(0))                       // Blue Status LED
+              if (PCONFIG(0))                   // Blue Status LED
               {
                 P112_data->sensor.enableIndicator();
               }

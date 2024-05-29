@@ -357,7 +357,7 @@ void Caches::updateExtraTaskSettingsCache()
     }
     #endif // ifdef ESP32
 
-    extraTaskSettings_cache[TaskIndex] = tmp;
+    extraTaskSettings_cache.emplace(std::make_pair(TaskIndex, std::move(tmp)));
   }
 }
 

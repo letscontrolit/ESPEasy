@@ -145,6 +145,30 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
 }
 #endif // if FEATURE_I2C_DEVICE_SCAN
 
+bool getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex, uint16_t& x, uint16_t& y, uint16_t& r, uint16_t& colorDepth) {
+  if (!validTaskIndex(taskIndex)) { return false; }
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+  if (validDeviceIndex(deviceIndex)) {
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+
+    if (validPluginID(pluginID)) {
+      String dummy;
+      struct EventStruct TempEvent;
+      TempEvent.setTaskIndex(taskIndex);
+
+      if (PluginCall(deviceIndex, PLUGIN_GET_DISPLAY_PARAMETERS, &TempEvent, dummy)) {
+        x          = TempEvent.Par1;
+        y          = TempEvent.Par2;
+        r          = TempEvent.Par3;
+        colorDepth = TempEvent.Par4;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 #if FEATURE_I2C_GET_ADDRESS
 uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
   uint8_t getI2CAddress = 0;
@@ -283,6 +307,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
       if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
       {
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           LoadTaskSettings(taskIndex);
         }
         TempEvent->setTaskIndex(taskIndex);
@@ -602,6 +627,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
         if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
           if (!retval && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
@@ -689,6 +715,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       if (Function == PLUGIN_READ || Function == PLUGIN_INIT || Function == PLUGIN_PROCESS_CONTROLLER_DATA) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
+        }
+        if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(event->TaskIndex);
         }
       }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
@@ -818,6 +847,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             }
           }
           if (Function == PLUGIN_EXIT) {
+            UserVar.clear_computed(event->TaskIndex);
             clearPluginTaskData(event->TaskIndex);
 //            initSerial();
             queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
@@ -854,6 +884,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
     case PLUGIN_INIT_VALUE_RANGES:
+    #ifdef USES_ESPEASY_NOW
+    case PLUGIN_FILTEROUT_CONTROLLER_DATA:
+    #endif
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
@@ -899,7 +932,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           // Each of these may update ExtraTaskSettings, but it may not have been saved yet.
           // Thus update the cache just in case something from it is requested from the cache.
           Cache.updateExtraTaskSettingsCache();
-          UserVar.clear_computed(event->TaskIndex);
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();

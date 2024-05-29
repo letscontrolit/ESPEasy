@@ -1,0 +1,43 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``digipot,reset``
+    ","
+    Sending this command to the task the digipot will be reset to the default wiper settings (128). When a ``RST`` pin is configured, that will be shortly pulled to GND to reset the hardware, else the initial settings will be set to the chip.
+
+    On reset, the Initial Shutdown settings will *not* be applied!
+    "
+    "
+    ``digipot,shutdown[,<wiper>]``
+
+    ``<wiper>``: Optional wiper to shutdown.
+    
+    ``0`` = W0
+
+    ``1`` = W1
+
+    ``2`` = Both wipers (default when ommitted)
+    ","
+    This command will set the indicated wiper to Shutdown mode. When no wiper is given, then both wipers will be set to shutdown mode, optionally using the hardware ``SHDN`` pin if that's configured.
+
+    Shutdown mode will be released when a value is set to a wiper.
+    "
+    "
+    ``digipot,<wiper>,<value>``
+
+    ``<wiper>``: Wiper to set the value for.
+    
+    ``0`` = W0
+
+    ``1`` = W1
+
+    ``2`` = Both wipers
+
+    ``<value>``: Range 0..255 to set the wiper to.
+    ","
+    This command will set the provided value to the indicated wiper. When using wiper 2 (both), then a single command will change both values at the same moment.
+
+    When setting a value to a wiper, it will also release the shutdown mode, when enabled.
+    "

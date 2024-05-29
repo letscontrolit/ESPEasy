@@ -200,7 +200,7 @@ bool C005_parse_command(struct EventStruct *event) {
           cmd += ',';
           cmd += event->String2;
         }
-        //addLog(LOG_LEVEL_INFO, String(F("MQTT cmd: ")) + cmd);
+        // addLog(LOG_LEVEL_INFO, concat(F("MQTT cmd: "), cmd));
 
         validTopic = true;
       }

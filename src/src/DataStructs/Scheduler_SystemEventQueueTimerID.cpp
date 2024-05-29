@@ -7,9 +7,9 @@
 SystemEventQueueTimerID::SystemEventQueueTimerID(SchedulerPluginPtrType_e ptr_type, uint8_t Index, uint8_t Function) :
   SchedulerTimerID(SchedulerTimerType_e::SystemEventQueue)
 {
-  id = (static_cast<uint32_t>(ptr_type) << 16) +
+  setId((static_cast<uint32_t>(ptr_type) << 16) +
        (Index << 8) +
-       Function;
+       Function);
 }
 
 
