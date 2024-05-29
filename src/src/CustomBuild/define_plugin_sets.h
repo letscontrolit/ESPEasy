@@ -2837,7 +2837,7 @@ To create/register a plugin, you have to :
         #if ESP_IDF_VERSION_MAJOR >= 5
           // See if it is now more usable...
           // See: https://github.com/letscontrolit/ESPEasy/issues/5061
-          #define FEATURE_MDNS  1
+          #define FEATURE_MDNS  0
         #else
           #define FEATURE_MDNS  0
         #endif
