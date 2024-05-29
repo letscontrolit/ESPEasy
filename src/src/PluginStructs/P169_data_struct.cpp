@@ -646,7 +646,8 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     {
       uint8_t curGain = _sensor.readAFE();
 
-      if (curGain < AS3935MI::AS3935_INDOORS) {
+//      if (curGain < AS3935MI::AS3935_INDOORS) {
+      if (curGain < AS3935MI::AS3935_OUTDOORS) {
 
         ++curGain;
 
