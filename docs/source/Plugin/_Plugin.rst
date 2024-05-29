@@ -390,6 +390,7 @@ There are different released versions of ESP Easy:
    ":ref:`P162_page`","|P162_status|","P162"
    ":ref:`P164_page`","|P164_status|","P164"
    ":ref:`P166_page`","|P166_status|","P166"
+   ":ref:`P167_page`","|P167_status|","P167"
 
 
 .. include:: _plugin_sets_overview.repl

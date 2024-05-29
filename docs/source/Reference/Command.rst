@@ -810,6 +810,11 @@ P166 :ref:`P166_page`
 
 .. include:: ../Plugin/P166_commands.repl
 
+P167 :ref:`P167_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P167_commands.repl
+
 .. .. *** Insert regular plugin commands above this remark! ***
 
 .. _AdafruitGFX Helper commands:

@@ -1949,6 +1949,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
+  #ifndef USES_P167
+    #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+  #endif
 
   // Controllers
   #ifndef USES_C011
@@ -2358,6 +2361,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
+  #ifndef USES_P167
+    #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
   #endif
 
   // Controllers
