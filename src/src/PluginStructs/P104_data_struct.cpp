@@ -128,7 +128,7 @@ void P104_data_struct::loadSettings() {
       reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1; // just add 1 for storing a string-terminator
     }
     reservedBuffer++;                               // Add 1 for 0..size use
-    settingsBuffer = new char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
+    settingsBuffer = new (std::nothrow) char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
     loadOffset    += sizeof(bufferSize);
 
     if (settingsVersionV2) {
