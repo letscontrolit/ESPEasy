@@ -139,6 +139,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #if FEATURE_RULES_EASY_COLOR_CODE
     case LabelType::DISABLE_RULES_AUTOCOMPLETE:  return F("Disable Rules auto-completion");
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    case LabelType::DISABLE_SAVE_CONFIG_AS_TAR:  return F("Disable Save Config as .tar");
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -194,6 +197,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:            return F("Enable IPv6");
+#endif
+
 
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
@@ -260,12 +267,16 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return F("Eth IP / Subnet");
     case LabelType::ETH_IP_GATEWAY:         return F("Eth Gateway");
     case LabelType::ETH_IP_DNS:             return F("Eth DNS");
+#if FEATURE_USE_IPV6
+    case LabelType::ETH_IP6_LOCAL:          return F("Eth IPv6 link local");
+#endif
     case LabelType::ETH_MAC:                return F("Eth MAC");
     case LabelType::ETH_DUPLEX:             return F("Eth Mode");
     case LabelType::ETH_SPEED:              return F("Eth Speed");
     case LabelType::ETH_STATE:              return F("Eth State");
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
+    case LabelType::ETH_CHIP:               return F("Eth chip");
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
@@ -413,6 +424,9 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_RULES_EASY_COLOR_CODE
     case LabelType::DISABLE_RULES_AUTOCOMPLETE: return jsonBool(Settings.DisableRulesCodeCompletion());
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    case LabelType::DISABLE_SAVE_CONFIG_AS_TAR: return jsonBool(Settings.DisableSaveConfigAsTar());
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -433,9 +447,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return strformat(F("%s / %s"), getValue(LabelType::IP_ADDRESS).c_str(), getValue(LabelType::IP_SUBNET).c_str());
     case LabelType::GATEWAY:                return formatIP(NetworkGatewayIP());
 #if FEATURE_USE_IPV6
-    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6());
+    case LabelType::IP6_LOCAL:              return formatIP(NetworkLocalIP6(), true);
     case LabelType::IP6_GLOBAL:             return formatIP(NetworkGlobalIP6());
-//    case LabelType::IP6_ALL_ADDRESSES:
+#if FEATURE_ETHERNET
+    case LabelType::ETH_IP6_LOCAL:          return formatIP(NetworkLocalIP6(), true);
+#endif
+/*
+    case LabelType::IP6_ALL_ADDRESSES:
     {
       IP6Addresses_t addresses = NetworkAllIPv6();
       String res;
@@ -448,8 +466,9 @@ String getValue(LabelType::Enum label) {
       }
       return res;
     }
+*/
 #endif
-    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
+    case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP(), true);
     #if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:   return toString(getInternalTemperature());
     #endif // if FEATURE_INTERNAL_TEMPERATURE
@@ -499,7 +518,11 @@ String getValue(LabelType::Enum label) {
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
     case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
-    case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.WifiNoneSleep());
+    case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.SDK_WiFi_autoreconnect());
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:            return jsonBool(Settings.EnableIPv6());
+#endif
+
 
     case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:
@@ -575,6 +598,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return EthLinkUp() ? F("Link Up") : F("Link Down");
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
+    case LabelType::ETH_CHIP:               return toString(Settings.ETH_Phy_Type);
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);

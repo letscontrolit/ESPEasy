@@ -363,6 +363,18 @@
 
     ``Name,<new name>``"
     "
+    Notify","
+    :green:`Rules`","
+    Trigger a notification. Requires the notifier at the numbered index (1..3) to be enabled.
+
+    Optionally include the message body (quoted) and subject (quoted) to be passed. NB: The buzzer doesn't support a message body or subject.
+
+    Syntax: ``Notify,<notifier>[,<message>[,<subject>]]``
+
+    Example:
+
+    ``Notify,1,'The temperature is currently [ds#temp] degrees!','Temperature warning'``"
+    "
     NTPHost[,<host-name_or_ip>]","
     :red:`Internal`","
     Set the name of the NTP-host
@@ -370,6 +382,23 @@
     ``NTPHost,192.168.1.1`` -> Set an IP for the NTP host (local NTP server)
     
     ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
+    "
+    OWScan","
+    :red:`Internal`","
+    Scan for & list 1-wire (One Wire = OW) devices on a GPIO pin.
+
+    Syntax: ``owscan,<rx-pin>[,<txpin>]``
+
+    If no separate TX pin is provided, the RX pin will be used as the TX pin too, as is the normal behavior for 1-wire communication. The separate TX pin is used on a Shelly device when adding the Shelly Temperature add-on (RX = GPIO-0 and TX = GPIO-3).
+
+    Example:
+
+    .. code-block:: none
+
+      >owscan,5
+      01-6e-56-8c-01-00-00-84 [DS1990A]    
+
+    "
     "
     Password","
     :red:`Internal`","
@@ -469,9 +498,15 @@
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
+    Send command using MQTT broker service. The 'Will Retain' option as configured in the MQTT Controller settings is used. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PublishR","
+    :green:`Rules`","
+    Send command using MQTT broker service, with the MQTT 'Will Retain' flag enabled. Uses the first enabled MQTT Controller.
+
+    ``PublishR,<topic>[,<payload>]``"
     "
     PutToHTTP","
     :green:`Rules`","

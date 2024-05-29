@@ -87,6 +87,9 @@ const char Internal_commands_ghij[] PROGMEM =
   "i2cscanner|"
   "inc|"
   "ip|"
+#if FEATURE_USE_IPV6
+  "ip6|"
+#endif
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   "jsonportstatus|"
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -129,14 +132,17 @@ const char Internal_commands_m[] PROGMEM =
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 ;
 
-#define Int_cmd_n_offset ESPEasy_cmd_e::name
-const char Internal_commands_n[] PROGMEM =
+#define Int_cmd_no_offset ESPEasy_cmd_e::name
+const char Internal_commands_no[] PROGMEM =
   "name|"
   "nosleep|"
 #if FEATURE_NOTIFIER
   "notify|"
 #endif // #if FEATURE_NOTIFIER
   "ntphost|"
+#if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+  "owscan|"
+#endif // if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
 ;
 
 #define Int_cmd_p_offset ESPEasy_cmd_e::password
@@ -172,6 +178,7 @@ const char Internal_commands_p[] PROGMEM =
   "pulse|"
 #if FEATURE_MQTT
   "publish|"
+  "publishr|"
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   "puttohttp|"
@@ -313,8 +320,9 @@ const char* getInternalCommand_Haystack_Offset(const char firstLetter, int& offs
       haystack = Internal_commands_m;
       break;
     case 'n':
-      offset   = static_cast<int>(Int_cmd_n_offset);
-      haystack = Internal_commands_n;
+    case 'o':
+      offset   = static_cast<int>(Int_cmd_no_offset);
+      haystack = Internal_commands_no;
       break;
     case 'p':
       offset   = static_cast<int>(Int_cmd_p_offset);

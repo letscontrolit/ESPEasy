@@ -1969,6 +1969,65 @@ Added: 2022/07/23
 * Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
 * HTTP user credentials now can handle Basic Auth and Digest Auth.
 
+Added: 2023/10/26
+
+* ``SendToHTTP`` now generates an event with the response of a thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html & // https://de.mathworks.com/help/thingspeak/readdata.html)
+* There are two options:
+
+  1. Get the value of a single field: 
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last.csv``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=143789,5,9.65"``
+       
+        | channel number = ``%eventvalue1%``
+        | field number = ``%eventvalue2%``
+        | value = ``%eventvalue3%``
+        
+  2. Get the values of all fields:
+  
+     - Example command:
+     	``SendToHTTP,api.thingspeak.com,80,/channels/143789/feeds/last.csv``
+     - Example of the resulting event:
+     	``"EVENT: ThingspeakReply=143789,11.12,9.46,9.55,16.32,9.65,8.81,-1.23,14.76"``
+        
+        | channel number = ``%eventvalue1%``
+        | values = ``%eventvalue2%`` to ``%eventvalue9%``
+
+        .. note::
+          ``last.csv`` is mandatory!
+     
+  .. warning:: When using the command for all fields, the reply can become extremely big and can lead to memory issues which results in instabilities of your device (especially when all eight fields are filled with very big numbers)
+
+* Rules example:
+
+  .. code:: none
+
+    On System#Boot Do
+      SendToHTTP,api.thingspeak.com,80,/channels/143789/feeds/last.csv
+    Endon
+
+    On ThinkspeakReply Do
+      LogEntry,'The channel number is: %eventvalue1%'
+      LogEntry,'%eventvalue6%°C in Berlin'
+      LogEntry,'%eventvalue7%°C in Paris'
+    Endon
+
+Added 2024/02/05
+ 
+* Added the option to get a single value of a field or all values of a channel at a certain time (not only the last entry)
+
+* Examples:
+    
+  Single channel: ``SendToHTTP,api.thingspeak.com,80,channels/143789/fields/1.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 143789
+  
+  All channels: ``SendToHTTP,api.thingspeak.com,80,channels/143789/feeds.csv?end=2024-01-01%2023:59:00&results=1``
+    => gets the value of each field of the channel 143789 at (or the last entry before) 23:59:00 
+
+  .. note::
+    ``csv`` and ``results=1`` are mandatory!
 
 Convert curl POST command to PostToHTTP
 ---------------------------------------
@@ -2404,3 +2463,113 @@ This rule can be used to calculate the moving average for, f.e., a temperature s
 
 This assumes that a Controller has been configured, and the Dummy task is configured to send out its values via the controller.
 
+Register daily working time
+---------------------------
+
+To register the daily time in seconds that a device is active, these rules have been developed (from the forum).
+
+Required device tasks:
+
+* Sensor (temperature in the example)
+* Dummy device (named ``Dummy`` in this example, minimal 2 values, ``LoggingON`` and ``LoggingOFF``), Interval can be set to 0
+
+.. code-block:: none
+
+  On System#Boot Do
+    TaskValueSet,Dummy,LoggingON,1 // Make sure timer is started and Heater ON message is sent
+  Endon
+
+  On DS1#Temperature Do // Check tmeperature
+    If %eventvalue1% < 40
+      GPIO,5,0
+      AsyncEvent,HeaterON=%eventvalue1%
+    Endif
+    If %eventvalue1% > 55
+      GPIO,5,1
+      AsyncEvent,HeaterOFF=%eventvalue1%
+    Endif
+  Endon
+
+  On HeaterON Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingON] = 1
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater ON'
+      TaskValueSet,Dummy,LoggingON,0
+      TaskValueSet,Dummy,LoggingOFF,1
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On HeaterOFF Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
+    If [Dummy#LoggingOFF] = 1
+      Let,2,[int#2]+%syssec_d%-[int#1] // Add run time to var#2
+      PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater OFF'
+      TaskValueSet,Dummy,LoggingON,1
+      TaskValueSet,Dummy,LoggingOFF,0
+      TaskRun,Dummy
+    Endif
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Send value of [int#2] to wherever you need it
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [int#2] Seconds'
+    Let,1,0 // Reset start time
+    Let,2,0 // Reset total counter 
+  Endon
+
+
+Register power used for a heater
+--------------------------------
+
+As a variation on the running time, we can also measure the time and calculate the total power used, as long as the used device-power is known. Parts from the above example have been re-used.
+
+This example uses a ``Generic - Dummy Device``, so the values can also be viewed on the Devices page. This has name: Power, output data type: Dual (or Triple or Quad, must be able to store decimals!), value names: Seconds (0 decimmals) and PowerUsed (4 decimals).
+
+The time is counted while GPIO-14 (D5 on a Wemos or NodeMCU ESP8266) has a low state, and power is calculated once the power goes off. The not-On state will need a pull-up resistor to pull the level to 3V3!
+
+After loading this code, either reboot the ESP, or run the command ``event,system#boot`` to set up the GPIO monitoring and wattage of the device.
+
+.. code-block:: none
+
+  // Used variables: 1,3,4,5
+
+  On GPIO#14 Do // GPIO-14 = D5 on Wemos/NodeMCU ESP8266 boards
+    If %eventvalue1%=0 // On state
+      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+    Else // Off state
+      Event,CalcPower // Don't queue
+      Event,TransmitPower // Send out to receiver
+    Endif
+    Let,5,!%eventvalue1% // 0 = On, to invert on/off state change to: Let,5,%eventvalue1%
+    LogEntry,"Power [int#5#O#C], measured: [Power#Seconds] sec. [Power#PowerUsed#d.4] kWh"
+  Endon
+
+  On CalcPower Do
+    TaskValueSet,Power,Seconds,[Power#Seconds]+%syssec_d%-[int#1] // Add run time to Power#Seconds
+    Let,4,[Power#Seconds]*[var#3] // Wattseconds
+    If [var#4]>0
+      TaskValueSet,Power,PowerUsed,[var#4]/3600000 // Wattseconds to kWh
+    Endif
+    TaskRun,Power
+  Endon
+
+  On TransmitPower Do
+    // Send value of [Power#Seconds] and [Power#PowerUsed] to wherever you need it, adjust as needed
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [Power#Seconds] Seconds, PowerUsed = [Power#PowerUsed] kWh'
+  Endon
+
+  On Clock#Time=All,00:00 Do // At midnight
+    // Include power used until midnight
+    If [Plugin#GPIO#PinState#14]=0 // Still on?
+      Event,CalcPower // Don't queue
+    Endif
+    Let,1,0 // Reset start time
+    Event,TransmitPower // Send out remainder of the day
+    TaskValueSet,Power,Seconds,0 // Reset total counter
+    TaskValueSet,Power,PowerUsed,0 // Reset total power
+  Endon
+
+  On System#Boot Do
+    Monitor,gpio,14 // Generate an event when the GPIO state changes
+    Let,3,250 // Wattage of the load, adjust as needed
+  Endon

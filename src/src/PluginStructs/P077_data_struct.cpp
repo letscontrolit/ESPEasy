@@ -353,6 +353,13 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
     P077_PREF = CSE_PREF_PULSE;
     success   = true;
     changed   = true;
+  } else if (equals(cmd, F("cseclearpulses"))) {
+    // Clear the pulses count
+    cf_pulses = 0;
+    setOutputValue(event, P077_query::P077_QUERY_KWH,    cf_pulses);
+    setOutputValue(event, P077_query::P077_QUERY_PULSES, cf_pulses);
+    Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+    success   = true;
   } else if (equals(cmd, F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
     success = true;
     float CalibVolt  = 0.0f;

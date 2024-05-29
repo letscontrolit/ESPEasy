@@ -64,11 +64,16 @@ void ethSetupStaticIPconfig() {
 
 bool ethCheckSettings() {
   return isValid(Settings.ETH_Phy_Type) 
-      && isValid(Settings.ETH_Clock_Mode)
+#if CONFIG_ETH_USE_ESP32_EMAC
+      && (isValid(Settings.ETH_Clock_Mode)/* || isSPI_EthernetType(Settings.ETH_Phy_Type)*/)
+#endif
       && isValid(Settings.NetworkMedium)
-      && validGpio(Settings.ETH_Pin_mdc)
-      && validGpio(Settings.ETH_Pin_mdio)
-      && (validGpio(Settings.ETH_Pin_power) || (Settings.ETH_Pin_power == -1)); // Some boards have fixed power
+      && validGpio(Settings.ETH_Pin_mdc_cs)
+      && (isSPI_EthernetType(Settings.ETH_Phy_Type) ||
+          ( validGpio(Settings.ETH_Pin_mdio_irq) && 
+            (validGpio(Settings.ETH_Pin_power_rst) || (Settings.ETH_Pin_power_rst == -1))
+          )
+        ); // Some boards have fixed power
 }
 
 bool ethPrepare() {
@@ -89,14 +94,16 @@ void ethPrintSettings() {
       log += toString(Settings.ETH_Phy_Type);
       log += F(" PHY Addr: ");
       log += Settings.ETH_Phy_Addr;
-      log += F(" Eth Clock mode: ");
-      log += toString(Settings.ETH_Clock_Mode);
-      log += F(" MDC Pin: ");
-      log += String(Settings.ETH_Pin_mdc);
-      log += F(" MIO Pin: ");
-      log += String(Settings.ETH_Pin_mdio);
-      log += F(" Power Pin: ");
-      log += String(Settings.ETH_Pin_power);
+
+      if (!isSPI_EthernetType(Settings.ETH_Phy_Type)) {
+        log += F(" Eth Clock mode: ");
+        log += toString(Settings.ETH_Clock_Mode);
+      }
+      log += strformat(isSPI_EthernetType(Settings.ETH_Phy_Type) 
+        ? F(" CS: %d IRQ: %d RST: %d") : F(" MDC: %d MIO: %d PWR: %d"),
+        Settings.ETH_Pin_mdc_cs,
+        Settings.ETH_Pin_mdio_irq,
+        Settings.ETH_Pin_power_rst);
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
@@ -152,23 +159,69 @@ bool ETHConnectRelaxed() {
   registerEthEventHandler();
 
   if (!EthEventData.ethInitSuccess) {
-    ethResetGPIOpins();
 #if ESP_IDF_VERSION_MAJOR < 5
     EthEventData.ethInitSuccess = ETH.begin( 
       Settings.ETH_Phy_Addr,
-      Settings.ETH_Pin_power,
-      Settings.ETH_Pin_mdc,
-      Settings.ETH_Pin_mdio,
+      Settings.ETH_Pin_power_rst,
+      Settings.ETH_Pin_mdc_cs,
+      Settings.ETH_Pin_mdio_irq,
       (eth_phy_type_t)Settings.ETH_Phy_Type,
       (eth_clock_mode_t)Settings.ETH_Clock_Mode);
 #else
+#if FEATURE_USE_IPV6
+    if (Settings.EnableIPv6()) {
+      ETH.enableIPv6(true);
+    }
+#endif
+
+    if (isSPI_EthernetType(Settings.ETH_Phy_Type)) {
+      spi_host_device_t SPI_host = Settings.getSPI_host();
+      if (SPI_host == spi_host_device_t::SPI_HOST_MAX) {
+        addLog(LOG_LEVEL_ERROR, F("SPI not enabled"));
+        #ifdef ESP32C3
+        // FIXME TD-er: Fallback for ETH01-EVO board
+        SPI_host = spi_host_device_t::SPI2_HOST;
+        Settings.InitSPI = static_cast<int>(SPI_Options_e::UserDefined);
+        Settings.SPI_SCLK_pin = 7;
+        Settings.SPI_MISO_pin = 3;
+        Settings.SPI_MOSI_pin = 10;
+        #endif
+      }
+      // else 
+      {
+#if ETH_SPI_SUPPORTS_CUSTOM
+        EthEventData.ethInitSuccess = ETH.begin( 
+          to_ESP_phy_type(Settings.ETH_Phy_Type),
+          Settings.ETH_Phy_Addr,
+          Settings.ETH_Pin_mdc_cs,
+          Settings.ETH_Pin_mdio_irq,
+          Settings.ETH_Pin_power_rst,
+          SPI);
+#else
+        EthEventData.ethInitSuccess = ETH.begin( 
+          to_ESP_phy_type(Settings.ETH_Phy_Type),
+          Settings.ETH_Phy_Addr,
+          Settings.ETH_Pin_mdc_cs,
+          Settings.ETH_Pin_mdio_irq,
+          Settings.ETH_Pin_power_rst,
+          SPI_host,
+          static_cast<int>(Settings.SPI_SCLK_pin),
+          static_cast<int>(Settings.SPI_MISO_pin),
+          static_cast<int>(Settings.SPI_MOSI_pin));
+#endif
+      }
+    } else {
+# if CONFIG_ETH_USE_ESP32_EMAC
+    ethResetGPIOpins();
     EthEventData.ethInitSuccess = ETH.begin( 
-      (eth_phy_type_t)Settings.ETH_Phy_Type,
+      to_ESP_phy_type(Settings.ETH_Phy_Type),
       Settings.ETH_Phy_Addr,
-      Settings.ETH_Pin_mdc,
-      Settings.ETH_Pin_mdio,
-      Settings.ETH_Pin_power,
+      Settings.ETH_Pin_mdc_cs,
+      Settings.ETH_Pin_mdio_irq,
+      Settings.ETH_Pin_power_rst,
       (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+#endif
+    }
 
 #endif
   }
@@ -176,17 +229,42 @@ bool ETHConnectRelaxed() {
     // FIXME TD-er: Not sure if this is correctly set to false
     //EthEventData.ethConnectAttemptNeeded = false;
 
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+#if ESP_IDF_VERSION_MAJOR < 5
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("ETH  : MAC: %s speed: %dM %s Link: %s"),
+        ETH.macAddress().c_str(),
+        ETH.linkSpeed(),
+        String(ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex")).c_str(),
+        String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
+#else
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("ETH  : MAC: %s phy addr: %d speed: %dM %s Link: %s"),
+        ETH.macAddress().c_str(),
+        ETH.phyAddr(),
+        ETH.linkSpeed(),
+        concat(
+          ETH.fullDuplex() ? F("Full Duplex") : F("Half Duplex"),
+          ETH.autoNegotiation() ? F("(auto)") : F("")).c_str(),
+        String(ETH.linkUp() ? F("Up") : F("Down")).c_str()));
+#endif
+    }
+    
     if (EthLinkUp()) {
       // We might miss the connected event, since we are already connected.
       EthEventData.markConnected();
     }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("ETH  : Failed to initialize ETH"));
   }
   return EthEventData.ethInitSuccess;
 }
 
 void ethPower(bool enable) {
-  if (Settings.ETH_Pin_power != -1) {
-    if (GPIO_Internal_Read(Settings.ETH_Pin_power) == enable) {
+  if (isSPI_EthernetType(Settings.ETH_Phy_Type)) 
+    return;
+  if (Settings.ETH_Pin_power_rst != -1) {
+    if (GPIO_Internal_Read(Settings.ETH_Pin_power_rst) == enable) {
       // Already the desired state
       return;
     }
@@ -207,9 +285,9 @@ void ethPower(bool enable) {
     if (enable) {
 //      ethResetGPIOpins();
     }
-//    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power);
+//    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power_rst);
 
-    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power, enable ? 1 : 0);
+    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power_rst, enable ? 1 : 0);
     if (!enable) {
       if (Settings.ETH_Clock_Mode == EthClockMode_t::Ext_crystal_osc) {
         delay(600); // Give some time to discharge any capacitors
@@ -222,18 +300,23 @@ void ethPower(bool enable) {
 }
 
 void ethResetGPIOpins() {
+  if (isSPI_EthernetType(Settings.ETH_Phy_Type)) 
+    return;
+
   // fix an disconnection issue after rebooting Olimex POE - this forces a clean state for all GPIO involved in RMII
   // Thanks to @s-hadinger and @Jason2866
   // Resetting state of power pin is done in ethPower()
   addLog(LOG_LEVEL_INFO, F("ethResetGPIOpins()"));
-  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdc);
-  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdio);
+  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdc_cs);
+  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdio_irq);
+# if CONFIG_ETH_USE_ESP32_EMAC
   gpio_reset_pin(GPIO_NUM_19);    // EMAC_TXD0 - hardcoded
   gpio_reset_pin(GPIO_NUM_21);    // EMAC_TX_EN - hardcoded
   gpio_reset_pin(GPIO_NUM_22);    // EMAC_TXD1 - hardcoded
   gpio_reset_pin(GPIO_NUM_25);    // EMAC_RXD0 - hardcoded
   gpio_reset_pin(GPIO_NUM_26);    // EMAC_RXD1 - hardcoded
   gpio_reset_pin(GPIO_NUM_27);    // EMAC_RX_CRS_DV - hardcoded
+#endif
   /*
   switch (Settings.ETH_Clock_Mode) {
     case EthClockMode_t::Ext_crystal_osc:       // ETH_CLOCK_GPIO0_IN

@@ -56,7 +56,7 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR, 0x77);
         addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);

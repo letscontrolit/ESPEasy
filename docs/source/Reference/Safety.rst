@@ -23,12 +23,12 @@ So these have the same hole on the side used on the TH10/16 to connect sensors.
 This hole may seem like an invitation to connect some external sensor to these devices, but don't be tempted to do so.
 
 
-HWL8012 & CSE7766
+HLW8012 & CSE7766
 =================
 
 Some ESP8266 and ESP32 powered devices have an energy monitoring sensor on board.
 Well known examples are the Sonoff POW, POW r2, POW R3xx(D) and Shelly PLUG S, but there are many others.
-Almost all use either the HWL8012 or CSE7766 chip.
+Almost all use either the HLW8012 or CSE7766 chip.
 
 These chips are not isolated from mains power, which means all electronics connected
 to them does also have a direct connection to mains power lines.

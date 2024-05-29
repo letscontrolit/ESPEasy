@@ -9,12 +9,12 @@ struct ConstIntervalTimerID : SchedulerTimerID {
   ConstIntervalTimerID(SchedulerIntervalTimer_e timer) :
     SchedulerTimerID(SchedulerTimerType_e::ConstIntervalTimer)
   {
-    id = static_cast<uint32_t>(timer);
+    setId(static_cast<uint32_t>(timer));
   }
 
   SchedulerIntervalTimer_e getIntervalTimer() const
   {
-    return static_cast<SchedulerIntervalTimer_e>(id);
+    return static_cast<SchedulerIntervalTimer_e>(getId());
   }
 
 #ifndef BUILD_NO_DEBUG

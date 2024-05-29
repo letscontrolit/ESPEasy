@@ -5,6 +5,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../../ESPEasy_common.h"
@@ -77,8 +78,8 @@ bool Internal_GPIO_pulseHelper::init()
     attachInterruptArg(
       digitalPinToInterrupt(config.gpio),
       config.useEdgeMode() ?
-        reinterpret_cast<void (*)(void *)>(ISR_edgeCheck) :
-        reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
+      reinterpret_cast<void (*)(void *)>(ISR_edgeCheck) :
+      reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
       this,
       intPinMode);
     return true;
@@ -197,7 +198,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
         pulseModeData.Step2NOKcounter++;
         #endif // PULSE_STATISTIC
         // lets ignore previous pin status. It might have been a spike. Try to detect stable signal
-        pulseModeData.lastCheckState = pinState;    // now trust the new state
+        pulseModeData.lastCheckState = pinState; // now trust the new state
         // after debounceTime/2, do step 2 again
         Scheduler.setPluginTaskTimer(config.debounceTime >> 1, config.taskIndex, GPIO_PULSE_HELPER_PROCESSING_STEP_2);
       }
@@ -247,7 +248,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
         #endif // PULSE_STATISTIC
 
         // ignore spike from previous step. It is regarded as spike within previous=current signal. Again try to detect stable signal
-        pulseModeData.lastCheckState = pinState;    // now trust the previous=new state
+        pulseModeData.lastCheckState = pinState; // now trust the previous=new state
         Scheduler.setPluginTaskTimer(config.debounceTime >> 1, config.taskIndex, GPIO_PULSE_HELPER_PROCESSING_STEP_2);
 
         #ifdef PULSE_STATISTIC
@@ -261,9 +262,8 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
     default:
     {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log; log.reserve(48);
-        log = F("_P003:PLUGIN_TASKTIMER_IN: Invalid processingStep: "); log += pStep;
-        addLogMove(LOG_LEVEL_ERROR, log);
+        addLog(LOG_LEVEL_ERROR,
+               concat(F("_P003:PLUGIN_TASKTIMER_IN: Invalid processingStep: "), pStep));
       }
       break;
     }
@@ -334,11 +334,9 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
       default:
       {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-          log.reserve(48);
-          log  = F("_P003:PLUGIN_TASKTIMER_IN: Invalid modeType: ");
-          log += static_cast<int>(config.interruptPinMode);
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR,
+                 concat(F("_P003:PLUGIN_TASKTIMER_IN: Invalid modeType: "),
+                        static_cast<int>(config.interruptPinMode)));
         }
         break;
       }
@@ -379,7 +377,7 @@ void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_edgeCheck(Internal_GPIO_pulseHelpe
     self->ISRdata.pulseTime              = timeSinceLastTrigger;
     self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
   }
-  ISR_interrupts(); // enable interrupts again.
+  ISR_interrupts();                                     // enable interrupts again.
 }
 
 void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelper *self)
@@ -399,7 +397,7 @@ void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelp
     self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
     self->ISRdata.triggerTimestamp = getMicros64();
   }
-  ISR_interrupts(); // enable interrupts again.
+  ISR_interrupts();                        // enable interrupts again.
 }
 
 #ifdef PULSE_STATISTIC
@@ -437,24 +435,19 @@ void Internal_GPIO_pulseHelper::doStatisticLogging(uint8_t logLevel)
 {
   if (loglevelActiveFor(logLevel)) {
     // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
-    String log;
-
-    if (log.reserve(125)) {
-      log  = F("Pulse:");
-      log += F("Stats (GPIO) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
-      log += config.gpio;                       log += F(") [");
-      log += ISRdata.Step0counter;              log += '|';
-      log += pulseModeData.Step1counter;        log += '|';
-      log += pulseModeData.Step2OKcounter;      log += '/';
-      log += pulseModeData.Step2NOKcounter;     log += '|';
-      log += pulseModeData.Step3OKcounter;      log += '/';
-      log += pulseModeData.Step3NOKcounter;     log += '/';
-      log += pulseModeData.Step3IGNcounter;     log += '|';
-      log += ISRdata.pulseTotalCounter;         log += F("] [");
-      log += pulseModeData.pulseLowTime / 1000L;  log += '|';
-      log += pulseModeData.pulseHighTime / 1000L; log += ']';
-      addLogMove(logLevel, log);
-    }
+    addLog(logLevel,
+           strformat(F("Pulse:Stats (GPIO) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (%d) [%d|%d/%d|%d/%d/%d|%d][%.4f|%.4f]"),
+                     static_cast<int>(config.gpio),
+                     static_cast<int>(ISRdata.Step0counter),
+                     pulseModeData.Step1counter,
+                     pulseModeData.Step2OKcounter,
+                     pulseModeData.Step2NOKcounter,
+                     pulseModeData.Step3OKcounter,
+                     pulseModeData.Step3NOKcounter,
+                     pulseModeData.Step3IGNcounter,
+                     static_cast<int>(ISRdata.pulseTotalCounter),
+                     pulseModeData.pulseLowTime / 1000L,
+                     pulseModeData.pulseHighTime / 1000L));
   }
 }
 
@@ -468,11 +461,10 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
     String log;
 
     if (log.reserve(120)) {
-      log  = F("Pulse:");
-      log += F("OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");
-      log += config.gpio;  log += F(") [");
-      log += config.debounceTime;  log += F("] {");
-      log += pulseModeData.Step0ODcounter;  log += F("} [");
+      log = strformat(F("Pulse:OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (%d) [%d] {%d} ["),
+                      config.gpio,
+                      config.debounceTime,
+                      pulseModeData.Step0ODcounter);
 
       for (int pStep = 0; pStep <= P003_PSTEP_MAX; pStep++) {
         log += pulseModeData.StepOverdueMax[pStep];

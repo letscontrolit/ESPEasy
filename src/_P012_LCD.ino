@@ -289,6 +289,10 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
             P012_data->lcd->setContrast(event->Par2);
             success = true;
           }
+          else if (arg1.equalsIgnoreCase(F("Clear"))) {
+            P012_data->lcd.clear();
+            P012_data->splashState = P012_splashState_e::SplashCleared;
+          }
         }
         else if (equals(cmd, F("lcd")))
         {

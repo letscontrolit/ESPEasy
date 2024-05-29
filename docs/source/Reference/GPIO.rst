@@ -325,7 +325,7 @@ Typical uses in ESPEasy where an interrupt of a GPIO pin is used are:
 Pins used for RMII Ethernet PHY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. include:: ../Reference/Ethernet_PHY_ESP32.rst
+.. include:: ../Reference/RMII_Ethernet_PHY_ESP32.rst
 
 
 Best pins to use on ESP32-C3

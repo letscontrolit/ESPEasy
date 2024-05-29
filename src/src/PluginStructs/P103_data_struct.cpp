@@ -23,7 +23,9 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
   }
   # endif // ifndef BUILD_NO_DEBUG
   Wire.beginTransmission(I2Caddress);
-  Wire.write(cmd.c_str());
+  for (size_t i = 0; i < cmd.length(); ++i)  {
+    Wire.write(static_cast<uint8_t>(cmd[i]));
+  }
   error = Wire.endTransmission();
 
   if (error != 0)

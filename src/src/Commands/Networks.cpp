@@ -40,6 +40,29 @@ String Command_IP (struct EventStruct *event, const char* Line)
   return Command_GetORSetIP(event, F("IP:"), Line, Settings.IP, NetworkLocalIP(),1);
 }
 
+#if FEATURE_USE_IPV6
+String Command_show_all_IP6 (struct EventStruct *event, const char* Line)
+{
+  // Only get all IPv6 addresses
+  IP6Addresses_t addresses = NetworkAllIPv6();
+  String res;
+  res += '[';
+  bool first = true;
+  for (auto it = addresses.begin(); it != addresses.end(); ++it)
+  {
+    if (first) {
+      first = false;
+    } else {
+      res += ',';
+    }
+    res += wrap_String(it->toString(true), '"');
+  }
+  res += ']';
+  return res;
+}
+#endif
+
+
 String Command_Subnet (struct EventStruct *event, const char* Line)
 {
   return Command_GetORSetIP(event, F("Subnet:"), Line, Settings.Subnet, NetworkSubnetMask(), 1);
@@ -53,17 +76,17 @@ String Command_ETH_Phy_Addr (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Pin_mdc (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdc),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc_cs:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdc_cs),1);
 }
 
 String Command_ETH_Pin_mdio (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdio),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio_irq:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdio_irq),1);
 }
 
 String Command_ETH_Pin_power (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_power:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_power),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_power_rst:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_power_rst),1);
 }
 
 String Command_ETH_Phy_Type (struct EventStruct *event, const char* Line)

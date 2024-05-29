@@ -121,8 +121,10 @@ void handle_sysinfo_json() {
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
 #if FEATURE_USE_IPV6
-  json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
-  json_prop(F("ip6_global"),     getValue(LabelType::IP6_GLOBAL));
+  if (Settings.EnableIPv6()) {
+    json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
+    json_prop(F("ip6_global"),    getValue(LabelType::IP6_GLOBAL));
+  }
 #endif
 
   json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
@@ -147,10 +149,15 @@ void handle_sysinfo_json() {
   json_open(false, F("ethernet"));
   json_prop(F("ethwifimode"),   getValue(LabelType::ETH_WIFI_MODE));
   json_prop(F("ethconnected"),  getValue(LabelType::ETH_CONNECTED));
+  json_prop(F("ethchip"),       getValue(LabelType::ETH_CHIP));
   json_prop(F("ethduplex"),     getValue(LabelType::ETH_DUPLEX));
   json_prop(F("ethspeed"),      getValue(LabelType::ETH_SPEED));
   json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
   json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
+#if FEATURE_USE_IPV6
+  if (Settings.EnableIPv6())
+    json_prop(F("ethipv6local"), getValue(LabelType::ETH_IP6_LOCAL));
+#endif
   json_close();
 # endif // if FEATURE_ETHERNET
 
@@ -404,6 +411,7 @@ void handle_sysinfo_Ethernet() {
 
     static const LabelType::Enum labels[] PROGMEM =
     {
+      LabelType::ETH_CHIP,
       LabelType::ETH_STATE,
       LabelType::ETH_SPEED,
       LabelType::ETH_DUPLEX,
@@ -537,6 +545,9 @@ void handle_sysinfo_WiFiSettings() {
     LabelType::HIDDEN_SSID_SLOW_CONNECT,
     LabelType::CONNECT_HIDDEN_SSID,
     LabelType::SDK_WIFI_AUTORECONNECT,
+#if FEATURE_USE_IPV6
+    LabelType::ENABLE_IPV6,
+#endif
 
     LabelType::MAX_LABEL
   };

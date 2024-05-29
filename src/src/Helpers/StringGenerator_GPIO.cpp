@@ -287,21 +287,30 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
 
   #if FEATURE_ETHERNET
+  if (isSPI_EthernetType(Settings.ETH_Phy_Type)) {
+    if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+      if (Settings.ETH_Pin_mdc_cs == gpio) { return F("Eth SPI CS"); }
 
-  if (Settings.isEthernetPin(gpio)) {
-    return F("Eth");
-  }
+      if (Settings.ETH_Pin_mdio_irq == gpio) { return F("Eth SPI IRQ"); }
 
-  if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
-    if (isGpioUsedInETHClockMode(Settings.ETH_Clock_Mode, gpio)) { return F("Eth Clock"); }
+      if (Settings.ETH_Pin_power_rst == gpio) { return F("Eth SPI RST"); }
+    }
+  } else {
+    if (Settings.isEthernetPin(gpio)) {
+      return F("Eth");
+    }
 
-    if (Settings.ETH_Pin_mdc == gpio) { return F("Eth MDC"); }
+    if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+      if (isGpioUsedInETHClockMode(Settings.ETH_Clock_Mode, gpio)) { return F("Eth Clock"); }
 
-    if (Settings.ETH_Pin_mdio == gpio) { return F("Eth MDIO"); }
+      if (Settings.ETH_Pin_mdc_cs == gpio) { return F("Eth MDC"); }
 
-    if (Settings.ETH_Pin_power == gpio) { return F("Eth Pwr"); }
+      if (Settings.ETH_Pin_mdio_irq == gpio) { return F("Eth MDIO"); }
 
-    return F("Eth");
+      if (Settings.ETH_Pin_power_rst == gpio) { return F("Eth Pwr"); }
+
+      return F("Eth");
+    }
   }
   #endif // if FEATURE_ETHERNET
 

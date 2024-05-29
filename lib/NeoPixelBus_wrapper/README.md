@@ -16,6 +16,7 @@
 ### Limitations
 
 - Currently only supports the most commonly used NeoPixel stripes `NEO_GRB` and `NEO_GRBW`, and the default `NEO_KHZ800` method. (That's all what is used in ESPEasy...)
+- When using an ESP8266 and the used GPIO pin is *not* `GPIO2`, you can enable `#  define NEOPIXEL_WRAPPER_USE_ADAFRUIT` in `NeoPixelBus_wrapper.h`, but you'll then be using the Adafruit_NeoPixel library again, as that does allow to select the GPIO pin. The `Adafruit_NeoPixel` library then has to be available for compilation!
 
 ### Support
 

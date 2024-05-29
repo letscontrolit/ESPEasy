@@ -51,7 +51,7 @@ struct ChartJS_options_scale {
 };
 
 struct ChartJS_options_scales {
-  ChartJS_options_scales() = default;
+  ChartJS_options_scales();
 
   void   add(const ChartJS_options_scale& scale);
 

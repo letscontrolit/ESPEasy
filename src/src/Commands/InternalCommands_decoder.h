@@ -67,6 +67,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   i2cscanner,
   inc,
   ip,
+#if FEATURE_USE_IPV6
+  ip6,
+#endif
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   jsonportstatus,
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -109,6 +112,10 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_NOTIFIER
   ntphost,
 
+#if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+  owscan,
+#endif // if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+
   password,
 #ifdef USES_P019
   pcfgpio,
@@ -140,6 +147,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   pulse,
 #if FEATURE_MQTT
   publish,
+  publishr,
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   puttohttp,

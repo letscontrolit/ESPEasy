@@ -6,16 +6,16 @@ var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
   "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "Gateway", "I2Cscanner", "Inc",
-  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish",
+  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish", "PublishR",
   "Reboot", "Reset", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
-  "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAPkey", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
-  "WiFiKey2", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode", "WiFi#Disconnected",
+  "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
+  "WiFiKey2", "WiFiMode", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode",
   "Event", "AsyncEvent",
   "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",];
-var commonString2 = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
-  "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
-  "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected"];
+var commonEvents = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
+  "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "ThingspeakReply", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
+  "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "WiFi#Disconnected"];
 var commonPlugins = [
   //P003
   "ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic",
@@ -24,6 +24,8 @@ var commonPlugins = [
   //P009
   "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse", "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "MonitorRange,MCP",
   "UnMonitorRange,MCP", "UnMonitor,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
+  //P011
+  "ExtGpio", "ExtPwm", "ExtPulse", "ExtLongPulse", "Status,EXT,",
   //P012
   "LCDCmd", "LCD",
   //P019
@@ -55,6 +57,8 @@ var commonPlugins = [
   "7dn", "7dst", "7dsd", "7dtext", "7ddt", "7dt", "7dtfont", "7dtbin", "7don", "7doff", "7output",
   //P076
   "HLWCalibrate", "HLWReset",
+  //P077
+  "csecalibrate", "cseclearpulses", "csereset",
   //P079
   "WemosMotorShieldCMD", "LolinMotorShieldCMD",
   //P082
@@ -106,12 +110,18 @@ var commonPlugins = [
   "sht4x", "sht4x,startup",
   //P159
   "ld2410", "ld2410,factoryreset", "ld2410,logall",
+  //P162
+  "digipot", "digipot,reset", "digipot,shutdown", "digipot,",
+  //P166
+  "gp8403", "gp8403,volt,", "gp8403,mvolt,", "gp8403,range,", "gp8403,preset,", "gp8403,init,",
+  //P167
+  "sen5x", "sen5x,startclean", "sen5x,techlog,",
 ];
 var pluginDispKind = [
   //P095
   "tft", "ili9341", "ili9342", "ili9481", "ili9486", "ili9488",
   //P096
-  "eink", "epaper", "il3897", "uc8151d", "ssd1680", "ws2in7", "ws1in54",
+  "epd", "eink", "epaper", "il3897", "uc8151d", "ssd1680", "ws2in7", "ws1in54",
   //P116
   /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
   //P131
@@ -122,7 +132,8 @@ var pluginDispKind = [
 var pluginDispCmd = [
   "cmd,on", "cmd,off", "cmd,clear", "cmd,backlight", "cmd,bright", "cmd,deepsleep", "cmd,seq_start", "cmd,seq_end", "cmd,inv", "cmd,rot",
   ",clear", ",rot", ",tpm", ",txt", ",txp", ",txz", ",txc", ",txs", ",txtfull", ",asciitable", ",font",
-  ",l", ",lh", ",lv", ",lm", ",lmr", ",r", ",rf", ",c", ",cf", ",rf", ",t", ",tf", ",rr", ",rrf", ",px", ",pxh", ",pxv", ",bmp", ",btn"
+  ",l", ",lh", ",lv", ",lm", ",lmr", ",r", ",rf", ",c", ",cf", ",rf", ",t", ",tf", ",rr", ",rrf", ",px", ",pxh", ",pxv", ",bmp", ",btn",
+  ",win", ",defwin", ",delwin",
 ];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
@@ -134,20 +145,25 @@ var taskSpecifics = [
   "settings.Controller1.Enabled", "settings.Controller2.Enabled", "settings.Controller3.Enabled",
   "settings.Controller1.Idx", "settings.Controller2.Idx", "settings.Controller3.Idx"
 ];
-//things that does not fit in any other catergory (for now)
+//things that do not fit in any other catergory (for now)
 var AnythingElse = [
   //System Variables
-  "%eventvalue%", "%eventpar%", "%eventname%", "substring", "%sysname%", "%bootcause%", "%systime%", "%systm_hm%",
+  "%eventvalue%", "%eventpar%", "%eventname%", "%sysname%", "%bootcause%", "%systime%", "%systm_hm%",
   "%systm_hm_0%", "%systm_hm_sp%", "%systime_am%", "%systime_am_0%", "%systime_am_sp%", "%systm_hm_am%", "%systm_hm_am_0%", "%systm_hm_am_sp%",
   "%lcltime%", "%sunrise%", "%s_sunrise%", "%m_sunrise%", "%sunset%", "%s_sunset%", "%m_sunset%", "%lcltime_am%",
   "%syshour%", "%syshour_0%", "%sysmin%", "%sysmin_0%", "%syssec%", "%syssec_0%", "%sysday%", "%sysday_0%", "%sysmonth%",
   "%sysmonth_0%", "%sysyear%", "%sysyear_0%", "%sysyears%", "%sysweekday%", "%sysweekday_s%", "%unixtime%", "%uptime%", "%uptime_ms%",
-  "%rssi%", "%ip%", "%unit%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
+  "%rssi%", "%ip%", "%unit%", "%unit_0%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
-  "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%",
+  "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%", "%inttemp%",
+  //String Functions
+  "substring", "indexOf", "indexOf_ci", "equals", "equals_ci", "strtol", "timeToMin", "timeToSec",
+  //Ethernet
+  "%ethwifimode%", "%ethconnected%", "%ethduplex%", "%ethspeed%", "%ethstate%", "%ethspeedstate%",
   //Standard Conversions
   "%c_w_dir%", "%c_c2f%", "%c_ms2Bft%", "%c_dew_th%", "%c_alt_pres_sea%", "%c_sea_pres_alt%", "%c_cm2imp%", "%c_mm2imp%",
-  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%",
+  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_2hex%", "%c_u2ip%", "%c_uname%", "%c_uage%", "%c_ubuild%", "%c_ubuildstr%",
+  "%c_uload%", "%c_utype%", "%c_utypestr%",
   //Variables
   "var", "int"
 ];
@@ -163,7 +179,7 @@ for (const element2 of pluginDispKind) {
   }
 }
 
-var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommands, commonString2, commonTag, commonNumber, commonMath, commonWarning, taskSpecifics, AnythingElse);
+var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommands, commonEvents, commonTag, commonNumber, commonMath, commonWarning, taskSpecifics, AnythingElse);
 
 var rEdit;
 function initCM() {
@@ -219,8 +235,8 @@ function initCM() {
     var lCcommonCommands = commonCommands.map(name => name.toLowerCase());
     commonCommands = commonCommands.concat(lCcommonCommands);
 
-    var lCcommonString2 = commonString2.map(name => name.toLowerCase());
-    commonString2 = commonString2.concat(lCcommonString2);
+    var lCcommonString2 = commonEvents.map(name => name.toLowerCase());
+    commonEvents = commonEvents.concat(lCcommonString2);
 
     var lCcommonPlugins = commonPlugins.map(name => name.toLowerCase());
     commonPlugins = commonPlugins.concat(lCcommonPlugins);
@@ -249,7 +265,7 @@ function initCM() {
     define('atom', commonAtoms);
     define('keyword', commonKeywords);
     define('builtin', commonCommands);
-    define('string-2', commonString2);
+    define('events', commonEvents);
     define('def', commonPlugins);
     define('tag', commonTag);
     define('number', commonNumber);
@@ -350,7 +366,7 @@ function initCM() {
       if (/\w/.test(ch)) {
         if (stream.match("#")) {
           stream.eatWhile(/[\w.#]/);
-          return 'string-2';
+          return 'events';
         }
       }
 

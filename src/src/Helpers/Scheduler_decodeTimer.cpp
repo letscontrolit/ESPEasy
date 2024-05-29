@@ -62,6 +62,6 @@ String ESPEasy_Scheduler::decodeSchedulerId(SchedulerTimerID timerID) {
 
 #endif // ifndef BUILD_NO_DEBUG
   result += F(" timer, id: ");
-  result += timerID.id;
+  result += timerID.getId();
   return result;
 }

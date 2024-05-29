@@ -9,7 +9,7 @@
 #include <Arduino.h>
 
 #define CC1101_BUFFER_LEN        64
-#define CC1101_DATA_LEN          CC1101_BUFFER_LEN - 3
+#define CC1101_DATA_LEN          (CC1101_BUFFER_LEN - 3)
 
 
 class CC1101Packet {

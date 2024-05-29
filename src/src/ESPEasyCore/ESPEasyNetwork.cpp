@@ -46,6 +46,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 //      ETH.end();
       if (new_medium == NetworkMedium_t::WIFI) {
         WiFiEventData.clearAll();
+#if ESP_IDF_VERSION_MAJOR >= 5
+        WiFi.STA.setDefault();
+#endif
       }
       #endif
       break;
@@ -53,6 +56,11 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
       WiFiEventData.timerAPstart.clear();
       if (new_medium == NetworkMedium_t::Ethernet) {
+#if ESP_IDF_VERSION_MAJOR >= 5
+#if FEATURE_ETHERNET
+        ETH.setDefault();
+#endif
+#endif
         WifiDisconnect();
       }
       break;
@@ -239,7 +247,7 @@ bool IPv6_from_MAC(const MAC_address& mac, IPAddress& ipv6)
   addLog(LOG_LEVEL_INFO, strformat(
      F("IPv6_from_MAC: Mac %s IP %s"),
      mac.toString().c_str(),
-     ipv6.toString().c_str()
+     ipv6.toString(true).c_str()
      ));
 */
   return true;
@@ -398,7 +406,7 @@ bool EthFullDuplex()
 bool EthLinkUp()
 {
   if (EthEventData.ethInitSuccess) {
-    #ifdef ESP_IDF_VERSION_MAJOR
+    #if ESP_IDF_VERSION_MAJOR < 5
     // FIXME TD-er: See: https://github.com/espressif/arduino-esp32/issues/6105
     return EthEventData.EthConnected();
     #else

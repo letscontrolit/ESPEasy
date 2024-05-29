@@ -224,20 +224,14 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
-        String log = F("P122: Temperature: ");
-        log += UserVar[event->BaseVarIndex + 0];
-        log += F(" Humidity: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO,
+               strformat(F("P122: Temperature: %s Humidity: %s"),
+                         formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+                         formatUserVarNoCheck(event->TaskIndex, 1).c_str()
+                         ));
       }
       success = true;
       break;
-    }
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      // code to be executed once a second. Tasks which do not require fast response can be added here
-      success = true;
     }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -251,6 +245,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->update(); // SHT2x FSM evaluation
       }
       success = true;
+      break;
     }
   } // switch
   return success;

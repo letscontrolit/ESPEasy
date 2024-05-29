@@ -8,8 +8,7 @@
 // Forward declaration
 struct C018_data_struct;
 
-# include <rn2xx3.h>
-
+#include <rn2xx3_datatypes.h>
 
 # define C018_DEVICE_EUI_LEN          17
 # define C018_DEVICE_ADDR_LEN         33

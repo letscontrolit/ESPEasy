@@ -778,6 +778,8 @@ void addTextBox(const String  & id,
                 #if FEATURE_TOOLTIPS
                 , const String& tooltip
                 #endif // if FEATURE_TOOLTIPS
+                ,
+                const String&   datalist
                 )
 {
   addHtml(F("<input "));
@@ -787,6 +789,9 @@ void addTextBox(const String  & id,
   addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
+  }
+  if (!datalist.isEmpty()) {
+    addHtmlAttribute(F("list"),    datalist);
   }
   addHtmlAttribute(F("value"),     value);
 

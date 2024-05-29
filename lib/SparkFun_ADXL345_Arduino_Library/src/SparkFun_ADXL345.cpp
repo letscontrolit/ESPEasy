@@ -199,7 +199,7 @@ void ADXL345::getRangeSetting(byte *rangeSetting) {
   byte _b;
 
   readFrom(ADXL345_DATA_FORMAT, 1, &_b);
-  *rangeSetting = _b & B00000011;
+  *rangeSetting = _b & 0b00000011;
 }
 
 void ADXL345::setRangeSetting(int val) {
@@ -208,22 +208,22 @@ void ADXL345::setRangeSetting(int val) {
 
   switch (val) {
     case 2:
-      _s = B00000000;
+      _s = 0b00000000;
       break;
     case 4:
-      _s = B00000001;
+      _s = 0b00000001;
       break;
     case 8:
-      _s = B00000010;
+      _s = 0b00000010;
       break;
     case 16:
-      _s = B00000011;
+      _s = 0b00000011;
       break;
     default:
-      _s = B00000000;
+      _s = 0b00000000;
   }
   readFrom(ADXL345_DATA_FORMAT, 1, &_b);
-  _s |= (_b & B11101100);
+  _s |= (_b & 0b11101100);
   writeTo(ADXL345_DATA_FORMAT, _s);
 }
 
@@ -700,7 +700,7 @@ double ADXL345::getRate() {
   byte _b;
 
   readFrom(ADXL345_BW_RATE, 1, &_b);
-  _b &= B00001111;
+  _b &= 0b00001111;
   return (pow(2, ((int)_b) - 6)) * 6.25;
 }
 
@@ -716,7 +716,7 @@ void ADXL345::setRate(double rate) {
 
   if (r <= 9) {
     readFrom(ADXL345_BW_RATE, 1, &_b);
-    _s = (byte)(r + 6) | (_b & B11110000);
+    _s = (byte)(r + 6) | (_b & 0b11110000);
     writeTo(ADXL345_BW_RATE, _s);
   }
 }

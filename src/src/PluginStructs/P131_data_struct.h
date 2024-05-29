@@ -24,6 +24,7 @@
 # define P131_CONFIG_MATRIX_HEIGHT  PCONFIG(1)
 # define P131_CONFIG_TILE_WIDTH     PCONFIG(2)
 # define P131_CONFIG_TILE_HEIGHT    PCONFIG(3)
+# define P131_CONFIG_DEFAULT_FONT   PCONFIG(4)
 
 # define P131_CONFIG_FLAGS          PCONFIG_ULONG(0)
 # define P131_CONFIG_FLAGS_B        PCONFIG_ULONG(1)
@@ -107,8 +108,9 @@ public:
                    String              commandTrigger,
                    uint8_t             brightness,
                    uint8_t             maxbright,
-                   uint16_t            fgcolor = ADAGFX_WHITE,
-                   uint16_t            bgcolor = ADAGFX_BLACK);
+                   uint16_t            fgcolor       = ADAGFX_WHITE,
+                   uint16_t            bgcolor       = ADAGFX_BLACK,
+                   const uint8_t       defaultFontId = 0);
 
   P131_data_struct() = delete;
   virtual ~P131_data_struct();
@@ -149,15 +151,16 @@ private:
   int8_t  _pin          = -1;
   uint8_t _matrixType   = NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE |
                           NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE;
+  neoPixelType        _ledType     = NEO_GRB + NEO_KHZ800;
   uint8_t             _rotation    = 0;
   uint8_t             _fontscaling = 1;
   AdaGFXTextPrintMode _textmode    = AdaGFXTextPrintMode::ContinueToNextLine;
   String              _commandTrigger;
   uint8_t             _brightness = 40;
   uint8_t             _maxbright  = 255;
-  neoPixelType        _ledType    = NEO_GRB + NEO_KHZ800;
   uint16_t            _fgcolor    = ADAGFX_WHITE;
   uint16_t            _bgcolor    = ADAGFX_BLACK;
+  uint8_t             _defaultFontId;
 
   uint16_t _textcols     = 0;
   uint16_t _textrows     = 0;

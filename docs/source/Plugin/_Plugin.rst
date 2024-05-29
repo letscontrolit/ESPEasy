@@ -360,6 +360,7 @@ There are different released versions of ESP Easy:
    ":ref:`P120_page`","|P120_status|","P120"
    ":ref:`P121_page`","|P121_status|","P121"
    ":ref:`P122_page`","|P122_status|","P122"
+   ":ref:`P123_page`","|P123_status|","P123"
    ":ref:`P124_page`","|P124_status|","P124"
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
@@ -386,7 +387,16 @@ There are different released versions of ESP Easy:
    ":ref:`P153_page`","|P153_status|","P153"
    ":ref:`P154_page`","|P154_status|","P154"
    ":ref:`P159_page`","|P159_status|","P159"
+   ":ref:`P162_page`","|P162_status|","P162"
+   ":ref:`P164_page`","|P164_status|","P164"
+   ":ref:`P166_page`","|P166_status|","P166"
+   ":ref:`P167_page`","|P167_status|","P167"
 
+
+.. include:: _plugin_sets_overview.repl
+
+Plugins per Category
+====================
 
 Internal GPIO handling
 ----------------------

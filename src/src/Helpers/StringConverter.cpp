@@ -22,6 +22,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
@@ -59,7 +60,7 @@ bool equals(const String& str, const __FlashStringHelper * f_str) {
 }
 
 bool equals(const String& str, const char& c) {
-  return str.equals(String(c));
+  return str.length() == 1 && str[0] == c;
 }
 
 void move_special(String& dest, String&& source) {
@@ -117,7 +118,7 @@ String strformat(const String& format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
     va_end(arg);
@@ -147,7 +148,7 @@ String strformat(const __FlashStringHelper * format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
     va_end(arg);
@@ -199,7 +200,7 @@ bool str2ip(const char *string, uint8_t *IP)
   return false;
 }
 
-String formatIP(const IPAddress& ip) {
+String formatIP(const IPAddress& ip, bool includeZone) {
 #ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
@@ -218,7 +219,11 @@ String formatIP(const IPAddress& ip) {
   }
   #endif
 */
+#if FEATURE_USE_IPV6
+  return ip.toString(includeZone);
+#else
   return ip.toString();
+#endif
 #endif
 }
 
@@ -630,10 +635,34 @@ String to_json_object_value(const __FlashStringHelper * object,
   return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  return to_json_object_value(String(object), value, wrapInQuotes);
+}
+
+String to_json_object_value(const String& object,
+                            int value,
+                            bool wrapInQuotes)
+{
+  if (wrapInQuotes) {
+    return strformat(
+      F("\"%s\":\"%d\""),
+      object.c_str(),
+      value);
+  }
+    
+  return strformat(
+    F("\"%s\":%d"), 
+    object.c_str(),
+    value);
+}
+
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   return strformat(
-    F("%s:%s"), 
-    wrap_String(object, '"').c_str(),  
+    F("\"%s\":%s"), 
+    object.c_str(),
     to_json_value(value, wrapInQuotes).c_str());
 }
 
@@ -642,6 +671,18 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Empty string
     return F("\"\"");
   }
+  if (value.length() > 2) {
+    // Check for JSON objects or arrays
+    const char firstchar = value[0];
+    const char lastchar = value[value.length() - 1];
+    if ((firstchar == '[' && lastchar == ']') ||
+        (firstchar == '{' && lastchar == '}')) 
+    {
+      return value;
+    }
+  }
+
+
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
 
@@ -1043,7 +1084,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
 int GetCommandCode(const char* needle, const char* haystack)
 {
   // Likely long enough to parse any command
-  char temp[32]{};
+  static char temp[32]{};
+  temp[0] = '\0';
   return GetCommandCode(temp, sizeof(temp), needle, haystack);
 }
 
@@ -1421,6 +1463,15 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
+  #if FEATURE_ESPEASY_P2P
+  SMART_CONV(F("%c_uname%"),  getNameForUnit(data.arg1))
+  SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
+  SMART_CONV(F("%c_ubuild%"), String(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_ubuildstr%"), formatSystemBuildNr(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_uload%"),  toString(getLoadForUnit(data.arg1)))
+  SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
+  SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
+  #endif // if FEATURE_ESPEASY_P2P
   #undef SMART_CONV
 
   // Conversions with 2 parameters
@@ -1464,6 +1515,9 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
   pos_begin = -1;
   pos_end   = -1;
+  if (string == nullptr) {
+    return false;
+  }
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
   bool parenthesis          = false;
