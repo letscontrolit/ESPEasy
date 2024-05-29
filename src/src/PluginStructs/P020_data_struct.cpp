@@ -257,11 +257,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     blinkLED();
 
     rulesEngine(serial_buffer);
-#if ESP_IDF_VERSION_MAJOR>=5
-    ser2netClient.clear();
-#else
     ser2netClient.flush();
-#endif
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2Net: data sent!"));

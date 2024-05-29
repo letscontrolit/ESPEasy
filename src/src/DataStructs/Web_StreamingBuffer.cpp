@@ -268,11 +268,7 @@ void Web_StreamingBuffer::endStream() {
     buf.clear();
     sendContentBlocking(buf);
 
-#if ESP_IDF_VERSION_MAJOR>=5
-    web_server.client().clear();
-#else
     web_server.client().flush();
-#endif
 
     finalRam = ESP.getFreeHeap();
 
@@ -371,11 +367,8 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
-  #if ESP_IDF_VERSION_MAJOR>=5
-  web_server.client().clear();
-  #else
+  
   web_server.client().flush();
-  #endif
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);

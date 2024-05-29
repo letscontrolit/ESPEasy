@@ -232,11 +232,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       break;
     }
 
-  #if ESP_IDF_VERSION_MAJOR>=5
-    client.clear();
-  #else
     client.flush();
-  #endif
     client.stop();
 
     if (myStatus == true) {
