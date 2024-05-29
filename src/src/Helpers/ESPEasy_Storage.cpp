@@ -519,19 +519,18 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-  // 'Fix' for IDF 4.4 LittleFS not needed anymore
-  // #ifdef USE_LITTLEFS
-  //   #ifdef ESP32
-  //   const bool res = ESPEASY_FS.begin(true);
-  //   ESPEASY_FS.end();
-  //   return res;
-  //   #else
-  //   return ESPEASY_FS.format();
-  //   #endif
-  // #else
+   #ifdef USE_LITTLEFS
+     # ifdef ESP32
+  const bool res = ESPEASY_FS.begin(true);
+  ESPEASY_FS.end();
+  return res;
+     # else // ifdef ESP32
+  return ESPEASY_FS.format();
+     # endif // ifdef ESP32
+   #else // ifdef USE_LITTLEFS
   return ESPEASY_FS.format();
 
-  // #endif
+   #endif // ifdef USE_LITTLEFS
 }
 
 #ifdef ESP32

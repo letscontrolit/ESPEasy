@@ -224,13 +224,15 @@ private:
   bool updateIPcache();
 };
 
+#include "../Helpers/Memory.h"
+
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
 /*
 # ifdef USE_SECOND_HEAP
 #define MakeControllerSettings(T) HeapSelectIram ephemeral; ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
 #else
 */
-#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
+#define MakeControllerSettings(T) void * calloc_ptr = special_calloc(1,sizeof(ControllerSettingsStruct)); ControllerSettingsStruct_ptr_type T(new (calloc_ptr)  ControllerSettingsStruct());
 //#endif
 
 // Check to see if MakeControllerSettings was successful

@@ -37,14 +37,14 @@ bool P147_data_struct::init(struct EventStruct *event) {
 
     // TODO Add initialization of IndexAlgorithm objects
     # if P147_FEATURE_GASINDEXALGORITHM
-    vocGasIndexAlgorithm = new VOCGasIndexAlgorithm((P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER) * 1.0f);
+    vocGasIndexAlgorithm = new (std::nothrow) VOCGasIndexAlgorithm((P147_LOW_POWER_MEASURE == 0 ? P147_SHORT_COUNTER : P147_LONG_COUNTER) * 1.0f);
 
     if (nullptr == vocGasIndexAlgorithm) {
       _initialized = false;
     }
 
     if (_initialized && (_sensorType == P147_sensor_e::SGP41)) {
-      noxGasIndexAlgorithm = new NOxGasIndexAlgorithm(); // Algorithm doesn't support a sampling interval
+      noxGasIndexAlgorithm = new (std::nothrow) NOxGasIndexAlgorithm(); // Algorithm doesn't support a sampling interval
 
       if (nullptr == noxGasIndexAlgorithm) {
         _initialized = false;

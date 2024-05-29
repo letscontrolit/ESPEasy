@@ -184,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      std::unique_ptr<C015_queue_element> element(new C015_queue_element(event, valueCount));
+      std::unique_ptr<C015_queue_element> element(new (std::nothrow) C015_queue_element(event, valueCount));
       success = C015_DelayHandler->addToQueue(std::move(element));
 
       if (success) {

@@ -12,6 +12,10 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2024-05-18 tonhuisman: Change default argument separator for Get Config Value from comma (,) to period (.), with fall-back.
+ * 2024-05-07 tonhuisman: Correct font related functions, add [<taskname>#font] to return the currently selected fontname
+ *                        Accept numeric font Ids to select a different font: <trigger>,font,<fontId>
+ *                        Show font ID in Default font selector
  * 2024-04-17 tonhuisman: Add AdaGFXFormDefaultFont() selector and some support functions
  *                        Add default font selection at initialization
  * 2024-04-16 tonhuisman: Add font TomThumb, 3x5 pixel font to be used on a NeoMatrix 5x29 display. Disabled by LIMIT_BUILD_SIZE.
@@ -33,9 +37,12 @@
  * 2022-09-10 tonhuisman: Enable printing partial characters falling off at the right edge of the screen, only when on Window 0
  * 2022-08-25 tonhuisman: Add invertDisplay() functionality, often used for monochrome displays
  * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
+ * 2022-08-22 tonhuisman: Improve drawing of slider when using a range, so a reverse range (40,-10) is displayed 'flipped'
  * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr,
  *                        always in row/column mode.
  *                        Improved argument parsing to allow up to 2 empty arguments between filled arguments
+ * 2022-08-16 tonhuisman: Add drawing of Slide/Gauge controls via btn subcommand, horizontal or vertical depending on width/height ratio
+ * 2022-08-15 tonhuisman: Add initial support for slide/gauge controls
  * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
  * 2022-06-06 tonhuisman: Process any special characters for lenght and textheight values for correct sizing
  * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width & height (current window),
@@ -93,8 +100,11 @@
 #  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable subcommands for displaying .bmp files on supported displays (color)
 # endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
 # ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#  define ADAGFX_ENABLE_BUTTON_DRAW    1    // Enable subcommands for displaying button-like shapes
+#  define ADAGFX_ENABLE_BUTTON_DRAW   1     // Enable/disable subcommands for displaying button-like shapes
 # endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_BUTTON_SLIDER
+#  define ADAGFX_ENABLE_BUTTON_SLIDER 1     // Enable/disable displaying button-shape with slider-actions
+# endif // ifndef ADAGFX_ENABLE_BUTTON_SLIDER
 # ifndef ADAGFX_ENABLE_FRAMED_WINDOW
 #  define ADAGFX_ENABLE_FRAMED_WINDOW 1     // Enable framed window features
 # endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
@@ -162,30 +172,41 @@
 # define ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
 
 # ifdef LIMIT_BUILD_SIZE
-#  ifdef ADAGFX_FONTS_INCLUDED
+#  if ADAGFX_FONTS_INCLUDED
 #   undef ADAGFX_FONTS_INCLUDED
-#  endif // ifdef ADAGFX_FONTS_INCLUDED
-#  ifdef ADAGFX_ARGUMENT_VALIDATION
+#   define ADAGFX_FONTS_INCLUDED  0
+#  endif // if ADAGFX_FONTS_INCLUDED
+#  if ADAGFX_ARGUMENT_VALIDATION
 #   undef ADAGFX_ARGUMENT_VALIDATION
-#  endif // ifdef ADAGFX_ARGUMENT_VALIDATION
-#  ifdef ADAGFX_USE_ASCIITABLE
+#   define ADAGFX_ARGUMENT_VALIDATION 0
+#  endif // if ADAGFX_ARGUMENT_VALIDATION
+#  if ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
-#  endif // ifdef ADAGFX_USE_ASCIITABLE
-#  ifdef ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_USE_ASCIITABLE  0
+#  endif // if ADAGFX_USE_ASCIITABLE
+#  if ADAGFX_SUPPORT_8and16COLOR
 #   undef ADAGFX_SUPPORT_8and16COLOR
-#  endif // ifdef ADAGFX_SUPPORT_8and16COLOR
-// #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
+#   define ADAGFX_SUPPORT_8and16COLOR 0
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
+// #  if ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
-// #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
-// #  ifdef ADAGFX_ENABLE_BUTTON_DRAW
+// #   define ADAGFX_ENABLE_BMP_DISPLAY  0
+// #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+// #  if ADAGFX_ENABLE_BUTTON_DRAW
 // #   undef ADAGFX_ENABLE_BUTTON_DRAW
-// #  endif // ifdef ADAGFX_ENABLE_BUTTON_DRAW
-// #  ifdef ADAGFX_ENABLE_FRAMED_WINDOW
-// #   undef ADAGFX_ENABLE_FRAMED_WINDOW
-// #  endif // ifdef ADAGFX_ENABLE_FRAMED_WINDOW
+// #   define ADAGFX_ENABLE_BUTTON_DRAW  0
+// #  endif // if ADAGFX_ENABLE_BUTTON_DRAW
+#  if ADAGFX_ENABLE_FRAMED_WINDOW
+#   undef ADAGFX_ENABLE_FRAMED_WINDOW
+#   define ADAGFX_ENABLE_FRAMED_WINDOW  0
+#  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 // #  ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #   undef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #  endif // ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
+#  if ADAGFX_ENABLE_BUTTON_SLIDER
+#   undef ADAGFX_ENABLE_BUTTON_SLIDER
+#   define ADAGFX_ENABLE_BUTTON_SLIDER  0 // Disable displaying button-shape with slider-actions
+#  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
@@ -210,12 +231,14 @@
 #  ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_24PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
-#  ifndef ADAGFX_SUPPORT_7COLOR
+#  if !ADAGFX_SUPPORT_7COLOR
+#   undef ADAGFX_SUPPORT_7COLOR
 #   define ADAGFX_SUPPORT_7COLOR       1
-#  endif // ifndef ADAGFX_SUPPORT_7COLOR
-#  ifndef ADAGFX_SUPPORT_8and16COLOR
+#  endif // if !ADAGFX_SUPPORT_7COLOR
+#  if !ADAGFX_SUPPORT_8and16COLOR
+#   undef ADAGFX_SUPPORT_8and16COLOR
 #   define ADAGFX_SUPPORT_8and16COLOR  1
-#  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
+#  endif // if !ADAGFX_SUPPORT_8and16COLOR
 # endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
@@ -310,7 +333,7 @@ enum class AdaGFXColorDepth : uint16_t {
 
 # if ADAGFX_ENABLE_BUTTON_DRAW
 
-// Only bits 0..3 can be used, masked with: 0x0F
+// Only bits 0..3 can be used, masked with: 0x0F, max possible values: 16
 // stored combined with Button_layout_e value
 enum class Button_type_e : uint8_t {
   None       = 0x00,
@@ -321,10 +344,9 @@ enum class Button_type_e : uint8_t {
   ArrowUp    = 0x05,
   ArrowRight = 0x06,
   ArrowDown  = 0x07,
-  Button_MAX = 8u // must be last value in enum, max possible values: 16
 };
 
-// Only bits 4..7 can be used, masked with: 0xF0
+// Only bits 4..7 can be used, masked with: 0xF0, max possible values: 16
 // stored combined with Button_type_e value
 enum class Button_layout_e : uint8_t {
   CenterAligned      = 0x00,
@@ -337,8 +359,12 @@ enum class Button_layout_e : uint8_t {
   RightBottomAligned = 0x70,
   LeftBottomAligned  = 0x80,
   NoCaption          = 0x90,
-  Bitmap             = 0xA0,
-  Alignment_MAX      = 11u // options-count, max possible values: 16
+  #  if ADAGFX_ENABLE_BMP_DISPLAY
+  Bitmap = 0xA0,
+  #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  #  if ADAGFX_ENABLE_BUTTON_SLIDER
+  Slider = 0xB0,
+  #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 };
 
 const __FlashStringHelper* toString(const Button_type_e button);
@@ -416,7 +442,8 @@ uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to
 # endif // if ADAGFX_SUPPORT_7COLOR
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
-String   AdaGFXgetFontName(uint8_t fontId);
+String   AdaGFXgetFontName(uint8_t fontId,
+                           bool    includeFontId = false);
 uint32_t AdaGFXgetFontIndexForFontId(uint8_t fontId);
 void     AdaGFXFormDefaultFont(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
@@ -526,12 +553,12 @@ public:
                        const int16_t& h,
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
-  bool     deleteWindow(const uint8_t& windowId);
+  bool deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
-  #if ADAGFX_FONTS_INCLUDED
-  void setFontById(uint8_t fontId);
-  #endif
+  # if ADAGFX_FONTS_INCLUDED
+  void     setFontById(uint8_t fontId);
+  # endif // if ADAGFX_FONTS_INCLUDED
 
   uint16_t getTextSize(const String& text,
                        uint16_t    & h); // return length and height in pixels using current font
@@ -588,6 +615,7 @@ private:
   int8_t _rotation       = 0;
   bool _displayInverted  = false;
   int8_t _lineSpacing    = 15; // Default fontheight * fontsize
+  uint8_t _fontId        = 0;
 
   uint16_t _display_x = 0;
   uint16_t _display_y = 0;

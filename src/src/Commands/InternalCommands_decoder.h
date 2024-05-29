@@ -116,6 +116,10 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_NOTIFIER
   ntphost,
 
+#if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+  owscan,
+#endif // if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+
   password,
 #ifdef USES_P019
   pcfgpio,

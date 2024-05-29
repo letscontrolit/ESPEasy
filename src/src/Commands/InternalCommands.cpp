@@ -27,6 +27,9 @@
 #if FEATURE_NOTIFIER
 # include "../Commands/Notifications.h"
 #endif // if FEATURE_NOTIFIER
+#if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+#include "../Commands/OneWire.h"
+#endif // if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
 #include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
@@ -356,6 +359,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::notify:                     COMMAND_CASE_R(Command_Notifications_Notify, -1);        // Notifications.h
 #endif // if FEATURE_NOTIFIER
     case ESPEasy_cmd_e::ntphost:                    COMMAND_CASE_R(Command_NTPHost,              1);         // Time.h
+#if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
+    case ESPEasy_cmd_e::owscan:                     COMMAND_CASE_R(Command_OneWire_Owscan,       -1);         // OneWire.h
+#endif // if FEATURE_DALLAS_HELPER && FEATURE_COMMAND_OWSCAN
 #ifdef USES_P019
     case ESPEasy_cmd_e::pcfgpio:                    COMMAND_CASE_A(Command_GPIO,                 2);         // Gpio.h
     case ESPEasy_cmd_e::pcfgpiorange:               COMMAND_CASE_A(Command_GPIO_PcfGPIORange,   -1);         // Gpio.h
