@@ -47,10 +47,20 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options,
+  bool                       enableZoom,
   size_t                     nrSamples,
   bool                       onlyJSON)
 {
-  add_ChartJS_chart_header(chartType, String(id), chartTitle, width, height, options, nrSamples, onlyJSON);
+  add_ChartJS_chart_header(
+    chartType,
+    String(id),
+    chartTitle,
+    width,
+    height,
+    options,
+    enableZoom,
+    nrSamples,
+    onlyJSON);
 }
 
 void add_ChartJS_chart_header(
@@ -60,6 +70,7 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options,
+  bool                       enableZoom,
   size_t                     nrSamples,
   bool                       onlyJSON)
 {
@@ -79,11 +90,46 @@ void add_ChartJS_chart_header(
               id_c_str,
               id_c_str));
   }
-  add_ChartJS_chart_JSON_header(chartType, chartTitle, options, nrSamples);
+  String plugins;
+
+  if (enableZoom) {
+    plugins = F(
+      "\"zoom\":"
+      "{"
+      "\"limits\":{"
+      "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":10*1000}," // 10 sec min range
+      "},"
+      "\"pan\":{"
+      "\"enabled\":true,"
+      "\"mode\":\"x\","
+      "\"modifierKey\":\"ctrl\","
+      "},"
+      "\"zoom\":{"
+      "\"wheel\":{"
+      "\"enabled\":true,"
+      "},"
+      "\"drag\":{"
+      "\"enabled\":true,"
+      "},"
+      "\"pinch\":{"
+      "\"enabled\":true"
+      "},"
+      "\"mode\":\"x\","
+      "}"
+      "}"
+      );
+  }
+  add_ChartJS_chart_JSON_header(
+    chartType,
+    plugins,
+    chartTitle,
+    options,
+    nrSamples);
 }
 
 void add_ChartJS_chart_JSON_header(
   const __FlashStringHelper *chartType,
+  const String             & plugins,
   const ChartJS_title      & chartTitle,
   const String             & options,
   size_t                     nrSamples)
@@ -91,18 +137,26 @@ void add_ChartJS_chart_JSON_header(
   addHtml(F("{\"type\":\""));
   addHtml(chartType);
   addHtml(F("\",\"options\":{"
-            "\"responsive\":false,\"plugins\":{"
-            "\"legend\":{"
+            "\"responsive\":false,\"plugins\":{"));
+  addHtml(F("\"legend\":{"
             "\"position\":\"top\""
             "},\"title\":"));
   addHtml(chartTitle.toString());
+
+  if (plugins.length() > 0) {
+    addHtml(',');
+  }
+  addHtml(plugins);
   addHtml('}'); // end plugins
 
   if (nrSamples >= 60) {
     // Default point radius = 3
     // Typically when having > 64 samples, these points become really cluttered
-    // Thus it is best to remove them by setting the radius to 0.
-    addHtml(F(",\"elements\":{\"point\":{\"radius\":0}}"));
+    // Thus it is best to reduce their radius.
+    const float radius = (plugins.length() > 0) ? 2.5f : 2.0f;
+    addHtml(strformat(
+      F(",\"elements\":{\"point\":{\"radius\":%.1f}}"),
+      radius));
   }
 
   if (!options.isEmpty()) {

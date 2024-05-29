@@ -295,6 +295,8 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
 
     scales.update_Yaxis_TickCount();
 
+    const bool enableZoom = true;
+
     add_ChartJS_chart_header(
       F("line"),
       F("TaskStatsChart"),
@@ -302,6 +304,7 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
       500 + (70 * (scales.nr_Y_scales() - 1)),
       500,
       scales.toString(),
+      enableZoom,
       nrSamples,
       onlyJSON);
   }
@@ -378,6 +381,7 @@ void PluginStats_array::plot_ChartJS_scatter(
 
 
   const size_t nrSamples = stats_X->getNrSamples();
+  const bool enableZoom = false;
 
   add_ChartJS_chart_header(
     F("scatter"),
@@ -386,6 +390,7 @@ void PluginStats_array::plot_ChartJS_scatter(
     width,
     height,
     axisOptions,
+    enableZoom,
     nrSamples,
     onlyJSON);
 

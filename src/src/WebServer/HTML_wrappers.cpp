@@ -288,8 +288,19 @@ void html_add_ChartJS_script() {
     #define CDN_URL_CHART_JS_ADAPTER_DATE "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
   #endif
 
+  #ifndef CDN_URL_CHART_JS_HAMMERJS
+    #define CDN_URL_CHART_JS_HAMMERJS "https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"
+  #endif
+
+  #ifndef CDN_URL_CHART_JS_PLUGIN_ZOOM
+    #define CDN_URL_CHART_JS_PLUGIN_ZOOM "https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"
+  #endif
+
+
   addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
   addHtml(F("<script src=\"" CDN_URL_CHART_JS_ADAPTER_DATE "\"></script>"));
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS_HAMMERJS "\"></script>"));
+  addHtml(F("<script src=\"" CDN_URL_CHART_JS_PLUGIN_ZOOM "\"></script>"));
 }
 #endif // if FEATURE_CHART_JS
 
