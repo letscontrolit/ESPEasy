@@ -6,6 +6,12 @@
 
 # include "../Helpers/Dallas1WireHelper.h"
 
+# ifndef P004_FEATURE_GET_CONFIG_VALUE
+#  define P004_FEATURE_GET_CONFIG_VALUE   1 // Enable by default,
+// adds 468 bytes on ESP8266, 944 bytes on ESP32-C6, 490 bytes on ESP32-C3
+// 456 bytes on ESP32 Classic, 468 bytes on ESP32-S3 (ESP32 builds: IDF 5.1)
+# endif // ifndef P004_FEATURE_GET_CONFIG_VALUE
+
 struct P004_data_struct : public PluginTaskData_base {
   /*********************************************************************************************\
   * Task data struct to simplify taking measurements of upto 4 Dallas DS18b20 (or compatible)
