@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_DALLAS_HELPER
+
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
 
@@ -227,5 +229,6 @@ uint16_t Dallas_crc16(const uint8_t *input,
                       uint16_t       crc);
 
 
+#endif // if FEATURE_DALLAS_HELPER
 
 #endif // ifndef HELPERS_DALLAS1WIREHELPER_H
