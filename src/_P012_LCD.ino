@@ -115,8 +115,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         String strings[P12_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
 
-        for (int varNr = 0; varNr < P12_Nlines; varNr++)
-        {
+        for (int varNr = 0; varNr < P12_Nlines; ++varNr) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
         }
       }
@@ -155,8 +154,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       char   deviceTemplate[P12_Nlines][P12_Nchars] = {};
       String error;
 
-      for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)
-      {
+      for (uint8_t varNr = 0; varNr < P12_Nlines; ++varNr) {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P12_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
@@ -193,10 +191,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (validGpio(CONFIG_PIN3))
-      {
-        if (digitalRead(CONFIG_PIN3) == P012_INVERSE_BTN)
-        {
+      if (validGpio(CONFIG_PIN3)) {
+        if (digitalRead(CONFIG_PIN3) == P012_INVERSE_BTN) {
           P012_data_struct *P012_data =
             static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -242,13 +238,11 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
             break;
         }
 
-        for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
-        {
+        for (uint8_t x = 0; x < P012_data->Plugin_012_rows; ++x) {
           String tmpString = deviceTemplate[x];
 
-          if (tmpString.length())
-          {
-            String newString = P012_data->P012_parseTemplate(tmpString, P012_data->Plugin_012_cols);
+          if (!tmpString.isEmpty()) {
+            const String newString = P012_data->P012_parseTemplate(tmpString, P012_data->Plugin_012_cols);
             P012_data->lcdWrite(newString, 0, x);
           }
         }
@@ -263,11 +257,10 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P012_data) && P012_data->isValid()) {
-        String cmd = parseString(string, 1);
+        const String cmd = parseString(string, 1);
 
-        if (equals(cmd, F("lcdcmd")))
-        {
-          String arg1 = parseString(string, 2);
+        if (equals(cmd, F("lcdcmd"))) {
+          const String arg1 = parseString(string, 2);
 
           if (equals(arg1, F("off"))) {
             P012_data->lcd->noBacklight();
@@ -289,17 +282,12 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
             P012_data->lcd->setContrast(event->Par2);
             success = true;
           }
-          else if (arg1.equalsIgnoreCase(F("Clear"))) {
-            P012_data->lcd.clear();
-            P012_data->splashState = P012_splashState_e::SplashCleared;
-          }
         }
-        else if (equals(cmd, F("lcd")))
-        {
+        else if (equals(cmd, F("lcd"))) {
           success = true;
-          int colPos  = event->Par2 - 1;
-          int rowPos  = event->Par1 - 1;
-          String text = parseStringKeepCaseNoTrim(string, 4);
+          const int colPos = event->Par2 - 1;
+          const int rowPos = event->Par1 - 1;
+          String    text   = parseStringKeepCaseNoTrim(string, 4);
           text = P012_data->P012_parseTemplate(text, P012_data->Plugin_012_cols);
 
           P012_data->lcdWrite(text, colPos, rowPos);
