@@ -264,6 +264,7 @@ void checkUDP()
   if (runningUPDCheck) {
     return;
   }
+  START_TIMER
 
   runningUPDCheck = true;
 
@@ -380,6 +381,7 @@ void checkUDP()
     portUDP.read();
   }
   runningUPDCheck = false;
+  STOP_TIMER(CHECK_UDP);
 }
 
 /*********************************************************************************************\

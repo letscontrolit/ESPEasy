@@ -79,8 +79,11 @@ void backgroundtasks()
     serial();
 
 //    if (webserverRunning) {
+    {
+      START_TIMER
       web_server.handleClient();
-//    }
+      STOP_TIMER(WEBSERVER_HANDLE_CLIENT);
+    }
     #if FEATURE_ESPEASY_P2P
     if (networkConnected) {
       checkUDP();

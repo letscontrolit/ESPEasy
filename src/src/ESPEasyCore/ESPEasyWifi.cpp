@@ -241,11 +241,18 @@ bool WiFiConnected() {
   }
 
 
-  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
-    if (WiFiEventData.lastDisconnectMoment.isSet() &&
-        WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassedSince(lastCheckedTime))
-    {
-      // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+  const int32_t timePassed = timePassedSince(lastCheckedTime);
+  if (lastCheckedTime != 0) {
+    if (timePassed < 100) {
+      if (WiFiEventData.lastDisconnectMoment.isSet() &&
+          WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassed)
+      {
+        // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+        return lastState;
+      }
+    }
+    if (timePassed < 10) {
+      // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
       return lastState;
     }
   }

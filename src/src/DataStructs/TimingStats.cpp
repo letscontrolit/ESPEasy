@@ -247,6 +247,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::GRAT_ARP_STATS:             return F("sendGratuitousARP()");
     case TimingStatsElements::SAVE_TO_RTC:                return F("saveToRTC()");
     case TimingStatsElements::BACKGROUND_TASKS:           return F("backgroundtasks()");
+    case TimingStatsElements::UPDATE_RTTTL:               return F("update_rtttl()");
+    case TimingStatsElements::CHECK_UDP:                  return F("checkUDP()");
+    case TimingStatsElements::WEBSERVER_HANDLE_CLIENT:    return F("web_server.handleClient()");
     case TimingStatsElements::PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case TimingStatsElements::FORMAT_USER_VAR:            return F("doFormatUserVar()");
     case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
