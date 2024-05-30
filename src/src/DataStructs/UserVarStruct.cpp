@@ -1,7 +1,7 @@
 #include "../DataStructs/UserVarStruct.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/TimingStats.h"
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins.h"

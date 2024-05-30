@@ -69,7 +69,7 @@ String ull2String(uint64_t value, uint8_t base) {
 
   if (value == 0) {
     res = '0';
-    return res;
+    return std::move(res);
   }
 
   while (value > 0) {
@@ -88,15 +88,12 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
-  return res;
+  return std::move(res);
 }
 
 String ll2String(int64_t value, uint8_t  base) {
   if (value < 0) {
-    String res;
-    res  = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
+    return concat('-', ull2String(value * -1ll, base));
   } else {
     return ull2String(value, base);
   }
@@ -123,7 +120,7 @@ String trimTrailingZeros(const String& value) {
       res.trim();
     }
   }
-  return res;
+  return std::move(res);
 
 }
 
@@ -168,7 +165,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return res;
+  return std::move(res);
 }
 #endif
 
@@ -176,12 +173,12 @@ String floatToString(const float& value,
                       unsigned int  decimalPlaces,
                       bool          trimTrailingZeros_b)
 {
-  const String res = toString(value, decimalPlaces);
+  String res = toString(value, decimalPlaces);
 
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return res;
+  return std::move(res);
 }
 
 
