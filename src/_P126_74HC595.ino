@@ -101,6 +101,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].HasFormatUserVar = true;
 
       break;
     }

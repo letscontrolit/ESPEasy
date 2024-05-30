@@ -138,7 +138,7 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
             String log = strformat(F("[P100]DS   : Counter %c :"), PCONFIG(0) == 0 ? 'A' : 'B');
 
             if (success) {
-              log += formatUserVarNoCheck(event->TaskIndex, 0);
+              log += formatUserVarNoCheck(event, 0);
             } else {
               log += F("Error!");
             }

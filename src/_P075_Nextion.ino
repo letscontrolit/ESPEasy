@@ -237,8 +237,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
           # ifdef P075_DEBUG_LOG
           addLogMove(LOG_LEVEL_INFO,
                      strformat(F("NEXTION075: Interval values data enabled, resending idx=%s, value=%s"),
-                               formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
-                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
+                               formatUserVarNoCheck(event, 0).c_str(),
+                               formatUserVarNoCheck(event, 1).c_str()));
           # endif // ifdef P075_DEBUG_LOG
 
           success = true;
@@ -433,7 +433,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                 log.reserve(80); // Prevent re-allocation
                 log += F("NEXTION075 : Pipe Command Sent: ");
                 log += __buffer;
-                log += formatUserVarNoCheck(event->TaskIndex, 0);
+                log += formatUserVarNoCheck(event, 0);
                 addLogMove(LOG_LEVEL_INFO, log);
                 # endif // ifdef P075_DEBUG_LOG
               }
