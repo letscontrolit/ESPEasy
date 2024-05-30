@@ -6,12 +6,13 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2023-08-11, tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
- *                         Also use new/delete on sensor object (code improvement)
- *                         Limit the selection list of I2C addresses to 1 item, as changing the I2C address of the sensor does not work as
- *                         intended/expected
- * 2021-04-06, tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
- * 2021-04-05, tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
+ * 2024-04-25 tonhuisman: Add Direction value (1/0/-1), code improvements
+ * 2023-08-11 tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
+ *                        Also use new/delete on sensor object (code improvement)
+ *                        Limit the selection list of I2C addresses to 1 item, as changing the I2C address of the sensor does not work as
+ *                        intended/expected
+ * 2021-04-06 tonhuisman: Remove Interval optional attribute to avoid system overload, cleanup source
+ * 2021-04-05 tonhuisman: Add VL53L1X Time of Flight sensor to main repo (similar to but not compatible with VL53L0X)
  */
 
 // needs SparkFun_VL53L1X library from https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library
@@ -23,6 +24,7 @@
 # define PLUGIN_NAME_113       "Distance - VL53L1X (400cm)"
 # define PLUGIN_VALUENAME1_113 "Distance"
 # define PLUGIN_VALUENAME2_113 "Ambient"
+# define PLUGIN_VALUENAME3_113 "Direction"
 
 
 boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
@@ -40,9 +42,10 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
+      Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
       break;
@@ -58,6 +61,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_113));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_113));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_113));
       break;
     }
 
@@ -68,7 +72,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x29, 0x30 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c"), P113_ACTIVE_I2C_ADDRESSES, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c"), P113_ACTIVE_I2C_ADDRESSES, i2cAddressValues, P113_I2C_ADDRESS);
       } else {
         success = intArrayContains(P113_ACTIVE_I2C_ADDRESSES, i2cAddressValues, event->Par1);
       }
@@ -78,7 +82,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = PCONFIG(0);
+      event->Par1 = P113_I2C_ADDRESS;
       success     = true;
       break;
     }
@@ -96,7 +100,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
           F("500ms"),
         };
         const int optionValuesMode2[] = { 100, 20, 33, 50, 200, 500 };
-        addFormSelector(F("Timing"), F("timing"), 6, optionsMode2, optionValuesMode2, PCONFIG(1));
+        addFormSelector(F("Timing"), F("timing"), 6, optionsMode2, optionValuesMode2, P113_TIMING);
       }
 
       {
@@ -105,14 +109,16 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
           F("Long (~400cm)"),
         };
         const int optionValuesMode3[2] = { 0, 1 };
-        addFormSelector(F("Range"), F("range"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
+        addFormSelector(F("Range"), F("range"), 2, optionsMode3, optionValuesMode3, P113_RANGE);
       }
-      addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), PCONFIG(3) == 1);
+      addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), P113_SEND_ALWAYS == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));
 
-      addFormNumericBox(F("Trigger delta"), F("delta"), PCONFIG(4), 0, 100);
+      addFormNumericBox(F("Trigger delta"), F("delta"), P113_DELTA, 0, 100);
       addUnit(F("0-100mm"));
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("Minimal change in Distance to trigger an event."));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       success = true;
       break;
@@ -120,11 +126,11 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("i2c"));
-      PCONFIG(1) = getFormItemInt(F("timing"));
-      PCONFIG(2) = getFormItemInt(F("range"));
-      PCONFIG(3) = isFormItemChecked(F("notchanged")) ? 1 : 0;
-      PCONFIG(4) = getFormItemInt(F("delta"));
+      P113_I2C_ADDRESS = getFormItemInt(F("i2c"));
+      P113_TIMING      = getFormItemInt(F("timing"));
+      P113_RANGE       = getFormItemInt(F("range"));
+      P113_SEND_ALWAYS = isFormItemChecked(F("notchanged")) ? 1 : 0;
+      P113_DELTA       = getFormItemInt(F("delta"));
 
       success = true;
       break;
@@ -132,7 +138,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P113_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P113_data_struct(P113_I2C_ADDRESS, P113_TIMING, P113_RANGE == 1));
       P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (nullptr != P113_data) && P113_data->begin(); // Start the sensor
@@ -152,11 +158,14 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P113_data) {
         const uint16_t dist      = P113_data->readDistance();
         const uint16_t ambient   = P113_data->readAmbient();
-        const bool     triggered = (dist > UserVar[event->BaseVarIndex] + PCONFIG(4)) || (dist < UserVar[event->BaseVarIndex] - PCONFIG(4));
+        const uint16_t p_dist    = UserVar.getFloat(event->TaskIndex, 0);
+        const int16_t  direct    = dist == p_dist ? 0 : (dist < p_dist ? -1 : 1);
+        const bool     triggered = (dist > p_dist + P113_DELTA) || (dist < p_dist - P113_DELTA);
 
-        if (P113_data->isReadSuccessful() && (triggered || (PCONFIG(3) == 1)) && (dist != 0xFFFF)) {
+        if (P113_data->isReadSuccessful() && (triggered || (P113_SEND_ALWAYS == 1)) && (dist != 0xFFFF)) {
           UserVar.setFloat(event->TaskIndex, 0, dist);
           UserVar.setFloat(event->TaskIndex, 1, ambient);
+          UserVar.setFloat(event->TaskIndex, 2, direct);
           success = true;
         }
       }
