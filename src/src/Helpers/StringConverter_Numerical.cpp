@@ -1,5 +1,7 @@
 #include "../Helpers/StringConverter_Numerical.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Helpers/Numerical.h"
 
 #include "../Helpers/StringConverter.h"
@@ -23,17 +25,21 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
+  START_TIMER
+  String sValue;
   #ifndef LIMIT_BUILD_SIZE
 
   if (decimalPlaces == 0) {
     if ((value > -2e9f) && (value < 2e9f)) {
       const int32_t l_value = static_cast<int32_t>(roundf(value));
-      return String(l_value);
-    }
-    if ((value > -1e18f) && (value < 1e18f)) {
+      sValue = l_value;
+    } else if ((value > -1e18f) && (value < 1e18f)) {
       // Work-around to perform a faster conversion
       const int64_t ll_value = static_cast<int64_t>(roundf(value));
-      return ll2String(ll_value);
+      sValue = ll2String(ll_value);
+    }
+    if (sValue.length() > 0) {
+      return std::move(sValue);
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
@@ -44,10 +50,9 @@ String toString(const float& value, unsigned int decimalPlaces)
 
   char buf[decimalPlaces + 42];
   #ifdef USE_SECOND_HEAP
-  String sValue;
   move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
   #else
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  sValue = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
   #endif
 
 /*
@@ -56,7 +61,7 @@ String toString(const float& value, unsigned int decimalPlaces)
 #endif
 */
   sValue.trim();
-  return sValue;
+  return std::move(sValue);
 }
 
 String ull2String(uint64_t value, uint8_t base) {
