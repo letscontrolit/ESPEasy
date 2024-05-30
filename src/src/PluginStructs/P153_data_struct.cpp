@@ -174,11 +174,11 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           const String taskName = getTaskDeviceName(event->TaskIndex);
           addLogMove(LOG_LEVEL_INFO, strformat(F("%s: Temperature: %s"),
                                                taskName.c_str(),
-                                               formatUserVarNoCheck(event->TaskIndex, 0).c_str()));
+                                               formatUserVarNoCheck(event, 0).c_str()));
 
           addLogMove(LOG_LEVEL_INFO, strformat(F("%s: Humidity: %s"),
                                                taskName.c_str(),
-                                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
+                                               formatUserVarNoCheck(event, 1).c_str()));
         }
       } else {
         UserVar.setFloat(event->TaskIndex, 0, NAN);

@@ -753,7 +753,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
             {
-              pluginWebformShowValue(x, varNr, getTaskValueName(x, varNr), formatUserVarNoCheck(x, varNr));
+              pluginWebformShowValue(
+                x, 
+                varNr, 
+                getTaskValueName(x, varNr), 
+                formatUserVarNoCheck(&TempEvent, varNr));
             }
           }
         }

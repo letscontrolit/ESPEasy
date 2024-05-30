@@ -104,8 +104,8 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 1, th.h);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, concat(F("AM2320: Temperature: "), formatUserVarNoCheck(event->TaskIndex, 0)));
-            addLogMove(LOG_LEVEL_INFO, concat(F("AM2320: Humidity: "), formatUserVarNoCheck(event->TaskIndex, 1)));
+            addLogMove(LOG_LEVEL_INFO, concat(F("AM2320: Temperature: "), formatUserVarNoCheck(event, 0)));
+            addLogMove(LOG_LEVEL_INFO, concat(F("AM2320: Humidity: "), formatUserVarNoCheck(event, 1)));
           }
           success = true;
           break;
