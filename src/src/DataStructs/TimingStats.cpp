@@ -117,8 +117,8 @@ bool mustLogFunction(int function) {
     case PLUGIN_FORMAT_USERVAR:        return true;
     case PLUGIN_GET_DEVICENAME:        return true;
 //    case PLUGIN_GET_DEVICEVALUENAMES:  return false;
-//    case PLUGIN_GET_DEVICEVALUECOUNT:  return false;
-//    case PLUGIN_GET_DEVICEVTYPE:       return false;
+//    case PLUGIN_GET_DEVICEVALUECOUNT:  return true;
+//    case PLUGIN_GET_DEVICEVTYPE:       return true;
     case PLUGIN_WRITE:                 return true;
 //    case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
     case PLUGIN_SERIAL_IN:             return true;
@@ -250,7 +250,6 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case TimingStatsElements::FORMAT_USER_VAR:            return F("doFormatUserVar()");
     case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
-    case TimingStatsElements::GET_TASKVALUE_AS_STRING:    return F("TaskValueGetAsString()");
     case TimingStatsElements::HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
     case TimingStatsElements::HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");

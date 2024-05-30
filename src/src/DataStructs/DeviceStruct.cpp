@@ -11,7 +11,7 @@ DeviceStruct::DeviceStruct() :
   DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
   PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
   TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false),
-  I2CMax100kHz(false) {}
+  I2CMax100kHz(false), HasFormatUserVar(false) {}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {

@@ -170,7 +170,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
           String log = F("P086 : Value ");
           log += x+1;
           log += F(": ");
-          log += formatUserVarNoCheck(event->TaskIndex, x);
+          log += formatUserVarNoCheck(event, x);
           addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
