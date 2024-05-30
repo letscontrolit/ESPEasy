@@ -36,3 +36,16 @@
 .. |P166_maintainer| replace:: `tonhuisman`
 .. |P166_compileinfo| replace:: `.`
 .. |P166_usedlibraries| replace:: `modified version of DFRobot_GP8403`
+
+.. |P167_name| replace:: :cyan:`Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_type| replace:: :cyan:`Environment`
+.. |P167_typename| replace:: :cyan:`Environment - Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_porttype| replace:: `.`
+.. |P167_status| replace:: :yellow:`CLIMATE`
+.. |P167_github| replace:: P167_Vindstyrka.ino
+.. _P167_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P167_Vindstyrka.ino
+.. |P167_usedby| replace:: `.`
+.. |P167_shortinfo| replace:: `Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_maintainer| replace:: `AndiBaciu, tonhuisman`
+.. |P167_compileinfo| replace:: `.`
+.. |P167_usedlibraries| replace:: `.`

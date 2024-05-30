@@ -7,6 +7,17 @@
 
 // Maxim Integrated
 
+/** Changelog:
+ * 2024-05-11 tonhuisman: Dallas_StartConversion() call not needed for iButton.
+ *                        Reduce logging in Dallas_readiButton() function to on-change (only used for this plugin)
+ * 2024-05-10 tonhuisman: Add support for Event with iButton address,
+ *                        generating event: <taskname>#Address=<state>[,<buttonaddress_high4byte>,<buttonaddress_low4byte>],
+ *                        enabling address to be processed in rules
+ *                        Fix plugin VType setting as SENSOR_TYPE_ULONG isn't needed here, only storing 0/1 state
+ *                        Make Interval optional, as with Event processing enabled, this state is not useful
+ * 2024-05 tonhuisman: Start changelog
+ */
+
 # include "src/Helpers/Dallas1WireHelper.h"
 
 # define PLUGIN_080
@@ -14,6 +25,8 @@
 # define PLUGIN_NAME_080       "Input - iButton"
 # define PLUGIN_VALUENAME1_080 "iButton"
 
+# define P080_ADDRESS_EVENT     PCONFIG(0)
+# define P080_EVENT_NAME        "Address"
 
 boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -25,7 +38,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_080;
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
@@ -33,6 +46,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -64,7 +78,11 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
       if (validGpio(Plugin_080_DallasPin)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin, Plugin_080_DallasPin);
+
+        addFormCheckBox(F("Event with iButton address"), F("iaddr"), P080_ADDRESS_EVENT);
+        addFormNote(F("When checked, <b>Device Address</b> should be '- None -'"));
       }
+
       success = true;
       break;
     }
@@ -73,7 +91,8 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     {
       // save the address for selected device and store into extra tasksettings
       Dallas_addr_selector_webform_save(event->TaskIndex, CONFIG_PIN1, CONFIG_PIN1);
-      success = true;
+      P080_ADDRESS_EVENT = isFormItemChecked(F("iaddr"));
+      success            = true;
       break;
     }
 
@@ -85,6 +104,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+
     case PLUGIN_INIT:
     {
       const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
@@ -97,9 +117,11 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
         pinMode(Plugin_080_DallasPin, INPUT);
 
         Dallas_plugin_get_addr(addr, event->TaskIndex);
-        Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
-        delay(800); // give it time to do intial conversion
+        if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) { // Trigger at least once a PLUGIN_READ
+          UserVar.setFloat(event->TaskIndex, 2, -1);
+        }
+
         success = true;
       }
       break;
@@ -107,22 +129,51 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND: // PLUGIN_READ:
     {
+      const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
       uint8_t addr[8];
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
-      if (addr[0] != 0) {
-        const int8_t Plugin_080_DallasPin = CONFIG_PIN1;
+      if ((0x00 == addr[0]) && P080_ADDRESS_EVENT) { // Respond to any iButton presented?
+        uint32_t state = 0;
+        Dallas_reset(Plugin_080_DallasPin, Plugin_080_DallasPin);
+        Dallas_reset_search();
 
-        if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin))
-        {
-          UserVar.setUint32(event->TaskIndex, 0, 1);
+        while (Dallas_search(addr, Plugin_080_DallasPin, Plugin_080_DallasPin)) {
+          if (addr[0] == 0x01) { // Respond to first iButton device
+            state = 1;
+            break;
+          }
+        }
+
+        if (0x01 == addr[0]) {
+          if (state != UserVar.getFloat(event->TaskIndex, 0)) {
+            UserVar.setFloat(event->TaskIndex, 0, state);
+            eventQueue.add(event->TaskIndex, F(P080_EVENT_NAME),
+                           strformat(F("%d,0x%s,0x%s"), // Address split in 2 hex parts
+                                     state,
+                                     formatToHex_array(addr,     4).c_str(),
+                                     formatToHex_array(&addr[4], 4).c_str()));
+          }
+        } else {
+          if (state != UserVar.getFloat(event->TaskIndex, 0)) {
+            UserVar.setFloat(event->TaskIndex, 0, state);
+            eventQueue.add(event->TaskIndex, F(P080_EVENT_NAME),
+                           state);
+          }
+        }
+
+        // No (debug) logging is added as the generated event is already logged at INFO level.
+        success = true;
+        addr[0] = 0; // Ignore other devices on the wire
+      } else
+
+      if (0 != addr[0]) {
+        if (Dallas_readiButton(addr, Plugin_080_DallasPin, Plugin_080_DallasPin, UserVar.getFloat(event->TaskIndex, 0))) {
+          UserVar.setFloat(event->TaskIndex, 0, 1);
           success = true;
+        } else {
+          UserVar.setFloat(event->TaskIndex, 0, 0);
         }
-        else
-        {
-          UserVar.setUint32(event->TaskIndex, 0, 0);
-        }
-        Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
         # ifndef BUILD_NO_DEBUG
 
@@ -130,7 +181,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
           String log = F("DS   : iButton: ");
 
           if (success) {
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            log += formatUserVarNoCheck(event, 0);
           } else {
             log += F("Not Present!");
           }
@@ -142,10 +193,10 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_READ:
     {
-      success = UserVar.getUint32(event->TaskIndex, 0) != UserVar.getUint32(event->TaskIndex, 2); // Changed?
+      success = UserVar.getFloat(event->TaskIndex, 0) != UserVar.getFloat(event->TaskIndex, 2); // Changed?
 
       // Keep previous state
-      UserVar.setUint32(event->TaskIndex, 2, UserVar.getUint32(event->TaskIndex, 0));
+      UserVar.setFloat(event->TaskIndex, 2, UserVar.getFloat(event->TaskIndex, 0));
       break;
     }
   }

@@ -57,10 +57,10 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
                          P005_logString(logNr));
 
     if (logNr == P005_logNr::P005_info_temperature) {
-      text += formatUserVarNoCheck(event->TaskIndex, 0);
+      text += formatUserVarNoCheck(event, 0);
     }
     else if (logNr == P005_logNr::P005_info_humidity) {
-      text += formatUserVarNoCheck(event->TaskIndex, 1);
+      text += formatUserVarNoCheck(event, 1);
     }
     addLogMove(isError ? LOG_LEVEL_ERROR : LOG_LEVEL_INFO, text);
   }

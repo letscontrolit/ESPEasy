@@ -135,13 +135,13 @@ void P104_data_struct::loadSettings() {
     uint16_t reservedBuffer = 0;
 
     if (!settingsVersionV2 && !settingsVersionV3) {
-      reservedBuffer = bufferSize + 1;              // just add 1 for storing a string-terminator
+      reservedBuffer = bufferSize + 1;                         // just add 1 for storing a string-terminator
       addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2/V3."));
     } else {
-      reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1; // just add 1 for storing a string-terminator
+      reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1;            // just add 1 for storing a string-terminator
     }
-    reservedBuffer++;                               // Add 1 for 0..size use
-    settingsBuffer = new char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
+    reservedBuffer++;                                          // Add 1 for 0..size use
+    settingsBuffer = new (std::nothrow)char[reservedBuffer](); // Allocate buffer and reset to all zeroes
     # if P104_FEATURE_STORAGE_V3
 
     if (settingsVersionV3) {
@@ -719,10 +719,10 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
     P->setIntensity(zstruct.zone - 1, zstruct.brightness);                                           // don't forget to set the brightness
     uint8_t row = 0;
 
-    if ((barGraphs.size() == 3) || (barGraphs.size() == 5) || (barGraphs.size() == 6)) { // Center within the rows a bit
+    if ((barGraphs.size() == 3) || (barGraphs.size() == 5) || (barGraphs.size() == 6)) {             // Center within the rows a bit
       for (; row < (barGraphs.size() == 5 ? 2 : 1); row++) {
         for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
-          pM->setPoint(row, col, false);                                                 // all off
+          pM->setPoint(row, col, false);                                                             // all off
 
           if (col % 16 == 0) { delay(0); }
         }
@@ -815,6 +815,7 @@ void P104_data_struct::displayDots(uint8_t                 zone,
 
       int32_t row;
       int32_t col;
+
       if (validIntFromString(sRow, row) &&
           validIntFromString(sCol, col) &&
           (row > 0) && ((row - 1) < 8) &&
@@ -1075,8 +1076,8 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
               }
           # endif // ifdef P104_USE_COMMANDS
 
-              case p104_subcommands_e::txt:                                                     // subcommand: [set]txt,<zone>,<text> (only
-              case p104_subcommands_e::settxt:                                                 // allowed for zones with Text content)
+              case p104_subcommands_e::txt:                                  // subcommand: [set]txt,<zone>,<text> (only
+              case p104_subcommands_e::settxt:                               // allowed for zones with Text content)
               {
                 if ((it->content == P104_CONTENT_TEXT) ||
                     (it->content == P104_CONTENT_TEXT_REV)) {                // no length check, so longer than the UI allows is made
@@ -1722,10 +1723,11 @@ bool P104_data_struct::saveSettings() {
 
       for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
         // for newly added zone, use defaults
-        const bool mustCheckSize = 
-          (i == P104_OFFSET_BRIGHTNESS) || 
+        const bool mustCheckSize =
+          (i == P104_OFFSET_BRIGHTNESS) ||
           (i == P104_OFFSET_REPEATDELAY);
-        if (!mustCheckSize || zones[zoneIndex].size != 0) {          
+
+        if (!mustCheckSize || (zones[zoneIndex].size != 0)) {
           if (i == P104_OFFSET_TEXT) {
             zones[zoneIndex].text = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
           } else {
@@ -1787,12 +1789,14 @@ bool P104_data_struct::saveSettings() {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
       zbuffer.clear();
+
       for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
         if (i == P104_OFFSET_TEXT) {
           zbuffer += it->text;
           zbuffer += '\x01';
         } else {
           int32_t value{};
+
           if (it->getIntValue(i, value)) {
             zbuffer += value;
             zbuffer += '\x01';
@@ -2263,8 +2267,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       };
 
       constexpr unsigned nrHeaders = NR_ELEMENTS(headers);
+
       for (unsigned i = 0; i < nrHeaders; ++i) {
         int width = 0;
+
         if (i == 2) {
           // "Text" needs a width
           width = 180;
@@ -2416,10 +2422,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         // Split here
         html_TR_TD(); // Start new row
-        html_TD(4);  // Start with some blank columns
+        html_TD(4);   // Start with some blank columns
 
         {
-          html_TD(); // Animation Out
+          html_TD();  // Animation Out
           addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
                       animationCount,
                       animationTypes,
@@ -2564,31 +2570,28 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
   return result;
 }
 
-
-
-
-P104_zone_struct::P104_zone_struct(uint8_t _zone) 
+P104_zone_struct::P104_zone_struct(uint8_t _zone)
   :  text(F("\"\"")), zone(_zone) {}
 
 
 bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 {
   switch (offset) {
-    case P104_OFFSET_SIZE:          value = size;           break; 
+    case P104_OFFSET_SIZE:          value = size;           break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       value = content;        break; 
-    case P104_OFFSET_ALIGNMENT:     value = alignment;      break; 
-    case P104_OFFSET_ANIM_IN:       value = animationIn;    break; 
-    case P104_OFFSET_SPEED:         value = speed;          break; 
-    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break; 
-    case P104_OFFSET_PAUSE:         value = pause;          break; 
-    case P104_OFFSET_FONT:          value = font;           break; 
-    case P104_OFFSET_LAYOUT:        value = layout;         break; 
-    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break; 
-    case P104_OFFSET_OFFSET:        value = offset;         break; 
-    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break; 
-    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break; 
-    case P104_OFFSET_INVERTED:      value = inverted;       break; 
+    case P104_OFFSET_CONTENT:       value = content;        break;
+    case P104_OFFSET_ALIGNMENT:     value = alignment;      break;
+    case P104_OFFSET_ANIM_IN:       value = animationIn;    break;
+    case P104_OFFSET_SPEED:         value = speed;          break;
+    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break;
+    case P104_OFFSET_PAUSE:         value = pause;          break;
+    case P104_OFFSET_FONT:          value = font;           break;
+    case P104_OFFSET_LAYOUT:        value = layout;         break;
+    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break;
+    case P104_OFFSET_OFFSET:        value = offset;         break;
+    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break;
+    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break;
+    case P104_OFFSET_INVERTED:      value = inverted;       break;
 
     default:
       return false;
@@ -2599,27 +2602,26 @@ bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 bool P104_zone_struct::setIntValue(uint8_t offset, int32_t value)
 {
   switch (offset) {
-    case P104_OFFSET_SIZE:          size          = value; break; 
+    case P104_OFFSET_SIZE:          size = value; break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       content       = value; break; 
-    case P104_OFFSET_ALIGNMENT:     alignment     = value; break; 
-    case P104_OFFSET_ANIM_IN:       animationIn   = value; break; 
-    case P104_OFFSET_SPEED:         speed         = value; break; 
-    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break; 
-    case P104_OFFSET_PAUSE:         pause         = value; break; 
-    case P104_OFFSET_FONT:          font          = value; break; 
-    case P104_OFFSET_LAYOUT:        layout        = value; break; 
-    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break; 
-    case P104_OFFSET_OFFSET:        offset        = value; break; 
-    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break; 
-    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break; 
-    case P104_OFFSET_INVERTED:      inverted      = value; break; 
+    case P104_OFFSET_CONTENT:       content       = value; break;
+    case P104_OFFSET_ALIGNMENT:     alignment     = value; break;
+    case P104_OFFSET_ANIM_IN:       animationIn   = value; break;
+    case P104_OFFSET_SPEED:         speed         = value; break;
+    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break;
+    case P104_OFFSET_PAUSE:         pause         = value; break;
+    case P104_OFFSET_FONT:          font          = value; break;
+    case P104_OFFSET_LAYOUT:        layout        = value; break;
+    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break;
+    case P104_OFFSET_OFFSET:        offset        = value; break;
+    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break;
+    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break;
+    case P104_OFFSET_INVERTED:      inverted      = value; break;
 
     default:
       return false;
   }
   return true;
 }
-
 
 #endif // ifdef USES_P104

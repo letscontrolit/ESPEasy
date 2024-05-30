@@ -492,6 +492,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P121   // HMC5883L
 // #define USES_P122   // SHT2x
+// #define USES_P123   // FT6206
 // #define USES_P124   // I2C Multi Relay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
@@ -540,6 +541,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P162   // Output - MCP42xxx Digipot
 // #define USES_P164   // Gases - ENS16x TVOC/eCO2
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
+// #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+
 /*
  #######################################################################################################
  ###########     Controllers

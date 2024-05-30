@@ -9,14 +9,19 @@
 #  define P113_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
 # endif // ifndef BUILD_NO_DEBUG
 
-# ifdef LIMIT_BUILD_SIZE
-  #  ifdef P113_DEBUG_DEBUG
-    #   undef P113_DEBUG_DEBUG
-  #  endif // ifdef P113_DEBUG_DEBUG
-# endif    // ifdef LIMIT_BUILD_SIZE
+# if defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)
+#  ifdef P113_DEBUG_DEBUG
+#   undef P113_DEBUG_DEBUG
+#  endif // ifdef P113_DEBUG_DEBUG
+# endif // if defined(LIMIT_BUILD_SIZE) || defined(BUILD_NO_DEBUG)
 
-# include <Wire.h>
 # include <SparkFun_VL53L1X.h>
+
+# define P113_I2C_ADDRESS   PCONFIG(0)
+# define P113_TIMING        PCONFIG(1)
+# define P113_RANGE         PCONFIG(2)
+# define P113_SEND_ALWAYS   PCONFIG(3)
+# define P113_DELTA         PCONFIG(4)
 
 struct P113_data_struct : public PluginTaskData_base {
 public:
