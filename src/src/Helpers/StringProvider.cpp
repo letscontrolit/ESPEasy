@@ -30,6 +30,7 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/ESPEasy_Build_Description.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Hardware_temperature_sensor.h"
@@ -210,6 +211,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BUILD_TIME:             return F("Build Time");
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
+    case LabelType::BUILD_DESCRIPTION:      return F("Build Description");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
     #ifdef CONFIGURATION_CODE
     case LabelType::CONFIGURATION_CODE_LBL: return F("Configuration code");
@@ -538,6 +540,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::BUILD_TIME:             return String(get_build_date()) + ' ' + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
+    case LabelType::BUILD_DESCRIPTION:      return CreateBuildDescription(':');
     case LabelType::GIT_HEAD:               return get_git_head();
     #ifdef CONFIGURATION_CODE
     case LabelType::CONFIGURATION_CODE_LBL: return getConfigurationCode();
