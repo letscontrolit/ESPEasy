@@ -59,9 +59,15 @@ const char flameimg[] PROGMEM = {
 # define P109_FLAG_TASKNAME_IN_TITLE    0
 # define P109_FLAG_ALTERNATE_HEADER     1
 # define P109_FLAG_RELAY_INVERT         2
+# define P109_FLAG_BUTTON1_INVERT       3
+# define P109_FLAG_BUTTON2_INVERT       4
+# define P109_FLAG_BUTTON3_INVERT       5
 # define P109_GET_TASKNAME_IN_TITLE     bitRead(P109_FLAGS, P109_FLAG_TASKNAME_IN_TITLE)
 # define P109_GET_ALTERNATE_HEADER      bitRead(P109_FLAGS, P109_FLAG_ALTERNATE_HEADER)
 # define P109_GET_RELAY_INVERT          bitRead(P109_FLAGS, P109_FLAG_RELAY_INVERT)
+# define P109_GET_BUTTON1_INVERT         bitRead(P109_FLAGS, P109_FLAG_BUTTON1_INVERT)
+# define P109_GET_BUTTON2_INVERT         bitRead(P109_FLAGS, P109_FLAG_BUTTON2_INVERT)
+# define P109_GET_BUTTON3_INVERT         bitRead(P109_FLAGS, P109_FLAG_BUTTON3_INVERT)
 
 struct P109_data_struct : public PluginTaskData_base {
   P109_data_struct();
@@ -100,6 +106,7 @@ private:
   uint8_t _setpointTimeout = 0;
   int8_t  _relaypin        = -1;
   bool    _relayInverted   = false;
+  bool    _buttonInverted[3] = {false, false, false};
   String  _last_heater;
 
   String _title;

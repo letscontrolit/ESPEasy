@@ -85,6 +85,9 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   _varIndex        = event->BaseVarIndex;
   _relaypin        = P109_CONFIG_RELAYPIN;
   _relayInverted   = P109_GET_RELAY_INVERT;
+  _buttonInverted[0]   = P109_GET_BUTTON1_INVERT;
+  _buttonInverted[1]   = P109_GET_BUTTON2_INVERT;
+  _buttonInverted[2]   = P109_GET_BUTTON3_INVERT;
   _setpointTimeout = P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET;
 
   if (P109_CONFIG_DISPLAYTYPE == 1) {
@@ -120,7 +123,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   for (uint8_t pin = 0; pin < 3; ++pin) {
     if (validGpio(PIN(pin))) {
-      pinMode(PIN(pin), INPUT_PULLUP);
+      pinMode(PIN(pin), _buttonInverted[pin] ? INPUT : INPUT_PULLUP);
     }
   }
 
@@ -198,7 +201,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if (_initialized) {
     uint32_t current_time;
 
-    if (validGpio(CONFIG_PIN1) && !digitalRead(CONFIG_PIN1)) {
+    if (validGpio(CONFIG_PIN1) && (_buttonInverted[0] ? digitalRead(CONFIG_PIN1) : !digitalRead(CONFIG_PIN1))) {
       current_time = millis();
 
       if (_buttons[0] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
@@ -207,7 +210,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (validGpio(CONFIG_PIN2) && !digitalRead(CONFIG_PIN2)) {
+    if (validGpio(CONFIG_PIN2) && (_buttonInverted[1] ? digitalRead(CONFIG_PIN2) : !digitalRead(CONFIG_PIN2))) {
       current_time = millis();
 
       if (_buttons[1] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
@@ -216,7 +219,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (validGpio(CONFIG_PIN3) && !digitalRead(CONFIG_PIN3)) {
+    if (validGpio(CONFIG_PIN3) && (_buttonInverted[2] ? digitalRead(CONFIG_PIN3) : !digitalRead(CONFIG_PIN3))) {
       current_time = millis();
 
       if (_buttons[2] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
