@@ -513,10 +513,10 @@ void P169_data_struct::adjustForNoise(struct EventStruct *event)
   // if the noise floor threshold setting is not yet maxed out, increase the setting.
   // note that noise floor threshold events can also be triggered by an incorrect
   // analog front end setting.
-  const uint8_t nf_lev = _sensor.increaseNoiseFloorThreshold();
+  uint8_t nf_lev{};
 
-  if (nf_lev) {
-    addLog(LOG_LEVEL_INFO, F("AS3935: Increased noise floor threshold"));
+  if (_sensor.increaseNoiseFloorThreshold(nf_lev)) {
+    addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased noise floor threshold to: %u"), nf_lev));
     sendChangeEvent(event);
   }
   else {
@@ -646,8 +646,8 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     {
       uint8_t curGain = _sensor.readAFE();
 
-//      if (curGain < AS3935MI::AS3935_INDOORS) {
-      if (curGain < AS3935MI::AS3935_OUTDOORS) {
+      if (curGain < AS3935MI::AS3935_INDOORS) {
+//      if (curGain < AS3935MI::AS3935_OUTDOORS) {
 
         ++curGain;
 

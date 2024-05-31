@@ -415,76 +415,109 @@ void AS3935MI::clearStatistics()
 	writeRegisterValue(AS3935_REGISTER_CL_STAT, AS3935_MASK_CL_STAT, 1);
 }
 
-uint8_t AS3935MI::decreaseNoiseFloorThreshold()
+bool AS3935MI::decreaseNoiseFloorThreshold() {
+	uint8_t nf_lev{};
+	return decreaseNoiseFloorThreshold(nf_lev);
+}
+
+bool AS3935MI::decreaseNoiseFloorThreshold(uint8_t& nf_lev)
 {
-	uint8_t nf_lev = readNoiseFloorThreshold();
+	nf_lev = readNoiseFloorThreshold();
 
 	if (nf_lev == AS3935_NFL_0)
-		return AS3935_NFL_7;
+		return false;
 
 	writeNoiseFloorThreshold(--nf_lev);
 
 	return true;
 }
 
-uint8_t AS3935MI::increaseNoiseFloorThreshold()
+bool AS3935MI::increaseNoiseFloorThreshold() {
+	uint8_t nf_lev{};
+	return increaseNoiseFloorThreshold(nf_lev);
+}
+
+bool AS3935MI::increaseNoiseFloorThreshold(uint8_t& nf_lev)
 {
-	uint8_t nf_lev = readNoiseFloorThreshold();
+	nf_lev = readNoiseFloorThreshold();
 
 	if (nf_lev >= AS3935_NFL_7)
-		return AS3935_NFL_0;
+		return false;
 
 	writeNoiseFloorThreshold(++nf_lev);
 
-	return nf_lev;
+	return true;
 }
 
-uint8_t AS3935MI::decreaseWatchdogThreshold()
+bool AS3935MI::decreaseWatchdogThreshold() {
+	uint8_t wdth{};
+	return decreaseWatchdogThreshold(wdth);
+}
+
+bool AS3935MI::decreaseWatchdogThreshold(uint8_t& wdth)
 {
-	uint8_t wdth = readWatchdogThreshold();
+	wdth = readWatchdogThreshold();
 
 	if (wdth == AS3935_WDTH_0)
-		return AS3935_WDTH_15;
+		return false;
 
 	writeWatchdogThreshold(--wdth);
 
-	return wdth;
+	return true;
 }
 
-uint8_t AS3935MI::increaseWatchdogThreshold()
+bool AS3935MI::increaseWatchdogThreshold() {
+	uint8_t wdth{};
+	return increaseWatchdogThreshold(wdth);
+}
+
+bool AS3935MI::increaseWatchdogThreshold(uint8_t& wdth)
 {
-	uint8_t wdth = readWatchdogThreshold();
+	wdth = readWatchdogThreshold();
 
 	if (wdth >= AS3935_WDTH_15)
-		return AS3935_WDTH_0;
+		return false;
 
 	writeWatchdogThreshold(++wdth);
 
-	return wdth;
+	return true;
 }
 
-uint8_t AS3935MI::decreaseSpikeRejection()
+
+bool AS3935MI::decreaseSpikeRejection()
 {
-	uint8_t srej = readSpikeRejection();
+	uint8_t srej{};
+	return decreaseSpikeRejection(srej);
+}
+
+bool AS3935MI::decreaseSpikeRejection(uint8_t& srej)
+{
+	srej = readSpikeRejection();
 
 	if (srej == AS3935_SREJ_0)
-		return AS3935_SREJ_15;
+		return false;
 
 	writeSpikeRejection(--srej);
 
-	return srej;
+	return true;
 }
 
-uint8_t AS3935MI::increaseSpikeRejection()
+bool AS3935MI::increaseSpikeRejection()
 {
-	uint8_t srej = readSpikeRejection();
+	uint8_t srej{};
+	return increaseSpikeRejection(srej);
+}
+
+bool AS3935MI::increaseSpikeRejection(uint8_t& srej)
+{
+	srej = readSpikeRejection();
 
 	if (srej >= AS3935_SREJ_15)
-		return AS3935_SREJ_0;
+		return false;
 
 	writeSpikeRejection(++srej);
 
-	return srej;
+	return true;
 }
 
 void AS3935MI::displayLcoOnIrq(bool enable)
