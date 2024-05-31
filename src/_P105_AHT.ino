@@ -206,8 +206,8 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO,
                      strformat(F("%s : Temperature: %s : Humidity: %s"),
                                P105_data->getDeviceName().c_str(),
-                               formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
-                               formatUserVarNoCheck(event->TaskIndex, 1).c_str()));
+                               formatUserVarNoCheck(event, 0).c_str(),
+                               formatUserVarNoCheck(event, 1).c_str()));
         }
         success = true;
       }

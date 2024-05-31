@@ -624,9 +624,9 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, concat(F("State: "), formatUserVarNoCheck(event->TaskIndex, 0)));
-    addLog(LOG_LEVEL_DEBUG, concat(F("Timer: "), formatUserVarNoCheck(event->TaskIndex, 1)));
-    addLog(LOG_LEVEL_DEBUG, concat(F("LastIDindex: "), formatUserVarNoCheck(event->TaskIndex, 2)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("State: "), formatUserVarNoCheck(event, 0)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("Timer: "), formatUserVarNoCheck(event, 1)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("LastIDindex: "), formatUserVarNoCheck(event, 2)));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }

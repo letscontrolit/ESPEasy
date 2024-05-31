@@ -135,7 +135,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
           String log = strformat(
             F("ADC  : Analog value: %d = %s"), 
             raw_value,
-            formatUserVarNoCheck(event->TaskIndex, 0).c_str());
+            formatUserVarNoCheck(event, 0).c_str());
 
           if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
             log += strformat(F(" (%u samples)"), P002_data->getOversamplingCount());

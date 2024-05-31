@@ -390,10 +390,10 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           }
           log += strformat(
             F(" %s R: %s G: %s B: %s "),
-            formatUserVarNoCheck(event->TaskIndex, 3).c_str(),
-            formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
-            formatUserVarNoCheck(event->TaskIndex, 1).c_str(),
-            formatUserVarNoCheck(event->TaskIndex, 2).c_str());
+            formatUserVarNoCheck(event, 3).c_str(),
+            formatUserVarNoCheck(event, 0).c_str(),
+            formatUserVarNoCheck(event, 1).c_str(),
+            formatUserVarNoCheck(event, 2).c_str());
           addLogMove(LOG_LEVEL_INFO, log);
         }
 
