@@ -171,13 +171,15 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       }
 
       addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button left/down"), F("taskdevicepin1"), CONFIG_PIN1);
+      addFormCheckBox(F("Button left/down Pull mode (0=IntPullUp, 1=Input)"), F("invertbutton1"), P109_GET_BUTTON1_INVERT);
       addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button right/up"),  F("taskdevicepin2"), CONFIG_PIN2);
+      addFormCheckBox(F("Button right/up Pull mode (0=IntPullUp, 1=Input)"), F("invertbutton2"), P109_GET_BUTTON2_INVERT);
       addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button mode"),      F("taskdevicepin3"), CONFIG_PIN3);
-
+      addFormCheckBox(F("Button Mode Pull mode (0=IntPullUp, 1=Input)"), F("invertbutton3"), P109_GET_BUTTON3_INVERT);
       addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"),            F("heatrelay"),      P109_CONFIG_RELAYPIN);
 
       addFormCheckBox(F("Invert relay-state (0=on, 1=off)"), F("invertrelay"), P109_GET_RELAY_INVERT);
-
+      
       {
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
         const int optionValues4[]             = { 2, 5, 10 };
@@ -213,6 +215,9 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P109_FLAG_TASKNAME_IN_TITLE, isFormItemChecked(F("ptask")));
       bitWrite(lSettings, P109_FLAG_ALTERNATE_HEADER,  !isFormItemChecked(F("palt"))); // Inverted
       bitWrite(lSettings, P109_FLAG_RELAY_INVERT,      isFormItemChecked(F("invertrelay")));
+      bitWrite(lSettings, P109_FLAG_BUTTON1_INVERT,      isFormItemChecked(F("invertbutton1")));
+      bitWrite(lSettings, P109_FLAG_BUTTON2_INVERT,      isFormItemChecked(F("invertbutton2")));
+      bitWrite(lSettings, P109_FLAG_BUTTON3_INVERT,      isFormItemChecked(F("invertbutton3")));
       P109_FLAGS = lSettings;
 
       {
