@@ -1957,7 +1957,6 @@ To create/register a plugin, you have to :
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
   
-
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -2388,7 +2387,6 @@ To create/register a plugin, you have to :
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
-
 
   // Controllers
   #ifndef USES_C015

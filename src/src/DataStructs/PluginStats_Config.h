@@ -66,7 +66,6 @@ private:
 
   uint8_t getStored() const {
     uint8_t res{};
-
     memcpy(&res, &bits, sizeof(uint8_t));
     return res;
   }
