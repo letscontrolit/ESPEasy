@@ -91,12 +91,13 @@ void PluginTaskData_base::processTimeSet(const double& time_offset)
 #endif // if FEATURE_PLUGIN_STATS
 
 void PluginTaskData_base::pushPluginStatsValues(struct EventStruct *event,
-                                                bool                trackPeaks)
+                                                bool                trackPeaks,
+                                                bool                onlyUpdateTimestampWhenSame)
 {
 #if FEATURE_PLUGIN_STATS
 
   if (_plugin_stats_array != nullptr) {
-    _plugin_stats_array->pushPluginStatsValues(event, trackPeaks);
+    _plugin_stats_array->pushPluginStatsValues(event, trackPeaks, onlyUpdateTimestampWhenSame);
   }
 #endif // if FEATURE_PLUGIN_STATS
 }

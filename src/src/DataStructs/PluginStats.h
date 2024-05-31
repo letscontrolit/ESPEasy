@@ -37,6 +37,9 @@ public:
   // This does not also track peaks as the peaks could be raw sensor data and the samples processed data.
   bool push(float value);
 
+  // When only updating the timestamp of the last entry, we should look at the last 
+  bool matchesLastTwoEntries(float value) const;
+
   // Keep track of peaks.
   // Use this for sensors that need to take several samples before actually output a task value.
   // For example the ADC with oversampling

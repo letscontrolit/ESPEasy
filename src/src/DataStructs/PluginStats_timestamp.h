@@ -17,6 +17,8 @@ public:
 
   bool     push(uint32_t unixTime);
 
+  bool     updateLast(uint32_t unixTime);
+
   void     clear();
 
   // Update any logged timestamp with this newly set system time.

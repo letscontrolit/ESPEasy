@@ -891,7 +891,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
 
             if (taskData != nullptr) {
-              taskData->pushPluginStatsValues(event, !Device[DeviceIndex].TaskLogsOwnPeaks);
+              // FIXME TD-er: Must make this flag configurable
+              bool onlyUpdateTimestampWhenSame = true;
+              taskData->pushPluginStatsValues(
+                event, 
+                !Device[DeviceIndex].TaskLogsOwnPeaks,
+                onlyUpdateTimestampWhenSame); 
             }
               #endif // if FEATURE_PLUGIN_STATS
             saveUserVarToRTC();

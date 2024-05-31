@@ -41,7 +41,8 @@ struct PluginTaskData_base {
 
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event,
-                             bool                trackPeaks);
+                             bool                trackPeaks,
+                             bool                onlyUpdateTimestampWhenSame);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.

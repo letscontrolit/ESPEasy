@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -29,7 +30,7 @@ String toString(const float& value, unsigned int decimalPlaces)
   String sValue;
   #ifndef LIMIT_BUILD_SIZE
 
-  if (decimalPlaces == 0) {
+  if (decimalPlaces == 0 && isValidFloat(value)) {
     if ((value > -2e9f) && (value < 2e9f)) {
       const int32_t l_value = static_cast<int32_t>(roundf(value));
       sValue = l_value;
@@ -39,7 +40,7 @@ String toString(const float& value, unsigned int decimalPlaces)
       sValue = ll2String(ll_value);
     }
     if (sValue.length() > 0) {
-      return std::move(sValue);
+      return sValue;
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
@@ -61,7 +62,7 @@ String toString(const float& value, unsigned int decimalPlaces)
 #endif
 */
   sValue.trim();
-  return std::move(sValue);
+  return sValue;
 }
 
 String ull2String(uint64_t value, uint8_t base) {
@@ -69,7 +70,7 @@ String ull2String(uint64_t value, uint8_t base) {
 
   if (value == 0) {
     res = '0';
-    return std::move(res);
+    return res;
   }
 
   while (value > 0) {
@@ -88,7 +89,7 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
-  return std::move(res);
+  return res;
 }
 
 String ll2String(int64_t value, uint8_t  base) {
@@ -120,7 +121,7 @@ String trimTrailingZeros(const String& value) {
       res.trim();
     }
   }
-  return std::move(res);
+  return res;
 
 }
 
@@ -165,7 +166,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return std::move(res);
+  return res;
 }
 #endif
 
@@ -178,7 +179,7 @@ String floatToString(const float& value,
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return std::move(res);
+  return res;
 }
 
 

@@ -12,6 +12,13 @@ bool PluginStats_timestamp::push(uint32_t unixTime)
   return _timestamps.push(unixTime);
 }
 
+bool PluginStats_timestamp::updateLast(uint32_t unixTime)
+{
+  const size_t nrElements = _timestamps.size();
+  if (nrElements == 0) return false;
+  return _timestamps.set(nrElements - 1, unixTime);
+}
+
 void PluginStats_timestamp::clear()
 {
   _timestamps.clear();

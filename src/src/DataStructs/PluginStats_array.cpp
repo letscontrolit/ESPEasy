@@ -162,16 +162,43 @@ uint32_t PluginStats_array::getFullPeriodInSec() const
   return _plugin_stats_timestamps->getFullPeriodInSec();
 }
 
-void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
+void PluginStats_array::pushPluginStatsValues(
+  struct EventStruct *event,
+  bool                trackPeaks,
+  bool                onlyUpdateTimestampWhenSame)
 {
   if (validTaskIndex(event->TaskIndex)) {
     const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
     if (valueCount > 0) {
+      const Sensor_VType sensorType = event->getSensorType();
+
+      if (onlyUpdateTimestampWhenSame && (_plugin_stats_timestamps != nullptr)) {
+        // When only updating the timestamp of the last entry,
+        // we should look at the last 2 entries to see if they are the same.
+        bool   isSame = true;
+        size_t i      = 0;
+
+        while (isSame && i < valueCount) {
+          if (_plugin_stats[i] != nullptr) {
+            const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
+
+            if (!_plugin_stats[i]->matchesLastTwoEntries(value)) {
+              isSame = false;
+            }
+          }
+          ++i;
+        }
+
+        if (isSame) {
+          _plugin_stats_timestamps->updateLast(node_time.getUnixTime());
+          return;
+        }
+      }
+
       if (_plugin_stats_timestamps != nullptr) {
         _plugin_stats_timestamps->push(node_time.getUnixTime());
       }
-      const Sensor_VType sensorType = event->getSensorType();
 
       for (size_t i = 0; i < valueCount; ++i) {
         if (_plugin_stats[i] != nullptr) {
@@ -380,8 +407,8 @@ void PluginStats_array::plot_ChartJS_scatter(
   }
 
 
-  const size_t nrSamples = stats_X->getNrSamples();
-  const bool enableZoom = false;
+  const size_t nrSamples  = stats_X->getNrSamples();
+  const bool   enableZoom = false;
 
   add_ChartJS_chart_header(
     F("scatter"),

@@ -59,6 +59,44 @@ bool PluginStats::push(float value)
   return _samples->push(value);
 }
 
+bool PluginStats::matchesLastTwoEntries(float value) const
+{
+  const size_t nrSamples = getNrSamples();
+
+  if (nrSamples < 2) { return false; }
+
+  const float last       = (*_samples)[nrSamples - 1];
+  const float beforeLast = (*_samples)[nrSamples - 2];
+
+  const String value_str = toString(value, _nrDecimals);
+
+  return
+    toString(last,       _nrDecimals).equals(value_str) &&
+    toString(beforeLast, _nrDecimals).equals(value_str);
+
+
+  /*
+     const bool  value_valid = isValidFloat(value);
+     const bool  last_valid  = isValidFloat(last);
+
+     if (value_valid != last_valid) {
+      return false;
+     }
+     const bool beforeLast_valid = isValidFloat(beforeLast);
+
+     if (value_valid != beforeLast_valid) {
+      return false;
+     }
+
+     if (value_valid) {
+      return
+        approximatelyEqual(value, last) &&
+        approximatelyEqual(value, beforeLast);
+     }
+     return true;
+   */
+}
+
 void PluginStats::trackPeak(float value)
 {
   if (value > _maxValue) {

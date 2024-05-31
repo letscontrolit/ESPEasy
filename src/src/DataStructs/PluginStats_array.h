@@ -40,7 +40,8 @@ public:
   uint32_t getFullPeriodInSec() const;
 
   void     pushPluginStatsValues(struct EventStruct *event,
-                                 bool                trackPeaks);
+                                 bool                trackPeaks,
+                                 bool                onlyUpdateTimestampWhenSame);
 
   bool     plugin_get_config_value_base(struct EventStruct *event,
                                         String            & string) const;
