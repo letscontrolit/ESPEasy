@@ -4,12 +4,78 @@
 
 # include "../Helpers/AdafruitGFX_helper.h"
 
+const __FlashStringHelper* toString(P123_TouchType_e tType) {
+  switch (tType) {
+    case P123_TouchType_e::FT62x6: return F("FT62x6 (0x38)");
+    case P123_TouchType_e::GT911_1: return F("GT911 (0x5D)");
+    case P123_TouchType_e::GT911_2: return F("GT911 (0x14)");
+    case P123_TouchType_e::CST820: return F("CST820 (0x15)");
+    case P123_TouchType_e::CST226: return F("CST226 (0x5A)");
+    case P123_TouchType_e::AXS15231: return F("AXS15231 (0x3B)");
+    case P123_TouchType_e::Automatic: return F("Auto-detect");
+  }
+  return F("");
+}
+
+/**
+ * Order must match enum P123_TouchType_e, with Automatic (-1) ignored
+ */
+const uint8_t P123_i2cAddressValues[] = { FT6X36_ADDR, GT911_ADDR1, GT911_ADDR2, CST820_ADDR, CST226_ADDR, AXS15231_ADDR };
+
+bool P123_data_struct::plugin_i2c_has_address(const int Par1) {
+  return intArrayContains(NR_ELEMENTS(P123_i2cAddressValues), P123_i2cAddressValues, Par1);
+}
+
+uint8_t P123_data_struct::plugin_i2c_address(P123_TouchType_e touchType) {
+  const int tType = static_cast<int>(touchType);
+
+  if ((tType >= 0) && (tType < NR_ELEMENTS(P123_i2cAddressValues))) {
+    return P123_i2cAddressValues[tType];
+  }
+  return 0u;
+}
+
+P123_TouchType_e P123_data_struct::getTouchType() {
+  if (nullptr != touchscreen) {
+    const int stype = touchscreen->sensorType();
+
+    switch (stype) {
+      case CT_TYPE_FT6X36: return P123_TouchType_e::FT62x6;
+      case CT_TYPE_GT911:
+
+        if (GT911_ADDR1 == touchscreen->getI2CAddress()) {
+          return P123_TouchType_e::GT911_1;
+        } else {
+          return P123_TouchType_e::GT911_2;
+        }
+      case CT_TYPE_CST820: return P123_TouchType_e::CST820;
+      case CT_TYPE_CST226: return P123_TouchType_e::CST226;
+      case CT_TYPE_AXS15231: return P123_TouchType_e::AXS15231;
+    }
+  }
+  return P123_TouchType_e::Automatic;
+}
+
+int P123_data_struct::getBBCapTouchType(P123_TouchType_e touchType) {
+  switch (touchType) {
+    case P123_TouchType_e::Automatic: return CT_TYPE_UNKNOWN;
+    case P123_TouchType_e::FT62x6: return CT_TYPE_FT6X36;
+    case P123_TouchType_e::GT911_1: // Fall through
+    case P123_TouchType_e::GT911_2: return CT_TYPE_GT911;
+    case P123_TouchType_e::CST820: return CT_TYPE_CST820;
+    case P123_TouchType_e::CST226: return CT_TYPE_CST226;
+    case P123_TouchType_e::AXS15231: return CT_TYPE_AXS15231;
+  }
+  return CT_TYPE_UNKNOWN;
+}
+
 /**
  * Constructor
  */
-P123_data_struct::P123_data_struct()
-  : touchscreen(nullptr) {
+P123_data_struct::P123_data_struct(P123_TouchType_e touchType)
+  : _touchType(touchType) {
   touchHandler = new (std::nothrow) ESPEasy_TouchHandler(); // Temporary object to be able to call loadTouchObjects
+  _i2caddr     = plugin_i2c_address(_touchType);
 }
 
 /**
@@ -50,12 +116,23 @@ bool P123_data_struct::init(struct EventStruct *event) {
     touchHandler->init(event);
 
     if (touchHandler->touchEnabled()) {
-      touchscreen = new (std::nothrow) Adafruit_FT6206();
+      touchscreen = new (std::nothrow) BBCapTouch();
 
       if (nullptr != touchscreen) {
-        if (!touchscreen->begin(P123_CONFIG_THRESHOLD)) {
+        touchscreen->setThreshold(P123_CONFIG_THRESHOLD);
+
+        P123_TouchType_e touchType = static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE);
+
+        if (P123_TouchType_e::Automatic != touchType) { // Manual override
+          touchscreen->sensorType(getBBCapTouchType(touchType));
+          touchscreen->setI2CAddress(plugin_i2c_address(touchType));
+        }
+
+        if (touchscreen->init(-1, -1, P123_RESETPIN, P123_INTERRUPTPIN) != CT_SUCCESS) {
           delete touchscreen;
           touchscreen = nullptr;
+        } else {
+          setRotation(_rotation);
         }
       }
     }
@@ -213,7 +290,7 @@ void P123_data_struct::loadTouchObjects(struct EventStruct *event) {
  */
 bool P123_data_struct::touched() {
   if (isInitialized()) {
-    return touchscreen->touched();
+    return touchscreen->getSamples(&touchInfo) > 0; // 1 or more points touched
   }
   return false;
 }
@@ -227,55 +304,11 @@ void P123_data_struct::readData(int16_t& x,
                                 int16_t& ox,
                                 int16_t& oy) {
   if (isInitialized()) {
-    FT_Point p = touchscreen->getPoint();
-
-    int16_t _x = p.x;
-    int16_t _y = p.y;
-
-    // Rotate, as the driver doesn't provide that, use native touch-panel resolution
-    switch (_rotation) {
-      case P123_ROTATION_90:
-
-        if (touchHandler->_flipped) {
-          p.x = map(_y, 0, P123_TOUCH_Y_NATIVE, P123_TOUCH_Y_NATIVE, 0);
-          p.y = _x;
-        } else {
-          p.x = _y;
-          p.y = map(_x, 0, P123_TOUCH_X_NATIVE, P123_TOUCH_X_NATIVE, 0);
-        }
-        break;
-      case P123_ROTATION_180:
-
-        if (!touchHandler->_flipped) { // Change only when not flipped
-          p.x = map(_x, 0, P123_TOUCH_X_NATIVE, P123_TOUCH_X_NATIVE, 0);
-          p.y = map(_y, 0, P123_TOUCH_Y_NATIVE, P123_TOUCH_Y_NATIVE, 0);
-        }
-        break;
-      case P123_ROTATION_270:
-
-        if (touchHandler->_flipped) {
-          p.x = _y;
-          p.y = map(_x, 0, P123_TOUCH_X_NATIVE, P123_TOUCH_X_NATIVE, 0);
-        } else {
-          p.x = map(_y, 0, P123_TOUCH_Y_NATIVE, P123_TOUCH_Y_NATIVE, 0);
-          p.y = _x;
-        }
-        break;
-      case P123_ROTATION_0:
-      default:
-
-        if (touchHandler->_flipped) {
-          p.x = map(p.x, 0, P123_TOUCH_X_NATIVE, P123_TOUCH_X_NATIVE, 0);
-          p.y = map(p.y, 0, P123_TOUCH_Y_NATIVE, P123_TOUCH_Y_NATIVE, 0);
-        }
-        break;
-    }
-
-    x  = p.x;
-    y  = p.y;
-    z  = p.z;
-    ox = _x;
-    oy = _y;
+    x  = touchInfo.x[0]; // Only 1 point used for now.
+    y  = touchInfo.y[0];
+    z  = touchInfo.pressure[0];
+    ox = touchInfo.x[0]; // Change of touch driver has made these arguments obsolete, but in use for touchHandler...
+    oy = touchInfo.y[0];
   }
 }
 
@@ -284,6 +317,17 @@ void P123_data_struct::readData(int16_t& x,
  */
 void P123_data_struct::setRotation(uint8_t n) {
   _rotation = n;
+
+  if (isInitialized()) {
+    const bool fl = touchHandler->_flipped;
+
+    switch (_rotation) { // Rotation is handled by touch driver, flipped handled here
+      case 0: touchscreen->setOrientation(fl ? 180 : 0, _ts_x_res, _ts_y_res); break;
+      case 1: touchscreen->setOrientation(fl ? 270 : 90, _ts_x_res, _ts_y_res); break;
+      case 2: touchscreen->setOrientation(fl ? 0 : 180, _ts_x_res, _ts_y_res); break;
+      case 3: touchscreen->setOrientation(fl ? 90 : 270, _ts_x_res, _ts_y_res); break;
+    }
+  }
   # ifdef PLUGIN_123_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

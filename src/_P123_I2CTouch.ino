@@ -7,6 +7,13 @@
 
 /**
  * Changelog:
+ * 2024-06-02 tonhuisman: Renamed to I2C Touchscreens
+ *                        Refactor to use modified bb_captouch library https://github.com/bitbank2/bb_captouch to add support for
+ *                        FT62x6 and GT911 (tested), CST820, CST226 and AXS15231 (untested)
+ *                        The library supports auto-configure, but that only checks if an I2C device is available at certain addresses
+ *                        so that's not really reliable. Added methods to override the used touchscreen with the known device
+ *                        Only single-point support for now.
+ *                        For the auto-configure option the I2C device check is disabled for this plugin.
  * 2024-03-21 tonhuisman: Refactor increment/decrement to next/prevButtonGroup/Page functions, to align with ESPEasy_TouchHandler
  * 2023-12-31 tonhuisman: Code optimizations
  * 2023-10-01 tonhuisman: Re-implement (fix) switching of X/Y/Z vs X/Y output values using PLUGIN_GET_DEVICEVALUECOUNT, store (also) in task
@@ -47,7 +54,7 @@
 
 # define PLUGIN_123
 # define PLUGIN_ID_123         123
-# define PLUGIN_NAME_123       "Touch - FT62x6 touchscreen"
+# define PLUGIN_NAME_123       "Touch - I2C Touchscreens"
 # define PLUGIN_VALUENAME1_123 "X"
 # define PLUGIN_VALUENAME2_123 "Y"
 # define PLUGIN_VALUENAME3_123 "Z"
@@ -74,6 +81,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].ExitTaskBeforeSave = false;
+      Device[deviceCount].I2CNoDeviceCheck   = true;
       success                                = true;
       break;
     }
@@ -96,7 +104,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
-      success = (event->Par1 == P123_I2C_ADDRESS); // Fixed I2C address
+      success = P123_data_struct::plugin_i2c_has_address(event->Par1);
       break;
     }
 
@@ -107,6 +115,10 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       P123_CONFIG_ROTATION     = P123_TS_ROTATION;
       P123_CONFIG_X_RES        = P123_TS_X_RES;
       P123_CONFIG_Y_RES        = P123_TS_Y_RES;
+      P123_I2C_ADDRESS         = 0x38; // Former default was FT62x6
+      P123_SET_TOUCH_TYPE(static_cast<int>(P123_TouchType_e::FT62x6));
+      P123_INTERRUPTPIN = -1;          // No interrupt
+      P123_RESETPIN     = -1;          // No reset
 
       success = true;
       break;
@@ -167,13 +179,47 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       AdaGFXFormColorDepth(F("colordepth"), P123_COLOR_DEPTH, (colorDepth_ == 0));
 
       addFormNumericBox(F("Touch minimum pressure"), F("threshold"), P123_CONFIG_THRESHOLD, 0, 255);
+      addUnit(F("Only used for FT62x6"));
 
       {
         P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
         bool deleteP123_data        = false;
+        {
+          const __FlashStringHelper *touchTypes[] = {
+            toString(P123_TouchType_e::FT62x6),
+            toString(P123_TouchType_e::GT911_1),
+            toString(P123_TouchType_e::GT911_2),
+            toString(P123_TouchType_e::CST820),
+            toString(P123_TouchType_e::CST226),
+            toString(P123_TouchType_e::AXS15231),
+            toString(P123_TouchType_e::Automatic),
+          };
+          const int touchTypeOptions[] = {
+            static_cast<int>(P123_TouchType_e::FT62x6),
+            static_cast<int>(P123_TouchType_e::GT911_1),
+            static_cast<int>(P123_TouchType_e::GT911_2),
+            static_cast<int>(P123_TouchType_e::CST820),
+            static_cast<int>(P123_TouchType_e::CST226),
+            static_cast<int>(P123_TouchType_e::AXS15231),
+            static_cast<int>(P123_TouchType_e::Automatic),
+          };
+          addFormSelector(F("Touchscreen type (address)"),
+                          F("ttype"),
+                          NR_ELEMENTS(touchTypeOptions),
+                          touchTypes,
+                          touchTypeOptions,
+                          P123_GET_TOUCH_TYPE);
+
+          if (nullptr != P123_data) {
+            addUnit(concat(F("Detected: "), toString(P123_data->getTouchType())));
+          }
+        }
+        addFormPinSelect(PinSelectPurpose::Generic_bidir, F("Interrupt pin"), F("taskdevicepin1"), P123_INTERRUPTPIN);
+        addFormPinSelect(PinSelectPurpose::Generic_bidir, F("Reset pin"),     F("taskdevicepin2"), P123_RESETPIN);
+        addFormNote(F("Interrupt and Reset pins (optional) used by GT911 touch only."));
 
         if (nullptr == P123_data) {
-          P123_data       = new (std::nothrow) P123_data_struct();
+          P123_data       = new (std::nothrow) P123_data_struct(static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE));
           deleteP123_data = true;
         }
 
@@ -200,6 +246,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       P123_CONFIG_ROTATION     = getFormItemInt(F("rotate"));
       P123_CONFIG_X_RES        = getFormItemInt(F("xres"));
       P123_CONFIG_Y_RES        = getFormItemInt(F("yres"));
+      P123_SET_TOUCH_TYPE(getFormItemInt(F("ttype")));
+
+      // taskdevicepin1/taskdevicepin2 are saved automatically
 
       const int colorDepth = getFormItemInt(F("colordepth"), -1);
 
@@ -212,7 +261,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         bool deleteP123_data        = false;
 
         if (nullptr == P123_data) {
-          P123_data       = new (std::nothrow) P123_data_struct();
+          P123_data       = new (std::nothrow) P123_data_struct(static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE));
           deleteP123_data = true;
         }
 
@@ -233,7 +282,12 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       # ifdef PLUGIN_123_DEBUG
       addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_INIT"));
       # endif // ifdef PLUGIN_123_DEBUG
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P123_data_struct());
+
+      if (0 == P123_I2C_ADDRESS) {
+        P123_I2C_ADDRESS = 0x38; // Former default was FT62x6
+        P123_SET_TOUCH_TYPE(static_cast<int>(P123_TouchType_e::FT62x6));
+      }
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P123_data_struct(static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE)));
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P123_data) {
