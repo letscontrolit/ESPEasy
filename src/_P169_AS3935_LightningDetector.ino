@@ -63,7 +63,8 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
       // Set a default config here, which will be called when a plugin is assigned to a task.
       P169_I2C_ADDRESS         = P169_I2C_ADDRESS_DFLT;
       P169_LIGHTNING_THRESHOLD = AS3935MI::AS3935_MNL_1;
-      P169_AFE_GAIN            = AS3935MI::AS3935_OUTDOORS;
+      P169_AFE_GAIN_LOW        = AS3935MI::AS3935_OUTDOORS;
+      P169_AFE_GAIN_HIGH       = AS3935MI::AS3935_OUTDOORS;
       P169_SET_MASK_DISTURBANCE(false);
       P169_SET_SEND_ONLY_ON_LIGHTNING(true);
       P169_SET_TOLERANT_CALIBRATION_RANGE(true);
@@ -158,7 +159,9 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
           17,
           18
         };
-        addFormSelector(F("AFE Gain"), P169_AFE_GAIN_LABEL, NR_ELEMENTS(optionValues), options, optionValues, P169_AFE_GAIN);
+        addFormSelector(F("AFE Gain Min"), P169_AFE_GAIN_LOW_LABEL,  NR_ELEMENTS(optionValues), options, optionValues, P169_AFE_GAIN_LOW);
+        addFormSelector(F("AFE Gain Max"), P169_AFE_GAIN_HIGH_LABEL, NR_ELEMENTS(optionValues), options, optionValues, P169_AFE_GAIN_HIGH);
+        addFormNote(F("Lower and upper limit for the Analog Frond-End auto gain to use."));
       }
 
       addFormCheckBox(F("Ignore Disturbance"),                F(P169_MASK_DISTURBANCE_LABEL),           P169_GET_MASK_DISTURBANCE);
@@ -190,7 +193,15 @@ boolean Plugin_169(uint8_t function, struct EventStruct *event, String& string)
             P169_SPIKE_REJECTION     = getFormItemInt(P169_SPIKE_REJECTION_LABEL);
        */
       P169_LIGHTNING_THRESHOLD = getFormItemInt(P169_LIGHTNING_THRESHOLD_LABEL);
-      P169_AFE_GAIN            = getFormItemInt(P169_AFE_GAIN_LABEL);
+      const int gain_low  = getFormItemInt(P169_AFE_GAIN_LOW_LABEL);
+      const int gain_high = getFormItemInt(P169_AFE_GAIN_HIGH_LABEL);
+      P169_AFE_GAIN_LOW  = gain_low;
+      P169_AFE_GAIN_HIGH = gain_high;
+
+      if (gain_low > gain_high) {
+        P169_AFE_GAIN_LOW  = gain_high;
+        P169_AFE_GAIN_HIGH = gain_low;
+      }
       P169_SET_MASK_DISTURBANCE(isFormItemChecked(F(P169_MASK_DISTURBANCE_LABEL)));
       P169_SET_SEND_ONLY_ON_LIGHTNING(isFormItemChecked(F(P169_SEND_ONLY_ON_LIGHTNING_LABEL)));
       P169_SET_TOLERANT_CALIBRATION_RANGE(isFormItemChecked(F(P169_TOLERANT_CALIBRATION_RANGE_LABEL)));

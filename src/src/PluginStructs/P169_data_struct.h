@@ -26,8 +26,10 @@
 # define P169_LIGHTNING_THRESHOLD       PCONFIG(1)
 # define P169_LIGHTNING_THRESHOLD_LABEL PCONFIG_LABEL(1)
 
-# define P169_AFE_GAIN                  PCONFIG(3)
-# define P169_AFE_GAIN_LABEL            PCONFIG_LABEL(3)
+# define P169_AFE_GAIN_LOW                  PCONFIG(3)
+# define P169_AFE_GAIN_LOW_LABEL            PCONFIG_LABEL(3)
+# define P169_AFE_GAIN_HIGH                  PCONFIG(4)
+# define P169_AFE_GAIN_HIGH_LABEL            PCONFIG_LABEL(4)
 
 
 // # define P169_GET_INDOOR                bitRead(PCONFIG(2), 0)

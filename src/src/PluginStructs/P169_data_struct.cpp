@@ -261,7 +261,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
   _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
   _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
-  setAFE_gain(event, P169_AFE_GAIN);
+  setAFE_gain(event, P169_AFE_GAIN_LOW);
   {
     AS3935MI::min_num_lightnings_t min_num_lightnings = AS3935MI::AS3935_MNL_1;
 
@@ -543,7 +543,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
       // Resonance frequency is still OK, try lowering gain
       uint8_t curGain = _sensor.readAFE();
 
-      if (curGain > AS3935MI::AS3935_OUTDOORS) {
+      if (curGain > P169_AFE_GAIN_LOW) {
         --curGain;
 
         // Since we change the gain, reset the other values to default
@@ -646,9 +646,7 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     {
       uint8_t curGain = _sensor.readAFE();
 
-      if (curGain < AS3935MI::AS3935_INDOORS) {
-//      if (curGain < AS3935MI::AS3935_OUTDOORS) {
-
+      if (curGain < P169_AFE_GAIN_HIGH) {
         ++curGain;
 
         // Since we change the gain, reset the other values to default
