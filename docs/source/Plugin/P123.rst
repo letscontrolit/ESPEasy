@@ -24,9 +24,9 @@ Used libraries: |P123_usedlibraries|
 Supported hardware
 ------------------
 
-Some displays are available with a touch overlay mounted on top of the visible side of the display. There's a choice of resistive and capacitive touch overlays. The FT62x6 series of touch overlays are of the Capacitive kind, being very easy to interact with, comparable to modern smartphones, where you can use a finger for the interaction. (Resistive touch overlays usually require a special pen to be used, or pressed with a finger-nail, to get a response.)
+Some displays are available with a touch overlay mounted on top of the visible side of the display. There's a choice of resistive and capacitive touch overlays. The I2C touch overlays supported in this plugin are of the Capacitive kind, being very easy to interact with, comparable to modern smartphones, where you can use a finger for the interaction. (Resistive touch overlays usually require a special pen to be used, or pressed with a finger-nail, to get a response.)
 
-The FT62x6 touch overlay (or touch screen), can be found on several displays, f.e. some M5Stack devices and the WT32-SC01 display unit.
+The supported touch overlays (or touch screens), can be found on several displays, f.e. some M5Stack devices, the WT32-SC01 display unit and the LilyGO LILY Pi ESP32 unit.
 
 Device configuration
 --------------------
@@ -59,7 +59,33 @@ The configured display will be used to draw the objects, if any, that can be con
 
 * **Display Color-depth**: If the display settings have been retrieved successfully, this setting can not be changed, but will be used from the display. This value is used to select the correct color mappings for displaying the Objects.
 
-* **Touch minimum pressure**: This setting determines the relative pressure or sensitivity of the touch display. Lower values make it more sensitive. The range is 0 to 255.
+* **Touch minimum pressure**: This setting determines the relative pressure or sensitivity of the FT62x6 touch displays. Lower values make it more sensitive. The range is 0 to 255. Only applicable for the FT62x6 controller.
+
+* **Touchscreen Type (Address)**: Select the type of touchscreen installed, available options:
+
+.. image:: P123_TouchscreenTypeOptions.png
+
+* *FT62x6 (0x38)*: Focaltech FT62x6/FT52x6 touchscreen controller family. Default selection.
+
+* *GT911 (0x5D)*: GT911 touchscreen controller, default address.
+
+* *GT911 (0x14)*: GT911 touchscreen controller, alternate address.
+
+* *CST820 (0x15)*: CST816/CST820 touchscreen controller family.
+
+* *CST226 (0x5A)*: CST226 touchscreen controller.
+
+* *AXS15231 (0x3B)*: AXS15231 touchscreen controller.
+
+* *Auto-detect*: Select this option to have the plugin auto-detect the used touchscreen controller. This auto-detect is mostly based on an I2C device being available at the shown addresses, so might get confused if a non-touchscreen I2C device at one of these addresses is installed.
+
+|
+
+* **Interrupt pin**: Select the GPIO that is connected to the IRQ connection of a GT911 touchscreen controller. The IRQ pin is only used for detection & address configuration, combined with the **Reset pin**, if available and configured. Only used for GT911 controller.
+
+* **Reset pin**: Select the GPIO that is connected to the Reset connection of a GT911 touchscreen controller. Similar to the **IRQ pin**, only used for the GT911 controller.
+
+.. note:: The **Interrupt** and **Reset** GPIO pins are only used for the GT911 controller, and are optional
 
 .. include:: Touch_Configuration.repl
 
