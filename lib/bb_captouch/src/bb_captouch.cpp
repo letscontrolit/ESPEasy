@@ -272,7 +272,6 @@ int BBCapTouch::getSamples(TOUCHINFO *pTI) {
 
   if (_iType == CT_TYPE_CST226) {               // CST226
     i = I2CReadRegister(_iAddr, 0, ucTemp, 28); // read the whole block of regs
-    #ifdef FUTURE
 
     if ((ucTemp[0] == 0x83) && (ucTemp[1] == 0x17) && (ucTemp[5] == 0x80)) {
       // home button pressed
@@ -292,8 +291,7 @@ int BBCapTouch::getSamples(TOUCHINFO *pTI) {
       I2CWrite(_iAddr, ucTemp, 2); // reset
       return 0;
     }
-    #endif // ifdef FUTURE
-    c          = 1; // debug
+
     pTI->count = c;
     j          = 0;
 
@@ -305,13 +303,13 @@ int BBCapTouch::getSamples(TOUCHINFO *pTI) {
     }
 
     if (_iOrientation != 0) { fixSamples(pTI); }
-    return 1;                                                  // TODO This may need to check the actual count
+    return c > 0;
   } // CST226
 
   if (_iType == CT_TYPE_CST820) {                              // CST820
     I2CReadRegister(_iAddr, CST820_TOUCH_REGS + 1, ucTemp, 1); // read touch count
 
-    if ((ucTemp[0] < 1) || (ucTemp[0] > 5)) {                  // something went wrong
+    if ((ucTemp[0] < 1) || (ucTemp[0] > 5)) { // something went wrong
       return 0;
     }
 
