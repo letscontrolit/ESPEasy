@@ -41,7 +41,7 @@
    -  /control?cmd=thermo,mode,0               Switch heating off, absolutely do nothing until further notice
 
    ------------------------------------------------------------------------------------------
-   Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
+   Copyleft Nagy Sandor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
    2022-12-08 tonhuisman: Add Relay invert state option, reorder config option Contrast
                           Add setpoint delay option, switch relay after delay seconds
@@ -138,16 +138,16 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      const char* separator = event->String1.c_str();
+      const char *separator = event->String1.c_str();
       string = strformat(
         F("Btn L: %s%sBtn R: %s%sBtn M: %s%sRelay: %s"),
-       formatGpioLabel(CONFIG_PIN1, false).c_str(),
-       separator,
-       formatGpioLabel(CONFIG_PIN2, false).c_str(),
-       separator,
-       formatGpioLabel(CONFIG_PIN3, false).c_str(),
-       separator,
-       formatGpioLabel(P109_CONFIG_RELAYPIN, false).c_str());
+        formatGpioLabel(CONFIG_PIN1,          false).c_str(),
+        separator,
+        formatGpioLabel(CONFIG_PIN2,          false).c_str(),
+        separator,
+        formatGpioLabel(CONFIG_PIN3,          false).c_str(),
+        separator,
+        formatGpioLabel(P109_CONFIG_RELAYPIN, false).c_str());
       success = true;
       break;
     }
@@ -170,41 +170,41 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button left/down"), F("taskdevicepin1"), CONFIG_PIN1);
-      addFormCheckBox(F("Button left/down Pull mode (0=IntPullUp, 1=Input)"), F("NoIntPullupButton1"), P109_GET_BUTTON1_NO_INTPULLUP);
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button right/up"),  F("taskdevicepin2"), CONFIG_PIN2);
-      addFormCheckBox(F("Button right/up Pull mode (0=IntPullUp, 1=Input)"), F("NoIntPullupButton2"), P109_GET_BUTTON2_NO_INTPULLUP);
-      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button mode"),      F("taskdevicepin3"), CONFIG_PIN3);
-      addFormCheckBox(F("Button Mode Pull mode (0=IntPullUp, 1=Input)"), F("NoIntPullupButton3"), P109_GET_BUTTON3_NO_INTPULLUP);
-      
-      addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"),            F("heatrelay"),      P109_CONFIG_RELAYPIN);
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("Button left/down"), F("taskdevicepin1"), CONFIG_PIN1);
+      addFormCheckBox(F("Button left/down Pull mode (1=IntPullUp, 0=Input)"), F("IntPullupButton1"), P109_GET_BUTTON1_INT_PULL_UP == 0); // Inverted
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("Button right/up"), F("taskdevicepin2"), CONFIG_PIN2);
+      addFormCheckBox(F("Button right/up Pull mode (1=IntPullUp, 0=Input)"), F("IntPullupButton2"), P109_GET_BUTTON2_INT_PULL_UP == 0); // Inverted
+      addFormPinSelect(PinSelectPurpose::Generic_input, F("Button mode"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormCheckBox(F("Button Mode Pull mode (1=IntPullUp, 0=Input)"), F("IntPullupButton3"), P109_GET_BUTTON3_INT_PULL_UP == 0); // Inverted
+
+      addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"), F("heatrelay"), P109_CONFIG_RELAYPIN);
 
       addFormCheckBox(F("Invert relay-state (0=on, 1=off)"), F("invertrelay"), P109_GET_RELAY_INVERT);
-      
+
       {
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1"), F("1.5"), F("2"), F("3"), F("4"), F("5") };
         const int optionValues4[]             = { 2, 5, 10, 15, 20, 30, 40, 50 };
-        addFormSelector(F("Hysteresis"), F("hyst"), 8, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
+        addFormSelector(F("Hysteresis"), F("hyst"), NR_ELEMENTS(optionValues4), options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
       }
 
       {
         const __FlashStringHelper *options5[] = { F("5"), F("10"), F("15"), F("20"), F("30"), F("45"), F("60"), F("90") };
         const int optionValues5[]             = { 5, 10, 15, 20, 30, 45, 60, 90 };
-        addFormSelector(F("Timeout default"), F("timeout"), 8, options5, optionValues5, static_cast<int>(P109_CONFIG_TIMEOUT));
+        addFormSelector(F("Timeout default"), F("timeout"), NR_ELEMENTS(optionValues5), options5, optionValues5, P109_CONFIG_TIMEOUT);
         addUnit('m');
       }
 
       {
         const __FlashStringHelper *options6[] = { F("1.5"), F("2"), F("2.5"), F("3"), F("3.5"), F("4"), F("4.5"), F("5") };
         const int optionValues6[]             = { 90, 120, 150, 180, 210, 240, 270, 300 };
-        addFormSelector(F("Timeout MAX"), F("timeout_max"), 8, options6, optionValues6, static_cast<int>(P109_CONFIG_MAX_TIMEOUT));
+        addFormSelector(F("Timeout MAX"), F("timeout_max"), NR_ELEMENTS(optionValues6), options6, optionValues6, P109_CONFIG_MAX_TIMEOUT);
         addUnit('h');
       }
 
       {
         const __FlashStringHelper *options7[] = { F("5"), F("10"), F("15"), F("20"), F("25"), F("30") };
         const int optionValues7[]             = { 5, 10, 15, 20, 25, 30 };
-        addFormSelector(F("Timeout step"), F("timeout_step"), 6, options7, optionValues7, static_cast<int>(P109_CONFIG_STEP_TIMEOUT));
+        addFormSelector(F("Timeout step"), F("timeout_step"), NR_ELEMENTS(optionValues7), options7, optionValues7, static_cast<int>(P109_CONFIG_STEP_TIMEOUT));
         addUnit('m');
       }
 
@@ -219,11 +219,11 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Delay on setpoint change"), F("setpdelay"), P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET, 1, 10);
         addUnit('s');
       }
-            
+
       {
         const __FlashStringHelper *options8[] = { F("Auto"), F("Off"), F("Manual") };
         const int optionValues8[]             = { 1, 0, 2 };
-        addFormSelector(F("Default mode"), F("mode"), 3, options8, optionValues8, static_cast<int>(P109_MODE_STATE_INITIAL));
+        addFormSelector(F("Default mode"), F("mode"), NR_ELEMENTS(optionValues8), options8, optionValues8, static_cast<int>(P109_MODE_STATE_INITIAL));
       }
 
       success = true;
@@ -240,16 +240,16 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       P109_CONFIG_HYSTERESIS     = (getFormItemInt(F("hyst")) / 10.0f);
       P109_CONFIG_TIMEOUT        = getFormItemInt(F("timeout"));
       P109_CONFIG_MAX_TIMEOUT    = getFormItemInt(F("timeout_max"));
-      P109_CONFIG_STEP_TIMEOUT   = getFormItemInt(F("timeout_step"));
       P109_CONFIG_SETPOINT_DELAY = getFormItemInt(F("setpdelay")) + P109_SETPOINT_OFFSET;
+      P109_CONFIG_STEP_TIMEOUT   = getFormItemInt(F("timeout_step"));
       P109_MODE_STATE_INITIAL    = getFormItemInt(F("mode"));
       uint32_t lSettings = 0u;
-      bitWrite(lSettings, P109_FLAG_TASKNAME_IN_TITLE, isFormItemChecked(F("ptask")));
-      bitWrite(lSettings, P109_FLAG_ALTERNATE_HEADER,  !isFormItemChecked(F("palt"))); // Inverted
-      bitWrite(lSettings, P109_FLAG_RELAY_INVERT,      isFormItemChecked(F("invertrelay")));
-      bitWrite(lSettings, P109_FLAG_BUTTON1_NO_INTPULLUP,      isFormItemChecked(F("NoIntPullupButton1")));
-      bitWrite(lSettings, P109_FLAG_BUTTON2_NO_INTPULLUP,      isFormItemChecked(F("NoIntPullupButton2")));
-      bitWrite(lSettings, P109_FLAG_BUTTON3_NO_INTPULLUP,      isFormItemChecked(F("NoIntPullupButton3")));
+      bitWrite(lSettings, P109_FLAG_TASKNAME_IN_TITLE,   isFormItemChecked(F("ptask")));
+      bitWrite(lSettings, P109_FLAG_ALTERNATE_HEADER,    !isFormItemChecked(F("palt"))); // Inverted
+      bitWrite(lSettings, P109_FLAG_RELAY_INVERT,        isFormItemChecked(F("invertrelay")));
+      bitWrite(lSettings, P109_FLAG_BUTTON1_INT_PULL_UP, !isFormItemChecked(F("IntPullupButton1"))); // Inverted
+      bitWrite(lSettings, P109_FLAG_BUTTON2_INT_PULL_UP, !isFormItemChecked(F("IntPullupButton2"))); // Inverted
+      bitWrite(lSettings, P109_FLAG_BUTTON3_INT_PULL_UP, !isFormItemChecked(F("IntPullupButton3"))); // Inverted
       P109_FLAGS = lSettings;
 
       {
