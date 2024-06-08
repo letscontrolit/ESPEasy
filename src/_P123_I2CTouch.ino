@@ -216,7 +216,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormPinSelect(PinSelectPurpose::Generic_bidir, F("Interrupt pin"), F("taskdevicepin1"), P123_INTERRUPTPIN);
         addFormPinSelect(PinSelectPurpose::Generic_bidir, F("Reset pin"),     F("taskdevicepin2"), P123_RESETPIN);
-        addFormNote(F("Interrupt and Reset pins (optional) used by GT911 touch only."));
+        addFormNote(F("Interrupt and Reset pins are optional. Interrupt is only used by GT911."));
 
         if (nullptr == P123_data) {
           P123_data       = new (std::nothrow) P123_data_struct(static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE));

@@ -65,7 +65,7 @@ The configured display will be used to draw the objects, if any, that can be con
 
 .. image:: P123_TouchscreenTypeOptions.png
 
-* *FT62x6 (0x38)*: Focaltech FT62x6/FT52x6 touchscreen controller family. Default selection.
+* *FT62x6 (0x38)*: Focaltech FT62x6/FT63x6/FT52x6 touchscreen controller family. Default selection.
 
 * *GT911 (0x5D)*: GT911 touchscreen controller, default address.
 
@@ -83,9 +83,11 @@ The configured display will be used to draw the objects, if any, that can be con
 
 * **Interrupt pin**: Select the GPIO that is connected to the IRQ connection of a GT911 touchscreen controller. The IRQ pin is only used for detection & address configuration, combined with the **Reset pin**, if available and configured. Only used for GT911 controller.
 
-* **Reset pin**: Select the GPIO that is connected to the Reset connection of a GT911 touchscreen controller. Similar to the **IRQ pin**, only used for the GT911 controller.
+* **Reset pin**: Select the GPIO that is connected to the Reset connection of the touchscreen controller. When set, this will be used to reset the controller during initialization. (See the Warning below). Do not set this GPIO setting if the RST pin is shared with another device, like on a WT32 SC01 Plus, where the display and touch controllers use the same GPIO pin. **Only** set the RST pin on the display configuration, and give that Display task a **lower task number** than the touch screen, as the touchscreen task will try to display defined objects on the connected Display device!
 
-.. note:: The **Interrupt** and **Reset** GPIO pins are only used for the GT911 controller, and are optional
+.. note:: The **Interrupt** and **Reset** GPIO pins are optional. Interrupt is only used by the GT911 controller during initialization.
+
+.. warning:: Some devices that have the reset pin connected, initially set that GPIO to low/0, causing the touch controller not to start, and it won't even show up on the I2C Scan. This can be solved by setting the involved GPIO pin to **Output High** on the :ref:`Hardware_page`.
 
 .. include:: Touch_Configuration.repl
 
@@ -96,8 +98,7 @@ Change log
 .. versionadded:: 2.0
   ...
 
-  |added|
-  Initial release version.
+  |added| 2024-06-05 Initial release version.
 
 
 
