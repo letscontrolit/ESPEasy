@@ -65,6 +65,7 @@ enum class P123_TouchType_e : int8_t {
   CST820    = 3,
   CST226    = 4,
   AXS15231  = 5,
+  CHSC5816  = 6,
 };
 
 const __FlashStringHelper* toString(P123_TouchType_e tType);

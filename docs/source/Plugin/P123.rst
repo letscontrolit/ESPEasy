@@ -77,6 +77,8 @@ The configured display will be used to draw the objects, if any, that can be con
 
 * *AXS15231 (0x3B)*: AXS15231 touchscreen controller.
 
+* *CHSC5816 (0x2E)*: CHSC5816 touchscreen controller.
+
 * *Auto-detect*: Select this option to have the plugin auto-detect the used touchscreen controller. This auto-detect is mostly based on an I2C device being available at the shown addresses, so might get confused if a non-touchscreen I2C device at one of these addresses is installed.
 
 |

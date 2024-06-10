@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2024-06-10 tonhuisman: Add support for CHSC5816, as found in https://github.com/lewisxhe/SensorLib by Lewis He (added to bb_captouch)
  * 2024-06-02 tonhuisman: Renamed to I2C Touchscreens
  *                        Refactor to use modified bb_captouch library https://github.com/bitbank2/bb_captouch to add support for
  *                        FT62x6 and GT911 (tested), CST820, CST226 and AXS15231 (untested)
@@ -192,6 +193,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
             toString(P123_TouchType_e::CST820),
             toString(P123_TouchType_e::CST226),
             toString(P123_TouchType_e::AXS15231),
+            toString(P123_TouchType_e::CHSC5816),
             toString(P123_TouchType_e::Automatic),
           };
           const int touchTypeOptions[] = {
@@ -201,6 +203,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(P123_TouchType_e::CST820),
             static_cast<int>(P123_TouchType_e::CST226),
             static_cast<int>(P123_TouchType_e::AXS15231),
+            static_cast<int>(P123_TouchType_e::CHSC5816),
             static_cast<int>(P123_TouchType_e::Automatic),
           };
           addFormSelector(F("Touchscreen type (address)"),

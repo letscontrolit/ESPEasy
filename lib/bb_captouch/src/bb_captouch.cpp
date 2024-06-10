@@ -119,6 +119,14 @@ int BBCapTouch::init(int iSDA, int iSCL, int iRST, int iINT, uint32_t u32Speed) 
       reset(iRST);
     }
   } // CST820
+  else if (I2CTest(CHSC5816_ADDR)) { // CHSC5816
+    _iType = CT_TYPE_CHSC5816;
+    _iAddr = CHSC5816_ADDR;
+
+    if (iRST != -1) {
+      reset(iRST);
+    }
+  } // CHSC5816
   #ifdef ESP32
   Wire.setTimeout(orgTimeout); // ESPEasy: Restore original I2C timeout
   #endif // ifdef ESP32
@@ -399,6 +407,24 @@ int BBCapTouch::getSamples(TOUCHINFO *pTI) {
       return i > 0;
     }
   } // GT911
+  else if (_iType == CT_TYPE_CHSC5816) { // CHSC5816
+    __CHSC5816_PointReg touch;
+
+    // CHSC5816_REG_POINT
+    uint8_t write_buffer[] = { 0x20, 0x00, 0x00, 0x2c };
+    I2CWrite(_iAddr, write_buffer, 4);
+    I2CRead(_iAddr, touch.data, 8);
+
+    if ((touch.rp.status == 0xFF) && (touch.rp.fingerNumber == 0)) {
+      return 0;
+    }
+    pTI->x[0] = static_cast<uint16_t>(touch.rp.x_h4 << 8) | touch.rp.x_l8;
+    pTI->y[0] = static_cast<uint16_t>(touch.rp.y_h4 << 8) | touch.rp.y_l8;
+
+    if (_iOrientation != 0) { fixSamples(pTI); }
+
+    return 1;
+  } // CHSC5816
   return 0;
 }   /* getSamples() */
 

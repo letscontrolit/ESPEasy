@@ -12,6 +12,7 @@ const __FlashStringHelper* toString(P123_TouchType_e tType) {
     case P123_TouchType_e::CST820: return F("CST820 (0x15)");
     case P123_TouchType_e::CST226: return F("CST226 (0x5A)");
     case P123_TouchType_e::AXS15231: return F("AXS15231 (0x3B)");
+    case P123_TouchType_e::CHSC5816: return F("CHSC5816 (0x2E)");
     case P123_TouchType_e::Automatic: return F("Auto-detect");
   }
   return F("");
@@ -20,7 +21,7 @@ const __FlashStringHelper* toString(P123_TouchType_e tType) {
 /**
  * Order must match enum P123_TouchType_e, with Automatic (-1) ignored
  */
-const uint8_t P123_i2cAddressValues[] = { FT6X36_ADDR, GT911_ADDR1, GT911_ADDR2, CST820_ADDR, CST226_ADDR, AXS15231_ADDR };
+const uint8_t P123_i2cAddressValues[] = { FT6X36_ADDR, GT911_ADDR1, GT911_ADDR2, CST820_ADDR, CST226_ADDR, AXS15231_ADDR, CHSC5816_ADDR };
 
 bool P123_data_struct::plugin_i2c_has_address(const int Par1) {
   return intArrayContains(NR_ELEMENTS(P123_i2cAddressValues), P123_i2cAddressValues, Par1);
@@ -51,6 +52,7 @@ P123_TouchType_e P123_data_struct::getTouchType() {
       case CT_TYPE_CST820: return P123_TouchType_e::CST820;
       case CT_TYPE_CST226: return P123_TouchType_e::CST226;
       case CT_TYPE_AXS15231: return P123_TouchType_e::AXS15231;
+      case CT_TYPE_CHSC5816: return P123_TouchType_e::CHSC5816;
     }
   }
   return P123_TouchType_e::Automatic;
@@ -65,6 +67,7 @@ int P123_data_struct::getBBCapTouchType(P123_TouchType_e touchType) {
     case P123_TouchType_e::CST820: return CT_TYPE_CST820;
     case P123_TouchType_e::CST226: return CT_TYPE_CST226;
     case P123_TouchType_e::AXS15231: return CT_TYPE_AXS15231;
+    case P123_TouchType_e::CHSC5816: return CT_TYPE_CHSC5816;
   }
   return CT_TYPE_UNKNOWN;
 }

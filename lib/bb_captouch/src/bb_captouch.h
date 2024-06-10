@@ -17,6 +17,8 @@
 //
 // Written for the many variants of ESP32 + Capacitive touch LCDs on the market
 //
+// 2024-06-10 tonhuisman: Add support for CHSC5816 touchscreen, code borrowed from Lewis He SensorLib at
+//                        https://github.com/lewisxhe/SensorLib
 // 2024-06-02 tonhuisman: Fix FT62x6 to not return true when no data is read
 //                        Formatted source using Uncrustify
 //                        Adjust I2C handling so ESPEasy stays happy, ignoring SDA/SCL pins and I2C enable/disable
@@ -38,6 +40,7 @@ enum {
   CT_TYPE_CST820,
   CT_TYPE_CST226,
   CT_TYPE_AXS15231,
+  CT_TYPE_CHSC5816,
   CT_TYPE_COUNT
 };
 
@@ -47,6 +50,7 @@ enum {
 # define CST820_ADDR    0x15
 # define CST226_ADDR    0x5A
 # define AXS15231_ADDR  0x3B
+# define CHSC5816_ADDR  0x2E
 
 // CST8xx gestures
 enum {
@@ -91,6 +95,22 @@ enum {
 
 // register offset to info for the second touch point
 # define PT2_OFFSET 6
+
+union __CHSC5816_PointReg {
+  struct {
+    uint8_t status;
+    uint8_t fingerNumber;
+    uint8_t x_l8;
+    uint8_t y_l8;
+    uint8_t z;
+    uint8_t x_h4  : 4;
+    uint8_t y_h4  : 4;
+    uint8_t id    : 4;
+    uint8_t event : 4;
+    uint8_t p2;
+  }             rp;
+  unsigned char data[8];
+};
 
 # ifndef __TOUCHINFO_STRUCT__
 #  define __TOUCHINFO_STRUCT__
