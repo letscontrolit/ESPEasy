@@ -250,6 +250,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       P123_CONFIG_X_RES        = getFormItemInt(F("xres"));
       P123_CONFIG_Y_RES        = getFormItemInt(F("yres"));
       P123_SET_TOUCH_TYPE(getFormItemInt(F("ttype")));
+      P123_I2C_ADDRESS = P123_data_struct::plugin_i2c_address(static_cast<P123_TouchType_e>(P123_GET_TOUCH_TYPE));
 
       // taskdevicepin1/taskdevicepin2 are saved automatically
 
