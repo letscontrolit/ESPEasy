@@ -91,6 +91,8 @@ The configured display will be used to draw the objects, if any, that can be con
 
 .. warning:: Some devices that have the reset pin connected, initially set that GPIO to low/0, causing the touch controller not to start, and it won't even show up on the I2C Scan. This can be solved by setting the involved GPIO pin to **Output High** on the :ref:`Hardware_page`.
 
+.. warning:: During testing we found that specifically the CST816 touchscreen controller, whiel working as expected, **doesn't** show up in an I2C Scan. This also implies they can't be auto-detected, and have to be set explicitly.
+
 .. include:: Touch_Configuration.repl
 
 
