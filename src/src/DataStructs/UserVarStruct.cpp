@@ -1,7 +1,7 @@
 #include "../DataStructs/UserVarStruct.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/TimingStats.h"
-
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins.h"
@@ -263,6 +263,7 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t    taskIndex,
 
 String UserVarStruct::getAsString(taskIndex_t taskIndex, taskVarIndex_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals, bool raw) const
 {
+  START_TIMER
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
@@ -358,10 +359,11 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
 
 void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
 {
+  struct EventStruct TempEvent(taskIndex);
   for (taskVarIndex_t varNr = 0; validTaskVarIndex(varNr); ++varNr) {
     if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
       const uint16_t key = makeWord(taskIndex, varNr);
-      _prevValue[key] = formatUserVarNoCheck(taskIndex, varNr);
+      _prevValue[key] = formatUserVarNoCheck(&TempEvent, varNr);
     }
   }
 }

@@ -310,7 +310,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           log += event->TaskIndex + 1;
           # if P013_EXTENDED_LOG
           log += F(" Distance: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
+          log += formatUserVarNoCheck(event, 0);
           log += ' ';
           log += (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
           # endif // if P013_EXTENDED_LOG

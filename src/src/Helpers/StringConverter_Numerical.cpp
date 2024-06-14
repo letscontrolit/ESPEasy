@@ -1,5 +1,7 @@
 #include "../Helpers/StringConverter_Numerical.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Helpers/Numerical.h"
 
 #include "../Helpers/StringConverter.h"
@@ -23,17 +25,21 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
+  START_TIMER
+  String sValue;
   #ifndef LIMIT_BUILD_SIZE
 
   if (decimalPlaces == 0) {
     if ((value > -2e9f) && (value < 2e9f)) {
       const int32_t l_value = static_cast<int32_t>(roundf(value));
-      return String(l_value);
-    }
-    if ((value > -1e18f) && (value < 1e18f)) {
+      sValue = l_value;
+    } else if ((value > -1e18f) && (value < 1e18f)) {
       // Work-around to perform a faster conversion
       const int64_t ll_value = static_cast<int64_t>(roundf(value));
-      return ll2String(ll_value);
+      sValue = ll2String(ll_value);
+    }
+    if (sValue.length() > 0) {
+      return std::move(sValue);
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
@@ -44,10 +50,9 @@ String toString(const float& value, unsigned int decimalPlaces)
 
   char buf[decimalPlaces + 42];
   #ifdef USE_SECOND_HEAP
-  String sValue;
   move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
   #else
-  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  sValue = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
   #endif
 
 /*
@@ -56,7 +61,7 @@ String toString(const float& value, unsigned int decimalPlaces)
 #endif
 */
   sValue.trim();
-  return sValue;
+  return std::move(sValue);
 }
 
 String ull2String(uint64_t value, uint8_t base) {
@@ -64,7 +69,7 @@ String ull2String(uint64_t value, uint8_t base) {
 
   if (value == 0) {
     res = '0';
-    return res;
+    return std::move(res);
   }
 
   while (value > 0) {
@@ -83,15 +88,12 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
-  return res;
+  return std::move(res);
 }
 
 String ll2String(int64_t value, uint8_t  base) {
   if (value < 0) {
-    String res;
-    res  = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
+    return concat('-', ull2String(value * -1ll, base));
   } else {
     return ull2String(value, base);
   }
@@ -118,7 +120,7 @@ String trimTrailingZeros(const String& value) {
       res.trim();
     }
   }
-  return res;
+  return std::move(res);
 
 }
 
@@ -163,7 +165,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return res;
+  return std::move(res);
 }
 #endif
 
@@ -171,12 +173,12 @@ String floatToString(const float& value,
                       unsigned int  decimalPlaces,
                       bool          trimTrailingZeros_b)
 {
-  const String res = toString(value, decimalPlaces);
+  String res = toString(value, decimalPlaces);
 
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return res;
+  return std::move(res);
 }
 
 
