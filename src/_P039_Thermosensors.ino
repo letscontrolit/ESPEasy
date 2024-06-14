@@ -622,7 +622,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             log += strformat(
               F(" %s: %s"),
               getTaskValueName(event->TaskIndex, i).c_str(),
-              formatUserVarNoCheck(event->TaskIndex, i).c_str());
+              formatUserVarNoCheck(event, i).c_str());
           }
           addLogMove(LOG_LEVEL_INFO, log);
         }

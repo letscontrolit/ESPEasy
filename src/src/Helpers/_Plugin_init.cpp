@@ -2166,10 +2166,12 @@ unsigned getNrBuiltInDeviceIndex()
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
-  const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
-  if (arrayIndex < Plugin_id_to_DeviceIndex_size)
-  {
-    return Plugin_id_to_DeviceIndex[arrayIndex];
+  if (validPluginID(pluginID)) {
+    const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+    if (arrayIndex < Plugin_id_to_DeviceIndex_size)
+    {
+      return Plugin_id_to_DeviceIndex[arrayIndex];
+    }
   }
   return INVALID_DEVICE_INDEX;
 }

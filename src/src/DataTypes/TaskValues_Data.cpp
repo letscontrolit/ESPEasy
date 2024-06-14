@@ -275,6 +275,5 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 #endif
   }
   result.trim();
-  STOP_TIMER(GET_TASKVALUE_AS_STRING);
-  return result;
+  return std::move(result);
 }

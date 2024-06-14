@@ -89,7 +89,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         UserVar.setFloat(event->TaskIndex, 2, value);
         UserVar.setFloat(event->TaskIndex, 0, UserVar.getFloat(event->TaskIndex, 2) + _offsetChanA); // Offset
 
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
+        log += formatUserVarNoCheck(event, 0);
 
         if (P067_GET_CHANNEL_A_CALIB) { // Calibration channel A?
           int   adc1 = P067_CONFIG_CHANNEL_A_ADC1;
@@ -101,7 +101,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
             const float normalized = static_cast<float>(UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar.setFloat(event->TaskIndex, 0, normalized * (out2 - out1) + out1);
 
-            log += concat(F(" = "), formatUserVarNoCheck(event->TaskIndex, 0));
+            log += concat(F(" = "), formatUserVarNoCheck(event, 0));
           }
         }
       } else {
@@ -121,7 +121,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
         UserVar.setFloat(event->TaskIndex, 3, value);
         UserVar.setFloat(event->TaskIndex, 1, UserVar.getFloat(event->TaskIndex, 3) + _offsetChanB); // Offset
 
-        log += formatUserVarNoCheck(event->TaskIndex, 1);
+        log += formatUserVarNoCheck(event, 1);
 
         if (P067_GET_CHANNEL_B_CALIB) { // Calibration channel B?
           int   adc1 = P067_CONFIG_CHANNEL_B_ADC1;
@@ -133,7 +133,7 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
             const float normalized = (UserVar[event->BaseVarIndex + 1] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar.setFloat(event->TaskIndex, 1, normalized * (out2 - out1) + out1);
 
-            log += concat(F(" = "), formatUserVarNoCheck(event->TaskIndex, 1));
+            log += concat(F(" = "), formatUserVarNoCheck(event, 1));
           }
         }
       } else {

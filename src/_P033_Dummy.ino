@@ -88,7 +88,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
         for (uint8_t x = 0; x < valueCount; ++x)
         {
           addLog(LOG_LEVEL_INFO,
-                 strformat(F("Dummy: value %d: %s"), x + 1, formatUserVarNoCheck(event->TaskIndex, x).c_str()));
+                 strformat(F("Dummy: value %d: %s"), x + 1, formatUserVarNoCheck(event, x).c_str()));
         }
       }
       # endif // ifndef LIMIT_BUILD_SIZE
