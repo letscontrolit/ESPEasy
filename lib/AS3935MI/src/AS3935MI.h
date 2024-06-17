@@ -487,7 +487,13 @@ public:
 
 	uint32_t              getInterruptTimestamp() const;
 
+	uint32_t              getInterruptCount() const;
+
 	void                  setInterruptMode(interrupt_mode_t mode);
+
+    // For unknown reasons, the sensor may not have turned off any of the 
+	// displayed frequencies and thus those may still cause lots of unwanted interrupts to be triggered.
+	bool                  checkProperlySetToListenMode();
 
 private:
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;

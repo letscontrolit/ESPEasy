@@ -33,9 +33,19 @@ bool P169_data_struct::loop(struct EventStruct *event)
     const uint32_t timestamp = _sensor.getInterruptTimestamp();
 
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
-      if ((timestamp != 0ul) && (timePassedSince(timestamp) < 10)) {
-        // Sensor not yet ready to report some data
-        return false;
+      if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
+        // Check to make sure the sensor isn't still outputting a high freq. signal to the interrupt pin.
+        // Count should be 1 at most.
+        if (!_sensor.checkProperlySetToListenMode()) {
+          // Sensor not yet ready to report some data
+          addLog(LOG_LEVEL_ERROR, F("AS3935: Sensor was still showing LCO frequency on IRQ pin"));
+          return false;
+        }
+
+        // Wait for the sensor to be ready to read the interrupt source
+        if (timePassedSince(_sensor.getInterruptTimestamp()) < 2) {
+          delay(1);
+        }
       }
 
       // query the interrupt source from the AS3935
@@ -780,7 +790,7 @@ void P169_data_struct::sendChangeEvent(struct EventStruct *event)
     const   uint8_t srej       = _sensor.readSpikeRejection();
 
     if (((_lastEvent_noiseFloor != noiseFloor)  && ((_lastEvent_noiseFloor > 1) || (noiseFloor > 1))) ||
-        ((_lastEvent_watchdog != watchdog) && ((_lastEvent_watchdog > 1) || (watchdog > 1)) ) ||
+        ((_lastEvent_watchdog != watchdog) && ((_lastEvent_watchdog > 1) || (watchdog > 1))) ||
         (_lastEvent_srej != srej) ||
         (_lastEvent_gain != _afeGainRegval)) {
       // Some value was updated, send event

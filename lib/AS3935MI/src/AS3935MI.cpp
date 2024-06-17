@@ -93,6 +93,7 @@ uint8_t AS3935MI::readStormDistance()
 uint8_t AS3935MI::readInterruptSource()
 {
 	interrupt_timestamp_ = 0;
+	interrupt_count_ = 0;
 	return readRegisterValue(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
@@ -733,6 +734,10 @@ uint32_t AS3935MI::getInterruptTimestamp() const {
 	return interrupt_timestamp_; 
 }
 
+uint32_t AS3935MI::getInterruptCount() const { 
+	return interrupt_count_;
+}
+
 void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 	if (mode_ == mode) {
 		return;
@@ -784,9 +789,56 @@ void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
 	}
 }
 
+bool AS3935MI::checkProperlySetToListenMode() {
+	if (mode_ != AS3935MI::AS3935_INTERRUPT_NORMAL) {
+		// Nothing to check here, so just return all OK
+		return true;
+	}
+
+	if (interrupt_timestamp_ == 0 || interrupt_count_ == 0) {
+		// No interrupts since last clearing of these interrupt variables.
+		return true;
+	}
+
+    int retries = 2;
+	while (retries > 0 && interrupt_count_ < 2) {
+		// The possible displayed frequencies are several kHz, 
+		// so time since last interrupt should be less than a msec since 
+		// last trigger if these frequencies are still present.
+		//
+		// In 'normal' mode, the interrupt count should never be more than 1 
+		// as the IRQ pin will be kept high until the interrupt source is read.
+		//
+		// N.B. Use the volatile variable here as those may be updated inbetween.
+		const int32_t msec_passed_since = (int32_t)(millis() - interrupt_timestamp_);
+		if (msec_passed_since > 2) {
+			return true;
+		}
+		--retries;
+		delay(1);
+	}
+
+	// Apparently there is still some frequency being displayed.
+	setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
+
+	delayMicroseconds(AS3935_TIMEOUT);
+
+	// stop displaying LCO on IRQ
+	displayLcoOnIrq(false);
+	delayMicroseconds(AS3935_TIMEOUT);
+
+	// restore normal operation
+	setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
+
+    // It wasn't how it should be so return false
+	return false;
+}
+
+
 #ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
 void AS3935MI_IRAM_ATTR AS3935MI::interruptISR(AS3935MI *self) {
 	self->interrupt_timestamp_ = millis();
+	++(self->interrupt_count_);
 }
 
 void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
@@ -801,6 +853,7 @@ void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
 #else
 void AS3935MI_IRAM_ATTR AS3935MI::interruptISR() {
 	interrupt_timestamp_ = millis();
+	++interrupt_count_;
 }
 
 void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR() {
