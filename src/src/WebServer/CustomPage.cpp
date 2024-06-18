@@ -204,8 +204,7 @@ bool handle_custom(const String& path) {
             for (uint8_t varNr = 0; varNr < valueCount; varNr++)
             {
               const String taskValueName = Cache.getTaskDeviceValueName(x, varNr);
-              if ((varNr < valueCount) &&
-                  (!taskValueName.isEmpty()))
+              if (!taskValueName.isEmpty())
               {
                 if (varNr > 0) {
                   html_TR_TD();

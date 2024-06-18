@@ -104,9 +104,11 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         String value;
 
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+# ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             value = event->String2.substring(0, 20); // For the log
           }
+# endif
         } else {
           value = formatUserVarNoCheck(event, x);
         }
