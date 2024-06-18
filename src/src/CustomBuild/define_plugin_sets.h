@@ -1627,6 +1627,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_G
+  #ifndef USES_P142
+    #define USES_P142   // Position - AS5600
+  #endif
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx
   #endif
@@ -1921,6 +1924,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P135
     #define USES_P135 // SCD4x
+  #endif
+  #ifndef USES_P142
+    #define USES_P142   // Position - AS5600
   #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
@@ -2315,7 +2321,7 @@ To create/register a plugin, you have to :
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
   #ifndef USES_P142
-//    #define USES_P142   // GT911 Touchscreen
+    #define USES_P142   // Position - AS5600
   #endif
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
