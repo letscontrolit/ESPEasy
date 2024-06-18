@@ -120,7 +120,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
     // Populate JSON with the data
     for (uint8_t i = 0; i < element.valueCount; i++)
     {
-      const String taskValueName = getTaskValueName(element._taskIndex, i);
+      const String taskValueName = Cache.getTaskDeviceValueName(element._taskIndex, i);
       if (taskValueName.isEmpty()) {
         continue;                                    // Zabbix will ignore an empty key anyway
       }

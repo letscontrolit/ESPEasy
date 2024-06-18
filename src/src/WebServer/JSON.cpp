@@ -74,7 +74,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(getTaskValueName(taskNr, x));
+            addHtml(Cache.getTaskDeviceValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');

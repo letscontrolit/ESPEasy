@@ -83,8 +83,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
           pubname = ControllerSettings->Publish;
         }
-
         parseControllerVariables(pubname, event, false);
+        const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -94,7 +94,9 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           if (isvalid) {
             String txt;
             txt = pubname;
-            parseSingleControllerVariable(txt, event, x, false);
+            if (contains_valname) {
+              parseSingleControllerVariable(txt, event, x, false);
+            }
             txt.replace(F("%value%"), formattedValue);
             move_special(element->txt[x], std::move(txt));
 #ifndef BUILD_NO_DEBUG

@@ -201,9 +201,9 @@ bool handle_custom(const String& path) {
             const uint8_t valueCount = getValueCountForTask(x);
 
             struct EventStruct TempEvent(x);
-            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            for (uint8_t varNr = 0; varNr < valueCount; varNr++)
             {
-              const String taskValueName = getTaskValueName(x, varNr);
+              const String taskValueName = Cache.getTaskDeviceValueName(x, varNr);
               if ((varNr < valueCount) &&
                   (!taskValueName.isEmpty()))
               {

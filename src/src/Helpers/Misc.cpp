@@ -312,7 +312,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
         , node_time.getTimeString(':').c_str()
         , Settings.Unit
         , getTaskDeviceName(TaskIndex).c_str()
-        , getTaskValueName(TaskIndex, varNr).c_str()
+        , Cache.getTaskDeviceValueName(TaskIndex, varNr).c_str()
         , formatUserVarNoCheck(TaskIndex, varNr).c_str()
         );
       }

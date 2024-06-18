@@ -756,7 +756,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               pluginWebformShowValue(
                 x, 
                 varNr, 
-                getTaskValueName(x, varNr), 
+                Cache.getTaskDeviceValueName(x, varNr), 
                 formatUserVarNoCheck(&TempEvent, varNr));
             }
           }

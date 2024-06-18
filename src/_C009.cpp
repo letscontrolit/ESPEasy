@@ -178,7 +178,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
             {
               jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element._taskIndex));
               jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
+              jsonString += to_json_object_value(F("valueName"), Cache.getTaskDeviceValueName(element._taskIndex, x));
               jsonString += ',';
               jsonString += to_json_object_value(F("type"), static_cast<int>(element.sensorType));
               jsonString += ',';

@@ -221,11 +221,13 @@ bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
   const String fullValueName = parseString(string, 1);
   const String valueName     = parseString(fullValueName, 1, '.');
 
-  for (taskVarIndex_t i = 0; i < VARS_PER_TASK; i++)
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+
+  for (taskVarIndex_t i = 0; i < valueCount; i++)
   {
     if (_plugin_stats[i] != nullptr) {
       // Check case insensitive, since the user entered value name can have any case.
-      if (valueName.equalsIgnoreCase(getTaskValueName(event->TaskIndex, i)))
+      if (valueName.equalsIgnoreCase(Cache.getTaskDeviceValueName(event->TaskIndex, i)))
       {
         return _plugin_stats[i]->plugin_get_config_value_base(event, string);
       }
