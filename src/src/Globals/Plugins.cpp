@@ -321,12 +321,12 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
+        if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
+          LoadTaskSettings(taskIndex);
+        }
         if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
         {
-          if (Function == PLUGIN_INIT) {
-            UserVar.clear_computed(taskIndex);
-            LoadTaskSettings(taskIndex);
-          }
           TempEvent->setTaskIndex(taskIndex);
           // Need to 'clear' the sensorType first, before calling getSensorType()
           TempEvent->sensorType = Sensor_VType::SENSOR_TYPE_NOT_SET;

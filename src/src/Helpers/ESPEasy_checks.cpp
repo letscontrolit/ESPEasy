@@ -34,7 +34,8 @@
 #include <cstddef>
 
 #ifdef USES_C013
-#include "../DataStructs/C013_p2p_dataStructs.h"
+#include "../DataStructs/C013_p2p_SensorDataStruct.h"
+#include "../DataStructs/C013_p2p_SensorInfoStruct.h"
 #endif
 
 #ifdef USES_C016
@@ -124,8 +125,8 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 138u>();
-  check_size<C013_SensorDataStruct,                 24u>();
+  check_size<C013_SensorInfoStruct,                 228u>();
+  check_size<C013_SensorDataStruct,                 30u>();
   #endif
   #ifdef USES_C016
   check_size<C016_binary_element,                   24u>();

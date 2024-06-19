@@ -131,6 +131,11 @@ void taskClear(taskIndex_t taskIndex, bool save)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+  if (Settings.TaskDeviceEnabled[taskIndex]) {
+    struct EventStruct TempEvent(taskIndex);
+    String dummy;
+    PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+  }
   Settings.clearTask(taskIndex);
   clearTaskCache(taskIndex); // Invalidate any cached values.
   ExtraTaskSettings.clear(); 
