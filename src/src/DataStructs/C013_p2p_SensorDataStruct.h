@@ -15,7 +15,7 @@
 
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
-struct C013_SensorDataStruct
+struct __attribute__((__packed__)) C013_SensorDataStruct
 {
   C013_SensorDataStruct() = default;
 
@@ -23,8 +23,6 @@ struct C013_SensorDataStruct
                size_t         size);
 
   bool prepareForSend();
-
-  bool isValid() const;
 
   bool matchesPluginID(pluginID_t pluginID) const;
 
@@ -50,13 +48,6 @@ struct C013_SensorDataStruct
   uint16_t          sourceNodeBuild = 0;
   uint16_t          timestamp_frac  = 0;
   uint32_t          timestamp_sec   = 0;
-
-  // Add some space for future values, so we won't run into issues with checksum later when extending this struct.
-  // Extended upto 64 bytes struct size.
-  // Make sure not to extend beyond this or else nodes running an 
-  // older version of ESPEasy which knows about the checksum calculation 
-  // will reject the packet.
-  uint8_t reserved[28]{};
 };
 
 #endif // ifdef USES_C013

@@ -22,9 +22,7 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   bool setData(const uint8_t *data,
                size_t         size);
 
-  bool prepareForSend();
-
-  bool isValid() const;
+  bool prepareForSend(size_t& sizeToSend);
 
   uint8_t      header          = 255;
   uint8_t      ID              = 3;
@@ -41,23 +39,20 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   ShortChecksumType checksum;
   uint16_t          sourceNodeBuild = 0;
 
-  // Some info from ExtraTaskSettings
-  uint8_t  TaskDeviceValueDecimals[VARS_PER_TASK]{};
-  float    TaskDeviceMinValue[VARS_PER_TASK]{};
-  float    TaskDeviceMaxValue[VARS_PER_TASK]{};
-  float    TaskDeviceErrorValue[VARS_PER_TASK]{};
-  uint32_t VariousBits[VARS_PER_TASK]{};
-
   // Settings PCONFIG values
   int16_t TaskDevicePluginConfig[PLUGIN_CONFIGVAR_MAX]{};
 
-  // Add some space for future values, so we won't run into issues with checksum later when extending this struct.
-  // Extended upto 256 bytes struct size.
-  // Make sure not to extend beyond this or else nodes running an 
-  // older version of ESPEasy which knows about the checksum calculation 
-  // will reject the packet.
-  uint8_t reserved[28]{};
+  // Some info from ExtraTaskSettings Sorted so the most likely member to be 0 is at the end.
+  uint8_t  ExtraTaskSettings_version = 0;
+  uint8_t  TaskDeviceValueDecimals[VARS_PER_TASK]{};
+  uint32_t VariousBits[VARS_PER_TASK]{};
+  float    TaskDeviceErrorValue[VARS_PER_TASK]{};
+  float    TaskDeviceMinValue[VARS_PER_TASK]{};
+  float    TaskDeviceMaxValue[VARS_PER_TASK]{};
 
+  // Put these as last as they are most likely to be empty
+  // FIXME TD-er: Sending formula over is not working well on the receiving end.
+//  char TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]{};
 };
 
 

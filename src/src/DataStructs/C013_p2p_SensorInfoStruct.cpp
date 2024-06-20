@@ -11,14 +11,34 @@
 # include "../CustomBuild/CompiletimeDefines.h"
 
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
-bool C013_SensorInfoStruct::prepareForSend()
+bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
 {
+  if (!(validTaskIndex(sourceTaskIndex) &&
+        validTaskIndex(destTaskIndex) &&
+        validPluginID(deviceNumber))) {
+    return false;
+  }
+
+  sizeToSend = sizeof(C013_SensorInfoStruct);
+
   sourceNodeBuild = get_build_nr();
   checksum.clear();
 
+  ZERO_FILL(taskName);
+  safe_strncpy(taskName, getTaskDeviceName(sourceTaskIndex), sizeof(taskName));
+
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
+    ZERO_FILL(ValueNames[x]);
+    safe_strncpy(ValueNames[x], getTaskValueName(sourceTaskIndex, x), sizeof(ValueNames[x]));
+  }
+
+
   if (sourceNodeBuild >= 20871) {
     LoadTaskSettings(sourceTaskIndex);
+
+    ExtraTaskSettings_version = ExtraTaskSettings.version;
 
     for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
       TaskDeviceValueDecimals[x] = ExtraTaskSettings.TaskDeviceValueDecimals[x];
@@ -26,24 +46,52 @@ bool C013_SensorInfoStruct::prepareForSend()
       TaskDeviceMaxValue[x]      = ExtraTaskSettings.TaskDeviceMaxValue[x];
       TaskDeviceErrorValue[x]    = ExtraTaskSettings.TaskDeviceErrorValue[x];
       VariousBits[x]             = ExtraTaskSettings.VariousBits[x];
+
+/*
+      ZERO_FILL(TaskDeviceFormula[x]);
+
+      if (ExtraTaskSettings.TaskDeviceFormula[x][0] != 0) {
+        safe_strncpy(TaskDeviceFormula[x], ExtraTaskSettings.TaskDeviceFormula[x], sizeof(TaskDeviceFormula[x]));
+      }
+*/
     }
 
     for (uint8_t x = 0; x < PLUGIN_CONFIGVAR_MAX; ++x) {
       TaskDevicePluginConfig[x] = Settings.TaskDevicePluginConfig[sourceTaskIndex][x];
     }
+  }
 
+  // Check to see if last bytes are all zero, so we can simply not send them
+  bool doneShrinking                          = false;
+  constexpr unsigned len_upto_sourceNodeBuild = offsetof(C013_SensorInfoStruct, sourceNodeBuild);
+
+  const uint8_t *data = reinterpret_cast<const uint8_t *>(this);
+
+  while (!doneShrinking) {
+    if (sizeToSend < len_upto_sourceNodeBuild) {
+      doneShrinking = true;
+    }
+    else {
+      if (data[sizeToSend - 1] == 0) {
+        --sizeToSend;
+      } else {
+        doneShrinking = true;
+      }
+    }
+  }
+
+  if (sourceNodeBuild >= 20871) {
+    // Make sure to add checksum as last step
     constexpr unsigned len_upto_checksum = offsetof(C013_SensorInfoStruct, checksum);
-
     const ShortChecksumType tmpChecksum(
       reinterpret_cast<const uint8_t *>(this),
-      sizeof(C013_SensorInfoStruct),
+      sizeToSend,
       len_upto_checksum);
 
     checksum = tmpChecksum;
   }
 
-  // FIXME TD-er: Checksum is now computed twice
-  return isValid();
+  return true;
 }
 
 bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
@@ -60,6 +108,13 @@ bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
     return false;
   }
 
+  // Before copying the data, compute the checksum of the entire packet
+  constexpr unsigned len_upto_checksum = offsetof(C013_SensorInfoStruct, checksum);
+  const ShortChecksumType tmpChecksum(
+    data,
+    size,
+    len_upto_checksum);
+
   // Need to keep track of different possible versions of data which still need to be supported.
   if (size > sizeof(C013_SensorInfoStruct)) {
     size = sizeof(C013_SensorInfoStruct);
@@ -75,22 +130,10 @@ bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
       sourceNodeBuild = sourceNode->build;
     }
   }
+
   memcpy(this, data, size);
 
-  return isValid();
-}
-
-bool C013_SensorInfoStruct::isValid() const
-{
-  if ((header != 255) || (ID != 3)) { return false; }
-
   if (checksum.isSet()) {
-    constexpr unsigned len_upto_checksum = offsetof(C013_SensorInfoStruct, checksum);
-    const ShortChecksumType tmpChecksum(
-      reinterpret_cast<const uint8_t *>(this),
-      sizeof(C013_SensorInfoStruct),
-      len_upto_checksum);
-
     if (!(tmpChecksum == checksum)) {
       return false;
     }

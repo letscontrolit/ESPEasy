@@ -33,8 +33,8 @@ bool C013_SensorDataStruct::prepareForSend()
     checksum = tmpChecksum;
   }
 
-  // FIXME TD-er: Checksum is now computed twice
-  return isValid();
+  return validTaskIndex(sourceTaskIndex) &&
+         validTaskIndex(destTaskIndex);
 }
 
 bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
@@ -50,6 +50,13 @@ bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
       (data[1] != 5)) {   // ID
     return false;
   }
+
+  constexpr unsigned len_upto_checksum = offsetof(C013_SensorDataStruct, checksum);
+  const ShortChecksumType tmpChecksum(
+    data,
+    size,
+    len_upto_checksum);
+
 
   // Need to keep track of different possible versions of data which still need to be supported.
   // Really old versions of ESPEasy might send upto 80 bytes of uninitialized data
@@ -75,26 +82,15 @@ bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
       sourceNodeBuild = sourceNode->build;
     }
   }
+
   memcpy(this, data, size);
 
-  return isValid();
-}
-
-bool C013_SensorDataStruct::isValid() const
-{
-  if ((header != 255) || (ID != 5)) { return false; }
-
   if (checksum.isSet()) {
-    constexpr unsigned len_upto_checksum = offsetof(C013_SensorDataStruct, checksum);
-    const ShortChecksumType tmpChecksum(
-      reinterpret_cast<const uint8_t *>(this),
-      sizeof(C013_SensorDataStruct),
-      len_upto_checksum);
-
     if (!(tmpChecksum == checksum)) {
       return false;
     }
   }
+
   return validTaskIndex(sourceTaskIndex) &&
          validTaskIndex(destTaskIndex);
 }
