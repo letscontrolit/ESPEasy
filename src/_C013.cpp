@@ -31,7 +31,7 @@ void C013_SendUDPTaskData(struct EventStruct *event,
                           uint8_t             destTaskIndex);
 void C013_sendUDP(uint8_t        unit,
                   const uint8_t *data,
-                  uint8_t        size);
+                  size_t        size);
 void C013_Receive(struct EventStruct *event);
 
 
@@ -205,7 +205,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
+void C013_sendUDP(uint8_t unit, const uint8_t *data, size_t size)
 {
   START_TIMER
 

@@ -125,9 +125,12 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 228u>();
+  // Warning, checksum will fail on older nodes when this struct size 
+  // is changed to something other than 256 bytes
+  check_size<C013_SensorInfoStruct,                 256u>();
 
-  // Warning, checksum will fail on older nodes when this struct size is extended beyond 64 bytes
+  // Warning, checksum will fail on older nodes when this struct size 
+  // is changed to something other than 64 bytes
   check_size<C013_SensorDataStruct,                 64u>(); 
   #endif
   #ifdef USES_C016

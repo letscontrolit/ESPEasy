@@ -50,6 +50,14 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
 
   // Settings PCONFIG values
   int16_t TaskDevicePluginConfig[PLUGIN_CONFIGVAR_MAX]{};
+
+  // Add some space for future values, so we won't run into issues with checksum later when extending this struct.
+  // Extended upto 256 bytes struct size.
+  // Make sure not to extend beyond this or else nodes running an 
+  // older version of ESPEasy which knows about the checksum calculation 
+  // will reject the packet.
+  uint8_t reserved[28]{};
+
 };
 
 

@@ -310,13 +310,17 @@ void SendValueLogger(taskIndex_t TaskIndex)
     if (validDeviceIndex(DeviceIndex)) {
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-      {
-        logger += strformat(F("%s %s,%d,%s,%s,%s\r\n")
+      const String logline_prefix = strformat(F("%s %s,%d,%s")
         , node_time.getDateString('-').c_str()
         , node_time.getTimeString(':').c_str()
         , Settings.Unit
         , getTaskDeviceName(TaskIndex).c_str()
+        );
+
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+      {
+        logger += strformat(F("%s,%s,%s\r\n")
+        , logline_prefix.c_str()
         , Cache.getTaskDeviceValueName(TaskIndex, varNr).c_str()
         , formatUserVarNoCheck(TaskIndex, varNr).c_str()
         );
