@@ -137,12 +137,13 @@ void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSourc
   }
 }
 
-uint32_t ESPEasy_time::getUnixTime() const
+uint32_t ESPEasy_time::getUnixTime()
 {
+  now();
   return static_cast<uint32_t>(sysTime);
 }
 
-uint32_t ESPEasy_time::getUnixTime(uint32_t& unix_time_frac) const
+uint32_t ESPEasy_time::getUnixTime(uint32_t& unix_time_frac)
 {
   const uint32_t seconds(getUnixTime());
   double tmp(sysTime);
@@ -388,7 +389,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::Manual_set:
       return true;
     case timeSource_t::NTP_time_source:
-      return getUnixTime() > get_build_unixtime();
+      return sysTime > get_build_unixtime();
   }
   return nextSyncTime > 0 || externalUnixTime_d > get_build_unixtime();
 }

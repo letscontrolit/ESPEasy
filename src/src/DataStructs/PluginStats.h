@@ -43,7 +43,7 @@ public:
   // Keep track of peaks.
   // Use this for sensors that need to take several samples before actually output a task value.
   // For example the ADC with oversampling
-  void  trackPeak(float value);
+  void  trackPeak(float value, uint32_t timestamp = 0u);
 
   // Get lowest recorded value since reset
   float getPeakLow() const {

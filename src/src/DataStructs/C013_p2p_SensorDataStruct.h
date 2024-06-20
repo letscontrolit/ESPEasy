@@ -22,7 +22,7 @@ struct C013_SensorDataStruct
   bool setData(const uint8_t *data,
                size_t         size);
 
-  bool validate();
+  bool prepareForSend();
 
   bool isValid() const;
 
@@ -48,6 +48,15 @@ struct C013_SensorDataStruct
   // Extra info added on 20240619 (build ID 20871)
   ShortChecksumType checksum;
   uint16_t          sourceNodeBuild = 0;
+  uint16_t          timestamp_frac  = 0;
+  uint32_t          timestamp_sec   = 0;
+
+  // Add some space for future values, so we won't run into issues with checksum later when extending this struct.
+  // Extended upto 64 bytes struct size.
+  // Make sure not to extend beyond this or else nodes running an 
+  // older version of ESPEasy which knows about the checksum calculation 
+  // will reject the packet.
+  uint8_t reserved[28]{};
 };
 
 #endif // ifdef USES_C013

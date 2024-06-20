@@ -892,10 +892,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
             if (taskData != nullptr) {
               // FIXME TD-er: Must make this flag configurable
-              bool onlyUpdateTimestampWhenSame = true;
+              const bool onlyUpdateTimestampWhenSame = true;
+              const bool trackpeaks = 
+                Settings.TaskDeviceDataFeed[event->TaskIndex] != 0 || // Receive data from remote node
+                !Device[DeviceIndex].TaskLogsOwnPeaks;
+
               taskData->pushPluginStatsValues(
                 event, 
-                !Device[DeviceIndex].TaskLogsOwnPeaks,
+                trackpeaks,
                 onlyUpdateTimestampWhenSame); 
             }
               #endif // if FEATURE_PLUGIN_STATS

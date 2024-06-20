@@ -22,7 +22,7 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   bool setData(const uint8_t *data,
                size_t         size);
 
-  bool validate();
+  bool prepareForSend();
 
   bool isValid() const;
 
@@ -42,16 +42,14 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   uint16_t          sourceNodeBuild = 0;
 
   // Some info from ExtraTaskSettings
-  uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK]{};
-  float       TaskDeviceMinValue[VARS_PER_TASK]{};
-  float       TaskDeviceMaxValue[VARS_PER_TASK]{};
-  float       TaskDeviceErrorValue[VARS_PER_TASK]{};
-  uint32_t    VariousBits[VARS_PER_TASK]{};
+  uint8_t  TaskDeviceValueDecimals[VARS_PER_TASK]{};
+  float    TaskDeviceMinValue[VARS_PER_TASK]{};
+  float    TaskDeviceMaxValue[VARS_PER_TASK]{};
+  float    TaskDeviceErrorValue[VARS_PER_TASK]{};
+  uint32_t VariousBits[VARS_PER_TASK]{};
 
   // Settings PCONFIG values
-  int16_t       TaskDevicePluginConfig[PLUGIN_CONFIGVAR_MAX]{};
-
-
+  int16_t TaskDevicePluginConfig[PLUGIN_CONFIGVAR_MAX]{};
 };
 
 

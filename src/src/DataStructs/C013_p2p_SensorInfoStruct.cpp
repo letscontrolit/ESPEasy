@@ -12,7 +12,7 @@
 
 # include "../Helpers/ESPEasy_Storage.h"
 
-bool C013_SensorInfoStruct::validate()
+bool C013_SensorInfoStruct::prepareForSend()
 {
   sourceNodeBuild = get_build_nr();
   checksum.clear();

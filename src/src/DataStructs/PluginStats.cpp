@@ -97,16 +97,22 @@ bool PluginStats::matchesLastTwoEntries(float value) const
    */
 }
 
-void PluginStats::trackPeak(float value)
+void PluginStats::trackPeak(float value, uint32_t timestamp)
 {
-  if (value > _maxValue) {
-    _maxValueTimestamp = node_time.getUnixTime();
-    _maxValue          = value;
-  }
+  if (value > _maxValue || value < _minValue) {
+    if (timestamp == 0) {
+      // Make sure both extremes are flagged with the same timestamp.
+      timestamp = node_time.getUnixTime();
+    }
+    if (value > _maxValue) {
+      _maxValueTimestamp = timestamp;
+      _maxValue          = value;
+    }
 
-  if (value < _minValue) {
-    _minValueTimestamp = node_time.getUnixTime();
-    _minValue          = value;
+    if (value < _minValue) {
+      _minValueTimestamp = timestamp;
+      _minValue          = value;
+    }
   }
 }
 

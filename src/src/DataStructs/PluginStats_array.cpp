@@ -173,6 +173,10 @@ void PluginStats_array::pushPluginStatsValues(
     if (valueCount > 0) {
       const Sensor_VType sensorType = event->getSensorType();
 
+      const uint32_t timestamp = event->timestamp == 0 
+        ? node_time.getUnixTime() 
+        : event->timestamp;
+
       if (onlyUpdateTimestampWhenSame && (_plugin_stats_timestamps != nullptr)) {
         // When only updating the timestamp of the last entry,
         // we should look at the last 2 entries to see if they are the same.
@@ -191,13 +195,13 @@ void PluginStats_array::pushPluginStatsValues(
         }
 
         if (isSame) {
-          _plugin_stats_timestamps->updateLast(node_time.getUnixTime());
+          _plugin_stats_timestamps->updateLast(timestamp);
           return;
         }
       }
 
       if (_plugin_stats_timestamps != nullptr) {
-        _plugin_stats_timestamps->push(node_time.getUnixTime());
+        _plugin_stats_timestamps->push(timestamp);
       }
 
       for (size_t i = 0; i < valueCount; ++i) {
@@ -206,7 +210,7 @@ void PluginStats_array::pushPluginStatsValues(
           _plugin_stats[i]->push(value);
 
           if (trackPeaks) {
-            _plugin_stats[i]->trackPeak(value);
+            _plugin_stats[i]->trackPeak(value, timestamp);
           }
         }
       }

@@ -134,14 +134,14 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (destUnit != 0)
   {
     infoReply.destUnit = destUnit;
-    infoReply.validate();
+    infoReply.prepareForSend();
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
   } else {
     /*
        for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
        if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
-        infoReply.validate();
+        infoReply.prepareForSend();
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
        }
        }
@@ -149,7 +149,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
 
     // Send to broadcast address
     infoReply.destUnit = 255;
-    infoReply.validate();
+    infoReply.prepareForSend();
     C013_sendUDP(255, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
   }
 }
@@ -182,14 +182,14 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   if (destUnit != 0)
   {
     dataReply.destUnit = destUnit;
-    dataReply.validate();
+    dataReply.prepareForSend();
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
   } else {
     /*
        for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
        if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
-        dataReply.validate();
+        dataReply.prepareForSend();
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
        }
        }
@@ -197,7 +197,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 
     // Send to broadcast address
     dataReply.destUnit = 255;
-    dataReply.validate();
+    dataReply.prepareForSend();
     C013_sendUDP(255, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
   }
 }
@@ -409,7 +409,13 @@ void C013_Receive(struct EventStruct *event) {
               }
               STOP_TIMER(C013_RECEIVE_SENSOR_DATA);
 
-              SensorSendTask(&TempEvent);
+              if (node_time.systemTimePresent() && dataReply.timestamp_sec != 0) {
+                // Only use timestamp of remote unit when we got a system time ourselves
+                // If not, then the order of samples can get messed up.
+                SensorSendTask(&TempEvent, dataReply.timestamp_sec);
+              } else {
+                SensorSendTask(&TempEvent);
+              }
             } else {
               // Mismatch in sensor types
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

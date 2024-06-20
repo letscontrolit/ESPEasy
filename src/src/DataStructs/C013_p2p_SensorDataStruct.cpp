@@ -4,16 +4,25 @@
 
 # include "../DataStructs/NodeStruct.h"
 # include "../Globals/Nodes.h"
+# include "../Globals/ESPEasy_time.h"
 # include "../Globals/Plugins.h"
 
 # include "../CustomBuild/CompiletimeDefines.h"
 
-bool C013_SensorDataStruct::validate()
+bool C013_SensorDataStruct::prepareForSend()
 {
   sourceNodeBuild = get_build_nr();
   checksum.clear();
 
   if (sourceNodeBuild >= 20871) {
+    if (node_time.systemTimePresent()) {
+      uint32_t unix_time_frac{};
+      timestamp_sec  = node_time.getUnixTime(unix_time_frac);
+      timestamp_frac = unix_time_frac >> 16;
+    }
+
+
+    // Make sure to add checksum as last step
     constexpr unsigned len_upto_checksum = offsetof(C013_SensorDataStruct, checksum);
 
     const ShortChecksumType tmpChecksum(

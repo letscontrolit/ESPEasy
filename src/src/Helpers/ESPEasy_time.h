@@ -38,11 +38,11 @@ public:
                              uint8_t      unitnr = 0);
 
   // Get unix time in seconds
-  uint32_t getUnixTime() const;
+  uint32_t getUnixTime();
 
   // Get unix time in seconds
   // @param unix_time_frac  The fractional part
-  uint32_t      getUnixTime(uint32_t& unix_time_frac) const;
+  uint32_t      getUnixTime(uint32_t& unix_time_frac);
 
   void          initTime();
 
