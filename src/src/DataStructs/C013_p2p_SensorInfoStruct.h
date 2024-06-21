@@ -39,6 +39,10 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   ShortChecksumType checksum;
   uint16_t          sourceNodeBuild = 0;
 
+  // Optional IDX value to allow receiving remote 
+  // feed data on a different task index as is used on the sender node.
+  uint32_t          IDX             = 0;
+
   // Settings PCONFIG values
   int16_t TaskDevicePluginConfig[PLUGIN_CONFIGVAR_MAX]{};
 

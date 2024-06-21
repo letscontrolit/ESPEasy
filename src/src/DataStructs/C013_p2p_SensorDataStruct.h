@@ -48,6 +48,10 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
   uint16_t          sourceNodeBuild = 0;
   uint16_t          timestamp_frac  = 0;
   uint32_t          timestamp_sec   = 0;
+
+  // Optional IDX value to allow receiving remote 
+  // feed data on a different task index as is used on the sender node.
+  uint32_t          IDX             = 0;
 };
 
 #endif // ifdef USES_C013
