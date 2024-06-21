@@ -204,7 +204,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
                        F("PCF  : Analog port: A%d value %d: %s"),
                        port - 1,
                        var + 1,
-                       formatUserVarNoCheck(event->TaskIndex, var).c_str()));
+                       formatUserVarNoCheck(event, var).c_str()));
             }
             success = true;
           }

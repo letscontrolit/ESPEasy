@@ -187,6 +187,7 @@ bool handle_custom(const String& path) {
                 "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>"));
       html_table_class_normal();
 
+
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
         if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
@@ -199,6 +200,7 @@ bool handle_custom(const String& path) {
 
             const uint8_t valueCount = getValueCountForTask(x);
 
+            struct EventStruct TempEvent(x);
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
               const String taskValueName = getTaskValueName(x, varNr);
@@ -211,7 +213,7 @@ bool handle_custom(const String& path) {
                 html_TD();
                 addHtml(taskValueName);
                 html_TD();
-                addHtml(formatUserVarNoCheck(x, varNr));
+                addHtml(formatUserVarNoCheck(&TempEvent, varNr));
               }
             }
           }

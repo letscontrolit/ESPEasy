@@ -351,16 +351,16 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String hum;
             if (P028_data->hasHumidity()) {
-              hum = formatUserVarNoCheck(event->TaskIndex, 1);
+              hum = formatUserVarNoCheck(event, 1);
             }
             addLogMove(LOG_LEVEL_INFO, concat(
               P028_data_struct::getDeviceName(P028_data->sensorID),
               strformat(
                 F(": Addr: %s T: %s H: %s P: %s"), 
                 formatToHex(P028_I2C_ADDRESS, 2).c_str(),
-                formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
+                formatUserVarNoCheck(event, 0).c_str(),
                 hum.c_str(),
-                formatUserVarNoCheck(event->TaskIndex, 2).c_str())));
+                formatUserVarNoCheck(event, 2).c_str())));
           }
           # endif // ifndef LIMIT_BUILD_SIZE
           success = true;
