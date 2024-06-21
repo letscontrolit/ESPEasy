@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2024-06-21 tonhuisman: Fix support for VEML6030, using by default the alternate I2C address, by modifying the VEML7700 library
  * 2024-05-18 tonhuisman: Implement AutoLux feature, and Get Config Value for automatically determined gain and integration
  * 2024-05-16 tonhuisman: Start plugin for VEML6030/VEML7700 I2C Light sensor, using a slightly adjusted Adafruit library:
  *                        https://github.com/adafruit/Adafruit_VEML7700

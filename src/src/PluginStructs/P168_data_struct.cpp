@@ -23,7 +23,7 @@ bool P168_data_struct::init(struct EventStruct *event) {
 
   // - Read sensor serial number
   if ((nullptr != veml) &&
-      veml->begin()) {
+      veml->begin(P168_I2C_ADDRESS)) {
     // Set config & start sensor
     veml->setGain(_als_gain);
     veml->setIntegrationTime(_als_integration);

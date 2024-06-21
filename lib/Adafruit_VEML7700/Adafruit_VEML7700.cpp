@@ -39,8 +39,8 @@ Adafruit_VEML7700::Adafruit_VEML7700(void) {}
  *    @param  theWire An optional pointer to an I2C interface
  *    @return True if initialization was successful, otherwise false.
  */
-bool Adafruit_VEML7700::begin(TwoWire *theWire) {
-  i2c_dev = new Adafruit_I2CDevice(VEML7700_I2CADDR_DEFAULT, theWire);
+bool Adafruit_VEML7700::begin(int8_t i2cAddr, TwoWire *theWire) {
+  i2c_dev = new Adafruit_I2CDevice(i2cAddr, theWire);
 
   if (!i2c_dev->begin()) {
     return false;
