@@ -64,8 +64,8 @@ void sendData(struct EventStruct *event, bool sendEvents)
         Settings.TaskDeviceSendData[x][event->TaskIndex] &&        
         Settings.Protocol[x])
     {
-      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
       event->ControllerIndex = x;
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
       event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {

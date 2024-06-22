@@ -2020,7 +2020,9 @@ To create/register a plugin, you have to :
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     #ifdef ESP32
+    #ifndef USES_C018
       #define USES_C018 // TTN RN2483
+    #endif
     #endif
     // #define USES_C019   // ESPEasy-NOW
 #endif

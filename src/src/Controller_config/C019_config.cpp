@@ -81,7 +81,10 @@ void C019_ConfigStruct::webform_load(struct EventStruct *event) {
                    filters[i].matchTopic,
                    C019_MQTT_TOPIC_LENGTH - 1);
     addRowLabel(F("Task"));
-    addTaskSelect(concat(F("ftask"), i), filters[i].taskIndex, false);
+    addTaskSelect(
+      concat(F("ftask"), i), 
+      filters[i].taskIndex, 
+      EMPTY_STRING); // No 'wide' selector
   }
   addFormSeparator(2);
 }
