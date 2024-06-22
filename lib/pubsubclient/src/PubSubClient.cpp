@@ -435,7 +435,11 @@ boolean PubSubClient::loop() {
     loop_read();
     if (connected()) {
         unsigned long t = millis();
-        if ((t - lastInActivity > MQTT_KEEPALIVE*1000UL) || (t - lastOutActivity > MQTT_KEEPALIVE*1000UL)) {
+        // Send message at 2/3 of keepalive interval
+        // Just to make sure the broker will not disconnect us
+        constexpr int32_t keepalive = MQTT_KEEPALIVE*666UL;
+        if (((int32_t)(t - lastInActivity) > keepalive) || 
+            ((int32_t)(t - lastOutActivity) > keepalive)) {
             if (pingOutstanding) {
                 this->_state = MQTT_CONNECTION_TIMEOUT;
                 _client->stop();
