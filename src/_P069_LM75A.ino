@@ -117,7 +117,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         }
         else
         {
-          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event->TaskIndex,0)));
+          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event,0)));
         }
       }
       break;

@@ -1050,7 +1050,10 @@ void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
 template<unsigned int N_TASKS>
 pluginID_t SettingsStruct_tmpl<N_TASKS>::getPluginID_for_task(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
-    return pluginID_t::toPluginID(TaskDeviceNumber[taskIndex]);
+    const uint8_t tdn = TaskDeviceNumber[taskIndex];
+    if (tdn > 0) {
+      return pluginID_t::toPluginID(tdn);
+    }
   }
   return INVALID_PLUGIN_ID;
 }

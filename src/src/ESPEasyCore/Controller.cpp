@@ -60,14 +60,13 @@ void sendData(struct EventStruct *event, bool sendEvents)
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
-    event->ControllerIndex = x;
-    event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
-
-    if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] &&
-        Settings.ControllerEnabled[event->ControllerIndex] &&
-        Settings.Protocol[event->ControllerIndex])
+    if (Settings.ControllerEnabled[x] &&
+        Settings.TaskDeviceSendData[x][event->TaskIndex] &&        
+        Settings.Protocol[x])
     {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+      event->ControllerIndex = x;
+      event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {
         String dummy;
@@ -762,6 +761,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
   if (!validTaskIndex(event->TaskIndex)) { return; }
+
+  // FIXME TD-er: Should a 'disabled' task be rescheduled?
+  // If not, then it should be rescheduled after the check to see if it is enabled.
   Scheduler.reschedule_task_device_timer(event->TaskIndex, lasttimer);
 
   #ifndef BUILD_NO_RAM_TRACKER

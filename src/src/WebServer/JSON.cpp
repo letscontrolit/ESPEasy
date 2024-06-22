@@ -84,11 +84,13 @@ void handle_csvval()
         addHtml('\n');
       }
 
+      struct EventStruct TempEvent(taskNr);
+
       for (uint8_t x = 0; x < taskValCount; x++)
       {
         if ((valNr == INVALID_VALUE_NUM) || (valNr == x))
         {
-          addHtml(formatUserVarNoCheck(taskNr, x));
+          addHtml(formatUserVarNoCheck(&TempEvent, x));
 
           if (x != taskValCount - 1)
           {
@@ -438,10 +440,12 @@ void handle_json()
         }
         addHtml(F("\"TaskValues\": [\n"));
 
+        struct EventStruct TempEvent(TaskIndex);
+
         for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
-          const String value = formatUserVarNoCheck(TaskIndex, x);
+          const String value = formatUserVarNoCheck(&TempEvent, x);
           uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
 
           if (mustConsiderAsJSONString(value)) {

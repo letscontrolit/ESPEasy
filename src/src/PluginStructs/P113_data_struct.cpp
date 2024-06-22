@@ -7,9 +7,7 @@ P113_data_struct::P113_data_struct(uint8_t i2c_addr, int timing, bool range) : i
 }
 
 P113_data_struct::~P113_data_struct() {
-  if (nullptr != sensor) {
-    delete sensor;
-  }
+  delete sensor;
 }
 
 // **************************************************************************/
@@ -19,12 +17,12 @@ bool P113_data_struct::begin() {
   initState = nullptr != sensor;
 
   if (initState) {
-    uint16_t id = sensor->getID();
+    const uint16_t id = sensor->getID();
 
     // FIXME 2023-08-11 tonhuisman: Disabled, as it seems to mess up the sensor
     // sensor->setI2CAddress(i2cAddress); // Initialize for configured address
 
-    uint8_t res = sensor->begin();
+    const bool res = sensor->begin();
 
     if (res) { // 0/false is NO-ERROR
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -43,9 +41,12 @@ bool P113_data_struct::begin() {
       sensor->setDistanceModeShort();
     }
 
+    # ifdef P113_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Sensor initialized at address 0x%02x, id: 0x%04x"), i2cAddress, id));
     }
+    # endif // ifdef P113_DEBUG
   }
 
   return initState;
@@ -74,24 +75,19 @@ bool P113_data_struct::readAvailable() {
 }
 
 uint16_t P113_data_struct::readDistance() {
-  success = false;
-
-  # if defined(P113_DEBUG) || defined(P113_DEBUG_DEBUG)
-  String log;
-  # endif // if defined(P113_DEBUG) || defined(P113_DEBUG_DEBUG)
   # ifdef P113_DEBUG_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L1X  : idx: 0x%x init: %d"), i2cAddress, initState ? 1 : 0));
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L1X: idx: 0x%02x init: %d"), i2cAddress, initState));
   }
   # endif // P113_DEBUG_DEBUG
 
   success    = true;
   readActive = false;
 
-  if (distance >= 8190) {
+  if (distance >= 8190u) {
     # ifdef P113_DEBUG_DEBUG
-    addLog(LOG_LEVEL_DEBUG, "VL53L1X: NO MEASUREMENT");
+    addLog(LOG_LEVEL_DEBUG, concat(F("VL53L1X: NO MEASUREMENT"), distance));
     # endif // P113_DEBUG_DEBUG
     success = false;
   }
@@ -100,7 +96,7 @@ uint16_t P113_data_struct::readDistance() {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L1X: Address: 0x%02x / Timing: %d / Long Range: %d / Distance: %d"),
-                                         i2cAddress, timing, range ? 1 : 0, distance));
+                                         i2cAddress, timing, range, distance));
   }
   # endif // P113_DEBUG
 

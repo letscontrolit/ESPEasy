@@ -196,7 +196,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   log += ' ';
-                  log += formatUserVarNoCheck(event->TaskIndex, i);
+                  log += formatUserVarNoCheck(event, i);
                 }
                 # endif // ifndef BUILD_NO_DEBUG
               }
