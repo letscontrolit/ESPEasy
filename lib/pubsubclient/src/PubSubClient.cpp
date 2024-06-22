@@ -149,16 +149,16 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
             result = 1;
         } else {
             if (domain.length() != 0) {
-#ifdef ESP32
+#if defined(ESP32) && ESP_IDF_VERSION_MAJOR < 5 
                 WiFiClient* wfc = (WiFiClient*)_client;
-                result = wfc->connect(this->domain.c_str(), this->port, ESP32_CONNECTION_TIMEOUT);
+                result = wfc->connect(this->domain.c_str(), this->port, _client->getTimeout());
 #else
                 result = _client->connect(this->domain.c_str(), this->port);
 #endif
             } else {
-#ifdef ESP32
+#if defined(ESP32) && ESP_IDF_VERSION_MAJOR < 5 
                 WiFiClient* wfc = (WiFiClient*)_client;
-                result = wfc->connect(this->ip, this->port, ESP32_CONNECTION_TIMEOUT);
+                result = wfc->connect(this->ip, this->port, _client->getTimeout());
 #else
                 result = _client->connect(this->ip, this->port);
 #endif
@@ -264,10 +264,16 @@ boolean PubSubClient::readByte(uint8_t * result) {
      return false;
    }
    uint32_t previousMillis = millis();
-   while(!_client->available()) {
+   #ifdef ESP8266
+   const int32_t timeout = 4000;
+   #else
+   const int32_t timeout = _client->getTimeout();
+   #endif
+
+   while(!_client->available() && _client->connected()) {
      delay(1);  // Prevent watchdog crashes
-     uint32_t currentMillis = millis();
-     if(currentMillis - previousMillis >= ((int32_t) MQTT_SOCKET_TIMEOUT * 1000)){
+
+     if((int32_t)(millis() - previousMillis) >= timeout){
        return false;
      }
    }
