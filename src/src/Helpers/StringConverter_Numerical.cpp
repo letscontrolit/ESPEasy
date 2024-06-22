@@ -26,7 +26,6 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
-  START_TIMER
   String sValue;
   #ifndef LIMIT_BUILD_SIZE
 

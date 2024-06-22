@@ -67,7 +67,7 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
     if (_plugin_stats_timestamps == nullptr) {
       // Try to allocate in PSRAM if possible
       constexpr unsigned size = sizeof(PluginStats_timestamp);
-      void *ptr               = special_calloc(1, sizeof(PluginStats_timestamp));
+      void *ptr               = special_calloc(1, size);
 
       if (ptr == nullptr) { _plugin_stats_timestamps = nullptr; }
       else {
