@@ -82,39 +82,39 @@ bool safeReadStringUntil(Stream     & input,
 }
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const __FlashStringHelper *prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLogMove(LOG_LEVEL_DEBUG,
                strformat(F("%s%s connecting to %s"),
                          prefix,
-                         get_formatted_Controller_number(controller_number).c_str(),
+                         get_formatted_Controller_number(cpluginID).c_str(),
                          ControllerSettings.getHostPortString().c_str()));
   }
 }
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const __FlashStringHelper *prefix, int controller_number) {
+void log_connecting_fail(const __FlashStringHelper *prefix, cpluginID_t cpluginID) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     addLogMove(LOG_LEVEL_ERROR,
                strformat(F("%s%s connection failed (%d/%d)"),
                          prefix,
-                         get_formatted_Controller_number(controller_number).c_str(),
+                         get_formatted_Controller_number(cpluginID).c_str(),
                          WiFiEventData.connectionFailures,
                          Settings.ConnectionFailuresThreshold));
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, uint64_t statisticsTimerStart) {
-  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(controller_number);
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart) {
+  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(cpluginID);
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
-    log_connecting_fail(prefix, controller_number);
+    log_connecting_fail(prefix, cpluginID);
     STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_FAIL);
     return false;
   }
-  WiFiEventData.connectDurations[controller_number] = usecPassedSince(statisticsTimerStart) / 1000ul;
+  WiFiEventData.connectDurations[cpluginID] = usecPassedSince(statisticsTimerStart) / 1000ul;
   STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_SUCCESS);
   statusLED(true);
 
@@ -124,7 +124,7 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
   return true;
 }
 
-bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
   if (!NetworkConnected()) {
@@ -137,13 +137,13 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
   const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
   client.setTimeout(timeout); // in msec as it should be!
   delay(0);
 #ifndef BUILD_NO_DEBUG
-  log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
+  log_connecting_to(F("UDP  : "), cpluginID, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
   bool success = ControllerSettings.beginPacket(client);
@@ -154,18 +154,18 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   const bool result = count_connection_results(
     success,
     F("UDP  : "),
-    controller_number,
+    cpluginID,
     statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
 
 #if FEATURE_HTTP_CLIENT
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
+bool try_connect_host(cpluginID_t cpluginID, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  return try_connect_host(cpluginID, client, ControllerSettings, F("HTTP : "));
 }
 
-bool try_connect_host(int                        controller_number,
+bool try_connect_host(cpluginID_t                cpluginID,
                       WiFiClient               & client,
                       ControllerSettingsStruct & ControllerSettings,
                       const __FlashStringHelper *loglabel) {
@@ -184,7 +184,7 @@ bool try_connect_host(int                        controller_number,
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
   const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
@@ -198,7 +198,7 @@ bool try_connect_host(int                        controller_number,
   # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
 # ifndef BUILD_NO_DEBUG
-  log_connecting_to(loglabel, controller_number, ControllerSettings);
+  log_connecting_to(loglabel, cpluginID, ControllerSettings);
 # endif // ifndef BUILD_NO_DEBUG
 
   const bool success = ControllerSettings.connectToHost(client);
@@ -209,7 +209,7 @@ bool try_connect_host(int                        controller_number,
   const bool result = count_connection_results(
     success,
     loglabel,
-    controller_number,
+    cpluginID,
     statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
@@ -223,7 +223,7 @@ bool client_available(WiFiClient& client) {
   return (client.available() != 0) || (client.connected() != 0);
 }
 
-String send_via_http(int                             controller_number,
+String send_via_http(int                             cpluginID,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
                      const String                  & uri,
@@ -236,12 +236,12 @@ String send_via_http(int                             controller_number,
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
   const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
   const uint64_t statisticsTimerStart(getMicros64());
   const String result                    = send_via_http(
-    get_formatted_Controller_number(controller_number),
+    get_formatted_Controller_number(cpluginID),
     timeout,
     getControllerUser(controller_idx, ControllerSettings),
     getControllerPass(controller_idx, ControllerSettings),
@@ -261,7 +261,7 @@ String send_via_http(int                             controller_number,
   count_connection_results(
     success,
     F("HTTP  : "),
-    controller_number,
+    cpluginID,
     statisticsTimerStart);
 
   return result;
