@@ -99,11 +99,12 @@ bool PluginStats::matchesLastTwoEntries(float value) const
 
 void PluginStats::trackPeak(float value, uint32_t timestamp)
 {
-  if (value > _maxValue || value < _minValue) {
+  if ((value > _maxValue) || (value < _minValue)) {
     if (timestamp == 0) {
       // Make sure both extremes are flagged with the same timestamp.
       timestamp = node_time.getUnixTime();
     }
+
     if (value > _maxValue) {
       _maxValueTimestamp = timestamp;
       _maxValue          = value;
@@ -501,36 +502,53 @@ bool PluginStats::webformLoad_show_stdev(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_peaks(struct EventStruct *event, bool include_peak_to_peak) const
 {
   if (hasPeaks() && (getNrSamples() > 1)) {
-    addRowLabel(concat(getLabel(),  F(" Peak Low/High")));
-    addHtmlFloat(getPeakLow(), _nrDecimals);
-    addHtml(F(" / "));
-    addHtmlFloat(getPeakHigh(), _nrDecimals);
-
-    webformLoad_show_peaks_timestamp(event, getLabel());
-
-    if (include_peak_to_peak) {
-      addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));
-      addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
-    }
-    return true;
+    return webformLoad_show_peaks(
+      event,
+      getLabel(),
+      toString(getPeakLow(),  _nrDecimals),
+      toString(getPeakHigh(), _nrDecimals),
+      include_peak_to_peak);
   }
   return false;
 }
 
-bool PluginStats::webformLoad_show_peaks_timestamp(struct EventStruct *event, const String& labelPrefix) const
+bool PluginStats::webformLoad_show_peaks(struct EventStruct *event,
+                                         const String      & label,
+                                         const String      & lowValue,
+                                         const String      & highValue,
+                                         bool                include_peak_to_peak) const
 {
   if (hasPeaks() && (getNrSamples() > 1)) {
-    addRowLabel(concat(labelPrefix,  F(" Peak Low/High TimeStamp")));
     const uint32_t peakLow     = getPeakLowTimestamp();
     const uint32_t peakHigh    = getPeakHighTimestamp();
     const uint32_t current     = node_time.getUnixTime();
     const bool     useTimeOnly = (current - peakLow) < 86400 && (current - peakHigh) < 86400;
     struct tm ts;
     breakTime(time_zone.toLocal(peakLow), ts);
-    addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
-    addHtml(F(" / "));
+
+    addRowLabel(concat(label,  F(" Peak Low")));
+    addHtml(strformat(
+              F("%s @ %s"),
+              lowValue.c_str(),
+              useTimeOnly
+      ? formatTimeString(ts).c_str()
+      : formatDateTimeString(ts).c_str()));
+
+
     breakTime(time_zone.toLocal(peakHigh), ts);
-    addHtml(useTimeOnly ? formatTimeString(ts) : formatDateTimeString(ts));
+
+    addRowLabel(concat(label,  F(" Peak High")));
+    addHtml(strformat(
+              F("%s @ %s"),
+              highValue.c_str(),
+              useTimeOnly
+      ? formatTimeString(ts).c_str()
+      : formatDateTimeString(ts).c_str()));
+
+    if (include_peak_to_peak) {
+      addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));
+      addHtmlFloat(getPeakHigh() - getPeakLow(), _nrDecimals);
+    }
     return true;
   }
   return false;

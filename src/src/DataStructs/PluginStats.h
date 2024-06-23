@@ -131,8 +131,11 @@ public:
   bool webformLoad_show_stdev(struct EventStruct *event) const;
   bool webformLoad_show_peaks(struct EventStruct *event,
                               bool                include_peak_to_peak = true) const;
-  bool webformLoad_show_peaks_timestamp(struct EventStruct *event,
-                                        const String      & labelPrefix) const;
+  bool webformLoad_show_peaks(struct EventStruct *event,
+                              const String& label,
+                              const String& lowValue,
+                              const String& highValue,
+                              bool                include_peak_to_peak = true) const;
 
   void webformLoad_show_val(
     struct EventStruct      *event,

@@ -340,12 +340,19 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
     if (stats->webformLoad_show_stdev(event)) { somethingAdded = true; }
 
     if (stats->hasPeaks()) {
-      formatADC_statistics(F("ADC Peak Low"),  stats->getPeakLow(),  true);
-      formatADC_statistics(F("ADC Peak High"), stats->getPeakHigh(), true);
+      float floatvalue_low, floatvalue_high;
 
-      stats->webformLoad_show_peaks_timestamp(event, F("ADC"));
-
-      somethingAdded = true;
+      if (stats->webformLoad_show_peaks(
+            event,
+            stats->getLabel(),
+            formatADC_statistics_to_str(stats->getPeakLow(),  floatvalue_low,  true),
+            formatADC_statistics_to_str(stats->getPeakHigh(), floatvalue_high, true),
+            false))
+      {
+        addRowLabel(concat(stats->getLabel(),  F(" Peak-to-peak")));
+        addHtmlFloat(floatvalue_high - floatvalue_low, _nrDecimals);
+        somethingAdded = true;
+      }
     }
   }
   return somethingAdded;
@@ -531,24 +538,34 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
 void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw, bool includeOutputValue) const
 {
   addRowLabel(label);
-  addHtmlInt(raw);
+  float float_value{};
 
-  float float_value = raw;
+  addHtml(formatADC_statistics_to_str(raw, float_value, includeOutputValue));
+}
+
+String P002_data_struct::formatADC_statistics_to_str(
+  int    raw,
+  float& float_value,
+  bool   includeOutputValue) const
+{
+  String res;
+
+  res += raw;
+
+  float_value = raw;
 
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
     float_value = applyADCFactoryCalibration(raw, _attenuation);
-
-    html_add_estimate_symbol();
-    addHtmlFloat(float_value, _nrDecimals);
-    addUnit(F("mV"));
+    res        += F(" &#8793; ");
+    res        += toString(float_value, _nrDecimals);
+    res        += (F(" [mV]"));
   }
 # endif // ifdef ESP32
 
   if (includeOutputValue) {
-    addHtml(' ');
-    addHtml(F("&rarr; "));
+    res        += F(" &rarr; ");
     float_value =  applyCalibration(float_value);
 
 # ifndef LIMIT_BUILD_SIZE
@@ -569,8 +586,10 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
       }
     }
 # endif // ifndef LIMIT_BUILD_SIZE
-    addHtmlFloat(float_value, _nrDecimals);
+    res += toString(float_value, _nrDecimals);
   }
+
+  return res;
 }
 
 void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper *label, int raw, float float_value) const

@@ -2,7 +2,7 @@
 
 #ifdef ESP32
 
-//# include "../Helpers/ESPEasy_math.h"
+// # include "../Helpers/ESPEasy_math.h"
 # include "../Helpers/Hardware.h"
 
 
@@ -26,7 +26,13 @@ bool Hardware_ADC_cali_t::init(int         pin,
                                adc_atten_t attenuation)
 {
 # if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
+  #  ifdef ESP32C6
+
+  // All calibration curves seem to be linear, so use high res linear interpolation.
+  _useHighResInterpolation = true;
+  #  else // ifdef ESP32C6
   _useHighResInterpolation = false;
+  #  endif // ifdef ESP32C6
 # elif ESP_IDF_VERSION_MAJOR >= 5
   _useHighResInterpolation = attenuation != adc_atten_t::ADC_ATTEN_DB_12;
 # else // if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
@@ -88,12 +94,29 @@ float Hardware_ADC_cali_t::applyFactoryCalibration(float rawValue) const {
   }
 
   if (!_useHighResInterpolation) {
-    const int raw = rawValue;
 # if ESP_IDF_VERSION_MAJOR >= 5
-    int res{};
-    adc_cali_raw_to_voltage(_adc_cali_handle, raw, &res);
-    return res;
+    int adc_low  = rawValue - 100;
+    int adc_high = rawValue + 100;
+
+    if (adc_low < 0) { adc_low = 0; }
+
+    if (adc_high > MAX_ADC_VALUE) { adc_high = MAX_ADC_VALUE; }
+
+    int volt_low{};
+    int volt_high{};
+
+    if (
+      (adc_cali_raw_to_voltage(_adc_cali_handle, adc_low, &volt_low) == ESP_OK) &&
+      (adc_cali_raw_to_voltage(_adc_cali_handle, adc_high, &volt_high) == ESP_OK)) {
+      return mapADCtoFloat(
+        rawValue,
+        adc_low,
+        adc_high,
+        volt_low,
+        volt_high);
+    }
 # else // if ESP_IDF_VERSION_MAJOR >= 5
+    const int raw = rawValue;
     return esp_adc_cal_raw_to_voltage(raw, &_adc_chars);
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
   }
@@ -208,4 +231,4 @@ bool Hardware_ADC_cali_t::adc_calibration_init(
 
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
 
-#endif // ifdef ESP32
+#endif  // ifdef ESP32
