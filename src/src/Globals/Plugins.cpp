@@ -812,7 +812,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         bool retval                  = false;
         const bool performPluginCall =
-          (Function != PLUGIN_READ) ||
+          (Function != PLUGIN_READ && Function != PLUGIN_INIT) ||
           (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0);
         #if FEATURE_I2C_DEVICE_CHECK
         bool i2cStatusOk = true;

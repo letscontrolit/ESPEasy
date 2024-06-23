@@ -143,6 +143,8 @@ bool mustLogFunction(int function) {
 const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
+    case CPlugin::Function::CPLUGIN_CONNECT_SUCCESS:           return F("CPLUGIN_CONNECT_SUCCESS");
+    case CPlugin::Function::CPLUGIN_CONNECT_FAIL:              return F("CPLUGIN_CONNECT_FAIL");
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return F("CPLUGIN_PROTOCOL_SEND");
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return F("CPLUGIN_PROTOCOL_RECV");
@@ -175,6 +177,8 @@ bool mustLogCFunction(CPlugin::Function function) {
 
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return false;
+    case CPlugin::Function::CPLUGIN_CONNECT_SUCCESS:           return true;
+    case CPlugin::Function::CPLUGIN_CONNECT_FAIL:              return true;
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return false;
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return true;
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return true;

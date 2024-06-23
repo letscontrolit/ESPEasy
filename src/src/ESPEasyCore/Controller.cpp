@@ -234,7 +234,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
 
-  const unsigned long connect_start_time = millis();
+  const uint64_t statisticsTimerStart(getMicros64());
 
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, *ControllerSettings)) {
@@ -259,7 +259,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
+  count_connection_results(
+    MQTTresult, 
+    F("MQTT : Broker "), 
+    Settings.Protocol[controller_idx], 
+    statisticsTimerStart);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();
