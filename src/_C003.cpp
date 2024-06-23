@@ -85,7 +85,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c003_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c003_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C003_queue_element& element = static_cast<const C003_queue_element&>(element_base);
 // *INDENT-ON*
   bool success = false;
@@ -93,7 +93,7 @@ bool do_process_c003_delay_queue(int controller_number, const Queue_element_base
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
 
-  if (!try_connect_host(controller_number, client, ControllerSettings, F("TELNT: ")))
+  if (!try_connect_host(cpluginID, client, ControllerSettings, F("TELNT: ")))
   {
     return success;
   }
