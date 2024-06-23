@@ -743,11 +743,28 @@ size_t PubSubClient::flushBuffer() {
 
 bool PubSubClient::initBuffer()
 {
+    constexpr size_t size = sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE;
     if (buffer == nullptr) {
+#ifdef ESP32
+        buffer = (uint8_t*) heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (buffer == nullptr) {
+          buffer = (uint8_t*) malloc(size);
+        }
+#else
+        {
 #ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
+            // Try allocating on ESP8266 2nd heap
+            HeapSelectIram ephemeral;
 #endif
-        buffer = (uint8_t*) malloc(sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE);
+            buffer = (uint8_t*) malloc(size);
+            if (buffer != nullptr) return true;
+        }
+#ifdef USE_SECOND_HEAP
+        // Not successful, try allocating on (ESP8266) main heap
+        HeapSelectDram ephemeral;
+#endif
+        buffer = (uint8_t*) malloc(size);
+#endif
     }
     return buffer != nullptr;
 }
