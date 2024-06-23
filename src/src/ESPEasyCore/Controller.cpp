@@ -210,6 +210,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #endif
   
   MQTTclient.setClient(mqtt);
+  MQTTclient.setKeepAlive(10);
+  MQTTclient.setSocketTimeout(timeout);
 
   if (ControllerSettings->UseDNS) {
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
