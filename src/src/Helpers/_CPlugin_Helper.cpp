@@ -105,15 +105,17 @@ void log_connecting_fail(const __FlashStringHelper *prefix, int controller_numbe
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, unsigned long connect_start_time) {
-  WiFiEventData.connectDurations[controller_number] = timePassedSince(connect_start_time);
-
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, uint64_t statisticsTimerStart) {
+  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(controller_number);
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
     log_connecting_fail(prefix, controller_number);
+    STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_FAIL);
     return false;
   }
+  WiFiEventData.connectDurations[controller_number] = usecPassedSince(statisticsTimerStart) / 1000ul;
+  STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_SUCCESS);
   statusLED(true);
 
   if (WiFiEventData.connectionFailures > 0) {
@@ -123,7 +125,7 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
 }
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
-  START_TIMER;
+  const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
   if (!NetworkConnected()) {
     client.stop();
@@ -144,8 +146,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-  const unsigned long connect_start_time = millis();
-  bool success                           = ControllerSettings.beginPacket(client);
+  bool success = ControllerSettings.beginPacket(client);
 
   if (!success) {
     client.stop();
@@ -154,7 +155,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
     success,
     F("UDP  : "),
     controller_number,
-    connect_start_time);
+    statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
@@ -168,7 +169,7 @@ bool try_connect_host(int                        controller_number,
                       WiFiClient               & client,
                       ControllerSettingsStruct & ControllerSettings,
                       const __FlashStringHelper *loglabel) {
-  START_TIMER;
+  const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
   if (!NetworkConnected()) {
     client.stop();
@@ -200,8 +201,6 @@ bool try_connect_host(int                        controller_number,
   log_connecting_to(loglabel, controller_number, ControllerSettings);
 # endif // ifndef BUILD_NO_DEBUG
 
-  const unsigned long connect_start_time = millis();
-
   const bool success = ControllerSettings.connectToHost(client);
 
   if (!success) {
@@ -211,7 +210,7 @@ bool try_connect_host(int                        controller_number,
     success,
     loglabel,
     controller_number,
-    connect_start_time);
+    statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
@@ -240,7 +239,7 @@ String send_via_http(int                             controller_number,
     ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
-  const unsigned long connect_start_time = millis();
+  const uint64_t statisticsTimerStart(getMicros64());
   const String result                    = send_via_http(
     get_formatted_Controller_number(controller_number),
     timeout,
@@ -263,7 +262,7 @@ String send_via_http(int                             controller_number,
     success,
     F("HTTP  : "),
     controller_number,
-    connect_start_time);
+    statisticsTimerStart);
 
   return result;
 }
