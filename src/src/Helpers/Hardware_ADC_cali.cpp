@@ -26,13 +26,7 @@ bool Hardware_ADC_cali_t::init(int         pin,
                                adc_atten_t attenuation)
 {
 # if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
-  #  ifdef ESP32C6
-
-  // All calibration curves seem to be linear, so use high res linear interpolation.
-  _useHighResInterpolation = true;
-  #  else // ifdef ESP32C6
   _useHighResInterpolation = false;
-  #  endif // ifdef ESP32C6
 # elif ESP_IDF_VERSION_MAJOR >= 5
   _useHighResInterpolation = attenuation != adc_atten_t::ADC_ATTEN_DB_12;
 # else // if ESP_IDF_VERSION_MAJOR >= 5 &&  ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
@@ -44,9 +38,11 @@ bool Hardware_ADC_cali_t::init(int         pin,
   if (_adc_cali_handle != nullptr) {
 #  if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
     adc_cali_delete_scheme_curve_fitting(_adc_cali_handle);
+    _adc_cali_handle = nullptr;
 
 #  elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_delete_scheme_line_fitting(_adc_cali_handle);
+    _adc_cali_handle = nullptr;
 
 #  endif // if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
   }
@@ -95,8 +91,8 @@ float Hardware_ADC_cali_t::applyFactoryCalibration(float rawValue) const {
 
   if (!_useHighResInterpolation) {
 # if ESP_IDF_VERSION_MAJOR >= 5
-    int adc_low  = rawValue - 100;
-    int adc_high = rawValue + 100;
+    int adc_low  = (static_cast<int>(rawValue) - 128) & 0xFFFFFF80;
+    int adc_high = (static_cast<int>(rawValue) + 128) & 0xFFFFFF80;
 
     if (adc_low < 0) { adc_low = 0; }
 

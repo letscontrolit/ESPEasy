@@ -266,7 +266,7 @@ bool PluginStats_array::plugin_write_base(struct EventStruct *event, const Strin
   return success;
 }
 
-bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
+bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event, bool showTaskValues) const
 {
   bool somethingAdded = false;
 
@@ -285,10 +285,12 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
     somethingAdded = true;
   }
 
-  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (_plugin_stats[i] != nullptr) {
-      if (_plugin_stats[i]->webformLoad_show_stats(event)) {
-        somethingAdded = true;
+  if (showTaskValues) {
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        if (_plugin_stats[i]->webformLoad_show_stats(event)) {
+          somethingAdded = true;
+        }
       }
     }
   }

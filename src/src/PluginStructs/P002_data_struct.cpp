@@ -332,6 +332,10 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
 
+  if (_plugin_stats_array != nullptr) {
+    somethingAdded = _plugin_stats_array->webformLoad_show_stats(event, false);
+  }
+
   const PluginStats *stats = getPluginStats(0);
 
   if (stats != nullptr) {

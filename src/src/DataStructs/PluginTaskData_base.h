@@ -84,7 +84,7 @@ struct PluginTaskData_base {
 
   PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
 
-private:
+protected:
 
   // Array of pointers to PluginStats. One per task value.
   PluginStats_array *_plugin_stats_array = nullptr;

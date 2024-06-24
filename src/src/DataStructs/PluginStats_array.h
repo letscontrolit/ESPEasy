@@ -49,7 +49,7 @@ public:
   bool     plugin_write_base(struct EventStruct *event,
                              const String      & string);
 
-  bool     webformLoad_show_stats(struct EventStruct *event) const;
+  bool     webformLoad_show_stats(struct EventStruct *event, bool showTaskValues = true) const;
 
 # if FEATURE_CHART_JS
   void     plot_ChartJS(bool onlyJSON = false) const;
