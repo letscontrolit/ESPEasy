@@ -440,7 +440,9 @@ bool PubSubClient::loop_read() {
             if (_client->connected()) {
                 buffer[0] = MQTTPINGRESP;
                 buffer[1] = 0;
-                _client->write(buffer,2);
+                if (_client->write(buffer,2) != 0) {
+                    lastOutActivity = t;
+                }
             }
             break;
         } 
@@ -460,8 +462,11 @@ boolean PubSubClient::loop() {
     if (connected()) {
         unsigned long t = millis();
         // Send message at 2/3 of keepalive interval
+        // Wait for server-sent keep-alive till 3/2 of keepalive interval
         // Just to make sure the broker will not disconnect us
-        const int32_t keepalive_66pct = keepAlive_sec * 666;
+        const int32_t keepalive_66pct = pingOutstanding
+            ? keepAlive_sec * 1500
+            : keepAlive_sec * 666;
         if (((int32_t)(t - lastInActivity) > keepalive_66pct) || 
             ((int32_t)(t - lastOutActivity) > keepalive_66pct)) {
             if (pingOutstanding) {
@@ -617,6 +622,9 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint32_t length) {
         result = (rc == bytesToWrite);
         bytesRemaining -= rc;
         writeBuf += rc;
+        if (rc != 0) {
+            lastOutActivity = millis();
+        }
     }
     return result;
 #else
