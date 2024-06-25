@@ -175,6 +175,38 @@ class VL53L0X
     static uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel_period_pclks);
     static uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks);
     String initResult;
+
+public:
+
+    #define VL53L0X_NOT_WAITING -1
+    #define VL53L0X_WAITING     -2
+    #define VL53L0X_TIMEOUT     -3
+
+private:
+
+    // Returns true when measurement done.
+    // distance < 0 when there was an error, otherwise successful measurement
+    bool loop(int16_t& distance);
+
+public:
+
+    void startSingleMeasurement();
+
+    // Check if taking a sample has finished
+    // Return true when measurement has finished or aborted.
+    // Valid distance when distance >= 0
+    bool asyncReadRangeSingleMillimeters(int16_t& distance);
+
+private:
+
+    enum class state_e {
+      uninitialized,
+      initialized,
+      waitStartBitCleared,
+      waitMeasurement
+    };
+    state_e state = state_e::uninitialized;
+    uint32_t start_timeout_ms = 0;
 };
 
 #endif
