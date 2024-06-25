@@ -2,28 +2,30 @@
 
 #ifdef USES_P110
 
-P110_data_struct::P110_data_struct(uint8_t i2c_addr, int timing, bool range) : i2cAddress(i2c_addr), timing(timing), range(range) {}
+P110_data_struct::P110_data_struct(uint8_t i2c_addr, int timing, bool range) :
+  _i2cAddress(i2c_addr),
+  _timing(timing),
+  _range(range) {}
 
 // **************************************************************************/
 // Initialize VL53L0X
 // **************************************************************************/
 bool P110_data_struct::begin() {
-  initState = true;
-
-  sensor.setAddress(i2cAddress); // Initialize for configured address
+  _timeToWait = 0;
+  _initPhase  = P110_initPhases::Undefined;
+  sensor.setAddress(_i2cAddress); // Initialize for configured address
 
   if (!sensor.init()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Sensor not found, init failed for 0x%02x"), i2cAddress));
+      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Sensor not found, init failed for 0x%02x"), _i2cAddress));
       addLog(LOG_LEVEL_INFO, sensor.getInitResult());
     }
-    initState = false;
-    return initState;
+    return false;
   }
 
   sensor.setTimeout(500);
 
-  if (range) {
+  if (_range) {
     // lower the return signal rate limit (default is 0.25 MCPS)
     sensor.setSignalRateLimit(0.1);
 
@@ -32,78 +34,75 @@ bool P110_data_struct::begin() {
     sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
   }
 
-  sensor.setMeasurementTimingBudget(timing * 1000);
+  sensor.setMeasurementTimingBudget(_timing * 1000);
 
-  initPhase  = P110_initPhases::InitDelay;
-  timeToWait = timing + 50;
+  _initPhase  = P110_initPhases::InitDelay;
+  _timeToWait = millis() + _timing + 50;
 
-  return initState;
+  return true;
 }
 
 bool P110_data_struct::plugin_fifty_per_second() {
-  if (initPhase == P110_initPhases::InitDelay) {
-    timeToWait -= 20; // milliseconds
-
-    // String log = F("VL53L0X: remaining wait: ");
-    // log += timeToWait;
-    // addLogMove(LOG_LEVEL_INFO, log);
-
-    if (timeToWait <= 0) {
-      timeToWait = 0;
-      initPhase  = P110_initPhases::Ready;
+  if (_initPhase == P110_initPhases::InitDelay) {
+    if ((_timeToWait != 0) && timeOutReached(_timeToWait)) {
+      _timeToWait = 0;
+      _initPhase  = P110_initPhases::Ready;
     }
   }
   return true;
 }
 
-uint16_t P110_data_struct::getDistance() {
+int16_t P110_data_struct::getDistance() const {
   return _distance;
 }
 
-uint16_t P110_data_struct::readDistance() {
-  uint16_t dist = 0xFFFF; // Invalid
+int16_t P110_data_struct::readDistance() {
+  if (_initPhase != P110_initPhases::Ready) {
+    return P110_DISTANCE_UNINITIALIZED;
+  }
 
-  if (initPhase != P110_initPhases::Ready) { return dist; }
-
-  # ifdef P110_DEBUG_LOG
+# ifdef P110_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L0X: idx: 0x%02x init: %d"),
-                                          i2cAddress, initState));
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("VL53L0X: idx: 0x%02x init: %u"),
+                                          _i2cAddress, static_cast<uint8_t>(_initPhase)));
   }
-  # endif // P110_DEBUG_LOG
+# endif // P110_DEBUG_LOG
 
-  if (initState) {
-    success = true;
-    dist    = sensor.readRangeSingleMillimeters();
+  const uint16_t dist = sensor.readRangeSingleMillimeters();
 
-    if (sensor.timeoutOccurred()) {
-      # ifdef P110_DEBUG_LOG
-      addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
-      # endif // P110_DEBUG_LOG
-      success = false;
-    } else if (dist >= 8190u) {
-      # ifdef P110_DEBUG_LOG
-      addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
-      # endif // P110_DEBUG_LOG
-      success = false;
-    } else {
-      _distance = dist;
-    }
-
-    # ifdef P110_INFO_LOG
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Addr: 0x%02x / Timing: %d / Long Range: %d / success: %d / Distance: %d"),
-                                           i2cAddress, timing, range, success, dist));
-    }
-    # endif // P110_INFO_LOG
+  if (sensor.timeoutOccurred()) {
+# ifdef P110_DEBUG_LOG
+    addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
+# endif // P110_DEBUG_LOG
+    _distance = P110_DISTANCE_READ_TIMEOUT;
+  } else if (dist == 0xFFFF) {
+# ifdef P110_DEBUG_LOG
+    addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT: 0xFFFF"));
+# endif // P110_DEBUG_LOG
+    _distance = P110_DISTANCE_READ_ERROR;
+  } else if (dist >= 8190u) {
+# ifdef P110_DEBUG_LOG
+    addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
+# endif // P110_DEBUG_LOG
+    _distance = P110_DISTANCE_OUT_OF_RANGE;
+  } else {
+    _distance = dist;
   }
-  return dist;
+
+# ifdef P110_INFO_LOG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Addr: 0x%02x / Timing: %d / Long Range: %d / success: %d / Distance: %d"),
+                                         _i2cAddress, _timing, _range, success, dist));
+  }
+# endif // P110_INFO_LOG
+
+  return _distance;
 }
 
-bool P110_data_struct::isReadSuccessful() {
-  return success;
+bool P110_data_struct::isReadSuccessful() const {
+  return _distance >= 0;
 }
 
 #endif // ifdef USES_P110

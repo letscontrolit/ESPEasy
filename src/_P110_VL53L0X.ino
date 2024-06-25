@@ -150,22 +150,24 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P110_data) {
-        const uint16_t dist      = P110_data->getDistance();
-        const uint16_t p_dist    = UserVar.getFloat(event->TaskIndex, 0);
-        const int16_t  direct    = dist == p_dist ? 0 : (dist < p_dist ? -1 : 1);
-        const bool     triggered = (dist > (p_dist + P110_DELTA)) || (dist < (p_dist - P110_DELTA));
+        if (P110_data->isReadSuccessful()) {
+          const uint16_t dist      = P110_data->getDistance();
+          const uint16_t p_dist    = UserVar.getFloat(event->TaskIndex, 0);
+          const int16_t  direct    = dist == p_dist ? 0 : (dist < p_dist ? -1 : 1);
+          const bool     triggered = (dist > (p_dist + P110_DELTA)) || (dist < (p_dist - P110_DELTA));
 
         #ifdef P110_INFO_LOG
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLog(LOG_LEVEL_INFO, strformat(F("VL53L0x: Perform read: trig: %d, prev: %d, dist: %d"), triggered, p_dist, dist));
-        }
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(F("VL53L0x: Perform read: trig: %d, prev: %d, dist: %d"), triggered, p_dist, dist));
+          }
         #endif // ifdef P110_INFO_LOG
 
-        if (triggered || (P110_SEND_ALWAYS == 1)) {
-          UserVar.setFloat(event->TaskIndex, 0, dist); // Value is classified as invalid when > 8190, so no conversion or 'split' needed
-          UserVar.setFloat(event->TaskIndex, 1, direct);
-          success = true;
+          if (triggered || (P110_SEND_ALWAYS == 1)) {
+            UserVar.setFloat(event->TaskIndex, 0, dist); // Value is classified as invalid when > 8190, so no conversion or 'split' needed
+            UserVar.setFloat(event->TaskIndex, 1, direct);
+            success = true;
+          }
         }
       }
       break;
