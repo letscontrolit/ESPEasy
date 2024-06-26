@@ -178,7 +178,9 @@ void handle_json()
         LabelType::UNIT_NAME,
         LabelType::UPTIME,
         LabelType::UPTIME_MS,
+#if FEATURE_INTERNAL_TEMPERATURE
         LabelType::INTERNAL_TEMPERATURE,
+#endif
         LabelType::BOOT_TYPE,
         LabelType::RESET_REASON,
         LabelType::CPU_ECO_MODE,

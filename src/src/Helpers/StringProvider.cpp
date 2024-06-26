@@ -630,7 +630,7 @@ String getValue(LabelType::Enum label) {
 
 #if FEATURE_ETHERNET
 String getEthSpeed() {
-  return strformat(F("%dMbps"), EthLinkSpeed());
+  return strformat(F("%d [Mbps]"), EthLinkSpeed());
 }
 
 String getEthLinkSpeedState() {
@@ -661,9 +661,12 @@ String getExtendedValue(LabelType::Enum label) {
 
 String getFormNote(LabelType::Enum label)
 {
+  // Keep flash string till the end of the function, to reduce build size
+  // Otherwise lots of calls to String() constructor are included.
   const __FlashStringHelper *flash_str = F("");
 
   switch (label) {
+#ifndef MINIMAL_OTA
     case LabelType::CONNECT_HIDDEN_SSID:
       flash_str = F("Must be checked to connect to a hidden SSID");
       break;
@@ -703,18 +706,23 @@ String getFormNote(LabelType::Enum label)
       flash_str = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
       break;
 
+    case LabelType::WAIT_WIFI_CONNECT:
+      flash_str = F("Wait for 1000 msec right after connecting to WiFi.<BR>May improve success on some APs like Fritz!Box");
+      break;
+
+
+#endif
+
 #if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:
-    {
-      float maxTXpwr;
-      float sensitivity = GetRSSIthreshold(maxTXpwr);
-      return strformat(
-        F("Current max: %.2f dBm"), maxTXpwr);
-    }
     case LabelType::WIFI_SENS_MARGIN:
     {
       float maxTXpwr;
       float sensitivity = GetRSSIthreshold(maxTXpwr);
+      if (LabelType::WIFI_TX_MAX_PWR == label) {
+        return strformat(
+          F("Current max: %.2f dBm"), maxTXpwr);
+      }
       return strformat(
         F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: %.2f dBm"),
         sensitivity);
