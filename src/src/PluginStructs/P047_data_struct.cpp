@@ -167,7 +167,7 @@ float P047_data_struct::readTemperature() {
     Wire.endTransmission();
     delayMicroseconds(1000);
 
-    if (Wire.requestFrom(_address, 4) == 4) {
+    if (Wire.requestFrom(_address, 4u) == 4) {
       for (int b = 0; b < 4; ++b) {
         buf[b] = Wire.read();
       }
@@ -241,7 +241,7 @@ uint32_t P047_data_struct::getVersion() {
     Wire.write((uint8_t)P047_ADAFRUIT_GET_VERSION);
     Wire.endTransmission();
 
-    if (Wire.requestFrom(_address, 4) == 4) {
+    if (Wire.requestFrom(_address, 4u) == 4) {
       for (int b = 0; b < 4; ++b) {
         buf[b] = Wire.read();
       }

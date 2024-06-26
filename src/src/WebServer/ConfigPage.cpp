@@ -179,13 +179,12 @@ void handle_config() {
   addFormNote(F("WPA Key must be at least 8 characters long"));
 
   addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
-  addFormNote(F("Must be checked to connect to a hidden SSID"));
+
 #ifdef ESP32
   addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN, Settings.PassiveWiFiScan());
 #endif
   
   addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
-  addFormNote(F("Required for some AP brands like Mikrotik to connect to hidden SSID"));
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);

@@ -144,6 +144,9 @@ struct LabelType {
     WAIT_WIFI_CONNECT,
     HIDDEN_SSID_SLOW_CONNECT,
     CONNECT_HIDDEN_SSID,
+#ifdef ESP32
+    WIFI_PASSIVE_SCAN,
+#endif
     SDK_WIFI_AUTORECONNECT,
 #if FEATURE_USE_IPV6
     ENABLE_IPV6,
@@ -252,6 +255,9 @@ String getInternalLabel(LabelType::Enum label,
 const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
+
+String getFormNote(LabelType::Enum label);
+String getFormUnit(LabelType::Enum label);
 
 
 #endif // STRING_PROVIDER_TYPES_H

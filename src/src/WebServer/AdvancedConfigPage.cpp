@@ -325,8 +325,6 @@ void handle_advanced() {
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
-  addFormNote(F("When enabled, OTA updating can overwrite the filesystem and settings!"));
-  addFormNote(F("Requires reboot to activate"));
   # endif // ifndef NO_HTTP_UPDATER
   #if FEATURE_AUTO_DARK_MODE
   const __FlashStringHelper * cssModeNames[] = {
@@ -346,7 +344,6 @@ void handle_advanced() {
 
   #if FEATURE_RULES_EASY_COLOR_CODE
   addFormCheckBox(LabelType::DISABLE_RULES_AUTOCOMPLETE, Settings.DisableRulesCodeCompletion());
-  addFormNote(F("Also disables Rules syntax highlighting!"));
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
   #if FEATURE_TARSTREAM_SUPPORT
   addFormCheckBox(LabelType::DISABLE_SAVE_CONFIG_AS_TAR, Settings.DisableSaveConfigAsTar());
@@ -366,40 +363,24 @@ void handle_advanced() {
 
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
-  addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
 #ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
-  addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
 #if FEATURE_SET_WIFI_TX_PWR
-  {
-    float maxTXpwr;
-    float sensitivity = GetRSSIthreshold(maxTXpwr);
-    
-    addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
-    addUnit(F("dBm"));
-    addFormNote(strformat(
-      F("Current max: %.2f dBm"), maxTXpwr));
-
-    addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
-    addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
-    addFormNote(strformat(
-      F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: %.2f dBm"),
-      sensitivity));
-  }
+  addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
+  addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
   addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
 #endif
   {
     addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
-    addFormNote(F("Number of extra times to scan all channels to have higher chance of finding the desired AP"));
   }
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
 
-  addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,      Settings.WaitWiFiConnect());
-  addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT, Settings.SDK_WiFi_autoreconnect());
-  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
+  addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,        Settings.WaitWiFiConnect());
+  addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT,   Settings.SDK_WiFi_autoreconnect());
+  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT, Settings.HiddenSSID_SlowConnectPerBSSID());
 #ifdef ESP32
   addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN,        Settings.PassiveWiFiScan());
 #endif

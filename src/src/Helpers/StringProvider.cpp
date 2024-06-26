@@ -658,3 +658,155 @@ String getExtendedValue(LabelType::Enum label) {
   }
   return EMPTY_STRING;
 }
+
+String getFormNote(LabelType::Enum label)
+{
+  const __FlashStringHelper *flash_str = F("");
+
+  switch (label) {
+    case LabelType::CONNECT_HIDDEN_SSID:
+      flash_str = F("Must be checked to connect to a hidden SSID");
+      break;
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:
+      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP. Passive scan is typically faster.");
+      break;
+#endif // ifdef ESP32
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT:
+      flash_str = F("Required for some AP brands like Mikrotik to connect to hidden SSID");
+      break;
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:
+      flash_str = F("Toggling IPv6 requires reboot");
+      break;
+#endif // if FEATURE_USE_IPV6
+#ifndef NO_HTTP_UPDATER
+    case LabelType::ALLOW_OTA_UNLIMITED:
+      flash_str = F("When enabled, OTA updating can overwrite the filesystem and settings!<br>Requires reboot to activate");
+      break;
+#endif // ifndef NO_HTTP_UPDATER
+#if FEATURE_RULES_EASY_COLOR_CODE
+    case LabelType::DISABLE_RULES_AUTOCOMPLETE:
+      flash_str = F("Also disables Rules syntax highlighting!");
+      break;
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
+
+    case LabelType::FORCE_WIFI_NOSLEEP:
+      flash_str = F("Change WiFi sleep settings requires reboot to activate");
+      break;
+
+    case LabelType::CPU_ECO_MODE:
+      flash_str = F("Node may miss receiving packets with Eco mode enabled");
+      break;
+
+    case LabelType::WIFI_NR_EXTRA_SCANS:
+      flash_str = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
+      break;
+
+#if FEATURE_SET_WIFI_TX_PWR
+    case LabelType::WIFI_TX_MAX_PWR:
+    {
+      float maxTXpwr;
+      float sensitivity = GetRSSIthreshold(maxTXpwr);
+      return strformat(
+        F("Current max: %.2f dBm"), maxTXpwr);
+    }
+    case LabelType::WIFI_SENS_MARGIN:
+    {
+      float maxTXpwr;
+      float sensitivity = GetRSSIthreshold(maxTXpwr);
+      return strformat(
+        F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: %.2f dBm"),
+        sensitivity);
+    }
+#endif // if FEATURE_SET_WIFI_TX_PWR
+
+    default:
+      return EMPTY_STRING;
+  }
+
+  return flash_str;
+}
+
+
+String getFormUnit(LabelType::Enum label)
+{
+    const __FlashStringHelper *flash_str = F("");
+
+  switch (label) {
+#if FEATURE_SET_WIFI_TX_PWR
+    case LabelType::WIFI_TX_MAX_PWR:
+    case LabelType::WIFI_RSSI:
+      flash_str = F("dBm");
+      break;
+    case LabelType::WIFI_SENS_MARGIN:
+    case LabelType::WIFI_CUR_TX_PWR:
+      flash_str = F("dB");
+      break;
+#endif
+    case LabelType::TIME_WANDER:
+      flash_str = F("ppm");
+      break;
+#ifdef ESP32
+    case LabelType::HEAP_SIZE:
+    case LabelType::HEAP_MIN_FREE:
+    #ifdef BOARD_HAS_PSRAM
+    case LabelType::PSRAM_SIZE:
+    case LabelType::PSRAM_FREE:
+    case LabelType::PSRAM_MIN_FREE:
+    case LabelType::PSRAM_MAX_FREE_BLOCK:
+    #endif // BOARD_HAS_PSRAM
+#endif // ifdef ESP32
+    case LabelType::FREE_MEM:
+    case LabelType::FREE_STACK:
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:
+#endif
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
+    case LabelType::HEAP_MAX_FREE_BLOCK:
+  #endif
+#endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+
+      flash_str = F("byte");
+      break;
+    case LabelType::FLASH_CHIP_REAL_SIZE:
+    case LabelType::FLASH_IDE_SIZE:
+      flash_str = F("kB");
+      break;
+    case LabelType::UPTIME:
+      flash_str = F("min");
+      break;
+    case LabelType::LOAD_PCT:
+#if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
+    case LabelType::HEAP_FRAGMENTATION:
+  #endif
+#endif // if defined(CORE_POST_2_5_0)
+
+      flash_str = F("%");
+      break;
+
+    case LabelType::ESP_CHIP_FREQ:
+#ifdef ESP32
+    case LabelType::ESP_CHIP_XTAL_FREQ:
+    case LabelType::ESP_CHIP_APB_FREQ:
+#endif
+    case LabelType::FLASH_CHIP_SPEED:
+    case LabelType::FLASH_IDE_SPEED:
+      flash_str = F("MHz");
+      break;
+    #if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:
+      flash_str = F("&deg;C");
+      break;
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
+
+
+
+    default:
+      return EMPTY_STRING;
+  }
+
+  return flash_str;
+}

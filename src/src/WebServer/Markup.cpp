@@ -431,6 +431,7 @@ void addUnit(const __FlashStringHelper *unit)
 
 void addUnit(const String& unit)
 {
+  if (unit.isEmpty()) return;
   addHtml(F(" ["));
   addHtml(unit);
   addHtml(']');
@@ -517,6 +518,7 @@ void addRowLabel(LabelType::Enum label) {
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
   addHtml(getValue(label));
+  addUnit(getFormUnit(label));
 }
 
 void addRowLabelValues(const LabelType::Enum labels[]) {
@@ -537,6 +539,7 @@ void addRowLabelValues(const LabelType::Enum labels[]) {
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));
+  addUnit(getFormUnit(label));
 }
 
 // ********************************************************************************

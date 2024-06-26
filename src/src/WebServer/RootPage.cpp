@@ -159,7 +159,7 @@ void handle_root() {
     if (wdcounter > 0)
     {
       addHtmlFloat(getCPUload());
-      addHtml(F("% (LC="));
+      addHtml(F("[%] (LC="));
       addHtmlInt(getLoopCountPerSec());
       addHtml(')');
     }
@@ -172,6 +172,7 @@ void handle_root() {
         lowestRAM,
         lowestRAMfunction.c_str()));
 # endif // ifndef BUILD_NO_RAM_TRACKER
+      addUnit(getFormUnit(LabelType::FREE_MEM));
     }
     {
         # ifdef USE_SECOND_HEAP
@@ -187,6 +188,7 @@ void handle_root() {
         lowestFreeStack,
         lowestFreeStackfunction.c_str()));
 # endif // ifndef BUILD_NO_RAM_TRACKER
+      addUnit(getFormUnit(LabelType::FREE_STACK));
     }
 
   # if FEATURE_ETHERNET
@@ -204,7 +206,7 @@ void handle_root() {
 #endif
       addRowLabel(LabelType::WIFI_RSSI);
       addHtml(strformat(
-        F("%d dBm (%s)"),
+        F("%d [dBm] (%s)"),
         WiFi.RSSI(),
         WiFi.SSID().c_str()));
     }

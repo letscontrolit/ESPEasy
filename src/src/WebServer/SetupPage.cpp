@@ -206,13 +206,12 @@ void handle_setup() {
       addFormHeader(F("Advanced WiFi settings"));
 
       addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
-      addFormNote(F("Must be checked to connect to a hidden SSID"));
+
 #ifdef ESP32
       addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN, Settings.PassiveWiFiScan());
 #endif
 
       addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
-      addFormNote(F("Required for some AP brands like Mikrotik to connect to hidden SSID"));
 
       html_BR();
       html_BR();

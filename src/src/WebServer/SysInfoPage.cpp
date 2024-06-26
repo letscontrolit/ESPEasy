@@ -310,7 +310,6 @@ void handle_sysinfo_basicInfo() {
     #endif
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
-    addUnit(F("ppm"));
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -354,6 +353,7 @@ void handle_sysinfo_memory() {
   addRowLabel(LabelType::FREE_MEM);
   {
     addHtmlInt(freeMem);
+    addUnit(getFormUnit(LabelType::FREE_MEM));
 # ifndef BUILD_NO_RAM_TRACKER
     addHtml(F(" ("));
     addHtmlInt(lowestRAM);
@@ -370,7 +370,6 @@ void handle_sysinfo_memory() {
 # if defined(CORE_POST_2_5_0)
   #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml('%');
   #  endif // ifndef LIMIT_BUILD_SIZE
   {
     #ifdef USE_SECOND_HEAP
@@ -383,6 +382,7 @@ void handle_sysinfo_memory() {
   addRowLabel(LabelType::FREE_STACK);
   {
     addHtmlInt(getCurrentFreeStack());
+    addUnit(getFormUnit(LabelType::FREE_STACK));
 # ifndef BUILD_NO_RAM_TRACKER
     addHtml(F(" ("));
     addHtmlInt(lowestFreeStack);
@@ -649,12 +649,9 @@ void handle_sysinfo_ESP_Board() {
     formatToHex(chipID, 6).c_str()));
 
   addRowLabelValue(LabelType::ESP_CHIP_FREQ);
-  addHtml(F(" MHz"));
 #   ifdef ESP32
   addRowLabelValue(LabelType::ESP_CHIP_XTAL_FREQ);
-  addHtml(F(" MHz"));
   addRowLabelValue(LabelType::ESP_CHIP_APB_FREQ);
-  addHtml(F(" MHz"));
 #   endif // ifdef ESP32
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
@@ -708,20 +705,20 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
   addHtmlInt(realSize / 1024);
-  addHtml(F(" kB"));
+  addHtml(F(" [kB]"));
 
   addRowLabel(LabelType::FLASH_IDE_SIZE);
   addHtmlInt(ideSize / 1024);
-  addHtml(F(" kB"));
+  addHtml(F(" [kB]"));
 
   addRowLabel(LabelType::FLASH_CHIP_SPEED);
   addHtmlInt(getFlashChipSpeed() / 1000000);
-  addHtml(F(" MHz"));
+  addHtml(F(" [MHz]"));
 
   // Please check what is supported for the ESP32
   addRowLabel(LabelType::FLASH_IDE_SPEED);
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
-  addHtml(F(" MHz"));
+  addHtml(F(" [MHz]"));
 
   addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
@@ -735,7 +732,7 @@ void handle_sysinfo_Storage() {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
     addHtml(strformat(
-      F("%d kB (%d kB free)"),
+      F("%d [kB] (%d kB free)"),
       getSketchSize() / 1024,
       getFreeSketchSpace() / 1024));
 
@@ -747,7 +744,7 @@ void handle_sysinfo_Storage() {
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     addHtml(strformat(
-      F("%d kB (%d bytes)"),
+      F("%d [kB] (%d bytes)"),
       maxSketchSize / 1024,
       maxSketchSize));
 
@@ -762,7 +759,7 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FS_SIZE);
   addHtml(strformat(
-    F("%d kB (%d kB free)"),
+    F("%d [kB] (%d kB free)"),
     SpiffsTotalBytes() / 1024,
     SpiffsFreeSpace() / 1024));
 
