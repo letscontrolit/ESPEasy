@@ -374,6 +374,9 @@ bool WiFiConnected() {
 }
 
 void WiFiConnectRelaxed() {
+  if (!WiFiEventData.processedDisconnect) {
+    processDisconnect();
+  }
   if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
     if (WiFiEventData.wifiConnectInProgress) {
       if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) { 
