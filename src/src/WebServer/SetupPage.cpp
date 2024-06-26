@@ -113,6 +113,10 @@ void handle_setup() {
               // Hidden SSID
               Settings.IncludeHiddenSSID(isFormItemChecked(LabelType::CONNECT_HIDDEN_SSID));
               Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
+#ifdef ESP32
+              Settings.PassiveWiFiScan(isFormItemChecked(LabelType::WIFI_PASSIVE_SCAN));
+#endif
+
               addHtmlError(SaveSettings());
               WiFiEventData.wifiSetupConnect         = true;
               WiFiEventData.wifiConnectAttemptNeeded = true;
@@ -203,6 +207,9 @@ void handle_setup() {
 
       addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
       addFormNote(F("Must be checked to connect to a hidden SSID"));
+#ifdef ESP32
+      addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN, Settings.PassiveWiFiScan());
+#endif
 
       addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
       addFormNote(F("Required for some AP brands like Mikrotik to connect to hidden SSID"));
@@ -236,7 +243,10 @@ void handle_setup() {
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
-  const bool needsRescan = scanCompleteStatus <= 0 || WiFiScanAllowed();
+  const bool needsRescan = 
+    (scanCompleteStatus == 0 || // No AP found
+     scanCompleteStatus == -2)  // Scan not triggered
+    && WiFiScanAllowed();
   if (needsRescan) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);

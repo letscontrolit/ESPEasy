@@ -288,6 +288,9 @@ void handle_json()
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
 #endif
         LabelType::WIFI_NR_EXTRA_SCANS,
+#ifdef ESP32
+        LabelType::WIFI_PASSIVE_SCAN,
+#endif
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
 

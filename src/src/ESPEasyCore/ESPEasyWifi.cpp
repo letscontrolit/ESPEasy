@@ -1122,8 +1122,8 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 #endif
 #ifdef ESP32
-    const bool passive = false;
-    const uint32_t max_ms_per_chan = 300;
+    const bool passive = Settings.PassiveWiFiScan();
+    const uint32_t max_ms_per_chan = 120;
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
 #endif
     if (!async) {

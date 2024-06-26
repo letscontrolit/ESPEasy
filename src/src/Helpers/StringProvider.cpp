@@ -195,6 +195,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
     case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
     case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:      return F("Passive WiFi Scan");
+#endif
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
 #if FEATURE_USE_IPV6
@@ -517,6 +520,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
     case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:      return jsonBool(Settings.PassiveWiFiScan());
+#endif
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
     case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.SDK_WiFi_autoreconnect());
 #if FEATURE_USE_IPV6

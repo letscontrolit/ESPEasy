@@ -542,6 +542,9 @@ void handle_sysinfo_WiFiSettings() {
 #endif
     LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
     LabelType::WAIT_WIFI_CONNECT,
+#ifdef ESP32
+    LabelType::WIFI_PASSIVE_SCAN,
+#endif
     LabelType::HIDDEN_SSID_SLOW_CONNECT,
     LabelType::CONNECT_HIDDEN_SSID,
     LabelType::SDK_WIFI_AUTORECONNECT,
