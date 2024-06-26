@@ -158,37 +158,41 @@ void handle_root() {
 
     if (wdcounter > 0)
     {
-      addHtmlFloat(getCPUload());
-      addHtml(F("[%] (LC="));
-      addHtmlInt(getLoopCountPerSec());
-      addHtml(')');
+      addHtml(strformat(
+        F("%.2f [%%] (LC=%d)"),
+        getCPUload(),
+        getLoopCountPerSec()));
     }
+
+#if FEATURE_INTERNAL_TEMPERATURE
+    addRowLabelValue(LabelType::INTERNAL_TEMPERATURE);
+#endif
     {
       addRowLabel(LabelType::FREE_MEM);
       addHtmlInt(freeMem);
+      addUnit(getFormUnit(LabelType::FREE_MEM));
 # ifndef BUILD_NO_RAM_TRACKER
       addHtml(strformat(
         F(" (%d - %s)"),
         lowestRAM,
         lowestRAMfunction.c_str()));
 # endif // ifndef BUILD_NO_RAM_TRACKER
-      addUnit(getFormUnit(LabelType::FREE_MEM));
     }
     {
-        # ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
       addRowLabelValue(LabelType::FREE_HEAP_IRAM);
-      # endif // ifdef USE_SECOND_HEAP
+# endif // ifdef USE_SECOND_HEAP
     }
     {
       addRowLabel(LabelType::FREE_STACK);
       addHtmlInt(getCurrentFreeStack());
+      addUnit(getFormUnit(LabelType::FREE_STACK));
 # ifndef BUILD_NO_RAM_TRACKER
       addHtml(strformat(
         F(" (%d - %s)"),
         lowestFreeStack,
         lowestFreeStackfunction.c_str()));
 # endif // ifndef BUILD_NO_RAM_TRACKER
-      addUnit(getFormUnit(LabelType::FREE_STACK));
     }
 
   # if FEATURE_ETHERNET

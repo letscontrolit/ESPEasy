@@ -262,7 +262,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
     #if FEATURE_INTERNAL_TEMPERATURE
-    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal temperature (ESP32)");
+    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal Temperature");
     #endif // if FEATURE_INTERNAL_TEMPERATURE
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
@@ -774,9 +774,11 @@ String getFormUnit(LabelType::Enum label)
     case LabelType::FLASH_IDE_SIZE:
       flash_str = F("kB");
       break;
+/*
     case LabelType::UPTIME:
       flash_str = F("min");
       break;
+*/
     case LabelType::LOAD_PCT:
 #if defined(CORE_POST_2_5_0)
   #ifndef LIMIT_BUILD_SIZE
@@ -796,11 +798,11 @@ String getFormUnit(LabelType::Enum label)
     case LabelType::FLASH_IDE_SPEED:
       flash_str = F("MHz");
       break;
-    #if FEATURE_INTERNAL_TEMPERATURE
+#if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:
       flash_str = F("&deg;C");
       break;
-    #endif // if FEATURE_INTERNAL_TEMPERATURE
+#endif // if FEATURE_INTERNAL_TEMPERATURE
 
 
 

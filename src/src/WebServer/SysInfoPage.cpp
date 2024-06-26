@@ -48,6 +48,11 @@
 #  include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
 # endif // if FEATURE_MQTT
 
+
+#if FEATURE_INTERNAL_TEMPERATURE
+#include "../Helpers/Hardware_temperature_sensor.h"
+#endif
+
 # ifdef ESP32
 #  include <esp_partition.h>
 # endif // ifdef ESP32
@@ -72,6 +77,9 @@ void handle_sysinfo_json() {
   json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
   json_number(F("cpu_load"),   toString(getCPUload()));
+#if FEATURE_INTERNAL_TEMPERATURE
+  json_number(F("cpu_temp"),   toString(getInternalTemperature()));
+#endif
   json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
 
@@ -322,10 +330,14 @@ void handle_sysinfo_basicInfo() {
   if (wdcounter > 0)
   {
     addHtml(strformat(
-      F("%.2f%% (LC=%d)"),
+      F("%.2f [%%] (LC=%d)"),
       getCPUload(),
       getLoopCountPerSec()));
   }
+#if FEATURE_INTERNAL_TEMPERATURE
+  addRowLabelValue(LabelType::INTERNAL_TEMPERATURE);
+#endif
+
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
 
