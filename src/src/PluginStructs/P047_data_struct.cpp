@@ -160,6 +160,7 @@ float P047_data_struct::readTemperature() {
   } else if (P047_MODEL_ADAFRUIT == _model) {
     uint8_t buf[4]{};
     bool    isOk;
+    const uint8_t toRead = 4;
 
     Wire.beginTransmission(_address);
     Wire.write((uint8_t)P047_ADAFRUIT_STATUS_BASE);
@@ -167,8 +168,8 @@ float P047_data_struct::readTemperature() {
     Wire.endTransmission();
     delayMicroseconds(1000);
 
-    if (Wire.requestFrom(_address, 4) == 4) {
-      for (int b = 0; b < 4; ++b) {
+    if (Wire.requestFrom(_address, toRead) == toRead) {
+      for (uint8_t b = 0; b < toRead; ++b) {
         buf[b] = Wire.read();
       }
     }
@@ -235,14 +236,15 @@ uint32_t P047_data_struct::getVersion() {
   } else if (P047_MODEL_ADAFRUIT == _model) {
     uint8_t buf[4]{};
     bool    isOk = false;
+    const uint8_t toRead = 4;
 
     Wire.beginTransmission(_address);
     Wire.write((uint8_t)P047_ADAFRUIT_STATUS_BASE);
     Wire.write((uint8_t)P047_ADAFRUIT_GET_VERSION);
     Wire.endTransmission();
 
-    if (Wire.requestFrom(_address, 4) == 4) {
-      for (int b = 0; b < 4; ++b) {
+    if (Wire.requestFrom(_address, toRead) == toRead) {
+      for (uint8_t b = 0; b < toRead; ++b) {
         buf[b] = Wire.read();
       }
     }
