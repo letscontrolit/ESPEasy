@@ -156,6 +156,10 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
         if (P110_data->isReadSuccessful()) {
           const int16_t  dist      = P110_data->getDistance();
           const int16_t  p_dist    = UserVar.getFloat(event->TaskIndex, 0);
+          // Check trend:
+          //  0 = equal
+          // -1 = move closer
+          //  1 = move away
           const int16_t  direct    = dist == p_dist ? 0 : (dist < p_dist ? -1 : 1);
           const bool     triggered = (dist > (p_dist + P110_DELTA)) || (dist < (p_dist - P110_DELTA));
 
@@ -168,7 +172,7 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
 
           if (triggered || (P110_SEND_ALWAYS == 1)) {
             UserVar.setFloat(event->TaskIndex, 0, dist); // Value is classified as invalid when > 8190, so no conversion or 'split' needed
-            UserVar.setFloat(event->TaskIndex, 1, direct);
+            UserVar.setFloat(event->TaskIndex, 1, direct); // Trend of value
             success = true;
           }
         }

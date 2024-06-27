@@ -56,6 +56,7 @@ bool P110_data_struct::plugin_fifty_per_second() {
 
 int16_t P110_data_struct::getDistance() {
   const int res = _distance;
+
   _distance = P110_DISTANCE_WAITING;
   return res;
 }
@@ -65,9 +66,21 @@ int16_t P110_data_struct::readDistance() {
     return P110_DISTANCE_UNINITIALIZED;
   }
 
-  const uint16_t dist = sensor.readRangeContinuousMillimeters();
+  int16_t dist{};
 
-  if (dist == 65534) {
+  if (sensor.asyncReadRangeContinuousMillimeters(dist)) {
+    if ((dist >= 0) && (dist < 8192)) {
+      // Only keep a copy of valid distance readings.
+      // Since the distance reading is later called from PLUGIN_READ,
+      // we might have had a new reading inbetween which could be a "still waiting"
+      // value and then we lost the actual reading.
+
+      _distance = dist;
+      return _distance;
+    }
+  }
+
+  if (dist == VL53L0X_WAITING) {
     // Just waiting
     // No need to keep sending many logs per second
     return P110_DISTANCE_WAITING;
@@ -87,24 +100,17 @@ int16_t P110_data_struct::readDistance() {
     addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
 # endif // P110_DEBUG_LOG
     return P110_DISTANCE_READ_TIMEOUT;
-  } else if (dist == 0xFFFF) {
-# ifdef P110_DEBUG_LOG
-    addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT: 0xFFFF"));
-# endif // P110_DEBUG_LOG
-    return P110_DISTANCE_READ_ERROR;
   } else if (dist >= 8190u) {
 # ifdef P110_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
 # endif // P110_DEBUG_LOG
     return P110_DISTANCE_OUT_OF_RANGE;
-  } 
+  }
 
-  // Only keep a copy of actual distance readings.
-  // Since the distance reading is later called from PLUGIN_READ, 
-  // we might have had a new reading inbetween which could be a "still waiting"
-  // value and then we lost the actual reading.
-  _distance = dist;
-  return _distance;
+# ifdef P110_DEBUG_LOG
+  addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT: 0xFFFF"));
+# endif // P110_DEBUG_LOG
+  return P110_DISTANCE_READ_ERROR;
 }
 
 bool P110_data_struct::isReadSuccessful() const {

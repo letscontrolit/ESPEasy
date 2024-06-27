@@ -46,6 +46,9 @@ public:
 
   bool    begin(uint32_t interval_ms);
   int16_t readDistance();
+
+  // Return last reading and clear the cached _distance value
+  // This way we know if there was a new successful reading since last call of getDistance()
   int16_t getDistance();
   bool    isReadSuccessful() const;
   bool    plugin_fifty_per_second();
