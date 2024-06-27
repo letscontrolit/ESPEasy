@@ -197,6 +197,11 @@ public:
     // Valid distance when distance >= 0
     bool asyncReadRangeSingleMillimeters(int16_t& distance);
 
+    // Check if new sample is ready.
+    // Return true when measurement has finished or aborted.
+    // Valid distance when distance >= 0
+    bool asyncReadRangeContinuousMillimeters(int16_t& distance);
+
 private:
 
     enum class state_e {

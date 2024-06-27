@@ -25,12 +25,14 @@
 # define P110_DISTANCE_READ_TIMEOUT   -2
 # define P110_DISTANCE_READ_ERROR     -3
 # define P110_DISTANCE_OUT_OF_RANGE   -4
+# define P110_DISTANCE_WAITING        -5
 
 
 enum class P110_initPhases : uint8_t {
-  Ready     = 0x00,
-  InitDelay = 0x01,
-  Undefined = 0xFF
+  Undefined       = 0xFF,
+  InitDelay       = 0x00,
+  Ready           = 0x01,
+  WaitMeasurement = 0x02
 };
 
 struct P110_data_struct : public PluginTaskData_base {
@@ -42,9 +44,9 @@ public:
   P110_data_struct()          = delete;
   virtual ~P110_data_struct() = default;
 
-  bool    begin();
+  bool    begin(uint32_t interval_ms);
   int16_t readDistance();
-  int16_t getDistance() const;
+  int16_t getDistance();
   bool    isReadSuccessful() const;
   bool    plugin_fifty_per_second();
 

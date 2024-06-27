@@ -832,12 +832,16 @@ uint16_t VL53L0X::readRangeContinuousMillimeters()
   start_timeout_ms = millis();
   while (!loop(distance)) {
     if (VL53L0X_NOT_WAITING == distance) {
-      return 65535;
+      return 65535u;
     }
   }
   if (VL53L0X_TIMEOUT == distance)
   {
-    return 65535;
+    return 65535u;
+  }
+  if (VL53L0X_WAITING == distance)
+  {
+    return 65534u;
   }
   return distance;
 }
@@ -867,6 +871,11 @@ bool VL53L0X::asyncReadRangeSingleMillimeters(int16_t& distance)
     return true;
   }
   return false;
+}
+
+bool VL53L0X::asyncReadRangeContinuousMillimeters(int16_t& distance)
+{
+  return loop(distance);
 }
 
 // Performs a single-shot range measurement and returns the reading in
@@ -1100,7 +1109,6 @@ bool VL53L0X::loop(int16_t& distance) {
     }
     case state_e::waitMeasurement:
     {
-      distance = VL53L0X_WAITING;
       if ((readReg(RESULT_INTERRUPT_STATUS) & 0x07) == 0) {
         if (timePassedSince > io_timeout) {
           distance = VL53L0X_TIMEOUT;
@@ -1108,17 +1116,17 @@ bool VL53L0X::loop(int16_t& distance) {
           start_timeout_ms = millis();
           return true;
         }
-      } else {
-        // assumptions: Linearity Corrective Gain is 1000 (default);
-        // fractional ranging is not enabled
-        distance = readReg16Bit(RESULT_RANGE_STATUS + 10);
-
-        writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
-        did_timeout = false;
-        start_timeout_ms = millis();
-        return true;
+        distance = VL53L0X_WAITING;
+        return false;
       }
-      return false;
+      // assumptions: Linearity Corrective Gain is 1000 (default);
+      // fractional ranging is not enabled
+      distance = readReg16Bit(RESULT_RANGE_STATUS + 10);
+
+      writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
+      did_timeout = false;
+      start_timeout_ms = millis();
+      return true;
     }
   }
   return true;

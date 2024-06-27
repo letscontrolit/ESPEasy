@@ -142,7 +142,10 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P110_data_struct(P110_I2C_ADDRESS, P110_TIMING, P110_RANGE == 1));
       P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P110_data) && P110_data->begin(); // Start the sensor
+      if (nullptr != P110_data) {
+        const uint32_t interval_ms = Settings.TaskDeviceTimer[event->TaskIndex] * 1000;
+        success = P110_data->begin(interval_ms); // Start the sensor
+      }
       break;
     }
     case PLUGIN_READ:
@@ -151,8 +154,8 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P110_data) {
         if (P110_data->isReadSuccessful()) {
-          const uint16_t dist      = P110_data->getDistance();
-          const uint16_t p_dist    = UserVar.getFloat(event->TaskIndex, 0);
+          const int16_t  dist      = P110_data->getDistance();
+          const int16_t  p_dist    = UserVar.getFloat(event->TaskIndex, 0);
           const int16_t  direct    = dist == p_dist ? 0 : (dist < p_dist ? -1 : 1);
           const bool     triggered = (dist > (p_dist + P110_DELTA)) || (dist < (p_dist - P110_DELTA));
 
@@ -178,10 +181,7 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P110_data) {
-        P110_data->readDistance();
-
-        if (P110_data->isReadSuccessful() && (Settings.TaskDeviceTimer[event->TaskIndex] == 0)) { // Trigger as soon as there's a valid
-                                                                                                  // measurement and 0 interval is set
+        if (P110_data->readDistance() >= 0) {
           Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
       }

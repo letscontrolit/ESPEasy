@@ -10,7 +10,7 @@ P110_data_struct::P110_data_struct(uint8_t i2c_addr, int timing, bool range) :
 // **************************************************************************/
 // Initialize VL53L0X
 // **************************************************************************/
-bool P110_data_struct::begin() {
+bool P110_data_struct::begin(uint32_t interval_ms) {
   _timeToWait = 0;
   _initPhase  = P110_initPhases::Undefined;
   sensor.setAddress(_i2cAddress); // Initialize for configured address
@@ -39,6 +39,8 @@ bool P110_data_struct::begin() {
   _initPhase  = P110_initPhases::InitDelay;
   _timeToWait = millis() + _timing + 50;
 
+  sensor.startContinuous(interval_ms);
+
   return true;
 }
 
@@ -52,14 +54,25 @@ bool P110_data_struct::plugin_fifty_per_second() {
   return true;
 }
 
-int16_t P110_data_struct::getDistance() const {
-  return _distance;
+int16_t P110_data_struct::getDistance() {
+  const int res = _distance;
+  _distance = P110_DISTANCE_WAITING;
+  return res;
 }
 
 int16_t P110_data_struct::readDistance() {
   if (_initPhase != P110_initPhases::Ready) {
     return P110_DISTANCE_UNINITIALIZED;
   }
+
+  const uint16_t dist = sensor.readRangeContinuousMillimeters();
+
+  if (dist == 65534) {
+    // Just waiting
+    // No need to keep sending many logs per second
+    return P110_DISTANCE_WAITING;
+  }
+
 
 # ifdef P110_DEBUG_LOG
 
@@ -69,35 +82,28 @@ int16_t P110_data_struct::readDistance() {
   }
 # endif // P110_DEBUG_LOG
 
-  const uint16_t dist = sensor.readRangeSingleMillimeters();
-
   if (sensor.timeoutOccurred()) {
 # ifdef P110_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
 # endif // P110_DEBUG_LOG
-    _distance = P110_DISTANCE_READ_TIMEOUT;
+    return P110_DISTANCE_READ_TIMEOUT;
   } else if (dist == 0xFFFF) {
 # ifdef P110_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, F("VL53L0X: NO MEASUREMENT: 0xFFFF"));
 # endif // P110_DEBUG_LOG
-    _distance = P110_DISTANCE_READ_ERROR;
+    return P110_DISTANCE_READ_ERROR;
   } else if (dist >= 8190u) {
 # ifdef P110_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
 # endif // P110_DEBUG_LOG
-    _distance = P110_DISTANCE_OUT_OF_RANGE;
-  } else {
-    _distance = dist;
-  }
+    return P110_DISTANCE_OUT_OF_RANGE;
+  } 
 
-# ifdef P110_INFO_LOG
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Addr: 0x%02x / Timing: %d / Long Range: %d / success: %d / Distance: %d"),
-                                         _i2cAddress, _timing, _range, success, dist));
-  }
-# endif // P110_INFO_LOG
-
+  // Only keep a copy of actual distance readings.
+  // Since the distance reading is later called from PLUGIN_READ, 
+  // we might have had a new reading inbetween which could be a "still waiting"
+  // value and then we lost the actual reading.
+  _distance = dist;
   return _distance;
 }
 
