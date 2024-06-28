@@ -296,8 +296,9 @@ void handle_json()
 #endif
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
-
+#ifndef ESP32
         LabelType::WAIT_WIFI_CONNECT,
+#endif
         LabelType::HIDDEN_SSID_SLOW_CONNECT,
         LabelType::CONNECT_HIDDEN_SSID,
         LabelType::SDK_WIFI_AUTORECONNECT,

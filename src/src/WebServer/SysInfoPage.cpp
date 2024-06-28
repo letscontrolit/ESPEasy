@@ -553,7 +553,9 @@ void handle_sysinfo_WiFiSettings() {
     LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
     LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
+#ifndef ESP32
     LabelType::WAIT_WIFI_CONNECT,
+#endif
 #ifdef ESP32
     LabelType::WIFI_PASSIVE_SCAN,
 #endif

@@ -193,7 +193,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return F("Force WiFi No Sleep");
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
+#ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
+#endif
     case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
 #ifdef ESP32
     case LabelType::WIFI_PASSIVE_SCAN:      return F("Passive WiFi Scan");
@@ -518,7 +520,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return jsonBool(Settings.WifiNoneSleep());
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
+#ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
+#endif
     case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
 #ifdef ESP32
     case LabelType::WIFI_PASSIVE_SCAN:      return jsonBool(Settings.PassiveWiFiScan());
@@ -705,11 +709,11 @@ String getFormNote(LabelType::Enum label)
     case LabelType::WIFI_NR_EXTRA_SCANS:
       flash_str = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
       break;
-
+#ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:
       flash_str = F("Wait for 1000 msec right after connecting to WiFi.<BR>May improve success on some APs like Fritz!Box");
       break;
-
+#endif
 
 #endif
 

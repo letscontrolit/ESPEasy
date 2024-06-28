@@ -472,6 +472,7 @@ void AttemptWiFiConnect() {
   if (WiFiEventData.unprocessedWifiEvents()) {
     return;
   }
+  setSTA(false);
 
   setSTA(true);
 
@@ -528,10 +529,15 @@ void AttemptWiFiConnect() {
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
+#ifdef ESP32
+  // Always wait for a second on ESP32
+      WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
+#else
       if (Settings.WaitWiFiConnect() || candidate.bits.isHidden) {
 //        WiFi.waitForConnectResult(candidate.isHidden ? 3000 : 1000);  // https://github.com/arendst/Tasmota/issues/14985
         WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
+#endif
       delay(1);
     } else {
       WiFiEventData.wifiConnectInProgress = false;
@@ -918,6 +924,9 @@ void WifiDisconnect()
 {
   if (!WiFiEventData.processedDisconnect || 
        WiFiEventData.processingDisconnect.isSet()) {
+    return;
+  }
+  if (WiFi.status() == WL_DISCONNECTED) {
     return;
   }
   // Prevent recursion

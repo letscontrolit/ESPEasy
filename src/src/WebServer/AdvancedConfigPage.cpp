@@ -130,8 +130,9 @@ void handle_advanced() {
     #if FEATURE_I2C_DEVICE_CHECK
     Settings.CheckI2Cdevice(isFormItemChecked(LabelType::ENABLE_I2C_DEVICE_CHECK));
     #endif // if FEATURE_I2C_DEVICE_CHECK
-
+#ifndef ESP32
     Settings.WaitWiFiConnect(isFormItemChecked(LabelType::WAIT_WIFI_CONNECT));
+#endif
     Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
     Settings.SDK_WiFi_autoreconnect(isFormItemChecked(LabelType::SDK_WIFI_AUTORECONNECT));
 #ifdef ESP32
@@ -377,8 +378,9 @@ void handle_advanced() {
   }
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
-
+#ifndef ESP32
   addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,        Settings.WaitWiFiConnect());
+#endif
   addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT,   Settings.SDK_WiFi_autoreconnect());
   addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT, Settings.HiddenSSID_SlowConnectPerBSSID());
 #ifdef ESP32
