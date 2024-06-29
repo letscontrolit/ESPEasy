@@ -466,60 +466,6 @@ static const uint8_t PROGMEM initcmd_9486[] = {   // ILI9486
 
 // clang-format on
 
-// clang-format off
-static const uint8_t PROGMEM initcmd_9488[] = { // ILI9488
-  // Set gamma
-  ILI9341_GMCTRP1, 15,              0x00,               0x03,               0x09,               0x08,               0x16,               0x0A,
-  0x3F,            0x78,            0x4C,               0x09,               0x0A,               0x08,               0x16,               0x1A,
-  0x0F,
-
-  // Set gamma
-  ILI9341_GMCTRN1, 15,              0x00,               0x16,               0x19,               0x03,               0x0F,               0x05,
-  0x32,            0x45,            0x46,               0x04,               0x0E,               0x0D,               0x35,               0x37,
-  0x0F,
-
-  // Power control  VRH[5:0]
-  ILI9341_PWCTR1,  2,               0x17,               0x15,
-
-  // Power control SAP[2:0];BT[3:0]
-  ILI9341_PWCTR2,  1,               0x41,
-
-  // VCM control
-  ILI9341_VMCTR1,  3,               0x00,               0x12,               0x80,
-
-  // Memory access Control
-  ILI9341_MADCTL,  1,               0x48,
-
-  // Pixel format  0x55=16bit, 0x66=18bit
-  ILI9341_PIXFMT,  1,               0x55,
-
-  // Interface control Mode
-  0xB0,            1,               0x80,
-
-  // Frame rate
-  ILI9341_FRMCTR1, 1,               0xA0,
-
-  // Display onversion control
-  ILI9341_INVCTR,  1,               0x02,
-
-  // Display function control
-  ILI9341_DFUNCTR, 2,               0x02,               0x02,
-
-  // Disable 24 bit data
-  0xE9,            1,               0x00,
-
-  // Adjust control
-  0xF7,            4,               0xA9,               0x51,               0x2C,               0x82,
-
-  // Exit sleep
-  ILI9341_SLPOUT,  0x80,
-
-  // Display on
-  ILI9341_DISPON,  0x80,
-
-  // End of list
-  0x00
-};
 #endif // ifdef ILI9341_ENABLE_ILI948X
 
 // clang-format on
@@ -582,9 +528,6 @@ void Adafruit_ILI9341::begin(uint32_t freq) {
     case ILI_TYPE_9486: // ILI9486
       addr = initcmd_9486;
       break;
-    case ILI_TYPE_9488: // ILI9488
-      addr = initcmd_9488;
-      break;
     #endif // ifdef ILI9341_ENABLE_ILI948X
     default:
       addr = initcmd;
@@ -641,9 +584,6 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9486: // ILI9486
         // m = (MADCTL_MX | MADCTL_BGR);
         // break;
-        case ILI_TYPE_9488: // ILI9488
-          // m = (MADCTL_MX | MADCTL_BGR);
-          // break;
         #endif // ifdef ILI9341_ENABLE_ILI948X
         default:
           m = (MADCTL_MX | MADCTL_BGR);
@@ -675,9 +615,6 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9486: // ILI9486
         // m = (MADCTL_MV | MADCTL_BGR);
         // break;
-        case ILI_TYPE_9488: // ILI9488
-          // m = (MADCTL_MV | MADCTL_BGR);
-          // break;
         #endif // ifdef ILI9341_ENABLE_ILI948X
         default:
           m = (MADCTL_MV | MADCTL_BGR);
@@ -709,9 +646,6 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9486: // ILI9486
         // m = (MADCTL_MY | MADCTL_BGR);
         // break;
-        case ILI_TYPE_9488: // ILI9488
-          // m = (MADCTL_MY | MADCTL_BGR);
-          // break;
         #endif // ifdef ILI9341_ENABLE_ILI948X
         default:
           m = (MADCTL_MY | MADCTL_BGR);
@@ -743,9 +677,6 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9486: // ILI9486
         // m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
         // break;
-        case ILI_TYPE_9488: // ILI9488
-          // m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
-          // break;
         #endif // ifdef ILI9341_ENABLE_ILI948X
         default:
           m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
