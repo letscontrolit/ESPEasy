@@ -53,9 +53,13 @@ public:
   bool    isReadSuccessful() const;
   bool    plugin_fifty_per_second();
 
+  bool    plugin_read(struct EventStruct *event);
+
 private:
 
   VL53L0X sensor;
+
+  float _prev_distance = -1.0f;
 
   const uint8_t _i2cAddress;
   const int     _timing;

@@ -54,6 +54,55 @@ bool P110_data_struct::plugin_fifty_per_second() {
   return true;
 }
 
+bool P110_data_struct::plugin_read(struct EventStruct *event) {
+  bool success = false;
+
+  if (isReadSuccessful()) {
+    const float new_distance  = getDistance();
+    const float prev_distance = _prev_distance;
+
+    const bool first_sample = (prev_distance < 0.0f);
+
+    const float filtered = first_sample
+            ? new_distance
+            : 0.75f * prev_distance + 0.25f * new_distance;
+
+
+    const float dist   = filtered;
+    const float p_dist = prev_distance;
+
+    // Check trend:
+    //  0 = equal
+    // -1 = move closer
+    //  1 = move away
+
+    const int16_t displacement = first_sample ? 0 : roundf(dist - p_dist);
+    const int16_t disp_dir     = (displacement == 0)
+            ? 0
+            : (displacement > 0) ? 1 : -1;
+
+    const bool direction_changed = disp_dir != static_cast<int16_t>(UserVar.getFloat(event->TaskIndex, 1));
+    const bool triggered         = direction_changed || (std::abs(displacement) > P110_DELTA);
+
+        # ifdef P110_INFO_LOG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, strformat(F("VL53L0x: Perform read: trig: %d, prev: %d, dist: %d"), triggered, p_dist, dist));
+    }
+        # endif // ifdef P110_INFO_LOG
+    // Value is classified as invalid when > 8190, so no conversion or 'split' needed
+    UserVar.setFloat(event->TaskIndex, 0, filtered);
+    UserVar.setFloat(event->TaskIndex, 1, disp_dir);       // Trend of value
+
+    if (first_sample || triggered || (P110_SEND_ALWAYS == 1)) {
+      // Update the "previous" distance.
+      _prev_distance = filtered;
+      success = true;
+    }
+  }
+  return success;
+}
+
 int16_t P110_data_struct::getDistance() {
   const int res = _distance;
 
