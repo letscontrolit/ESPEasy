@@ -491,7 +491,7 @@ void prepareShutdown(IntendedRebootReason_e reason)
   ESPEASY_FS.end();
   process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep
-  node_time.now();
+  node_time.now_();
   Scheduler.markIntendedReboot(reason);
   saveToRTC();
 }

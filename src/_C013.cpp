@@ -398,6 +398,8 @@ void C013_Receive(struct EventStruct *event) {
               if (node_time.systemTimePresent() && (dataReply.timestamp_sec != 0)) {
                 // Only use timestamp of remote unit when we got a system time ourselves
                 // If not, then the order of samples can get messed up.
+                // timestamp_fraq is 16 bit, so need to scale it to 32 bit
+                TempEvent.timestamp_frac = static_cast<uint32_t>(dataReply.timestamp_frac) << 16;
                 SensorSendTask(&TempEvent, dataReply.timestamp_sec);
               } else {
                 SensorSendTask(&TempEvent);

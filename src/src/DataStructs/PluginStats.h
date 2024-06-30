@@ -43,7 +43,7 @@ public:
   // Keep track of peaks.
   // Use this for sensors that need to take several samples before actually output a task value.
   // For example the ADC with oversampling
-  void  trackPeak(float value, uint32_t timestamp = 0u);
+  void  trackPeak(float value, int64_t timestamp = 0u);
 
   // Get lowest recorded value since reset
   float getPeakLow() const {
@@ -55,17 +55,13 @@ public:
     return hasPeaks() ? _maxValue : _errorValue;
   }
 
-  uint32_t getPeakLowTimestamp() const {
+  int64_t getPeakLowTimestamp() const {
     return hasPeaks() ? _minValueTimestamp : 0;
   }
 
-  uint32_t getPeakHighTimestamp() const {
+  int64_t getPeakHighTimestamp() const {
     return hasPeaks() ? _maxValueTimestamp : 0;
   }
-
-  uint32_t getPeakLowLocalTimestamp() const;
-
-  uint32_t getPeakHighLocalTimestamp() const;
 
   bool     hasPeaks() const {
     return _maxValue >= _minValue;
@@ -91,14 +87,14 @@ public:
 
   // Compute average over all stored values, taking timestamp into account.
   // Returns average per second.
-  float getSampleAvg_time(uint32_t& totalDuration) const {
-    return getSampleAvg_time(getNrSamples(), totalDuration);
+  float getSampleAvg_time(uint32_t& totalDuration_sec) const {
+    return getSampleAvg_time(getNrSamples(), totalDuration_sec);
   }
 
   // Compute average over last N stored values, taking timestamp into account.
   // Returns average per second.
   float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
-                          uint32_t                   & totalDuration) const;
+                          uint32_t                   & totalDuration_sec) const;
 
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
@@ -185,8 +181,8 @@ private:
 
   float _minValue;
   float _maxValue;
-  uint32_t _minValueTimestamp;
-  uint32_t _maxValueTimestamp;
+  int64_t _minValueTimestamp;
+  int64_t _maxValueTimestamp;
 
   PluginStatsBuffer_t *_samples = nullptr;
   float _errorValue;

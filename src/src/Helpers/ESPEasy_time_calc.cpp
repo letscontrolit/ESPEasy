@@ -13,6 +13,27 @@
 #define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
 
 
+uint32_t unix_time_frac_to_millis(uint32_t unix_time_frac)
+{
+  return static_cast<float>(unix_time_frac) / 4294967.0f;
+}
+
+uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac)
+{
+  return static_cast<float>(unix_time_frac) / 4294.967f;
+}
+
+uint32_t millis_to_unix_time_frac(uint32_t millis)
+{
+  return static_cast<float>(millis) * 4294967.0f;
+}
+
+uint32_t micros_to_unix_time_frac(uint32_t micros)
+{
+  return static_cast<float>(micros) * 4294.967f;
+}
+
+
 bool isLeapYear(int year) {
   return ((year > 0) && !(year % 4) && ((year % 100) || !(year % 400)));
 }

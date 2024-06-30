@@ -55,6 +55,10 @@ inline bool usecTimeOutReached(const uint64_t& timer) {
   return usecPassedSince(timer) >= 0;
 }
 
+uint32_t unix_time_frac_to_millis(uint32_t unix_time_frac);
+uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac);
+uint32_t millis_to_unix_time_frac(uint32_t millis);
+uint32_t micros_to_unix_time_frac(uint32_t micros);
 
 
 /********************************************************************************************\

@@ -44,10 +44,29 @@ public:
   // @param unix_time_frac  The fractional part
   uint32_t      getUnixTime(uint32_t& unix_time_frac);
 
+  // Convert the UnixTime to systemMicros
+  // Returns converted system micros when system time has been set.
+  // Returns UnixTime in usec when system time has not yet been set, so it can be easily identified.
+  // Return value is negative if Unix timestamp was before system boot.
+  int64_t      Unixtime_to_systemMicros(const uint32_t& unix_time_sec, uint32_t unix_time_frac = 0) const;
+
+  // Convert the system micros() to Unix Time.
+  // Return value is in seconds.
+  // Returns UnixTime when time has been set, otherwise the seconds part of system micros
+  uint32_t      systemMicros_to_Unixtime(const int64_t& systemMicros, uint32_t& unix_time_frac);
+
+  // Convert the system micros() to Unix Time.
+  // Return value is in seconds.
+  // Returns LocalTime when time has been set, otherwise the seconds part of system micros
+  uint32_t      systemMicros_to_Localtime(const int64_t& systemMicros, uint32_t& unix_time_frac);
+
   void          initTime();
 
+  unsigned long getLocalUnixTime();
+  unsigned long getLocalUnixTime(uint32_t& unix_time_frac);
+
   // Update and get the current systime
-  unsigned long now();
+  unsigned long now_();
 
   // Update time and return whether the minute has changed since last check.
   bool          reportNewMinute();
@@ -196,12 +215,17 @@ public:
 
   struct tm local_tm;               // local time
   uint32_t syncInterval = 3600;     // time sync will be attempted after this many seconds
+
+  // FIXME TD-er: Should get rid of sysTime, as all time calculation should be 
+  // done using getMicros64() + unixTime_usec_uptime_offset
   double sysTime = 0.0;             // Use high resolution double to get better sync between nodes when using NTP
+  uint64_t unixTime_usec_uptime_offset = 0.0; // Use usec resolution to get better sync between nodes when using NTP
   uint32_t prevMillis = 0;
   uint32_t nextSyncTime = 0;        // Next time to allow time sync against UNIX time (thus seconds)
   uint32_t lastSyncTime_ms = 0;
   uint32_t lastNTPSyncTime_ms = 0;
   double externalUnixTime_d = -1.0; // Used to set time from a source other than NTP.
+  uint64_t externalUnixTime_received_micros{};
   struct tm tsRise, tsSet;
   struct tm sunRise;
   struct tm sunSet;

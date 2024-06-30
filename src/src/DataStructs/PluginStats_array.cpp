@@ -173,9 +173,7 @@ void PluginStats_array::pushPluginStatsValues(
     if (valueCount > 0) {
       const Sensor_VType sensorType = event->getSensorType();
 
-      const uint32_t timestamp = event->timestamp == 0 
-        ? node_time.getUnixTime() 
-        : event->timestamp;
+      const int64_t timestamp_sysmicros = event->getTimestamp_as_systemMicros();
 
       if (onlyUpdateTimestampWhenSame && (_plugin_stats_timestamps != nullptr)) {
         // When only updating the timestamp of the last entry,
@@ -195,13 +193,13 @@ void PluginStats_array::pushPluginStatsValues(
         }
 
         if (isSame) {
-          _plugin_stats_timestamps->updateLast(timestamp);
+          _plugin_stats_timestamps->updateLast(timestamp_sysmicros);
           return;
         }
       }
 
       if (_plugin_stats_timestamps != nullptr) {
-        _plugin_stats_timestamps->push(timestamp);
+        _plugin_stats_timestamps->push(timestamp_sysmicros);
       }
 
       for (size_t i = 0; i < valueCount; ++i) {
@@ -210,7 +208,7 @@ void PluginStats_array::pushPluginStatsValues(
           _plugin_stats[i]->push(value);
 
           if (trackPeaks) {
-            _plugin_stats[i]->trackPeak(value, timestamp);
+            _plugin_stats[i]->trackPeak(value, timestamp_sysmicros);
           }
         }
       }
@@ -355,10 +353,13 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
 
     if (_plugin_stats_timestamps != nullptr) {
       struct tm ts;
-      const uint32_t local_timestamp = time_zone.toLocal((*_plugin_stats_timestamps)[i]);
+      uint32_t  unix_time_frac{};
+      const uint32_t uinxtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
+      const uint32_t local_timestamp = time_zone.toLocal(uinxtime_sec);
       breakTime(local_timestamp, ts);
       addHtml('"');
       addHtml(formatDateTimeString(ts));
+      addHtml(strformat(F(".%03u"), unix_time_frac_to_millis(unix_time_frac)));
       addHtml('"');
     } else {
       addHtmlInt(i);

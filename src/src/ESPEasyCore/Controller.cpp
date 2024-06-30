@@ -638,7 +638,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
     struct EventStruct TempEvent(event->TaskIndex);
     TempEvent.Source = event->Source;
-    TempEvent.timestamp = timestampUnixTime;
+    TempEvent.timestamp_sec = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
     String dummy;

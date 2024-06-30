@@ -93,9 +93,9 @@ void run_compiletime_checks() {
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  check_size<EventStruct,                           120u>(); // Is not stored
+  check_size<EventStruct,                           124u>(); // Is not stored
   #else
-  check_size<EventStruct,                           100u>(); // Is not stored
+  check_size<EventStruct,                           104u>(); // Is not stored
   #endif
 
 

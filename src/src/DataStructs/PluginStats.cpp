@@ -44,12 +44,16 @@ PluginStats::~PluginStats()
 
 void PluginStats::processTimeSet(const double& time_offset)
 {
-  if (_maxValueTimestamp < 1000000000) {
-    _maxValueTimestamp += time_offset;
+  // Check to see if there was a unix time set before the system time was set
+  const uint64_t cur_micros    = getMicros64();
+  const uint64_t offset_micros = time_offset * 1000000ull;
+
+  if ((_maxValueTimestamp > cur_micros) && (_maxValueTimestamp > offset_micros)) {
+    _maxValueTimestamp -= offset_micros;
   }
 
-  if (_minValueTimestamp < 1000000000) {
-    _minValueTimestamp += time_offset;
+  if ((_minValueTimestamp > cur_micros) && (_minValueTimestamp > offset_micros)) {
+    _minValueTimestamp -= offset_micros;
   }
 }
 
@@ -97,12 +101,12 @@ bool PluginStats::matchesLastTwoEntries(float value) const
    */
 }
 
-void PluginStats::trackPeak(float value, uint32_t timestamp)
+void PluginStats::trackPeak(float value, int64_t timestamp)
 {
   if ((value > _maxValue) || (value < _minValue)) {
     if (timestamp == 0) {
       // Make sure both extremes are flagged with the same timestamp.
-      timestamp = node_time.getUnixTime();
+      timestamp = getMicros64();
     }
 
     if (value > _maxValue) {
@@ -115,16 +119,6 @@ void PluginStats::trackPeak(float value, uint32_t timestamp)
       _minValue          = value;
     }
   }
-}
-
-uint32_t PluginStats::getPeakLowLocalTimestamp() const
-{
-  return time_zone.toLocal(getPeakLowTimestamp());
-}
-
-uint32_t PluginStats::getPeakHighLocalTimestamp() const
-{
-  return time_zone.toLocal(getPeakHighTimestamp());
 }
 
 void PluginStats::resetPeaks()
@@ -177,11 +171,11 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   return sum / samplesUsed;
 }
 
-float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration) const
+float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration_sec) const
 {
   const size_t nrSamples = getNrSamples();
 
-  totalDuration = 0u;
+  int64_t totalDuration_usec = 0u;
 
   if ((nrSamples == 0) || (_plugin_stats_timestamps == nullptr)) {
     return _errorValue;
@@ -193,27 +187,27 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
     i = nrSamples - lastNrSamples;
   }
 
-  uint32_t lastTimestamp   = 0;
-  float    lastValue       = 0.0f;
-  bool     lastValueUsable = false;
-  float    sum             = 0.0f;
+  int64_t lastTimestamp   = 0;
+  float   lastValue       = 0.0f;
+  bool    lastValueUsable = false;
+  float   sum             = 0.0f;
 
   for (; i < nrSamples; ++i) {
-    const float sample((*_samples)[i]);
-    const uint32_t curTimestamp   = (*_plugin_stats_timestamps)[i];
-    const bool     curValueUsable = usableValue(sample);
+    const float   sample((*_samples)[i]);
+    const int64_t curTimestamp   = (*_plugin_stats_timestamps)[i];
+    const bool    curValueUsable = usableValue(sample);
 
     if ((lastTimestamp != 0) && lastValueUsable) {
-      const uint32_t duration = abs(timeDiff(lastTimestamp, curTimestamp));
+      const int64_t duration_usec = abs(timeDiff64(lastTimestamp, curTimestamp));
 
       if (curValueUsable) {
         // Old and new value usable, take average of this period.
-        sum += ((lastValue + sample) / 2.0f) * duration;
+        sum += ((lastValue + sample) / 2.0f) * duration_usec;
       } else {
         // New value is not usable, so just add the last value for the duration.
-        sum += lastValue * duration;
+        sum += lastValue * duration_usec;
       }
-      totalDuration += duration;
+      totalDuration_usec += duration_usec;
     }
 
     lastValueUsable = curValueUsable;
@@ -221,8 +215,10 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
     lastValue       = sample;
   }
 
-  if (totalDuration == 0) { return _errorValue; }
-  return sum / totalDuration;
+  totalDuration_sec = totalDuration_usec / 1000000ll;
+
+  if (totalDuration_usec == 0) { return _errorValue; }
+  return sum / totalDuration_usec;
 }
 
 float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
@@ -469,16 +465,17 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
 
     if (_plugin_stats_timestamps != nullptr) {
-      uint32_t totalDuration  = 0u;
-      const float avg_per_sec = getSampleAvg_time(totalDuration);
+      uint32_t totalDuration_sec = 0u;
+      const float avg_per_sec    = getSampleAvg_time(totalDuration_sec);
 
-      if (totalDuration > 0) {
+      if (totalDuration_sec > 0) {
         addRowLabel(concat(getLabel(),  F(" Average / sec")));
         addHtmlFloat(avg_per_sec, (_nrDecimals == 0) ? 1 : _nrDecimals);
 
-        //        addHtml(strformat(F(" (%s duration = %u sec)"), secondsToDayHourMinuteSecond(totalDuration).c_str(), totalDuration));
+        //        addHtml(strformat(F(" (%s duration = %u sec)"), secondsToDayHourMinuteSecond(totalDuration_sec).c_str(),
+        // totalDuration_sec));
 
-        addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond(totalDuration).c_str()));
+        addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond(totalDuration_sec).c_str()));
       }
     }
     return true;
@@ -519,31 +516,36 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event,
                                          bool                include_peak_to_peak) const
 {
   if (hasPeaks() && (getNrSamples() > 1)) {
-    const uint32_t peakLow     = getPeakLowTimestamp();
-    const uint32_t peakHigh    = getPeakHighTimestamp();
+    uint32_t peakLow_frac{};
+    uint32_t peakHigh_frac{};
+    const uint32_t peakLow     = node_time.systemMicros_to_Unixtime(getPeakLowTimestamp(), peakLow_frac);
+    const uint32_t peakHigh    = node_time.systemMicros_to_Unixtime(getPeakHighTimestamp(), peakHigh_frac);
     const uint32_t current     = node_time.getUnixTime();
     const bool     useTimeOnly = (current - peakLow) < 86400 && (current - peakHigh) < 86400;
     struct tm ts;
     breakTime(time_zone.toLocal(peakLow), ts);
 
+
     addRowLabel(concat(label,  F(" Peak Low")));
     addHtml(strformat(
-              F("%s @ %s"),
+              F("%s @ %s.%03u"),
               lowValue.c_str(),
               useTimeOnly
       ? formatTimeString(ts).c_str()
-      : formatDateTimeString(ts).c_str()));
+      : formatDateTimeString(ts).c_str(),
+              unix_time_frac_to_millis(peakLow_frac)));
 
 
     breakTime(time_zone.toLocal(peakHigh), ts);
 
     addRowLabel(concat(label,  F(" Peak High")));
     addHtml(strformat(
-              F("%s @ %s"),
+              F("%s @ %s.%03u"),
               highValue.c_str(),
               useTimeOnly
       ? formatTimeString(ts).c_str()
-      : formatDateTimeString(ts).c_str()));
+      : formatDateTimeString(ts).c_str(),
+              unix_time_frac_to_millis(peakHigh_frac)));
 
     if (include_peak_to_peak) {
       addRowLabel(concat(getLabel(),  F(" Peak-to-peak")));

@@ -169,7 +169,7 @@ bool fileExists(const String& fname) {
       // use some random value as we don't have a time yet
       Cache.fileCacheClearMoment = HwRandom();
     } else {
-      Cache.fileCacheClearMoment = node_time.now();
+      Cache.fileCacheClearMoment = node_time.getLocalUnixTime();
     }
   }
   return res;
