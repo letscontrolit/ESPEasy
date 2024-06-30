@@ -1642,6 +1642,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
 
 #endif
 
@@ -1951,6 +1954,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P167
     #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
   #endif
 
   // Controllers
@@ -2364,6 +2370,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P167
     #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
   #endif
 
   // Controllers
