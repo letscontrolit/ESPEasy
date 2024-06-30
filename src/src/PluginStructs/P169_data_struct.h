@@ -133,8 +133,8 @@ private:
 # endif // if FEATURE_CHART_JS
 
 
-  AS3935I2C _sensor;
-  uint8_t   _irqPin;
+  AS3935I2C *_sensor = nullptr;
+  int8_t   _irqPin;
   float     _afeGain = 1.0f;
   uint8_t   _afeGainRegval = 0;
 

@@ -17,39 +17,51 @@
 
 
 P169_data_struct::P169_data_struct(struct EventStruct *event) :
-  _sensor(P169_I2C_ADDRESS, P169_IRQ_PIN),
   _irqPin(P169_IRQ_PIN)
-{}
+{
+  // Do not try to construct the sensor if not needed as it will set the pinmode of the pin
+  if (_irqPin >= 0 && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
+    _sensor = new (std::nothrow) AS3935I2C(P169_I2C_ADDRESS, P169_IRQ_PIN);
+  }
+}
 
 P169_data_struct::~P169_data_struct()
 {
-  _sensor.writePowerDown(true);
+  if (_sensor != nullptr) {
+    _sensor->writePowerDown(true);
+    delete _sensor;
+    _sensor = nullptr;
+  }
 }
 
 bool P169_data_struct::loop(struct EventStruct *event)
 {
-  if (_sensor.getInterruptMode() == AS3935MI::AS3935_INTERRUPT_NORMAL) {
+  if (_sensor == nullptr) {
+    return false;
+  }
+
+  if (_sensor->getInterruptMode() == AS3935MI::AS3935_INTERRUPT_NORMAL) {
     // FIXME TD-er: Should also check for state of IRQ pin as it may still be high if the interrupt souce isn't checked.
-    const uint32_t timestamp = _sensor.getInterruptTimestamp();
+    const uint32_t timestamp = _sensor->getInterruptTimestamp();
 
     if ((timestamp != 0ul) || DIRECT_pinRead(_irqPin)) {
       if ((timestamp != 0ul) && (timePassedSince(timestamp) < 2)) {
         // Check to make sure the sensor isn't still outputting a high freq. signal to the interrupt pin.
         // Count should be 1 at most.
-        if (!_sensor.checkProperlySetToListenMode()) {
+        if (!_sensor->checkProperlySetToListenMode()) {
           // Sensor not yet ready to report some data
           addLog(LOG_LEVEL_ERROR, F("AS3935: Sensor was still showing LCO frequency on IRQ pin"));
           return false;
         }
 
         // Wait for the sensor to be ready to read the interrupt source
-        if (timePassedSince(_sensor.getInterruptTimestamp()) < 2) {
+        if (timePassedSince(_sensor->getInterruptTimestamp()) < 2) {
           delay(1);
         }
       }
 
       // query the interrupt source from the AS3935
-      switch (_sensor.readInterruptSource()) {
+      switch (_sensor->readInterruptSource()) {
         case AS3935MI::AS3935_INT_NH:
 
           // Noise floor too high
@@ -58,7 +70,7 @@ bool P169_data_struct::loop(struct EventStruct *event)
         case AS3935MI::AS3935_INT_D:
 
           // Disturbance detected
-          // N.B. can be disabled with _sensor.writeMaskDisturbers(true);
+          // N.B. can be disabled with _sensor->writeMaskDisturbers(true);
           adjustForDisturbances(event);
           break;
         case AS3935MI::AS3935_INT_L:
@@ -122,7 +134,7 @@ bool P169_data_struct::loop(struct EventStruct *event)
             // Do not update until after this task interval or else the reported distance will be too low.
             UserVar.setFloat(event->TaskIndex, 0, distance);
           } else {
-            _sensor.clearStatistics();
+            _sensor->clearStatistics();
           }
 
           if (Settings.UseRules) {
@@ -146,12 +158,16 @@ bool P169_data_struct::loop(struct EventStruct *event)
 
 void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   addFormSubHeader(F("Current Sensor Data"));
   addRowLabel(F("Calibration"));
-  const int8_t ant_cap = _sensor.getCalibratedAntCap();
+  const int8_t ant_cap = _sensor->getCalibratedAntCap();
 
   if (ant_cap != -1) {
-    const float deviation_pct = computeDeviationPct(_sensor.getAntCapFrequency(ant_cap));
+    const float deviation_pct = computeDeviationPct(_sensor->getAntCapFrequency(ant_cap));
 
     if (fabs(deviation_pct) < (100 * AS3935MI_ALLOWED_DEVIATION)) {
       addEnabled(true);
@@ -176,7 +192,7 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
 # else // if FEATURE_CHART_JS
 
   for (uint8_t i = 0; i < 16; ++i) {
-    const int32_t freq = _sensor.getAntCapFrequency(i);
+    const int32_t freq = _sensor->getAntCapFrequency(i);
 
     if (i != 0) {
       addHtml(',');
@@ -196,20 +212,24 @@ void P169_data_struct::html_show_sensor_info(struct EventStruct *event)
   addHtml('x');
 
   addRowLabel(F("Current Noise Floor Threshold"));
-  addHtmlInt(_sensor.readNoiseFloorThreshold());
+  addHtmlInt(_sensor->readNoiseFloorThreshold());
 
   addRowLabel(F("Current Watchdog Threshold"));
-  addHtmlInt(_sensor.readWatchdogThreshold());
+  addHtmlInt(_sensor->readWatchdogThreshold());
 
   addRowLabel(F("Current Spike Rejection"));
-  addHtmlInt(_sensor.readSpikeRejection());
+  addHtmlInt(_sensor->readSpikeRejection());
 }
 
 bool P169_data_struct::plugin_init(struct EventStruct *event)
 {
-  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
+  if (_sensor == nullptr) {
+    return false;
+  }
 
-  if (!(_sensor.begin() && _sensor.checkConnection()))
+  _sensor->setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
+
+  if (!(_sensor->begin() && _sensor->checkConnection()))
   {
     addLog(LOG_LEVEL_ERROR, F("AS3935: Sensor not detected"));
     return false;
@@ -217,7 +237,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
   addLog(LOG_LEVEL_INFO, F("AS3935: Sensor detected"));
 
   /*
-     if (!_sensor.checkIRQ())
+     if (!_sensor->checkIRQ())
      {
       addLog(LOG_LEVEL_ERROR, F("AS3935: IRQ pin connection check failed"));
 
@@ -247,8 +267,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
       for (size_t i = 0; i < 7; ++i) {
         const uint32_t nrSamples = 2048 >> i;
-        _sensor.setFrequencyMeasureNrSamples(nrSamples);
-        const uint32_t freq = _sensor.measureResonanceFrequency(AS3935MI::display_frequency_source_t::LCO, antcap);
+        _sensor->setFrequencyMeasureNrSamples(nrSamples);
+        const uint32_t freq = _sensor->measureResonanceFrequency(AS3935MI::display_frequency_source_t::LCO, antcap);
 
         if (freq > 0) {
           deviation_pct[i] = computeDeviationPct(freq);
@@ -268,9 +288,9 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
 
   // set the analog front end gain
-  _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
-  _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
-  _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+  _sensor->writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+  _sensor->writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+  _sensor->writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
   setAFE_gain(event, P169_AFE_GAIN_LOW);
   {
     AS3935MI::min_num_lightnings_t min_num_lightnings = AS3935MI::AS3935_MNL_1;
@@ -278,12 +298,12 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
     if ((P169_LIGHTNING_THRESHOLD >= AS3935MI::AS3935_MNL_1) && (P169_LIGHTNING_THRESHOLD <= AS3935MI::AS3935_MNL_16)) {
       min_num_lightnings = static_cast<AS3935MI::min_num_lightnings_t>(P169_LIGHTNING_THRESHOLD);
     }
-    _sensor.writeMinLightnings(min_num_lightnings);
+    _sensor->writeMinLightnings(min_num_lightnings);
   }
 
-  _sensor.writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
+  _sensor->writeMaskDisturbers(P169_GET_MASK_DISTURBANCE);
 
-  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
+  _sensor->setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
   return true;
 }
 
@@ -304,6 +324,10 @@ enum class P169_subcmd_e : int8_t {
 *****************************************************/
 bool P169_data_struct::plugin_write(struct EventStruct *event,
                                     String            & string) {
+  if (_sensor == nullptr) {
+    return false;
+  }
+
   bool success = false;
 
   const String command = parseString(string, 1);
@@ -327,7 +351,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
         break;
       case P169_subcmd_e::calibrate:
         calibrate(event);
-        _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
+        _sensor->setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
 
         success = true;
         break;
@@ -351,7 +375,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
 
         if (hasValue) {
           success = true;
-          _sensor.writeWatchdogThreshold(value);
+          _sensor->writeWatchdogThreshold(value);
           sendChangeEvent(event);
         }
         break;
@@ -359,7 +383,7 @@ bool P169_data_struct::plugin_write(struct EventStruct *event,
 
         if (hasValue) {
           success = true;
-          _sensor.writeSpikeRejection(value);
+          _sensor->writeSpikeRejection(value);
           sendChangeEvent(event);
         }
         break;
@@ -384,6 +408,10 @@ enum class P169_get_config_e : int8_t {
 *****************************************************/
 bool P169_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
+  if (_sensor == nullptr) {
+    return false;
+  }
+
   const String var      = parseString(string, 1);
   const int    config_i = GetCommandCode(var.c_str(), P169_get_config);
 
@@ -395,13 +423,13 @@ bool P169_data_struct::plugin_get_config_value(struct EventStruct *event,
     case P169_get_config_e::invalid:
       return false;
     case P169_get_config_e::noisefloor:
-      string = _sensor.readNoiseFloorThreshold();
+      string = _sensor->readNoiseFloorThreshold();
       break;
     case P169_get_config_e::watchdog:
-      string = _sensor.readWatchdogThreshold();
+      string = _sensor->readWatchdogThreshold();
       break;
     case P169_get_config_e::srej:
-      string = _sensor.readSpikeRejection();
+      string = _sensor->readSpikeRejection();
       break;
     case P169_get_config_e::gain:
       string = toString(_afeGain, 2);
@@ -417,16 +445,20 @@ float P169_data_struct::getDistance()
 
 uint32_t P169_data_struct::getEnergy()
 {
-  const uint32_t rawEnergy = _sensor.readEnergy();
+  if (_sensor == nullptr) {
+    return 0u;
+  }
+
+  const uint32_t rawEnergy = _sensor->readEnergy();
 
   if ((rawEnergy == 0) || (rawEnergy == 0xFFFFFFFF)) {
     return 0u;
   }
 
-  const int8_t ant_cap = _sensor.getCalibratedAntCap();
+  const int8_t ant_cap = _sensor->getCalibratedAntCap();
 
   if (ant_cap != -1) {
-    const float deviation_pct = computeDeviationPct(_sensor.getAntCapFrequency(ant_cap));
+    const float deviation_pct = computeDeviationPct(_sensor->getAntCapFrequency(ant_cap));
 
     // Compute correction factor for loss in reported energy due to offset from perfect calibration.
     // Formula derived by TD-er using chart on this site: (section "Is Tuning Important?")
@@ -455,7 +487,9 @@ uint32_t P169_data_struct::getAndClearLightningCount()
 
 void P169_data_struct::clearStatistics()
 {
-  _sensor.clearStatistics();
+  if (_sensor != nullptr) {
+    _sensor->clearStatistics();
+  }
 }
 
 float P169_data_struct::computeDeviationPct(uint32_t LCO_freq)
@@ -477,19 +511,23 @@ float P169_data_struct::computeDistanceFromEnergy(uint32_t energy, float errorVa
 
 bool P169_data_struct::calibrate(struct EventStruct *event)
 {
-  _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
+  if (_sensor == nullptr) {
+    return false;
+  }
+
+  _sensor->setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
 
 
   // calibrate the resonance frequency. failing the resonance frequency could indicate an issue
   // of the sensor.
   int32_t frequency = 0;
 
-  _sensor.setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
+  _sensor->setCalibrateAllAntCap(P169_GET_SLOW_LCO_CALIBRATION);
 
-  _sensor.setFrequencyMeasureNrSamples(P169_GET_SLOW_LCO_CALIBRATION ? AS3935MI_NR_CALIBRATION_SAMPLES : (AS3935MI_NR_CALIBRATION_SAMPLES /
-                                                                                                          2));
+  _sensor->setFrequencyMeasureNrSamples(P169_GET_SLOW_LCO_CALIBRATION ? AS3935MI_NR_CALIBRATION_SAMPLES : (AS3935MI_NR_CALIBRATION_SAMPLES /
+                                                                                                           2));
 
-  if (!_sensor.calibrateResonanceFrequency(frequency))
+  if (!_sensor->calibrateResonanceFrequency(frequency))
   {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR,
@@ -499,13 +537,13 @@ bool P169_data_struct::calibrate(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO,
              strformat(F("AS3935: Resonance Frequency Calibration passed: ant_cap: %d, %d Hz, deviation: %.2f%%"),
-                       _sensor.readAntennaTuning(),
+                       _sensor->readAntennaTuning(),
                        frequency, computeDeviationPct(frequency)));
     }
   }
 
   // calibrate the RCO.
-  if (!_sensor.calibrateRCO())
+  if (!_sensor->calibrateRCO())
   {
     addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
   } else {
@@ -513,19 +551,23 @@ bool P169_data_struct::calibrate(struct EventStruct *event)
   }
 
   // stop displaying LCO on IRQ
-  _sensor.displayLcoOnIrq(false);
+  _sensor->displayLcoOnIrq(false);
 
   return frequency != 0;
 }
 
 void P169_data_struct::adjustForNoise(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   // if the noise floor threshold setting is not yet maxed out, increase the setting.
   // note that noise floor threshold events can also be triggered by an incorrect
   // analog front end setting.
   uint8_t nf_lev{};
 
-  if (_sensor.increaseNoiseFloorThreshold(nf_lev)) {
+  if (_sensor->increaseNoiseFloorThreshold(nf_lev)) {
     addLog(LOG_LEVEL_INFO, strformat(F("AS3935: Increased noise floor threshold to: %u"), nf_lev));
     sendChangeEvent(event);
   }
@@ -536,30 +578,34 @@ void P169_data_struct::adjustForNoise(struct EventStruct *event)
 
 void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   // increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance
   // against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
-  const uint8_t wdth  = _sensor.readWatchdogThreshold();
-  const uint8_t srej  = _sensor.readSpikeRejection();
-  const uint8_t noise = _sensor.readNoiseFloorThreshold();
+  const uint8_t wdth  = _sensor->readWatchdogThreshold();
+  const uint8_t srej  = _sensor->readSpikeRejection();
+  const uint8_t noise = _sensor->readNoiseFloorThreshold();
 
   if ((wdth == AS3935MI::AS3935_WDTH_5) ||
       (srej == AS3935MI::AS3935_SREJ_5) ||
       (noise == AS3935MI::AS3935_NFL_5))
   {
     int32_t frequency{};
-    const bool valid = _sensor.validateCurrentResonanceFrequency(frequency);
+    const bool valid = _sensor->validateCurrentResonanceFrequency(frequency);
 
     if (valid || P169_GET_TOLERANT_CALIBRATION_RANGE) {
       // Resonance frequency is still OK, try lowering gain
-      uint8_t curGain = _sensor.readAFE();
+      uint8_t curGain = _sensor->readAFE();
 
       if (curGain > P169_AFE_GAIN_LOW) {
         --curGain;
 
         // Since we change the gain, reset the other values to default
-        _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
-        _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
-        _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+        _sensor->writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+        _sensor->writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+        _sensor->writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
         setAFE_gain(event, curGain);
         _sense_adj_last = millis();
       } else
@@ -576,7 +622,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
                  frequency));
       }
 
-      if (_sensor.calibrateResonanceFrequency(frequency)) {
+      if (_sensor->calibrateResonanceFrequency(frequency)) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(
                    F("AS3935: Calibrate Resonance freq. Current frequency: %d"),
@@ -584,7 +630,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
         }
 
         // calibrate the RCO.
-        if (!_sensor.calibrateRCO())
+        if (!_sensor->calibrateRCO())
         {
           addLog(LOG_LEVEL_ERROR, F("AS3935: RCO Calibration failed."));
         } else {
@@ -594,7 +640,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 
       // FIXME TD-er: Should we do anything else here?
     }
-    _sensor.setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
+    _sensor->setInterruptMode(AS3935MI::AS3935_INTERRUPT_NORMAL);
   }
 
   // FIXME TD-er: Is this a good threshold for auto adjust algorithm?
@@ -609,7 +655,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
     // alternatively increase spike rejection and watchdog threshold
     if (srej < wdth)
     {
-      if (_sensor.increaseSpikeRejection()) {
+      if (_sensor->increaseSpikeRejection()) {
         sendChangeEvent(event);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -622,7 +668,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
     }
     else
     {
-      if (_sensor.increaseWatchdogThreshold()) {
+      if (_sensor->increaseWatchdogThreshold()) {
         sendChangeEvent(event);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -638,6 +684,10 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
 
 void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   // increase sensor sensitivity every once in a while. _sense_increase_interval controls how quickly the code
   // attempts to increase sensitivity.
   if (timePassedSince(_sense_adj_last) > static_cast<long>(_sense_increase_interval))
@@ -646,30 +696,30 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 
     addLog(LOG_LEVEL_INFO, F("AS3935: No disturber detected, attempting to decrease noise floor threshold."));
 
-    const uint8_t wdth  = _sensor.readWatchdogThreshold();
-    const uint8_t srej  = _sensor.readSpikeRejection();
-    const uint8_t noise = _sensor.readNoiseFloorThreshold();
+    const uint8_t wdth  = _sensor->readWatchdogThreshold();
+    const uint8_t srej  = _sensor->readSpikeRejection();
+    const uint8_t noise = _sensor->readNoiseFloorThreshold();
 
     if ((wdth == AS3935MI::AS3935_WDTH_0) ||
         (srej == AS3935MI::AS3935_SREJ_0) ||
         (noise == AS3935MI::AS3935_NFL_0))
     {
-      uint8_t curGain = _sensor.readAFE();
+      uint8_t curGain = _sensor->readAFE();
 
       if (curGain < P169_AFE_GAIN_HIGH) {
         ++curGain;
 
         // Since we change the gain, reset the other values to default
-        _sensor.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
-        _sensor.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
-        _sensor.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
+        _sensor->writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
+        _sensor->writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
+        _sensor->writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
 
         setAFE_gain(event, curGain);
         return;
       }
     }
 
-    if ((noise > srej) && (noise > wdth) && _sensor.decreaseNoiseFloorThreshold()) {
+    if ((noise > srej) && (noise > wdth) && _sensor->decreaseNoiseFloorThreshold()) {
       sendChangeEvent(event);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -680,7 +730,7 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     // alternatively decrease spike rejection and watchdog threshold
     if (srej > wdth)
     {
-      if (_sensor.decreaseSpikeRejection()) {
+      if (_sensor->decreaseSpikeRejection()) {
         sendChangeEvent(event);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -695,7 +745,7 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
     }
     else
     {
-      if (_sensor.decreaseWatchdogThreshold()) {
+      if (_sensor->decreaseWatchdogThreshold()) {
         sendChangeEvent(event);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -713,16 +763,24 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 
 void P169_data_struct::setAFE_gain(struct EventStruct *event, uint8_t gain)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   _afeGain       = regValue_AFE_gain_toFloat(gain);
   _afeGainRegval = gain;
-  _sensor.writeAFE(gain);
+  _sensor->writeAFE(gain);
 
   sendChangeEvent(event);
 }
 
 void P169_data_struct::setNoiseFloorThreshold(struct EventStruct *event, uint8_t noiseFloor)
 {
-  _sensor.writeNoiseFloorThreshold(noiseFloor);
+  if (_sensor == nullptr) {
+    return;
+  }
+
+  _sensor->writeNoiseFloorThreshold(noiseFloor);
   sendChangeEvent(event);
 }
 
@@ -784,10 +842,14 @@ uint8_t P169_data_struct::AFE_gain_to_regValue(float gain)
 
 void P169_data_struct::sendChangeEvent(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   if (Settings.UseRules) {
-    const   uint8_t noiseFloor = _sensor.readNoiseFloorThreshold();
-    const   uint8_t watchdog   = _sensor.readWatchdogThreshold();
-    const   uint8_t srej       = _sensor.readSpikeRejection();
+    const   uint8_t noiseFloor = _sensor->readNoiseFloorThreshold();
+    const   uint8_t watchdog   = _sensor->readWatchdogThreshold();
+    const   uint8_t srej       = _sensor->readSpikeRejection();
 
     if (((_lastEvent_noiseFloor != noiseFloor)  && ((_lastEvent_noiseFloor > 1) || (noiseFloor > 1))) ||
         ((_lastEvent_watchdog != watchdog) && ((_lastEvent_watchdog > 1) || (watchdog > 1))) ||
@@ -819,6 +881,10 @@ void P169_data_struct::sendChangeEvent(struct EventStruct *event)
 # if FEATURE_CHART_JS
 void P169_data_struct::addCalibrationChart(struct EventStruct *event)
 {
+  if (_sensor == nullptr) {
+    return;
+  }
+
   const int valueCount = 16;
   int   xAxisValues[valueCount]{};
   float values[valueCount]{};
@@ -826,7 +892,7 @@ void P169_data_struct::addCalibrationChart(struct EventStruct *event)
   int actualValueCount = 0;
 
   for (int i = 0; i < valueCount; ++i) {
-    const int32_t freq = _sensor.getAntCapFrequency(i);
+    const int32_t freq = _sensor->getAntCapFrequency(i);
 
     if (freq > 0) {
       values[actualValueCount]      = computeDeviationPct(freq);
