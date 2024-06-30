@@ -7,7 +7,7 @@
 
 # include "../Helpers/ESPEasy_TouchHandler.h"
 
-# include <Adafruit_FT6206.h>
+# include <bb_captouch.h>
 
 # ifndef LIMIT_BUILD_SIZE
 #  define PLUGIN_123_DEBUG      // Additional debugging information
@@ -21,8 +21,18 @@
 #  undef PLUGIN_123_DEBUG
 # endif // if defined(BUILD_NO_DEBUG) && defined(PLUGIN_123_DEBUG)
 
-# define P123_I2C_ADDRESS           (0x38) // Fixed value
+# define P123_I2C_ADDRESS           PCONFIG(6)
 # define P123_CONFIG_DISPLAY_TASK   PCONFIG(0)
+
+# define P123_CONFIG_FLAGS          PCONFIG_ULONG(0) // All flags
+# define P123_CONFIG_FLAG_TOUCHTYPE 0                // Flag indexes
+
+// We're storing an int8_t in range -128..127 in an uin8_t
+# define P123_GET_TOUCH_TYPE        (get8BitFromUL(P123_CONFIG_FLAGS, P123_CONFIG_FLAG_TOUCHTYPE) - 128)
+# define P123_SET_TOUCH_TYPE(T) (set8BitToUL(P123_CONFIG_FLAGS, P123_CONFIG_FLAG_TOUCHTYPE, T + 128))
+
+# define P123_INTERRUPTPIN          (CONFIG_PIN1)
+# define P123_RESETPIN              (CONFIG_PIN2)
 
 # define P123_COLOR_DEPTH           PCONFIG_LONG(1)
 # define P123_CONFIG_THRESHOLD      PCONFIG(1)
@@ -47,31 +57,50 @@
 # define P123_ROTATION_180          2
 # define P123_ROTATION_270          3
 
+enum class P123_TouchType_e : int8_t {
+  Automatic = -1,
+  FT62x6    = 0, // Also used as offset in I2C address array
+  GT911_1   = 1,
+  GT911_2   = 2,
+  CST820    = 3,
+  CST226    = 4,
+  AXS15231  = 5,
+  CHSC5816  = 6,
+};
+
+const __FlashStringHelper* toString(P123_TouchType_e tType);
+
 // Data structure
 struct P123_data_struct : public PluginTaskData_base
 {
-  P123_data_struct();
+  P123_data_struct(P123_TouchType_e touchType);
   ~P123_data_struct();
 
-  void reset();
-  bool init(struct EventStruct *event);
-  bool isInitialized() const;
+  static bool      plugin_i2c_has_address(int Par1);
+  static uint8_t   plugin_i2c_address(P123_TouchType_e touchType);
 
-  bool plugin_webform_load(struct EventStruct *event);
-  bool plugin_webform_save(struct EventStruct *event);
-  bool plugin_write(struct EventStruct *event,
-                    const String      & string);
-  bool plugin_fifty_per_second(struct EventStruct *event);
-  bool plugin_get_config_value(struct EventStruct *event,
-                               String            & string);
+  P123_TouchType_e getTouchType();
+  int              getBBCapTouchType(P123_TouchType_e touchType);
 
-  void loadTouchObjects(struct EventStruct *event);
-  bool touched();
-  void readData(int16_t& x,
-                int16_t& y,
-                int16_t& z,
-                int16_t& ox,
-                int16_t& oy);
+  void             reset();
+  bool             init(struct EventStruct *event);
+  bool             isInitialized() const;
+
+  bool             plugin_webform_load(struct EventStruct *event);
+  bool             plugin_webform_save(struct EventStruct *event);
+  bool             plugin_write(struct EventStruct *event,
+                                const String      & string);
+  bool             plugin_fifty_per_second(struct EventStruct *event);
+  bool             plugin_get_config_value(struct EventStruct *event,
+                                           String            & string);
+
+  void             loadTouchObjects(struct EventStruct *event);
+  bool             touched();
+  void             readData(int16_t& x,
+                            int16_t& y,
+                            int16_t& z,
+                            int16_t& ox,
+                            int16_t& oy);
 
   void setRotation(uint8_t n);
   void setRotationFlipped(bool _flipped);
@@ -111,13 +140,20 @@ struct P123_data_struct : public PluginTaskData_base
 private:
 
   // This is initialized by calling init()
-  Adafruit_FT6206 *touchscreen = nullptr;
-  uint8_t          _rotation   = 0u;
-  uint16_t         _ts_x_res   = 0u;
-  uint16_t         _ts_y_res   = 0u;
+  BBCapTouch *touchscreen = nullptr;
+  uint8_t     _rotation   = 0u;
+  uint16_t    _ts_x_res   = 0u;
+  uint16_t    _ts_y_res   = 0u;
+
+  int16_t          _i2caddr{};
+  int16_t          _resetPin     = -1;
+  int16_t          _interruptPin = -1;
+  P123_TouchType_e _touchType;
+
+  TOUCHINFO touchInfo;
 
   ESPEasy_TouchHandler *touchHandler = nullptr;
 };
 
-#endif // ifdef USED_P123
+#endif // ifdef USES_P123
 #endif // ifndef PLUGINSTRUCTS_P123_DATA_STRUCT_H

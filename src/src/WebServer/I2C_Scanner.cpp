@@ -187,12 +187,16 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x12:
     case 0x13:
-    case 0x14:
-    case 0x15:
     case 0x16:
     case 0x17:
     case 0x18:
       result += F("I2C_MultiRelay");
+      break;
+    case 0x14:
+      result += F("I2C_MultiRelay,GT911");
+      break;
+    case 0x15:
+      result += F("I2C_MultiRelay,CST820");
       break;
     case 0x1D:
       result += F("ADXL345");
@@ -217,6 +221,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x29:
       result += F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
       break;
+    case 0x2E:
+      result += F("CHSC5816");
+      break;
     case 0x30:
       result += F("VL53L0X,VL53L1X");
       break;
@@ -236,8 +243,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc,Adafruit Soil moisture");
       break;
     case 0x3A:
-    case 0x3B:
       result += F("LCD,PCF8574A,Adafruit Rotary enc");
+      break;
+    case 0x3B:
+      result += F("LCD,PCF8574A,Adafruit Rotary enc,AXS15231");
       break;
     case 0x3C:
     case 0x3D:
@@ -299,7 +308,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("SGP4x,GP8403");
       break;
     case 0x5A:
-      result += F("MLX90614,MPR121,CCS811,GP8403");
+      result += F("MLX90614,MPR121,CCS811,GP8403,CST226");
       break;
     case 0x5B:
       result += F("MPR121,CCS811,GP8403");
@@ -308,7 +317,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("DHT12,AM2320,BH1750,MPR121,GP8403");
       break;
     case 0x5D:
-      result += F("MPR121,GP8403");
+      result += F("MPR121,GP8403,GT911");
       break;
     case 0x5E:
     case 0x5F:
