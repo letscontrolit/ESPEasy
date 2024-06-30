@@ -1645,6 +1645,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
+  #endif
 
 #endif
 
@@ -2026,7 +2029,9 @@ To create/register a plugin, you have to :
     //#define USES_C015   // Blynk
     #define USES_C017   // Zabbix
     #ifdef ESP32
-      #define USES_C018 // TTN RN2483
+      #ifndef USES_C018
+        #define USES_C018 // TTN RN2483
+      #endif
     #endif
     // #define USES_C019   // ESPEasy-NOW
 #endif
@@ -2373,6 +2378,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
   #endif
 
   // Controllers
