@@ -73,11 +73,11 @@ The configured display will be used to draw the objects, if any, that can be con
 
 * *CST820 (0x15)*: CST816/CST820 touchscreen controller family.
 
-* *CST226 (0x5A)*: CST226 touchscreen controller.
+* *CST226 (0x5A)*: CST226 touchscreen controller. (Not yet tested on real hardware)
 
-* *AXS15231 (0x3B)*: AXS15231 touchscreen controller.
+* *AXS15231 (0x3B)*: AXS15231 touchscreen controller. (Not yet tested on real hardware)
 
-* *CHSC5816 (0x2E)*: CHSC5816 touchscreen controller.
+* *CHSC5816 (0x2E)*: CHSC5816 touchscreen controller. (Not yet tested on real hardware)
 
 * *Auto-detect*: Select this option to have the plugin auto-detect the used touchscreen controller. This auto-detect is mostly based on an I2C device being available at the shown addresses, so might get confused if a non-touchscreen I2C device at one of these addresses is installed.
 
