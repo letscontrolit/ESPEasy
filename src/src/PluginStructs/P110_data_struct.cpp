@@ -67,12 +67,19 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
 
     const bool first_sample = (prev_distance < 0.0f);
 
-    const float filtered = first_sample
+    const float estimator = (_filtered < 0.0f)
             ? new_distance
-            : 0.75f * prev_distance + 0.25f * new_distance;
+            : _filtered;
 
+    const float ratio_filtered = 16;
+    const float ratio_newVal = _prev_newval_ratio;
+    _prev_newval_ratio = std::abs(estimator - new_distance);
 
-    const float dist   = filtered;
+    _filtered = 
+      ((ratio_filtered * estimator) + (ratio_newVal * new_distance))
+      / (ratio_filtered + ratio_newVal);
+
+    const float dist   = _filtered;
     const float p_dist = prev_distance;
 
     // Check trend:
@@ -85,7 +92,7 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
             ? 0
             : (displacement > 0) ? 1 : -1;
 
-    const bool direction_changed = disp_dir != static_cast<int16_t>(UserVar.getFloat(event->TaskIndex, 1));
+    //const bool direction_changed = disp_dir != static_cast<int16_t>(UserVar.getFloat(event->TaskIndex, 1));
     const bool triggered         =
       //      direction_changed ||
       (std::abs(displacement) > P110_DELTA);
@@ -97,12 +104,12 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
     }
         # endif // ifdef P110_INFO_LOG
     // Value is classified as invalid when > 8190, so no conversion or 'split' needed
-    UserVar.setFloat(event->TaskIndex, 0, filtered);
+    UserVar.setFloat(event->TaskIndex, 0, _filtered);
     UserVar.setFloat(event->TaskIndex, 1, disp_dir);       // Trend of value
 
     if (first_sample || triggered || (P110_SEND_ALWAYS == 1)) {
       // Update the "previous" distance.
-      _prev_distance = filtered;
+      _prev_distance = _filtered;
       success        = true;
     }
   }

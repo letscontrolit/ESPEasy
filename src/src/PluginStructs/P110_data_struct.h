@@ -60,6 +60,8 @@ private:
   VL53L0X sensor;
 
   float _prev_distance = -1.0f;
+  float _filtered = -1.0f;
+  float _prev_newval_ratio = 1.0f;
 
   const uint8_t _i2cAddress;
   const int     _timing;
