@@ -160,25 +160,12 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-
-    case PLUGIN_TEN_PER_SECOND: // Handle sensor reading
+    case PLUGIN_TEN_PER_SECOND: // Handle startup delay and sensor reading
     {
       P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P110_data) {
-        if (P110_data->readDistance() >= 0) {
-          Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
-        }
-      }
-      break;
-    }
-
-    case PLUGIN_FIFTY_PER_SECOND: // Handle startup delay
-    {
-      P110_data_struct *P110_data = static_cast<P110_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P110_data) {
-        success = P110_data->plugin_fifty_per_second();
+        success = P110_data->check_reading_ready(event);
       }
       break;
     }

@@ -44,11 +44,15 @@ bool P110_data_struct::begin(uint32_t interval_ms) {
   return true;
 }
 
-bool P110_data_struct::plugin_fifty_per_second() {
+bool P110_data_struct::check_reading_ready(struct EventStruct *event) {
   if (_initPhase == P110_initPhases::InitDelay) {
     if ((_timeToWait != 0) && timeOutReached(_timeToWait)) {
       _timeToWait = 0;
       _initPhase  = P110_initPhases::Ready;
+    }
+  } else {
+    if (readDistance() >= 0) {
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
     }
   }
   return true;
@@ -82,7 +86,9 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
             : (displacement > 0) ? 1 : -1;
 
     const bool direction_changed = disp_dir != static_cast<int16_t>(UserVar.getFloat(event->TaskIndex, 1));
-    const bool triggered         = direction_changed || (std::abs(displacement) > P110_DELTA);
+    const bool triggered         =
+      //      direction_changed ||
+      (std::abs(displacement) > P110_DELTA);
 
         # ifdef P110_INFO_LOG
 
@@ -97,7 +103,7 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
     if (first_sample || triggered || (P110_SEND_ALWAYS == 1)) {
       // Update the "previous" distance.
       _prev_distance = filtered;
-      success = true;
+      success        = true;
     }
   }
   return success;

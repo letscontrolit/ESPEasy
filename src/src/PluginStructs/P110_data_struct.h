@@ -51,7 +51,7 @@ public:
   // This way we know if there was a new successful reading since last call of getDistance()
   int16_t getDistance();
   bool    isReadSuccessful() const;
-  bool    plugin_fifty_per_second();
+  bool    check_reading_ready(struct EventStruct *event);
 
   bool    plugin_read(struct EventStruct *event);
 
