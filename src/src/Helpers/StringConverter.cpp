@@ -438,7 +438,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  {
+  if (Device[DeviceIndex].HasFormatUserVar) {
     // First try to format using the plugin specific formatting.
     String result;
     EventStruct tempEvent;
@@ -449,7 +449,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       return result;
     }
   }
-
+  
+  // Spent upto 400 usec till here
   const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
   const Sensor_VType sensorType = event->getSensorType();
 
@@ -496,7 +497,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
   }
   String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
   STOP_TIMER(FORMAT_USER_VAR);
-  return res;
+  return std::move(res);
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {

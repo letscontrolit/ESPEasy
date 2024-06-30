@@ -31,21 +31,21 @@ Configuration
 
 .. image:: P110_DeviceConfiguration.png
 
-**Name** A unique name should be entered here.
+* **Name** A unique name should be entered here.
 
-**Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 I2C Options 
 ^^^^^^^^^^^^
 
 The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
 
-**I2C Address**: The address the device is using. Some boards holding this chip offer an extra connection SDO that can be used to select the address, other boards just allow to select the secondary address and keep that active until the next power-cycle of the sensor.
+* **I2C Address**: The address the device is using. Some boards holding this chip offer an extra connection SDO that can be used to select the address, other boards just allow to select the secondary address and keep that active until the next power-cycle of the sensor.
 
 Device Settings
 ^^^^^^^^^^^^^^^^
 
-**Timing**: The timing setting of the sensor determines the accuracy of the measurement. There are 3 options available:
+* **Timing**: The timing setting of the sensor determines the accuracy of the measurement. There are 3 options available:
 
 .. image:: P110_TimingOptions.png
 
@@ -55,7 +55,7 @@ Device Settings
 
 *Accurate* A slower but far more accurate measurement (320 msec.) For use with a longer read interval setting (30-60 sec).
 
-**Range**: the measuring ranges:
+* **Range**: the measuring ranges:
 
 .. image:: P110_RangeOptions.png
 
@@ -63,12 +63,22 @@ Device Settings
 
 *Long* For measurements in the 0 to 2000 millimeter range (but somewhat less accurate).
 
+* **Send event when value unchanged**: When checked, will generate events for every **Interval**, when unchecked *and* **Interval** is set to 0, a change in **Distance** will immediately trigger events. (NB: Behavior changed since 2024/04/27, when this option was added)
+
+* **Trigger delta** To avoid triggering many events with only a small difference in distance the 'Trigger delta' option is available. This can be set to only trigger an event when the new distance is at least the delta less or more than the previous measurement.
+
+NB: This setting is ignored if 'Send event when value unchanged' is checked!
+n
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+
+``Interval`` can now be set to 0, causing events to only be generated when changed, with ``Trigger delta`` calculated in.
 
 Values
 ^^^^^^
 
-There is only 1 value available for this sensor, with the default name ``Distance``. A formula can be set to recalculate, f.e. to centimeters using ``%value%/10``. The number of decimals is by default set to 2, but for use with millimeters distance it can be set to 0, as no decimals are provided from the measurement.
+There are 2 values available for this sensor, with the default name ``Distance`` and ``Direction``. A formula can be set to recalculate the distance, f.e. to centimeters using ``%value%/10``. The number of decimals can be set to 0, when using millimeters, as no decimals are provided from the measurement.
+
+Value ``Direction`` holds the direction relative to the *previous* distance value: ``-1`` = smaller distance, ``0`` = unchanged distance, ``1`` = greater distance.
 
 .. Events
 .. ~~~~~~
@@ -82,6 +92,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2024-04-27 Add options for ``Send event when value unchanged`` and ``Trigger delta``, causing somewhat changed behavior.
 
   |added| 2021-02-06 Moved to main repository Plugin 110 from PluginPlayground Plugin 133
 

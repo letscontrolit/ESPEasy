@@ -226,8 +226,8 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       {
         addLog(LOG_LEVEL_INFO,
                strformat(F("P122: Temperature: %s Humidity: %s"),
-                         formatUserVarNoCheck(event->TaskIndex, 0).c_str(),
-                         formatUserVarNoCheck(event->TaskIndex, 1).c_str()
+                         formatUserVarNoCheck(event, 0).c_str(),
+                         formatUserVarNoCheck(event, 1).c_str()
                          ));
       }
       success = true;

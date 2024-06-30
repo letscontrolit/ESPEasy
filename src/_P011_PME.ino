@@ -109,7 +109,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(P011_PORT_TYPE, CONFIG_PORT));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+          addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event, 0)));
         }
         success = true;
       }

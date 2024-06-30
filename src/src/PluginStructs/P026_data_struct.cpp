@@ -224,7 +224,7 @@ bool P026_data_struct::Plugin_Read(struct EventStruct *event)
         if (i != 0) {
           log += ',';
         }
-        log += formatUserVarNoCheck(event->TaskIndex, i);
+        log += formatUserVarNoCheck(event, i);
       }
       addLogMove(LOG_LEVEL_INFO, log);
     }
