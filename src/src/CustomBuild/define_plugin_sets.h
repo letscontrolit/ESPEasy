@@ -1642,6 +1642,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
@@ -1792,7 +1795,7 @@ To create/register a plugin, you have to :
      #define USES_P116   // ST77xx
    #endif
    #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // FT6206
+     #define USES_P123   // I2C Touchscreens
    #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -1954,6 +1957,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P167
     #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
   #endif
 
   // Controllers
@@ -2263,7 +2269,7 @@ To create/register a plugin, you have to :
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-    #define USES_P123   // FT6206
+    #define USES_P123   // I2C Touchscreens
   #endif
   #ifndef USES_P124
     #define USES_P124   // I2C Multi relay
@@ -2369,6 +2375,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P167
     #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
   #endif
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
