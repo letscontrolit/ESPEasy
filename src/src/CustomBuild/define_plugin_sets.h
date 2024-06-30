@@ -1792,7 +1792,7 @@ To create/register a plugin, you have to :
      #define USES_P116   // ST77xx
    #endif
    #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // FT6206
+     #define USES_P123   // I2C Touchscreens
    #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -2264,7 +2264,7 @@ To create/register a plugin, you have to :
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-    #define USES_P123   // FT6206
+    #define USES_P123   // I2C Touchscreens
   #endif
   #ifndef USES_P124
     #define USES_P124   // I2C Multi relay
