@@ -87,14 +87,14 @@ public:
 
   // Compute average over all stored values, taking timestamp into account.
   // Returns average per second.
-  float getSampleAvg_time(uint32_t& totalDuration_sec) const {
-    return getSampleAvg_time(getNrSamples(), totalDuration_sec);
+  float getSampleAvg_time(uint64_t& totalDuration_usec) const {
+    return getSampleAvg_time(getNrSamples(), totalDuration_usec);
   }
 
   // Compute average over last N stored values, taking timestamp into account.
   // Returns average per second.
   float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
-                          uint32_t                   & totalDuration_sec) const;
+                          uint64_t                   & totalDuration_usec) const;
 
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;

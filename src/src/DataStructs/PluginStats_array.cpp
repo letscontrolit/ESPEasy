@@ -26,7 +26,7 @@ PluginStats_array::~PluginStats_array()
   }
 }
 
-void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
+void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     delete _plugin_stats[taskVarIndex];
@@ -44,9 +44,17 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
       HeapSelectIram ephemeral;
       # endif // ifdef USE_SECOND_HEAP
 
-      _plugin_stats[taskVarIndex] = new (std::nothrow) PluginStats(
-        ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
-        ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
+      // Try to allocate in PSRAM if possible
+      constexpr unsigned size = sizeof(PluginStats);
+      void *ptr               = special_calloc(1, size);
+
+      if (ptr == nullptr) { _plugin_stats[taskVarIndex] = nullptr; }
+      else {
+        _plugin_stats[taskVarIndex] = new (ptr) PluginStats(
+          ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
+          ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
+      }
+
 
       if (_plugin_stats[taskVarIndex] != nullptr) {
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
@@ -69,9 +77,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
       constexpr unsigned size = sizeof(PluginStats_timestamp);
       void *ptr               = special_calloc(1, size);
 
-      if (ptr == nullptr) { _plugin_stats_timestamps = nullptr; }
-      else {
-        _plugin_stats_timestamps = new (ptr) PluginStats_timestamp();
+      if (ptr != nullptr) {
+        // TODO TD-er: Let the task decide whether we need 1/50 sec resolution or 1/10
+        // 1/10 sec resolution allows for ~13.6 years without overflow
+        _plugin_stats_timestamps = new (ptr) PluginStats_timestamp(true);
       }
 
       for (size_t i = 0; i < VARS_PER_TASK; ++i) {
@@ -154,12 +163,13 @@ size_t PluginStats_array::nrPluginStats() const
   return res;
 }
 
-uint32_t PluginStats_array::getFullPeriodInSec() const
+uint32_t PluginStats_array::getFullPeriodInSec(uint32_t& time_frac) const
 {
   if (_plugin_stats_timestamps == nullptr) {
+    time_frac = 0u;
     return 0u;
   }
-  return _plugin_stats_timestamps->getFullPeriodInSec();
+  return _plugin_stats_timestamps->getFullPeriodInSec(time_frac);
 }
 
 void PluginStats_array::pushPluginStatsValues(
@@ -268,16 +278,24 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event, bool s
 {
   bool somethingAdded = false;
 
-  const uint32_t duration  = getFullPeriodInSec();
+  uint32_t time_frac{};
+  const uint32_t duration  = getFullPeriodInSec(time_frac);
   const uint32_t nrSamples = nrSamplesPresent();
 
   if ((duration > 0) && (nrSamples > 1)) {
+    const uint32_t duration_millis = unix_time_frac_to_millis(time_frac);
     addRowLabel(F("Total Duration"));
-    addHtml(strformat(F("%s (%u sec)"), secondsToDayHourMinuteSecond(duration).c_str(), duration));
+    addHtml(strformat(
+              F("%s.%03u (%u.%03u sec)"),
+              secondsToDayHourMinuteSecond(duration).c_str(),
+              duration_millis,
+              duration,
+              duration_millis));
+    const float duration_f = static_cast<float>(duration) + (duration_millis / 1000.0f);
     addRowLabel(F("Total Nr Samples"));
     addHtmlInt(nrSamples);
     addRowLabel(F("Avg Rate"));
-    addHtmlFloat(static_cast<float>(duration) / static_cast<float>(nrSamples - 1), 2);
+    addHtmlFloat(duration_f / static_cast<float>(nrSamples - 1), 2);
     addUnit(F("sec/sample"));
     addFormSeparator(4);
     somethingAdded = true;

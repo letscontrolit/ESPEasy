@@ -23,7 +23,8 @@ public:
   PluginStats_array() = default;
   ~PluginStats_array();
 
-  void   initPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskIndex_t    taskIndex,
+                         taskVarIndex_t taskVarIndex);
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Update any logged timestamp with this newly set system time.
@@ -37,24 +38,25 @@ public:
 
   // Compute the duration between first and last sample in seconds
   // For 0 or 1 samples, the period will be 0 seconds.
-  uint32_t getFullPeriodInSec() const;
+  uint32_t getFullPeriodInSec(uint32_t& time_frac) const;
 
   void     pushPluginStatsValues(struct EventStruct *event,
                                  bool                trackPeaks,
                                  bool                onlyUpdateTimestampWhenSame);
 
-  bool     plugin_get_config_value_base(struct EventStruct *event,
-                                        String            & string) const;
+  bool plugin_get_config_value_base(struct EventStruct *event,
+                                    String            & string) const;
 
-  bool     plugin_write_base(struct EventStruct *event,
-                             const String      & string);
+  bool plugin_write_base(struct EventStruct *event,
+                         const String      & string);
 
-  bool     webformLoad_show_stats(struct EventStruct *event, bool showTaskValues = true) const;
+  bool webformLoad_show_stats(struct EventStruct *event,
+                              bool                showTaskValues = true) const;
 
 # if FEATURE_CHART_JS
-  void     plot_ChartJS(bool onlyJSON = false) const;
+  void plot_ChartJS(bool onlyJSON = false) const;
 
-  void     plot_ChartJS_scatter(
+  void plot_ChartJS_scatter(
     taskVarIndex_t                values_X_axis_index,
     taskVarIndex_t                values_Y_axis_index,
     const __FlashStringHelper    *id,

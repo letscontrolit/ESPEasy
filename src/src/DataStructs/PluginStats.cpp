@@ -45,6 +45,7 @@ PluginStats::~PluginStats()
 void PluginStats::processTimeSet(const double& time_offset)
 {
   // Check to see if there was a unix time set before the system time was set
+  // For example when receiving data from a p2p node
   const uint64_t cur_micros    = getMicros64();
   const uint64_t offset_micros = time_offset * 1000000ull;
 
@@ -171,11 +172,11 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   return sum / samplesUsed;
 }
 
-float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint32_t& totalDuration_sec) const
+float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint64_t& totalDuration_usec) const
 {
   const size_t nrSamples = getNrSamples();
 
-  int64_t totalDuration_usec = 0u;
+  totalDuration_usec = 0u;
 
   if ((nrSamples == 0) || (_plugin_stats_timestamps == nullptr)) {
     return _errorValue;
@@ -214,8 +215,6 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
     lastTimestamp   = curTimestamp;
     lastValue       = sample;
   }
-
-  totalDuration_sec = totalDuration_usec / 1000000ll;
 
   if (totalDuration_usec == 0) { return _errorValue; }
   return sum / totalDuration_usec;
@@ -465,17 +464,13 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
     addHtml(strformat(F(" (%u samples)"), getNrSamples()));
 
     if (_plugin_stats_timestamps != nullptr) {
-      uint32_t totalDuration_sec = 0u;
-      const float avg_per_sec    = getSampleAvg_time(totalDuration_sec);
+      uint64_t totalDuration_usec = 0u;
+      const float avg_per_sec     = getSampleAvg_time(totalDuration_usec);
 
-      if (totalDuration_sec > 0) {
+      if (totalDuration_usec > 0) {
         addRowLabel(concat(getLabel(),  F(" Average / sec")));
         addHtmlFloat(avg_per_sec, (_nrDecimals == 0) ? 1 : _nrDecimals);
-
-        //        addHtml(strformat(F(" (%s duration = %u sec)"), secondsToDayHourMinuteSecond(totalDuration_sec).c_str(),
-        // totalDuration_sec));
-
-        addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond(totalDuration_sec).c_str()));
+        addHtml(strformat(F(" (%s duration)"), secondsToDayHourMinuteSecond_ms(totalDuration_usec).c_str()));
       }
     }
     return true;

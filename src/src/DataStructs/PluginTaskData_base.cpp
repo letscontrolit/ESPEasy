@@ -56,7 +56,7 @@ size_t PluginTaskData_base::nrSamplesPresent() const {
 }
 
 #if FEATURE_PLUGIN_STATS
-void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
+void PluginTaskData_base::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     if (_plugin_stats_array == nullptr) {
@@ -64,7 +64,7 @@ void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
     }
 
     if (_plugin_stats_array != nullptr) {
-      _plugin_stats_array->initPluginStats(taskVarIndex);
+      _plugin_stats_array->initPluginStats(taskIndex, taskVarIndex);
     }
   }
 }

@@ -32,7 +32,7 @@ struct PluginTaskData_base {
   size_t nrSamplesPresent() const;
 
   #if FEATURE_PLUGIN_STATS
-  void   initPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex);
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Update any logged timestamp with this newly set system time.

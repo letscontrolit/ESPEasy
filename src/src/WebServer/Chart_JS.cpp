@@ -97,7 +97,7 @@ void add_ChartJS_chart_header(
       "\"zoom\":"
       "{"
       "\"limits\":{"
-      "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":10*1000}," // 10 sec min range
+      "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":1000}," // 1 sec min range
       "},"
       "\"pan\":{"
       "\"enabled\":true,"

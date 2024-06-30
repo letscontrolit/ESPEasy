@@ -499,9 +499,9 @@ void handle_sysinfo_Network() {
   if (tsf_time > 0) {
     addRowLabel(F("WiFi TSF time"));
     // Split it while printing, so we're not loosing a lot of decimals in the float conversion
-    addHtml(secondsToDayHourMinuteSecond(tsf_time / 1000000));
-    addHtml('.');    
-    addHtmlInt(tsf_time % 1000000);
+    uint32_t tsf_usec{};
+    addHtml(secondsToDayHourMinuteSecond(systemMicros_to_sec_usec(tsf_time, tsf_usec)));
+    addHtml(strformat(F(".%06u"), tsf_usec));
   }
   #endif
 
