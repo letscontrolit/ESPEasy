@@ -123,12 +123,12 @@
 # define TOUCH_FLAGS_SWAP_LEFT_RIGHT    19 // Swaps Left and Right, Up and Down swipe directions for menu actions
 # define TOUCH_FLAGS_IGNORE_TOUCH       20 // Disable touch, use for object/button features only
 
-# define TOUCH_GET_VALUE_X    UserVar.getInt32(event->TaskIndex, 0)
-# define TOUCH_GET_VALUE_Y    UserVar.getInt32(event->TaskIndex, 1)
-# define TOUCH_GET_VALUE_Z    UserVar.getInt32(event->TaskIndex, 2)
-# define TOUCH_SET_VALUE_X(N) UserVar.setInt32(event->TaskIndex, 0, N)
-# define TOUCH_SET_VALUE_Y(N) UserVar.setInt32(event->TaskIndex, 1, N)
-# define TOUCH_SET_VALUE_Z(N) UserVar.setInt32(event->TaskIndex, 2, N)
+# define TOUCH_GET_VALUE_X    UserVar.getFloat(event->TaskIndex, 0)
+# define TOUCH_GET_VALUE_Y    UserVar.getFloat(event->TaskIndex, 1)
+# define TOUCH_GET_VALUE_Z    UserVar.getFloat(event->TaskIndex, 2)
+# define TOUCH_SET_VALUE_X(N) UserVar.setFloat(event->TaskIndex, 0, N)
+# define TOUCH_SET_VALUE_Y(N) UserVar.setFloat(event->TaskIndex, 1, N)
+# define TOUCH_SET_VALUE_Z(N) UserVar.setFloat(event->TaskIndex, 2, N)
 
 # define TOUCH_TS_ROTATION              0   // Rotation 0-3 = 0/90/180/270 degrees
 # define TOUCH_TS_SEND_XY             true  // Enable/Disable X/Y events
