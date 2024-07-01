@@ -2,7 +2,7 @@
 #define PLUGINSTRUCTS_P154_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#ifdef USES_P154
+#if defined(USES_P154) || defined(USES_P172)
 
 # include <Adafruit_Sensor.h>
 # include <Adafruit_BMP3XX.h>
@@ -19,12 +19,13 @@ public:
   P154_data_struct()          = delete;
   virtual ~P154_data_struct() = default;
 
-  bool        begin();
+  bool        begin(bool _i2cMode = true);
 
   bool        read(float& temp,
                    float& pressure);
 
-  static bool webformLoad(struct EventStruct *event);
+  static bool webformLoad(struct EventStruct *event,
+                          bool                _i2cMode = true);
   static bool webformSave(struct EventStruct *event);
 
 private:
@@ -33,8 +34,10 @@ private:
 
   uint8_t i2cAddress;
   int16_t elevation{};
+  int16_t csPin{};
 
   bool initialized = false;
+  bool i2cMode     = true;
 };
-#endif // ifdef USES_P154
+#endif // if defined(USES_P154) || defined(USES_P172)
 #endif // ifndef PLUGINSTRUCTS_P154_DATA_STRUCT_H

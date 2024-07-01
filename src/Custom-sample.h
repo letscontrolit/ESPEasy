@@ -534,7 +534,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P151   // Honeywell Pressure
 // #define USES_P152   // ESP32 DAC
 // #define USES_P153   // SHT4x
-// #define USES_P154   // BMP3xx
+// #define USES_P154   // BMP3xx I2C
 
 // #define USES_P159   // Presence - LD2410 Radar detection
 
@@ -542,6 +542,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P164   // Gases - ENS16x TVOC/eCO2
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 // #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+// #define USES_P168   // Light - VEML6030/VEML7700
+
+// #define USES_P170   // Input - I2C Liquid level sensor
+// #define USES_P172   // BMP3xx SPI.
 
 /*
  #######################################################################################################
