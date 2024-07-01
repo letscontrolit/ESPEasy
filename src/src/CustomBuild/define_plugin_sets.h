@@ -391,6 +391,14 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_RULES_EASY_COLOR_CODE
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
+
+    #ifndef USES_P095
+        #define USES_P095   // ILI9341 , added by TEB
+    #endif
+
+    #ifndef USES_P110
+        #define USES_P110   // VL53L0X Time of Flight sensor, added by TEB
+    #endif
 #endif
 
 #if FEATURE_FHEM
@@ -733,16 +741,16 @@ To create/register a plugin, you have to :
       #ifndef SHOW_SYSINFO_JSON
         #define SHOW_SYSINFO_JSON 1
       #endif
-      #ifndef FEATURE_TIMING_STATS                  
+      #ifndef FEATURE_TIMING_STATS
         #define FEATURE_TIMING_STATS 1
       #endif
-      #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 
+      #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
       #endif
       #ifdef BUILD_NO_DEBUG
         #undef BUILD_NO_DEBUG
       #endif
-      
+
 //      #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
@@ -1474,7 +1482,7 @@ To create/register a plugin, you have to :
     #ifdef USES_N002
       #undef USES_N002   // Buzzer
     #endif
-    
+
     // Do not include large blobs but fetch them from CDN
     #ifndef WEBSERVER_USE_CDN_JS_CSS
       #define WEBSERVER_USE_CDN_JS_CSS
@@ -1549,6 +1557,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_COLLECTION_B
     #define USES_P069   // LM75A
 
+    #define USES_P095  // TFT ILI9341, added by TEB 06/28/2024
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
     #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
@@ -1599,10 +1608,10 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_COLLECTION_F
   #ifndef USES_P112
-    #define USES_P112   // AS7265x 
+    #define USES_P112   // AS7265x
   #endif
   #ifndef USES_P122
-    #define USES_P122   // SHT2x 
+    #define USES_P122   // SHT2x
   #endif
   // Disable Itho when using second heap as it no longer fits.
   #if !defined(USES_P118) && !defined(USE_SECOND_HEAP)
@@ -2929,7 +2938,7 @@ To create/register a plugin, you have to :
 #define FEATURE_RTC_CACHE_STORAGE             0
 #endif
 
-#ifndef FEATURE_DNS_SERVER                    
+#ifndef FEATURE_DNS_SERVER
 #define FEATURE_DNS_SERVER                    0
 #endif
 
@@ -2965,7 +2974,7 @@ To create/register a plugin, you have to :
  #endif
 #endif
 
-#ifndef FEATURE_HOMEASSISTANT_OPENHAB         
+#ifndef FEATURE_HOMEASSISTANT_OPENHAB
 #define FEATURE_HOMEASSISTANT_OPENHAB         0
 #endif
 
@@ -3041,7 +3050,7 @@ To create/register a plugin, you have to :
 #define FEATURE_SERVO                         0
 #endif
 
-#ifndef FEATURE_SETTINGS_ARCHIVE              
+#ifndef FEATURE_SETTINGS_ARCHIVE
 #ifdef ESP32
 #define FEATURE_SETTINGS_ARCHIVE              1
 #else
@@ -3301,7 +3310,7 @@ To create/register a plugin, you have to :
   #endif
 #endif // ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
 
-    
+
 
 #ifndef FEATURE_CLEAR_I2C_STUCK
   #ifdef ESP8266
@@ -3336,10 +3345,10 @@ To create/register a plugin, you have to :
 # if ESP_IDF_VERSION_MAJOR>=5 && defined(LWIP_IPV6)
 #  ifdef TESTING_FEATURE_USE_IPV6
 #   define FEATURE_USE_IPV6   1
-#  else 
+#  else
 #   define FEATURE_USE_IPV6   0
 #  endif
-# else 
+# else
 #  define FEATURE_USE_IPV6   0
 # endif
 #endif
@@ -3376,8 +3385,8 @@ To create/register a plugin, you have to :
 #endif
 
 
-  
-  
+
+
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
   #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)
     #define FEATURE_ALTERNATIVE_CDN_URL 0 // No need to configure custom CDN url when all content is included in build
@@ -3393,7 +3402,7 @@ To create/register a plugin, you have to :
 
 // Enable dependencies for custom provisioning
 // FIXME TD-er: What about using this feature on non-Custom builds????
-#if FEATURE_CUSTOM_PROVISIONING 
+#if FEATURE_CUSTOM_PROVISIONING
   #ifdef FEATURE_DOWNLOAD
     #undef FEATURE_DOWNLOAD
   #endif

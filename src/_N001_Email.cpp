@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-06-29 ThomasB   : Modified to support new email server protocol used by some ISP hosting providers
+ *                        Add support for (also) supplying an alternate email address via the notify command
+ *                        Now uses Plugin's new Timeout Setting for SMTP server response.
  * 2024-04-06 tonhuisman: Add support for (also) supplying a custom subject when sending an email notification via the notify command
  *                        Log reply from mailserver at DEBUG level
  *                        Code improvements
@@ -18,7 +21,8 @@
 # define NPLUGIN_ID_001         1
 # define NPLUGIN_NAME_001       "Email (SMTP)"
 
-# define NPLUGIN_001_TIMEOUT 5000
+//# define NPLUGIN_001_TIMEOUT    8000
+# define NPLUGIN_001_PKT_SZ     256
 
 # include "src/DataStructs/ESPEasy_EventStruct.h"
 # include "src/DataStructs/NotificationSettingsStruct.h"
@@ -42,10 +46,12 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
                       String                          & aMesg);
 bool NPlugin_001_Auth(WiFiClient  & client,
                       const String& user,
-                      const String& pass);
+                      const String& pass,
+                      uint16_t timeout);
 bool NPlugin_001_MTA(WiFiClient  & client,
                      const String& aStr,
-                     uint16_t      aWaitForPattern);
+                     uint16_t      aWaitForPattern,
+                     uint16_t      timeout);
 bool getNextMailAddress(const String& data,
                         String      & address,
                         int           index);
@@ -120,6 +126,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 {
   //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
   bool myStatus = false;
+  bool failFlag = false;
 
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
@@ -138,7 +145,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, strformat(
-             F("EMAIL: Connecting to %s:%d"),
+             F("Email: Connecting to %s:%d"),
              notificationsettings.Server,
              notificationsettings.Port));
   }
@@ -147,11 +154,12 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   if (!connectClient(client, notificationsettings.Server, notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR, strformat(
-               F("EMAIL: Error connecting to %s:%d"),
+               F("Email: Error connecting to %s:%d"),
                notificationsettings.Server,
                notificationsettings.Port));
     }
     myStatus = false;
+    failFlag = true;
   } else {
     String mailheader = F(
       "From: $nodename <$emailfrom>\r\n"
@@ -163,6 +171,12 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       "Content-type: text/html; charset=UTF-8\r\n"
       "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
       );
+
+    uint16_t clientTimeout = notificationsettings.Timeout;
+    if (clientTimeout < NPLUGIN_001_MIN_TM || clientTimeout > NPLUGIN_001_MAX_TM) {
+      clientTimeout = NPLUGIN_001_DEF_TM;
+    }
+    clientTimeout *= 1000; // Change to millisecs.
 
     String email_address(notificationsettings.Sender);
     int    pos_less   = email_address.indexOf('<');
@@ -178,9 +192,39 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       senderName.trim();
     }
 
+
+    // Use Notify Command's Receiver if provided in Command rules.
+    String subAddr = "";
+    int pos_brace1 = aMesg.indexOf('{');
+    int pos_amper  = aMesg.indexOf('@');
+    int pos_brace2 = aMesg.indexOf('}');
+    if(pos_brace1 == 0 && pos_amper > pos_brace1 && pos_brace2 > pos_amper) {
+        subAddr = aMesg.substring(pos_brace1+1, pos_brace2);
+        # ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Notify substitute email addr: %s"), subAddr.c_str())); // TEB
+        # endif
+        String subMsg = aMesg.substring(pos_brace2+1); // Remove substitute email address from subject line.
+
+        if(subMsg.indexOf(' ') == 0 || subMsg.indexOf(',') == 0) {
+         subMsg = subMsg.substring(1); // Remove leading space or comma.
+        }
+        if(!subMsg.length()) {
+            subMsg = "ERROR: ESPEasy Notification Rule is missing the message text. Please correct the rule.";
+        }
+        # ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Notify substitute Message: %s"), subMsg.c_str())); // TEB
+        # endif
+        aMesg = subMsg;
+    }
+
+    String tmp_ato(notificationsettings.Receiver);
+    tmp_ato.replace(";", ",");
+    tmp_ato.replace(" ", "");
+    addLog(LOG_LEVEL_DEBUG, strformat(F("Email: ato is: >%s<"),tmp_ato.c_str()));
+
     mailheader.replace(F("$nodename"),       senderName);
     mailheader.replace(F("$emailfrom"),      email_address);
-    mailheader.replace(F("$ato"),            notificationsettings.Receiver);
+    mailheader.replace(F("$ato"),            tmp_ato);
     mailheader.replace(F("$subject"),        aSub);
     String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
     mailheader.replace(F("$date"),           parseTemplate(dateFmtHdr));
@@ -193,60 +237,158 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
     // Wait for Client to Start Sending
     // The MTA Exchange
-    while (true) {
-      if (!NPlugin_001_MTA(client, EMPTY_STRING, 220)) { break; }
 
-      if (!NPlugin_001_MTA(client, strformat(F("EHLO %s"), notificationsettings.Domain), 250)) { break; }
+    if (!failFlag) {
+      addLog(LOG_LEVEL_INFO, F("Email: Initializating ..."));
 
-      if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass)) { break; }
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, strformat(F("Email: Max Allowed Timeout is %d secs"), clientTimeout/1000));
+      # endif
 
-      if (!NPlugin_001_MTA(client, strformat(F("MAIL FROM:<%s>"), email_address.c_str()), 250)) { break; }
-
-      bool   nextAddressAvailable = true;
-      int    i                    = 0;
-      String emailTo;
-      const String receiver(notificationsettings.Receiver);
-
-      if (!getNextMailAddress(receiver, emailTo, i)) {
-        addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
-        break;
-      }
-
-      while (nextAddressAvailable) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
+      while (true) {
+        if (!NPlugin_001_MTA(client, EMPTY_STRING, 220, clientTimeout)) {
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("Email: Initialization Fail"));
+          # endif
+          failFlag = true;
+          break;
         }
 
-        if (!NPlugin_001_MTA(client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250)) { break; }
-        ++i;
-        nextAddressAvailable = getNextMailAddress(receiver, emailTo, i);
+        if (!failFlag) {
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("Email: Sending EHLO domain"));
+          # endif
+          if (!NPlugin_001_MTA(client, strformat(F("EHLO %s"), notificationsettings.Domain), 250, clientTimeout)) {
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("Email: EHLO Domain Fail"));
+            # endif
+            failFlag = true;
+          }
+        }
+
+    // Must retrieve SMTP Reply Packet. Data not used, ignored.
+        if (!failFlag) {
+          unsigned long timeout = millis();
+          String replyStr;
+          String catStr = "";
+	      while (client.available()) {
+	        if (millis() > timeout + clientTimeout) {
+              failFlag = true;
+              break;
+            }
+            safeReadStringUntil(client, replyStr, '\n', NPLUGIN_001_PKT_SZ, clientTimeout);
+            catStr += replyStr;
+          }
+
+          if(!catStr.length()) {
+            catStr = "Empty!";
+          }
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Packet Rcvd is: > %s <"),catStr.c_str()));
+          # endif
+        }
+
+        if (!failFlag) {
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("Email: Sending User/Pass"));
+          # endif
+          if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass, clientTimeout)) {
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("Email: User/Pass Fail"));
+            # endif
+            failFlag = true;
+            break;
+          }
+        }
+
+        if (!failFlag) {
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("Email: Sending email Addr"));
+          # endif
+          if (!NPlugin_001_MTA(client, strformat(F("MAIL FROM:<%s>"), email_address.c_str()), 250, clientTimeout)) {
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("Email: Addr Fail"));
+            # endif
+            failFlag = true;
+            break;
+          }
+        }
+
+        if (!failFlag) {
+          bool nextAddressAvailable = true;
+          int i = 0;
+          String emailTo;
+          String tmpRcvr;
+//        const String receiver(notificationsettings.Receiver);
+
+          if (!subAddr.length()) {
+            tmpRcvr = notificationsettings.Receiver;
+          }
+          else {  // Use Notify Rule receiver(s) instead.
+            tmpRcvr = subAddr;
+          }
+
+          tmpRcvr.replace(";", ",");  // Must use comma as address separation character.
+          tmpRcvr.replace(" ", "");   // Remove all spaces from address.
+          const String receiver(tmpRcvr);
+
+          addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Receiver is: *%s*"),receiver.c_str()));
+
+          if (!getNextMailAddress(receiver, emailTo, i)) {
+            addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
+            break;
+          }
+
+          while (nextAddressAvailable) {
+
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              addLogMove(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
+            }
+
+            if (!NPlugin_001_MTA(client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250, clientTimeout)) { break; }
+            ++i;
+            nextAddressAvailable = getNextMailAddress(receiver, emailTo, i);
+          }
+        }
+
+        if (!failFlag) {
+          if (!NPlugin_001_MTA(client, F("DATA"), 354, clientTimeout)) {
+            failFlag = true;
+            break;
+          }
+        }
+
+        if (!failFlag) {
+          if (!NPlugin_001_MTA(client, strformat(F("%s%s\r\n.\r\n"), mailheader.c_str(), aMesg.c_str()), 250, clientTimeout)) {
+            failFlag = true;
+            break;
+          }
+        }
+
+        // Email Sent. Do some final housekeeping, tell server we're leaving.
+        if (!failFlag) {
+          myStatus = true;
+        }
+
+        NPlugin_001_MTA(client, F("QUIT"), 221, clientTimeout); // Sent successfully, close SMTP protocol, ignore failure
+        break;
       }
-
-      if (!NPlugin_001_MTA(client, F("DATA"), 354)) { break; }
-
-      if (!NPlugin_001_MTA(client, strformat(F("%s%s\r\n.\r\n"), mailheader.c_str(), aMesg.c_str()), 250)) { break; }
-
-      myStatus = true;
-
-      NPlugin_001_MTA(client, F("QUIT"), 221); // Sent successfully, close SMTP protocol, ignore failure
-      break;
     }
-
     client.flush();
     client.stop();
 
     if (myStatus == true) {
-      addLog(LOG_LEVEL_INFO, F("EMAIL: Connection Closed Successfully"));
+      addLog(LOG_LEVEL_INFO, F("Email: Connection Closed Successfully"));
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, concat(F("EMAIL: Connection Closed With Error. Used header: "),  mailheader));
+        addLogMove(LOG_LEVEL_ERROR, concat(F("Email: Connection Closed With Error. Used header: "),  mailheader));
       }
     }
   }
   return myStatus;
 }
 
-bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
+bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass, uint16_t timeout)
 {
   if (user.isEmpty() || pass.isEmpty()) {
     // No user/password given.
@@ -254,26 +396,33 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
   }
   base64 encoder;
 
-  return NPlugin_001_MTA(client, F("AUTH LOGIN"), 334) &&
-         NPlugin_001_MTA(client, encoder.encode(user), 334) &&
-         NPlugin_001_MTA(client, encoder.encode(pass), 235);
+  bool mta1 = NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout);
+  bool mta2 = NPlugin_001_MTA(client, encoder.encode(user), 334, timeout);
+  bool mta3 = NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout);
+
+  if (mta1 && mta2 && mta3) {
+    addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
+  }
+  return (mta1 && mta2 && mta3);
+
 }
 
-bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern)
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
 {
   # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, aStr);
   # endif // ifndef BUILD_NO_DEBUG
 
+  client.flush();
+
   if (aStr.length()) { client.println(aStr); }
 
   // Wait For Response
-  unsigned long timer = millis() + NPLUGIN_001_TIMEOUT;
+  unsigned long timer = millis() + timeout;
 
   backgroundtasks();
 
   const String aWaitForPattern_str = strformat(F("%d "), aWaitForPattern);
-
   while (true) {
     if (timeOutReached(timer)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -286,7 +435,9 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
     delay(0);
 
     String line;
-    safeReadStringUntil(client, line, '\n');
+    safeReadStringUntil(client, line, '\n', NPLUGIN_001_PKT_SZ, timeout);
+
+    line.replace("-", " ");   // Must Remove optional dash from MTA response code.
 
     const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
 
