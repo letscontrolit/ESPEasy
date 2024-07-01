@@ -10,6 +10,7 @@
  * 2024-06-29 ThomasB   : Modified to support new email server protocol used by some ISP hosting providers
  *                        Add support for (also) supplying an alternate email address via the notify command
  *                        Now uses Plugin's new Timeout Setting for SMTP server response.
+ *                        Can now use substitute email address(s), provided within Notify command rule.
  * 2024-04-06 tonhuisman: Add support for (also) supplying a custom subject when sending an email notification via the notify command
  *                        Log reply from mailserver at DEBUG level
  *                        Code improvements
@@ -193,7 +194,8 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     }
 
 
-    // Use Notify Command's Receiver if provided in Command rules.
+    // Use Notify Command's destination email address(s) if provided in Command rules.
+    // Sample Rule: Notify 1, "{email1@domain.com;email2@domain.net},Test email from %sysname%.<br/> How are you?<br/>Have a good day.<br/>"
     String subAddr = "";
     int pos_brace1 = aMesg.indexOf('{');
     int pos_amper  = aMesg.indexOf('@');
