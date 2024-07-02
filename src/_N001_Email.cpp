@@ -142,7 +142,6 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   # ifndef BUILD_NO_DEBUG
-
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, strformat(
              F("Email: Connecting to %s:%d"),
@@ -204,7 +203,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
         subAddr.trim();
         tmp_ato = subAddr;
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Receiver (ato): %s"), subAddr.c_str())); // TEB
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Receiver (ato): %s"), subAddr.c_str()));
+        }
         # endif
 
         String subMsg = aMesg.substring(pos_brace2+1); // Remove substitute email address from subject line.
@@ -217,7 +218,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
             subMsg = "ERROR: ESPEasy Notify Rule missing the message text. Please correct the rule.";
         }
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Message: %s"), subMsg.c_str())); // TEB
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Message: %s"), subMsg.c_str()));
+        }
         # endif
         aMesg = subMsg;
     }
@@ -255,7 +258,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       while (true) {
         if (!NPlugin_001_MTA(client, EMPTY_STRING, 220, clientTimeout)) {
           # ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, F("Email: Initialization Fail"));
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLog(LOG_LEVEL_DEBUG, F("Email: Initialization Fail"));
+          }
           # endif
           failFlag = true;
           break;
@@ -263,11 +268,15 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
         if (!failFlag) {
           # ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, F("Email: Sending EHLO domain"));
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLog(LOG_LEVEL_DEBUG, F("Email: Sending EHLO domain"));
+          }
           # endif
           if (!NPlugin_001_MTA(client, strformat(F("EHLO %s"), notificationsettings.Domain), 250, clientTimeout)) {
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("Email: EHLO Domain Fail"));
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, F("Email: EHLO Domain Fail"));
+            }
             # endif
             failFlag = true;
           }
@@ -290,18 +299,25 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           if(!catStr.length()) {
             catStr = "Empty!";
           }
+
           # ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Packet Rcvd is: > %s <"),catStr.c_str()));
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Packet Rcvd is: > %s <"),catStr.c_str()));
+          }
           # endif
         }
 
         if (!failFlag) {
           # ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, F("Email: Sending User/Pass"));
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLog(LOG_LEVEL_DEBUG, F("Email: Sending User/Pass"));
+          }
           # endif
           if (!NPlugin_001_Auth(client, notificationsettings.User, notificationsettings.Pass, clientTimeout)) {
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("Email: User/Pass Fail"));
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, F("Email: User/Pass Fail"));
+            }
             # endif
             failFlag = true;
             break;
@@ -314,7 +330,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           # endif
           if (!NPlugin_001_MTA(client, strformat(F("MAIL FROM:<%s>"), email_address.c_str()), 250, clientTimeout)) {
             # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("Email: Addr Fail"));
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, F("Email: Addr Fail"));
+            }
             # endif
             failFlag = true;
             break;
@@ -405,7 +423,9 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
 bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
 {
   # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, aStr);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, aStr);
+  }
   # endif // ifndef BUILD_NO_DEBUG
 
   client.flush();
@@ -437,7 +457,9 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
     const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
 
     # ifndef BUILD_NO_DEBUG
-    addLogMove(LOG_LEVEL_DEBUG, line);
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, line);
+    }
     # endif // ifndef BUILD_NO_DEBUG
 
     return patternFound;
