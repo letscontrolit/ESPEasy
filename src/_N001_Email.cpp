@@ -193,34 +193,41 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
 
     // Use Notify Command's destination email address(s) if provided in Command rules.
-    // Sample Rule: Notify 1, "{email1@domain.com;email2@domain.net},Test email from %sysname%.<br/> How are you?<br/>Have a good day.<br/>"
+    // Sample Rule: Notify 1, "{email1@domain.com;email2@domain.net}Test email from %sysname%.<br/> How are you?<br/>Have a good day.<br/>"
     String subAddr = "";
+    String tmp_ato = "";
     int pos_brace1 = aMesg.indexOf('{');
     int pos_amper  = aMesg.indexOf('@');
     int pos_brace2 = aMesg.indexOf('}');
     if(pos_brace1 == 0 && pos_amper > pos_brace1 && pos_brace2 > pos_amper) {
         subAddr = aMesg.substring(pos_brace1+1, pos_brace2);
+        subAddr.trim();
+        tmp_ato = subAddr;
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Notify substitute email addr: %s"), subAddr.c_str())); // TEB
+        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Receiver (ato): %s"), subAddr.c_str())); // TEB
         # endif
-        String subMsg = aMesg.substring(pos_brace2+1); // Remove substitute email address from subject line.
 
-        if(subMsg.indexOf(' ') == 0 || subMsg.indexOf(',') == 0) {
-         subMsg = subMsg.substring(1); // Remove leading space or comma.
+        String subMsg = aMesg.substring(pos_brace2+1); // Remove substitute email address from subject line.
+        subMsg.trim();
+        if(subMsg.indexOf(',') == 0) {
+         subMsg = subMsg.substring(1); // Remove leading comma.
+         subMsg.trim();
         }
         if(!subMsg.length()) {
-            subMsg = "ERROR: ESPEasy Notification Rule is missing the message text. Please correct the rule.";
+            subMsg = "ERROR: ESPEasy Notify Rule missing the message text. Please correct the rule.";
         }
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Notify substitute Message: %s"), subMsg.c_str())); // TEB
+        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Substitute Message: %s"), subMsg.c_str())); // TEB
         # endif
         aMesg = subMsg;
     }
+    else {
+        tmp_ato = notificationsettings.Receiver;  // Use plugin's receiver.
+    }
 
-    String tmp_ato(notificationsettings.Receiver);
+    // Clean up receiver address.
     tmp_ato.replace(";", ",");
     tmp_ato.replace(" ", "");
-    addLog(LOG_LEVEL_DEBUG, strformat(F("Email: ato is: >%s<"),tmp_ato.c_str()));
 
     mailheader.replace(F("$nodename"),       senderName);
     mailheader.replace(F("$emailfrom"),      email_address);
@@ -318,23 +325,12 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           bool nextAddressAvailable = true;
           int i = 0;
           String emailTo;
-          String tmpRcvr;
+          const String receiver(tmp_ato);
 
-          if (!subAddr.length()) {
-            tmpRcvr = notificationsettings.Receiver;
-          }
-          else {  // Use Notify Rule receiver(s) instead.
-            tmpRcvr = subAddr;
-          }
-
-          tmpRcvr.replace(";", ",");  // Must use comma as address separation character.
-          tmpRcvr.replace(" ", "");   // Remove all spaces from address.
-          const String receiver(tmpRcvr);
-
-          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Receiver is: *%s*"),receiver.c_str()));
+          addLog(LOG_LEVEL_INFO, strformat(F("Email: Receiver(s): %s"),receiver.c_str()));
 
           if (!getNextMailAddress(receiver, emailTo, i)) {
-            addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
+            addLog(LOG_LEVEL_ERROR, F("Email: Receiver missing!"));
             break;
           }
 

@@ -9,7 +9,7 @@
 
 # define NPLUGIN_001_DEF_TM     8000  // Email Server Default Response Time, in mS.
 # define NPLUGIN_001_MIN_TM     5000
-# define NPLUGIN_001_MAX_TM     20000
+# define NPLUGIN_001_MAX_TM     12000
 
 /*********************************************************************************************\
  * NotificationSettingsStruct

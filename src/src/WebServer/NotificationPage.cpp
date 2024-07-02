@@ -208,7 +208,8 @@ void handle_notifications() {
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
           addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535, F("NOTE: SSL/TLS servers NOT supported!"));
           if (NotificationSettings.Timeout<NPLUGIN_001_MIN_TM/1000 || NotificationSettings.Timeout>NPLUGIN_001_MAX_TM/1000) {NotificationSettings.Timeout=NPLUGIN_001_DEF_TM/1000;}
-          addFormNumericBox(F("Timeout (Secs)"), F("timeout"), NotificationSettings.Timeout, NPLUGIN_001_MIN_TM/1000, NPLUGIN_001_MAX_TM/1000, F("Maximum Server Response Time)"));
+          addFormNumericBox(F("Timeout"), F("timeout"), NotificationSettings.Timeout, NPLUGIN_001_MIN_TM/1000, NPLUGIN_001_MAX_TM/1000, F("Maximum Server Response Time)"));
+          addUnit(F("Seconds"));
 
           addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
           addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);
