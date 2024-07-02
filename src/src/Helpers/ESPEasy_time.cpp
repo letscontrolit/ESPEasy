@@ -6,7 +6,9 @@
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../DataStructs/NTP_packet.h"
 #include "../DataStructs/TimingStats.h"
+
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -169,7 +171,7 @@ int64_t ESPEasy_time::Unixtime_to_systemMicros(const uint32_t& unix_time_sec, ui
 
 uint32_t ESPEasy_time::systemMicros_to_Unixtime(const int64_t& systemMicros, uint32_t& unix_time_frac) const
 {
-  return systemMicros_to_sec_time_frac(systemMicros + unixTime_usec_uptime_offset, unix_time_frac);
+  return micros_to_sec_time_frac(systemMicros + unixTime_usec_uptime_offset, unix_time_frac);
 }
 
 uint32_t ESPEasy_time::systemMicros_to_Localtime(const int64_t& systemMicros, uint32_t& unix_time_frac) const
@@ -271,29 +273,32 @@ unsigned long ESPEasy_time::now_() {
     if (updatedTime) {
       START_TIMER;
 
-      double time_offset = 0.0;
+      double time_offset_sec = 0.0;
 
       // Update offset
-      unixTime_usec_uptime_offset = static_cast<uint64_t>(unixTime_d * 1000000.0);
+      const uint64_t tmp_unixTime_usec_uptime_offset = static_cast<uint64_t>(unixTime_d * 1000000.0);
 
-      if (micros_received < unixTime_usec_uptime_offset) {
-        const uint64_t new_unixTime_usec_uptime_offset = unixTime_usec_uptime_offset - micros_received;
-        time_offset                 = unixTime_usec_uptime_offset;
-        time_offset                -= new_unixTime_usec_uptime_offset;
-        time_offset                /= 1000000.0;
+      if (micros_received < tmp_unixTime_usec_uptime_offset) {
+        const uint64_t new_unixTime_usec_uptime_offset = tmp_unixTime_usec_uptime_offset - micros_received;
+        time_offset_sec             = unixTime_usec_uptime_offset;
+        time_offset_sec            -= new_unixTime_usec_uptime_offset;
+        time_offset_sec            /= 1000000.0;
         unixTime_usec_uptime_offset = new_unixTime_usec_uptime_offset;
+
+        if ((lastTimeWanderCalculation_ms != 0) &&
+            statusNTPInitialized &&
+            (std::abs(time_offset_sec) < 10.0)) {
+          // Clock instability in ppm
+          timeWander  = ((time_offset_sec * 1000000.0) / timePassedSince(lastTimeWanderCalculation_ms));
+          timeWander *= 1000.0f;
+        }
+
+        lastTimeWanderCalculation_ms = static_cast<uint32_t>(micros_received / 1000);
       } else {
         // Should not happen, so what to do now????
-        unixTime_usec_uptime_offset = 0;
+        //        unixTime_usec_uptime_offset = 0;
       }
 
-      if (statusNTPInitialized && (time_offset < 1.0) && (time_offset > -1.0)) {
-        // Clock instability in ppm
-        timeWander  = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation_ms));
-        timeWander *= 1000.0f;
-      }
-
-      lastTimeWanderCalculation_ms = millis();
 
       timeSynced = true;
 
@@ -302,7 +307,7 @@ unsigned long ESPEasy_time::now_() {
       // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
       const uint32_t unixTime_20200101 = 1577836800;
 
-      if (!statusNTPInitialized && (time_offset > unixTime_20200101)) {
+      if (!statusNTPInitialized && (time_offset_sec > unixTime_20200101)) {
         if (static_cast<uint32_t>(unixTime_d) > unixTime_20200101) {
           // Update recorded plugin stats timestamps
           for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
@@ -310,7 +315,7 @@ unsigned long ESPEasy_time::now_() {
             PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(taskIndex);
 
             if (taskData != nullptr) {
-              taskData->processTimeSet(time_offset);
+              taskData->processTimeSet(time_offset_sec);
             }
           }
         }
@@ -325,7 +330,7 @@ unsigned long ESPEasy_time::now_() {
       ExtRTC_set(static_cast<uint32_t>(unixTime_d + 0.5));
       #endif // if FEATURE_EXT_RTC
       {
-        const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;
+        const unsigned long abs_time_offset_ms = std::abs(time_offset_sec) * 1000;
 
         if (timeSource == timeSource_t::NTP_time_source) {
           // May need to lessen the load on the NTP servers, randomize the sync interval
@@ -360,11 +365,11 @@ unsigned long ESPEasy_time::now_() {
         log += static_cast<uint32_t>(unixTime_d);
         #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-        if ((-86400 < time_offset) && (time_offset < 86400)) {
+        if (std::abs(time_offset_sec) < 86400) {
           // Only useful to show adjustment if it is less than a day.
           log += strformat(
             F(" Time adjusted by %d msec. Wander: %.1f ppm Source: "),
-            static_cast<int32_t>(time_offset * 1000.0),
+            static_cast<int32_t>(time_offset_sec * 1000.0),
             timeWander);
           log += toString(timeSource);
         }
@@ -503,8 +508,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     return false;
   }
 
-  const int NTP_PACKET_SIZE = 48;            // NTP time is in the first 48 bytes of message
-  uint8_t   packetBuffer[NTP_PACKET_SIZE]{}; // buffer to hold incoming & outgoing packets
+  NTP_packet ntp_packet;
 
   log += F(" queried");
 #ifndef BUILD_NO_DEBUG
@@ -513,14 +517,6 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   while (udp.parsePacket() > 0) { // discard any previously received packets
   }
-  packetBuffer[0]  = 0b11100011; // LI, Version, Mode
-  packetBuffer[1]  = 0;          // Stratum, or type of clock
-  packetBuffer[2]  = 6;          // Polling Interval
-  packetBuffer[3]  = 0xEC;       // Peer Clock Precision
-  packetBuffer[12] = 49;
-  packetBuffer[13] = 0x4E;
-  packetBuffer[14] = 49;
-  packetBuffer[15] = 52;
 
   FeedSW_watchdog();
 
@@ -530,20 +526,41 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     STOP_TIMER(NTP_FAIL);
     return false;
   }
-  udp.write(packetBuffer, NTP_PACKET_SIZE);
+  constexpr int  NTP_packet_size = sizeof(NTP_packet);
+  const uint64_t txMicros        = getMicros64() + unixTime_usec_uptime_offset;
+  ntp_packet.setTxTimestamp(txMicros);
+  udp.write(ntp_packet.data, NTP_packet_size);
   udp.endPacket();
-
 
   const uint32_t beginWait = millis();
 
+#ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("NTP  : before\n"), ntp_packet.toDebugString()));
+#endif // ifndef BUILD_NO_DEBUG
+
   while (!timeOutReached(beginWait + 1000)) {
-    int size       = udp.parsePacket();
-    int remotePort = udp.remotePort();
+    const int size       = udp.parsePacket();
+    const int remotePort = udp.remotePort();
 
-    if ((size >= NTP_PACKET_SIZE) && (remotePort == 123)) {
-      udp.read(packetBuffer, NTP_PACKET_SIZE); // read packet into the buffer
+    if (size >= NTP_packet_size) {
+      if (remotePort != 123) {
+#ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG_MORE, concat(F("NTP  : Reply from wrong port: "), remotePort));
+#endif // ifndef BUILD_NO_DEBUG
+        udp.stop();
+        STOP_TIMER(NTP_FAIL);
+        return false;
+      }
+      udp.read(ntp_packet.data, NTP_packet_size); // read packet into the buffer
+      const uint64_t receivedMicros = getMicros64();
 
-      if ((packetBuffer[0] & 0b11000000) == 0b11000000) {
+      udp.stop();
+
+#ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, concat(F("NTP  : after\n"), ntp_packet.toDebugString()));
+#endif // ifndef BUILD_NO_DEBUG
+
+      if (ntp_packet.isUnsynchronized()) {
         // Leap-Indicator: unknown (clock unsynchronized)
         // See: https://github.com/letscontrolit/ESPEasy/issues/2886#issuecomment-586656384
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -556,84 +573,84 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = getUptime_in_sec() + 120;
         }
-        udp.stop();
         STOP_TIMER(NTP_FAIL);
         return false;
       }
 
       // For more detailed info on improving accuracy, see:
       // https://github.com/lettier/ntpclient/issues/4#issuecomment-360703503
-      // For now, we simply use half the reply time as delay compensation.
 
-      unsigned long secsSince1900;
+      uint64_t offset_usec{};
+      uint64_t roundtripDelay_usec{};
 
-      // convert four bytes starting at location 40 to a long integer
-      // TX time is used here.
-      secsSince1900  = (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
+      if (!ntp_packet.compute_usec(
+            txMicros,
+            receivedMicros + unixTime_usec_uptime_offset,
+            offset_usec, roundtripDelay_usec))
+      {
+#ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+                     F("NTP  : NTP error: round-trip delay: %d ms offset: %s,\n  t0: %s,\n  t1: %s,\n  t2: %s,\n  t3: %s"),
+                     static_cast<int32_t>(roundtripDelay_usec / 1000),
+                     secondsToDayHourMinuteSecond_ms(offset_usec).c_str(),
+                     doubleToString(ntp_packet.getReferenceTimestamp_usec() / 1000000.0, 3).c_str(),
+                     doubleToString(ntp_packet.getOriginTimestamp_usec() / 1000000.0,    3).c_str(),
+                     doubleToString(ntp_packet.getReceiveTimestamp_usec() / 1000000.0,   3).c_str(),
+                     doubleToString(ntp_packet.getTransmitTimestamp_usec() / 1000000.0,  3).c_str()
+                     ));
+#else // ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+                     F("NTP  : NTP error: round-trip delay: %d ms offset: %s"),
+                     static_cast<int32_t>(roundtripDelay_usec / 1000),
+                     secondsToDayHourMinuteSecond_ms(offset_usec).c_str()
+                     ));
 
-      if (secsSince1900 == 0) {
-        // No time stamp received
+#endif // ifndef BUILD_NO_DEBUG
 
-        if (!useNTPpool) {
-          // Retry again in a minute.
-          nextSyncTime = getUptime_in_sec() + 60;
-        }
-        udp.stop();
+        // Apparently this is not a valid packet
+        // as the received timestamp is before the origin timestamp
+        // or no valid timestamps from the NTP server.
+        nextSyncTime = getUptime_in_sec() + 60;
         STOP_TIMER(NTP_FAIL);
         return false;
       }
-      uint32_t txTm = secsSince1900 - 2208988800UL;
 
-      unsigned long txTm_f;
-      txTm_f  = (unsigned long)packetBuffer[44] << 24;
-      txTm_f |= (unsigned long)packetBuffer[45] << 16;
-      txTm_f |= (unsigned long)packetBuffer[46] << 8;
-      txTm_f |= (unsigned long)packetBuffer[47];
+      unixTime_d =
+        static_cast<double>(ntp_packet.getTransmitTimestamp_usec()) /
+        1000000.0;
+      externalUnixTime_received_micros =
+        receivedMicros - (roundtripDelay_usec / 2);
 
-      // Convert seconds to double
-      unixTime_d = static_cast<double>(txTm);
-
-      // Add fractional part.
-      unixTime_d += (static_cast<double>(txTm_f) / 4294967295.0);
-
-      long total_delay = timePassedSince(beginWait);
-      lastSyncTime_ms = millis();
-
-      // compensate for the delay by adding half the total delay
-      // N.B. unixTime_d is in seconds and delay in msec.
-      double delay_compensation = static_cast<double>(total_delay) / 2000.0;
-      unixTime_d                      += delay_compensation;
-      externalUnixTime_received_micros = getMicros64();
+      timeSource         = timeSource_t::NTP_time_source;
+      lastSyncTime_ms    = millis();
+      lastNTPSyncTime_ms = lastSyncTime_ms;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("NTP  : NTP replied: delay ");
-        log += total_delay;
-        log += F(" mSec");
-#ifndef LIMIT_BUILD_SIZE
-        log += F(" Accuracy increased by ");
-        double fractpart, intpart;
-        fractpart = modf(unixTime_d, &intpart);
-
-        if (fractpart < delay_compensation) {
-          // We gained more than 1 second in accuracy
-          fractpart += 1.0;
-        }
-        log += static_cast<int>(fractpart * 1000.0);
-        log += F(" msec");
-#endif // ifndef LIMIT_BUILD_SIZE
-        addLogMove(LOG_LEVEL_INFO, log);
+#ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_INFO, strformat(
+                     F("NTP  : NTP replied: delay %d ms round-trip delay: %u ms offset: %s,\n  t0: %s,\n  t1: %s,\n  t2: %s,\n  t3: %s"),
+                     timePassedSince(beginWait),
+                     static_cast<uint32_t>(roundtripDelay_usec / 1000),
+                     secondsToDayHourMinuteSecond_ms(offset_usec).c_str(),
+                     doubleToString(ntp_packet.getReferenceTimestamp_usec() / 1000000.0, 3).c_str(),
+                     doubleToString(ntp_packet.getOriginTimestamp_usec() / 1000000.0,    3).c_str(),
+                     doubleToString(ntp_packet.getReceiveTimestamp_usec() / 1000000.0,   3).c_str(),
+                     doubleToString(ntp_packet.getTransmitTimestamp_usec() / 1000000.0,  3).c_str()
+                     ));
+#else // ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_INFO, strformat(
+                     F("NTP  : NTP replied: delay %d ms round-trip delay: %u ms offset: %s"),
+                     timePassedSince(beginWait),
+                     static_cast<uint32_t>(roundtripDelay_usec / 1000),
+                     secondsToDayHourMinuteSecond_ms(offset_usec).c_str()
+                     ));
+#endif // ifndef BUILD_NO_DEBUG
       }
-      udp.stop();
-      timeSource         = timeSource_t::NTP_time_source;
-      lastNTPSyncTime_ms = millis();
       CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       STOP_TIMER(NTP_SUCCESS);
       return true;
     }
-    delay(10);
+    delay(1);
   }
 
   // Timeout.

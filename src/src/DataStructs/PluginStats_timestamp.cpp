@@ -86,7 +86,7 @@ uint32_t PluginStats_timestamp::getFullPeriodInSec(uint32_t& time_frac) const
 
   const int64_t period_usec = (end < start) ? (start - end) : (end - start);
 
-  return systemMicros_to_sec_time_frac(period_usec, time_frac);
+  return micros_to_sec_time_frac(period_usec, time_frac);
 }
 
 int64_t PluginStats_timestamp::operator[](PluginStatsTimestamps_t::index_t index) const

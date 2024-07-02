@@ -333,7 +333,7 @@ String getValue(LabelType::Enum label) {
       }
       return timeSource_str;
     }
-    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
+    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 3);
     #if FEATURE_EXT_RTC
     case LabelType::EXT_RTC_UTC_TIME:
     {

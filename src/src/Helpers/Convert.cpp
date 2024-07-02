@@ -123,7 +123,7 @@ String secondsToDayHourMinuteSecond_ms(int64_t systemMicros)
   }
 
   uint32_t usec{};
-  const uint32_t seconds = systemMicros_to_sec_usec(systemMicros, usec);
+  const uint32_t seconds = micros_to_sec_usec(systemMicros, usec);
   return strformat(
     F("%s.%03u"),
     secondsToDayHourMinuteSecond(seconds).c_str(),

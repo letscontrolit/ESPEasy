@@ -33,22 +33,29 @@ uint32_t micros_to_unix_time_frac(uint32_t micros)
   return static_cast<float>(micros) * 4294.967f;
 }
 
-uint32_t systemMicros_to_sec_time_frac(int64_t systemMicros, uint32_t& unix_time_frac)
+uint32_t micros_to_sec_time_frac(int64_t micros, uint32_t& unix_time_frac)
 {
-  const uint64_t unixtime_sec = static_cast<uint32_t>(systemMicros / 1000000ull);
+  const uint64_t seconds = static_cast<uint32_t>(micros / 1000000ull);
 
   // Compute modulo usec
-  unix_time_frac = micros_to_unix_time_frac(systemMicros - (1000000ull * unixtime_sec));
-  return static_cast<uint32_t>(unixtime_sec);
+  unix_time_frac = micros_to_unix_time_frac(micros - (1000000ull * seconds));
+  return static_cast<uint32_t>(seconds);
 }
 
-uint32_t systemMicros_to_sec_usec(int64_t systemMicros, uint32_t& usec)
+uint64_t sec_time_frac_to_Micros(uint32_t seconds, uint32_t time_frac)
 {
-  const uint64_t unixtime_sec = static_cast<uint32_t>(systemMicros / 1000000ull);
+  return
+    (static_cast<uint64_t>(seconds) * 1000000ull) +
+    unix_time_frac_to_micros(time_frac);
+}
+
+uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec)
+{
+  const uint64_t seconds = static_cast<uint32_t>(micros / 1000000ull);
 
   // Compute modulo usec
-  usec = static_cast<uint32_t>(systemMicros - (1000000ull * unixtime_sec));
-  return static_cast<uint32_t>(unixtime_sec);
+  usec = static_cast<uint32_t>(micros - (1000000ull * seconds));
+  return static_cast<uint32_t>(seconds);
 }
 
 bool isLeapYear(int year) {

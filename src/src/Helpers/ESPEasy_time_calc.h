@@ -60,9 +60,10 @@ uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac);
 uint32_t millis_to_unix_time_frac(uint32_t millis);
 uint32_t micros_to_unix_time_frac(uint32_t micros);
 
-uint32_t systemMicros_to_sec_time_frac(int64_t systemMicros, uint32_t& unix_time_frac);
+uint32_t micros_to_sec_time_frac(int64_t micros, uint32_t& unix_time_frac);
+uint64_t sec_time_frac_to_Micros(uint32_t seconds, uint32_t time_frac);
 
-uint32_t systemMicros_to_sec_usec(int64_t systemMicros, uint32_t& usec);
+uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec);
 
 /********************************************************************************************\
    Unix Time computations
