@@ -73,7 +73,7 @@ void handle_notifications() {
             NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
           }
           NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
-          NotificationSettings.Timeout                    = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
+          NotificationSettings.Timeout                    = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM/1000);
           NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
           NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
           Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
@@ -207,8 +207,8 @@ void handle_notifications() {
           addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
           addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535, F("NOTE: SSL/TLS servers NOT supported!"));
-          if (NotificationSettings.Timeout<NPLUGIN_001_MIN_TM || NotificationSettings.Timeout>NPLUGIN_001_MAX_TM) {NotificationSettings.Timeout=NPLUGIN_001_DEF_TM;}
-          addFormNumericBox(F("Timeout (Secs)"), F("timeout"), NotificationSettings.Timeout, NPLUGIN_001_MIN_TM, NPLUGIN_001_MAX_TM, F("Maximum Server Response Time)"));
+          if (NotificationSettings.Timeout<NPLUGIN_001_MIN_TM/1000 || NotificationSettings.Timeout>NPLUGIN_001_MAX_TM/1000) {NotificationSettings.Timeout=NPLUGIN_001_DEF_TM/1000;}
+          addFormNumericBox(F("Timeout (Secs)"), F("timeout"), NotificationSettings.Timeout, NPLUGIN_001_MIN_TM/1000, NPLUGIN_001_MAX_TM/1000, F("Maximum Server Response Time)"));
 
           addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
           addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);

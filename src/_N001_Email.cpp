@@ -7,7 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2024-06-29 ThomasB   : Modified to support new email server protocol used by some ISP hosting providers
+ * 2024-07-01 ThomasB   : Modified to support new email server protocol used by some ISP hosting providers
  *                        Add support for (also) supplying an alternate email address via the notify command
  *                        Now uses Plugin's new Timeout Setting for SMTP server response.
  *                        Can now use substitute email address(s), provided within Notify command rule.
@@ -173,11 +173,10 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
       );
 
-    uint16_t clientTimeout = notificationsettings.Timeout;
+    uint16_t clientTimeout = notificationsettings.Timeout * 1000; // Convert to mS.
     if (clientTimeout < NPLUGIN_001_MIN_TM || clientTimeout > NPLUGIN_001_MAX_TM) {
       clientTimeout = NPLUGIN_001_DEF_TM;
     }
-    clientTimeout *= 1000; // Change to millisecs.
 
     String email_address(notificationsettings.Sender);
     int    pos_less   = email_address.indexOf('<');
@@ -241,7 +240,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     // The MTA Exchange
 
     if (!failFlag) {
-      addLog(LOG_LEVEL_INFO, F("Email: Initializating ..."));
+      addLog(LOG_LEVEL_INFO, F("Email: Initializing ..."));
 
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, strformat(F("Email: Max Allowed Timeout is %d secs"), clientTimeout/1000));
