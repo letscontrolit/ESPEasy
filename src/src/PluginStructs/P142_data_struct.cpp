@@ -55,7 +55,9 @@ bool P142_data_struct::init(struct EventStruct *event) {
     as5600->setOffset(_angleOffset);
   }
 
-  addLog(LOG_LEVEL_INFO, concat(F("AS5600: Initialization "), isInitialized() ? F("succeeded") : F("failed")));
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, concat(F("AS5600: Initialization "), isInitialized() ? F("succeeded") : F("failed")));
+  }
   return isInitialized();
 }
 
