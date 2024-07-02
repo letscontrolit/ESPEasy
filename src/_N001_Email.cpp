@@ -22,7 +22,6 @@
 # define NPLUGIN_ID_001         1
 # define NPLUGIN_NAME_001       "Email (SMTP)"
 
-//# define NPLUGIN_001_TIMEOUT    8000
 # define NPLUGIN_001_PKT_SZ     256
 
 # include "src/DataStructs/ESPEasy_EventStruct.h"
@@ -202,7 +201,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     if(pos_brace1 == 0 && pos_amper > pos_brace1 && pos_brace2 > pos_amper) {
         subAddr = aMesg.substring(pos_brace1+1, pos_brace2);
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Notify substitute email addr: %s"), subAddr.c_str())); // TEB
+        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Notify substitute email addr: %s"), subAddr.c_str())); // TEB
         # endif
         String subMsg = aMesg.substring(pos_brace2+1); // Remove substitute email address from subject line.
 
@@ -213,7 +212,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
             subMsg = "ERROR: ESPEasy Notification Rule is missing the message text. Please correct the rule.";
         }
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Notify substitute Message: %s"), subMsg.c_str())); // TEB
+        addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Notify substitute Message: %s"), subMsg.c_str())); // TEB
         # endif
         aMesg = subMsg;
     }
@@ -320,7 +319,6 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           int i = 0;
           String emailTo;
           String tmpRcvr;
-//        const String receiver(notificationsettings.Receiver);
 
           if (!subAddr.length()) {
             tmpRcvr = notificationsettings.Receiver;
@@ -333,7 +331,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
           tmpRcvr.replace(" ", "");   // Remove all spaces from address.
           const String receiver(tmpRcvr);
 
-          addLog(LOG_LEVEL_DEBUG, strformat(F("->Email: Receiver is: *%s*"),receiver.c_str()));
+          addLog(LOG_LEVEL_DEBUG, strformat(F("Email: Receiver is: *%s*"),receiver.c_str()));
 
           if (!getNextMailAddress(receiver, emailTo, i)) {
             addLog(LOG_LEVEL_ERROR, F("Email: No recipient given"));
