@@ -97,15 +97,9 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       P107_data->uv.reset(); // Stop the sensor reading
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SI1145: Visible: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLogMove(LOG_LEVEL_INFO, log);
-        log  = F("SI1145: Infrared: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 1);
-        addLogMove(LOG_LEVEL_INFO, log);
-        log  = F("SI1145: UV index: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 2);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Visible: "), formatUserVarNoCheck(event->TaskIndex, 0)));
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Infrared: "), formatUserVarNoCheck(event->TaskIndex, 1)));
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: UV index: "), formatUserVarNoCheck(event->TaskIndex, 2)));
       }
       success = true;
       break;

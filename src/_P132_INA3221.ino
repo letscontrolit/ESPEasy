@@ -78,14 +78,14 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_I2C_GET_ADDRESS
+    #if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
       event->Par1 = P132_I2C_ADDR;
       success     = true;
       break;
     }
-    # endif // if FEATURE_I2C_GET_ADDRESS
+    #endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -114,7 +114,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("Voltage channel 3")
         };
 
-        for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
+        for (uint8_t r = 0; r < VARS_PER_TASK; ++r) {
           addFormSelector(concat(F("Power value "), r + 1),
                           getPluginCustomArgName(r), INA3221_var_OPTION, varOptions, NULL, PCONFIG(P132_CONFIG_BASE + r));
         }
@@ -197,7 +197,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
     {
       P132_I2C_ADDR = getFormItemInt(F("i2c_addr"));
 
-      for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
+      for (uint8_t r = 0; r < VARS_PER_TASK; ++r) {
         PCONFIG(P132_CONFIG_BASE + r) = getFormItemIntCustomArgName(r);
       }
       P132_SHUNT = getFormItemInt(F("shunt"));
@@ -235,13 +235,14 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
       uint8_t reg;
 
-      for (uint8_t r = 0; r < VARS_PER_TASK; r++) {
+      for (uint8_t r = 0; r < VARS_PER_TASK; ++r) {
         // VALUES 1..4
         reg = static_cast<uint8_t>(PCONFIG(P132_CONFIG_BASE + r) + 1);
 
         if ((reg == 2) || (reg == 4) || (reg == 6)) {
-          UserVar.setFloat(event->TaskIndex, r, P132_data->getBusVoltage_V(reg)
-                                             + (P132_data->getShuntVoltage_mV(reg - 1) / 1000.0f));
+          UserVar.setFloat(event->TaskIndex, r,
+                           P132_data->getBusVoltage_V(reg)
+                           + (P132_data->getShuntVoltage_mV(reg - 1) / 1000.0f));
         } else {
           UserVar.setFloat(event->TaskIndex, r, (P132_data->getShuntVoltage_mV(reg) / 100.0f) * P132_SHUNT);
         }
@@ -250,15 +251,11 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("INA3221: Values: ");
-        log += UserVar[event->BaseVarIndex];
-        log += '/';
-        log += UserVar[event->BaseVarIndex + 1];
-        log += '/';
-        log += UserVar[event->BaseVarIndex + 2];
-        log += '/';
-        log += UserVar[event->BaseVarIndex + 3];
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("INA3221: Values: %.2f/%.2f/%.2f/%.2f"),
+                                         UserVar[event->BaseVarIndex],
+                                         UserVar[event->BaseVarIndex + 1],
+                                         UserVar[event->BaseVarIndex + 2],
+                                         UserVar[event->BaseVarIndex + 3]));
       }
       #endif // ifndef BUILD_NO_DEBUG
 

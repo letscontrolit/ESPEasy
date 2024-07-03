@@ -67,7 +67,7 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C017_queue_element> element(new C017_queue_element(event));
+      std::unique_ptr<C017_queue_element> element(new (std::nothrow) C017_queue_element(event));
       success = C017_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());
       break;
@@ -139,7 +139,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
 
   uint64_t payload_len = JSON_packet_content.length();
 
-  // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + JSON_packet_content);
+  // addLog(LOG_LEVEL_INFO, concat(F("ZBX: "), JSON_packet_content));
   // Send the packet
   client.write(packet_header,               sizeof(packet_header) - 1);
   client.write(reinterpret_cast<const char *>(&payload_len),        sizeof(payload_len));

@@ -84,8 +84,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Btn: ");
-      string += formatGpioLabel(CONFIG_PIN3, false);
+      string  = concat(F("Btn: "), formatGpioLabel(CONFIG_PIN3, false));
       success = true;
       break;
     }
@@ -98,13 +97,13 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const int controllerValues[2] = { 0, 1 };
+      const int controllerValues[] = { 0, 1 };
       OLedFormController(F("use_sh1106"), controllerValues, PCONFIG(5));
 
       OLedFormRotation(F("rotate"), PCONFIG(1));
 
       {
-        const int optionValues3[3] = { 1, 3, 2 };
+        const int optionValues3[] = { 1, 3, 2 };
         OLedFormSizes(F("size"), optionValues3, PCONFIG(3));
       }
       {
@@ -116,7 +115,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (int varNr = 0; varNr < 8; varNr++)
+        for (int varNr = 0; varNr < 8; ++varNr)
         {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
@@ -145,7 +144,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       char   deviceTemplate[P23_Nlines][P23_Nchars] = {};
       String error;
 
-      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P23_Nlines; ++varNr) {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }

@@ -1,0 +1,109 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    ``touch,enable,<touchObject|nr>[,...]``
+
+    ``<touchObject|nr>`` Select an object either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ","
+
+    Enable 1 or more objects. Select the objects by name or number. Using names makes it more easy to re-use a script.
+
+    "
+    "
+    ``touch,disable,<touchObject|nr>[,...]``
+
+    ``<touchObject|nr>`` Select an object either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ","
+    Disable 1 or more objects. Select the objects by name or number. Using names makes it more easy to re-use a script.
+    "
+    "
+    ``touch,on,<buttonName|nr>[,...]``
+
+    ``<buttonName|nr>`` Select a button either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ","
+    Switch 1 or more button objects On. Select the buttons by name or number. Using names makes it more easy to re-use a script.
+    "
+    "
+    ``touch,off,<buttonName|nr>[,...]``
+
+    ``<buttonName|nr>`` Select a button either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ","
+    Switch 1 or more buttons Off. Select the buttons by name or number. Using names makes it more easy to re-use a script.
+    "
+    "
+    ``touch,toggle,<buttonName|nr>[,...]``
+
+    ``<buttonName|nr>`` Select a button either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ","
+    Toggle the state for 1 or more buttons. Select the buttons by name or number. Using names makes it more easy to re-use a script.
+    "
+    "
+    ``touch,set,<touchObject|nr>,<value>``
+
+    ``<touchObject|nr>`` Select an object either by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ``<value>`` Set to a value, for object buttons, only 0 and <> 0 count. 0 will set the state to Off, and <> 0 will set the state to On.
+
+    ","
+
+    Set the state or value of an object. Select the object by name or number.
+
+    When selecting a value of 0, the state will be changed to Off. When selecting a numeric value <> 0, the state will be set to On.
+
+    For non-button objects, like a slide control, set the current value for the slider. Must be within the range of the slider.
+    "
+    "
+    ``touch,swipe,<swipeDirection>``
+
+    ``<swipeDirection>`` The numeric direction of a swipe, 1 = ``up``, 3 = ``right``, 5 = ``down``, 7 = ``left``, to change the currently selected group.
+
+    ","
+    Select another button-group as if it was selected by a swipe on the display.
+    "
+    "
+    ``touch,setgrp,<group>``
+
+    ``<group>`` Group to select. Numeric, and has to be an exisiting group number.
+
+    ","
+    Select a button-group by number.
+    "
+    "
+    ``touch,nextgrp``
+    ","
+    Select the next button-group.
+    "
+    "
+    ``touch,prevgrp``
+    ","
+    Select the previous button-group.
+    "
+    "
+    ``touch,nextpage``
+    ","
+    Select the next button-page (group + 10). When **Navigation Left/Right/Up/Down menu reversed** is enabled, the group number wil be *decreased* by 10!
+    "
+    "
+    ``touch,prevpage``
+    ","
+    Select the previous button-page (group - 10). When **Navigation Left/Right/Up/Down menu reversed** is enabled, the group number wil be *increased* by 10!
+    "
+    "
+    ``touch,updatebutton,<buttonName|nr>[,<group>[,<mode>]]``
+
+    ``<buttonName|nr>`` Select either a button by name or number. Numbers match with the numbers shown in the web UI or ESPEasy.
+
+    ``<group>`` The group number for the button.
+
+    ``<mode>`` The mode of the button. Available options: 0 = normal, -1 = initial, -2 = clear button area.
+    ","
+    Update the button according to the current state, on the display. To update a dynamic caption or external state/value change.
+    "

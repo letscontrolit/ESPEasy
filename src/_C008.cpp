@@ -78,7 +78,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));
+      std::unique_ptr<C008_queue_element> element(new (std::nothrow) C008_queue_element(event, valueCount));
       success = C008_DelayHandler->addToQueue(std::move(element));
 
       if (success) {

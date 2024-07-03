@@ -58,40 +58,46 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 
   //  USB.begin();
   if (_hwcdc_serial != nullptr) {
-    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
-    _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
+    // _hwcdc_serial->end();
+
+    //    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
+    //    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(_config.txBuffSize);
 
     // See: https://github.com/espressif/arduino-esp32/issues/9043
-    _hwcdc_serial->setTxTimeoutMs(0);       // sets no timeout when trying to write to USB HW CDC
+    //    _hwcdc_serial->setTxTimeoutMs(0);       // sets no timeout when trying to write to USB HW CDC
 
-    _hwcdc_serial->begin();
+    //    _hwcdc_serial->begin();
 
     //    _hwcdc_serial->onEvent(hwcdcEventCallback);
   }
 }
 
-Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {}
+Port_ESPEasySerial_USB_HWCDC_t::~Port_ESPEasySerial_USB_HWCDC_t() {
+  if (_hwcdc_serial != nullptr) {
+    // _hwcdc_serial->end();
+  }
+}
 
 void Port_ESPEasySerial_USB_HWCDC_t::begin(unsigned long baud)
 {
   _config.baud = baud;
-  /*
-     if (_hwcdc_serial != nullptr) {
-     _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
-     _config.txBuffSize = _hwcdc_serial->setRxBufferSize(_config.txBuffSize);
-     _hwcdc_serial->begin();
-     delay(10);
-     _hwcdc_serial->onEvent(hwcdcEventCallback);
-     delay(1);
-     }
-   */
+
+  if (_hwcdc_serial != nullptr) {
+    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
+    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(_config.txBuffSize);
+    _hwcdc_serial->begin();
+    delay(10);
+
+    //   _hwcdc_serial->onEvent(hwcdcEventCallback);
+    delay(1);
+  }
 }
 
 void Port_ESPEasySerial_USB_HWCDC_t::end() {
   // Disabled for now
   // See: https://github.com/espressif/arduino-esp32/issues/8224
   if (_hwcdc_serial != nullptr) {
-    _hwcdc_serial->end();
+    // _hwcdc_serial->end();
   }
 }
 
@@ -203,6 +209,5 @@ bool Port_ESPEasySerial_USB_HWCDC_t::setRS485Mode(int8_t rtsPin, bool enableColl
 {
   return false;
 }
-
 
 #endif // if USES_HWCDC

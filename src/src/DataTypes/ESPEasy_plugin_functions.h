@@ -62,6 +62,9 @@ enum PluginFunctions_e {
    PLUGIN_PRIORITY_INIT_ALL           , // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
    PLUGIN_PRIORITY_INIT               , // Pre-initialize a singe plugins that is set to PowerManager priority
    PLUGIN_WEBFORM_LOAD_ALWAYS         , // Loaded *after* PLUGIN_WEBFORM_LOAD, also shown for remote data-feed devices
+#ifdef USES_ESPEASY_NOW
+   PLUGIN_FILTEROUT_CONTROLLER_DATA   , // Can be called from the controller to query a task whether the data should be processed further.
+#endif
    PLUGIN_WEBFORM_PRE_SERIAL_PARAMS   , // Before serial parameters, convert additional parameters like baudrate or specific serial config
 
    PLUGIN_MAX_FUNCTION  // Leave as last one.
