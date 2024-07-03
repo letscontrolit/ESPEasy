@@ -617,12 +617,14 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = strformat(F("P039 : %s :"), getTaskDeviceName(event->TaskIndex).c_str());
 
-          for (uint8_t i = 0; i < getValueCountForTask(event->TaskIndex); ++i)
+          const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+
+          for (uint8_t i = 0; i < valueCount; ++i)
           {
             log += strformat(
               F(" %s: %s"),
-              getTaskValueName(event->TaskIndex, i).c_str(),
-              formatUserVarNoCheck(event->TaskIndex, i).c_str());
+              Cache.getTaskDeviceValueName(event->TaskIndex, i).c_str(),
+              formatUserVarNoCheck(event, i).c_str());
           }
           addLogMove(LOG_LEVEL_INFO, log);
         }

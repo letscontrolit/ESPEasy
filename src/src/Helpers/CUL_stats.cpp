@@ -99,7 +99,7 @@ bool CUL_Stats::add(const mBusPacket_t& packet, CUL_stats_hash key, CUL_stats_ha
     tmp._id1                = packet._deviceId1.encode_toUInt64();
     tmp._id2                = packet._deviceId2.encode_toUInt64();
     tmp._lqi_rssi           = packet._lqi_rssi;
-    tmp._UnixTimeFirstSeen  = node_time.now();
+    tmp._UnixTimeFirstSeen  = node_time.getLocalUnixTime();
     tmp._UnixTimeLastSeen   = tmp._UnixTimeFirstSeen;
     tmp._sourceHash         = sourceHash;
     _mBusStatsMap[key]      = tmp;
@@ -107,7 +107,7 @@ bool CUL_Stats::add(const mBusPacket_t& packet, CUL_stats_hash key, CUL_stats_ha
   }
   it->second._count++;
   it->second._lqi_rssi         = packet._lqi_rssi;
-  it->second._UnixTimeLastSeen = node_time.now();
+  it->second._UnixTimeLastSeen = node_time.getLocalUnixTime();
   return false;
 }
 

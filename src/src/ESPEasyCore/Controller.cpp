@@ -56,14 +56,13 @@ void sendData(struct EventStruct *event, bool sendEvents)
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
-    event->ControllerIndex = x;
-    event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
-
-    if (Settings.TaskDeviceSendData[event->ControllerIndex][event->TaskIndex] &&
-        Settings.ControllerEnabled[event->ControllerIndex] &&
-        Settings.Protocol[event->ControllerIndex])
+    if (Settings.ControllerEnabled[x] &&
+        Settings.TaskDeviceSendData[x][event->TaskIndex] &&        
+        Settings.Protocol[x])
     {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+      event->ControllerIndex = x;
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+      event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {
         String dummy;
@@ -211,6 +210,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #endif
   
   MQTTclient.setClient(mqtt);
+  MQTTclient.setKeepAlive(10);
+  MQTTclient.setSocketTimeout(timeout);
 
   if (ControllerSettings->UseDNS) {
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
@@ -233,7 +234,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
 
-  const unsigned long connect_start_time = millis();
+  const uint64_t statisticsTimerStart(getMicros64());
 
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, *ControllerSettings)) {
@@ -258,7 +259,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
+  count_connection_results(
+    MQTTresult, 
+    F("MQTT : Broker "), 
+    Settings.Protocol[controller_idx], 
+    statisticsTimerStart);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();
@@ -535,7 +540,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -550,7 +555,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
     return false;
   }
 
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
+  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -616,6 +621,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
   if (!validTaskIndex(event->TaskIndex)) { return; }
+
+  // FIXME TD-er: Should a 'disabled' task be rescheduled?
+  // If not, then it should be rescheduled after the check to see if it is enabled.
   Scheduler.reschedule_task_device_timer(event->TaskIndex, lasttimer);
 
   #ifndef BUILD_NO_RAM_TRACKER
@@ -630,7 +638,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
     struct EventStruct TempEvent(event->TaskIndex);
     TempEvent.Source = event->Source;
-    TempEvent.timestamp = timestampUnixTime;
+    TempEvent.timestamp_sec = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
     String dummy;

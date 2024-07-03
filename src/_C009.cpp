@@ -80,7 +80,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        std::unique_ptr<C009_queue_element> element(new C009_queue_element(event));
+        std::unique_ptr<C009_queue_element> element(new (std::nothrow) C009_queue_element(event));
         success = C009_DelayHandler->addToQueue(std::move(element));
         Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       }
@@ -106,7 +106,7 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c009_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c009_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C009_queue_element& element = static_cast<const C009_queue_element&>(element_base);
 // *INDENT-ON*
   String jsonString;
@@ -178,7 +178,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
             {
               jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element._taskIndex));
               jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
+              jsonString += to_json_object_value(F("valueName"), Cache.getTaskDeviceValueName(element._taskIndex, x));
               jsonString += ',';
               jsonString += to_json_object_value(F("type"), static_cast<int>(element.sensorType));
               jsonString += ',';
@@ -203,7 +203,7 @@ bool do_process_c009_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     F("/ESPEasy"),

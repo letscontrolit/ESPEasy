@@ -186,7 +186,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (C018_data != nullptr) {
         {
-          std::unique_ptr<C018_queue_element> element(new C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          std::unique_ptr<C018_queue_element> element(new (std::nothrow) C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
           success = C018_DelayHandler->addToQueue(std::move(element));
           Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                            C018_DelayHandler->getNextScheduleTime());
@@ -356,7 +356,7 @@ bool C018_init(struct EventStruct *event) {
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c018_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c018_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C018_queue_element& element = static_cast<const C018_queue_element&>(element_base);
 // *INDENT-ON*
   uint8_t pl           = (element.packed.length() / 2);

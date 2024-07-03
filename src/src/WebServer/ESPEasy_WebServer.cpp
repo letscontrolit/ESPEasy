@@ -659,13 +659,16 @@ void json_prop(LabelType::Enum label) {
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice)
+void addTaskSelect(const String& name,  taskIndex_t choice, const String& cssclass)
 {
   String deviceName;
 
   addHtml(F("<select "));
   addHtmlAttribute(F("id"),       F("selectwidth"));
   addHtmlAttribute(F("name"),     name);
+  if (!cssclass.isEmpty()) {
+    addHtmlAttribute(F("class"),  cssclass);
+  }
   addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
   addHtml('>');
 
@@ -732,7 +735,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(getTaskValueName(TaskIndex, x));
+    addHtml(Cache.getTaskDeviceValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }

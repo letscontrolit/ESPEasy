@@ -184,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      std::unique_ptr<C015_queue_element> element(new C015_queue_element(event, valueCount));
+      std::unique_ptr<C015_queue_element> element(new (std::nothrow) C015_queue_element(event, valueCount));
       success = C015_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
@@ -192,6 +192,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = static_cast<C015_queue_element&>(*(C015_DelayHandler->sendQueue.back()));
+
+        const String taskDeviceName = getTaskDeviceName(event->TaskIndex);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -203,10 +205,10 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             formattedValue = String();
           }
 
-          const String valueName = getTaskValueName(event->TaskIndex, x);
+          const String valueName = Cache.getTaskDeviceValueName(event->TaskIndex, x);
           const String valueFullName = strformat(
             F("%s.%s"),          
-            getTaskDeviceName(event->TaskIndex).c_str(),
+            taskDeviceName.c_str(),
             valueName.c_str());
           const String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
@@ -253,7 +255,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c015_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c015_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C015_queue_element& element = static_cast<const C015_queue_element&>(element_base);
 // *INDENT-ON*
   if (!Settings.ControllerEnabled[element._controller_idx]) {

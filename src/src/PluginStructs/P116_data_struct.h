@@ -43,6 +43,7 @@
 # define P116_CONFIG_TYPE               PCONFIG(2)      // Type of device
 # define P116_CONFIG_BACKLIGHT_PIN      PCONFIG(3)      // Backlight pin
 # define P116_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)      // Backlight percentage
+# define P116_CONFIG_DEFAULT_FONT       PCONFIG(5)      // Default font
 # define P116_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
 # define P116_CONFIG_FLAGS             PCONFIG_ULONG(0) // All flags
@@ -130,8 +131,13 @@ public:
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true);
-  P116_data_struct()                                = delete;
+                   bool                textBackFill = true
+                   # if                ADAGFX_FONTS_INCLUDED
+                   ,
+                   const uint8_t       defaultFontId = 0
+                   # endif // if ADAGFX_FONTS_INCLUDED
+                   );
+  P116_data_struct() = delete;
   virtual ~P116_data_struct();
 
   bool plugin_init(struct EventStruct *event);
@@ -185,6 +191,9 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   bool                _textBackFill;
+  # if ADAGFX_FONTS_INCLUDED
+  uint8_t _defaultFontId;
+  # endif // if ADAGFX_FONTS_INCLUDED
 
   String _commandTriggerCmd;
 

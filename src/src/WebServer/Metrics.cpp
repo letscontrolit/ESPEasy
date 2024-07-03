@@ -116,15 +116,16 @@ void handle_metrics_devices() {
 
           if (!customValues) {
             const uint8_t valueCount = getValueCountForTask(x);
+            struct EventStruct TempEvent(x);
 
             for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
               if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                 addHtml(F("espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F("{valueName=\""));
-                addHtml(getTaskValueName(x, varNr));
+                addHtml(Cache.getTaskDeviceValueName(x, varNr));
                 addHtml(F("\"} "));
-                addHtml(formatUserVarNoCheck(x, varNr));
+                addHtml(formatUserVarNoCheck(&TempEvent, varNr));
                 addHtml('\n');
               }
             }

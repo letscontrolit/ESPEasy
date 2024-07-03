@@ -106,10 +106,18 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill)
+                                   bool                textBackFill
+                                   # if                ADAGFX_FONTS_INCLUDED
+                                   ,
+                                   const uint8_t       defaultFontId
+                                   # endif // if ADAGFX_FONTS_INCLUDED
+                                   )
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
+  # if ADAGFX_FONTS_INCLUDED
+  , _defaultFontId(defaultFontId)
+  # endif // if ADAGFX_FONTS_INCLUDED
 {
   _commandTrigger.toLowerCase();
   _commandTriggerCmd = concat(_commandTrigger, F("cmd"));
@@ -255,7 +263,11 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       _fgcolor,
                                                       _bgcolor,
                                                       true,
-                                                      _textBackFill);
+                                                      _textBackFill
+                                                      # if ADAGFX_FONTS_INCLUDED
+                                                      , _defaultFontId
+                                                      # endif // if ADAGFX_FONTS_INCLUDED
+                                                      );
 
     if (nullptr != gfxHelper) {
       displayOnOff(true);

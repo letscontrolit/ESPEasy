@@ -8,6 +8,7 @@
 
 
 // History:
+// 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
 // 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
 //                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
 //                        By default (also) only enabled on ESP32 builds
@@ -197,6 +198,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("mode"), P116_CONFIG_FLAG_GET_MODE);
 
+      # if ADAGFX_FONTS_INCLUDED
+      AdaGFXFormDefaultFont(F("deffont"), P116_CONFIG_DEFAULT_FONT);
+      # endif // if ADAGFX_FONTS_INCLUDED
+
       AdaGFXFormFontScaling(F("fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE);
 
       addFormCheckBox(F("Clear display on exit"), F("clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
@@ -266,6 +271,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       P116_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("timer"));
       P116_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("backlight"));
       P116_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("backpercentage"));
+      # if ADAGFX_FONTS_INCLUDED
+      P116_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
+      # endif // if ADAGFX_FONTS_INCLUDED
 
       uint32_t lSettings = 0;
       bitWrite(lSettings, P116_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
@@ -340,7 +348,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
                                                                P116_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0));
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0
+                                                               # if ADAGFX_FONTS_INCLUDED
+                                                               ,
+                                                               P116_CONFIG_DEFAULT_FONT
+                                                               # endif // if ADAGFX_FONTS_INCLUDED
+                                                               ));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P116_data) && P116_data->plugin_init(event); // Start the display

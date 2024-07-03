@@ -1,0 +1,46 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.Success]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the number of successful reads for this sensor as shown in the settings page.
+    "
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.Retry]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the number of retries for this sensor as shown in the settings page.
+    "
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.Failed]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the number of failed reads for this sensor as shown in the settings page.
+    "
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.InitFailed]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the number of failed initialization-reads (second retry failed too) for this sensor as shown in the settings page.
+    "
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.Resolution]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the resolution in bits for this sensor as shown in the settings page.
+    "
+    "
+    | ``[<taskname>#SensorStats.<sensornr>.Address]``
+
+    | ``<sensornr>``: The number of the device address within the configuration, range 1..4.
+    ","
+    | Returns the formatted Device Address, including the device type, for this sensor as shown in the settings page.
+    "

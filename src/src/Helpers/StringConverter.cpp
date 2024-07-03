@@ -438,7 +438,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  {
+  if (Device[DeviceIndex].HasFormatUserVar) {
     // First try to format using the plugin specific formatting.
     String result;
     EventStruct tempEvent;
@@ -449,7 +449,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       return result;
     }
   }
-
+  
+  // Spent upto 400 usec till here
   const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
   const Sensor_VType sensorType = event->getSensorType();
 
@@ -496,7 +497,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
   }
   String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
   STOP_TIMER(FORMAT_USER_VAR);
-  return res;
+  return std::move(res);
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -1342,12 +1343,13 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
-    for (uint8_t i = 0; i < 4; ++i) {
+    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+    for (uint8_t i = 0; i < valueCount; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
 
-      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
+      SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
   }
 }

@@ -669,7 +669,7 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
-    if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
+    if (valueName.equalsIgnoreCase(Cache.getTaskDeviceValueName(taskIndex, valueNr)))
     {
       Cache.taskIndexValueName.emplace(
         std::make_pair(

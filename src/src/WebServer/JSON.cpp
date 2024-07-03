@@ -74,7 +74,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(getTaskValueName(taskNr, x));
+            addHtml(Cache.getTaskDeviceValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');
@@ -84,11 +84,13 @@ void handle_csvval()
         addHtml('\n');
       }
 
+      struct EventStruct TempEvent(taskNr);
+
       for (uint8_t x = 0; x < taskValCount; x++)
       {
         if ((valNr == INVALID_VALUE_NUM) || (valNr == x))
         {
-          addHtml(formatUserVarNoCheck(taskNr, x));
+          addHtml(formatUserVarNoCheck(&TempEvent, x));
 
           if (x != taskValCount - 1)
           {
@@ -122,7 +124,7 @@ void handle_json()
   bool showNodes           = true;
   #endif
   #if FEATURE_PLUGIN_STATS
-  bool showPluginStats     = isFormItemChecked(F("showpluginstats"));
+  bool showPluginStats     = getFormItemInt(F("showpluginstats"), 0) != 0;
   #endif
 
   if (equals(webArg(F("view")), F("sensorupdate"))) {
@@ -137,7 +139,7 @@ void handle_json()
     showNodes           = false;
     #endif
     #if FEATURE_PLUGIN_STATS
-    showPluginStats     = false;
+    showPluginStats     = hasArg(F("showpluginstats"));
     #endif
   }
 
@@ -176,6 +178,9 @@ void handle_json()
         LabelType::UNIT_NAME,
         LabelType::UPTIME,
         LabelType::UPTIME_MS,
+#if FEATURE_INTERNAL_TEMPERATURE
+        LabelType::INTERNAL_TEMPERATURE,
+#endif
         LabelType::BOOT_TYPE,
         LabelType::RESET_REASON,
         LabelType::CPU_ECO_MODE,
@@ -286,10 +291,14 @@ void handle_json()
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
 #endif
         LabelType::WIFI_NR_EXTRA_SCANS,
+#ifdef ESP32
+        LabelType::WIFI_PASSIVE_SCAN,
+#endif
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
-
+#ifndef ESP32
         LabelType::WAIT_WIFI_CONNECT,
+#endif
         LabelType::HIDDEN_SSID_SLOW_CONNECT,
         LabelType::CONNECT_HIDDEN_SSID,
         LabelType::SDK_WIFI_AUTORECONNECT,
@@ -435,10 +444,12 @@ void handle_json()
         }
         addHtml(F("\"TaskValues\": [\n"));
 
+        struct EventStruct TempEvent(TaskIndex);
+
         for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
-          const String value = formatUserVarNoCheck(TaskIndex, x);
+          const String value = formatUserVarNoCheck(&TempEvent, x);
           uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
 
           if (mustConsiderAsJSONString(value)) {
