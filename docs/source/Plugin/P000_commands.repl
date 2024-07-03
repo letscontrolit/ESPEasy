@@ -232,16 +232,36 @@
     :red:`Internal`","
     Run I2C scanner to find connected I2C chips. Output will be sent to the serial port.
 
-    ``I2Cscanner``
+    ``I2Cscanner[,1]``
     
+    Added: 2024-06-14:
+    With the optional debug argument ``1`` provided, the returned I2C status (error) code will be listed for *all* tested I2C addresses.
+
+    Added: 2024-06-14:
+    Scan is performed at the Low I2C speed configured (default 100 kHz). When having an I2C multiplexer configured, all channels of the multiplexer will also be scanned.
+
     Example output:
 
     .. code-block:: none
 
-     4500043 : Info  : Command: i2cscanner
+     >i2cscanner
+     Standard I2C bus
      I2C  : Found 0x3c
      I2C  : Found 0x40
      I2C  : Found 0x5a
+
+     >i2cscanner,1
+     Standard I2C bus
+     I2C  : Error 2 at 0x01
+     I2C  : Error 2 at 0x02
+     I2C  : Error 2 at 0x03
+     ...
+     I2C  : Error 2 at 0x3f
+     I2C  : Found 0x40
+     I2C  : Error 2 at 0x41
+     ...
+     I2C  : Error 2 at 0x7e
+     I2C  : Error 2 at 0x7f
 
     "
     "

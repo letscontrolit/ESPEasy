@@ -1,0 +1,12 @@
+.. |P170_name| replace:: :cyan:`I2C Liquid level sensor`
+.. |P170_type| replace:: :cyan:`Input`
+.. |P170_typename| replace:: :cyan:`Input - I2C Liquid level sensor`
+.. |P170_porttype| replace:: `.`
+.. |P170_status| replace:: :yellow:`COLLECTION G`
+.. |P170_github| replace:: P170_Waterlevel.ino
+.. _P170_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P170_Waterlevel.ino
+.. |P170_usedby| replace:: `.`
+.. |P170_shortinfo| replace:: `Seeed Studio I2C Liquid level sensor`
+.. |P170_maintainer| replace:: `tonhuisman`
+.. |P170_compileinfo| replace:: `.`
+.. |P170_usedlibraries| replace:: `.`

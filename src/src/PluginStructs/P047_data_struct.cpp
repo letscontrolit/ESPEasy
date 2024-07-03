@@ -18,10 +18,13 @@ P047_data_struct::P047_data_struct(uint8_t address,
 const __FlashStringHelper* toString(P047_SensorModels sensor) {
   switch (sensor) {
     case P047_SensorModels::CatnipMiceuz: return F("Catnip electronics/miceuz (default)");
-    case P047_SensorModels::BeFlE: return F("BeFlE");
+    case P047_SensorModels::BeFlE: return F("BeFlE v2.2");
     # if P047_FEATURE_ADAFRUIT
     case P047_SensorModels::Adafruit: return F("Adafruit (4026)");
     # endif // if P047_FEATURE_ADAFRUIT
+    # if P047_FEATURE_BEFLE_V3
+    case P047_SensorModels::BeFlEv3: return F("BeFlE v3.x");
+    # endif // if P047_FEATURE_BEFLE_V3
   }
   return F("");
 }
@@ -34,7 +37,7 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
 
   if (P047_SENSOR_SLEEP && (P047_ReadMode::ReadStarted != _readMode)) {
     // wake sensor when not reading
-    getVersion();
+    setToSleep(false);   // Wake sensor
     delayBackground(20); // Seems acceptable to have this relatively short delay
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
@@ -82,65 +85,67 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
 
     case P047_ReadMode::ReadStarted:
     {
-      # if P047_FEATURE_ADAFRUIT
+      if (measurementReady()) {
+        # if P047_FEATURE_ADAFRUIT
 
-      // Define range
-      float moisture_min = 1.0f;
-      float moisture_max = 800.0f;
+        // Define range
+        float moisture_min = 1.0f;
+        float moisture_max = 800.0f;
 
-      if (P047_MODEL_ADAFRUIT == _model) {
-        moisture_min = 200.0f;
-        moisture_max = 2000.0f;
-      }
-      # else // if P047_FEATURE_ADAFRUIT
-
-      // Define range
-      const float moisture_min = 1.0f;
-      const float moisture_max = 800.0f;
-      # endif // if P047_FEATURE_ADAFRUIT
-
-      // Get the values
-      const float temperature = readTemperature();
-      const float moisture    = readMoisture();
-      const float light       = readLight();
-
-      if ((temperature > 100.0f) || (temperature < -40.0f) ||
-          (moisture > moisture_max) || (moisture < moisture_min) ||
-          (light > 65535.0f) || (light < 0.0f)) {
-        addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
-        resetSensor();
-      }
-      else
-      {
-        UserVar.setFloat(event->TaskIndex, 0, temperature);
-        UserVar.setFloat(event->TaskIndex, 1, moisture);
-        UserVar.setFloat(event->TaskIndex, 2, light);
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = strformat(F("SoilMoisture: Address: 0x%02x"), P047_I2C_ADDR);
-
-          if (P047_CHECK_VERSION) {
-            log += strformat(F(" Version: 0x%02x"), _sensorVersion);
-          }
-          addLogMove(LOG_LEVEL_INFO, log);
-          addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Temperature: "), formatUserVarNoCheck(event, 0)));
-          addLogMove(LOG_LEVEL_INFO, strformat(F("SoilMoisture: Moisture: %.0f"), moisture));
-
-          if (P047_MODEL_CATNIP == _model) {
-            addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Light: "), formatUserVarNoCheck(event, 2)));
-          }
+        if (P047_MODEL_ADAFRUIT == _model) {
+          moisture_min = 200.0f;
+          moisture_max = 2000.0f;
         }
+        # else // if P047_FEATURE_ADAFRUIT
 
-        if (P047_SENSOR_SLEEP) {
-          // send sensor to sleep
-          setToSleep();
-          # ifndef BUILD_NO_DEBUG
-          addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
-          # endif // ifndef BUILD_NO_DEBUG
+        // Define range
+        const float moisture_min = 1.0f;
+        const float moisture_max = 800.0f;
+        # endif // if P047_FEATURE_ADAFRUIT
+
+        // Get the values
+        const float temperature = readTemperature();
+        const float moisture    = readMoisture();
+        const float light       = readLight();
+
+        if ((temperature > 100.0f) || (temperature < -40.0f) ||
+            (moisture > moisture_max) || (moisture < moisture_min) ||
+            (light > 65535.0f) || (light < 0.0f)) {
+          addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
+          resetSensor();
         }
-        success = true;
+        else
+        {
+          UserVar.setFloat(event->TaskIndex, 0, temperature);
+          UserVar.setFloat(event->TaskIndex, 1, moisture);
+          UserVar.setFloat(event->TaskIndex, 2, light);
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = strformat(F("SoilMoisture: Address: 0x%02x"), P047_I2C_ADDR);
+
+            if (P047_CHECK_VERSION) {
+              log += strformat(F(" Version: 0x%02x"), _sensorVersion);
+            }
+            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Temperature: "), formatUserVarNoCheck(event, 0)));
+            addLogMove(LOG_LEVEL_INFO, strformat(F("SoilMoisture: Moisture: %.0f"), moisture));
+
+            if (P047_MODEL_CATNIP == _model) {
+              addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Light: "), formatUserVarNoCheck(event, 2)));
+            }
+          }
+
+          if (P047_SENSOR_SLEEP) {
+            // send sensor to sleep
+            setToSleep(true);
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
+            # endif // ifndef BUILD_NO_DEBUG
+          }
+          success = true;
+        }
+        _readMode = P047_ReadMode::NotReading;
       }
-      _readMode = P047_ReadMode::NotReading;
 
       break;
     }
@@ -154,17 +159,18 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
 float P047_data_struct::readTemperature() {
   if (P047_MODEL_CATNIP == _model) {
     return I2C_readS16_reg(_address, P047_CATNIP_GET_TEMPERATURE) / 10.0f;
-  } else if (P047_MODEL_BEFLE == _model) {
+  } else if (P047_MODEL_BEFLE == _model
+             # if P047_FEATURE_BEFLE_V3
+             || P047_MODEL_BEFLE_V3 == _model
+             # endif // if P047_FEATURE_BEFLE_V3
+             ) {
     return static_cast<float>(I2C_read8_reg(_address, P047_BEFLE_GET_TEMPERATURE));
     # if P047_FEATURE_ADAFRUIT
   } else if (P047_MODEL_ADAFRUIT == _model) {
     uint8_t buf[4]{};
     bool    isOk;
 
-    Wire.beginTransmission(_address);
-    Wire.write((uint8_t)P047_ADAFRUIT_STATUS_BASE);
-    Wire.write((uint8_t)P047_ADAFRUIT_GET_TEMPERATURE);
-    Wire.endTransmission();
+    I2C_write8_reg(_address, P047_ADAFRUIT_STATUS_BASE, P047_ADAFRUIT_GET_TEMPERATURE);
     delayMicroseconds(1000);
 
     if (Wire.requestFrom(_address, 4) == 4) {
@@ -199,7 +205,11 @@ float P047_data_struct::readLight() {
 unsigned int P047_data_struct::readMoisture() {
   if (P047_MODEL_CATNIP == _model) {
     return I2C_read16_reg(_address, P047_CATNIP_GET_CAPACITANCE);
-  } else if (P047_MODEL_BEFLE == _model) {
+  } else if (P047_MODEL_BEFLE == _model
+             # if P047_FEATURE_BEFLE_V3
+             || P047_MODEL_BEFLE_V3 == _model
+             # endif // if P047_FEATURE_BEFLE_V3
+             ) {
     return I2C_read16_reg(_address, P047_BEFLE_GET_CAPACITANCE) >> 8; // Get averaged value
     # if P047_FEATURE_ADAFRUIT
   } else if (P047_MODEL_ADAFRUIT == _model) {
@@ -208,10 +218,7 @@ unsigned int P047_data_struct::readMoisture() {
     bool     isOk = false;
 
     for (uint8_t retry = 0; retry < 5; ++retry) {
-      Wire.beginTransmission(_address);
-      Wire.write((uint8_t)P047_ADAFRUIT_TOUCH_BASE);
-      Wire.write((uint8_t)(P047_ADAFRUIT_GET_CAPACITANCE + p));
-      Wire.endTransmission();
+      I2C_write8_reg(_address, P047_ADAFRUIT_TOUCH_BASE, P047_ADAFRUIT_GET_CAPACITANCE + p);
       delayMicroseconds(3000 + retry * 1000);
 
       ret = I2C_read16(_address, &isOk);
@@ -234,12 +241,8 @@ uint32_t P047_data_struct::getVersion() {
     # if P047_FEATURE_ADAFRUIT
   } else if (P047_MODEL_ADAFRUIT == _model) {
     uint8_t buf[4]{};
-    bool    isOk = false;
 
-    Wire.beginTransmission(_address);
-    Wire.write((uint8_t)P047_ADAFRUIT_STATUS_BASE);
-    Wire.write((uint8_t)P047_ADAFRUIT_GET_VERSION);
-    Wire.endTransmission();
+    I2C_write8_reg(_address, P047_ADAFRUIT_STATUS_BASE, P047_ADAFRUIT_GET_VERSION);
 
     if (Wire.requestFrom(_address, 4) == 4) {
       for (int b = 0; b < 4; ++b) {
@@ -250,9 +253,29 @@ uint32_t P047_data_struct::getVersion() {
                    ((uint32_t)buf[2] << 8) | (uint32_t)buf[3];
     return ret;
     # endif // if P047_FEATURE_ADAFRUIT
+    # if P047_FEATURE_BEFLE_V3
+  } else if (P047_MODEL_BEFLE_V3 == _model) {
+    uint8_t buf[4]{};
+
+    I2C_write8(_address, P047_BEFLE_V3_GET_VERSION);
+    delay(1);
+
+    if (Wire.requestFrom(_address, 4) == 4) {
+      for (int b = 0; b < 4; ++b) {
+        buf[b] = Wire.read();
+      }
+    }
+
+    if ((buf[0] == 0x76) /*'v'*/ && (buf[2] == 0x2E) /*'.'*/) {                      // Returns "v3.4" for version 3.4
+      uint32_t ret = (((uint32_t)buf[1] - 0x30) * 0x10) | ((uint32_t)buf[3] - 0x30); // Return 0x34 for 3.4
+      return ret;
+    } else {
+      return 0x22;                                                                   // Fallback to HW version 2.2
+    }
+    # endif // if P047_FEATURE_ADAFRUIT
   }
 
-  // Not supported by BeFlE sensor
+  // Not supported by BeFlE v2 sensor
   return 0;
 }
 
@@ -267,12 +290,21 @@ bool P047_data_struct::changeAddress(uint8_t new_i2cAddr) {
 
   if (P047_MODEL_CATNIP == _model) {
     command = P047_CATNIP_SET_ADDRESS;
-  } else if (P047_MODEL_BEFLE == _model) {
-    command = P047_BEFLE_SET_ADDRESS;
+  } else
+  if (P047_MODEL_BEFLE == _model) {
+    command     = P047_BEFLE_SET_ADDRESS;
+    new_i2cAddr = (new_i2cAddr << 1) & 0xFE;
     # if P047_FEATURE_ADAFRUIT
-  } else if (P047_MODEL_ADAFRUIT == _model) {
+  } else
+  if (P047_MODEL_ADAFRUIT == _model) {
     return true; // Is set in hardware
     # endif // if P047_FEATURE_ADAFRUIT
+    # if P047_FEATURE_BEFLE_V3
+  } else
+  if (P047_MODEL_BEFLE_V3 == _model) {
+    command     = P047_BEFLE_SET_ADDRESS;
+    new_i2cAddr = (new_i2cAddr << 1) & 0xFE;
+    # endif // if P047_FEATURE_BEFLE_V3
   }
   I2C_write8_reg(_address, command, new_i2cAddr);
   I2C_write8_reg(_address, command, new_i2cAddr);
@@ -306,20 +338,53 @@ bool P047_data_struct::resetSensor() {
   return false;
 }
 
-void P047_data_struct::setToSleep() {
-  if (P047_MODEL_CATNIP == _model) {
-    I2C_write8(_address, P047_CATNIP_SLEEP);
+void P047_data_struct::setToSleep(bool sleep) {
+  if ((P047_MODEL_CATNIP == _model)) {
+    if (sleep) {
+      I2C_write8(_address, P047_CATNIP_SLEEP);
+    } else {
+      getVersion(); // Standard method to wake the sensor
+    }
+    # if P047_FEATURE_BEFLE_V3
+  } else
+  if (P047_MODEL_BEFLE_V3 == _model) {
+    I2C_write8_reg(_address, P047_BEFLE_V3_SLEEP, sleep); // Set low-power mode
+    # endif // if P047_FEATURE_BEFLE_V3
   }
 
-  // Not supported by BeFlE or Adafruit sensors
+  // Not supported by BeFlE v2 or Adafruit sensors
 }
 
 void P047_data_struct::startMeasure() {
   if (P047_MODEL_CATNIP == _model) {
     I2C_write8(_address, P047_CATNIP_MEASURE_LIGHT);
+    # if P047_FEATURE_BEFLE_V3
+  } else
+  if (P047_MODEL_BEFLE_V3 == _model) {
+    I2C_write8_reg(_address, P047_BEFLE_V3_START_MEASURE, 100); // Read 100 samples
+    # endif // if P047_FEATURE_BEFLE_V3
   }
 
-  // Not supported by BeFlE or Adafruit sensors
+  // Not supported by BeFlE v2 or Adafruit sensors
+}
+
+/**
+ * Check if a measurement is available
+ */
+bool P047_data_struct::measurementReady() {
+  if (P047_MODEL_CATNIP == _model) {
+    const uint8_t status = I2C_read8_reg(_address, P047_BEFLE_GET_BUSY);
+    return status == 0;
+    # if P047_FEATURE_BEFLE_V3
+  } else
+  if (P047_MODEL_BEFLE_V3 == _model) {
+    const uint8_t status = I2C_read8_reg(_address, P047_BEFLE_GET_BUSY);
+    return (status & 0x01) == 0;
+    # endif // if P047_FEATURE_BEFLE_V3
+  }
+
+  // Not supported by BeFlE v2 or Adafruit sensors
+  return true;
 }
 
 #endif // ifdef USES_P047

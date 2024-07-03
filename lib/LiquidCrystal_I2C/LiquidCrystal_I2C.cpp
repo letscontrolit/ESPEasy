@@ -365,7 +365,7 @@ void LiquidCrystal_I2C::setContrast(uint8_t val) {
 	if (LCD_AltMode::ST7032 == _altMode) {
 		if (val > LCD_CONTRAST_MAX) val = LCD_CONTRAST_MIN;
 		else if (val < LCD_CONTRAST_MIN) val = LCD_CONTRAST_MAX;
-		command(LCD_EX_CONTRASTSETL | (val & B00001111));
+		command(LCD_EX_CONTRASTSETL | (val & 0b00001111));
 		command((val >> 4) | LCD_EX_POWICONCONTRASTH | POWER_ICON_BOST_CONTR_Bon);
 		_contrast = val;
 	}
