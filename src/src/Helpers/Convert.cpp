@@ -1,6 +1,7 @@
 #include "../Helpers/Convert.h"
 
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
@@ -113,6 +114,20 @@ String secondsToDayHourMinuteSecond(int seconds) {
     return strformat(F("%02d:%02d:%02d"), hours, mins, sec);
   } 
   return strformat(F("%dT%02d:%02d:%02d"), days, hours, mins, sec);
+}
+
+String secondsToDayHourMinuteSecond_ms(int64_t systemMicros) 
+{
+  if (systemMicros < 0ll) {
+    return concat('-', secondsToDayHourMinuteSecond_ms(-1ll*systemMicros));
+  }
+
+  uint32_t usec{};
+  const uint32_t seconds = micros_to_sec_usec(systemMicros, usec);
+  return strformat(
+    F("%s.%03u"),
+    secondsToDayHourMinuteSecond(seconds).c_str(),
+    usec / 1000ul);
 }
 
 String format_msec_duration(int64_t duration) {

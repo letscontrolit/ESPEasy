@@ -123,7 +123,7 @@ void handle_metrics_devices() {
                 addHtml(F("espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F("{valueName=\""));
-                addHtml(getTaskValueName(x, varNr));
+                addHtml(Cache.getTaskDeviceValueName(x, varNr));
                 addHtml(F("\"} "));
                 addHtml(formatUserVarNoCheck(&TempEvent, varNr));
                 addHtml('\n');
