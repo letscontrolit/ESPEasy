@@ -137,7 +137,7 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO,
                  strformat(F("BH1750 Address: 0x%02x Mode: 0x%02x : Light intensity: %s"),
                            PCONFIG(0),  PCONFIG(1),
-                           formatUserVarNoCheck(event->TaskIndex, 0).c_str()));
+                           formatUserVarNoCheck(event, 0).c_str()));
         }
         success = true;
       }

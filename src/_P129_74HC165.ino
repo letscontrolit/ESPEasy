@@ -84,6 +84,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true; // No use in sending the Values to a controller
       Device[deviceCount].TimerOption    = true; // Used to update the Devices page
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].HasFormatUserVar = true;
 
       break;
     }

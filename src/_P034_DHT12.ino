@@ -106,10 +106,10 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO,
                        concat(F("DHT12: Temperature: "),
-                              formatUserVarNoCheck(event->TaskIndex, 0)));
+                              formatUserVarNoCheck(event, 0)));
             addLogMove(LOG_LEVEL_INFO,
                        concat(F("DHT12: Humidity: "),
-                              formatUserVarNoCheck(event->TaskIndex, 1)));
+                              formatUserVarNoCheck(event, 1)));
 
             /*
                         log = F("DHT12: Data: ");
