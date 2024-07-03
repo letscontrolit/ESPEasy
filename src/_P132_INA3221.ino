@@ -70,10 +70,10 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x40, 0x41, 0x42, 0x43 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P132_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), NR_ELEMENTS(i2cAddressValues), i2cAddressValues, P132_I2C_ADDR);
         addFormNote(F("A0 connected to: GND= 0x40, VCC= 0x41, SDA= 0x42, SCL= 0x43"));
       } else {
-        success = intArrayContains(4, i2cAddressValues, event->Par1);
+        success = intArrayContains(NR_ELEMENTS(i2cAddressValues), i2cAddressValues, event->Par1);
       }
       break;
     }

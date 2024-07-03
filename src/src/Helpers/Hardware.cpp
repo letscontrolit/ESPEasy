@@ -358,9 +358,9 @@ float mapADCtoFloat(float float_value,
 
 // FIXME TD-er: For now keep a local array of the adc calibration 
 #if ESP_IDF_VERSION_MAJOR < 5
-Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTEN_MAX];
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTEN_MAX]{};
 #else
-Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTENDB_MAX];
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTENDB_MAX]{};
 #endif
 
 

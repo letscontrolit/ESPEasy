@@ -61,9 +61,9 @@ bool P166_data_struct::plugin_read(struct EventStruct *event)           {
   return isInitialized();
 }
 
-const char subcommands[] PROGMEM = "volt|mvolt|range|preset|init";
+const char P166_subcommands[] PROGMEM = "volt|mvolt|range|preset|init";
 
-enum class subcmd_e : int8_t {
+enum class P166_subcmd_e : int8_t {
   invalid = -1,
   volt    = 0,
   mvolt,
@@ -84,33 +84,33 @@ bool P166_data_struct::plugin_write(struct EventStruct *event,
   if (isInitialized() && equals(command, F("gp8403"))) {
     const String subcommand   = parseString(string, 2);
     const String sValue       = parseString(string, 4);
-    const int    subcommand_i = GetCommandCode(subcommand.c_str(), subcommands);
+    const int    subcommand_i = GetCommandCode(subcommand.c_str(), P166_subcommands);
 
     if (subcommand_i < 0) { return false; } // Fail fast
 
-    const subcmd_e subcmd = static_cast<subcmd_e>(subcommand_i);
+    const P166_subcmd_e subcmd = static_cast<P166_subcmd_e>(subcommand_i);
     uint32_t   nChannel{};
     const bool hasChannel = validUIntFromString(parseString(string, 3), nChannel);
 
     switch (subcmd) {
-      case subcmd_e::invalid:
+      case P166_subcmd_e::invalid:
         break;
-      case subcmd_e::volt:
-      case subcmd_e::mvolt:
-      case subcmd_e::preset:
+      case P166_subcmd_e::volt:
+      case P166_subcmd_e::mvolt:
+      case P166_subcmd_e::preset:
 
         if (hasChannel && (nChannel <= 2)) { // Channel range check
           float fValue{};
           bool  isValid = false;
 
-          if (subcmd_e::preset == subcmd) {
+          if (P166_subcmd_e::preset == subcmd) {
             isValid = validPresetValue(sValue, fValue);
           } else {
             isValid = validFloatFromString(sValue, fValue);
           }
 
           if (isValid) { // Value valid check
-            const bool voltValue = (subcmd_e::volt == subcmd || subcmd_e::preset == subcmd);
+            const bool voltValue = (P166_subcmd_e::volt == subcmd || P166_subcmd_e::preset == subcmd);
 
             // Calculate mV from requested voltage
             const int iValue = static_cast<int>(roundf(voltValue ? fValue * P166_FACTOR_mV : fValue));
@@ -135,7 +135,7 @@ bool P166_data_struct::plugin_write(struct EventStruct *event,
         }
         break;
 
-      case subcmd_e::init:
+      case P166_subcmd_e::init:
 
         if (hasChannel && (nChannel <= 2)) { // Channel range check
           for (uint8_t i = 0; i < P166_MAX_OUTPUTS; ++i) {
@@ -162,7 +162,7 @@ bool P166_data_struct::plugin_write(struct EventStruct *event,
         }
         break;
 
-      case subcmd_e::range:
+      case P166_subcmd_e::range:
 
         if ((event->Par2 == 5) || (event->Par2 == 10)) { // Value options check
           _range = (event->Par2 == 5
