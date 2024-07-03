@@ -1651,6 +1651,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
+  #endif
 
 #endif
 
@@ -1798,7 +1804,7 @@ To create/register a plugin, you have to :
      #define USES_P116   // ST77xx
    #endif
    #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // FT6206
+     #define USES_P123   // I2C Touchscreens
    #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -1961,7 +1967,14 @@ To create/register a plugin, you have to :
   #ifndef USES_P167
     #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
   #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
 
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -2023,15 +2036,29 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef CONTROLLER_SET_COLLECTION
+  #ifndef USES_C011
     #define USES_C011   // Generic HTTP Advanced
+  #endif
+  #ifndef USES_C012
     #define USES_C012   // Blynk HTTP
+  #endif
+  #ifndef USES_C014
     #define USES_C014   // homie 3 & 4dev MQTT
+  #endif
+  #ifndef USES_C015
     //#define USES_C015   // Blynk
+  #endif
+  #ifndef USES_C017
     #define USES_C017   // Zabbix
-    #ifdef ESP32
+  #endif
+  #ifdef ESP32
+    #ifndef USES_C018
       #define USES_C018 // TTN RN2483
     #endif
+  #endif
+  #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
+  #endif
 #endif
 
 
@@ -2267,7 +2294,7 @@ To create/register a plugin, you have to :
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-    #define USES_P123   // FT6206
+    #define USES_P123   // I2C Touchscreens
   #endif
   #ifndef USES_P124
     #define USES_P124   // I2C Multi relay
@@ -2372,7 +2399,17 @@ To create/register a plugin, you have to :
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
   #ifndef USES_P167
-    #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+    #define USES_P167   // Environment - IKEA Vindstyrka SEN54 temperature , humidity and air quality
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
+  #endif
+
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
 
   // Controllers
@@ -2831,7 +2868,13 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #define FEATURE_MDNS  0
+        #if ESP_IDF_VERSION_MAJOR >= 5
+          // See if it is now more usable...
+          // See: https://github.com/letscontrolit/ESPEasy/issues/5061
+          #define FEATURE_MDNS  0
+        #else
+          #define FEATURE_MDNS  0
+        #endif
       #else
         // Do not use MDNS on ESP8266 due to memory leak
         #define FEATURE_MDNS  0

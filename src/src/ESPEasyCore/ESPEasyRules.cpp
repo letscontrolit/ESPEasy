@@ -1299,7 +1299,7 @@ void createRuleEvents(struct EventStruct *event) {
   // These also only yield a single value, so no need to check for combining task values.
   if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
-    expectedSize += getTaskValueName(event->TaskIndex, 0).length();
+    expectedSize += Cache.getTaskDeviceValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
 
@@ -1313,7 +1313,7 @@ void createRuleEvents(struct EventStruct *event) {
     }
     eventString += getTaskDeviceName(event->TaskIndex);
     eventString += '#';
-    eventString += getTaskValueName(event->TaskIndex, 0);
+    eventString += Cache.getTaskDeviceValueName(event->TaskIndex, 0);
     eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
@@ -1338,7 +1338,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-      eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
+      eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
   }
 }

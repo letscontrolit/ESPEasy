@@ -100,10 +100,10 @@ class PubSubClient : public Print {
 private:
    Client* _client;
    uint8_t *buffer = nullptr;
-   uint16_t nextMsgId;
-   unsigned long lastOutActivity;
-   unsigned long lastInActivity;
-   bool pingOutstanding;
+   uint16_t nextMsgId = 0;
+   unsigned long lastOutActivity = 0;
+   unsigned long lastInActivity = 0;
+   bool pingOutstanding = false;
    MQTT_CALLBACK_SIGNATURE;
    // Try to read from the client whatever is available.
    bool loop_read();
@@ -127,10 +127,12 @@ private:
 
    IPAddress ip;
    String domain;
-   uint16_t port;
+   uint16_t port = 0;
    Stream* stream;
-   int _state;
+   int _state = MQTT_DISCONNECTED;
    int _bufferWritePos = 0;
+   int16_t keepAlive_sec = MQTT_KEEPALIVE;
+   int16_t socketTimeout_msec = MQTT_SOCKET_TIMEOUT*1000;
 public:
    PubSubClient();
    PubSubClient(Client& client);
@@ -194,6 +196,9 @@ public:
    boolean loop();
    boolean connected();
    int state();
+
+   PubSubClient& setKeepAlive(uint16_t keepAlive_sec);
+   PubSubClient& setSocketTimeout(uint16_t timeout_ms);
 };
 
 
