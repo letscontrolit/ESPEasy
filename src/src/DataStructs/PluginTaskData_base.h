@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/PluginStats.h"
+#include "../DataStructs/PluginStats_array.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/TaskIndex.h"
@@ -25,20 +25,24 @@ struct PluginTaskData_base {
     return _baseClassOnly;
   }
 
-  bool hasPluginStats() const;
+  bool   hasPluginStats() const;
 
-  bool hasPeaks() const;
+  bool   hasPeaks() const;
 
   size_t nrSamplesPresent() const;
 
   #if FEATURE_PLUGIN_STATS
-  void initPluginStats(taskVarIndex_t taskVarIndex);
-  void clearPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex);
+  void   clearPluginStats(taskVarIndex_t taskVarIndex);
+
+  // Update any logged timestamp with this newly set system time.
+  void   processTimeSet(const double& time_offset);
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event,
-                             bool                trackPeaks);
+                             bool                trackPeaks,
+                             bool                onlyUpdateTimestampWhenSame);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
@@ -80,7 +84,7 @@ struct PluginTaskData_base {
 
   PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
 
-private:
+protected:
 
   // Array of pointers to PluginStats. One per task value.
   PluginStats_array *_plugin_stats_array = nullptr;
