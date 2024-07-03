@@ -18,6 +18,7 @@ void addFormSeparator(int clspan);
 // ********************************************************************************
 void addFormNote(const __FlashStringHelper * text);
 void addFormNote(const String& text, const String& id = EMPTY_STRING);
+void addFormNote(const LabelType::Enum& label);
 
 // ********************************************************************************
 // Create Forms

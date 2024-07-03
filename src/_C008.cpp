@@ -76,6 +76,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
         pubname = ControllerSettings->Publish;
       }
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       std::unique_ptr<C008_queue_element> element(new (std::nothrow) C008_queue_element(event, valueCount));
@@ -101,7 +102,9 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             String txt;
             txt += '/';
             txt += pubname;
-            parseSingleControllerVariable(txt, event, x, true);
+            if (contains_valname) {
+              parseSingleControllerVariable(txt, event, x, true);
+            }
 
 # ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

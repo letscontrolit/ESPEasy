@@ -193,6 +193,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = static_cast<C015_queue_element&>(*(C015_DelayHandler->sendQueue.back()));
 
+        const String taskDeviceName = getTaskDeviceName(event->TaskIndex);
+
         for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
@@ -203,10 +205,10 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             formattedValue = String();
           }
 
-          const String valueName = getTaskValueName(event->TaskIndex, x);
+          const String valueName = Cache.getTaskDeviceValueName(event->TaskIndex, x);
           const String valueFullName = strformat(
             F("%s.%s"),          
-            getTaskDeviceName(event->TaskIndex).c_str(),
+            taskDeviceName.c_str(),
             valueName.c_str());
           const String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();

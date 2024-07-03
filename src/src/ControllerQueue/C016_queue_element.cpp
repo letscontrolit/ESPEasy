@@ -27,7 +27,7 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count) :
-  unixTime(event->timestamp),
+  unixTime(event->timestamp_sec),
   sensorType(event->sensorType),
   valueCount(value_count)
 {

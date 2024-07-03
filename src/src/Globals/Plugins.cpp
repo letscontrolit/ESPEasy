@@ -18,6 +18,7 @@
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
@@ -320,12 +321,12 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
+        if (Function == PLUGIN_INIT) {
+          UserVar.clear_computed(taskIndex);
+          LoadTaskSettings(taskIndex);
+        }
         if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
         {
-          if (Function == PLUGIN_INIT) {
-            UserVar.clear_computed(taskIndex);
-            LoadTaskSettings(taskIndex);
-          }
           TempEvent->setTaskIndex(taskIndex);
           // Need to 'clear' the sensorType first, before calling getSensorType()
           TempEvent->sensorType = Sensor_VType::SENSOR_TYPE_NOT_SET;
@@ -890,7 +891,16 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(event->TaskIndex);
 
             if (taskData != nullptr) {
-              taskData->pushPluginStatsValues(event, !Device[DeviceIndex].TaskLogsOwnPeaks);
+              // FIXME TD-er: Must make this flag configurable
+              const bool onlyUpdateTimestampWhenSame = true;
+              const bool trackpeaks = 
+                Settings.TaskDeviceDataFeed[event->TaskIndex] != 0 || // Receive data from remote node
+                !Device[DeviceIndex].TaskLogsOwnPeaks;
+
+              taskData->pushPluginStatsValues(
+                event, 
+                trackpeaks,
+                onlyUpdateTimestampWhenSame); 
             }
               #endif // if FEATURE_PLUGIN_STATS
             saveUserVarToRTC();
