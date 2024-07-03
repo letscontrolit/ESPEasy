@@ -1,5 +1,6 @@
 #include "../Helpers/Audio.h"
 
+#include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/Hardware_GPIO.h"
@@ -99,6 +100,7 @@ bool play_rtttl(int8_t _pin, const char *p) {
 
 #  if FEATURE_ANYRTTTL_ASYNC
 void update_rtttl() {
+  START_TIMER
   if (anyrtttl::nonblocking::isPlaying()) {
     anyrtttl::nonblocking::play();
   } else {
@@ -113,6 +115,7 @@ void update_rtttl() {
     #   endif // if FEATURE_RTTTL_EVENTS
     clear_rtttl_melody(); // Release memory
   }
+  STOP_TIMER(UPDATE_RTTTL);
 }
 
 #  endif // if FEATURE_ANYRTTTL_ASYNC

@@ -504,7 +504,7 @@ void NodesHandler::updateThisNode() {
 }
 
 const NodeStruct * NodesHandler::getThisNode() {
-  node_time.now();
+//  node_time.now();
   updateThisNode();
   MAC_address this_mac = NetworkMacAddress();
   return getNodeByMac(this_mac.mac);
