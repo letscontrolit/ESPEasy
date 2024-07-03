@@ -748,11 +748,11 @@ String getFormUnit(LabelType::Enum label)
   switch (label) {
 #if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:
+    case LabelType::WIFI_CUR_TX_PWR:
     case LabelType::WIFI_RSSI:
       flash_str = F("dBm");
       break;
     case LabelType::WIFI_SENS_MARGIN:
-    case LabelType::WIFI_CUR_TX_PWR:
       flash_str = F("dB");
       break;
 #endif
