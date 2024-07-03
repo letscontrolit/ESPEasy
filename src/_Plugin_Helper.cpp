@@ -63,7 +63,7 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
       const uint8_t valueCount = getValueCountForTask(taskIndex);
       for (size_t i = 0; i < valueCount; ++i) {
         if (Cache.enabledPluginStats(taskIndex, i)) {
-          Plugin_task_data[taskIndex]->initPluginStats(i);
+          Plugin_task_data[taskIndex]->initPluginStats(taskIndex, i);
         }
       }
   #endif
