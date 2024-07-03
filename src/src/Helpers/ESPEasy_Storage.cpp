@@ -169,7 +169,7 @@ bool fileExists(const String& fname) {
       // use some random value as we don't have a time yet
       Cache.fileCacheClearMoment = HwRandom();
     } else {
-      Cache.fileCacheClearMoment = node_time.now();
+      Cache.fileCacheClearMoment = node_time.getLocalUnixTime();
     }
   }
   return res;
@@ -769,6 +769,7 @@ void afterloadSettings() {
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
+  node_time.applyTimeZone();
   CheckRunningServices(); // To update changes in hostname.
 }
 
@@ -1612,7 +1613,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
     //    return log;  // FIXME TD-er: Should this be considered a breaking error?
   }
 # endif // ifndef ESP32
-#endif // ifndef BUILD_NO_DEBUG
+#endif  // ifndef BUILD_NO_DEBUG
 
   if (index < 0) {
     #ifndef BUILD_NO_DEBUG
@@ -2340,9 +2341,10 @@ bool validateUploadConfigDat(const uint8_t *buf) {
     memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &buf[x], 1);
   }
   #ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, strformat(F("Validate config.dat, Version: %d = %d, PID: %d = %d"), 
+  addLog(LOG_LEVEL_INFO, strformat(F("Validate config.dat, Version: %d = %d, PID: %d = %d"),
                                    Temp.Version, VERSION, Temp.PID, ESP_PROJECT_PID));
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
+
   if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
     result = true;
   }
