@@ -370,6 +370,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
           if (proto.usesTimeout) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
+            if (proto.usesHost) {
+              addFormNote(F("Typical timeout: 100...300 msec for local host, >500 msec for internet hosts"));
+            }
           }
 
           if (proto.usesSampleSets) {

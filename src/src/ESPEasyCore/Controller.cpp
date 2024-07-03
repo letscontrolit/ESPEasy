@@ -60,8 +60,8 @@ void sendData(struct EventStruct *event, bool sendEvents)
         Settings.TaskDeviceSendData[x][event->TaskIndex] &&        
         Settings.Protocol[x])
     {
-      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
       event->ControllerIndex = x;
+      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
       event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {
@@ -210,6 +210,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #endif
   
   MQTTclient.setClient(mqtt);
+  MQTTclient.setKeepAlive(10);
+  MQTTclient.setSocketTimeout(timeout);
 
   if (ControllerSettings->UseDNS) {
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
@@ -232,7 +234,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
 
-  const unsigned long connect_start_time = millis();
+  const uint64_t statisticsTimerStart(getMicros64());
 
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, *ControllerSettings)) {
@@ -257,7 +259,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
+  count_connection_results(
+    MQTTresult, 
+    F("MQTT : Broker "), 
+    Settings.Protocol[controller_idx], 
+    statisticsTimerStart);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();
@@ -632,7 +638,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
     struct EventStruct TempEvent(event->TaskIndex);
     TempEvent.Source = event->Source;
-    TempEvent.timestamp = timestampUnixTime;
+    TempEvent.timestamp_sec = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
     String dummy;
