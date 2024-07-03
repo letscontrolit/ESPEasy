@@ -114,7 +114,9 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     if (Dallas_plugin(Settings.getPluginID_for_task(task))) {
       uint8_t tmpAddress[8] = { 0 };
 
-      for (uint8_t var_index = 0; var_index < VARS_PER_TASK; ++var_index) {
+      const uint8_t valueCount = getValueCountForTask(task);
+
+      for (uint8_t var_index = 0; var_index < valueCount; ++var_index) {
         Dallas_plugin_get_addr(tmpAddress, task, var_index);
         uint64_t tmpAddr_64 = Dallas_addr_to_uint64(tmpAddress);
 
@@ -126,7 +128,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
                 F(" (task %d [%s#%s])")
               , task + 1
               , getTaskDeviceName(task).c_str()
-              , getTaskValueName(task, var_index).c_str())
+              , Cache.getTaskDeviceValueName(task, var_index).c_str())
           ));
         }
       }

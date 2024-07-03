@@ -556,7 +556,7 @@ bool P143_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     if (current != _encoderPosition) {
       // Generate event
       if (Settings.UseRules) {
-        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 0),
+        eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, 0),
                        strformat(F("%d,%d"), current, current - _encoderPosition)); // Position, Delta (positive = clock-wise)
       }
 
@@ -838,7 +838,7 @@ bool P143_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
       // Generate event
       if (Settings.UseRules) {
-        eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, 1), state);
+        eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, 1), state);
       }
 
       // Set task value
