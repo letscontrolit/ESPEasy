@@ -173,7 +173,7 @@ float P047_data_struct::readTemperature() {
     I2C_write8_reg(_address, P047_ADAFRUIT_STATUS_BASE, P047_ADAFRUIT_GET_TEMPERATURE);
     delayMicroseconds(1000);
 
-    if (Wire.requestFrom(_address, 4) == 4) {
+    if (Wire.requestFrom(_address, 4u) == 4) {
       for (int b = 0; b < 4; ++b) {
         buf[b] = Wire.read();
       }
@@ -244,7 +244,7 @@ uint32_t P047_data_struct::getVersion() {
 
     I2C_write8_reg(_address, P047_ADAFRUIT_STATUS_BASE, P047_ADAFRUIT_GET_VERSION);
 
-    if (Wire.requestFrom(_address, 4) == 4) {
+    if (Wire.requestFrom(_address, 4u) == 4) {
       for (int b = 0; b < 4; ++b) {
         buf[b] = Wire.read();
       }

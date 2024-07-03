@@ -543,7 +543,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 // #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
 // #define USES_P168   // Light - VEML6030/VEML7700
-
+// #define USES_P169   // Environment - AS3935 Lightning Detector
 // #define USES_P170   // Input - I2C Liquid level sensor
 // #define USES_P172   // BMP3xx SPI.
 

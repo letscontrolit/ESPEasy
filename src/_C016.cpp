@@ -114,8 +114,11 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      if (event->timestamp == 0) {
-        event->timestamp = C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime();
+      if (event->timestamp_sec == 0) {
+        if (C016_allowLocalSystemTime)
+          event->setLocalTimeTimestamp();
+        else 
+          event->setUnixTimeTimestamp();
       }
       const C016_queue_element element(
         event,
@@ -167,7 +170,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c016_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c016_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
 return true;
 
