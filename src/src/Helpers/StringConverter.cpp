@@ -1346,12 +1346,13 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
-    for (uint8_t i = 0; i < 4; ++i) {
+    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+    for (uint8_t i = 0; i < valueCount; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
 
-      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
+      SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
   }
 }

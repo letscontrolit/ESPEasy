@@ -756,7 +756,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               pluginWebformShowValue(
                 x, 
                 varNr, 
-                getTaskValueName(x, varNr), 
+                Cache.getTaskDeviceValueName(x, varNr), 
                 formatUserVarNoCheck(&TempEvent, varNr));
             }
           }
@@ -932,6 +932,27 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     }
     #endif // if FEATURE_PLUGIN_PRIORITY
 
+    const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
+    #if FEATURE_ESPEASY_P2P
+    if (device.SendDataOption)
+    {
+      // Show remote feed information.
+      addFormSubHeader(F("Data Source"));
+      addFormNumericBox(F("Remote Unit"), F("remoteFeed"), remoteUnit, 0, 255);
+
+      if (remoteUnit != 255) {
+        const NodeStruct* node = Nodes.getNode(remoteUnit);
+
+        if (node != nullptr) {
+          addUnit(node->getNodeName());
+        } else {
+          addUnit(F("Unknown Unit Name"));
+        }
+      }
+      addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
+    }
+    #endif
+
     bool addPinConfig = false;
 
     // section: Sensor / Actuator
@@ -975,13 +996,15 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         devicePage_show_pin_config(taskIndex, DeviceIndex);
       }
     }
-    if (DEVICE_TYPE_DUMMY != device.Type) {
-      addFormSubHeader(F("Device Settings"));
-    }
 
     String webformLoadString;
     struct EventStruct TempEvent(taskIndex);
+
+
     // add plugins content
+    if (DEVICE_TYPE_DUMMY != device.Type && remoteUnit == 0) {
+      addFormSubHeader(F("Device Settings"));
+    }
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
       #ifndef BUILD_NO_DEBUG
@@ -992,30 +1015,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         addHtmlError(errorMessage);
       }
       #endif
-
-      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
     }
-    else {
-      #if FEATURE_ESPEASY_P2P
-      // Show remote feed information.
-      addFormSubHeader(F("Data Source"));
-      const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
-      addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
-
-      if (remoteUnit != 255) {
-        const NodeStruct* node = Nodes.getNode(remoteUnit);
-
-        if (node != nullptr) {
-          addUnit(node->getNodeName());
-        } else {
-          addUnit(F("Unknown Unit Name"));
-        }
-      }
-      addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
-      #endif
-
-      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
-    }
+    PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
 
     devicePage_show_output_data_type(taskIndex, DeviceIndex);
 
@@ -1295,6 +1296,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
+        
       }
       #endif // if FEATURE_CHART_JS
 

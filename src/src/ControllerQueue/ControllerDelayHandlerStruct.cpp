@@ -258,7 +258,7 @@ size_t ControllerDelayHandlerStruct::getQueueMemorySize() const {
 }
 
 void ControllerDelayHandlerStruct::process(
-  int                                controller_number,
+  cpluginID_t                        cpluginID,
   do_process_function                func,
   TimingStatsElements                timerstats_id,
   SchedulerIntervalTimer_e timerID) 
@@ -274,7 +274,7 @@ void ControllerDelayHandlerStruct::process(
       LoadControllerSettings(element->_controller_idx, *ControllerSettings);
       cacheControllerSettings(*ControllerSettings);
       START_TIMER;
-      markProcessed(func(controller_number, *element, *ControllerSettings));
+      markProcessed(func(cpluginID, *element, *ControllerSettings));
       #if FEATURE_TIMING_STATS
       STOP_TIMER_VAR(timerstats_id);
       #endif
