@@ -34,7 +34,8 @@
 #include <cstddef>
 
 #ifdef USES_C013
-#include "../DataStructs/C013_p2p_dataStructs.h"
+#include "../DataStructs/C013_p2p_SensorDataStruct.h"
+#include "../DataStructs/C013_p2p_SensorInfoStruct.h"
 #endif
 
 #ifdef USES_C016
@@ -92,9 +93,9 @@ void run_compiletime_checks() {
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  check_size<EventStruct,                           120u>(); // Is not stored
+  check_size<EventStruct,                           124u>(); // Is not stored
   #else
-  check_size<EventStruct,                           100u>(); // Is not stored
+  check_size<EventStruct,                           104u>(); // Is not stored
   #endif
 
   // LogStruct is mainly dependent on the number of lines.
@@ -123,8 +124,8 @@ void run_compiletime_checks() {
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 138u>();
-  check_size<C013_SensorDataStruct,                 24u>();
+  check_size<C013_SensorInfoStruct,                 233u>();
+  check_size<C013_SensorDataStruct,                 40u>(); 
   #endif
   #ifdef USES_C016
   check_size<C016_binary_element,                   24u>();

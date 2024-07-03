@@ -88,7 +88,7 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c017_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c017_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C017_queue_element& element = static_cast<const C017_queue_element&>(element_base);
 // *INDENT-ON*
   if (element.valueCount == 0) {
@@ -102,7 +102,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
 
   WiFiClient client;
 
-  if (!try_connect_host(controller_number, client, ControllerSettings, F("ZBX  : ")))
+  if (!try_connect_host(cpluginID, client, ControllerSettings, F("ZBX  : ")))
   {
     return false;
   }
@@ -120,7 +120,7 @@ bool do_process_c017_delay_queue(int controller_number, const Queue_element_base
     // Populate JSON with the data
     for (uint8_t i = 0; i < element.valueCount; i++)
     {
-      const String taskValueName = getTaskValueName(element._taskIndex, i);
+      const String taskValueName = Cache.getTaskDeviceValueName(element._taskIndex, i);
       if (taskValueName.isEmpty()) {
         continue;                                    // Zabbix will ignore an empty key anyway
       }

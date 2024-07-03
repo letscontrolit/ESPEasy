@@ -86,7 +86,9 @@ void handle_unprocessedNetworkEvents()
         WiFiEventData.setWiFiServicesInitialized();
 //#ifdef ESP32
         setWebserverRunning(false);
+        delay(1);
         setWebserverRunning(true);
+        delay(1);
 /*        
 #else
         CheckRunningServices();

@@ -1962,6 +1962,10 @@ To create/register a plugin, you have to :
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
 
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -2023,17 +2027,29 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef CONTROLLER_SET_COLLECTION
+  #ifndef USES_C011
     #define USES_C011   // Generic HTTP Advanced
+  #endif
+  #ifndef USES_C012
     #define USES_C012   // Blynk HTTP
+  #endif
+  #ifndef USES_C014
     #define USES_C014   // homie 3 & 4dev MQTT
+  #endif
+  #ifndef USES_C015
     //#define USES_C015   // Blynk
+  #endif
+  #ifndef USES_C017
     #define USES_C017   // Zabbix
-    #ifdef ESP32
-      #ifndef USES_C018
-        #define USES_C018 // TTN RN2483
-      #endif
+  #endif
+  #ifdef ESP32
+    #ifndef USES_C018
+      #define USES_C018 // TTN RN2483
     #endif
+  #endif
+  #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
+  #endif
 #endif
 
 
@@ -2374,13 +2390,17 @@ To create/register a plugin, you have to :
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
   #ifndef USES_P167
-    #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+    #define USES_P167   // Environment - IKEA Vindstyrka SEN54 temperature , humidity and air quality
   #endif
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
+  #endif
+
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
 
   // Controllers
@@ -2842,7 +2862,13 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #define FEATURE_MDNS  0
+        #if ESP_IDF_VERSION_MAJOR >= 5
+          // See if it is now more usable...
+          // See: https://github.com/letscontrolit/ESPEasy/issues/5061
+          #define FEATURE_MDNS  0
+        #else
+          #define FEATURE_MDNS  0
+        #endif
       #else
         // Do not use MDNS on ESP8266 due to memory leak
         #define FEATURE_MDNS  0

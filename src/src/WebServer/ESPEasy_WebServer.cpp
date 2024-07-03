@@ -738,7 +738,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(getTaskValueName(TaskIndex, x));
+    addHtml(Cache.getTaskDeviceValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }

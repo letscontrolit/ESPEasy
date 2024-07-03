@@ -200,8 +200,13 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return F("Force WiFi No Sleep");
     case LabelType::PERIODICAL_GRAT_ARP:    return F("Periodical send Gratuitous ARP");
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
+#ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:      return F("Extra Wait WiFi Connect");
+#endif
     case LabelType::CONNECT_HIDDEN_SSID:    return F("Include Hidden SSID");
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:      return F("Passive WiFi Scan");
+#endif
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return F("Hidden SSID Slow Connect");
     case LabelType::SDK_WIFI_AUTORECONNECT: return F("Enable SDK WiFi Auto Reconnect");
 #if FEATURE_USE_IPV6
@@ -276,9 +281,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #endif
 
 #if FEATURE_INTERNAL_TEMPERATURE
-    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal temperature (ESP32)");
+    case LabelType::INTERNAL_TEMPERATURE:   return F("Internal Temperature");
 #endif // if FEATURE_INTERNAL_TEMPERATURE
-
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
@@ -346,7 +350,7 @@ String getValue(LabelType::Enum label) {
       }
       return timeSource_str;
     }
-    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 1);
+    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 3);
     #if FEATURE_EXT_RTC
     case LabelType::EXT_RTC_UTC_TIME:
     {
@@ -533,8 +537,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::FORCE_WIFI_NOSLEEP:     return jsonBool(Settings.WifiNoneSleep());
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: retval = Settings.ConnectionFailuresThreshold; break;
+#ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:      return jsonBool(Settings.WaitWiFiConnect());
+#endif
     case LabelType::CONNECT_HIDDEN_SSID:    return jsonBool(Settings.IncludeHiddenSSID());
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:      return jsonBool(Settings.PassiveWiFiScan());
+#endif
     case LabelType::HIDDEN_SSID_SLOW_CONNECT: return jsonBool(Settings.HiddenSSID_SlowConnectPerBSSID());
     case LabelType::SDK_WIFI_AUTORECONNECT: return jsonBool(Settings.SDK_WiFi_autoreconnect());
 #if FEATURE_USE_IPV6
@@ -653,7 +662,7 @@ String getValue(LabelType::Enum label) {
 
 #if FEATURE_ETHERNET
 String getEthSpeed() {
-  return strformat(F("%dMbps"), EthLinkSpeed());
+  return strformat(F("%d [Mbps]"), EthLinkSpeed());
 }
 
 String getEthLinkSpeedState() {
@@ -680,4 +689,166 @@ String getExtendedValue(LabelType::Enum label) {
       break;
   }
   return EMPTY_STRING;
+}
+
+String getFormNote(LabelType::Enum label)
+{
+  // Keep flash string till the end of the function, to reduce build size
+  // Otherwise lots of calls to String() constructor are included.
+  const __FlashStringHelper *flash_str = F("");
+
+  switch (label) {
+#ifndef MINIMAL_OTA
+    case LabelType::CONNECT_HIDDEN_SSID:
+      flash_str = F("Must be checked to connect to a hidden SSID");
+      break;
+#ifdef ESP32
+    case LabelType::WIFI_PASSIVE_SCAN:
+      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP. Passive scan is typically faster.");
+      break;
+#endif // ifdef ESP32
+    case LabelType::HIDDEN_SSID_SLOW_CONNECT:
+      flash_str = F("Required for some AP brands like Mikrotik to connect to hidden SSID");
+      break;
+#if FEATURE_USE_IPV6
+    case LabelType::ENABLE_IPV6:
+      flash_str = F("Toggling IPv6 requires reboot");
+      break;
+#endif // if FEATURE_USE_IPV6
+#ifndef NO_HTTP_UPDATER
+    case LabelType::ALLOW_OTA_UNLIMITED:
+      flash_str = F("When enabled, OTA updating can overwrite the filesystem and settings!<br>Requires reboot to activate");
+      break;
+#endif // ifndef NO_HTTP_UPDATER
+#if FEATURE_RULES_EASY_COLOR_CODE
+    case LabelType::DISABLE_RULES_AUTOCOMPLETE:
+      flash_str = F("Also disables Rules syntax highlighting!");
+      break;
+#endif // if FEATURE_RULES_EASY_COLOR_CODE
+
+    case LabelType::FORCE_WIFI_NOSLEEP:
+      flash_str = F("Change WiFi sleep settings requires reboot to activate");
+      break;
+
+    case LabelType::CPU_ECO_MODE:
+      flash_str = F("Node may miss receiving packets with Eco mode enabled");
+      break;
+
+    case LabelType::WIFI_NR_EXTRA_SCANS:
+      flash_str = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
+      break;
+#ifndef ESP32
+    case LabelType::WAIT_WIFI_CONNECT:
+      flash_str = F("Wait for 1000 msec right after connecting to WiFi.<BR>May improve success on some APs like Fritz!Box");
+      break;
+#endif
+
+#endif
+
+#if FEATURE_SET_WIFI_TX_PWR
+    case LabelType::WIFI_TX_MAX_PWR:
+    case LabelType::WIFI_SENS_MARGIN:
+    {
+      float maxTXpwr;
+      float sensitivity = GetRSSIthreshold(maxTXpwr);
+      if (LabelType::WIFI_TX_MAX_PWR == label) {
+        return strformat(
+          F("Current max: %.2f dBm"), maxTXpwr);
+      }
+      return strformat(
+        F("Adjust TX power to target the AP with (sensitivity + margin) dBm signal strength. Current sensitivity: %.2f dBm"),
+        sensitivity);
+    }
+#endif // if FEATURE_SET_WIFI_TX_PWR
+
+    default:
+      return EMPTY_STRING;
+  }
+
+  return flash_str;
+}
+
+
+String getFormUnit(LabelType::Enum label)
+{
+    const __FlashStringHelper *flash_str = F("");
+
+  switch (label) {
+#if FEATURE_SET_WIFI_TX_PWR
+    case LabelType::WIFI_TX_MAX_PWR:
+    case LabelType::WIFI_CUR_TX_PWR:
+    case LabelType::WIFI_RSSI:
+      flash_str = F("dBm");
+      break;
+    case LabelType::WIFI_SENS_MARGIN:
+      flash_str = F("dB");
+      break;
+#endif
+    case LabelType::TIME_WANDER:
+      flash_str = F("ppm");
+      break;
+#ifdef ESP32
+    case LabelType::HEAP_SIZE:
+    case LabelType::HEAP_MIN_FREE:
+    #ifdef BOARD_HAS_PSRAM
+    case LabelType::PSRAM_SIZE:
+    case LabelType::PSRAM_FREE:
+    case LabelType::PSRAM_MIN_FREE:
+    case LabelType::PSRAM_MAX_FREE_BLOCK:
+    #endif // BOARD_HAS_PSRAM
+#endif // ifdef ESP32
+    case LabelType::FREE_MEM:
+    case LabelType::FREE_STACK:
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:
+#endif
+#if defined(CORE_POST_2_5_0) || defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
+    case LabelType::HEAP_MAX_FREE_BLOCK:
+  #endif
+#endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+
+      flash_str = F("byte");
+      break;
+    case LabelType::FLASH_CHIP_REAL_SIZE:
+    case LabelType::FLASH_IDE_SIZE:
+      flash_str = F("kB");
+      break;
+/*
+    case LabelType::UPTIME:
+      flash_str = F("min");
+      break;
+*/
+    case LabelType::LOAD_PCT:
+#if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
+    case LabelType::HEAP_FRAGMENTATION:
+  #endif
+#endif // if defined(CORE_POST_2_5_0)
+
+      flash_str = F("%");
+      break;
+
+    case LabelType::ESP_CHIP_FREQ:
+#ifdef ESP32
+    case LabelType::ESP_CHIP_XTAL_FREQ:
+    case LabelType::ESP_CHIP_APB_FREQ:
+#endif
+    case LabelType::FLASH_CHIP_SPEED:
+    case LabelType::FLASH_IDE_SPEED:
+      flash_str = F("MHz");
+      break;
+#if FEATURE_INTERNAL_TEMPERATURE
+    case LabelType::INTERNAL_TEMPERATURE:
+      flash_str = F("&deg;C");
+      break;
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
+
+
+    default:
+      return EMPTY_STRING;
+  }
+
+  return flash_str;
 }

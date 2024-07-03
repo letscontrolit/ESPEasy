@@ -55,10 +55,11 @@ else:
     "-DUSES_P100",  # Pulse Counter - DS2423
     "-DUSES_P106",  # BME680
     "-DUSES_P107",  # SI1145 UV index
+    "-DUSES_P110",  # VL53L0x
     "-DUSES_P131",  # NeoPixelMatrix
 
     "-DUSES_P146",  # Cache Reader
-    
+    "-DUSES_P169",  # AS3935 Lightning Detector 
 
 #   "-DUSES_C015",  # Blynk
     "-DUSES_C016",  # Cache Controller

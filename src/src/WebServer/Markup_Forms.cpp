@@ -40,6 +40,12 @@ void addFormNote(const String& text, const String& id)
   addHtmlDiv(F("note"), concat(F("Note: "), text));
 }
 
+void addFormNote(const LabelType::Enum& label)
+{
+  addUnit(getFormUnit(label));
+  addFormNote(getFormNote(label));
+}
+
 // ********************************************************************************
 // Create Forms
 // ********************************************************************************
@@ -97,6 +103,7 @@ void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
                   , tooltip
                   #endif // if FEATURE_TOOLTIPS
                   );
+  addFormNote(label);
 }
 
 void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
@@ -119,6 +126,7 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                     #endif // if FEATURE_TOOLTIPS
                     , disabled
                     );
+  addFormNote(label);
 }
 
 void addFormNumericBox(const __FlashStringHelper * label, 
@@ -169,6 +177,7 @@ void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float 
                         , tooltip
                         #endif // if FEATURE_TOOLTIPS
                         );
+  addFormNote(label);
 }
 
 void addFormFloatNumberBox(const String& label,

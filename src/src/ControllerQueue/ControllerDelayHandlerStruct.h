@@ -28,7 +28,7 @@
   # define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
 #endif // ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
 
-typedef bool (*do_process_function)(int,
+typedef bool (*do_process_function)(cpluginID_t,
                                     const Queue_element_base&,
                                     ControllerSettingsStruct&);
 
@@ -71,7 +71,7 @@ struct ControllerDelayHandlerStruct {
   size_t getQueueMemorySize() const;
 
   void   process(
-    int                                controller_number,
+    cpluginID_t                        cpluginID,
     do_process_function                func,
     TimingStatsElements                timerstats_id,
     SchedulerIntervalTimer_e timerID);

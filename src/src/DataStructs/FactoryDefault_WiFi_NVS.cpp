@@ -29,6 +29,7 @@ void FactoryDefault_WiFi_NVS::fromSettings() {
   bits.SDK_WiFi_autoreconnect         = Settings.SDK_WiFi_autoreconnect();
   bits.HiddenSSID_SlowConnectPerBSSID = Settings.HiddenSSID_SlowConnectPerBSSID();
   bits.EnableIPv6                     = Settings.EnableIPv6();
+  bits.PassiveWiFiScan                = Settings.PassiveWiFiScan();
 }
 
 void FactoryDefault_WiFi_NVS::applyToSettings() const {
@@ -45,6 +46,7 @@ void FactoryDefault_WiFi_NVS::applyToSettings() const {
   Settings.SDK_WiFi_autoreconnect(bits.SDK_WiFi_autoreconnect);
   Settings.HiddenSSID_SlowConnectPerBSSID(bits.HiddenSSID_SlowConnectPerBSSID);
   Settings.EnableIPv6(bits.EnableIPv6);
+  Settings.PassiveWiFiScan(bits.PassiveWiFiScan);
 }
 
 struct FactoryDefault_WiFi_NVS_securityPrefs {

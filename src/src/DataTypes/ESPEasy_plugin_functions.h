@@ -85,6 +85,8 @@ public:
 
   enum class Function {
     CPLUGIN_PROTOCOL_ADD = 127, // Called at boot for letting a controller adding itself to list of available controllers
+    CPLUGIN_CONNECT_SUCCESS,     // Only used for timing stats
+    CPLUGIN_CONNECT_FAIL,        // Only used for timing stats
     CPLUGIN_PROTOCOL_TEMPLATE,
     CPLUGIN_PROTOCOL_SEND,
     CPLUGIN_PROTOCOL_RECV,
