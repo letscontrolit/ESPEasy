@@ -41,7 +41,11 @@ bool isExternalTimeSource(timeSource_t timeSource);
 // All nodes in the network may be in sync with each other, but get out of sync with the rest of the world.
 // Therefore use a strong bias for external synced nodes.
 // But also must make sure the same NTP synced node will be held responsible for the entire network.
-unsigned long computeExpectedWander(timeSource_t  timeSource,
-                                    unsigned long timePassedSinceLastTimeSync);
+uint32_t computeExpectedWander(timeSource_t  timeSource,
+                                    uint32_t timePassedSinceLastTimeSync);
+
+uint32_t updateExpectedWander(
+  int32_t current_wander,
+  uint32_t timePassedSinceLastTimeSync);
 
 #endif /* DATATYPES_ESPEASYTIMESOURCE_H */

@@ -766,7 +766,7 @@ void P082_setSystemTime(struct EventStruct *event) {
     return;
   }
 
-  if ((timeSource_t::GPS_time_source == node_time.timeSource) &&
+  if ((timeSource_t::GPS_time_source == node_time.getTimeSource()) &&
       (P082_data->_last_setSystemTime != 0) &&
       (timePassedSince(P082_data->_last_setSystemTime) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC))
   {
@@ -785,8 +785,8 @@ void P082_setSystemTime(struct EventStruct *event) {
     if (updated) {
       // Use floating point precision to use the time since last update from GPS
       // and the given offset in centisecond.
-      ESPEASY_RULES_FLOAT_TYPE time = makeTime(dateTime);
-      time += (static_cast<ESPEASY_RULES_FLOAT_TYPE>(age) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1000));
+      double time = makeTime(dateTime);
+      time += age / 1000.0;
       node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
       P082_data->_last_setSystemTime = millis();
     }

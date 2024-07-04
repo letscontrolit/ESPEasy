@@ -90,54 +90,74 @@ void ESPEasy_time::restoreFromRTC()
     // It should not be before the build time
     // Still it makes sense to restore RTC time to get some kind of continuous logging when no time source is available.
     // ToDo TD-er: Fix this when time travel appears to be possible
-    setExternalTimeSource(RTC.lastSysTime,
+    setExternalTimeSource(RTC.lastSysTime + getUptime_in_sec(),
                           RTC.lastSysTime < get_build_unixtime()
         ? timeSource_t::No_time_source
         : timeSource_t::Restore_RTC_time_source);
-
-    // Do not add the current uptime as offset. This will be done when calling now()
-    lastSyncTime_ms = 0;
     initTime();
   }
 }
 
-void ESPEasy_time::setExternalTimeSource(double time, timeSource_t new_timeSource, uint8_t unitnr) {
-  if ((new_timeSource == timeSource) && (new_timeSource != timeSource_t::Manual_set)) {
+void ESPEasy_time::setExternalTimeSource_withTimeWander(
+  double       new_time,
+  timeSource_t new_timeSource,
+  int32_t      wander,
+  uint8_t      unitnr)
+{
+  if ((new_timeSource == _timeSource) && (new_timeSource != timeSource_t::Manual_set)) {
     // Update from the same type of time source, except when manually adjusting the time
-    if (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) {
+    if ((lastSyncTime_ms != 0) && (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC)) {
       return;
     }
   }
 
-  if ((timeSource < new_timeSource) &&
+  if ((_timeSource < new_timeSource) &&
       (new_timeSource != timeSource_t::No_time_source) &&
       (new_timeSource != timeSource_t::Manual_set))
   {
+    if (wander < 0) {
+      wander = computeExpectedWander(new_timeSource, timePassedSince(lastSyncTime_ms));
+    }
+
     // New time source is potentially worse than the current one.
-    if (computeExpectedWander(timeSource, lastSyncTime_ms) <
-        computeExpectedWander(new_timeSource, millis())) { return; }
+    if (computeExpectedWander(_timeSource, timePassedSince(lastSyncTime_ms)) <
+        wander) {
+      return;
+    }
   }
 
   if ((new_timeSource == timeSource_t::No_time_source) ||
       (new_timeSource == timeSource_t::Manual_set) ||
-      (time > get_build_unixtime())) {
+      (new_time > get_build_unixtime())) {
+    if (externalUnixTime_offset_usec == 0) {
+      const int64_t cur_system_Unixtime_usec = getMicros64() + unixTime_usec_uptime_offset;
+      const int64_t new_Unixtime_usec        = new_time * 1000000.0;
+      externalUnixTime_offset_usec = new_Unixtime_usec - cur_system_Unixtime_usec;
+    }
+    extTimeSource       = new_timeSource;
+    lastSyncTime_ms     = millis();
+    timeSource_p2p_unit = unitnr;
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Time : Set Ext. Time Source: ");
-      log += toString(new_timeSource);
-      log += F(" time: ");
-      log += static_cast<uint32_t>(time);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+                   F("Time : Set Ext. Time Source: %s time: %.3f offset: %s"),
+                   String(toString(new_timeSource)).c_str(),
+                   new_time,
+                   secondsToDayHourMinuteSecond_ms(externalUnixTime_offset_usec).c_str()));
     }
 #endif // ifndef BUILD_NO_DEBUG
-    extTimeSource                    = new_timeSource;
-    externalUnixTime_d               = time;
-    externalUnixTime_received_micros = getMicros64();
-    lastSyncTime_ms                  = millis();
-    timeSource_p2p_unit              = unitnr;
+
     initTime();
   }
+}
+
+void ESPEasy_time::setExternalTimeSource(double new_time, timeSource_t new_timeSource, uint8_t unitnr) {
+  setExternalTimeSource_withTimeWander(
+    new_time,
+    new_timeSource,
+    computeExpectedWander(new_timeSource, timePassedSince(lastSyncTime_ms)),
+    unitnr);
 }
 
 uint32_t ESPEasy_time::getUptime_in_sec() const {
@@ -196,7 +216,6 @@ unsigned long ESPEasy_time::getLocalUnixTime(uint32_t& unix_time_frac) const
 }
 
 unsigned long ESPEasy_time::now_() {
-  // calculate number of seconds passed since last call to now()
   bool timeSynced = false;
 
   if (nextSyncTime <= getUptime_in_sec()) {
@@ -205,117 +224,113 @@ unsigned long ESPEasy_time::now_() {
 
     bool updatedTime = false;
 
-    uint64_t micros_received = getMicros64();
+    if ((externalUnixTime_offset_usec != 0) &&
+        (extTimeSource != timeSource_t::No_time_source)) {
+      unixTime_d = getMicros64() +
+                   unixTime_usec_uptime_offset +
+                   externalUnixTime_offset_usec;
+      unixTime_d /= 1000000.0;
 
-    if (externalUnixTime_d > 0.0) {
-      unixTime_d = externalUnixTime_d;
+      syncInterval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC;
+      updatedTime  = true;
+      _timeSource  = extTimeSource;
+    } else {
+      if (!isExternalTimeSource(_timeSource)
+          || (timePassedSince(lastSyncTime_ms) > static_cast<long>(1000 * syncInterval)))
+      {
+        externalUnixTime_offset_usec = 0;
 
-      if (externalUnixTime_received_micros != 0) {
-        micros_received = externalUnixTime_received_micros;
-      }
-
-      // Correct for the delay between the last received external time and applying it
-      unixTime_d                      += (timePassedSince(lastSyncTime_ms) / 1000.0);
-      externalUnixTime_d               = -1.0;
-      externalUnixTime_received_micros = 0;
-      syncInterval                     = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC;
-      updatedTime                      = true;
-      timeSource                       = extTimeSource;
-    }
-
-    if (!isExternalTimeSource(timeSource)
-        || (extTimeSource <= timeSource)
-        || (timePassedSince(lastSyncTime_ms) > static_cast<long>(1000 * syncInterval))) {
-      if (getNtpTime(unixTime_d)) {
-        updatedTime     = true;
-        micros_received = getMicros64();
-
-        if (externalUnixTime_received_micros != 0) {
-          micros_received = externalUnixTime_received_micros;
-        }
-      } else {
+        // FIXME TD-er: calls to set external timesource should be done via the scheduler
+        // Those should then also call setExternalTimeSource,
+        // which determines whether the newly set time is an improvement
+        if (getNtpTime(unixTime_d)) {
+          updatedTime = true;
+        } else {
         #if FEATURE_ESPEASY_P2P
-        double tmp_unixtime_d;
 
-        if (!updatedTime && Nodes.getUnixTime(tmp_unixtime_d, timeSource_p2p_unit)) {
-          unixTime_d      = tmp_unixtime_d;
-          micros_received = getMicros64(); // When calling Nodes.getUnixTime the unixtime has been patched with the time passed since packet
-                                           // was received
-          timeSource   = timeSource_t::ESPEASY_p2p_UDP;
-          updatedTime  = true;
-          syncInterval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC;
-        }
+          if (!updatedTime) {
+            double  tmp_unixtime_d{};
+            int32_t wander{};
+            const timeSource_t tmp_timeSource = Nodes.getUnixTime(tmp_unixtime_d, wander, timeSource_p2p_unit);
+
+            if (tmp_timeSource != timeSource_t::No_time_source) {
+              // Nodes.getUnixTime does compensate for any delay since the timestamp was received from the p2p node
+              // thus this can be used here without further compensation.
+
+              // FIXME TD-er: Should check if this is a better time source compared to what we already have, using time wander
+
+              unixTime_d   = tmp_unixtime_d;
+              _timeSource  = tmp_timeSource;
+              updatedTime  = true;
+              syncInterval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_SEC;
+            }
+          }
         #endif // if FEATURE_ESPEASY_P2P
 
         #if FEATURE_EXT_RTC
-        uint32_t tmp_unixtime = 0;
+          uint32_t tmp_unixtime = 0;
 
-        if (!updatedTime &&
-            (timeSource > timeSource_t::External_RTC_time_source) && // No need to set from ext RTC more than once.
-            ExtRTC_get(tmp_unixtime)) {
-          unixTime_d      = tmp_unixtime;
-          micros_received = getMicros64();
-          timeSource      = timeSource_t::External_RTC_time_source;
-          updatedTime     = true;
-          syncInterval    = 120; // Allow sync in 2 minutes to see if we get some better options from p2p nodes.
-        }
+          if (!updatedTime &&
+              (_timeSource > timeSource_t::External_RTC_time_source) && // No need to set from ext RTC more than once.
+              ExtRTC_get(tmp_unixtime)) {
+            unixTime_d   = tmp_unixtime;
+            _timeSource  = timeSource_t::External_RTC_time_source;
+            updatedTime  = true;
+            syncInterval = 120; // Allow sync in 2 minutes to see if we get some better options from p2p nodes.
+          }
         #endif // if FEATURE_EXT_RTC
+
+          if (updatedTime && (externalUnixTime_offset_usec == 0)) {
+            const int64_t cur_system_Unixtime_usec = getMicros64() + unixTime_usec_uptime_offset;
+            const int64_t new_Unixtime_usec        = unixTime_d * 1000000.0;
+            externalUnixTime_offset_usec = new_Unixtime_usec - cur_system_Unixtime_usec;
+          }
+        }
       }
     }
 
     // Clear the external time source so it has to be set again with updated values.
-    extTimeSource                    = timeSource_t::No_time_source;
-    externalUnixTime_received_micros = 0;
-    externalUnixTime_d               = -1.0;
+    extTimeSource = timeSource_t::No_time_source;
 
-    if (timeSource != timeSource_t::ESPEASY_p2p_UDP) { timeSource_p2p_unit = 0; }
+    if ((_timeSource != timeSource_t::ESPEASY_p2p_UDP) &&
+        (_timeSource != timeSource_t::ESP_now_peer))
+    {
+      timeSource_p2p_unit = 0;
+    }
 
     if (updatedTime) {
       START_TIMER;
+      unixTime_usec_uptime_offset += externalUnixTime_offset_usec;
 
-      double time_offset_sec = 0.0;
+      constexpr int64_t ten_sec_in_usec = 10 * 1000000ll;
 
-      // Update offset
-      const uint64_t tmp_unixTime_usec_uptime_offset = static_cast<uint64_t>(unixTime_d * 1000000.0);
-
-      if (micros_received < tmp_unixTime_usec_uptime_offset) {
-        const uint64_t new_unixTime_usec_uptime_offset = tmp_unixTime_usec_uptime_offset - micros_received;
-        time_offset_sec             = unixTime_usec_uptime_offset;
-        time_offset_sec            -= new_unixTime_usec_uptime_offset;
-        time_offset_sec            /= 1000000.0;
-        unixTime_usec_uptime_offset = new_unixTime_usec_uptime_offset;
-
-        if ((lastTimeWanderCalculation_ms != 0) &&
-            statusNTPInitialized &&
-            (std::abs(time_offset_sec) < 10.0)) {
-          // Clock instability in ppm
-          timeWander  = ((time_offset_sec * 1000000.0) / timePassedSince(lastTimeWanderCalculation_ms));
-          timeWander *= 1000.0f;
-        }
-
-        lastTimeWanderCalculation_ms = static_cast<uint32_t>(micros_received / 1000);
-      } else {
-        // Should not happen, so what to do now????
-        //        unixTime_usec_uptime_offset = 0;
+      if ((lastTimeWanderCalculation_ms != 0) &&
+          statusNTPInitialized &&
+          (std::abs(externalUnixTime_offset_usec) < ten_sec_in_usec)) {
+        // Clock instability in ppm
+        timeWander =
+          static_cast<float>(externalUnixTime_offset_usec) /
+          static_cast<float>(timePassedSince(lastTimeWanderCalculation_ms));
+        timeWander *= 1000.0f;
       }
 
-
-      timeSynced = true;
+      lastTimeWanderCalculation_ms = millis();
+      timeSynced                   = true;
 
       #if FEATURE_PLUGIN_STATS
 
       // GMT	Wed Jan 01 2020 00:00:00 GMT+0000
-      const uint32_t unixTime_20200101 = 1577836800;
+      constexpr int64_t unixTime_20200101_usec = 1577836800ll * 1000000ll;
 
-      if (!statusNTPInitialized && (time_offset_sec > unixTime_20200101)) {
-        if (static_cast<uint32_t>(unixTime_d) > unixTime_20200101) {
+      if (!statusNTPInitialized && (externalUnixTime_offset_usec > unixTime_20200101_usec)) {
+        if (getUnixTime() > get_build_unixtime()) {
           // Update recorded plugin stats timestamps
           for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
           {
             PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(taskIndex);
 
             if (taskData != nullptr) {
-              taskData->processTimeSet(time_offset_sec);
+              taskData->processTimeSet(externalUnixTime_offset_usec / 1000000.0);
             }
           }
         }
@@ -330,9 +345,9 @@ unsigned long ESPEasy_time::now_() {
       ExtRTC_set(static_cast<uint32_t>(unixTime_d + 0.5));
       #endif // if FEATURE_EXT_RTC
       {
-        const unsigned long abs_time_offset_ms = std::abs(time_offset_sec) * 1000;
+        const unsigned long abs_time_offset_ms = std::abs(externalUnixTime_offset_usec) / 1000ll;
 
-        if (timeSource == timeSource_t::NTP_time_source) {
+        if (_timeSource == timeSource_t::NTP_time_source) {
           // May need to lessen the load on the NTP servers, randomize the sync interval
           if (abs_time_offset_ms < 1000) {
             // offset is less than 1 second, so we consider it a regular time sync.
@@ -350,7 +365,7 @@ unsigned long ESPEasy_time::now_() {
           if (syncInterval <= 3600) {
             syncInterval = HwRandom(3600, 4000);
           }
-        } else if (timeSource == timeSource_t::No_time_source) {
+        } else if (_timeSource == timeSource_t::No_time_source) {
           syncInterval = 60;
         } else {
           syncInterval = 3600;
@@ -365,13 +380,13 @@ unsigned long ESPEasy_time::now_() {
         log += static_cast<uint32_t>(unixTime_d);
         #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-        if (std::abs(time_offset_sec) < 86400) {
+        if (std::abs(externalUnixTime_offset_usec / 1000000ll) < 86400ll) {
           // Only useful to show adjustment if it is less than a day.
           log += strformat(
-            F(" Time adjusted by %d msec. Wander: %.1f ppm Source: "),
-            static_cast<int32_t>(time_offset_sec * 1000.0),
+            F(" Time adjusted by %d msec. Wander: %.3f ppm Source: "),
+            static_cast<int32_t>(externalUnixTime_offset_usec / 1000ll),
             timeWander);
-          log += toString(timeSource);
+          log += toString(_timeSource);
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
@@ -380,12 +395,13 @@ unsigned long ESPEasy_time::now_() {
       lastSyncTime_ms = millis();
       nextSyncTime    = getUptime_in_sec() + syncInterval;
 
-      if (isExternalTimeSource(timeSource)) {
+      if (isExternalTimeSource(_timeSource)) {
         #ifdef USES_ESPEASY_NOW
         ESPEasy_now_handler.sendNTPbroadcast();
         #endif // ifdef USES_ESPEASY_NOW
       }
       STOP_TIMER(SYSTIME_UPDATED);
+      externalUnixTime_offset_usec = 0;
     }
   }
   RTC.lastSysTime = getUnixTime();
@@ -438,7 +454,7 @@ bool ESPEasy_time::reportNewMinute()
 }
 
 bool ESPEasy_time::systemTimePresent() const {
-  switch (timeSource) {
+  switch (_timeSource) {
     case timeSource_t::No_time_source:
     case timeSource_t::Restore_RTC_time_source:
       break;
@@ -450,9 +466,9 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::Manual_set:
       return true;
     case timeSource_t::NTP_time_source:
-      return getUnixTime() > get_build_unixtime();
+      break;
   }
-  return nextSyncTime > 0 || externalUnixTime_d > get_build_unixtime();
+  return getUnixTime() > get_build_unixtime();
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
@@ -580,8 +596,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       // For more detailed info on improving accuracy, see:
       // https://github.com/lettier/ntpclient/issues/4#issuecomment-360703503
 
-      uint64_t offset_usec{};
-      uint64_t roundtripDelay_usec{};
+      int64_t offset_usec{};
+      int64_t roundtripDelay_usec{};
 
       if (!ntp_packet.compute_usec(
             txMicros,
@@ -590,7 +606,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       {
 #ifndef BUILD_NO_DEBUG
         addLogMove(LOG_LEVEL_ERROR, strformat(
-                     F("NTP  : NTP error: round-trip delay: %d ms offset: %s,\n  t0: %s,\n  t1: %s,\n  t2: %s,\n  t3: %s"),
+                     F("NTP  : NTP error: round-trip delay: %d [ms] offset: %s,\n  t0: %s,\n  t1: %s,\n  t2: %s,\n  t3: %s"),
                      static_cast<int32_t>(roundtripDelay_usec / 1000),
                      secondsToDayHourMinuteSecond_ms(offset_usec).c_str(),
                      doubleToString(ntp_packet.getReferenceTimestamp_usec() / 1000000.0, 3).c_str(),
@@ -600,7 +616,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
                      ));
 #else // ifndef BUILD_NO_DEBUG
         addLogMove(LOG_LEVEL_ERROR, strformat(
-                     F("NTP  : NTP error: round-trip delay: %d ms offset: %s"),
+                     F("NTP  : NTP error: round-trip delay: %d [ms] offset: %s"),
                      static_cast<int32_t>(roundtripDelay_usec / 1000),
                      secondsToDayHourMinuteSecond_ms(offset_usec).c_str()
                      ));
@@ -615,15 +631,14 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         return false;
       }
 
-      unixTime_d =
-        static_cast<double>(ntp_packet.getTransmitTimestamp_usec()) /
-        1000000.0;
-      externalUnixTime_received_micros =
-        receivedMicros - (roundtripDelay_usec / 2);
-
-      timeSource         = timeSource_t::NTP_time_source;
-      lastSyncTime_ms    = millis();
-      lastNTPSyncTime_ms = lastSyncTime_ms;
+      externalUnixTime_offset_usec = offset_usec;
+      _timeSource                  = timeSource_t::NTP_time_source;
+      lastSyncTime_ms              = millis();
+      lastNTPSyncTime_ms           = lastSyncTime_ms;
+      unixTime_d                   = getMicros64() +
+                                     unixTime_usec_uptime_offset +
+                                     externalUnixTime_offset_usec;
+      unixTime_d /= 1000000.0;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
 #ifndef BUILD_NO_DEBUG
@@ -987,7 +1002,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
 #if FEATURE_EXT_RTC
 bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 {
-  if (timeSource >= timeSource_t::External_RTC_time_source) {
+  if (_timeSource >= timeSource_t::External_RTC_time_source) {
     // Do not adjust the external RTC time if we already used it as a time source.
     // or the new time source is worse than the external RTC time souce.
     return true;
