@@ -72,7 +72,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C004_queue_element> element(new C004_queue_element(event));
+      std::unique_ptr<C004_queue_element> element(new (std::nothrow) C004_queue_element(event));
 
       success = C004_DelayHandler->addToQueue(std::move(element));
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
@@ -118,17 +118,17 @@ if (!ControllerSettings.UseDNS) {
   ControllerSettings.UseDNS = true;
 }
 
-  int httpCode = -1;
-  send_via_http(
-    cpluginID,
-    ControllerSettings,
-    element._controller_idx,
-    F("/update"), // uri
-    F("POST"),
-    F("Content-Type: application/x-www-form-urlencoded\r\n"),
-    postDataStr,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  F("/update"), // uri
+  F("POST"),
+  F("Content-Type: application/x-www-form-urlencoded\r\n"),
+  postDataStr,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C004
