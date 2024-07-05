@@ -95,7 +95,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c004_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c004_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C004_queue_element& element = static_cast<const C004_queue_element&>(element_base);
 // *INDENT-ON*
 String postDataStr = concat(F("api_key="),
@@ -118,17 +118,17 @@ if (!ControllerSettings.UseDNS) {
   ControllerSettings.UseDNS = true;
 }
 
-int httpCode = -1;
-send_via_http(
-  controller_number,
-  ControllerSettings,
-  element._controller_idx,
-  F("/update"), // uri
-  F("POST"),
-  F("Content-Type: application/x-www-form-urlencoded\r\n"),
-  postDataStr,
-  httpCode);
-return (httpCode >= 100) && (httpCode < 300);
+  int httpCode = -1;
+  send_via_http(
+    cpluginID,
+    ControllerSettings,
+    element._controller_idx,
+    F("/update"), // uri
+    F("POST"),
+    F("Content-Type: application/x-www-form-urlencoded\r\n"),
+    postDataStr,
+    httpCode);
+  return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C004

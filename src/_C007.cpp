@@ -99,7 +99,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c007_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c007_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C007_queue_element& element = static_cast<const C007_queue_element&>(element_base);
 // *INDENT-ON*
   if (ControllerSettings.Publish[0] == '\0') {
@@ -121,7 +121,7 @@ bool do_process_c007_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     url,

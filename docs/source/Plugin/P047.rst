@@ -80,21 +80,29 @@ Device Settings
 
 * *Catnip electronics/miceuz (default)*: The originally supported soil moisture sensor, that supports temperature, moisture and light measurement, has a sleep-mode, and can report a version number, to optionally validate if the sensor is supported.
 
-* *BeFlE*: An I2C soil moisture sensor that supports temperature and moisture measurement. There is no sleep mode or version check available.
+* *BeFlE v2.2*: An I2C soil moisture sensor that supports temperature and moisture measurement. There is no sleep mode or version check available.
+
+* *BeFlE v3.x*: An I2C soil moisture sensor that supports temperature and moisture measurement, has a low-power Sleep mode and can report it's version, but this is not explicitly checked.
 
 * *Adafruit (4026)*: An I2C soil moisture sensor that supports temperature and moisture measurement. There is no sleep mode available, and the version is only logged at startup.
 
-When selecting the BeFlE sensor, only these **Device Settings** will be available:
+When selecting the BeFlE v2.2 sensor, only these **Device Settings** will be available:
 
 .. image:: P047_SensorModelBeFlE.png
 
-* **Send sensor to sleep**: When not actively reading the sensor, the device can be set to sleep-mode, to conserve some power. (Catnip sensor only).
+When selecting the BeFlE v3.x sensor, only these **Device Settings** will be available:
+
+.. image:: P047_SensorModelBeFlEv3.png
+
+* **Send sensor to sleep**: When not actively reading the sensor, the device can be set to sleep-mode, to conserve some power. (Catnip and BeFlE v3 sensors only).
 
 * **Check sensor version**: To validate if the sensor is of the correct mode, the version can be validated. (Catnip sensor only).
 
 * **Change sensor address**: To use multiple sensors connected to a single ESP unit, a sensor can be configured to use a different I2C address. To change that address, this checkbox has to be enabled, and a different I2C address should be entered in the **Change I2C Address to (Hex)** field in hexadecimal format, range: 0x01..0x7F. This option isn't available for the Adafruit sensor.
 
 * **Change I2C Addr. to (Hex)**: The new address to be used by the sensor. The change will be applied the next time the task is enabled. The **I2C Address (Hex)** field, above, will be updated with the new value. After the change is applied, **the tasks Settings have to be saved once more to save the new address** as the address to use. This option isn't available for the Adafruit sensor.
+
+When using the I2C scanner, the changed address will show up, but it probably will not show the sensor name, as only the original I2C address is added to the list. NB: Not all builds show known names for sensors to reduce the build binary size.
 
 .. note:: The newly set address is permanently stored in the sensor, and can be changed again at a later time if desired.
 
@@ -131,9 +139,11 @@ Change log
 .. versionchanged:: 2.0
   ...
 
+  |added| 2024-05: Add support for BeFlE v3.x I2C moisture sensor.
+
   |added| 2024-04: Add support for Adafruit I2C moisture sensor.
 
-  |added| 2023-03: Add support for BeFlE I2C moisture sensor.
+  |added| 2023-03: Add support for BeFlE v2.2 I2C moisture sensor.
 
   |added|
   Major overhaul for 2.0 release.
