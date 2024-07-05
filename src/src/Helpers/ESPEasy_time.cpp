@@ -98,16 +98,27 @@ void ESPEasy_time::restoreFromRTC()
   }
 }
 
-void ESPEasy_time::setExternalTimeSource_withTimeWander(
+bool ESPEasy_time::setExternalTimeSource_withTimeWander(
   double       new_time,
   timeSource_t new_timeSource,
   int32_t      wander,
   uint8_t      unitnr)
 {
-  if ((new_timeSource == _timeSource) && (new_timeSource != timeSource_t::Manual_set)) {
-    // Update from the same type of time source, except when manually adjusting the time
-    if ((lastSyncTime_ms != 0) && (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC)) {
-      return;
+  if ((lastSyncTime_ms != 0) && (new_timeSource == _timeSource)) {
+    if (new_timeSource != timeSource_t::Manual_set) {
+      // Update from the same type of time source, except when manually adjusting the time
+      long min_update_interval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC;
+
+      if ((new_timeSource == timeSource_t::GPS_PPS_time_source) ||
+          (new_timeSource == timeSource_t::GPS_time_source))
+      {
+        // Allow for faster updates when running GPS.
+        min_update_interval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC / 3;
+      }
+
+      if (timePassedSince(lastSyncTime_ms) < min_update_interval) {
+        return false;
+      }
     }
   }
 
@@ -116,13 +127,13 @@ void ESPEasy_time::setExternalTimeSource_withTimeWander(
       (new_timeSource != timeSource_t::Manual_set))
   {
     if (wander < 0) {
-      wander = computeExpectedWander(new_timeSource, timePassedSince(lastSyncTime_ms));
+      wander = computeExpectedWander(new_timeSource);
     }
 
     // New time source is potentially worse than the current one.
     if (computeExpectedWander(_timeSource, timePassedSince(lastSyncTime_ms)) <
         wander) {
-      return;
+      return false;
     }
   }
 
@@ -150,13 +161,14 @@ void ESPEasy_time::setExternalTimeSource_withTimeWander(
 
     initTime();
   }
+  return true;
 }
 
-void ESPEasy_time::setExternalTimeSource(double new_time, timeSource_t new_timeSource, uint8_t unitnr) {
-  setExternalTimeSource_withTimeWander(
+bool ESPEasy_time::setExternalTimeSource(double new_time, timeSource_t new_timeSource, uint8_t unitnr) {
+  return setExternalTimeSource_withTimeWander(
     new_time,
     new_timeSource,
-    computeExpectedWander(new_timeSource, timePassedSince(lastSyncTime_ms)),
+    computeExpectedWander(new_timeSource),
     unitnr);
 }
 

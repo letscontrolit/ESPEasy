@@ -33,12 +33,12 @@ public:
   void restoreLastKnownUnixTime(unsigned long lastSysTime,
                                 uint8_t       deepSleepState);
 
-  void setExternalTimeSource_withTimeWander(double       new_time,
+  bool setExternalTimeSource_withTimeWander(double       new_time,
                                             timeSource_t new_timeSource,
                                             int32_t      wander,
                                             uint8_t      unitnr = 0);
 
-  void setExternalTimeSource(double       new_time,
+  bool setExternalTimeSource(double       new_time,
                              timeSource_t new_timeSource,
                              uint8_t      unitnr = 0);
 

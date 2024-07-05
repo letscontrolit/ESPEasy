@@ -22,7 +22,9 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
   const unsigned long p2p_source_penalty =
     isExternalTimeSource(timeSource)  ? 0 : 10000;
   const unsigned long time_wander_other =
-    p2p_source_penalty + computeExpectedWander(timeSource, timePassedSince(node.lastUpdated));
+    p2p_source_penalty + 
+    computeExpectedWander(timeSource, node.lastUpdated); // node.lastUpdated is already set to "time passed since" when sent
+
 
   if (timePassedSince(_received_moment) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) { clear(); }
 

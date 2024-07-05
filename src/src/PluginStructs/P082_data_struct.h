@@ -6,6 +6,7 @@
 
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
+# include "../Helpers/OversamplingHelper.h"
 
 # ifndef BUILD_NO_DEBUG
 # define P082_SEND_GPS_TO_LOG
@@ -128,6 +129,9 @@ struct P082_data_struct : public PluginTaskData_base {
                    bool     & updated,
                    bool     & pps_sync);
 
+  // Try to fetch 5 timestamps in a row, filter out the peaks and use the average to set the 
+  bool tryUpdateSystemTime();
+
   // Send command to GPS to put it in PMREQ backup mode (UBLOX only)
   // @retval true when successful in sending command
   bool powerDown();
@@ -178,7 +182,6 @@ public:
   unsigned long _last_measurement    = 0;
   uint32_t      _last_time           = 0;
   uint32_t      _last_date           = 0;
-  uint32_t      _last_setSystemTime  = 0;
   uint32_t      _start_sentence      = 0;
   uint32_t      _start_prev_sentence = 0;
   uint32_t      _start_sequence      = 0;
@@ -188,6 +191,8 @@ public:
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
   float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
+
+  OversamplingHelper<uint64_t,uint64_t> _oversampling_gps_time_offset_usec;
 };
 
 #endif // ifdef USES_P082

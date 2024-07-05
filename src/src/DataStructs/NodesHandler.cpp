@@ -76,7 +76,10 @@ bool NodesHandler::addNode(const NodeStruct& node)
       #endif
       _nodes[node.unit] = node;
     }
+    // Make sure to set first as NTP candidate, as it was set to time since
+    // last time sync by the sender node before sending.
     _ntp_candidate.set(node);
+    // Now set lastUpdated so we can keep track of its age.
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);

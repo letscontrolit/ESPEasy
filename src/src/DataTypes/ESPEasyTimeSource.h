@@ -42,7 +42,7 @@ bool isExternalTimeSource(timeSource_t timeSource);
 // Therefore use a strong bias for external synced nodes.
 // But also must make sure the same NTP synced node will be held responsible for the entire network.
 uint32_t computeExpectedWander(timeSource_t  timeSource,
-                                    uint32_t timePassedSinceLastTimeSync);
+                                    uint32_t timePassedSinceLastTimeSync = 0u);
 
 uint32_t updateExpectedWander(
   int32_t current_wander,
