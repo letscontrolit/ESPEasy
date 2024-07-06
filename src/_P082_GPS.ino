@@ -724,12 +724,7 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
-  uint32_t  age;
-  bool updated;
-  bool pps_sync;
-
-  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
-    dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
+  if (P082_data->getDateTime(dateTime)) {
     addHtml(formatDateTimeString(dateTime));
   } else {
     addHtml('-');

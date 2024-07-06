@@ -364,6 +364,18 @@ bool P082_data_struct::getDateTime(
   return true;
 }
 
+bool P082_data_struct::getDateTime(struct tm& dateTime) const
+{
+  uint64_t value_usec{};
+
+  if (_oversampling_gps_time_offset_usec.peek(value_usec)) {
+    const double time = (getMicros64() + value_usec) / 1000000.0;
+    breakTime(static_cast<uint32_t>(time), dateTime);
+    return true;
+  }
+  return false;
+}
+
 bool P082_data_struct::tryUpdateSystemTime() {
   struct tm dateTime;
   uint32_t  age{};

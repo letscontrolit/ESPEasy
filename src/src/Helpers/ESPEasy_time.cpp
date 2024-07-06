@@ -107,16 +107,7 @@ bool ESPEasy_time::setExternalTimeSource_withTimeWander(
   if ((lastSyncTime_ms != 0) && (new_timeSource == _timeSource)) {
     if (new_timeSource != timeSource_t::Manual_set) {
       // Update from the same type of time source, except when manually adjusting the time
-      long min_update_interval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC;
-
-      if ((new_timeSource == timeSource_t::GPS_PPS_time_source) ||
-          (new_timeSource == timeSource_t::GPS_time_source))
-      {
-        // Allow for faster updates when running GPS.
-        min_update_interval = EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC / 3;
-      }
-
-      if (timePassedSince(lastSyncTime_ms) < min_update_interval) {
+      if (timePassedSince(lastSyncTime_ms) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) {
         return false;
       }
     }
@@ -132,7 +123,7 @@ bool ESPEasy_time::setExternalTimeSource_withTimeWander(
 
     // New time source is potentially worse than the current one.
     if (computeExpectedWander(_timeSource, timePassedSince(lastSyncTime_ms)) <
-        wander) {
+        static_cast<uint32_t>(wander)) {
       return false;
     }
   }

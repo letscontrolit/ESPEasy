@@ -44,7 +44,7 @@ NTP_packet::NTP_packet()
   //    time of several iterations to read the system clock.
   data[3] = 0xEC; // -20 -> 2^-20 sec -> microsec precision.
 
-  constexpr int8_t precision = 0xEC;
+  //constexpr int8_t precision = 0xEC;
 
   // Reference clock identifier. ASCII: "1N14"
   data[12] = 0x31;

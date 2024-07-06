@@ -121,6 +121,7 @@ struct P082_data_struct : public PluginTaskData_base {
   // @retval  -1 when no fix.
   ESPEASY_RULES_FLOAT_TYPE distanceSinceLast(unsigned int maxAge_msec);
 
+private:
   // Return the GPS time stamp, which is in UTC.
   // @param age is the time in msec since the last update of the time +
   // additional centiseconds given by the GPS.
@@ -128,6 +129,9 @@ struct P082_data_struct : public PluginTaskData_base {
                    uint32_t & age,
                    bool     & updated,
                    bool     & pps_sync);
+public:
+
+  bool getDateTime(struct tm& dateTime) const;
 
   // Try to fetch 5 timestamps in a row, filter out the peaks and use the average to set the 
   bool tryUpdateSystemTime();
