@@ -12,10 +12,19 @@
 #  endif // ifdef LIMIT_BUILD_SIZE
 # endif // ifndef P047_FEATURE_ADAFRUIT
 
+# ifndef P047_FEATURE_BEFLE_V3
+#  ifdef LIMIT_BUILD_SIZE
+#   define P047_FEATURE_BEFLE_V3 0
+#  else // ifdef LIMIT_BUILD_SIZE
+#   define P047_FEATURE_BEFLE_V3 1
+#  endif // ifdef LIMIT_BUILD_SIZE
+# endif // ifndef P047_FEATURE_BEFLE_V3
+
 // Default I2C Address of the sensor
 # define P047_CATNIP_DEFAULT_ADDR     0x20
 # define P047_BEFLE_DEFAULT_ADDR      0x55
 # define P047_ADAFRUIT_DEFAULT_ADDR   0x36
+# define P047_BEFLE_V3_DEFAULT_ADDR   0x55
 
 // Soil Moisture Sensor Register Addresses
 // Catnip electronics / miceuz:
@@ -36,11 +45,24 @@
 # define P047_BEFLE_GET_ADDRESS           0xFF   // (r)     n/a
 # define P047_BEFLE_MEASURE_LIGHT         0xFF   //	(w)     n/a
 # define P047_BEFLE_GET_LIGHT             0xFF   //	(r)     n/a
-# define P047_BEFLE_GET_TEMPERATURE       0x74   //	(r)     2 bytes
+# define P047_BEFLE_GET_TEMPERATURE       0x74   //	(r)     1 int8_t
 # define P047_BEFLE_RESET                 0xFF   //	(w)     n/a
 # define P047_BEFLE_GET_VERSION           0xFF   //	(r)     n/a
 # define P047_BEFLE_SLEEP                 0xFF   // (w)     n/a
 # define P047_BEFLE_GET_BUSY              0xFF   // (r)	    n/a
+
+// BeFlE v3: (unsupported features set to 0xFF)
+# define P047_BEFLE_V3_GET_CAPACITANCE    0x76   // (r)     2 uint8_t
+# define P047_BEFLE_V3_SET_ADDRESS        0x41   //	(w)     1 uint8_t
+# define P047_BEFLE_V3_GET_ADDRESS        0xFF   // (r)     n/a
+# define P047_BEFLE_V3_MEASURE_LIGHT      0xFF   //	(w)     n/a
+# define P047_BEFLE_V3_START_MEASURE      0x4D   //	(w)     1 uint8_t
+# define P047_BEFLE_V3_GET_LIGHT          0xFF   //	(r)     n/a
+# define P047_BEFLE_V3_GET_TEMPERATURE    0x74   //	(r)     1 int8_t
+# define P047_BEFLE_V3_RESET              0xFF   //	(w)     n/a
+# define P047_BEFLE_V3_GET_VERSION        0x68   //	(r)     4 bytes HW version
+# define P047_BEFLE_V3_SLEEP              0x4C   // (w)     1 uint8_t
+# define P047_BEFLE_V3_GET_BUSY           0x6F   // (r)	    n/a
 
 // Adafruit I2C Capacitive Moisture Sensor
 # define P047_ADAFRUIT_GET_CAPACITANCE      0x10 // (r)     2 bytes
@@ -76,6 +98,9 @@ enum class P047_SensorModels : uint8_t {
   # if P047_FEATURE_ADAFRUIT
   Adafruit = 2,
   # endif // if P047_FEATURE_ADAFRUIT
+  # if P047_FEATURE_BEFLE_V3
+  BeFlEv3 = 3,
+  # endif // if P047_FEATURE_BEFLE_V3
 };
 
 // Shortcuts
@@ -84,6 +109,9 @@ enum class P047_SensorModels : uint8_t {
 # if P047_FEATURE_ADAFRUIT
 #  define P047_MODEL_ADAFRUIT P047_SensorModels::Adafruit
 # endif // if P047_FEATURE_ADAFRUIT
+# if P047_FEATURE_BEFLE_V3
+#  define P047_MODEL_BEFLE_V3  P047_SensorModels::BeFlEv3
+# endif // if P047_FEATURE_BEFLE_V3
 
 const __FlashStringHelper* toString(P047_SensorModels sensor);
 
@@ -106,8 +134,9 @@ private:
   bool         changeAddress(uint8_t new_i2cAddr);
   bool         checkAddress(uint8_t new_i2cAddr);
   bool         resetSensor();
-  void         setToSleep();
+  void         setToSleep(bool sleep);
   void         startMeasure();
+  bool         measurementReady();
 
   uint8_t           _address       = 0;
   P047_SensorModels _model         = P047_MODEL_CATNIP;

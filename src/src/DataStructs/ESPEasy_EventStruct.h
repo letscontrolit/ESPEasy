@@ -45,12 +45,19 @@ public:
   // Check (and update) sensorType if not set, plus return (corrected) sensorType
   Sensor_VType getSensorType();
 
+  int64_t      getTimestamp_as_systemMicros() const;
+  void         setUnixTimeTimestamp();
+  void         setLocalTimeTimestamp();
+
   String        String1;
   String        String2;
   String        String3;
   String        String4;
   String        String5;
-  unsigned long timestamp = 0u;
+
+
+  uint32_t      timestamp_sec = 0u;
+  uint32_t      timestamp_frac = 0u;
   uint8_t      *Data = nullptr;
   int           idx  = 0;
   int           Par1 = 0;

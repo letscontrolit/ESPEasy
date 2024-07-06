@@ -38,6 +38,13 @@ At the root of the JSON output is a value names ``TTL`` which reflects the lowes
 
   N.B. task nr starts at 1.
   "
+  "
+  ``http://<espeasyip>/json?view=sensorupdate&tasknr=1&showpluginstats=1``
+  ","
+  All task values of a specific task nr and needed information to format the values, including all info needed to create ChartJS charts when ``stats`` has been enabled for that task.
+
+  N.B. task nr starts at 1.
+  "
 
 
 
@@ -87,3 +94,4 @@ N.B. task number and variable number do count starting at 0.
 
 Control
 -------
+

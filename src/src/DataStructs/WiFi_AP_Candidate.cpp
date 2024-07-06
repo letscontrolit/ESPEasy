@@ -204,7 +204,7 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   if (rssi == -1) {
     result += F(" (RTC) ");
   } else {
-    result += strformat(F(" (%ddBm)"), rssi);
+    result += strformat(F(" (%ddBm) "), rssi);
   }
 
   result += encryption_type();
