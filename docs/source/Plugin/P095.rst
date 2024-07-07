@@ -107,6 +107,8 @@ Available options:
 .. warning:: 
    The **ILI9481** display controller does have issues when rotating, by using the ``<trigger>,rot,<n>`` command, to change the display orientation after some content is already displayed on the screen (content may move, rotate and/or mirror unexpectedly). It is advised to clear the screen after changing the rotation setting.
 
+.. note:: ILI9486 displays tested so far (sourced from Aliexpress) either are *compatible* with ILI9488 or **are** ILI9488 displays, that's why they share the same entry in the list. If you find an ILI9486 display that doesn't work with this setting, please raise an issue in ESPEasy Github Issues list, so this can be adjusted.
+
 Layout
 ^^^^^^^^
 
