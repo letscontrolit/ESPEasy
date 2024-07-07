@@ -448,9 +448,12 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       if (Settings.InitSPI != 0) {
+        # if P095_ENABLE_ILI948X
+
         if (10 == P095_CONFIG_FLAG_GET_TYPE) { // If ILI9486 was selected, reset to ILI9488
           set4BitToUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE, static_cast<uint8_t>(ILI9xxx_type_e::ILI9488_320x480));
         }
+        # endif // if P095_ENABLE_ILI948X
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P095_data_struct(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE),
                                                                P095_CONFIG_ROTATION,
