@@ -22,15 +22,7 @@
 #  define P095_ENABLE_ILI948X   0 // Not enabled for limited buildsizes
 # endif // if defined(LIMIT_BUILD_SIZE) && P095_ENABLE_ILI948X && !defined(PLUGIN_BUILD_CUSTOM)
 
-// # define P095_ALT_ILI9486_SPI // Use an alternative ILI9486 library (ILI9486_SPI)
-
-// MUST reflect similar #define in Adafruit_ILI9341.h ! (ILI9486 only if not using P095_ALT_ILI9486_SPI)
 # if P095_ENABLE_ILI948X
-#  ifdef P095_ALT_ILI9486_SPI
-#   undef P095_ALT_ILI9486_SPI // Not yet supported
-
-// #   include <ILI9486_SPI.h> // Specific behavior: ILI9486 using 24 bit colors in SPI mode
-#  endif // ifdef P095_ALT_ILI9486_SPI
 #  include <ILI9488.h> // Specific behavior: ILI9488 needs 24 bit colors in SPI mode
 # endif // if P095_ENABLE_ILI948X
 
@@ -101,7 +93,8 @@ enum class ILI9xxx_type_e : uint8_t {
   ILI9481_CMI7_320x480   = 8u,
   ILI9481_CMI8_320x480   = 9u,
   # if P095_ENABLE_ILI948X
-  ILI9486_320x480 = 10u,
+
+  // ILI9486_320x480 = 10u,
   ILI9488_320x480 = 11u, // Uses a separate library for having a 16 bit data interface
   # endif // if P095_ENABLE_ILI948X
 };

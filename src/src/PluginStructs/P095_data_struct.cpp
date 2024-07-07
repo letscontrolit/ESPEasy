@@ -18,8 +18,9 @@ const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
     case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
     case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
     # if P095_ENABLE_ILI948X
-    case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
-    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+
+    // case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
+    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9486/ILI9488 320 x 480px");
     # endif // if P095_ENABLE_ILI948X
   }
   # ifndef BUILD_NO_DEBUG
@@ -50,7 +51,8 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
     case ILI9xxx_type_e::ILI9481_CMI7_320x480:
     case ILI9xxx_type_e::ILI9481_CMI8_320x480:
     # if P095_ENABLE_ILI948X
-    case ILI9xxx_type_e::ILI9486_320x480:
+
+    // case ILI9xxx_type_e::ILI9486_320x480:
     case ILI9xxx_type_e::ILI9488_320x480:
     # endif // if P095_ENABLE_ILI948X
       x = 320;
@@ -152,16 +154,6 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
         ili9488->begin();
         useILI9488 = true;
       }
-    #  ifdef P095_ALT_ILI9486_SPI
-    } else if (ILI9xxx_type_e::ILI9486_320x480 == _displayType) {
-      ILI9486_SPI *ili9486_spi = new (std::nothrow) ILI9486_SPI(PIN(0), PIN(1), PIN(2));
-
-      if (nullptr != ili9486_spi) {
-        ili9486_spi->setSpiKludge();
-        ili9486_spi->init();
-        tft = (Adafruit_ILI9341 *)ili9486_spi;
-      }
-    #  endif // ifdef P095_ALT_ILI9486_SPI
     } else
     # endif // if P095_ENABLE_ILI948X
     {

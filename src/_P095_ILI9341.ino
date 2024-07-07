@@ -15,6 +15,8 @@
 
 /**
  * Changelog:
+ * 2024-07-07 tonhuisman: Remove explicit support for ILI9486 as all ILI9486 displays tested so far work with the ILI9488 driver,
+ *                        sometimes with Invert display setting enabled (or they are actually ILI9488 displays...)
  * 2024-06-23 tonhuisman: Add support for ILI9488 displays by implementing an adapted library (jaretburkett/ILI9488)
  *                        Add Default font selection setting, if AdafruitGFX_Helper fonts are included
  * 2022-10-24 tonhuisman: Add Invert display option in settings to accomodate displays that swap foreground and background colors
@@ -241,7 +243,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI7_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI8_320x480),
           # if P095_ENABLE_ILI948X
-          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
+
+          // ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
           # endif // if P095_ENABLE_ILI948X
         };
@@ -257,7 +260,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMI7_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMI8_320x480),
           # if P095_ENABLE_ILI948X
-          static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
+
+          // static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
           # endif // if P095_ENABLE_ILI948X
         };
@@ -351,9 +355,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
         for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
           addFormTextBox(
-            concat(F("Line "), varNr + 1), 
-            getPluginCustomArgName(varNr), 
-            strings[varNr], 
+            concat(F("Line "), varNr + 1),
+            getPluginCustomArgName(varNr),
+            strings[varNr],
             P095_Nchars);
           remain -= (strings[varNr].length() + 1);
         }
@@ -444,6 +448,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       if (Settings.InitSPI != 0) {
+        if (10 == P095_CONFIG_FLAG_GET_TYPE) { // If ILI9486 was selected, reset to ILI9488
+          set4BitToUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE, static_cast<uint8_t>(ILI9xxx_type_e::ILI9488_320x480));
+        }
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P095_data_struct(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE),
                                                                P095_CONFIG_ROTATION,
