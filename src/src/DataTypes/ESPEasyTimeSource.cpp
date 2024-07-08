@@ -40,10 +40,20 @@ bool isExternalTimeSource(timeSource_t timeSource)
 // Meaning per 25 sec, the time may wander 1 msec.
 #define TIME_WANDER_FACTOR  25000
 
-unsigned long computeExpectedWander(timeSource_t  timeSource,
-                                    unsigned long timePassedSinceLastTimeSync)
+uint32_t updateExpectedWander(
+  int32_t  current_wander,
+  uint32_t timePassedSinceLastTimeSync)
 {
-  unsigned long expectedWander_ms = timePassedSinceLastTimeSync / TIME_WANDER_FACTOR;
+  if (current_wander < 0) {
+    return current_wander;
+  }
+  return current_wander + (timePassedSinceLastTimeSync / TIME_WANDER_FACTOR);
+}
+
+uint32_t computeExpectedWander(timeSource_t timeSource,
+                               uint32_t     timePassedSinceLastTimeSync)
+{
+  uint32_t expectedWander_ms = timePassedSinceLastTimeSync / TIME_WANDER_FACTOR;
 
   switch (timeSource) {
     case timeSource_t::GPS_PPS_time_source:

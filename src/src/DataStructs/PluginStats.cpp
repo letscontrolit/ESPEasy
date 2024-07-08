@@ -46,8 +46,8 @@ void PluginStats::processTimeSet(const double& time_offset)
 {
   // Check to see if there was a unix time set before the system time was set
   // For example when receiving data from a p2p node
-  const uint64_t cur_micros    = getMicros64();
-  const uint64_t offset_micros = time_offset * 1000000ull;
+  const int64_t cur_micros    = getMicros64();
+  const int64_t offset_micros = time_offset * 1000000ull;
 
   if ((_maxValueTimestamp > cur_micros) && (_maxValueTimestamp > offset_micros)) {
     _maxValueTimestamp -= offset_micros;
