@@ -9,23 +9,13 @@
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataTypes/ControllerIndex.h"
 # include "../DataTypes/TaskValues_Data.h"
+# include "../DataStructs/C016_binary_element.h"
 # include "../DataStructs/DeviceStruct.h"
 # include "../DataStructs/UnitMessageCount.h"
 # include "../Globals/Plugins.h"
 
 struct EventStruct;
 
-
-// The binary format to store the samples using the Cache Controller
-// Do NOT change order of members!
-struct C016_binary_element {
-  TaskValues_Data_t values{};
-  unsigned long unixTime{};
-  taskIndex_t   TaskIndex{ INVALID_TASK_INDEX };
-  pluginID_t    pluginID{ INVALID_PLUGIN_ID };
-  Sensor_VType  sensorType{ Sensor_VType::SENSOR_TYPE_NONE };
-  uint8_t       valueCount{};
-};
 
 
 /*********************************************************************************************\

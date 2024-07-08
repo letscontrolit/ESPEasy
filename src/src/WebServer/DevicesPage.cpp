@@ -266,7 +266,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+  Settings.setPluginID_for_task(taskIndex, taskdevicenumber);
 
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;

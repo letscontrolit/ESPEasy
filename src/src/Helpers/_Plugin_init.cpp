@@ -16,7 +16,7 @@
 
 
 // Vector to match a "DeviceIndex" to a plugin ID.
-constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
+constexpr PLUGINID_BASE_TYPE DeviceIndex_to_Plugin_id[] PROGMEM =
 {
 #ifdef USES_P001
   1,
@@ -2180,7 +2180,12 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
   if (validDeviceIndex_init(deviceIndex))
   {
+    #if FEATURE_SUPPORT_OVER_255_PLUGINS
+    // FIXME TD-er: Check if this uses the correct pointer arithmic.
+    return pluginID_t::toPluginID(pgm_read_word(DeviceIndex_to_Plugin_id + deviceIndex.value));
+    #else
     return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
+    #endif
   }
   return INVALID_PLUGIN_ID;
 }

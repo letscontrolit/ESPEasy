@@ -108,7 +108,11 @@ void run_compiletime_checks() {
   const unsigned int LogStructSize = ((13u + 20 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
+#if FEATURE_SUPPORT_OVER_255_PLUGINS
+  check_size<DeviceStruct,                          10u>(); // Is not stored
+#else
   check_size<DeviceStruct,                          9u>(); // Is not stored
+#endif
   check_size<ProtocolStruct,                        4u>();
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
@@ -121,12 +125,16 @@ void run_compiletime_checks() {
   #endif
   check_size<systemTimerStruct,                     28u>();
   check_size<RTCStruct,                             32u>();
-  check_size<portStatusStruct,                      6u>();
+#if FEATURE_SUPPORT_OVER_255_PLUGINS
+  check_size<portStatusStruct,                      8u>(); // Is not stored
+#else
+  check_size<portStatusStruct,                      6u>(); // Is not stored
+#endif
   check_size<ResetFactoryDefaultPreference_struct,  4u>();
   check_size<GpioFactorySettingsStruct,             18u>();
   #ifdef USES_C013
-  check_size<C013_SensorInfoStruct,                 233u>();
-  check_size<C013_SensorDataStruct,                 40u>(); 
+  check_size<C013_SensorInfoStruct,                 235u>();
+  check_size<C013_SensorDataStruct,                 42u>(); 
   #endif
   #ifdef USES_C016
   check_size<C016_binary_element,                   24u>();
@@ -171,7 +179,7 @@ void run_compiletime_checks() {
 
   static_assert(192u == offsetof(SettingsStruct, Protocol), "");
   static_assert(195u == offsetof(SettingsStruct, Notification), "CONTROLLER_MAX has changed?");
-  static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
+  static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber_lsb), "NOTIFICATION_MAX has changed?");
 
   // All settings related to N_TASKS
   static_assert((200 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.

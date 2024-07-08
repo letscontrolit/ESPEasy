@@ -3,6 +3,14 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_SUPPORT_OVER_255_PLUGINS
+#define PLUGINID_BASE_TYPE  uint16_t
+#else
+#define PLUGINID_BASE_TYPE  uint8_t
+#endif
+
+
+
 struct __attribute__((__packed__)) pluginID_t {
   pluginID_t() = default;
 
@@ -45,10 +53,11 @@ struct __attribute__((__packed__)) pluginID_t {
 
   String toDisplayString() const;
 
-  uint8_t value{};
+  // Max value = 4095, due to how the bits are stored in C016_binary_element
+  PLUGINID_BASE_TYPE value{};
 };
 
-
+// Invalid PluginID value = 0
 extern const pluginID_t INVALID_PLUGIN_ID;
 
 #endif // ifndef DATATYPES_PLUGINID_H
