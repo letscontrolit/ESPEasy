@@ -109,16 +109,17 @@ void ESPEasy_Now_NTP_query::reset(bool success)
 
 bool ESPEasy_Now_NTP_query::hasLowerWander() const
 {
+  const timeSource_t timeSource = node_time.getTimeSource();
   const long timePassed                  = timePassedSince(node_time.lastSyncTime_ms);
-  unsigned long currentExpectedWander_ms = computeExpectedWander(node_time.timeSource, timePassed);
+  unsigned long currentExpectedWander_ms = computeExpectedWander(timeSource, timePassed);
 
-  if (node_time.timeSource < _timeSource) {
+  if (timeSource < _timeSource) {
     // Current time source is of better category than the best other.
     // So only update from the other if ours was too long ago.
     if (currentExpectedWander_ms < 1000) { return false; }
   }
 
-  if (node_time.timeSource == _timeSource) {
+  if (timeSource == _timeSource) {
     // Same time source category.
     // Try to limit the number of time updates by only accepting updates if time since last sync is over N seconds
     if (timePassed < MINIMUM_TIME_BETWEEN_UPDATES) { return false; }
@@ -151,11 +152,13 @@ void ESPEasy_Now_NTP_query::createBroadcastNTP()
 
 void ESPEasy_Now_NTP_query::createReply(unsigned long queryReceiveTimestamp)
 {
+  const timeSource_t timeSource = node_time.getTimeSource();
   _millis_in = queryReceiveTimestamp;
-  node_time.now();
-  _timeSource        = node_time.timeSource;
-  _unixTime_d        = node_time.sysTime;
-  _expectedWander_ms = computeExpectedWander(node_time.timeSource, timePassedSince(node_time.lastSyncTime_ms));
+  uint32_t unix_time_frac{};
+  _unixTime_d = node_time.getUnixTime(unix_time_frac);
+  _unixTime_d += unix_time_frac_to_micros(unix_time_frac) / 1000000.0;
+  _timeSource        = timeSource;
+  _expectedWander_ms = computeExpectedWander(timeSource, timePassedSince(node_time.lastSyncTime_ms));
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -199,7 +202,7 @@ bool ESPEasy_Now_NTP_query::processReply(const ESPEasy_Now_NTP_query& received, 
   double new_unixTime_d  = received._unixTime_d + (compensation_ms / 1000);
 
   node_time.setExternalTimeSource(new_unixTime_d, timeSource_t::ESP_now_peer);
-  node_time.now();
+  node_time.now_();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;

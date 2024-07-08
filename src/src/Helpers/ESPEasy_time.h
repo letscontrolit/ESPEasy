@@ -217,14 +217,14 @@ public:
 
   bool ExtRTC_get(uint32_t& unixtime);
 
+  timeSource_t getTimeSource() const { return _timeSource; }
+
 private:
 
   bool ExtRTC_set(uint32_t unixtime);
 #endif // if FEATURE_EXT_RTC
 
 public:
-
-  timeSource_t getTimeSource() const { return _timeSource; }
   
 
   struct tm local_tm;                         // local time

@@ -138,7 +138,7 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
   return success;
 }
 
-bool do_process_c019_delay_queue(int controller_number, const Queue_element_base& element_base,
+bool do_process_c019_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base,
                                  ControllerSettingsStruct& ControllerSettings) {
   const C019_queue_element& element = static_cast<const C019_queue_element&>(element_base);
 
@@ -174,7 +174,7 @@ bool do_process_c019_delay_queue(int controller_number, const Queue_element_base
     broadcast.mac[i] = 0xFF;
   }
 
-  return ESPEasy_now_handler.sendESPEasyNow_p2p(controller_number, broadcast, data);
+  return ESPEasy_now_handler.sendESPEasyNow_p2p(cpluginID, broadcast, data);
 }
 
 #endif // ifdef USES_C019
