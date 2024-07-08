@@ -89,6 +89,8 @@ public:
 
   void          applyTimeZone();
 
+  timeSource_t  getTimeSource() const { return _timeSource; }
+
   /********************************************************************************************\
      Date/Time string formatters
    \*********************************************************************************************/
@@ -217,15 +219,12 @@ public:
 
   bool ExtRTC_get(uint32_t& unixtime);
 
-  timeSource_t getTimeSource() const { return _timeSource; }
-
 private:
 
   bool ExtRTC_set(uint32_t unixtime);
 #endif // if FEATURE_EXT_RTC
 
 public:
-  
 
   struct tm local_tm;                         // local time
   uint32_t syncInterval = 3600;               // time sync will be attempted after this many seconds
