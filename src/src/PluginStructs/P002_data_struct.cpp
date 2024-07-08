@@ -189,7 +189,15 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     #  if FEATURE_CHART_JS
     webformLoad_calibrationCurve(event);
     #  endif // if FEATURE_CHART_JS
-    formatADC_statistics(F("Current ADC to mV"), raw_value);
+    # ifdef ESP32
+    if (_useFactoryCalibration) {
+      formatADC_statistics(F("Current Voltage"), raw_value);
+    } else {
+      formatADC_statistics(F("Current ADC raw value"), raw_value);
+    }
+    #else
+    formatADC_statistics(F("Current ADC raw value"), raw_value);
+    #endif
 
     for (size_t att = 0; att < P002_ADC_ATTEN_MAX; ++att) {
       const adc_atten_t attenuation = static_cast<adc_atten_t>(att);
@@ -554,18 +562,21 @@ String P002_data_struct::formatADC_statistics_to_str(
 {
   String res;
 
-  res += raw;
-
   float_value = raw;
 
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
     float_value = applyADCFactoryCalibration(raw, _attenuation);
-    res        += F(" &#8793; ");
-    res        += toString(float_value, _nrDecimals);
-    res        += (F(" [mV]"));
+    res = strformat(
+      F("%s [mV]  &#8793; %d [ADC]"),
+      toString(float_value, _nrDecimals).c_str(),
+      raw);
+  } else {
+    res += raw;
   }
+#else
+  res += raw;
 # endif // ifdef ESP32
 
   if (includeOutputValue) {
