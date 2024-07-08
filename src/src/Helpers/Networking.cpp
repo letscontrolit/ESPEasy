@@ -257,6 +257,8 @@ void updateUDPport(bool force)
 boolean runningUPDCheck = false;
 void checkUDP()
 {
+  if (!NetworkConnected())
+    return;
   if (Settings.UDPPort == 0) {
     return;
   }

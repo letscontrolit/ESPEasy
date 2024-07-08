@@ -165,7 +165,7 @@ bool fileExists(const String& fname) {
   }
 
   if (Cache.fileCacheClearMoment == 0) {
-    if (node_time.timeSource == timeSource_t::No_time_source) {
+    if (node_time.getTimeSource() == timeSource_t::No_time_source) {
       // use some random value as we don't have a time yet
       Cache.fileCacheClearMoment = HwRandom();
     } else {
