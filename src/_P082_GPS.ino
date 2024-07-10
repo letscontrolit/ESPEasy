@@ -724,12 +724,7 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
-  uint32_t  age;
-  bool updated;
-  bool pps_sync;
-
-  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
-    dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
+  if (P082_data->getDateTime(dateTime)) {
     addHtml(formatDateTimeString(dateTime));
   } else {
     addHtml('-');
@@ -766,32 +761,10 @@ void P082_setSystemTime(struct EventStruct *event) {
     return;
   }
 
-  if ((timeSource_t::GPS_time_source == node_time.timeSource) &&
-      (P082_data->_last_setSystemTime != 0) &&
-      (timePassedSince(P082_data->_last_setSystemTime) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC))
-  {
-    // Only update the system time every hour from the same time source.
-    return;
-  }
-
-  struct tm dateTime;
-  uint32_t  age;
-  bool updated;
-  bool pps_sync;
-
   P082_data->_pps_time = P082_pps_time; // Must copy the interrupt gathered time first.
-
-  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
-    if (updated) {
-      // Use floating point precision to use the time since last update from GPS
-      // and the given offset in centisecond.
-      ESPEASY_RULES_FLOAT_TYPE time = makeTime(dateTime);
-      time += (static_cast<ESPEASY_RULES_FLOAT_TYPE>(age) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1000));
-      node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
-      P082_data->_last_setSystemTime = millis();
-    }
-  }
   P082_pps_time = 0;
+
+  P082_data->tryUpdateSystemTime();
 }
 
 void Plugin_082_interrupt() {
