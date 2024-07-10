@@ -14,8 +14,17 @@
 # define P095_Nchars           60
 # define P095_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
 
-// # define P095_ENABLE_ILI948X                            // Enable or disable support for ILI9486 and ILI9488.
-// MUST reflect similar #define in Adafruit_ILI9341.h !
+# if !defined(P095_ENABLE_ILI948X) && defined(ESP32)
+#  define P095_ENABLE_ILI948X   1           // Enable or disable support for ILI9486 and ILI9488.
+# endif // if !defined(P095_ENABLE_ILI948X) && defined(ESP32)
+# if defined(LIMIT_BUILD_SIZE) && P095_ENABLE_ILI948X && !defined(PLUGIN_BUILD_CUSTOM)
+#  undef P095_ENABLE_ILI948X
+#  define P095_ENABLE_ILI948X   0 // Not enabled for limited buildsizes
+# endif // if defined(LIMIT_BUILD_SIZE) && P095_ENABLE_ILI948X && !defined(PLUGIN_BUILD_CUSTOM)
+
+# if P095_ENABLE_ILI948X
+#  include <ILI9488.h> // Specific behavior: ILI9488 needs 24 bit colors in SPI mode
+# endif // if P095_ENABLE_ILI948X
 
 # ifndef LIMIT_BUILD_SIZE
 #  define P095_SHOW_SPLASH                              // Enable to show initial splash (text)
@@ -28,6 +37,7 @@
 # define P095_CONFIG_DISPLAY_TIMEOUT    PCONFIG(3)      // Time-out when display-button is enable
 # define P095_CONFIG_BACKLIGHT_PIN      PCONFIG(4)      // Backlight pin
 # define P095_CONFIG_BACKLIGHT_PERCENT  PCONFIG(5)      // Backlight percentage
+# define P095_CONFIG_DEFAULT_FONT       PCONFIG(6)      // Default font
 # define P095_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
 # define P095_CONFIG_FLAGS             PCONFIG_ULONG(0) // All flags
@@ -82,10 +92,11 @@ enum class ILI9xxx_type_e : uint8_t {
   ILI9481_RGB_320x480    = 7u,
   ILI9481_CMI7_320x480   = 8u,
   ILI9481_CMI8_320x480   = 9u,
-  # ifdef P095_ENABLE_ILI948X
-  ILI9486_320x480 = 10u,
-  ILI9488_320x480 = 11u,
-  # endif // ifdef P095_ENABLE_ILI948X
+  # if P095_ENABLE_ILI948X
+
+  // ILI9486_320x480 = 10u,
+  ILI9488_320x480 = 11u, // Uses a separate library for having a 16 bit data interface
+  # endif // if P095_ENABLE_ILI948X
 };
 
 enum class P095_CommandTrigger : uint8_t {
@@ -93,10 +104,10 @@ enum class P095_CommandTrigger : uint8_t {
   ili9341,
   ili9342,
   ili9481,
-  # ifdef P095_ENABLE_ILI948X
+  # if P095_ENABLE_ILI948X
   ili9486,
   ili9488,
-  # endif // ifdef P095_ENABLE_ILI948X
+  # endif // if P095_ENABLE_ILI948X
 };
 
 const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device);
@@ -118,8 +129,13 @@ public:
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true);
-  P095_data_struct()                                = delete;
+                   bool                textBackFill = true
+                   # if                ADAGFX_FONTS_INCLUDED
+                   ,
+                   const uint8_t       defaultFontId = 0
+                   # endif // if ADAGFX_FONTS_INCLUDED
+                   );
+  P095_data_struct() = delete;
   virtual ~P095_data_struct();
 
   void init();
@@ -145,10 +161,22 @@ public:
 
 private:
 
+  bool isInitialized() {
+    return !(nullptr == tft
+             # if P095_ENABLE_ILI948X
+             && nullptr == ili9488
+             # endif // if P095_ENABLE_ILI948X
+             );
+  }
+
   void displayOnOff(bool state);
   void updateFontMetrics();
 
   Adafruit_ILI9341 *tft = nullptr;
+  # if P095_ENABLE_ILI948X
+  ILI9488 *ili9488    = nullptr;
+  bool     useILI9488 = false;
+  # endif // if P095_ENABLE_ILI948X
 
   AdafruitGFX_helper *gfxHelper = nullptr;
 
@@ -172,6 +200,9 @@ private:
   uint16_t            _fgcolor      = ADAGFX_WHITE;
   uint16_t            _bgcolor      = ADAGFX_BLACK;
   bool                _textBackFill = false;
+  # if ADAGFX_FONTS_INCLUDED
+  uint8_t _defaultFontId;
+  # endif // if ADAGFX_FONTS_INCLUDED
 
   String _commandTriggerCmd;
 

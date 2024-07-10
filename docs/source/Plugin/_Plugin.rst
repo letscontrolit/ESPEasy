@@ -222,13 +222,13 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and DEBUG-level logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds, though some exceptions may be applied. Also, some features are disabled to save space in the .bin files, like RTTTL, Servo, tooltips, and DEBUG-level logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
 :yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
-:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32-s3 8MB Flash units.
+:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32 8MB Flash units (available for ESP32 Classic, ESP32-S3 and ESP32-C6).
 
 :gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
@@ -333,7 +333,7 @@ There are different released versions of ESP Easy:
    ":ref:`P092_page`","|P092_status|","P092"
    ":ref:`P093_page`","|P093_status|","P093"
    ":ref:`P094_page`","|P094_status|","P094"
-   ":ref:`P095_page`","|P095_status|","P095"
+   ":ref:`P095_page`","|P095_status| (ESP32)","P095"
    ":ref:`P097_page`","|P097_status|","P097"
    ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"

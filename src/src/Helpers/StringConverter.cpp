@@ -986,11 +986,14 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
         j += 2;
 
         // Skip characters we need to ignore
-        int c = -1;
-        do {
-          ++j;
-          c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
-        } while (c > -1);
+        if ((j + 1 < arg.length()) && (skipChars.indexOf(arg[j + 1]) != -1)) {
+          int c = -1;
+
+          do {
+            ++j;
+            c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
+          } while (c > -1);
+        }
       }
     } else {
       for (size_t s = 0; s < arg.length(); s++) {
