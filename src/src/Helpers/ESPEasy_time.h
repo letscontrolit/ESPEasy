@@ -33,8 +33,13 @@ public:
   void restoreLastKnownUnixTime(unsigned long lastSysTime,
                                 uint8_t       deepSleepState);
 
-  void setExternalTimeSource(double       time,
-                             timeSource_t source,
+  bool setExternalTimeSource_withTimeWander(double       new_time,
+                                            timeSource_t new_timeSource,
+                                            int32_t      wander,
+                                            uint8_t      unitnr = 0);
+
+  bool setExternalTimeSource(double       new_time,
+                             timeSource_t new_timeSource,
                              uint8_t      unitnr = 0);
 
   uint32_t getUptime_in_sec() const;
@@ -219,20 +224,24 @@ private:
 
 public:
 
-  struct tm local_tm;                          // local time
-  uint32_t syncInterval = 3600;                // time sync will be attempted after this many seconds
+  timeSource_t getTimeSource() const { return _timeSource; }
+  
 
-  uint64_t unixTime_usec_uptime_offset = 0.0;  // Use usec resolution to get better sync between nodes when using NTP
-  uint32_t nextSyncTime                = 0;    // Next time to allow time sync against UNIX time (thus seconds)
+  struct tm local_tm;                         // local time
+  uint32_t syncInterval = 3600;               // time sync will be attempted after this many seconds
+
+  uint64_t unixTime_usec_uptime_offset = 0.0; // Use usec resolution to get better sync between nodes when using NTP
+  uint32_t nextSyncTime                = 0;   // Next time to allow time sync against UNIX time (thus seconds)
   uint32_t lastSyncTime_ms             = 0;
   uint32_t lastNTPSyncTime_ms          = 0;
-  double externalUnixTime_d            = -1.0; // Used to set time from a source other than NTP.
-  uint64_t externalUnixTime_received_micros{};
+  int64_t externalUnixTime_offset_usec{};     // Computed offset from current systime
   struct tm tsRise, tsSet;
   struct tm sunRise;
   struct tm sunSet;
-  timeSource_t timeSource               = timeSource_t::No_time_source;
+private:
+  timeSource_t _timeSource              = timeSource_t::No_time_source;
   timeSource_t extTimeSource            = timeSource_t::No_time_source;
+public:
   float timeWander                      = 0.0f; // Clock instability in ppm
   uint32_t lastTimeWanderCalculation_ms = 0;
 

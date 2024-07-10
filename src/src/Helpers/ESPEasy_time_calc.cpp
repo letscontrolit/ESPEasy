@@ -58,6 +58,17 @@ uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec)
   return static_cast<uint32_t>(seconds);
 }
 
+uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
+                                   uint32_t        time_frac)
+{
+  const uint64_t unix_time_usec = sec_time_frac_to_Micros(seconds, time_frac);
+  const uint64_t cur_usec = getMicros64();
+  if (unix_time_usec < cur_usec) 
+    return unix_time_usec;
+  return unix_time_usec - cur_usec;
+}
+
+
 bool isLeapYear(int year) {
   return (year > 0) && !(year % 4) && ((year % 100) || !(year % 400));
 }

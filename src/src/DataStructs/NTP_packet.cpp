@@ -44,7 +44,7 @@ NTP_packet::NTP_packet()
   //    time of several iterations to read the system clock.
   data[3] = 0xEC; // -20 -> 2^-20 sec -> microsec precision.
 
-  constexpr int8_t precision = 0xEC;
+  //constexpr int8_t precision = 0xEC;
 
   // Reference clock identifier. ASCII: "1N14"
   data[12] = 0x31;
@@ -124,10 +124,10 @@ void NTP_packet::setTxTimestamp(uint64_t micros)
 }
 
 bool NTP_packet::compute_usec(
-  uint64_t  localTXTimestamp_usec,
-  uint64_t  localRxTimestamp_usec,
-  uint64_t& offset_usec,
-  uint64_t& roundtripDelay_usec) const
+  uint64_t localTXTimestamp_usec,
+  uint64_t localRxTimestamp_usec,
+  int64_t& offset_usec,
+  int64_t& roundtripDelay_usec) const
 {
   int64_t t1 = getOriginTimestamp_usec();
 
@@ -191,9 +191,9 @@ String NTP_packet::getRefID_str(bool& isError) const
 #ifndef BUILD_NO_DEBUG
 String NTP_packet::toDebugString() const
 {
-  const uint8_t li   = (data[0] >> 6) & 0x3;
-  const uint8_t ver  = (data[0] >> 3) & 0x7;
-  const uint8_t mode = data[0] & 0x7;
+  const uint8_t li   = (data[0] >> 6) & 0x3; // Leap Indicator
+  const uint8_t ver  = (data[0] >> 3) & 0x7; // Version
+  const uint8_t mode = data[0] & 0x7;        // Mode
 
   bool isError{};
 
