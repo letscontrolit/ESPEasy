@@ -103,6 +103,7 @@ String toStringNoZero(int64_t value) {
 
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
   String res;
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
   // We use some trick here to prevent rounding errors 
   // like when representing 23.8, which will be printed like 23.799999...
@@ -117,6 +118,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
   constexpr double max_uint64 = std::numeric_limits<uint64_t>::max();
 
   if ((decimalPlaces > 18) || (tmp_value > max_uint64)) {
+#endif
     // Cannot use int64_t as intermediate variable
     unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
     if (value > 1e33 || value < -1e33) {
@@ -132,6 +134,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
     move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
     free(buf);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else {
     // Round the double value, multiplied with the factor 10^decimalPlaces, 
     // to make sure we will not end up with values like 23.799999...
@@ -177,6 +180,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
       res = concat('-', res);
     }
   }
+  #endif
 
   res.trim();
 
