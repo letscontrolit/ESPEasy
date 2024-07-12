@@ -9,7 +9,7 @@
 # include <ESPeasySerial.h>
 
 
-const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString) {
+const __FlashStringHelper* Plugin_082_valuename(P082_query value_nr, bool displayString) {
   switch (value_nr) {
     case P082_query::P082_QUERY_LONG:        return displayString ? F("Longitude")          : F("long");
     case P082_query::P082_QUERY_LAT:         return displayString ? F("Latitude")           : F("lat");
@@ -82,23 +82,23 @@ P082_data_struct::~P082_data_struct() {
 }
 
 /*
-void P082_data_struct::reset() {
-  if (gps != nullptr) {
+   void P082_data_struct::reset() {
+   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
-  }
+   }
 
-  if (easySerial != nullptr) {
+   if (easySerial != nullptr) {
     delete easySerial;
     easySerial = nullptr;
-  }
-}
-*/
-
+   }
+   }
+ */
 bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
   if (serial_rx < 0) {
     return false;
   }
+
   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
@@ -137,8 +137,10 @@ bool P082_data_struct::loop() {
     while (available > 0 && timePassedSince(startLoop) < 10) {
       --available;
       int c = easySerial->read();
+
       if (c >= 0) {
 # ifdef P082_SEND_GPS_TO_LOG
+
         if (_currentSentence.length() <= 80) {
           // No need to capture more than 80 bytes as a NMEA message is never that long.
           if (c != 0) {
@@ -149,31 +151,36 @@ bool P082_data_struct::loop() {
 
         if (c == 0x85) {
           // Found possible start of u-blox message
-          unsigned long timeout = millis() + 200;
-          unsigned int bytesRead = 0;
-          bool done = false;
-          bool ack_nak_read = false;
+          unsigned long timeout   = millis() + 200;
+          unsigned int  bytesRead = 0;
+          bool done               = false;
+          bool ack_nak_read       = false;
+
           while (!timeOutReached(timeout) && !done)
           {
             if (available == 0) {
               available = easySerial->available();
             } else {
               const int c = easySerial->read();
+
               if (c >= 0) {
                 switch (bytesRead) {
                   case 0:
+
                     if (c != 0x62) {
                       done = true;
                     }
                     ++bytesRead;
                     break;
                   case 1:
+
                     if (c != 0x05) {
                       done = true;
                     }
                     ++bytesRead;
                     break;
                   case 2:
+
                     if (c == 0x01) {
                       ack_nak_read = true;
                       addLog(LOG_LEVEL_INFO, F("GPS  : ACK-ACK"));
@@ -190,6 +197,7 @@ bool P082_data_struct::loop() {
               }
             }
           }
+
           if (!done) {
             addLog(LOG_LEVEL_ERROR, F("GPS  : Ack/Nack timeout"));
           } else if (!ack_nak_read) {
@@ -208,20 +216,24 @@ bool P082_data_struct::loop() {
           if (available == 0) {
             available = easySerial->available();
           }
+
           if (c == '$') {
             _start_prev_sentence = _start_sentence;
-            _start_sentence = millis();
+            _start_sentence      = millis();
             const unsigned long baudrate = easySerial->getBaudRate();
+
             if (baudrate != 0) {
               // Subtract the time (msec) taken to send the nr of bytes present in the serial buffer
               // Assume 10 bits per byte. (8N1)
               _start_sentence -= (available * 10000) / baudrate;
             }
             const int32_t max_sentence_duration = (160 * 10000) / baudrate;
+
             if (timeDiff(_start_prev_sentence, _start_sentence) > max_sentence_duration) {
               _start_sequence = _start_sentence;
+
               // Debug accuracy of computing the time stability
-//              addLog(LOG_LEVEL_INFO, concat(F("GPS  : Start Sequence: "), _start_sequence));
+              //              addLog(LOG_LEVEL_INFO, concat(F("GPS  : Start Sequence: "), _start_sequence));
             }
           }
         }
@@ -309,6 +321,7 @@ bool P082_data_struct::getDateTime(
     gps->time.value(); // Clear the 'updated' state
     return false;
   }
+
   if (!gps->date.isValid()) {
     gps->date.value(); // Clear the 'updated' state
     return false;
@@ -323,53 +336,114 @@ bool P082_data_struct::getDateTime(
 
   const uint32_t reported_time = gps->time.value();
   const uint32_t reported_date = gps->date.value();
+
   updated = reported_time != _last_time;
 
   _last_time = reported_time;
   _last_date = reported_date;
+
   // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
   if (!pps_sync) {
-    // Don't use the "commit" time when the sentence was read, but use the timestamp when the first sentence of a NMEA sequence was received.
+    // Don't use the "commit" time when the sentence was read, but use the timestamp when the first sentence of a NMEA sequence was
+    // received.
     const long time_since_start_seq = timePassedSince(_start_sequence);
-    if (time_since_start_seq < P082_TIMESTAMP_AGE) {
-      age = time_since_start_seq;
+
+    if (time_since_start_seq > P082_TIMESTAMP_AGE) {
+      return false;
     }
-    age += (gps->time.centisecond() * 10);
+    age = time_since_start_seq;
+
+    // FIXME TD-er: Are centiseconds expressed as 0.01 sec, or is it some fraction?
+    const uint8_t centiseconds = gps->time.centisecond();
+
+    if (centiseconds < 100) {
+      age += (gps->time.centisecond() * 10);
+    }
   }
 
   return true;
 }
 
+bool P082_data_struct::getDateTime(struct tm& dateTime) const
+{
+  uint64_t value_usec{};
+
+  if (_oversampling_gps_time_offset_usec.peek(value_usec)) {
+    const double time = (getMicros64() + value_usec) / 1000000.0;
+    breakTime(static_cast<uint32_t>(time), dateTime);
+    return true;
+  }
+  return false;
+}
+
+bool P082_data_struct::tryUpdateSystemTime() {
+  struct tm dateTime;
+  uint32_t  age{};
+  bool updated{};
+  bool pps_sync{};
+
+  if (getDateTime(dateTime, age, updated, pps_sync)) {
+    if (updated) {
+      // Use floating point precision to use the time since last update from GPS
+      // and the given offset in centisecond.
+      const uint32_t unixTime_sec       = makeTime(dateTime) + (age / 1000);
+      const uint64_t uptime_offset_usec =
+        sec_time_frac_to_uptime_offset_usec(
+          unixTime_sec,
+          millis_to_unix_time_frac(age % 1000));
+      _oversampling_gps_time_offset_usec.add(uptime_offset_usec);
+
+      // Compute average over offset between system micros and GPS reported timestamp.
+      // Both extremes will be filtered out
+      if (_oversampling_gps_time_offset_usec.getCount() == 5) {
+        uint64_t value_usec{};
+
+        if (_oversampling_gps_time_offset_usec.get(value_usec)) {
+          const double time = (getMicros64() + value_usec) / 1000000.0;
+
+          if (node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source)) {
+            return true;
+          } else {
+            _oversampling_gps_time_offset_usec.add(value_usec);
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
 bool P082_data_struct::powerDown() {
-  const uint8_t UBLOX_GPSStandby[] = {0xB5, 0x62, 0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x4D, 0x3B}; 
+  const uint8_t UBLOX_GPSStandby[] = { 0xB5, 0x62, 0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x4D, 0x3B };
+
   return writeToGPS(UBLOX_GPSStandby, sizeof(UBLOX_GPSStandby));
 }
 
 bool P082_data_struct::wakeUp() {
   if (isInitialized()) {
     if (easySerial->isTxEnabled()) {
-      easySerial->println();   // Send some character to wake it up.
+      easySerial->println(); // Send some character to wake it up.
     }
   }
   return false;
 }
 
-#ifdef P082_USE_U_BLOX_SPECIFIC
+# ifdef P082_USE_U_BLOX_SPECIFIC
 bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
   switch (mode) {
-    case P082_PowerMode::Max_Performance: 
+    case P082_PowerMode::Max_Performance:
     {
-      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x00, 0x21, 0x91}; 
+      const uint8_t UBLOX_command[] = { 0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x00, 0x21, 0x91 };
       return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
     }
-    case P082_PowerMode::Power_Save:      
+    case P082_PowerMode::Power_Save:
     {
-      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x01, 0x22, 0x92}; 
+      const uint8_t UBLOX_command[] = { 0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x01, 0x22, 0x92 };
       return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
     }
-    case P082_PowerMode::Eco:             
+    case P082_PowerMode::Eco:
     {
-      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x04, 0x25, 0x95}; 
+      const uint8_t UBLOX_command[] = { 0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x04, 0x25, 0x95 };
       return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
     }
   }
@@ -377,54 +451,59 @@ bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
 }
 
 bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
-
   const uint8_t dynModel = static_cast<uint8_t>(model);
-  if (dynModel == 1 || dynModel > 10) {
+
+  if ((dynModel == 1) || (dynModel > 10)) {
     return false;
   }
 
   uint8_t UBLOX_command[] = {
     0xB5, 0x62, // header
-    0x06, // class
-    0x24, // ID, UBX-CFG-NAV5
+    0x06,       // class
+    0x24,       // ID, UBX-CFG-NAV5
     0x24, 0x00, // length
     0x01, 0x00, // mask
-    dynModel, // dynModel
-    0x03, // fixMode auto 2D/3D
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
+    dynModel,   // dynModel
+    0x03,       // fixMode auto 2D/3D
     0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,0x00, 0x00
   };
+
   setUbloxChecksum(UBLOX_command, sizeof(UBLOX_command));
   return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
 }
-#endif
 
-#ifdef P082_USE_U_BLOX_SPECIFIC
-void P082_data_struct::computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B) {
+# endif // ifdef P082_USE_U_BLOX_SPECIFIC
+
+# ifdef P082_USE_U_BLOX_SPECIFIC
+void P082_data_struct::computeUbloxChecksum(const uint8_t *data, size_t size, uint8_t& CK_A, uint8_t& CK_B) {
   CK_A = 0;
   CK_B = 0;
+
   for (size_t i = 0; i < size; ++i) {
     CK_A = CK_A + data[i];
     CK_B = CK_B + CK_A;
   }
 }
 
-void P082_data_struct::setUbloxChecksum(uint8_t* data, size_t size) {
+void P082_data_struct::setUbloxChecksum(uint8_t *data, size_t size) {
   uint8_t CK_A;
   uint8_t CK_B;
+
   computeUbloxChecksum(data + 2, size - 4, CK_A, CK_B);
   data[size - 2] = CK_A;
   data[size - 1] = CK_B;
 }
-#endif
 
-bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
+# endif // ifdef P082_USE_U_BLOX_SPECIFIC
+
+bool P082_data_struct::writeToGPS(const uint8_t *data, size_t size) {
   if (isInitialized()) {
     if (easySerial->isTxEnabled()) {
       if (size != easySerial->write(data, size)) {

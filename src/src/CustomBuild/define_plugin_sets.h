@@ -1512,6 +1512,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P095) && defined(ESP32) && !defined(PLUGIN_BUILD_IR_EXTENDED)
+      #define USES_P095   // TFT ILI9xxx
+    #endif
     #if !defined(USES_P137) && defined(ESP32)
       #define USES_P137   // AXP192
     #endif
