@@ -2,14 +2,14 @@
 #ifdef USES_P154
 
 // #######################################################################################################
-// #################################### Plugin-154: Environment - BMP3xx   ###############################
+// ################################## Plugin-154: Environment - BMP3xx I2C   #############################
 // #######################################################################################################
 
 # include "src/PluginStructs/P154_data_struct.h"
 
 # define PLUGIN_154
 # define PLUGIN_ID_154         154
-# define PLUGIN_NAME_154       "Environment - BMP3xx"
+# define PLUGIN_NAME_154       "Environment - BMP3xx (I2C)"
 # define PLUGIN_VALUENAME1_154 "Temperature"
 # define PLUGIN_VALUENAME2_154 "Pressure"
 
