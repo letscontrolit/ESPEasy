@@ -53,6 +53,7 @@ The text on most displays is somewhat confusing, as not the usual SPI names are 
   3V3     --- VCC (most displays only support 3.3V)
   GND     --- GND
   MOSI    --> SDA/SDI
+  MISO    --> SDO/DO (optional, not used)
   CLK     --> SCL/SCK
   (gpio)  --> DC
   (gpio)  --> CS
@@ -68,23 +69,35 @@ Device configuration
 .. image:: P095_DeviceConfiguration.png
    :alt: Device configuration
 
-* **Name** A unique name should be entered here.
+* **Name**: A unique name should be entered here.
 
-* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 Actuator
 ^^^^^^^^
 
-* **GPIO -> TFT CS** Select the GPIO pin to use for the ``CS`` connection. If the display doesn't have a ``CS`` connection it can be set to *None*.
-* **GPIO -> TFT DC** The GPIO pin to use for the ``DC`` connection (Data/Command).
-* **GPIO -> TFT RST** Select the GPIO pin to use for the ``RES`` (reset) connection. If the display doesn't have a ``RES`` (or RST) connection, or no free pin is available, it can be set to *None*. If it is set to None, for proper operation it may need too be wired to the Reset connection on the ESP, so the device is initialized correctly.
-* **GPIO -> Backlight (optional)** Select the GPIO pin to use for controlling the backlight. To save power, the backlight can be dimmed, or turned off if the display is turned off. If set to *None*, usually the max. brightness is used for the backlight.
-* **Backlight percentage** The backlight can be controlled via PWM modulation on the Backlight (BLK) pin of the display. This is set as a percentage between 1 and 100.
-* **Display button** A GPIO pin can be configured to wake the display on demand. This, combined with the **Display Timeout** setting, can preserve the lifetime of the display, and save some power.
-* **Inversed Logic** When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
-* **Display Timeout** Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.
-* **TFT Display model** Select the hardware model that is connected. Currently there are only preset resolutions available.
-* **Invert display** Default value for Invert display, some displays have foreground and background colors swapped (f.e. M5Stack Core2 using ILI9342C), this option is applied at plugin initialization.
+* **GPIO -> TFT CS**: Select the GPIO pin to use for the ``CS`` connection. If the display doesn't have a ``CS`` connection it can be set to *None*.
+
+* **GPIO -> TFT DC**: The GPIO pin to use for the ``DC`` connection (Data/Command).
+
+* **GPIO -> TFT RST**: Select the GPIO pin to use for the ``RES`` (reset) connection. If the display doesn't have a ``RES`` (or RST) connection, or no free pin is available, it can be set to *None*. If it is set to None, for proper operation it may need too be wired to the Reset connection on the ESP, so the device is initialized correctly.
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+* **GPIO -> Backlight (optional)**: Select the GPIO pin to use for controlling the backlight. To save power, the backlight can be dimmed, or turned off if the display is turned off. If set to *None*, usually the max. brightness is used for the backlight, but sometimes the BL/LED pin of the display has to be connected to ``VCC`` to get the content visible.
+
+* **Backlight percentage**: The backlight can be controlled via PWM modulation on the Backlight (BLK) pin of the display. This is set as a percentage between 1 and 100.
+
+* **Display button**: A GPIO pin can be configured to wake the display on demand. This, combined with the **Display Timeout** setting, can preserve the lifetime of the display, and save some power.
+
+* **Inversed Logic**: When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
+
+* **Display Timeout**: Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.
+
+* **TFT Display model**: Select the hardware model that is connected. Currently there are only preset resolutions available.
+
+* **Invert display**: Default value for Invert display, some displays have foreground and background colors swapped (f.e. M5Stack Core2 using ILI9342C and some ILI9486/ILI9488 models), this option is applied at plugin initialization.
 
 Available options:
 
@@ -94,10 +107,12 @@ Available options:
 .. warning:: 
    The **ILI9481** display controller does have issues when rotating, by using the ``<trigger>,rot,<n>`` command, to change the display orientation after some content is already displayed on the screen (content may move, rotate and/or mirror unexpectedly). It is advised to clear the screen after changing the rotation setting.
 
+.. note:: ILI9486 displays tested so far (sourced from Aliexpress) either are *compatible* with ILI9488 or **are** ILI9488 displays, that's why they share the same entry in the list. If you find an ILI9486 display that doesn't work with this setting, please raise an issue in ESPEasy Github Issues list, so this can be adjusted.
+
 Layout
 ^^^^^^^^
 
-* **Rotation** Depending on how the display is to be mounted/installed, it may be needed to rotate the content, or with a non-square resolution, to use the display in *Landscape* layout instead of the default *Portrait*.
+* **Rotation**: Depending on how the display is to be mounted/installed, it may be needed to rotate the content, or with a non-square resolution, to use the display in *Landscape* layout instead of the default *Portrait*.
 
 Available options:
 
@@ -120,13 +135,18 @@ Available options:
 
 Default setting is *Continue to next line*.
 
-* **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 10.
+* **Default font**: If fonts are available in the build (excluded from some builds because of .bin size issues), the default font at initialization can be selected. The names/numbers that can be used in the ``<trigger>,font,<fontname|fontnr>`` are shown in the combobox, and documented below in the **AdafruitGFX_Helper** documentation. The font numbers aren't consecutive if all fonts aren't included, to keep them consistent across builds.
 
-* **Show splash on start** When available, and enabled, will show an ESPEasy & plugin name text-splash during start of the plugin. If also some content is configured, this will be written over the splash, as that is not cleared after being displayed.
+.. image:: P095_DefaultFontOptions.png
+   :alt: Default font
 
-* **Clear display on exit** When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. The screen will be turned off, and when a backlight pin is configured, also the backlight is turned off.
+* **Font scaling**: The scaling factor for the currently active font. Select a factor between 1 and 10.
 
-* **Write Command trigger** The command to handle any commands for this device can be selected here. This can make the commands compatible with other (tft) displays, using the same command structure via the ESPEasy Adafruit Graphics helper class.
+* **Show splash on start**: When available, and enabled, will show an ESPEasy & plugin name text-splash during start of the plugin. If also some content is configured, this will be written over the splash, as that is not cleared after being displayed.
+
+* **Clear display on exit**: When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. The screen will be turned off, and when a backlight pin is configured, also the backlight is turned off.
+
+* **Write Command trigger**: The command to handle any commands for this device can be selected here. This can make the commands compatible with other (tft) displays, using the same command structure via the ESPEasy Adafruit Graphics helper class.
 
 Available options:
 
@@ -142,19 +162,20 @@ Available options:
 
 The command is handled non-case sensitive. See below for available commands and subcommands.
 
-* **Wake display on receiving text** When checked, the display will be enabled once any content is written to the screen, either triggered by the Interval, or from a command. Default checked.
+* **Wake display on receiving text**: When checked, the display will be enabled once any content is written to the screen, either triggered by the Interval, or from a command. Default checked.
 
-* **Text Coordinates in col/row** When checked, the coordinates for the ``txp``, ``txz`` and ``txtfull`` subcommands will be handled in cursor columns & rows, instead of pixels. Column and row are calculated from the current font size and font scaling settings.
+* **Text Coordinates in col/row**: When checked, the coordinates for the ``txp``, ``txz`` and ``txtfull`` subcommands will be handled in cursor columns & rows, instead of pixels. Column and row are calculated from the current font size and font scaling settings.
 
-* **Use -1px offset for txp & txtfull** For backward compatibility with the previous, non-AdafruitGFX_helper based, plugin implementation, that used 0-based coordinates, an offset of -1 pixel can be applied to the ``txp``, ``txz`` and ``txtfull`` subcommands. This option is enabled by default.
+* **Use -1px offset for txp & txtfull**: For backward compatibility with the previous, non-AdafruitGFX_helper based, plugin implementation, that used 0-based coordinates, an offset of -1 pixel can be applied to the ``txp``, ``txz`` and ``txtfull`` subcommands. This option is enabled by default.
 
-* **Background-fill for text** When checked, for any text-line sent to the screen, the entire background (including top and bottom lines) will have the provided background color, *unless* transparent is used (Background color == Foreground color). Default checked.
+* **Background-fill for text**: When checked, for any text-line sent to the screen, the entire background (including top and bottom lines) will have the provided background color, *unless* transparent is used (Background color == Foreground color). Default checked.
 
 Content
 ^^^^^^^^
 
-* **Foreground color**
-* **Background color**
+* **Foreground color**:
+
+* **Background color**:
 
 These are the default colors, used to display the content as configured below (if any). The background color is also used as the Clear screen color.
 
@@ -166,7 +187,7 @@ Colors can be specified in 3 ways:
 
 If the Foreground and Background colors are the same, the background color will become ``transparent``. If the Forground color is empty, as a default ``white`` will be set.
 
-* **Line 1..24** Predefined content can be specified. The number of lines available depends on the size of the display, the font used, the font scaling that is set and the selected rotation.
+* **Line 1..24**: Predefined content can be specified. The number of lines available depends on the size of the display, the font used, the font scaling that is set and the selected rotation.
 
 The usual variables, like ``[Taskname#Valuename]``, or ``%v1%``, system variables, formulas and functions can be used.
 
@@ -174,14 +195,14 @@ Input length is limited to 60 characters per line. If a longer calculated text i
 
 Next to Line 24, the remaining capacity in characters is displayed.
 
-The total combination of lines * input length can not exceed 1000 characters (sized dynamically), as there is limited storage per task available for these settings. An error message will be shown after (trying to) save the settings, **any excess content will be discarded!**
+The total combination of lines * input length can not exceed 5192 characters (1000 on some builds) (sized dynamically), as there is limited storage per task available for these settings. An error message will be shown after (trying to) save the settings, **any excess content will be discarded!**
 
 Example:
 
 .. image:: P095_SaveError.png
    :alt: Save error
 
-* **Interval** By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content will be updated automatically using that interval (seconds). Depending on the **Text print Mode** setting, content that may have been draw from rules or external commands, may be erased.
+* **Interval**: By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content will be updated automatically using that interval (seconds). Depending on the **Text print Mode** setting, content that may have been draw from rules or external commands, may be erased.
 
 Values
 ^^^^^^
@@ -209,6 +230,8 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added| 2020-04-20 Initially added
+  |added| 2024-07-07 Add support for ILI9486/ILI9488 displays.
 
   |added| 2022-04-23 Rewrite of the plugin based on AdafruitGFX_helper, udated documentation based on shared settings with :ref:`P116_page` and AdafruitGFX_helper
+
+  |added| 2020-04-20 Initially added
