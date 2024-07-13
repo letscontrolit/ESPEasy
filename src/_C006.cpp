@@ -103,7 +103,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         {
           cmd += event->String2; // Par2
         }
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
       }
       break;
     }
@@ -114,20 +114,23 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      String pubname         = CPlugin_006_pubname;
-      bool   mqtt_retainFlag = CPlugin_006_mqtt_retainFlag;
+      String pubname              = CPlugin_006_pubname;
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
+      bool   mqtt_retainFlag      = CPlugin_006_mqtt_retainFlag;
 
       statusLED(true);
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
       parseControllerVariables(pubname, event, false);
 
-      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       for (uint8_t x = 0; x < valueCount; x++)
       {
         String tmppubname = pubname;
-        parseSingleControllerVariable(tmppubname, event, x, false);
+        if (contains_valname) {
+          parseSingleControllerVariable(tmppubname, event, x, false);
+        }
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {

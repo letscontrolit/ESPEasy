@@ -30,13 +30,9 @@ struct P144_data_struct : public PluginTaskData_base {
   private:
   bool     processRx(char c);   // Handle one received character according to protocol
   void     dump();              // Diagnostics, dump the serialRxBuffer
-  char*    toHex(char c, char * ptr);           // Print an int in hexadecimal
 
   ESPeasySerial *easySerial = nullptr;          // Setial port object
   char serialRxBuffer[P144_bufferSize] = {0};   // Receive buffer for serial RX characters
-  #ifdef PLUGIN_144_DEBUG
-  char debugBuffer[3*P144_bufferSize] = {0};    // Buffer to build debugging string during reception
-  #endif
   int rxChecksum = 0;     // Build checksum value during message processing
   int rxIndex = 0;        // Index in serialRxBuffer during message processing
   int rxlen = 0;          // Size of the received message as stated in the received message

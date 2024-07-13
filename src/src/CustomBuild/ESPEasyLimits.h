@@ -151,7 +151,7 @@
   #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 #endif
 #ifndef UDP_PACKETSIZE_MAX
-  #define UDP_PACKETSIZE_MAX               256 // Currently only needed for C013_Receive
+  #define UDP_PACKETSIZE_MAX               512 // Currently only needed for C013_Receive
 #endif
 #ifndef TIMER_GRATUITOUS_ARP_MAX
   #define TIMER_GRATUITOUS_ARP_MAX           5000

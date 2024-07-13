@@ -162,10 +162,14 @@ void ESPEasy_setup()
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
+/*
 #ifdef ESP32
-  ResetFactoryDefaultPreference.init();
+{
+  ESPEasy_NVS_Helper preferences;
+  ResetFactoryDefaultPreference.init(preferences);
+}
 #endif
-
+*/
 #ifndef BUILD_NO_DEBUG
 //  checkAll_internalCommands();
 #endif
@@ -485,9 +489,7 @@ void ESPEasy_setup()
   #endif
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log  = F("INIT : Free RAM:");
-    log += FreeMem();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("INIT : Free RAM:"), FreeMem()));
   }
 
 # ifndef BUILD_NO_DEBUG
@@ -579,8 +581,8 @@ void ESPEasy_setup()
   #endif
 
   #if FEATURE_ETHERNET
-  if (Settings.ETH_Pin_power != -1) {
-    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power, 1);
+  if (Settings.ETH_Pin_power_rst != -1) {
+    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power_rst, 1);
   }
 
   #endif

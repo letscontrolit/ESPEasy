@@ -37,15 +37,10 @@ def esp32_create_combined_bin(source, target, env):
     sections = env.subst(env.get("FLASH_EXTRA_IMAGES"))
     firmware_name = env.subst("$BUILD_DIR/${PROGNAME}.bin")
     chip = env.get("BOARD_MCU")
-    flash_size = env.BoardConfig().get("upload.flash_size")
-    flash_freq = env.BoardConfig().get("build.f_flash", '40m')
-    flash_freq = flash_freq.replace('000000L', 'm')
-    flash_mode = env.BoardConfig().get("build.flash_mode", "dio")
-    memory_type = env.BoardConfig().get("build.arduino.memory_type", "qio_qspi")
-    if flash_mode == "qio" or flash_mode == "qout":
-        flash_mode = "dio"
-    if memory_type == "opi_opi" or memory_type == "opi_qspi":
-        flash_mode = "dout"
+    flash_size = env.BoardConfig().get("upload.flash_size", "4MB")
+    flash_mode = env["__get_board_flash_mode"](env)
+    flash_freq = env["__get_board_f_flash"](env)
+
     cmd = [
         "--chip",
         chip,

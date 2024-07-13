@@ -77,7 +77,9 @@ void handle_unprocessedNetworkEvents()
         WiFiEventData.setWiFiServicesInitialized();
 //#ifdef ESP32
         setWebserverRunning(false);
+        delay(1);
         setWebserverRunning(true);
+        delay(1);
 /*        
 #else
         CheckRunningServices();
@@ -211,7 +213,7 @@ void handle_unprocessedNetworkEvents()
 #endif // if FEATURE_ETHERNET
 
 #if FEATURE_ESPEASY_P2P
-  updateUDPport();
+  updateUDPport(false);
 #endif
 }
 
@@ -308,7 +310,7 @@ void processConnect() {
   WiFiEventData.setWiFiConnected();
   ++WiFiEventData.wifi_reconnects;
 
-  if (WiFi_AP_Candidates.getCurrent().isEmergencyFallback) {
+  if (WiFi_AP_Candidates.getCurrent().bits.isEmergencyFallback) {
     #ifdef CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS
     const bool mustResetCredentials = CUSTOM_EMERGENCY_FALLBACK_RESET_CREDENTIALS;
     #else
@@ -459,6 +461,19 @@ void processGotIP() {
   logConnectionStatus();
 }
 
+#if FEATURE_USE_IPV6
+void processGotIPv6() {
+  if (!WiFiEventData.processedGotIP6) {
+    WiFiEventData.processedGotIP6 = true;
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+      addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + WiFiEventData.unprocessed_IP6.toString(true));
+#if FEATURE_ESPEASY_P2P
+//    updateUDPport(true);
+#endif
+  }
+}
+#endif
+
 // A client disconnected from the AP on this node.
 void processDisconnectAPmode() {
   if (WiFiEventData.processedDisconnectAPmode) { return; }
@@ -577,9 +592,10 @@ void processScanDone() {
         addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect"));
       }
       #endif
-
+#ifdef ESP32
 //      setSTA(false);
-//      NetworkConnectRelaxed();
+#endif
+      NetworkConnectRelaxed();
 #ifdef USES_ESPEASY_NOW
       temp_disable_EspEasy_now_timer = millis() + 20000;
 #endif

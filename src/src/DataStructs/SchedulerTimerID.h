@@ -11,24 +11,22 @@ struct SchedulerTimerID {
 
   explicit SchedulerTimerID(uint32_t mixedID)  : mixed_id(mixedID) {}
 
-  union {
-    struct {
-      uint32_t id         : 28;
-      uint32_t timer_type : 4; // Change this when SchedulerTimerType_e needs more bits
-    };
+  virtual ~SchedulerTimerID() {}
 
-    uint32_t mixed_id{};
-  };
+  void                 setTimerType(SchedulerTimerType_e timerType);
+  SchedulerTimerType_e getTimerType() const;
 
-  void setTimerType(SchedulerTimerType_e timerType)
+
+  uint32_t             getId() const;
+
+  // Have setId in the header file as it is used in the constructor of derived classes
+  // Thus it should be inline as we otherwise cannot call member functions of base class in the constructor in a derived class
+  void setId(uint32_t id)
   {
-    timer_type = static_cast<uint32_t>(timerType);
+    mixed_id = (id << 4) | (mixed_id & 0x0f);
   }
 
-  SchedulerTimerType_e getTimerType() const
-  {
-    return static_cast<SchedulerTimerType_e>(timer_type);
-  }
+  uint32_t mixed_id{};
 };
 
 

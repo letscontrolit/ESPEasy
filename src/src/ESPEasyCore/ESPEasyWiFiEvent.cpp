@@ -28,8 +28,7 @@
 
 
 #ifdef ESP32
-void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
-  _useStaticIp = enabled;
+void setUseStaticIP(bool enabled) {
 }
 
 #endif // ifdef ESP32
@@ -37,15 +36,15 @@ void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
 void WiFi_Access_Static_IP::set_use_static_ip(bool enabled) {
   _useStaticIp = enabled;
 }
-
-#endif // ifdef ESP8266
-
-
 void setUseStaticIP(bool enabled) {
   WiFi_Access_Static_IP tmp_wifi;
 
   tmp_wifi.set_use_static_ip(enabled);
 }
+
+#endif // ifdef ESP8266
+
+
 
 
 // ********************************************************************************
@@ -134,9 +133,6 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       WiFiEventData.markConnected((const char*) ssid_copy, info.connected.bssid, info.connected.channel);
       #endif
-      #if FEATURE_USE_IPV6
-      WiFi.enableIpV6();
-      #endif
       break;
     }
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -146,7 +142,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
         if (info.wifi_sta_disconnected.reason == WIFI_REASON_AUTH_EXPIRE) {
           // See: https://github.com/espressif/arduino-esp32/issues/8877#issuecomment-1807677897
+          #if ESP_IDF_VERSION_MAJOR >= 5
+          // FIXME TD-er: Should no longer be needed.
+          WiFi.STA._setStatus(WL_CONNECTION_LOST);
+          #else
           WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+          #endif
         }
         #else
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
@@ -167,9 +168,8 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
     {
       ip_event_got_ip6_t * event = static_cast<ip_event_got_ip6_t*>(&info.got_ip6);
-      IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
+      const IPAddress ip(IPv6, (const uint8_t*)event->ip6_info.ip.addr, event->ip6_info.ip.zone);
       WiFiEventData.markGotIPv6(ip);
-      addLog(LOG_LEVEL_INFO, String(F("WIFI : STA got IP6 ")) + ip.toString());
       break;
     }
     case ARDUINO_EVENT_WIFI_AP_GOT_IP6:

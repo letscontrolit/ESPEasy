@@ -77,44 +77,45 @@ bool safeReadStringUntil(Stream     & input,
     }
   } while (!timeOutReached(timer));
 
-  addLog(LOG_LEVEL_ERROR, F("Timeout while reading input data!"));
+  addLog(LOG_LEVEL_ERROR, strformat(F("Timeout while reading input data! str: `%s`"), str.c_str()));
   return false;
 }
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const __FlashStringHelper *prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = prefix;
-    log += get_formatted_Controller_number(controller_number);
-    log += F(" connecting to ");
-    log += ControllerSettings.getHostPortString();
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("%s%s connecting to %s"),
+                         prefix,
+                         get_formatted_Controller_number(cpluginID).c_str(),
+                         ControllerSettings.getHostPortString().c_str()));
   }
 }
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const __FlashStringHelper *prefix, int controller_number) {
+void log_connecting_fail(const __FlashStringHelper *prefix, cpluginID_t cpluginID) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log = prefix;
-    log += get_formatted_Controller_number(controller_number);
-    log += F(" connection failed (");
-    log += WiFiEventData.connectionFailures;
-    log += F("/");
-    log += Settings.ConnectionFailuresThreshold;
-    log += F(")");
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR,
+               strformat(F("%s%s connection failed (%d/%d)"),
+                         prefix,
+                         get_formatted_Controller_number(cpluginID).c_str(),
+                         WiFiEventData.connectionFailures,
+                         Settings.ConnectionFailuresThreshold));
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, unsigned long connect_start_time) {
-  WiFiEventData.connectDurations[controller_number] = timePassedSince(connect_start_time);
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart) {
+  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(cpluginID);
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
-    log_connecting_fail(prefix, controller_number);
+    log_connecting_fail(prefix, cpluginID);
+    STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_FAIL);
     return false;
   }
+  WiFiEventData.connectDurations[cpluginID] = usecPassedSince(statisticsTimerStart) / 1000ul;
+  STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_SUCCESS);
   statusLED(true);
 
   if (WiFiEventData.connectionFailures > 0) {
@@ -123,53 +124,54 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
   return true;
 }
 
-bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
-  START_TIMER;
+bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
+  const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
-  if (!NetworkConnected()) { 
+  if (!NetworkConnected()) {
     client.stop();
-    return false; 
+    return false;
   }
+
   // Ignoring the ACK from the server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+  const uint32_t timeout = ControllerSettings.MustCheckReply
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
   client.setTimeout(timeout); // in msec as it should be!
   delay(0);
 #ifndef BUILD_NO_DEBUG
-  log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
+  log_connecting_to(F("UDP  : "), cpluginID, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-  const unsigned long connect_start_time = millis();  
-  bool success      = ControllerSettings.beginPacket(client);
+  bool success = ControllerSettings.beginPacket(client);
+
   if (!success) {
     client.stop();
   }
   const bool result = count_connection_results(
     success,
-    F("UDP  : "), 
-    controller_number,
-    connect_start_time);
+    F("UDP  : "),
+    cpluginID,
+    statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
 
 #if FEATURE_HTTP_CLIENT
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
-  return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
+bool try_connect_host(cpluginID_t cpluginID, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
+  return try_connect_host(cpluginID, client, ControllerSettings, F("HTTP : "));
 }
 
-bool try_connect_host(int                        controller_number,
+bool try_connect_host(cpluginID_t                cpluginID,
                       WiFiClient               & client,
                       ControllerSettingsStruct & ControllerSettings,
                       const __FlashStringHelper *loglabel) {
-  START_TIMER;
+  const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
-  if (!NetworkConnected()) { 
+  if (!NetworkConnected()) {
     client.stop();
     return false;
   }
@@ -181,35 +183,34 @@ bool try_connect_host(int                        controller_number,
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+  const uint32_t timeout = ControllerSettings.MustCheckReply
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
   pClient->setTimeout(timeout);
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(timeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout); // in msec as it should be!
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-#ifndef BUILD_NO_DEBUG
-  log_connecting_to(loglabel, controller_number, ControllerSettings);
-#endif // ifndef BUILD_NO_DEBUG
-
-  const unsigned long connect_start_time = millis();
+# ifndef BUILD_NO_DEBUG
+  log_connecting_to(loglabel, cpluginID, ControllerSettings);
+# endif // ifndef BUILD_NO_DEBUG
 
   const bool success = ControllerSettings.connectToHost(client);
+
   if (!success) {
     client.stop();
   }
-  const bool result  = count_connection_results(
+  const bool result = count_connection_results(
     success,
-    loglabel, 
-    controller_number,
-    connect_start_time);
+    loglabel,
+    cpluginID,
+    statisticsTimerStart);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
@@ -222,7 +223,7 @@ bool client_available(WiFiClient& client) {
   return (client.available() != 0) || (client.connected() != 0);
 }
 
-String send_via_http(int                             controller_number,
+String send_via_http(int                             cpluginID,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
                      const String                  & uri,
@@ -230,18 +231,17 @@ String send_via_http(int                             controller_number,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode) {
-
   // Ignoring the ACK from the HTTP server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply 
-    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+  const uint32_t timeout = ControllerSettings.MustCheckReply
+    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
     : ControllerSettings.ClientTimeout;
 
-  const unsigned long connect_start_time = millis();
-  const String result = send_via_http(
-    get_formatted_Controller_number(controller_number),
+  const uint64_t statisticsTimerStart(getMicros64());
+  const String result                    = send_via_http(
+    get_formatted_Controller_number(cpluginID),
     timeout,
     getControllerUser(controller_idx, ControllerSettings),
     getControllerPass(controller_idx, ControllerSettings),
@@ -261,15 +261,13 @@ String send_via_http(int                             controller_number,
   count_connection_results(
     success,
     F("HTTP  : "),
-    controller_number,
-    connect_start_time);
+    cpluginID,
+    statisticsTimerStart);
 
   return result;
 }
+
 #endif // FEATURE_HTTP_CLIENT
-
-
-
 
 
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool doParseTemplate)
@@ -277,12 +275,14 @@ String getControllerUser(controllerIndex_t controller_idx, const ControllerSetti
   if (!validControllerIndex(controller_idx)) { return EMPTY_STRING; }
 
   String res;
+
   if (ControllerSettings.useExtendedCredentials()) {
     res = ExtendedControllerCredentials.getControllerUser(controller_idx);
   } else {
     res = String(SecuritySettings.ControllerUser[controller_idx]);
   }
   res.trim();
+
   if (doParseTemplate) {
     res = parseTemplate(res);
   }
@@ -297,6 +297,7 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
   String res(SecuritySettings.ControllerPassword[controller_idx]);
+
   res.trim();
   return res;
 }

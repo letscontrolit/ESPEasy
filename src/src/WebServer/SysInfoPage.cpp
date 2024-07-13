@@ -48,6 +48,11 @@
 #  include "../ESPEasyCore/Controller.h" // For finding enabled MQTT controller
 # endif // if FEATURE_MQTT
 
+
+#if FEATURE_INTERNAL_TEMPERATURE
+#include "../Helpers/Hardware_temperature_sensor.h"
+#endif
+
 # ifdef ESP32
 #  include <esp_partition.h>
 # endif // ifdef ESP32
@@ -72,6 +77,9 @@ void handle_sysinfo_json() {
   json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
   json_number(F("cpu_load"),   toString(getCPUload()));
+#if FEATURE_INTERNAL_TEMPERATURE
+  json_number(F("cpu_temp"),   toString(getInternalTemperature()));
+#endif
   json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
 
@@ -121,8 +129,10 @@ void handle_sysinfo_json() {
   json_prop(F("dhcp"),          useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(LabelType::IP_CONFIG_DYNAMIC));
   json_prop(F("ip"),            getValue(LabelType::IP_ADDRESS));
 #if FEATURE_USE_IPV6
-  json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
-  json_prop(F("ip6_global"),     getValue(LabelType::IP6_GLOBAL));
+  if (Settings.EnableIPv6()) {
+    json_prop(F("ip6_local"),     getValue(LabelType::IP6_LOCAL));
+    json_prop(F("ip6_global"),    getValue(LabelType::IP6_GLOBAL));
+  }
 #endif
 
   json_prop(F("subnet"),        getValue(LabelType::IP_SUBNET));
@@ -147,10 +157,15 @@ void handle_sysinfo_json() {
   json_open(false, F("ethernet"));
   json_prop(F("ethwifimode"),   getValue(LabelType::ETH_WIFI_MODE));
   json_prop(F("ethconnected"),  getValue(LabelType::ETH_CONNECTED));
+  json_prop(F("ethchip"),       getValue(LabelType::ETH_CHIP));
   json_prop(F("ethduplex"),     getValue(LabelType::ETH_DUPLEX));
   json_prop(F("ethspeed"),      getValue(LabelType::ETH_SPEED));
   json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
   json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
+#if FEATURE_USE_IPV6
+  if (Settings.EnableIPv6())
+    json_prop(F("ethipv6local"), getValue(LabelType::ETH_IP6_LOCAL));
+#endif
   json_close();
 # endif // if FEATURE_ETHERNET
 
@@ -303,7 +318,6 @@ void handle_sysinfo_basicInfo() {
     #endif
     addRowLabelValue(LabelType::TIME_SOURCE);
     addRowLabelValue(LabelType::TIME_WANDER);
-    addUnit(F("ppm"));
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -316,10 +330,14 @@ void handle_sysinfo_basicInfo() {
   if (wdcounter > 0)
   {
     addHtml(strformat(
-      F("%.2f%% (LC=%d)"),
+      F("%.2f [%%] (LC=%d)"),
       getCPUload(),
       getLoopCountPerSec()));
   }
+#if FEATURE_INTERNAL_TEMPERATURE
+  addRowLabelValue(LabelType::INTERNAL_TEMPERATURE);
+#endif
+
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
 
@@ -347,6 +365,7 @@ void handle_sysinfo_memory() {
   addRowLabel(LabelType::FREE_MEM);
   {
     addHtmlInt(freeMem);
+    addUnit(getFormUnit(LabelType::FREE_MEM));
 # ifndef BUILD_NO_RAM_TRACKER
     addHtml(F(" ("));
     addHtmlInt(lowestRAM);
@@ -363,7 +382,6 @@ void handle_sysinfo_memory() {
 # if defined(CORE_POST_2_5_0)
   #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml('%');
   #  endif // ifndef LIMIT_BUILD_SIZE
   {
     #ifdef USE_SECOND_HEAP
@@ -376,6 +394,7 @@ void handle_sysinfo_memory() {
   addRowLabel(LabelType::FREE_STACK);
   {
     addHtmlInt(getCurrentFreeStack());
+    addUnit(getFormUnit(LabelType::FREE_STACK));
 # ifndef BUILD_NO_RAM_TRACKER
     addHtml(F(" ("));
     addHtmlInt(lowestFreeStack);
@@ -404,6 +423,7 @@ void handle_sysinfo_Ethernet() {
 
     static const LabelType::Enum labels[] PROGMEM =
     {
+      LabelType::ETH_CHIP,
       LabelType::ETH_STATE,
       LabelType::ETH_SPEED,
       LabelType::ETH_DUPLEX,
@@ -479,9 +499,9 @@ void handle_sysinfo_Network() {
   if (tsf_time > 0) {
     addRowLabel(F("WiFi TSF time"));
     // Split it while printing, so we're not loosing a lot of decimals in the float conversion
-    addHtml(secondsToDayHourMinuteSecond(tsf_time / 1000000));
-    addHtml('.');    
-    addHtmlInt(tsf_time % 1000000);
+    uint32_t tsf_usec{};
+    addHtml(secondsToDayHourMinuteSecond(micros_to_sec_usec(tsf_time, tsf_usec)));
+    addHtml(strformat(F(".%06u"), tsf_usec));
   }
   #endif
 
@@ -533,10 +553,18 @@ void handle_sysinfo_WiFiSettings() {
     LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
     LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
+#ifndef ESP32
     LabelType::WAIT_WIFI_CONNECT,
+#endif
+#ifdef ESP32
+    LabelType::WIFI_PASSIVE_SCAN,
+#endif
     LabelType::HIDDEN_SSID_SLOW_CONNECT,
     LabelType::CONNECT_HIDDEN_SSID,
     LabelType::SDK_WIFI_AUTORECONNECT,
+#if FEATURE_USE_IPV6
+    LabelType::ENABLE_IPV6,
+#endif
 
     LabelType::MAX_LABEL
   };
@@ -635,12 +663,9 @@ void handle_sysinfo_ESP_Board() {
     formatToHex(chipID, 6).c_str()));
 
   addRowLabelValue(LabelType::ESP_CHIP_FREQ);
-  addHtml(F(" MHz"));
 #   ifdef ESP32
   addRowLabelValue(LabelType::ESP_CHIP_XTAL_FREQ);
-  addHtml(F(" MHz"));
   addRowLabelValue(LabelType::ESP_CHIP_APB_FREQ);
-  addHtml(F(" MHz"));
 #   endif // ifdef ESP32
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
@@ -694,20 +719,20 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
   addHtmlInt(realSize / 1024);
-  addHtml(F(" kB"));
+  addHtml(F(" [kB]"));
 
   addRowLabel(LabelType::FLASH_IDE_SIZE);
   addHtmlInt(ideSize / 1024);
-  addHtml(F(" kB"));
+  addHtml(F(" [kB]"));
 
   addRowLabel(LabelType::FLASH_CHIP_SPEED);
   addHtmlInt(getFlashChipSpeed() / 1000000);
-  addHtml(F(" MHz"));
+  addHtml(F(" [MHz]"));
 
   // Please check what is supported for the ESP32
   addRowLabel(LabelType::FLASH_IDE_SPEED);
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
-  addHtml(F(" MHz"));
+  addHtml(F(" [MHz]"));
 
   addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
@@ -721,7 +746,7 @@ void handle_sysinfo_Storage() {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
     addHtml(strformat(
-      F("%d kB (%d kB free)"),
+      F("%d [kB] (%d kB free)"),
       getSketchSize() / 1024,
       getFreeSketchSpace() / 1024));
 
@@ -733,7 +758,7 @@ void handle_sysinfo_Storage() {
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     addHtml(strformat(
-      F("%d kB (%d bytes)"),
+      F("%d [kB] (%d bytes)"),
       maxSketchSize / 1024,
       maxSketchSize));
 
@@ -748,16 +773,18 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FS_SIZE);
   addHtml(strformat(
-    F("%d kB (%d kB free)"),
+    F("%d [kB] (%d kB free)"),
     SpiffsTotalBytes() / 1024,
     SpiffsFreeSpace() / 1024));
 
   # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtmlInt(SpiffsPagesize());
+  addUnit(getFormUnit(LabelType::FREE_MEM)); // FIXME TD-er: Add labeltype
 
   addRowLabel(F("Block size"));
   addHtmlInt(SpiffsBlocksize());
+  addUnit(getFormUnit(LabelType::FREE_MEM)); // FIXME TD-er: Add labeltype
 
   addRowLabel(F("Number of blocks"));
   addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());

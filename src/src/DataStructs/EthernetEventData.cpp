@@ -3,6 +3,7 @@
 #if FEATURE_ETHERNET
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
 
 #include <ETH.h>
@@ -11,6 +12,19 @@
 #define ESPEASY_ETH_CONNECTED               0
 #define ESPEASY_ETH_GOT_IP                  1
 #define ESPEASY_ETH_SERVICES_INITIALIZED    2
+
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
 
 bool EthernetEventData_t::EthConnectAllowed() const {
   if (!ethConnectAttemptNeeded) return false;
@@ -163,15 +177,23 @@ void EthernetEventData_t::markDisconnect() {
   }
   lastConnectMoment.clear();
   processedDisconnect  = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  WiFi.STA.setDefault();
+#endif
 }
 
 void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
-#if FEATURE_USE_IPV6
-  ETH.enableIpV6();
+#if ESP_IDF_VERSION_MAJOR >= 5
+  ETH.setDefault();
 #endif
 
+#if FEATURE_USE_IPV6
+  if (Settings.EnableIPv6()) {
+    ETH.enableIPv6(true);
+  }
+#endif
 }
 
 String EthernetEventData_t::ESPEasyEthStatusToString() const {

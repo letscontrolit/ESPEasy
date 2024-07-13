@@ -179,26 +179,17 @@ const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, co
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 {  
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log += F("PortStatus detail: Port=");
-    log += getPortFromKey(it->first);
-    log += F(" State=");
-    log += it->second.getValue();
-    log += F(" Output=");
-    log += it->second.output;
-    log += F(" Mode=");
-    log += it->second.mode;
-    log += F(" Task=");
-    log += it->second.task;
-    log += F(" Monitor=");
-    log += it->second.monitor;
-    log += F(" Command=");
-    log += it->second.command;
-    log += F(" Init=");
-    log += it->second.init;
-    log += F(" PreviousTask=");
-    log += it->second.previousTask;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F("PortStatus detail: Port=%u State=%d Output=%d Mode=%u Task=%u Monitor=%u Command=%d Init=%d PreviousTask=%d"),
+      getPortFromKey(it->first),
+      it->second.getValue(),
+      it->second.output,
+      it->second.mode,
+      it->second.task,
+      it->second.monitor,
+      it->second.command,
+      it->second.init,
+      it->second.previousTask));
   }
 }
 

@@ -1,8 +1,11 @@
 #include "../Helpers/StringConverter_Numerical.h"
 
+#include "../DataStructs/TimingStats.h"
+
 #include "../Helpers/Numerical.h"
 
 #include "../Helpers/StringConverter.h"
+
 
 /********************************************************************************************\
    Convert a char string to integer
@@ -23,30 +26,34 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces)
 {
-  /*
+  String sValue;
   #ifndef LIMIT_BUILD_SIZE
 
-  if (decimalPlaces == 0) {
+  if (decimalPlaces == 0 && isValidFloat(value)) {
     if ((value > -2e9f) && (value < 2e9f)) {
       const int32_t l_value = static_cast<int32_t>(roundf(value));
-      return String(l_value);
-    }
-    if ((value > -1e18f) && (value < 1e18f)) {
+      sValue = l_value;
+    } else if ((value > -1e18f) && (value < 1e18f)) {
       // Work-around to perform a faster conversion
       const int64_t ll_value = static_cast<int64_t>(roundf(value));
-      return ll2String(ll_value);
+      sValue = ll2String(ll_value);
+    }
+    if (sValue.length() > 0) {
+      return sValue;
     }
   }
   #endif // ifndef LIMIT_BUILD_SIZE
-  */
 // #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   // This has been fixed in ESP32 code, not (yet) in ESP8266 code
   // https://github.com/espressif/arduino-esp32/pull/6138/files
   //  #ifdef ESP8266
 
   char buf[decimalPlaces + 42];
-  String sValue;
+  #ifdef USE_SECOND_HEAP
   move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
+  #else
+  sValue = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+  #endif
 
 /*
 #else
@@ -86,10 +93,7 @@ String ull2String(uint64_t value, uint8_t base) {
 
 String ll2String(int64_t value, uint8_t  base) {
   if (value < 0) {
-    String res;
-    res  = '-';
-    res += ull2String(value * -1ll, base);
-    return res;
+    return concat('-', ull2String(value * -1ll, base));
   } else {
     return ull2String(value, base);
   }
@@ -169,7 +173,7 @@ String floatToString(const float& value,
                       unsigned int  decimalPlaces,
                       bool          trimTrailingZeros_b)
 {
-  const String res = toString(value, decimalPlaces);
+  String res = toString(value, decimalPlaces);
 
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);

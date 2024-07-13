@@ -169,7 +169,6 @@ void handle_devices() {
       // N.B. When calling delete, the settings were already saved.
       if (nosave) {
         Cache.updateExtraTaskSettingsCache();
-        UserVar.clear_computed(taskIndex);
       } else {
         addHtmlError(SaveTaskSettings(taskIndex));
         addHtmlError(SaveSettings());
@@ -318,7 +317,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       Sensor_VType VType = TempEvent.sensorType;
 
       if ((pconfigIndex >= 0) && (pconfigIndex < PLUGIN_CONFIGVAR_MAX)) {
-        VType = static_cast<Sensor_VType>(getFormItemInt(PCONFIG_LABEL(pconfigIndex), 0));
+        VType = static_cast<Sensor_VType>(getFormItemInt(sensorTypeHelper_webformID(pconfigIndex), 0));
         Settings.TaskDevicePluginConfig[taskIndex][pconfigIndex] = static_cast<int>(VType);
       }
       ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
@@ -436,8 +435,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   // Store all PCONFIG values on the web page
   // Must be done after PLUGIN_WEBFORM_SAVE, to allow tasks to clear the default task value names
   // Output type selectors are typically stored in PCONFIG 
-  for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
-    pconfig_webformSave(&TempEvent, pconfigIndex);
+  if (device.OutputDataType != Output_Data_type_t::Default) {
+    for (int pconfigIndex = 0; pconfigIndex < PLUGIN_CONFIGVAR_MAX; ++pconfigIndex) {
+      pconfig_webformSave(&TempEvent, pconfigIndex);
+    }
   }
   // ExtraTaskSettings may have changed during PLUGIN_WEBFORM_SAVE, so again update the cache.
   Cache.updateExtraTaskSettingsCache();
@@ -458,6 +459,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
+  // FIXME TD-er: Is this still needed as it is also cleared on PLUGIN_INIT and PLUGIN_EXIT?
   UserVar.clear_computed(taskIndex);
 }
 
@@ -751,7 +753,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
             {
-              pluginWebformShowValue(x, varNr, getTaskValueName(x, varNr), formatUserVarNoCheck(x, varNr));
+              pluginWebformShowValue(
+                x, 
+                varNr, 
+                Cache.getTaskDeviceValueName(x, varNr), 
+                formatUserVarNoCheck(&TempEvent, varNr));
             }
           }
         }
@@ -926,6 +932,27 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     }
     #endif // if FEATURE_PLUGIN_PRIORITY
 
+    const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
+    #if FEATURE_ESPEASY_P2P
+    if (device.SendDataOption)
+    {
+      // Show remote feed information.
+      addFormSubHeader(F("Data Source"));
+      addFormNumericBox(F("Remote Unit"), F("remoteFeed"), remoteUnit, 0, 255);
+
+      if (remoteUnit != 255) {
+        const NodeStruct* node = Nodes.getNode(remoteUnit);
+
+        if (node != nullptr) {
+          addUnit(node->getNodeName());
+        } else {
+          addUnit(F("Unknown Unit Name"));
+        }
+      }
+      addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
+    }
+    #endif
+
     bool addPinConfig = false;
 
     // section: Sensor / Actuator
@@ -969,13 +996,15 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         devicePage_show_pin_config(taskIndex, DeviceIndex);
       }
     }
-    if (DEVICE_TYPE_DUMMY != device.Type) {
-      addFormSubHeader(F("Device Settings"));
-    }
 
     String webformLoadString;
     struct EventStruct TempEvent(taskIndex);
+
+
     // add plugins content
+    if (DEVICE_TYPE_DUMMY != device.Type && remoteUnit == 0) {
+      addFormSubHeader(F("Device Settings"));
+    }
     if (Settings.TaskDeviceDataFeed[taskIndex] == 0) { // only show additional config for local connected sensors
       PluginCall(PLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
       #ifndef BUILD_NO_DEBUG
@@ -986,30 +1015,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         addHtmlError(errorMessage);
       }
       #endif
-
-      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
     }
-    else {
-      #if FEATURE_ESPEASY_P2P
-      // Show remote feed information.
-      addFormSubHeader(F("Data Source"));
-      const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
-      addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
-
-      if (remoteUnit != 255) {
-        const NodeStruct* node = Nodes.getNode(remoteUnit);
-
-        if (node != nullptr) {
-          addUnit(node->getNodeName());
-        } else {
-          addUnit(F("Unknown Unit Name"));
-        }
-      }
-      addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
-      #endif
-
-      PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
-    }
+    PluginCall(PLUGIN_WEBFORM_LOAD_ALWAYS, &TempEvent, webformLoadString); // Load settings also useful for remote-datafeed devices
 
     devicePage_show_output_data_type(taskIndex, DeviceIndex);
 
@@ -1068,6 +1075,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (device.PullUpOption)
   {
     addFormCheckBox(F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]); // ="taskdevicepin1pullup"
+    addFormNote(F("Best to (also) configure pull-up on Hardware tab under \"GPIO boot states\""));
       # if defined(ESP8266)
 
     if ((Settings.TaskDevicePin1[taskIndex] == 16) || (Settings.TaskDevicePin2[taskIndex] == 16) ||
@@ -1148,8 +1156,11 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
-  serialHelper_webformLoad(&TempEvent);
   String webformLoadString;
+
+  PluginCall(PLUGIN_WEBFORM_PRE_SERIAL_PARAMS, &TempEvent, webformLoadString);
+
+  serialHelper_webformLoad(&TempEvent);
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
@@ -1285,6 +1296,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
+        
       }
       #endif // if FEATURE_CHART_JS
 

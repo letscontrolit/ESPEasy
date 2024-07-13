@@ -5,6 +5,9 @@
 # include "../Commands/ExecuteCommand.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include <IRutils.h>
+# ifdef P016_CHECK_HEAP
+#  include "src/Helpers/Memory.h"
+# endif // ifdef P016_CHECK_HEAP
 
 # ifdef P16_SETTINGS_V1
 
@@ -183,35 +186,31 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
   #  ifdef PLUGIN_016_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-
-    if (log.reserve(80)) { // estimated
-      log  = F("[P016] AddCode: ");
-      log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-      log += F(" code: 0x");
-      log += uint64ToString(Code, 16);
-      log += F(" to index ");
-      log += _index;
-      addLogMove(LOG_LEVEL_INFO, log);
-    }
+    addLogMove(LOG_LEVEL_INFO, strformat(
+                 F("[P016] AddCode: %s code: 0x%s to index %d"),
+                 typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+                 uint64ToString(Code, 16).c_str(),
+                 _index));
   }
   #  endif // PLUGIN_016_DEBUG
 }
 
-void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
+bool P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
   if (Code == 0) {
-    return;
+    return false;
   }
 
   if ((iLastCmd == Code) && (iLastDecodeType == DecodeType)) {
     // same code as before
     if (iCmdInhibitTime > timePassedSince(iLastCmdTime)) {
       // inhibit time not ellapsed
-      return;
+      return false;
     }
   }
 
-  for (int i = 0; i < P16_Nlines; ++i) {
+  const unsigned int nr_CommandLines = CommandLines.size();
+
+  for (unsigned int i = 0; i < nr_CommandLines; ++i) {
     if (validateCode(i, Code, DecodeType, CodeFlags)) {
       // code already saved
       iLastCmd        = Code;
@@ -220,61 +219,43 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       iLastCmdTime    = millis();
 
       if (CommandLines[i].Command[0] != 0) {
-        #  ifdef PLUGIN_016_DEBUG
-        bool _success =
-        #  endif // ifdef PLUGIN_016_DEBUG
-        ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command);
+        #  ifdef P016_CHECK_HEAP
+        CheckHeap(F("Before ExecuteCommand_all:"));
+        #  endif // ifdef P016_CHECK_HEAP
+        ExecuteCommand_all(
+          { EventValueSource::Enum::VALUE_SOURCE_SYSTEM, CommandLines[i].Command }, true);
+        #  ifdef P016_CHECK_HEAP
+        CheckHeap(F("After ExecuteCommand_all:"));
+        #  endif // ifdef P016_CHECK_HEAP
         #  ifdef PLUGIN_016_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-
-          if (log.reserve(128)) { // estimated
-            log  = F("[P016] Execute: ");
-            log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-            log += F(" Code: 0x");
-            log += uint64ToString(Code, 16);
-            log += F(" with command ");
-            log += (i + 1);
-            log += F(": {");
-            log += String(CommandLines[i].Command);
-            log += '}';
-
-            if (!_success) {
-              log += F(" FAILED!");
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(
+                       F("[P016] Execute added: %s Code: 0x%s with command %d: {%s}"),
+                       typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+                       uint64ToString(Code, 16).c_str(),
+                       (i + 1),
+                       CommandLines[i].Command));
         }
         #  endif // PLUGIN_016_DEBUG
-      }
-      return;
-    }
-    #  ifdef PLUGIN_016_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      if (log.reserve(128)) { // estimated
-        log  = F("[P016] ValidateCode failed: ");
-        log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(Code, 16);
-        log += F(" / [");
-        log += (i + 1);
-        log += F("] = {");
-        log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(CommandLines[i].Code, 16);
-        log += '}';
-        addLogMove(LOG_LEVEL_INFO, log);
+        return true;
       }
     }
-    #  endif // PLUGIN_016_DEBUG
   }
+  #  ifdef PLUGIN_016_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    addLogMove(LOG_LEVEL_ERROR, strformat(
+                 F("[P016] ValidateCode failed: %s Code: 0x%s"),
+                 typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT)).c_str(),
+                 uint64ToString(Code, 16).c_str()));
+  }
+  #  endif // PLUGIN_016_DEBUG
+  return false;
 }
 
 bool P016_data_struct::validateCode(int i, uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
+  if ((i >= static_cast<int>(CommandLines.size())) || (i < 0)) { return false; }
   return ((CommandLines[i].Code == Code)
           && (CommandLines[i].CodeDecodeType == DecodeType)
           && (CommandLines[i].CodeFlags == CodeFlags))
@@ -284,5 +265,15 @@ bool P016_data_struct::validateCode(int i, uint64_t Code, decode_type_t DecodeTy
 }
 
 # endif // if P016_FEATURE_COMMAND_HANDLING
+# ifdef P016_CHECK_HEAP
+void P016_data_struct::CheckHeap(String dbgtxt) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, strformat(
+                 F("P016: %s FreeMem: %d FreeStack:%d"),
+                 dbgtxt.c_str(), FreeMem(), getCurrentFreeStack()));
+  }
+}
+
+# endif // ifdef P016_CHECK_HEAP
 
 #endif // ifdef USES_P016

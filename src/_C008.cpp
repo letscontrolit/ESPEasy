@@ -76,9 +76,10 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
         pubname = ControllerSettings->Publish;
       }
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));
+      std::unique_ptr<C008_queue_element> element(new (std::nothrow) C008_queue_element(event, valueCount));
       success = C008_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
@@ -101,7 +102,9 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             String txt;
             txt += '/';
             txt += pubname;
-            parseSingleControllerVariable(txt, event, x, true);
+            if (contains_valname) {
+              parseSingleControllerVariable(txt, event, x, true);
+            }
 
 # ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -145,7 +148,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c008_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c008_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C008_queue_element& element = static_cast<const C008_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {
@@ -158,7 +161,7 @@ bool do_process_c008_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     element.txt[element.valuesSent],

@@ -865,31 +865,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
               eventQueue.addMove(std::move(newEvent));
             }
           } else { // not an event
-            String log;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log = F("C014 :");
-            }
-
             // FIXME TD-er: Command is not parsed, should we call ExecuteCommand here?
-            if (ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str())) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Internal Command: OK!");
-              }
-            } else if (PluginCall(PLUGIN_WRITE, &TempEvent, cmd)) {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" PluginCall: OK!");
-              }
-            } else {
-              remoteConfig(&TempEvent, cmd);
-
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                log += F(" Plugin/Internal command failed! remoteConfig?");
-              }
-            }
-
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
+            ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
           }
         }
       }
@@ -904,6 +881,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       String pubname         = CPlugin_014_pubname;
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
       bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 
       statusLED(true);
@@ -917,7 +895,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String tmppubname = pubname;
         String value;
-        parseSingleControllerVariable(tmppubname, event, x, false);
+        if (contains_valname) {
+          parseSingleControllerVariable(tmppubname, event, x, false);
+        }
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {

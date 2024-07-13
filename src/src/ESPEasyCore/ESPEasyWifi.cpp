@@ -231,17 +231,30 @@ bool WiFiConnected() {
 
 #if FEATURE_USE_IPV6
   if (!WiFiEventData.processedGotIP6) {
-#if FEATURE_ESPEASY_P2P
-    updateUDPport();
-#endif
-    WiFiEventData.processedGotIP6 = true;
+    processGotIPv6();
   }
 #endif
 
-
-  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
-    // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+  if (!WifiIsSTA(WiFi.getMode())) {
+    lastState = false;
     return lastState;
+  }
+
+
+  const int32_t timePassed = timePassedSince(lastCheckedTime);
+  if (lastCheckedTime != 0) {
+    if (timePassed < 100) {
+      if (WiFiEventData.lastDisconnectMoment.isSet() &&
+          WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassed)
+      {
+        // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+        return lastState;
+      }
+    }
+    if (timePassed < 10) {
+      // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
+      return lastState;
+    }
   }
 
 
@@ -315,6 +328,7 @@ bool WiFiConnected() {
           if (!WiFiEventData.wifiConnectAttemptNeeded) {
             addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
             WifiScan(false);
+            setSTA(false); // Force reset WiFi + reduce power consumption
             setAP(true);
           }
         }
@@ -360,6 +374,9 @@ bool WiFiConnected() {
 }
 
 void WiFiConnectRelaxed() {
+  if (!WiFiEventData.processedDisconnect) {
+    processDisconnect();
+  }
   if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
     if (WiFiEventData.wifiConnectInProgress) {
       if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) { 
@@ -455,6 +472,7 @@ void AttemptWiFiConnect() {
   if (WiFiEventData.unprocessedWifiEvents()) {
     return;
   }
+  setSTA(false);
 
   setSTA(true);
 
@@ -487,19 +505,39 @@ void AttemptWiFiConnect() {
       const String key = WiFi_AP_CandidatesList::get_key(candidate.index);
 
 #if FEATURE_USE_IPV6
-      WiFi.IPv6(true);
+      if (Settings.EnableIPv6()) {
+        WiFi.enableIPv6(true);
+      }
 #endif
 
-      if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.isHidden)
+#ifdef ESP32
+      if (Settings.IncludeHiddenSSID()) {
+        wifi_country_t config = {
+          .cc = "01",
+          .schan = 1,
+          .nchan = 14,
+          .policy = WIFI_COUNTRY_POLICY_MANUAL,
+        };
+        esp_wifi_set_country(&config);
+      }
+#endif
+
+
+      if ((Settings.HiddenSSID_SlowConnectPerBSSID() || !candidate.bits.isHidden)
            && candidate.allowQuickConnect()) {
         WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
-      if (Settings.WaitWiFiConnect() || candidate.isHidden) {
+#ifdef ESP32
+  // Always wait for a second on ESP32
+      WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
+#else
+      if (Settings.WaitWiFiConnect() || candidate.bits.isHidden) {
 //        WiFi.waitForConnectResult(candidate.isHidden ? 3000 : 1000);  // https://github.com/arendst/Tasmota/issues/14985
         WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
+#endif
       delay(1);
     } else {
       WiFiEventData.wifiConnectInProgress = false;
@@ -888,17 +926,21 @@ void WifiDisconnect()
        WiFiEventData.processingDisconnect.isSet()) {
     return;
   }
+  if (WiFi.status() == WL_DISCONNECTED) {
+    return;
+  }
   // Prevent recursion
-  static bool processingDisconnect = false;
-  if (processingDisconnect) return;
-  processingDisconnect = true;
+  static LongTermTimer processingDisconnectTimer;
+  if (processingDisconnectTimer.isSet() && 
+     !processingDisconnectTimer.timeoutReached(200)) return;
+  processingDisconnectTimer.setNow();
   # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
   #endif
   #ifdef ESP32
-  WiFi.disconnect();
-  delay(1);
   removeWiFiEventHandler();
+  WiFi.disconnect();
+  delay(100);
   {
     const IPAddress ip;
     const IPAddress gw;
@@ -929,7 +971,7 @@ void WifiDisconnect()
   WiFiEventData.processingDisconnect.clear();
   WiFiEventData.processedDisconnect = false;
   processDisconnect();
-  processingDisconnect = false;
+  processingDisconnectTimer.clear();
 }
 
 // ********************************************************************************
@@ -1021,6 +1063,18 @@ void WifiScan(bool async, uint8_t channel) {
   // Perform a disconnect after scanning.
   // See: https://github.com/letscontrolit/ESPEasy/pull/3579#issuecomment-967021347
   async = false;
+
+  if (Settings.IncludeHiddenSSID()) {
+    wifi_country_t config = {
+      .cc = "01",
+      .schan = 1,
+      .nchan = 14,
+      .policy = WIFI_COUNTRY_POLICY_MANUAL,
+    };
+    esp_wifi_set_country(&config);
+  }
+
+
 #endif
 
   START_TIMER;
@@ -1080,8 +1134,8 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 #endif
 #ifdef ESP32
-    const bool passive = false;
-    const uint32_t max_ms_per_chan = 300;
+    const bool passive = Settings.PassiveWiFiScan();
+    const uint32_t max_ms_per_chan = 120;
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
 #endif
     if (!async) {
@@ -1217,7 +1271,13 @@ void setAPinternal(bool enable)
     IPAddress subnet(DEFAULT_AP_SUBNET);
 
     if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
-      addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
+      addLog(LOG_LEVEL_ERROR, strformat(
+        ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s"),
+        apIP.toString().c_str(), 
+        apIP.toString().c_str(), 
+        subnet.toString().c_str()
+      )
+      );
     }
 
     int channel = 1;
@@ -1382,7 +1442,7 @@ void setWifiMode(WiFiMode_t new_mode) {
     SetWiFiTXpower();
 #endif
     if (WifiIsSTA(new_mode)) {
-      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
+//      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
       WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
     }
     delay(100); // Must allow for some time to init.
@@ -1446,11 +1506,11 @@ void setConnectionSpeed() {
   WiFiPhyMode_t phyMode = (Settings.ForceWiFi_bg_mode() || forcedByAPmode) ? WIFI_PHY_MODE_11G : WIFI_PHY_MODE_11N;
   if (!forcedByAPmode) {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
-    if (candidate.phy_known() && (candidate.phy_11g != candidate.phy_11n)) {
-      if ((WIFI_PHY_MODE_11G == phyMode) && !candidate.phy_11g) {
+    if (candidate.phy_known() && (candidate.bits.phy_11g != candidate.bits.phy_11n)) {
+      if ((WIFI_PHY_MODE_11G == phyMode) && !candidate.bits.phy_11g) {
         phyMode = WIFI_PHY_MODE_11N;
         addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
-      } else if ((WIFI_PHY_MODE_11N == phyMode) && !candidate.phy_11n) {
+      } else if ((WIFI_PHY_MODE_11N == phyMode) && !candidate.bits.phy_11n) {
         phyMode = WIFI_PHY_MODE_11G;
         addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11g only"));
       }      
@@ -1508,14 +1568,14 @@ void setConnectionSpeed() {
   if (candidate.phy_known()) {
     // Check to see if the access point is set to "N-only"
     if ((protocol & WIFI_PROTOCOL_11N) == 0) {
-      if (!candidate.phy_11b && !candidate.phy_11g && candidate.phy_11n) {
-        if (candidate.phy_11n) {
+      if (!candidate.bits.phy_11b && !candidate.bits.phy_11g && candidate.bits.phy_11n) {
+        if (candidate.bits.phy_11n) {
           // Set to use BGN
           protocol |= WIFI_PROTOCOL_11N;
           addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
         }
 #ifdef ESP32C6
-        if (candidate.phy_11ax) {
+        if (candidate.bits.phy_11ax) {
           // Set to use WiFi6
           protocol |= WIFI_PROTOCOL_11AX;
           addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11ax"));

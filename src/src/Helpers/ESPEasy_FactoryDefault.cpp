@@ -27,21 +27,21 @@
 #ifdef ESP32
 
 // Store in NVS partition
-#include "../Helpers/ESPEasy_NVS_Helper.h"
+# include "../Helpers/ESPEasy_NVS_Helper.h"
 
 
 // Max. 15 char namespace for ESPEasy Factory Default settings
 # define FACTORY_DEFAULT_NVS_NAMESPACE      "ESPEasyFacDef"
 
 # include "../Helpers/StringConverter.h"
-#include "../DataStructs/FactoryDefaultPref.h"
-#include "../DataStructs/FactoryDefault_UnitName_NVS.h"
-#include "../DataStructs/FactoryDefault_WiFi_NVS.h"
-#include "../DataStructs/FactoryDefault_Network_NVS.h"
-#include "../DataStructs/FactoryDefault_LogConsoleSettings_NVS.h"
+# include "../DataStructs/FactoryDefaultPref.h"
+# include "../DataStructs/FactoryDefault_UnitName_NVS.h"
+# include "../DataStructs/FactoryDefault_WiFi_NVS.h"
+# include "../DataStructs/FactoryDefault_Network_NVS.h"
+# include "../DataStructs/FactoryDefault_LogConsoleSettings_NVS.h"
 # if FEATURE_ALTERNATIVE_CDN_URL
-#include "../DataStructs/FactoryDefault_CDN_customurl_NVS.h"
-#endif
+#  include "../DataStructs/FactoryDefault_CDN_customurl_NVS.h"
+# endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 
 #endif // ifdef ESP32
@@ -52,37 +52,72 @@
  \*********************************************************************************************/
 void ResetFactory(bool formatFS)
 {
-  #ifdef ESP32
-  ResetFactoryDefaultPreference.init();
-  #endif
   bool mustApplySafebootDefaults = false;
+
+  #ifdef ESP32
+  ESPEasy_NVS_Helper preferences;
+
+  if (!ResetFactoryDefaultPreference.init(preferences)) {
+    mustApplySafebootDefaults = true;
+  }
+  #endif // ifdef ESP32
 
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {
 #if FEATURE_CUSTOM_PROVISIONING
     ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
-    ResetFactoryDefaultPreference.fetchRulesTXT(0, DEFAULT_PROVISIONING_FETCH_RULES1);
-    ResetFactoryDefaultPreference.fetchRulesTXT(1, DEFAULT_PROVISIONING_FETCH_RULES2);
-    ResetFactoryDefaultPreference.fetchRulesTXT(2, DEFAULT_PROVISIONING_FETCH_RULES3);
-    ResetFactoryDefaultPreference.fetchRulesTXT(3, DEFAULT_PROVISIONING_FETCH_RULES4);
-    ResetFactoryDefaultPreference.fetchNotificationDat(DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS);
-    ResetFactoryDefaultPreference.fetchSecurityDat(DEFAULT_PROVISIONING_FETCH_SECURITY);
-    ResetFactoryDefaultPreference.fetchConfigDat(DEFAULT_PROVISIONING_FETCH_CONFIG);
-    ResetFactoryDefaultPreference.fetchProvisioningDat(DEFAULT_PROVISIONING_FETCH_PROVISIONING);
-    ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
-    ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
-#endif // if FEATURE_CUSTOM_PROVISIONING
+    #if DEFAULT_PROVISIONING_FETCH_RULES1
+    ResetFactoryDefaultPreference.fetchRulesTXT(0, true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_RULES2
+    ResetFactoryDefaultPreference.fetchRulesTXT(1, true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_RULES3
+    ResetFactoryDefaultPreference.fetchRulesTXT(2, true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_RULES4
+    ResetFactoryDefaultPreference.fetchRulesTXT(3, true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS
+    ResetFactoryDefaultPreference.fetchNotificationDat(true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_SECURITY
+    ResetFactoryDefaultPreference.fetchSecurityDat(true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_CONFIG
+    ResetFactoryDefaultPreference.fetchConfigDat(true);
+    #endif
+    #if DEFAULT_PROVISIONING_FETCH_PROVISIONING
+    ResetFactoryDefaultPreference.fetchProvisioningDat(true);
+    #endif
+    #if DEFAULT_PROVISIONING_SAVE_URL
+    ResetFactoryDefaultPreference.saveURL(true);
+    #endif
+    #if DEFAULT_PROVISIONING_SAVE_CREDENTIALS
+    ResetFactoryDefaultPreference.storeCredentials(true);
+    #endif
+  #endif
+    #if DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME
+    ResetFactoryDefaultPreference.keepUnitName(true);
+    #endif
+    #if DEFAULT_FACTORY_RESET_KEEP_WIFI
+    ResetFactoryDefaultPreference.keepWiFi(true);
+    #endif
+    #if DEFAULT_FACTORY_RESET_KEEP_NETWORK
+    ResetFactoryDefaultPreference.keepNetwork(true);
+    #endif
+    #if DEFAULT_FACTORY_RESET_KEEP_NTP_DST
+    ResetFactoryDefaultPreference.keepNTP(true);
+    #endif
+    #if DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG
+    ResetFactoryDefaultPreference.keepLogConsoleSettings(true);
+    #endif
 #ifdef PLUGIN_BUILD_SAFEBOOT
     mustApplySafebootDefaults = true;
-    ResetFactoryDefaultPreference.keepWiFi(true);
-    ResetFactoryDefaultPreference.keepNetwork(true);
-    ResetFactoryDefaultPreference.keepUnitName(true);
-    ResetFactoryDefaultPreference.keepLogConsoleSettings(true);
     ResetFactoryDefaultPreference.keepCustomCdnUrl(true);
 
     Settings.UseLastWiFiFromRTC(true);
 #endif // ifdef PLUGIN_BUILD_SAFEBOOT
-
   }
 
 
@@ -204,13 +239,13 @@ void ResetFactory(bool formatFS)
     Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
 
     // FIXME TD-er: Must also keep console settings.
-    Settings.console_serial_port = DEFAULT_CONSOLE_PORT; 
-    Settings.console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
-    Settings.console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
+    Settings.console_serial_port      = DEFAULT_CONSOLE_PORT;
+    Settings.console_serial_rxpin     = DEFAULT_CONSOLE_PORT_RXPIN;
+    Settings.console_serial_txpin     = DEFAULT_CONSOLE_PORT_TXPIN;
     Settings.console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
-    Settings.UseSerial = DEFAULT_USE_SERIAL;
-    Settings.BaudRate = DEFAULT_SERIAL_BAUD;
-}
+    Settings.UseSerial                = DEFAULT_USE_SERIAL;
+    Settings.BaudRate                 = DEFAULT_SERIAL_BAUD;
+  }
 
   if (!ResetFactoryDefaultPreference.keepUnitName() || mustApplySafebootDefaults) {
     Settings.clearUnitNameSettings();
@@ -271,9 +306,9 @@ void ResetFactory(bool formatFS)
 
   // Ethernet related settings are never used on ESP8266
   Settings.ETH_Phy_Addr   = gpio_settings.eth_phyaddr;
-  Settings.ETH_Pin_mdc    = gpio_settings.eth_mdc;
-  Settings.ETH_Pin_mdio   = gpio_settings.eth_mdio;
-  Settings.ETH_Pin_power  = gpio_settings.eth_power;
+  Settings.ETH_Pin_mdc_cs    = gpio_settings.eth_mdc;
+  Settings.ETH_Pin_mdio_irq   = gpio_settings.eth_mdio;
+  Settings.ETH_Pin_power_rst  = gpio_settings.eth_power;
   Settings.ETH_Phy_Type   = gpio_settings.eth_phytype;
   Settings.ETH_Clock_Mode = gpio_settings.eth_clock_mode;
 #endif // ifdef ESP32
@@ -330,31 +365,30 @@ void ResetFactory(bool formatFS)
   }
 #endif // if DEFAULT_CONTROLLER
 
-#ifdef ESP32 
+#ifdef ESP32
+  if (!mustApplySafebootDefaults)
   {
-    ESPEasy_NVS_Helper preferences;
-    preferences.begin(F(FACTORY_DEFAULT_NVS_NAMESPACE), true);
-
-    if (ResetFactoryDefaultPreference.from_NVS(preferences)) {
-      Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
-    }
+    Settings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 
     if (ResetFactoryDefaultPreference.keepUnitName())
     {
       FactoryDefault_UnitName_NVS unitNameNVS{};
       unitNameNVS.applyToSettings_from_NVS(preferences);
     }
-    if (ResetFactoryDefaultPreference.keepWiFi()) 
+
+    if (ResetFactoryDefaultPreference.keepWiFi())
     {
       FactoryDefault_WiFi_NVS wifiNVS{};
       wifiNVS.applyToSettings_from_NVS(preferences);
     }
+
     if (ResetFactoryDefaultPreference.keepNetwork())
     {
       // Restore Network IP settings
       FactoryDefault_Network_NVS network_nvs;
       network_nvs.applyToSettings_from_NVS(preferences);
     }
+
     if (ResetFactoryDefaultPreference.keepLogConsoleSettings())
     {
       // Restore Log and Console settings
@@ -362,13 +396,15 @@ void ResetFactory(bool formatFS)
       log_console_nvs.applyToSettings_from_NVS(preferences);
     }
 
-#if FEATURE_ALTERNATIVE_CDN_URL
+# if FEATURE_ALTERNATIVE_CDN_URL
+
     if (ResetFactoryDefaultPreference.keepCustomCdnUrl()) {
       FactoryDefault_CDN_customurl_NVS::applyToSettings_from_NVS(preferences);
     }
-#endif
+# endif // if FEATURE_ALTERNATIVE_CDN_URL
+    preferences.end();
   }
-#endif
+#endif // ifdef ESP32
 
   const bool forFactoryReset = true;
   SaveSettings(forFactoryReset);
@@ -399,6 +435,7 @@ void applyFactoryDefaultPref() {
   ResetFactoryDefaultPreference.to_NVS(preferences);
   {
     FactoryDefault_UnitName_NVS unitNameNVS{};
+
     if (ResetFactoryDefaultPreference.keepUnitName())
     {
       // Store Unit nr and hostname
@@ -409,6 +446,7 @@ void applyFactoryDefaultPref() {
   }
   {
     FactoryDefault_WiFi_NVS wifiNVS{};
+
     if (ResetFactoryDefaultPreference.keepWiFi())
     {
       // Store WiFi credentials
@@ -419,6 +457,7 @@ void applyFactoryDefaultPref() {
   }
   {
     FactoryDefault_Network_NVS network_nvs{};
+
     if (ResetFactoryDefaultPreference.keepNetwork())
     {
       // Store Network IP settings
@@ -429,6 +468,7 @@ void applyFactoryDefaultPref() {
   }
   {
     FactoryDefault_LogConsoleSettings_NVS log_console_nvs{};
+
     if (ResetFactoryDefaultPreference.keepLogConsoleSettings())
     {
       // Store Log and Console settings

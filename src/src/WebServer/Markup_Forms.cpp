@@ -40,6 +40,12 @@ void addFormNote(const String& text, const String& id)
   addHtmlDiv(F("note"), concat(F("Note: "), text));
 }
 
+void addFormNote(const LabelType::Enum& label)
+{
+  addUnit(getFormUnit(label));
+  addFormNote(getFormNote(label));
+}
+
 // ********************************************************************************
 // Create Forms
 // ********************************************************************************
@@ -97,6 +103,7 @@ void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
                   , tooltip
                   #endif // if FEATURE_TOOLTIPS
                   );
+  addFormNote(label);
 }
 
 void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
@@ -119,6 +126,7 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                     #endif // if FEATURE_TOOLTIPS
                     , disabled
                     );
+  addFormNote(label);
 }
 
 void addFormNumericBox(const __FlashStringHelper * label, 
@@ -169,6 +177,7 @@ void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float 
                         , tooltip
                         #endif // if FEATURE_TOOLTIPS
                         );
+  addFormNote(label);
 }
 
 void addFormFloatNumberBox(const String& label,
@@ -249,6 +258,8 @@ void addFormTextBox(const String  & label,
                     #if FEATURE_TOOLTIPS
                     , const String& tooltip
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String&   datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -256,6 +267,7 @@ void addFormTextBox(const String  & label,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
@@ -271,6 +283,8 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     ,
                     const String& tooltip 
                     #endif // if FEATURE_TOOLTIPS
+                    ,
+                    const String& datalist
                     )
 {
   addRowLabel_tr_id(label, id);
@@ -278,6 +292,7 @@ void addFormTextBox(const __FlashStringHelper * classname,
              #if FEATURE_TOOLTIPS
              , tooltip
              #endif // if FEATURE_TOOLTIPS
+             , datalist
              );
 }
 
@@ -389,6 +404,32 @@ void addFormIPaccessControlSelect(const __FlashStringHelper * label, const __Fla
 }
 
 // ********************************************************************************
+// a Separator character selector
+// ********************************************************************************
+void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
+                               const __FlashStringHelper *id,
+                               int                        value,
+                               const String             & charset,
+                               const __FlashStringHelper *additionalText) {
+  const int len = charset.length() + 1;
+  String    charList[len];
+  int charOpts[len];
+
+  charList[0] = F("None");
+  charOpts[0] = 0;
+
+  for (uint16_t i = 0; i < charset.length(); i++) {
+    charList[i + 1] = charset[i];
+    charOpts[i + 1] = static_cast<int>(charset[i]);
+  }
+  addFormSelector(rowLabel, id, len, charList, charOpts, value);
+
+  if (!String(additionalText).isEmpty()) {
+    addUnit(additionalText);
+  }
+}
+
+// ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice)
@@ -431,7 +472,11 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
   addPinSelect(PinSelectPurpose::I2C, id, choice);
 }
 
-void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addresses[], int selectedIndex
+void addFormSelectorI2C(const String& id,
+                        int           addressCount,
+                        const uint8_t addresses[],
+                        int           selectedIndex,
+                        uint8_t       defaultAddress
                         #if FEATURE_TOOLTIPS
                         , const String& tooltip
                         #endif // if FEATURE_TOOLTIPS
@@ -444,11 +489,11 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
                       #endif // if FEATURE_TOOLTIPS
                       );
 
-  for (uint8_t x = 0; x < addressCount; x++)
+  for (int x = 0; x < addressCount; x++)
   {
     String option = formatToHex_decimal(addresses[x]);
 
-    if (x == 0) {
+    if (((x == 0) && (defaultAddress == 0)) || (defaultAddress == addresses[x])) {
       option += F(" - (default)");
     }
     addSelector_Item(option, addresses[x], addresses[x] == selectedIndex);
@@ -617,9 +662,9 @@ void addFormSelector_YesNo(const __FlashStringHelper * label,
                            int           selectedIndex,
                            bool       reloadonchange)
 {
-  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
-  int optionValuesNoYes[2]                   = { 0, 1 };
-  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+  const __FlashStringHelper *optionsNoYes[] = { F("No"), F("Yes") };
+  int optionValuesNoYes[]                   = { 0, 1 };
+  addFormSelector(label, id, NR_ELEMENTS(optionValuesNoYes), optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
 }
 
 

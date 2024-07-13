@@ -241,15 +241,15 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
-      int8_t rxPin               = serialHelper_getRxPin(event);
-      int8_t txPin               = serialHelper_getTxPin(event);
-      ESPEasySerialPort portType = serialHelper_getSerialType(event);
+      const int8_t rxPin               = serialHelper_getRxPin(event);
+      const int8_t txPin               = serialHelper_getTxPin(event);
+      const ESPEasySerialPort portType = serialHelper_getSerialType(event);
 
       // Create the P159_data_struct object that will do all the sensor interaction
       success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
-                                                                               rxPin,
-                                                                               txPin,
-                                                                               P159_GET_ENGINEERING_MODE == 1));
+                                                                                         rxPin,
+                                                                                         txPin,
+                                                                                         P159_GET_ENGINEERING_MODE == 1));
       addLog(LOG_LEVEL_INFO, concat(F("P159 : INIT, success: "), success ? 1 : 0));
 
       break;

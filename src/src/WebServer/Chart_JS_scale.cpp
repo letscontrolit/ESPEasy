@@ -54,20 +54,24 @@ String ChartJS_options_scale::toString() const
       case Position::Left:   positionStr = F("left"); break;
     }
 
-    String ticksStr;
+    String extraOptions;
+    if (typeStr.equalsIgnoreCase(F("time")) || typeStr.equalsIgnoreCase(F("timeseries"))) {
+      // Make sure to use 24h time notation.
+      extraOptions += F(",\"time\":{\"displayFormats\":{\"millisecond\":\"HH:mm:ss.SSS\",\"second\":\"HH:mm:ss\",\"minute\":\"HH:mm:ss\",\"hour\":\"HH:mm\",\"day\":\"dd-MMM\",\"month\":\"MMM-yyyy\",\"year\":\"yyyy\"},\"tooltipFormat\":\"yyyy-MM-dd HH:mm:ss\"}");
+    }
 
     if (tickCount > 0) {
-      ticksStr = strformat(F(",ticks:{count:%d}"), tickCount);
+      extraOptions += strformat(F(",\"ticks\":{\"count\":%d}"), tickCount);
     }
     return strformat(
-      F("\"%s\":{display:%s,type:\"%s\",position:\"%s\",title:%s,weight:%d%s}"),
+      F("\"%s\":{\"display\":%s,\"type\":\"%s\",\"position\":\"%s\",\"title\":%s,\"weight\":%d%s}"),
       axisID.c_str(),
       displayStr.c_str(),
       typeStr.c_str(),
       positionStr.c_str(),
       axisTitle.toString().c_str(),
       weight,
-      ticksStr.c_str());
+      extraOptions.c_str());
   }
   return EMPTY_STRING;
 }
@@ -77,6 +81,8 @@ bool ChartJS_options_scale::is_Y_axis() const
   return position == Position::Left ||
          position == Position::Right;
 }
+
+ChartJS_options_scales::ChartJS_options_scales() {}
 
 void ChartJS_options_scales::add(const ChartJS_options_scale& scale)
 {
@@ -114,7 +120,7 @@ String ChartJS_options_scales::toString() const
 {
   if (_scales.empty()) { return EMPTY_STRING; }
 
-  String res   = F("scales:{");
+  String res   = F("\"scales\":{");
   bool   first = true;
 
   for (auto it = _scales.begin(); it != _scales.end(); ++it) {
@@ -125,11 +131,11 @@ String ChartJS_options_scales::toString() const
         res += ',';
       }
       first = false;
+      res  += '\n';
       res  += scale_str;
     }
   }
   res += '}';
-  res += ',';
   return res;
 }
 

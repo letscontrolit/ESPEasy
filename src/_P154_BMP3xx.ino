@@ -2,14 +2,14 @@
 #ifdef USES_P154
 
 // #######################################################################################################
-// #################################### Plugin-154: Environment - BMP3xx   ###############################
+// ################################## Plugin-154: Environment - BMP3xx I2C   #############################
 // #######################################################################################################
 
 # include "src/PluginStructs/P154_data_struct.h"
 
 # define PLUGIN_154
 # define PLUGIN_ID_154         154
-# define PLUGIN_NAME_154       "Environment - BMP3xx"
+# define PLUGIN_NAME_154       "Environment - BMP3xx (I2C)"
 # define PLUGIN_VALUENAME1_154 "Temperature"
 # define PLUGIN_VALUENAME2_154 "Pressure"
 
@@ -56,7 +56,7 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR, 0x77);
         addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);

@@ -158,6 +158,11 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   */
     #endif // ifndef BUILD_NO_DEBUG
   }
+  // We have sent a lot of data at once.
+  // try to flush it to the connected client to free up some RAM 
+  // from pending transfers
+  TXBuffer.flush();
+  delay(10);
 }
 
 bool captivePortal() {
@@ -204,6 +209,9 @@ void WebServerInit()
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),    handle_advanced);
+  #if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
+  web_server.on(F("/backup"),      handle_full_backup);
+  #endif // if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
   #endif // ifdef WEBSERVER_ADVANCED
   #ifdef WEBSERVER_CONFIG
   web_server.on(F("/config"),      handle_config);
@@ -455,7 +463,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-//  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
+//  addLog(LOG_LEVEL_INFO, concat(F("tmpl.length(): "), tmpl.length()));
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
@@ -651,13 +659,16 @@ void json_prop(LabelType::Enum label) {
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice)
+void addTaskSelect(const String& name,  taskIndex_t choice, const String& cssclass)
 {
   String deviceName;
 
   addHtml(F("<select "));
   addHtmlAttribute(F("id"),       F("selectwidth"));
   addHtmlAttribute(F("name"),     name);
+  if (!cssclass.isEmpty()) {
+    addHtmlAttribute(F("class"),  cssclass);
+  }
   addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
   addHtml('>');
 
@@ -724,7 +735,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(getTaskValueName(TaskIndex, x));
+    addHtml(Cache.getTaskDeviceValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }
@@ -817,7 +828,7 @@ void addSVG_param(const char key, const String& value)
 
 
 void addSVG_param(const __FlashStringHelper * key, int value) {
-  addHtml(strformat(F(" %s=\"%d\""), String(key).c_str(), value));
+  addHtml(strformat(F(" %s=\"%d\""), key, value));
 }
 
 void addSVG_param(const __FlashStringHelper * key, float value) {
@@ -825,7 +836,7 @@ void addSVG_param(const __FlashStringHelper * key, float value) {
 }
 
 void addSVG_param(const __FlashStringHelper * key, const String& value) {
-  addHtml(strformat(F(" %s=\"%s\""), String(key).c_str(), value.c_str()));
+  addHtml(strformat(F(" %s=\"%s\""), key, value.c_str()));
 }
 
 void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {

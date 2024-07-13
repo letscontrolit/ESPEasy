@@ -1,0 +1,18 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``sen5x,Startclean``
+    ","
+    | Starts the built-in cleaning cycle of the device.
+
+    | N.B.: Normally this shouldn't be needed, as the device automatically starts a weekly cleaning cycle, but if the device is not switched on continuously, this timer is reset on power-on, but the device still needs a cleaning cycle once a week.
+    "
+    "
+    | ``sen5x,Techlog,<0|1>``
+    ","
+    | Enable or disable the ``Technical logging`` option, available in the UI. This logging is mostly useful when debugging either the hardware or software setup.
+
+    | The setting is *not* stored automatically.
+    "

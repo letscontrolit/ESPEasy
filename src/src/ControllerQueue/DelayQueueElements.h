@@ -52,7 +52,7 @@
 //      in the element stored in the queue.
 #define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                                          \
   extern struct ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler;                                              \
-  bool do_process_c##NNN####M##_delay_queue(int controller_number, const Queue_element_base & element, ControllerSettingsStruct & ControllerSettings); \
+  bool do_process_c##NNN####M##_delay_queue(cpluginID_t cpluginID, const Queue_element_base & element, ControllerSettingsStruct & ControllerSettings); \
   void process_c##NNN####M##_delay_queue();                                                                            \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex);                                              \
   void exit_c##NNN####M##_delay_queue();                                                                               \

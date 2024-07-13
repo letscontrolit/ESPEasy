@@ -194,7 +194,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c011_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c011_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C011_queue_element& element = static_cast<const C011_queue_element&>(element_base);
 // *INDENT-ON*
 
@@ -203,7 +203,7 @@ bool do_process_c011_delay_queue(int controller_number, const Queue_element_base
   int httpCode = -1;
 
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     element.uri,
@@ -246,7 +246,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
   //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
-  std::unique_ptr<C011_queue_element> element(new C011_queue_element(event));
+  std::unique_ptr<C011_queue_element> element(new (std::nothrow) C011_queue_element(event));
   bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {

@@ -128,7 +128,7 @@ float P026_get_value(uint8_t type)
     case P026_VALUETYPE_ip2:
     case P026_VALUETYPE_ip3:
     case P026_VALUETYPE_ip4:
-      res = NetworkLocalIP()[type - 5];
+      res = NetworkLocalIP()[type - P026_VALUETYPE_ip1];
       break;
     case P026_VALUETYPE_web:
       res = timePassedSince(lastWeb) / 1000.0f;
@@ -224,7 +224,7 @@ bool P026_data_struct::Plugin_Read(struct EventStruct *event)
         if (i != 0) {
           log += ',';
         }
-        log += formatUserVarNoCheck(event->TaskIndex, i);
+        log += formatUserVarNoCheck(event, i);
       }
       addLogMove(LOG_LEVEL_INFO, log);
     }

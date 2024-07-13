@@ -113,6 +113,7 @@ Relevant Settings:
 * Plugin: Output - Domoticz MQTT Helper
 * 1st GPIO: 12 (the relay)
 * IDX: 475
+* Invert On/Off value: To ease the use of this plugin, without the need for rules, an Invert option has been added. This will cause the GPIO pin (and ``Output`` value) to be set to 1 when the Domoticz device is in Off state, and 0 for the On state.
 
 
 Rules
@@ -184,6 +185,8 @@ Change log
 .. versionchanged:: 2.0
   ...
 
+  |added| 2024-03: Add Invert On/Off value option.
+  
   |added|
   Major overhaul for 2.0 release.
 

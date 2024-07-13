@@ -59,7 +59,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      std::unique_ptr<C012_queue_element> element(new C012_queue_element(event, valueCount));
+      std::unique_ptr<C012_queue_element> element(new (std::nothrow) C012_queue_element(event, valueCount));
 
       for (uint8_t x = 0; x < valueCount; x++)
       {
@@ -105,7 +105,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c012_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c012_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C012_queue_element& element = static_cast<const C012_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {

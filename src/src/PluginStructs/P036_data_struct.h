@@ -85,12 +85,6 @@
 # define P36_Nlines 12              // The number of different lines which can be displayed - each line is 64 chars max
 # define P36_NcharsV0 32            // max chars per line up to 22.11.2019 (V0)
 # define P36_NcharsV1 64            // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3        // number of different OLED sizes
-# ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 3        // number of different fonts
-# else // ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 5        // number of different fonts
-# endif // ifdef P036_LIMIT_BUILD_SIZE
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
@@ -203,9 +197,9 @@ typedef struct {
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
   uint8_t  SLidx       = 0;    // index to DisplayLinesV1
-  uint8_t  reserved22;         // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t  reserved23;
-  uint8_t  reserved24;
+  uint8_t  reserved22{};         // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t  reserved23{};
+  uint8_t  reserved24{};
 } tScrollLine;
 
 typedef struct {
@@ -216,8 +210,8 @@ typedef struct {
   uint16_t TickerAvgPixPerChar = 0; // max of average pixel per character or pix change per scroll time (100ms)
   int16_t  MaxPixLen           = 0; // Max pix length to display (display width + 2*TickerAvgPixPerChar)
   # ifdef ESP8266                   // Helpful on ESP8266 only, it seems
-  uint8_t reserved15;               // Fillers added to achieve better instance/memory alignment (multiple of 8)
-  uint8_t reserved16;
+  uint8_t reserved15{};             // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved16{};
   # endif // ifdef ESP8266
 } tTicker;
 
@@ -415,6 +409,11 @@ struct P036_data_struct : public PluginTaskData_base {
   void RestoreLineContent(taskIndex_t taskIndex,
                           uint8_t     LoadVersion,
                           uint8_t     LineNo);
+
+private:
+  String create_display_header_text(eHeaderContent iHeaderContent) const;
+
+public:
 
   // The screen is set up as:
   // - 10 rows at the top for the header

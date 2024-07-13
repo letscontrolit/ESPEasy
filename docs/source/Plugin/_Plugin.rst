@@ -222,13 +222,13 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the regular set of plugins, this is the base set of plugins, and with all secondary features enabled, like I2C multiplexer, RTTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like RTTTL, tooltips, and DEBUG-level logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds, though some exceptions may be applied. Also, some features are disabled to save space in the .bin files, like RTTTL, Servo, tooltips, and DEBUG-level logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
 :yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
-:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32-s3 8MB Flash units.
+:yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32 8MB Flash units (available for ESP32 Classic, ESP32-S3 and ESP32-C6).
 
 :gray:`RETIRED` plugin has been retired and removed from ESPEasy.
 
@@ -333,7 +333,7 @@ There are different released versions of ESP Easy:
    ":ref:`P092_page`","|P092_status|","P092"
    ":ref:`P093_page`","|P093_status|","P093"
    ":ref:`P094_page`","|P094_status|","P094"
-   ":ref:`P095_page`","|P095_status|","P095"
+   ":ref:`P095_page`","|P095_status| (ESP32)","P095"
    ":ref:`P097_page`","|P097_status|","P097"
    ":ref:`P098_page`","|P098_status|","P098"
    ":ref:`P099_page`","|P099_status|","P099"
@@ -360,6 +360,7 @@ There are different released versions of ESP Easy:
    ":ref:`P120_page`","|P120_status|","P120"
    ":ref:`P121_page`","|P121_status|","P121"
    ":ref:`P122_page`","|P122_status|","P122"
+   ":ref:`P123_page`","|P123_status|","P123"
    ":ref:`P124_page`","|P124_status|","P124"
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
@@ -386,7 +387,20 @@ There are different released versions of ESP Easy:
    ":ref:`P153_page`","|P153_status|","P153"
    ":ref:`P154_page`","|P154_status|","P154"
    ":ref:`P159_page`","|P159_status|","P159"
+   ":ref:`P162_page`","|P162_status|","P162"
+   ":ref:`P164_page`","|P164_status|","P164"
+   ":ref:`P166_page`","|P166_status|","P166"
+   ":ref:`P167_page`","|P167_status|","P167"
+   ":ref:`P168_page`","|P168_status|","P168"
+   ":ref:`P169_page`","|P169_status|","P169"
+   ":ref:`P170_page`","|P170_status|","P170"
+   ":ref:`P172_page`","|P172_status|","P172"
 
+
+.. include:: _plugin_sets_overview.repl
+
+Plugins per Category
+====================
 
 Internal GPIO handling
 ----------------------

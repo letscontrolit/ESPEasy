@@ -28,8 +28,10 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING,
-  size_t                     nrSamples = 0);
+  const String             & options   = EMPTY_STRING,
+  bool                       enableZoom = false,
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON  = false);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
@@ -37,9 +39,17 @@ void add_ChartJS_chart_header(
   const ChartJS_title      & chartTitle,
   int                        width,
   int                        height,
-  const String             & options = EMPTY_STRING,
-  size_t                     nrSamples = 0);
+  const String             & options   = EMPTY_STRING,
+  bool                       enableZoom = false,
+  size_t                     nrSamples = 0,
+  bool                       onlyJSON  = false);
 
+void add_ChartJS_chart_JSON_header(
+  const __FlashStringHelper *chartType,
+  const String             & plugins,
+  const ChartJS_title      & chartTitle,
+  const String             & options,
+  size_t                     nrSamples);
 
 void add_ChartJS_chart_labels(
   int       valueCount,
@@ -50,7 +60,9 @@ void add_ChartJS_chart_labels(
   const String labels[]);
 
 
-void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals);
+void add_ChartJS_scatter_data_point(float x,
+                                    float y,
+                                    int   nrDecimals);
 
 void add_ChartJS_dataset(
   const ChartJS_dataset_config& config,
@@ -64,7 +76,7 @@ void add_ChartJS_dataset_header(const ChartJS_dataset_config& config);
 void add_ChartJS_dataset_footer(const String& options = EMPTY_STRING);
 
 
-void add_ChartJS_chart_footer();
+void add_ChartJS_chart_footer(bool onlyJSON = false);
 #endif // if FEATURE_CHART_JS
 
 #endif // ifndef WEBSERVER_CHART_JS_H

@@ -115,7 +115,7 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WRITE: {
-      if (parseString(string, 1).equalsIgnoreCase(F("MitsubishiHP"))) {
+      if (equals(parseString(string, 1), F("mitsubishihp"))) {
         P093_data_struct *heatPump = static_cast<P093_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (heatPump != nullptr) {
