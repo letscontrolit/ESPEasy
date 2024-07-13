@@ -50,9 +50,9 @@
 .. |P153_compileinfo| replace:: `.`
 .. |P153_usedlibraries| replace:: `.`
 
-.. |P154_name| replace:: :cyan:`BMP3xx`
+.. |P154_name| replace:: :cyan:`BMP3xx (I2C)`
 .. |P154_type| replace:: :cyan:`Environment`
-.. |P154_typename| replace:: :cyan:`Environment - BMP3xx`
+.. |P154_typename| replace:: :cyan:`Environment - BMP3xx (I2C)`
 .. |P154_porttype| replace:: `.`
 .. |P154_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
 .. |P154_github| replace:: P154_BMP3xx.ino
