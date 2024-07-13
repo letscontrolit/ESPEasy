@@ -23,6 +23,7 @@ public:
 
   bool        read(float& temp,
                    float& pressure);
+  uint32_t    chipID();
 
   static bool webformLoad(struct EventStruct *event,
                           bool                _i2cMode = true);

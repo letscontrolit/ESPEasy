@@ -55,12 +55,32 @@ bool P154_data_struct::read(float& temp, float& pressure)
   return true;
 }
 
+uint32_t P154_data_struct::chipID() {
+  return bmp.chipID();
+}
+
 bool P154_data_struct::webformLoad(struct EventStruct *event,
                                    bool                _i2cMode)
 {
+  uint32_t chipID{};
+  bool     chipIDvalid = _i2cMode;
+
   if (_i2cMode) {
+    chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
+  # ifdef USES_P172
+  } else {
+    P154_data_struct *P154_P172_data =
+      static_cast<P154_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+    if (nullptr != P154_P172_data) {
+      chipID      = P154_P172_data->chipID();
+      chipIDvalid = true;
+    }
+  # endif // ifdef USES_P172
+  }
+
+  if (chipIDvalid) {
     addRowLabel(F("Detected Sensor Type"));
-    const uint32_t chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
 
     if (chipID == P154_BMP3_CHIP_ID) {
       addHtml(F("BMP38x"));
