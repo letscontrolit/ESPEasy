@@ -38,9 +38,9 @@ bool isExternalTimeSource(timeSource_t timeSource)
   }
 }
 
-// Typical time wander for ESP nodes is 0.04 ms/sec
-// Meaning per 25 sec, the time may wander 1 msec.
-#define TIME_WANDER_FACTOR  25000
+// Typical time wander for ESP nodes should be less than 10 ppm
+// Meaning per hour, the time should wander less than 36 msec.
+#define TIME_WANDER_FACTOR  100000
 
 uint32_t updateExpectedWander(
   int32_t  current_wander,
@@ -86,8 +86,8 @@ uint32_t computeExpectedWander(timeSource_t timeSource,
     case timeSource_t::ESP_now_peer:
     case timeSource_t::ESPEASY_p2p_UDP:
     {
-      // expected wander is 144 per hour.
-      // Using a 'penalty' of 1000 makes it only preferrable over NTP after +/- 7 hour.
+      // expected wander is 36 per hour.
+      // Using a 'penalty' of 1000 makes it only preferrable over NTP after +/- 28 hour.
       expectedWander_ms += 1000;
       break;
     }
