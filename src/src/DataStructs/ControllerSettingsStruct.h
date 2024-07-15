@@ -154,7 +154,6 @@ struct ControllerSettingsStruct
 
   bool         mqtt_retainFlag() const { return VariousBits1.mqtt_retainFlag; }
   void         mqtt_retainFlag(bool value) { VariousBits1.mqtt_retainFlag = value; }
-#endif
 
   bool         useExtendedCredentials() const { return VariousBits1.useExtendedCredentials; }
   void         useExtendedCredentials(bool value) { VariousBits1.useExtendedCredentials = value; }

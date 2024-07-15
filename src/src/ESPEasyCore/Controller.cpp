@@ -25,7 +25,8 @@
 #include "../Globals/RulesCalculate.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
-//#include "../Helpers/Memory.h"
+
+// #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
@@ -43,7 +44,7 @@ void sendData(struct EventStruct *event, bool sendEvents)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-//  LoadTaskSettings(event->TaskIndex);
+  //  LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules && sendEvents) {
     createRuleEvents(event);
@@ -53,17 +54,17 @@ void sendData(struct EventStruct *event, bool sendEvents)
     SendValueLogger(event->TaskIndex);
   }
 
-//  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
+  //  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     if (Settings.ControllerEnabled[x] &&
-        Settings.TaskDeviceSendData[x][event->TaskIndex] &&        
+        Settings.TaskDeviceSendData[x][event->TaskIndex] &&
         Settings.Protocol[x])
     {
       event->ControllerIndex = x;
       const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
-      event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
+      event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {
         String dummy;
@@ -86,18 +87,19 @@ void sendData(struct EventStruct *event, bool sendEvents)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  if (!validTaskIndex(event->TaskIndex)) return false;
+  if (!validTaskIndex(event->TaskIndex)) { return false; }
   const Sensor_VType vtype = event->getSensorType();
+
   if (isIntegerOutputDataType(vtype) ||
-      vtype == Sensor_VType::SENSOR_TYPE_STRING)  // FIXME TD-er: Must look at length of event->String2 ?
+      (vtype == Sensor_VType::SENSOR_TYPE_STRING)) // FIXME TD-er: Must look at length of event->String2 ?
   {
     return true;
   }
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
-    if (!UserVar.isValid(event->TaskIndex, i, vtype)) { 
-      return false; 
+    if (!UserVar.isValid(event->TaskIndex, i, vtype)) {
+      return false;
     }
   }
   return true;
@@ -172,7 +174,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient_next_connect_attempt.setNow();
   ++mqtt_reconnect_count;
 
-  MakeControllerSettings(ControllerSettings); //-V522
+  MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
@@ -187,31 +189,33 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
     # if FEATURE_MQTT_TLS
+
     if (mqtt_tls != nullptr) {
       delete mqtt_tls;
       mqtt_tls = nullptr;
     }
     mqtt_rootCA.clear();
-    #endif
+    # endif // if FEATURE_MQTT_TLS
   }
-  
+
   updateMQTTclient_connected();
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
   uint16_t mqttPort = ControllerSettings->Port;
 
-#if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS
   mqtt_tls_last_errorstr.clear();
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings->TLStype();
-  if (TLS_type != TLS_types::NoTLS && nullptr == mqtt_tls) {
-    #ifdef ESP32
+
+  if ((TLS_type != TLS_types::NoTLS) && (nullptr == mqtt_tls)) {
+    #  ifdef ESP32
     mqtt_tls = new ESPEasy_WiFiClientSecure;
-    #endif
-    #ifdef ESP8266
+    #  endif // ifdef ESP32
+    #  ifdef ESP8266
     mqtt_tls = new BearSSL::WiFiClientSecure;
-    #endif
+    #  endif // ifdef ESP8266
     mqtt_rootCA.clear();
 
     if (mqtt_tls == nullptr) {
@@ -220,58 +224,61 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       return false;
     }
   }
-  switch(TLS_type) {
+
+  switch (TLS_type) {
     case TLS_types::NoTLS:
     {
-    // Ignoring the ACK from the server is probably set for a reason.
-    // For example because the server does not give an acknowledgement.
-    // This way, we always need the set amount of timeout to handle the request.
-    // Thus we should not make the timeout dynamic here if set to ignore ack.
-    const uint32_t timeout = ControllerSettings->MustCheckReply 
+      // Ignoring the ACK from the server is probably set for a reason.
+      // For example because the server does not give an acknowledgement.
+      // This way, we always need the set amount of timeout to handle the request.
+      // Thus we should not make the timeout dynamic here if set to ignore ack.
+      const uint32_t timeout = ControllerSettings->MustCheckReply
       ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
       : ControllerSettings->ClientTimeout;
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  #  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
       mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
       Client *pClient = &mqtt;
       pClient->setTimeout(timeout);
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-      mqtt.setTimeout(timeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  #  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      mqtt.setTimeout(timeout); // in msec as it should be!
+  #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
       break;
     }
     case TLS_types::TLS_PSK:
     {
-      //if (mqtt_tls != nullptr)
+      // if (mqtt_tls != nullptr)
       //  mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
       break;
     }
     case TLS_types::TLS_CA_CERT:
     {
       mqtt_rootCA.clear();
+
       /*
-      {
-        static int previousFree = FreeMem();
-        const int freemem = FreeMem();
-        
-        String analyse = F(" free memory: ");
-        analyse += freemem;
-        analyse += F(" largest free block: ");
-        analyse += getMaxFreeBlock();
+         {
+         static int previousFree = FreeMem();
+         const int freemem = FreeMem();
 
-        analyse += F(" Difference: ");
-        analyse += previousFree - freemem;
+         String analyse = F(" free memory: ");
+         analyse += freemem;
+         analyse += F(" largest free block: ");
+         analyse += getMaxFreeBlock();
 
-        addLog(LOG_LEVEL_INFO, analyse);
-        previousFree = freemem;
-      }
-      */
+         analyse += F(" Difference: ");
+         analyse += previousFree - freemem;
 
-      if (mqtt_rootCA.isEmpty() && mqtt_tls != nullptr) {
+         addLog(LOG_LEVEL_INFO, analyse);
+         previousFree = freemem;
+         }
+       */
+
+      if (mqtt_rootCA.isEmpty() && (mqtt_tls != nullptr)) {
         LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_rootCA);
+
         if (mqtt_rootCA.isEmpty()) {
           // Fingerprint must be of some minimal length to continue.
           mqtt_tls_last_errorstr = F("MQTT : No TLS root CA");
@@ -279,36 +286,39 @@ bool MQTTConnect(controllerIndex_t controller_idx)
           return false;
         }
 
-        #ifdef ESP32
+        #  ifdef ESP32
         mqtt_tls->setCACert(mqtt_rootCA.c_str());
-        #endif
-        #ifdef ESP8266
+        #  endif // ifdef ESP32
+        #  ifdef ESP8266
         mqtt_X509List.append(mqtt_rootCA.c_str());
         mqtt_tls->setTrustAnchors(&mqtt_X509List);
-        #endif
+        #  endif // ifdef ESP8266
       }
       break;
     }
+
     /*
-    case TLS_types::TLS_CA_CLI_CERT:
-    {
-      //if (mqtt_tls != nullptr)
-      //  mqtt_tls->setCertificate(const char *client_ca);
-      break;
-    }
-    */
+       case TLS_types::TLS_CA_CLI_CERT:
+       {
+       //if (mqtt_tls != nullptr)
+       //  mqtt_tls->setCertificate(const char *client_ca);
+       break;
+       }
+     */
     case TLS_types::TLS_FINGERPRINT:
     {
       // Fingerprint is checked when making the connection.
       mqtt_rootCA.clear();
       mqtt_fingerprint.clear();
       LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_fingerprint, false);
+
       if (mqtt_fingerprint.length() < 32) {
         // Fingerprint must be of some minimal length to continue.
         mqtt_tls_last_errorstr = F("MQTT : Stored TLS fingerprint too small");
         addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
         return false;
       }
+
       if (mqtt_tls != nullptr) {
         mqtt_tls->setInsecure();
       }
@@ -317,37 +327,40 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     case TLS_types::TLS_insecure:
     {
       mqtt_rootCA.clear();
+
       if (mqtt_tls != nullptr) {
         mqtt_tls->setInsecure();
       }
       break;
     }
   }
-  if (TLS_type != TLS_types::NoTLS && mqtt_tls != nullptr) {
+
+  if ((TLS_type != TLS_types::NoTLS) && (mqtt_tls != nullptr)) {
     // Certificate expiry not enabled in Mbed TLS.
-//    mqtt_tls->setX509Time(node_time.getUnixTime());
+    //    mqtt_tls->setX509Time(node_time.getUnixTime());
     // Ignoring the ACK from the server is probably set for a reason.
     // For example because the server does not give an acknowledgement.
     // This way, we always need the set amount of timeout to handle the request.
     // Thus we should not make the timeout dynamic here if set to ignore ack.
-    const uint32_t timeout = ControllerSettings->MustCheckReply 
+    const uint32_t timeout = ControllerSettings->MustCheckReply
       ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
       : ControllerSettings->ClientTimeout;
 
-#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+#  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-      // See: https://github.com/espressif/arduino-esp32/pull/6676
-      mqtt_tls->setTimeout((timeout + 500) / 1000); // in seconds!!!!
-      Client *pClient = mqtt_tls;
-      pClient->setTimeout(timeout);
-#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-      mqtt_tls->setTimeout(timeout);                // in msec as it should be!
-#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    mqtt_tls->setTimeout((timeout + 500) / 1000); // in seconds!!!!
+    Client *pClient = mqtt_tls;
+    pClient->setTimeout(timeout);
+#  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    mqtt_tls->setTimeout(timeout); // in msec as it should be!
+#  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-#ifdef ESP8266
-    mqtt_tls->setBufferSizes(1024,1024);
-    #endif
+#  ifdef ESP8266
+    mqtt_tls->setBufferSizes(1024, 1024);
+    #  endif // ifdef ESP8266
     MQTTclient.setClient(*mqtt_tls);
+
     if (mqttPort == 1883) {
       mqttPort = 8883;
     }
@@ -357,28 +370,30 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
   }
 
-#else
+# else // if FEATURE_MQTT_TLS
+
   // Ignoring the ACK from the server is probably set for a reason.
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings->MustCheckReply 
+  const uint32_t timeout = ControllerSettings->MustCheckReply
     ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
     : ControllerSettings->ClientTimeout;
 
-#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+#  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
-    // See: https://github.com/espressif/arduino-esp32/pull/6676
-    mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
-    Client *pClient = &mqtt;
-    pClient->setTimeout(timeout);
-#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-    mqtt.setTimeout(timeout);                // in msec as it should be!
-#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &mqtt;
+  pClient->setTimeout(timeout);
+#  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  mqtt.setTimeout(timeout); // in msec as it should be!
+#  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   MQTTclient.setClient(mqtt);
   MQTTclient.setKeepAlive(10);
   MQTTclient.setSocketTimeout(timeout);
+#endif
 
   if (ControllerSettings->UseDNS) {
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
@@ -390,12 +405,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   // MQTT needs a unique clientname to subscribe to broker
   const String clientid = getMQTTclientID(*ControllerSettings);
 
-  const String  LWTTopic             = getLWT_topic(*ControllerSettings);
-  const String  LWTMessageDisconnect = getLWT_messageDisconnect(*ControllerSettings);
-  bool          MQTTresult           = false;
-  const uint8_t willQos              = 0;
-  const bool    willRetain           = ControllerSettings->mqtt_willRetain() && ControllerSettings->mqtt_sendLWT();
-  const bool    cleanSession         = ControllerSettings->mqtt_cleanSession(); // As suggested here:
+  const String LWTTopic             = getLWT_topic(*ControllerSettings);
+  const String LWTMessageDisconnect = getLWT_messageDisconnect(*ControllerSettings);
+  bool MQTTresult                   = false;
+  const uint8_t willQos             = 0;
+  const bool    willRetain          = ControllerSettings->mqtt_willRetain() && ControllerSettings->mqtt_sendLWT();
+  const bool    cleanSession        = ControllerSettings->mqtt_cleanSession(); // As suggested here:
 
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -427,50 +442,57 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
   count_connection_results(
-    MQTTresult, 
-    F("MQTT : Broker "), 
-    Settings.Protocol[controller_idx], 
+    MQTTresult,
+    F("MQTT : Broker "),
+    Settings.Protocol[controller_idx],
     statisticsTimerStart);
 
-  #if FEATURE_MQTT_TLS
+  #  if FEATURE_MQTT_TLS
+
   if (mqtt_tls != nullptr)
   {
-    char buf[128] = {0};
-    #ifdef ESP8266
-    mqtt_tls_last_error = mqtt_tls->getLastSSLError(buf,128);
-    #endif
-    #ifdef ESP32
-    mqtt_tls_last_error = mqtt_tls->lastError(buf,128);
+    char buf[128] = { 0 };
+    #   ifdef ESP8266
+    mqtt_tls_last_error = mqtt_tls->getLastSSLError(buf, 128);
+    #   endif // ifdef ESP8266
+    #   ifdef ESP32
+    mqtt_tls_last_error = mqtt_tls->lastError(buf, 128);
     mqtt_tls->clearLastError();
-    #endif
+    #   endif // ifdef ESP32
     mqtt_tls_last_errorstr = buf;
   }
-  #ifdef ESP32
+  #   ifdef ESP32
+
   // FIXME TD-er: There seems to be no verify function in BearSSL used on ESP8266
   if (TLS_type == TLS_types::TLS_FINGERPRINT)
   {
     // Check fingerprint
     if (MQTTresult) {
       const int newlinepos = mqtt_fingerprint.indexOf('\n');
-      String fp;
-      String dn;
-      if (ControllerSettings->UseDNS) dn = ControllerSettings->getHost();
+      String    fp;
+      String    dn;
+
+      if (ControllerSettings->UseDNS) { dn = ControllerSettings->getHost(); }
+
       if (newlinepos == -1) {
         fp = mqtt_fingerprint;
       } else {
         fp = mqtt_fingerprint.substring(0, newlinepos);
         const int newlinepos2 = mqtt_fingerprint.indexOf('\n', newlinepos);
-        if (newlinepos2 == -1)
-          dn = mqtt_fingerprint.substring(newlinepos + 1);
-        else
-          dn = mqtt_fingerprint.substring(newlinepos + 1, newlinepos2);
-        dn.trim();
 
+        if (newlinepos2 == -1) {
+          dn = mqtt_fingerprint.substring(newlinepos + 1);
+        }
+        else {
+          dn = mqtt_fingerprint.substring(newlinepos + 1, newlinepos2);
+        }
+        dn.trim();
       }
+
       if (mqtt_tls != nullptr) {
         if (!mqtt_tls->verify(
-          fp.c_str(), 
-          dn.isEmpty() ? nullptr : dn.c_str())) 
+              fp.c_str(),
+              dn.isEmpty() ? nullptr : dn.c_str()))
         {
           mqtt_tls_last_errorstr += F("TLS Fingerprint does not match");
           addLog(LOG_LEVEL_INFO, mqtt_fingerprint);
@@ -479,12 +501,13 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       }
     }
   }
-  #endif
+  #   endif // ifdef ESP32
 
-  #endif
+  #  endif  // if FEATURE_MQTT_TLS
 
   if (!MQTTresult) {
-    #if FEATURE_MQTT_TLS
+    #  if FEATURE_MQTT_TLS
+
     if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("MQTT : TLS error code: ");
       log += mqtt_tls_last_error;
@@ -492,27 +515,30 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       log += mqtt_tls_last_errorstr;
       addLog(LOG_LEVEL_ERROR, log);
     }
-    #endif
+    #  endif // if FEATURE_MQTT_TLS
 
     MQTTclient.disconnect();
-    #if FEATURE_MQTT_TLS
+    #  if FEATURE_MQTT_TLS
+
     if (mqtt_tls != nullptr) {
       mqtt_tls->stop();
     }
-    #endif
+    #  endif // if FEATURE_MQTT_TLS
 
     updateMQTTclient_connected();
 
     return false;
   }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     addLogMove(LOG_LEVEL_INFO, concat(F("MQTT : Connected to broker with client ID: "), clientid));
   }
 
-  #if FEATURE_MQTT_TLS
-  #ifdef ESP32
-  if (mqtt_tls != nullptr && loglevelActiveFor(LOG_LEVEL_INFO))
+  #  if FEATURE_MQTT_TLS
+  #   ifdef ESP32
+
+  if ((mqtt_tls != nullptr) && loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("MQTT : Peer certificate info: ");
     log += ControllerSettings->getHost();
@@ -520,13 +546,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     log += mqtt_tls->getPeerCertificateInfo();
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  #endif
-  #endif
+  #   endif // ifdef ESP32
+  #  endif  // if FEATURE_MQTT_TLS
 
   String subscribeTo = ControllerSettings->Subscribe;
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
+
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
@@ -593,7 +620,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -610,7 +637,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
          if (ControllerSettings->enableESPEasyNowFallback()) {
           return true;
          }
-       }
+         }
        #endif
        */
 
@@ -718,14 +745,14 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
   return false;
 }
 
-void SendStatus(struct EventStruct *event, const __FlashStringHelper * status)
+void SendStatus(struct EventStruct *event, const __FlashStringHelper *status)
 {
   SendStatus(event, String(status));
 }
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
-  if (status.isEmpty()) { return; }
+  if (status.isEmpty()) {}
 
   switch (event->Source)
   {
@@ -754,6 +781,7 @@ void SendStatus(struct EventStruct *event, const String& status)
 controllerIndex_t firstEnabledMQTT_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+
     if (validProtocolIndex(ProtocolIndex)) {
       if (getProtocolStruct(ProtocolIndex).usesMQTT && Settings.ControllerEnabled[i]) {
         return i;
@@ -776,7 +804,12 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   return false;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const char *topic, const char *payload, bool retained, bool callbackTask)
+bool MQTTpublish(controllerIndex_t controller_idx,
+                 taskIndex_t       taskIndex,
+                 const char       *topic,
+                 const char       *payload,
+                 bool              retained,
+                 bool              callbackTask)
 {
   if (MQTTDelayHandler == nullptr) {
     return false;
@@ -785,13 +818,21 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic, payload, retained, callbackTask)));
+  const bool success =
+    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic,
+                                                                                                           payload, retained,
+                                                                                                           callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained, bool callbackTask) {
+bool MQTTpublish(controllerIndex_t controller_idx,
+                 taskIndex_t       taskIndex,
+                 String         && topic,
+                 String         && payload,
+                 bool              retained,
+                 bool              callbackTask) {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }
@@ -800,7 +841,11 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
     return false;
   }
 
-  const bool success = MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained, callbackTask)));
+  const bool success =
+    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex,
+                                                                                                           std::move(topic),
+                                                                                                           std::move(payload), retained,
+                                                                                                           callbackTask)));
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -818,13 +863,12 @@ void MQTTStatus(struct EventStruct *event, const String& status)
 
     if (DomoticzMQTT_controllerIndex == enabledMqttController) {
       // Do not send MQTT status updates to Domoticz
-      return;
     }
     String pubname;
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));
@@ -852,19 +896,24 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#if FEATURE_MQTT_TLS
-bool GetTLSfingerprint(String& fp) 
+# if FEATURE_MQTT_TLS
+bool GetTLSfingerprint(String& fp)
 {
-  #ifdef ESP32
-  if (MQTTclient_connected && mqtt_tls != nullptr) {
-    uint8_t sha256_result[32] = {0};
+  #  ifdef ESP32
+
+  if (MQTTclient_connected && (mqtt_tls != nullptr)) {
+    uint8_t sha256_result[32] = { 0 };
+
     if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
       fp.reserve(64);
+
       for (size_t i = 0; i < 32; ++i) {
         const String tmp(sha256_result[i], HEX);
+
         switch (tmp.length()) {
           case 0:
             fp += '0';
+
           // fall through
           case 1:
             fp += '0';
@@ -876,26 +925,28 @@ bool GetTLSfingerprint(String& fp)
       return true;
     }
   }
-  #endif
+  #  endif // ifdef ESP32
   return false;
 }
 
 bool GetTLS_Certificate(String& cert, bool caRoot)
 {
-  #ifdef ESP32
-  if (MQTTclient_connected && mqtt_tls != nullptr) {
+  #  ifdef ESP32
+
+  if (MQTTclient_connected && (mqtt_tls != nullptr)) {
     String subject;
+
     if (mqtt_tls->getPeerCertificate(cert, subject, caRoot) == 0) {
       return true;
     }
   }
-  #endif
+  #  endif // ifdef ESP32
   return false;
 }
 
-#endif
+# endif // if FEATURE_MQTT_TLS
 
-#endif // if FEATURE_MQTT
+#endif  // if FEATURE_MQTT
 
 
 /*********************************************************************************************\
@@ -908,7 +959,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(event->TaskIndex)) { return; }
+  if (!validTaskIndex(event->TaskIndex)) {}
 
   // FIXME TD-er: Should a 'disabled' task be rescheduled?
   // If not, then it should be rescheduled after the check to see if it is enabled.
@@ -925,11 +976,12 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
     struct EventStruct TempEvent(event->TaskIndex);
-    TempEvent.Source = event->Source;
+    TempEvent.Source        = event->Source;
     TempEvent.timestamp_sec = timestampUnixTime;
     checkDeviceVTypeForTask(&TempEvent);
 
     String dummy;
+
     if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
