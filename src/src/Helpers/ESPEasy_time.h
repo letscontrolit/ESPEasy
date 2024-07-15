@@ -33,6 +33,8 @@ public:
   void restoreLastKnownUnixTime(unsigned long lastSysTime,
                                 uint8_t       deepSleepState);
 
+  // Set external time source
+  // Wander is expected error in msec
   bool setExternalTimeSource_withTimeWander(double       new_time,
                                             timeSource_t new_timeSource,
                                             int32_t      wander,
