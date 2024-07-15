@@ -319,17 +319,6 @@ bool ControllerSettingsStruct::mqtt_cleanSession() const
 */
 
 #if FEATURE_MQTT_TLS
-TLS_types ControllerSettingsStruct::TLStype() const
-{
-  // Store it in bits 12, 13, 14, 15
-  return static_cast<TLS_types>(get4BitFromUL(VariousFlags, 12));
-}
-
-void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
-{
-  set4BitToUL(VariousFlags, 12, static_cast<uint8_t>(tls_type));
-}
-
 String ControllerSettingsStruct::getCertificateFilename() const
 {
   return getCertificateFilename(TLStype());
