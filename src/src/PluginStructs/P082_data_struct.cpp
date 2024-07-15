@@ -63,6 +63,116 @@ const __FlashStringHelper* toString(P082_DynamicModel model) {
   return F("");
 }
 
+P082_software_pps::P082_software_pps()
+{
+  for (size_t i = 0; i < NR_ELEMENTS(_second_frac_in_usec); ++i) {
+    _second_frac_in_usec[i].setModulo(1000000ul);
+  }
+}
+
+void P082_software_pps::addStartOfSentence(uint32_t bytesAvailableInSerialBuffer)
+{
+  if (_baudrate == 0) {
+    return;
+  }
+
+  // Subtract the time (usec) taken to send the nr of bytes present in the serial buffer
+  _cur_start_sentence_usec = getMicros64() - bytesToUsec(bytesAvailableInSerialBuffer);
+}
+
+void P082_software_pps::setSentenceType(
+  TinyGPSPlus::GPS_Sentence_type sentenceType,
+  uint32_t                       bytesAvailableInSerialBuffer)
+{
+  if ((sentenceType < TinyGPSPlus::GPS_SENTENCE_OTHER) && (_cur_start_sentence_usec != 0ull)) {
+    const uint64_t endOfLine_received_usec = getMicros64() - bytesToUsec(bytesAvailableInSerialBuffer);
+    const int64_t  sentence_duration       = timeDiff64(_cur_start_sentence_usec, endOfLine_received_usec);
+
+//    if (usecPassedSince(_cur_start_sentence_usec) < 1000000ll) {
+
+    // Assume a NMEA sentence cannot be over 80 bytes
+    // Apply some tolerance, thus check for duration to receive 120 bytes
+    if (sentence_duration < bytesToUsec(120)) {
+      // Make sure we're not committing a timestamp to the wrong sentence type
+      // However we only set this when a complete sentence was processed,
+      // so it is highly unlikely we missed the start of the sentence.
+      // Only way this can happen is when we missed exactly a complete sentence (or multiple)
+      _second_frac_in_usec[sentenceType].add(_cur_start_sentence_usec % 1000000ull);
+
+      if (_second_frac_in_usec[sentenceType].getCount() >= 10) {
+        // Filter out the outliers and seed with current average.
+        _second_frac_in_usec[sentenceType].resetKeepLast();
+      }
+    }
+  }
+  _cur_start_sentence_usec = 0;
+}
+
+void P082_software_pps::setBaudrate(uint32_t baudrate) {
+  if (baudrate != 0) {
+    _baudrate = baudrate;
+  }
+}
+
+bool P082_software_pps::getPPS(uint32_t& second_frac_in_usec) const
+{
+  /*
+     // Check the timestamps of the sentences which are likely to only have occurred once per second
+     constexpr TinyGPSPlus::GPS_Sentence_type sentenceTypes[] =
+     {
+     TinyGPSPlus::GPS_SENTENCE_GPRMC,
+     TinyGPSPlus::GPS_SENTENCE_GPGGA,
+     TinyGPSPlus::GPS_SENTENCE_GPGLL
+     };
+   */
+
+  return _second_frac_in_usec[TinyGPSPlus::GPS_SENTENCE_GPRMC].peek(second_frac_in_usec);
+}
+
+uint64_t P082_software_pps::bytesToUsec(uint32_t bytes) const
+{
+  if (_baudrate == 0) {
+    return 0ull;
+  }
+
+  // Assume 10 bits per byte. (8N1)
+  uint64_t duration_usec = bytes;
+
+  duration_usec *= 10000000ull;
+  duration_usec /= _baudrate;
+  return duration_usec;
+}
+
+#ifndef BUILD_NO_DEBUG
+String P082_software_pps::getStats() const
+{
+  String res;
+  constexpr uint32_t nrelements = NR_ELEMENTS(_second_frac_in_usec);
+  for (size_t i = 0; i < nrelements; ++i) {
+    uint32_t value{};
+    _second_frac_in_usec[i].peek(value);
+    {
+
+      switch (i) {
+        case TinyGPSPlus::GPS_SENTENCE_GPGGA: res += F("GGA"); break;
+        case TinyGPSPlus::GPS_SENTENCE_GPRMC: res += F("RMC"); break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGSA: res += F("GSA"); break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGSV: res += F("GSV"); break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGLL: res += F("GLL"); break;
+        case TinyGPSPlus::GPS_SENTENCE_GPTXT: res += F("TXT"); break;
+        default:
+        res += F("---");
+        break;
+      }
+      res += strformat(F(": %06d (%d)<br>"), value, _second_frac_in_usec[i].getCount());
+    }
+  }
+  return res;  
+}
+#endif
+
+
+
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
   for (size_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
     _cache[i] = 0.0f;
@@ -70,6 +180,10 @@ P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
 }
 
 P082_data_struct::~P082_data_struct() {
+  if (validGpio(_ppsPin)) {
+    detachInterrupt(digitalPinToInterrupt(_ppsPin));
+  }
+
   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
@@ -94,7 +208,11 @@ P082_data_struct::~P082_data_struct() {
    }
    }
  */
-bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
+bool P082_data_struct::init(
+  ESPEasySerialPort port,
+  const int16_t     serial_rx,
+  const int16_t     serial_tx,
+  const int8_t      pps_pin) {
   if (serial_rx < 0) {
     return false;
   }
@@ -121,6 +239,20 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
     easySerial->begin(9600);
     wakeUp();
   }
+
+  _ppsPin = pps_pin;
+
+  if (validGpio(_ppsPin)) {
+    pinMode(_ppsPin, INPUT);
+
+    attachInterruptArg(
+      digitalPinToInterrupt(_ppsPin),
+      reinterpret_cast<void (*)(void *)>(pps_interrupt),
+      this, RISING);
+  } else {
+    _softwarePPS.setBaudrate(easySerial->getBaudRate());
+  }
+
   return isInitialized();
 }
 
@@ -212,29 +344,15 @@ bool P082_data_struct::loop() {
           _currentSentence = String();
 # endif // ifdef P082_SEND_GPS_TO_LOG
           completeSentence = true;
+          available        = easySerial->available();
+          _softwarePPS.setSentenceType(gps->getCurrentSentenceType(), available);
         } else {
+          if (c == '$') {
+            available = easySerial->available();
+            _softwarePPS.addStartOfSentence(available);
+          }
           if (available == 0) {
             available = easySerial->available();
-          }
-
-          if (c == '$') {
-            _start_prev_sentence = _start_sentence;
-            _start_sentence      = millis();
-            const unsigned long baudrate = easySerial->getBaudRate();
-
-            if (baudrate != 0) {
-              // Subtract the time (msec) taken to send the nr of bytes present in the serial buffer
-              // Assume 10 bits per byte. (8N1)
-              _start_sentence -= (available * 10000) / baudrate;
-            }
-            const int32_t max_sentence_duration = (160 * 10000) / baudrate;
-
-            if (timeDiff(_start_prev_sentence, _start_sentence) > max_sentence_duration) {
-              _start_sequence = _start_sentence;
-
-              // Debug accuracy of computing the time stability
-              //              addLog(LOG_LEVEL_INFO, concat(F("GPS  : Start Sequence: "), _start_sequence));
-            }
           }
         }
       }
@@ -279,9 +397,9 @@ ESPEASY_RULES_FLOAT_TYPE P082_data_struct::distanceSinceLast(unsigned int maxAge
 // additional centiseconds given by the GPS.
 bool P082_data_struct::getDateTime(
   struct tm& dateTime,
+  uint8_t  & centiseconds,
   uint32_t & age,
-  bool     & updated,
-  bool     & pps_sync) {
+  bool     & updated) {
   updated = false;
 
   if (!isInitialized()) {
@@ -292,24 +410,9 @@ bool P082_data_struct::getDateTime(
     return false;
   }
 
-  if (_pps_time != 0) {
-    age       = timePassedSince(_pps_time);
-    _pps_time = 0;
-    pps_sync  = true;
-
-    if ((age > P082_TIMESTAMP_AGE) || (gps->time.age() > age)) {
-      return false;
-    }
-  } else {
-    age      = gps->time.age();
-    pps_sync = false;
-  }
+  age = gps->time.age();
 
   if (age > P082_TIMESTAMP_AGE) {
-    return false;
-  }
-
-  if (!gps->time.isUpdated() || !gps->date.isUpdated()) {
     return false;
   }
 
@@ -337,29 +440,14 @@ bool P082_data_struct::getDateTime(
   const uint32_t reported_time = gps->time.value();
   const uint32_t reported_date = gps->date.value();
 
-  updated = reported_time != _last_time;
+  // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
+  if (!validGpio(_ppsPin)) {
+    centiseconds = gps->time.centisecond();
+  }
 
+  updated    = reported_time != _last_time;
   _last_time = reported_time;
   _last_date = reported_date;
-
-  // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
-  if (!pps_sync) {
-    // Don't use the "commit" time when the sentence was read, but use the timestamp when the first sentence of a NMEA sequence was
-    // received.
-    const long time_since_start_seq = timePassedSince(_start_sequence);
-
-    if (time_since_start_seq > P082_TIMESTAMP_AGE) {
-      return false;
-    }
-    age = time_since_start_seq;
-
-    // FIXME TD-er: Are centiseconds expressed as 0.01 sec, or is it some fraction?
-    const uint8_t centiseconds = gps->time.centisecond();
-
-    if (centiseconds < 100) {
-      age += (gps->time.centisecond() * 10);
-    }
-  }
 
   return true;
 }
@@ -378,33 +466,74 @@ bool P082_data_struct::getDateTime(struct tm& dateTime) const
 
 bool P082_data_struct::tryUpdateSystemTime() {
   struct tm dateTime;
+  uint8_t   centiseconds{};
   uint32_t  age{};
   bool updated{};
-  bool pps_sync{};
 
-  if (getDateTime(dateTime, age, updated, pps_sync)) {
+  if (getDateTime(dateTime, centiseconds, age, updated)) {
     if (updated) {
-      // Use floating point precision to use the time since last update from GPS
-      // and the given offset in centisecond.
-      const uint32_t unixTime_sec       = makeTime(dateTime) + (age / 1000);
+      const uint64_t cur_micros = getMicros64();
+
+      uint32_t second_frac_in_usec{};
+
+      if (validGpio(_ppsPin) && (_pps_time_micros > 0ll)) {
+        // Rely on timestamp from PPS pin,
+        // even when this might have been updated quite long ago
+        second_frac_in_usec = _pps_time_micros % 1000000ll;
+      } else if (_softwarePPS.getPPS(second_frac_in_usec)) {
+        // we got some estimate based on the timestamp of receiving the first sentence.
+      } else {
+        // Determine the system micros at the time the GPS time was committed
+        // This is the least accurate method.
+        const uint64_t micros = cur_micros - (age * 1000ull);
+        second_frac_in_usec = micros % 1000000ull;
+      }
+
+      // First round to seconds
+      uint64_t sys_micros_at_start_second = cur_micros / 1000000ull;
+      sys_micros_at_start_second *= 1000000ull;
+
+      // Add fraction of seconds (phase offset in usec)
+      sys_micros_at_start_second += second_frac_in_usec;
+
+      if (sys_micros_at_start_second > cur_micros) {
+        sys_micros_at_start_second -= 1000000ull;
+      }
+      const uint64_t unixTime_usec      = makeTime(dateTime) * 1000000ull + (10000ull * centiseconds);
       const uint64_t uptime_offset_usec =
-        sec_time_frac_to_uptime_offset_usec(
-          unixTime_sec,
-          millis_to_unix_time_frac(age % 1000));
+        (unixTime_usec < sys_micros_at_start_second)
+        ? unixTime_usec
+        : (unixTime_usec - sys_micros_at_start_second);
+
       _oversampling_gps_time_offset_usec.add(uptime_offset_usec);
 
       // Compute average over offset between system micros and GPS reported timestamp.
       // Both extremes will be filtered out
-      if (_oversampling_gps_time_offset_usec.getCount() == 5) {
+      if (_oversampling_gps_time_offset_usec.getCount() >= 5) {
         uint64_t value_usec{};
 
         if (_oversampling_gps_time_offset_usec.get(value_usec)) {
           const double time = (getMicros64() + value_usec) / 1000000.0;
 
-          if (node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source)) {
+          // Seed oversampling with the current average value
+          _oversampling_gps_time_offset_usec.add(value_usec);
+
+          timeSource_t timeSource = timeSource_t::GPS_time_source_no_fix;
+
+          if (hasFix(P082_TIMESTAMP_AGE)) {
+            // Using PPS sync should be extremely stable without any significant time wander.
+            // When we only can rely on keeping track of the timestamp at the start of a sentence, the fluctuation is significant.
+            if (usecPassedSince(_pps_time_micros) < 1000000ll) {
+              timeSource = timeSource_t::GPS_PPS_time_source;
+            } else {
+              timeSource = timeSource_t::GPS_time_source;
+            }
+          }
+
+          if (node_time.setExternalTimeSource(
+                time,
+                timeSource)) {
             return true;
-          } else {
-            _oversampling_gps_time_offset_usec.add(value_usec);
           }
         }
       }
@@ -515,6 +644,11 @@ bool P082_data_struct::writeToGPS(const uint8_t *data, size_t size) {
   }
   addLog(LOG_LEVEL_ERROR, F("GPS  : Cannot send to GPS"));
   return false;
+}
+
+void ICACHE_RAM_ATTR P082_data_struct::pps_interrupt(P082_data_struct *self)
+{
+  self->_pps_time_micros = getMicros64();
 }
 
 # if FEATURE_PLUGIN_STATS
@@ -636,4 +770,13 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
 
 #  endif // if FEATURE_CHART_JS
 # endif  // if FEATURE_PLUGIN_STATS
+
+#ifndef BUILD_NO_DEBUG
+String P082_data_struct::getPPSStats() const
+{
+  return _softwarePPS.getStats();
+}
+#endif
+
+
 #endif   // ifdef USES_P082
