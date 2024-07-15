@@ -189,10 +189,7 @@ struct ControllerSettingsStruct
     uint32_t allowExpire                      : 1; // Bit 09
     uint32_t deduplicate                      : 1; // Bit 10
     uint32_t useLocalSystemTime               : 1; // Bit 11
-    uint32_t unused_12                        : 1; // Bit 12
-    uint32_t unused_13                        : 1; // Bit 13
-    uint32_t unused_14                        : 1; // Bit 14
-    uint32_t unused_15                        : 1; // Bit 15
+    uint32_t TLStype                          : 4; // Bit 12...15: TLS type
     uint32_t unused_16                        : 1; // Bit 16
     uint32_t unused_17                        : 1; // Bit 17
     uint32_t unused_18                        : 1; // Bit 18
