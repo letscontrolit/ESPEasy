@@ -28,6 +28,7 @@ enum class timeSource_t : uint8_t {
   ESP_now_peer        = 40,     // < 5 msec accuracy between nodes, but time on the whole network may drift
   ESPEASY_p2p_UDP     = 41,
   External_RTC_time_source = 45, // Typically +/- 500 msec off.
+  GPS_time_source_no_fix = 46, // Typically 500 - 1000 msec off.
 
   Restore_RTC_time_source = 50, // > 1 sec difference per reboot
   No_time_source          = 255 // No time set

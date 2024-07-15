@@ -7,6 +7,7 @@ const __FlashStringHelper* toString(timeSource_t timeSource)
   switch (timeSource) {
     case timeSource_t::GPS_PPS_time_source:      return F("GPS PPS");
     case timeSource_t::GPS_time_source:          return F("GPS");
+    case timeSource_t::GPS_time_source_no_fix:   return F("GPS no Fix");
     case timeSource_t::NTP_time_source:          return F("NTP");
     case timeSource_t::Manual_set:               return F("Manual");
     case timeSource_t::ESP_now_peer:             return F(ESPEASY_NOW_NAME " peer");
@@ -27,6 +28,7 @@ bool isExternalTimeSource(timeSource_t timeSource)
   switch (timeSource) {
     case timeSource_t::GPS_PPS_time_source:
     case timeSource_t::GPS_time_source:
+    case timeSource_t::GPS_time_source_no_fix:
     case timeSource_t::NTP_time_source:
     case timeSource_t::External_RTC_time_source:
     case timeSource_t::Manual_set:
@@ -66,6 +68,12 @@ uint32_t computeExpectedWander(timeSource_t timeSource,
       // Not sure about the wander here, as GPS does not have a drift.
       // But the moment a message is received from a second's start may differ.
       expectedWander_ms += 10;
+      break;
+    }
+    case timeSource_t::GPS_time_source_no_fix:
+    {
+      // When the GPS has no fix, the reported time may differ quite a bit
+      expectedWander_ms += 2000;
       break;
     }
     case timeSource_t::NTP_time_source:
