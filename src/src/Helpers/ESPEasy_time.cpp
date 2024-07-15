@@ -464,6 +464,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::External_RTC_time_source:
     case timeSource_t::GPS_time_source:
     case timeSource_t::GPS_PPS_time_source:
+    case timeSource_t::GPS_time_source_no_fix:
     case timeSource_t::ESP_now_peer:
     case timeSource_t::ESPEASY_p2p_UDP:
     case timeSource_t::Manual_set:
