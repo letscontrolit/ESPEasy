@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-07-16 tonhuisman: Set INA219 in Powerdown mode when not actually measuring, to reduce quiescent current
  * 2022-04-02 tonhuisman: Add all technically possible I2C addresses (16), instead of only the 4 most common
  *                        As requested in the forum: https://www.letscontrolit.com/forum/viewtopic.php?t=9079
  * (No previous changelog registered)
@@ -113,6 +114,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("measuretype"), 4, options, nullptr, PCONFIG(2));
       }
+      addFormCheckBox(F("Use Powerdown mode"), F("pwrdwn"), PCONFIG(3) == 1);
 
       success = true;
       break;
@@ -123,6 +125,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(0) = getFormItemInt(F("range"));
       PCONFIG(1) = getFormItemInt(F("i2c_addr"));
       PCONFIG(2) = getFormItemInt(F("measuretype"));
+      PCONFIG(3) = isFormItemChecked(F("pwrdwn")) ? 1 : 0;
       success    = true;
       break;
     }
@@ -179,6 +182,10 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
+        if (1 == PCONFIG(3)) {
+          P027_data->setPowerDown(); // Put sensor in powerdown mode
+        }
+
         if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
         }
@@ -197,6 +204,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P027_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P027_data) {
+        if (1 == PCONFIG(3)) {
+          P027_data->setActiveMode(); // Get sensor out of powerdown mode
+        }
         float voltage = P027_data->getBusVoltage_V() + (P027_data->getShuntVoltage_mV() / 1000);
         float current = P027_data->getCurrent_mA() / 1000;
         float power   = voltage * current;
@@ -264,6 +274,10 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             }
             break;
           }
+        }
+
+        if (1 == PCONFIG(3)) {
+          P027_data->setPowerDown(); // Put sensor in powerdown mode
         }
 
         if (mustLog) {

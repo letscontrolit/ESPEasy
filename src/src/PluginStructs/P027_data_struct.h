@@ -10,7 +10,7 @@ public:
 
   P027_data_struct(uint8_t i2c_addr);
 
-  P027_data_struct() = delete;
+  P027_data_struct()          = delete;
   virtual ~P027_data_struct() = default;
 
 
@@ -34,6 +34,16 @@ public:
   // Configures to INA219 to be able to measure up to 26V and 8A
   // **************************************************************************/
   void setCalibration_26V_8A();
+
+  // **************************************************************************/
+  // Configure INA219 to Powerdown mode, keeping current configuration
+  // **************************************************************************/
+  void setPowerDown();
+
+  // **************************************************************************/
+  // Configure INA219 to Active working mode, keeping current configuration
+  // **************************************************************************/
+  void setActiveMode();
 
 private:
 
