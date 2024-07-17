@@ -131,6 +131,7 @@ void P027_data_struct::setCalibration_26V_8A() {
   wireWriteRegister(INA219_REG_CONFIG, config);
 }
 
+# if P027_FEATURE_POWERDOWN
 void P027_data_struct::setPowerDown() {
   uint16_t value;
 
@@ -152,8 +153,10 @@ void P027_data_struct::setActiveMode() {
   value |= INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS;
 
   wireWriteRegister(INA219_REG_CONFIG, value);
-  delay(1); // Allow at lease 40 microseconds to recover from powerdown mode
+  delay(1); // Allow at least 40 microseconds to recover from powerdown mode
 }
+
+# endif // if P027_FEATURE_POWERDOWN
 
 int16_t P027_data_struct::getBusVoltage_raw() {
   uint16_t value;
