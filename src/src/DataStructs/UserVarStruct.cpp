@@ -4,13 +4,14 @@
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Cache.h"
+#include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/CRC_functions.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
-
 
 
 void UserVarStruct::clear()
@@ -40,7 +41,7 @@ float UserVarStruct::operator[](unsigned int index) const
     static float errorvalue = NAN;
 #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE
     return errorvalue;
   }
 }
@@ -253,6 +254,27 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t    taskIndex,
                                                     Sensor_VType   sensorType,
                                                     bool           raw) const
 {
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+  if (raw || !Cache.hasFormula(taskIndex, varNr)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (Device[DeviceIndex].HasFormatUserVar) {
+      // First try to format using the plugin specific formatting.
+      String formattedUserVar;
+      EventStruct tempEvent(taskIndex);
+      tempEvent.idx = varNr;
+
+      if (PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, formattedUserVar)) {
+        ESPEASY_RULES_FLOAT_TYPE value{};
+
+        if (validDoubleFromString(formattedUserVar, value)) {
+          return value;
+        }
+      }
+    }
+  }
+#endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
@@ -263,6 +285,20 @@ ESPEASY_RULES_FLOAT_TYPE UserVarStruct::getAsDouble(taskIndex_t    taskIndex,
 
 String UserVarStruct::getAsString(taskIndex_t taskIndex, taskVarIndex_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals, bool raw) const
 {
+  if (raw || !Cache.hasFormula(taskIndex, varNr)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (Device[DeviceIndex].HasFormatUserVar) {
+      // First try to format using the plugin specific formatting.
+      String formattedUserVar;
+      EventStruct tempEvent(taskIndex);
+      tempEvent.idx = varNr;
+
+      if (PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, formattedUserVar)) {
+        return formattedUserVar;
+      }
+    }
+  }
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, varNr, sensorType, raw);
 
   if (data != nullptr) {
@@ -339,7 +375,7 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
     const uint16_t key = makeWord(taskIndex, varNr);
 #ifndef LIMIT_BUILD_SIZE
     {
-      auto it            = _preprocessedFormula.find(key);
+      auto it = _preprocessedFormula.find(key);
 
       if (it != _preprocessedFormula.end()) {
         _preprocessedFormula.erase(it);
@@ -347,7 +383,7 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
     }
 #endif // ifndef LIMIT_BUILD_SIZE
     {
-      auto it            = _prevValue.find(key);
+      auto it = _prevValue.find(key);
 
       if (it != _prevValue.end()) {
         _prevValue.erase(it);
@@ -359,6 +395,7 @@ void UserVarStruct::clear_computed(taskIndex_t taskIndex)
 void UserVarStruct::markPluginRead(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
+
   for (taskVarIndex_t varNr = 0; validTaskVarIndex(varNr); ++varNr) {
     if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
       const uint16_t key = makeWord(taskIndex, varNr);
@@ -439,14 +476,15 @@ bool UserVarStruct::applyFormula(taskIndex_t    taskIndex,
     if (formula_has_prevvalue) {
       const String prev_str = getPreviousValue(taskIndex, varNr, sensorType);
       formula.replace(F("%pvalue%"), prev_str.isEmpty() ? value : prev_str);
+
       /*
-      addLog(LOG_LEVEL_INFO, 
-        strformat(
-          F("pvalue: %s, value: %s, formula: %s"), 
-          prev_str.c_str(), 
+         addLog(LOG_LEVEL_INFO,
+         strformat(
+          F("pvalue: %s, value: %s, formula: %s"),
+          prev_str.c_str(),
           value.c_str(),
           formula.c_str()));
-      */
+       */
     }
 
     ESPEASY_RULES_FLOAT_TYPE result{};
@@ -502,7 +540,7 @@ String UserVarStruct::getPreprocessedFormula(taskIndex_t taskIndex, taskVarIndex
   if (it == _preprocessedFormula.end()) {
     _preprocessedFormula.emplace(
       std::make_pair(
-        key, 
+        key,
         RulesCalculate_t::preProces(Cache.getTaskDeviceFormula(taskIndex, varNr))
         ));
   }

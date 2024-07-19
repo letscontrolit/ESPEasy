@@ -440,13 +440,12 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   if (Device[DeviceIndex].HasFormatUserVar) {
     // First try to format using the plugin specific formatting.
-    String result;
+    String formattedUserVar;
     EventStruct tempEvent;
     tempEvent.deep_copy(event);
     tempEvent.idx = rel_index;
-    PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, result);
-    if (result.length() > 0) {
-      return result;
+    if (PluginCall(PLUGIN_FORMAT_USERVAR, &tempEvent, formattedUserVar)) {
+      return formattedUserVar;
     }
   }
   
