@@ -24,9 +24,12 @@ PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   else {
     _samples = new (ptr) PluginStatsBuffer_t();
   }
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  _offset = 0.0f;
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   _errorValueIsNaN   = isnan(_errorValue);
-  _minValue          = std::numeric_limits<float>::max();
-  _maxValue          = std::numeric_limits<float>::lowest();
+  _minValue          = std::numeric_limits<ESPEASY_RULES_FLOAT_TYPE>::max();
+  _maxValue          = std::numeric_limits<ESPEASY_RULES_FLOAT_TYPE>::lowest();
   _minValueTimestamp = 0;
   _maxValueTimestamp = 0;
 }
@@ -58,51 +61,55 @@ void PluginStats::processTimeSet(const double& time_offset)
   }
 }
 
-bool PluginStats::push(float value)
+bool PluginStats::push(ESPEASY_RULES_FLOAT_TYPE value)
 {
   if (_samples == nullptr) { return false; }
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+  if (_samples->isEmpty() && usableValue(value)) {
+    // When the first value isn't usable, we keep the offset at 0 and thus loose accuracy
+    _offset = value;
+  }
+  return _samples->push(value - _offset);
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   return _samples->push(value);
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 }
 
-bool PluginStats::matchesLastTwoEntries(float value) const
+bool PluginStats::matchesLastTwoEntries(ESPEASY_RULES_FLOAT_TYPE value) const
 {
   const size_t nrSamples = getNrSamples();
 
   if (nrSamples < 2) { return false; }
 
-  const float last       = (*_samples)[nrSamples - 1];
-  const float beforeLast = (*_samples)[nrSamples - 2];
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return matchesLastTwoEntries(doubleToString(value, _nrDecimals));
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return matchesLastTwoEntries(toString(value, _nrDecimals));
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+}
 
-  const String value_str = toString(value, _nrDecimals);
+bool PluginStats::matchesLastTwoEntries(const String& value_str) const
+{
+  const size_t nrSamples = getNrSamples();
 
+  if (nrSamples < 2) { return false; }
+
+  const ESPEASY_RULES_FLOAT_TYPE last       = get(nrSamples - 1);
+  const ESPEASY_RULES_FLOAT_TYPE beforeLast = get(nrSamples - 2);
+
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return
+    doubleToString(last,       _nrDecimals).equals(value_str) &&
+    doubleToString(beforeLast, _nrDecimals).equals(value_str);
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   return
     toString(last,       _nrDecimals).equals(value_str) &&
     toString(beforeLast, _nrDecimals).equals(value_str);
-
-
-  /*
-     const bool  value_valid = isValidFloat(value);
-     const bool  last_valid  = isValidFloat(last);
-
-     if (value_valid != last_valid) {
-      return false;
-     }
-     const bool beforeLast_valid = isValidFloat(beforeLast);
-
-     if (value_valid != beforeLast_valid) {
-      return false;
-     }
-
-     if (value_valid) {
-      return
-        approximatelyEqual(value, last) &&
-        approximatelyEqual(value, beforeLast);
-     }
-     return true;
-   */
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 }
 
-void PluginStats::trackPeak(float value, int64_t timestamp)
+void PluginStats::trackPeak(ESPEASY_RULES_FLOAT_TYPE value, int64_t timestamp)
 {
   if ((value > _maxValue) || (value < _minValue)) {
     if (timestamp == 0) {
@@ -124,8 +131,8 @@ void PluginStats::trackPeak(float value, int64_t timestamp)
 
 void PluginStats::resetPeaks()
 {
-  _minValue          = std::numeric_limits<float>::max();
-  _maxValue          = std::numeric_limits<float>::lowest();
+  _minValue          = std::numeric_limits<ESPEASY_RULES_FLOAT_TYPE>::max();
+  _maxValue          = std::numeric_limits<ESPEASY_RULES_FLOAT_TYPE>::lowest();
   _minValueTimestamp = 0;
   _maxValueTimestamp = 0;
 }
@@ -141,16 +148,16 @@ size_t PluginStats::getNrSamples() const {
   return _samples->size();
 }
 
-float PluginStats::getSampleAvg() const {
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSampleAvg() const {
   return getSampleAvg(getNrSamples());
 }
 
-float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
   const size_t nrSamples = getNrSamples();
 
   if (nrSamples == 0) { return _errorValue; }
-  float sum = 0.0f;
+  ESPEASY_RULES_FLOAT_TYPE sum{};
 
   PluginStatsBuffer_t::index_t i = 0;
 
@@ -160,7 +167,7 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
   for (; i < nrSamples; ++i) {
-    const float sample((*_samples)[i]);
+    const ESPEASY_RULES_FLOAT_TYPE sample(get(i));
 
     if (usableValue(sample)) {
       ++samplesUsed;
@@ -172,7 +179,7 @@ float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) cons
   return sum / samplesUsed;
 }
 
-float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint64_t& totalDuration_usec) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples, uint64_t& totalDuration_usec) const
 {
   const size_t nrSamples = getNrSamples();
 
@@ -188,13 +195,13 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
     i = nrSamples - lastNrSamples;
   }
 
-  int64_t lastTimestamp   = 0;
-  float   lastValue       = 0.0f;
-  bool    lastValueUsable = false;
-  float   sum             = 0.0f;
+  int64_t lastTimestamp = 0;
+  ESPEASY_RULES_FLOAT_TYPE lastValue{};
+  bool lastValueUsable = false;
+  ESPEASY_RULES_FLOAT_TYPE sum{};
 
   for (; i < nrSamples; ++i) {
-    const float   sample((*_samples)[i]);
+    const ESPEASY_RULES_FLOAT_TYPE sample(get(i));
     const int64_t curTimestamp   = (*_plugin_stats_timestamps)[i];
     const bool    curValueUsable = usableValue(sample);
 
@@ -203,7 +210,7 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
 
       if (curValueUsable) {
         // Old and new value usable, take average of this period.
-        sum += ((lastValue + sample) / 2.0f) * duration_usec;
+        sum += ((lastValue + sample) / 2) * duration_usec;
       } else {
         // New value is not usable, so just add the last value for the duration.
         sum += lastValue * duration_usec;
@@ -220,11 +227,11 @@ float PluginStats::getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
   return sum / totalDuration_usec;
 }
 
-float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
   const size_t nrSamples = getNrSamples();
-  float variance         = 0.0f;
-  const float average    = getSampleAvg(lastNrSamples);
+  ESPEASY_RULES_FLOAT_TYPE variance{};
+  const ESPEASY_RULES_FLOAT_TYPE average = getSampleAvg(lastNrSamples);
 
   if (!usableValue(average)) { return 0.0f; }
 
@@ -236,11 +243,11 @@ float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) c
   PluginStatsBuffer_t::index_t samplesUsed = 0;
 
   for (; i < nrSamples; ++i) {
-    const float sample((*_samples)[i]);
+    const ESPEASY_RULES_FLOAT_TYPE sample(get(i));
 
     if (usableValue(sample)) {
       ++samplesUsed;
-      const float diff = sample - average;
+      const ESPEASY_RULES_FLOAT_TYPE diff = sample - average;
       variance += diff * diff;
     }
   }
@@ -248,10 +255,14 @@ float PluginStats::getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) c
   if (samplesUsed < 2) { return 0.0f; }
 
   variance /= samplesUsed;
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return sqrt(variance);
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   return sqrtf(variance);
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 }
 
-float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const
 {
   const size_t nrSamples = getNrSamples();
 
@@ -265,10 +276,10 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
 
   bool changed = false;
 
-  float res = getMax ? INT_MIN : INT_MAX;
+  ESPEASY_RULES_FLOAT_TYPE res = getMax ? INT_MIN : INT_MAX;
 
   for (; i < nrSamples; ++i) {
-    const float sample((*_samples)[i]);
+    const ESPEASY_RULES_FLOAT_TYPE sample(get(i));
 
     if (usableValue(sample)) {
       if ((getMax && (sample > res)) ||
@@ -284,7 +295,7 @@ float PluginStats::getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, 
   return res;
 }
 
-float PluginStats::getSample(int lastNrSamples) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::getSample(int lastNrSamples) const
 {
   const size_t nrSamples = getNrSamples();
 
@@ -299,16 +310,28 @@ float PluginStats::getSample(int lastNrSamples) const
   }
 
   if (i < nrSamples) {
-    return (*_samples)[i];
+    return get(i);
   }
   return _errorValue;
 }
 
-float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
+ESPEASY_RULES_FLOAT_TYPE PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
+{
+  return get(index);
+}
+
+ESPEASY_RULES_FLOAT_TYPE PluginStats::get(PluginStatsBuffer_t::index_t index) const
 {
   const size_t nrSamples = getNrSamples();
 
-  if (index < nrSamples) { return (*_samples)[index]; }
+  if (index < nrSamples) {
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    ESPEASY_RULES_FLOAT_TYPE res = _offset + (*_samples)[index];
+    return res;
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    return (*_samples)[index];
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  }
   return _errorValue;
 }
 
@@ -578,8 +601,8 @@ void PluginStats::plot_ChartJS_dataset() const
       addHtml(',');
     }
 
-    if (!isnan((*_samples)[i])) {
-      addHtmlFloat((*_samples)[i], _nrDecimals);
+    if (!isnan(get(i))) {
+      addHtmlFloat(get(i), _nrDecimals);
     }
     else {
       addHtml(F("null"));
