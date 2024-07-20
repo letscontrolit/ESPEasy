@@ -47,6 +47,10 @@ The Hysteresis can be symetrical around the Setpoint: Switching on above Setpoin
 With an asymetrical Hysteresis the output is switched on above the Setpoint and switched of below Setpoint - Hysteresis.
 
 To facilitate various applications the direction of the input comparator can be inverted.
+Combining symetrical hystersis and invert output this results in the following overview:
+
+.. image:: P021_control.png
+  :alt: Control algorithm overview
 
 State control extension
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,7 +102,7 @@ Configuration settings in classic mode:
 .. image:: P021_DeviceConfiguration1.png
   :alt: Device Configuration classic settings
 
-Configuration settings in extended mode:
+In extended mode additional settings are available:
 
 .. image:: P021_DeviceConfiguration2.png
   :alt: Device Configuration extended settings
@@ -130,13 +134,15 @@ In case of symetrical hysteresis there is 1 exception to the **Hysteresis**: If 
 
 * **Extended functionality** Enable new functionality. Changing this will reload the form showing/hiding the new options below.
 
+* **Long time span** Timer values are per default entered in [seconds], enabling this option timing settings are tuned to long intervals using [hours] or [seconds]. Changing this will reload the form showing rescaled values and new units.
+
 * **Control mode** Selection of the Control mode, see Operation mode above.
 
-* **Minimum running time** Once switched on the Output shall be active for at least this time. See State control extension.
+* **Minimum running time** Once switched on the Output shall be active for at least this time. See State control extension. Time is either in [seconds] or in [minutes].
 
-* **Maximum idle time** Output will be forced to active if it has been idle for this time. See State control extension.
+* **Maximum idle time** Output will be forced to active if it has been idle for this time. See State control extension. Time is either in [seconds] or in [hours].
 
-* **Forced circulation time** Output will be active for this duration once it is forced active. See State control extension.
+* **Forced circulation time** Output will be active for this duration once it is forced active. See State control extension. Time is either in [seconds] or in [minutes].
 
 * **Symetrical hysteress** If checked the Hysteresis is symerical around the Setpoint. Otherwise it is asymertical. See basic control algorithm.
 
@@ -175,22 +181,30 @@ So this change can also be handled using Rules.
 example
 -------
 
-I am using this plugin to control a water circulation pump foor my floor heating at house. The house is heated by a central heating system (boiler and heatpump combination). 
+I am using this plugin to control a water circulation pump for my floor heating at house. The house is heated by a central heating system (boiler and heatpump combination). 
 The circulation pump consumes quite some electricity, so I only want to switch it on only when needed. The control box contains an ESP32 with 3 temperature sensors to monitor:
+
 * Water temperature from the heater
+
 * Water temperature floor inlet
+
 * Water termperature floor outlet
+
 It has one output to control the pump.
 
 Control input is the water temperature from the central heating. If the temparture rises above the Setpoint (heating switched on by the thermostat in the room) the pump is switched on. 
 When the temperature drops below the Setpoint minus Hysteresis it can be switched off.
-However, it shall run some extension time to assure the remaining heat in the water is spread well. It also prevents switching the pump too often.
-These pumps don't like it when being stopped for half a season. Therefore the pump is switched on for 5 minutes in case is has not been running for a day.
-With the introduction of the heat pump the water temperature stays relativel low (40 degrees) and the pump mingt be switched on late. Therefore the home automation system sends a "remote on" when the heat pump is running.
+However, it shall run for some extension time to assure the remaining heat in the water is spread well over the floor. It also prevents switching the pump too often which might damage it.
+These pumps don't like it when idling for half a season. Therefore the pump is switched on for 5 minutes in case is has not been running for a day.
+With the introduction of the heat pump the water temperature stays relatively low (40 degrees) and the pump might be switched on very late. Therefore the home automation system sends a "remote on" when the heat pump is running.
+Note that setting the setpoint very low will result in switching on the pump in summer due to high environmental temperatures. 
 
 The control box has a 3 color LED to signal the the state. I use a rule to use the state value to enable one of the LED outputs:
+
 * IDLE : green LED
+
 * HEATING : red LED
+
 * EXTEND, FORCE : blue LED
 
 My settings:
@@ -206,6 +220,8 @@ My settings:
 * **Auto-save interval** 0
 
 * **Extended functionality** YES
+
+* **Long time span** YES
 
 * **Control mode** Remote
 
