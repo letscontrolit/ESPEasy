@@ -45,10 +45,10 @@
 #  undef P073_SCROLL_TEXT          // Optionally activate if .bin file space is problematic, remove the scrolling text feature
 #  undef P073_7DBIN_COMMAND        // Optionally activate if .bin file space is problematic, remove the 7dbin command
 #  undef P073_SUPPRESS_ZERO        // Optionally activate if .bin file space is problematic, remove the Suppress leading zero feature
-// #  undef P073_USE_74HC595          // Optionally activate if .bin file space is problematic, remove the support for 74HC595 displays
+#  undef P073_USE_74HC595          // Optionally activate if .bin file space is problematic, remove the support for 74HC595 displays
 # else // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
-#  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
+// #  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
 # endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 # define TM1637_POWER_ON    0b10001000
