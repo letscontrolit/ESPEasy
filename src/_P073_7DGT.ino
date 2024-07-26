@@ -10,6 +10,7 @@
 //  1 - TM1637     -- 2 pins - 4 digits and dot on each digit (X.X.X.X.)
 //  2 - TM1637     -- 2 pins - 6 digits and dot on each digit (X.X.X.X.X.X.)
 //  3 - MAX7219/21 -- 3 pins - 8 digits and dot on each digit (X.X.X.X.X.X.X.X.)
+//  4 - 74HC595 xDgt  3 pins - 2,2+2,3,3+2,2+3,4,6,3+3,8 digits and dot on each digit (X.X. .. X.X.X.X.X.X.X.X.)
 //
 // Plugin can be setup as:
 //  - Manual        -- display is manually updated sending commands
@@ -39,34 +40,43 @@
 //  - "7output,<0-5> -- select display output mode, 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",3:"Clock 12h - Blink",4:"Clock
 //                      12h - No Blink",5:"Date"
 //
-// History
-// 2023-03-30, tonhuisman: Correct 7dtext on 6-digit TM1637 to also swap the dots when swapping the digits
-// 2023-03-29, tonhuisman: Add option to suppress the leading zero on day and hour when < 10
-//                         Disable scrolling for content/commands that don't support that
-// 2023-03-28, tonhuisman: Guard scrolling feature to only be used for 7dtext and 7dbin commands, and fix scrolling on 6-digit display
-//                         Fix 7dbin command to also work correctly for TM1637 displays
-// 2022-02-03, tonhuisman: Move P073_data_struct to PluginStruct directory, code optimizations, de-duplication
-// 2021-10-06, tonhuisman: Store via commands changed output, font and brightness setting in settings variables, but not save them yet.
-// 2021-10-05, tonhuisman: Add 7output command for changing the Display Output setting. Not saved, unless the save command is also sent.
-// 2021-02-13, tonhuisman: Fixed self-introduced bug of conversion from MAX7219 to TM1637 bit mapping, removed now unused TM1637 character
-//                         maps, moved some logging to DEBUG level
-// 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes
-//                         with these special characters: " -^=/_
-//                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters
-//                         "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CHNORUX",
-//                         "^" displays as degree symbol and "|" displays overscsore (top-line only).
-//                         'Merged' fontdata for TM1637 by converting the data for MAX7219 (bits 0-6 are swapped around), to save a little
-//                         space and maintanance burden.
-//                         Added 7dfont,<font> command for changing the font dynamically runtime. NB: The numbers digits are equal for all
-//                         fonts!
-//                         Added Scroll Text option for scrolling texts longer then the display is wide
-//                         Added 7dbin,<uint8_t>[,...] for displaying binary formatted data bits clock-wise from left to right, dot, top,
-//                         right 2x, bottom, left 2x, center), scroll-enabled
-// 2021-01-10, tonhuisman: Added optional . as dot display (7dtext)
-//                         Added 7ddt,<temp1>,<temp2> dual temperature display
-//                         Added optional removal of degree symbol on temperature display
-//                         Added optional right-shift of 7dt,<temp> on MAX7219 display (is normally shifted to left by 1 digit, so last
-//                         digit is blank)
+
+/** History
+ * 2024-07-24 tonhuisman: Fixed the issue that most extended features where not included in the MAX or ESP32 builds
+ * 2024-07-20 tonhuisman: Implement 74HC595 7-segment displays (2, 2+2, 3, 2+3, 3+2, 4, 6, 3+3 and 8 digits)
+ *                        2 and 3 digit display use sequential data, 4, 6 and 8 digit displays use multiplexing, requiring continuous
+ *                        refreshing of the display content.
+ *                        The 2 and 3 digit displays can be coupled (output to input) in sets of max. 2 (2+2, 2+3, 3+2, 3+3), and will be
+ *                        seen as a single display of 4, 5 or 6 digits.
+ *                        Multiplexed displays can _not_ be coupled, nor can the TM1637 or MAX7219 displays.
+ * 2023-03-30 tonhuisman: Correct 7dtext on 6-digit TM1637 to also swap the dots when swapping the digits
+ * 2023-03-29 tonhuisman: Add option to suppress the leading zero on day and hour when < 10
+ *                        Disable scrolling for content/commands that don't support that
+ * 2023-03-28 tonhuisman: Guard scrolling feature to only be used for 7dtext and 7dbin commands, and fix scrolling on 6-digit display
+ *                        Fix 7dbin command to also work correctly for TM1637 displays
+ * 2022-02-03 tonhuisman: Move P073_data_struct to PluginStruct directory, code optimizations, de-duplication
+ * 2021-10-06 tonhuisman: Store via commands changed output, font and brightness setting in settings variables, but not save them yet.
+ * 2021-10-05 tonhuisman: Add 7output command for changing the Display Output setting. Not saved, unless the save command is also sent.
+ * 2021-02-13 tonhuisman: Fixed self-introduced bug of conversion from MAX7219 to TM1637 bit mapping, removed now unused TM1637 character
+ *                        maps, moved some logging to DEBUG level
+ * 2021-01-30 tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes
+ *                        with these special characters: " -^=/_
+ *                        Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters
+ *                        "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CHNORUX",
+ *                        "^" displays as degree symbol and "|" displays overscsore (top-line only).
+ *                        'Merged' fontdata for TM1637 by converting the data for MAX7219 (bits 0-6 are swapped around), to save a little
+ *                        space and maintanance burden.
+ *                        Added 7dfont,<font> command for changing the font dynamically runtime. NB: The numbers digits are equal for all
+ *                        fonts!
+ *                        Added Scroll Text option for scrolling texts longer then the display is wide
+ *                        Added 7dbin,<uint8_t>[,...] for displaying binary formatted data bits clock-wise from left to right, dot, top,
+ *                        right 2x, bottom, left 2x, center), scroll-enabled
+ * 2021-01-10 tonhuisman: Added optional . as dot display (7dtext)
+ *                        Added 7ddt,<temp1>,<temp2> dual temperature display
+ *                        Added optional removal of degree symbol on temperature display
+ *                        Added optional right-shift of 7dt,<temp> on MAX7219 display (is normally shifted to left by 1 digit, so last
+ *                        digit is blank)
+ */
 
 # define PLUGIN_073
 # define PLUGIN_ID_073           73
@@ -87,18 +97,19 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_073;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_073;
+      Device[deviceCount].Type             = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].ValueCount       = 0;
+      Device[deviceCount].GlobalSyncOption = true;
+
+      // Device[deviceCount].PullUpOption       = false;
+      // Device[deviceCount].InverseLogicOption = false;
+      // Device[deviceCount].FormulaOption      = false;
+      // Device[deviceCount].SendDataOption     = false;
+      // Device[deviceCount].TimerOption        = false;
+      // Device[deviceCount].TimerOptional      = false;
 
       break;
     }
@@ -108,22 +119,48 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    # ifdef P073_SCROLL_TEXT
+    # if defined(P073_SCROLL_TEXT) || defined(P073_USE_74HC595)
     case PLUGIN_SET_DEFAULTS: {
-      PCONFIG(3) = 10; // Default 10 * 0.1 sec scroll speed
+      #  ifdef P073_SCROLL_TEXT
+      P073_CFG_SCROLLSPEED = 10; // Default 10 * 0.1 sec scroll speed
+      #  endif // ifdef P073_SCROLL_TEXT
+      #  ifdef P073_USE_74HC595
+      P073_CFG_DIGITS = 4;       // Default number of digits
+      #  endif // ifdef P073_USE_74HC595
       break;
     }
-    # endif // P073_SCROLL_TEXT
+    # endif // if defined(P073_SCROLL_TEXT) || defined(P073_USE_74HC595)
 
     case PLUGIN_WEBFORM_LOAD: {
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
+      # ifdef P073_USE_74HC595
+      addFormNote(F("74HC595: 1st=SDI-Pin, 2nd=CLK-Pin, 3rd=LOAD-Pin"));
+      # endif // ifdef P073_USE_74HC595
       {
         const __FlashStringHelper *displtype[] = { F("TM1637 - 4 digit (colon)"),
                                                    F("TM1637 - 4 digit (dots)"),
                                                    F("TM1637 - 6 digit"),
-                                                   F("MAX7219 - 8 digit") };
-        addFormSelector(F("Display Type"), F("displtype"), 4, displtype, nullptr, PCONFIG(0));
+                                                   F("MAX7219 - 8 digit"),
+                                                   # ifdef P073_USE_74HC595
+                                                   F("74HC595 - 2..8 digit"),
+                                                   # endif // ifdef P073_USE_74HC595
+        };
+        addFormSelector(F("Display Type"), F("displtype"), NR_ELEMENTS(displtype), displtype, nullptr, P073_CFG_DISPLAYTYPE);
+      }
+      # ifdef P073_USE_74HC595
+
+      if (P073_74HC595_2_8DGT == P073_CFG_DISPLAYTYPE) {
+        if (0 == P073_CFG_DIGITS) {
+          P073_CFG_DIGITS = 4;
+        }
+        const __FlashStringHelper *digits[] = { F("2"), F("2+2"), F("3"), F("4"), F("3+2 / 2+3"), F("6"), F("3+3"), F("8") };
+        const int digitsOptions[]           = { 2, 1, 3, 4, 5, 6, 7, 8 };
+        addFormSelector(F("Nr. of digits"), F("dgts"), NR_ELEMENTS(digitsOptions), digits, digitsOptions, P073_CFG_DIGITS);
+      } else
+      # endif // ifdef P073_USE_74HC595
+      {
+        P073_CFG_DIGITS = p073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
       }
       {
         const __FlashStringHelper *displout[] = { F("Manual"),
@@ -132,10 +169,10 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Clock 12h - Blink"),
                                                   F("Clock 12h - No Blink"),
                                                   F("Date") };
-        addFormSelector(F("Display Output"), F("displout"), 6, displout, nullptr, PCONFIG(1));
+        addFormSelector(F("Display Output"), F("displout"), 6, displout, nullptr, P073_CFG_OUTPUTTYPE);
       }
 
-      addFormNumericBox(F("Brightness"), F("brightness"), PCONFIG(2), 0, 15);
+      addFormNumericBox(F("Brightness"), F("brightness"), P073_CFG_BRIGHTNESS, 0, 15);
       addUnit(F("0..15"));
 
       # ifdef P073_EXTRA_FONTS
@@ -144,37 +181,41 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Siekoo"),
                                                   F("Siekoo with uppercase 'CHNORUX'"),
                                                   F("dSEG7") };
-        addFormSelector(F("Font set"), F("fontset"), 4, fontset, nullptr, PCONFIG(4));
+        addFormSelector(F("Font set"), F("fontset"), 4, fontset, nullptr, P073_CFG_FONTSET);
         addFormNote(F("Check documentation for examples of the font sets."));
       }
       # endif // P073_EXTRA_FONTS
 
       addFormSubHeader(F("Options"));
 
-      addFormCheckBox(F("Text show periods as dot"),    F("periods"),     bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD));
+      addFormCheckBox(F("Text show periods as dot"),    F("periods"),     bitRead(P073_CFG_FLAGS, P073_OPTION_PERIOD));
 
-      addFormCheckBox(F("Hide &deg; for Temperatures"), F("hide_degree"), bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE));
+      addFormCheckBox(F("Hide &deg; for Temperatures"), F("hide_degree"), bitRead(P073_CFG_FLAGS, P073_OPTION_HIDEDEGREE));
       # ifdef P073_7DDT_COMMAND
       addFormNote(F("Commands 7dt,&lt;temp&gt; and 7ddt,&lt;temp1&gt;,&lt;temp2&gt;"));
       # else // ifdef P073_7DDT_COMMAND
       addFormNote(F("Command 7dt,&lt;temp&gt;"));
       # endif // P073_7DDT_COMMAND
       # ifdef P073_SUPPRESS_ZERO
-      addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"), bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0));
+      addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"), bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0));
       # endif // ifdef P073_SUPPRESS_ZERO
 
       # ifdef P073_SCROLL_TEXT
-      addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT));
-      addFormCheckBox(F("Scroll text in from right"),      F("scroll_full"), bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL));
+      addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(P073_CFG_FLAGS, P073_OPTION_SCROLLTEXT));
+      addFormCheckBox(F("Scroll text in from right"),      F("scroll_full"), bitRead(P073_CFG_FLAGS, P073_OPTION_SCROLLFULL));
 
-      if (PCONFIG(3) == 0) { PCONFIG(3) = 10; }
-      addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("scrollspeed"), PCONFIG(3), 1, 600);
+      if (P073_CFG_SCROLLSPEED == 0) { P073_CFG_SCROLLSPEED = 10; }
+      addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("scrollspeed"), P073_CFG_SCROLLSPEED, 1, 600);
       addUnit(F("1..600 = 0.1..60 sec/step"));
       # endif // P073_SCROLL_TEXT
 
+      # ifdef P073_USE_74HC595
+      addFormSubHeader(F("Options for 8 digit displays (MAX7219/74HC595)"));
+      # else // ifdef P073_USE_74HC595
       addFormSubHeader(F("Options for MAX7219 - 8 digit"));
+      # endif // ifdef P073_USE_74HC595
 
-      bool bRightAlign = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
+      bool bRightAlign = bitRead(P073_CFG_FLAGS, P073_OPTION_RIGHTALIGN);
       addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bRightAlign);
 
       success = true;
@@ -182,9 +223,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      PCONFIG(0) = getFormItemInt(F("displtype"));
-      PCONFIG(1) = getFormItemInt(F("displout"));
-      PCONFIG(2) = getFormItemInt(F("brightness"));
+      P073_CFG_DISPLAYTYPE = getFormItemInt(F("displtype"));
+      P073_CFG_OUTPUTTYPE  = getFormItemInt(F("displout"));
+      P073_CFG_BRIGHTNESS  = getFormItemInt(F("brightness"));
       uint32_t lSettings = 0;
       bitWrite(lSettings, P073_OPTION_PERIOD,     isFormItemChecked(F("periods")));
       bitWrite(lSettings, P073_OPTION_HIDEDEGREE, isFormItemChecked(F("hide_degree")));
@@ -192,15 +233,21 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       # ifdef P073_SCROLL_TEXT
       bitWrite(lSettings, P073_OPTION_SCROLLTEXT, isFormItemChecked(F("scroll_text")));
       bitWrite(lSettings, P073_OPTION_SCROLLFULL, isFormItemChecked(F("scroll_full")));
-      PCONFIG(3) = getFormItemInt(F("scrollspeed"));
+      P073_CFG_SCROLLSPEED = getFormItemInt(F("scrollspeed"));
       # endif // P073_SCROLL_TEXT
       # ifdef P073_SUPPRESS_ZERO
       bitWrite(lSettings, P073_OPTION_SUPPRESS0, isFormItemChecked(F("supp0")));
       # endif // ifdef P073_SUPPRESS_ZERO
       # ifdef P073_EXTRA_FONTS
-      PCONFIG(4) = getFormItemInt(F("fontset"));
+      P073_CFG_FONTSET = getFormItemInt(F("fontset"));
       # endif // P073_EXTRA_FONTS
-      PCONFIG_LONG(0) = lSettings;
+      # ifdef P073_USE_74HC595
+
+      if (P073_74HC595_2_8DGT == P073_CFG_DISPLAYTYPE) {
+        P073_CFG_DIGITS = getFormItemInt(F("dgts"));
+      }
+      # endif // ifdef P073_USE_74HC595
+      P073_CFG_FLAGS = lSettings;
 
       success = true;
       break;
@@ -222,25 +269,36 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         switch (P073_data->displayModel) {
           case P073_TM1637_4DGTCOLON:
           case P073_TM1637_4DGTDOTS:
-          case P073_TM1637_6DGT: {
+          case P073_TM1637_6DGT:
             tm1637_InitDisplay(CONFIG_PIN1, CONFIG_PIN2);
-            tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, PCONFIG(2) / 2, true);
+            tm1637_SetPowerBrightness(CONFIG_PIN1, CONFIG_PIN2, P073_CFG_BRIGHTNESS / 2, true);
 
-            if (PCONFIG(1) == P073_DISP_MANUAL) {
+            if (P073_CFG_OUTPUTTYPE == P073_DISP_MANUAL) {
               tm1637_ClearDisplay(CONFIG_PIN1, CONFIG_PIN2);
             }
             break;
-          }
-          case P073_MAX7219_8DGT: {
+          case P073_MAX7219_8DGT:
             max7219_InitDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
             delay(10); // small poweroff/poweron delay
-            max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(2), true);
+            max7219_SetPowerBrightness(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, P073_CFG_BRIGHTNESS, true);
 
-            if (PCONFIG(1) == P073_DISP_MANUAL) {
+            if (P073_CFG_OUTPUTTYPE == P073_DISP_MANUAL) {
               max7219_ClearDisplay(event, CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3);
             }
             break;
-          }
+          # ifdef P073_USE_74HC595
+          case P073_74HC595_2_8DGT:
+            P073_data->hc595_InitDisplay();
+
+            if (P073_CFG_OUTPUTTYPE == P073_DISP_MANUAL) {
+              P073_data->ClearBuffer();
+
+              if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+                P073_data->hc595_ShowBuffer();
+              }
+            }
+            break;
+          # endif // ifdef P073_USE_74HC595
         }
         success = true;
       }
@@ -270,7 +328,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       if (P073_data->output == P073_DISP_DATE) {
         P073_data->FillBufferWithDate(true, 0, 0, 0,
                                       # ifdef P073_SUPPRESS_ZERO
-                                      bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                      bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0)
                                       # else // ifdef P073_SUPPRESS_ZERO
                                       false
                                       # endif // ifdef P073_SUPPRESS_ZERO
@@ -279,7 +337,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         P073_data->FillBufferWithTime(true, 0, 0, 0, !((P073_data->output == P073_DISP_CLOCK24BLNK) ||
                                                        (P073_data->output == P073_DISP_CLOCK24)),
                                       # ifdef P073_SUPPRESS_ZERO
-                                      bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                      bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0)
                                       # else // ifdef P073_SUPPRESS_ZERO
                                       false
                                       # endif // ifdef P073_SUPPRESS_ZERO
@@ -293,7 +351,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
           break;
         }
         case P073_TM1637_6DGT: {
-          if (PCONFIG(1) == P073_DISP_DATE) {
+          if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
             tm1637_ShowDate6(event);
           } else {
             tm1637_ShowTime6(event);
@@ -301,7 +359,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
           break;
         }
         case P073_MAX7219_8DGT: {
-          if (PCONFIG(1) == P073_DISP_DATE) {
+          if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
             max7219_ShowDate(event, P073_data->pin1, P073_data->pin2,
                              P073_data->pin3);
           } else {
@@ -310,6 +368,12 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
           }
           break;
         }
+        # ifdef P073_USE_74HC595
+        case P073_74HC595_2_8DGT: {
+          //
+          break;
+        }
+        # endif // ifdef P073_USE_74HC595
       }
       break;
     }
@@ -353,13 +417,43 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                P073_data->pin3);
             break;
           }
+          #  ifdef P073_USE_74HC595
+          case P073_74HC595_2_8DGT: {
+            if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+              P073_data->hc595_ShowBuffer();
+            }
+            break;
+          }
+          #  endif // ifdef P073_USE_74HC595
         }
+        success = true;
       }
       break;
     }
     # endif // P073_SCROLL_TEXT
+
+    # ifdef P073_USE_74HC595
+    case PLUGIN_FIFTY_PER_SECOND: {
+      P073_data_struct *P073_data =
+        static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P073_data) {
+        success = P073_data->plugin_fifty_per_second(event);
+      }
+      break;
+    }
+    # endif // ifdef P073_USE_74HC595
   }
   return success;
+}
+
+uint8_t p073_getDefaultDigits(uint8_t displayType) {
+  const uint8_t digits[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
+
+  if (displayType < NR_ELEMENTS(digits)) {
+    return digits[displayType];
+  }
+  return 0;
 }
 
 bool p073_plugin_write(struct EventStruct *event,
@@ -415,8 +509,8 @@ bool p073_plugin_write(struct EventStruct *event,
     return p073_plugin_write_7dbin(event, text);
   # endif // P073_7DBIN_COMMAND
   } else {
-    bool p073_validcmd  = false;
-    bool p073_displayon = false;
+    bool success   = false;
+    bool displayon = false;
 
     if (equals(cmd, F("7don"))) {
       # ifdef P073_SCROLL_TEXT
@@ -425,8 +519,8 @@ bool p073_plugin_write(struct EventStruct *event,
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("7DGT : Display ON"));
       # endif // ifndef BUILD_NO_DEBUG
-      p073_displayon = true;
-      p073_validcmd  = true;
+      displayon = true;
+      success   = true;
     } else if (equals(cmd, F("7doff"))) {
       # ifdef P073_SCROLL_TEXT
       newScroll = currentScroll; // Restore state
@@ -434,8 +528,8 @@ bool p073_plugin_write(struct EventStruct *event,
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("7DGT : Display OFF"));
       # endif // ifndef BUILD_NO_DEBUG
-      p073_displayon = false;
-      p073_validcmd  = true;
+      displayon = false;
+      success   = true;
     } else if (equals(cmd, F("7db"))) {
       # ifdef P073_SCROLL_TEXT
       newScroll = currentScroll; // Restore state
@@ -449,9 +543,9 @@ bool p073_plugin_write(struct EventStruct *event,
         }
         # endif // ifndef BUILD_NO_DEBUG
         P073_data->brightness = event->Par1;
-        PCONFIG(2)            = event->Par1;
-        p073_displayon        = true;
-        p073_validcmd         = true;
+        P073_CFG_BRIGHTNESS   = event->Par1;
+        displayon             = true;
+        success               = true;
       }
     } else if (equals(cmd, F("7output"))) {
       if ((event->Par1 >= 0) && (event->Par1 < 6)) { // 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",
@@ -462,10 +556,10 @@ bool p073_plugin_write(struct EventStruct *event,
           addLog(LOG_LEVEL_INFO, concat(F("7DGT : Display output="), event->Par1));
         }
         # endif // ifndef BUILD_NO_DEBUG
-        P073_data->output = event->Par1;
-        PCONFIG(1)        = event->Par1;
-        p073_displayon    = true;
-        p073_validcmd     = true;
+        P073_data->output   = event->Par1;
+        P073_CFG_OUTPUTTYPE = event->Par1;
+        displayon           = true;
+        success             = true;
         # ifdef P073_SCROLL_TEXT
 
         if (event->Par1 == 0) { newScroll = currentScroll; } // Restore state
@@ -473,7 +567,7 @@ bool p073_plugin_write(struct EventStruct *event,
       }
     }
 
-    if (p073_validcmd) {
+    if (success) {
       # ifdef P073_SCROLL_TEXT
       P073_data->setScrollEnabled(newScroll);
       # endif // ifdef P073_SCROLL_TEXT
@@ -482,23 +576,47 @@ bool p073_plugin_write(struct EventStruct *event,
         case P073_TM1637_4DGTCOLON:
         case P073_TM1637_4DGTDOTS:
         case P073_TM1637_6DGT:
-        {
           tm1637_SetPowerBrightness(P073_data->pin1, P073_data->pin2,
-                                    P073_data->brightness / 2, p073_displayon);
+                                    P073_data->brightness / 2, displayon);
           break;
-        }
         case P073_MAX7219_8DGT:
-        {
           max7219_SetPowerBrightness(event, P073_data->pin1, P073_data->pin2,
                                      P073_data->pin3, P073_data->brightness,
-                                     p073_displayon);
+                                     displayon);
           break;
-        }
+        # ifdef P073_USE_74HC595
+        case P073_74HC595_2_8DGT:
+          // 74HC595 don't have a brightness setting
+          break;
+        # endif // ifdef P073_USE_74HC595
       }
     }
-    return p073_validcmd;
+    return success;
   }
   return false;
+}
+
+void p073_GetDisplayLimits(struct EventStruct *event, int32_t& lLimit, int32_t& uLimit, int8_t offset = 0) {
+  uint8_t dgts = p073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
+
+  # ifdef P073_USE_74HC595
+
+  if (P073_74HC595_2_8DGT == P073_CFG_DISPLAYTYPE) {
+    dgts = P073_CFG_DIGITS;
+
+    if (1 == dgts) {
+      dgts = 4; // Special case
+    } else
+    if (7 == dgts) {
+      dgts = 6; // Special case
+    }
+  }
+  # endif // ifdef P073_USE_74HC595
+  dgts  -= offset;           // Subtract an offset, used for extra symbol
+  lLimit = -pow10(dgts - 1); // Lowest value we can display - 1
+  uLimit = pow10(dgts);      // Highest value we can display + 1
+  // TODO disable log
+  addLog(LOG_LEVEL_INFO, strformat(F("P073: limits: %d digits(%d), lower: %d, upper: %d"), dgts, offset, lLimit, uLimit));
 }
 
 bool p073_plugin_write_7dn(struct EventStruct *event,
@@ -517,42 +635,40 @@ bool p073_plugin_write_7dn(struct EventStruct *event,
   }
   # endif // ifndef BUILD_NO_DEBUG
 
+  int32_t lLimit = 0;
+  int32_t uLimit = 0;
+  p073_GetDisplayLimits(event, lLimit, uLimit);
+
+  if (!text.isEmpty()) {
+    if ((event->Par1 > lLimit) && (event->Par1 < uLimit)) {
+      P073_data->FillBufferWithNumber(text.c_str());
+    } else {
+      P073_data->FillBufferWithDash();
+    }
+  }
+
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
-    {
-      if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(text.c_str());
-      } else {
-        P073_data->FillBufferWithDash();
-      }
       tm1637_ShowBuffer(event, TM1637_4DIGIT, 8);
       break;
-    }
     case P073_TM1637_6DGT:
-    {
-      if ((event->Par1 > -100000) && (event->Par1 < 1000000)) {
-        P073_data->FillBufferWithNumber(text.c_str());
-      } else {
-        P073_data->FillBufferWithDash();
-      }
       tm1637_SwapDigitInBuffer(event, 2); // only needed for 6-digits displays
       tm1637_ShowBuffer(event, TM1637_6DIGIT, 8);
       break;
-    }
     case P073_MAX7219_8DGT:
-    {
-      if (!text.isEmpty()) {
-        if ((event->Par1 > -10000000) && (event->Par1 < 100000000)) {
-          P073_data->FillBufferWithNumber(text.c_str());
-        } else {
-          P073_data->FillBufferWithDash();
-        }
-        max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
-                           P073_data->pin3);
+      max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2,
+                         P073_data->pin3);
+      break;
+    # ifdef P073_USE_74HC595
+    case P073_74HC595_2_8DGT:
+      P073_data->hc595_AdjustBuffer();
+
+      if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+        P073_data->hc595_ShowBuffer();
       }
       break;
-    }
+    # endif // ifdef P073_USE_74HC595
   }
   return true;
 }
@@ -580,23 +696,35 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
   }
   # endif // ifndef BUILD_NO_DEBUG
 
+  int32_t lLimit = 0;
+  int32_t uLimit = 0;
+  p073_GetDisplayLimits(event, lLimit, uLimit, P073_data->hideDegree ? 0 : 1);
+  float lLimitErr = lLimit + 0.1f;
+  float uLimitErr = uLimit - 1.0f;
+  float lLimitDec = lLimit / 10.0f;
+  float uLimitDec = uLimit / 10.0f;
+
+  // TODO disable log
+  addLog(LOG_LEVEL_INFO, strformat(F("P073: 7dt: lErr: %.1f, uErr: %.1f, lDec: %.1f, uDec: %.1f"),
+                                   lLimitErr, uLimitErr, lLimitDec, uLimitDec));
+
+  if ((p073_temptemp > uLimitErr) || (p073_temptemp < lLimitErr)) {
+    P073_data->FillBufferWithDash();
+  } else {
+    if ((p073_temptemp < uLimitDec) && (p073_temptemp > lLimitDec)) {
+      p073_temptemp    = roundf(p073_temptemp * 10.0f);
+      p073_tempflagdot = true;
+    }
+    P073_data->FillBufferWithTemp(p073_temptemp);
+  }
+
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
-    {
-      if ((p073_temptemp > 999.0f) || (p073_temptemp < -99.9f)) {
-        P073_data->FillBufferWithDash();
-      } else {
-        if ((p073_temptemp < 100.0f) && (p073_temptemp > -10.0f)) {
-          p073_temptemp    = roundf(p073_temptemp * 10.0f);
-          p073_tempflagdot = true;
-        }
-        P073_data->FillBufferWithTemp(p073_temptemp);
 
-        if ((p073_temptemp == 0) && p073_tempflagdot) {
-          P073_data->showbuffer[5] = 0;
-        }
+      if ((p073_temptemp == 0) && p073_tempflagdot) {
+        P073_data->showbuffer[5] = 0;
       }
 
       if (P073_TM1637_6DGT == P073_data->displayModel) {
@@ -605,12 +733,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
         tm1637_ShowTimeTemp4(event, p073_tempflagdot, 4);
       }
       break;
-    }
     case P073_MAX7219_8DGT:
-    {
-      p073_temptemp = roundf(p073_temptemp * 10.0f);
-      P073_data->FillBufferWithTemp(p073_temptemp);
-
       # ifdef P073_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -620,7 +743,15 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
 
       max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, P073_data->hideDegree ? 6 : 5, -1);
       break;
-    }
+    # ifdef P073_USE_74HC595
+    case P073_74HC595_2_8DGT:
+      P073_data->hc595_AdjustBuffer();
+
+      if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+        P073_data->hc595_ShowBuffer();
+      }
+      break;
+    # endif // ifdef P073_USE_74HC595
   }
   # ifdef P073_DEBUG
   P073_data->LogBufferContent(F("7dt"));
@@ -651,7 +782,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, strformat(F("7DGT : Show Temperature 1st=%.2f 2nd=%.2f"), p073_lefttemp, p073_righttemp));
+    addLog(LOG_LEVEL_INFO, strformat(F("7DGT : Dual Temperature 1st=%.2f 2nd=%.2f"), p073_lefttemp, p073_righttemp));
   }
 
   switch (P073_data->displayModel) {
@@ -669,6 +800,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
       break;
     }
     case P073_MAX7219_8DGT:
+    case P073_74HC595_2_8DGT:
     {
       uint8_t firstDot       = -1; // No decimals is no dots
       uint8_t secondDot      = -1;
@@ -705,12 +837,23 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
 
       P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDecimals, p073_righttemp, secondDecimals);
 
-      bool alignSave = P073_data->rightAlignTempMAX7219; // Save setting
-      P073_data->rightAlignTempMAX7219 = true;
+      if (P073_MAX7219_8DGT == P073_data->displayModel) {
+        bool alignSave = P073_data->rightAlignTempMAX7219; // Save setting
+        P073_data->rightAlignTempMAX7219 = true;
 
-      max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, firstDot, secondDot);
+        max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, firstDot, secondDot);
 
-      P073_data->rightAlignTempMAX7219 = alignSave; // Restore
+        P073_data->rightAlignTempMAX7219 = alignSave; // Restore
+      #  ifdef P073_USE_74HC595
+      } else
+      if ((P073_74HC595_2_8DGT == P073_data->displayModel) && (P073_data->digits < 8)) {
+        P073_data->FillBufferWithDash();
+
+        if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+          P073_data->hc595_ShowBuffer();
+        }
+      #  endif // ifdef P073_USE_74HC595
+      }
 
       break;
     }
@@ -740,7 +883,7 @@ bool p073_plugin_write_7dst(struct EventStruct *event) {
   P073_data->timesep = true;
   P073_data->FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false,
                                 # ifdef P073_SUPPRESS_ZERO
-                                bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0)
                                 # else // ifdef P073_SUPPRESS_ZERO
                                 false
                                 # endif // ifdef P073_SUPPRESS_ZERO
@@ -749,20 +892,23 @@ bool p073_plugin_write_7dst(struct EventStruct *event) {
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
-    {
       tm1637_ShowTimeTemp4(event, P073_data->timesep, 0);
       break;
-    }
     case P073_TM1637_6DGT:
-    {
       tm1637_ShowTime6(event);
       break;
-    }
     case P073_MAX7219_8DGT:
-    {
       max7219_ShowTime(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, P073_data->timesep);
       break;
-    }
+    # ifdef P073_USE_74HC595
+    case P073_74HC595_2_8DGT:
+      P073_data->hc595_AdjustBuffer();
+
+      if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+        P073_data->hc595_ShowBuffer();
+      }
+      break;
+    # endif // ifdef P073_USE_74HC595
   }
   return true;
 }
@@ -780,7 +926,7 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
   }
   P073_data->FillBufferWithDate(false, event->Par1, event->Par2, event->Par3,
                                 # ifdef P073_SUPPRESS_ZERO
-                                bitRead(PCONFIG_LONG(0), P073_OPTION_SUPPRESS0)
+                                bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0)
                                 # else // ifdef P073_SUPPRESS_ZERO
                                 false
                                 # endif // ifdef P073_SUPPRESS_ZERO
@@ -789,20 +935,23 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
-    {
       tm1637_ShowTimeTemp4(event, P073_data->timesep, 0);
       break;
-    }
     case P073_TM1637_6DGT:
-    {
       tm1637_ShowDate6(event);
       break;
-    }
     case P073_MAX7219_8DGT:
-    {
       max7219_ShowDate(event, P073_data->pin1, P073_data->pin2, P073_data->pin3);
       break;
-    }
+    # ifdef P073_USE_74HC595
+    case P073_74HC595_2_8DGT:
+      P073_data->hc595_AdjustBuffer();
+
+      if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+        P073_data->hc595_ShowBuffer();
+      }
+      break;
+    # endif // ifdef P073_USE_74HC595
   }
   return true;
 }
@@ -824,7 +973,7 @@ bool p073_plugin_write_7dtext(struct EventStruct *event,
   # endif // ifndef BUILD_NO_DEBUG
   # ifdef P073_SCROLL_TEXT
   P073_data->setTextToScroll("");
-  uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel);
+  uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel, P073_data->digits);
 
   if (P073_data->isScrollEnabled() && (P073_data->getEffectiveTextLength(text) > bufLen)) {
     P073_data->setTextToScroll(text);
@@ -836,22 +985,24 @@ bool p073_plugin_write_7dtext(struct EventStruct *event,
     switch (P073_data->displayModel) {
       case P073_TM1637_4DGTCOLON:
       case P073_TM1637_4DGTDOTS:
-      {
         tm1637_ShowBuffer(event, 0, 4);
         break;
-      }
       case P073_TM1637_6DGT:
-      {
         tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
         tm1637_ShowBuffer(event, 0, 6);
         break;
-      }
       case P073_MAX7219_8DGT:
-      {
         P073_data->dotpos = -1; // avoid to display the dot
         max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2, P073_data->pin3);
         break;
-      }
+      # ifdef P073_USE_74HC595
+      case P073_74HC595_2_8DGT:
+
+        if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+          P073_data->hc595_ShowBuffer();
+        }
+        break;
+      # endif // ifdef P073_USE_74HC595
     }
   }
   return true;
@@ -868,8 +1019,8 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
   }
 
   if (!text.isEmpty()) {
-    String fontArg = parseString(text, 1);
-    int32_t fontNr  = -1;
+    const String fontArg = parseString(text, 1);
+    int32_t fontNr       = -1;
 
     if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
       fontNr = 0;
@@ -892,7 +1043,7 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
 
     if ((fontNr >= 0) && (fontNr <= 3)) {
       P073_data->fontset = fontNr;
-      PCONFIG(4)         = fontNr;
+      P073_CFG_FONTSET   = fontNr;
       return true;
     }
   }
@@ -912,10 +1063,10 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
   }
 
   if (!text.isEmpty()) {
-    String data;
+    String  data;
     int32_t byteValue{};
-    int    arg      = 1;
-    String argValue = parseString(text, arg);
+    int     arg      = 1;
+    String  argValue = parseString(text, arg);
 
     while (!argValue.isEmpty()) {
       if (validIntFromString(argValue, byteValue) && (byteValue < 256) && (byteValue > -1)) {
@@ -927,7 +1078,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
       argValue = parseString(text, arg);
     }
     #  ifdef P073_SCROLL_TEXT
-    const uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel);
+    const uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel, P073_data->digits);
     #  endif // P073_SCROLL_TEXT
 
     if (!data.isEmpty()) {
@@ -944,22 +1095,25 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
         switch (P073_data->displayModel) {
           case P073_TM1637_4DGTCOLON:
           case P073_TM1637_4DGTDOTS:
-          {
             tm1637_ShowBuffer(event, 0, 4);
             break;
-          }
           case P073_TM1637_6DGT:
-          {
             tm1637_SwapDigitInBuffer(event, 0); // only needed for 6-digits displays
             tm1637_ShowBuffer(event, 0, 6, true);
             break;
-          }
           case P073_MAX7219_8DGT:
-          {
             P073_data->dotpos = -1; // avoid to display the dot
             max7219_ShowBuffer(event, P073_data->pin1, P073_data->pin2, P073_data->pin3);
             break;
-          }
+          #  ifdef P073_USE_74HC595
+          case P073_74HC595_2_8DGT:
+            P073_data->hc595_AdjustBuffer();
+
+            if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+              P073_data->hc595_ShowBuffer();
+            }
+            break;
+          #  endif // ifdef P073_USE_74HC595
         }
       }
       return true;
@@ -1068,7 +1222,7 @@ void tm1637_i2cWrite(uint8_t clk_pin,
   # endif // ifdef P073_DEBUG
   uint8_t i;
 
-  for (i = 0; i < 8; i++) {
+  for (i = 0; i < 8; ++i) {
     CLK_LOW();
 
     if (bytetoprint & 0b00000001) {
@@ -1118,8 +1272,6 @@ void tm1637_InitDisplay(uint8_t clk_pin,
   CLK_HIGH();
   DIO_HIGH();
 
-  //  pinMode(dio_pin, INPUT_PULLUP);
-  //  pinMode(clk_pin, OUTPUT);
   uint8_t bytesToPrint[1] = { 0 };
 
   bytesToPrint[0] = 0x40;
@@ -1232,23 +1384,10 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event,
   P073_data->showperiods[3 + startPos] = P073_data->showperiods[5 + startPos];
   P073_data->showperiods[5 + startPos] = p073_per;
 
-  switch (P073_data->dotpos) {
-    case 2: {
-      P073_data->dotpos = 4;
-      break;
-    }
-    case 4: {
-      P073_data->dotpos = 2;
-      break;
-    }
-    case 5: {
-      P073_data->dotpos = 7;
-      break;
-    }
-    case 7: {
-      P073_data->dotpos = 5;
-      break;
-    }
+  if (P073_data->dotpos > -1) {
+    const uint8_t dotPositionSwap[] = { 0, 1, 4, 3, 2, 7, 6, 5, 8 };
+
+    P073_data->dotpos = dotPositionSwap[P073_data->dotpos];
   }
 }
 
@@ -1273,7 +1412,7 @@ void tm1637_ShowBuffer(struct EventStruct *event,
 
   uint8_t p073_datashowpos1;
 
-  for (int i = firstPos; i < lastPos; i++) {
+  for (int i = firstPos; i < lastPos; ++i) {
     if (useBinaryData) {
       bytesToPrint[length] = P073_data->showbuffer[i];
     } else {
@@ -1297,10 +1436,10 @@ void tm1637_ShowBuffer(struct EventStruct *event,
 # define OP_SHUTDOWN    12
 # define OP_DISPLAYTEST 15
 
-void max7219_spiTransfer(struct EventStruct *event,
-                         uint8_t             din_pin,
-                         uint8_t             clk_pin,
-                         uint8_t             cs_pin,
+void max7219_spiTransfer(struct EventStruct       *event,
+                         uint8_t                   din_pin,
+                         uint8_t                   clk_pin,
+                         uint8_t                   cs_pin,
                          ESPEASY_VOLATILE(uint8_t) opcode,
                          ESPEASY_VOLATILE(uint8_t) data) {
   P073_data_struct *P073_data =
@@ -1349,7 +1488,7 @@ void max7219_SetDigit(struct EventStruct *event,
 
   # ifdef P073_EXTRA_FONTS
 
-  switch (PCONFIG(4)) {
+  switch (P073_CFG_FONTSET) {
     case 1:  // Siekoo
     case 2:  // Siekoo with uppercase CHNORUX
       p073_tempvalue = pgm_read_byte(&(SiekooCharTable[dgtvalue]));
@@ -1358,11 +1497,10 @@ void max7219_SetDigit(struct EventStruct *event,
       p073_tempvalue = pgm_read_byte(&(Dseg7CharTable[dgtvalue]));
       break;
     default: // Default fontset
-  # endif // P073_EXTRA_FONTS
+      p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
+  }
+  # else // ifdef P073_EXTRA_FONTS
   p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
-  # ifdef P073_EXTRA_FONTS
-}
-
   # endif // P073_EXTRA_FONTS
 
   if (showdot) {
@@ -1404,7 +1542,7 @@ void max7219_ShowTime(struct EventStruct *event,
 
   const uint8_t idx_list[] = { 7, 6, 4, 3, 1, 0 }; // Digits in reversed order, as the loop is backward
 
-  for (int8_t i = 5; i >= 0; i--) {
+  for (int8_t i = 5; i >= 0; --i) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, idx_list[i], P073_data->showbuffer[i], false);
   }
 
@@ -1435,7 +1573,7 @@ void max7219_ShowTemp(struct EventStruct *event,
 
   const int alignRight = P073_data->rightAlignTempMAX7219 ? 0 : 1;
 
-  for (int i = alignRight; i < 8; i++) {
+  for (int i = alignRight; i < 8; ++i) {
     const int bufIndex = (7 + alignRight) - i;
 
     if (bufIndex < 8) {
@@ -1459,7 +1597,7 @@ void max7219_ShowDate(struct EventStruct *event,
 
   const uint8_t dotflags[8] = { false, true, false, true, false, false, false, false };
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; ++i) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
                      P073_data->showbuffer[7 - i],
                      dotflags[7 - i]);

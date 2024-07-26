@@ -8,22 +8,178 @@ void P073_data_struct::init(struct EventStruct *event)
   pin1         = CONFIG_PIN1;
   pin2         = CONFIG_PIN2;
   pin3         = CONFIG_PIN3;
-  displayModel = PCONFIG(0);
-  output       = PCONFIG(1);
-  brightness   = PCONFIG(2);
-  periods      = bitRead(PCONFIG_LONG(0), P073_OPTION_PERIOD);
-  hideDegree   = bitRead(PCONFIG_LONG(0), P073_OPTION_HIDEDEGREE);
+  displayModel = P073_CFG_DISPLAYTYPE;
+  output       = P073_CFG_OUTPUTTYPE;
+  brightness   = P073_CFG_BRIGHTNESS;
+  periods      = bitRead(P073_CFG_FLAGS, P073_OPTION_PERIOD);
+  hideDegree   = bitRead(P073_CFG_FLAGS, P073_OPTION_HIDEDEGREE);
   # ifdef P073_SCROLL_TEXT
-  txtScrolling = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLTEXT);
-  scrollFull   = bitRead(PCONFIG_LONG(0), P073_OPTION_SCROLLFULL);
-  setScrollSpeed(PCONFIG(3));
+  txtScrolling = bitRead(P073_CFG_FLAGS, P073_OPTION_SCROLLTEXT);
+  scrollFull   = bitRead(P073_CFG_FLAGS, P073_OPTION_SCROLLFULL);
+  setScrollSpeed(P073_CFG_SCROLLSPEED);
   # endif // P073_SCROLL_TEXT
-  rightAlignTempMAX7219 = bitRead(PCONFIG_LONG(0), P073_OPTION_RIGHTALIGN);
+  rightAlignTempMAX7219 = bitRead(P073_CFG_FLAGS, P073_OPTION_RIGHTALIGN);
   timesep               = true;
   # ifdef P073_EXTRA_FONTS
-  fontset = PCONFIG(4);
+  fontset = P073_CFG_FONTSET;
   # endif // P073_EXTRA_FONTS
+  digits = P073_CFG_DIGITS;
+  # ifdef P073_USE_74HC595
+
+  if ((digits > 0) && ((digits < 4) || (5 == digits) || (7 == digits))) {
+    isSequential = true;
+
+    if (1 == digits) { // 2+2
+      digits = 4;
+    } else
+    if (7 == digits) { // 3+3
+      digits = 6;
+    }
+  }
+  # endif // ifdef P073_USE_74HC595
+
+  if ((digits > 0) && (digits < 4)) {
+    hideDegree = true; // Hide degree symbol on small displays
+  }
 }
+
+# ifdef P073_USE_74HC595
+bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
+  #  ifdef P073_DEBUG
+  counter50++;
+  #  endif // ifdef P073_DEBUG
+
+  if (P073_74HC595_2_8DGT == displayModel) {
+    if (P073_HC595_MULTIPLEX) {
+      hc595_ShowBuffer();
+    }
+    return true;
+  }
+  return false;
+}
+
+// ====================================
+// ---- 74HC595 specific functions ----
+// ====================================
+
+void P073_data_struct::hc595_ShowBuffer() {
+  const uint8_t hc595digit4[] = {
+    0b00001000, // left segment
+    0b00000100,
+    0b00000010,
+    0b00000001, // right segment
+  };
+  const uint8_t hc595digit6[] = {
+    0b00010000, // left segment
+    0b00100000,
+    0b01000000,
+    0b00000001,
+    0b00000010,
+    0b00000100, // right segment
+  };
+  const uint8_t hc595digit8[] = {
+    0b00010000, // left segment
+    0b00100000,
+    0b01000000,
+    0b10000000,
+    0b00000001,
+    0b00000010,
+    0b00000100,
+    0b00001000, // right segment
+  };
+
+  int8_t i    = 0;
+  int8_t stop = digits;
+  int8_t incr = 1;
+  int8_t trgr = digits - 1;
+
+  if (P073_HC595_SEQUENTIAL) {
+    i    = digits - 1;
+    stop = -1;
+    incr = -1;
+    trgr = 0;
+  }
+
+  int8_t oi = i;
+
+  for (; i != stop && i >= 0; i += incr) {
+    uint8_t value;
+    uint8_t digit = 0xFF;
+    #  ifdef P073_EXTRA_FONTS
+
+    // 74HC595 uses inverted data, compared to MAX7219/TM1637
+    switch (fontset) {
+      case 1:  // Siekoo
+      case 2:  // Siekoo with uppercase CHNORUX
+        value = ~pgm_read_byte(&(SiekooCharTable[showbuffer[i]]));
+        break;
+      case 3:  // dSEG7
+        value = ~pgm_read_byte(&(Dseg7CharTable[showbuffer[i]]));
+        break;
+      default: // Default fontset
+        value = ~pgm_read_byte(&(DefaultCharTable[showbuffer[i]]));
+    }
+    #  else // ifdef P073_EXTRA_FONTS
+    value = ~pgm_read_byte(&(DefaultCharTable[showbuffer[i]]));
+    #  endif // P073_EXTRA_FONTS
+
+    if (showperiods[i]) {
+      value &= 0x7F;
+    }
+    value = mapMAX7219FontToTM1673Font(value); // Revert bits 6..0
+
+    shiftOut(pin1, pin2, MSBFIRST, value);     // Digit data out
+
+    // 2 and 3 digit modules use sequential digit values (in reversed order)
+    // 4, 6 and 8 digit modules use multiplexing in LTR order
+    if (4 == digits) {
+      digit = hc595digit4[i];
+    } else
+    if ((6 == digits) && !isSequential) {
+      digit = hc595digit6[i];
+    } else
+    if (8 == digits) {
+      digit = hc595digit8[i];
+    }
+
+    if (digit != 0xFF) { // Select multiplexer digit, 0xFF is invalid
+      shiftOut(pin1, pin2, MSBFIRST, digit);
+    }
+
+    if ((P073_HC595_SEQUENTIAL && (i == trgr)) || P073_HC595_MULTIPLEX) {
+      digitalWrite(pin3, LOW); // Clock data
+      delay(1);
+      digitalWrite(pin3, HIGH);
+    }
+  }
+
+  #  ifdef P073_DEBUG
+
+  if ((counter50 % 100 == 0) || P073_HC595_SEQUENTIAL) {
+    addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d oi:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
+                                     digits, oi, i, stop, incr, pin1, pin2, pin3));
+  }
+  #  endif // ifdef P073_DEBUG
+}
+
+void P073_data_struct::hc595_AdjustBuffer() {
+  if (digits < 8) {
+    const uint8_t delta = 8 - digits;
+
+    for (uint8_t i = 0; i < digits; ++i) {
+      showbuffer[i] = showbuffer[i + delta];
+    }
+  }
+}
+
+void P073_data_struct::hc595_InitDisplay() {
+  pinMode(pin1, OUTPUT);
+  pinMode(pin2, OUTPUT);
+  pinMode(pin3, OUTPUT);
+  digitalWrite(pin3, HIGH);
+}
+
+# endif // ifdef P073_USE_74HC595
 
 void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
                                           uint8_t sevendgt_hours,
@@ -115,10 +271,9 @@ void P073_data_struct::FillBufferWithNumber(const String& number) {
 void P073_data_struct::FillBufferWithTemp(long temperature) {
   ClearBuffer();
   char p073_digit[8];
-  bool between10and0 = ((temperature < 10) && (temperature >= 0));      // To have a zero prefix (0.x and -0.x) display between 0.9 and
-                                                                        // -0.9
-  bool between0andMinus10 = ((temperature < 0) && (temperature > -10)); // degrees,as all display types use 1 digit for temperatures
-                                                                        // between 10.0 and -10.0
+  const bool between10and0      = ((temperature < 10) && (temperature >= 0)); // To have a zero prefix (0.x and -0.x) display between 0.9
+  const bool between0andMinus10 = ((temperature < 0) && (temperature > -10)); // and -0.9 degrees,as all display types use 1 digit for
+                                                                              // temperatures between 10.0 and -10.0
   String format;
 
   if (hideDegree) {
@@ -129,7 +284,7 @@ void P073_data_struct::FillBufferWithTemp(long temperature) {
   sprintf_P(p073_digit, format.c_str(), static_cast<int>(temperature));
   int p073_numlenght = strlen(p073_digit);
 
-  for (int i = 0; i < p073_numlenght; i++) {
+  for (int i = 0; i < p073_numlenght; ++i) {
     showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
   }
 
@@ -151,11 +306,11 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
   ClearBuffer();
   char   p073_digit[8];
   String format;
-  bool   leftBetween10and0 = (leftWithDecimal && (leftTemperature < 10) && (leftTemperature >= 0));
+  const bool leftBetween10and0 = (leftWithDecimal && (leftTemperature < 10) && (leftTemperature >= 0));
 
   // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
   // as all display types use 1 digit for temperatures between 10.0 and -10.0
-  bool leftBetween0andMinus10 = (leftWithDecimal && (leftTemperature < 0) && (leftTemperature > -10));
+  const bool leftBetween0andMinus10 = (leftWithDecimal && (leftTemperature < 0) && (leftTemperature > -10));
 
   if (hideDegree) {
     // Include a space for compensation of the degree symbol
@@ -168,7 +323,7 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
 
   // To have a zero prefix (0.x and -0.x) display between 0.9 and -0.9 degrees,
   // as all display types use 1 digit for temperatures between 10.0 and -10.0
-  bool rightBetween0andMinus10 = (rightWithDecimal && (rightTemperature < 0) && (rightTemperature > -10));
+  const bool rightBetween0andMinus10 = (rightWithDecimal && (rightTemperature < 0) && (rightTemperature > -10));
 
   if (hideDegree) {
     format += (rightBetween10and0 ? F("  %02d") : (rightBetween0andMinus10 ? F(" %03d") : rightTemperature < -1000 ? F("----") : F("%4d")));
@@ -178,7 +333,7 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
   sprintf_P(p073_digit, format.c_str(), static_cast<int>(leftTemperature), static_cast<int>(rightTemperature));
   const int p073_numlenght = strlen(p073_digit);
 
-  for (int i = 0; i < p073_numlenght; i++) {
+  for (int i = 0; i < p073_numlenght; ++i) {
     showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
   }
 
@@ -207,7 +362,7 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
 
   int p = 0;
 
-  for (int i = 0; i < p073_txtlength && p <= 8; i++) { // p <= 8 to allow a period after last digit
+  for (int i = 0; i < p073_txtlength && p <= 8; ++i) { // p <= 8 to allow a period after last digit
     if (periods
         && textToShow.charAt(i) == '.'
         # ifdef P073_7DBIN_COMMAND
@@ -244,20 +399,17 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
 }
 
 # ifdef P073_SCROLL_TEXT
-uint8_t P073_data_struct::getBufferLength(uint8_t displayModel) {
-  uint8_t bufLen = 0;
+uint8_t P073_data_struct::getBufferLength(uint8_t displayModel,
+                                          uint8_t digits) {
+  const uint8_t digitsSet[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
+  uint8_t bufLen            = 0;
 
-  switch (displayModel) {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-      bufLen = 4;
-      break;
-    case P073_TM1637_6DGT:
-      bufLen = 6;
-      break;
-    case P073_MAX7219_8DGT:
-      bufLen = 8;
-      break;
+  if (displayModel < NR_ELEMENTS(digitsSet)) {
+    bufLen = digitsSet[displayModel];
+  }
+
+  if (P073_74HC595_2_8DGT == displayModel) {
+    bufLen = digits;
   }
   return bufLen;
 }
@@ -266,7 +418,7 @@ int P073_data_struct::getEffectiveTextLength(const String& text) {
   const int textLength = text.length();
   int p                = 0;
 
-  for (int i = 0; i < textLength; i++) {
+  for (int i = 0; i < textLength; ++i) {
     if (periods && (text.charAt(i) == '.')) { // If setting periods true
       if (p == 0) {                           // Text starts with a period, becomes a space with a dot
         p++;
@@ -291,13 +443,13 @@ bool P073_data_struct::NextScroll() {
     if (scrollCount == 0) {
       scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
       result      = true;
-      const int bufToFill      = getBufferLength(displayModel);
+      const int bufToFill      = getBufferLength(displayModel, digits);
       const int p073_txtlength = _textToScroll.length();
       ClearBuffer();
 
       int p = 0;
 
-      for (int i = scrollPos; i < p073_txtlength && p <= bufToFill; i++) { // p <= bufToFill to allow a period after last digit
+      for (int i = scrollPos; i < p073_txtlength && p <= bufToFill; ++i) { // p <= bufToFill to allow a period after last digit
         if (periods
             && _textToScroll.charAt(i) == '.'
             #  ifdef P073_7DBIN_COMMAND
@@ -344,10 +496,10 @@ void P073_data_struct::setTextToScroll(const String& text) {
   _textToScroll = String();
 
   if (!text.isEmpty()) {
-    const int bufToFill = getBufferLength(displayModel);
+    const int bufToFill = getBufferLength(displayModel, digits);
     _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
 
-    for (int i = 0; scrollFull && i < bufToFill; i++) { // Scroll text in from the right, so start with all spaces
+    for (int i = 0; scrollFull && i < bufToFill; ++i) { // Scroll text in from the right, so start with all spaces
       _textToScroll +=
         #  ifdef P073_7DBIN_COMMAND
         binaryData ? (char)0x00 :
@@ -356,7 +508,7 @@ void P073_data_struct::setTextToScroll(const String& text) {
     }
     _textToScroll += text;
 
-    for (int i = 0; i < bufToFill; i++) { // Scroll text off completely before restarting
+    for (int i = 0; i < bufToFill; ++i) { // Scroll text off completely before restarting
       _textToScroll +=
         #  ifdef P073_7DBIN_COMMAND
         binaryData ? (char)0x00 :
@@ -408,12 +560,9 @@ void P073_data_struct::LogBufferContent(String prefix) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
       log.reserve(48)) {
-    log  = prefix;
-    log += F(" buffer: periods: ");
-    log += periods ? 't' : 'f';
-    log += ' ';
+    log = strformat(F("%s buffer: periods: %c "), prefix.c_str(), periods ? 't' : 'f');
 
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; ++i) {
       if (i > 0) { log += ','; }
       log += formatToHex(showbuffer[i]);
       log += ',';
@@ -437,7 +586,7 @@ void P073_data_struct::ClearBuffer() {
          # endif // P073_7DBIN_COMMAND
          10, sizeof(showbuffer));
 
-  for (uint8_t i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; ++i) {
     showperiods[i] = false;
   }
 }
@@ -447,8 +596,8 @@ uint8_t P073_data_struct::mapCharToFontPosition(char    character,
   uint8_t position = 10;
 
   # ifdef P073_EXTRA_FONTS
-  String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
-  String chnorux      = F("CHNORUX");
+  const String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
+  const String chnorux      = F("CHNORUX");
 
   switch (fontset) {
     case 1: // Siekoo
@@ -461,7 +610,7 @@ uint8_t P073_data_struct::mapCharToFontPosition(char    character,
       } else if (isAlpha(character)) {
         position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
       } else {
-        int idx = specialChars.indexOf(character);
+        const int idx = specialChars.indexOf(character);
 
         if (idx > -1) {
           position = idx + 10;
@@ -493,10 +642,14 @@ uint8_t P073_data_struct::mapCharToFontPosition(char    character,
   return position;
 }
 
+/**
+ * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
+ * Dot/colon bit is still bit 8
+ */
 uint8_t P073_data_struct::mapMAX7219FontToTM1673Font(uint8_t character) {
   uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
 
-  for (int b = 0; b < 7; b++) {
+  for (int b = 0; b < 7; ++b) {
     if (character & (0x01 << b)) {
       newCharacter |= (0x40 >> b);
     }
@@ -509,18 +662,17 @@ uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
   # ifdef P073_EXTRA_FONTS
 
   switch (fontset) {
-    case 1:                                                                        // Siekoo
-    case 2:                                                                        // Siekoo uppercase CHNORUX
-      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooCharTable[index]))); // SiekooTableTM1637[index];
-    case 3:                                                                        // dSEG7
-      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7CharTable[index])));  // Dseg7TableTM1637[index];
-    default:                                                                       // Standard fontset
-  # endif // P073_EXTRA_FONTS
-  return mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index])));    // CharTableTM1637[index];
-  # ifdef P073_EXTRA_FONTS
-} // Out of wack because of the conditional compilation ifdef's
-
-  # endif // P073_EXTRA_FONTS
+    case 1:  // Siekoo
+    case 2:  // Siekoo uppercase CHNORUX
+      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooCharTable[index])));
+    case 3:  // dSEG7
+      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7CharTable[index])));
+    default: // Standard fontset
+      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index])));
+  }
+  # else // ifdef P073_EXTRA_FONTS
+  return mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index])));
+  # endif // ifdef P073_EXTRA_FONTS
 }
 
 #endif    // ifdef USES_P073

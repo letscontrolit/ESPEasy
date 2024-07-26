@@ -4,10 +4,19 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P073
 
+# define P073_CFG_DISPLAYTYPE    PCONFIG(0)
+# define P073_CFG_OUTPUTTYPE     PCONFIG(1)
+# define P073_CFG_BRIGHTNESS     PCONFIG(2)
+# define P073_CFG_SCROLLSPEED    PCONFIG(3)
+# define P073_CFG_FONTSET        PCONFIG(4)
+# define P073_CFG_DIGITS         PCONFIG(5)
+# define P073_CFG_FLAGS          PCONFIG_ULONG(0)
+
 # define P073_TM1637_4DGTCOLON   0
 # define P073_TM1637_4DGTDOTS    1
 # define P073_TM1637_6DGT        2
 # define P073_MAX7219_8DGT       3
+# define P073_74HC595_2_8DGT     4
 
 # define P073_DISP_MANUAL        0
 # define P073_DISP_CLOCK24BLNK   1
@@ -28,23 +37,28 @@
 # define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
 # define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
 # define P073_SUPPRESS_ZERO        // Enable Suppress leading zero on day/hour
+# define P073_USE_74HC595          // Enable support for 74HC595 based (sequential and multiplexing) displays
 
-# ifndef PLUGIN_SET_COLLECTION
+# if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
+#  undef P073_7DDT_COMMAND         // Optionally activate if .bin file space is problematic, remove the 7ddt command
+#  undef P073_EXTRA_FONTS          // Optionally activate if .bin file space is problematic, remove the font selection and 7dfont command
+#  undef P073_SCROLL_TEXT          // Optionally activate if .bin file space is problematic, remove the scrolling text feature
+#  undef P073_7DBIN_COMMAND        // Optionally activate if .bin file space is problematic, remove the 7dbin command
+#  undef P073_SUPPRESS_ZERO        // Optionally activate if .bin file space is problematic, remove the Suppress leading zero feature
+// #  undef P073_USE_74HC595          // Optionally activate if .bin file space is problematic, remove the support for 74HC595 displays
+# else // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
-// #  define P073_DEBUG        // Leave out some debugging on demand, activates extra log info in the debug
-# else // ifndef PLUGIN_SET_COLLECTION
-#  undef P073_7DDT_COMMAND  // Optionally activate if .bin file space is really problematic, to remove the 7ddt command
-#  undef P073_EXTRA_FONTS   // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
-#  undef P073_SCROLL_TEXT   // Optionally activate if .bin file space is really problematic, to remove the scrolling text feature
-#  undef P073_7DBIN_COMMAND // Optionally activate if .bin file space is really problematic, to remove the 7dbin command
-#  undef P073_SUPPRESS_ZERO // Optionally activate if .bin file space is really problematic, to remove the Suppress leading zero feature
-# endif // ifndef PLUGIN_SET_COLLECTION
+#  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
+# endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
 # define TM1637_CLOCKDELAY  40
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
+
+# define P073_HC595_SEQUENTIAL  (isSequential)  // Sequential digits
+# define P073_HC595_MULTIPLEX   (!isSequential) // Multiplexed digits, have to be constantly refreshed
 
 // each char table is specific for each display and maps all numbers/symbols
 // needed:
@@ -147,6 +161,17 @@ public:
   virtual ~P073_data_struct() = default;
 
   void init(struct EventStruct *event);
+  # ifdef P073_USE_74HC595
+  bool plugin_fifty_per_second(struct EventStruct *event);
+  void hc595_ShowBuffer();
+  void hc595_AdjustBuffer();
+  bool hc595_Sequential() {
+    return P073_HC595_SEQUENTIAL;
+  }
+
+  void hc595_InitDisplay();
+
+  # endif // ifdef P073_USE_74HC595
 
   void FillBufferWithTime(bool    sevendgt_now,
                           uint8_t sevendgt_hours,
@@ -170,7 +195,8 @@ public:
   void    FillBufferWithString(const String& textToShow,
                                bool          useBinaryData = false);
   # ifdef P073_SCROLL_TEXT
-  uint8_t getBufferLength(uint8_t displayModel);
+  uint8_t getBufferLength(uint8_t displayModel,
+                          uint8_t digits);
   int     getEffectiveTextLength(const String& text);
   bool    NextScroll();
   void    setTextToScroll(const String& text);
@@ -203,6 +229,7 @@ public:
   uint8_t displayModel          = 0;
   uint8_t output                = 0;
   uint8_t brightness            = 0;
+  uint8_t digits                = 4;
   bool    timesep               = false;
   bool    shift                 = false;
   bool    periods               = false;
@@ -225,7 +252,13 @@ private:
   # endif // P073_SCROLL_TEXT
   # if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
   String _textToScroll;
-  # endif // P073_SCROLL_TEXT
+  # endif // if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
+  # ifdef P073_DEBUG
+  uint32_t counter50 = 0;
+  # endif // ifdef P073_DEBUG
+  # ifdef P073_USE_74HC595
+  bool isSequential = false;
+  # endif // ifdef P073_USE_74HC595
 };
 
 #endif    // ifdef USES_P073
