@@ -154,6 +154,9 @@ static const uint8_t Dseg7CharTable[42] PROGMEM = {
 
 # endif // P073_EXTRA_FONTS
 
+uint8_t p073_getDefaultDigits(uint8_t displayModel,
+                              uint8_t digits = 0);
+
 struct P073_data_struct : public PluginTaskData_base {
 public:
 
@@ -163,13 +166,12 @@ public:
   void init(struct EventStruct *event);
   # ifdef P073_USE_74HC595
   bool plugin_fifty_per_second(struct EventStruct *event);
+  void hc595_InitDisplay();
   void hc595_ShowBuffer();
   void hc595_AdjustBuffer();
   bool hc595_Sequential() {
     return P073_HC595_SEQUENTIAL;
   }
-
-  void hc595_InitDisplay();
 
   # endif // ifdef P073_USE_74HC595
 
@@ -184,19 +186,26 @@ public:
                           uint8_t sevendgt_month,
                           int     sevendgt_year,
                           bool    suppressLeading0);
+  void Put4NumbersInBuffer(const uint8_t nr1,
+                           const uint8_t nr2,
+                           const uint8_t nr3,
+                           const int8_t  nr4
+                           # ifdef       P073_SUPPRESS_ZERO
+                           ,
+                           const bool    suppressLeading0
+                           # endif // ifdef P073_SUPPRESS_ZERO
+                           );
   void FillBufferWithNumber(const String& number);
-  void FillBufferWithTemp(long temperature);
+  void FillBufferWithTemp(int temperature);
   # ifdef P073_7DDT_COMMAND
-  void FillBufferWithDualTemp(long leftTemperature,
+  void FillBufferWithDualTemp(int  leftTemperature,
                               bool leftWithDecimal,
-                              long rightTemperature,
+                              int  rightTemperature,
                               bool rightWithDecimal);
   # endif // ifdef P073_7DDT_COMMAND
   void    FillBufferWithString(const String& textToShow,
                                bool          useBinaryData = false);
   # ifdef P073_SCROLL_TEXT
-  uint8_t getBufferLength(uint8_t displayModel,
-                          uint8_t digits);
   int     getEffectiveTextLength(const String& text);
   bool    NextScroll();
   void    setTextToScroll(const String& text);

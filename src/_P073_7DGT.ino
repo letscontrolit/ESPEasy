@@ -104,13 +104,6 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].ValueCount       = 0;
       Device[deviceCount].GlobalSyncOption = true;
 
-      // Device[deviceCount].PullUpOption       = false;
-      // Device[deviceCount].InverseLogicOption = false;
-      // Device[deviceCount].FormulaOption      = false;
-      // Device[deviceCount].SendDataOption     = false;
-      // Device[deviceCount].TimerOption        = false;
-      // Device[deviceCount].TimerOptional      = false;
-
       break;
     }
 
@@ -370,7 +363,11 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         }
         # ifdef P073_USE_74HC595
         case P073_74HC595_2_8DGT: {
-          //
+          P073_data->hc595_AdjustBuffer();
+
+          if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
+            P073_data->hc595_ShowBuffer();
+          }
           break;
         }
         # endif // ifdef P073_USE_74HC595
@@ -445,15 +442,6 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
     # endif // ifdef P073_USE_74HC595
   }
   return success;
-}
-
-uint8_t p073_getDefaultDigits(uint8_t displayType) {
-  const uint8_t digits[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
-
-  if (displayType < NR_ELEMENTS(digits)) {
-    return digits[displayType];
-  }
-  return 0;
 }
 
 bool p073_plugin_write(struct EventStruct *event,
@@ -596,27 +584,20 @@ bool p073_plugin_write(struct EventStruct *event,
   return false;
 }
 
-void p073_GetDisplayLimits(struct EventStruct *event, int32_t& lLimit, int32_t& uLimit, int8_t offset = 0) {
+void p073_GetDisplayLimits(struct EventStruct *event, int32_t& lLimit, int32_t& uLimit, int8_t offset = 0, uint8_t digits = 0) {
   uint8_t dgts = p073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
 
   # ifdef P073_USE_74HC595
 
   if (P073_74HC595_2_8DGT == P073_CFG_DISPLAYTYPE) {
-    dgts = P073_CFG_DIGITS;
-
-    if (1 == dgts) {
-      dgts = 4; // Special case
-    } else
-    if (7 == dgts) {
-      dgts = 6; // Special case
-    }
+    dgts = digits;
   }
   # endif // ifdef P073_USE_74HC595
   dgts  -= offset;           // Subtract an offset, used for extra symbol
   lLimit = -pow10(dgts - 1); // Lowest value we can display - 1
   uLimit = pow10(dgts);      // Highest value we can display + 1
   // TODO disable log
-  addLog(LOG_LEVEL_INFO, strformat(F("P073: limits: %d digits(%d), lower: %d, upper: %d"), dgts, offset, lLimit, uLimit));
+  // addLog(LOG_LEVEL_INFO, strformat(F("P073: limits: %d digits(%d), lower: %d, upper: %d"), dgts, offset, lLimit, uLimit));
 }
 
 bool p073_plugin_write_7dn(struct EventStruct *event,
@@ -637,7 +618,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event,
 
   int32_t lLimit = 0;
   int32_t uLimit = 0;
-  p073_GetDisplayLimits(event, lLimit, uLimit);
+  p073_GetDisplayLimits(event, lLimit, uLimit, 0, P073_data->digits);
 
   if (!text.isEmpty()) {
     if ((event->Par1 > lLimit) && (event->Par1 < uLimit)) {
@@ -698,15 +679,15 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
 
   int32_t lLimit = 0;
   int32_t uLimit = 0;
-  p073_GetDisplayLimits(event, lLimit, uLimit, P073_data->hideDegree ? 0 : 1);
+  p073_GetDisplayLimits(event, lLimit, uLimit, P073_data->hideDegree ? 0 : 1, P073_data->digits);
   float lLimitErr = lLimit + 0.1f;
   float uLimitErr = uLimit - 1.0f;
   float lLimitDec = lLimit / 10.0f;
   float uLimitDec = uLimit / 10.0f;
 
   // TODO disable log
-  addLog(LOG_LEVEL_INFO, strformat(F("P073: 7dt: lErr: %.1f, uErr: %.1f, lDec: %.1f, uDec: %.1f"),
-                                   lLimitErr, uLimitErr, lLimitDec, uLimitDec));
+  // addLog(LOG_LEVEL_INFO, strformat(F("P073: 7dt: lErr: %.1f, uErr: %.1f, lDec: %.1f, uDec: %.1f"),
+  //                                  lLimitErr, uLimitErr, lLimitDec, uLimitDec));
 
   if ((p073_temptemp > uLimitErr) || (p073_temptemp < lLimitErr)) {
     P073_data->FillBufferWithDash();
@@ -781,9 +762,12 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
     }
   }
 
+  #  ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("7DGT : Dual Temperature 1st=%.2f 2nd=%.2f"), p073_lefttemp, p073_righttemp));
   }
+  #  endif // ifndef BUILD_NO_DEBUG
 
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON:
@@ -802,11 +786,9 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
     case P073_MAX7219_8DGT:
     case P073_74HC595_2_8DGT:
     {
-      uint8_t firstDot       = -1; // No decimals is no dots
-      uint8_t secondDot      = -1;
-      float   hideFactor     = P073_data->hideDegree ? 10.0f : 1.0f;
-      bool    firstDecimals  = false;
-      bool    secondDecimals = false;
+      uint8_t firstDot   = -1; // No decimals is no dots
+      uint8_t secondDot  = -1;
+      float   hideFactor = P073_data->hideDegree ? 10.0f : 1.0f;
 
       if ((p073_lefttemp > 999.99f * hideFactor) || (p073_lefttemp < -99.99f * hideFactor)) {
         p073_lefttemp = -101.0f * hideFactor; // Triggers on -100
@@ -814,7 +796,6 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         if ((p073_lefttemp < 100.0f * hideFactor) && (p073_lefttemp > -10.0f * hideFactor)) {
           p073_lefttemp = roundf(p073_lefttemp * 10.0f);
           firstDot      = P073_data->hideDegree ? 2 : 1;
-          firstDecimals = true;
         }
       }
 
@@ -824,7 +805,6 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         if ((p073_righttemp < 100.0f * hideFactor) && (p073_righttemp > -10.0f * hideFactor)) {
           p073_righttemp = roundf(p073_righttemp * 10.0f);
           secondDot      = P073_data->hideDegree ? 6 : 5;
-          secondDecimals = true;
         }
       }
 
@@ -835,7 +815,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
       }
       #  endif // ifdef P073_DEBUG
 
-      P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDecimals, p073_righttemp, secondDecimals);
+      P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDot > -1, p073_righttemp, secondDot > -1);
 
       if (P073_MAX7219_8DGT == P073_data->displayModel) {
         bool alignSave = P073_data->rightAlignTempMAX7219; // Save setting
@@ -846,8 +826,12 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         P073_data->rightAlignTempMAX7219 = alignSave; // Restore
       #  ifdef P073_USE_74HC595
       } else
-      if ((P073_74HC595_2_8DGT == P073_data->displayModel) && (P073_data->digits < 8)) {
-        P073_data->FillBufferWithDash();
+
+      // if (P073_74HC595_2_8DGT == P073_data->displayModel)
+      {
+        if (P073_data->digits < 8) {
+          P073_data->FillBufferWithDash();
+        }
 
         if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
           P073_data->hc595_ShowBuffer();
@@ -921,9 +905,12 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
     return false;
   }
 
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("7DGT : Show Date=%02d:%02d:%02d"), event->Par1, event->Par2, event->Par3));
   }
+  # endif // ifndef BUILD_NO_DEBUG
   P073_data->FillBufferWithDate(false, event->Par1, event->Par2, event->Par3,
                                 # ifdef P073_SUPPRESS_ZERO
                                 bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0)
@@ -972,8 +959,8 @@ bool p073_plugin_write_7dtext(struct EventStruct *event,
   }
   # endif // ifndef BUILD_NO_DEBUG
   # ifdef P073_SCROLL_TEXT
-  P073_data->setTextToScroll("");
-  uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel, P073_data->digits);
+  P073_data->setTextToScroll(EMPTY_STRING);
+  uint8_t bufLen = p073_getDefaultDigits(P073_data->displayModel, P073_data->digits);
 
   if (P073_data->isScrollEnabled() && (P073_data->getEffectiveTextLength(text) > bufLen)) {
     P073_data->setTextToScroll(text);
@@ -1078,7 +1065,7 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
       argValue = parseString(text, arg);
     }
     #  ifdef P073_SCROLL_TEXT
-    const uint8_t bufLen = P073_data->getBufferLength(P073_data->displayModel, P073_data->digits);
+    const uint8_t bufLen = p073_getDefaultDigits(P073_data->displayModel, P073_data->digits);
     #  endif // P073_SCROLL_TEXT
 
     if (!data.isEmpty()) {
@@ -1107,7 +1094,6 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
             break;
           #  ifdef P073_USE_74HC595
           case P073_74HC595_2_8DGT:
-            P073_data->hc595_AdjustBuffer();
 
             if (P073_data->hc595_Sequential()) { // Sequential displays don't need continuous refreshing
               P073_data->hc595_ShowBuffer();
@@ -1239,7 +1225,7 @@ void tm1637_i2cWrite(uint8_t clk_pin,
 
 void tm1637_ClearDisplay(uint8_t clk_pin,
                          uint8_t dio_pin) {
-  uint8_t bytesToPrint[7] = { 0 };
+  uint8_t bytesToPrint[7]{};
 
   bytesToPrint[0] = 0xC0;
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
@@ -1260,7 +1246,7 @@ void tm1637_SetPowerBrightness(uint8_t clk_pin,
     brightvalue = TM1637_POWER_OFF | brightvalue;
   }
 
-  uint8_t bytesToPrint[1] = { 0 };
+  uint8_t bytesToPrint[1]{};
   bytesToPrint[0] = brightvalue;
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 1);
 }
@@ -1272,7 +1258,7 @@ void tm1637_InitDisplay(uint8_t clk_pin,
   CLK_HIGH();
   DIO_HIGH();
 
-  uint8_t bytesToPrint[1] = { 0 };
+  uint8_t bytesToPrint[1]{};
 
   bytesToPrint[0] = 0x40;
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 1);
@@ -1298,7 +1284,7 @@ void tm1637_ShowDate6(struct EventStruct *event, bool showTime) {
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t bytesToPrint[7] = { 0 };
+  uint8_t bytesToPrint[7]{};
 
   bytesToPrint[0] = 0xC0;
   bytesToPrint[1] = P073_data->tm1637_getFontChar(P073_data->showbuffer[2], P073_data->fontset);
@@ -1325,7 +1311,7 @@ void tm1637_ShowTemp6(struct EventStruct *event,
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t bytesToPrint[7] = { 0 };
+  uint8_t bytesToPrint[7]{};
 
   bytesToPrint[0] = 0xC0;
   bytesToPrint[1] = tm1637_separator(P073_data->tm1637_getFontChar(P073_data->showbuffer[5], P073_data->fontset), sep);
@@ -1347,7 +1333,7 @@ void tm1637_ShowTimeTemp4(struct EventStruct *event,
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t bytesToPrint[7] = { 0 };
+  uint8_t bytesToPrint[5]{};
 
   bytesToPrint[0] = 0xC0;
   bytesToPrint[1] = P073_data->tm1637_getFontChar(P073_data->showbuffer[0 + bufoffset], P073_data->fontset);
@@ -1366,23 +1352,12 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event,
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t p073_tmp; // Swap digits
 
-  p073_tmp                            = P073_data->showbuffer[2 + startPos];
-  P073_data->showbuffer[2 + startPos] = P073_data->showbuffer[0 + startPos];
-  P073_data->showbuffer[0 + startPos] = p073_tmp;
-  p073_tmp                            = P073_data->showbuffer[3 + startPos];
-  P073_data->showbuffer[3 + startPos] = P073_data->showbuffer[5 + startPos];
-  P073_data->showbuffer[5 + startPos] = p073_tmp;
+  std::swap(P073_data->showbuffer[2 + startPos],  P073_data->showbuffer[0 + startPos]);
+  std::swap(P073_data->showbuffer[3 + startPos],  P073_data->showbuffer[5 + startPos]);
 
-  bool p073_per; // Swap periods
-
-  p073_per                             = P073_data->showperiods[2 + startPos];
-  P073_data->showperiods[2 + startPos] = P073_data->showperiods[0 + startPos];
-  P073_data->showperiods[0 + startPos] = p073_per;
-  p073_per                             = P073_data->showperiods[3 + startPos];
-  P073_data->showperiods[3 + startPos] = P073_data->showperiods[5 + startPos];
-  P073_data->showperiods[5 + startPos] = p073_per;
+  std::swap(P073_data->showperiods[2 + startPos], P073_data->showperiods[0 + startPos]);
+  std::swap(P073_data->showperiods[3 + startPos], P073_data->showperiods[5 + startPos]);
 
   if (P073_data->dotpos > -1) {
     const uint8_t dotPositionSwap[] = { 0, 1, 4, 3, 2, 7, 6, 5, 8 };
@@ -1401,7 +1376,7 @@ void tm1637_ShowBuffer(struct EventStruct *event,
   if (nullptr == P073_data) {
     return;
   }
-  uint8_t bytesToPrint[8] = { 0 };
+  uint8_t bytesToPrint[8]{};
 
   bytesToPrint[0] = 0xC0;
   uint8_t length = 1;
@@ -1486,29 +1461,30 @@ void max7219_SetDigit(struct EventStruct *event,
                       bool                binaryData = false) {
   uint8_t p073_tempvalue;
 
-  # ifdef P073_EXTRA_FONTS
-
-  switch (P073_CFG_FONTSET) {
-    case 1:  // Siekoo
-    case 2:  // Siekoo with uppercase CHNORUX
-      p073_tempvalue = pgm_read_byte(&(SiekooCharTable[dgtvalue]));
-      break;
-    case 3:  // dSEG7
-      p073_tempvalue = pgm_read_byte(&(Dseg7CharTable[dgtvalue]));
-      break;
-    default: // Default fontset
-      p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
-  }
-  # else // ifdef P073_EXTRA_FONTS
-  p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
-  # endif // P073_EXTRA_FONTS
-
-  if (showdot) {
-    p073_tempvalue |= 0b10000000;
-  }
-
   if (binaryData) {
     p073_tempvalue = dgtvalue; // Overwrite if binary data
+  } else
+  {
+    # ifdef P073_EXTRA_FONTS
+
+    switch (P073_CFG_FONTSET) {
+      case 1:  // Siekoo
+      case 2:  // Siekoo with uppercase CHNORUX
+        p073_tempvalue = pgm_read_byte(&(SiekooCharTable[dgtvalue]));
+        break;
+      case 3:  // dSEG7
+        p073_tempvalue = pgm_read_byte(&(Dseg7CharTable[dgtvalue]));
+        break;
+      default: // Default fontset
+        p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
+    }
+    # else // ifdef P073_EXTRA_FONTS
+    p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
+    # endif // P073_EXTRA_FONTS
+
+    if (showdot) {
+      p073_tempvalue |= 0b10000000;
+    }
   }
   max7219_spiTransfer(event, din_pin, clk_pin, cs_pin, dgtpos + 1, p073_tempvalue);
 }

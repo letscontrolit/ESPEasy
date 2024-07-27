@@ -2,6 +2,24 @@
 
 #ifdef USES_P073
 
+uint8_t p073_getDefaultDigits(uint8_t displayModel,
+                              uint8_t digits) {
+  const uint8_t digitsSet[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
+  uint8_t bufLen{};
+
+  if (displayModel < NR_ELEMENTS(digitsSet)) {
+    bufLen = digitsSet[displayModel];
+  }
+  # ifdef P073_USE_74HC595
+
+  if (P073_74HC595_2_8DGT == displayModel) {
+    bufLen = digits;
+  }
+  # endif // ifdef P073_USE_74HC595
+
+  return bufLen;
+}
+
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
@@ -100,7 +118,9 @@ void P073_data_struct::hc595_ShowBuffer() {
     trgr = 0;
   }
 
-  int8_t oi = i;
+  #  ifdef P073_DEBUG
+  const int8_t oi = i;
+  #  endif // ifdef P073_DEBUG
 
   for (; i != stop && i >= 0; i += incr) {
     uint8_t value;
@@ -155,10 +175,10 @@ void P073_data_struct::hc595_ShowBuffer() {
 
   #  ifdef P073_DEBUG
 
-  if ((counter50 % 100 == 0) || P073_HC595_SEQUENTIAL) {
-    addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d oi:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
-                                     digits, oi, i, stop, incr, pin1, pin2, pin3));
-  }
+  // if ((counter50 % 100 == 0) || P073_HC595_SEQUENTIAL) {
+  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d oi:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
+  //                                    digits, oi, i, stop, incr, pin1, pin2, pin3));
+  // }
   #  endif // ifdef P073_DEBUG
 }
 
@@ -202,16 +222,11 @@ void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
   if (flag12h && (sevendgt_hours == 0)) {
     sevendgt_hours = 12; // if flag 12h is TRUE and h=0  adjust to h=12
   }
-  showbuffer[0] = static_cast<uint8_t>(sevendgt_hours / 10);
-  showbuffer[1] = sevendgt_hours % 10;
-  showbuffer[2] = static_cast<uint8_t>(sevendgt_minutes / 10);
-  showbuffer[3] = sevendgt_minutes % 10;
-  showbuffer[4] = static_cast<uint8_t>(sevendgt_seconds / 10);
-  showbuffer[5] = sevendgt_seconds % 10;
-  # ifdef P073_SUPPRESS_ZERO
-
-  if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
-  # endif // ifdef P073_SUPPRESS_ZERO
+  Put4NumbersInBuffer(sevendgt_hours, sevendgt_minutes, sevendgt_seconds, -1
+                      # ifdef P073_SUPPRESS_ZERO
+                      , suppressLeading0
+                      # endif // ifdef P073_SUPPRESS_ZERO
+                      );
 }
 
 void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
@@ -232,14 +247,32 @@ void P073_data_struct::FillBufferWithDate(bool    sevendgt_now,
   const uint8_t sevendgt_year1 = static_cast<uint8_t>(sevendgt_year0 / 100);
   const uint8_t sevendgt_year2 = static_cast<uint8_t>(sevendgt_year0 % 100);
 
-  showbuffer[0] = static_cast<uint8_t>(sevendgt_day / 10);
-  showbuffer[1] = sevendgt_day % 10;
-  showbuffer[2] = static_cast<uint8_t>(sevendgt_month / 10);
-  showbuffer[3] = sevendgt_month % 10;
-  showbuffer[4] = static_cast<uint8_t>(sevendgt_year1 / 10);
-  showbuffer[5] = sevendgt_year1 % 10;
-  showbuffer[6] = static_cast<uint8_t>(sevendgt_year2 / 10);
-  showbuffer[7] = sevendgt_year2 % 10;
+  Put4NumbersInBuffer(sevendgt_day, sevendgt_month, sevendgt_year1, sevendgt_year2
+                      # ifdef P073_SUPPRESS_ZERO
+                      , suppressLeading0
+                      # endif // ifdef P073_SUPPRESS_ZERO
+                      );
+}
+
+void P073_data_struct::Put4NumbersInBuffer(const uint8_t nr1,
+                                           const uint8_t nr2,
+                                           const uint8_t nr3,
+                                           const int8_t  nr4
+                                           # ifdef       P073_SUPPRESS_ZERO
+                                           , const bool  suppressLeading0
+                                           # endif // ifdef P073_SUPPRESS_ZERO
+                                           ) {
+  showbuffer[0] = static_cast<uint8_t>(nr1 / 10);
+  showbuffer[1] = nr1 % 10;
+  showbuffer[2] = static_cast<uint8_t>(nr2 / 10);
+  showbuffer[3] = nr2 % 10;
+  showbuffer[4] = static_cast<uint8_t>(nr3 / 10);
+  showbuffer[5] = nr3 % 10;
+
+  if (nr4 > -1) {
+    showbuffer[6] = static_cast<uint8_t>(nr4 / 10);
+    showbuffer[7] = nr4 % 10;
+  }
   # ifdef P073_SUPPRESS_ZERO
 
   if (suppressLeading0 && (showbuffer[0] == 0)) { showbuffer[0] = 10; } // set to space
@@ -268,7 +301,7 @@ void P073_data_struct::FillBufferWithNumber(const String& number) {
   }
 }
 
-void P073_data_struct::FillBufferWithTemp(long temperature) {
+void P073_data_struct::FillBufferWithTemp(int temperature) {
   ClearBuffer();
   char p073_digit[8];
   const bool between10and0      = ((temperature < 10) && (temperature >= 0)); // To have a zero prefix (0.x and -0.x) display between 0.9
@@ -281,10 +314,10 @@ void P073_data_struct::FillBufferWithTemp(long temperature) {
   } else {
     format = (between10and0 ? F("     %02d") : (between0andMinus10 ? F("    %03d") : F("%7d")));
   }
-  sprintf_P(p073_digit, format.c_str(), static_cast<int>(temperature));
-  int p073_numlenght = strlen(p073_digit);
+  sprintf_P(p073_digit, format.c_str(), temperature);
+  const size_t p073_numlenght = strlen(p073_digit);
 
-  for (int i = 0; i < p073_numlenght; ++i) {
+  for (size_t i = 0; i < p073_numlenght; ++i) {
     showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
   }
 
@@ -299,9 +332,9 @@ void P073_data_struct::FillBufferWithTemp(long temperature) {
  * FillBufferWithDualTemp()
  * leftTemperature or rightTempareature < -100.0 then shows dashes
  */
-void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
+void P073_data_struct::FillBufferWithDualTemp(int  leftTemperature,
                                               bool leftWithDecimal,
-                                              long rightTemperature,
+                                              int  rightTemperature,
                                               bool rightWithDecimal) {
   ClearBuffer();
   char   p073_digit[8];
@@ -330,10 +363,10 @@ void P073_data_struct::FillBufferWithDualTemp(long leftTemperature,
   } else {
     format += (rightBetween10and0 ? F(" %02d") : (rightBetween0andMinus10 ? F("%03d") : rightTemperature < -100 ? F("----") : F("%3d")));
   }
-  sprintf_P(p073_digit, format.c_str(), static_cast<int>(leftTemperature), static_cast<int>(rightTemperature));
-  const int p073_numlenght = strlen(p073_digit);
+  sprintf_P(p073_digit, format.c_str(), leftTemperature, rightTemperature);
+  const size_t p073_numlenght = strlen(p073_digit);
 
-  for (int i = 0; i < p073_numlenght; ++i) {
+  for (size_t i = 0; i < p073_numlenght; ++i) {
     showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
   }
 
@@ -399,21 +432,6 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
 }
 
 # ifdef P073_SCROLL_TEXT
-uint8_t P073_data_struct::getBufferLength(uint8_t displayModel,
-                                          uint8_t digits) {
-  const uint8_t digitsSet[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
-  uint8_t bufLen            = 0;
-
-  if (displayModel < NR_ELEMENTS(digitsSet)) {
-    bufLen = digitsSet[displayModel];
-  }
-
-  if (P073_74HC595_2_8DGT == displayModel) {
-    bufLen = digits;
-  }
-  return bufLen;
-}
-
 int P073_data_struct::getEffectiveTextLength(const String& text) {
   const int textLength = text.length();
   int p                = 0;
@@ -443,7 +461,7 @@ bool P073_data_struct::NextScroll() {
     if (scrollCount == 0) {
       scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
       result      = true;
-      const int bufToFill      = getBufferLength(displayModel, digits);
+      const int bufToFill      = p073_getDefaultDigits(displayModel, digits);
       const int p073_txtlength = _textToScroll.length();
       ClearBuffer();
 
@@ -496,7 +514,7 @@ void P073_data_struct::setTextToScroll(const String& text) {
   _textToScroll = String();
 
   if (!text.isEmpty()) {
-    const int bufToFill = getBufferLength(displayModel, digits);
+    const int bufToFill = p073_getDefaultDigits(displayModel, digits);
     _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
 
     for (int i = 0; scrollFull && i < bufToFill; ++i) { // Scroll text in from the right, so start with all spaces
