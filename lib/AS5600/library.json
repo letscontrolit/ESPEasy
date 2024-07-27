@@ -1,0 +1,23 @@
+{
+  "name": "AS5600",
+  "keywords": "AS5600,AS5600L",
+  "description": "Arduino library for AS5600 and AS5600L magnetic rotation meter.",
+  "authors":
+  [
+    {
+      "name": "Rob Tillaart",
+      "email": "Rob.Tillaart@gmail.com",
+      "maintainer": true
+    }
+  ],
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/RobTillaart/AS5600.git"
+  },
+  "version": "0.6.1",
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": "AS5600.h"
+}
