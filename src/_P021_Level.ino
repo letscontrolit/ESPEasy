@@ -113,8 +113,8 @@
 // Simple conversion from parameter settings in hours/minutes to seconds (administration unit)
 // And from seconds to the millis domain used for the actual control
 // Note that these simple conversion may lose precision due to rough rounding
-#define millis2seconds(x) ((x) / ((ulong)1000))
-#define seconds2millis(x) ((x) * ((ulong)1000))
+#define millis2seconds(x) ((x) / (1000))
+#define seconds2millis(x) ((x) * (1000))
 #define minutes2seconds(x) ((x) * 60)
 #define hours2seconds(x) ((x) * 60 * 60)
 #define seconds2minutes(x) ((x) / 60)
@@ -224,10 +224,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
         // Add some debug information
-        String msg = strformat(F(", State= %s "), P021_printControlState(control_state));
-        msg += strformat(F(", Output= %s"), (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off"));
-        msg += strformat(F(", Remote= %d"), P021_remote[event->TaskIndex]);
-        msg += strformat(F(", Timer= %d sec"), (millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex]))));
+        String outpstring = (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off");
+        String msg        = strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
+                                      P021_printControlState(control_state),
+                                      outpstring.c_str(),
+                                      P021_remote[event->TaskIndex],
+                                      millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex])));
         addFormNote(msg);
       }
       #endif // ifdef PLUGIN_021_DEBUG
@@ -273,11 +275,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), P021_OPMODE_SIZE, options, optionValues, P021_OPMODE);
 
         {
-          ulong  min_time      = P021_MIN_TIME;      // Value to display for minimum timer
-          ulong  interval_time = P021_INTERVAL_TIME; // Value to display for max idling time
-          ulong  force_time    = P021_FORCE_TIME;    // Value for forces run
-          String unit1         = F("seconds");       // use minutes or seconds
-          String unit2         = F("seconds");       // use hours or seconds
+          uint32_t min_time      = P021_MIN_TIME;      // Value to display for minimum timer
+          uint32_t interval_time = P021_INTERVAL_TIME; // Value to display for max idling time
+          uint32_t force_time    = P021_FORCE_TIME;    // Value for forces run
+          String   unit1         = F("seconds");       // use minutes or seconds
+          String   unit2         = F("seconds");       // use hours or seconds
 
           if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
           {
@@ -475,9 +477,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       const String command = parseString(string, 1); // already converted to lowercase
       const String subcmd  = parseString(string, 2);
       const String value   = parseString(string, 3);
-      String log           = F("P021 write: ");
 
       if (equals(command, F("levelcontrol"))) {
+        String log           = F("P021 write: ");
         if (equals(subcmd, F("remote"))) {
           log += F(" levelcontrol");
 
@@ -494,9 +496,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             success                       = true;
           }
         }
+        // If not successful rely upon ESPeasy framework to report
+        if (success) {
+          addLogMove(LOG_LEVEL_INFO, log);  
+        }
       }
       P021_evaluate(event);
-      addLogMove(LOG_LEVEL_INFO, log);
       break;
     }
 
@@ -603,9 +608,9 @@ void P021_evaluate(struct EventStruct *event)
   P021_control_state new_control_state       = old_control_state;
   const bool invert_input                    = bitRead(P021_FLAGS, P021_INV_INPUT);
   const bool symetric_hyst                   = bitRead(P021_FLAGS, P021_SYM_HYSTERESIS);
-  bool  relay_output                         = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
-  bool  remote_state                         = P021_remote[event->TaskIndex] != 0;
-  ulong timestamp                            = P021_timestamp[event->TaskIndex];
+  bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
+  bool remote_state                          = P021_remote[event->TaskIndex] != 0;
+  uint32_t timestamp                         = P021_timestamp[event->TaskIndex];
 
   // Get the control value from the external task. If task does not exist use the default
   if (validTaskIndex(TaskIndex))
@@ -653,13 +658,13 @@ void P021_evaluate(struct EventStruct *event)
 
       if (old_control_state == P021_STATE_IDLE) // Output was idling
       {
-        if ((timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME)) && ((ulong)P021_FORCE_TIME >= 1))
+        if ((timePassedSince(timestamp) >= (long)seconds2millis(P021_INTERVAL_TIME)) && ((uint32_t)P021_FORCE_TIME >= 1))
         {
           timestamp         = millis();
           new_control_state = P021_STATE_FORCE;
         }
       }
-      else if (timePassedSince(timestamp) < seconds2millis(P021_FORCE_TIME))
+      else if (timePassedSince(timestamp) < (long)seconds2millis(P021_FORCE_TIME))
       {
         // Output was active shorter than the forced on time
         new_control_state = P021_STATE_FORCE; // Keep running in state FORCE
@@ -689,7 +694,7 @@ void P021_evaluate(struct EventStruct *event)
             timestamp         = millis();
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME))
+          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_INTERVAL_TIME))
           {
             // Inactive for a long period, forced maintenance run
             timestamp         = millis();
@@ -702,7 +707,7 @@ void P021_evaluate(struct EventStruct *event)
 
           if (P021_check_off(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
           {
-            if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
+            if (timePassedSince(timestamp) >= (long)seconds2millis(P021_MIN_TIME))
             {
               timestamp         = millis();
               new_control_state = P021_STATE_IDLE;
@@ -726,7 +731,7 @@ void P021_evaluate(struct EventStruct *event)
           {
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
+          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_MIN_TIME))
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
@@ -741,7 +746,7 @@ void P021_evaluate(struct EventStruct *event)
             // Keep timestamp from moment pump was swiched on
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME))
+          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_FORCE_TIME))
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
@@ -785,14 +790,16 @@ void P021_evaluate(struct EventStruct *event)
 
   #ifdef PLUGIN_021_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = strformat(F("P021: Calculated State= %s"), P021_printControlState(new_control_state));
-    log += strformat(F("; GPIO= %d"), relay_output);
-    log += strformat(F("; timer= %d sec"), millis2seconds(timePassedSince(timestamp)));
-    log += strformat(F("; mode= %s"), P021_printControlMode(P021_OPMODE));
-    log += strformat(F("; value= %f"), value);
-    log += strformat(F("; remote= %d"), remote_state);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+  {
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("P021: Calculated State= %s; GPIO= %d; timer= %d sec; mode= %s; value= %f; remote= %d"),
+                         P021_printControlState(new_control_state),
+                         relay_output,
+                         millis2seconds(timePassedSince(timestamp)),
+                         P021_printControlMode(P021_OPMODE),
+                         value,
+                         remote_state));
   }
   #endif // ifdef PLUGIN_021_DEBUG
 
