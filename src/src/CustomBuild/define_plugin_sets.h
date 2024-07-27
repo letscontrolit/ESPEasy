@@ -1577,9 +1577,9 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_COLLECTION_D
     #define USES_P093   // Mitsubishi Heat Pump
-#ifdef ESP32
-    #define USES_P094  // CUL Reader
-#endif
+    #ifdef ESP32
+      #define USES_P094  // CUL Reader
+    #endif
     #ifndef USES_P098
       #define USES_P098   // PWM motor
     #endif
