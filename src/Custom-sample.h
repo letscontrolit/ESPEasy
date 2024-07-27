@@ -519,6 +519,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P138   // IP5306
 
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
+// #define USES_P142   // Position - AS5600
 // #define USES_P143   // I2C Rotary encoders
 //   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
 //   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
