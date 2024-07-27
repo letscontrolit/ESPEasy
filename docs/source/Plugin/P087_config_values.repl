@@ -7,7 +7,7 @@
     ","
     Get the contents from groupnr after processing received data.
 
-    NB: The regular expression parsen uses 0-based group numbers (where most other regex parsers use 1-based group numbers!)
+    NB: The regular expression parser uses 0-based group numbers (where most other regex parsers use 1-based group numbers!)
     "
     "
     ``[<taskname>#next.<groupvalue>]``
