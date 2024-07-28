@@ -114,6 +114,10 @@ Content
 
 * **Header** / **Header (alternate)**: The plugin allows for a header line, which may show some user selectable information. When using a different setting for **Header (alternate)**, the header will be updated halfway of the Interval time. The **User defined 1/2** options are not available in all builds. If they are available, their content can be set using the ``oledframedcmd,userDef1,'<user Defined Header1>'`` and ``oledframedcmd,userDef2,'<user Defined Header2>'`` commands (by default they are empty), see the command reference below for details.
 
+* **Header Time format**: To leave some more space for long **Header** values, the time can be shortened from the default *HH:MM:SS* format to *HH:MM* format. For users that prefer the AM/PM time format, these options have also been added.
+
+.. image:: P036_HeaderTimeFormatOptions.png
+
 * **Scroll long lines**: When checked, lines that won't fit on the display will be scrolled to be completely shown.
 
 * **Wake display on receiving text**: (default: on) Allows to not wake up the display when a text is sent from a remote source or rules, when Display Timeout is set, by unchecking this option.
