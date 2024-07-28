@@ -32,28 +32,56 @@
 # define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 # define P073_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
 
-# define P073_7DDT_COMMAND         // Enable 7ddt by default
-# define P073_EXTRA_FONTS          // Enable extra fonts
-# define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
-# define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
-# define P073_SUPPRESS_ZERO        // Enable Suppress leading zero on day/hour
-# define P073_USE_74HC595          // Enable support for 74HC595 based (sequential and multiplexing) displays
+# ifndef P073_7DDT_COMMAND
+#  define P073_7DDT_COMMAND     1  // Enable 7ddt by default
+# endif // ifndef P073_7DDT_COMMAND
+# ifndef P073_EXTRA_FONTS
+#  define P073_EXTRA_FONTS      1  // Enable extra fonts
+# endif // ifndef P073_EXTRA_FONTS
+# ifndef P073_SCROLL_TEXT
+#  define P073_SCROLL_TEXT      1  // Enable scrolling of 7dtext by default
+# endif // ifndef P073_SCROLL_TEXT
+# ifndef P073_7DBIN_COMMAND
+#  define P073_7DBIN_COMMAND    1  // Enable input of binary data via 7dbin,uint8_t,... command
+# endif // ifndef P073_7DBIN_COMMAND
+# ifndef P073_SUPPRESS_ZERO
+#  define P073_SUPPRESS_ZERO    1  // Enable Suppress leading zero on day/hour
+# endif // ifndef P073_SUPPRESS_ZERO
+# ifndef P073_USE_74HC595
+#  define P073_USE_74HC595      1  // Enable support for 74HC595 based (sequential and multiplexing) displays
+# endif // ifndef P073_USE_74HC595
 
 # if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
-#  undef P073_7DDT_COMMAND         // Optionally activate if .bin file space is problematic, remove the 7ddt command
-#  undef P073_EXTRA_FONTS          // Optionally activate if .bin file space is problematic, remove the font selection and 7dfont command
-#  undef P073_SCROLL_TEXT          // Optionally activate if .bin file space is problematic, remove the scrolling text feature
-#  undef P073_7DBIN_COMMAND        // Optionally activate if .bin file space is problematic, remove the 7dbin command
-#  undef P073_SUPPRESS_ZERO        // Optionally activate if .bin file space is problematic, remove the Suppress leading zero feature
+#  if P073_7DDT_COMMAND
+#   undef P073_7DDT_COMMAND // Optionally activate if .bin file space is problematic, remove the 7ddt command
+#   define P073_7DDT_COMMAND    0
+#  endif // if P073_7DDT_COMMAND
+#  if P073_EXTRA_FONTS
+#   undef P073_EXTRA_FONTS // Optionally activate if .bin file space is problematic, remove the font selection and 7dfont command
+#   define P073_EXTRA_FONTS     0
+#  endif // if  P073_EXTRA_FONTS
+#  if P073_SCROLL_TEXT
+#   undef P073_SCROLL_TEXT // Optionally activate if .bin file space is problematic, remove the scrolling text feature
+#   define P073_SCROLL_TEXT     0
+#  endif // if P073_SCROLL_TEXT
+#  if P073_7DBIN_COMMAND
+#   undef P073_7DBIN_COMMAND // Optionally activate if .bin file space is problematic, remove the 7dbin command
+#   define P073_7DBIN_COMMAND   0
+#  endif // if P073_7DBIN_COMMAND
+#  if P073_SUPPRESS_ZERO
+#   undef P073_SUPPRESS_ZERO // Optionally activate if .bin file space is problematic, remove the Suppress leading zero feature
+#   define P073_SUPPRESS_ZERO   0
+#  endif // if P073_SUPPRESS_ZERO
 # else // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 // #  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
 # endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 # if defined(ESP8266)
-#  ifdef P073_USE_74HC595
+#  if P073_USE_74HC595
 #   undef P073_USE_74HC595 // Removes the support for 74HC595 displays
-#  endif // ifdef P073_USE_74HC595
+#   define P073_USE_74HC595 0
+#  endif // if P073_USE_74HC595
 # endif // if defined(ESP8266)
 
 # define TM1637_POWER_ON    0b10001000
@@ -84,7 +112,7 @@ static const uint8_t DefaultCharTable[42] PROGMEM = {
   0b01111110, 0b01100111, 0b01101011, 0b01100110, 0b01011011, 0b00001111,
   0b00111110, 0b00111110, 0b00101010, 0b00110111, 0b00111011, 0b01101101 };
 
-# ifdef P073_EXTRA_FONTS
+# if P073_EXTRA_FONTS
 
 // Siekoo alphabet https://www.fakoo.de/siekoo
 // as the 'over score' character isn't normally available, the pipe "|" is used for that, and for degree the "^"" is used
@@ -169,17 +197,16 @@ public:
   virtual ~P073_data_struct() = default;
 
   void init(struct EventStruct *event);
-  # ifdef P073_USE_74HC595
+  bool p073_plugin_write(struct EventStruct *event,
+                         const String      & string);
+  bool plugin_once_a_second(struct EventStruct *event);
+  # if P073_SCROLL_TEXT
+  bool plugin_ten_per_second(struct EventStruct *event);
+  # endif // if P073_SCROLL_TEXT
+
+  # if P073_USE_74HC595
   bool plugin_fifty_per_second(struct EventStruct *event);
-  void hc595_InitDisplay();
-  void hc595_ShowBuffer();
-  void hc595_AdjustBuffer();
-  bool hc595_Sequential() {
-    return P073_HC595_SEQUENTIAL;
-  }
-
-  # endif // ifdef P073_USE_74HC595
-
+  # endif // if P073_USE_74HC595
   void FillBufferWithTime(bool    sevendgt_now,
                           uint8_t sevendgt_hours,
                           uint8_t sevendgt_minutes,
@@ -195,32 +222,32 @@ public:
                            const uint8_t nr2,
                            const uint8_t nr3,
                            const int8_t  nr4
-                           # ifdef       P073_SUPPRESS_ZERO
+                           # if          P073_SUPPRESS_ZERO
                            ,
                            const bool    suppressLeading0
-                           # endif // ifdef P073_SUPPRESS_ZERO
+                           # endif // if P073_SUPPRESS_ZERO
                            );
   void FillBufferWithNumber(const String& number);
   void FillBufferWithTemp(int temperature);
-  # ifdef P073_7DDT_COMMAND
+  # if P073_7DDT_COMMAND
   void FillBufferWithDualTemp(int  leftTemperature,
                               bool leftWithDecimal,
                               int  rightTemperature,
                               bool rightWithDecimal);
-  # endif // ifdef P073_7DDT_COMMAND
+  # endif // if P073_7DDT_COMMAND
   void    FillBufferWithString(const String& textToShow,
                                bool          useBinaryData = false);
-  # ifdef P073_SCROLL_TEXT
+  # if P073_SCROLL_TEXT
   int     getEffectiveTextLength(const String& text);
   bool    NextScroll();
   void    setTextToScroll(const String& text);
   void    setScrollSpeed(uint8_t speed);
   bool    isScrollEnabled();
   void    setScrollEnabled(bool scroll);
-  # endif // ifdef P073_SCROLL_TEXT
-  # ifdef P073_7DBIN_COMMAND
+  # endif // if P073_SCROLL_TEXT
+  # if P073_7DBIN_COMMAND
   void    setBinaryData(const String& data);
-  # endif // ifdef P073_7DBIN_COMMAND
+  # endif // if P073_7DBIN_COMMAND
   # ifdef P073_DEBUG
   void    LogBufferContent(String prefix);
   # endif // ifdef P073_DEBUG
@@ -249,11 +276,12 @@ public:
   bool    periods               = false;
   bool    hideDegree            = false;
   bool    rightAlignTempMAX7219 = false;
+  bool    suppressLeading0      = false;
   uint8_t fontset               = 0;
-  # ifdef P073_7DBIN_COMMAND
+  # if P073_7DBIN_COMMAND
   bool binaryData = false;
   # endif // P073_7DBIN_COMMAND
-  # ifdef P073_SCROLL_TEXT
+  # if P073_SCROLL_TEXT
   bool     txtScrolling  = false;
   bool     scrollAllowed = false;
   uint16_t scrollCount   = 0;
@@ -270,9 +298,118 @@ private:
   # ifdef P073_DEBUG
   uint32_t counter50 = 0;
   # endif // ifdef P073_DEBUG
-  # ifdef P073_USE_74HC595
+  # if P073_USE_74HC595
   bool isSequential = false;
-  # endif // ifdef P073_USE_74HC595
+  # endif // if P073_USE_74HC595
+
+private:
+
+  void getDisplayLimits(int32_t& lLimit,
+                        int32_t& uLimit,
+                        int8_t   offset = 0,
+                        uint8_t  digits = 0);
+  bool plugin_write_7dn(struct EventStruct *event,
+                        const String      & text);
+  bool plugin_write_7dt(const String& text);
+  # if P073_7DDT_COMMAND
+  bool plugin_write_7ddt(const String& text);
+  # endif // if P073_7DDT_COMMAND
+  bool plugin_write_7dst(struct EventStruct *event);
+  bool plugin_write_7dsd(struct EventStruct *event);
+  bool plugin_write_7dtext(const String& text);
+  # if P073_EXTRA_FONTS
+  bool plugin_write_7dfont(struct EventStruct *event,
+                           const String      & text);
+  # endif // if P073_EXTRA_FONTS
+  # if P073_7DBIN_COMMAND
+  bool plugin_write_7dbin(const String& text);
+  # endif // if P073_7DBIN_COMMAND
+
+  // ---- TM1637 specific functions ----
+  void tm1637_i2cStart(uint8_t clk_pin,
+                       uint8_t dio_pin);
+  void tm1637_i2cStop(uint8_t clk_pin,
+                      uint8_t dio_pin);
+  void tm1637_i2cAck(uint8_t clk_pin,
+                     uint8_t dio_pin);
+  void tm1637_i2cWrite_ack(uint8_t clk_pin,
+                           uint8_t dio_pin,
+                           uint8_t bytesToPrint[],
+                           uint8_t length);
+  void tm1637_i2cWrite_ack(uint8_t clk_pin,
+                           uint8_t dio_pin,
+                           uint8_t bytetoprint);
+  void tm1637_i2cWrite(uint8_t clk_pin,
+                       uint8_t dio_pin,
+                       uint8_t bytetoprint);
+  void tm1637_ClearDisplay(uint8_t clk_pin,
+                           uint8_t dio_pin);
+  void tm1637_SetPowerBrightness(uint8_t clk_pin,
+                                 uint8_t dio_pin,
+                                 uint8_t brightlvl,
+                                 bool    poweron);
+  void    tm1637_InitDisplay(uint8_t clk_pin,
+                             uint8_t dio_pin);
+  uint8_t tm1637_separator(uint8_t value,
+                           bool    sep);
+  void    tm1637_ShowTime6();
+  void    tm1637_ShowDate6(bool showTime = false);
+  void    tm1637_ShowTemp6(bool sep);
+  void    tm1637_ShowTimeTemp4(bool    sep,
+                               uint8_t bufoffset);
+  void    tm1637_SwapDigitInBuffer(uint8_t startPos);
+  void    tm1637_ShowBuffer(uint8_t firstPos,
+                            uint8_t lastPos,
+                            bool    useBinaryData = false);
+
+  // ---- MAX7219 specific functions ----
+  void max7219_spiTransfer(uint8_t                   din_pin,
+                           uint8_t                   clk_pin,
+                           uint8_t                   cs_pin,
+                           ESPEASY_VOLATILE(uint8_t) opcode,
+                           ESPEASY_VOLATILE(uint8_t) data);
+  void max7219_ClearDisplay(uint8_t din_pin,
+                            uint8_t clk_pin,
+                            uint8_t cs_pin);
+  void max7219_SetPowerBrightness(uint8_t din_pin,
+                                  uint8_t clk_pin,
+                                  uint8_t cs_pin,
+                                  uint8_t brightlvl,
+                                  bool    poweron);
+  void max7219_SetDigit(uint8_t din_pin,
+                        uint8_t clk_pin,
+                        uint8_t cs_pin,
+                        int     dgtpos,
+                        uint8_t dgtvalue,
+                        bool    showdot,
+                        bool    binaryData = false);
+  void max7219_InitDisplay(uint8_t din_pin,
+                           uint8_t clk_pin,
+                           uint8_t cs_pin);
+  void max7219_ShowTime(uint8_t din_pin,
+                        uint8_t clk_pin,
+                        uint8_t cs_pin,
+                        bool    sep);
+  void max7219_ShowTemp(uint8_t din_pin,
+                        uint8_t clk_pin,
+                        uint8_t cs_pin,
+                        int8_t  firstDot,
+                        int8_t  secondDot);
+  void max7219_ShowDate(uint8_t din_pin,
+                        uint8_t clk_pin,
+                        uint8_t cs_pin);
+  void max7219_ShowBuffer(uint8_t din_pin,
+                          uint8_t clk_pin,
+                          uint8_t cs_pin);
+  # if P073_USE_74HC595
+  void hc595_InitDisplay();
+  void hc595_ShowBuffer();
+  void hc595_AdjustBuffer();
+  bool hc595_Sequential() {
+    return P073_HC595_SEQUENTIAL;
+  }
+
+  # endif // if P073_USE_74HC595
 };
 
 #endif    // ifdef USES_P073
