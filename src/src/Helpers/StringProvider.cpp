@@ -324,9 +324,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
     case LabelType::TIME_SOURCE:
     {
-      String timeSource_str = toString(node_time.timeSource);
-      if (((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) ||
-           (node_time.timeSource == timeSource_t::ESP_now_peer)) &&
+      String timeSource_str = toString(node_time.getTimeSource());
+      if (((node_time.getTimeSource() == timeSource_t::ESPEASY_p2p_UDP) ||
+           (node_time.getTimeSource() == timeSource_t::ESP_now_peer)) &&
           (node_time.timeSource_p2p_unit != 0))
       {
         return strformat(F("%s (%u)"), timeSource_str.c_str(), node_time.timeSource_p2p_unit);
