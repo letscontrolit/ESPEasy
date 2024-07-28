@@ -50,7 +50,7 @@
 .. |P094_name| replace:: :cyan:`CUL Reader`
 .. |P094_type| replace:: :cyan:`Communication`
 .. |P094_typename| replace:: :cyan:`Communication - CUL Reader`
-.. |P094_status| replace:: :yellow:`COLLECTION D`
+.. |P094_status| replace:: :yellow:`MAX`
 .. |P094_github| replace:: P094_CULReader.ino
 .. _P094_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P094_CULReader.ino
 .. |P094_usedby| replace:: `.`
