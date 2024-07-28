@@ -40,11 +40,15 @@ The plugin provides a simple "Classic" mode of operation which can be extended w
 Basic control algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The output of another plugin is used as measurement input. This input is compared with a given Setpoint. If the Input is above the Setpoint the Output (heater/pump) should be switched on; if it is below the Output should be switched off. 
-If the Input is close to the Setpoint the controller might switch very rapidly between on and off. This may destroy the relay or pump. A margin between switch on and switch off level is used to prevent this. 
+The output of another plugin is used as measurement input. This input is compared with a given Setpoint. If the Input is above the Setpoint the Output (heater/pump) should be switched on (becomes active); 
+If it is below the setpoint the Output should be switched off (becomes inactive). 
+If the Input is close to the Setpoint the controller might switch very rapidly between on and off (flip-flopping). This may destroy the relay or pump. A margin between switch on and switch off level is used to prevent this flip-flopping. 
 When the Input value stays between these two levels the output will not be changed. This margin is called Hysteresis. 
-The Hysteresis can be symetrical around the Setpoint: Switching on above Setpoint + 0.5*Hysteresis and switching off below Setpoint - 0.5*Hystersis.
-With an asymetrical Hysteresis the output is switched on above the Setpoint and switched of below Setpoint - Hysteresis.
+The Hysteresis can be symetrical around the Setpoint: Switching on above (Setpoint + 0.5*Hysteresis) and switching off below (Setpoint - 0.5*Hystersis).
+With an asymetrical Hysteresis the output is switched on above the Setpoint and switched of below (Setpoint - Hysteresis).
+
+In case of symetrical hysteresis there is an exception in hysteresis handling: If the Hysteresis is set to 0, the output state will become active if the measured value goes *below* Setpoint, and the output state will become inactive if the measured value reaches ``Setpoint + 1.0``.
+It is strongly advised to use a proper non-zero Hysteresis tuned to the behavior of the control process and not to rely on this exception.
 
 To facilitate various applications the direction of the input comparator can be inverted.
 Combining symetrical hystersis and invert output this results in the following overview:
@@ -58,13 +62,13 @@ State control extension
 To provide additional control features the controller can be in one of several States. Based upon the input value and some timers the controller can change the State. The output of the controller directly depends on the State.
 The following states exist:
 
-* **Idle** : The Output (heater/pump) is swiched off. There is no reason to switch it on.
-* **Heating** : The basic comparator algorithm decides the Output must be switched on. There is a demand based upon the measured Input value.
+* **Idle** : The Output is swiched to inactive (off). There is no reason to switch it active (on).
+* **Active** : The basic comparator algorithm decides the Output must be switched to active. There is a demand based upon the the measured Input value.
 * **Extend** : The Output was switched on for a too short period. It will be kept running for a minimum time even while the comparator algorithm has no demand.
-* **Force** : The output is forced on for a minimum amount of time to keep the system in condition. The State will be set to Forced when the Output is off for a too long time.
+* **Force** : The output is forced on for a minimum amount of time to keep the system in condition. The State will be set to Forced when the Output is inactive for a too long time.
 
-Extension of the period the Output is switched depends on the use case. Extension from the moment of activating the Output is used to prevent the heater/pump is running too short cycles. 
-Extension when the demand drops (input below setpoint) is used optimize the process. For example a heating pump runs some tome to spread the remaining heat.
+Extension of the period the Output is kept active depends on the use case. Extension from the moment of activating the Output is used to prevent a heater or pump is running too short cycles. 
+Extension when the demand drops (input below setpoint) is used optimize the control process. For example a heating pump is kept running for some time to spread the remaining heat.
 
 Remote control
 ^^^^^^^^^^^^^^
@@ -114,7 +118,7 @@ In extended mode additional settings are available:
 Sensor
 ^^^^^^
 
-* **GPIO -> Output** Select a GPIO pin that will be updated when the Level state changes. The state is applied directly on the GPIO pin, so only On (1) and Off (0) will be set.
+* **GPIO -> Output** Select a GPIO pin that will be updated when the Output state changes. The state is applied directly on the GPIO pin, so only On (1) and Off (0) will be set.
 
 * **Input Task** Select the Task that should be monitored. Initially the first Task will be selected. Only configured tasks can be selected.
 
@@ -122,9 +126,7 @@ Sensor
 
 * **Setpoint** The value that is to be maintained. Decimals can be used in this value.
 
-* **Hysteresis** To avoid 'flip-flopping' of the output, some hysteresis should be applied to the **Set Value**. The value entered here will be applied 'around' that set value, so half of the hysteresis below Set Value will turn on (1) the output state, and half of the hysteresis above the set value will turn off (0) the output state.
-
-In case of symetrical hysteresis there is 1 exception to the **Hysteresis**: If the Hysteresis is set to 0, the output state will become active if the measured value goes *below* Set Value, and the output state will become inactive if the measured value reaches ``Setpoint + 1.0``.
+* **Hysteresis** To avoid 'flip-flopping' of the output, some hysteresis should be applied to the **Setpoint**. The value entered here will be applied as described above in Basic control algorithm.
 
 * **Invert Output** When checked, the output state will be 0 instead of 1 when the level is activated.
 
@@ -146,9 +148,9 @@ In case of symetrical hysteresis there is 1 exception to the **Hysteresis**: If 
 
 * **Symetrical hysteress** If checked the Hysteresis is symerical around the Setpoint. Otherwise it is asymertical. See basic control algorithm.
 
-* **Extend at end** If checked the extension period is started after demand dropt, otherwise the extension period timing is started when the Output is switched on
+* **Extend at end** If checked the extension period is started after demand dropt, otherwise the extension period timing is started when the Output is switched to active.
 
-* **Invert Input** If checked the output pin is inverted (active LOW).
+* **Invert Input** If checked the input compare direction is inverted. See basic control algorithm above.
 
 * **Slow evaluation** By default the control algorithm is evaluated 10 times per second. Many applications don't need this speed. Checking this setting evaluates the control algorithm once per second to reduce the CPU load.
 
@@ -192,12 +194,12 @@ The circulation pump consumes quite some electricity, so I only want to switch i
 
 It has one output to control the pump.
 
-Control input is the water temperature from the central heating. If the temparture rises above the Setpoint (heating switched on by the thermostat in the room) the pump is switched on. 
-When the temperature drops below the Setpoint minus Hysteresis it can be switched off.
+Control input is the water temperature from the central heating. If the temparture rises above the **Setpoint** (heating switched on by the thermostat in the room) the pump is switched on. 
+When the temperature drops below the **Setpoint** minus **Hysteresis** it can be switched off.
 However, it shall run for some extension time to assure the remaining heat in the water is spread well over the floor. It also prevents switching the pump too often which might damage it.
-These pumps don't like it when idling for half a season. Therefore the pump is switched on for 5 minutes in case is has not been running for a day.
+These pumps don't like it when idling for half a year. Therefore the pump is switched on for 5 minutes in case is has not been running for a day.
 With the introduction of the heat pump the water temperature stays relatively low (40 degrees) and the pump might be switched on very late. Therefore the home automation system sends a "remote on" when the heat pump is running.
-Note that setting the setpoint very low will result in switching on the pump in summer due to high environmental temperatures. 
+Note that setting the setpoint very low will result in switching on the pump in summer due to high environmental temperatures. I have a small margin here or have to switch the **Control mode** to STANDBY in summer.
 
 The control box has a 3 color LED to signal the the state. I use a rule to use the state value to enable one of the LED outputs:
 
