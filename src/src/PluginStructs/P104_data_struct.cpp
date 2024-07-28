@@ -90,6 +90,9 @@ bool P104_data_struct::begin() {
                                         // version.
                                         // Any third version or later could use 0xE000, etc. The 'version' is stored in the first uint16_t
                                         // stored in the custom settings
+# define P104_CONFIG_VERSION_V3  0xE000 // Marker to indicate we're using V3 of the settings, same base-format as V2, but using the
+                                        // CustomTaskSettings Extension file only, by inserting an offset of DAT_TASKS_CUSTOM_SIZE
+                                        // ATTENTION: V3 is _only_ activated for FEATURE_EXTENDED_CUSTOM_SETTINGS, ESP32 & USE_LITTLEFS !!!
 
 /*
    Settings layout:
@@ -104,6 +107,15 @@ bool P104_data_struct::begin() {
    - char[x]  : Blob
    - ...
    - Max. allowed total custom settings size = 1024
+   Version 3:
+   - uint16_t : marker with content P104_CONFIG_VERSION_V2
+   - empty space, size of DAT_TASKS_CUSTOM_SIZE - 2 so the actual storage is in the extension file
+   - uint16_t : size of next blob holding 1 zone settings string
+   - char[y]  : Blob holding 1 zone settings string, with csv like string, using P104_FIELD_SEP separators
+   - uint16_t : next size, if 0 then no more blobs
+   - char[x]  : Blob
+   - ...
+   - Max. allowed total custom settings size = 4096
  */
 /**************************************
  * loadSettings
@@ -112,26 +124,36 @@ void P104_data_struct::loadSettings() {
   uint16_t bufferSize;
   char    *settingsBuffer;
 
-  if (taskIndex < TASKS_MAX) {
+  if (validTaskIndex(taskIndex)) {
     int loadOffset = 0;
 
     // Read size of the used buffer, could be the settings-version marker
     LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), loadOffset);
     bool settingsVersionV2  = (bufferSize == P104_CONFIG_VERSION_V2) || (bufferSize == 0u);
+    bool settingsVersionV3  = (bufferSize == P104_CONFIG_VERSION_V3) || (bufferSize == 0u);
     uint16_t structDataSize = 0;
     uint16_t reservedBuffer = 0;
 
-    if (!settingsVersionV2) {
-      reservedBuffer = bufferSize + 1;              // just add 1 for storing a string-terminator
-      addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2."));
+    if (!settingsVersionV2 && !settingsVersionV3) {
+      reservedBuffer = bufferSize + 1;                         // just add 1 for storing a string-terminator
+      addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2/V3."));
     } else {
-      reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1; // just add 1 for storing a string-terminator
+      reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1;            // just add 1 for storing a string-terminator
     }
-    reservedBuffer++;                               // Add 1 for 0..size use
-    settingsBuffer = new (std::nothrow) char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
-    loadOffset    += sizeof(bufferSize);
+    reservedBuffer++;                                          // Add 1 for 0..size use
+    settingsBuffer = new (std::nothrow)char[reservedBuffer](); // Allocate buffer and reset to all zeroes
+    # if P104_FEATURE_STORAGE_V3
 
-    if (settingsVersionV2) {
+    if (settingsVersionV3) {
+      loadOffset = DAT_TASKS_CUSTOM_SIZE; // Skip storage in config.dat
+    } else {
+      loadOffset += sizeof(bufferSize);
+    }
+    # else // if P104_FEATURE_STORAGE_V3
+    loadOffset += sizeof(bufferSize);
+    # endif // if P104_FEATURE_STORAGE_V3
+
+    if (settingsVersionV2 || settingsVersionV3) {
       LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), loadOffset);
       loadOffset += sizeof(bufferSize); // Skip the size
     }
@@ -158,18 +180,14 @@ void P104_data_struct::loadSettings() {
       String log;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: loadSettings bufferSize: ");
-        log += bufferSize;
-        log += F(" untrimmed: ");
-        log += buffer.length();
+        log = strformat(F("P104: loadSettings bufferSize: %d untrimmed: %d"), bufferSize, buffer.length());
       }
       # endif // ifdef P104_DEBUG_DEV
       buffer.trim();
       # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log += F(" trimmed: ");
-        log += buffer.length();
+        log += concat(F(" trimmed: "), buffer.length());
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
@@ -221,7 +239,7 @@ void P104_data_struct::loadSettings() {
 
         numDevices += zones[zoneIndex].size + zones[zoneIndex].offset;
 
-        if (!settingsVersionV2) {
+        if (!settingsVersionV2 && !settingsVersionV3) { // V1 check
           prev2   = offset2 + 1;
           offset2 = buffer.indexOf(P104_ZONE_SEP, prev2);
         } else {
@@ -701,10 +719,10 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
     P->setIntensity(zstruct.zone - 1, zstruct.brightness);                                           // don't forget to set the brightness
     uint8_t row = 0;
 
-    if ((barGraphs.size() == 3) || (barGraphs.size() == 5) || (barGraphs.size() == 6)) { // Center within the rows a bit
+    if ((barGraphs.size() == 3) || (barGraphs.size() == 5) || (barGraphs.size() == 6)) {             // Center within the rows a bit
       for (; row < (barGraphs.size() == 5 ? 2 : 1); row++) {
         for (uint8_t col = zstruct._lower; col <= zstruct._upper; col++) {
-          pM->setPoint(row, col, false);                                                 // all off
+          pM->setPoint(row, col, false);                                                             // all off
 
           if (col % 16 == 0) { delay(0); }
         }
@@ -797,6 +815,7 @@ void P104_data_struct::displayDots(uint8_t                 zone,
 
       int32_t row;
       int32_t col;
+
       if (validIntFromString(sRow, row) &&
           validIntFromString(sCol, col) &&
           (row > 0) && ((row - 1) < 8) &&
@@ -1057,8 +1076,8 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
               }
           # endif // ifdef P104_USE_COMMANDS
 
-              case p104_subcommands_e::txt:                                                     // subcommand: [set]txt,<zone>,<text> (only
-              case p104_subcommands_e::settxt:                                                 // allowed for zones with Text content)
+              case p104_subcommands_e::txt:                                  // subcommand: [set]txt,<zone>,<text> (only
+              case p104_subcommands_e::settxt:                               // allowed for zones with Text content)
               {
                 if ((it->content == P104_CONTENT_TEXT) ||
                     (it->content == P104_CONTENT_TEXT_REV)) {                // no length check, so longer than the UI allows is made
@@ -1704,10 +1723,11 @@ bool P104_data_struct::saveSettings() {
 
       for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
         // for newly added zone, use defaults
-        const bool mustCheckSize = 
-          (i == P104_OFFSET_BRIGHTNESS) || 
+        const bool mustCheckSize =
+          (i == P104_OFFSET_BRIGHTNESS) ||
           (i == P104_OFFSET_REPEATDELAY);
-        if (!mustCheckSize || zones[zoneIndex].size != 0) {          
+
+        if (!mustCheckSize || (zones[zoneIndex].size != 0)) {
           if (i == P104_OFFSET_TEXT) {
             zones[zoneIndex].text = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
           } else {
@@ -1747,10 +1767,19 @@ bool P104_data_struct::saveSettings() {
 
   numDevices = 0;                      // Count the number of connected display units
 
+  # if P104_FEATURE_STORAGE_V3
+  bufferSize = P104_CONFIG_VERSION_V3; // Save special marker that we're using V3 (extended) settings
+  # else // if P104_FEATURE_STORAGE_V3
   bufferSize = P104_CONFIG_VERSION_V2; // Save special marker that we're using V2 settings
+  # endif // if P104_FEATURE_STORAGE_V3
+
   // This write is counting
-  error      += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+  error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+  # if P104_FEATURE_STORAGE_V3
+  saveOffset = DAT_TASKS_CUSTOM_SIZE; // Start in the extension file
+  # else // if P104_FEATURE_STORAGE_V3
   saveOffset += sizeof(bufferSize);
+  # endif // if P104_FEATURE_STORAGE_V3
 
   String zbuffer;
 
@@ -1760,12 +1789,14 @@ bool P104_data_struct::saveSettings() {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
       zbuffer.clear();
+
       for (uint8_t i = 0; i < P104_OFFSET_COUNT; ++i) {
         if (i == P104_OFFSET_TEXT) {
           zbuffer += it->text;
           zbuffer += '\x01';
         } else {
           int32_t value{};
+
           if (it->getIntValue(i, value)) {
             zbuffer += value;
             zbuffer += '\x01';
@@ -1773,15 +1804,23 @@ bool P104_data_struct::saveSettings() {
         }
       }
 
-      numDevices += (it->size != 0 ? it->size : 1) + it->offset;                                // Count corrected for newly added zones
+      numDevices += (it->size != 0 ? it->size : 1) + it->offset; // Count corrected for newly added zones
 
-      if (saveOffset + zbuffer.length() + (sizeof(bufferSize) * 2) > (DAT_TASKS_CUSTOM_SIZE)) { // Detect ourselves if we've reached the
-        error.reserve(55);                                                                      // high-water mark
+      ZERO_FILL(P104_storeThis);                                 // Clean previous data
+
+      if (saveOffset + zbuffer.length() + (sizeof(P104_dataSize) * 2) >
+          (
+            # if !P104_FEATURE_STORAGE_V3       // Don't count the skipped storage
+            DAT_TASKS_CUSTOM_SIZE +
+            # endif // if !P104_FEATURE_STORAGE_V3
+            DAT_TASKS_CUSTOM_EXTENSION_SIZE)) { // Detect ourselves if we've reached the
+        error.reserve(55);                      // high-water mark
         error += F("Total combination of Zones & text too long to store.\n");
         addLogMove(LOG_LEVEL_ERROR, error);
       } else {
         // Store length of buffer
-        bufferSize = zbuffer.length();
+        P104_dataSize = zbuffer.length();
+        safe_strncpy(P104_data, zbuffer.c_str(), P104_dataSize + 1);
 
         // As we write in parts, only count as single write.
         if (RTC.flashDayCounter > 0) {
@@ -1789,21 +1828,10 @@ bool P104_data_struct::saveSettings() {
         }
         error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
                             taskIndex,
-                            (uint8_t *)&bufferSize,
-                            sizeof(bufferSize),
+                            (uint8_t *)P104_storeThis,
+                            P104_dataSize + sizeof(P104_dataSize),
                             saveOffset);
-        saveOffset += sizeof(bufferSize);
-
-        // As we write in parts, only count as single write.
-        if (RTC.flashDayCounter > 0) {
-          RTC.flashDayCounter--;
-        }
-        error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
-                            taskIndex,
-                            (uint8_t *)zbuffer.c_str(),
-                            bufferSize,
-                            saveOffset);
-        saveOffset += bufferSize;
+        saveOffset += P104_dataSize + sizeof(P104_dataSize);
 
         # ifdef P104_DEBUG_DEV
 
@@ -2131,6 +2159,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , P104_KATAKANA_FONT_ID
     # endif // ifdef P104_USE_KATAKANA_FONT
     };
+    constexpr int fontCount = NR_ELEMENTS(fontTypes);
 
     const __FlashStringHelper *layoutTypes[] = {
       F("Standard")
@@ -2146,6 +2175,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       , P104_LAYOUT_DOUBLE_LOWER
     # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
     };
+    constexpr int layoutCount = NR_ELEMENTS(layoutTypes);
 
     const __FlashStringHelper *specialEffectTypes[] = {
       F("None"),
@@ -2159,6 +2189,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_SPECIAL_EFFECT_LEFT_RIGHT,
       P104_SPECIAL_EFFECT_BOTH
     };
+    constexpr int specialEffectCount = NR_ELEMENTS(specialEffectTypes);
 
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
@@ -2236,8 +2267,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       };
 
       constexpr unsigned nrHeaders = NR_ELEMENTS(headers);
+
       for (unsigned i = 0; i < nrHeaders; ++i) {
         int width = 0;
+
         if (i == 2) {
           // "Text" needs a width
           width = 180;
@@ -2389,10 +2422,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         // Split here
         html_TR_TD(); // Start new row
-        html_TD(4);  // Start with some blank columns
+        html_TD(4);   // Start with some blank columns
 
         {
-          html_TD(); // Animation Out
+          html_TD();  // Animation Out
           addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
                       animationCount,
                       animationTypes,
@@ -2537,31 +2570,28 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
   return result;
 }
 
-
-
-
-P104_zone_struct::P104_zone_struct(uint8_t _zone) 
+P104_zone_struct::P104_zone_struct(uint8_t _zone)
   :  text(F("\"\"")), zone(_zone) {}
 
 
 bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 {
   switch (offset) {
-    case P104_OFFSET_SIZE:          value = size;           break; 
+    case P104_OFFSET_SIZE:          value = size;           break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       value = content;        break; 
-    case P104_OFFSET_ALIGNMENT:     value = alignment;      break; 
-    case P104_OFFSET_ANIM_IN:       value = animationIn;    break; 
-    case P104_OFFSET_SPEED:         value = speed;          break; 
-    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break; 
-    case P104_OFFSET_PAUSE:         value = pause;          break; 
-    case P104_OFFSET_FONT:          value = font;           break; 
-    case P104_OFFSET_LAYOUT:        value = layout;         break; 
-    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break; 
-    case P104_OFFSET_OFFSET:        value = offset;         break; 
-    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break; 
-    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break; 
-    case P104_OFFSET_INVERTED:      value = inverted;       break; 
+    case P104_OFFSET_CONTENT:       value = content;        break;
+    case P104_OFFSET_ALIGNMENT:     value = alignment;      break;
+    case P104_OFFSET_ANIM_IN:       value = animationIn;    break;
+    case P104_OFFSET_SPEED:         value = speed;          break;
+    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break;
+    case P104_OFFSET_PAUSE:         value = pause;          break;
+    case P104_OFFSET_FONT:          value = font;           break;
+    case P104_OFFSET_LAYOUT:        value = layout;         break;
+    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break;
+    case P104_OFFSET_OFFSET:        value = offset;         break;
+    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break;
+    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break;
+    case P104_OFFSET_INVERTED:      value = inverted;       break;
 
     default:
       return false;
@@ -2572,27 +2602,26 @@ bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 bool P104_zone_struct::setIntValue(uint8_t offset, int32_t value)
 {
   switch (offset) {
-    case P104_OFFSET_SIZE:          size          = value; break; 
+    case P104_OFFSET_SIZE:          size = value; break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       content       = value; break; 
-    case P104_OFFSET_ALIGNMENT:     alignment     = value; break; 
-    case P104_OFFSET_ANIM_IN:       animationIn   = value; break; 
-    case P104_OFFSET_SPEED:         speed         = value; break; 
-    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break; 
-    case P104_OFFSET_PAUSE:         pause         = value; break; 
-    case P104_OFFSET_FONT:          font          = value; break; 
-    case P104_OFFSET_LAYOUT:        layout        = value; break; 
-    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break; 
-    case P104_OFFSET_OFFSET:        offset        = value; break; 
-    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break; 
-    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break; 
-    case P104_OFFSET_INVERTED:      inverted      = value; break; 
+    case P104_OFFSET_CONTENT:       content       = value; break;
+    case P104_OFFSET_ALIGNMENT:     alignment     = value; break;
+    case P104_OFFSET_ANIM_IN:       animationIn   = value; break;
+    case P104_OFFSET_SPEED:         speed         = value; break;
+    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break;
+    case P104_OFFSET_PAUSE:         pause         = value; break;
+    case P104_OFFSET_FONT:          font          = value; break;
+    case P104_OFFSET_LAYOUT:        layout        = value; break;
+    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break;
+    case P104_OFFSET_OFFSET:        offset        = value; break;
+    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break;
+    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break;
+    case P104_OFFSET_INVERTED:      inverted      = value; break;
 
     default:
       return false;
   }
   return true;
 }
-
 
 #endif // ifdef USES_P104

@@ -735,21 +735,22 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
 {
   String newString, strHeader;
   const __FlashStringHelper *newString_f = F("%sysname%");
-  bool use_newString_f = true;
+  bool use_newString_f                   = true;
 
   switch (iHeaderContent) {
     case eHeaderContent::eSSID:
 
       if (NetworkConnected()) {
-        strHeader = WiFi.SSID();
+        strHeader       = WiFi.SSID();
         use_newString_f = false;
       }
-//      else {
-//        newString_f = F("%sysname%");
-//      }
+
+      //      else {
+      //        newString_f = F("%sysname%");
+      //      }
       break;
     case eHeaderContent::eSysName:
-//      newString_f = F("%sysname%");
+      //      newString_f = F("%sysname%");
       break;
     case eHeaderContent::eTime:
       newString_f = F("%systime%");
@@ -786,8 +787,8 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
       break;
     case eHeaderContent::ePageNo:
       use_newString_f = false;
-      strHeader  = F("page ");
-      strHeader += (currentFrameToDisplay + 1);
+      strHeader       = F("page ");
+      strHeader      += (currentFrameToDisplay + 1);
 
       if (MaxFramesToDisplay != 0xFF) {
         strHeader += F("/");
@@ -797,11 +798,11 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
     # if P036_USERDEF_HEADERS
     case eHeaderContent::eUserDef1:
       use_newString_f = false;
-      newString = userDef1;
+      newString       = userDef1;
       break;
     case eHeaderContent::eUserDef2:
       use_newString_f = false;
-      newString = userDef2;
+      newString       = userDef2;
       break;
     # endif // if P036_USERDEF_HEADERS
     case eHeaderContent::eNone:
@@ -831,10 +832,11 @@ void P036_data_struct::display_header() {
     return;
   }
 
-  const eHeaderContent iHeaderContent = ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) 
+  const eHeaderContent iHeaderContent = ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader)
     ? HeaderContent
     : HeaderContentAlternative;
   const String title = create_display_header_text(iHeaderContent);
+
   display_title(title);
 
   // Display time and wifibars both clear area below, so paint them after the title.
@@ -855,7 +857,23 @@ void P036_data_struct::display_time() {
     return;
   }
 
-  const String dtime = SystemVariables::getSystemVariable(SystemVariables::SYSTIME);
+  # if P036_ENABLE_TIME_FORMAT
+  SystemVariables::Enum timeOptions[] = {
+    SystemVariables::SYSTIME,
+    SystemVariables::SYSTM_HM_0,
+    SystemVariables::SYSTIME_AM_0,
+    SystemVariables::SYSTM_HM_AM_0,
+  };
+  # endif // if P036_ENABLE_TIME_FORMAT
+
+  const String dtime = SystemVariables::getSystemVariable(
+    # if P036_ENABLE_TIME_FORMAT
+    timeOptions[timeFormat]
+    # else // if P036_ENABLE_TIME_FORMAT
+    SystemVariables::SYSTIME
+    # endif // if P036_ENABLE_TIME_FORMAT
+    );
+
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
@@ -876,6 +894,7 @@ void P036_data_struct::display_title(const String& title) {
     return;
   }
   display->setFont(getArialMT_Plain_10());
+
   if (getDisplaySizeSettings(disp_resolution).Width == P36_MaxDisplayWidth) {
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->drawString(P36_DisplayCentre, TopLineOffset, title);
@@ -1019,7 +1038,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
   for (uint8_t i = LineNo; i < P36_Nlines; ++i) {
     // calculate individual font settings
-    uint8_t lFontIndex             = FontIndex;
+    uint8_t lFontIndex            = FontIndex;
     const eModifyFont iModifyFont =
       static_cast<eModifyFont>(get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font));
 
@@ -1028,8 +1047,8 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
         if (ScrollingPages.linesPerFrameDef > 1) {
           // Font can only be enlarged if more than 1 line is displayed
-          if (lFontIndex > IdxForBiggestFont) { 
-            lFontIndex--; 
+          if (lFontIndex > IdxForBiggestFont) {
+            lFontIndex--;
           } else {
             lFontIndex = IdxForBiggestFont;
           }

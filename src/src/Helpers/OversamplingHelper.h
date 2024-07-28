@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include <limits>
 
-template<class T>
+template<class T, class SUM_VALUE_TYPE=float>
 class OversamplingHelper {
 public:
 
@@ -28,9 +28,9 @@ public:
 
   // Get current oversampling value without reset.
   // @param value  Value will only be updated if there were samples available
-  bool peek(float& value) const {
+  bool peek(SUM_VALUE_TYPE& value) const {
     if (_count == 0) { return false; }
-    float sum      = _sum;
+    SUM_VALUE_TYPE sum      = _sum;
     uint32_t count = _count;
 
     if ((count >= 3) && _filterPeaks) {
@@ -45,7 +45,7 @@ public:
 
   // Get current oversampling value and reset.
   // @param value  Value will only be updated if there were samples available
-  bool get(float& value) {
+  bool get(SUM_VALUE_TYPE& value) {
     if (peek(value)) {
       reset();
       return true;
@@ -67,19 +67,20 @@ public:
   }
 
   // Clear all oversampling values and add last average if there were samples available.
-  void resetKeepLast() {
-    float value{};
+  SUM_VALUE_TYPE resetKeepLast() {
+    SUM_VALUE_TYPE value{};
 
     if (get(value)) {
       add(static_cast<T>(value));
     }
+    return value;
   }
 
   // Clear all oversampling values and add last average if there were samples available.
   // Last value will be added with a weight according to the given ratio of the last count.
   // @param countRatio  New weight will be previous nr of samples / countRatio
   void resetKeepLastWeighted(int countRatio) {
-    float value{};
+    SUM_VALUE_TYPE value{};
     const uint32_t count = getCount();
 
     if (get(value)) {
@@ -99,7 +100,7 @@ public:
 private:
 
   uint32_t _count{};
-  float _sum{};
+  SUM_VALUE_TYPE _sum{};
   T _minval         = std::numeric_limits<T>::max();
   T _maxval         = std::numeric_limits<T>::min();
   bool _filterPeaks = true;
