@@ -25,7 +25,7 @@
 # ifdef BUILD_NO_DEBUG
 # undef PLUGIN_021_DEBUG
 # else // ifdef BUILD_NO_DEBUG
-# define PLUGIN_021_DEBUG
+////# define PLUGIN_021_DEBUG
 # endif // ifndef/else BUILD_NO_DEBUG
 
 # define PLUGIN_021
@@ -144,10 +144,6 @@ enum P021_control_state
 // Static storage for global state info. Track per ESPeasy plugin instance
 static uint8_t  P021_remote[TASKS_MAX];    // Static storage for remote control.
 static uint32_t P021_timestamp[TASKS_MAX]; // Static storage for timestamp last change
-
-#ifdef PLUGIN_021_DEBUG
-const __FlashStringHelper* P021_printControlState(int state);
-#endif // ifdef PLUGIN_021_DEBUG
 
 ///////////////////////////////////////////////////////////////////////////////
 // ESPeasy main entry point for a plugin
@@ -337,9 +333,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Save extended parameters only when they are selected and are shown on the page
       if ((getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0) && (bitRead(P021_FLAGS, P021_EXT_FUNCT)))
       {
+        const bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
+        const bool old_units = bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT) != 0;
         P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
-        bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
-        bool old_units = bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT) != 0;
 
         // Check if timer unit flag is stable to prevent misalignment
         if (new_units == old_units)
@@ -460,6 +456,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (validGpio(P021_GPIO_RELAY)) {
         pinMode(P021_GPIO_RELAY, OUTPUT);
       }
+      P021_evaluate(event); // Calculate the new control outputs
+      sendData(event);      // Force an update event for the plugin
       success = true;
       break;
     }
@@ -478,28 +476,25 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       const String subcmd  = parseString(string, 2);
       const String value   = parseString(string, 3);
 
-      if (equals(command, F("levelcontrol"))) {
-        String log           = F("P021 write: ");
-        if (equals(subcmd, F("remote"))) {
-          log += F(" levelcontrol");
-
+      if (equals(command, F("levelcontrol")))
+      {
+        if (equals(subcmd, F("remote")))
+        {
           if (equals(value, F("on")))
           {
-            log                          += F(" on");
             P021_remote[event->TaskIndex] = 1;
-            success                       = true;
+            addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=on"));
+            success = true;
           }
           else if (equals(value, F("off")))
           {
-            log                          += F(" off");
             P021_remote[event->TaskIndex] = 0;
-            success                       = true;
+            addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=off"));
+            success = true;
           }
         }
-        // If not successful rely upon ESPeasy framework to report
-        if (success) {
-          addLogMove(LOG_LEVEL_INFO, log);  
-        }
+
+        // If not successful rely upon ESPeasy framework to report the issue
       }
       P021_evaluate(event);
       break;
