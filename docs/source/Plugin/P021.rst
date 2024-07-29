@@ -63,7 +63,7 @@ To provide additional control features the controller can be in one of several S
 The following states exist:
 
 * **Idle** : The Output is swiched to inactive (off). There is no reason to switch it active (on).
-* **Active** : The basic comparator algorithm decides the Output must be switched to active. There is a demand based upon the the measured Input value.
+* **Active** : The basic comparator algorithm decides the Output must be switched to active. There is a demand based upon the measured Input value.
 * **Extend** : The Output was switched on for a too short period. It will be kept running for a minimum time even while the comparator algorithm has no demand.
 * **Force** : The output is forced on for a minimum amount of time to keep the system in condition. The State will be set to Forced when the Output is inactive for a too long time.
 
@@ -201,7 +201,7 @@ These pumps don't like it when idling for half a year. Therefore the pump is swi
 With the introduction of the heat pump the water temperature stays relatively low (40 degrees) and the pump might be switched on very late. Therefore the home automation system sends a "remote on" when the heat pump is running.
 Note that setting the setpoint very low will result in switching on the pump in summer due to high environmental temperatures. I have a small margin here or have to switch the **Control mode** to STANDBY in summer.
 
-The control box has a 3 color LED to signal the the state. I use a rule to use the state value to enable one of the LED outputs:
+The control box has a 3 color LED to signal the state. I use a rule to use the state value to enable one of the LED outputs:
 
 * IDLE : green LED
 

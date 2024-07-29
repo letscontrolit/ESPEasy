@@ -114,7 +114,7 @@
 // And from seconds to the millis domain used for the actual control
 // Note that these simple conversion may lose precision due to rough rounding
 #define millis2seconds(x) ((x) / (1000))
-#define seconds2millis(x) ((x) * (1000))
+#define seconds2millis(x) (long)((x) * (1000))
 #define minutes2seconds(x) ((x) * 60)
 #define hours2seconds(x) ((x) * 60 * 60)
 #define seconds2minutes(x) ((x) / 60)
@@ -653,13 +653,13 @@ void P021_evaluate(struct EventStruct *event)
 
       if (old_control_state == P021_STATE_IDLE) // Output was idling
       {
-        if ((timePassedSince(timestamp) >= (long)seconds2millis(P021_INTERVAL_TIME)) && ((uint32_t)P021_FORCE_TIME >= 1))
+        if ((timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME)) && ((uint32_t)P021_FORCE_TIME >= 1))
         {
           timestamp         = millis();
           new_control_state = P021_STATE_FORCE;
         }
       }
-      else if (timePassedSince(timestamp) < (long)seconds2millis(P021_FORCE_TIME))
+      else if (timePassedSince(timestamp) < seconds2millis(P021_FORCE_TIME))
       {
         // Output was active shorter than the forced on time
         new_control_state = P021_STATE_FORCE; // Keep running in state FORCE
@@ -689,7 +689,7 @@ void P021_evaluate(struct EventStruct *event)
             timestamp         = millis();
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_INTERVAL_TIME))
+          else if (timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME))
           {
             // Inactive for a long period, forced maintenance run
             timestamp         = millis();
@@ -702,7 +702,7 @@ void P021_evaluate(struct EventStruct *event)
 
           if (P021_check_off(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
           {
-            if (timePassedSince(timestamp) >= (long)seconds2millis(P021_MIN_TIME))
+            if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
             {
               timestamp         = millis();
               new_control_state = P021_STATE_IDLE;
@@ -726,7 +726,7 @@ void P021_evaluate(struct EventStruct *event)
           {
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_MIN_TIME))
+          else if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
@@ -741,7 +741,7 @@ void P021_evaluate(struct EventStruct *event)
             // Keep timestamp from moment pump was swiched on
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= (long)seconds2millis(P021_FORCE_TIME))
+          else if (timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME))
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
