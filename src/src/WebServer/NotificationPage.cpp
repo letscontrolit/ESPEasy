@@ -7,9 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2024-07-30 ThomasB   : Added User Setting for SMTP email server timeout. Display in Seconds.
- *                        Added Read-the-Docs Help Button to email and buzzer plugins.
- * 2024-07-30 ThomasB   : Start of changelog, older changes not logged.
+ * 2024-07-30 ThomasB   : Added Read-the-Docs Help Button to email and buzzer plugins.
+ * 2024-07-01 ThomasB   : Added User Setting for SMTP email server timeout. Display in Seconds.
+ * 2024-07-01 ThomasB   : Start of changelog, older changes not logged.
  */
 
 #include "../WebServer/ESPEasy_WebServer.h"
