@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @tonhuisman: 2024-07-14
+// ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
 // @tonhuisman: 2023-09-16
 // CHG: Some improvements and optimizations, improved struct alignment to reduce bin size, uncrustify sources
 // @uwekaditz: 2023-08-10
@@ -409,13 +411,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *options9[] =
-        { F("SSID"),           F("SysName"),               F("IP"),                    F("MAC"),                    F("RSSI"),
-          F("BSSID"),          F("WiFi channel"),          F("Unit"),                  F("SysLoad"),                F("SysHeap"),
-          F("SysStack"),       F("Date"),                  F("Time"),                  F("PageNumbers"),
+        {
+          /* *INDENT-OFF* */
+          F("SSID"),     F("SysName"),      F("IP"),   F("MAC"),         F("RSSI"),
+          F("BSSID"),    F("WiFi channel"), F("Unit"), F("SysLoad"),     F("SysHeap"),
+          F("SysStack"), F("Date"),         F("Time"), F("PageNumbers"),
           # if P036_USERDEF_HEADERS
           F("User defined 1"),
           F("User defined 2"),
           # endif // if P036_USERDEF_HEADERS
+ /* *INDENT-ON* */
         };
         const int optionValues9[] =
         { static_cast<int>(eHeaderContent::eSSID),
@@ -443,6 +448,23 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Header (alternate)"), F("headerAlternate"), nrOptions9, options9, optionValues9,
                         get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // HeaderContentAlternative
       }
+      # if P036_ENABLE_TIME_FORMAT
+      {
+        // From SystemVariables enum:
+        // SYSTIME,
+        // SYSTM_HM_0,
+        // SYSTIME_AM_0,
+        // SYSTM_HM_AM_0,
+        const __FlashStringHelper *options[] = { // ! Order has to be the same as array in display_time() function !
+          F("HH:MM:SS (24h)"),
+          F("HH:MM (24h)"),
+          F("HH:MM:SS (am/pm)"),
+          F("HH:MM (am/pm)"),
+        };
+        addFormSelector(F("Header Time format"), F("timeFmt"), NR_ELEMENTS(options), options, nullptr,
+                        get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT));
+      }
+      # endif // if P036_ENABLE_TIME_FORMAT
 
       addFormCheckBox(F("Scroll long lines"),              F("ScrollLines"), bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_LINES));
 
@@ -611,12 +633,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       P036_FLAGS_0 = lSettings;
 
-# if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
       lSettings = 0;
-      set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, uint8_t(getFormItemInt(F("LeftAlign")) & 0xff)); // Alignment
-      bitWrite(lSettings, P036_FLAG_REDUCE_LINE_NO, isFormItemChecked(F("ReduceLineNo")));            // Reduce line numbers
+      # endif // if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
+      # if P036_ENABLE_LEFT_ALIGN
+      set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, getFormItemInt(F("LeftAlign")) & 0x03); // Alignment
+      bitWrite(lSettings, P036_FLAG_REDUCE_LINE_NO, isFormItemChecked(F("ReduceLineNo")));   // Reduce line numbers
+      # endif // if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_TIME_FORMAT
+      set4BitToUL(lSettings, P036_FLAG_TIME_FORMAT, getFormItemInt(F("timeFmt")) & 0x0f);    // Time format
+      # endif // if P036_ENABLE_TIME_FORMAT
+      # if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
       P036_FLAGS_1 = lSettings;
-# endif // if P036_ENABLE_LEFT_ALIGN
+      # endif // if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
 
       {
         // For load and save of the display lines, we must not rely on the data in memory.
@@ -700,6 +729,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_data->setTextAlignment(static_cast<eAlignment>(get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED)));
       P036_data->bReduceLinesPerFrame = bitRead(P036_FLAGS_1, P036_FLAG_REDUCE_LINE_NO); // Bit 2 Reduce line number
       # endif // if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_TIME_FORMAT
+      P036_data->timeFormat = get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT);        // Bit 3..6, 4 bits time format
+      # endif // if P036_ENABLE_TIME_FORMAT
 
       // Init the display and turn it on
 # ifdef P036_CHECK_HEAP
