@@ -1512,6 +1512,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P095) && defined(ESP32) && !defined(PLUGIN_BUILD_IR_EXTENDED)
+      #define USES_P095   // TFT ILI9xxx
+    #endif
     #if !defined(USES_P137) && defined(ESP32)
       #define USES_P137   // AXP192
     #endif
@@ -1627,8 +1630,14 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_G
+  #ifndef USES_P142
+    #define USES_P142   // Position - AS5600
+  #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
@@ -1947,7 +1956,10 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC/eCO2
@@ -2342,7 +2354,7 @@ To create/register a plugin, you have to :
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
   #ifndef USES_P142
-//    #define USES_P142   // GT911 Touchscreen
+    #define USES_P142   // Position - AS5600
   #endif
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
@@ -2378,7 +2390,10 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
