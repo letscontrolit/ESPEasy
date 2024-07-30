@@ -13,7 +13,7 @@ P113_data_struct::~P113_data_struct() {
 // **************************************************************************/
 // Initialize VL53L1X
 // **************************************************************************/
-bool P113_data_struct::begin() {
+bool P113_data_struct::begin(struct EventStruct *event) {
   initState = nullptr != sensor;
 
   if (initState) {
@@ -40,6 +40,15 @@ bool P113_data_struct::begin() {
     } else {
       sensor->setDistanceModeShort();
     }
+
+    # if P113_USE_ROI
+
+    if (initState) {
+      if ((0 != P113_ROI_X) && (0 != P113_ROI_Y) && (0 != P113_OPT_CENTER)) {
+        sensor->setROI(P113_ROI_X, P113_ROI_Y, P113_OPT_CENTER);
+      }
+    }
+    # endif // if P113_USE_ROI
 
     # ifdef P113_DEBUG
 

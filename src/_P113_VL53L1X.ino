@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-07-29 tonhuisman: Add Region of Interest (ROI) settings for reducing the Field of View (FoV) of the sensor
  * 2024-04-25 tonhuisman: Add Direction value (1/0/-1), code improvements
  * 2023-08-11 tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
  *                        Also use new/delete on sensor object (code improvement)
@@ -88,6 +89,16 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
 
+    # if P113_USE_ROI
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P113_ROI_X      = 16;
+      P113_ROI_Y      = 16;
+      P113_OPT_CENTER = 199; // Optical Center @ Center of sensor. See matrix in documentation
+      break;
+    }
+    # endif // if P113_USE_ROI
+
     case PLUGIN_WEBFORM_LOAD:
     {
       {
@@ -120,6 +131,18 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("Minimal change in Distance to trigger an event."));
       # endif // ifndef LIMIT_BUILD_SIZE
 
+      # if P113_USE_ROI
+      addFormSubHeader(F("Region Of Interest (ROI)"));
+
+      addFormNumericBox(F("ROI 'x' SPADs"), F("roix"), P113_ROI_X, 4, 16);
+      addUnit(F("4..16"));
+      addFormNumericBox(F("ROI 'y' SPADs"), F("roiy"), P113_ROI_Y, 4, 16);
+      addUnit(F("4..16"));
+      addFormNumericBox(F("Optical Center index for ROI"), F("optcent"), P113_OPT_CENTER, 0, 255);
+      addFormNote(F("Default: 199 = sensor-center, please check the documentation."));
+
+      # endif // if P113_USE_ROI
+
       success = true;
       break;
     }
@@ -131,6 +154,11 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       P113_RANGE       = getFormItemInt(F("range"));
       P113_SEND_ALWAYS = isFormItemChecked(F("notchanged")) ? 1 : 0;
       P113_DELTA       = getFormItemInt(F("delta"));
+      # if P113_USE_ROI
+      P113_ROI_X      = getFormItemInt(F("roix"));
+      P113_ROI_Y      = getFormItemInt(F("roiy"));
+      P113_OPT_CENTER = getFormItemInt(F("optcent"));
+      # endif // if P113_USE_ROI
 
       success = true;
       break;
@@ -141,7 +169,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P113_data_struct(P113_I2C_ADDRESS, P113_TIMING, P113_RANGE == 1));
       P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P113_data) && P113_data->begin(); // Start the sensor
+      success = (nullptr != P113_data) && P113_data->begin(event); // Start the sensor
       break;
     }
 
