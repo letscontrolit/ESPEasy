@@ -3,9 +3,6 @@
 
 .. _N002_page:
 
-.. role:: raw-html(raw)
-    :format: html
-
 Notifications Buzzer
 =====================
 
@@ -37,7 +34,7 @@ Please be aware that ESPEasy supports a more advanced audio tone feature named *
 
 .. hint:: To learn about the RTTTL tone feature please click here :ref:`P000_Buzzer_page`
 
-:raw-html:`<br clear="all">`
+|
 
 Speaker Driver
 ---------------
@@ -50,7 +47,7 @@ The implementation can be fully DiY using a simple transistor driver circuit, a 
 Be aware that the tone frequency is created by software.
 So the audio output device must be the "passive" type that does not include an oscillator.
 
-Keep in mind that common buzzers and beepers are turned on by a fixed voltage; Do **NOT** use that type with the Notfications feature.
+Keep in mind that common buzzers and beepers are turned on by a fixed voltage; Do **NOT** use that type with the Notifications feature.
 
 The idle state for the Buzzer's GPIO pin is logic low.
 So the driver circuit should have an active high turn-on state, which will be toggled on/off to create the tone's fixed 440Hz frequency.
@@ -65,7 +62,7 @@ Below is one such circuit, which requires only three components:
     :width: 275
     :alt: Simple Speaker Driver Circuit
 
-:raw-html:`<br clear="all">`
+|
 
 ESPEasy Buzzer Configuration
 -----------------------------
@@ -75,9 +72,9 @@ Only one Buzzer entry is needed to enable the feature.
 
 .. image:: NotifyBuzzer1.png
     :width: 600
-    :alt: Notfications Tab
+    :alt: Notifications Tab
 
-:raw-html:`<br clear="all">`
+|
 
 From the *Notifications* page, press *Edit* on an available *Nr* option. Next, Choose *Buzzer* in the drop-down list and select the GPIO pin number for your audio output.
 Be sure to check the *Enabled* box before pressing the *Submit* button.
@@ -86,7 +83,7 @@ Be sure to check the *Enabled* box before pressing the *Submit* button.
     :width: 600
     :alt: Buzzer Configuration Example
 
-:raw-html:`<br clear="all">`
+|
 
 
 Command Syntax
@@ -100,7 +97,7 @@ The general syntax for making a buzzer noise is:
 
 Where <Nr> is the position number (1,2,3) assigned to the notification declaration.
 
-:raw-html:`<br clear="all">`
+|
 
 Rules Example
 --------------
@@ -119,12 +116,13 @@ To make a buzzer sound every 60 seconds, create a rule file with these commands:
 .. code-block:: none
 
    On System#Boot do
-     timerSet,1,60  // Start the timer.
+     LoopTimerSet,1,60  // Start the timer.
    endon
 
    On Rules#Timer=1 do
-     timerSet,1,60 // Restart the timer.
      notify 1 // Beep!
    endon
 
 .. hint:: The examples discussed here have setup the buzzer in the very first (Nr 1) row. So the command syntax will be "*notify 1*"
+
+|

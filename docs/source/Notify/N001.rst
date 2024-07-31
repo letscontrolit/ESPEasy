@@ -2,9 +2,6 @@
 
 .. _N001_page:
 
-.. role:: raw-html(raw)
-    :format: html
-
 Notifications Email (SMTP)
 ===========================
 
@@ -27,7 +24,7 @@ Introduction
 
 *Notifications Email (SMTP)* is used to send an email message using ESPEasy rules.
 
-:raw-html:`<br clear="all">`
+|
 
 Basic Rules Examples
 ---------------------
@@ -59,7 +56,7 @@ To send an email every day at noon, create a rule like this:
 .. hint::
     The examples discussed here have setup the Notification Email in the very first (Nr 1) row. So the command syntax will be "*notify 1*"
 
-:raw-html:`<br clear="all">`
+|
 
 Email Configuration
 --------------------
@@ -70,7 +67,7 @@ ESPEasy's Notifications tab allows up to three declarations for email (and buzze
     :width: 600
     :alt: Notifications Tab
 
-:raw-html:`<br clear="all">`
+|
 
 The *Notifications Email* page is used to create pre-defined email messages.
 At least one is required to use the email feature.
@@ -95,9 +92,9 @@ From the *Notifications* page, press *Edit* on an available *Nr* option. Next, C
 
 Be sure to press *Submit* to save your settings.
 
-Note: For more flexibility, there are :ref:`adv_feat` that allow customized email recipients and/or messages.
+Note: For more flexibility, there are :ref:`adv_feat` within the notify command for changing the recipient(s), subject line, and message body.
 
-:raw-html:`<br clear="all">`
+|
 
 Email Server Requirements
 --------------------------
@@ -143,31 +140,45 @@ The table below provides sample entries for smtp2go.com and smtp.smart-mail.de
 +-----------+--------------------+--------------------+--------------------------------------+
 
 
-:raw-html:`<br clear="all">`
+|
 
 .. _adv_feat:
 
 Advanced Features
 ------------------
 
-Along with the pre-defined settings, it is possible to customized the email message body and recipient address from a Notify command rule.
+Along with the pre-defined settings, it is possible to customized the email's recipient(s), subject line, and message body, all from the Notify command rule.
 So ad-hoc emails are possible.
 
 .. hint::
     Use the latest ESPEasy build. Older releases do not support these advanced features.
 
-The general syntax for a custom message body is:
+Custom Message Body
+___________________
+
+The Basic syntax for a custom message body is:
 
 .. code-block:: none
 
-   notify <Nr>, "Your Custom Message goes Here."
+   notify <Nr>, "Your Custom Message Goes Here. System variables can be used too. Wrap this text in quotes."
 
-So to specify a custom message with the Notify command, simply use a rule like this:
+So to specify a custom message with the Notify command, use a rule like this:
 
 .. code-block:: none
 
    notify 1,"%sysname% is online.<br>Location: Office.<br>Local IP: %ip%.<br>WiFi Signal: %rssi%dBm."
 
+Custom Message Body and Subject Line
+_____________________________________
+
+To specify a custom message AND subject line, use a rule like this:
+
+.. code-block:: none
+
+   notify 1,"%sysname% is online.<br>Location: Office.<br>Local IP: %ip%.<br>WiFi Signal: %rssi%dBm.","Your Custom Subject Line Goes Here."
+
+Custom Recipient Address
+_____________________________
 
 The custom message can also include the email recipient.
 The general syntax is:
@@ -182,14 +193,20 @@ For example:
 
    notify 1,"{jimmydean@domain123.com},%sysname% has rebooted.<br>Local IP: %ip%.<br>WiFi Signal: %rssi%dBm.<br>Have a great day."
 
+To include a custom subject with the previous example, simply add it as the last argument. Like this:
+
+.. code-block:: none
+
+   notify 1,"{jimmydean@domain123.com},%sysname% has rebooted.<br>Local IP: %ip%.<br>WiFi Signal: %rssi%dBm.<br>Have a great day.","System Reboot!"
+
 Multiple email recipients can be specified too. Use a comma (,) between addresses.
 
 .. code-block:: none
 
    notify 1,"{email123@domain.com,billy@steamhouseinc.com},The steam boiler is overheating!"
 
-.. hint::
+.. attention::
     A custom message MUST be provided whenever the recipient address is specified in the Notify command.
-    Be sure to wrap the entire payload in quotations.
+    A custom subject line is optional.
 
-:raw-html:`<br clear="all">`
+|

@@ -3,7 +3,7 @@
 Notifications
 **************
 
-ESPEasy has two basic Notification methods. It can send an email or briefly alert the user using a audio beep tone.
+ESPEasy has two basic Notification methods. It can send an email or briefly alert the user using an audio beep tone.
 
 Feature Summary
 ----------------

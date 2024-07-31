@@ -201,7 +201,7 @@ void handle_notifications() {
     addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
-    addHelpButton(F("RTD_Notifications.html"));
+    addRTDHelpButton(F("Notify/_Notifications.html"));
 
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
