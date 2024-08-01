@@ -1424,7 +1424,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     if (device.FormulaOption)
     {
-      html_table_header(F("Formula"), F("EasyFormula"), 500);
+      html_table_header(F("Formula"), F("RTDPlugin/_Plugin.html#formula"), 500);
       ++colCount;
     }
 
@@ -1441,7 +1441,9 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
       html_table_header(F("Hide"), 30);
       ++colCount;
-      html_table_header(F("Axis"), 30);
+      html_table_header(F("Chart Axis"), 30);
+      ++colCount;
+      html_table_header(F(""), F("RTDPlugin/_Plugin.html#task-value-statistics"), 30);
       ++colCount;
     }
 #endif
