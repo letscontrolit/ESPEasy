@@ -108,6 +108,8 @@ The Ambient lighting condition during measurement is available in ``Ambient``. T
 
 Value ``Direction`` holds the direction relative to the *previous* distance value: ``-1`` = smaller distance, ``0`` = unchanged distance, ``1`` = greater distance.
 
+In selected builds, per Value are a **Stats** and **Hide** checkbox available, and a coordinate Chart Axis combo, that when Stats is checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
+
 .. Events
 .. ~~~~~~
 
@@ -118,7 +120,7 @@ Value ``Direction`` holds the direction relative to the *previous* distance valu
 Field of View considerations
 ----------------------------
 
-An aproximation of the FoV for a few ROI configurations:
+An approximation of the FoV for a few ROI configurations:
 
 .. csv-table:: 
   :header: "ROI zone size (SPADs)", "Diagonal Field of View"

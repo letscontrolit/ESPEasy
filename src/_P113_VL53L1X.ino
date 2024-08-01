@@ -92,9 +92,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     # if P113_USE_ROI
     case PLUGIN_SET_DEFAULTS:
     {
-      P113_ROI_X      = 16;
-      P113_ROI_Y      = 16;
-      P113_OPT_CENTER = 199; // Optical Center @ Center of sensor. See matrix in documentation
+      P113_CheckMinMaxValues(event);
       break;
     }
     # endif // if P113_USE_ROI
@@ -134,6 +132,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       # if P113_USE_ROI
       addFormSubHeader(F("Region Of Interest (ROI)"));
 
+      P113_CheckMinMaxValues(event);
       addFormNumericBox(F("ROI 'x' SPADs"), F("roix"), P113_ROI_X, 4, 16);
       addUnit(F("4..16"));
       addFormNumericBox(F("ROI 'y' SPADs"), F("roiy"), P113_ROI_Y, 4, 16);
@@ -158,6 +157,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       P113_ROI_X      = getFormItemInt(F("roix"));
       P113_ROI_Y      = getFormItemInt(F("roiy"));
       P113_OPT_CENTER = getFormItemInt(F("optcent"));
+      P113_CheckMinMaxValues(event);
       # endif // if P113_USE_ROI
 
       success = true;
@@ -166,6 +166,9 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      # if P113_USE_ROI
+      P113_CheckMinMaxValues(event);
+      # endif // if P113_USE_ROI
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P113_data_struct(P113_I2C_ADDRESS, P113_TIMING, P113_RANGE == 1));
       P113_data_struct *P113_data = static_cast<P113_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -218,4 +221,16 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+# if P113_USE_ROI
+void P113_CheckMinMaxValues(struct EventStruct *event) {
+  if (0 == P113_ROI_X) { P113_ROI_X = 16; }                              // Default
+
+  if (0 == P113_ROI_Y) { P113_ROI_Y = 16; }                              // Default
+
+  if (0 == P113_OPT_CENTER) { P113_OPT_CENTER = 199; }                   // Optical Center @ Center of sensor. See matrix in documentation
+
+  if ((P113_ROI_X > 10) || (P113_ROI_Y > 10)) { P113_OPT_CENTER = 199; } // Driver behavior
+}
+
+# endif // if P113_USE_ROI
 #endif // USES_P113
