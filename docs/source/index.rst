@@ -16,9 +16,9 @@ Welcome to ESP Easy's documentation!
    Config/Config.rst
    Controller/_Controller.rst
    Hardware/Hardware.rst
-   Notify/_Notifications.rst
    Plugin/_Plugin.rst
    Rules/Rules.rst
+   Notify/_Notifications.rst
    Tools/Tools.rst
    WiFi/WiFi.rst
 

@@ -64,7 +64,6 @@ Email Configuration
 ESPEasy's Notifications tab allows up to three declarations for email (and buzzer) alerts.
 
 .. image:: NotifyEmail1.png
-    :width: 600
     :alt: Notifications Tab
 
 |
@@ -75,7 +74,6 @@ At least one is required to use the email feature.
 From the *Notifications* page, press *Edit* on an available *Nr* option. Next, Choose *Email (SMTP)* in the drop-down list.
 
 .. image:: NotifyEmail2.png
-    :width: 600
     :alt: Email Configuration Example
 
 * **Domain :** Mail provider domain.
@@ -147,7 +145,7 @@ The table below provides sample entries for smtp2go.com and smtp.smart-mail.de
 Advanced Features
 ------------------
 
-Along with the pre-defined settings, it is possible to customized the email's recipient(s), subject line, and message body, all from the Notify command rule.
+Along with the pre-defined settings, it is possible to customized the email's message body, subject line, and recipient(s), all from the Notify command rule.
 So ad-hoc emails are possible.
 
 .. hint::

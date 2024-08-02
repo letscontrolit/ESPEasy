@@ -59,7 +59,7 @@ Below is one such circuit, which requires only three components:
 * 8-16 ohm Speaker
 
 .. image:: BuzzerSchem.png
-    :width: 275
+    :width: 350
     :alt: Simple Speaker Driver Circuit
 
 |
@@ -71,7 +71,6 @@ ESPEasy's *Notifications* tab allows up to three declarations for email and buzz
 Only one Buzzer entry is needed to enable the feature.
 
 .. image:: NotifyBuzzer1.png
-    :width: 600
     :alt: Notifications Tab
 
 |
@@ -80,7 +79,6 @@ From the *Notifications* page, press *Edit* on an available *Nr* option. Next, C
 Be sure to check the *Enabled* box before pressing the *Submit* button.
 
 .. image:: NotifyBuzzer2.png
-    :width: 600
     :alt: Buzzer Configuration Example
 
 |
