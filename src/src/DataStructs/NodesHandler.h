@@ -115,8 +115,8 @@ public:
 
 #endif // ifdef USES_ESPEASY_NOW
 
-  bool getUnixTime(double &unix_time, uint8_t& unit) const {
-    return _ntp_candidate.getUnixTime(unix_time, unit);
+  timeSource_t getUnixTime(double &unix_time, int32_t& wander, uint8_t& unit) const {
+    return _ntp_candidate.getUnixTime(unix_time, wander, unit);
   }
 
 

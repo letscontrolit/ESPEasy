@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-07-16 tonhuisman: Set INA219 in Powerdown mode when not actually measuring, to reduce quiescent current
  * 2022-04-02 tonhuisman: Add all technically possible I2C addresses (16), instead of only the 4 most common
  *                        As requested in the forum: https://www.letscontrolit.com/forum/viewtopic.php?t=9079
  * (No previous changelog registered)
@@ -21,6 +22,28 @@
 # define PLUGIN_VALUENAME3_027 "Power"
 
 # define P027_I2C_ADDR    (uint8_t)PCONFIG(1)
+
+void P027_SetTaskDeviceValueNames(int16_t measureType) {
+  ExtraTaskSettings.clearTaskDeviceValueName(1);
+  ExtraTaskSettings.clearTaskDeviceValueName(2);
+
+  switch (measureType) {
+    case 0:
+      ExtraTaskSettings.setTaskDeviceValueName(0, F(PLUGIN_VALUENAME1_027));
+      break;
+    case 1:
+      ExtraTaskSettings.setTaskDeviceValueName(0, F(PLUGIN_VALUENAME2_027));
+      break;
+    case 2:
+      ExtraTaskSettings.setTaskDeviceValueName(0, F(PLUGIN_VALUENAME3_027));
+      break;
+    case 3:
+      ExtraTaskSettings.setTaskDeviceValueName(0, F(PLUGIN_VALUENAME1_027));
+      ExtraTaskSettings.setTaskDeviceValueName(1, F(PLUGIN_VALUENAME2_027));
+      ExtraTaskSettings.setTaskDeviceValueName(2, F(PLUGIN_VALUENAME3_027));
+      break;
+  }
+}
 
 boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -53,9 +76,15 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_027));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_027));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_027));
+      P027_SetTaskDeviceValueNames(PCONFIG(2));
+
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = 3 == PCONFIG(2) ? 3 : 1;
+      success     = true;
       break;
     }
 
@@ -106,13 +135,15 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A"), F("26V, 8A") };
-        const int optionValuesMode[]             = { 0, 1, 2, 3 };
-        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, optionValuesMode, PCONFIG(0));
+        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, nullptr, PCONFIG(0));
       }
       {
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("measuretype"), 4, options, nullptr, PCONFIG(2));
       }
+      # if P027_FEATURE_POWERDOWN
+      addFormCheckBox(F("Use Powerdown mode"), F("pwrdwn"), PCONFIG(3) == 1);
+      # endif // if P027_FEATURE_POWERDOWN
 
       success = true;
       break;
@@ -120,18 +151,27 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      const int16_t lastType = PCONFIG(2);
       PCONFIG(0) = getFormItemInt(F("range"));
       PCONFIG(1) = getFormItemInt(F("i2c_addr"));
       PCONFIG(2) = getFormItemInt(F("measuretype"));
-      success    = true;
+      # if P027_FEATURE_POWERDOWN
+      PCONFIG(3) = isFormItemChecked(F("pwrdwn")) ? 1 : 0;
+      # endif // if P027_FEATURE_POWERDOWN
+
+      if (lastType != PCONFIG(2)) {
+        P027_SetTaskDeviceValueNames(PCONFIG(2));
+      }
+
+      success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      const uint8_t i2caddr =  P027_I2C_ADDR;
+      // const uint8_t i2caddr =  P027_I2C_ADDR;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P027_data_struct(i2caddr));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P027_data_struct(P027_I2C_ADDR));
       P027_data_struct *P027_data =
         static_cast<P027_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -140,7 +180,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         String     log;
 
         if (mustLog) {
-          log  = formatToHex(i2caddr, F("INA219 0x"), 2);
+          log  = formatToHex(P027_I2C_ADDR, F("INA219 0x"), 2);
           log += F(" setting Range to: ");
         }
 
@@ -164,7 +204,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           case 2:
           {
             if (mustLog) {
-              log += F("16V, 400mA");
+              log += F("16V, 0.4A");
             }
             P027_data->setCalibration_16V_400mA();
             break;
@@ -178,6 +218,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
         }
+
+        # if P027_FEATURE_POWERDOWN
+
+        if (1 == PCONFIG(3)) {
+          P027_data->setPowerDown(); // Put sensor in powerdown mode
+        }
+        # endif // if P027_FEATURE_POWERDOWN
 
         if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
@@ -197,13 +244,15 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P027_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P027_data) {
-        float voltage = P027_data->getBusVoltage_V() + (P027_data->getShuntVoltage_mV() / 1000);
-        float current = P027_data->getCurrent_mA() / 1000;
-        float power   = voltage * current;
+        # if P027_FEATURE_POWERDOWN
 
-        UserVar.setFloat(event->TaskIndex, 0, voltage);
-        UserVar.setFloat(event->TaskIndex, 1, current);
-        UserVar.setFloat(event->TaskIndex, 2, power);
+        if (1 == PCONFIG(3)) {
+          P027_data->setActiveMode(); // Get sensor out of powerdown mode
+        }
+        # endif // if P027_FEATURE_POWERDOWN
+        const float voltage = P027_data->getBusVoltage_V() + (P027_data->getShuntVoltage_mV() / 1000.0f);
+        const float current = P027_data->getCurrent_mA() / 1000.0f;
+        const float power   = voltage * current;
 
         const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
         String     log;
@@ -212,9 +261,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           log = formatToHex(P027_I2C_ADDR, F("INA219 0x"), 2);
         }
 
-        // for backward compability we allow the user to select if only one measurement should be returned
+        // for backward compatability we allow the user to select if only one measurement should be returned
         // or all 3 measurements at once
-        event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
+        // event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
 
         switch (PCONFIG(2)) {
           case 0:
@@ -222,7 +271,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             UserVar.setFloat(event->TaskIndex, 0, voltage);
 
             if (mustLog) {
-              log += F(": Voltage: ");
+              log += F(" Voltage: ");
               log += voltage;
             }
             break;
@@ -249,13 +298,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           }
           case 3:
           {
-            event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
+            // event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
             UserVar.setFloat(event->TaskIndex, 0, voltage);
             UserVar.setFloat(event->TaskIndex, 1, current);
             UserVar.setFloat(event->TaskIndex, 2, power);
 
             if (mustLog) {
-              log += F(": Voltage: ");
+              log += F(" Voltage: ");
               log += voltage;
               log += F(" Current: ");
               log += current;
@@ -265,6 +314,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
         }
+
+        # if P027_FEATURE_POWERDOWN
+
+        if (1 == PCONFIG(3)) {
+          P027_data->setPowerDown(); // Put sensor in powerdown mode
+        }
+        # endif // if P027_FEATURE_POWERDOWN
 
         if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
