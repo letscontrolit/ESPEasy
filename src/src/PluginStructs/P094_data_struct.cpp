@@ -180,7 +180,8 @@ bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter
 
   _filters.push_back(f);
 
-  std::sort(_filters.begin(), _filters.end());
+  // No sorting as this may have unexpected side-effects
+  // std::sort(_filters.begin(), _filters.end());
 
   if (P094_NR_FILTERS < _filters.size()) {
     P094_NR_FILTERS = _filters.size();
