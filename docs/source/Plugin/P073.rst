@@ -30,11 +30,11 @@ Depending on the available space in the release, some features may not be availa
 
 Currently 3 fonts are available for presenting text on the display, where the character shapes are somewhat different, and a choice can be made on what font is the most appropriate for the intended purpose. The numbers in the fonts are all equal.
 
-When text to be displayed can't fit on the width of the display (2, 3, 4, 5, 6 or 8 digits), scrolling text can be used so longer messages are shown like a ticker-tape display.
+When text to be displayed can't fit on the width of the display (2, 3, 4, 5, 6, 7 or 8 digits), scrolling text can be used so longer messages are shown like a ticker-tape display. Scrolling is always from right to left, and optionally starts with an empty display, so text can be read as it scrolls in.
 
 Optionally, periods in text can be shown on the dots of the display, when available (not all 7 segment display have dots).
 
-For temperature display commands, ``7dt,<temp>`` and ``7ddt,<temp1>,<temp2>``, the degree symbol after the temperature can be turned off so there's room for 1 more digit of temperature on the display. The degree symbol is turned off for 2 and 3 digit displays.
+For temperature display commands, ``7dt,<temp>`` and ``7ddt,<temp1>,<temp2>``, the degree symbol after the temperature can be turned off so there's room for 1 more digit of temperature on the display. The degree symbol is always turned off for 2 and 3 digit displays.
 
 Configuration
 ^^^^^^^^^^^^^^
@@ -47,7 +47,7 @@ Configuration
 
 * **1st/2nd/3rd GPIO**: How the display is connected can be configured here. Description per module type is in the Notes below the GPIO fields.
 
-For the MAX7219 and 74HC595 displays, the DIN-Pin and CLK-Pin can be shared when multiple displays are connected, but each display's CS-Pin must be connected to a unique GPIO of the unit.
+For the MAX7219 and 74HC595 displays, the DIN/SDI/DIO-Pin and (S)CLK-Pin can be shared when multiple displays are connected, but each display's CS/LOAD/RCLK-Pin must be connected to a unique GPIO of the unit.
 
 For TM1637 display possibly the DIN-Pin GPIO's can be shared, but that's untested, so it is more safe to use separate GPIOs for each display.
 
@@ -59,21 +59,25 @@ For TM1637 display possibly the DIN-Pin GPIO's can be shared, but that's unteste
 
 .. image:: P073_NrOfDigitsOptions.png
 
-* *2*: 2 digits, the smallest available display
+* *2*: 2 digits, the smallest supported display
 
 * *2+2*: 2 displays using 2 digits connected sequentially (SDO of first display to SDI of second display), making a total of 4 digits.
 
 * *3*: 3 digits. The 2 and 3 digits displays use 2 or 3 74HC505 chips sequentially, to control a single digit per chip.
 
-* *4*: 4 digits. The 4, 6 and 8 digit display use a multiplexed setup, using 2 74HC595 chips per board, 1 controlling the digit leds, and 1 controlling the digit selected. These multiplexed displays need to be refreshed continuously to properly display the intended data, causing some extra load on the ESP.
+* *4 multiplexed*: 4 digits. The 4, 6 and 8 digit display use a multiplexed setup, using 2 74HC595 chips per board, 1 controlling the digit leds, and 1 controlling the digit selected. These multiplexed displays need to be refreshed continuously to properly display the intended data, causing some extra load on the ESP.
 
 * *2+3 / 3+2*: 2 displays with 2 and 3 digits or 3 and 2 digits connected sequentially (SDO to SDI), effectively giving a usable display of 5 digits.
 
-* *6*: 6 digits, multiplexed display.
+* *6 multiplexed*: 6 digits, multiplexed display.
 
 * *3+3*: 6 digits, 2 boards with 3 digits connected sequentially (SDO to SDI).
 
-* *8*: 8 digits, multiplexed display. This display also supports the ``7ddt`` command for displaying dual temperatures.
+* *3+4 / 4+3*: 7 digits, 2 boards with 3 and 4 digits connected sequentially (SDO to SDI).
+
+* *4+4*: 8 digits, 2 boards with 4 digits connected sequentially (SDO to SDI).
+
+* *8 multiplexed*: 8 digits, multiplexed display. This display, and the 4+4 combination, also supports the ``7ddt`` command for displaying dual temperatures.
 
 
 * **Display Output**: Here the type of output can be selected:
@@ -92,11 +96,11 @@ For TM1637 display possibly the DIN-Pin GPIO's can be shared, but that's unteste
 
 *Date*: Displays the current date.
 
-*NB: Clock and Date outputs assume the NTP option is enabled in Tools/Advanced.*
+*NB: Clock and Date outputs assume a time-source is available, f.e. the via NTP or External Time Source settings in Tools/Advanced, by connecting a GPS module, or via the ESPEasy P2P network.*
 
 The Clock and Date outputs are updated every second, and the blinking selections are 1 second on then 1 second off.
 
-Clock and Date formats are optimized for each Display Type to fill the display efficiently.
+Clock and Date formats are optimized for each Display Type to fill the display efficiently, but won't properly fit on the 2 and 3 digit displays.
 
 * **Brightness**: The brightness level of the display can be set here. 0 is 'Default' brightness, 1..15 from low to high brightness. Displays using 74HC595 ignore this **Brightness** setting!
 
