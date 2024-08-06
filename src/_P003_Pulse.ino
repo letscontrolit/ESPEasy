@@ -12,14 +12,19 @@
 // with pulse rates of less than 750 RPM with DebounceTime > 20ms and pulse length > 40ms. This type may
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
+/** Changelog:
+ * 2024-08-06 tonhuisman: Add support for PLUGIN_GET_DEVICEVALUECOUNT and PLUGIN_GET_DEVICEVTYPE to use the correct number of values when
+ *                        sending data to controllers. Also move Total to first value to have it sent out properly when it's the only value.
+ * 2024-08-06 tonhuisman: Start changelog. Uncrustify the source.
+ */
 
 # include "src/PluginStructs/P003_data_struct.h"
 
 # include "src/Helpers/ESPEasy_time_calc.h"
 
-#ifndef BUILD_NO_DEBUG
-# define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
-#endif
+# ifndef BUILD_NO_DEBUG
+#  define P003_PULSE_STATS_DEFAULT_LOG_LEVEL  LOG_LEVEL_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 # define P003_PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 
 # define PLUGIN_003
@@ -46,7 +51,6 @@
 # define P003_IDX_MODETYPE       2
 
 // values for WEBFORM Counter Types
-# define P003_NR_COUNTERTYPES               4
 # define P003_COUNTERTYPE_LIST { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total"), }
 # define P003_CT_INDEX_COUNTER              0
 # define P003_CT_INDEX_COUNTER_TOTAL_TIME   1
@@ -98,23 +102,65 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
+        case P003_CT_INDEX_COUNTER:
+        case P003_CT_INDEX_TOTAL:
+          event->Par1 = 1;
+          break;
+        case P003_CT_INDEX_COUNTER_TOTAL_TIME:
+          event->Par1 = 3;
+          break;
+        case P003_CT_INDEX_COUNTER_TOTAL:
+          event->Par1 = 2;
+          break;
+      }
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
+        case P003_CT_INDEX_COUNTER:
+        case P003_CT_INDEX_TOTAL:
+          event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
+          break;
+        case P003_CT_INDEX_COUNTER_TOTAL_TIME:
+          event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
+          break;
+        case P003_CT_INDEX_COUNTER_TOTAL:
+          event->sensorType = Sensor_VType::SENSOR_TYPE_DUAL;
+          break;
+      }
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Debounce Time (mSec)"), F("debounce")
+      addFormNumericBox(F("Debounce Time"), F("debounce")
                         , PCONFIG(P003_IDX_DEBOUNCETIME));
+      addUnit(F("mSec"));
 
       {
-        uint8_t choice  = PCONFIG(P003_IDX_COUNTERTYPE);
-        const __FlashStringHelper *options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
-        addFormSelector(F("Counter Type"), F("countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
+        const uint8_t choice                 = PCONFIG(P003_IDX_COUNTERTYPE);
+        const __FlashStringHelper *options[] = P003_COUNTERTYPE_LIST;
+        addFormSelector(F("Counter Type"), F("countertype"), NR_ELEMENTS(options), options, nullptr, choice);
+
         if (choice != 0) {
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
+        }
+
+        if (choice == P003_CT_INDEX_TOTAL) {
+          addFormNote(F("Value name is not auto-updated!"));
         }
       }
 
       Internal_GPIO_pulseHelper::addGPIOtriggerMode(
-        F("Mode Type"), 
-        F("raisetype"), 
+        F("Mode Type"),
+        F("raisetype"),
         static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE)));
 
       success = true;
@@ -147,11 +193,11 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
-        #ifdef PULSE_STATISTIC
-        #ifndef BUILD_NO_DEBUG
+        # ifdef PULSE_STATISTIC
+        #  ifndef BUILD_NO_DEBUG
         P003_data->pulseHelper.setStatsLogLevel(P003_PULSE_STATS_DEFAULT_LOG_LEVEL);
-        #endif
-        #endif
+        #  endif // ifndef BUILD_NO_DEBUG
+        # endif // ifdef PULSE_STATISTIC
 
         // Restore the total counter from the unused 4th UserVar value.
         // It may be using a formula to generate the output, which makes it impossible to restore
@@ -159,24 +205,17 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         P003_data->pulseHelper.setPulseCountTotal(UserVar[event->BaseVarIndex + P003_IDX_persistedTotalCounter]);
 
         // Restore any values from the RTC-memory (persistent as long as power is on. Survives warm reset or deep sleep)
-        switch (PCONFIG(P003_IDX_COUNTERTYPE))
-        {
+        switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
           case P003_CT_INDEX_COUNTER:
           case P003_CT_INDEX_COUNTER_TOTAL:
-          {
-            P003_data->pulseHelper.setPulseCounter(UserVar[event->BaseVarIndex + P003_IDX_pulseCounter]);
+            P003_data->pulseHelper.setPulseCounter(UserVar.getFloat(event->TaskIndex, P003_IDX_pulseCounter));
             break;
-          }
-          case P003_CT_INDEX_COUNTER_TOTAL_TIME:
-          {
-            P003_data->pulseHelper.setPulseCounter(UserVar[event->BaseVarIndex + P003_IDX_pulseCounter],
-                                                   UserVar[event->BaseVarIndex + P003_IDX_pulseTime]);
-            break;
-          }
           case P003_CT_INDEX_TOTAL:
-          {
             break;
-          }
+          case P003_CT_INDEX_COUNTER_TOTAL_TIME:
+            P003_data->pulseHelper.setPulseCounter(UserVar.getFloat(event->TaskIndex, P003_IDX_pulseCounter),
+                                                   UserVar.getFloat(event->TaskIndex, P003_IDX_pulseTime));
+            break;
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -202,35 +241,27 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
 
         // store the current counter values into UserVar (RTC-memory)
-        // FIXME TD-er: Is it correct to write the first 3  UserVar values, regardless the set counter type?
         // FIXME TD-er: Must check we're interacting with the raw values in this PulseCounter plugin
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter      , pulseCounter);
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter , pulseCounterTotal);
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTime         , pulseTime_msec);
+        // For backward compatibility, set all values
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseCounter);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseCounterTotal);
+        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTime,         pulseTime_msec);
+
+        switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
+          case P003_CT_INDEX_COUNTER:            // No updates
+          case P003_CT_INDEX_COUNTER_TOTAL:      // No updates
+            break;
+          case P003_CT_INDEX_TOTAL:              // Replace first value
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter, pulseCounterTotal);
+            break;
+          case P003_CT_INDEX_COUNTER_TOTAL_TIME: // No updates
+            break;
+        }
 
         // Store the raw value in the unused 4th position.
         // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
         UserVar.setFloat(event->TaskIndex, P003_IDX_persistedTotalCounter, pulseCounterTotal);
 
-        switch (PCONFIG(P003_IDX_COUNTERTYPE))
-        {
-          case P003_CT_INDEX_COUNTER:
-          case P003_CT_INDEX_TOTAL:
-          {
-            event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
-            break;
-          }
-          case P003_CT_INDEX_COUNTER_TOTAL_TIME:
-          {
-            event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
-            break;
-          }
-          case P003_CT_INDEX_COUNTER_TOTAL:
-          {
-            event->sensorType = Sensor_VType::SENSOR_TYPE_DUAL;
-            break;
-          }
-        }
         success = true;
       }
       break;
@@ -242,8 +273,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
-        const String command      = parseString(string, 1);
-        bool   mustCallPluginRead = false;
+        const String command    = parseString(string, 1);
+        bool mustCallPluginRead = false;
 
         const bool cmd_resetpulsecounter    = equals(command, F("resetpulsecounter"));
         const bool cmd_setpulsecountertotal = equals(command, F("setpulsecountertotal"));
@@ -300,8 +331,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           //       i = increase the log level for regular statstic logs to "info"
 
           const String subcommand = parseString(string, 2);
-          const bool sub_i = equals(subcommand, F("i"));
-          const bool sub_r = equals(subcommand, F("r"));
+          const bool   sub_i      = equals(subcommand, F("i"));
+          const bool   sub_r      = equals(subcommand, F("r"));
 
           if ((sub_i) || (sub_r) || (subcommand.isEmpty())) {
             P003_data->pulseHelper.doStatisticLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);
@@ -313,7 +344,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
             success = true;
           }
           # else // ifdef PULSE_STATISTIC
-          success = false;   // Command not available
+          success = false; // Command not available
           # endif // PULSE_STATISTIC
         }
 
