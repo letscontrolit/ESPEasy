@@ -45,7 +45,9 @@
         They will be interpreted once to generate the new line content.
 
         To use template notations that are to be reinterpreted each time before the line is displayed, the **<line> parameter must be negative**.
-        Additionally to the negative <line> parameter following conditions must also be met:
+        
+        Additionally to the **negative** <line> parameter following conditions must also be met:
+
         * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
         * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
 
@@ -85,16 +87,20 @@
         ``oledframedcmd,userDef1,'<user Defined Header1>'``
         ","
         Set the user defined header nr. 1 with any desired text value.
+
         * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
         * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+
         **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
         "
         ``oledframedcmd,userDef2,'<user Defined Header2>'``
         ","
         Set the user defined header nr. 2 with any desired text value.
+
         * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
         * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+
         **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
         "
