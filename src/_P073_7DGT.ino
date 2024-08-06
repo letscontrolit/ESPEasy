@@ -10,13 +10,13 @@
 //  1 - TM1637     -- 2 pins - 4 digits and dot on each digit (X.X.X.X.)
 //  2 - TM1637     -- 2 pins - 6 digits and dot on each digit (X.X.X.X.X.X.)
 //  3 - MAX7219/21 -- 3 pins - 8 digits and dot on each digit (X.X.X.X.X.X.X.X.)
-//  4 - 74HC595 xDgt  3 pins - 2,2+2,3,3+2,2+3,4,6,3+3,8 digits and dot on each digit (X.X. .. X.X.X.X.X.X.X.X.)
+//  4 - 74HC595 xDgt  3 pins - 2,2+2,3,3+2,2+3,4,4+4,6,3+3,3+4,4+3,8 digits and dot on each digit (X.X. .. X.X.X.X.X.X.X.X.)
 //
 // Plugin can be setup as:
 //  - Manual        -- display is manually updated sending commands
 //  "7dn,<number>"        (number can be negative or positive, even with decimal)
 //  "7dt,<temperature>"   (temperature can be negative or positive and containing decimals)
-//  "7ddt,<temperature>,<temperature>"   (Dual temperatures on Max7219 (8 digits) only, temperature can be negative or
+//  "7ddt,<temperature>,<temperature>"   (Dual temperatures on Max7219/74HC595 (8 digits) only, temperature can be negative or
 //                                        positive and containing decimals)
 //  "7dst,<hh>,<mm>,<ss>" (show manual time -not current-, no checks done on numbers validity!)
 //  "7dsd,<dd>,<mm>,<yy>" (show manual date -not current-, no checks done on numbers validity!)
@@ -27,11 +27,6 @@
 //                        dSEG7 : https://www.keshikan.net/fonts-e.html
 //  "7dbin,[uint8_t],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom,
 //                            left 2x, center), scroll-enabled
-//  - Clock-Blink     -- display is automatically updated with current time and blinking dot/lines
-//  - Clock-NoBlink   -- display is automatically updated with current time and steady dot/lines
-//  - Clock12-Blink   -- display is automatically updated with current time (12h clock) and blinking dot/lines
-//  - Clock12-NoBlink -- display is automatically updated with current time (12h clock) and steady dot/lines
-//  - Date            -- display is automatically updated with current date
 //
 // Generic commands:
 //  - "7don"         -- turn ON the display
@@ -39,10 +34,18 @@
 //  - "7db,<0-15>    -- set brightness to specific value between 0 and 15
 //  - "7output,<0-5> -- select display output mode, 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",3:"Clock 12h - Blink",4:"Clock
 //                      12h - No Blink",5:"Date"
-//  - "7dfont,<fontname|fontnr>" -- Select the active font by name or number: 0/default, 1/siekoo, 2/siekoo_upper, 3/dseg7
+//  - Clock-Blink     -- display is automatically updated with current time and blinking dot/lines
+//  - Clock-NoBlink   -- display is automatically updated with current time and steady dot/lines
+//  - Clock12-Blink   -- display is automatically updated with current time (12h clock) and blinking dot/lines
+//  - Clock12-NoBlink -- display is automatically updated with current time (12h clock) and steady dot/lines
+//  - Date            -- display is automatically updated with current date
 //
 
 /** History
+ * 2024-08-06 tonhuisman: Make 74HC595 multiplexed displays a separate compile-time option, as these require special treatment
+ *                        Separate 7-segment font-related functions for re-use by other plugins
+ *                        Size reduction by removing now unneeded function pin arguments
+ * 2024-07-30 tonhuisman: Add support for larger combinations of sequential displays, 2..8 digits
  * 2024-07-27 tonhuisman: Move most code to P073 PluginStruct and remove now unneeded code, use explicit compile-time defines (0/1)
  * 2024-07-24 tonhuisman: Fixed the issue that most extended features where not included in the MAX or ESP32 builds
  * 2024-07-20 tonhuisman: Implement 74HC595 7-segment displays (2, 2+2, 3, 2+3, 3+2, 4, 6, 3+3 and 8 digits)
@@ -113,7 +116,11 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       P073_CFG_SCROLLSPEED = 10; // Default 10 * 0.1 sec scroll speed
       #  endif // if P073_SCROLL_TEXT
       #  if P073_USE_74HC595
-      P073_CFG_DIGITS = 4;       // Default number of digits
+      #   if P073_USE_74HCMULTIPLEX
+      P073_CFG_DIGITS = 4; // Default number of digits
+      #   else // if P073_USE_74HCMULTIPLEX
+      P073_CFG_DIGITS = 9; // Default number of digits code, 9 = 4 sequential
+      #   endif // if P073_USE_74HCMULTIPLEX
       #  endif // if P073_USE_74HC595
       break;
     }
@@ -123,7 +130,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
       # if P073_USE_74HC595
-      addFormNote(F("74HC595: 1st=SDI-Pin, 2nd=CLK-Pin, 3rd=LOAD-Pin"));
+      addFormNote(F("74HC595: 1st=SDI/DIO-Pin, 2nd=CLK/SCLK-Pin, 3rd=LOAD/RCLK-Pin"));
       # endif // if P073_USE_74HC595
       {
         const __FlashStringHelper *displtype[] = { F("TM1637 - 4 digit (colon)"),
@@ -140,15 +147,55 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
       if (P073_74HC595_2_8DGT == P073_CFG_DISPLAYTYPE) {
         if (0 == P073_CFG_DIGITS) {
+          #  if P073_USE_74HCMULTIPLEX
           P073_CFG_DIGITS = 4;
+          #  else // if P073_USE_74HCMULTIPLEX
+          P073_CFG_DIGITS = 9;
+          #  endif // if P073_USE_74HCMULTIPLEX
         }
-        const __FlashStringHelper *digits[] = { F("2"), F("2+2"), F("3"), F("4"), F("3+2 / 2+3"), F("6"), F("3+3"), F("8") };
-        const int digitsOptions[]           = { 2, 1, 3, 4, 5, 6, 7, 8 };
+        const __FlashStringHelper *digits[] = {
+          F("2"),
+          F("2+2"),
+          F("3"),
+          #  if P073_USE_74HCMULTIPLEX
+          F("4 multiplexed"),
+          #  endif // if P073_USE_74HCMULTIPLEX
+          F("4"),
+          F("3+2 / 2+3"),
+          #  if P073_USE_74HCMULTIPLEX
+          F("6 multiplexed"),
+          #  endif // if P073_USE_74HCMULTIPLEX
+          F("3+3"),
+          F("3+4 / 4+3"),
+          F("4+4"),
+          #  if P073_USE_74HCMULTIPLEX
+          F("8 multiplexed"),
+          #  endif // if P073_USE_74HCMULTIPLEX
+        };
+        const int digitsOptions[] = {
+          2,
+          1,
+          3,
+          #  if P073_USE_74HCMULTIPLEX
+          4,
+          #  endif // if P073_USE_74HCMULTIPLEX
+          9,
+          5,
+          #  if P073_USE_74HCMULTIPLEX
+          6,
+          #  endif // if P073_USE_74HCMULTIPLEX
+          7,
+          11,
+          10,
+          #  if P073_USE_74HCMULTIPLEX
+          8,
+          #  endif // if P073_USE_74HCMULTIPLEX
+        };
         addFormSelector(F("Nr. of digits"), F("dgts"), NR_ELEMENTS(digitsOptions), digits, digitsOptions, P073_CFG_DIGITS);
       } else
       # endif // if P073_USE_74HC595
       {
-        P073_CFG_DIGITS = p073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
+        P073_CFG_DIGITS = P073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
       }
       {
         const __FlashStringHelper *displout[] = { F("Manual"),
@@ -264,7 +311,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P073_data) {
-        success = P073_data->p073_plugin_write(event, string);
+        success = P073_data->plugin_write(event, string);
       }
       break;
     }
@@ -301,6 +348,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       if (nullptr != P073_data) {
         success = P073_data->plugin_fifty_per_second(event);
       }
+
       break;
     }
     # endif // if P073_USE_74HC595

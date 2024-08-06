@@ -2,7 +2,7 @@
 
 #ifdef USES_P073
 
-uint8_t p073_getDefaultDigits(uint8_t displayModel,
+uint8_t P073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits) {
   const uint8_t digitsSet[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
   uint8_t bufLen{};
@@ -122,14 +122,23 @@ void P073_data_struct::init(struct EventStruct *event)
   digits = P073_CFG_DIGITS;
   # if P073_USE_74HC595
 
-  if ((digits > 0) && ((digits < 4) || (5 == digits) || (7 == digits))) {
+  if ((digits > 0) && ((digits < 4) || (5 == digits) || (7 == digits) || (9 == digits) || (10 == digits) || (11 == digits))) {
     isSequential = true;
 
-    if (1 == digits) { // 2+2
+    if (1 == digits) {  // 2+2
       digits = 4;
     } else
-    if (7 == digits) { // 3+3
+    if (9 == digits) {  // 4 sequential
+      digits = 4;
+    } else
+    if (10 == digits) { // 4+4 sequential
+      digits = 8;
+    } else
+    if (7 == digits) {  // 3+3
       digits = 6;
+    } else
+    if (11 == digits) { // 3+4/4+3 sequential
+      digits = 7;
     }
   }
   # endif // if P073_USE_74HC595
@@ -142,20 +151,20 @@ void P073_data_struct::init(struct EventStruct *event)
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
-      tm1637_InitDisplay(pin1, pin2);
-      tm1637_SetPowerBrightness(pin1, pin2, brightness / 2, true);
+      tm1637_InitDisplay();
+      tm1637_SetPowerBrightness(brightness / 2, true);
 
       if (output == P073_DISP_MANUAL) {
-        tm1637_ClearDisplay(pin1, pin2);
+        tm1637_ClearDisplay();
       }
       break;
     case P073_MAX7219_8DGT:
-      max7219_InitDisplay(pin1, pin2, pin3);
+      max7219_InitDisplay();
       delay(10); // small poweroff/poweron delay
-      max7219_SetPowerBrightness(pin1, pin2, pin3, brightness, true);
+      max7219_SetPowerBrightness(brightness, true);
 
       if (output == P073_DISP_MANUAL) {
-        max7219_ClearDisplay(pin1, pin2, pin3);
+        max7219_ClearDisplay();
       }
       break;
     # if P073_USE_74HC595
@@ -194,6 +203,7 @@ bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 // ====================================
 
 void P073_data_struct::hc595_ShowBuffer() {
+  #  if P073_USE_74HCMULTIPLEX
   const uint8_t hc595digit4[] = {
     0b00001000, // left segment
     0b00000100,
@@ -218,43 +228,27 @@ void P073_data_struct::hc595_ShowBuffer() {
     0b00000100,
     0b00001000, // right segment
   };
+  #  endif // if P073_USE_74HCMULTIPLEX
 
-  int8_t i    = 0;
-  int8_t stop = digits;
-  int8_t incr = 1;
-  int8_t trgr = digits - 1;
+  int8_t i    = digits - 1;
+  int8_t stop = -1;
+  int8_t incr = -1;
 
-  if (P073_HC595_SEQUENTIAL) {
-    i    = digits - 1;
-    stop = -1;
-    incr = -1;
-    trgr = 0;
+  #  if P073_USE_74HCMULTIPLEX
+
+  if (P073_HC595_MULTIPLEX) {
+    i    =  dspDgt;
+    stop =  dspDgt + 1;
+    incr =  1;
   }
-
-  #  ifdef P073_DEBUG
-  const int8_t oi = i;
-  #  endif // ifdef P073_DEBUG
+  #  endif // if P073_USE_74HCMULTIPLEX
 
   for (; i != stop && i >= 0; i += incr) {
     uint8_t value;
     uint8_t digit = 0xFF;
-    #  if P073_EXTRA_FONTS
 
     // 74HC595 uses inverted data, compared to MAX7219/TM1637
-    switch (fontset) {
-      case 1:  // Siekoo
-      case 2:  // Siekoo with uppercase CHNORUX
-        value = ~pgm_read_byte(&(SiekooCharTable[showbuffer[i]]));
-        break;
-      case 3:  // dSEG7
-        value = ~pgm_read_byte(&(Dseg7CharTable[showbuffer[i]]));
-        break;
-      default: // Default fontset
-        value = ~pgm_read_byte(&(DefaultCharTable[showbuffer[i]]));
-    }
-    #  else // if P073_EXTRA_FONTS
-    value = ~pgm_read_byte(&(DefaultCharTable[showbuffer[i]]));
-    #  endif // if P073_EXTRA_FONTS
+    value = ~P073_getFontChar(showbuffer[i], fontset);
 
     if (showperiods[i]) {
       value &= 0x7F;
@@ -263,34 +257,46 @@ void P073_data_struct::hc595_ShowBuffer() {
 
     shiftOut(pin1, pin2, MSBFIRST, value);     // Digit data out
 
-    // 2 and 3 digit modules use sequential digit values (in reversed order)
+    // 2, 3 and some 4 digit modules use sequential digit values (in reversed order)
     // 4, 6 and 8 digit modules use multiplexing in LTR order
-    if (4 == digits) {
-      digit = hc595digit4[i];
-    } else
-    if ((6 == digits) && !isSequential) {
-      digit = hc595digit6[i];
-    } else
-    if (8 == digits) {
-      digit = hc595digit8[i];
+    #  if P073_USE_74HCMULTIPLEX
+
+    if (!isSequential) {
+      if (4 == digits) {
+        digit = hc595digit4[i];
+      } else
+      if (6 == digits) {
+        digit = hc595digit6[i];
+      } else
+      if (8 == digits) {
+        digit = hc595digit8[i];
+      }
     }
 
     if (digit != 0xFF) { // Select multiplexer digit, 0xFF is invalid
       shiftOut(pin1, pin2, MSBFIRST, digit);
     }
+    #  endif // if P073_USE_74HCMULTIPLEX
 
-    if ((P073_HC595_SEQUENTIAL && (i == trgr)) || P073_HC595_MULTIPLEX) {
+    if ((P073_HC595_SEQUENTIAL && (0 == i)) || P073_HC595_MULTIPLEX) {
       digitalWrite(pin3, LOW); // Clock data
-      delay(1);
+      // delay(1);
       digitalWrite(pin3, HIGH);
     }
   }
 
+  if (i >= digits) {
+    dspDgt = 0;
+  } else {
+    dspDgt = i;
+  }
+
   #  ifdef P073_DEBUG
 
-  // if ((counter50 % 100 == 0) || P073_HC595_SEQUENTIAL) {
-  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d oi:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
-  //                                    digits, oi, i, stop, incr, pin1, pin2, pin3));
+  // TODO disable log
+  // if ((counter50 % 200 == 0) || P073_HC595_SEQUENTIAL) {
+  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
+  //                                    digits, i, stop, incr, pin1, pin2, pin3));
   // }
   #  endif // ifdef P073_DEBUG
 }
@@ -408,7 +414,7 @@ void P073_data_struct::FillBufferWithNumber(const String& number) {
     if (p073_tmpchar == '.') { // dot
       dotpos = p073_index;
     } else {
-      showbuffer[p073_index] = mapCharToFontPosition(p073_tmpchar, fontset);
+      showbuffer[p073_index] = P073_mapCharToFontPosition(p073_tmpchar, fontset);
       p073_index--;
     }
   }
@@ -431,7 +437,7 @@ void P073_data_struct::FillBufferWithTemp(int temperature) {
   const size_t p073_numlenght = strlen(p073_digit);
 
   for (size_t i = 0; i < p073_numlenght; ++i) {
-    showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
+    showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i], fontset);
   }
 
   if (!hideDegree) {
@@ -480,7 +486,7 @@ void P073_data_struct::FillBufferWithDualTemp(int  leftTemperature,
   const size_t p073_numlenght = strlen(p073_digit);
 
   for (size_t i = 0; i < p073_numlenght; ++i) {
-    showbuffer[i] = mapCharToFontPosition(p073_digit[i], fontset);
+    showbuffer[i] = P073_mapCharToFontPosition(p073_digit[i], fontset);
   }
 
   if (!hideDegree) {
@@ -532,9 +538,9 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
       }
     } else if (p < 8) {
       # if P073_7DBIN_COMMAND
-      showbuffer[p] = useBinaryData ? textToShow.charAt(i) : mapCharToFontPosition(textToShow.charAt(i), fontset);
+      showbuffer[p] = useBinaryData ? textToShow.charAt(i) : P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
       # else // if fP073_7DBIN_COMMAND
-      showbuffer[p] = mapCharToFontPosition(textToShow.charAt(i), fontset);
+      showbuffer[p] = P073_mapCharToFontPosition(textToShow.charAt(i), fontset);
       # endif // if P073_7DBIN_COMMAND
       p++;
     }
@@ -574,7 +580,7 @@ bool P073_data_struct::NextScroll() {
     if (scrollCount == 0) {
       scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
       result      = true;
-      const int bufToFill      = p073_getDefaultDigits(displayModel, digits);
+      const int bufToFill      = P073_getDefaultDigits(displayModel, digits);
       const int p073_txtlength = _textToScroll.length();
       ClearBuffer();
 
@@ -602,9 +608,9 @@ bool P073_data_struct::NextScroll() {
           #  if P073_7DBIN_COMMAND
           showbuffer[p] = binaryData ?
                           _textToScroll.charAt(i) :
-                          mapCharToFontPosition(_textToScroll.charAt(i), fontset);
+                          P073_mapCharToFontPosition(_textToScroll.charAt(i), fontset);
           #  else // if P073_7DBIN_COMMAND
-          showbuffer[p] = mapCharToFontPosition(_textToScroll.charAt(i), fontset);
+          showbuffer[p] = P073_mapCharToFontPosition(_textToScroll.charAt(i), fontset);
           #  endif // if P073_7DBIN_COMMAND
           p++;
         }
@@ -627,7 +633,7 @@ void P073_data_struct::setTextToScroll(const String& text) {
   _textToScroll = String();
 
   if (!text.isEmpty()) {
-    const int bufToFill = p073_getDefaultDigits(displayModel, digits);
+    const int bufToFill = P073_getDefaultDigits(displayModel, digits);
     _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
 
     for (int i = 0; scrollFull && i < bufToFill; ++i) { // Scroll text in from the right, so start with all spaces
@@ -722,57 +728,6 @@ void P073_data_struct::ClearBuffer() {
   }
 }
 
-uint8_t P073_data_struct::mapCharToFontPosition(char    character,
-                                                uint8_t fontset) {
-  uint8_t position = 10;
-
-  # if P073_EXTRA_FONTS
-  const String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
-  const String chnorux      = F("CHNORUX");
-
-  switch (fontset) {
-    case 1: // Siekoo
-    case 2: // Siekoo with uppercase 'CHNORUX'
-
-      if ((fontset == 2) && (chnorux.indexOf(character) > -1)) {
-        position = chnorux.indexOf(character) + 35;
-      } else if (isDigit(character)) {
-        position = character - '0';
-      } else if (isAlpha(character)) {
-        position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
-      } else {
-        const int idx = specialChars.indexOf(character);
-
-        if (idx > -1) {
-          position = idx + 10;
-        }
-      }
-      break;
-    case 3:  // dSEG7 (same table size as 7Dgt)
-    default: // Original fontset (7Dgt)
-  # endif // if P073_EXTRA_FONTS
-
-  if (isDigit(character)) {
-    position = character - '0';
-  } else if (isAlpha(character)) {
-    position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
-  } else {
-    switch (character) {
-      case ' ': position = 10; break;
-      case '-': position = 11; break;
-      case '^': position = 12; break; // degree
-      case '=': position = 13; break;
-      case '/': position = 14; break;
-      case '_': position = 15; break;
-    }
-  }
-  # if P073_EXTRA_FONTS
-}
-
-  # endif // if P073_EXTRA_FONTS
-  return position;
-}
-
 /**
  * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
  * Dot/colon bit is still bit 8
@@ -790,20 +745,7 @@ uint8_t P073_data_struct::mapMAX7219FontToTM1673Font(uint8_t character) {
 
 uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
                                              uint8_t fontset) {
-  # if P073_EXTRA_FONTS
-
-  switch (fontset) {
-    case 1:  // Siekoo
-    case 2:  // Siekoo uppercase CHNORUX
-      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(SiekooCharTable[index])));
-    case 3:  // dSEG7
-      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(Dseg7CharTable[index])));
-    default: // Standard fontset
-      return mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index])));
-  }
-  # else // if P073_EXTRA_FONTS
-  return mapMAX7219FontToTM1673Font(pgm_read_byte(&(DefaultCharTable[index])));
-  # endif // if P073_EXTRA_FONTS
+  return mapMAX7219FontToTM1673Font(P073_getFontChar(index, fontset));
 }
 
 bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
@@ -853,9 +795,9 @@ bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
     case P073_MAX7219_8DGT:
 
       if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
-        max7219_ShowDate(pin1, pin2, pin3);
+        max7219_ShowDate();
       } else {
-        max7219_ShowTime(pin1, pin2, pin3, timesep);
+        max7219_ShowTime(timesep);
       }
       break;
     # if P073_USE_74HC595
@@ -899,7 +841,7 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
       case P073_MAX7219_8DGT: {
         dotpos = -1; // avoid to display the dot
-        max7219_ShowBuffer(pin1, pin2, pin3);
+        max7219_ShowBuffer();
         break;
       }
       #  if P073_USE_74HC595
@@ -918,7 +860,7 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 # endif // if P073_SCROLL_TEXT
 
 const char p073_commands[] PROGMEM =
-  "7dn|7dt"
+  "7dn|7dt|"
   # if P073_7DDT_COMMAND
   "7ddt|"
   # endif // if P073_7DDT_COMMAND
@@ -953,8 +895,8 @@ enum class p073_commands_e : int8_t {
   c7output,
 };
 
-bool P073_data_struct::p073_plugin_write(struct EventStruct *event,
-                                         const String      & string) {
+bool P073_data_struct::plugin_write(struct EventStruct *event,
+                                    const String      & string) {
   const String cmd_s = parseString(string, 1);
 
   if ((cmd_s.length() < 3) || (cmd_s[0] != '7')) { return false; }
@@ -1078,10 +1020,10 @@ bool P073_data_struct::p073_plugin_write(struct EventStruct *event,
       case P073_TM1637_4DGTCOLON:
       case P073_TM1637_4DGTDOTS:
       case P073_TM1637_6DGT:
-        tm1637_SetPowerBrightness(pin1, pin2, brightness / 2, displayon);
+        tm1637_SetPowerBrightness(brightness / 2, displayon);
         break;
       case P073_MAX7219_8DGT:
-        max7219_SetPowerBrightness(pin1, pin2, pin3, brightness, displayon);
+        max7219_SetPowerBrightness(brightness, displayon);
         break;
       # if P073_USE_74HC595
       case P073_74HC595_2_8DGT:
@@ -1097,7 +1039,7 @@ void P073_data_struct::getDisplayLimits(int32_t& lLimit,
                                         int32_t& uLimit,
                                         int8_t   offset,
                                         uint8_t  digits) {
-  uint8_t dgts = p073_getDefaultDigits(displayModel);
+  uint8_t dgts = P073_getDefaultDigits(displayModel);
 
   # if P073_USE_74HC595
 
@@ -1147,7 +1089,7 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
       tm1637_ShowBuffer(TM1637_6DIGIT, 8);
       break;
     case P073_MAX7219_8DGT:
-      max7219_ShowBuffer(pin1, pin2, pin3);
+      max7219_ShowBuffer();
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
@@ -1226,7 +1168,7 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
       }
       # endif // ifdef P073_DEBUG
 
-      max7219_ShowTemp(pin1, pin2, pin3, hideDegree ? 6 : 5, -1);
+      max7219_ShowTemp(hideDegree ? 6 : 5, -1);
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
@@ -1321,7 +1263,7 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
         bool alignSave = rightAlignTempMAX7219; // Save setting
         rightAlignTempMAX7219 = true;
 
-        max7219_ShowTemp(pin1, pin2, pin3, firstDot, secondDot);
+        max7219_ShowTemp(firstDot, secondDot);
 
         rightAlignTempMAX7219 = alignSave; // Restore
       #  if P073_USE_74HC595
@@ -1379,7 +1321,7 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
       tm1637_ShowTime6();
       break;
     case P073_MAX7219_8DGT:
-      max7219_ShowTime(pin1, pin2, pin3, timesep);
+      max7219_ShowTime(timesep);
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
@@ -1422,7 +1364,7 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
       tm1637_ShowDate6();
       break;
     case P073_MAX7219_8DGT:
-      max7219_ShowDate(pin1, pin2, pin3);
+      max7219_ShowDate();
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
@@ -1450,7 +1392,7 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
   # endif // ifndef BUILD_NO_DEBUG
   # if P073_SCROLL_TEXT
   setTextToScroll(EMPTY_STRING);
-  uint8_t bufLen = p073_getDefaultDigits(displayModel, digits);
+  const uint8_t bufLen = P073_getDefaultDigits(displayModel, digits);
 
   if (isScrollEnabled() && (getEffectiveTextLength(text) > bufLen)) {
     setTextToScroll(text);
@@ -1470,7 +1412,7 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
         break;
       case P073_MAX7219_8DGT:
         dotpos = -1; // avoid to display the dot
-        max7219_ShowBuffer(pin1, pin2, pin3);
+        max7219_ShowBuffer();
         break;
       # if P073_USE_74HC595
       case P073_74HC595_2_8DGT:
@@ -1540,7 +1482,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       argValue = parseString(text, arg);
     }
     #  if P073_SCROLL_TEXT
-    const uint8_t bufLen = p073_getDefaultDigits(displayModel, digits);
+    const uint8_t bufLen = P073_getDefaultDigits(displayModel, digits);
     #  endif // if P073_SCROLL_TEXT
 
     if (!data.isEmpty()) {
@@ -1565,7 +1507,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
             break;
           case P073_MAX7219_8DGT:
             dotpos = -1; // avoid to display the dot
-            max7219_ShowBuffer(pin1, pin2, pin3);
+            max7219_ShowBuffer();
             break;
           #  if P073_USE_74HC595
           case P073_74HC595_2_8DGT:
@@ -1589,13 +1531,12 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-# define CLK_HIGH() digitalWrite(clk_pin, HIGH)
-# define CLK_LOW() digitalWrite(clk_pin, LOW)
-# define DIO_HIGH() pinMode(dio_pin, INPUT)
-# define DIO_LOW() pinMode(dio_pin, OUTPUT)
+# define CLK_HIGH() digitalWrite(this->pin1, HIGH)
+# define CLK_LOW() digitalWrite(this->pin1, LOW)
+# define DIO_HIGH() pinMode(this->pin2, INPUT)
+# define DIO_LOW() pinMode(this->pin2, OUTPUT)
 
-void P073_data_struct::tm1637_i2cStart(uint8_t clk_pin,
-                                       uint8_t dio_pin) {
+void P073_data_struct::tm1637_i2cStart() {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
   # endif // ifdef P073_DEBUG
@@ -1605,8 +1546,7 @@ void P073_data_struct::tm1637_i2cStart(uint8_t clk_pin,
   DIO_LOW();
 }
 
-void P073_data_struct::tm1637_i2cStop(uint8_t clk_pin,
-                                      uint8_t dio_pin) {
+void P073_data_struct::tm1637_i2cStop() {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Stop"));
   # endif // ifdef P073_DEBUG
@@ -1619,23 +1559,18 @@ void P073_data_struct::tm1637_i2cStop(uint8_t clk_pin,
   DIO_HIGH();
 }
 
-void P073_data_struct::tm1637_i2cAck(uint8_t clk_pin,
-                                     uint8_t dio_pin) {
-  # ifdef P073_DEBUG
-  bool dummyAck = false;
-  # endif // ifdef P073_DEBUG
-
+void P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
-  pinMode(dio_pin, INPUT_PULLUP);
+  pinMode(pin2, INPUT_PULLUP);
 
   // DIO_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
 
   // while(digitalRead(dio_pin));
   # ifdef P073_DEBUG
-  dummyAck =
+  const bool dummyAck =
   # endif // ifdef P073_DEBUG
-  digitalRead(dio_pin);
+  digitalRead(pin2);
 
   # ifdef P073_DEBUG
 
@@ -1653,31 +1588,25 @@ void P073_data_struct::tm1637_i2cAck(uint8_t clk_pin,
   CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_LOW();
-  pinMode(dio_pin, OUTPUT);
+  pinMode(pin2, OUTPUT);
 }
 
-void P073_data_struct::tm1637_i2cWrite_ack(uint8_t clk_pin,
-                                           uint8_t dio_pin,
-                                           uint8_t bytesToPrint[],
+void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                                            uint8_t length) {
-  tm1637_i2cStart(clk_pin, dio_pin);
+  tm1637_i2cStart();
 
   for (uint8_t i = 0; i < length; ++i) {
-    tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint[i]);
+    tm1637_i2cWrite_ack(bytesToPrint[i]);
   }
-  tm1637_i2cStop(clk_pin, dio_pin);
+  tm1637_i2cStop();
 }
 
-void P073_data_struct::tm1637_i2cWrite_ack(uint8_t clk_pin,
-                                           uint8_t dio_pin,
-                                           uint8_t bytetoprint) {
-  tm1637_i2cWrite(clk_pin, dio_pin, bytetoprint);
-  tm1637_i2cAck(clk_pin, dio_pin);
+void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytetoprint) {
+  tm1637_i2cWrite(bytetoprint);
+  tm1637_i2cAck();
 }
 
-void P073_data_struct::tm1637_i2cWrite(uint8_t clk_pin,
-                                       uint8_t dio_pin,
-                                       uint8_t bytetoprint) {
+void P073_data_struct::tm1637_i2cWrite(uint8_t bytetoprint) {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
   # endif // ifdef P073_DEBUG
@@ -1698,17 +1627,14 @@ void P073_data_struct::tm1637_i2cWrite(uint8_t clk_pin,
   }
 }
 
-void P073_data_struct::tm1637_ClearDisplay(uint8_t clk_pin,
-                                           uint8_t dio_pin) {
+void P073_data_struct::tm1637_ClearDisplay() {
   uint8_t bytesToPrint[7]{};
 
   bytesToPrint[0] = 0xC0;
-  tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
+  tm1637_i2cWrite_ack(bytesToPrint, 7);
 }
 
-void P073_data_struct::tm1637_SetPowerBrightness(uint8_t clk_pin,
-                                                 uint8_t dio_pin,
-                                                 uint8_t brightlvl,
+void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
                                                  bool    poweron) {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_INFO, F("7DGT : Set BRIGHT"));
@@ -1722,20 +1648,19 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t clk_pin,
   }
 
   const uint8_t byteToPrint = brightvalue;
-  tm1637_i2cWrite_ack(clk_pin, dio_pin, byteToPrint);
+  tm1637_i2cWrite_ack(byteToPrint);
 }
 
-void P073_data_struct::tm1637_InitDisplay(uint8_t clk_pin,
-                                          uint8_t dio_pin) {
-  pinMode(clk_pin, OUTPUT);
-  pinMode(dio_pin, OUTPUT);
+void P073_data_struct::tm1637_InitDisplay() {
+  pinMode(pin1, OUTPUT);
+  pinMode(pin2, OUTPUT);
   CLK_HIGH();
   DIO_HIGH();
 
   const uint8_t byteToPrint = 0x40;
 
-  tm1637_i2cWrite_ack(clk_pin, dio_pin, byteToPrint);
-  tm1637_ClearDisplay(clk_pin, dio_pin);
+  tm1637_i2cWrite_ack(byteToPrint);
+  tm1637_ClearDisplay();
 }
 
 uint8_t P073_data_struct::tm1637_separator(uint8_t value,
@@ -1767,7 +1692,7 @@ void P073_data_struct::tm1637_ShowDate6(bool showTime) {
   }
   bytesToPrint[6] = tm1637_separator(tm1637_getFontChar(showbuffer[3], fontset), timesep);
 
-  tm1637_i2cWrite_ack(pin1, pin2, bytesToPrint, 7);
+  tm1637_i2cWrite_ack(bytesToPrint, 7);
 }
 
 void P073_data_struct::tm1637_ShowTemp6(bool sep) {
@@ -1781,7 +1706,7 @@ void P073_data_struct::tm1637_ShowTemp6(bool sep) {
   bytesToPrint[5] = tm1637_getFontChar(showbuffer[7], fontset);
   bytesToPrint[6] = tm1637_getFontChar(showbuffer[6], fontset);
 
-  tm1637_i2cWrite_ack(pin1, pin2, bytesToPrint, 7);
+  tm1637_i2cWrite_ack(bytesToPrint, 7);
 }
 
 void P073_data_struct::tm1637_ShowTimeTemp4(bool    sep,
@@ -1794,7 +1719,7 @@ void P073_data_struct::tm1637_ShowTimeTemp4(bool    sep,
   bytesToPrint[3] = tm1637_getFontChar(showbuffer[2 + bufoffset], fontset);
   bytesToPrint[4] = tm1637_getFontChar(showbuffer[3 + bufoffset], fontset);
 
-  tm1637_i2cWrite_ack(pin1, pin2, bytesToPrint, 5);
+  tm1637_i2cWrite_ack(bytesToPrint, 5);
 }
 
 void P073_data_struct::tm1637_SwapDigitInBuffer(uint8_t startPos) {
@@ -1834,9 +1759,12 @@ void P073_data_struct::tm1637_ShowBuffer(uint8_t firstPos,
         showperiods[i]);
       bytesToPrint[length] = p073_datashowpos1;
     }
-    ++length;
+    length++;
   }
-  tm1637_i2cWrite_ack(pin1, pin2, bytesToPrint, length);
+  # ifdef P073_DEBUG
+  addLog(LOG_LEVEL_INFO, strformat(F("TM1673: Write bytes: %d buffer %d to %d"), length, firstPos, lastPos));
+  # endif // ifdef P073_DEBUG
+  tm1637_i2cWrite_ack(bytesToPrint, length);
 }
 
 // ====================================
@@ -1849,40 +1777,29 @@ void P073_data_struct::tm1637_ShowBuffer(uint8_t firstPos,
 # define OP_SHUTDOWN    12
 # define OP_DISPLAYTEST 15
 
-void P073_data_struct::max7219_spiTransfer(uint8_t                   din_pin,
-                                           uint8_t                   clk_pin,
-                                           uint8_t                   cs_pin,
-                                           ESPEASY_VOLATILE(uint8_t) opcode,
+void P073_data_struct::max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
                                            ESPEASY_VOLATILE(uint8_t) data) {
   spidata[1] = opcode;
   spidata[0] = data;
-  digitalWrite(cs_pin, LOW);
-  shiftOut(din_pin, clk_pin, MSBFIRST, spidata[1]);
-  shiftOut(din_pin, clk_pin, MSBFIRST, spidata[0]);
-  digitalWrite(cs_pin, HIGH);
+  digitalWrite(pin3, LOW);
+  shiftOut(pin1, pin2, MSBFIRST, spidata[1]);
+  shiftOut(pin1, pin2, MSBFIRST, spidata[0]);
+  digitalWrite(pin3, HIGH);
 }
 
-void P073_data_struct::max7219_ClearDisplay(uint8_t din_pin,
-                                            uint8_t clk_pin,
-                                            uint8_t cs_pin) {
+void P073_data_struct::max7219_ClearDisplay() {
   for (int i = 0; i < 8; i++) {
-    max7219_spiTransfer(din_pin, clk_pin, cs_pin, i + 1, 0);
+    max7219_spiTransfer(i + 1, 0);
   }
 }
 
-void P073_data_struct::max7219_SetPowerBrightness(uint8_t din_pin,
-                                                  uint8_t clk_pin,
-                                                  uint8_t cs_pin,
-                                                  uint8_t brightlvl,
+void P073_data_struct::max7219_SetPowerBrightness(uint8_t brightlvl,
                                                   bool    poweron) {
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_INTENSITY, brightlvl);
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SHUTDOWN,  poweron ? 1 : 0);
+  max7219_spiTransfer(OP_INTENSITY, brightlvl);
+  max7219_spiTransfer(OP_SHUTDOWN,  poweron ? 1 : 0);
 }
 
-void P073_data_struct::max7219_SetDigit(uint8_t din_pin,
-                                        uint8_t clk_pin,
-                                        uint8_t cs_pin,
-                                        int     dgtpos,
+void P073_data_struct::max7219_SetDigit(int     dgtpos,
                                         uint8_t dgtvalue,
                                         bool    showdot,
                                         bool    binaryData) {
@@ -1892,66 +1809,43 @@ void P073_data_struct::max7219_SetDigit(uint8_t din_pin,
     p073_tempvalue = dgtvalue; // Overwrite if binary data
   } else
   {
-    # if P073_EXTRA_FONTS
-
-    switch (fontset) {
-      case 1:  // Siekoo
-      case 2:  // Siekoo with uppercase CHNORUX
-        p073_tempvalue = pgm_read_byte(&(SiekooCharTable[dgtvalue]));
-        break;
-      case 3:  // dSEG7
-        p073_tempvalue = pgm_read_byte(&(Dseg7CharTable[dgtvalue]));
-        break;
-      default: // Default fontset
-        p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
-    }
-    # else // if P073_EXTRA_FONTS
-    p073_tempvalue = pgm_read_byte(&(DefaultCharTable[dgtvalue]));
-    # endif // if P073_EXTRA_FONTS
+    p073_tempvalue = P073_getFontChar(dgtvalue, fontset);
 
     if (showdot) {
       p073_tempvalue |= 0b10000000;
     }
   }
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, dgtpos + 1, p073_tempvalue);
+  max7219_spiTransfer(dgtpos + 1, p073_tempvalue);
 }
 
-void P073_data_struct::max7219_InitDisplay(uint8_t din_pin,
-                                           uint8_t clk_pin,
-                                           uint8_t cs_pin) {
-  pinMode(din_pin, OUTPUT);
-  pinMode(clk_pin, OUTPUT);
-  pinMode(cs_pin,  OUTPUT);
-  digitalWrite(cs_pin, HIGH);
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_DISPLAYTEST, 0);
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_SCANLIMIT,   7); // scanlimit setup to max at Init
-  max7219_spiTransfer(din_pin, clk_pin, cs_pin, OP_DECODEMODE,  0);
-  max7219_ClearDisplay(din_pin, clk_pin, cs_pin);
-  max7219_SetPowerBrightness(din_pin, clk_pin, cs_pin, 0, false);
+void P073_data_struct::max7219_InitDisplay() {
+  pinMode(pin1, OUTPUT);
+  pinMode(pin2, OUTPUT);
+  pinMode(pin3, OUTPUT);
+  digitalWrite(pin3, HIGH);
+  max7219_spiTransfer(OP_DISPLAYTEST, 0);
+  max7219_spiTransfer(OP_SCANLIMIT,   7); // scanlimit setup to max at Init
+  max7219_spiTransfer(OP_DECODEMODE,  0);
+  max7219_ClearDisplay();
+  max7219_SetPowerBrightness(0, false);
 }
 
-void P073_data_struct::max7219_ShowTime(uint8_t din_pin,
-                                        uint8_t clk_pin,
-                                        uint8_t cs_pin,
-                                        bool    sep) {
+void P073_data_struct::max7219_ShowTime(bool sep) {
   const uint8_t idx_list[] = { 7, 6, 4, 3, 1, 0 }; // Digits in reversed order, as the loop is backward
 
   for (int8_t i = 5; i >= 0; --i) {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, idx_list[i], showbuffer[i], false);
+    max7219_SetDigit(idx_list[i], showbuffer[i], false);
   }
 
-  const uint8_t sepChar = mapCharToFontPosition(sep ? '-' : ' ', fontset);
+  const uint8_t sepChar = P073_mapCharToFontPosition(sep ? '-' : ' ', fontset);
 
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 2, sepChar, false);
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 5, sepChar, false);
+  max7219_SetDigit(2, sepChar, false);
+  max7219_SetDigit(5, sepChar, false);
 }
 
-void P073_data_struct::max7219_ShowTemp(uint8_t din_pin,
-                                        uint8_t clk_pin,
-                                        uint8_t cs_pin,
-                                        int8_t  firstDot,
-                                        int8_t  secondDot) {
-  max7219_SetDigit(din_pin, clk_pin, cs_pin, 0, 10, false);
+void P073_data_struct::max7219_ShowTemp(int8_t firstDot,
+                                        int8_t secondDot) {
+  max7219_SetDigit(0, 10, false);
 
   if (firstDot  > -1) { showperiods[firstDot] = true; }
 
@@ -1963,34 +1857,30 @@ void P073_data_struct::max7219_ShowTemp(uint8_t din_pin,
     const int bufIndex = (7 + alignRight) - i;
 
     if (bufIndex < 8) {
-      max7219_SetDigit(din_pin, clk_pin, cs_pin, i,
+      max7219_SetDigit(i,
                        showbuffer[bufIndex],
                        showperiods[bufIndex]);
     }
   }
 }
 
-void P073_data_struct::max7219_ShowDate(uint8_t din_pin,
-                                        uint8_t clk_pin,
-                                        uint8_t cs_pin) {
+void P073_data_struct::max7219_ShowDate() {
   const uint8_t dotflags[8] = { false, true, false, true, false, false, false, false };
 
   for (int i = 0; i < 8; ++i) {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, i,
+    max7219_SetDigit(i,
                      showbuffer[7 - i],
                      dotflags[7 - i]);
   }
 }
 
-void P073_data_struct::max7219_ShowBuffer(uint8_t din_pin,
-                                          uint8_t clk_pin,
-                                          uint8_t cs_pin) {
+void P073_data_struct::max7219_ShowBuffer() {
   if (dotpos > -1) {
     showperiods[dotpos] = true;
   }
 
   for (int i = 0; i < 8; i++) {
-    max7219_SetDigit(din_pin, clk_pin, cs_pin, i,
+    max7219_SetDigit(i,
                      showbuffer[7 - i],
                      showperiods[7 - i]
                      # if P073_7DBIN_COMMAND

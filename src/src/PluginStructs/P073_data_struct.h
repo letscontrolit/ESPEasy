@@ -25,31 +25,34 @@
 # define P073_DISP_CLOCK12       4
 # define P073_DISP_DATE          5
 
-# define P073_OPTION_PERIOD      0 // Period as dot
-# define P073_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
-# define P073_OPTION_RIGHTALIGN  2 // Align 7dt output right on MAX7219 display
-# define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
-# define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
-# define P073_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
+# define P073_OPTION_PERIOD      0  // Period as dot
+# define P073_OPTION_HIDEDEGREE  1  // Hide degree symbol for temperatures
+# define P073_OPTION_RIGHTALIGN  2  // Align 7dt output right on MAX7219 display
+# define P073_OPTION_SCROLLTEXT  3  // Scroll text > 8 characters
+# define P073_OPTION_SCROLLFULL  4  // Scroll text from the right in, starting with a blank display
+# define P073_OPTION_SUPPRESS0   5  // Suppress leading zero on day/hour of Date/Time display
 
 # ifndef P073_7DDT_COMMAND
-#  define P073_7DDT_COMMAND     1  // Enable 7ddt by default
+#  define P073_7DDT_COMMAND     1   // Enable 7ddt by default
 # endif // ifndef P073_7DDT_COMMAND
 # ifndef P073_EXTRA_FONTS
-#  define P073_EXTRA_FONTS      1  // Enable extra fonts
+#  define P073_EXTRA_FONTS      1   // Enable extra fonts
 # endif // ifndef P073_EXTRA_FONTS
 # ifndef P073_SCROLL_TEXT
-#  define P073_SCROLL_TEXT      1  // Enable scrolling of 7dtext by default
+#  define P073_SCROLL_TEXT      1   // Enable scrolling of 7dtext by default
 # endif // ifndef P073_SCROLL_TEXT
 # ifndef P073_7DBIN_COMMAND
-#  define P073_7DBIN_COMMAND    1  // Enable input of binary data via 7dbin,uint8_t,... command
+#  define P073_7DBIN_COMMAND    1   // Enable input of binary data via 7dbin,uint8_t,... command
 # endif // ifndef P073_7DBIN_COMMAND
 # ifndef P073_SUPPRESS_ZERO
-#  define P073_SUPPRESS_ZERO    1  // Enable Suppress leading zero on day/hour
+#  define P073_SUPPRESS_ZERO    1   // Enable Suppress leading zero on day/hour
 # endif // ifndef P073_SUPPRESS_ZERO
 # ifndef P073_USE_74HC595
-#  define P073_USE_74HC595      1  // Enable support for 74HC595 based (sequential and multiplexing) displays
+#  define P073_USE_74HC595      1   // Enable support for 74HC595 based sequential displays
 # endif // ifndef P073_USE_74HC595
+# ifndef P073_USE_74HCMULTIPLEX
+#  define P073_USE_74HCMULTIPLEX  1 // Enable support for 74HC595 based multiplexing displays
+# endif // ifndef P073_USE_74HCMULTIPLEX
 
 # if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 #  if P073_7DDT_COMMAND
@@ -82,6 +85,10 @@
 #   undef P073_USE_74HC595 // Removes the support for 74HC595 displays
 #   define P073_USE_74HC595 0
 #  endif // if P073_USE_74HC595
+#  if P073_USE_74HCMULTIPLEX
+#   undef P073_USE_74HCMULTIPLEX // Removes the support for 74HC595 multiplexed displays
+#   define P073_USE_74HCMULTIPLEX 0
+#  endif // if P073_USE_74HCMULTIPLEX
 # endif // if defined(ESP8266)
 
 # define TM1637_POWER_ON    0b10001000
@@ -187,7 +194,7 @@ static const uint8_t Dseg7CharTable[42] PROGMEM = {
 
 # endif // P073_EXTRA_FONTS
 
-uint8_t p073_getDefaultDigits(uint8_t displayModel,
+uint8_t P073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits = 0);
 uint8_t P073_mapCharToFontPosition(char    character,
                                    uint8_t fontset);
@@ -201,8 +208,8 @@ public:
   virtual ~P073_data_struct() = default;
 
   void init(struct EventStruct *event);
-  bool p073_plugin_write(struct EventStruct *event,
-                         const String      & string);
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
   bool plugin_once_a_second(struct EventStruct *event);
   # if P073_SCROLL_TEXT
   bool plugin_ten_per_second(struct EventStruct *event);
@@ -258,8 +265,6 @@ public:
   void    FillBufferWithDash();
   void    ClearBuffer();
 
-  uint8_t mapCharToFontPosition(char    character,
-                                uint8_t fontset);
   uint8_t mapMAX7219FontToTM1673Font(uint8_t character);
   uint8_t tm1637_getFontChar(uint8_t index,
                              uint8_t fontset);
@@ -268,9 +273,9 @@ public:
   uint8_t showbuffer[8]         = { 0 };
   bool    showperiods[8]        = { 0 };
   uint8_t spidata[2]            = { 0 };
-  int8_t  pin1                  = -1;
-  int8_t  pin2                  = -1;
-  int8_t  pin3                  = -1;
+  uint8_t pin1                  = 0xFF;
+  uint8_t pin2                  = 0xFF;
+  uint8_t pin3                  = 0xFF;
   uint8_t displayModel          = 0;
   uint8_t output                = 0;
   uint8_t brightness            = 0;
@@ -303,7 +308,8 @@ private:
   uint32_t counter50 = 0;
   # endif // ifdef P073_DEBUG
   # if P073_USE_74HC595
-  bool isSequential = false;
+  int8_t dspDgt       = 0;
+  bool   isSequential = false;
   # endif // if P073_USE_74HC595
 
 private:
@@ -330,30 +336,17 @@ private:
   # endif // if P073_7DBIN_COMMAND
 
   // ---- TM1637 specific functions ----
-  void tm1637_i2cStart(uint8_t clk_pin,
-                       uint8_t dio_pin);
-  void tm1637_i2cStop(uint8_t clk_pin,
-                      uint8_t dio_pin);
-  void tm1637_i2cAck(uint8_t clk_pin,
-                     uint8_t dio_pin);
-  void tm1637_i2cWrite_ack(uint8_t clk_pin,
-                           uint8_t dio_pin,
-                           uint8_t bytesToPrint[],
-                           uint8_t length);
-  void tm1637_i2cWrite_ack(uint8_t clk_pin,
-                           uint8_t dio_pin,
-                           uint8_t bytetoprint);
-  void tm1637_i2cWrite(uint8_t clk_pin,
-                       uint8_t dio_pin,
-                       uint8_t bytetoprint);
-  void tm1637_ClearDisplay(uint8_t clk_pin,
-                           uint8_t dio_pin);
-  void tm1637_SetPowerBrightness(uint8_t clk_pin,
-                                 uint8_t dio_pin,
-                                 uint8_t brightlvl,
-                                 bool    poweron);
-  void    tm1637_InitDisplay(uint8_t clk_pin,
-                             uint8_t dio_pin);
+  void    tm1637_i2cStart();
+  void    tm1637_i2cStop();
+  void    tm1637_i2cAck();
+  void    tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
+                              uint8_t length);
+  void    tm1637_i2cWrite_ack(uint8_t bytetoprint);
+  void    tm1637_i2cWrite(uint8_t bytetoprint);
+  void    tm1637_ClearDisplay();
+  void    tm1637_SetPowerBrightness(uint8_t brightlvl,
+                                    bool    poweron);
+  void    tm1637_InitDisplay();
   uint8_t tm1637_separator(uint8_t value,
                            bool    sep);
   void    tm1637_ShowTime6();
@@ -367,44 +360,21 @@ private:
                             bool    useBinaryData = false);
 
   // ---- MAX7219 specific functions ----
-  void max7219_spiTransfer(uint8_t                   din_pin,
-                           uint8_t                   clk_pin,
-                           uint8_t                   cs_pin,
-                           ESPEASY_VOLATILE(uint8_t) opcode,
+  void max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
                            ESPEASY_VOLATILE(uint8_t) data);
-  void max7219_ClearDisplay(uint8_t din_pin,
-                            uint8_t clk_pin,
-                            uint8_t cs_pin);
-  void max7219_SetPowerBrightness(uint8_t din_pin,
-                                  uint8_t clk_pin,
-                                  uint8_t cs_pin,
-                                  uint8_t brightlvl,
+  void max7219_ClearDisplay();
+  void max7219_SetPowerBrightness(uint8_t brightlvl,
                                   bool    poweron);
-  void max7219_SetDigit(uint8_t din_pin,
-                        uint8_t clk_pin,
-                        uint8_t cs_pin,
-                        int     dgtpos,
+  void max7219_SetDigit(int     dgtpos,
                         uint8_t dgtvalue,
                         bool    showdot,
                         bool    binaryData = false);
-  void max7219_InitDisplay(uint8_t din_pin,
-                           uint8_t clk_pin,
-                           uint8_t cs_pin);
-  void max7219_ShowTime(uint8_t din_pin,
-                        uint8_t clk_pin,
-                        uint8_t cs_pin,
-                        bool    sep);
-  void max7219_ShowTemp(uint8_t din_pin,
-                        uint8_t clk_pin,
-                        uint8_t cs_pin,
-                        int8_t  firstDot,
-                        int8_t  secondDot);
-  void max7219_ShowDate(uint8_t din_pin,
-                        uint8_t clk_pin,
-                        uint8_t cs_pin);
-  void max7219_ShowBuffer(uint8_t din_pin,
-                          uint8_t clk_pin,
-                          uint8_t cs_pin);
+  void max7219_InitDisplay();
+  void max7219_ShowTime(bool sep);
+  void max7219_ShowTemp(int8_t firstDot,
+                        int8_t secondDot);
+  void max7219_ShowDate();
+  void max7219_ShowBuffer();
   # if P073_USE_74HC595
   void hc595_InitDisplay();
   void hc595_ShowBuffer();
