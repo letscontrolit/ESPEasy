@@ -189,6 +189,10 @@ static const uint8_t Dseg7CharTable[42] PROGMEM = {
 
 uint8_t p073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits = 0);
+uint8_t P073_mapCharToFontPosition(char    character,
+                                   uint8_t fontset);
+uint8_t P073_getFontChar(uint8_t index,
+                         uint8_t fontset);
 
 struct P073_data_struct : public PluginTaskData_base {
 public:

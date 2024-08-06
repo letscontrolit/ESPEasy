@@ -20,6 +20,83 @@ uint8_t p073_getDefaultDigits(uint8_t displayModel,
   return bufLen;
 }
 
+/**
+ * Maps an ASCII character to a generic 7-segment usable smaller characterset,
+ * for easy mapping to different font-sets, see P073_getFontChar()
+ */
+uint8_t P073_mapCharToFontPosition(char    character,
+                                   uint8_t fontset) {
+  uint8_t position = 10;
+
+  # if P073_EXTRA_FONTS
+  const String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
+  const String chnorux      = F("CHNORUX");
+
+  switch (fontset) {
+    case 1: // Siekoo
+    case 2: // Siekoo with uppercase 'CHNORUX'
+
+      if ((fontset == 2) && (chnorux.indexOf(character) > -1)) {
+        position = chnorux.indexOf(character) + 35;
+      } else if (isDigit(character)) {
+        position = character - '0';
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
+      } else {
+        const int idx = specialChars.indexOf(character);
+
+        if (idx > -1) {
+          position = idx + 10;
+        }
+      }
+      break;
+    case 3:  // dSEG7 (same table size as 7Dgt)
+    default: // Original fontset (7Dgt)
+  # endif // if P073_EXTRA_FONTS
+
+  if (isDigit(character)) {
+    position = character - '0';
+  } else if (isAlpha(character)) {
+    position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
+  } else {
+    switch (character) {
+      case ' ': position = 10; break;
+      case '-': position = 11; break;
+      case '^': position = 12; break; // degree
+      case '=': position = 13; break;
+      case '/': position = 14; break;
+      case '_': position = 15; break;
+    }
+  }
+  # if P073_EXTRA_FONTS
+}
+
+  # endif // if P073_EXTRA_FONTS
+  return position;
+}
+
+/**
+ * Get the 7-segment representation for an index into a specific 7-segment font
+ * Fonts available depend on the build, but the 'DefaultCharTable' is always available
+ */
+uint8_t P073_getFontChar(uint8_t index,
+                         uint8_t fontset) {
+  # if P073_EXTRA_FONTS
+
+  switch (fontset) {
+    case 1:  // Siekoo
+    case 2:  // Siekoo uppercase CHNORUX
+      return pgm_read_byte(&(SiekooCharTable[index]));
+    case 3:  // dSEG7
+      return pgm_read_byte(&(Dseg7CharTable[index]));
+    default: // Standard fontset
+      return pgm_read_byte(&(DefaultCharTable[index]));
+  }
+  # else // if P073_EXTRA_FONTS
+  return pgm_read_byte(&(DefaultCharTable[index]));
+  # endif // if P073_EXTRA_FONTS
+}
+
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
