@@ -284,6 +284,23 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
   return isInitialized();
 }
 
+String P036_data_struct::ReplaceTokenDelimiters(const String str, const bool ForHeaderOnly = false)
+{
+  String s = str;
+
+  s.replace("$$", "%"); // Allow system vars to be passed in by using $$ instead of %
+  s.replace("${", "["); // Allow task values to be passed in by using ${ instead of [
+  s.replace("}$", "]"); // Allow task values to be passed in by using }$ instead of ]
+
+  /***** WILL BE DEPRECATED - DO NOT USE *****/
+  if (ForHeaderOnly) {
+    s.replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
+  }
+
+  /***** WILL BE DEPRECATED - DO NOT USE *****/
+  return s;
+}
+
 const char p036_subcommands[] PROGMEM = "display|frame"
                                         # if P036_ENABLE_LINECOUNT
                                         "|linecount"
@@ -342,10 +359,8 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
     String parseString = parseStringKeepCaseNoTrim(string, 3);
 
     if (!Parsing) {
-      LineNo = -LineNo;
-      parseString.replace("$$", "%"); // Allow system vars to be passed in by using $$ instead of %
-      parseString.replace("${", "["); // Allow task values to be passed in by using ${ instead of [
-      parseString.replace("}$", "]"); // Allow task values to be passed in by using }$ instead of ]
+      LineNo      = -LineNo;
+      parseString = ReplaceTokenDelimiters(parseString); // Allow system vars and task values to be passed to the line
     }
 
     if ((LineNo > 0) && (LineNo <= P36_Nlines)) {
@@ -590,15 +605,15 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
 
       case p036_subcommands_e::userdef1:
       {
-        userDef1 = parseStringKeepCase(string, 3);
-        userDef1.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
+        userDef1 = ReplaceTokenDelimiters(parseStringKeepCase(string, 3), true); // Allow system vars and task values to be passed to the
+                                                                                 // user defined header1
         break;
       }
 
       case p036_subcommands_e::userdef2:
       {
-        userDef2 = parseStringKeepCase(string, 3);
-        userDef2.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
+        userDef2 = ReplaceTokenDelimiters(parseStringKeepCase(string, 3), true); // Allow system vars and task values to be passed to the
+                                                                                 // user defined header2
         break;
       }
       # endif // if P036_USERDEF_HEADERS
@@ -800,8 +815,6 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
       break;
     case eHeaderContent::ePageNo:
       use_newString_f = false;
-      strHeader  = F("page ");
-      strHeader += (currentFrameToDisplay + 1);
       strHeader       = F("page ");
       strHeader      += (currentFrameToDisplay + 1);
 

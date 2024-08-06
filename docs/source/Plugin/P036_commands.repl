@@ -85,15 +85,17 @@
         ``oledframedcmd,userDef1,'<user Defined Header1>'``
         ","
         Set the user defined header nr. 1 with any desired text value.
-
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
+        * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+        **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be depricated in near future.
         "
         "
         ``oledframedcmd,userDef2,'<user Defined Header2>'``
         ","
         Set the user defined header nr. 2 with any desired text value.
-
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
+        * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+        **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be depricated in near future.
         "
         "
         ``oledframedcmd,restore,<line>``

@@ -554,6 +554,8 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
+  String   ReplaceTokenDelimiters(const String str,
+                                  const bool   ForHeaderOnly);
 
   # if P036_FEATURE_DISPLAY_PREVIEW
   String currentLines[P36_MAX_LinesPerPage]{};

@@ -417,8 +417,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         {
           /* *INDENT-OFF* */
           F("SSID"),     F("SysName"),      F("IP"),   F("MAC"),         F("RSSI"),
-          F("BSSID"),          F("WiFi channel"),          F("Unit"),                  F("SysLoad"),                F("SysHeap"),
-          F("SysStack"),       F("Date"),                  F("Time"),                  F("PageNumbers"),
+          F("BSSID"),    F("WiFi channel"), F("Unit"), F("SysLoad"),     F("SysHeap"),
+          F("SysStack"), F("Date"),         F("Time"), F("PageNumbers"),
           # if P036_USERDEF_HEADERS
           F("User defined 1"),
           F("User defined 2"),
