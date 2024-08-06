@@ -416,6 +416,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             // culreader,setfilters,EBZ.02.12345678;all|*.02.*;15m|TCH.44.*;once|*.*.*;5m
             success = true;
             P094_data->clearFilters();
+            P094_NR_FILTERS = 0;
             const String argument = parseString(string, 3);
 
             if (!argument.isEmpty()) {

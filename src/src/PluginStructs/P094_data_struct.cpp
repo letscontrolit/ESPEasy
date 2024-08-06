@@ -114,6 +114,7 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
   String res;
   const size_t nrFilters = _filters.size();
   size_t currentFilter = 0;
+  size_t actualNrFilters = 0;
   const size_t chunkSize = P094_filter::getBinarySize();
   const size_t nrChunks  = 8;
   #ifdef ESP32
@@ -141,11 +142,15 @@ String P094_data_struct::saveFilters(struct EventStruct *event) const
         memcpy(writePos, binaryData, size);
         writePos  += size;
         writeSize += size;
+        ++actualNrFilters;
       }
       ++currentFilter;
     }
     res              = SaveCustomTaskSettings(event->TaskIndex, &buffer[0], bufferSize, offset_in_block);
     offset_in_block += bufferSize;
+  }
+  if (P094_NR_FILTERS < actualNrFilters) {
+    P094_NR_FILTERS = actualNrFilters;
   }
   return res;
 }
@@ -175,7 +180,8 @@ bool P094_data_struct::addFilter(struct EventStruct *event, const String& filter
 
   _filters.push_back(f);
 
-  std::sort(_filters.begin(), _filters.end());
+  // No sorting as this may have unexpected side-effects
+  // std::sort(_filters.begin(), _filters.end());
 
   if (P094_NR_FILTERS < _filters.size()) {
     P094_NR_FILTERS = _filters.size();
