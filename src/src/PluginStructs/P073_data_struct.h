@@ -51,7 +51,7 @@
 #  define P073_USE_74HC595      1   // Enable support for 74HC595 based sequential displays
 # endif // ifndef P073_USE_74HC595
 # ifndef P073_USE_74HCMULTIPLEX
-#  define P073_USE_74HCMULTIPLEX  1 // Enable support for 74HC595 based multiplexing displays
+#  define P073_USE_74HCMULTIPLEX  0 // Enable support for 74HC595 based multiplexing displays
 # endif // ifndef P073_USE_74HCMULTIPLEX
 
 # if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
