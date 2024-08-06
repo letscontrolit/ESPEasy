@@ -330,6 +330,7 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
 
   const String subcommand = parseString(string, 2);
   int LineNo              = event->Par1;
+  bool Parsing            = (LineNo >= 0);
 
       # if P036_SEND_EVENTS
   const bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
@@ -338,32 +339,41 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
   int command_i = GetCommandCode(subcommand.c_str(), p036_subcommands);
 
   if (command_i == -1) {
+    String parseString = parseStringKeepCaseNoTrim(string, 3);
+    if (!Parsing) {
+      LineNo = -LineNo;
+      parseString.replace("$$", "%"); // Allow system vars to be passed in by using $$ instead of %
+      parseString.replace("${", "["); // Allow task values to be passed in by using ${ instead of [
+      parseString.replace("}$", "]"); // Allow task values to be passed in by using }$ instead of ]
+    }
     if ((LineNo > 0) && (LineNo <= P36_Nlines)) {
       // content functions
       success = true;
       String *currentLine = &LineContent->DisplayLinesV1[LineNo - 1].Content;
-      *currentLine = parseStringKeepCaseNoTrim(string, 3);
-      *currentLine = P36_parseTemplate(*currentLine, LineNo - 1);
+      *currentLine = parseString;
+      if (Parsing) {
+        *currentLine = P36_parseTemplate(*currentLine, LineNo - 1);
 
-          # if P036_ENABLE_TICKER
+        # if P036_ENABLE_TICKER
 
-      if (!bUseTicker)
-          # endif // if P036_ENABLE_TICKER
-      {
-        // calculate Pix length of new content, not necessary for ticker
-        uint16_t PixLength = CalcPixLength(LineNo - 1);
+        if (!bUseTicker)
+        # endif // if P036_ENABLE_TICKER
+        {
+          // calculate Pix length of new content, not necessary for ticker
+          uint16_t PixLength = CalcPixLength(LineNo - 1);
 
-        if (PixLength > 255) {
-          addHtmlError(strformat(F("Pixel length of %d too long for line! Max. 255 pix!"), PixLength));
+          if (PixLength > 255) {
+            addHtmlError(strformat(F("Pixel length of %d too long for line! Max. 255 pix!"), PixLength));
 
-          const unsigned int strlen = currentLine->length();
+            const unsigned int strlen = currentLine->length();
 
-          if (strlen > 0) {
-            const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
-            const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+            if (strlen > 0) {
+              const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
+              const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
-            // shorten string because OLED controller can not handle such long strings
-            *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+              // shorten string because OLED controller can not handle such long strings
+              *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+            }
           }
         }
       }
@@ -735,22 +745,22 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
 {
   String newString, strHeader;
   const __FlashStringHelper *newString_f = F("%sysname%");
-  bool use_newString_f                   = true;
+  bool use_newString_f = true;
 
   switch (iHeaderContent) {
     case eHeaderContent::eSSID:
 
       if (NetworkConnected()) {
-        strHeader       = WiFi.SSID();
+        strHeader = WiFi.SSID();
         use_newString_f = false;
       }
 
-      //      else {
-      //        newString_f = F("%sysname%");
-      //      }
+//      else {
+//        newString_f = F("%sysname%");
+//      }
       break;
     case eHeaderContent::eSysName:
-      //      newString_f = F("%sysname%");
+//      newString_f = F("%sysname%");
       break;
     case eHeaderContent::eTime:
       newString_f = F("%systime%");
@@ -787,8 +797,8 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
       break;
     case eHeaderContent::ePageNo:
       use_newString_f = false;
-      strHeader       = F("page ");
-      strHeader      += (currentFrameToDisplay + 1);
+      strHeader  = F("page ");
+      strHeader += (currentFrameToDisplay + 1);
 
       if (MaxFramesToDisplay != 0xFF) {
         strHeader += F("/");
@@ -798,11 +808,11 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
     # if P036_USERDEF_HEADERS
     case eHeaderContent::eUserDef1:
       use_newString_f = false;
-      newString       = userDef1;
+      newString = userDef1;
       break;
     case eHeaderContent::eUserDef2:
       use_newString_f = false;
-      newString       = userDef2;
+      newString = userDef2;
       break;
     # endif // if P036_USERDEF_HEADERS
     case eHeaderContent::eNone:
@@ -832,7 +842,7 @@ void P036_data_struct::display_header() {
     return;
   }
 
-  const eHeaderContent iHeaderContent = ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader)
+  const eHeaderContent iHeaderContent = ((HeaderContentAlternative == HeaderContent) || !bAlternativHeader) 
     ? HeaderContent
     : HeaderContentAlternative;
   const String title = create_display_header_text(iHeaderContent);
@@ -1038,7 +1048,7 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
   for (uint8_t i = LineNo; i < P36_Nlines; ++i) {
     // calculate individual font settings
-    uint8_t lFontIndex            = FontIndex;
+    uint8_t lFontIndex             = FontIndex;
     const eModifyFont iModifyFont =
       static_cast<eModifyFont>(get3BitFromUL(LineContent->DisplayLinesV1[i].ModifyLayout, P036_FLAG_ModifyLayout_Font));
 
@@ -1047,8 +1057,8 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
 
         if (ScrollingPages.linesPerFrameDef > 1) {
           // Font can only be enlarged if more than 1 line is displayed
-          if (lFontIndex > IdxForBiggestFont) {
-            lFontIndex--;
+          if (lFontIndex > IdxForBiggestFont) { 
+            lFontIndex--; 
           } else {
             lFontIndex = IdxForBiggestFont;
           }

@@ -42,6 +42,12 @@
         The line text can also be restored from the settings by the command ``restore``.
 
         All template notations can be used, like system variables, or reference to a task value.
+        They will be interpreted once to generate the new line content.
+
+        To use template notations that are to be reinterpreted each time before the line is displayed, the **<line> parameter must be negative**.
+        Additionally to the negative <line> parameter following conditions must also be met:
+        * use ``$$<sysvar>$$`` instead of ``%<sysvar>%`` for system variables
+        * use ``${<TaskName>#<TaskValue>}$`` instead of ``[<TaskName>#<TaskValue>]`` for task values
 
         After receiving text this way, the frame where the text is placed is shown, if the setting for 'Wake display on receiving text' is checked.
         "

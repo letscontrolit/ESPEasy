@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @uwekaditz: 2024-08-06
+// ADD: Using template notations within oledframedcmd,<line>,<text> that are to be reinterpreted each time before the line is displayed,
+//      not only once while creating the new line content
 // @tonhuisman: 2024-07-14
 // ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
 // @tonhuisman: 2023-09-16
@@ -414,8 +417,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         {
           /* *INDENT-OFF* */
           F("SSID"),     F("SysName"),      F("IP"),   F("MAC"),         F("RSSI"),
-          F("BSSID"),    F("WiFi channel"), F("Unit"), F("SysLoad"),     F("SysHeap"),
-          F("SysStack"), F("Date"),         F("Time"), F("PageNumbers"),
+          F("BSSID"),          F("WiFi channel"),          F("Unit"),                  F("SysLoad"),                F("SysHeap"),
+          F("SysStack"),       F("Date"),                  F("Time"),                  F("PageNumbers"),
           # if P036_USERDEF_HEADERS
           F("User defined 1"),
           F("User defined 2"),
