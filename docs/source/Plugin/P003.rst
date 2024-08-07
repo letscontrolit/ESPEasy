@@ -26,17 +26,11 @@ Supported hardware
 
 |P003_usedby|
 
-SETUP
------
+Configuration
+-------------
 
-The setup dialog:
-
-.. image:: P003_Setup.jpg
-    :width: 664px
-    :height: 378px
-    :scale: 100 %
+.. image:: P003_DeviceConfiguration.png
     :alt: Pulse Counter Setup
-    :align: center
 
 
 Task's Sensor Parameters
@@ -50,8 +44,19 @@ Task's Sensor Parameters
   The specific use of this parameter to filter out valid signals, depends on the Mode Type (cf. description below).
 
 :Counter Type:
-  (practical use of this parameter is unclear, but kept for compatibility reasons)
+  Select the output values desired. Available options:
 
+.. image:: P003_CounterTypeOptions.png
+
+* **Delta**: Count only.
+* **Delta/Total/Time**: Count, Total count and Time since last pulse in msec.
+* **Total**: Total count only.
+* **Delta/Total**: Count and Total count.
+* **Time**: Time since last pulse in msec.
+* **Total/Time**: Total count and Time since last pulse in msec.
+* **Time/Delta**: Time since last pulse in msec. and count.
+
+After saving the settings, the Values section is adjusted to show the number of values needed to output the selected Counter Type. The names are not updated!
 
 :Mode Type:
   Determines if you want to count **edges** or **pulses** and
@@ -62,20 +67,26 @@ Task's Sensor Parameters
   
   See Description below.
 
+Available options:
+
+.. image:: P003_ModeTypeOptions.png
+
 For setup of some specific device examples see: |P003_usedby|
 
 Description
 -----------
 P003 is a general purpose pulse counter for counting high/low state changes and pulses at an ESP GPIO.
 It may be used to count water or gas meter pulses or speed measurement of fans, etc.
-It provides three values:
+It provides up to three values:
 
 :``Count``:
   Number of counted pulses since last transmission (Delta)
 :``Total``:
-  Total number of counted pulses (since power on or cold restart)
+  Total number of counted pulses (since power on, cold restart or use of ``resetpulsecounter`` or ``setpulsecountertotal`` commands)
 :``Time``:
   Time between current and most recent pulse in milliseconds
+
+.. warning:: The number of Values depends on the selected Counter Type setting, but the names are not updated when the selection is changed, tough values *are* set to the Counter Type(s) selected.
 
 This allows you to simply count the pulses using ``Total`` or use Count and Time to calculate the number of pulses per time unit.
 But please note: When ``Count`` > 1, the ``Time`` only applies to the most recent of the counted pulses and you have to guess how long the previous were. 
@@ -137,7 +148,7 @@ It is temporary possible to output the logging in log level ``Info`` by use of t
     :width: 688px
     :height: 20px
     :scale: 100 %
-    :alt: Pule statistic log record
+    :alt: Pulse statistic log record
     :align: center
 
 Records like the above are written to log output, whenever a new valid pulse level was detected.
@@ -223,6 +234,8 @@ Change log
 
 .. versionchanged:: 2.2
   ...
+
+  |added| 2024-08-07 New Counter Type options, counter type now correctly sets the Values available.
 
   |added|
   Added new PULSE mode types.
