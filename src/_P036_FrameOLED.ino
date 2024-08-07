@@ -15,8 +15,8 @@
 // As long as the device is not enabled, no RAM is wasted.
 //
 // @uwekaditz: 2024-08-06
-// ADD: Using template notations within oledframedcmd,<line>,<text> that are to be reinterpreted each time before the line is displayed,
-//      not only once while creating the new line content
+// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time before the line is displayed,
+//      not only once while issuing the command and creating the new line content
 // @tonhuisman: 2024-07-14
 // ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
 // @tonhuisman: 2023-09-16

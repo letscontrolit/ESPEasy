@@ -26,6 +26,20 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+// Checks str for the given escaped characters
+// So far \\% \\[ and \\] are used (all with single backslash!)
+bool hasEscapeCharacters(String *str, const String EscapeChar)
+{
+return (str->indexOf(EscapeChar)>=0);
+}
+
+void stripEscapeCharacters(String *str)
+{
+  str->replace("\\%", "%"); // Allow system vars to be passed in by using \% instead of %
+  str->replace("\\[", "["); // Allow task values to be passed in by using \[ instead of [
+  str->replace("\\]", "]"); // Allow task values to be passed in by using \] instead of ]
+}
+
 String parseTemplate(String& tmpString)
 {
   return parseTemplate(tmpString, false);
@@ -56,12 +70,13 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   if (parseTemplate_CallBack_ptr != nullptr) {
     parseTemplate_CallBack_ptr(tmpString, useURLencode);
   }
-  parseSystemVariables(tmpString, useURLencode);
-
+  if (!hasEscapeCharacters(&tmpString, "\\%"))
+    parseSystemVariables(tmpString, useURLencode);
 
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
+  if (!hasEscapeCharacters(&tmpString, "\\[") && (!hasEscapeCharacters(&tmpString, "\\]")))
   {
     String deviceName, valueName, format;
 

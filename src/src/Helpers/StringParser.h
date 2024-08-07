@@ -8,6 +8,10 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+// Cleans str from escaped characters
+// So far \\% \\[ and \\] are used (all with single backslash!)
+void   stripEscapeCharacters(String *str);
+
 String parseTemplate(String& tmpString);
 
 String parseTemplate(String& tmpString,
