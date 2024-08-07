@@ -13,6 +13,7 @@
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
 /** Changelog:
+ * 2024-08-07 tonhuisman: Add support for Time, Total/Time, Time/Delta Counter types. Not included in LIMIT_BUILD_SIZE builds!
  * 2024-08-06 tonhuisman: Add support for PLUGIN_GET_DEVICEVALUECOUNT and PLUGIN_GET_DEVICEVTYPE to use the correct number of values when
  *                        sending data to controllers. Also move Total to first value to have it sent out properly when it's the only value.
  * 2024-08-06 tonhuisman: Start changelog. Uncrustify the source.
@@ -51,11 +52,15 @@
 # define P003_IDX_MODETYPE       2
 
 // values for WEBFORM Counter Types
-# define P003_COUNTERTYPE_LIST { F("Delta"), F("Delta/Total/Time"), F("Total"), F("Delta/Total"), }
 # define P003_CT_INDEX_COUNTER              0
 # define P003_CT_INDEX_COUNTER_TOTAL_TIME   1
 # define P003_CT_INDEX_TOTAL                2
 # define P003_CT_INDEX_COUNTER_TOTAL        3
+# if P003_USE_EXTRA_COUNTERTYPES
+#  define P003_CT_INDEX_TIME                4
+#  define P003_CT_INDEX_TOTAL_TIME          5
+#  define P003_CT_INDEX_TIME_COUNTER        6
+# endif // if P003_USE_EXTRA_COUNTERTYPES
 
 
 boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
@@ -107,12 +112,19 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
         case P003_CT_INDEX_COUNTER:
         case P003_CT_INDEX_TOTAL:
+        # if P003_USE_EXTRA_COUNTERTYPES
+        case P003_CT_INDEX_TIME:
+        # endif // if P003_USE_EXTRA_COUNTERTYPES
           event->Par1 = 1;
           break;
         case P003_CT_INDEX_COUNTER_TOTAL_TIME:
           event->Par1 = 3;
           break;
         case P003_CT_INDEX_COUNTER_TOTAL:
+        # if P003_USE_EXTRA_COUNTERTYPES
+        case P003_CT_INDEX_TOTAL_TIME:
+        case P003_CT_INDEX_TIME_COUNTER:
+        # endif // if P003_USE_EXTRA_COUNTERTYPES
           event->Par1 = 2;
           break;
       }
@@ -125,12 +137,19 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
         case P003_CT_INDEX_COUNTER:
         case P003_CT_INDEX_TOTAL:
+        # if P003_USE_EXTRA_COUNTERTYPES
+        case P003_CT_INDEX_TIME:
+        # endif // if P003_USE_EXTRA_COUNTERTYPES
           event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
           break;
         case P003_CT_INDEX_COUNTER_TOTAL_TIME:
           event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
           break;
         case P003_CT_INDEX_COUNTER_TOTAL:
+        # if P003_USE_EXTRA_COUNTERTYPES
+        case P003_CT_INDEX_TOTAL_TIME:
+        case P003_CT_INDEX_TIME_COUNTER:
+        # endif // if P003_USE_EXTRA_COUNTERTYPES
           event->sensorType = Sensor_VType::SENSOR_TYPE_DUAL;
           break;
       }
@@ -146,15 +165,29 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const uint8_t choice                 = PCONFIG(P003_IDX_COUNTERTYPE);
-        const __FlashStringHelper *options[] = P003_COUNTERTYPE_LIST;
+        const __FlashStringHelper *options[] = {
+          F("Delta"),
+          F("Delta/Total/Time"),
+          F("Total"),
+          F("Delta/Total"),
+          # if P003_USE_EXTRA_COUNTERTYPES
+          F("Time"),
+          F("Total/Time"),
+          F("Time/Delta"),
+          # endif // if P003_USE_EXTRA_COUNTERTYPES
+        };
         addFormSelector(F("Counter Type"), F("countertype"), NR_ELEMENTS(options), options, nullptr, choice);
 
         if (choice != 0) {
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
         }
 
-        if (choice == P003_CT_INDEX_TOTAL) {
-          addFormNote(F("Value name is not auto-updated!"));
+        if ((choice == P003_CT_INDEX_TOTAL)
+            # if P003_USE_EXTRA_COUNTERTYPES
+            || (choice >= P003_CT_INDEX_TIME)
+            # endif // if P003_USE_EXTRA_COUNTERTYPES
+            ) {
+          addFormNote(F("Value names are not auto-updated!"));
         }
       }
 
@@ -216,6 +249,14 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
             P003_data->pulseHelper.setPulseCounter(UserVar.getFloat(event->TaskIndex, P003_IDX_pulseCounter),
                                                    UserVar.getFloat(event->TaskIndex, P003_IDX_pulseTime));
             break;
+          # if P003_USE_EXTRA_COUNTERTYPES
+          case P003_CT_INDEX_TIME:
+            break;
+          case P003_CT_INDEX_TOTAL_TIME:
+            break;
+          case P003_CT_INDEX_TIME_COUNTER:
+            break;
+          # endif // if P003_USE_EXTRA_COUNTERTYPES
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -256,6 +297,19 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
             break;
           case P003_CT_INDEX_COUNTER_TOTAL_TIME: // No updates
             break;
+          # if P003_USE_EXTRA_COUNTERTYPES
+          case P003_CT_INDEX_TIME:               // Replace first value
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseTime_msec);
+            break;
+          case P003_CT_INDEX_TOTAL_TIME:         // Replace first 2 values
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseCounterTotal);
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseTime_msec);
+            break;
+          case P003_CT_INDEX_TIME_COUNTER: // Replace first 2 values
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseTime_msec);
+            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseCounter);
+            break;
+          # endif // if P003_USE_EXTRA_COUNTERTYPES
         }
 
         // Store the raw value in the unused 4th position.
