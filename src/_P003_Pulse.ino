@@ -210,7 +210,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("debounce"));
       PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("countertype"));
       PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("raisetype"));
-      PCONFIG(P003_IDX_IGNORE_ZERO)  = isFormItemChecked(F("raisetype"));
+      PCONFIG(P003_IDX_IGNORE_ZERO)  = isFormItemChecked(F("nozero"));
       success                        = true;
       break;
     }
