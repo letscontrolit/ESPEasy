@@ -284,13 +284,13 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
   return isInitialized();
 }
 
-void P036_data_struct::CleanEscapeCharacters(String *str, const bool ForHeaderOnly = false)
+void P036_data_struct::CleanEscapeCharacters(String& str, const bool ForHeaderOnly = false)
 {
   stripEscapeCharacters(str);
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/
   if (ForHeaderOnly) {
-    str->replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
+    str.replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
   }
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/
@@ -355,7 +355,7 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (!Parsing) {
       LineNo = -LineNo;
-      CleanEscapeCharacters(&parseString); // Allow system vars and task values to be passed to the line
+      CleanEscapeCharacters(parseString); // Allow system vars and task values to be passed to the line
     }
 
     if ((LineNo > 0) && (LineNo <= P36_Nlines)) {
@@ -601,7 +601,7 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
       case p036_subcommands_e::userdef1:
       {
         userDef1 = parseStringKeepCase(string, 3);
-        CleanEscapeCharacters(&userDef1, true); // Allow system vars and task values to be passed to the
+        CleanEscapeCharacters(userDef1, true); // Allow system vars and task values to be passed to the
         // user defined header1
         break;
       }
@@ -609,7 +609,7 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
       case p036_subcommands_e::userdef2:
       {
         userDef2 = parseStringKeepCase(string, 3);
-        CleanEscapeCharacters(&userDef2, true); // Allow system vars and task values to be passed to the
+        CleanEscapeCharacters(userDef2, true); // Allow system vars and task values to be passed to the
         // user defined header2
         break;
       }

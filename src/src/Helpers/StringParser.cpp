@@ -26,18 +26,22 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
-// Checks str for the given escaped characters
-// So far \\% \\[ and \\] are used (all with single backslash!)
-bool hasEscapeCharacters(String *str, const String EscapeChar)
+bool hasEscapedCharacter(String& str, const char EscapeChar)
 {
-return (str->indexOf(EscapeChar)>=0);
+  String EscStr = F("\\");
+  EscStr += EscapeChar;
+  return (str.indexOf(EscStr)>=0);
 }
 
-void stripEscapeCharacters(String *str)
+void stripEscapeCharacters(String& str)
 {
-  str->replace("\\%", "%"); // Allow system vars to be passed in by using \% instead of %
-  str->replace("\\[", "["); // Allow task values to be passed in by using \[ instead of [
-  str->replace("\\]", "]"); // Allow task values to be passed in by using \] instead of ]
+  str.replace(F("\\%"), "%"); // Allow system vars to be passed in by using \% instead of %
+  str.replace(F("\\["), "["); // Allow task values to be passed in by using \[ instead of [
+  str.replace(F("\\]"), "]"); // Allow task values to be passed in by using \] instead of ]
+  str.replace(F("\\{"), "{"); // Allow commands to be passed in by using \{ instead of {
+  str.replace(F("\\}"), "}"); // Allow commands to be passed in by using \} instead of }
+  str.replace(F("\\("), "("); // Allow commands to be passed in by using \( instead of (
+  str.replace(F("\\)"), ")"); // Allow commands to be passed in by using \) instead of )
 }
 
 String parseTemplate(String& tmpString)
@@ -70,13 +74,24 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   if (parseTemplate_CallBack_ptr != nullptr) {
     parseTemplate_CallBack_ptr(tmpString, useURLencode);
   }
-  if (!hasEscapeCharacters(&tmpString, "\\%"))
-    parseSystemVariables(tmpString, useURLencode);
+  parseSystemVariables(tmpString, useURLencode);
 
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
-  if (!hasEscapeCharacters(&tmpString, "\\[") && (!hasEscapeCharacters(&tmpString, "\\]")))
+  bool mustReplaceEscapedSquareBracket = false;
+  String MaskEscapedBracket = "";
+
+  if (hasEscapedCharacter(tmpString, '[') || hasEscapedCharacter(tmpString, ']')) {
+    // replace the \[ and \] with other characters to mask the escaped square brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    tmpString.replace(F("\\["), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    tmpString.replace(F("\\]"), MaskEscapedBracket);
+    mustReplaceEscapedSquareBracket = true;
+  }
+
   {
     String deviceName, valueName, format;
 
@@ -220,6 +235,15 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (mustReplaceEscapedSquareBracket) {
+    // We now have to check if we did mask some escaped square bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x11);   // ASCII 0x11 = Device control 1
+    newString.replace(MaskEscapedBracket, F("\\["));
+    MaskEscapedBracket = static_cast<char>(0x12);   // ASCII 0x12 = Device control 2
+    newString.replace(MaskEscapedBracket, F("\\]"));
+  }
 
   // Restore previous loaded taskSettings
   if (validTaskIndex(currentTaskIndex))
