@@ -39,7 +39,7 @@ Task's Sensor Parameters
 :GPIO <- Pulse:
    Select the GPIO pin at which the pulse is counted
 
-:Debounce Time (mSec):
+:Debounce Time:
   Period in which you allow the signal to be unstable (bouncing) after a level change (high -> low / low -> high).
   The specific use of this parameter to filter out valid signals, depends on the Mode Type (cf. description below).
 
@@ -70,6 +70,9 @@ After saving the settings, the Values section is adjusted to show the number of 
 Available options:
 
 .. image:: P003_ModeTypeOptions.png
+
+:Ignore Delta = 0:
+  When enabled doesn't generate events or send data to Controllers if the Delta (Count) is 0 since the last time the data is read. This also suppresses then initial Read action when the plugin is started!
 
 For setup of some specific device examples see: |P003_usedby|
 

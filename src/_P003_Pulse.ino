@@ -13,6 +13,8 @@
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
 /** Changelog:
+ * 2024-08-08 tonhuisman: Add support for 'Ignore Delta = 0' setting, to not send out events and data to controllers if the Delta (Count)
+ *                        value is 0.
  * 2024-08-07 tonhuisman: Add support for Time, Total/Time, Time/Delta Counter types. Not included in LIMIT_BUILD_SIZE builds!
  * 2024-08-06 tonhuisman: Add support for PLUGIN_GET_DEVICEVALUECOUNT and PLUGIN_GET_DEVICEVTYPE to use the correct number of values when
  *                        sending data to controllers. Also move Total to first value to have it sent out properly when it's the only value.
@@ -50,6 +52,7 @@
 # define P003_IDX_DEBOUNCETIME   0
 # define P003_IDX_COUNTERTYPE    1
 # define P003_IDX_MODETYPE       2
+# define P003_IDX_IGNORE_ZERO    3
 
 // values for WEBFORM Counter Types
 # define P003_CT_INDEX_COUNTER              0
@@ -196,6 +199,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         F("raisetype"),
         static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE)));
 
+      addFormCheckBox(F("Ignore Delta = 0"), F("nozero"), PCONFIG(P003_IDX_IGNORE_ZERO));
+
       success = true;
       break;
     }
@@ -205,6 +210,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(P003_IDX_DEBOUNCETIME) = getFormItemInt(F("debounce"));
       PCONFIG(P003_IDX_COUNTERTYPE)  = getFormItemInt(F("countertype"));
       PCONFIG(P003_IDX_MODETYPE)     = getFormItemInt(F("raisetype"));
+      PCONFIG(P003_IDX_IGNORE_ZERO)  = isFormItemChecked(F("raisetype"));
       success                        = true;
       break;
     }
@@ -280,6 +286,11 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         P003_data->pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);
         P003_data->pulseHelper.resetPulseCounter();
 
+        success = true;
+
+        if (PCONFIG(P003_IDX_IGNORE_ZERO) && (0 == pulseCounter)) {
+          success = false;
+        }
 
         // store the current counter values into UserVar (RTC-memory)
         // FIXME TD-er: Must check we're interacting with the raw values in this PulseCounter plugin
@@ -315,8 +326,6 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         // Store the raw value in the unused 4th position.
         // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
         UserVar.setFloat(event->TaskIndex, P003_IDX_persistedTotalCounter, pulseCounterTotal);
-
-        success = true;
       }
       break;
     }
