@@ -85,9 +85,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   if (hasEscapedCharacter(tmpString, '[') || hasEscapedCharacter(tmpString, ']')) {
     // replace the \[ and \] with other characters to mask the escaped square brackets so we can continue parsing.
     // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
     tmpString.replace(F("\\["), MaskEscapedBracket);
-    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
     tmpString.replace(F("\\]"), MaskEscapedBracket);
     mustReplaceEscapedSquareBracket = true;
   }
@@ -239,9 +239,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   if (mustReplaceEscapedSquareBracket) {
     // We now have to check if we did mask some escaped square bracket and unmask them.
     // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x11);   // ASCII 0x11 = Device control 1
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
     newString.replace(MaskEscapedBracket, F("\\["));
-    MaskEscapedBracket = static_cast<char>(0x12);   // ASCII 0x12 = Device control 2
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
     newString.replace(MaskEscapedBracket, F("\\]"));
   }
 
