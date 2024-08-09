@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2024-08-08 tonhuisman: Add double-buffering for 74HC595 displays to improve update-speed
  * 2024-08-06 tonhuisman: Make 74HC595 multiplexed displays a separate compile-time option, as these require special treatment
  *                        Separate 7-segment font-related functions for re-use by other plugins
  *                        Size reduction by removing now unneeded function pin arguments

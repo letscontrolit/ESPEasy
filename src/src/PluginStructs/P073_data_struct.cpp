@@ -173,6 +173,7 @@ void P073_data_struct::init(struct EventStruct *event)
 
       if (output == P073_DISP_MANUAL) {
         ClearBuffer();
+        hc595_ToOutputBuffer();
 
         if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
           hc595_ShowBuffer();
@@ -210,14 +211,16 @@ void P073_data_struct::hc595_ShowBuffer() {
     0b00000010,
     0b00000001, // right segment
   };
-  const uint8_t hc595digit6[] = {
-    0b00010000, // left segment
-    0b00100000,
-    0b01000000,
-    0b00000001,
-    0b00000010,
-    0b00000100, // right segment
-  };
+
+  // const uint8_t hc595digit6[] = {
+  //   0b00010000, // left segment
+  //   0b00100000,
+  //   0b01000000,
+  //   0b00000001,
+  //   0b00000010,
+  //   0b00000100, // right segment
+  // };
+
   const uint8_t hc595digit8[] = {
     0b00010000, // left segment
     0b00100000,
@@ -244,29 +247,19 @@ void P073_data_struct::hc595_ShowBuffer() {
   #  endif // if P073_USE_74HCMULTIPLEX
 
   for (; i != stop && i >= 0; i += incr) {
-    uint8_t value;
-    uint8_t digit = 0xFF;
-
-    // 74HC595 uses inverted data, compared to MAX7219/TM1637
-    value = ~P073_getFontChar(showbuffer[i], fontset);
-
-    if (showperiods[i]) {
-      value &= 0x7F;
-    }
-    value = mapMAX7219FontToTM1673Font(value); // Revert bits 6..0
-
-    shiftOut(pin1, pin2, MSBFIRST, value);     // Digit data out
+    shiftOut(pin1, pin2, MSBFIRST, outputbuffer[i]); // Digit data out
 
     // 2, 3 and some 4 digit modules use sequential digit values (in reversed order)
     // 4, 6 and 8 digit modules use multiplexing in LTR order
     #  if P073_USE_74HCMULTIPLEX
+    uint8_t digit = 0xFF;
 
     if (!isSequential) {
       if (4 == digits) {
         digit = hc595digit4[i];
       } else
       if (6 == digits) {
-        digit = hc595digit6[i];
+        digit = hc595digit8[i + (i > 2 ? 1 : 0)];
       } else
       if (8 == digits) {
         digit = hc595digit8[i];
@@ -280,7 +273,6 @@ void P073_data_struct::hc595_ShowBuffer() {
 
     if ((P073_HC595_SEQUENTIAL && (0 == i)) || P073_HC595_MULTIPLEX) {
       digitalWrite(pin3, LOW); // Clock data
-      // delay(1);
       digitalWrite(pin3, HIGH);
     }
   }
@@ -299,6 +291,20 @@ void P073_data_struct::hc595_ShowBuffer() {
   //                                    digits, i, stop, incr, pin1, pin2, pin3));
   // }
   #  endif // ifdef P073_DEBUG
+}
+
+void P073_data_struct::hc595_ToOutputBuffer() {
+  for (uint8_t i = 0; i < 8; ++i) {
+    uint8_t value;
+
+    // 74HC595 uses inverted data, compared to MAX7219/TM1637
+    value = ~P073_getFontChar(showbuffer[i], fontset);
+
+    if (showperiods[i]) {
+      value &= 0x7F;
+    }
+    outputbuffer[i] = mapMAX7219FontToTM1637Font(value); // Rotate bits 6..0
+  }
 }
 
 void P073_data_struct::hc595_AdjustBuffer() {
@@ -732,7 +738,7 @@ void P073_data_struct::ClearBuffer() {
  * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
  * Dot/colon bit is still bit 8
  */
-uint8_t P073_data_struct::mapMAX7219FontToTM1673Font(uint8_t character) {
+uint8_t P073_data_struct::mapMAX7219FontToTM1637Font(uint8_t character) {
   uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
 
   for (int b = 0; b < 7; ++b) {
@@ -745,7 +751,7 @@ uint8_t P073_data_struct::mapMAX7219FontToTM1673Font(uint8_t character) {
 
 uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
                                              uint8_t fontset) {
-  return mapMAX7219FontToTM1673Font(P073_getFontChar(index, fontset));
+  return mapMAX7219FontToTM1637Font(P073_getFontChar(index, fontset));
 }
 
 bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
@@ -803,6 +809,7 @@ bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_AdjustBuffer();
+      hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
         hc595_ShowBuffer();
@@ -846,6 +853,8 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
       #  if P073_USE_74HC595
       case P073_74HC595_2_8DGT: {
+        hc595_ToOutputBuffer();
+
         if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
           hc595_ShowBuffer();
         }
@@ -1094,6 +1103,7 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_AdjustBuffer();
+      hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
         hc595_ShowBuffer();
@@ -1173,6 +1183,7 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_AdjustBuffer();
+      hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
         hc595_ShowBuffer();
@@ -1274,6 +1285,7 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
         if (digits < 8) {
           FillBufferWithDash();
         }
+        hc595_ToOutputBuffer();
 
         if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
           hc595_ShowBuffer();
@@ -1326,6 +1338,7 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_AdjustBuffer();
+      hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
         hc595_ShowBuffer();
@@ -1369,6 +1382,7 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_AdjustBuffer();
+      hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
         hc595_ShowBuffer();
@@ -1416,6 +1430,7 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
         break;
       # if P073_USE_74HC595
       case P073_74HC595_2_8DGT:
+        hc595_ToOutputBuffer();
 
         if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
           hc595_ShowBuffer();
@@ -1476,7 +1491,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       if (validIntFromString(argValue, byteValue) && (byteValue < 256) && (byteValue > -1)) {
         data += static_cast<char>(displayModel == P073_MAX7219_8DGT ?
                                   byteValue :
-                                  mapMAX7219FontToTM1673Font(byteValue));
+                                  mapMAX7219FontToTM1637Font(byteValue));
       }
       arg++;
       argValue = parseString(text, arg);
@@ -1511,6 +1526,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
             break;
           #  if P073_USE_74HC595
           case P073_74HC595_2_8DGT:
+            hc595_ToOutputBuffer();
 
             if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
               hc595_ShowBuffer();

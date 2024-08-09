@@ -265,7 +265,7 @@ public:
   void    FillBufferWithDash();
   void    ClearBuffer();
 
-  uint8_t mapMAX7219FontToTM1673Font(uint8_t character);
+  uint8_t mapMAX7219FontToTM1637Font(uint8_t character);
   uint8_t tm1637_getFontChar(uint8_t index,
                              uint8_t fontset);
 
@@ -378,11 +378,13 @@ private:
   # if P073_USE_74HC595
   void hc595_InitDisplay();
   void hc595_ShowBuffer();
+  void hc595_ToOutputBuffer();
   void hc595_AdjustBuffer();
   bool hc595_Sequential() {
     return P073_HC595_SEQUENTIAL;
   }
 
+  uint8_t outputbuffer[8]{};
   # endif // if P073_USE_74HC595
 };
 
