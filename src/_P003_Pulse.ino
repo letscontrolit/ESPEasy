@@ -13,6 +13,9 @@
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
 /** Changelog:
+ * 2024-08-10 tonhuisman: Changed option to 'Ignore multiple Delta = 0', and allow Interval = 0, combined with Delta = 0, to send a pulse
+ *                        immediately to the Controllers and generate events.
+ *                        Moved most PLUGIN_READ logic to P003_data_struct for easy re-use.
  * 2024-08-08 tonhuisman: Add support for 'Ignore Delta = 0' setting, to not send out events and data to controllers if the Delta (Count)
  *                        value is 0.
  * 2024-08-07 tonhuisman: Add support for Time, Total/Time, Time/Delta Counter types. Not included in LIMIT_BUILD_SIZE builds!
@@ -40,31 +43,6 @@
 # define PLUGIN_VALUENAME2_003          "Total"
 # define PLUGIN_VALUENAME3_003          "Time"
 
-// ... their index in UserVar and TaskDeviceValueNames
-# define P003_IDX_pulseCounter           0
-# define P003_IDX_pulseTotalCounter      1
-# define P003_IDX_pulseTime              2
-
-// ... and the following index into UserVar for storing the persisted TotalCounter
-# define P003_IDX_persistedTotalCounter  3
-
-// indexes for config parameters
-# define P003_IDX_DEBOUNCETIME   0
-# define P003_IDX_COUNTERTYPE    1
-# define P003_IDX_MODETYPE       2
-# define P003_IDX_IGNORE_ZERO    3
-
-// values for WEBFORM Counter Types
-# define P003_CT_INDEX_COUNTER              0
-# define P003_CT_INDEX_COUNTER_TOTAL_TIME   1
-# define P003_CT_INDEX_TOTAL                2
-# define P003_CT_INDEX_COUNTER_TOTAL        3
-# if P003_USE_EXTRA_COUNTERTYPES
-#  define P003_CT_INDEX_TIME                4
-#  define P003_CT_INDEX_TOTAL_TIME          5
-#  define P003_CT_INDEX_TIME_COUNTER        6
-# endif // if P003_USE_EXTRA_COUNTERTYPES
-
 
 boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -84,6 +62,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = PLUGIN_NR_VALUENAMES_003;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
       Device[deviceCount].TaskLogsOwnPeaks   = true;
@@ -107,6 +86,12 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       event->String1 = formatGpioName_input(F("Pulse"));
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      Settings.TaskDeviceTimer[event->TaskIndex] = Settings.Delay; // Previous default for non-TimerOptional
       break;
     }
 
@@ -199,7 +184,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         F("raisetype"),
         static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE)));
 
-      addFormCheckBox(F("Ignore Delta = 0"), F("nozero"), PCONFIG(P003_IDX_IGNORE_ZERO));
+      addFormCheckBox(F("Ignore multiple Delta = 0"), F("nozero"), PCONFIG(P003_IDX_IGNORE_ZERO));
 
       success = true;
       break;
@@ -281,51 +266,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
-        unsigned long pulseCounter, pulseCounterTotal;
-        float pulseTime_msec;
-        P003_data->pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);
-        P003_data->pulseHelper.resetPulseCounter();
-
-        success = true;
-
-        if (PCONFIG(P003_IDX_IGNORE_ZERO) && (0 == pulseCounter)) {
-          success = false;
-        }
-
-        // store the current counter values into UserVar (RTC-memory)
-        // FIXME TD-er: Must check we're interacting with the raw values in this PulseCounter plugin
-        // For backward compatibility, set all values
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseCounter);
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseCounterTotal);
-        UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTime,         pulseTime_msec);
-
-        switch (PCONFIG(P003_IDX_COUNTERTYPE)) {
-          case P003_CT_INDEX_COUNTER:            // No updates
-          case P003_CT_INDEX_COUNTER_TOTAL:      // No updates
-            break;
-          case P003_CT_INDEX_TOTAL:              // Replace first value
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter, pulseCounterTotal);
-            break;
-          case P003_CT_INDEX_COUNTER_TOTAL_TIME: // No updates
-            break;
-          # if P003_USE_EXTRA_COUNTERTYPES
-          case P003_CT_INDEX_TIME:               // Replace first value
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseTime_msec);
-            break;
-          case P003_CT_INDEX_TOTAL_TIME:         // Replace first 2 values
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseCounterTotal);
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseTime_msec);
-            break;
-          case P003_CT_INDEX_TIME_COUNTER: // Replace first 2 values
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseCounter,      pulseTime_msec);
-            UserVar.setFloat(event->TaskIndex, P003_IDX_pulseTotalCounter, pulseCounter);
-            break;
-          # endif // if P003_USE_EXTRA_COUNTERTYPES
-        }
-
-        // Store the raw value in the unused 4th position.
-        // This is needed to restore the value from RTC as it may be converted into another output value using a formula.
-        UserVar.setFloat(event->TaskIndex, P003_IDX_persistedTotalCounter, pulseCounterTotal);
+        P003_data->plugin_read(event);
       }
       break;
     }
@@ -439,7 +380,12 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P003_data) {
         // this function is called when the next (1,2,3) processing step (Par1) is scheduled
-        P003_data->pulseHelper.doPulseStepProcessing(event->Par1);
+        if (P003_data->pulseHelper.doPulseStepProcessing(event->Par1) &&
+            (Settings.TaskDeviceTimer[event->TaskIndex] == 0) &&
+            PCONFIG(P003_IDX_IGNORE_ZERO) &&
+            P003_data->plugin_read(event)) {
+          sendData(event);
+        }
       }
 
       break;

@@ -111,8 +111,9 @@ void Internal_GPIO_pulseHelper::resetPulseCounter()
   ISRdata.pulseTime    = 0;
 }
 
-void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
+bool Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
 {
+  bool result = false; // No count
   switch (pStep)
   {
     case GPIO_PULSE_HELPER_PROCESSING_STEP_0:
@@ -189,6 +190,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
         #endif // PULSE_STATISTIC
         // after debounceTime/2, do step 3
         Scheduler.setPluginTaskTimer(config.debounceTime >> 1, config.taskIndex, GPIO_PULSE_HELPER_PROCESSING_STEP_3);
+        result = true;
       }
       else
 
@@ -238,6 +240,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       // we found the same state as in step 2. It is stable and valid.
       {
         processStablePulse(pinState, pulseChangeTime);
+        result = true;
       }
       else
 
@@ -268,6 +271,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       break;
     }
   }
+  return result;
 }
 
 uint64_t Internal_GPIO_pulseHelper::us_Since_triggerTimestamp() const {

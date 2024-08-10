@@ -71,8 +71,18 @@ Available options:
 
 .. image:: P003_ModeTypeOptions.png
 
-:Ignore Delta = 0:
-  When enabled doesn't generate events or send data to Controllers if the Delta (Count) is 0 since the last time the data is read. This also suppresses then initial Read action when the plugin is started!
+:Ignore multiple Delta = 0:
+  When enabled doesn't generate events or send data to Controllers if multiple Delta (Count) values of 0 are read. The first 0 after a non-zero Count *will* be sent out to Controllers, and generate events (when Rules are enabled).
+
+|
+
+:Interval: The interval between reading the pulses from the counter logic. If the Interval is set to 0 *AND* **Ignore multiple Delta = 0** is enabled, the check for new pulses is performed much more often (up to ca. 50 times per second). This has the advantage that any infrequent pulse can be captured very close to the time it occurs, but also has a disadvantage, see the warning:
+
+.. warning:: The Interval for this plugin can be set to **0**, but when receiving high-frequency pulses, this should better not be used, as it can overload the ESP *and* any Controller, and it's backend service, configured for the task, as it's sending data, processing the Controllers, and processing events for the task values!
+
+With **Interval** set to 0, but **Ignore multiple Delta = 0** not enabled, then No data is sent to Controllers and no events are generated, unless a ``TaskRun`` command is executed for this task!
+
+|
 
 For setup of some specific device examples see: |P003_usedby|
 
@@ -135,8 +145,8 @@ Electrical signal quality
 Make sure physical connections are electrically well separated so no crossover of the signals happen. 
 Especially with edge pulse mode at rates above ~5'000 RPM with longer lines. Best use a cable with ground and signal twisted.
 
-Statistical logging for PUSE modes
-----------------------------------
+Statistical logging for PULSE modes
+-----------------------------------
 
 The **Pulse** modes provide at runtime statistical information in the log output in order to support problem finding and the tuning of debounce time. 
 The interpretation is a little tricky, as it is related to the implemented step by step detection method. 

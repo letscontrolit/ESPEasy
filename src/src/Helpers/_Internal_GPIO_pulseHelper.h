@@ -148,7 +148,7 @@ struct Internal_GPIO_pulseHelper {
 
   // Process recorded pulse data on regular intervals.
   // Typically from PLUGIN_FIFTY_PER_SECOND or PLUGIN_TASKTIMER_IN
-  void doPulseStepProcessing(int pStep);
+  bool doPulseStepProcessing(int pStep);
 
   pulseModeData_t pulseModeData;
 
