@@ -28,6 +28,14 @@
 ////# define PLUGIN_021_DEBUG
 # endif // ifndef/else BUILD_NO_DEBUG
 
+#ifdef LIMIT_BUILD_SIZE
+#define P21_MIN_BUILD_SIZE
+#undef PLUGIN_021_DEBUG
+#endif // ifdef LIMIT_BUILD_SIZE
+
+// Force minimal build size for development/debugging purposes
+#define P21_MIN_BUILD_SIZE
+
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
 # define PLUGIN_NAME_021        "Regulator - Level Control"
@@ -113,12 +121,33 @@
 // Simple conversion from parameter settings in hours/minutes to seconds (administration unit)
 // And from seconds to the millis domain used for the actual control
 // Note that these simple conversion may lose precision due to rough rounding
-#define millis2seconds(x) ((x) / (1000))
-#define seconds2millis(x) (long)((x) * (1000))
-#define minutes2seconds(x) ((x) * 60)
-#define hours2seconds(x) ((x) * 60 * 60)
-#define seconds2minutes(x) ((x) / 60)
-#define seconds2hours(x) ((x) / (60 * 60))
+
+int millis2seconds(int32_t x) {
+  return (uint)(x / 1000);
+}
+
+int32_t seconds2millis(int x) {
+  return (uint32_t)(x * 1000);
+}
+
+# ifndef P21_MIN_BUILD_SIZE
+int minutes2seconds(int x) {
+  return x * 60;
+}
+
+int hours2seconds(int x) {
+  return x * 60 * 60;
+}
+
+int seconds2minutes(int x) {
+  return x / 60;
+}
+
+int seconds2hours(int x) {
+  return x / (60 * 60);
+}
+
+# endif // ifndef P21_MIN_BUILD_SIZE
 
 // Operation modes for the control algorithm
 enum P021_opmode
@@ -130,7 +159,6 @@ enum P021_opmode
   P021_OPMODE_TEMP,    // Control algorithm based on temperature only
   P021_OPMODE_REMOTE   // Both temperature and remote command can switch on Output
 };
-#define P021_OPMODE_SIZE  6
 
 // Control state for the control algorithm
 enum P021_control_state
@@ -142,7 +170,7 @@ enum P021_control_state
 };
 
 // Static storage for global state info. Track per ESPeasy plugin instance
-static uint8_t  P021_remote[TASKS_MAX];    // Static storage for remote control.
+static bool P021_remote[TASKS_MAX];        // Static storage for remote control.
 static uint32_t P021_timestamp[TASKS_MAX]; // Static storage for timestamp last change
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -156,16 +184,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_021;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
+      Device[++deviceCount].Number       = PLUGIN_ID_021;
+      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].ValueCount     = 1;
+      Device[deviceCount].SendDataOption = true;
+
+      // Device[deviceCount].PullUpOption       = false;
+      // Device[deviceCount].InverseLogicOption = false;
+      // Device[deviceCount].FormulaOption      = false;
+      // Device[deviceCount].TimerOption        = false;
       break;
     }
 
@@ -197,25 +226,27 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P021_DONT_ALWAYS_SAVE = 1;                   // Do not save
-      P021_GPIO_RELAY       = -1;                  // GPIO for relay output not assigned
-      P021_CHECK_TASK       = -1;                  // No input source assigned
-      P021_CHECK_VALUE      = -1;                  // No input source assigned
-      P021_SETPOINT         = 25.0f;               // Switch output active above 25 [deg C]
-      P021_HYSTERESIS       = 5.0f;                // Switch off hysteresis 5 [deg C] below switch on value
-      P021_MIN_TIME         = minutes2seconds(30); // Once switched on output should be active at least 30 [min]
-      P021_INTERVAL_TIME    = hours2seconds(24);   // Output shall run after 24 [hour] stand still
-      P021_FORCE_TIME       = minutes2seconds(5);  // Forced circulation for 5 [min]
-      P021_OPMODE           = P021_OPMODE_OFF;     // Don't touch output unless selected by operator
-      P021_FLAGS            = 0;                   // Reset all flags
-      UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
-      P021_remote[event->TaskIndex] = 0;           // Remote control state is "off"
+      P021_DONT_ALWAYS_SAVE = 1;               // Do not save
+      P021_GPIO_RELAY       = -1;              // GPIO for relay output not assigned
+      P021_CHECK_TASK       = -1;              // No input source assigned
+      P021_CHECK_VALUE      = -1;              // No input source assigned
+      P021_SETPOINT         = 25.0f;           // Switch output active above 25 [deg C]
+      P021_HYSTERESIS       = 5.0f;            // Switch off hysteresis 5 [deg C] below switch on value
+      P021_MIN_TIME         = 30 * 60;         // Once switched on output should be active at least 30 [min]
+      P021_INTERVAL_TIME    = 24 * 60 * 60;    // Output shall run after 24 [hour] stand still
+      P021_FORCE_TIME       = 5 * 30;          // Forced circulation for 5 [min]
+      P021_OPMODE           = P021_OPMODE_OFF; // Don't touch output unless selected by operator
+      P021_FLAGS            = 0;               // Reset all flags
+      // UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
+      // P021_remote[event->TaskIndex] = 0;       // Remote control state is "off"
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-       #ifdef PLUGIN_021_DEBUG
+      const bool extFunc = bitRead(P021_FLAGS, P021_EXT_FUNCT); // Extended functionality selected
+
+       # ifdef PLUGIN_021_DEBUG
       {
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
@@ -228,14 +259,14 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                                       millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex])));
         addFormNote(msg);
       }
-      #endif // ifdef PLUGIN_021_DEBUG
-
+      # endif // ifdef PLUGIN_021_DEBUG
+      const taskIndex_t check_task = P021_CHECK_TASK;  // Optimze reference
       addRowLabel(F("Input Task"));
-      addTaskSelect(F(P021_GUID_CHECK_TASK), P021_CHECK_TASK);
+      addTaskSelect(F(P021_GUID_CHECK_TASK), check_task);
 
-      if (validTaskIndex(P021_CHECK_TASK)) {
+      if (validTaskIndex(check_task)) {
         addRowLabel(F("Input Value"));
-        addTaskValueSelect(F(P021_GUID_CHECK_VALUE), P021_CHECK_VALUE, P021_CHECK_TASK);
+        addTaskValueSelect(F(P021_GUID_CHECK_VALUE), P021_CHECK_VALUE, check_task);
       }
 
       addFormTextBox(F("Setpoint"),   F(P021_GUID_SETPOINT),   toString(P021_SETPOINT),   8);
@@ -249,26 +280,33 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                       F(P021_GUID_DONT_ALWAYS_SAVE),
                       P021_DONT_ALWAYS_SAVE == 0);
 
+      # ifndef P21_MIN_BUILD_SIZE
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
+      # endif // ifndef P21_MIN_BUILD_SIZE
 
       addFormNumericBox(F("Auto-save interval"), F(P021_GUID_AUTOSAVE_TIMER), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       addUnit(F("minutes"));
 
+      # ifndef P21_MIN_BUILD_SIZE
       addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
+      # endif // ifndef P21_MIN_BUILD_SIZE
 
       // Settings extension for new operation modes. Will reload the page.
-      addFormSelector_YesNo(F("Extended functionality"), F(P021_GUID_EXT_FUNCT), bitRead(P021_FLAGS, P021_EXT_FUNCT), true);
+      addFormSelector_YesNo(F("Extended functionality"), F(P021_GUID_EXT_FUNCT), extFunc, true);
 
-      if (bitRead(P021_FLAGS, P021_EXT_FUNCT))
+      if (extFunc)
       {
+        # ifndef P21_MIN_BUILD_SIZE
+
         // Selection of timer units. Will reload the page.
         addFormSelector_YesNo(F("Long time span"), F(P021_GUID_LONG_TIMER_UNIT), bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT), true);
+        # endif // ifndef P21_MIN_BUILD_SIZE
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
-        int optionValues[P021_OPMODE_SIZE]   =
+        const int optionValues[]             =
         { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), P021_OPMODE_SIZE, options, optionValues, P021_OPMODE);
+        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), NR_ELEMENTS(optionValues), options, optionValues, P021_OPMODE);
 
         {
           uint32_t min_time      = P021_MIN_TIME;      // Value to display for minimum timer
@@ -276,6 +314,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           uint32_t force_time    = P021_FORCE_TIME;    // Value for forces run
           String   unit1         = F("seconds");       // use minutes or seconds
           String   unit2         = F("seconds");       // use hours or seconds
+
+          # ifndef P21_MIN_BUILD_SIZE
 
           if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
           {
@@ -285,6 +325,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             unit1         = F("minutes");
             unit2         = F("hours");
           }
+          # endif // ifndef P21_MIN_BUILD_SIZE
 
           // Minimum on time
           addFormNumericBox(F("Minimum running time"), F(P021_GUID_MIN_TIME), min_time, 0);
@@ -321,6 +362,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+
+      const bool newExtFunct =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
+
       P021_CHECK_TASK       = getFormItemInt(F(P021_GUID_CHECK_TASK));
       P021_CHECK_VALUE      = getFormItemInt(F(P021_GUID_CHECK_VALUE));
       P021_DONT_ALWAYS_SAVE = isFormItemChecked(F(P021_GUID_DONT_ALWAYS_SAVE)) ? 0 : 1; // inverted flag!
@@ -331,11 +375,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(P021_FLAGS, (P021_INV_OUTPUT), isFormItemChecked(F(P021_GUID_INV_OUTPUT)));
 
       // Save extended parameters only when they are selected and are shown on the page
-      if ((getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0) && (bitRead(P021_FLAGS, P021_EXT_FUNCT)))
+      if (newExtFunct && (bitRead(P021_FLAGS, P021_EXT_FUNCT)))
       {
+        P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
+        # ifndef P21_MIN_BUILD_SIZE
         const bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
         const bool old_units = bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT) != 0;
-        P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
 
         // Check if timer unit flag is stable to prevent misalignment
         if (new_units == old_units)
@@ -353,17 +398,22 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
           }
         }
-
-        bitWrite(P021_FLAGS, P021_INV_INPUT,       isFormItemChecked(F(P021_GUID_INV_INPUT)));
-        bitWrite(P021_FLAGS, P021_EXTEND_END,      isFormItemChecked(F(P021_GUID_EXTEND_END)));
-        bitWrite(P021_FLAGS, P021_SYM_HYSTERESIS,  isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
-        bitWrite(P021_FLAGS, P021_SLOW_EVAL,       isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
-        bitWrite(P021_FLAGS, P021_STATE_OUTP,      isFormItemChecked(F(P021_GUID_STATE_OUTP)));
         bitWrite(P021_FLAGS, P021_LONG_TIMER_UNIT, new_units);
+        # else // ifndef P21_MIN_BUILD_SIZE
+        P021_MIN_TIME      = getFormItemInt(F(P021_GUID_MIN_TIME));
+        P021_INTERVAL_TIME = getFormItemInt(F(P021_GUID_INTERVAL_TIME));
+        P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
+        # endif // ifndef P21_MIN_BUILD_SIZE
+
+        bitWrite(P021_FLAGS, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
+        bitWrite(P021_FLAGS, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
+        bitWrite(P021_FLAGS, P021_SYM_HYSTERESIS, isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
+        bitWrite(P021_FLAGS, P021_SLOW_EVAL,      isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
+        bitWrite(P021_FLAGS, P021_STATE_OUTP,     isFormItemChecked(F(P021_GUID_STATE_OUTP)));
       }
 
       // Set extended parameters to backwards compatible values when extension is disabled
-      if (getFormItemInt(F(P021_GUID_EXT_FUNCT)) == 0)
+      if (!newExtFunct)
       {
         P021_OPMODE = P021_OPMODE_CLASSIC;                // Switch to classic control algorithm
         bitWrite(P021_FLAGS, P021_INV_INPUT,      false); // Standard input direction
@@ -374,7 +424,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // Update the extension flag last.
-      bitWrite(P021_FLAGS, P021_EXT_FUNCT, getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
+      bitWrite(P021_FLAGS, P021_EXT_FUNCT, newExtFunct);
 
       success = true;
       break;
@@ -406,9 +456,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             isChanged       = true;
           }
 
+          # ifndef P21_MIN_BUILD_SIZE
           if (isRemote) {
-            P021_remote[event->TaskIndex] = (uint8_t)result;
+            P021_remote[event->TaskIndex] = !essentiallyZero(result);
           }
+          #endif // ifndef P21_MIN_BUILD_SIZE
 
           if (isChanged) {
             if (P021_DONT_ALWAYS_SAVE == 0) { // save only if explicitly enabled
@@ -456,8 +508,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (validGpio(P021_GPIO_RELAY)) {
         pinMode(P021_GPIO_RELAY, OUTPUT);
       }
-      P021_evaluate(event); // Calculate the new control outputs
-      sendData(event);      // Force an update event for the plugin
+
+      // I am not sure we want to reset the state at every init.
+      // UserVar seems to be persistent
+      UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
+      P021_remote[event->TaskIndex] = false; // Remote control state is "off"
+      P021_evaluate(event);                  // Calculate the new control outputs
+      sendData(event);                       // Force an update event for the plugin
       success = true;
       break;
     }
@@ -471,25 +528,30 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Expected commands:
       // * levelcontrol,remote, [on|off]
 
+      # ifndef P21_MIN_BUILD_SIZE
       // parse string to extract the command
-      const String command = parseString(string, 1); // already converted to lowercase
-      const String subcmd  = parseString(string, 2);
-      const String value   = parseString(string, 3);
+      const String command  = parseString(string, 1); // already converted to lowercase
+      const String subcmd   = parseString(string, 2);
+      const bool   hasValue = !parseString(string, 3).isEmpty();
 
       if (equals(command, F("levelcontrol")))
       {
-        if (equals(subcmd, F("remote")))
+        if (equals(subcmd, F("remote")) && hasValue)
         {
-          if (equals(value, F("on")))
+          if (event->Par2 == 1)
           {
-            P021_remote[event->TaskIndex] = 1;
+            P021_remote[event->TaskIndex] = true;
+            # ifndef P21_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=on"));
+            # endif // ifndef P21_MIN_BUILD_SIZE
             success = true;
           }
-          else if (equals(value, F("off")))
+          else if (event->Par2 == 0)
           {
-            P021_remote[event->TaskIndex] = 0;
+            P021_remote[event->TaskIndex] = false;
+            # ifndef P21_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=off"));
+            # endif // ifndef P21_MIN_BUILD_SIZE
             success = true;
           }
         }
@@ -497,6 +559,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // If not successful rely upon ESPeasy framework to report the issue
       }
       P021_evaluate(event);
+      # endif // ifndef P21_MIN_BUILD_SIZE
       break;
     }
 
@@ -528,7 +591,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Convert control state to string for debugging purposes
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef PLUGIN_021_DEBUG
+# ifdef PLUGIN_021_DEBUG
 const __FlashStringHelper* P021_printControlState(int state)
 {
   switch (state)
@@ -541,12 +604,12 @@ const __FlashStringHelper* P021_printControlState(int state)
   }
 }
 
-#endif // ifdef PLUGIN_021_DEBUG
+# endif // ifdef PLUGIN_021_DEBUG
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Convert control state to string for debugging purposes
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef PLUGIN_021_DEBUG
+# ifdef PLUGIN_021_DEBUG
 const __FlashStringHelper* P021_printControlMode(int mode)
 {
   switch (mode)
@@ -561,7 +624,7 @@ const __FlashStringHelper* P021_printControlMode(int mode)
   }
 }
 
-#endif // ifdef PLUGIN_021_DEBUG
+# endif // ifdef PLUGIN_021_DEBUG
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Check if updated control parameters should be saved to disk
@@ -580,7 +643,9 @@ void P021_check_autosafe(struct EventStruct *event)
     if (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) == 0) {
       if ((UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG) != 0) &&
           !essentiallyEqual(P021_SETPOINT, P021_SETP_LAST_STORED)) {
+        # ifndef P21_MIN_BUILD_SIZE
         addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
+        # endif // ifndef P21_MIN_BUILD_SIZE
         P021_SETP_LAST_STORED = P021_SETPOINT;
         SaveSettings();
         UserVar.setUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG, 0);
@@ -604,7 +669,7 @@ void P021_evaluate(struct EventStruct *event)
   const bool invert_input                    = bitRead(P021_FLAGS, P021_INV_INPUT);
   const bool symetric_hyst                   = bitRead(P021_FLAGS, P021_SYM_HYSTERESIS);
   bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
-  bool remote_state                          = P021_remote[event->TaskIndex] != 0;
+  bool remote_state                          = P021_remote[event->TaskIndex];
   uint32_t timestamp                         = P021_timestamp[event->TaskIndex];
 
   // Get the control value from the external task. If task does not exist use the default
@@ -783,7 +848,7 @@ void P021_evaluate(struct EventStruct *event)
     digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
   }
 
-  #ifdef PLUGIN_021_DEBUG
+  # ifdef PLUGIN_021_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
@@ -796,7 +861,7 @@ void P021_evaluate(struct EventStruct *event)
                          value,
                          remote_state));
   }
-  #endif // ifdef PLUGIN_021_DEBUG
+  # endif // ifdef PLUGIN_021_DEBUG
 
   // Write back updated persistant control data:
   // - The logical state of the output signal [on,OFF]
@@ -813,6 +878,13 @@ void P021_evaluate(struct EventStruct *event)
   }
 }
 
+float P021_symetric_threshold(float setpoint, float hysteresis, bool invert) {
+  const bool  isZero = essentiallyZero(hysteresis);
+  const float delta  = (isZero ? 1.0f : (hysteresis / 2.0f));
+
+  return setpoint + ((invert ? -1.0f : 1.0f) * delta);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Input evaluation to determine switching the control signal on
 // Return true when controller output indicates activation (switching on). See documentation
@@ -825,27 +897,10 @@ void P021_evaluate(struct EventStruct *event)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P021_check_on(float value, float setpoint, float hysteresis, bool invert, bool symetric, bool force)
 {
-  float Threshold = setpoint; // Default to Setpoint for asymetric hysteresis
-
-  if (force)
-  {
-    return true;
-  }
-
-  if (symetric)
-  {
-    bool isZero = essentiallyZero(hysteresis);
-
-    if (invert)
-    {
-      Threshold = setpoint - (isZero ? 1.0f : (hysteresis / 2.0f));
-    }
-    else
-    {
-      Threshold = setpoint + (isZero ? 1.0f : (hysteresis / 2.0f));
-    }
-  }
-
+  if (force) { return true; }
+  const float Threshold = symetric
+    ? P021_symetric_threshold(setpoint, hysteresis, invert)
+    : setpoint;
   return invert ? definitelyLessThan(value, Threshold) : definitelyGreaterThan(value, Threshold);
 }
 
@@ -861,37 +916,10 @@ bool P021_check_on(float value, float setpoint, float hysteresis, bool invert, b
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P021_check_off(float value, float setpoint, float hysteresis, bool invert, bool symetric, bool force)
 {
-  float Threshold = setpoint;
-
-  if (force)
-  {
-    return false;
-  }
-
-  if (symetric)
-  {
-    bool isZero = essentiallyZero(hysteresis);
-
-    if (invert)
-    {
-      Threshold = setpoint + (isZero ? 1.0f : (hysteresis / 2.0f));
-    }
-    else
-    {
-      Threshold = setpoint - (isZero ? 1.0f : (hysteresis / 2.0f));
-    }
-  }
-  else
-  {
-    if (invert)
-    {
-      Threshold = setpoint + hysteresis;
-    }
-    else
-    {
-      Threshold = setpoint - hysteresis;
-    }
-  }
+  if (force) { return false; }
+  const float Threshold = symetric
+    ? P021_symetric_threshold(setpoint, hysteresis, invert)
+    : setpoint + ((invert ? -1.0f : 1.0f) * hysteresis);
   return invert ? definitelyGreaterThan(value, Threshold) : definitelyLessThan(value, Threshold);
 }
 
