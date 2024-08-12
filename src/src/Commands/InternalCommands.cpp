@@ -305,6 +305,7 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::erasesdkwifi:               COMMAND_CASE_R(Command_WiFi_Erase,     0);               // WiFi.h
     case ESPEasy_cmd_e::event:                      COMMAND_CASE_A(Command_Rules_Events,  -1);               // Rule.h
     case ESPEasy_cmd_e::executerules:               COMMAND_CASE_A(Command_Rules_Execute, -1);               // Rule.h
+    case ESPEasy_cmd_e::factoryreset:               COMMAND_CASE_R(Command_Settings_FactoryReset, 0);        // Settings.h
     case ESPEasy_cmd_e::gateway:                    COMMAND_CASE_R(Command_Gateway,     1);                  // Network Command
     case ESPEasy_cmd_e::gpio:                       COMMAND_CASE_A(Command_GPIO,        2);                  // Gpio.h
     case ESPEasy_cmd_e::gpiotoggle:                 COMMAND_CASE_A(Command_GPIO_Toggle, 1);                  // Gpio.h
@@ -396,7 +397,6 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::pwm:                        COMMAND_CASE_A(Command_GPIO_PWM,          4);                 // GPIO.h
     case ESPEasy_cmd_e::reboot:                     COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
-    case ESPEasy_cmd_e::reset:                      COMMAND_CASE_R(Command_Settings_Reset,             0);        // Settings.h
     case ESPEasy_cmd_e::resetflashwritecounter:     COMMAND_CASE_A(Command_RTC_resetFlashWriteCounter, 0);        // RTC.h
     case ESPEasy_cmd_e::restart:                    COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
     case ESPEasy_cmd_e::rtttl:                      COMMAND_CASE_A(Command_GPIO_RTTTL,                -1);        // GPIO.h
