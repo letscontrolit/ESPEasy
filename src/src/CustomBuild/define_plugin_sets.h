@@ -1659,6 +1659,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
+  #ifdef ESP32 // These plugins no longer fit in an ESP8266 build
+    #ifndef USES_P163
+      #define USES_P163   // Counter - RadSens I2C radiation counter
+    #endif
+  #endif
 
 #endif
 
