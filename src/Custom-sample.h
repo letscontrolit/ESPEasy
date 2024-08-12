@@ -540,6 +540,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P159   // Presence - LD2410 Radar detection
 
 // #define USES_P162   // Output - MCP42xxx Digipot
+// #define USES_P163   // Counter - RadSens I2C radiation counter
 // #define USES_P164   // Gases - ENS16x TVOC/eCO2
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 // #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
