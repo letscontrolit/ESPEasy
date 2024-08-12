@@ -154,9 +154,8 @@ void handle_devices() {
 
       if (validDeviceIndex(DeviceIndex)) { 
         const DeviceStruct& device = Device[DeviceIndex];
-        if ((device.Type == DEVICE_TYPE_I2C) && device.I2CMax100kHz) {      // 100 kHz-only I2C device?
-          bitWrite(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
-        }
+        bitWrite(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED,      // 100 kHz-only I2C device?
+                 (device.Type == DEVICE_TYPE_I2C) && device.I2CMax100kHz); // Then: Enable Force Slow I2C speed checkbox by default
       }
     }
     else if (taskdevicenumber != INVALID_PLUGIN_ID) // save settings
