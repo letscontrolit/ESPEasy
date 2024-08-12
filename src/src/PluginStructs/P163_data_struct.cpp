@@ -33,6 +33,7 @@ bool P163_data_struct::init(struct EventStruct *event) {
                                        sensor->getChipId(), sensor->getFirmwareVersion()));
     }
   } else {
+    delete sensor; // Clean up if initialization fails
     addLog(LOG_LEVEL_ERROR, F("RadSens: Initialization failed!"));
   }
   return isInitialized();
