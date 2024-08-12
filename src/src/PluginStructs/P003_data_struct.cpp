@@ -56,4 +56,15 @@ bool P003_data_struct::plugin_read(struct EventStruct *event) {
   return success;
 }
 
+bool P003_data_struct::plugin_peek(struct EventStruct *event) {
+  unsigned long pulseCounter, pulseCounterTotal;
+  float pulseTime_msec;
+
+  pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);
+
+  const bool success = (PCONFIG(P003_IDX_IGNORE_ZERO) && (0 != pulseCounter));
+
+  return success;
+}
+
 #endif // ifdef USES_P003

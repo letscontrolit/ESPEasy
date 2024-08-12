@@ -47,6 +47,7 @@ struct P003_data_struct : public PluginTaskData_base {
   virtual ~P003_data_struct() = default;
 
   bool plugin_read(struct EventStruct *event);
+  bool plugin_peek(struct EventStruct *event);
 
   Internal_GPIO_pulseHelper pulseHelper;
 

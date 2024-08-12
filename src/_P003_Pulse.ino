@@ -13,6 +13,7 @@
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
 /** Changelog:
+ * 2024-08-12 tonhuisman: Improved handling of 'Ignore multiple Delta = 0' by peeking the Delta value.
  * 2024-08-10 tonhuisman: Changed option to 'Ignore multiple Delta = 0', and allow Interval = 0, combined with Delta = 0, to send a pulse
  *                        immediately to the Controllers and generate events.
  *                        Moved most PLUGIN_READ logic to P003_data_struct for easy re-use.
@@ -266,7 +267,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
-        P003_data->plugin_read(event);
+        success = P003_data->plugin_read(event);
       }
       break;
     }
@@ -369,6 +370,12 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P003_data) {
         // step 0 will check if a new signal edge is to be processed and then schedule step 1
         P003_data->pulseHelper.doPulseStepProcessing(GPIO_PULSE_HELPER_PROCESSING_STEP_0);
+
+        if ((Settings.TaskDeviceTimer[event->TaskIndex] == 0) &&
+            PCONFIG(P003_IDX_IGNORE_ZERO) &&
+            P003_data->plugin_peek(event)) {
+          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() - 10);
+        }
       }
       break;
     }
@@ -380,12 +387,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P003_data) {
         // this function is called when the next (1,2,3) processing step (Par1) is scheduled
-        if (P003_data->pulseHelper.doPulseStepProcessing(event->Par1) &&
-            (Settings.TaskDeviceTimer[event->TaskIndex] == 0) &&
-            PCONFIG(P003_IDX_IGNORE_ZERO) &&
-            P003_data->plugin_read(event)) {
-          sendData(event);
-        }
+        P003_data->pulseHelper.doPulseStepProcessing(event->Par1);
       }
 
       break;
