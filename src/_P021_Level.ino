@@ -29,12 +29,12 @@
 # endif // ifndef/else BUILD_NO_DEBUG
 
 #ifdef LIMIT_BUILD_SIZE
-#define P21_MIN_BUILD_SIZE
+#define P021_MIN_BUILD_SIZE
 #undef PLUGIN_021_DEBUG
 #endif // ifdef LIMIT_BUILD_SIZE
 
 // Force minimal build size for development/debugging purposes
-#define P21_MIN_BUILD_SIZE
+//#undef P021_MIN_BUILD_SIZE
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
@@ -130,7 +130,7 @@ int32_t seconds2millis(int x) {
   return (uint32_t)(x * 1000);
 }
 
-# ifndef P21_MIN_BUILD_SIZE
+# ifndef P021_MIN_BUILD_SIZE
 int minutes2seconds(int x) {
   return x * 60;
 }
@@ -147,7 +147,7 @@ int seconds2hours(int x) {
   return x / (60 * 60);
 }
 
-# endif // ifndef P21_MIN_BUILD_SIZE
+# endif // ifndef P021_MIN_BUILD_SIZE
 
 // Operation modes for the control algorithm
 enum P021_opmode
@@ -280,27 +280,27 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                       F(P021_GUID_DONT_ALWAYS_SAVE),
                       P021_DONT_ALWAYS_SAVE == 0);
 
-      # ifndef P21_MIN_BUILD_SIZE
+      # ifndef P021_MIN_BUILD_SIZE
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
-      # endif // ifndef P21_MIN_BUILD_SIZE
+      # endif // ifndef P021_MIN_BUILD_SIZE
 
       addFormNumericBox(F("Auto-save interval"), F(P021_GUID_AUTOSAVE_TIMER), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       addUnit(F("minutes"));
 
-      # ifndef P21_MIN_BUILD_SIZE
+      # ifndef P021_MIN_BUILD_SIZE
       addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
-      # endif // ifndef P21_MIN_BUILD_SIZE
+      # endif // ifndef P021_MIN_BUILD_SIZE
 
       // Settings extension for new operation modes. Will reload the page.
       addFormSelector_YesNo(F("Extended functionality"), F(P021_GUID_EXT_FUNCT), extFunc, true);
 
       if (extFunc)
       {
-        # ifndef P21_MIN_BUILD_SIZE
+        # ifndef P021_MIN_BUILD_SIZE
 
         // Selection of timer units. Will reload the page.
         addFormSelector_YesNo(F("Long time span"), F(P021_GUID_LONG_TIMER_UNIT), bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT), true);
-        # endif // ifndef P21_MIN_BUILD_SIZE
+        # endif // ifndef P021_MIN_BUILD_SIZE
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
@@ -315,7 +315,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           String   unit1         = F("seconds");       // use minutes or seconds
           String   unit2         = F("seconds");       // use hours or seconds
 
-          # ifndef P21_MIN_BUILD_SIZE
+          # ifndef P021_MIN_BUILD_SIZE
 
           if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
           {
@@ -325,7 +325,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             unit1         = F("minutes");
             unit2         = F("hours");
           }
-          # endif // ifndef P21_MIN_BUILD_SIZE
+          # endif // ifndef P021_MIN_BUILD_SIZE
 
           // Minimum on time
           addFormNumericBox(F("Minimum running time"), F(P021_GUID_MIN_TIME), min_time, 0);
@@ -378,7 +378,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (newExtFunct && (bitRead(P021_FLAGS, P021_EXT_FUNCT)))
       {
         P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
-        # ifndef P21_MIN_BUILD_SIZE
+        # ifndef P021_MIN_BUILD_SIZE
         const bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
         const bool old_units = bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT) != 0;
 
@@ -399,11 +399,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           }
         }
         bitWrite(P021_FLAGS, P021_LONG_TIMER_UNIT, new_units);
-        # else // ifndef P21_MIN_BUILD_SIZE
+        # else // ifndef P021_MIN_BUILD_SIZE
         P021_MIN_TIME      = getFormItemInt(F(P021_GUID_MIN_TIME));
         P021_INTERVAL_TIME = getFormItemInt(F(P021_GUID_INTERVAL_TIME));
         P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
-        # endif // ifndef P21_MIN_BUILD_SIZE
+        # endif // ifndef P021_MIN_BUILD_SIZE
 
         bitWrite(P021_FLAGS, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
         bitWrite(P021_FLAGS, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
@@ -456,11 +456,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             isChanged       = true;
           }
 
-          # ifndef P21_MIN_BUILD_SIZE
+          # ifndef P021_MIN_BUILD_SIZE
           if (isRemote) {
             P021_remote[event->TaskIndex] = !essentiallyZero(result);
           }
-          #endif // ifndef P21_MIN_BUILD_SIZE
+          #endif // ifndef P021_MIN_BUILD_SIZE
 
           if (isChanged) {
             if (P021_DONT_ALWAYS_SAVE == 0) { // save only if explicitly enabled
@@ -528,7 +528,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Expected commands:
       // * levelcontrol,remote, [on|off]
 
-      # ifndef P21_MIN_BUILD_SIZE
+      # ifndef P021_MIN_BUILD_SIZE
       // parse string to extract the command
       const String command  = parseString(string, 1); // already converted to lowercase
       const String subcmd   = parseString(string, 2);
@@ -541,17 +541,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           if (event->Par2 == 1)
           {
             P021_remote[event->TaskIndex] = true;
-            # ifndef P21_MIN_BUILD_SIZE
+            # ifndef P021_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=on"));
-            # endif // ifndef P21_MIN_BUILD_SIZE
+            # endif // ifndef P021_MIN_BUILD_SIZE
             success = true;
           }
           else if (event->Par2 == 0)
           {
             P021_remote[event->TaskIndex] = false;
-            # ifndef P21_MIN_BUILD_SIZE
+            # ifndef P021_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=off"));
-            # endif // ifndef P21_MIN_BUILD_SIZE
+            # endif // ifndef P021_MIN_BUILD_SIZE
             success = true;
           }
         }
@@ -559,7 +559,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // If not successful rely upon ESPeasy framework to report the issue
       }
       P021_evaluate(event);
-      # endif // ifndef P21_MIN_BUILD_SIZE
+      # endif // ifndef P021_MIN_BUILD_SIZE
       break;
     }
 
@@ -643,9 +643,9 @@ void P021_check_autosafe(struct EventStruct *event)
     if (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) == 0) {
       if ((UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG) != 0) &&
           !essentiallyEqual(P021_SETPOINT, P021_SETP_LAST_STORED)) {
-        # ifndef P21_MIN_BUILD_SIZE
+        # ifndef P021_MIN_BUILD_SIZE
         addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
-        # endif // ifndef P21_MIN_BUILD_SIZE
+        # endif // ifndef P021_MIN_BUILD_SIZE
         P021_SETP_LAST_STORED = P021_SETPOINT;
         SaveSettings();
         UserVar.setUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG, 0);
@@ -918,8 +918,8 @@ bool P021_check_off(float value, float setpoint, float hysteresis, bool invert, 
 {
   if (force) { return false; }
   const float Threshold = symetric
-    ? P021_symetric_threshold(setpoint, hysteresis, invert)
-    : setpoint + ((invert ? -1.0f : 1.0f) * hysteresis);
+    ? P021_symetric_threshold(setpoint, hysteresis, !invert)
+    : setpoint + ((invert ? 1.0f : -1.0f) * hysteresis);
   return invert ? definitelyGreaterThan(value, Threshold) : definitelyLessThan(value, Threshold);
 }
 
