@@ -2,21 +2,24 @@
 #ifdef USES_P163
 
 // #######################################################################################################
-// ########################## Plugin 163: Counter - RadSens I2C radiation counter ########################
+// ######################## Plugin 163: Environment - RadSens I2C radiation counter ######################
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-13 tonhuisman: Use pluginstats to get average over last n samples for determining event threshold
+ *                        Add highvoltage subcommand to switch the high voltage off or on
  * 2024-08-12 tonhuisman: Start plugin for RadSens I2C radiation counter using RadSens library
  * (Newest changes on top)
  **/
 
 /** Commands:
  * radsens,calibration,<calibrationvalue> : Set new Calibration value in impulses per millirad. Default 105 imp/uR.
+ * radsens,highvoltage,<0|1>              : Switch the high voltage for the geiger tube off or on to reduce power consumption.
  */
 
 # define PLUGIN_163
 # define PLUGIN_ID_163          163
-# define PLUGIN_NAME_163        "Counter - RadSens I2C radiation counter"
+# define PLUGIN_NAME_163        "Environment - RadSens I2C radiation counter"
 # define PLUGIN_VALUENAME1_163  "Count"
 # define PLUGIN_VALUENAME2_163  "iDynamic"
 # define PLUGIN_VALUENAME3_163  "iStatic"
@@ -82,7 +85,11 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
     {
       P163_SET_LED_STATE(true);                                    // Device defaults
       P163_SET_LOW_POWER(false);
-      P163_CFG_THRESHOLD                         = -1;             // Threshold disabled
+      P163_CFG_THRESHOLD = -1;                                     // Threshold disabled
+      # if FEATURE_PLUGIN_STATS
+      P163_CFG_COUNT_AVG = 10;                                     // Take average over last 10 values
+      # endif // if FEATURE_PLUGIN_STATS
+
       Settings.TaskDeviceTimer[event->TaskIndex] = Settings.Delay; // Set default like non-TimerOptional
 
       success = true;
@@ -96,6 +103,12 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Events on Count-threshold"), F("chg"), P163_CFG_THRESHOLD, -1);
       addUnit(F("-1 = disabled"));
 
+      # if FEATURE_PLUGIN_STATS
+      addFormNumericBox(F("Use Count-average of values"), F("avg"), P163_CFG_COUNT_AVG, 1, PLUGIN_STATS_NR_ELEMENTS);
+      addUnit(concat(F("1.."), PLUGIN_STATS_NR_ELEMENTS));
+      addFormNote(F("Stats for the Count value must be enabled."));
+      # endif // if FEATURE_PLUGIN_STATS
+
       success = true;
       break;
     }
@@ -105,6 +118,9 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
       P163_SET_LOW_POWER(isFormItemChecked(F("lpmode")));
       P163_SET_LED_STATE(isFormItemChecked(F("led")));
       P163_CFG_THRESHOLD = getFormItemInt(F("chg"));
+      # if FEATURE_PLUGIN_STATS
+      P163_CFG_COUNT_AVG = getFormItemInt(F("avg"));
+      # endif // if FEATURE_PLUGIN_STATS
 
       success = true;
 

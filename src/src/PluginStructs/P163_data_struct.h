@@ -7,6 +7,7 @@
 # include <CG_RadSens.h>
 
 # define P163_CFG_THRESHOLD             PCONFIG(0)
+# define P163_CFG_COUNT_AVG             PCONFIG(1)
 
 # define P163_CONFIG_FLAGS              PCONFIG_ULONG(0) // All flags
 # define P163_CONFIG_LOW_POWER          0                // Flag indexes
@@ -41,7 +42,10 @@ private:
 
   CG_RadSens *sensor = nullptr;
 
-  int  _threshold    = 0;
+  int _threshold = 0;
+  # if FEATURE_PLUGIN_STATS
+  uint8_t _countAvg = 1;
+  # endif // if FEATURE_PLUGIN_STATS
   bool _lowPowerMode = false;
   bool _ledState     = true;
   bool _changeOnly   = false;
