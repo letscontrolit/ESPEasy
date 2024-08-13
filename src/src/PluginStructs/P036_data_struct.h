@@ -24,7 +24,11 @@
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
 // # define P036_CHECK_INDIVIDUAL_FONT // Enable to add extra logging for individual font calculation
 # ifndef P036_FEATURE_DISPLAY_PREVIEW
-#  define P036_FEATURE_DISPLAY_PREVIEW   1
+#  ifdef ESP8266_1M
+#   define P036_FEATURE_DISPLAY_PREVIEW   0 // Disabled for 1M builds
+#  else // ifdef ESP8266_1M
+#   define P036_FEATURE_DISPLAY_PREVIEW   1
+#  endif // ifdef ESP8266_1M
 # endif // ifndef P036_FEATURE_DISPLAY_PREVIEW
 # ifndef P036_FEATURE_ALIGN_PREVIEW
 #  define P036_FEATURE_ALIGN_PREVIEW     1
