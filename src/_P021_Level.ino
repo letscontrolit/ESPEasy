@@ -28,13 +28,13 @@
 ////# define PLUGIN_021_DEBUG
 # endif // ifndef/else BUILD_NO_DEBUG
 
-#ifdef LIMIT_BUILD_SIZE
-#define P021_MIN_BUILD_SIZE
-#undef PLUGIN_021_DEBUG
-#endif // ifdef LIMIT_BUILD_SIZE
+# ifdef LIMIT_BUILD_SIZE
+# define P021_MIN_BUILD_SIZE
+# undef PLUGIN_021_DEBUG
+# endif // ifdef LIMIT_BUILD_SIZE
 
 // Force minimal build size for development/debugging purposes
-//#undef P021_MIN_BUILD_SIZE
+////# define P021_MIN_BUILD_SIZE
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
@@ -260,7 +260,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(msg);
       }
       # endif // ifdef PLUGIN_021_DEBUG
-      const taskIndex_t check_task = P021_CHECK_TASK;  // Optimze reference
+      const taskIndex_t check_task = P021_CHECK_TASK; // Optimze reference
       addRowLabel(F("Input Task"));
       addTaskSelect(F(P021_GUID_CHECK_TASK), check_task);
 
@@ -312,10 +312,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           uint32_t min_time      = P021_MIN_TIME;      // Value to display for minimum timer
           uint32_t interval_time = P021_INTERVAL_TIME; // Value to display for max idling time
           uint32_t force_time    = P021_FORCE_TIME;    // Value for forces run
-          String   unit1         = F("seconds");       // use minutes or seconds
-          String   unit2         = F("seconds");       // use hours or seconds
 
           # ifndef P021_MIN_BUILD_SIZE
+          String unit1 = F("seconds");                 // use minutes or seconds
+          String unit2 = F("seconds");                 // use hours or seconds
 
           if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
           {
@@ -329,15 +329,21 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
           // Minimum on time
           addFormNumericBox(F("Minimum running time"), F(P021_GUID_MIN_TIME), min_time, 0);
+          # ifndef P021_MIN_BUILD_SIZE
           addUnit(unit1);
+          # endif // ifndef P021_MIN_BUILD_SIZE
 
           // Interval time (max idle time)
           addFormNumericBox(F("Maximum idle time"), F(P021_GUID_INTERVAL_TIME), interval_time, 0);
+          # ifndef P021_MIN_BUILD_SIZE
           addUnit(unit2);
+          # endif // ifndef P021_MIN_BUILD_SIZE
 
           // Interval circulation time (forced circulation)
           addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME), force_time, 1);
+          # ifndef P021_MIN_BUILD_SIZE
           addUnit(unit1);
+          # endif // ifndef P021_MIN_BUILD_SIZE
         }
 
         // Symetrical/asymetrical hysteresis [checkbox]
@@ -362,7 +368,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-
       const bool newExtFunct =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
 
       P021_CHECK_TASK       = getFormItemInt(F(P021_GUID_CHECK_TASK));
@@ -436,11 +441,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       const String value        = parseString(string, 2);
       const bool   isHysteresis = equals(command, F("sethysteresis"));
       const bool   isSetLevel   = equals(command, F("setlevel"));
-      const bool   isRemote     = equals(command, F("remote"));
+      ESPEASY_RULES_FLOAT_TYPE result{};
 
-      if (isSetLevel || isHysteresis || isRemote) {
-        ESPEASY_RULES_FLOAT_TYPE result{};
+      # ifndef P021_MIN_BUILD_SIZE
+      const bool isRemote = equals(command, F("remote"));
 
+      if (isRemote) {
+        P021_remote[event->TaskIndex] = !essentiallyZero(result);
+      }
+      #endif // ifndef P021_MIN_BUILD_SIZE
+
+      if (isSetLevel || isHysteresis) {
         if (!isError(Calculate(value, result))) {
           bool isChanged = false;
 
@@ -455,12 +466,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             P021_HYSTERESIS = result;
             isChanged       = true;
           }
-
-          # ifndef P021_MIN_BUILD_SIZE
-          if (isRemote) {
-            P021_remote[event->TaskIndex] = !essentiallyZero(result);
-          }
-          #endif // ifndef P021_MIN_BUILD_SIZE
 
           if (isChanged) {
             if (P021_DONT_ALWAYS_SAVE == 0) { // save only if explicitly enabled
@@ -529,6 +534,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // * levelcontrol,remote, [on|off]
 
       # ifndef P021_MIN_BUILD_SIZE
+
       // parse string to extract the command
       const String command  = parseString(string, 1); // already converted to lowercase
       const String subcmd   = parseString(string, 2);
@@ -670,7 +676,10 @@ void P021_evaluate(struct EventStruct *event)
   const bool symetric_hyst                   = bitRead(P021_FLAGS, P021_SYM_HYSTERESIS);
   bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
   bool remote_state                          = P021_remote[event->TaskIndex];
-  uint32_t timestamp                         = P021_timestamp[event->TaskIndex];
+  uint32_t   timestamp                       = P021_timestamp[event->TaskIndex];
+  const bool beyond_interval                 = timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME);
+  const bool beyond_force                    = timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME);
+  const bool beyond_min_time                 = timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME);
 
   // Get the control value from the external task. If task does not exist use the default
   if (validTaskIndex(TaskIndex))
@@ -718,13 +727,13 @@ void P021_evaluate(struct EventStruct *event)
 
       if (old_control_state == P021_STATE_IDLE) // Output was idling
       {
-        if ((timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME)) && ((uint32_t)P021_FORCE_TIME >= 1))
+        if ((beyond_interval) && (P021_FORCE_TIME > 1))
         {
           timestamp         = millis();
           new_control_state = P021_STATE_FORCE;
         }
       }
-      else if (timePassedSince(timestamp) < seconds2millis(P021_FORCE_TIME))
+      else if (beyond_force)
       {
         // Output was active shorter than the forced on time
         new_control_state = P021_STATE_FORCE; // Keep running in state FORCE
@@ -754,7 +763,7 @@ void P021_evaluate(struct EventStruct *event)
             timestamp         = millis();
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME))
+          else if (beyond_interval)
           {
             // Inactive for a long period, forced maintenance run
             timestamp         = millis();
@@ -767,7 +776,7 @@ void P021_evaluate(struct EventStruct *event)
 
           if (P021_check_off(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
           {
-            if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
+            if (beyond_min_time)
             {
               timestamp         = millis();
               new_control_state = P021_STATE_IDLE;
@@ -791,7 +800,7 @@ void P021_evaluate(struct EventStruct *event)
           {
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME))
+          else if (beyond_min_time)
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
@@ -806,7 +815,7 @@ void P021_evaluate(struct EventStruct *event)
             // Keep timestamp from moment pump was swiched on
             new_control_state = P021_STATE_ACTIVE;
           }
-          else if (timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME))
+          else if (beyond_force)
           {
             timestamp         = millis();
             new_control_state = P021_STATE_IDLE;
@@ -840,6 +849,7 @@ void P021_evaluate(struct EventStruct *event)
       relay_output = false; // Relay output state
       break;
   }
+  const int output_value = relay_output;
 
   // Actuate the output pin taking output invert flag into account
   if (validGpio(P021_GPIO_RELAY))
@@ -868,7 +878,8 @@ void P021_evaluate(struct EventStruct *event)
   // - The state of the internal state machine
   // - Timestamp for last change of the output signal
   // Note: the actual state of the output is not stored, it can be calculated from the control_state
-  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(((P021_control_state)new_control_state == P021_STATE_IDLE) ? 0 : 1));
+  // UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(((P021_control_state)new_control_state == P021_STATE_IDLE) ? 0 : 1));
+  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(output_value));
   UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE,  (float)new_control_state);
   P021_timestamp[event->TaskIndex] = timestamp;
 
@@ -878,6 +889,8 @@ void P021_evaluate(struct EventStruct *event)
   }
 }
 
+// Helper function for P021_check_on() and P021_check_off() to reduce code size
+// Return the threshold level for the symetrical hysteresis handling
 float P021_symetric_threshold(float setpoint, float hysteresis, bool invert) {
   const bool  isZero = essentiallyZero(hysteresis);
   const float delta  = (isZero ? 1.0f : (hysteresis / 2.0f));
