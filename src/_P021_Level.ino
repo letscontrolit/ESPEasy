@@ -251,7 +251,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
         // Add some debug information
-        String outpstring = (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off");
+        const String outpstring = (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off");
         String msg        = strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
                                       P021_printControlState(control_state),
                                       outpstring.c_str(),
@@ -309,21 +309,21 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), NR_ELEMENTS(optionValues), options, optionValues, P021_OPMODE);
 
         {
-          uint32_t min_time      = P021_MIN_TIME;      // Value to display for minimum timer
-          uint32_t interval_time = P021_INTERVAL_TIME; // Value to display for max idling time
-          uint32_t force_time    = P021_FORCE_TIME;    // Value for forces run
+          uint32_t min_time      = P021_MIN_TIME;          // Value to display for minimum timer
+          uint32_t interval_time = P021_INTERVAL_TIME;     // Value to display for max idling time
+          uint32_t force_time    = P021_FORCE_TIME;        // Value for forces run
 
           # ifndef P021_MIN_BUILD_SIZE
-          String unit1 = F("seconds");                 // use minutes or seconds
-          String unit2 = F("seconds");                 // use hours or seconds
+          const __FlashStringHelper *unit1 = F("sec"); // use minutes or seconds
+          const __FlashStringHelper *unit2 = F("sec"); // use hours or seconds
 
           if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
           {
             min_time      = seconds2minutes(P021_MIN_TIME);
             interval_time = seconds2hours(P021_INTERVAL_TIME);
             force_time    = seconds2minutes(P021_FORCE_TIME);
-            unit1         = F("minutes");
-            unit2         = F("hours");
+            unit1         = F("min");
+            unit2         = F("hrs");
           }
           # endif // ifndef P021_MIN_BUILD_SIZE
 
@@ -517,9 +517,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // I am not sure we want to reset the state at every init.
       // UserVar seems to be persistent
       UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
-      P021_remote[event->TaskIndex] = false; // Remote control state is "off"
-      P021_evaluate(event);                  // Calculate the new control outputs
-      sendData(event);                       // Force an update event for the plugin
+      P021_remote[event->TaskIndex]    = false;    // Remote control state is "off"
+      P021_timestamp[event->TaskIndex] = millis(); // Initialize last switching time
+      P021_evaluate(event);                        // Calculate the new control outputs
+      sendData(event);                             // Force an update event for the plugin
       success = true;
       break;
     }
