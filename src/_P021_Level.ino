@@ -252,13 +252,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
         // Add some debug information
-        const String outpstring = (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off");
-        String msg              = strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
-                                            P021_printControlState(control_state),
-                                            outpstring.c_str(),
-                                            P021_remote[event->TaskIndex],
-                                            millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex])));
-        addFormNote(msg);
+        const String outpstring = essentiallyZero(UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT)) ? F("off") : F("on");
+        addFormNote(strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
+                              P021_printControlState(control_state),
+                              outpstring.c_str(),
+                              P021_remote[event->TaskIndex],
+                              millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex]))));
       }
       # endif // ifdef PLUGIN_021_DEBUG
       const taskIndex_t check_task = P021_CHECK_TASK; // Optimze reference
@@ -377,7 +376,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       const bool newExtFunct  =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
-      uint16_t   flagRegister = P021_FLAGS; // Reduce expensive access to P021 to write new flags
+      uint16_t   flags = P021_FLAGS; // Reduce expensive access to P021 to write new flags
 
       P021_CHECK_TASK       = getFormItemInt(F(P021_GUID_CHECK_TASK));
       P021_CHECK_VALUE      = getFormItemInt(F(P021_GUID_CHECK_VALUE));
@@ -386,15 +385,15 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       P021_SETP_LAST_STORED = P021_SETPOINT;
       P021_HYSTERESIS       = getFormItemFloat(F(P021_GUID_HYSTERESIS));
       P021_AUTOSAVE_TIMER   = getFormItemInt(F(P021_GUID_AUTOSAVE_TIMER)) * 60; // Store in seconds
-      bitWrite(P021_FLAGS, (P021_INV_OUTPUT), isFormItemChecked(F(P021_GUID_INV_OUTPUT)));
+      bitWrite(flags, (P021_INV_OUTPUT), isFormItemChecked(F(P021_GUID_INV_OUTPUT)));
 
       // Save extended parameters only when they are selected and are shown on the page
-      if (newExtFunct && (bitRead(P021_FLAGS, P021_EXT_FUNCT)))
+      if (newExtFunct && (bitRead(flags, P021_EXT_FUNCT)))
       {
         P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
         # ifndef P021_MIN_BUILD_SIZE
         const bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
-        const bool old_units = bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT) != 0;
+        const bool old_units = bitRead(flags, P021_LONG_TIMER_UNIT) != 0;
 
         // Check if timer unit flag is stable to prevent misalignment
         if (new_units == old_units)
@@ -412,33 +411,33 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
           }
         }
-        bitWrite(flagRegister, P021_LONG_TIMER_UNIT, new_units);
+        bitWrite(flags, P021_LONG_TIMER_UNIT, new_units);
         # else // ifndef P021_MIN_BUILD_SIZE
         P021_MIN_TIME      = getFormItemInt(F(P021_GUID_MIN_TIME));
         P021_INTERVAL_TIME = getFormItemInt(F(P021_GUID_INTERVAL_TIME));
         P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
         # endif // ifndef P021_MIN_BUILD_SIZE
 
-        bitWrite(flagRegister, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
-        bitWrite(flagRegister, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
-        bitWrite(flagRegister, P021_SYM_HYSTERESIS, isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
-        bitWrite(flagRegister, P021_SLOW_EVAL,      isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
-        bitWrite(flagRegister, P021_STATE_OUTP,     isFormItemChecked(F(P021_GUID_STATE_OUTP)));
+        bitWrite(flags, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
+        bitWrite(flags, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
+        bitWrite(flags, P021_SYM_HYSTERESIS, isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
+        bitWrite(flags, P021_SLOW_EVAL,      isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
+        bitWrite(flags, P021_STATE_OUTP,     isFormItemChecked(F(P021_GUID_STATE_OUTP)));
       }
 
       // Set extended parameters to backwards compatible values when extension is disabled
       if (!newExtFunct)
       {
         P021_OPMODE = P021_OPMODE_CLASSIC;                  // Switch to classic control algorithm
-        bitWrite(flagRegister, P021_INV_INPUT,      false); // Standard input direction
-        bitWrite(flagRegister, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
-        bitWrite(flagRegister, P021_SLOW_EVAL,      false); // 10Hz evaluation
-        bitWrite(flagRegister, P021_STATE_OUTP,     false); // Don't provide state as value
+        bitWrite(flags, P021_INV_INPUT,      false); // Standard input direction
+        bitWrite(flags, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
+        bitWrite(flags, P021_SLOW_EVAL,      false); // 10Hz evaluation
+        bitWrite(flags, P021_STATE_OUTP,     false); // Don't provide state as value
         // Keep al other extra settings, thay should not affect CLASSIC mode
       }
 
-      bitWrite(flagRegister, P021_EXT_FUNCT, newExtFunct);
-      P021_FLAGS = flagRegister; // Don't forget to write back the new flags
+      bitWrite(flags, P021_EXT_FUNCT, newExtFunct);
+      P021_FLAGS = flags; // Don't forget to write back the new flags
       success    = true;
       break;
     }
@@ -589,7 +588,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_ONCE_A_SECOND:
     {
-      P021_check_autosafe(event); // This function relies on being called exactly once a second
+      P021_check_autosave(event); // This function relies on being called exactly once a second
 
       if (bitRead(P021_FLAGS, P021_SLOW_EVAL))
       {
@@ -645,7 +644,7 @@ const __FlashStringHelper* P021_printControlMode(int mode)
 // Check if updated control parameters should be saved to disk
 // This function relies on being called once a second for time keeping
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void P021_check_autosafe(struct EventStruct *event)
+void P021_check_autosave(struct EventStruct *event)
 {
   uint32_t autosaveTime = UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME);
 
@@ -688,11 +687,11 @@ void P021_evaluate(struct EventStruct *event)
   const bool symetric_hyst                   = bitRead(P021_FLAGS, P021_SYM_HYSTERESIS);
   bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
   bool remote_state                          = P021_remote[event->TaskIndex];
-  uint32_t   timestamp                       = P021_timestamp[event->TaskIndex];
-  const bool beyond_interval                 = timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME);
-  const bool beyond_force                    = timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME);
-  const bool beyond_min_time                 = timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME);
-  const float hysteresis                     = P021_HYSTERESIS; 
+  uint32_t    timestamp                      = P021_timestamp[event->TaskIndex];
+  const bool  beyond_interval                = timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME);
+  const bool  beyond_force                   = timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME);
+  const bool  beyond_min_time                = timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME);
+  const float hysteresis                     = P021_HYSTERESIS;
   const float setpoint                       = P021_SETPOINT;
 
   // Get the control value from the external task. If task does not exist use the default
