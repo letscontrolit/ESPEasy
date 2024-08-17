@@ -96,10 +96,21 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *buttonOptions[] = { F("Normal Switch"), F("Push Button Active Low"), F("Push Button Active High") };
-        const int buttonOptionValues[]             =
-        { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(F("Switch Button Type"), F("button"), NR_ELEMENTS(buttonOptionValues), buttonOptions, buttonOptionValues, PCONFIG(2));
+        const __FlashStringHelper *buttonOptions[] = {
+          F("Normal Switch"),
+          F("Push Button Active Low"),
+          F("Push Button Active High") };
+        const int buttonOptionValues[] = {
+          PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH,
+          PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW,
+          PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
+        addFormSelector(
+          F("Switch Button Type"),
+          F("button"),
+          NR_ELEMENTS(buttonOptionValues),
+          buttonOptions,
+          buttonOptionValues,
+          PCONFIG(2));
       }
 
       SwitchWebformLoad(
@@ -146,15 +157,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
       if (validGpio(CONFIG_PIN1))
       {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P001_data_struct());
-        P001_data_struct *P001_data =
-          static_cast<P001_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P001_data)
-        {
-          success = true;
-          P001_data->init(event);
-        }
+        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P001_data_struct(event));
       }
       break;
     }
@@ -168,15 +171,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       {
         P001_data->tenPerSecond(event);
       }
-      break;
-
       success = true;
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      removeTaskFromPort(createKey(PLUGIN_GPIO, CONFIG_PIN1));
       break;
     }
 
