@@ -52,6 +52,14 @@ struct P001_data_struct : public PluginTaskData_base {
   static uint8_t P001_getSwitchType(struct EventStruct *event);
   void init(struct EventStruct *event);
   void tenPerSecond(struct EventStruct *event);
+
+  uint32_t _debounceTimer{};
+  uint32_t _doubleClickTimer{};
+  uint32_t _longpressTimer{};
+
+  int16_t _longpressFired{};
+  int16_t _doubleClickCounter{};
+  int16_t _safeButtonCounter{};
 };
 
 #endif // ifdef USES_P001

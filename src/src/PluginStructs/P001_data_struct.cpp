@@ -65,18 +65,18 @@ void P001_data_struct::init(struct EventStruct *event)
   }
 
   // counters = 0
-  PCONFIG(7)      = 0; // doubleclick counter
-  PCONFIG_LONG(3) = 0; // safebutton counter
+  _doubleClickCounter      = 0; // doubleclick counter
+  _safeButtonCounter = 0; // safebutton counter
 
   // used to track if LP has fired
-  PCONFIG(6) = 0;
+  _longpressFired = 0;
 
   {
     // store millis for debounce, doubleclick and long press
     const unsigned long cur_millis = millis();
-    PCONFIG_LONG(0) = cur_millis; // debounce timer
-    PCONFIG_LONG(1) = cur_millis; // doubleclick timer
-    PCONFIG_LONG(2) = cur_millis; // longpress timer
+    _debounceTimer = cur_millis; // debounce timer
+    _doubleClickTimer = cur_millis; // doubleclick timer
+    _longpressTimer = cur_millis; // longpress timer
   }
 
   // set minimum value for doubleclick MIN interval speed
@@ -97,8 +97,8 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   /**************************************************************************\
      20181009 - @giig1967g: new doubleclick logic is:
      if there is a 'state' change, check debounce period.
-     Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
-     PCONFIG(7) contains the current status for doubleclick:
+     Then if doubleclick interval exceeded, reset _doubleClickCounter to 0
+     _doubleClickCounter contains the current status for doubleclick:
      0: start counting
      1: 1st click
      2: 2nd click
@@ -129,49 +129,49 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     //        {
     // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
     // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-    if (lround(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+    if (lround(P001_SAFE_BTN) && (state != currentStatus.state) && (_safeButtonCounter == 0))
     {
 # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
 # endif // ifndef BUILD_NO_DEBUG
-      PCONFIG_LONG(3) = 1;
+      _safeButtonCounter = 1;
     }
 
     // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
     else if ((state != currentStatus.state) || currentStatus.forceEvent)
     {
       // Reset SafeButton counter
-      PCONFIG_LONG(3) = 0;
+      _safeButtonCounter = 0;
 
       // reset timer for long press
-      PCONFIG_LONG(2) = millis();
-      PCONFIG(6) = 0;
+      _longpressTimer = millis();
+      _longpressFired = 0;
 
-      const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
+      const unsigned long debounceTime = timePassedSince(_debounceTimer);
 
       if (debounceTime >= (unsigned long)lround(P001_DEBOUNCE)) // de-bounce check
       {
-        const unsigned long deltaDC = timePassedSince(PCONFIG_LONG(1));
+        const unsigned long deltaDC = timePassedSince(_doubleClickTimer);
 
         if ((deltaDC >= (unsigned long)lround(P001_DC_MAX_INT)) ||
-            (PCONFIG(7) == 3))
+            (_doubleClickCounter == 3))
         {
           // reset timer for doubleclick
-          PCONFIG(7) = 0;
-          PCONFIG_LONG(1) = millis();
+          _doubleClickCounter = 0;
+          _doubleClickTimer = millis();
         }
 
         // just to simplify the reading of the code
         const int16_t DC      = P001_DOUBLECLICK;
-        const int16_t COUNTER = PCONFIG(7);
+        const int16_t COUNTER = _doubleClickCounter;
 
         // check settings for doubleclick according to the settings
         if (COUNTER == 0) {
           if ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))) {
-            PCONFIG(7)++;
+            _doubleClickCounter++;
           }
         } else {
-          PCONFIG(7)++;
+          _doubleClickCounter++;
         }
 
         currentStatus.state = state;
@@ -211,7 +211,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
             sendState = !sendState;
           }
 
-          if ((PCONFIG(7) == 3) && (P001_DOUBLECLICK > 0))
+          if ((_doubleClickCounter == 3) && (P001_DOUBLECLICK > 0))
           {
             output_value = 3; // double click
           }
@@ -261,7 +261,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           // reset Userdata so it displays the correct state value in the web page
           UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
         }
-        PCONFIG_LONG(0) = millis();
+        _debounceTimer = millis();
       }
 
       // Reset forceEvent
@@ -272,7 +272,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
     // just to simplify the reading of the code
 # define LP P001_LONGPRESS
-# define FIRED PCONFIG(6)
+# define FIRED _longpressFired
 
     // CASE 3: status unchanged. Checking longpress:
     // Check if LP is enabled and if LP has not fired yet
@@ -296,16 +296,16 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
       \**************************************************************************/
 
       // Reset SafeButton counter
-      PCONFIG_LONG(3) = 0;
+      _safeButtonCounter = 0;
 
-      const unsigned long deltaLP = timePassedSince(PCONFIG_LONG(2));
+      const unsigned long deltaLP = timePassedSince(_longpressTimer);
 
       if (deltaLP >= (unsigned long)lround(P001_LP_MIN_INT))
       {
         uint8_t output_value;
         bool    needToSendEvent = false;
 
-        PCONFIG(6) = 1;
+        _longpressFired = 1;
 
         switch (PCONFIG(2))
         {
@@ -370,12 +370,12 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     }
     else
     {
-      if (PCONFIG_LONG(3) == 1)
+      if (_safeButtonCounter == 1)
       { // Safe Button detected. Send EVENT value = 4
         const uint8_t SAFE_BUTTON_EVENT = 4;
 
         // Reset SafeButton counter
-        PCONFIG_LONG(3) = 0;
+        _safeButtonCounter = 0;
 
         // Create EVENT with value = 4 for SafeButton false positive detection
         const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
