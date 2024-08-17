@@ -2223,6 +2223,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       0,
       1
     };
+    constexpr int invertedCount = NR_ELEMENTS(invertedOptions);
     # ifdef P104_USE_ZONE_ACTIONS
     uint8_t actionCount = 0;
     const __FlashStringHelper *actionTypes[4];
@@ -2372,7 +2373,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Font
         addSelector(getPluginCustomArgName(index + P104_OFFSET_FONT),
-                    NR_ELEMENTS(fontOptions),
+                    fontCount,
                     fontTypes,
                     fontOptions,
                     nullptr,
@@ -2387,7 +2388,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Inverted
         addSelector(getPluginCustomArgName(index + P104_OFFSET_INVERTED),
-                    NR_ELEMENTS(invertedOptions),
+                    invertedCount,
                     invertedTypes,
                     invertedOptions,
                     nullptr,
@@ -2451,7 +2452,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Layout
         addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
-                    NR_ELEMENTS(layoutOptions),
+                    layoutCount,
                     layoutTypes,
                     layoutOptions,
                     nullptr,
@@ -2466,7 +2467,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         html_TD(); // Special effects
         addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
-                    NR_ELEMENTS(specialEffectOptions),
+                    specialEffectCount,
                     specialEffectTypes,
                     specialEffectOptions,
                     nullptr,
