@@ -49,12 +49,10 @@
 
 
 struct P001_data_struct : public PluginTaskData_base {
+  static uint8_t P001_getSwitchType(struct EventStruct *event);
   void init(struct EventStruct *event);
   void tenPerSecond(struct EventStruct *event);
-
-
 };
 
 #endif // ifdef USES_P001
-
 #endif // ifndef PLUGINSTRUCTS_P001_DATA_STRUCT_H

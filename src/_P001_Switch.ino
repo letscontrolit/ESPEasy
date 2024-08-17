@@ -86,7 +86,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *options[] = { F("Switch"), F("Dimmer") };
         const int optionValues[]             = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const uint8_t switchtype             = P001_getSwitchType(event);
+        const uint8_t switchtype             = P001_data_struct::P001_getSwitchType(event);
         addFormSelector(F("Switch Type"), F("type"), NR_ELEMENTS(optionValues), options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
