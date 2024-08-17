@@ -244,7 +244,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const bool extFunc = bitRead(P021_FLAGS, P021_EXT_FUNCT); // Extended functionality selected
+      const uint16_t flags   = P021_FLAGS;                     // shortcut to read existing configuration flags
+      const bool     extFunc = bitRead(flags, P021_EXT_FUNCT); // Extended functionality selected
 
        # ifdef PLUGIN_021_DEBUG
       {
@@ -252,11 +253,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
         // Add some debug information
         const String outpstring = (int)UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT) == 1 ? F("on") : F("off");
-        String msg        = strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
-                                      P021_printControlState(control_state),
-                                      outpstring.c_str(),
-                                      P021_remote[event->TaskIndex],
-                                      millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex])));
+        String msg              = strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
+                                            P021_printControlState(control_state),
+                                            outpstring.c_str(),
+                                            P021_remote[event->TaskIndex],
+                                            millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex])));
         addFormNote(msg);
       }
       # endif // ifdef PLUGIN_021_DEBUG
@@ -285,9 +286,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifndef P021_MIN_BUILD_SIZE
 
       addFormNumericBox(F("Auto-save interval"), F(P021_GUID_AUTOSAVE_TIMER), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
+      # ifndef P021_MIN_BUILD_SIZE
       addUnit(F("minutes"));
 
-      # ifndef P021_MIN_BUILD_SIZE
       addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
       # endif // ifndef P021_MIN_BUILD_SIZE
 
@@ -299,7 +300,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         # ifndef P021_MIN_BUILD_SIZE
 
         // Selection of timer units. Will reload the page.
-        addFormSelector_YesNo(F("Long time span"), F(P021_GUID_LONG_TIMER_UNIT), bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT), true);
+        addFormSelector_YesNo(F("Long time span"), F(P021_GUID_LONG_TIMER_UNIT), bitRead(flags, P021_LONG_TIMER_UNIT), true);
         # endif // ifndef P021_MIN_BUILD_SIZE
 
         // FormSelector with all operation mode options
@@ -308,58 +309,65 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
         addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), NR_ELEMENTS(optionValues), options, optionValues, P021_OPMODE);
 
+        // Add timer values depending on build size
+        //  - minimum build size: units are always in seconds; drop the units on the form
+        //  - standard build size: units are either seconds or minutes/hours
+        # ifdef P021_MIN_BUILD_SIZE
+
+        // Minimum on time
+        addFormNumericBox(F("Minimum running time"),    F(P021_GUID_MIN_TIME),      P021_MIN_TIME,      0);
+
+        // Interval time (max idle time)
+        addFormNumericBox(F("Maximum idle time"),       F(P021_GUID_INTERVAL_TIME), P021_INTERVAL_TIME, 0);
+
+        // Interval circulation time (forced circulation)
+        addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME),    P021_FORCE_TIME,    1);
+
+        # else // ifdef P021_MIN_BUILD_SIZE
+        uint32_t min_time      = P021_MIN_TIME;          // Value to display for minimum timer
+        uint32_t interval_time = P021_INTERVAL_TIME;     // Value to display for max idling time
+        uint32_t force_time    = P021_FORCE_TIME;        // Value for forces run
+
+        const __FlashStringHelper *unit1 = F("seconds"); // use minutes or seconds
+        const __FlashStringHelper *unit2 = F("seconds"); // use hours or seconds
+
+        if (bitRead(flags, P021_LONG_TIMER_UNIT))
         {
-          uint32_t min_time      = P021_MIN_TIME;          // Value to display for minimum timer
-          uint32_t interval_time = P021_INTERVAL_TIME;     // Value to display for max idling time
-          uint32_t force_time    = P021_FORCE_TIME;        // Value for forces run
-
-          # ifndef P021_MIN_BUILD_SIZE
-          const __FlashStringHelper *unit1 = F("sec"); // use minutes or seconds
-          const __FlashStringHelper *unit2 = F("sec"); // use hours or seconds
-
-          if (bitRead(P021_FLAGS, P021_LONG_TIMER_UNIT))
-          {
-            min_time      = seconds2minutes(P021_MIN_TIME);
-            interval_time = seconds2hours(P021_INTERVAL_TIME);
-            force_time    = seconds2minutes(P021_FORCE_TIME);
-            unit1         = F("min");
-            unit2         = F("hrs");
-          }
-          # endif // ifndef P021_MIN_BUILD_SIZE
-
-          // Minimum on time
-          addFormNumericBox(F("Minimum running time"), F(P021_GUID_MIN_TIME), min_time, 0);
-          # ifndef P021_MIN_BUILD_SIZE
-          addUnit(unit1);
-          # endif // ifndef P021_MIN_BUILD_SIZE
-
-          // Interval time (max idle time)
-          addFormNumericBox(F("Maximum idle time"), F(P021_GUID_INTERVAL_TIME), interval_time, 0);
-          # ifndef P021_MIN_BUILD_SIZE
-          addUnit(unit2);
-          # endif // ifndef P021_MIN_BUILD_SIZE
-
-          // Interval circulation time (forced circulation)
-          addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME), force_time, 1);
-          # ifndef P021_MIN_BUILD_SIZE
-          addUnit(unit1);
-          # endif // ifndef P021_MIN_BUILD_SIZE
+          min_time      = seconds2minutes(P021_MIN_TIME);
+          interval_time = seconds2hours(P021_INTERVAL_TIME);
+          force_time    = seconds2minutes(P021_FORCE_TIME);
+          unit1         = F("minutes");
+          unit2         = F("hours");
         }
 
+        // Minimum on time
+        addFormNumericBox(F("Minimum running time"), F(P021_GUID_MIN_TIME), min_time, 0);
+        addUnit(unit1);
+
+        // Interval time (max idle time)
+        addFormNumericBox(F("Maximum idle time"), F(P021_GUID_INTERVAL_TIME), interval_time, 0);
+        addUnit(unit2);
+
+        // Interval circulation time (forced circulation)
+        addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME), force_time, 1);
+        addUnit(unit1);
+        #endif // ifdef P021_MIN_BUILD_SIZE - else
+
+
         // Symetrical/asymetrical hysteresis [checkbox]
-        addFormCheckBox(F("Symetrical hysteresis"), F(P021_GUID_SYM_HYSTERESIS), bitRead(P021_FLAGS, P021_SYM_HYSTERESIS));
+        addFormCheckBox(F("Symetrical hysteresis"), F(P021_GUID_SYM_HYSTERESIS), bitRead(flags, P021_SYM_HYSTERESIS));
 
         // Extension period time calculated from start or stop time [checkbox]
-        addFormCheckBox(F("Extend at end"),         F(P021_GUID_EXTEND_END),     bitRead(P021_FLAGS, P021_EXTEND_END));
+        addFormCheckBox(F("Extend at end"),         F(P021_GUID_EXTEND_END),     bitRead(flags, P021_EXTEND_END));
 
         // Direction of input comparator ( normal = input>setpoint; invert = input<setpoint) [checkbox]
-        addFormCheckBox(F("Invert Input"),          F(P021_GUID_INV_INPUT),      bitRead(P021_FLAGS, P021_INV_INPUT));
+        addFormCheckBox(F("Invert Input"),          F(P021_GUID_INV_INPUT),      bitRead(flags, P021_INV_INPUT));
 
         // Control evaluation at low speed (1Hz) or high speed (10Hz) [checkbox]
-        addFormCheckBox(F("Slow evaluation"),       F(P021_GUID_SLOW_EVAL),      bitRead(P021_FLAGS, P021_SLOW_EVAL));
+        addFormCheckBox(F("Slow evaluation"),       F(P021_GUID_SLOW_EVAL),      bitRead(flags, P021_SLOW_EVAL));
 
         // Provide the controller state as second sensor output value [checkbox]
-        addFormCheckBox(F("State as output value"), F(P021_GUID_STATE_OUTP),     bitRead(P021_FLAGS, P021_STATE_OUTP));
+        addFormCheckBox(F("State as output value"), F(P021_GUID_STATE_OUTP),     bitRead(flags, P021_STATE_OUTP));
       }
 
       success = true;
@@ -368,7 +376,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      const bool newExtFunct =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
+      const bool newExtFunct  =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
+      uint16_t   flagRegister = P021_FLAGS; // Reduce expensive access to P021 to write new flags
 
       P021_CHECK_TASK       = getFormItemInt(F(P021_GUID_CHECK_TASK));
       P021_CHECK_VALUE      = getFormItemInt(F(P021_GUID_CHECK_VALUE));
@@ -403,35 +412,34 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
           }
         }
-        bitWrite(P021_FLAGS, P021_LONG_TIMER_UNIT, new_units);
+        bitWrite(flagRegister, P021_LONG_TIMER_UNIT, new_units);
         # else // ifndef P021_MIN_BUILD_SIZE
         P021_MIN_TIME      = getFormItemInt(F(P021_GUID_MIN_TIME));
         P021_INTERVAL_TIME = getFormItemInt(F(P021_GUID_INTERVAL_TIME));
         P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
         # endif // ifndef P021_MIN_BUILD_SIZE
 
-        bitWrite(P021_FLAGS, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
-        bitWrite(P021_FLAGS, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
-        bitWrite(P021_FLAGS, P021_SYM_HYSTERESIS, isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
-        bitWrite(P021_FLAGS, P021_SLOW_EVAL,      isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
-        bitWrite(P021_FLAGS, P021_STATE_OUTP,     isFormItemChecked(F(P021_GUID_STATE_OUTP)));
+        bitWrite(flagRegister, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
+        bitWrite(flagRegister, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
+        bitWrite(flagRegister, P021_SYM_HYSTERESIS, isFormItemChecked(F(P021_GUID_SYM_HYSTERESIS)));
+        bitWrite(flagRegister, P021_SLOW_EVAL,      isFormItemChecked(F(P021_GUID_SLOW_EVAL)));
+        bitWrite(flagRegister, P021_STATE_OUTP,     isFormItemChecked(F(P021_GUID_STATE_OUTP)));
       }
 
       // Set extended parameters to backwards compatible values when extension is disabled
       if (!newExtFunct)
       {
-        P021_OPMODE = P021_OPMODE_CLASSIC;                // Switch to classic control algorithm
-        bitWrite(P021_FLAGS, P021_INV_INPUT,      false); // Standard input direction
-        bitWrite(P021_FLAGS, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
-        bitWrite(P021_FLAGS, P021_SLOW_EVAL,      false); // 10Hz evaluation
-        bitWrite(P021_FLAGS, P021_STATE_OUTP,     false); // Don't provide state as value
+        P021_OPMODE = P021_OPMODE_CLASSIC;                  // Switch to classic control algorithm
+        bitWrite(flagRegister, P021_INV_INPUT,      false); // Standard input direction
+        bitWrite(flagRegister, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
+        bitWrite(flagRegister, P021_SLOW_EVAL,      false); // 10Hz evaluation
+        bitWrite(flagRegister, P021_STATE_OUTP,     false); // Don't provide state as value
         // Keep al other extra settings, thay should not affect CLASSIC mode
       }
 
-      // Update the extension flag last.
-      bitWrite(P021_FLAGS, P021_EXT_FUNCT, newExtFunct);
-
-      success = true;
+      bitWrite(flagRegister, P021_EXT_FUNCT, newExtFunct);
+      P021_FLAGS = flagRegister; // Don't forget to write back the new flags
+      success    = true;
       break;
     }
 
@@ -639,15 +647,17 @@ const __FlashStringHelper* P021_printControlMode(int mode)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P021_check_autosafe(struct EventStruct *event)
 {
+  uint32_t autosaveTime = UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME);
+
   // When set but not Save after change is set, don't want to save twice
   if ((P021_AUTOSAVE_TIMER > 0) && (P021_DONT_ALWAYS_SAVE != 0) &&
-      (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) > 0) &&                                    // Only check if timer is
-                                                                                                                // running
-      (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) <= P021_AUTOSAVE_TIMER))
+      (autosaveTime > 0) && // Only check if timer is running
+      (autosaveTime <= P021_AUTOSAVE_TIMER))
   {
-    UserVar.setUint32(event->TaskIndex, 3, UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) - 1u); // Count down per second
+    autosaveTime--;         // Count down one unit [second]
+    UserVar.setUint32(event->TaskIndex, 3, autosaveTime);
 
-    if (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) == 0) {
+    if (autosaveTime == 0) {
       if ((UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG) != 0) &&
           !essentiallyEqual(P021_SETPOINT, P021_SETP_LAST_STORED)) {
         # ifndef P021_MIN_BUILD_SIZE
@@ -669,6 +679,7 @@ void P021_check_autosafe(struct EventStruct *event)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P021_evaluate(struct EventStruct *event)
 {
+  // Note: several const values are defined here to reduce the code size when accessing the value multiple times
   const taskIndex_t TaskIndex                = P021_CHECK_TASK; // TaskIndex for supplying sensor plugin
   float value                                = 0.0f;            // Input value for control algorithm
   const P021_control_state old_control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
@@ -681,6 +692,8 @@ void P021_evaluate(struct EventStruct *event)
   const bool beyond_interval                 = timePassedSince(timestamp) >= seconds2millis(P021_INTERVAL_TIME);
   const bool beyond_force                    = timePassedSince(timestamp) >= seconds2millis(P021_FORCE_TIME);
   const bool beyond_min_time                 = timePassedSince(timestamp) >= seconds2millis(P021_MIN_TIME);
+  const float hysteresis                     = P021_HYSTERESIS; 
+  const float setpoint                       = P021_SETPOINT;
 
   // Get the control value from the external task. If task does not exist use the default
   if (validTaskIndex(TaskIndex))
@@ -693,11 +706,11 @@ void P021_evaluate(struct EventStruct *event)
     // Classic (original P021) stateless control using hysteresis only
     case P021_OPMODE_CLASSIC:
 
-      if (P021_check_on(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+      if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
       {
         new_control_state = P021_STATE_ACTIVE;
       }
-      else if (P021_check_off(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+      else if (P021_check_off(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
       {
         new_control_state = P021_STATE_IDLE;
       }
@@ -758,7 +771,7 @@ void P021_evaluate(struct EventStruct *event)
         // Output is inactive
         case P021_STATE_IDLE:
 
-          if (P021_check_on(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+          if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             // Setpoint comparator or remote request to activate the output
             timestamp         = millis();
@@ -775,7 +788,7 @@ void P021_evaluate(struct EventStruct *event)
         // Output is active due to setpoint comparator request
         case P021_STATE_ACTIVE:
 
-          if (P021_check_off(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+          if (P021_check_off(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             if (beyond_min_time)
             {
@@ -797,7 +810,7 @@ void P021_evaluate(struct EventStruct *event)
         // Output is active to extend a started cycle untill minimum time exceeded
         case P021_STATE_EXTEND:
 
-          if (P021_check_on(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+          if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             new_control_state = P021_STATE_ACTIVE;
           }
@@ -811,7 +824,7 @@ void P021_evaluate(struct EventStruct *event)
         // Output was forced active when operation mode switched to temperature control
         case P021_STATE_FORCE:
 
-          if (P021_check_on(value, P021_SETPOINT, P021_HYSTERESIS, invert_input, symetric_hyst, remote_state))
+          if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             // Keep timestamp from moment pump was swiched on
             new_control_state = P021_STATE_ACTIVE;
@@ -890,8 +903,10 @@ void P021_evaluate(struct EventStruct *event)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper function for P021_check_on() and P021_check_off() to reduce code size
 // Return the threshold level for the symetrical hysteresis handling
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float P021_symetric_threshold(float setpoint, float hysteresis, bool invert) {
   const bool  isZero = essentiallyZero(hysteresis);
   const float delta  = (isZero ? 1.0f : (hysteresis / 2.0f));
