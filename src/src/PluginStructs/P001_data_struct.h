@@ -55,16 +55,18 @@ struct P001_data_struct : public PluginTaskData_base {
 
   P001_data_struct(struct EventStruct *event);
   ~P001_data_struct();
+
   void tenPerSecond(struct EventStruct *event);
 
 private:
 
-  uint32_t _portStatus_key;
-
-  uint32_t _debounceTimer;
-  uint32_t _debounceInterval_ms;
-  uint32_t _doubleClickTimer;
-  uint32_t _longpressTimer;
+  uint32_t       _portStatus_key;
+  uint32_t       _debounceTimer;
+  uint32_t       _debounceInterval_ms;
+  uint32_t       _doubleClickTimer;
+  const uint32_t _doubleClickMaxInterval_ms;
+  uint32_t       _longpressTimer;
+  const uint32_t _longpressMinInterval_ms;
 
   int16_t _longpressFired;
   int16_t _doubleClickCounter;

@@ -109,6 +109,22 @@ void SwitchWebformSave(
   doubleClickEvent       = getFormItemInt(F("sw_dc"));
   doubleClickMaxInterval = getFormItemInt(F("sw_dcmaxinterval"));
 
+  if (doubleClickMaxInterval < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
+    doubleClickMaxInterval = SWITCH_DOUBLECLICK_MIN_INTERVAL;
+  }
+
+  if (doubleClickMaxInterval > SWITCH_DOUBLECLICK_MAX_INTERVAL) {
+    doubleClickMaxInterval = SWITCH_DOUBLECLICK_MAX_INTERVAL;
+  }
+
+  if (longPressMinInterval_ms < SWITCH_LONGPRESS_MIN_INTERVAL) {
+    longPressMinInterval_ms = SWITCH_LONGPRESS_MIN_INTERVAL;
+  }
+
+  if (longPressMinInterval_ms > SWITCH_LONGPRESS_MAX_INTERVAL) {
+    longPressMinInterval_ms = SWITCH_LONGPRESS_MAX_INTERVAL;
+  }
+
   longPressEvent          = getFormItemInt(F("sw_lp"));
   longPressMinInterval_ms = getFormItemInt(F("sw_lpmininterval"));
 

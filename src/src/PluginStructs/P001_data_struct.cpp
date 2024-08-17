@@ -24,7 +24,9 @@ P001_data_struct::P001_data_struct(struct EventStruct *event)
   _debounceTimer(0),
   _debounceInterval_ms(0),
   _doubleClickTimer(0),
+  _doubleClickMaxInterval_ms(P001_DC_MAX_INT),
   _longpressTimer(0),
+  _longpressMinInterval_ms(P001_LP_MIN_INT),
   _longpressFired(0),
   _doubleClickCounter(0),
   _safeButtonCounter(0),
@@ -88,18 +90,6 @@ P001_data_struct::P001_data_struct(struct EventStruct *event)
 
   _debounceInterval_ms = lround(P001_DEBOUNCE);
   _dcMode              = P001_DOUBLECLICK;
-
-  // set minimum value for doubleclick MIN interval speed
-  if (P001_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL)
-  {
-    P001_DC_MAX_INT = SWITCH_DOUBLECLICK_MIN_INTERVAL;
-  }
-
-  // set minimum value for longpress MIN interval speed
-  if (P001_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL)
-  {
-    P001_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
-  }
 }
 
 P001_data_struct::~P001_data_struct()
@@ -150,10 +140,12 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
 # endif // ifndef BUILD_NO_DEBUG
     _safeButtonCounter = 1;
+
+    return;
   }
 
   // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-  else if ((state != currentStatus.state) || currentStatus.forceEvent)
+  if ((state != currentStatus.state) || currentStatus.forceEvent)
   {
     // Reset SafeButton counter
     _safeButtonCounter = 0;
@@ -168,7 +160,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     {
       const unsigned long deltaDC = timePassedSince(_doubleClickTimer);
 
-      if ((deltaDC >= (unsigned long)lround(P001_DC_MAX_INT)) ||
+      if ((deltaDC >= _doubleClickMaxInterval_ms) ||
           (_doubleClickCounter == 3))
       {
         // reset timer for doubleclick
@@ -282,19 +274,16 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     currentStatus.forceEvent = 0;
 
     savePortStatus(_portStatus_key, currentStatus);
+    return;
   }
 
   // just to simplify the reading of the code
-# define LP P001_LONGPRESS
-# define FIRED _longpressFired
+  const int16_t LP = P001_LONGPRESS;
 
   // CASE 3: status unchanged. Checking longpress:
   // Check if LP is enabled and if LP has not fired yet
-  else if (!FIRED && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1))))
+  if (!_longpressFired && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1))))
   {
-# undef LP
-# undef FIRED
-
     /**************************************************************************\
        20181009 - @giig1967g: new longpress logic is:
        if there is no 'state' change, check if longpress interval reached
@@ -314,7 +303,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
     const unsigned long deltaLP = timePassedSince(_longpressTimer);
 
-    if (deltaLP >= (unsigned long)lround(P001_LP_MIN_INT))
+    if (deltaLP >= _longpressMinInterval_ms)
     {
       uint8_t output_value;
       bool    needToSendEvent = false;
@@ -381,65 +370,40 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
       }
       savePortStatus(_portStatus_key, currentStatus);
     }
+    return;
   }
-  else
-  {
-    if (_safeButtonCounter == 1)
-    { // Safe Button detected. Send EVENT value = 4
-      const uint8_t SAFE_BUTTON_EVENT = 4;
 
-      // Reset SafeButton counter
-      _safeButtonCounter = 0;
+  if (_safeButtonCounter == 1)
+  { // Safe Button detected. Send EVENT value = 4
+    const uint8_t SAFE_BUTTON_EVENT = 4;
 
-      // Create EVENT with value = 4 for SafeButton false positive detection
-      const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
-      UserVar.setFloat(event->TaskIndex, 0, SAFE_BUTTON_EVENT);
+    // Reset SafeButton counter
+    _safeButtonCounter = 0;
+
+    // Create EVENT with value = 4 for SafeButton false positive detection
+    const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
+    UserVar.setFloat(event->TaskIndex, 0, SAFE_BUTTON_EVENT);
 
 # ifndef BUILD_NO_DEBUG
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO))
-      {
-        addLogMove(LOG_LEVEL_INFO,
-                   strformat(F("SW  : SafeButton: false positive detected. GPIO= %d State=%d"), _gpioPin, tempUserVar));
-      }
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+    {
+      addLogMove(LOG_LEVEL_INFO,
+                 strformat(F("SW  : SafeButton: false positive detected. GPIO= %d State=%d"), _gpioPin, tempUserVar));
+    }
 # endif // ifndef BUILD_NO_DEBUG
 
-      // send task event: DO NOT SEND TASK EVENT
-      // sendData(event);
-      // send monitor event
-      if (currentStatus.monitor)
-      {
-        sendMonitorEvent(monitorEventString, _gpioPin, SAFE_BUTTON_EVENT);
-      }
-
-      // reset Userdata so it displays the correct state value in the web page
-      UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
+    // send task event: DO NOT SEND TASK EVENT
+    // sendData(event);
+    // send monitor event
+    if (currentStatus.monitor)
+    {
+      sendMonitorEvent(monitorEventString, _gpioPin, SAFE_BUTTON_EVENT);
     }
+
+    // reset Userdata so it displays the correct state value in the web page
+    UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
   }
-
-  // OUTPUT PIN
-
-  /*
-          }
-
-                  else if ((state != currentStatus.state) || currentStatus.forceEvent) {
-                    // Reset forceEvent
-                    currentStatus.forceEvent = 0;
-                    currentStatus.state = state;
-                    UserVar.setFloat(event->TaskIndex, 0, state);
-
-                    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                      String log = F("SW  : GPIO=");
-                      log += _gpioPin;
-                      log += F(" State=");
-                      log += state ? '1' : '0';
-                      addLog(LOG_LEVEL_INFO, log);
-                    }
-                    sendData(event);
-                    savePortStatus(_portStatus_key, currentStatus);
-
-                  }
-   */
 }
 
 #endif // ifdef USES_P001

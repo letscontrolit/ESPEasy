@@ -218,15 +218,6 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_LONG(1) = millis(); // doubleclick timer
         PCONFIG_LONG(2) = millis(); // longpress timer
 
-        // @giig1967g-20181022: set minimum value for doubleclick MIN max speed
-        if (P019_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
-          P019_DC_MAX_INT = SWITCH_DOUBLECLICK_MIN_INTERVAL;
-        }
-
-        // @giig1967g-20181022: set minimum value for longpress MIN max speed
-        if (P019_LP_MIN_INT < SWITCH_LONGPRESS_MIN_INTERVAL) {
-          P019_LP_MIN_INT = SWITCH_LONGPRESS_MIN_INTERVAL;
-        }
 
         // setPinState(PLUGIN_ID_019, CONFIG_PORT, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
         savePortStatus(key, newStatus);
