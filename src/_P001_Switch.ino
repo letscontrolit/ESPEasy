@@ -91,7 +91,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
-          addFormNumericBox(F("Dim value"), F("dimvalue"), PCONFIG(1), 0, 255);
+          addFormNumericBox(F("Dim value"), F("dimvalue"), P001_DIMMER_VALUE, 0, 255);
         }
       }
 
@@ -110,7 +110,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
           NR_ELEMENTS(buttonOptionValues),
           buttonOptions,
           buttonOptionValues,
-          PCONFIG(2));
+          P001_BUTTON_TYPE);
       }
 
       SwitchWebformLoad(
@@ -128,14 +128,14 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("type"));
+      P001_SWITCH_OR_DIMMER = getFormItemInt(F("type"));
 
-      if (PCONFIG(0) == PLUGIN_001_TYPE_DIMMER)
+      if (P001_SWITCH_OR_DIMMER == PLUGIN_001_TYPE_DIMMER)
       {
-        PCONFIG(1) = getFormItemInt(F("dimvalue"));
+        P001_DIMMER_VALUE = getFormItemInt(F("dimvalue"));
       }
 
-      PCONFIG(2) = getFormItemInt(F("button"));
+      P001_BUTTON_TYPE = getFormItemInt(F("button"));
 
       SwitchWebformSave(
         event->TaskIndex,
@@ -195,9 +195,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       digitalWrite(event->Par1, event->Par2);
 
       // setPinState(PLUGIN_ID_001, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      
+
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_GPIO, event->Par1);
+      const uint32_t   key        = createKey(PLUGIN_GPIO, event->Par1);
       portStatusStruct tempStatus = globalMapPortStatus[key];
 
       tempStatus.state = event->Par2;

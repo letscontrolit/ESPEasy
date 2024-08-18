@@ -9,7 +9,7 @@
 // TD-er: Needed to fix a mistake in earlier fixes.
 uint8_t P001_data_struct::P001_getSwitchType(struct EventStruct *event)
 {
-  const uint8_t choice = PCONFIG(0);
+  const uint8_t choice = P001_SWITCH_OR_DIMMER;
 
   if ((choice == 2) || // Old implementation for Dimmer
       (choice == PLUGIN_001_TYPE_DIMMER))
@@ -170,7 +170,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
       const bool currentOutputState = currentStatus.output;
       bool new_outputState          = currentOutputState;
 
-      switch (PCONFIG(2))
+      switch (P001_BUTTON_TYPE)
       {
         case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
           new_outputState = state;
@@ -217,7 +217,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         {
           if (sendState)
           {
-            output_value = PCONFIG(1);
+            output_value = P001_DIMMER_VALUE;
 
             // Only set type to being dimmer when setting a value else it is "switched off".
             event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
@@ -300,7 +300,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
         _longpressFired = true;
 
-        switch (PCONFIG(2))
+        switch (P001_BUTTON_TYPE)
         {
           case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
             needToSendEvent = true;
@@ -366,7 +366,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   }
 
   if (_safeButtonCounter == 1)
-  { 
+  {
     // Safe Button detected. Send EVENT value = 4
     constexpr uint8_t SAFE_BUTTON_EVENT = 4;
 

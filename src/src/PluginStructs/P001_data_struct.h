@@ -14,8 +14,8 @@
    3: send boot state (true,false)
    4: use doubleclick (0,1,2,3)
    5: use longpress (0,1,2,3)
-   6: LP fired (true,false)
-   7: doubleclick counter (=0,1,2,3)
+   6: LP fired (true,false)           20240818 GN: No longer used
+   7: doubleclick counter (=0,1,2,3)  20240818 GN: No longer used
 
    TaskDevicePluginConfigFloat settings:
    0: debounce interval ms
@@ -23,7 +23,7 @@
    2: longpress interval ms
    3: use safebutton (=0,1)
 
-   TaskDevicePluginConfigLong settings:
+   TaskDevicePluginConfigLong settings:  (20240818 GN: No longer used)
    0: clickTime debounce ms
    1: clickTime doubleclick ms
    2: clickTime longpress ms
@@ -38,14 +38,17 @@
 # define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW   1
 # define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
 
+# define P001_SWITCH_OR_DIMMER PCONFIG(0)
+# define P001_DIMMER_VALUE     PCONFIG(1)
+# define P001_BUTTON_TYPE      PCONFIG(2) // (normal, push high, push low)
 
-# define P001_BOOTSTATE     PCONFIG(3)
-# define P001_DEBOUNCE      PCONFIG_FLOAT(0)
-# define P001_DOUBLECLICK   PCONFIG(4)
-# define P001_DC_MAX_INT    PCONFIG_FLOAT(1)
-# define P001_LONGPRESS     PCONFIG(5)
-# define P001_LP_MIN_INT    PCONFIG_FLOAT(2)
-# define P001_SAFE_BTN      PCONFIG_FLOAT(3)
+# define P001_BOOTSTATE        PCONFIG(3)
+# define P001_DEBOUNCE         PCONFIG_FLOAT(0)
+# define P001_DOUBLECLICK      PCONFIG(4)
+# define P001_DC_MAX_INT       PCONFIG_FLOAT(1)
+# define P001_LONGPRESS        PCONFIG(5)
+# define P001_LP_MIN_INT       PCONFIG_FLOAT(2)
+# define P001_SAFE_BTN         PCONFIG_FLOAT(3)
 
 
 struct P001_data_struct : public PluginTaskData_base {
@@ -71,7 +74,7 @@ private:
   int16_t _doubleClickCounter;
   int16_t _safeButtonCounter;
 
-  const uint8_t  _gpioPin;
+  const uint8_t _gpioPin;
   const uint8_t _dcMode; // use doubleclick (0,1,2,3)
   const bool    _safeButton;
   bool          _longpressFired;
