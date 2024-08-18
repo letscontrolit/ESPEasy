@@ -196,12 +196,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       Scheduler.clearGPIOTimer(PLUGIN_MCP, event->Par1);
       GPIO_MCP_Write(event->Par1, event->Par2);
 
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
       // WARNING: operator [] creates an entry in the map if key does not exist
       const uint32_t key = createKey(PLUGIN_MCP, event->Par1);
-      tempStatus = globalMapPortStatus[key];
+      portStatusStruct tempStatus = globalMapPortStatus[key];
 
       tempStatus.state        = event->Par2;
       tempStatus.mode         = PIN_MODE_OUTPUT;
