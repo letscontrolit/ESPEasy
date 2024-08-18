@@ -2,6 +2,7 @@
 
 #ifdef USES_P001
 
+# include "../Helpers/_Plugin_Helper_GPIO.h"
 # include "../Helpers/_Plugin_Helper_webform.h"
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -32,44 +33,33 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
 {
   _portStatus_key = createKey(PLUGIN_GPIO, _gpioPin);
 
-  // Read current status or create empty if it does not exist
-  portStatusStruct newStatus = globalMapPortStatus[_portStatus_key];
-
-  // read and store current state to prevent switching at boot time
-  newStatus.state  = GPIO_Read_Switch_State(event);
-  newStatus.output = newStatus.state;
-
-  // add this GPIO/port as a task
-  if (newStatus.task < 3) {
-    newStatus.task++;
-  }
+  uint8_t pinModeValue = PIN_MODE_INPUT;
 
   // setPinState(PLUGIN_ID_001, _gpioPin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
   //  if it is in the device list we assume it's an input pin
   if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
   {
     setInternalGPIOPullupMode(_gpioPin);
-    newStatus.mode = PIN_MODE_INPUT_PULLUP;
+    pinModeValue = PIN_MODE_INPUT_PULLUP;
   }
   else
   {
     pinMode(_gpioPin, INPUT);
-    newStatus.mode = PIN_MODE_INPUT;
+    pinModeValue = PIN_MODE_INPUT;
   }
 
-  // if boot state must be send, inverse default state
-  // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
-  if (P001_BOOTSTATE)
-  {
-    newStatus.state  = !newStatus.state;
-    newStatus.output = !newStatus.output;
-  }
-  savePortStatus(_portStatus_key, newStatus);
 
-  // set initial UserVar of the switch
-  const float stateValue = Settings.TaskDevicePin1Inversed[event->TaskIndex] ? !newStatus.state : newStatus.state;
+  // read and store current state to prevent switching at boot time
+  // "state" could be -1, 0 or 1
+  const int8_t state = GPIO_Read_Switch_State(event);
 
-  UserVar.setFloat(event->TaskIndex, 0, stateValue);
+  GPIO_plugin_helper_init(event,
+                          _portStatus_key,
+                          _gpioPin,
+                          state,
+                          pinModeValue,
+                          P001_BOOTSTATE
+                          );
 
   // store millis for debounce, doubleclick and long press
   const unsigned long cur_millis = millis();

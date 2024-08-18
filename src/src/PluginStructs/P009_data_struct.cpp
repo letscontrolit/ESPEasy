@@ -2,6 +2,7 @@
 
 #ifdef USES_P009
 
+# include "../Helpers/_Plugin_Helper_GPIO.h"
 # include "../Helpers/_Plugin_Helper_webform.h"
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -26,42 +27,22 @@ P009_data_struct::P009_data_struct(struct EventStruct *event) :
 
   _portStatus_key = createKey(PLUGIN_MCP, _mcpPin);
 
-  // Read current status or create empty if it does not exist
-  portStatusStruct newStatus = globalMapPortStatus[_portStatus_key];
-
   // read and store current state to prevent switching at boot time
   // "state" could be -1, 0 or 1
-  newStatus.state = GPIO_MCP_Read(_mcpPin);
+  const int8_t state = GPIO_MCP_Read(_mcpPin);
+
+  GPIO_plugin_helper_init(event,
+                          _portStatus_key,
+                          _mcpPin,
+                          state,
+                          (state == -1) ?  PIN_MODE_OFFLINE : PIN_MODE_INPUT_PULLUP,
+                          P009_BOOTSTATE
+                          );
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO,
-           concat(F("MCP INIT="), newStatus.state));
+           concat(F("MCP INIT="), state));
   }
-  newStatus.output = newStatus.state;
-  newStatus.mode   = (newStatus.state == -1) ?  PIN_MODE_OFFLINE : PIN_MODE_INPUT_PULLUP;
-
-  // @giig1967g: if it is in the device list we assume it's an input pin
-  // add this GPIO/port as a task
-  if (newStatus.task < 3) {
-    newStatus.task++;
-  }
-
-
-  // @giig1967g-20181022: set initial UserVar of the switch
-  if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-    UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
-  } else {
-    UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
-  }
-
-  // if boot state must be send, inverse default state
-  // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
-  if (P009_BOOTSTATE) {
-    newStatus.state = !newStatus.state;
-  }
-
-  // setPinState(PLUGIN_ID_009, _mcpPin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
-  savePortStatus(_portStatus_key, newStatus);
 
   // store millis for debounce, doubleclick and long press
   const unsigned long cur_millis = millis();
