@@ -56,5 +56,5 @@ private:
 # endif // if FEATURE_I2C_DEVICE_CHECK
 };
 
-#endif // ifdef USES_P009
-#endif // ifndef PLUGINSTRUCTS_P009_DATA_STRUCT_H
+#endif  // ifdef USES_P009
+#endif  // ifndef PLUGINSTRUCTS_P009_DATA_STRUCT_H

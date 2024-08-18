@@ -4,6 +4,16 @@
 
 #include "../../_Plugin_Helper.h"
 
+#define SWITCH_DC_DISABLED                   0
+#define SWITCH_DC_LOW                        1
+#define SWITCH_DC_HIGH                       2
+#define SWITCH_DC_BOTH                       3
+#define SWITCH_LONGPRESS_DISABLED            0
+#define SWITCH_LONGPRESS_LOW                 1
+#define SWITCH_LONGPRESS_HIGH                2
+#define SWITCH_LONGPRESS_BOTH                3
+
+
 struct GPIO_plugin_helper_data_t {
   GPIO_plugin_helper_data_t(
     pluginID_t pluginNumber,
@@ -12,41 +22,41 @@ struct GPIO_plugin_helper_data_t {
     uint32_t   doubleClickMaxInterval_ms,
     uint32_t   longpressMinInterval_ms,
     uint8_t    dcMode,
+    uint8_t longpressEvent,
     bool       safeButton,
     bool       sendBootState);
 
   ~GPIO_plugin_helper_data_t();
 
-  bool init(
-    struct EventStruct *event,
-    int8_t              pinState,
-    uint8_t             pinModeValue);
+  bool init(struct EventStruct *event,
+            int8_t              pinState,
+            uint8_t             pinModeValue);
 
-  uint32_t       _portStatus_key;
-  uint32_t       _debounceTimer;
-  const uint32_t _debounceInterval_ms;
-  uint32_t       _doubleClickTimer;
-  const uint32_t _doubleClickMaxInterval_ms;
-  uint32_t       _longpressTimer;
-  const uint32_t _longpressMinInterval_ms;
+ void tenPerSecond(
+   struct EventStruct        *event,
+   const __FlashStringHelper *monitorEventString,
+   int8_t                     pinState);
+
+
+  const uint32_t   _portStatus_key;
+  const uint32_t   _debounceInterval_ms;
+  const uint32_t   _doubleClickMaxInterval_ms;
+  const uint32_t   _longpressMinInterval_ms;
+  uint32_t         _debounceTimer;
+  uint32_t         _doubleClickTimer;
+  uint32_t         _longpressTimer;
 
   int16_t _doubleClickCounter;
   int16_t _safeButtonCounter;
 
   const uint16_t _pin;
 
+  const pluginID_t _pluginNumber;
   const uint8_t _dcMode; // use doubleclick (0,1,2,3)
+  const uint8_t _longpressEvent;
   const bool    _safeButton;
+  const bool    _sendBootState;
   bool          _longpressFired;
-  const  bool   _sendBootState;
 };
 
-
-/*
-   void GPIO_plugin_helper_tenPerSecond(
-   struct EventStruct        *event,
-   const __FlashStringHelper *prefix,
-   GPIO_plugin_helper_data_t& data,
-   int8_t                     pinState);
- */
 #endif // ifndef HELPERS__PLUGIN_HELPER_GPIO_H

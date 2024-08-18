@@ -3,16 +3,8 @@
 
 #include "../Globals/Plugins.h"
 
+#include "../Helpers/_Plugin_Helper_GPIO.h"
 #include "../../ESPEasy_common.h"
-
-#define SWITCH_DC_DISABLED                   0
-#define SWITCH_DC_LOW                        1
-#define SWITCH_DC_HIGH                       2
-#define SWITCH_DC_BOTH                       3
-#define SWITCH_LONGPRESS_DISABLED            0
-#define SWITCH_LONGPRESS_LOW                 1
-#define SWITCH_LONGPRESS_HIGH                2
-#define SWITCH_LONGPRESS_BOTH                3
 
 
 void SwitchWebformLoad(

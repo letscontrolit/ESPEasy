@@ -28,6 +28,7 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
     P001_DC_MAX_INT,
     P001_LP_MIN_INT,
     P001_DOUBLECLICK,
+    P001_LONGPRESS,
     P001_SAFE_BTN != 0,
     P001_BOOTSTATE)
 {
@@ -137,6 +138,9 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         _data._doubleClickCounter++;
       }
 
+      // FIXME TD-er: Must add handling of next few lines in GPIO_plugin_helper_data_t::tenPerSecond() so we can get rid of ducplicate code
+      // here
+
       currentStatus.state = state;
       const bool currentOutputState = currentStatus.output;
       bool new_outputState          = currentOutputState;
@@ -235,15 +239,12 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     return;
   }
 
-  // just to simplify the reading of the code
-  const int16_t LP = P001_LONGPRESS;
-
   // CASE 3: status unchanged. Checking longpress:
   // Check if LP is enabled and if LP has not fired yet
   if (!_data._longpressFired) {
-    if ((LP == SWITCH_LONGPRESS_BOTH) ||                  // "Active on LOW & HIGH (EVENT= 10 or 11)"
-        ((LP == SWITCH_LONGPRESS_LOW) && (state == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
-        ((LP == SWITCH_LONGPRESS_HIGH) && (state == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
+    if ((_data._longpressEvent == SWITCH_LONGPRESS_BOTH) ||                  // "Active on LOW & HIGH (EVENT= 10 or 11)"
+        ((_data._longpressEvent == SWITCH_LONGPRESS_LOW) && (state == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
+        ((_data._longpressEvent == SWITCH_LONGPRESS_HIGH) && (state == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
     {
       /**************************************************************************\
          20181009 - @giig1967g: new longpress logic is:
