@@ -5,8 +5,14 @@
 
 #include "../../ESPEasy_common.h"
 
-#define SWITCH_DOUBLECLICK_MIN_INTERVAL      1000
-#define SWITCH_LONGPRESS_MIN_INTERVAL        500
+#define SWITCH_DC_DISABLED                   0
+#define SWITCH_DC_LOW                        1
+#define SWITCH_DC_HIGH                       2
+#define SWITCH_DC_BOTH                       3
+#define SWITCH_LONGPRESS_DISABLED            0
+#define SWITCH_LONGPRESS_LOW                 1
+#define SWITCH_LONGPRESS_HIGH                2
+#define SWITCH_LONGPRESS_BOTH                3
 
 
 void SwitchWebformLoad(

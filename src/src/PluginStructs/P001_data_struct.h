@@ -62,7 +62,7 @@ private:
 
   uint32_t       _portStatus_key;
   uint32_t       _debounceTimer;
-  uint32_t       _debounceInterval_ms;
+  const uint32_t _debounceInterval_ms;
   uint32_t       _doubleClickTimer;
   const uint32_t _doubleClickMaxInterval_ms;
   uint32_t       _longpressTimer;
@@ -72,9 +72,9 @@ private:
   int16_t _doubleClickCounter;
   int16_t _safeButtonCounter;
 
-  int8_t  _gpioPin;
-  uint8_t _dcMode; // use doubleclick (0,1,2,3)
-  bool    _safeButton;
+  const int8_t  _gpioPin;
+  const uint8_t _dcMode; // use doubleclick (0,1,2,3)
+  const bool    _safeButton;
 };
 
 #endif // ifdef USES_P001

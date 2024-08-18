@@ -19,25 +19,17 @@ uint8_t P001_data_struct::P001_getSwitchType(struct EventStruct *event)
   return PLUGIN_001_TYPE_SWITCH;
 }
 
-P001_data_struct::P001_data_struct(struct EventStruct *event)
-  : _portStatus_key(0),
-  _debounceTimer(0),
-  _debounceInterval_ms(0),
-  _doubleClickTimer(0),
+P001_data_struct::P001_data_struct(struct EventStruct *event) :
+  _debounceInterval_ms(P001_DEBOUNCE),
   _doubleClickMaxInterval_ms(P001_DC_MAX_INT),
-  _longpressTimer(0),
   _longpressMinInterval_ms(P001_LP_MIN_INT),
   _longpressFired(0),
   _doubleClickCounter(0),
   _safeButtonCounter(0),
-  _gpioPin(-1),
-  _dcMode(0)
+  _gpioPin(CONFIG_PIN1),
+  _dcMode(P001_DOUBLECLICK),
+  _safeButton(P001_SAFE_BTN != 0)
 {
-  if (validGpio(CONFIG_PIN1)) {
-    return;
-  }
-  _gpioPin        = CONFIG_PIN1;
-  _safeButton     = !essentiallyZero(P001_SAFE_BTN);
   _portStatus_key = createKey(PLUGIN_GPIO, _gpioPin);
 
   // Read current status or create empty if it does not exist
@@ -87,14 +79,11 @@ P001_data_struct::P001_data_struct(struct EventStruct *event)
   _debounceTimer    = cur_millis; // debounce timer
   _doubleClickTimer = cur_millis; // doubleclick timer
   _longpressTimer   = cur_millis; // longpress timer
-
-  _debounceInterval_ms = lround(P001_DEBOUNCE);
-  _dcMode              = P001_DOUBLECLICK;
 }
 
 P001_data_struct::~P001_data_struct()
 {
-  if (_gpioPin != -1) {
+  if (_portStatus_key != 0) {
     removeTaskFromPort(_portStatus_key);
   }
 }
@@ -168,12 +157,11 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         _doubleClickTimer   = millis();
       }
 
-      // just to simplify the reading of the code
-      const int16_t COUNTER = _doubleClickCounter;
-
       // check settings for doubleclick according to the settings
-      if (COUNTER == 0) {
-        if ((_dcMode == 3u) || ((_dcMode == 1u) && (state == 0)) || ((_dcMode == 2u) && (state == 1))) {
+      if (_doubleClickCounter == 0) {
+        if ((_dcMode == SWITCH_DC_BOTH) ||                   // "Active on LOW & HIGH (EVENT=3)"
+            ((_dcMode == SWITCH_DC_LOW) && (state == 0)) ||  // "Active only on LOW (EVENT=3)"
+            ((_dcMode == SWITCH_DC_HIGH) && (state == 1))) { // "Active only on HIGH (EVENT=3)"
           _doubleClickCounter++;
         }
       } else {
@@ -244,6 +232,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {
+          // Need to split this log creation or else uncrustify would fail
           const String trailingStr = concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),
                                             static_cast<int>(output_value));
           String log = strformat(F("SW  : GPIO=%d State=%d%s"),
@@ -282,95 +271,100 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
   // CASE 3: status unchanged. Checking longpress:
   // Check if LP is enabled and if LP has not fired yet
-  if (!_longpressFired && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1))))
-  {
-    /**************************************************************************\
-       20181009 - @giig1967g: new longpress logic is:
-       if there is no 'state' change, check if longpress interval reached
-       When reached send longpress event.
-       Returned Event value = state + 10
-       So if state = 0 => EVENT longpress = 10
-       if state = 1 => EVENT longpress = 11
-       So we can trigger longpress for high or low contact
-
-       In rules this can be checked:
-       on Button#State=10 do //will fire if longpress when state = 0
-       on Button#State=11 do //will fire if longpress when state = 1
-    \**************************************************************************/
-
-    // Reset SafeButton counter
-    _safeButtonCounter = 0;
-
-    const unsigned long deltaLP = timePassedSince(_longpressTimer);
-
-    if (deltaLP >= _longpressMinInterval_ms)
+  if (!_longpressFired) {
+    if ((LP == SWITCH_LONGPRESS_BOTH) ||                  // "Active on LOW & HIGH (EVENT= 10 or 11)"
+        ((LP == SWITCH_LONGPRESS_LOW) && (state == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
+        ((LP == SWITCH_LONGPRESS_HIGH) && (state == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
     {
-      uint8_t output_value;
-      bool    needToSendEvent = false;
+      /**************************************************************************\
+         20181009 - @giig1967g: new longpress logic is:
+         if there is no 'state' change, check if longpress interval reached
+         When reached send longpress event.
+         Returned Event value = state + 10
+         So if state = 0 => EVENT longpress = 10
+         if state = 1 => EVENT longpress = 11
+         So we can trigger longpress for high or low contact
 
-      _longpressFired = 1;
+         In rules this can be checked:
+         on Button#State=10 do //will fire if longpress when state = 0
+         on Button#State=11 do //will fire if longpress when state = 1
+      \**************************************************************************/
 
-      switch (PCONFIG(2))
+      // Reset SafeButton counter
+      _safeButtonCounter = 0;
+
+      const unsigned long deltaLP = timePassedSince(_longpressTimer);
+
+      if (deltaLP >= _longpressMinInterval_ms)
       {
-        case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-          needToSendEvent = true;
-          break;
-        case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+        uint8_t output_value;
+        bool    needToSendEvent = false;
 
-          if (!state)
-          {
-            needToSendEvent = true;
-          }
-          break;
-        case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+        _longpressFired = 1;
 
-          if (state)
-          {
-            needToSendEvent = true;
-          }
-          break;
-      }
-
-      if (needToSendEvent)
-      {
-        bool sendState = state;
-
-        if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+        switch (PCONFIG(2))
         {
-          sendState = !sendState;
-        }
-        output_value = sendState ? 11 : 10;
+          case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+            needToSendEvent = true;
+            break;
+          case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
 
-        // output_value = output_value + 10;
-        UserVar.setFloat(event->TaskIndex, 0, output_value);
+            if (!state)
+            {
+              needToSendEvent = true;
+            }
+            break;
+          case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+
+            if (state)
+            {
+              needToSendEvent = true;
+            }
+            break;
+        }
+
+        if (needToSendEvent)
+        {
+          bool sendState = state;
+
+          if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+          {
+            sendState = !sendState;
+          }
+          output_value = sendState ? 11 : 10;
+
+          // output_value = output_value + 10;
+          UserVar.setFloat(event->TaskIndex, 0, output_value);
 
 # ifndef BUILD_NO_DEBUG
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO))
-        {
-          String log = strformat(F("SW  : LongPress: GPIO= %d State=%d Output value=%d"),
-                                 _gpioPin,
-                                 state ? 1 : 0,
-                                 output_value);
-          addLogMove(LOG_LEVEL_INFO, log);
-        }
+          if (loglevelActiveFor(LOG_LEVEL_INFO))
+          {
+            // Need to split this log creation or else uncrustify would fail
+            String log = strformat(F("SW  : LongPress: GPIO= %d State=%d Output value=%d"),
+                                   _gpioPin,
+                                   state ? 1 : 0,
+                                   output_value);
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
 # endif // ifndef BUILD_NO_DEBUG
 
-        // send task event
-        sendData(event);
+          // send task event
+          sendData(event);
 
-        // send monitor event
-        if (currentStatus.monitor)
-        {
-          sendMonitorEvent(monitorEventString, _gpioPin, output_value);
+          // send monitor event
+          if (currentStatus.monitor)
+          {
+            sendMonitorEvent(monitorEventString, _gpioPin, output_value);
+          }
+
+          // reset Userdata so it displays the correct state value in the web page
+          UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
         }
-
-        // reset Userdata so it displays the correct state value in the web page
-        UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
+        savePortStatus(_portStatus_key, currentStatus);
       }
-      savePortStatus(_portStatus_key, currentStatus);
+      return;
     }
-    return;
   }
 
   if (_safeButtonCounter == 1)
