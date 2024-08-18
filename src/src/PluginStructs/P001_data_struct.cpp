@@ -2,7 +2,7 @@
 
 #ifdef USES_P001
 
-# include "../Helpers/_Plugin_Helper_GPIO.h"
+
 # include "../Helpers/_Plugin_Helper_webform.h"
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -21,30 +21,28 @@ uint8_t P001_data_struct::P001_getSwitchType(struct EventStruct *event)
 }
 
 P001_data_struct::P001_data_struct(struct EventStruct *event) :
-  _debounceInterval_ms(P001_DEBOUNCE),
-  _doubleClickMaxInterval_ms(P001_DC_MAX_INT),
-  _longpressMinInterval_ms(P001_LP_MIN_INT),
-  _doubleClickCounter(0),
-  _safeButtonCounter(0),
-  _gpioPin(CONFIG_PIN1),
-  _dcMode(P001_DOUBLECLICK),
-  _safeButton(P001_SAFE_BTN != 0),
-  _longpressFired(false)
+  _data(
+    PLUGIN_GPIO,
+    CONFIG_PIN1,
+    P001_DEBOUNCE,
+    P001_DC_MAX_INT,
+    P001_LP_MIN_INT,
+    P001_DOUBLECLICK,
+    P001_SAFE_BTN != 0,
+    P001_BOOTSTATE)
 {
-  _portStatus_key = createKey(PLUGIN_GPIO, _gpioPin);
-
   uint8_t pinModeValue = PIN_MODE_INPUT;
 
-  // setPinState(PLUGIN_ID_001, _gpioPin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
+  // setPinState(PLUGIN_ID_001, _data._pin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
   //  if it is in the device list we assume it's an input pin
   if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
   {
-    setInternalGPIOPullupMode(_gpioPin);
+    setInternalGPIOPullupMode(_data._pin);
     pinModeValue = PIN_MODE_INPUT_PULLUP;
   }
   else
   {
-    pinMode(_gpioPin, INPUT);
+    pinMode(_data._pin, INPUT);
     pinModeValue = PIN_MODE_INPUT;
   }
 
@@ -53,38 +51,21 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
   // "state" could be -1, 0 or 1
   const int8_t state = GPIO_Read_Switch_State(event);
 
-  GPIO_plugin_helper_init(event,
-                          _portStatus_key,
-                          _gpioPin,
-                          state,
-                          pinModeValue,
-                          P001_BOOTSTATE
-                          );
-
-  // store millis for debounce, doubleclick and long press
-  const unsigned long cur_millis = millis();
-
-  _debounceTimer    = cur_millis; // debounce timer
-  _doubleClickTimer = cur_millis; // doubleclick timer
-  _longpressTimer   = cur_millis; // longpress timer
-}
-
-P001_data_struct::~P001_data_struct()
-{
-  if (_portStatus_key != 0) {
-    removeTaskFromPort(_portStatus_key);
-  }
+  _data.init(
+    event,
+    state,
+    pinModeValue);
 }
 
 void P001_data_struct::tenPerSecond(struct EventStruct *event)
 {
-  if (_gpioPin == -1) { return; }
+  if (_data._pin == -1) { return; }
 
   /**************************************************************************\
      20181009 - @giig1967g: new doubleclick logic is:
      if there is a 'state' change, check debounce period.
-     Then if doubleclick interval exceeded, reset _doubleClickCounter to 0
-     _doubleClickCounter contains the current status for doubleclick:
+     Then if doubleclick interval exceeded, reset _data._doubleClickCounter to 0
+     _data._doubleClickCounter contains the current status for doubleclick:
      0: start counting
      1: 1st click
      2: 2nd click
@@ -102,21 +83,21 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
   const __FlashStringHelper *monitorEventString = F("GPIO");
 
-  // WARNING operator [],creates an entry in map if _portStatus_key doesn't exist:
-  portStatusStruct currentStatus = globalMapPortStatus[_portStatus_key];
+  // WARNING operator [],creates an entry in map if _data._portStatus_key doesn't exist:
+  portStatusStruct currentStatus = globalMapPortStatus[_data._portStatus_key];
 
-  const int8_t state = GPIO_Read_Switch_State(_gpioPin, currentStatus.mode);
+  const int8_t state = GPIO_Read_Switch_State(_data._pin, currentStatus.mode);
 
   //        if (currentStatus.mode != PIN_MODE_OUTPUT )
   //        {
   // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
   // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-  if (_safeButton && (state != currentStatus.state) && (_safeButtonCounter == 0))
+  if (_data._safeButton && (state != currentStatus.state) && (_data._safeButtonCounter == 0))
   {
 # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
 # endif // ifndef BUILD_NO_DEBUG
-    _safeButtonCounter = 1;
+    _data._safeButtonCounter = 1;
 
     return;
   }
@@ -125,35 +106,35 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   if ((state != currentStatus.state) || currentStatus.forceEvent)
   {
     // Reset SafeButton counter
-    _safeButtonCounter = 0;
+    _data._safeButtonCounter = 0;
 
     // reset timer for long press
-    _longpressTimer = millis();
-    _longpressFired = false;
+    _data._longpressTimer = millis();
+    _data._longpressFired = false;
 
-    const unsigned long debounceTime = timePassedSince(_debounceTimer);
+    const unsigned long debounceTime = timePassedSince(_data._debounceTimer);
 
-    if (debounceTime >= _debounceInterval_ms) // de-bounce check
+    if (debounceTime >= _data._debounceInterval_ms) // de-bounce check
     {
-      const unsigned long deltaDC = timePassedSince(_doubleClickTimer);
+      const unsigned long deltaDC = timePassedSince(_data._doubleClickTimer);
 
-      if ((deltaDC >= _doubleClickMaxInterval_ms) ||
-          (_doubleClickCounter == 3))
+      if ((deltaDC >= _data._doubleClickMaxInterval_ms) ||
+          (_data._doubleClickCounter == 3))
       {
         // reset timer for doubleclick
-        _doubleClickCounter = 0;
-        _doubleClickTimer   = millis();
+        _data._doubleClickCounter = 0;
+        _data._doubleClickTimer   = millis();
       }
 
       // check settings for doubleclick according to the settings
-      if (_doubleClickCounter == 0) {
-        if ((_dcMode == SWITCH_DC_BOTH) ||                   // "Active on LOW & HIGH (EVENT=3)"
-            ((_dcMode == SWITCH_DC_LOW) && (state == 0)) ||  // "Active only on LOW (EVENT=3)"
-            ((_dcMode == SWITCH_DC_HIGH) && (state == 1))) { // "Active only on HIGH (EVENT=3)"
-          _doubleClickCounter++;
+      if (_data._doubleClickCounter == 0) {
+        if ((_data._dcMode == SWITCH_DC_BOTH) ||                   // "Active on LOW & HIGH (EVENT=3)"
+            ((_data._dcMode == SWITCH_DC_LOW) && (state == 0)) ||  // "Active only on LOW (EVENT=3)"
+            ((_data._dcMode == SWITCH_DC_HIGH) && (state == 1))) { // "Active only on HIGH (EVENT=3)"
+          _data._doubleClickCounter++;
         }
       } else {
-        _doubleClickCounter++;
+        _data._doubleClickCounter++;
       }
 
       currentStatus.state = state;
@@ -193,7 +174,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           sendState = !sendState;
         }
 
-        if ((_doubleClickCounter == 3) && (_dcMode > 0))
+        if ((_data._doubleClickCounter == 3) && (_data._dcMode > 0))
         {
           output_value = 3; // double click
         }
@@ -224,7 +205,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           const String trailingStr = concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),
                                             static_cast<int>(output_value));
           String log = strformat(F("SW  : GPIO=%d State=%d%s"),
-                                 _gpioPin,
+                                 _data._pin,
                                  state ? 1 : 0,
                                  trailingStr.c_str());
           addLogMove(LOG_LEVEL_INFO, log);
@@ -238,19 +219,19 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         // send monitor event
         if (currentStatus.monitor)
         {
-          sendMonitorEvent(monitorEventString, _gpioPin, output_value);
+          sendMonitorEvent(monitorEventString, _data._pin, output_value);
         }
 
         // reset Userdata so it displays the correct state value in the web page
         UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
       }
-      _debounceTimer = millis();
+      _data._debounceTimer = millis();
     }
 
     // Reset forceEvent
     currentStatus.forceEvent = 0;
 
-    savePortStatus(_portStatus_key, currentStatus);
+    savePortStatus(_data._portStatus_key, currentStatus);
     return;
   }
 
@@ -259,7 +240,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
   // CASE 3: status unchanged. Checking longpress:
   // Check if LP is enabled and if LP has not fired yet
-  if (!_longpressFired) {
+  if (!_data._longpressFired) {
     if ((LP == SWITCH_LONGPRESS_BOTH) ||                  // "Active on LOW & HIGH (EVENT= 10 or 11)"
         ((LP == SWITCH_LONGPRESS_LOW) && (state == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
         ((LP == SWITCH_LONGPRESS_HIGH) && (state == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
@@ -279,16 +260,16 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
       \**************************************************************************/
 
       // Reset SafeButton counter
-      _safeButtonCounter = 0;
+      _data._safeButtonCounter = 0;
 
-      const unsigned long deltaLP = timePassedSince(_longpressTimer);
+      const unsigned long deltaLP = timePassedSince(_data._longpressTimer);
 
-      if (deltaLP >= _longpressMinInterval_ms)
+      if (deltaLP >= _data._longpressMinInterval_ms)
       {
         uint8_t output_value;
         bool    needToSendEvent = false;
 
-        _longpressFired = true;
+        _data._longpressFired = true;
 
         switch (P001_BUTTON_TYPE)
         {
@@ -330,7 +311,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           {
             // Need to split this log creation or else uncrustify would fail
             String log = strformat(F("SW  : LongPress: GPIO= %d State=%d Output value=%d"),
-                                   _gpioPin,
+                                   _data._pin,
                                    state ? 1 : 0,
                                    output_value);
             addLogMove(LOG_LEVEL_INFO, log);
@@ -343,25 +324,25 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           // send monitor event
           if (currentStatus.monitor)
           {
-            sendMonitorEvent(monitorEventString, _gpioPin, output_value);
+            sendMonitorEvent(monitorEventString, _data._pin, output_value);
           }
 
           // reset Userdata so it displays the correct state value in the web page
           UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
         }
-        savePortStatus(_portStatus_key, currentStatus);
+        savePortStatus(_data._portStatus_key, currentStatus);
       }
       return;
     }
   }
 
-  if (_safeButtonCounter == 1)
+  if (_data._safeButtonCounter == 1)
   {
     // Safe Button detected. Send EVENT value = 4
     constexpr uint8_t SAFE_BUTTON_EVENT = 4;
 
     // Reset SafeButton counter
-    _safeButtonCounter = 0;
+    _data._safeButtonCounter = 0;
 
     // Create EVENT with value = 4 for SafeButton false positive detection
     const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
@@ -372,7 +353,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
       addLogMove(LOG_LEVEL_INFO,
-                 strformat(F("SW  : SafeButton: false positive detected. GPIO= %d State=%d"), _gpioPin, tempUserVar));
+                 strformat(F("SW  : SafeButton: false positive detected. GPIO= %d State=%d"), _data._pin, tempUserVar));
     }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -381,7 +362,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     // send monitor event
     if (currentStatus.monitor)
     {
-      sendMonitorEvent(monitorEventString, _gpioPin, SAFE_BUTTON_EVENT);
+      sendMonitorEvent(monitorEventString, _data._pin, SAFE_BUTTON_EVENT);
     }
 
     // reset Userdata so it displays the correct state value in the web page

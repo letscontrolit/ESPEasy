@@ -5,6 +5,7 @@
 
 #ifdef USES_P009
 
+# include "../Helpers/_Plugin_Helper_GPIO.h"
 
 /**************************************************\
    CONFIG
@@ -44,32 +45,15 @@ struct P009_data_struct : public PluginTaskData_base {
   P009_data_struct() = delete;
 
   P009_data_struct(struct EventStruct *event);
-  ~P009_data_struct();
 
   void tenPerSecond(struct EventStruct *event);
 
 private:
 
-  uint32_t       _portStatus_key;
-  uint32_t       _debounceTimer;
-  const uint32_t _debounceInterval_ms;
-  uint32_t       _doubleClickTimer;
-  const uint32_t _doubleClickMaxInterval_ms;
-  uint32_t       _longpressTimer;
-  const uint32_t _longpressMinInterval_ms;
-
-  int16_t _doubleClickCounter;
-  int16_t _safeButtonCounter;
-
-  const int8_t  _mcpPin;
-  const uint8_t _dcMode; // use doubleclick (0,1,2,3)
-
+  GPIO_plugin_helper_data_t _data;
 # if FEATURE_I2C_DEVICE_CHECK
   const uint8_t _address;
-#endif
-
-  const bool    _safeButton;
-  bool          _longpressFired;
+# endif // if FEATURE_I2C_DEVICE_CHECK
 };
 
 #endif // ifdef USES_P009
