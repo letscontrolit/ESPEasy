@@ -68,13 +68,13 @@ private:
   uint32_t       _longpressTimer;
   const uint32_t _longpressMinInterval_ms;
 
-  int16_t _longpressFired;
   int16_t _doubleClickCounter;
   int16_t _safeButtonCounter;
 
-  const int8_t  _gpioPin;
+  const uint8_t  _gpioPin;
   const uint8_t _dcMode; // use doubleclick (0,1,2,3)
   const bool    _safeButton;
+  bool          _longpressFired;
 };
 
 #endif // ifdef USES_P001

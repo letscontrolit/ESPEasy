@@ -23,12 +23,12 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
   _debounceInterval_ms(P001_DEBOUNCE),
   _doubleClickMaxInterval_ms(P001_DC_MAX_INT),
   _longpressMinInterval_ms(P001_LP_MIN_INT),
-  _longpressFired(0),
   _doubleClickCounter(0),
   _safeButtonCounter(0),
   _gpioPin(CONFIG_PIN1),
   _dcMode(P001_DOUBLECLICK),
-  _safeButton(P001_SAFE_BTN != 0)
+  _safeButton(P001_SAFE_BTN != 0),
+  _longpressFired(false)
 {
   _portStatus_key = createKey(PLUGIN_GPIO, _gpioPin);
 
@@ -40,10 +40,8 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
   newStatus.output = newStatus.state;
 
   // add this GPIO/port as a task
-  newStatus.task++;
-
-  if (newStatus.task > 3) {
-    newStatus.task = 3;
+  if (newStatus.task < 3) {
+    newStatus.task++;
   }
 
   // setPinState(PLUGIN_ID_001, _gpioPin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
@@ -141,7 +139,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
     // reset timer for long press
     _longpressTimer = millis();
-    _longpressFired = 0;
+    _longpressFired = false;
 
     const unsigned long debounceTime = timePassedSince(_debounceTimer);
 
@@ -300,7 +298,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         uint8_t output_value;
         bool    needToSendEvent = false;
 
-        _longpressFired = 1;
+        _longpressFired = true;
 
         switch (PCONFIG(2))
         {
@@ -368,8 +366,9 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   }
 
   if (_safeButtonCounter == 1)
-  { // Safe Button detected. Send EVENT value = 4
-    const uint8_t SAFE_BUTTON_EVENT = 4;
+  { 
+    // Safe Button detected. Send EVENT value = 4
+    constexpr uint8_t SAFE_BUTTON_EVENT = 4;
 
     // Reset SafeButton counter
     _safeButtonCounter = 0;

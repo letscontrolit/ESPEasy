@@ -170,8 +170,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P001_data)
       {
         P001_data->tenPerSecond(event);
+        success = true;
       }
-      success = true;
       break;
     }
 
