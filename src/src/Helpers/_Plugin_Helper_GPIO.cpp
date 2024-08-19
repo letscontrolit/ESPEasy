@@ -127,7 +127,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
   if (_safeButton && (pinState != currentStatus.state) && (_safeButtonCounter == 0))
   {
 #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, concat(monitorEventString, F(" : 1st click")));
+    addLog(LOG_LEVEL_DEBUG, concat(monitorEventString, F(" : SafeButton 1st click")));
 #endif // ifndef BUILD_NO_DEBUG
     _safeButtonCounter = 1;
 
@@ -169,6 +169,12 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         _doubleClickCounter++;
       }
 
+      if ((currentStatus.mode == PIN_MODE_OFFLINE) ||
+          (currentStatus.mode == PIN_MODE_UNDEFINED))
+      {
+        currentStatus.mode = PIN_MODE_INPUT_PULLUP; // changed from offline to online
+      }
+
       currentStatus.state = pinState;
       const bool currentOutputState = currentStatus.output;
       bool new_outputState          = currentOutputState;
@@ -208,10 +214,8 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
 
         if ((_doubleClickCounter == 3) && (_dcMode > 0))
         {
-          output_value = 3; // double click
-        }
-        else
-        {
+          output_value = 3;                 // double click
+        } else {
           output_value = sendState ? 1 : 0; // single click
         }
         event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;

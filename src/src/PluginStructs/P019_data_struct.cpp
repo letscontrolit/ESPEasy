@@ -9,8 +9,9 @@
 uint8_t P019_data_struct::getI2C_address(struct EventStruct *event)
 {
   const uint8_t unit = (CONFIG_PORT - 1) / 8;
-  const uint8_t port = CONFIG_PORT - (unit * 8);
-  uint8_t address    = 0x20 + unit;
+
+  //  const uint8_t port = CONFIG_PORT - (unit * 8);
+  uint8_t address = 0x20 + unit;
 
   if (unit > 7) { address += 0x10; }
 
