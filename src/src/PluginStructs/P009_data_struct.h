@@ -42,6 +42,8 @@
 
 
 struct P009_data_struct : public PluginTaskData_base {
+  static uint8_t getI2C_address(struct EventStruct *event);
+
   P009_data_struct() = delete;
 
   P009_data_struct(struct EventStruct *event);

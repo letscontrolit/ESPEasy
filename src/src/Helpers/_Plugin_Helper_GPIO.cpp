@@ -100,6 +100,8 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
 {
   // Avoid 10xSEC in case of a non-fully configured device (no port defined yet)
   if (pinState == -1) {
+    // FIXME TD-er: This will cause the last check at the end of this function not to be executed.
+    // Is this correct?
     return;
   }
 
@@ -121,10 +123,11 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
   portStatusStruct currentStatus = globalMapPortStatus[_portStatus_key];
 
   // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
+  // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
   if (_safeButton && (pinState != currentStatus.state) && (_safeButtonCounter == 0))
   {
 #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_DEBUG, concat(monitorEventString, F(" :SafeButton 1st click.")));
+    addLog(LOG_LEVEL_DEBUG, concat(monitorEventString, F(" : 1st click")));
 #endif // ifndef BUILD_NO_DEBUG
     _safeButtonCounter = 1;
 
@@ -137,7 +140,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
     // Reset SafeButton counter
     _safeButtonCounter = 0;
 
-    // @giig1967g20181022: reset timer for long press
+    // reset timer for long press
     _longpressTimer = millis();
     _longpressFired = false;
 
@@ -166,16 +169,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         _doubleClickCounter++;
       }
 
-      // switchstate[event->TaskIndex] = pinState;
-      if ((currentStatus.mode == PIN_MODE_OFFLINE) ||
-          (currentStatus.mode == PIN_MODE_UNDEFINED))
-      {
-        currentStatus.mode = PIN_MODE_INPUT_PULLUP; // changed from offline to online
-      }
       currentStatus.state = pinState;
-
-      uint8_t output_value;
-
       const bool currentOutputState = currentStatus.output;
       bool new_outputState          = currentOutputState;
 
@@ -203,28 +197,51 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
       // send if output needs to be changed
       if ((currentOutputState != new_outputState) || currentStatus.forceEvent)
       {
-        bool sendState = currentStatus.state;
+        uint8_t output_value;
+        currentStatus.output = new_outputState;
+        bool sendState = new_outputState;
 
-        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+        {
           sendState = !sendState;
         }
 
         if ((_doubleClickCounter == 3) && (_dcMode > 0))
         {
-          output_value = 3;                 // double click
-        } else {
+          output_value = 3; // double click
+        }
+        else
+        {
           output_value = sendState ? 1 : 0; // single click
         }
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
+        if (_switchType == SWITCH_TYPE_DIMMER)
+        {
+          if (sendState)
+          {
+            output_value = _dimmerValue;
+
+            // Only set type to being dimmer when setting a value else it is "switched off".
+            event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
+          }
+        }
         UserVar.setFloat(event->TaskIndex, 0, output_value);
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+#ifndef BUILD_NO_DEBUG
+
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO))
+        {
+          // Need to split this log creation or else uncrustify would fail
           String log = monitorEventString;
           log += strformat(F("  : Port=%d State=%d"), _pin, pinState);
           log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
           log += output_value;
           addLogMove(LOG_LEVEL_INFO, log);
         }
+
+#endif // ifndef BUILD_NO_DEBUG
 
         // send task event
         sendData(event);
@@ -256,16 +273,17 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         ((_longpressEvent == SWITCH_LONGPRESS_HIGH) && (pinState == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
     {
       /**************************************************************************\
-         20181022 - @giig1967g: new longpress logic is:
-         if there is no 'pinState' change, check if longpress interval reached
+         20181009 - @giig1967g: new longpress logic is:
+         if there is no 'state' change, check if longpress interval reached
          When reached send longpress event.
-         Returned Event value = pinState + 10
-         So if pinState = 0 => EVENT longpress = 10
-         if pinState = 1 => EVENT longpress = 11
+         Returned Event value = state + 10
+         So if state = 0 => EVENT longpress = 10
+         if state = 1 => EVENT longpress = 11
          So we can trigger longpress for high or low contact
+
          In rules this can be checked:
-         on Button#State=10 do //will fire if longpress when pinState = 0
-         on Button#State=11 do //will fire if longpress when pinState = 1
+         on Button#State=10 do //will fire if longpress when state = 0
+         on Button#State=11 do //will fire if longpress when state = 1
       \**************************************************************************/
 
       // Reset SafeButton counter
@@ -276,10 +294,9 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
       if (deltaLP >= _longpressMinInterval_ms)
       {
         uint8_t output_value;
+        bool    needToSendEvent = false;
 
-        bool needToSendEvent = false;
-
-        _longpressFired = true; // fired = true
+        _longpressFired = true;
 
         switch (_switchType)
         {
@@ -306,32 +323,40 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         {
           bool sendState = pinState;
 
-          if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
+          if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+          {
             sendState = !sendState;
           }
+          output_value = sendState ? 11 : 10;
 
-          output_value = (sendState ? 1 : 0) + 10;
-
+          // output_value = output_value + 10;
           UserVar.setFloat(event->TaskIndex, 0, output_value);
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+#ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO))
+          {
+            // Need to split this log creation or else uncrustify would fail
             String log = monitorEventString;
             log += strformat(
               F(" : LongPress: Port=%d State=%d Output value=%d"),
               _pin,
               pinState ? 1 : 0,
               output_value);
-
             addLogMove(LOG_LEVEL_INFO, log);
           }
+#endif // ifndef BUILD_NO_DEBUG
 
           // send task event
           sendData(event);
 
           // send monitor event
-          if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, _pin, output_value); }
+          if (currentStatus.monitor)
+          {
+            sendMonitorEvent(monitorEventString, _pin, output_value);
+          }
 
-          // reset Userdata so it displays the correct pinState value in the web page
+          // reset Userdata so it displays the correct state value in the web page
           UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
         }
         savePortStatus(_portStatus_key, currentStatus);
@@ -352,18 +377,28 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
     const int tempUserVar = lround(UserVar[event->BaseVarIndex]);
     UserVar.setFloat(event->TaskIndex, 0, SAFE_BUTTON_EVENT);
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO,
-             concat(monitorEventString,
-                    strformat(F(" : SafeButton: false positive detected. GPIO= %d State=%d"), _pin, tempUserVar)));
+#ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO))
+    {
+      addLogMove(LOG_LEVEL_INFO,
+                 concat(monitorEventString,
+                        strformat(
+                          F(" : SafeButton: false positive detected. Port=%d State=%d"),
+                          _pin,
+                          tempUserVar)));
     }
+#endif // ifndef BUILD_NO_DEBUG
 
     // send task event: DO NOT SEND TASK EVENT
     // sendData(event);
     // send monitor event
-    if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, _pin, 4); }
+    if (currentStatus.monitor)
+    {
+      sendMonitorEvent(monitorEventString, _pin, SAFE_BUTTON_EVENT);
+    }
 
-    // reset Userdata so it displays the correct pinState value in the web page
+    // reset Userdata so it displays the correct state value in the web page
     UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
     return;
   }
@@ -374,17 +409,25 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
     currentStatus.mode = PIN_MODE_OFFLINE;
 
     // switchstate[event->TaskIndex] = pinState;
+#ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO,
              concat(monitorEventString,
-                    strformat(F(" : Port=%d is offline (EVENT= -1)"), _pin)));
+                    strformat(
+                      F(" : Port=%d is offline (EVENT= -1)"),
+                      _pin)));
     }
+#endif // ifndef BUILD_NO_DEBUG
 
     // send task event
     sendData(event);
 
     // send monitor event
-    if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, _pin, -1); }
+    if (currentStatus.monitor)
+    {
+      sendMonitorEvent(monitorEventString, _pin, -1);
+    }
 
     savePortStatus(_portStatus_key, currentStatus);
   }

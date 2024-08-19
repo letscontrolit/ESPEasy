@@ -38,7 +38,7 @@
 # define PLUGIN_001_TYPE_SWITCH                   0
 # define PLUGIN_001_TYPE_DIMMER                   3 // Due to some changes in previous versions, do not use 2.
 
-# define P001_SWITCH_OR_DIMMER PCONFIG(0)  
+# define P001_SWITCH_OR_DIMMER PCONFIG(0)
 # define P001_DIMMER_VALUE     PCONFIG(1)
 # define P001_BUTTON_TYPE      PCONFIG(2) // (normal, push high, push low)
 

@@ -84,12 +84,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      const uint8_t unit = (CONFIG_PORT - 1) / 8;
-      uint8_t address    = 0x20 + unit;
-
-      if (unit > 7) { address += 0x10; }
-
-      event->Par1 = address;
+      event->Par1 = P019_data_struct::getI2C_address(event);
       success     = true;
       break;
     }

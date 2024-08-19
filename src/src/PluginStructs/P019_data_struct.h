@@ -43,6 +43,8 @@
 
 
 struct P019_data_struct : public PluginTaskData_base {
+  static uint8_t getI2C_address(struct EventStruct *event);
+
   P019_data_struct() = delete;
 
   P019_data_struct(struct EventStruct *event);
@@ -54,7 +56,6 @@ private:
   GPIO_plugin_helper_data_t _data;
 
 # if FEATURE_I2C_DEVICE_CHECK
-  const uint8_t _unit;
   const uint8_t _address;
 # endif // if FEATURE_I2C_DEVICE_CHECK
 };

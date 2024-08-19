@@ -20,6 +20,7 @@
 
 
 struct GPIO_plugin_helper_data_t {
+  GPIO_plugin_helper_data_t() = delete;
   GPIO_plugin_helper_data_t(
     pluginID_t pluginNumber,
     uint16_t   pin,

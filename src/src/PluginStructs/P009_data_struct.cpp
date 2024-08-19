@@ -7,6 +7,13 @@
 # include "../ESPEasyCore/ESPEasyGPIO.h"
 
 
+uint8_t P009_data_struct::getI2C_address(struct EventStruct *event)
+{
+  const uint8_t unit = (CONFIG_PORT - 1) / 16;
+
+  return 0x20 + unit;
+}
+
 P009_data_struct::P009_data_struct(struct EventStruct *event) :
   _data(
     PLUGIN_MCP,
@@ -19,7 +26,7 @@ P009_data_struct::P009_data_struct(struct EventStruct *event) :
     P009_SAFE_BTN != 0,
     P009_BOOTSTATE)
 # if FEATURE_I2C_DEVICE_CHECK
-  , _address(0x20 + ((_data._pin - 1) / 16)) // unit = (_data._pin - 1) / 16
+  , _address(P009_data_struct::getI2C_address(event))
 # endif // if FEATURE_I2C_DEVICE_CHECK
 {
   // Turn on Pullup resistor

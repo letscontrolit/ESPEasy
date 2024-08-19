@@ -84,8 +84,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      const uint8_t unit = (CONFIG_PORT - 1) / 16;
-      event->Par1 = 0x20 + unit;
+      event->Par1 = P009_data_struct::getI2C_address(event);
       success     = true;
       break;
     }
@@ -197,7 +196,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       GPIO_MCP_Write(event->Par1, event->Par2);
 
       // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_MCP, event->Par1);
+      const uint32_t   key        = createKey(PLUGIN_MCP, event->Par1);
       portStatusStruct tempStatus = globalMapPortStatus[key];
 
       tempStatus.state        = event->Par2;
