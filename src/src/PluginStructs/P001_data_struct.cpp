@@ -30,7 +30,9 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
     P001_DOUBLECLICK,
     P001_LONGPRESS,
     P001_SAFE_BTN != 0,
-    P001_BOOTSTATE)
+    P001_BOOTSTATE,
+    (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) ? SWITCH_TYPE_DIMMER : P001_BUTTON_TYPE,
+    P001_DIMMER_VALUE)
 {
   uint8_t pinModeValue = PIN_MODE_INPUT;
 
@@ -50,11 +52,11 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
 
   // read and store current state to prevent switching at boot time
   // "state" could be -1, 0 or 1
-  const int8_t state = GPIO_Read_Switch_State(event);
+  const int8_t pinState = GPIO_Read_Switch_State(event);
 
   _data.init(
     event,
-    state,
+    pinState,
     pinModeValue);
 }
 
@@ -87,13 +89,13 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   // WARNING operator [],creates an entry in map if _data._portStatus_key doesn't exist:
   portStatusStruct currentStatus = globalMapPortStatus[_data._portStatus_key];
 
-  const int8_t state = GPIO_Read_Switch_State(_data._pin, currentStatus.mode);
+  const int8_t pinState = GPIO_Read_Switch_State(_data._pin, currentStatus.mode);
 
   //        if (currentStatus.mode != PIN_MODE_OUTPUT )
   //        {
   // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
   // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-  if (_data._safeButton && (state != currentStatus.state) && (_data._safeButtonCounter == 0))
+  if (_data._safeButton && (pinState != currentStatus.state) && (_data._safeButtonCounter == 0))
   {
 # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
@@ -104,7 +106,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   }
 
   // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
-  if ((state != currentStatus.state) || currentStatus.forceEvent)
+  if ((pinState != currentStatus.state) || currentStatus.forceEvent)
   {
     // Reset SafeButton counter
     _data._safeButtonCounter = 0;
@@ -130,36 +132,33 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
       // check settings for doubleclick according to the settings
       if (_data._doubleClickCounter == 0) {
         if ((_data._dcMode == SWITCH_DC_BOTH) ||                   // "Active on LOW & HIGH (EVENT=3)"
-            ((_data._dcMode == SWITCH_DC_LOW) && (state == 0)) ||  // "Active only on LOW (EVENT=3)"
-            ((_data._dcMode == SWITCH_DC_HIGH) && (state == 1))) { // "Active only on HIGH (EVENT=3)"
+            ((_data._dcMode == SWITCH_DC_LOW) && (pinState == 0)) ||  // "Active only on LOW (EVENT=3)"
+            ((_data._dcMode == SWITCH_DC_HIGH) && (pinState == 1))) { // "Active only on HIGH (EVENT=3)"
           _data._doubleClickCounter++;
         }
       } else {
         _data._doubleClickCounter++;
       }
 
-      // FIXME TD-er: Must add handling of next few lines in GPIO_plugin_helper_data_t::tenPerSecond() so we can get rid of ducplicate code
-      // here
-
-      currentStatus.state = state;
+      currentStatus.state = pinState;
       const bool currentOutputState = currentStatus.output;
       bool new_outputState          = currentOutputState;
 
-      switch (P001_BUTTON_TYPE)
+      switch (_data._switchType)
       {
-        case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-          new_outputState = state;
+        case SWITCH_TYPE_NORMAL_SWITCH:
+          new_outputState = pinState;
           break;
-        case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+        case SWITCH_TYPE_PUSH_ACTIVE_LOW:
 
-          if (!state)
+          if (!pinState)
           {
             new_outputState = !currentOutputState;
           }
           break;
-        case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+        case SWITCH_TYPE_PUSH_ACTIVE_HIGH:
 
-          if (state)
+          if (pinState)
           {
             new_outputState = !currentOutputState;
           }
@@ -188,11 +187,11 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         }
         event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-        if (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER)
+        if (_data._switchType == SWITCH_TYPE_DIMMER)
         {
           if (sendState)
           {
-            output_value = P001_DIMMER_VALUE;
+            output_value = _data._dimmerValue;
 
             // Only set type to being dimmer when setting a value else it is "switched off".
             event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
@@ -206,12 +205,10 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {
           // Need to split this log creation or else uncrustify would fail
-          const String trailingStr = concat(output_value == 3 ? F(" Doubleclick=") : F(" Output value="),
-                                            static_cast<int>(output_value));
-          String log = strformat(F("SW  : GPIO=%d State=%d%s"),
-                                 _data._pin,
-                                 state ? 1 : 0,
-                                 trailingStr.c_str());
+          String log = monitorEventString;
+          log += strformat(F("  : Port=%d State=%d"), _data._pin, pinState);
+          log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
+          log += output_value;
           addLogMove(LOG_LEVEL_INFO, log);
         }
 
@@ -243,8 +240,8 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
   // Check if LP is enabled and if LP has not fired yet
   if (!_data._longpressFired) {
     if ((_data._longpressEvent == SWITCH_LONGPRESS_BOTH) ||                  // "Active on LOW & HIGH (EVENT= 10 or 11)"
-        ((_data._longpressEvent == SWITCH_LONGPRESS_LOW) && (state == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
-        ((_data._longpressEvent == SWITCH_LONGPRESS_HIGH) && (state == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
+        ((_data._longpressEvent == SWITCH_LONGPRESS_LOW) && (pinState == 0)) || // "Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"
+        ((_data._longpressEvent == SWITCH_LONGPRESS_HIGH) && (pinState == 1)))  // "Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"
     {
       /**************************************************************************\
          20181009 - @giig1967g: new longpress logic is:
@@ -272,21 +269,21 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
         _data._longpressFired = true;
 
-        switch (P001_BUTTON_TYPE)
+        switch (_data._switchType)
         {
-          case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
+          case SWITCH_TYPE_NORMAL_SWITCH:
             needToSendEvent = true;
             break;
-          case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+          case SWITCH_TYPE_PUSH_ACTIVE_LOW:
 
-            if (!state)
+            if (!pinState)
             {
               needToSendEvent = true;
             }
             break;
-          case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+          case SWITCH_TYPE_PUSH_ACTIVE_HIGH:
 
-            if (state)
+            if (pinState)
             {
               needToSendEvent = true;
             }
@@ -295,7 +292,7 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
         if (needToSendEvent)
         {
-          bool sendState = state;
+          bool sendState = pinState;
 
           if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
           {
@@ -311,10 +308,12 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
           if (loglevelActiveFor(LOG_LEVEL_INFO))
           {
             // Need to split this log creation or else uncrustify would fail
-            String log = strformat(F("SW  : LongPress: GPIO= %d State=%d Output value=%d"),
-                                   _data._pin,
-                                   state ? 1 : 0,
-                                   output_value);
+            String log = monitorEventString;
+            log += strformat(
+              F(" : LongPress: Port=%d State=%d Output value=%d"),
+              _data._pin,
+              pinState ? 1 : 0,
+              output_value);
             addLogMove(LOG_LEVEL_INFO, log);
           }
 # endif // ifndef BUILD_NO_DEBUG
@@ -354,7 +353,11 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
     if (loglevelActiveFor(LOG_LEVEL_INFO))
     {
       addLogMove(LOG_LEVEL_INFO,
-                 strformat(F("SW  : SafeButton: false positive detected. GPIO= %d State=%d"), _data._pin, tempUserVar));
+                 concat(monitorEventString,
+                        strformat(
+                          F(" : SafeButton: false positive detected. Port=%d State=%d"),
+                          _data._pin,
+                          tempUserVar)));
     }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -368,6 +371,36 @@ void P001_data_struct::tenPerSecond(struct EventStruct *event)
 
     // reset Userdata so it displays the correct state value in the web page
     UserVar.setFloat(event->TaskIndex, 0, tempUserVar);
+    return;
+  }
+
+  if ((pinState != currentStatus.state) && (pinState == -1)) {
+    // set UserVar and switchState = -1 and send EVENT to notify user
+    UserVar.setFloat(event->TaskIndex, 0, pinState);
+    currentStatus.mode = PIN_MODE_OFFLINE;
+
+    // switchstate[event->TaskIndex] = pinState;
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO,
+             concat(monitorEventString,
+                    strformat(
+                        F(" : Port=%d is offline (EVENT= -1)"), 
+                        _data._pin)));
+    }
+# endif // ifndef BUILD_NO_DEBUG
+
+    // send task event
+    sendData(event);
+
+    // send monitor event
+    if (currentStatus.monitor)
+    {
+      sendMonitorEvent(monitorEventString, _data._pin, -1);
+    }
+
+    savePortStatus(_data._portStatus_key, currentStatus);
   }
 }
 

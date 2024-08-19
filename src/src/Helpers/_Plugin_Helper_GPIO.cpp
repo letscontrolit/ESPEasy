@@ -16,7 +16,9 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   uint8_t    dcMode,
   uint8_t    longpressEvent,
   bool       safeButton,
-  bool       sendBootState) :
+  bool       sendBootState,
+  uint8_t    switchType,
+  uint8_t    dimmerValue) :
   _portStatus_key(createKey(pluginNumber, pin)),
   _debounceInterval_ms(debounceInterval_ms),
   _doubleClickMaxInterval_ms(doubleClickMaxInterval_ms),
@@ -27,6 +29,8 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   _pluginNumber(pluginNumber),
   _dcMode(dcMode),
   _longpressEvent(longpressEvent),
+  _switchType(switchType),
+  _dimmerValue(dimmerValue),
   _safeButton(safeButton),
   _sendBootState(sendBootState),
   _longpressFired(false)
@@ -162,8 +166,6 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         _doubleClickCounter++;
       }
 
-      // FIXME TD-er: Must add handling of switch (P001_BUTTON_TYPE) so we can get rid of ducplicate code in P001_data_struct.cpp:145
-
       // switchstate[event->TaskIndex] = pinState;
       if ((currentStatus.mode == PIN_MODE_OFFLINE) ||
           (currentStatus.mode == PIN_MODE_UNDEFINED))
@@ -174,41 +176,74 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
 
       uint8_t output_value;
 
-      // bool sendState = switchstate[event->TaskIndex];
-      bool sendState = currentStatus.state;
+      const bool currentOutputState = currentStatus.output;
+      bool new_outputState          = currentOutputState;
 
-      if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-        sendState = !sendState;
-      }
-
-      if ((_doubleClickCounter == 3) && (_dcMode > 0))
+      switch (_switchType)
       {
-        output_value = 3;                 // double click
-      } else {
-        output_value = sendState ? 1 : 0; // single click
+        case SWITCH_TYPE_NORMAL_SWITCH:
+          new_outputState = pinState;
+          break;
+        case SWITCH_TYPE_PUSH_ACTIVE_LOW:
+
+          if (!pinState)
+          {
+            new_outputState = !currentOutputState;
+          }
+          break;
+        case SWITCH_TYPE_PUSH_ACTIVE_HIGH:
+
+          if (pinState)
+          {
+            new_outputState = !currentOutputState;
+          }
+          break;
       }
 
-      UserVar.setFloat(event->TaskIndex, 0, output_value);
+      // send if output needs to be changed
+      if ((currentOutputState != new_outputState) || currentStatus.forceEvent)
+      {
+        bool sendState = currentStatus.state;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = monitorEventString;
-        log += strformat(F("  : Port=%d State=%d"), _pin, pinState);
-        log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
-        log += output_value;
-        addLogMove(LOG_LEVEL_INFO, log);
+        if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
+          sendState = !sendState;
+        }
+
+        if ((_doubleClickCounter == 3) && (_dcMode > 0))
+        {
+          output_value = 3;                 // double click
+        } else {
+          output_value = sendState ? 1 : 0; // single click
+        }
+
+        UserVar.setFloat(event->TaskIndex, 0, output_value);
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = monitorEventString;
+          log += strformat(F("  : Port=%d State=%d"), _pin, pinState);
+          log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
+          log += output_value;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+
+        // send task event
+        sendData(event);
+
+        // send monitor event
+        if (currentStatus.monitor)
+        {
+          sendMonitorEvent(monitorEventString, _pin, output_value);
+        }
+
+        // reset Userdata so it displays the correct state value in the web page
+        UserVar.setFloat(event->TaskIndex, 0, sendState ? 1 : 0);
       }
-
-      // send task event
-      sendData(event);
-
-      // send monitor event
-      if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, _pin, output_value); }
-
-      // Reset forceEvent
-      currentStatus.forceEvent = 0;
-
-      savePortStatus(_portStatus_key, currentStatus);
+      _debounceTimer = millis();
     }
+
+    // Reset forceEvent
+    currentStatus.forceEvent = 0;
+
     savePortStatus(_portStatus_key, currentStatus);
     return;
   }
@@ -242,35 +277,30 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
       {
         uint8_t output_value;
 
-        bool needToSendEvent = true; // (_pluginNumber != PLUGIN_GPIO);
+        bool needToSendEvent = false;
 
-        _longpressFired = true;      // fired = true
+        _longpressFired = true; // fired = true
 
-        /*
-                if (_pluginNumber == PLUGIN_GPIO) {
-                  switch (P001_BUTTON_TYPE)
-                  {
-                    case PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH:
-                      needToSendEvent = true;
-                      break;
-                    case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW:
+        switch (_switchType)
+        {
+          case SWITCH_TYPE_NORMAL_SWITCH:
+            needToSendEvent = true;
+            break;
+          case SWITCH_TYPE_PUSH_ACTIVE_LOW:
 
-                      if (!pinState)
-                      {
-                        needToSendEvent = true;
-                      }
-                      break;
-                    case PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH:
+            if (!pinState)
+            {
+              needToSendEvent = true;
+            }
+            break;
+          case SWITCH_TYPE_PUSH_ACTIVE_HIGH:
 
-                      if (pinState)
-                      {
-                        needToSendEvent = true;
-                      }
-                      break;
-                  }
-                }
-         */
-
+            if (pinState)
+            {
+              needToSendEvent = true;
+            }
+            break;
+        }
 
         if (needToSendEvent)
         {

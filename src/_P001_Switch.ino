@@ -101,9 +101,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
           F("Push Button Active Low"),
           F("Push Button Active High") };
         const int buttonOptionValues[] = {
-          PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH,
-          PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW,
-          PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
+          SWITCH_TYPE_NORMAL_SWITCH,
+          SWITCH_TYPE_PUSH_ACTIVE_LOW,
+          SWITCH_TYPE_PUSH_ACTIVE_HIGH };
         addFormSelector(
           F("Switch Button Type"),
           F("button"),

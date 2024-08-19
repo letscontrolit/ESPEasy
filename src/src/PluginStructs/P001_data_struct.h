@@ -32,15 +32,13 @@
    3: safebutton counter (=0,1)
 \**************************************************/
 
+// N.B. PCONFIG(0) ... PCONFIG(3) differ in P001 compared to P009 and P019
 
 // Make sure the initial default is a switch (value 0)
 # define PLUGIN_001_TYPE_SWITCH                   0
 # define PLUGIN_001_TYPE_DIMMER                   3 // Due to some changes in previous versions, do not use 2.
-# define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH     0
-# define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW   1
-# define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
 
-# define P001_SWITCH_OR_DIMMER PCONFIG(0)
+# define P001_SWITCH_OR_DIMMER PCONFIG(0)  
 # define P001_DIMMER_VALUE     PCONFIG(1)
 # define P001_BUTTON_TYPE      PCONFIG(2) // (normal, push high, push low)
 

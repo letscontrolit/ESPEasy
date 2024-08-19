@@ -16,8 +16,8 @@
    3:
    4: use doubleclick (0,1,2,3)
    5: use longpress (0,1,2,3)
-   6: LP fired (true,false)
-   7: doubleclick counter (=0,1,2,3)
+   6: LP fired (true,false)           20240818 GN: No longer used
+   7: doubleclick counter (=0,1,2,3)  20240818 GN: No longer used
 
    TaskDevicePluginConfigFloat settings:
    0: debounce interval ms
@@ -25,7 +25,7 @@
    2: longpress interval ms
    3: use safebutton (=0,1)
 
-   TaskDevicePluginConfigLong settings:
+   TaskDevicePluginConfigLong settings:  (20240818 GN: No longer used)
    0: clickTime debounce ms
    1: clickTime doubleclick ms
    2: clickTime longpress ms
