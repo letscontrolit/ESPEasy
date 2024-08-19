@@ -11,7 +11,7 @@
   "
   ``PCFGPIO,<PCFGPIO>,<state>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
 
   State:
 
@@ -30,7 +30,7 @@
   "
   ``PCFGPIOtoggle,<PCFGPIO>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
 
   ","
   **Toggle on/off.**.
@@ -40,7 +40,7 @@
   "
   ``PCFLongPulse,<PCFGPIO>,<state>,<duration>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
 
   State: 1/0
 
@@ -54,7 +54,7 @@
   "
   ``PCFLongPulse_mS,<PCFGPIO>,<state>,<duration>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
 
   State: 1/0
 
@@ -66,7 +66,7 @@
   "
   ``PCFPulse,<PCFGPIO>,<state>,<duration>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
 
   State: 1/0
 
@@ -79,7 +79,7 @@
   "
   ``Status,PCF,<PCFGPIO>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
   ","
   **Returns the status of a pin.**
   By the use of the command you will receive the status of the relevant pin.
@@ -87,7 +87,7 @@
   "
   ``Monitor,PCF,<PCFGPIO>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
   ","
   **To monitor a PCFGPIO state.**
   By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -95,23 +95,23 @@
   "
   ``UnMonitor,PCF,<PCFGPIO>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO: 1 ... 128
   ","
   **To cancel the monitor of a PCFGPIO state.**
   By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
   "
   "
-  ``MonitorRange,PCF,<PCFGPIO>``
+  ``MonitorRange,PCF,<PCFGPIO start>,<PCFGPIO end>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO start/PCFGPIO end: 1 ... 128 (end has to be \> start)
   ","
   **To monitor a PCFGPIO state.**
   By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
   "
   "
-  ``UnMonitorRange,PCF,<PCFGPIO>``
+  ``UnMonitorRange,PCF,<PCFGPIO start>,<PCFGPIO end>``
 
-  PCFGPIO: 0 ... 255
+  PCFGPIO start/PCFGPIO end: 1 ... 128 (end has to be \> start)
   ","
   **To cancel the monitor of a PCFGPIO state.**
   By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -119,9 +119,9 @@
   "
   ``PCFGPIOrange,<PCFGPIO start pin>,<PCFGPIO end pin>,<value> [,optional bitmask]``
 
-  | PCFGPIO start pin: 0 ... 255
+  | PCFGPIO start pin: 1 ... 128
   |
-  | PCFGPIO end pin: 0 ... 255
+  | PCFGPIO end pin: 1 ... 128 (end has to be \> start)
   |
   | value: 0 or 1
   |
@@ -151,9 +151,9 @@
   "
   ``PCFGPIOpattern,<PCFGPIO start pin>,<PCFGPIO end pin>,<write pattern> [,optional bitmask]``
 
-  | PCFGPIO start pin: 0 ... 255
+  | PCFGPIO start pin: 1 ... 128
   |
-  | PCFGPIO end pin: 0 ... 255
+  | PCFGPIO end pin: 1 ... 128 (end has to be \> start)
   |
   | write pattern: it's a write pattern. Write 0 or 1.
   | - Example: use decimal number 15 (in binary is 00001111) to set to 1 pin 1,2,3 and 4 and to set to 0 pins 5,6,7,8
@@ -189,7 +189,7 @@
   "
   ``PCFmode,<PCFGPIO>,<mode>``
 
-  | PCFGPIO: 0 ... 255
+  | PCFGPIO: 1 ... 128
   | 
   | mode: 
   | 0 = OUTPUT
@@ -203,9 +203,9 @@
   "
   ``PCFmodeRange,<PCFGPIO start pin>,<PCFGPIO end pin>, <mode>``
 
-  | PCFGPIO start pin: 0 ... 255
+  | PCFGPIO start pin: 1 ... 128
   | 
-  | PCFGPIO end pin: 0 ... 255
+  | PCFGPIO end pin: 1 ... 128
   |
   | mode: 
   | 0 = OUTPUT
