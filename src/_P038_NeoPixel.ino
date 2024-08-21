@@ -7,8 +7,8 @@
 // #######################################################################################################
 
 // Changelog:
-// 2024-08-21, tonhuisman:  Add NeoPixelFor and NeoPixelForHSV commands for setting pixels in a for-loop 
-//                          with variable increment to a color. Can also use a negative increment if from > to.
+// 2024-08-21, tonhuisman:  Add NeoPixelFor and NeoPixelForHSV commands for setting pixels in a for-loop with variable increment
+//                          to a color, optionally clearing the other pixels. Can also use a negative increment if 'from' > 'to'.
 //                          Displays the result once the for command is completed (like the other commands).
 // 2023-10-26, tonhuisman:  Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
 // 2022-12-26, tonhuisman:  Set initial brightness with default value 255, and allow 'only' values 1..255

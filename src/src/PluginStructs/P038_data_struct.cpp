@@ -163,11 +163,21 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
           int rgbw[4];
           int32_t par6 = 0;
           int32_t par7 = 0;
+          int32_t par8 = 0;
           validIntFromString(parseString(string, 7), par6);
           const String str8 = parseString(string, 8);
+          const String str9 = parseString(string, 9);
 
-          if (!str8.isEmpty() && (P038_STRIP_TYPE_RGBW == _stripType) && !useHsv) {
+          if (!str9.isEmpty()) { // Check last expected argument first
+            validIntFromString(str9, par8);
+          }
+
+          if (!str8.isEmpty()) {
             validIntFromString(str8, par7);
+
+            if (P038_STRIP_TYPE_RGBW != _stripType) {
+              par8 = par7;
+            }
           }
 
           if (useHsv) {
@@ -177,13 +187,25 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
             rgbw[0] = event->Par4;
             rgbw[1] = event->Par5;
             rgbw[2] = par6;
-            rgbw[3] = par7;
+            rgbw[3] = (P038_STRIP_TYPE_RGBW == _stripType) ? par7 : 0;
           }
 
-          for (int i = event->Par1 - 1; (event->Par3 < 0 ? (i >= event->Par2 - 1) : (i < event->Par2)) && i >= 0; i += event->Par3) {
-            Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
-            addLog(LOG_LEVEL_INFO, strformat(F("P038 : %d for: %d; %d; %d; color: 0x%02x 0x%02x 0x%02x 0x%02x"),
-                                             i, event->Par1, event->Par2, event->Par3, rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+          const int inc = event->Par3 < 0 ? -1 : 1;
+          int i         = event->Par1 - 1;
+          int j         = i;
+
+          for (; (event->Par3 < 0 ? (i >= event->Par2 - 1) : (i < event->Par2)) && i >= 0; i += inc) {
+            // addLog(LOG_LEVEL_INFO, strformat(F("P038 : %d/%d %c for: %d; %d; %d; color: 0x%02x %02x %02x %02x"),
+            //                                  i, j, i == j ? '*' : ' ', event->Par1, event->Par2, event->Par3,
+            //                                  rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+
+            if (i == j) { // Color pixel
+              Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+              j += event->Par3;
+            }
+            else if (par8 == 1) { // Clear pixel
+              Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(0, 0, 0, 0));
+            }
           }
         } else {
           success = false;
