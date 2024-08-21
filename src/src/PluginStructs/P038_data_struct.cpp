@@ -175,7 +175,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
           if (!str8.isEmpty()) {
             validIntFromString(str8, par7);
 
-            if (P038_STRIP_TYPE_RGBW != _stripType) {
+            if ((P038_STRIP_TYPE_RGBW != _stripType) || useHsv) {
               par8 = par7;
             }
           }
