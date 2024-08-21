@@ -52,3 +52,17 @@
 
     | The maximum brightness allowed is determined by the Maximum allowed brightness setting.
     "
+    "
+    | ``NeoPixelFor,<start led nr>,<stop led nr>,<increment>,<red>,<green>,<blue>[,<brightness>]``
+    ","
+    | Set a pattern of LEDs to the provided R/G/B[/W] color value.
+    | Start LED nr and Stop LED nr should be within range 1..<Led Count>.
+    | Increment must be <> 0, and can be negative if ``<start led nr>`` > ``<stop led nr>``.
+    "
+    "
+    | ``NeoPixelForHSV,<start led nr>,<stop led nr>,<increment>,<hue>,<saturation>,<value>``
+    ","
+    | Set a pattern of LEDs to the provided H/S/V color value.
+    | Start LED nr and Stop LED nr should be within range 1..<Led Count>.
+    | Increment must be <> 0, and can be negative if ``<start led nr>`` > ``<stop led nr>``.
+    "

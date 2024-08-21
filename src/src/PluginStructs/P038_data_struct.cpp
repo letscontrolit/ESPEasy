@@ -52,6 +52,10 @@ const char p038_commands[] PROGMEM =
   "neopixelallhsv|"
   "neopixelline|"
   "neopixellinehsv|"
+  # if P038_FEATURE_NEOPIXELFOR
+  "neopixelfor|"
+  "neopixelforhsv|"
+  # endif // if P038_FEATURE_NEOPIXELFOR
 ;
 enum class p038_commands_e : int8_t {
   invalid = -1,
@@ -62,6 +66,10 @@ enum class p038_commands_e : int8_t {
   neopixelallhsv,
   neopixelline,
   neopixellinehsv,
+  # if P038_FEATURE_NEOPIXELFOR
+  neopixelfor,
+  neopixelforhsv,
+  # endif // if P038_FEATURE_NEOPIXELFOR
 };
 
 bool P038_data_struct::plugin_write(struct EventStruct *event, const String& string) {
@@ -146,6 +154,43 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
         }
         break;
       }
+      # if P038_FEATURE_NEOPIXELFOR
+      case p038_commands_e::neopixelfor:
+      case p038_commands_e::neopixelforhsv:
+      {
+        if (event->Par3 != 0) { // endless loop protection
+          const bool useHsv = p038_commands_e::neopixelforhsv == cmde;
+          int rgbw[4];
+          int32_t par6 = 0;
+          int32_t par7 = 0;
+          validIntFromString(parseString(string, 7), par6);
+          const String str8 = parseString(string, 8);
+
+          if (!str8.isEmpty() && (P038_STRIP_TYPE_RGBW == _stripType) && !useHsv) {
+            validIntFromString(str8, par7);
+          }
+
+          if (useHsv) {
+            rgbw[3] = 0;
+            HSV2RGBWorRGBandLog(event->Par4, event->Par5, par6, rgbw);
+          } else {
+            rgbw[0] = event->Par4;
+            rgbw[1] = event->Par5;
+            rgbw[2] = par6;
+            rgbw[3] = par7;
+          }
+
+          for (int i = event->Par1 - 1; (event->Par3 < 0 ? (i >= event->Par2 - 1) : (i < event->Par2)) && i >= 0; i += event->Par3) {
+            Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+            addLog(LOG_LEVEL_INFO, strformat(F("P038 : %d for: %d; %d; %d; color: 0x%02x 0x%02x 0x%02x 0x%02x"),
+                                             i, event->Par1, event->Par2, event->Par3, rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+          }
+        } else {
+          success = false;
+        }
+        break;
+      }
+      # endif // if P038_FEATURE_NEOPIXELFOR
     }
 
     Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
