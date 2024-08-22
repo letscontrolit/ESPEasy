@@ -92,7 +92,7 @@ void P082_software_pps::setSentenceType(
 
     // Assume a NMEA sentence cannot be over 80 bytes
     // Apply some tolerance, thus check for duration to receive 120 bytes
-    if (sentence_duration < bytesToUsec(120)) {
+    if (sentence_duration < static_cast<int64_t>(bytesToUsec(120))) {
       // Make sure we're not committing a timestamp to the wrong sentence type
       // However we only set this when a complete sentence was processed,
       // so it is highly unlikely we missed the start of the sentence.
