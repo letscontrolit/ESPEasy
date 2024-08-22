@@ -9,6 +9,13 @@
 # define P23_Nlines 8 // The number of different lines which can be displayed
 # define P23_Nchars 64
 
+# ifndef P023_FEATURE_DISPLAY_PREVIEW
+#  ifndef LIMIT_BUILD_SIZE
+#   define P023_FEATURE_DISPLAY_PREVIEW 1
+#  else // ifndef LIMIT_BUILD_SIZE
+#   define P023_FEATURE_DISPLAY_PREVIEW 0
+#  endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P023_FEATURE_DISPLAY_PREVIEW
 
 struct P023_data_struct : public PluginTaskData_base {
   enum {
@@ -45,11 +52,13 @@ struct P023_data_struct : public PluginTaskData_base {
   bool   plugin_write(struct EventStruct *event,
                       String            & string);
 
-  bool   web_show_values();
+  # if P023_FEATURE_DISPLAY_PREVIEW
+  bool web_show_values();
 
-  void   setCurrentText(const String& string,
-                        int           X,
-                        int           Y);
+  void setCurrentText(const String& string,
+                      int           X,
+                      int           Y);
+  # endif // if P023_FEATURE_DISPLAY_PREVIEW
 
   void displayOn();
 
@@ -93,7 +102,9 @@ struct P023_data_struct : public PluginTaskData_base {
 private:
 
   String strings[P23_Nlines]{};
+  # if P023_FEATURE_DISPLAY_PREVIEW
   String currentLines[P23_Nlines]{};
+  # endif // if P023_FEATURE_DISPLAY_PREVIEW
 };
 
 #endif // ifdef USES_P023
