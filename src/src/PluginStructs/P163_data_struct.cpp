@@ -67,7 +67,7 @@ bool P163_data_struct::setOutputValues(struct EventStruct *event) {
   if (hasPluginStats()) {
     PluginStats *stats = getPluginStats(0);                // Get stats for Count value
 
-    if (stats->getNrSamples() > 0) {
+    if ((nullptr != stats) && (stats->getNrSamples() > 0)) {
       delta = abs(count - stats->getSampleAvg(_countAvg)); // Average count of last n values
     }
   }
