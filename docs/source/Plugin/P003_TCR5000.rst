@@ -13,7 +13,7 @@ TCR5000
 Introduction
 ------------
 
-The ESP8266 module can be used as an general purpose digital pulse counter device for various digital sensors.
+The ESP module can be used as an general purpose digital pulse counter device for various digital sensors.
 Think about optical sensors with a digital output. To be used for things like gas, water, electricity, door open/close counters, etc.
 
 In this example we will connect an optical sensor. Connect the digital output to a GPIO pin on the ESP module.
@@ -42,8 +42,6 @@ Setup
 .. image:: P003_Setup_TCR5000_1.png
     :scale: 40 %
 
-.. danger:: Only task number 1..4 is currently supported for the pulse plugin!
-
 Task settings
 ~~~~~~~~~~~~~
 
@@ -59,20 +57,20 @@ Sensor
 * **Counter type**: In this example the type is set to **Delta/Total/Time**.
 * **Mode type**: Pulse input is generally set to **Falling** or **PULSE low**
 
-  ``CHANGE`` = count on signal being changed, low to high (0.8-V to 2.4+V) or high to low (2.4+V to 0.8-V)
+  ``Change`` = count on signal being changed, low to high (0.8-V to 2.4+V) or high to low (2.4+V to 0.8-V)
 
-  ``RISING`` = count if signal is rising, from low to not low (0.8-V to 0.8+V)
+  ``Rising`` = count if signal is rising, from low to not low (0.8-V to 0.8+V)
 
-  ``FALLING`` = count if signal is falling, from high to not high (2.4+V to 2.4-V)
+  ``Falling`` = count if signal is falling, from high to not high (2.4+V to 2.4-V)
   
-  ``PULSE low`` = count if a stable low signal ended followed by a stable high signal
+  ``PULSE Low`` = count if a stable low signal ended followed by a stable high signal
   
-  ``PULSE high`` = count if a stable high signal ended followed by a stable low signal.
+  ``PULSE High`` = count if a stable high signal ended followed by a stable low signal.
 
-  ``PULSE change`` = count if the stable signal changes from high to low or from low to high
+  ``PULSE Change`` = count if the stable signal changes from high to low or from low to high
   
 
-.. warning:: GPIO 16 (D0) is not compatible with pulse counters.
+.. warning:: ESP8266 GPIO 16 (D0) is not compatible with pulse counters.
 
 Data acquisition
 ^^^^^^^^^^^^^^^^

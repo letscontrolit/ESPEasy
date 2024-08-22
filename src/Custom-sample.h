@@ -399,6 +399,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
 //   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
+//   #define P038_FEATURE_NEOPIXELFOR 1 // Enable NeoPixelFor/NeoPixelForHSV commands (default enabled for ESP32)
 // #define USES_P039   // Thermocouple
 
 // #define USES_P040   // RFID - ID12LA/RDM6300
