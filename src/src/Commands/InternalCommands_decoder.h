@@ -63,6 +63,8 @@ enum class ESPEasy_cmd_e : uint8_t {
   ethwifimode,
 #endif // FEATURE_ETHERNET
 
+  factoryreset,
+
   gateway,
   gpio,
   gpiotoggle,
@@ -159,7 +161,6 @@ enum class ESPEasy_cmd_e : uint8_t {
   pwm,
 
   reboot,
-  reset,
   resetflashwritecounter,
   restart,
   rtttl,

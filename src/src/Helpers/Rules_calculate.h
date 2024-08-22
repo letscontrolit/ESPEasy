@@ -10,7 +10,11 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#define TOKEN_LENGTH 40
+#else
 #define TOKEN_LENGTH 25
+#endif
 #define OPERATOR_STACK_SIZE 32
 
 enum class CalculateReturnCode : uint8_t{

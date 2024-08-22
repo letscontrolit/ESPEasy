@@ -919,7 +919,7 @@ void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool a
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
 
   if (activeLow) {
-    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // SWITCH_TYPE_PUSH_ACTIVE_LOW;
   }
   Settings.TaskDevicePluginConfig[taskIndex][3] = 1;   // "Send Boot state" checked.
 }
