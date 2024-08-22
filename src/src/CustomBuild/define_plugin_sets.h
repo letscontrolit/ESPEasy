@@ -1376,7 +1376,9 @@ To create/register a plugin, you have to :
     #define USES_P009   // MCP
 
     #define USES_P010   // BH1750
-    #define USES_P011   // PME
+    #ifndef ESP8266_1M
+      #define USES_P011   // PME (2024-08-13: moved to Collection builds)
+    #endif
     #define USES_P012   // LCD
     #define USES_P013   // HCSR04
     #define USES_P014   // SI7021
