@@ -1,4 +1,463 @@
 -------------------------------------------------
+Changes in release mega-20240822 (since mega-20240414)
+-------------------------------------------------
+
+Release date: Thu Aug 22 10:35:20 PM CEST 2024
+
+Gijs Noorlander (11):
+      [Cleanup] Revert accidentally changed line endings
+      [PluginStats] Show average rate and total duration of collected stats
+      [PluginStats] Add nr of samples to chart legend
+      [PluginStats] Uncrustify/cleanup code
+      [Build] Fix build due to static var with too generic name
+      [Docs] Remove unused files for P169
+      [Docs] Document getconfig and commands for P169 AS3935
+      [AS3935] Fix restart measurement after running calibration command
+      [PluginStats] Fix patching timestamps from before system time was set
+      [AS3935] Enable auto gain and reduce number of events
+      [Sonoff POR] Move Sonoff POW R1/R2 ESP8266 build back to core 2.7.4
+
+TD-er (139):
+      [IPv6] Add option to enable/disable IPv6
+      [AdaGFX Helper] Make "1" in TomThumb font as wide as all other numbers
+      [NeoPixel] Add AHT20 support to ESP32 NeoPixel build.
+      [NeoPixel Matrix] Fix trailing pixels on scrolling text
+      [Hidden SSID] Fix ESP32 connecting to hidden SSID with channel > 11
+      [ESP-IDF5.1] Update to latest SDK code + fix HWCDC
+      [ESP32 WiFi] Add info about found AP from scan
+      [ESPEasy p2p] Add p2pNode#Connected and #Disconnected events
+      [Build] Fix build on ESP-IDF4.4 builds
+      [C018] Reduce build size
+      [Build] Reduce ESP8266 build size by concat all in single __tmpfile.cpp
+      [Build] Reduce ESP8266 bin size disable LittleFS lib + OTA on 1M builds
+      [AS3935] Add P169 Lightning Detector plugin
+      [AS3935] Improve calibration accuracy
+      [AS3935] Implement P169 code
+      [AS3935] Add option to measure all calibrated oscillators
+      [AS3935] Improve frequency measurement accuracy
+      [AS3935] Improve stability and calibration success rate
+      [AS3935] Make it compile for ESP8266 and clarify logs
+      [AS3935] Fix build on ESP32 IDF4.4
+      [AS3935MI] Get in sync with pending PR to original lib
+      [AS3935MI] Move frequency count code to original library code
+      [AS3935MI] Make frequency count "vanilla Arduino" for non-ESP SoC
+      [AS3935MI] Add selection for nr Samples, division, etc
+      [AS3935MI] Add '2nd best' check to calibration to retest
+      [AS3935MI] Add event on lightning strike and count strikes per interval
+      [AS3935MI] Add total strikes counter, sensor stats and cleanup plugin
+      [AS3935MI] Cleanup settings & add chart to help tuning
+      [AS3935MI] Speedup LCO calibration + simplify configuration
+      [AS3935MI] Add timestamp to PluginStats
+      [AS3935] Fix compile issue
+      [ESP-IDF5.1] Update ESP-IDF SDK to fix HWCDC
+      [AS3935MI] Change lib function names to use camelCase
+      [ESP-IDF5.1] Fix crashes on LittleFS after factory reset
+      [ESP-IDF5.1] Fix crashes on LittleFS after factory reset
+      [ESP-IDF5.1] Update to latest ESP-IDF SDK code
+      [ESP-IDF 5.1] Exclude some OPI PSRAM speed improvements due to stability
+      [Json] Fix showing JSON including pluginstats data
+      [PluginStats] Compute average taking timestamps into account.
+      [PluginStats] Move stats to PSRAM when available
+      [AS3935MI] Rename interrupt enum to match style of other enums in lib
+      [Controller] Fail gracefully when almost out of memory
+      [Controller] Fail gracefully when almost out of memory
+      [ESP-IDF5.1] Fix WiFi issues on ESP32-C6
+      [AS3935] Minor clean-up in code and user-interface
+      [P169] Start documenting AS3935 plugin
+      [ESP-IDF5.1] Fix WiFi issues on ESP32-C6
+      [AS3935MI] Get rid of 'magic' values in lib code
+      [AS3935] Fix "indoor/outdoor" setting + no longer disable on fail calib
+      [AS3935] Document calibration for P169 Lightning sensor
+      [AS3935] Add commands to P169 Lightning Detector
+      [AS3935] Set task values to output distance Far/Near and remove "energy"
+      [ESP-IDF5.1] update to latest ESP-IDF SDK & Arduino 3.0.0
+      [mDNS] Enable FEATURE_MDNS again for ESP-IDF5.1 builds
+      [AS3935MI] Add validation check for computeCalibratedFrequency
+      [AS3935MI] Make ISR attributes like IRAM_ATTR platform dependant.
+      [AS3935MI] Add auto gain algorithm to adapt to changes in noise envs.
+      [PluginStats] Update recorded timestamps when time is first set
+      [AS3935] Improve auto tuning
+      [mDNS] Disable mDNS again as it causes major stalls
+      [Charts] Add option to zoom/pan for PluginStats charts
+      [ESP-IDF5.x] Fix recent change of flush() to clear() in Arduino SDK
+      Revert "[ESP-IDF5.x] Fix recent change of flush() to clear() in Arduino SDK"
+      [ESP-IDF5.1] Revert Arduino PR 9453 WiFiClient - rename flush() to clear()
+      [ESP-IDF5.1] Update to latest platform build
+      [AS3935] Disable auto gain for now
+      [ESP-IDF5.1] Revert Arduino PR 9453 WiFiClient - rename flush() to clear()
+      [Build] Fix merge issues.
+      [AS3935MI] Update to 1.3.5 with PRs from ESPEasy changes merged to lib
+      [System Load] Reduce system load running background tasks
+      [Cleanup] Speedup converting task values to String
+      [Cleanup] Speedup converting task values to String
+      [Cleanup] Further reduction of load
+      [Cleanup] Further reduction of load
+      [Cleanup] Revert line ending to CRLF again (.h files)
+      [Cleanup] Revert changed line-ending back to CRLF (.cpp)
+      [Cleanup] Revert line endings from LF to CRLF
+      [Cleanup] Revert line endings from LF to CRLF
+      [Cleanup] Revert line ending to CRLF for PlatformIO ini files
+      [AS3935MI] Update increase/decrease functions return values in lib
+      [PluginStats] Decimate samples by not storing unchanged values
+      [AS3935] Add selectable range for auto gain algorithm
+      [Build] Remove previously created __tmpfile.cpp files on ESP8266 build
+      [AS3935] Add check to see if RCO is still active on IRQ pin
+      [ESP-IDF5.x] Update to latest code incl. possible fix for WiFi issues
+      [Controller] Fix sending to controller
+      [Controller] Fix sending to controller
+      [Cleanup] Speedup all calls where task value name was used
+      [Build] Fix build error on LIMIT_BUILD_SIZE builds
+      [ESP-IDF5.x] Update ESP-IDF/ESP32-Arduino  to latest commits
+      [ESPEasy p2p] Improve sharing tasks via p2p + add checksum to UDP packet
+      [ESPEasy p2p] Add timestamp to taskvalue data to counter network delays
+      [ESPEasy p2p] Fix sending taskinfo packet rejected by  wrong size check
+      [ESPEasy p2p] Make taskinfo length more flexible, remove trailing zeroes
+      [ESPEasy p2p] Add "Data Source" selection to request remote data feed
+      [Cleanup] Remove unused code
+      [MQTT] Fix some extreme timeouts when broker is unresponsive (#5075)
+      [MQTT] Send keep-alive ping at 2/3rd of MQTT_KEEPALIVE
+      [MQTT] Set timeout also for connecting to the MQTT broker
+      [Memory] Make special memory allocations more robust
+      [Controller] Add time spent in connecting to host to timing stats
+      [Cleanup] Rename ambiguously controller_number in controller code
+      [Controller] Add note on typical timeout for local vs. online networks
+      [PluginStats] Fix inconsistency with pluginstats for ADC plugin
+      [MQTT] Fix disconnect when broker sends keepalive ping before client
+      [ADC] Improve ADC curve fitting calibration accuracy
+      [VL53L0X] Fix ignoring sensor error values
+      [VL53L0X] Add async read option to library
+      [ESP-IDF5.x] Update to latest ESP-IDF/Arduino SDK
+      [WiFi] Add passive/active scan for ESP32
+      [Cleanup] Always use the same unit/note for settings, regardless the page
+      [ESP-IDF5.1] No longer support Ethernet on ESP32-C2
+      [Sysinfo] Add internal temperature to sysinfo (when supported)
+      [Build] Fix build due to missing #ifdef checks
+      [ESP32 temp] Fix int. temperature sensor not changing range
+      [WiFi] Fix WiFi not able to reconnect due to unprocessed disconnect
+      [VL53L0x] Make reading sensor async
+      [VL53L0X] Actually do read the sensor asynchronous.
+      [WiFi] Fix (re)connect to WiFi on ESP32-xx builds
+      [VL53L0X] Add filtering + make threshold more intuitive
+      [AS3935] Do not set IRQ pin to input when not configured (e.g. p2p share)
+      [Time] Simplify system time management + increase resolution to usec
+      [Time] Cleanup ESPEasy internal system time management
+      [VL53L0X] Cleanup code
+      [VL53L0X] Add dynamic filtering, allowing fast response on quick change
+      [Time] Improve NTP accuracy and prevent lockups on incorrect data
+      [Cleanup] Fix wrong unit for TX power on web UI page
+      [Time] Improve accuracy and precision of time sync
+      [GPS] Fix filtering out occasional jitter in received GPS timestamp
+      [ESP-IDF5.1] Fix hanging when OTA update fails.
+      [GPS] Fix showing GPS received time on GPS task page
+      [P2P] Fix crashes when processing UDP packets after WiFi disconnect
+      [ADC] Change order of mV and ADC value as this is more intuitive
+      [OTA] Fix crash/abort of larger OTA updates (e.g. Max builds)
+      [GPS] Improve GPS time stability
+      [Timesync] Tweak time wander penalty for time since last sync
+      [CUL reader] Set nr. filters field to actual nr of used filters via cmd
+      [CUL reader] Do not sort CUL filters
+      [Readme] Added link to PVS-Studio as used SAST tool
+
+Ton Huisman (280):
+      [P123] Add FT6206 Capacitive touch screen
+      [AdaGFX] Implement/activate generic 'adagfx_trigger' command-trigger
+      [P123] Add arguments to Object events, allow initial events for On/Off button objects minor corrections
+      [P123] Code improvements, increased button response
+      [AdaGFX] Add support for `btn` subcommand to draw button-like objects
+      [P123] Add support for button-simulation using AdaGFX btn subcommand
+      [Build] Add -Wswitch compiler option for ESP32 (already active for ESP8266)
+      [P123] Minor updates and improvements
+      [P123] Limit code & bin size for LIMIT_BUILD_SIZE builds
+      [AdaGFX] Improve btn subcommand, slim down bin size, other minor improvements
+      [TouchHandler] Introduce ESPEasy_TouchHandler, refactored out of P123 touch support
+      [P123] Refactor and implement ESPEasy_TouchHandler
+      [TouchHandler] Fix conditional compilation issue
+      [AdaGFX] Add support for confined windows to print/draw in [AdaGFX] Add support for getting config values
+      [P095] [CP] Fix for displaying text on previous location was not overwriting old content Add Text print mode for centered text Extend txtfull subcommand to enable centered text
+      [TouchHandler] Move PLUGIN_WRITE and _GET_CONFIG_VALUE to helper, add getters for state and enabled, add toggle subcommand, handle multiple objects for on, off and toggle
+      [P123] Refactor PLUGIN_WRITE and _GET_CONFIG_VALUE to TouchHandler, minor improvements
+      [AdaGFX] Remove unused variable
+      [AdaGFX] Process like template for length and textheight values
+      [AdaGFX] Add/update documentation for window commands and config values
+      [AdaGFX] Code improvements, initialization, const, move window offset into printText()
+      [AdaGFX] Code improvements as suggested by feedback
+      [AdaGFX] Correct font include paths, add #ifndef filename checks to fonts
+      [AdaGFX] Regression: Background-fill for text should fill entire line height
+      [TouchHandler] Change method arguments to const-by-reference where possible
+      [TouchHandler] Strip unneeded prefix from page variables
+      [P123] Strip unneeded prefix from page variables
+      [TouchHandler] Optimizations (as suggested and more)
+      [P123] Fix some spelling issues, code optimizations
+      [P123] Minor optimizations
+      [AdaGFX] Reduce build some more for LIMIT_BUILD_SIZE
+      [P123] Small size improvement
+      [TouchHandler] Replace _ in captions and object names by a space, and reverse, might save some settings size
+      [UI] Add class table.multi2row for alternating color per 2 rows
+      [TouchHandler] Use 2-row alternating color, improvements
+      [P123] Code improvements
+      [AdaGFX] Add Slider/Gauge support (via btn subcommand), fixes
+      [AdaGFX] Missed a conditional compile option
+      [TouchHandler] Add support for sliders and swiping, many other improvements
+      [P123] Implement Slider/Gauge support, other (size) improvements
+      [AdaGFX] Improved drawing of Slider/Gauge control (also reverted)
+      [TouchHandler] Enable use of reverted sliders/gauges, and improved handling of ranges that don't have 0 included
+      [P123] Minor code improvements
+      [TouchHandler] Add optional touchscreen disabling, code fixes and improvements
+      [P123] Implement disabled-touchscreen feature
+      [TouchHandler] Fix typo and conditional compilation issue
+      [UI] Improvements for `multi2row` style
+      [TouchHandler] Settings page layout adjusted, and some minor improvements
+      [TouchHandler] Logging check improvements
+      [P123] Logging check improvements
+      [TouchHandler] Remove unneeded enum MAX values
+      [AdaGFX] Remove unneeded enum MAX values, fix BMP conditional compilation issue
+      [AdaGFX] Fix compilation error after merge from mega
+      [TouchHandler] Fix compilation error after merge from mega, table improvements
+      [P116] Add GetConfig feature, code improvements
+      [I2C scanner] Enable plugin-scan for ESP32, updated sensors
+      [TouchHandler] Fix touch-disabled option, code improvements
+      [P123] Code improvements
+      [TouchHandler] Conditional compilation fix
+      [TouchHandler] Conditional compilation fix
+      [Boards] Add BOARD_HAS_PSRAM flag for 16M8M config (avoids crashing when saving P123 settings)
+      [TouchHandler] Logging and code optimizations
+      [P123] Bugfixes and logging improvements
+      [P123] Fix for disabled touchpanel setting
+      [Lib FT6206] Add support for FT6336 touch panel (as used in M5Stack Core2)
+      [P123] Correct merge error
+      [P123] De-initialize on error during PLUGIN_INIT fixed
+      [Core] Add extra storage space for Custom TaskSettings
+      [Plugins] Adjust check for max. CustomTaskSettings
+      [TouchHandler][P123] Implement Extended CustomTaskSettings feature
+      [P104] Improve storing settings (speed and size)
+      [TAR] Add support for downloading and uploading files via .tar archive
+      [Core] ExtendedCustomTaskSettings code improvements based on feedback
+      [Code] Add `NR_ELEMENTS` macro for getting the number of elements in an array
+      [TAR] Code improvements from feedback, code de-duplication
+      [Download] Only add `exrcfgNN.dat` files with feature enabled
+      [TAR] Don't allow subdirectory files, check file before trying to delete
+      [TAR] Add setting to disable download configuration as a .tar file
+      [TAR] Add documentation
+      [TAR] Minimal logging during file-download
+      [TAR] Minimal logging during file-upload, code improvements
+      [Core] Re-enable Flash-formatting for LittleFS
+      [P123][TouchHandler] Fix merge issues, adjust log strings
+      [TouchHandler] Fix typo
+      [P123][TouchHandler] Fix valuecount issue, implement missing `GET_I2C_ADDRESS` function
+      [TouchHandler] Remove unused variable assignment
+      [P104] Disable new settings-version V3 for now
+      [P104] Code improvements, re-enable new settings-version V3
+      [AdaGFX_helper] Reduce build-size
+      [AdaGFX_helper] Simplify font handling, add some better 7/14 segment fonts, enable 18pt fonts for ESP32
+      Merge branch 'mega' of https://github.com/letscontrolit/ESPEasy into feature/TAR-archive-upload-and-download + fixes
+      [AdaGFX_helper] Update Fonts documentation
+      [TAR] Scrape off a few bytes to make the build fit
+      [TouchHandler] Fix compilation errors since Core code changes
+      [TouchHandler] Fix compilation errors since Core code changes
+      [TouchHandler] Code optimization reducing .bin size
+      [P123] Minor code optimiziations
+      [Build] Reduce code size to make Collection F fit again
+      [Build] Reduce code size to make Collection F fit again (Collection plugins)
+      [TAR] Exclude feature from normal_IRext_no_rx build for size overflow
+      [TAR] Exclude feature from normal_IRext_no_rx build for size overflow (commit correct file)
+      [Build] Reduce code size to make Collection F fit again (Collection plugins)
+      [Build] Reduce code size (Stable plugins)
+      [P045] Don't use UserVar.setInt32() for Collection builds
+      [Build] Reduce code size (Stable plugins)
+      [Build] Reduce code size (Stable plugins)
+      [Build] Reduce code size (Stable plugins)
+      [Build] Reduce code size (Collection A plugins)
+      [Build] Reduce code size (Collection B plugins)
+      [Build] Reduce code size (Collection C plugins)
+      [Build] Reduce code size (Collection D plugins)
+      [TAR] Correctly handle a 0-byte file on download
+      [TAR] Improve Tools/Save description, add Reboot button on Tools/Load, update documentation
+      [Build] Reduce code size (Collection E plugins)
+      [Core] String optimizations
+      [Core] String optimizations
+      [Core] String optimizations
+      [Core] String optimizations
+      [Lib] LD2410 Optimize code to reduce bin size
+      [Build] Reduce code size (Collection G plugins)
+      [Build] Reduce code size (Energy plugins)
+      [Build] Reduce code size (Display plugins)
+      [Build] Reduce code size (Controller helper)
+      [AdaGFX_helper] Code improvements Partly based on this commit: https://github.com/letscontrolit/ESPEasy/pull/4932/commits/a95ad3bda183f0ecf4e41efff3e9cbe4fb3a2e16
+      [Build] Reduce code size (avoid String(F("...")) conversions and concatenations)
+      [Build] Revert modifications for Eth- and WiFi- event handlers (too timing critical)
+      [TouchHandler] Also reverse the Left/Right navigation when Up/Down navigation is reversed
+      [TouchHandler] Rename inc/dec subcommands to next/prev
+      [P123] Refactor increment/decrement functions to next/prev in line with TouchHandler
+      [P123][TouchHandler] Add documentation
+      [Build] Code reductions to make Collection F build fit in .bin size again
+      [P145] Revert moved include
+      [P123] Docs minor corrections
+      [P011] Add Input (switch) option, code improvements
+      [P011] Add documentation
+      [P064] Add Separate Gesture events option
+      [P064] Updated documentation
+      [TAR] Re-enable TAR support in ESP8266 Display build
+      [Docs] Improvements and missing features
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [Storage] Use correct parameter-type for strformat()
+      [P047] Add support for Adafruit I2C Capacitive Moisture sensor
+      [P047] Update documentation for added sensor model
+      [N001] Add support for optional Subject to notify command
+      [P162] Add plugin for Digipot MCP42xxx/MCP41xxx
+      [P162] Add required include
+      [P011] Update documentation
+      [P011] Add support for Get Config Values and update documentation
+      [P011] Add plugin commands to EasyColorCode
+      [P162] Fix some testfindings, add logging
+      [P162] Add `Send data on change` option
+      [P162] Add documentation
+      [P162] Add EasyColorCode configuration
+      [AdaGFX Helper] Add TomThumb 3x5 font
+      [Build] Add ESP32-S3 4MB NeoPixel LittleFS build, including AHT2x (P105) for TinyTronics Smart Home display unit
+      [Build] ESP32-S3 4MB NeoPixel LittleFS build, remove typo, no longer needed here
+      [AdaGFX] Add Default font option and support functions
+      [P131] Add default font selector
+      [P131] Update documentation
+      [Docs] Hide default enabled sidebar menu
+      [P167] Enable use of SEN5x sensor, other improvements
+      [SysVars] Add conversions to get remote-unit info
+      [SysVars] Add more conversions to get remote-unit info
+      [Build] Remove P039 from `normal_IR_no_rx_ESP8266` build to make it fit again
+      [P167] Minor corrections and some cleanup
+      [SysVars] Update EasyColorCode with new variables and some fixes
+      [P167] Add to I2C Scanner
+      [P167] Update EasyColorCode docs
+      [P110] VL53L0x: Add Direction value, trigger only when changed, trigger delta
+      [P113] VL53L1x: Add Direction value, code optimizations
+      [P110] Update documentation
+      [P113] Update documentation
+      [Bugfix][P135] SCD4x fix reading sensor settings
+      [P135] Only set sensor parameters if needed
+      [P135] Only set sensor parameters if needed
+      [P105] Update plugin name and documentation
+      [Commands] Correctly handle `on`/`true`/`off`/`false` as enable/disable values for commands
+      [P105] Update documentation
+      [P034] Add documentation, remove unreachable documentation file
+      [P012] Clear splash after 5 seconds if not yet overwritten (man. picked from #4884)
+      [C018] Re-enable LoRa TTN controller for ESP32 Collection builds
+      [P105] Add extra devices to I2C scanner
+      [P167] Fix storing setting to enable tech. logging
+      [Build] Update espeasy.min.js for multiple merged PRs
+      [P167] Use fixed label for model and tech. logging
+      [AdaGFX_Helper] Fix typo in `default` font definition
+      [P116] Add Default font selection if AdafruitGFX_Helper fonts are included in build
+      [Docs] Add plugin overview per build set (generated)
+      [P167] Add command `sen5x,techlog,<0|1>`
+      [P167] Add command `sen5x,techlog,<0|1>`
+      [P167] Add documentation
+      [C011] Documentation correction
+      [AdaGFX_Helper] Fix typo in `default` font definition
+      [AdaGFX_Helper] Fix merge conflict
+      [AdaGFX_Helper] Fix font offset issues
+      [P047] Add support for BeFlE v3.x moisture sensor
+      [P080] Add Event with iButton address
+      [DallasHelper] Reduce logging for Dallas_readiButton to on-change only
+      [P080] Remove unneeded Dallas_startConversion calls, reduce logging for Dallas_readiButton call
+      [P080] Improved documentation
+      [P004] Add support for Get Config Value to retrieve sensor statistics
+      [Commands] Add OWScan command to scan for 1-wire devices
+      [P004] Correct typo
+      [P004] Change argument separator to dot for Get Config Value
+      [1WireHelper] Return Unknown for unrecognized devices
+      [P168] Add VEML6030/VEML7700 Light/Lux sensor
+      [AdaGFX Helper] Parse Get Config Values with period instead of comma, with fall-back
+      [AdaGFX Helper] Update documentation
+      [P011] Parse Get Config Values with period instead of comma, with fall-back
+      [P087] Parse Get Config Values with period instead of comma, with fall-back
+      [Build] Fix build error because of removed python package since 3.12
+      [Build] Fix build error because of removed python package since 3.12
+      [P168] Add documentation
+      [P170] Add Seeed studio I2C Liquid Level sensor
+      [Build] Set ETH enabled for all IDF 5.1 builds
+      [P167] Correct interrupt function definitions
+      [P170] Add documentation
+      [P170] Add optional logging of received data
+      [P123] Add support for GT911, CST820, CST226 and AXS15231 touch screens
+      [P123] Update documentation
+      [P123] Fix support for CST226 to return 0 when not touched
+      [P123] Update documentation
+      [P123] Add support for CHSC5816 and update documentation
+      [Commands] i2cscanner: add debug and multiplexer support
+      [P123] Save current device I2C address
+      [P123] Docs: add warning about CST816 can't be found by I2C scan
+      [P142] Add AS5600 Magnetic angle sensor
+      [P168] Fix VEML6030 support
+      [Build] Add P095 to Collection builds (ESP32 only) as documented
+      [P047] Fix compiler warning
+      [P095] Add support for ILI9488 Displays
+      [StringConverter] Fix `parseHexTextData` unwanted increment during parsing
+      [P123] Docs: add remark for untested touchscreen controllers
+      [P172] Add BMP3xx using SPI interface
+      [P142] Add documentation
+      [P095] Combine support for ILI9486 Displays with ILI9488
+      [P095] Combine support for ILI9486 Displays with ILI9488
+      [P095] Update documentation
+      [P095] Documentation note for ILI9486 added
+      [Docs] Documentation updates, README.md updates
+      [P172] Show ChipID when plugin is enabled
+      [P172] Add/update documentation
+      [P036] Add Header Time format options
+      [P087] Add example to plugin documentation
+      [P027] Add optional Powerdown mode
+      [P027] Fix sending single values via Controller
+      [P003] Countertype to determine the number of values
+      [P003] Update documentation, apply some corrections
+      [P003] Add extra Counter Type options (for selected builds)
+      [P003] Add extra setting for Ignore Delta = 0
+      [P003] Fix typo
+      [Build] Remove P094 from ESP8266 Collection D for size reasons
+      [Build] Remove P094 also from ESP32 Collection D builds
+      [P003] Allow Interval = 0 and send first read 0 Count value
+      [Commands] Rename `Reset` to `FactoryReset`
+      [Console] Exclude Serial Console fall-back GPIOs only when fall-back enabled
+      [P003] Improve handling and checking for new pulses when Interval = 0
+      [P141] Add default font selection setting
+      [P011] Exclude plugin from 1M builds
+      [P036] Exclude preview from web-UI for 1M builds
+      [P123] Missing parenthesis in macro
+      [P164] Missing parenthesis in macros
+      [TarStream] Add missing fall-through comment in switch
+      [P038] Reduce build size
+      [P135] Exclude factoryreset command by default
+      [P008] Small code optimizations
+      [P013] Log-string optimizations
+      [P023] Disable Content-display in web-UI for limited builds (code size reductions)
+      [P024] Fix issue with reporting/displaying the configured I2C address (offset via Port)
+      [P104] Fix unused variable warnings
+      [Docs] Corrections for P009 and P019 pin range commands
+      [P038] Add commands neopixelfor and neopixelforhsv
+      [P038] Add optional `<clear>` argument to neopixelfor commands
+      [P038] Fix optional `<clear>` argument for neopixelforhsv command
+
+andibaciu (2):
+      Plugin P167 IKEA Vindstyrka
+      Fix some bugs and add suport (only read parameters) for standalone sensirion sen54 and sen55
+
+thomastech (10):
+      Preliminary Notify Plugin Changes to restore operation after ISP email server upgrade
+      Added more comments to file. No code change.
+      Changed Notify SMTP email timeout values to mS (were secs), per TD-er's request.
+      Cleanup Notify log text messages.
+      (1) Reduced Notify Timeout Limit to 12000mS. (2) Fixed "Reply to" address when provided by Notify Command (via rules).
+      Reverted Notify Max Timeout to 20000mS (was 12000). Notify Log msgs now employ loglevelActiveFor() wrapper.
+      Created Docs (RTD) for updated Notifications Email plugin.
+      Corrected Changelog dates in NotificationPage.cpp.
+      (1) RTD text corrections, per discussions. (2) Updated RTD link, now use addRTDHelpButton() function.
+      Minor edits to Notification Docs, per Github comments
+
+
+-------------------------------------------------
 Changes in release mega-20240414 (since mega-20240401)
 -------------------------------------------------
 
