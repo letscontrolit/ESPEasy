@@ -218,12 +218,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   #if FEATURE_SD
   bool includeSDCard = true;
   #endif
-  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  // FIXME TD-er: Must check whether this can be a conflict.
-  bool includeSerial = false;
-  #else
-  bool includeSerial = true;
-  #endif
+  bool includeSerial = Settings.UseSerial; // Only need to check if Serial Port Console is enabled
 
   #if FEATURE_ETHERNET
   bool includeEthernet = true;
@@ -270,7 +265,11 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (includeSerial) {
     #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     if (Settings.UseSerial && 
-        Settings.console_serial_port == 2)  // 2 == ESPEasySerialPort::serial0
+        (Settings.console_serial_port == 2  // 2 == ESPEasySerialPort::serial0
+         #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+         || Settings.console_serial0_fallback
+         #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+        ))
     #else
     if (Settings.UseSerial) 
     #endif

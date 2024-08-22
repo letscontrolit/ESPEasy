@@ -25,7 +25,7 @@ void handle_pinstates_json() {
   bool first = true;
   addHtml('[');
 
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
+  for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     if (!first) {
       addHtml(',');
@@ -79,7 +79,7 @@ void handle_pinstates() {
   html_table_header(F("Command"));
   html_table_header(F("Init"));
 
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
+  for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it)
   {
     html_TR_TD();
     const pluginID_t plugin = getPluginFromKey(it->first);

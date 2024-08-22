@@ -207,6 +207,14 @@
 
     ``ExecuteRules,<filename>``"
     "
+    FactoryReset","
+    :red:`Internal`","
+    Reset config to factory default. Caution, all settings will be lost!
+
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset`` to avoid accidentally wiping the configuration when ``Reboot`` was the intended action...
+
+    ``FactoryReset``"
+    "
     Gateway","
     :red:`Internal`","
     Get or set the gateway configuration
@@ -594,10 +602,9 @@
     ``Reboot``"
     "
     Reset","
-    :red:`Internal`","
-    Reset config to factory default. Caution, all settings will be lost!
-
-    ``Reset``"
+    :gray:`Renamed`","
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset``.
+    "
     "
     Reset Flash Write Counter","
     :red:`Internal`","
