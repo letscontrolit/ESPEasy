@@ -104,7 +104,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 	return return_see_serial(event);
 }
 
-const __FlashStringHelper * Command_Settings_Reset(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_Settings_FactoryReset(struct EventStruct *event, const char* Line)
 {
 	ResetFactory();
 	reboot(IntendedRebootReason_e::ResetFactoryCommand);

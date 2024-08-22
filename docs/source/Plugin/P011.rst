@@ -34,6 +34,8 @@ After installing the software on the Arduino Nano, the simplest solution is to p
 
 NB: This software can also be installed on other Arduino models, that support I2C, Analog and Digital pins, but this hasn't been actively tested. Depending on the available IO pins, some of the features may not match with the Arduino Nano.
 
+2024-08-13: This plugin is excluded from ESP8266 1M builds for size reasons. It can still be used for Custom builds and is normally available in other builds.
+
 Device Configuration
 --------------------
 

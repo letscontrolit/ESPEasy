@@ -78,7 +78,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         uint32_t varNum;
 
         if (validUIntFromString(valueName, varNum)) {
-          unsigned char nr_decimals = maxNrDecimals_fpType(getCustomFloatVar(varNum));
+          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(varNum);
+          unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
           bool trimTrailingZeros    = true;
 
           if (devNameEqInt) {
@@ -89,9 +90,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             trimTrailingZeros = false;
           }
           #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
           #else
-          String value = floatToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
           #endif
           transformValue(
             newString, 
