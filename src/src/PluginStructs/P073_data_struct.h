@@ -51,7 +51,7 @@
 #  define P073_USE_74HC595      1   // Enable support for 74HC595 based sequential displays
 # endif // ifndef P073_USE_74HC595
 # ifndef P073_USE_74HCMULTIPLEX
-#  define P073_USE_74HCMULTIPLEX  0 // Enable support for 74HC595 based multiplexing displays
+#  define P073_USE_74HCMULTIPLEX  1 // Enable support for 74HC595 based multiplexing displays
 # endif // ifndef P073_USE_74HCMULTIPLEX
 
 # if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
@@ -200,6 +200,14 @@ uint8_t P073_mapCharToFontPosition(char    character,
                                    uint8_t fontset);
 uint8_t P073_getFontChar(uint8_t index,
                          uint8_t fontset);
+int32_t P073_parse_7dfont(struct EventStruct *event,
+                          const String      & text);
+void    P073_display_output_selector(const __FlashStringHelper *id,
+                                     int16_t                    value);
+# if P073_EXTRA_FONTS
+void    P073_font_selector(const __FlashStringHelper *id,
+                           int16_t                    value);
+# endif // if P073_EXTRA_FONTS
 
 struct P073_data_struct : public PluginTaskData_base {
 public:
@@ -217,6 +225,7 @@ public:
 
   # if P073_USE_74HC595
   bool plugin_fifty_per_second(struct EventStruct *event);
+  bool is74HC595Matrix();
   # endif // if P073_USE_74HC595
   void FillBufferWithTime(bool    sevendgt_now,
                           uint8_t sevendgt_hours,

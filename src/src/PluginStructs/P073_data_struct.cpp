@@ -97,6 +97,68 @@ uint8_t P073_getFontChar(uint8_t index,
   # endif // if P073_EXTRA_FONTS
 }
 
+int32_t P073_parse_7dfont(struct EventStruct *event,
+                          const String      & text) {
+  int32_t fontNr = 0;
+
+  # if P073_EXTRA_FONTS
+
+  if (!text.isEmpty()) {
+    const String fontArg = parseString(text, 1);
+    fontNr = -1;
+
+    if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
+      fontNr = 0;
+    } else if (equals(fontArg, F("siekoo"))) {
+      fontNr = 1;
+    } else if (equals(fontArg, F("siekoo_upper"))) {
+      fontNr = 2;
+    } else if (equals(fontArg, F("dseg7"))) {
+      fontNr = 3;
+    } else if (!validIntFromString(text, fontNr)) {
+      fontNr = -1; // reset if invalid
+    }
+  }
+  # endif // if P073_EXTRA_FONTS
+  return fontNr;
+}
+
+void P073_display_output_selector(const __FlashStringHelper *id, int16_t value) {
+  const __FlashStringHelper *displout[] = {
+    F("Manual"),
+    F("Clock 24h - Blink"),
+    F("Clock 24h - No Blink"),
+    F("Clock 12h - Blink"),
+    F("Clock 12h - No Blink"),
+    F("Date"),
+  };
+  const int disploutOptions[] = {
+    P073_DISP_MANUAL,
+    P073_DISP_CLOCK24BLNK,
+    P073_DISP_CLOCK24,
+    P073_DISP_CLOCK12BLNK,
+    P073_DISP_CLOCK12,
+    P073_DISP_DATE,
+  };
+
+  addFormSelector(F("Display Output"), id, NR_ELEMENTS(disploutOptions), displout, disploutOptions, value);
+}
+
+# if P073_EXTRA_FONTS
+void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
+  const __FlashStringHelper *fontset[] = {
+    F("Default"),
+    F("Siekoo"),
+    F("Siekoo with uppercase 'CHNORUX'"),
+    F("dSEG7"),
+  };
+
+  addFormSelector(F("Font set"), id, NR_ELEMENTS(fontset), fontset, nullptr, value);
+  addFormNote(F("Check documentation for examples of the font sets."));
+}
+
+# endif // if P073_EXTRA_FONTS
+
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
@@ -199,6 +261,10 @@ bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   return false;
 }
 
+bool P073_data_struct::is74HC595Matrix() {
+  return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX;
+}
+
 // ====================================
 // ---- 74HC595 specific functions ----
 // ====================================
@@ -211,15 +277,6 @@ void P073_data_struct::hc595_ShowBuffer() {
     0b00000010,
     0b00000001, // right segment
   };
-
-  // const uint8_t hc595digit6[] = {
-  //   0b00010000, // left segment
-  //   0b00100000,
-  //   0b01000000,
-  //   0b00000001,
-  //   0b00000010,
-  //   0b00000100, // right segment
-  // };
 
   const uint8_t hc595digit8[] = {
     0b00010000, // left segment
@@ -254,7 +311,7 @@ void P073_data_struct::hc595_ShowBuffer() {
     #  if P073_USE_74HCMULTIPLEX
     uint8_t digit = 0xFF;
 
-    if (!isSequential) {
+    if (P073_HC595_MULTIPLEX) {
       if (4 == digits) {
         digit = hc595digit4[i];
       } else
@@ -1446,25 +1503,11 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
 bool P073_data_struct::plugin_write_7dfont(struct EventStruct *event,
                                            const String      & text) {
   if (!text.isEmpty()) {
-    const String fontArg = parseString(text, 1);
-    int32_t fontNr       = -1;
-
-    if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
-      fontNr = 0;
-    } else if (equals(fontArg, F("siekoo"))) {
-      fontNr = 1;
-    } else if (equals(fontArg, F("siekoo_upper"))) {
-      fontNr = 2;
-    } else if (equals(fontArg, F("dseg7"))) {
-      fontNr = 3;
-    } else if (!validIntFromString(text, fontNr)) {
-      fontNr = -1; // reset if invalid
-    }
-
+    int32_t fontNr = P073_parse_7dfont(event, text);
     #  ifdef P073_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, strformat(F("P073 7dfont,%s -> %d"), fontArg.c_str(), fontNr));
+      addLog(LOG_LEVEL_INFO, strformat(F("P073 7dfont,%s -> %d"), parseString(text, 1).c_str(), fontNr));
     }
     #  endif // ifdef P073_DEBUG
 

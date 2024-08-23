@@ -42,6 +42,8 @@
 //
 
 /** History
+ * 2024-08-23 tonhuisman: The 74HC595 Matrix displays mostly work, with the higest possible refresh rate. Still a bit of flickering,
+ *                        but that might require adding extra hardware to solve.
  * 2024-08-08 tonhuisman: Add double-buffering for 74HC595 displays to improve update-speed
  * 2024-08-06 tonhuisman: Make 74HC595 multiplexed displays a separate compile-time option, as these require special treatment
  *                        Separate 7-segment font-related functions for re-use by other plugins
@@ -198,28 +200,14 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       {
         P073_CFG_DIGITS = P073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
       }
-      {
-        const __FlashStringHelper *displout[] = { F("Manual"),
-                                                  F("Clock 24h - Blink"),
-                                                  F("Clock 24h - No Blink"),
-                                                  F("Clock 12h - Blink"),
-                                                  F("Clock 12h - No Blink"),
-                                                  F("Date") };
-        addFormSelector(F("Display Output"), F("displout"), 6, displout, nullptr, P073_CFG_OUTPUTTYPE);
-      }
+
+      P073_display_output_selector(F("displout"), P073_CFG_OUTPUTTYPE);
 
       addFormNumericBox(F("Brightness"), F("brightness"), P073_CFG_BRIGHTNESS, 0, 15);
       addUnit(F("0..15"));
 
       # if P073_EXTRA_FONTS
-      {
-        const __FlashStringHelper *fontset[4] = { F("Default"),
-                                                  F("Siekoo"),
-                                                  F("Siekoo with uppercase 'CHNORUX'"),
-                                                  F("dSEG7") };
-        addFormSelector(F("Font set"), F("fontset"), 4, fontset, nullptr, P073_CFG_FONTSET);
-        addFormNote(F("Check documentation for examples of the font sets."));
-      }
+      P073_font_selector(F("fontset"), P073_CFG_FONTSET);
       # endif // if P073_EXTRA_FONTS
 
       addFormSubHeader(F("Options"));
@@ -302,6 +290,13 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       if (nullptr != P073_data) {
         P073_data->init(event);
 
+        # if P073_USE_74HC595
+
+        if (P073_data->is74HC595Matrix()) {
+          Scheduler.setPluginTaskTimer(0, event->TaskIndex, 0);
+        }
+        # endif // if P073_USE_74HC595
+
         success = true;
       }
       break;
@@ -342,12 +337,19 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
     # endif // if P073_SCROLL_TEXT
 
     # if P073_USE_74HC595
-    case PLUGIN_FIFTY_PER_SECOND: {
+
+    case PLUGIN_TASKTIMER_IN: {
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P073_data) {
         success = P073_data->plugin_fifty_per_second(event);
+
+        if (success) {
+          Scheduler.setPluginTaskTimer(1, event->TaskIndex, 0);
+        }
+
+        // success = false; // Don't send out to (not configurable) Controllers or Rules
       }
 
       break;
