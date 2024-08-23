@@ -58,6 +58,10 @@ Currently, only the default I2C address of ``0x66`` is supported. Multiple senso
 Device Settings
 ^^^^^^^^^^^^^^^
 
+* **Read incremental count**: If you want to see the incrementing count over a certain timespan, you can use the Incremental Count value, and after some time, reset the count using the ``radsens,resetcount`` command. When unchecked the number of impulses since the last read is used.
+
+* **Reset after read**: When checked, the incremental counter is reset after reading the value. This counter can also be cleared via the ``radsens,resetcount`` command.
+
 * **Low-power mode**: To use the low power mode of the board, this option can be checked.
 
 * **Enable onboard Led**: By default, the onboard Led of the sensor board shows an indication of the impulses counted. This setting can be used to turn the Led off. (On by default).
@@ -78,11 +82,11 @@ This group of settings, **Single event with all values**, **Send to Controller**
 Values
 ^^^^^^
 
-The plugin provides measurements ``Count`` in imposes/microRad, ``iDynamic`` the dynamic radiation intensity \< 123 sec., and ``iStatic`` the static radiation intensity.
+The plugin provides measurements ``Count`` in impulses/microRad, ``iDynamic`` the dynamic radiation intensity \< 123 sec., ``iStatic`` the static radiation intensity, and ``IncrCount``, the incremented counter value since the last reset or restart of the plugin.
 
 Per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
-To use the Count-average as threshold, the Stats for Count has to be enabled.
+To use the Count-average as threshold, the Stats option for ``Count`` has to be enabled.
 
 Commands available
 ^^^^^^^^^^^^^^^^^^

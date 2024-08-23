@@ -14,3 +14,8 @@
     
     This command can be used when bringing the ESP in sleep mode, and when returning from sleep mode.
     "
+    "
+    ``radsens,resetcount``
+    ","
+    Clear the incremental count in the sensor driver.
+    "
