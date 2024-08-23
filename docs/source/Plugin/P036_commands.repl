@@ -49,6 +49,7 @@
         Additionally to the **negative** <line> parameter following conditions must also be met:
                 * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
                 * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
         After receiving text this way, the frame where the text is placed is shown, if the setting for 'Wake display on receiving text' is checked.
         "
@@ -88,6 +89,7 @@
         Set the user defined header nr. 1 with any desired text value.
                 * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
                 * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
         **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
@@ -97,6 +99,7 @@
         Set the user defined header nr. 2 with any desired text value.
                 * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
                 * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
         **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
