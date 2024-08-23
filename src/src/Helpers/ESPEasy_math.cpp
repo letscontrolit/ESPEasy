@@ -37,14 +37,36 @@ int maxNrDecimals_fpType(const float& value)
   return res;
 }
 
+uint64_t computeDecimalFactorForDecimals(int nrDecimals)
+{
+  uint64_t factor = 1;
+  while (nrDecimals > 0) {
+    factor *= 10;
+    --nrDecimals;
+  }
+  return factor;
+}
+
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+double estimateDoubleEpsilon(const double& a, const double& b)
+{
+  return std::max(std::abs(a), std::abs(b)) * ESPEASY_DOUBLE_EPSILON;
+}
+#endif
+float estimateEpsilon(const float& a, const float& b)
+{
+  return std::max(std::abs(a), std::abs(b)) * ESPEASY_FLOAT_EPSILON;
+}
+
+
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool approximatelyEqual(const double& a, const double& b) {
-  return approximatelyEqual(a, b, ESPEASY_DOUBLE_EPSILON);
+  return approximatelyEqual(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool approximatelyEqual(const float& a, const float& b) {
-  return approximatelyEqual(a, b, ESPEASY_FLOAT_EPSILON);
+  return approximatelyEqual(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -61,12 +83,12 @@ bool approximatelyEqual(const float& a, const float& b, float epsilon)
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool definitelyGreaterThan(const double& a, const double& b) {
-  return definitelyGreaterThan(a, b, ESPEASY_DOUBLE_EPSILON);
+  return definitelyGreaterThan(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool definitelyGreaterThan(const float& a, const float& b) {
-  return definitelyGreaterThan(a, b, ESPEASY_FLOAT_EPSILON);
+  return definitelyGreaterThan(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -83,12 +105,12 @@ bool definitelyGreaterThan(const float& a, const float& b, float epsilon)
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool definitelyLessThan(const double& a, const double& b) {
-  return definitelyLessThan(a, b, ESPEASY_DOUBLE_EPSILON);
+  return definitelyLessThan(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool definitelyLessThan(const float& a, const float& b) {
-  return definitelyLessThan(a, b, ESPEASY_FLOAT_EPSILON);
+  return definitelyLessThan(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -105,12 +127,12 @@ bool definitelyLessThan(const float& a, const float& b, float epsilon)
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool essentiallyEqual(const double& a, const double& b) {
-  return essentiallyEqual(a, b, ESPEASY_DOUBLE_EPSILON);
+  return essentiallyEqual(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool essentiallyEqual(const float& a, const float& b) {
-  return essentiallyEqual(a, b, ESPEASY_FLOAT_EPSILON);
+  return essentiallyEqual(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
