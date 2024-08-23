@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-23 tonhuisman: Add options to read new pulses only (default) instead of incrementing pulse count,
+ *                        and reset on read, to clear the incrementing pulxe count
  * 2024-08-13 tonhuisman: Use pluginstats to get average over last n samples for determining event threshold
  *                        Add highvoltage subcommand to switch the high voltage off or on
  * 2024-08-12 tonhuisman: Start plugin for RadSens I2C radiation counter using RadSens library
@@ -23,6 +25,7 @@
 # define PLUGIN_VALUENAME1_163  "Count"
 # define PLUGIN_VALUENAME2_163  "iDynamic"
 # define PLUGIN_VALUENAME3_163  "iStatic"
+# define PLUGIN_VALUENAME4_163  "IncrCount"
 
 # include "./src/PluginStructs/P163_data_struct.h"
 
@@ -39,7 +42,7 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
       Device[deviceCount].Ports            = 0;
       Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 3;
+      Device[deviceCount].ValueCount       = 4;
       Device[deviceCount].SendDataOption   = true;
       Device[deviceCount].TimerOption      = true;
       Device[deviceCount].TimerOptional    = true;
@@ -61,6 +64,7 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_163));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_163));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_163));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_163));
 
       break;
     }
@@ -98,8 +102,12 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Use Low Power mode"), F("lpmode"), P163_GET_LOW_POWER);
-      addFormCheckBox(F("Enable onboard Led"), F("led"),    P163_GET_LED_STATE);
+      addFormCheckBox(F("Read incremental count"), F("rinc"),   P163_GET_READ_INCREMENT);
+      addFormCheckBox(F("Reset after read"),       F("rst"),    P163_GET_RESET_ON_READ);
+
+      addFormCheckBox(F("Use Low Power mode"),     F("lpmode"), P163_GET_LOW_POWER);
+      addFormCheckBox(F("Enable onboard Led"),     F("led"),    P163_GET_LED_STATE);
+
       addFormNumericBox(F("Events on Count-threshold"), F("chg"), P163_CFG_THRESHOLD, -1);
       addUnit(F("-1 = disabled"));
 
@@ -115,6 +123,8 @@ boolean Plugin_163(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      P163_SET_READ_INCREMENT(isFormItemChecked(F("rinc")));
+      P163_SET_RESET_ON_READ(isFormItemChecked(F("rst")));
       P163_SET_LOW_POWER(isFormItemChecked(F("lpmode")));
       P163_SET_LED_STATE(isFormItemChecked(F("led")));
       P163_CFG_THRESHOLD = getFormItemInt(F("chg"));

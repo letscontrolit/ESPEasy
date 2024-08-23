@@ -6,10 +6,12 @@
 * Constructor
 **************************************************************************/
 P163_data_struct::P163_data_struct(struct EventStruct *event) {
-  _lowPowerMode = P163_GET_LOW_POWER;
-  _ledState     = P163_GET_LED_STATE;
-  _threshold    = P163_CFG_THRESHOLD;
-  _changeOnly   = _threshold < 0;
+  _readIncrement = P163_GET_READ_INCREMENT;
+  _resetOnRead   = P163_GET_RESET_ON_READ;
+  _lowPowerMode  = P163_GET_LOW_POWER;
+  _ledState      = P163_GET_LED_STATE;
+  _threshold     = P163_CFG_THRESHOLD;
+  _changeOnly    = _threshold < 0;
   # if FEATURE_PLUGIN_STATS
   _countAvg = P163_CFG_COUNT_AVG;
   # endif // if FEATURE_PLUGIN_STATS
@@ -57,10 +59,15 @@ bool P163_data_struct::plugin_read(struct EventStruct *event) {
 bool P163_data_struct::setOutputValues(struct EventStruct *event) {
   bool result = false;
 
-  const uint32_t count    = sensor->getNumberOfPulses();
+  const uint32_t count    = _readIncrement ? sensor->getNumberOfPulses() : sensor->getNumberOfNewPulses();
+  const uint32_t incCount = sensor->getNumberOfPulses();
   const float    iDynamic = sensor->getRadIntensyDynamic();
   const float    iStatic  = sensor->getRadIntensyStatic();
   int32_t delta           = -1; // Invalid/unset
+
+  if (_resetOnRead) {
+    sensor->resetPulses();
+  }
 
   # if FEATURE_PLUGIN_STATS
 
@@ -84,6 +91,7 @@ bool P163_data_struct::setOutputValues(struct EventStruct *event) {
 
   UserVar.setFloat(event->TaskIndex, 1, iDynamic);
   UserVar.setFloat(event->TaskIndex, 2, iStatic);
+  UserVar.setFloat(event->TaskIndex, 3, incCount);
 
   return result;
 }
@@ -94,12 +102,14 @@ bool P163_data_struct::setOutputValues(struct EventStruct *event) {
 const char P163_subcommands[] PROGMEM =
   "calibration|"
   "highvoltage|"
+  "resetcount|"
 ;
 
 enum class P163_subcmd_e : int8_t {
   invalid     = -1,
   calibration = 0,
   highvoltage = 1,
+  resetcount  = 2,
 };
 
 bool P163_data_struct::plugin_write(struct EventStruct *event,
@@ -132,6 +142,10 @@ bool P163_data_struct::plugin_write(struct EventStruct *event,
           sensor->setHVGeneratorState(event->Par2 == 1);
           success = true;
         }
+        break;
+      case P163_subcmd_e::resetcount:
+        sensor->resetPulses();
+        success = true;
         break;
     }
   }
