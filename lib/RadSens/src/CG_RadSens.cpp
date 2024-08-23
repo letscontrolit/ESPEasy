@@ -83,7 +83,8 @@ void CG_RadSens::updatePulses()
     uint8_t res[2];
     if (i2c_read(RS_PULSE_COUNTER_RG, res, 2))
     {
-        _pulse_cnt += (res[0] << 8) | res[1];
+        _new_cnt = (res[0] << 8) | res[1];
+        _pulse_cnt += _new_cnt;
     }
 }
 
@@ -93,6 +94,19 @@ uint32_t CG_RadSens::getNumberOfPulses()
 {
     updatePulses();
     return _pulse_cnt;
+}
+
+/*Get current number of pulses*/
+uint32_t CG_RadSens::getNumberOfNewPulses()
+{
+    updatePulses();
+    return _new_cnt;
+}
+
+/*Reset accumulated count*/
+void CG_RadSens::resetPulses()
+{
+    _pulse_cnt = 0;
 }
 
 /*Get sensor address.*/

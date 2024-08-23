@@ -88,6 +88,7 @@ private:
     uint8_t _chip_id = 0;
     uint8_t _firmware_ver = 0;
     uint32_t _pulse_cnt = 0;
+    uint32_t _new_cnt = 0;
     bool i2c_read(uint8_t RegAddr, uint8_t *dest, uint8_t num);
     void updatePulses();
 
@@ -100,6 +101,8 @@ public:
     float getRadIntensyDynamic();
     float getRadIntensyStatic();
     uint32_t getNumberOfPulses();
+    uint32_t getNumberOfNewPulses();
+    void resetPulses();
     uint8_t getSensorAddress();
     bool getHVGeneratorState();
     bool getLedState();
