@@ -20,7 +20,11 @@ bool validUInt64FromString(const String& tBuf, uint64_t& result);
 
 bool validFloatFromString(const String& tBuf, float& result);
 
+bool validFloatFromString(const String& tBuf, float& result, int& nrDecimals);
+
 bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result);
+
+bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result, int& nrDecimals);
 
 // Numerical types sorted from least specific to most specific.
 enum class NumericalType {
