@@ -163,6 +163,9 @@ void handle_json()
         LabelType::BUILD_DESC,
         LabelType::GIT_BUILD,
         LabelType::SYSTEM_LIBRARIES,
+#ifdef ESP32
+        LabelType::ESP_IDF_SDK_VERSION,
+#endif
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
         LabelType::BUILD_TIME,
@@ -665,6 +668,9 @@ void handle_buildinfo() {
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);
+#ifdef ESP32
+  json_prop(LabelType::ESP_IDF_SDK_VERSION);
+#endif
   json_prop(LabelType::PLUGIN_COUNT);
   json_prop(LabelType::PLUGIN_DESCRIPTION);
   json_close();
