@@ -25,12 +25,16 @@
 # define P073_DISP_CLOCK12       4
 # define P073_DISP_DATE          5
 
-# define P073_OPTION_PERIOD      0  // Period as dot
-# define P073_OPTION_HIDEDEGREE  1  // Hide degree symbol for temperatures
-# define P073_OPTION_RIGHTALIGN  2  // Align 7dt output right on MAX7219 display
-# define P073_OPTION_SCROLLTEXT  3  // Scroll text > 8 characters
-# define P073_OPTION_SCROLLFULL  4  // Scroll text from the right in, starting with a blank display
-# define P073_OPTION_SUPPRESS0   5  // Suppress leading zero on day/hour of Date/Time display
+# define P073_OPTION_PERIOD      0 // Period as dot
+# define P073_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
+# define P073_OPTION_RIGHTALIGN  2 // Align 7dt output right on MAX7219 display
+# define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
+# define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
+# define P073_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
+
+# ifndef P073_USE_74HC595_OVERRIDE
+#  define P073_USE_74HC595_OVERRIDE 0
+# endif // ifndef P073_USE_74HC595_OVERRIDE
 
 # ifndef P073_7DDT_COMMAND
 #  define P073_7DDT_COMMAND     1   // Enable 7ddt by default
@@ -80,7 +84,7 @@
 // #  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
 # endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
-# if defined(ESP8266)
+# if defined(ESP8266) && !P073_USE_74HC595_OVERRIDE
 #  if P073_USE_74HC595
 #   undef P073_USE_74HC595 // Removes the support for 74HC595 displays
 #   define P073_USE_74HC595 0
@@ -89,7 +93,7 @@
 #   undef P073_USE_74HCMULTIPLEX // Removes the support for 74HC595 multiplexed displays
 #   define P073_USE_74HCMULTIPLEX 0
 #  endif // if P073_USE_74HCMULTIPLEX
-# endif // if defined(ESP8266)
+# endif // if defined(ESP8266) && !P073_USE_74HC595_OVERRIDE
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000

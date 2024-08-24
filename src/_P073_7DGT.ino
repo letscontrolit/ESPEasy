@@ -42,6 +42,8 @@
 //
 
 /** History
+ * 2024-08-24 tonhuisman: Add compiletime define P073_USE_74HC595_OVERRIDE that, when, set to 1, allows 74HC595 displays to be included
+ *                        for ESP8266 builds (f.e. Custom builds), also added to Custom-sample.h
  * 2024-08-23 tonhuisman: The 74HC595 Matrix displays mostly work, with the higest possible refresh rate. Still a bit of flickering,
  *                        but that might require adding extra hardware to solve.
  * 2024-08-08 tonhuisman: Add double-buffering for 74HC595 displays to improve update-speed
@@ -293,7 +295,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         # if P073_USE_74HC595
 
         if (P073_data->is74HC595Matrix()) {
-          Scheduler.setPluginTaskTimer(0, event->TaskIndex, 0);
+          Scheduler.setPluginTaskTimer(10, event->TaskIndex, 0);
         }
         # endif // if P073_USE_74HC595
 
@@ -346,7 +348,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         success = P073_data->plugin_fifty_per_second(event);
 
         if (success) {
-          Scheduler.setPluginTaskTimer(1, event->TaskIndex, 0);
+          Scheduler.setPluginTaskTimer(0, event->TaskIndex, 0);
         }
 
         // success = false; // Don't send out to (not configurable) Controllers or Rules
