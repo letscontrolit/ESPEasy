@@ -82,6 +82,7 @@ class GreeHeatpumpIR : public HeatpumpIR
     };
 
     GreeHeatpumpIR();
+    using HeatpumpIR::send;
 
     virtual const Timings & getTimings() const;
 
