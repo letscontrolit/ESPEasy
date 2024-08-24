@@ -862,6 +862,11 @@ float GetRSSIthreshold(float& maxTXpwr) {
       if (maxTXpwr > MAX_TX_PWR_DBM_n) maxTXpwr = MAX_TX_PWR_DBM_n;
       break;
 #ifdef ESP32
+#if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(5, 2, 0)
+    case WiFiConnectionProtocol::WiFi_Protocol_11a:
+    case WiFiConnectionProtocol::WiFi_Protocol_VHT20:
+      // FIXME TD-er: Must determine max. TX power for these 5 GHz modi
+#endif
     case WiFiConnectionProtocol::WiFi_Protocol_LR:
 #endif
     case WiFiConnectionProtocol::Unknown:
@@ -897,12 +902,17 @@ WiFiConnectionProtocol getConnectionProtocol() {
     wifi_phy_mode_t phymode;
     esp_wifi_sta_get_negotiated_phymode(&phymode);
     switch (phymode) {
-      case WIFI_PHY_MODE_11B: return WiFiConnectionProtocol::WiFi_Protocol_11b;
-      case WIFI_PHY_MODE_11G: return WiFiConnectionProtocol::WiFi_Protocol_11g;
-      case WIFI_PHY_MODE_HT20: return WiFiConnectionProtocol::WiFi_Protocol_HT20;
-      case WIFI_PHY_MODE_HT40: return WiFiConnectionProtocol::WiFi_Protocol_HT40;
-      case WIFI_PHY_MODE_HE20: return WiFiConnectionProtocol::WiFi_Protocol_HE20;
-      case WIFI_PHY_MODE_LR: return WiFiConnectionProtocol::WiFi_Protocol_LR;
+      case WIFI_PHY_MODE_11B:   return WiFiConnectionProtocol::WiFi_Protocol_11b;
+      case WIFI_PHY_MODE_11G:   return WiFiConnectionProtocol::WiFi_Protocol_11g;
+      case WIFI_PHY_MODE_HT20:  return WiFiConnectionProtocol::WiFi_Protocol_HT20;
+      case WIFI_PHY_MODE_HT40:  return WiFiConnectionProtocol::WiFi_Protocol_HT40;
+      case WIFI_PHY_MODE_HE20:  return WiFiConnectionProtocol::WiFi_Protocol_HE20;
+      case WIFI_PHY_MODE_LR:    return WiFiConnectionProtocol::WiFi_Protocol_LR;
+#if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(5, 2, 0)
+      // 5 GHz
+      case WIFI_PHY_MODE_11A:   return WiFiConnectionProtocol::WiFi_Protocol_11a;
+      case WIFI_PHY_MODE_VHT20: return WiFiConnectionProtocol::WiFi_Protocol_VHT20;
+#endif
     }
     #endif
   }
