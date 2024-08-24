@@ -747,13 +747,15 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 }
 
 void getmcustate() {
-  ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
-  ESPEASY_SERIAL_0.write(0xAA);
-  ESPEASY_SERIAL_0.write(0x00); // version 00
-  ESPEASY_SERIAL_0.write(0x08); // Tuya command 08 - request status
-  ESPEASY_SERIAL_0.write(0x00);
-  ESPEASY_SERIAL_0.write(0x00);
-  ESPEASY_SERIAL_0.write(0x07);
+  const uint8_t msg[] = {
+    0x55, // Tuya header 55AA
+    0xAA,
+    0x00, // version 00
+    0x08, // Tuya command 08 - request status
+    0x00,
+    0x00,
+    0x07};
+           ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
   ESPEASY_SERIAL_0.flush();
 }
 
@@ -765,18 +767,21 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
   {
     case SER_SWITCH_YEWE:
       {
-        ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
-        ESPEASY_SERIAL_0.write(0xAA);
-        ESPEASY_SERIAL_0.write(0x00); // version 00
-        ESPEASY_SERIAL_0.write(0x06); // Tuya command 06 - send order
-        ESPEASY_SERIAL_0.write(0x00);
-        ESPEASY_SERIAL_0.write(0x05); // following data length 0x05
-        ESPEASY_SERIAL_0.write( (btnnum + 1) ); // relay number 1,2,3
-        ESPEASY_SERIAL_0.write(0x01); // ?
-        ESPEASY_SERIAL_0.write(0x00); // ?
-        ESPEASY_SERIAL_0.write(0x01); // ?
-        ESPEASY_SERIAL_0.write( state ); // status
-        ESPEASY_SERIAL_0.write((13 + btnnum + state)); // checksum:sum of all bytes in packet mod 256
+        const uint8_t msg[] = {
+          0x55, // Tuya header 55AA
+          0xAA,
+          0x00, // version 00
+          0x06, // Tuya command 06 - send order
+          0x00,
+          0x05, // following data length 0x05
+          static_cast<uint8_t>(btnnum + 1) , // relay number 1,2,3
+          0x01, // ?
+          0x00, // ?
+          0x01, // ?
+          state , // status
+          static_cast<uint8_t>(13 + btnnum + state)}; // checksum:sum of all bytes in packet mod 256
+        
+        ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
         ESPEASY_SERIAL_0.flush();
         break;
       }
@@ -793,10 +798,12 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
           Plugin_091_switchstate[1] = state;
         }
         sstate = Plugin_091_switchstate[0] + (Plugin_091_switchstate[1] << 1) + (Plugin_091_switchstate[2] << 2);
-        ESPEASY_SERIAL_0.write(0xA0);
-        ESPEASY_SERIAL_0.write(0x04);
-        ESPEASY_SERIAL_0.write( sstate );
-        ESPEASY_SERIAL_0.write(0xA1);
+        const uint8_t msg[] = {
+          0xA0,
+          0x04,
+          sstate,
+          0xA1};
+        ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
         ESPEASY_SERIAL_0.flush();
         break;
       }
@@ -813,22 +820,26 @@ void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum
             delay(1);
           }
           if (Plugin_091_ipd) {
-            ESPEASY_SERIAL_0.write(0x0D);
-            ESPEASY_SERIAL_0.write(0x0A);
-            ESPEASY_SERIAL_0.write(0x2B);
-            ESPEASY_SERIAL_0.write(0x49);
-            ESPEASY_SERIAL_0.write(0x50);
-            ESPEASY_SERIAL_0.write(0x44);
-            ESPEASY_SERIAL_0.write(0x2C);
-            ESPEASY_SERIAL_0.write(0x30);
-            ESPEASY_SERIAL_0.write(0x2C);
-            ESPEASY_SERIAL_0.write(0x34);
-            ESPEASY_SERIAL_0.write(0x3A);
+            const uint8_t msg[] = {
+              0x0D,
+              0x0A,
+              0x2B,
+              0x49,
+              0x50,
+              0x44,
+              0x2C,
+              0x30,
+              0x2C,
+              0x34,
+              0x3A};
+            ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
           }
-          ESPEASY_SERIAL_0.write(0xA0);
-          ESPEASY_SERIAL_0.write((0x01 + btnnum));
-          ESPEASY_SERIAL_0.write((0x00 + state));
-          ESPEASY_SERIAL_0.write((0xA1 + state + btnnum));
+          const uint8_t msg[] = {
+            0xA0,
+            static_cast<uint8_t>(0x01 + btnnum),
+            static_cast<uint8_t>(0x00 + state),
+            static_cast<uint8_t>(0xA1 + state + btnnum)};
+          ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
           ESPEASY_SERIAL_0.flush();
         }
 
@@ -873,32 +884,36 @@ void sendmcudim(uint8_t dimvalue, uint8_t swtype)
   {
     case SER_SWITCH_YEWE:
       {
-        ESPEASY_SERIAL_0.write(0x55); // Tuya header 55AA
-        ESPEASY_SERIAL_0.write(0xAA);
-        ESPEASY_SERIAL_0.write(0x00); // version 00
-        ESPEASY_SERIAL_0.write(0x06); // Tuya command 06 - send order
-        ESPEASY_SERIAL_0.write(0x00);
-        ESPEASY_SERIAL_0.write(0x08); // following data length 0x08
-        ESPEASY_SERIAL_0.write(Plugin_091_numrelay); // dimmer order-id? select it at plugin settings 2/3!!!
-        ESPEASY_SERIAL_0.write(0x02); // type=value
-        ESPEASY_SERIAL_0.write(0x00); // length hi
-        ESPEASY_SERIAL_0.write(0x04); // length low
-        ESPEASY_SERIAL_0.write(0x00); // ?
-        ESPEASY_SERIAL_0.write(0x00); // ?
-        ESPEASY_SERIAL_0.write(0x00); // ?
-        ESPEASY_SERIAL_0.write( dimvalue ); // dim value (0-255)
-        ESPEASY_SERIAL_0.write( uint8_t(19 + Plugin_091_numrelay + dimvalue) ); // checksum:sum of all bytes in packet mod 256
+        const uint8_t msg[] = {
+          0x55,  // Tuya header 55AA
+          0xAA, 
+          0x00,  // version 00
+          0x06,  // Tuya command 06 - send order
+          0x00, 
+          0x08,  // following data length 0x08
+          Plugin_091_numrelay,  // dimmer order-id? select it at plugin settings 2/3!!!
+          0x02,  // type=value
+          0x00,  // length hi
+          0x04,  // length low
+          0x00,  // ?
+          0x00,  // ?
+          0x00,  // ?
+          dimvalue ,  // dim value (0-255)
+          static_cast<uint8_t>(19 + Plugin_091_numrelay + dimvalue)};  // checksum:sum of all bytes in packet mod 256
+        ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
         ESPEASY_SERIAL_0.flush();
         break;
       }
     case SER_SWITCH_WIFIDIMMER:
       {
-        ESPEASY_SERIAL_0.write(0xFF); // Wifidimmer header FF55
-        ESPEASY_SERIAL_0.write(0x55);
-        ESPEASY_SERIAL_0.write( dimvalue ); // dim value (0-255)
-        ESPEASY_SERIAL_0.write(0x05);
-        ESPEASY_SERIAL_0.write(0xDC);
-        ESPEASY_SERIAL_0.write(0x0A);
+        const uint8_t msg[] = {
+          0xFF, // Wifidimmer header FF55
+          0x55,
+          dimvalue , // dim value (0-255)
+          0x05,
+          0xDC,
+          0x0A};
+        ESPEASY_SERIAL_0.write(msg, NR_ELEMENTS(msg));
         ESPEASY_SERIAL_0.flush();
         Plugin_091_switchstate[1] = dimvalue;
         break;

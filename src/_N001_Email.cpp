@@ -387,7 +387,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
         break;
       }
     }
-    client.flush();
+    client.PR_9453_FLUSH_TO_CLEAR();
     client.stop();
 
     if (myStatus == true) {
@@ -428,7 +428,7 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  client.flush();
+  client.PR_9453_FLUSH_TO_CLEAR();
 
   if (aStr.length()) { client.println(aStr); }
 
