@@ -2,6 +2,140 @@
 
 #ifdef USES_P073
 
+// FIXME Next part should be merged from PR #5091 for use of #if vs. #ifdef !!!
+uint8_t P073_mapCharToFontPosition(char    character,
+                                   uint8_t fontset) {
+  uint8_t position = 10;
+
+  # ifdef P073_EXTRA_FONTS
+  const String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
+  const String chnorux      = F("CHNORUX");
+
+  switch (fontset) {
+    case 1: // Siekoo
+    case 2: // Siekoo with uppercase 'CHNORUX'
+
+      if ((fontset == 2) && (chnorux.indexOf(character) > -1)) {
+        position = chnorux.indexOf(character) + 35;
+      } else if (isDigit(character)) {
+        position = character - '0';
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
+      } else {
+        const int idx = specialChars.indexOf(character);
+
+        if (idx > -1) {
+          position = idx + 10; // Space is still 10
+        }
+      }
+      break;
+    case 3:  // dSEG7 (same table size as 7Dgt)
+    default: // Original fontset (7Dgt)
+  # endif // ifdef P073_EXTRA_FONTS
+
+  if (isDigit(character)) {
+    position = character - '0';
+  } else if (isAlpha(character)) {
+    position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
+  } else {
+    switch (character) {
+      case ' ': position = 10; break;
+      case '-': position = 11; break;
+      case '^': position = 12; break; // degree
+      case '=': position = 13; break;
+      case '/': position = 14; break;
+      case '_': position = 15; break;
+    }
+  }
+  # ifdef P073_EXTRA_FONTS
+}
+
+  # endif // ifdef P073_EXTRA_FONTS
+  return position;
+}
+
+uint8_t P073_getFontChar(uint8_t index,
+                         uint8_t fontset) {
+  # ifdef P073_EXTRA_FONTS
+
+  switch (fontset) {
+    case 1:  // Siekoo
+    case 2:  // Siekoo uppercase CHNORUX
+      return pgm_read_byte(&(SiekooCharTable[index]));
+    case 3:  // dSEG7
+      return pgm_read_byte(&(Dseg7CharTable[index]));
+    default: // Standard fontset
+      return pgm_read_byte(&(DefaultCharTable[index]));
+  }
+  # else // ifdef P073_EXTRA_FONTS
+  return pgm_read_byte(&(DefaultCharTable[index]));
+  # endif // ifdef P073_EXTRA_FONTS
+}
+
+int32_t P073_parse_7dfont(struct EventStruct *event,
+                          const String      & text) {
+  int32_t fontNr = 0;
+
+  # ifdef P073_EXTRA_FONTS
+
+  if (!text.isEmpty()) {
+    const String fontArg = parseString(text, 1);
+    fontNr = -1;
+
+    if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
+      fontNr = 0;
+    } else if (equals(fontArg, F("siekoo"))) {
+      fontNr = 1;
+    } else if (equals(fontArg, F("siekoo_upper"))) {
+      fontNr = 2;
+    } else if (equals(fontArg, F("dseg7"))) {
+      fontNr = 3;
+    } else if (!validIntFromString(text, fontNr)) {
+      fontNr = -1; // reset if invalid
+    }
+  }
+  # endif // ifdef P073_EXTRA_FONTS
+  return fontNr;
+}
+
+void P073_display_output_selector(const __FlashStringHelper *id, int16_t value) {
+  const __FlashStringHelper *displout[] = {
+    F("Manual"),
+    F("Clock 24h - Blink"),
+    F("Clock 24h - No Blink"),
+    F("Clock 12h - Blink"),
+    F("Clock 12h - No Blink"),
+    F("Date"),
+  };
+  const int disploutOptions[] = {
+    P073_DISP_MANUAL,
+    P073_DISP_CLOCK24BLNK,
+    P073_DISP_CLOCK24,
+    P073_DISP_CLOCK12BLNK,
+    P073_DISP_CLOCK12,
+    P073_DISP_DATE,
+  };
+
+  addFormSelector(F("Display Output"), id, NR_ELEMENTS(disploutOptions), displout, disploutOptions, value);
+}
+
+# ifdef P073_EXTRA_FONTS
+void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
+  const __FlashStringHelper *fontset[] = {
+    F("Default"),
+    F("Siekoo"),
+    F("Siekoo with uppercase 'CHNORUX'"),
+    F("dSEG7"),
+  };
+
+  addFormSelector(F("Font set"), id, NR_ELEMENTS(fontset), fontset, nullptr, value);
+  addFormNote(F("Check documentation for examples of the font sets."));
+}
+
+# endif // ifdef P073_EXTRA_FONTS
+
+// FIXME End of part to merge from PR #5091
+
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
