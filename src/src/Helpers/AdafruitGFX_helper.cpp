@@ -2176,7 +2176,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  if ADAGFX_ARGUMENT_VALIDATION
         const int16_t curWin = getWindow();
 
-        if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
         if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -2960,6 +2960,36 @@ uint16_t AdaGFXrgb565ToColor7(const uint16_t& color) {
 }
 
 # endif // if ADAGFX_SUPPORT_7COLOR
+
+/*****************************************************************************
+ * Convert rgb565 color to the closest matching rgb888 (RRGGBB) color
+ * (some approximation because of loss of resolution in rgb565)
+ ****************************************************************************/
+uint32_t AdaGFXrgb565ToRgb888(uint16_t rgb565) {
+  const uint16_t r = (((rgb565 & 0xF800) >> 11) * 255) / 31;
+  const uint16_t g = (((rgb565 & 0x07E0) >> 5) * 255) / 63;
+  const uint16_t b = ((rgb565 & 0x001F) * 255) / 31;
+
+  return (r << 16) + (g << 8) + b;
+}
+
+/****************************************************************************
+ * Convert rgb565 color to web-usable color (# prefix with 6 digit hex value)
+ ***************************************************************************/
+String AdaGFXrgb565ToWebColor(uint16_t rgb565) {
+  return strformat(F("#%06X"), AdaGFXrgb565ToRgb888(rgb565));
+}
+
+/****************************************************************************
+ * Convert a 24 bit RRGGBB color to rgb565 format. Some bits are lost
+ ***************************************************************************/
+uint16_t AdaGFXrgb888ToRgb565(uint32_t rgb888) {
+  const uint8_t r = (rgb888 & 0xFF0000) >> 16;
+  const uint8_t g = (rgb888 & 0xFF00) >> 8;
+  const uint8_t b = (rgb888 & 0xFF);
+
+  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
 
 /****************************************************************************
  * getTextMetrics: Returns the metrics related to current font
