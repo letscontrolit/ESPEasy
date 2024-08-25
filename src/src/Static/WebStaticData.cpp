@@ -168,6 +168,11 @@ void serve_JS(JSfiles_e JSfile) {
           #endif
           break;
 #endif
+#ifdef USES_P165
+        case JSfiles_e::P165_digit:
+          url = F("p165_digit.js");
+          break;
+#endif // ifdef USES_P165
 
     }
 
@@ -223,6 +228,11 @@ void serve_JS(JSfiles_e JSfile) {
             case JSfiles_e::EasyColorCode_cm_plugins:
               break;
 #endif
+#ifdef USES_P165
+            case JSfiles_e::P165_digit:
+              TXBuffer.addFlashString((PGM_P)FPSTR(p165_digit_script));
+              break;
+#endif // ifdef USES_P165
           }
           html_add_script_end();
           return;

@@ -1,0 +1,129 @@
+#include "_Plugin_Helper.h"
+#ifdef USES_P165
+
+// #######################################################################################################
+// ################################## Plugin-165: Display - 7-Segment NeoPixel ###########################
+// #######################################################################################################
+
+/** Changelog:
+ * 2024-08-22 tonhuisman: Increased segment pixels for height to 5, equal to width
+ *                        Increased decimal point digits to 7 (max) and extra pixels to 12
+ *                        When font color is either white or black, uses default color to stay visible in both light and dark Web-UI mode.
+ * 2024-08-20 tonhuisman: Draws either pixeled digits (edit mode) or the number plan (non-edit mode)
+ *                        Commands mostly similar to P073, including standard date/time content, text scrolling and binary content
+ *                        Additional RGB(W) colors can be set globally, per group, and per digit, both fontcolor and backcolor
+ * 2024-08-03 tonhuisman: Allow 1 to 4 groups of 1 to 4 digits, with decimal point (0..4 px) and extra pixels (0..10) per group
+ *                        Max pixels: horizontal segments 5/7, vertical segments 4/6. (7/6 with corner-overlap) Optional start-offset.
+ *                        Default content: Manual, Date/Time (12/24h), similar to P073
+ *                        Has javascript code to show selected configuration-example
+ * 2024-05-12 tonhuisman: Initial start of plugin,
+ *                        based on Noiasca library from https://werner.rothschopf.net/202005_arduino_neopixel_display_en.htm
+ */
+
+# include "src/PluginStructs/P165_data_struct.h"
+
+# define PLUGIN_165
+# define PLUGIN_ID_165         165
+# define PLUGIN_NAME_165       "Display - NeoPixel (7-Segment)"
+
+boolean Plugin_165(uint8_t function, struct EventStruct *event, String& string)
+{
+  boolean success = false;
+
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+    {
+      Device[++deviceCount].Number = PLUGIN_ID_165;
+      Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICENAME:
+    {
+      string = F(PLUGIN_NAME_165);
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+    {
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P165_CONFIG_GROUPCOUNT = 1;
+      P165_CONFIG_DEF_BRIGHT = 40;
+      P165_CONFIG_MAX_BRIGHT = 255;
+      P165_CONFIG_FG_COLOR   = ADAGFX_RED;
+
+      for (uint8_t grp = 0; grp < PLUGIN_CONFIGLONGVAR_MAX; ++grp) {
+        P165_data_struct::initDigitGroup(event, grp);
+      }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    {
+      event->String1 = formatGpioName_output(F("Strip"));
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P165_data_struct(event));
+
+      P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success = (nullptr != P165_data && P165_data->isInitialized());
+      break;
+    }
+
+    case PLUGIN_READ:
+    {
+      // Nothing to see here
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      success = P165_data_struct::plugin_webform_load(event);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      success = P165_data_struct::plugin_webform_save(event);
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success =  (nullptr != P165_data && P165_data->plugin_once_a_second(event));
+      break;
+    }
+
+    case PLUGIN_TEN_PER_SECOND:
+    {
+      P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success =  (nullptr != P165_data && P165_data->plugin_ten_per_second(event));
+      break;
+    }
+    case PLUGIN_WRITE:
+    {
+      P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success =  (nullptr != P165_data && P165_data->plugin_write(event, string));
+      break;
+    }
+  }
+  return success;
+}
+
+#endif // ifdef USES_P165
