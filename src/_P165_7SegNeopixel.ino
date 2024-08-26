@@ -6,6 +6,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-26 tonhuisman: Rework the UI somewhat to improve the display of the Extra pixels per group
+ *                        Add option for Clear on exit
+ *                        Add option to split the g-segment in 2 halves when assigning the number plan (should best be set from 3 pixels)
+ *                        this option was enabled by default from 3 horizontal pixels, can now be set manually.
  * 2024-08-22 tonhuisman: Increased segment pixels for height to 5, equal to width
  *                        Increased decimal point digits to 7 (max) and extra pixels to 12
  *                        When font color is either white or black, uses default color to stay visible in both light and dark Web-UI mode.

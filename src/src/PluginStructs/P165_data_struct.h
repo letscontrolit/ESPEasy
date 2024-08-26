@@ -13,7 +13,7 @@
 # include "../Static/WebStaticData.h"       // Javascript and support functions
 
 # define P165_DEBUG_INFO        1           // set 1 to enable some extra debug logging
-# define P165_DEBUG_DEBUG       0           // set 1 to enable some extra development debug logging
+# define P165_DEBUG_DEBUG       1           // set 1 to enable some extra development debug logging
 
 # ifdef USES_P073
 #  define P165_FEATURE_P073     1           // Use P073 shared functions when available
@@ -69,18 +69,21 @@
 # define P165_FLAG_SCROLL_TEXT    2          // 1 bit
 # define P165_FLAG_SCROLL_FULL    3          // 1 bit
 # define P165_FLAG_STD_OFFSET     4          // 4 bit
+# define P165_FLAG_CLEAR_EXIT     8          // 1 bit
 
 # define P165_GET_FLAG_SUPP0 (bitRead(P165_FLAGS, P165_FLAG_SUPPRESS_0))
 # define P165_GET_FLAG_NUMBERPLAN (bitRead(P165_FLAGS, P165_FLAG_NUMBERPLAN))
 # define P165_GET_FLAG_SCROLL_TEXT (bitRead(P165_FLAGS, P165_FLAG_SCROLL_TEXT))
 # define P165_GET_FLAG_SCROLL_FULL (bitRead(P165_FLAGS, P165_FLAG_SCROLL_FULL))
 # define P165_GET_FLAG_STD_OFFSET (get4BitFromUL(P165_FLAGS, P165_FLAG_STD_OFFSET))
+# define P165_GET_FLAG_CLEAR_EXIT (bitRead(P165_FLAGS, P165_FLAG_CLEAR_EXIT))
 
 # define P165_SET_FLAG_SUPP0(V) (bitWrite(P165_FLAGS, P165_FLAG_SUPPRESS_0, V))
 # define P165_SET_FLAG_NUMBERPLAN(V) (bitWrite(P165_FLAGS, P165_FLAG_NUMBERPLAN, V))
 # define P165_SET_FLAG_SCROLL_TEXT(V) (bitWrite(P165_FLAGS, P165_FLAG_SCROLL_TEXT, V))
 # define P165_SET_FLAG_SCROLL_FULL(V) (bitWrite(P165_FLAGS, P165_FLAG_SCROLL_FULL, V))
 # define P165_SET_FLAG_STD_OFFSET(V) (set4BitToUL(P165_FLAGS, P165_FLAG_STD_OFFSET, V))
+# define P165_SET_FLAG_CLEAR_EXIT(V) (bitWrite(P165_FLAGS, P165_FLAG_CLEAR_EXIT, V))
 
 // Config per display group, all 4 PCONFIG_(U)LONG variables used
 # define P165_GROUP_CFG(N) PCONFIG_ULONG(N)
@@ -95,6 +98,7 @@
 # define P165_CONFIG_IDX_START    21u // 1 bit
 # define P165_CONFIG_IDX_DEND     22u // 1 bit
 # define P165_CONFIG_IDX_RTLD     23u // 1 bit
+# define P165_CONFIG_IDX_SPLTG    24u // 1 bit
 
 # define P165_GET_CONFIG_WPIXELS(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS))
 # define P165_GET_CONFIG_HPIXELS(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS))
@@ -106,6 +110,7 @@
 # define P165_GET_CONFIG_START(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_START))
 # define P165_GET_CONFIG_DEND(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_DEND))
 # define P165_GET_CONFIG_RTLD(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD))
+# define P165_GET_CONFIG_SPLTG(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG))
 
 # define P165_SET_CONFIG_WPIXELS(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS, V))
 # define P165_SET_CONFIG_HPIXELS(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS, V))
@@ -117,6 +122,7 @@
 # define P165_SET_CONFIG_START(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_START, V))
 # define P165_SET_CONFIG_DEND(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_DEND, V))
 # define P165_SET_CONFIG_RTLD(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD, V))
+# define P165_SET_CONFIG_SPLTG(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG, V))
 
 # define P165_SHOW_BUFFER_SIZE  16 // Max number of characters in the buffer to show (1..4 groups of 1..4 digits)
 
@@ -132,10 +138,9 @@
 
 # define P165_SEGMENT_DOT_PIXELS    7  // Max: 7 (3 bits)
 # define P165_SEGMENT_ADDON_PIXELS  12 // Max: 15 (4 bits)
-# define P165_SEGMENT_G_SPLIT_SIZE  2
 
 // Set typedef before include <Noiasca_NeopixelDisplay.h>
-typedef uint64_t segsize_t; // largest storage size available, allows for up to 64 pixels per digit, 41 used
+typedef uint64_t segsize_t; // largest storage size available, allows for up to 64 pixels per digit
 
 # include <NeoPixelBus_wrapper.h>
 # if P165_FEATURE_P073
@@ -157,7 +162,8 @@ private:
     uint32_t strt    : 1;  // start segment 0 = left-top/a, 1 = right-top/b
     uint32_t dend    : 1;  // dot at: 1: end of digit 0: between c/d segments
     uint32_t rtld    : 1;  // right to left display
-    uint32_t unused  : 8;
+    uint32_t splt    : 1;  // split g-segment (best enabled > 3 horizontal pixels)
+    uint32_t unused  : 7;
     uint32_t aoffs   : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
     uint32_t unused2 : 16;
   };
@@ -190,7 +196,7 @@ private:
                                        const uint8_t decPt,
                                        const uint8_t addN);
   static void drawSevenSegment(const uint8_t  digit,
-                               const uint8_t  grp,
+                               const uint8_t  grp10,
                                const uint8_t  wpixels,
                                const uint8_t  hpixels,
                                const bool     overlap,
@@ -203,7 +209,8 @@ private:
                                const String & fgColor,
                                const bool     dspPlan,
                                const int16_t  aOffs,
-                               const bool     splitG);
+                               const bool     splitG,
+                               const bool     rtld);
   static String calculatePixelIndex(const uint8_t  hor,
                                     const int8_t   ver,
                                     const uint8_t  seg,
@@ -215,7 +222,6 @@ private:
                                     const bool     dend,
                                     const uint8_t  decPt,
                                     const uint8_t  addN,
-                                    const int16_t  aOffs,
                                     const bool     splitG);
   static void  addJavascript();
   uint16_t     calculateDisplayPixels();
@@ -299,9 +305,11 @@ private:
   uint8_t  _output           = 0;
   uint8_t  _fontset          = 0;
   uint8_t  _stdOffset        = 0;
+  uint8_t  _totalDigits      = 0;
   bool     _initialized      = false;
   bool     _timesep          = false;
   bool     _suppressLeading0 = false;
+  bool     _clearOnExit      = false;
 
   String   _textToScroll;
   bool     _txtScrolling  = false;

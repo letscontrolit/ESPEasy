@@ -16,7 +16,7 @@ function sh_row(tbl, row, show) { // Show/Hide row, minimal checks
   if (r) r.style.display = show ? 'block' : 'none';
 };
 function set_td(tbl, fill, row, col, td) { // Set <TD> content if fill is true, else non-breaking space, minimal checks
-  c = document.getElementById(tbl).getElementsByTagName('TR')[row].children[col];
+  c = document.getElementById(tbl)?.getElementsByTagName('TR')[row].children[col];
   if (c?.tagName == 'TD') c.innerHTML = fill ? td : '&nbsp;';
 };
 // Next functions: 4th & 5th parameters are used only in 1 function, but to keep the calling logic simple, leave it there
@@ -50,7 +50,7 @@ function chDecp(value, base, count, max, colr) { // Change Decimal point pixels
 };
 function chAddn(value, base, count, max, colr) { // Change Additional pixels
   for (t = base; t < base + count; t++)
-    set_td('dgtbl' + t, value > 0 && max && t === base + count - 1, 6, 8, '' + value);
+    set_td('dxtbl' + t, value > 0 && max /*&& t === base + count - 1*/, 6, 0, '' + value);
 };
 function dgts(gps, flds) { // Update pixel counts per group and total pixels
   z = 0;

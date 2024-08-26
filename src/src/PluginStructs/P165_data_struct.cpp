@@ -19,19 +19,21 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
   # endif // if P165_FEATURE_P073 && P165_EXTRA_FONTS
   _scrollSpeed      = P165_CONFIG_SCROLLSPEED;
   _suppressLeading0 = P165_GET_FLAG_SUPP0;
+  _clearOnExit      = P165_GET_FLAG_CLEAR_EXIT;
   _txtScrolling     = P165_GET_FLAG_SCROLL_TEXT;
   _scrollFull       = P165_GET_FLAG_SCROLL_FULL;
   _stdOffset        = P165_GET_FLAG_STD_OFFSET;
 
-  for (uint8_t grp = 0; grp < PLUGIN_CONFIGLONGVAR_MAX; ++grp) {
-    memcpy(&_pixelGroupCfg[grp], &P165_GROUP_CFG(grp), sizeof(_pixelGroupCfg[grp]));
+  for (uint8_t grp = 0; grp < _pixelGroups; ++grp) {
+    memcpy(&_pixelGroupCfg[grp], &P165_GROUP_CFG(grp), sizeof(P165_GROUP_CFG(grp)));
     _pixelGroupCfg[grp].aoffs = 0;
+    _totalDigits             += _pixelGroupCfg[grp].dgts;
   }
 
   const uint16_t pxlCount = calculateDisplayPixels(); // Needs the _pixelGroupCfg filled
 
   # if P165_DEBUG_INFO
-  addLog(LOG_LEVEL_INFO, strformat(F("NeoPixel7Segment: Start stripe for %d pixels."), pxlCount));
+  addLog(LOG_LEVEL_INFO, strformat(F("NeoPixel7Segment: Start stripe for %d pixels, %d digits."), pxlCount, _totalDigits));
   # endif // if P165_DEBUG_INFO
   strip = new (std::nothrow) NeoPixelBus_wrapper(pxlCount, CONFIG_PIN1, P165_STRIP_TYPE_RGBW == _stripType
                                                                           ? NEO_GRBW + NEO_KHZ800
@@ -122,6 +124,15 @@ int P165_data_struct::offsetLogic_callback(uint16_t position) {
 }
 
 P165_data_struct::~P165_data_struct() {
+  if (_clearOnExit && (nullptr != strip)) {
+    const uint16_t pxlCount = calculateDisplayPixels();
+
+    for (uint16_t pxl = 0; pxl < pxlCount; ++pxl) {
+      strip->setPixelColor(pxl, 0);
+    }
+    strip->show();
+  }
+
   for (uint8_t grp = 0; grp < PLUGIN_CONFIGLONGVAR_MAX; ++grp) {
     delete display[grp];
   }
@@ -143,6 +154,7 @@ void P165_data_struct::initDigitGroup(struct EventStruct *event,
   P165_SET_CONFIG_START(grp, false);
   P165_SET_CONFIG_DEND(grp, false);
   P165_SET_CONFIG_RTLD(grp, false);
+  P165_SET_CONFIG_SPLTG(grp, false);
 }
 
 /********************************************************************
@@ -222,6 +234,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     if (P165_CONFIG_SCROLLSPEED == 0) { P165_CONFIG_SCROLLSPEED = 10; }
     addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("scrlspd"), P165_CONFIG_SCROLLSPEED, 1, 600);
     addUnit(F("1..600 = 0.1..60 sec/step"));
+    addFormCheckBox(F("Clear display on exit"), F("clrexit"), P165_GET_FLAG_CLEAR_EXIT);
   }
 
   addFormSubHeader(F("Display"));
@@ -270,13 +283,18 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     fromGrp = grpCount - 1;
     toGrp   = -1;
     incGrp  = -1;
-    addFormNote(F("Attention, Groups and Digits are shown in reverse order!"));
+    addFormNote(F("Attention, Groups are shown in reverse order!"));
   }
 
   int16_t dgtOffset = 0;
 
   for (int8_t grp = fromGrp; grp != toGrp; grp += incGrp) {
-    const uint8_t grp10    = grp * 10;
+    const uint8_t grp10 = grp * 10;
+
+    if (0 == P165_GET_CONFIG_WPIXELS(grp)) { // Check for invalid settings
+      initDigitGroup(event, grp);
+    }
+
     const uint8_t grpDgts  = P165_GET_CONFIG_DIGITS(grp);
     const uint8_t grpWPxls = P165_GET_CONFIG_WPIXELS(grp);
     const uint8_t grpHPxls = P165_GET_CONFIG_HPIXELS(grp);
@@ -290,10 +308,6 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
       addFormSeparator(2);
     }
 
-    if (0 == grpWPxls) { // Check for invalid settings
-      initDigitGroup(event, grp);
-    }
-
     addRowLabel(concat(F("Group "), grp + 1));
 
     {
@@ -305,12 +319,15 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                   digitOptions,
                   digitOptionValues, nullptr,
                   grpDgts,
-                  true, !numberPlan);    // 1st and 2nd column
+                  true, !numberPlan); // 1st and 2nd column
 
       for (uint8_t dgt = 0; dgt < grpDgts; ++dgt) {
+        if ((0 == dgt) && grpRtld) { html_TD(); addHtml(F("(Extra)")); }
         html_TD(); addHtml(F("Digit ")); // 3rd column = "Digit <nr>"
-        addHtmlInt(static_cast<int8_t>(grpRtld ? (grpDgts - dgt) : (dgt + 1)));
+        addHtmlInt(static_cast<int8_t>(dgt + 1));
       }
+
+      if (!grpRtld) { html_TD(); addHtml(F("(Extra)")); }
     }
 
     addFormNumericBox(F("Segment Width pixels"), concat(F("wdth"), grp10),
@@ -333,7 +350,6 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
       if (grpRtld) { // Take care of Right To Left configured groups
         dgtOffset += (dgtPxls * (grpDgts - 1));
       }
-      const uint16_t grpAoffs = (grpRtld ? (grpDgts - 1) : 0) * dgtPxls + grpOffs;
 
       for (uint8_t dgt = 0; dgt < grpDgts; ++dgt) {
         drawSevenSegment(dgt, grp10, // 3rd column = subtable with digit
@@ -348,8 +364,9 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                          P165_GET_CONFIG_DEND(grp),
                          fgColor,
                          numberPlan,
-                         dgt < (grpDgts - 1) ? -1 : grpAoffs,
-                         grpWPxls > P165_SEGMENT_G_SPLIT_SIZE);
+                         grpOffs,
+                         P165_GET_CONFIG_SPLTG(grp),
+                         grpRtld);
         dgtOffset += (dgtPxls * (grpRtld ? -1 : 1));
       }
 
@@ -432,7 +449,11 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
         addHtml(F("<div class='note'>"));
         addHtml(F("Any 'Extra pixels after' will be<BR/>positioned left of the group!"));
         addHtml(F("</div></td>"));
-      } else {
+      }
+      addFormCheckBox(F("Split g-segment pixels"), concat(F("spltg"), grp10),
+                      P165_GET_CONFIG_SPLTG(grp), numberPlan);
+
+      if (!grpRtld) {
         for (uint8_t r = 12; r < 13; ++r) {
           html_TR_TD();
           addHtml(F("&nbsp;")); // We need 13 rows for the digit table to work as intended
@@ -504,6 +525,7 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
   P165_SET_FLAG_SUPP0(isFormItemChecked(F("supp0")) ? 1 : 0);
   P165_SET_FLAG_SCROLL_TEXT(isFormItemChecked(F("scrltxt")) ? 1 : 0);
   P165_SET_FLAG_SCROLL_FULL(isFormItemChecked(F("scrlfll")) ? 1 : 0);
+  P165_SET_FLAG_CLEAR_EXIT(isFormItemChecked(F("clrexit")) ? 1 : 0);
   int stdoff = 1;
 
   if (update_whenset_FormItemInt(F("stdoff"), stdoff)) {
@@ -537,6 +559,7 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
       P165_SET_CONFIG_START(grp, getFormItemInt(concat(F("strt"), grp10)));
       P165_SET_CONFIG_DEND(grp, isFormItemChecked(concat(F("dend"), grp10)));
       P165_SET_CONFIG_RTLD(grp, isFormItemChecked(concat(F("rtld"), grp10)));
+      P165_SET_CONFIG_SPLTG(grp, isFormItemChecked(concat(F("spltg"), grp10)));
     }
   }
   return true;
@@ -586,175 +609,217 @@ uint16_t P165_data_struct::calculateDisplayDigits() {
 
 // Draw a 7segment digit with optional decimal point and extra pixels, and max 5-wide segments and 5-high segments
 constexpr uint16_t P165_digitMask[13] = { // Regular digit layout, max size
-  0b011111000,
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b011111001, // Extra pixels after
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b100000100,
-  0b011111010,                               // Decimal point pixels
+  0b01111100,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b01111100,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b10000010,
+  0b01111101,                            // Decimal point pixels
+};
+
+constexpr uint8_t P165_extraMask[13] = { // Extra pixel table mask
+  0b0,
+  0b0,
+  0b0,
+  0b0,
+  0b0,
+  0b0,
+  0b1, // Extra pixels after
+  0b0,
+  0b0,
+  0b0,
+  0b0,
+  0b0,
+  0b0,
 };
 
 constexpr uint16_t P165_digitOverlap[13] = { // Overlap enabled, overlay these pixels
-  0b100000100,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b100000100,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b000000000,
-  0b100000100,
+  0b10000010,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b10000010,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b00000000,
+  0b10000010,
 };
 
 /********************************************************************
 * Draw a 7-segment digit-group by creating a table
 * with some rows and columns hidden when not max. size
 ********************************************************************/
-void P165_data_struct::drawSevenSegment(const uint8_t  digit,    // Digit
-                                        const uint8_t  grp,      // Group * 10
-                                        const uint8_t  wpixels,  // width pixels
-                                        const uint8_t  hpixels,  // heoght pixels
-                                        const bool     overlap,  // corner overlap
-                                        const uint8_t  decPt,    // decimal point pixels
-                                        const uint8_t  addN,     // additional pixels
-                                        const uint8_t  max,      // max already has 1 subtracted
-                                        const uint16_t offset,   // pre-offset
-                                        const bool     strt,     // start left-top or right-top
-                                        const bool     dend,     // decimal point at end
-                                        const String & fgColor,  // foreground color
-                                        const bool     dspPlan,  // show number plan
-                                        const int16_t  aOffs,    // addon offset
-                                        const bool     splitG) { // split segment G in 2 halves
-  addHtml(F("<TD rowspan=13>"));
-  addHtml(strformat(F("<table id='dgtbl%d'>"), digit + grp));    // Group should be factor 10
+void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
+                                        const uint8_t  grp10,   // Group * 10
+                                        const uint8_t  wpixels, // width pixels
+                                        const uint8_t  hpixels, // heoght pixels
+                                        const bool     overlap, // corner overlap
+                                        const uint8_t  decPt,   // decimal point pixels
+                                        const uint8_t  addN,    // additional pixels
+                                        const uint8_t  max,     // max already has 1 subtracted
+                                        const uint16_t offset,  // pre-offset
+                                        const bool     strt,    // start left-top or right-top
+                                        const bool     dend,    // decimal point at end
+                                        const String & fgColor, // foreground color
+                                        const bool     dspPlan, // show number plan
+                                        const int16_t  aOffs,   // addon offset
+                                        const bool     splitG,  // split segment G in 2 halves
+                                        const bool     rtld) {  // direction ltr or rtl
+  int8_t tblFrom = 0;
+  int8_t tblTo   = 1;
+  int8_t tblInc  = 1;
 
-  uint8_t hor = 0;
-  int8_t  ver = 0;
-  uint8_t seg = 0;
-
-  for (uint8_t h = 0; h < NR_ELEMENTS(P165_digitMask); ++h) {
-    const bool showRow = !(((h < 6) && (6 - h >= hpixels) && (h > 1)) ||
-                           ((h > 6) && (h - 6 > hpixels) && (h < 12)));
-    addHtml(F("<TR style='display:"));
-
-    if (!showRow) {
-      addHtml(F("none'>"));  // Hide row
+  if ((aOffs >= 0) && (digit == (rtld ? 0 : max))) {
+    if (rtld) {
+      tblFrom = 1;
+      tblTo   = -1;
+      tblInc  = -1;
     } else {
-      addHtml(F("block'>")); // Show row
-
-      if ((h == 0) || (h == 6)) {
-        ver = 0;             // Restart vertical counter
-      } else {
-        ver++;
-      }
-    }
-
-    hor = 0; // Restart horizontal counter
-
-    for (uint8_t w = 0; w < 9; ++w) {
-      String pIndex;
-
-      const bool showCol = !(w > 0 && w >= wpixels && w < 5);
-
-      html_TD(showCol ? F("width:30px;display:inline-block") : F("width:30px;display:none"));
-
-      if (bitRead(P165_digitMask[h], 8 - w) ||
-          (overlap && bitRead(P165_digitOverlap[h], 8 - w))) {
-        if (dspPlan && showRow && showCol) { // Determine segment for pixel-indexes:
-          if ((h > 0) && (h < 6)) {          // b/f
-            if (w == 0) {
-              seg = 5;                       // f
-            } else {
-              seg = 1;                       // b
-            }
-          } else if ((h > 6) && (h < 12)) {  // c/e
-            if (w == 0) {
-              seg = 4;                       // e
-            } else {
-              seg = 2;                       // c
-            }
-          } else if ((w > 6) && (h == 12)) { // Decimal point
-            seg = 7;
-          } else if (h == 6) {               // g / Additional pixels
-            if (w > 6) {
-              seg = 8;                       // virtual 9th segment
-            } else {
-              seg = 6;                       // g
-            }
-          } else if ((w < 7) && (h == 12)) {
-            seg = 3;                         // d
-          } else {
-            seg = 0;                         // a
-          }
-
-          pIndex = calculatePixelIndex(hor,
-                                       ver - 1,
-                                       seg,
-                                       offset,
-                                       wpixels,
-                                       hpixels,
-                                       overlap,
-                                       strt,
-                                       dend,
-                                       decPt,
-                                       addN,
-                                       aOffs,
-                                       splitG);
-
-          // pIndex = strformat(F("%d/%d/%d"), hor, ver - 1, seg); // For debugging only
-          hor++;
-        }
-
-        if (w < 7) {
-          if (dspPlan) {
-            addHtml(pIndex);
-          } else {
-            if (!fgColor.isEmpty()) {           // Colored pixel
-              addHtml(strformat(F("<span style='color:%s;'>" P165_PIXEL_CHARACTER "</span>"), fgColor.c_str()));
-            } else {
-              addHtml(F(P165_PIXEL_CHARACTER)); // Pixel
-            }
-          }
-        } else if (h == 6) {                    // Extra pixels after last digit
-          if ((addN > 0) && (digit == max)) {
-            if (dspPlan) {
-              addHtml(pIndex);
-            } else {
-              addHtmlInt(addN);   // Show number of pixels
-            }
-          } else {
-            addHtml(F("&nbsp;")); // None
-          }
-        } else if (h == 12) {     // Decimal point
-          if (decPt > 0) {
-            if (dspPlan) {
-              addHtml(pIndex);
-            } else {
-              addHtmlInt(decPt);  // Show number of pixels
-            }
-          } else {
-            addHtml(F("&nbsp;")); // None
-          }
-        } else {
-          addHtml('?');           // this shouldn't ever show up... ;-)
-        }
-      } else {
-        addHtml(F("&nbsp;"));     // No pixel
-      }
+      tblTo = 2;
     }
   }
-  html_end_table();
+
+  for (int8_t tbl = tblFrom; tbl != tblTo; tbl += tblInc) {
+    const bool drawDigit   = 0 == tbl;
+    const uint8_t maskBits = drawDigit ? 8 : 1;
+
+    addHtml(F("<TD rowspan=13 style='padding:0;'>"));
+    addHtml(strformat(F("<table id='d%ctbl%d'>"), drawDigit ? 'g' : 'x', digit + grp10)); // Group is factor 10
+
+    uint8_t hor = 0;
+    int8_t  ver = 0;
+    uint8_t seg = 0;
+
+    for (uint8_t h = 0; h < NR_ELEMENTS(P165_digitMask); ++h) {
+      const bool showRow = !(((h < 6) && (6 - h >= hpixels) && (h > 1)) ||
+                             ((h > 6) && (h - 6 > hpixels) && (h < 12)));
+      addHtml(F("<TR style='display:"));
+
+      if (!showRow) {
+        addHtml(F("none'>"));  // Hide row
+      } else {
+        addHtml(F("block'>")); // Show row
+
+        if ((h == 0) || (h == 6)) {
+          ver = 0;             // Restart vertical counter
+        } else {
+          ver++;
+        }
+      }
+
+      hor = 0; // Restart horizontal counter
+
+      for (uint8_t w = 0; w < maskBits; ++w) {
+        String pIndex;
+
+        const bool showCol = !(w > 0 && w >= wpixels && w < 5);
+
+        html_TD(showCol ? (dspPlan && (w == maskBits - 1)
+                                        ? F("min-width:30px;width:75px;display:inline-block")
+                                        : F("width:30px;display:inline-block"))
+                        : F("width:30px;display:none"));
+
+        const bool showBit = drawDigit
+                            ? (bitRead(P165_digitMask[h], (maskBits - 1) - w) ||
+                               (overlap && bitRead(P165_digitOverlap[h], (maskBits - 1) - w)))
+                            : bitRead(P165_extraMask[h], (maskBits - 1) - w);
+
+        if (showBit) {
+          if (dspPlan && showRow && showCol) { // Determine segment for pixel-indexes:
+            if ((h > 0) && (h < 6)) {          // b/f
+              if (w == 0) {
+                seg = 5;                       // f
+              } else {
+                seg = 1;                       // b
+              }
+            } else if ((h > 6) && (h < 12)) {  // c/e
+              if (w == 0) {
+                seg = 4;                       // e
+              } else {
+                seg = 2;                       // c
+              }
+            } else if ((w > 6) && (h == 12)) { // Decimal point
+              seg = 7;
+            } else if (h == 6) {               // g / Additional pixels
+              if ((w > 6) || !drawDigit) {
+                seg = 8;                       // virtual 9th segment
+              } else {
+                seg = 6;                       // g
+              }
+            } else if ((w < 7) && (h == 12)) {
+              seg = 3;                         // d
+            } else {
+              seg = 0;                         // a
+            }
+
+            pIndex = calculatePixelIndex(hor,
+                                         ver - 1,
+                                         seg,
+                                         offset,
+                                         wpixels,
+                                         hpixels,
+                                         overlap,
+                                         strt,
+                                         dend,
+                                         decPt,
+                                         addN,
+                                         splitG);
+
+            // pIndex = strformat(F("%d/%d/%d"), hor, ver - 1, seg); // For debugging only
+            hor++;
+          }
+
+          if ((w < 7) && drawDigit) {
+            if (dspPlan) {
+              addHtml(pIndex);
+            } else {
+              if (!fgColor.isEmpty()) {           // Colored pixel
+                addHtml(strformat(F("<span style='color:%s;'>" P165_PIXEL_CHARACTER "</span>"), fgColor.c_str()));
+              } else {
+                addHtml(F(P165_PIXEL_CHARACTER)); // Pixel
+              }
+            }
+          } else if (h == 6) {                    // Extra pixels after last digit
+            if ((addN > 0) && ((digit == max) || !drawDigit)) {
+              if (dspPlan) {
+                addHtml(pIndex);
+              } else {
+                addHtmlInt(addN);   // Show number of pixels
+              }
+            } else {
+              addHtml(F("&nbsp;")); // None
+            }
+          } else if (h == 12) {     // Decimal point
+            if (decPt > 0) {
+              if (dspPlan) {
+                addHtml(pIndex);
+              } else {
+                addHtmlInt(decPt);  // Show number of pixels
+              }
+            } else {
+              addHtml(F("&nbsp;")); // None
+            }
+          } else {
+            addHtml('?');           // this shouldn't ever show up... ;-)
+          }
+        } else {
+          addHtml(F("&nbsp;"));     // No pixel
+        }
+      }
+    }
+    html_end_table();
+  }
 }
 
 /************************************************************************
@@ -792,7 +857,6 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
                                              const bool     dend,     // decimal point at end
                                              const uint8_t  decPt,    // decimal point pixels
                                              const uint8_t  addN,     // additional pixels
-                                             const int16_t  aOffs,    // additional pixels offset
                                              const bool     splitG) { // split G segment in 2 halves
   int16_t result(offset);
   const uint8_t hpx  = wpixels + (overlap ? 2 : 0);                   // Overlapping pixels checked on horizontal segments
@@ -841,10 +905,7 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
 
         for (uint8_t dp = 1; dp < decPt; ++dp) {
           result++;
-          char sep = ',';
-
-          if (dp == 2) { sep = ' '; }
-          res = strformat(F("%s%c%d"), res.c_str(), sep, result);
+          res = strformat(F("%s %d"), res.c_str(), result);
         }
         return res;
       } else {
@@ -867,18 +928,14 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
     }
   }
 
-  if ((seg == 8) && (addN > 0) && (aOffs >= 0)) {
-    result += aOffs;
+  if ((seg == 8) && (addN > 0)) {
     String res(result);
 
     res.reserve(addN * 4);
 
     for (uint8_t a = 1; a < addN; ++a) {
       result++;
-      char sep = ',';
-
-      if ((addN > 5) && (a == addN / 2)) { sep = ' '; }
-      res = strformat(F("%s%c%d"), res.c_str(), sep, result);
+      res = strformat(F("%s %d"), res.c_str(), result);
     }
     return res;
   }
@@ -896,7 +953,7 @@ void P165_data_struct::fillSegmentBitmap(const uint8_t       grp,
   const uint8_t hpx = pixCfg.wpix + (pixCfg.crnr ? 2 : 0);       // Overlapping pixels checked on horizontal segments
   const uint8_t vpx = pixCfg.hpix;                               // Vertical pixels = height pixels
   // smap: Determine the segment(part) order
-  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.wpix > P165_SEGMENT_G_SPLIT_SIZE ? 4 : 0);
+  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.wpix > pixCfg.splt ? 4 : 0);
   const uint8_t rh   = hpx / 2;                                  // Horizontal half part, right
   const uint8_t lh   = hpx - rh;                                 // Horizontal half part, left
 
@@ -1003,10 +1060,20 @@ bool P165_data_struct::plugin_once_a_second(struct EventStruct *event) {
                        _suppressLeading0,
                        _stdOffset);
   }
-  writeBufferToDisplay(_currentGroup);
+  writeBufferToDisplay();
 
-  // FIXME Should probably determine what group(s) are used and set the extra pixels for those groups
-  extraPixelsState(_currentGroup, _timesep ? 1 : 0, AdaGFXrgb565ToRgb888(_timesep ? _fgColor : _bgColor));
+  // FIXME Determine what group(s) are used and set the extra pixels for those groups
+  uint8_t dgts             = 0;
+  const uint8_t dgtsNeeded = std::min(_totalDigits, static_cast<uint8_t>(P165_DISP_DATE == _output ? 8 : 6));
+
+  for (uint8_t grp = 0; grp < _pixelGroups; ++grp) {
+    dgts += _pixelGroupCfg[grp].dgts;
+    addLog(LOG_LEVEL_INFO, strformat(F("P165 : seconds marker %d Group %d, digits %d offset %d"), _timesep, grp, dgts, _stdOffset));
+
+    if ((_stdOffset <= dgts) && (dgtsNeeded - _stdOffset > dgts)) {
+      extraPixelsState(grp + 1, _timesep ? 1 : 0, AdaGFXrgb565ToRgb888(_timesep ? _fgColor : _bgColor));
+    }
+  }
 
   return true;
 }
@@ -1020,7 +1087,7 @@ bool P165_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   }
 
   if (nextScroll()) {
-    writeBufferToDisplay(_currentGroup);
+    writeBufferToDisplay();
   }
   return true;
 }
@@ -1119,7 +1186,7 @@ bool P165_data_struct::plugin_write(struct EventStruct *event,
       break;
     case p165_commands_e::c7db: // Set brightness
 
-      if ((event->Par1 >= 0) && (event->Par1 < 256)) {
+      if ((event->Par1 >= 0) && (event->Par1 <= _maxBrightness)) {
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -1693,12 +1760,12 @@ void P165_data_struct::put4NumbersInBuffer(const uint8_t nr1,
   showbuffer[2 + offset] = static_cast<uint8_t>((nr2 / 10) + cOffs);
   showbuffer[3 + offset] = (nr2 % 10) + cOffs;
 
-  if ((nr3 > -1) && ((5 + offset) < P165_SHOW_BUFFER_SIZE)) {
+  if ((nr3 > -1) && ((5 + offset) < _totalDigits)) {
     showbuffer[4 + offset] = static_cast<uint8_t>((nr3 / 10) + cOffs);
     showbuffer[5 + offset] = (nr3 % 10) + cOffs;
   }
 
-  if ((nr4 > -1) && ((7 + offset) < P165_SHOW_BUFFER_SIZE)) {
+  if ((nr4 > -1) && ((7 + offset) < _totalDigits)) {
     showbuffer[6 + offset] = static_cast<uint8_t>((nr4 / 10) + cOffs);
     showbuffer[7 + offset] = (nr4 % 10) + cOffs;
   }
