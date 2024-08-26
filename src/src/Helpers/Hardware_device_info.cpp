@@ -441,8 +441,11 @@ const __FlashStringHelper* getChipModel() {
           CHIP_ESP32S3    = 9,  //!< ESP32-S3
           CHIP_ESP32C3    = 5,  //!< ESP32-C3
           CHIP_ESP32C2    = 12, //!< ESP32-C2
+          CHIP_ESP32C5    = 17, //!< ESP32-C5 beta3 (MPW)
+          CHIP_ESP32C5    = 23, //!< ESP32-C5 MP
           CHIP_ESP32C6_b  = 7,  //!< ESP32-C6(beta)
           CHIP_ESP32C6    = 13, //!< ESP32-C6
+          CHIP_ESP32C61   = 20, //!< ESP32-C61
           CHIP_ESP32H2_b1 = 10, //!< ESP32-H2(beta1)
           CHIP_ESP32H2_b2 = 14, //!< ESP32-H2(beta2)
           CHIP_ESP32H2    = 16, //!< ESP32-H2
@@ -470,7 +473,12 @@ const __FlashStringHelper* getChipModel() {
   esp_chip_info(&chip_info);
 
   uint32_t chip_model    = chip_info.model;
-  uint32_t chip_revision = chip_info.revision;
+  const uint32_t chip_revision =
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    chip_info.revision / 100;
+#else
+    chip_info.revision;
+#endif
 
   uint32_t pkg_version = 0;
 # if (ESP_IDF_VERSION_MAJOR >= 5)
@@ -530,6 +538,8 @@ const __FlashStringHelper* getChipModel() {
       case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302:
         return F("ESP32-PICO-V3-02");                    // Max 240MHz, Dual core, LGA 7*7, 8MB embedded flash, 2MB embedded PSRAM,
                                                          // ESP32-PICO-MINI-02, ESP32-PICO-DevKitM-2
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3:
+        return F("ESP32-D0WDR2-V3");
     }
 # endif // if CONFIG_IDF_TARGET_ESP32
     return F("ESP32");
@@ -723,6 +733,15 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32P4
     return F("ESP32-P4");
   }
+  else if (17 == chip_model) {  // ESP32-C5 beta3 (MPW)
+    return F("ESP32-C5 beta3");
+  }
+  else if (23 == chip_model) {  // ESP32-C5 MP
+    return F("ESP32-C5");
+  }
+  else if (20 == chip_model) {  // ESP32-C61
+    return F("ESP32-C61");
+  }
 
   return F("ESP32");
 #elif defined(ESP8266)
@@ -823,11 +842,7 @@ String getChipRevision() {
     # endif // if ESP_IDF_VERSION_MAJOR < 5
   }
   #endif // ifdef ESP32
-  String res;
-  res += rev / 100;
-  res += '.';
-  res += rev % 100;
-  return res;
+  return strformat(F("%d.%02d"), rev / 100, rev % 100);
 }
 
 uint32_t getSketchSize() {
@@ -893,7 +908,13 @@ bool CanUsePSRAM() {
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
-  if ((CHIP_ESP32 == chip_info.model) && (chip_info.revision < 3)) {
+  if ((CHIP_ESP32 == chip_info.model) && 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+  (chip_info.revision < 300)
+#else
+  (chip_info.revision < 3)
+#endif
+  ) {
     return false;
   }
 #  if ESP_IDF_VERSION_MAJOR < 4
