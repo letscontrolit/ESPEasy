@@ -122,7 +122,7 @@ else
 	IPLIST=( $1 )
 fi
 
-echo "PROG: Backup list has ${#IPLIST[*]} nodes: ${IPLIST[*]} "
+echo "$PROG: Backup list has ${#IPLIST[*]} nodes: ${IPLIST[*]} "
 
 for H in ${IPLIST[*]}
 do 

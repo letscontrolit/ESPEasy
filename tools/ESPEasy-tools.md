@@ -97,7 +97,7 @@ If you add the `-a` option, the peer device list will be used to find your ESP d
 $ espeasybackup -a  192.168.202.62
 espeasybackup: Initial list 192.168.202.62 192.168.202.63  ...
 espeasybackup: Secondary list: 192.168.202.242 192.168.202.52 192.168.202.61 192.168.202.62 192.168.202.63 192.168.202.65 192.168.202.66 192.168.202.67 ...
-PROG: Backup list has 8 nodes: 192.168.202.242 192.168.202.52 192.168.202.61 192.168.202.62 192.168.202.63 192.168.202.65 192.168.202.66 192.168.202.67
+espeasybackup: Backup list has 8 nodes: 192.168.202.242 192.168.202.52 192.168.202.61 192.168.202.62 192.168.202.63 192.168.202.65 192.168.202.66 192.168.202.67
 espeasybackup: Backup 192.168.202.242 config.dat --> 20240827-210214-TestBallValve-2-config.dat ... OK
 espeasybackup: Backup 192.168.202.242 security.dat --> 20240827-210214-TestBallValve-2-security.dat ... OK
 espeasybackup: Backup 192.168.202.242 notification.dat --> 20240827-210214-TestBallValve-2-notification.dat ... OK
