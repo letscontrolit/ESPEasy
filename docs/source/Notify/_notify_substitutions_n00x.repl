@@ -1,0 +1,23 @@
+.. |N001_type| replace:: :cyan:`Notifications`
+.. |N001_name| replace:: :cyan:`Notifications Email (SMTP)`
+.. |N001_typename| replace:: :cyan:`Notifications - Email (SMTP)`
+.. |N001_porttype| replace:: `.`
+.. |N001_status| replace:: :green:`NORMAL` :yellow:`CLIMATE` :yellow:`COLLECTION` :yellow:`SONOFF` :yellow:`SHELLY`
+.. |N001_github| replace:: N001_Email.cpp
+.. _N001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_N001_Email.cpp
+.. |N001_maintainer| replace:: `.`
+.. |N001_usedlibraries| replace:: `.`
+.. |N001_shortinfo| replace:: Send the user a message using SMTP email. Multiple recipients are possible. IMPORTANT: Email server MUST allow a non-secure connection; The SSL/TLS SMTP protocol is not supported.
+.. |N001_page| replace:: N001
+
+.. |N002_type| replace:: :cyan:`Notifications`
+.. |N002_name| replace:: :cyan:`Notifications Buzzer`
+.. |N002_typename| replace:: :cyan:`Notifications - Buzzer`
+.. |N002_porttype| replace:: `.`
+.. |N002_status| replace:: :green:`NORMAL` :yellow:`CLIMATE` :yellow:`COLLECTION` :yellow:`SONOFF` :yellow:`SHELLY`
+.. |N002_github| replace:: N002_Buzzer.cpp
+.. _N002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_N002_Buzzer.cpp
+.. |N002_maintainer| replace:: `.`
+.. |N002_usedlibraries| replace:: `.`
+.. |N002_shortinfo| replace:: Alert the user with a brief 440Hz beep tone driven by a single GPIO pin. This audio feature requires a passive speaker/transducer and driver circuit.
+.. |N002_page| replace:: N002

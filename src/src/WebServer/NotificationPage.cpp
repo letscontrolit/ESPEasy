@@ -2,6 +2,16 @@
 
 #if FEATURE_NOTIFIER
 
+// #######################################################################################################
+// ############################### Notifification Page: Email ############################################
+// #######################################################################################################
+
+/** Changelog:
+ * 2024-07-30 ThomasB   : Added Read-the-Docs Help Button to email and buzzer plugins.
+ * 2024-07-01 ThomasB   : Added User Setting for SMTP email server timeout. Display in Seconds.
+ * 2024-07-01 ThomasB   : Start of changelog, older changes not logged.
+ */
+
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -191,6 +201,7 @@ void handle_notifications() {
     addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
+    addRTDHelpButton(F("Notify/_Notifications.html"));
 
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {

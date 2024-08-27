@@ -6,6 +6,9 @@
 // #######################################################################################################
 
 /**
+ * 2024-08-16 tonhuisman: Disable 'factoryreset' command by default, to protect the innocent. There is a higher than 99.999% chance you
+ *                        want something else than a reset to factory defaults and 400 ppm! If you do, then create a Custom build with
+ *                        the matching feature-flag enabled.
  * 2024-04-27 tonhuisman: Fix bug that sensor settings can only be retrieved if measuring is stopped
  * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-08-28 tonhuisman: Include 'CO2' in plugin name, to be in line with other CO2 plugins

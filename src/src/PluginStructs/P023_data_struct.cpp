@@ -267,7 +267,9 @@ bool P023_data_struct::plugin_read(struct EventStruct *event) {
       const String newString = parseTemplate(tmp, 16);
 
       sendStrXY(newString.c_str(), x, 0);
+      #if P023_FEATURE_DISPLAY_PREVIEW
       currentLines[x] = newString;
+      #endif // if P023_FEATURE_DISPLAY_PREVIEW
     }
   }
   return true;
@@ -275,8 +277,8 @@ bool P023_data_struct::plugin_read(struct EventStruct *event) {
 
 bool P023_data_struct::plugin_write(struct EventStruct *event,
                                     String            & string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1); // Changes to lowercase
+  bool success     = false;
+  const String cmd = parseString(string, 1); // Changes to lowercase
 
   if (equals(cmd, F("oledcmd"))) {
     const String param = parseString(string, 2);
@@ -299,10 +301,14 @@ bool P023_data_struct::plugin_write(struct EventStruct *event,
     String text = parseStringToEndKeepCase(string, 4);
     text = parseTemplate(text, 16);
     sendStrXY(text.c_str(), event->Par1 - 1, event->Par2 - 1);
+    #if P023_FEATURE_DISPLAY_PREVIEW
     setCurrentText(text, event->Par1 - 1, event->Par2 - 1);
+    #endif // if P023_FEATURE_DISPLAY_PREVIEW
   }
   return success;
 }
+
+#if P023_FEATURE_DISPLAY_PREVIEW
 
 /**
  * Update the buffer that is used for PLUGIN_WEB_SHOW_VALUES function
@@ -347,6 +353,8 @@ bool P023_data_struct::web_show_values() {
   addHtml(F("</pre>"));
   return result;
 }
+
+#endif // if P023_FEATURE_DISPLAY_PREVIEW
 
 void P023_data_struct::displayOn() {
   sendCommand(0xaf); // display on
