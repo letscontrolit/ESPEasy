@@ -2,6 +2,16 @@
 
 #if FEATURE_NOTIFIER
 
+// #######################################################################################################
+// ############################### Notifification Page: Email ############################################
+// #######################################################################################################
+
+/** Changelog:
+ * 2024-07-30 ThomasB   : Added Read-the-Docs Help Button to email and buzzer plugins.
+ * 2024-07-01 ThomasB   : Added User Setting for SMTP email server timeout. Display in Seconds.
+ * 2024-07-01 ThomasB   : Start of changelog, older changes not logged.
+ */
+
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -73,6 +83,7 @@ void handle_notifications() {
             NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
           }
           NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
+          NotificationSettings.Timeout                    = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM/1000);
           NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
           NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
           Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
@@ -153,7 +164,7 @@ void handle_notifications() {
         if (NotificationSettings.Port){
           addHtmlInt(NotificationSettings.Port);
         } else {
-          //MFD: we display the GPIO 
+          //MFD: we display the GPIO
           addGpioHtml(NotificationSettings.Pin1);
 
           if (NotificationSettings.Pin2>=0)
@@ -190,6 +201,7 @@ void handle_notifications() {
     addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
+    addRTDHelpButton(F("Notify/_Notifications.html"));
 
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
@@ -205,7 +217,10 @@ void handle_notifications() {
         {
           addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
-          addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535);
+          addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535, F("NOTE: SSL/TLS servers NOT supported!"));
+          if (NotificationSettings.Timeout<NPLUGIN_001_MIN_TM/1000 || NotificationSettings.Timeout>NPLUGIN_001_MAX_TM/1000) {NotificationSettings.Timeout=NPLUGIN_001_DEF_TM/1000;}
+          addFormNumericBox(F("Timeout"), F("timeout"), NotificationSettings.Timeout, NPLUGIN_001_MIN_TM/1000, NPLUGIN_001_MAX_TM/1000, F("Maximum Server Response Time)"));
+          addUnit(F("Seconds"));
 
           addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
           addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);

@@ -47,17 +47,13 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_008;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_008;
+      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_ULONG;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].ValueCount       = 1;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].GlobalSyncOption = true;
       break;
     }
 
@@ -93,9 +89,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P008_data_struct(event));
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_init(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_init(event);
       break;
     }
 
@@ -103,9 +97,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_timer_in(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_timer_in(event);
       break;
     }
 
@@ -113,9 +105,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_once_a_second(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_once_a_second(event);
       break;
     }
 
@@ -123,9 +113,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_get_config(event, string);
-      }
+      success = nullptr != P008_data && P008_data->plugin_get_config(event, string);
       break;
     }
 

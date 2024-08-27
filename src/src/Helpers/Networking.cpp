@@ -257,6 +257,8 @@ void updateUDPport(bool force)
 boolean runningUPDCheck = false;
 void checkUDP()
 {
+  if (!NetworkConnected())
+    return;
   if (Settings.UDPPort == 0) {
     return;
   }
@@ -264,6 +266,7 @@ void checkUDP()
   if (runningUPDCheck) {
     return;
   }
+  START_TIMER
 
   runningUPDCheck = true;
 
@@ -279,6 +282,11 @@ void checkUDP()
     if (portUDP.remotePort() == 123)
     {
       // unexpected NTP reply, drop for now...
+      while (portUDP.available()) {
+        // Do not call portUDP.flush() as that's meant to sending the packet (on ESP8266)
+        portUDP.read();
+      }
+
       runningUPDCheck = false;
       return;
     }
@@ -289,6 +297,8 @@ void checkUDP()
     // and then crash due to memory allocation failures
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
+      // Resize it to be 1 byte larger so we can 0-terminate it 
+      // in case it is some plain text string
       std::vector<char> packetBuffer;
       packetBuffer.resize(packetSize + 1);
 
@@ -380,6 +390,7 @@ void checkUDP()
     portUDP.read();
   }
   runningUPDCheck = false;
+  STOP_TIMER(CHECK_UDP);
 }
 
 /*********************************************************************************************\

@@ -251,7 +251,6 @@ bool TaskValues_Data_t::isValid(uint8_t varNr, Sensor_VType  sensorType) const
 String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, uint8_t nrDecimals) const
 {
   String result;
-  START_TIMER;
 
   if (isFloatOutputDataType(sensorType)) {
     result = toString(getFloat(varNr), nrDecimals);
@@ -275,5 +274,5 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 #endif
   }
   result.trim();
-  return std::move(result);
+  return result;
 }

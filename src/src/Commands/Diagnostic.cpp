@@ -205,7 +205,7 @@ const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, con
     addLogMove(LOG_LEVEL_INFO, concat(F("PortStatus structure: Called from=Rules Count="), static_cast<int>(globalMapPortStatus.size())));
   }
 
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
+  for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
     debugPortStatus(it);
   }
 

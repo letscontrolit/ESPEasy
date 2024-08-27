@@ -50,7 +50,7 @@
 .. |P094_name| replace:: :cyan:`CUL Reader`
 .. |P094_type| replace:: :cyan:`Communication`
 .. |P094_typename| replace:: :cyan:`Communication - CUL Reader`
-.. |P094_status| replace:: :yellow:`COLLECTION D`
+.. |P094_status| replace:: :yellow:`MAX`
 .. |P094_github| replace:: P094_CULReader.ino
 .. _P094_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P094_CULReader.ino
 .. |P094_usedby| replace:: `.`
@@ -63,7 +63,7 @@
 .. |P095_type| replace:: :cyan:`Display`
 .. |P095_typename| replace:: :cyan:`Display - TFT ILI934x/ILI948x`
 .. |P095_porttype| replace:: `.`
-.. |P095_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
+.. |P095_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION` :yellow:`(ESP32)`
 .. |P095_github| replace:: _P095_ILI9341.ino
 .. _P095_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P095_ILI9341.ino
 .. |P095_usedby| replace:: `.`

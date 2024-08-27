@@ -308,8 +308,8 @@ public:
   uint32_t passedChecksum()   const { return passedChecksumCount; }
   uint32_t invalidData()      const { return invalidDataCount; }
 
-private:
-  enum {
+public:
+  enum GPS_Sentence_type {
     GPS_SENTENCE_GPGGA,  // GGA - Global Positioning System Fix Data
     GPS_SENTENCE_GPRMC,  // RMC - Recommended Minimum Navigation Information
 
@@ -322,6 +322,9 @@ private:
 
     GPS_SENTENCE_OTHER};
 
+  GPS_Sentence_type getCurrentSentenceType() const { return static_cast<GPS_Sentence_type>(curSentenceType); }
+
+private:
   enum {
     GPS_SYSTEM_GPS = 0, // GP: GPS, SBAS, QZSS  & GN: Any combination of GNSS
     GPS_SYSTEM_GLONASS,

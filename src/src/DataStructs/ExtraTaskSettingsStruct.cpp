@@ -20,6 +20,7 @@ void ExtraTaskSettingsStruct::clear() {
   version = EXTRA_TASK_SETTINGS_VERSION;
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     TaskDeviceValueDecimals[i] = 2;
+    TaskDeviceErrorValue[i] = NAN;
   }
 }
 
@@ -43,7 +44,7 @@ void ExtraTaskSettingsStruct::validate() {
       // Need to initialize the newly added fields
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         setIgnoreRangeCheck(i);
-        TaskDeviceErrorValue[i] = 0.0f;
+        TaskDeviceErrorValue[i] = NAN;
         VariousBits[i]          = 0u;
       }
     }
@@ -74,7 +75,7 @@ void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
     ZERO_FILL(TaskDeviceValueNames[i]);
     TaskDeviceValueDecimals[i] = 2;
     setIgnoreRangeCheck(i);
-    TaskDeviceErrorValue[i] = 0.0f;
+    TaskDeviceErrorValue[i] = NAN;
     VariousBits[i]          = 0;
   }
 }

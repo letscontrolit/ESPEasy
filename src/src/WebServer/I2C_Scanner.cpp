@@ -180,19 +180,23 @@ String getKnownI2Cdevice(uint8_t address) {
   switch (address)
   {
     case 0x10:
-      result += F("VEML6075");
+      result += F("VEML6075,VEML6040,VEML6030,VEML7700");
       break;
     case 0x11:
       result += F("VEML6075,I2C_MultiRelay");
       break;
     case 0x12:
     case 0x13:
-    case 0x14:
-    case 0x15:
     case 0x16:
     case 0x17:
     case 0x18:
       result += F("I2C_MultiRelay");
+      break;
+    case 0x14:
+      result += F("I2C_MultiRelay,GT911");
+      break;
+    case 0x15:
+      result += F("I2C_MultiRelay,CST820");
       break;
     case 0x1D:
       result += F("ADXL345");
@@ -217,6 +221,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x29:
       result += F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
       break;
+    case 0x2E:
+      result += F("CHSC5816");
+      break;
     case 0x30:
       result += F("VL53L0X,VL53L1X");
       break;
@@ -224,7 +231,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("AXP192");
       break;
     case 0x36:
-      result += F("MAX1704x,Adafruit Rotary enc, Adafruit Soil moisture");
+      result += F("MAX1704x,Adafruit Rotary enc, Adafruit Soil moisture,AS5600");
       break;
     case 0x37:
       result += F("Adafruit Rotary enc, Adafruit Soil moisture");
@@ -236,8 +243,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("LCD,PCF8574A,TSL2561,APDS9960,AHT10,Adafruit Rotary enc,Adafruit Soil moisture");
       break;
     case 0x3A:
-    case 0x3B:
       result += F("LCD,PCF8574A,Adafruit Rotary enc");
+      break;
+    case 0x3B:
+      result += F("LCD,PCF8574A,Adafruit Rotary enc,AXS15231");
       break;
     case 0x3C:
     case 0x3D:
@@ -248,7 +257,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("LCD,PCF8574A");
       break;
     case 0x40:
-      result += F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc");
+      result += F("SI7021,HTU21D,INA219,PCA9685,HDC10xx,M5Stack Rotary enc,AS5600L");
       break;
     case 0x41:
     case 0x42:
@@ -263,6 +272,8 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("SHT4x");
       break;
     case 0x48:
+      result += F("PCF8591,ADS1x15,LM75A,INA219,TMP117,VEML6030");
+      break;
     case 0x4A:
     case 0x4B:
       result += F("PCF8591,ADS1x15,LM75A,INA219,TMP117");
@@ -299,7 +310,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("SGP4x,GP8403");
       break;
     case 0x5A:
-      result += F("MLX90614,MPR121,CCS811,GP8403");
+      result += F("MLX90614,MPR121,CCS811,GP8403,CST226");
       break;
     case 0x5B:
       result += F("MPR121,CCS811,GP8403");
@@ -308,7 +319,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("DHT12,AM2320,BH1750,MPR121,GP8403");
       break;
     case 0x5D:
-      result += F("MPR121,GP8403");
+      result += F("MPR121,GP8403,GT911");
       break;
     case 0x5E:
     case 0x5F:
@@ -353,7 +364,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result += F("BMP085,BMP180,BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result += F("BMP085,BMP180,BMP280,BME280,BME680,BMP3xx,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer,LiquidLevel");
+      break;
+    case 0x78:
+      result += F("LiquidLevel");
       break;
     case 0x7f:
       result += F("Arduino PME");

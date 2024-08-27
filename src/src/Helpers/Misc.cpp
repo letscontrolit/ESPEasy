@@ -131,6 +131,11 @@ void taskClear(taskIndex_t taskIndex, bool save)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+  if (Settings.TaskDeviceEnabled[taskIndex]) {
+    struct EventStruct TempEvent(taskIndex);
+    String dummy;
+    PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+  }
   Settings.clearTask(taskIndex);
   clearTaskCache(taskIndex); // Invalidate any cached values.
   ExtraTaskSettings.clear(); 
@@ -305,14 +310,18 @@ void SendValueLogger(taskIndex_t TaskIndex)
     if (validDeviceIndex(DeviceIndex)) {
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-      {
-        logger += strformat(F("%s %s,%d,%s,%s,%s\r\n")
+      const String logline_prefix = strformat(F("%s %s,%d,%s")
         , node_time.getDateString('-').c_str()
         , node_time.getTimeString(':').c_str()
         , Settings.Unit
         , getTaskDeviceName(TaskIndex).c_str()
-        , getTaskValueName(TaskIndex, varNr).c_str()
+        );
+
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+      {
+        logger += strformat(F("%s,%s,%s\r\n")
+        , logline_prefix.c_str()
+        , Cache.getTaskDeviceValueName(TaskIndex, varNr).c_str()
         , formatUserVarNoCheck(TaskIndex, varNr).c_str()
         );
       }

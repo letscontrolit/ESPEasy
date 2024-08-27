@@ -182,6 +182,12 @@ class SettingsStruct_tmpl
   bool WaitWiFiConnect() const { return VariousBits_2.WaitWiFiConnect; }
   void WaitWiFiConnect(bool value) { VariousBits_2.WaitWiFiConnect = value; }
 
+#ifdef ESP32
+  // Toggle between passive/active WiFi scan.
+  bool PassiveWiFiScan() const { return !VariousBits_2.PassiveWiFiScan; }
+  void PassiveWiFiScan(bool value) { VariousBits_2.PassiveWiFiScan = !value; }
+#endif
+
   // Connect to Hidden SSID using channel and BSSID
   // This is much slower, but appears to be needed for some access points 
   // like MikroTik.
@@ -528,7 +534,7 @@ public:
     uint32_t HiddenSSID_SlowConnectPerBSSID   : 1; // Bit 03  // inverted
     uint32_t EnableIPv6                       : 1; // Bit 04  // inverted
     uint32_t DisableSaveConfigAsTar           : 1; // Bit 05
-    uint32_t unused_06                        : 1; // Bit 06
+    uint32_t PassiveWiFiScan                  : 1; // Bit 06  // inverted
     uint32_t unused_07                        : 1; // Bit 07
     uint32_t unused_08                        : 1; // Bit 08
     uint32_t unused_09                        : 1; // Bit 09

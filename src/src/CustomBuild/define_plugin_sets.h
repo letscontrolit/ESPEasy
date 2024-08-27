@@ -1376,7 +1376,9 @@ To create/register a plugin, you have to :
     #define USES_P009   // MCP
 
     #define USES_P010   // BH1750
-    #define USES_P011   // PME
+    #ifndef ESP8266_1M
+      #define USES_P011   // PME (2024-08-13: moved to Collection builds)
+    #endif
     #define USES_P012   // LCD
     #define USES_P013   // HCSR04
     #define USES_P014   // SI7021
@@ -1512,6 +1514,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P095) && defined(ESP32) && !defined(PLUGIN_BUILD_IR_EXTENDED)
+      #define USES_P095   // TFT ILI9xxx
+    #endif
     #if !defined(USES_P137) && defined(ESP32)
       #define USES_P137   // AXP192
     #endif
@@ -1574,7 +1579,9 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_COLLECTION_D
     #define USES_P093   // Mitsubishi Heat Pump
-    #define USES_P094  // CUL Reader
+    // #ifdef ESP32
+    //   #define USES_P094  // CUL Reader
+    // #endif
     #ifndef USES_P098
       #define USES_P098   // PWM motor
     #endif
@@ -1627,8 +1634,14 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_G
+  #ifndef USES_P142
+    #define USES_P142   // Position - AS5600
+  #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
@@ -1641,6 +1654,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
   #endif
 
 #endif
@@ -1789,7 +1808,7 @@ To create/register a plugin, you have to :
      #define USES_P116   // ST77xx
    #endif
    #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // FT6206
+     #define USES_P123   // I2C Touchscreens
    #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
@@ -1941,7 +1960,10 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC/eCO2
@@ -1952,7 +1974,14 @@ To create/register a plugin, you have to :
   #ifndef USES_P167
     #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
   #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
 
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
@@ -2014,15 +2043,29 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef CONTROLLER_SET_COLLECTION
+  #ifndef USES_C011
     #define USES_C011   // Generic HTTP Advanced
+  #endif
+  #ifndef USES_C012
     #define USES_C012   // Blynk HTTP
+  #endif
+  #ifndef USES_C014
     #define USES_C014   // homie 3 & 4dev MQTT
+  #endif
+  #ifndef USES_C015
     //#define USES_C015   // Blynk
+  #endif
+  #ifndef USES_C017
     #define USES_C017   // Zabbix
-    #ifdef ESP32
+  #endif
+  #ifdef ESP32
+    #ifndef USES_C018
       #define USES_C018 // TTN RN2483
     #endif
+  #endif
+  #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
+  #endif
 #endif
 
 
@@ -2258,7 +2301,7 @@ To create/register a plugin, you have to :
     #define USES_P122   // SHT2x
   #endif
   #ifndef USES_P123
-    #define USES_P123   // FT6206
+    #define USES_P123   // I2C Touchscreens
   #endif
   #ifndef USES_P124
     #define USES_P124   // I2C Multi relay
@@ -2315,7 +2358,7 @@ To create/register a plugin, you have to :
     #define USES_P141   // PCD8544 Nokia 5110
   #endif
   #ifndef USES_P142
-//    #define USES_P142   // GT911 Touchscreen
+    #define USES_P142   // Position - AS5600
   #endif
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
@@ -2351,7 +2394,10 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
   #ifndef USES_P154
-    #define USES_P154   // Environment - BMP3xx
+    #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P172
+    #define USES_P172   // Environment - BMP3xx SPI
   #endif
   #ifndef USES_P159
     #define USES_P159   // Presence - LD2410 Radar detection
@@ -2363,7 +2409,17 @@ To create/register a plugin, you have to :
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
   #ifndef USES_P167
-    #define USES_P167   // Environment - SensirionSEN5x / Ikea Vindstyrka
+    #define USES_P167   // Environment - IKEA Vindstyrka SEN54 temperature , humidity and air quality
+  #endif
+  #ifndef USES_P168
+    #define USES_P168   // Light - VEML6030/VEML7700
+  #endif
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
+  #endif
+
+  #ifndef USES_P169
+    #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
 
   // Controllers
@@ -2822,7 +2878,13 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #define FEATURE_MDNS  0
+        #if ESP_IDF_VERSION_MAJOR >= 5
+          // See if it is now more usable...
+          // See: https://github.com/letscontrolit/ESPEasy/issues/5061
+          #define FEATURE_MDNS  0
+        #else
+          #define FEATURE_MDNS  0
+        #endif
       #else
         // Do not use MDNS on ESP8266 due to memory leak
         #define FEATURE_MDNS  0

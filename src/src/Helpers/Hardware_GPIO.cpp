@@ -489,22 +489,35 @@ bool isSerialConsolePin(int gpio) {
   if (!Settings.UseSerial) { return false; }
 
 #if defined(SOC_RX0) && defined(SOC_TX0)
-  return gpio == SOC_TX0 || gpio == SOC_RX0;
+  return (gpio == SOC_TX0 || gpio == SOC_RX0)
+         #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+         && Settings.console_serial0_fallback
+         #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  ;
 #else
 #ifdef ESP32S2
 
-  // FIXME TD-er: Must check whether USB serial is used
-  return gpio == 1 || gpio == 3;
+  return (gpio == 1 || gpio == 3)
+         #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+         && Settings.console_serial0_fallback
+         #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  ;
 
 #elif defined(ESP32S3)
 
-  // FIXME TD-er: Must check whether USB serial is used
-  return gpio == 43 || gpio == 44;
+  return (gpio == 43 || gpio == 44)
+         #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+         && Settings.console_serial0_fallback
+         #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  ;
 
 #elif defined(ESP32C3)
 
-  // FIXME TD-er: Must check whether USB serial is used
-  return gpio == 21 || gpio == 20;
+  return (gpio == 21 || gpio == 20) 
+         #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+         && Settings.console_serial0_fallback
+         #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
+  ;
 
 #elif defined(ESP32_CLASSIC)
   return gpio == 1 || gpio == 3;

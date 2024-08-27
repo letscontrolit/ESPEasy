@@ -152,6 +152,9 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 
   if (ESP_OK == result) {
     result = temperature_sensor_get_celsius(temp_sensor, &celsius);
+    if (result == ESP_FAIL) {
+      must_reinstall = true;
+    }
 
     // FIXME TD-er: What to do when result == ESP_FAIL (can be indication of out-of-range)
     if (celsius < (range_min + 10)) {
