@@ -1661,6 +1661,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
+  #if !defined(USES_P173) && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
+  #endif
 
 #endif
 
@@ -1980,6 +1983,9 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  #if !defined(USES_P173) // && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
   #endif
   
   // Controllers
@@ -2420,6 +2426,9 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  #ifndef USES_P173
+    #define USES_P173   // Environment - SHTC3
   #endif
 
   // Controllers
