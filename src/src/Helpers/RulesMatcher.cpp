@@ -75,8 +75,10 @@ bool ruleMatch(String event, String rule) {
   ESPEASY_RULES_FLOAT_TYPE value{};
   int    equal_pos   = event.indexOf('=');
 
+  int nrDecimalsValue{};
+
   if (equal_pos >= 0) {
-    if (!validDoubleFromString(event.substring(equal_pos + 1), value)) {
+    if (!validDoubleFromString(event.substring(equal_pos + 1), value, nrDecimalsValue)) {
       return false;
 
       // FIXME TD-er: What to do when trying to match NaN values?
@@ -95,8 +97,9 @@ bool ruleMatch(String event, String rule) {
 
   const bool stringMatch = event.equalsIgnoreCase(rule.substring(0, posStart));
   ESPEASY_RULES_FLOAT_TYPE     ruleValue{};
+  int nrDecimalsRuleValue{};
 
-  if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
+  if (!validDoubleFromString(rule.substring(posEnd), ruleValue, nrDecimalsRuleValue)) {
     return false;
 
     // FIXME TD-er: What to do when trying to match NaN values?
@@ -105,7 +108,8 @@ bool ruleMatch(String event, String rule) {
   bool match = false;
 
   if (stringMatch) {
-    match = compareDoubleValues(compare, value, ruleValue);
+    const int minimalNrDecimals = std::min(nrDecimalsValue, nrDecimalsRuleValue);
+    match = compareDoubleValues(compare, value, ruleValue, minimalNrDecimals);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch2"));
@@ -113,7 +117,10 @@ bool ruleMatch(String event, String rule) {
   return match;
 }
 
-bool compareIntValues(char compare, const int& Value1, const int& Value2)
+
+bool compareIntValues(char       compare,
+                      int64_t Value1,
+                      int64_t Value2)
 {
   switch (compare) {
     case '>' + '=': return Value1 >= Value2;
@@ -126,8 +133,23 @@ bool compareIntValues(char compare, const int& Value1, const int& Value2)
   return false;
 }
 
-bool compareDoubleValues(char compare, const ESPEASY_RULES_FLOAT_TYPE& Value1, const ESPEASY_RULES_FLOAT_TYPE& Value2)
+bool compareDoubleValues(char          compare,
+                         const ESPEASY_RULES_FLOAT_TYPE& Value1,
+                         const ESPEASY_RULES_FLOAT_TYPE& Value2,
+                         int nrDecimals)
 {
+  if (nrDecimals == 0) {
+    return compareIntValues(compare, Value1, Value2);
+  }
+  if (nrDecimals > 0) {
+    if (std::abs(Value1 - Value2) < 1) {
+      const int factor = computeDecimalFactorForDecimals(nrDecimals);
+      return compareIntValues(
+        compare, 
+        std::round(Value1 * factor), 
+        std::round(Value2 * factor));
+    }
+  }
   switch (compare) {
     case '>' + '=': return !definitelyLessThan(Value1, Value2);
     case '<' + '=': return !definitelyGreaterThan(Value1, Value2);
