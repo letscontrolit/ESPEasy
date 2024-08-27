@@ -22,15 +22,15 @@ function set_td(tbl, fill, row, col, td) { // Set <TD> content if fill is true, 
 // Next functions: 4th & 5th parameters are used only in 1 function, but to keep the calling logic simple, leave it there
 function chWdth(value, base, count, max, colr) { // Change width
   for (t = base; t < base + count; t++)
-    for (i = 1; i <= 5; i++)
+    for (i = 1; i <= 7; i++)
       sh_col('dgtbl' + t, i, i <= value);
 };
 function chHght(value, base, count, max, colr) { // Change height
   for (t = base; t < base + count; t++) {
     b = 'dgtbl' + t; // Table
-    for (i = 1; i < 6; i++) {
-      sh_row(b, 6 - i, i <= value);
-      sh_row(b, 6 + i, i <= value);
+    for (i = 1; i < 8; i++) {
+      sh_row(b, 8 - i, i <= value);
+      sh_row(b, 8 + i, i <= value);
     };
   }
 };
@@ -38,19 +38,19 @@ function chCrnr(checked, base, count, max, colr) { // Change Corner overlap
   if (colr) z = '<span style=\"color:' + colr + ';\">&#x2638;</span>'; else z = '&#x2638;';
   for (t = base; t < base + count; t++) {
     b = 'dgtbl' + t; // Table
-    for (i = 0; i < 14; i += 6) {
+    for (i = 0; i < 18; i += 8) {
       set_td(b, checked, i, 0, z); // P165_PIXEL_CHARACTER
-      set_td(b, checked, i, 6, z);
+      set_td(b, checked, i, 8, z);
     }
   }
 };
 function chDecp(value, base, count, max, colr) { // Change Decimal point pixels
   for (t = base; t < base + count; t++)
-    set_td('dgtbl' + t, value > 0, 12, 7, '' + value);
+    set_td('dgtbl' + t, value > 0, 16, 9, '' + value);
 };
 function chAddn(value, base, count, max, colr) { // Change Additional pixels
   for (t = base; t < base + count; t++)
-    set_td('dxtbl' + t, value > 0 && max /*&& t === base + count - 1*/, 6, 0, '' + value);
+    set_td('dxtbl' + t, value > 0 && max, 8, 0, '' + value);
 };
 function dgts(gps, flds) { // Update pixel counts per group and total pixels
   z = 0;

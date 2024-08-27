@@ -6,6 +6,11 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-27 tonhuisman: Changed max. number of pixels per segment to 7 (from 5), changed settings storage from 3 to 4 bits for
+ *                        height, width and dot pixels per segment (not fully used yet, just preparing for future expansion).
+ *                        Add checks for not having > 64 bits per digit, as that's technically not supported.
+ *                        Reduce Digit display to ca. 80% size to save some screen real-estate.
+ *                        Add command 7dbefore, like 7dextra, to set the Pixels-offset before pixels on/off, left half, right half.
  * 2024-08-26 tonhuisman: Rework the UI somewhat to improve the display of the Extra pixels per group
  *                        Add option for Clear on exit
  *                        Add option to split the g-segment in 2 halves when assigning the number plan (should best be set from 3 pixels)

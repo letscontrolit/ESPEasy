@@ -13,7 +13,7 @@
 # include "../Static/WebStaticData.h"       // Javascript and support functions
 
 # define P165_DEBUG_INFO        1           // set 1 to enable some extra debug logging
-# define P165_DEBUG_DEBUG       1           // set 1 to enable some extra development debug logging
+# define P165_DEBUG_DEBUG       0           // set 1 to enable some extra development debug logging
 
 # ifdef USES_P073
 #  define P165_FEATURE_P073     1           // Use P073 shared functions when available
@@ -88,22 +88,22 @@
 // Config per display group, all 4 PCONFIG_(U)LONG variables used
 # define P165_GROUP_CFG(N) PCONFIG_ULONG(N)
 
-# define P165_CONFIG_IDX_WPIXELS  0u  // 3 bits
-# define P165_CONFIG_IDX_HPIXELS  3u  // 3 bits
-# define P165_CONFIG_IDX_CORNER   6u  // 1 bit
-# define P165_CONFIG_IDX_DOT      7u  // 3 bits
-# define P165_CONFIG_IDX_EXTRA    10u // 4 bits
-# define P165_CONFIG_IDX_OFFSET   14u // 4 bits
-# define P165_CONFIG_IDX_DIGITS   18u // 3 bits
-# define P165_CONFIG_IDX_START    21u // 1 bit
-# define P165_CONFIG_IDX_DEND     22u // 1 bit
-# define P165_CONFIG_IDX_RTLD     23u // 1 bit
-# define P165_CONFIG_IDX_SPLTG    24u // 1 bit
+# define P165_CONFIG_IDX_WPIXELS  0u  // 4 bits
+# define P165_CONFIG_IDX_HPIXELS  4u  // 4 bits
+# define P165_CONFIG_IDX_CORNER   8u  // 1 bit
+# define P165_CONFIG_IDX_DOT      9u  // 4 bits
+# define P165_CONFIG_IDX_EXTRA    13u // 4 bits
+# define P165_CONFIG_IDX_OFFSET   17u // 4 bits
+# define P165_CONFIG_IDX_DIGITS   21u // 3 bits
+# define P165_CONFIG_IDX_START    24u // 1 bit
+# define P165_CONFIG_IDX_DEND     25u // 1 bit
+# define P165_CONFIG_IDX_RTLD     26u // 1 bit
+# define P165_CONFIG_IDX_SPLTG    27u // 1 bit
 
-# define P165_GET_CONFIG_WPIXELS(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS))
-# define P165_GET_CONFIG_HPIXELS(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS))
+# define P165_GET_CONFIG_WPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS))
+# define P165_GET_CONFIG_HPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS))
 # define P165_GET_CONFIG_CORNER(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_CORNER))
-# define P165_GET_CONFIG_DOT(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DOT))
+# define P165_GET_CONFIG_DOT(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DOT))
 # define P165_GET_CONFIG_EXTRA(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_EXTRA))
 # define P165_GET_CONFIG_OFFSET(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_OFFSET))
 # define P165_GET_CONFIG_DIGITS(D) (get3BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DIGITS))
@@ -112,10 +112,10 @@
 # define P165_GET_CONFIG_RTLD(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD))
 # define P165_GET_CONFIG_SPLTG(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG))
 
-# define P165_SET_CONFIG_WPIXELS(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS, V))
-# define P165_SET_CONFIG_HPIXELS(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS, V))
+# define P165_SET_CONFIG_WPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS, V))
+# define P165_SET_CONFIG_HPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS, V))
 # define P165_SET_CONFIG_CORNER(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_CORNER, V))
-# define P165_SET_CONFIG_DOT(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DOT, V))
+# define P165_SET_CONFIG_DOT(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DOT, V))
 # define P165_SET_CONFIG_EXTRA(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_EXTRA, V))
 # define P165_SET_CONFIG_OFFSET(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_OFFSET, V))
 # define P165_SET_CONFIG_DIGITS(D, V) (set3BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_DIGITS, V))
@@ -133,14 +133,22 @@
 # define P165_DISP_CLOCK12      4
 # define P165_DISP_DATE         5
 
-# define P165_STRIP_TYPE_RGB   0
-# define P165_STRIP_TYPE_RGBW  1
+# define P165_STRIP_TYPE_RGB    0
+# define P165_STRIP_TYPE_RGBW   1
 
-# define P165_SEGMENT_DOT_PIXELS    7  // Max: 7 (3 bits)
+# define P165_SEGMENT_WIDTH_PIXELS  7  // Max: 15 (4 bits), also needs digit table and javascript changes!
+# define P165_SEGMENT_HEIGHT_PIXELS 7  // Max: 15 (4 bits)
+# define P165_SEGMENT_DOT_PIXELS    7  // Max: 15 (4 bits)
 # define P165_SEGMENT_ADDON_PIXELS  12 // Max: 15 (4 bits)
+# define P165_SEGMENT_EXTRA_PIXELS  15 // Max: 15 (4 bits)
+
+# define P165_DIGIT_TABLE_H_INT   17
+# define P165_DIGIT_TABLE_HEIGHT  "17" // Used in F() string
+
+# define P165_TD_SIZE "1.6rem"         // For use in the Digit display, size (width & height) of the table TD's
 
 // Set typedef before include <Noiasca_NeopixelDisplay.h>
-typedef uint64_t segsize_t; // largest storage size available, allows for up to 64 pixels per digit
+typedef uint64_t segsize_t;            // largest storage size available, allows for up to 64 pixels per digit
 
 # include <NeoPixelBus_wrapper.h>
 # if P165_FEATURE_P073
@@ -151,21 +159,21 @@ typedef uint64_t segsize_t; // largest storage size available, allows for up to 
 struct P165_data_struct : public PluginTaskData_base {
 private:
 
-  struct PixelGroupCfg {   // Bit-mapping must match with P165_GET/SET_CONFIG_*() / P165_GROUP_CFG() macros
-    uint32_t wpix    : 3;  // widht (1..5)
-    uint32_t hpix    : 3;  // height (1..5)
-    uint32_t crnr    : 1;  // corners off/on
-    uint32_t dotp    : 3;  // dot pixels (0..7)
-    uint32_t addn    : 4;  // extra pixels (0..12)
-    uint32_t offs    : 4;  // offset before (0..15)
-    uint32_t dgts    : 3;  // digits in group (1..4)
-    uint32_t strt    : 1;  // start segment 0 = left-top/a, 1 = right-top/b
-    uint32_t dend    : 1;  // dot at: 1: end of digit 0: between c/d segments
-    uint32_t rtld    : 1;  // right to left display
-    uint32_t splt    : 1;  // split g-segment (best enabled > 3 horizontal pixels)
-    uint32_t unused  : 7;
-    uint32_t aoffs   : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
-    uint32_t unused2 : 16;
+  struct PixelGroupCfg {  // Bit-mapping must match with P165_GET/SET_CONFIG_*() / P165_GROUP_CFG() macros
+    uint32_t wpix   : 4;  // widht (1..15) (7)
+    uint32_t hpix   : 4;  // height (1..15) (7)
+    uint32_t crnr   : 1;  // corners off/on
+    uint32_t dotp   : 4;  // dot pixels (0..15) (7)
+    uint32_t addn   : 4;  // extra pixels (0..15) (12)
+    uint32_t offs   : 4;  // offset before (0..15) (15)
+    uint32_t dgts   : 3;  // digits in group (1..7) (4)
+    uint32_t strt   : 1;  // start segment 0 = left-top/a, 1 = right-top/b
+    uint32_t dend   : 1;  // dot at: 1: end of digit 0: between c/d segments
+    uint32_t rtld   : 1;  // right to left display
+    uint32_t splt   : 1;  // split g-segment (best enabled > 3 horizontal pixels)
+    uint32_t unused : 4;
+    uint32_t aoffs  : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
+    uint32_t boffs  : 16; // Before pixels offset
   };
 
 public:
@@ -279,7 +287,8 @@ private:
   void setBinaryData(const String& data);
   bool extraPixelsState(uint8_t  grp,
                         uint8_t  state,
-                        uint32_t color);
+                        uint32_t color,
+                        bool     pxlExtra = true);
   # if P165_DEBUG_INFO || P165_DEBUG_DEBUG
   void logBufferContent(String prefix);
   # endif // if P165_DEBUG_INFO || P165_DEBUG_DEBUG
