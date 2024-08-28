@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-28 tonhuisman: Fix digit mapping when using Right to Left digit ordering
+ *                        Moved around a few UI options, and changed some captions, fix editing digit options by keyboard.
  * 2024-08-27 tonhuisman: Changed max. number of pixels per segment to 7 (from 5), changed settings storage from 3 to 4 bits for
  *                        height, width and dot pixels per segment (not fully used yet, just preparing for future expansion).
  *                        Add checks for not having > 64 bits per digit, as that's technically not supported.

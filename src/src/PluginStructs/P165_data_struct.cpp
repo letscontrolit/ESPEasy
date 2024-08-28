@@ -60,9 +60,25 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
       toGrp   = -1;
       incGrp  = -1;
     }
+    uint8_t dgtMap = 0; // starting digit
 
     for (int8_t grp = fromGrp; grp != toGrp; grp += incGrp) {
       fillSegmentBitmap(grp, _pixelGroupCfg[grp]);
+
+      // Set up digit mapping
+      uint8_t gOffs = 0;
+
+      for (uint8_t g = 0; g < grp; ++g) { // Determine digit offset
+        gOffs += _pixelGroupCfg[g].dgts;
+      }
+
+      for (uint8_t d = 0; d < _pixelGroupCfg[grp].dgts; ++d) {
+        showmap[dgtMap] = gOffs + d;
+        # if P165_DEBUG_DEBUG
+        addLog(LOG_LEVEL_INFO, strformat(F("P165 : showmap digit: %d, to group %d digit: %d"), dgtMap + 1, grp + 1, gOffs + d + 1));
+        # endif // if P165_DEBUG_DEBUG
+        dgtMap++;
+      }
 
       if (_pixelGroupCfg[grp].offs > 0) {
         _pixelGroupCfg[grp].boffs = pxlOffset;
@@ -405,7 +421,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
       addFormCheckBox(F("Segment Corners overlap"), concat(F("crnr"), grp10),
                       grpCrnr, numberPlan);
 
-      addFormNumericBox(F("Decimal pixels"), concat(F("decp"), grp10),
+      addFormNumericBox(F("Decimal dot pixels"), concat(F("decp"), grp10),
                         grpDotP, 0, P165_SEGMENT_DOT_PIXELS,
                         # if FEATURE_TOOLTIPS
                         EMPTY_STRING,
@@ -456,14 +472,14 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                   P165_GET_CONFIG_START(grp), false,
                   !numberPlan);
 
-      addFormCheckBox(F("Decimal pixels last segment"), concat(F("dend"), grp10),
-                      P165_GET_CONFIG_DEND(grp), numberPlan);
-
-      addFormCheckBox(F("Right to Left digits"),   concat(F("rtld"), grp10),
-                      grpRtld, numberPlan);
-
       addFormCheckBox(F("Split g-segment pixels"), concat(F("spltg"), grp10),
                       P165_GET_CONFIG_SPLTG(grp), numberPlan);
+
+      addFormCheckBox(F("Decimal dot last segment"), concat(F("dend"), grp10),
+                      P165_GET_CONFIG_DEND(grp), numberPlan);
+
+      addFormCheckBox(F("Right to Left digits"), concat(F("rtld"), grp10),
+                      grpRtld, numberPlan);
 
       # if P165_DIGIT_TABLE_H_INT > 17
       int rws = 17; // Above should be fixed number of rows, matching with ~80% digit table size
@@ -480,7 +496,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     {
       // Bind handlers on input fields to update the 7 segment simulation and digit counts
       addHtml(F("\n<script type='text/javascript'>"));
-      const __FlashStringHelper *_fmt = F("document.getElementById('%s%d').onclick=function(){%s(this.%s,%d,%d,%d,'%s'),"
+      const __FlashStringHelper *_fmt = F("document.getElementById('%s%d').onchange=function(){%s(this.%s,%d,%d,%d,'%s'),"
                                           "dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};");
 
       //                          fieldname   index        function    fieldattribute   function arguments
@@ -1693,14 +1709,18 @@ void P165_data_struct::fillBufferWithString(const String& textToShow,
     }
   }
 
+  uint8_t mp = 0;
+
   for (int i = 0; i < txtlength && p <= bufLen; ++i) { // p <= bufLen to allow a period after last digit
+    mp = showmap[p];                                   // digit mapping
+
     if (_periods
         && (textToShow.charAt(i) == '.')
         && !_binaryData
         ) {         // If setting periods true
       if (p == 0) { // Text starts with a period, becomes a space with a dot
-        showperiods[p] = true;
-        showbuffer[p]  =
+        showperiods[mp] = true;
+        showbuffer[mp]  =
           # if P165_FEATURE_P073
           10  // space in 7dgt fonts
           # else // if P165_FEATURE_P073
@@ -1708,25 +1728,28 @@ void P165_data_struct::fillBufferWithString(const String& textToShow,
           # endif // if P165_FEATURE_P073
         ;
         p++;
+        mp = showmap[p]; // update
       } else {
         // if (p > 0) {
-        showperiods[p - 1] = true;                        // The period displays as a dot on the previous digit!
+        mp              = showmap[p - 1];
+        showperiods[mp] = true;                           // The period displays as a dot on the previous digit!
       }
 
       if ((i > 0) && (textToShow.charAt(i - 1) == '.')) { // Handle consecutive periods
         p++;
 
         if ((p - 1) < bufLen) {
-          showperiods[p - 1] = true; // The period displays as a dot on the previous digit!
+          mp              = showmap[p - 1];
+          showperiods[mp] = true; // The period displays as a dot on the previous digit!
         }
       }
     } else if (p < bufLen) {
       # if P165_FEATURE_P073
-      showbuffer[p] = useBinaryData
+      showbuffer[mp] = useBinaryData
                         ? textToShow.charAt(i)
                         : P073_mapCharToFontPosition(textToShow.charAt(i), _fontset);
       # else // if P165_FEATURE_P073
-      showbuffer[p] = textToShow.charAt(i);
+      showbuffer[mp] = textToShow.charAt(i);
       # endif // if P165_FEATURE_P073
       p++;
     }
@@ -1810,23 +1833,23 @@ void P165_data_struct::put4NumbersInBuffer(const uint8_t nr1,
   # endif // if P165_DEBUG_DEBUG
 
   // offset shouldn't ever be > buffer size - 4
-  showbuffer[0 + offset] = static_cast<uint8_t>((nr1 / 10) + cOffs);
-  showbuffer[1 + offset] = (nr1 % 10) + cOffs;
-  showbuffer[2 + offset] = static_cast<uint8_t>((nr2 / 10) + cOffs);
-  showbuffer[3 + offset] = (nr2 % 10) + cOffs;
+  showbuffer[showmap[0 + offset]] = static_cast<uint8_t>((nr1 / 10) + cOffs);
+  showbuffer[showmap[1 + offset]] = (nr1 % 10) + cOffs;
+  showbuffer[showmap[2 + offset]] = static_cast<uint8_t>((nr2 / 10) + cOffs);
+  showbuffer[showmap[3 + offset]] = (nr2 % 10) + cOffs;
 
   if ((nr3 > -1) && ((5 + offset) < _totalDigits)) {
-    showbuffer[4 + offset] = static_cast<uint8_t>((nr3 / 10) + cOffs);
-    showbuffer[5 + offset] = (nr3 % 10) + cOffs;
+    showbuffer[showmap[4 + offset]] = static_cast<uint8_t>((nr3 / 10) + cOffs);
+    showbuffer[showmap[5 + offset]] = (nr3 % 10) + cOffs;
   }
 
   if ((nr4 > -1) && ((7 + offset) < _totalDigits)) {
-    showbuffer[6 + offset] = static_cast<uint8_t>((nr4 / 10) + cOffs);
-    showbuffer[7 + offset] = (nr4 % 10) + cOffs;
+    showbuffer[showmap[6 + offset]] = static_cast<uint8_t>((nr4 / 10) + cOffs);
+    showbuffer[showmap[7 + offset]] = (nr4 % 10) + cOffs;
   }
 
-  if (suppressLeading0 && (showbuffer[0 + offset] == cOffs)) {
-    showbuffer[0 + offset] =
+  if (suppressLeading0 && (showbuffer[showmap[0 + offset]] == cOffs)) {
+    showbuffer[showmap[0 + offset]] =
       # if P165_FEATURE_P073
       10
       # else // if P165_FEATURE_P073
@@ -2054,25 +2077,30 @@ bool P165_data_struct::nextScroll() {
       clearBuffer();
 
       uint8_t p = 0;
+      uint8_t mp;
 
       for (int i = _scrollPos; i < txtlength && p <= bufToFill; ++i) { // p <= bufToFill to allow a period after last digit
+        mp = showmap[p];
+
         if (_periods
             && (_textToScroll.charAt(i) == '.')
             && !_binaryData
             ) {         // If setting periods true
           if (p == 0) { // Text starts with a period, becomes a space with a dot
-            showperiods[p] = true;
+            showperiods[mp] = true;
             p++;
           } else {
-            showperiods[p - 1] = true;                                    // The period displays as a dot on the previous digit!
+            mp              = showmap[p - 1];
+            showperiods[mp] = true;                                       // The period displays as a dot on the previous digit!
           }
 
           if ((i > _scrollPos) && (_textToScroll.charAt(i - 1) == '.')) { // Handle consecutive periods
-            showperiods[p - 1] = true;                                    // The period displays as a dot on the previous digit!
+            mp              = showmap[p - 1];
+            showperiods[mp] = true;                                       // The period displays as a dot on the previous digit!
             p++;
           }
         } else if (p < bufToFill) {
-          showbuffer[p] =
+          showbuffer[mp] =
             # if P165_FEATURE_P073
             _binaryData ?
             # endif // if P165_FEATURE_P073
@@ -2145,11 +2173,11 @@ void P165_data_struct::logBufferContent(String prefix) {
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(26 + 4 * P165_SHOW_BUFFER_SIZE)) {
+      log.reserve(26 + 4 * _totalDigits)) {
     log = strformat(F("%s buffer: periods: %c"), prefix.c_str(), _periods ? 't' : 'f');
 
-    for (uint8_t i = 0; i < P165_SHOW_BUFFER_SIZE; i++) {
-      log += strformat(F("%c0x%X,%c"), i > 0 ? ',' : ' ', showbuffer[i], showperiods[i] ? '.' : ' ');
+    for (uint8_t i = 0; i < _totalDigits; i++) {
+      log += strformat(F("%c0x%X,%c%d(%d)"), i > 0 ? ',' : ' ', showbuffer[i], showperiods[i] ? '.' : ' ', i, showmap[i]);
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }

@@ -16,7 +16,7 @@
 # define P165_DEBUG_DEBUG       0           // set 1 to enable some extra development debug logging
 
 # ifdef USES_P073
-#  define P165_FEATURE_P073     1           // Use P073 shared functions when available
+#  define P165_FEATURE_P073     1           // Use P073 shared functions and fonts when available
 # else // ifdef USES_P073
 #  define P165_FEATURE_P073     0
 # endif // ifdef USES_P073
@@ -99,6 +99,7 @@
 # define P165_CONFIG_IDX_DEND     25u // 1 bit
 # define P165_CONFIG_IDX_RTLD     26u // 1 bit
 # define P165_CONFIG_IDX_SPLTG    27u // 1 bit
+# define P165_CONFIG_IDX_CCLKW    28u // 1 bit
 
 # define P165_GET_CONFIG_WPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS))
 # define P165_GET_CONFIG_HPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS))
@@ -111,6 +112,7 @@
 # define P165_GET_CONFIG_DEND(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_DEND))
 # define P165_GET_CONFIG_RTLD(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD))
 # define P165_GET_CONFIG_SPLTG(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG))
+# define P165_GET_CONFIG_CCLKW(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_CCLKW))
 
 # define P165_SET_CONFIG_WPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS, V))
 # define P165_SET_CONFIG_HPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS, V))
@@ -123,6 +125,7 @@
 # define P165_SET_CONFIG_DEND(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_DEND, V))
 # define P165_SET_CONFIG_RTLD(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD, V))
 # define P165_SET_CONFIG_SPLTG(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG, V))
+# define P165_SET_CONFIG_CCLKW(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_CCLKW, V))
 
 # define P165_SHOW_BUFFER_SIZE  16 // Max number of characters in the buffer to show (1..4 groups of 1..4 digits)
 
@@ -171,7 +174,8 @@ private:
     uint32_t dend   : 1;  // dot at: 1: end of digit 0: between c/d segments
     uint32_t rtld   : 1;  // right to left display
     uint32_t splt   : 1;  // split g-segment (best enabled > 3 horizontal pixels)
-    uint32_t unused : 4;
+    uint32_t cclkw  : 1;  // number-plan counter-clockwise (tbd)
+    uint32_t unused : 3;
     uint32_t aoffs  : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
     uint32_t boffs  : 16; // Before pixels offset
   };
@@ -331,8 +335,9 @@ private:
   bool     _periods       = true;
   uint8_t  _currentGroup  = 0;
 
-  uint8_t showbuffer[P165_SHOW_BUFFER_SIZE]  = { 0 };
-  bool    showperiods[P165_SHOW_BUFFER_SIZE] = { 0 };
+  uint8_t showbuffer[P165_SHOW_BUFFER_SIZE]  = { 0 }; // The characters to put on the display
+  bool    showperiods[P165_SHOW_BUFFER_SIZE] = { 0 }; // show the dot
+  uint8_t showmap[P165_SHOW_BUFFER_SIZE]     = { 0 }; // map buffer index to digit index
 
   # if P165_FEATURE_DIGITCOLOR || P165_FEATURE_GROUPCOLOR
   std::map<uint16_t, uint32_t>digitColors;
