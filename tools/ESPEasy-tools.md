@@ -3,8 +3,13 @@
 
 This is a set of simple but powerful command line tools for scripting updates, and for backup and restore of configuration settings and ESPeasy rule files
 
-Be careful not to use these tools in a multiuser environment as the login password may display with something like `ps f -ef`
+## Security
 
+Some warnings apply:
+
+- Be careful not to use these tools in a multiuser environment. The ESPEasy device password may display with something like `ps f -ef` while commands are in progress.
+- Protect your `$HOME/.espeasy` credential files as well as your home directory from access for other users. 
+- Make sure you have physical access / can powercycle your ESPEasy devices. In rare cases a power cycle is needed for updates to work, or if a formware upload does not complete
 
 ## Installation and setup
 
@@ -12,6 +17,7 @@ Be careful not to use these tools in a multiuser environment as the login passwo
 
 You will need:
 
+- A `bash` shell environment (Linux, MacOS, WSL does not really matter)
 - `curl`, `jq` and `gzip` must be available
 - A working `mail` command is needed if you want backups sent somewhere else by email
 
@@ -20,13 +26,14 @@ You will need:
 The `espeasy*` scripts will normally be copied somewhere in your `$PATH`, for example:
 
 ```bash
+cd tools
 chmod a+rx espeasy*
-cp -v espeasy* /usr/local/bin/
+cp -v espeasy* /usr/local/bin/ # you may need sudo command in front
 ```
 
 ### Credentials
 
-You will need to set up a `$HOME/.espeasy` file as follows:
+You will normally set up a `$HOME/.espeasy` file as follows for the ESPEasy password. This is not needed if the `CURLARGS` variable is set up in your shell environment from somewhere else. In that case, create an empty file.
 
 ```bash
 #
@@ -38,8 +45,9 @@ CURLARGS=${CURLARGS:-"$CURLFLAGS -u admin:password"} # change password to yours
 
 Then make sure this file is readable by your user only (`chmod 600 $HOME/.espeasy`)
 
+This assumes that the same ESPEasy passwords apply on all devices, but you can also do something like `env CURLARGS="-u admin:otherpasswd" espeasy....` if some devices need another password.
 
-## Backup / restore 
+## Backup / restore
 
 ### Single device
 
@@ -92,7 +100,6 @@ The restore destination must be same ESP device type
 
 If you add the `-a` option, the peer device list will be used to find your ESP devices, and also add any well known ESP MAC addresses found in the local arp table (`arp -a`)
 
-
 ```bash
 $ espeasybackup -a  192.168.202.62
 espeasybackup: Initial list 192.168.202.62 192.168.202.63  ...
@@ -126,7 +133,6 @@ You may want to back up your ESP devices regularly to a remote place. This is a 
 20 06 * * 6  env MAILTO=admin@mydomain.net /usr/local/bin/espeasybackup -a -Z 192.168.202.52 192.168.202.62 192.168.202.64 > /tmp/espeasybackup.log 2>&1
 ```
 
-
 ## New firmware deployment
 
 To upload new firmware, you specify a firmware file and as many IP addresses / hostnames that you want to update with that same hardware
@@ -139,12 +145,12 @@ espeasyupdate: Firmware on file (ESP_Easy_mega_IR_ESP32c3_4M316k_LittleFS_CDC) d
 <META http-equiv="refresh" content="15;URL=/">Update Success! Rebooting...
 ```
 
-The `-f` option is needed if you want to switch from one firmware file to another, or repeat a git build already deployed. 
+The `-f` option is needed if you want to switch from one firmware file to another, or repeat installing a git build already deployed.
 
-This is tested as follows:
+These facts are tested from the ESPEasy device as follows:
 
 ```bash
-# IP is hoatname or IP address
+# IP is hostname or IP address
 curl -s "http://${IP}/json"| jq -r '.System."Git Build"'        # normally skipped if already deployed
 curl -s "http://${IP}/json"| jq -r '.System."Binary Filename"'  # normally skipped if binary file is different
 ```
