@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-29 tonhuisman: Add Counter-clockwise numbering option pe group. Enable GroupColor and DigitColor features also fog
+ *                        LIMIT_BUILD_SIZE builds, as the ESP8266 NeoPixel builds still have enough space available.
  * 2024-08-28 tonhuisman: Fix digit mapping when using Right to Left digit ordering
  *                        Moved around a few UI options, and changed some captions, fix editing digit options by keyboard.
  * 2024-08-27 tonhuisman: Changed max. number of pixels per segment to 7 (from 5), changed settings storage from 3 to 4 bits for

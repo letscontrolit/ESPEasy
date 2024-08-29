@@ -96,20 +96,20 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
                                                         _pixelGroupCfg[grp].dotp,
                                                         0)); // Extra pixels passed separately
       # if P165_DEBUG_DEBUG
-      addLog(LOG_LEVEL_INFO, strformat(F("P165 : group: %d -------- start-pixel: %d"), grp + 1, pxlOffset));
+      addLog(LOG_LEVEL_INFO, strformat(F("P165 : group: %d -------- start-pixel: %d"), grp + 1, pxlOffset + 1));
 
       for (uint8_t seg = 0; seg < 8; ++seg) {
         addLog(LOG_LEVEL_INFO, strformat(F("P165 : segment: %c, bits: 0b%s"), 'a' + seg,
-                                         ull2String(pxlDigit < 63 ? bitSetULL(segments[grp][seg], pxlDigit + 1)
-                                                                  : segments[grp][seg], 2).substring(1).c_str()));
+                                         ull2String(pxlDigit < 63 ? bitSetULL(_segments[grp][seg], pxlDigit + 1)
+                                                                  : _segments[grp][seg], 2).substring(1).c_str()));
 
-        if (pxlDigit < 63) { bitClearULL(segments[grp][seg], pxlDigit + 1); // Reset additional bit
+        if (pxlDigit < 63) { bitClearULL(_segments[grp][seg], pxlDigit + 1); // Reset additional bit
         }
       }
       # endif // if P165_DEBUG_DEBUG
 
       display[grp] = new (std::nothrow) Noiasca_NeopixelDisplay(*strip,
-                                                                segments[grp],
+                                                                _segments[grp],
                                                                 _pixelGroupCfg[grp].dgts,
                                                                 pxlDigit,
                                                                 pxlOffset,
@@ -331,6 +331,11 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     const uint8_t grpAddN  = P165_GET_CONFIG_EXTRA(grp);
     const uint8_t grpOffs  = P165_GET_CONFIG_OFFSET(grp);
     const uint8_t grpRtld  = P165_GET_CONFIG_RTLD(grp);
+    # if P165_FEATURE_C_CLOCKWISE
+    const uint8_t grpCclkw = P165_GET_CONFIG_CCLKW(grp);
+    # else // if P165_FEATURE_C_CLOCKWISE
+    const uint8_t grpCclkw = false;
+    # endif // if P165_FEATURE_C_CLOCKWISE
 
     if (grp != fromGrp) {
       addFormSeparator(2);
@@ -341,10 +346,14 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     {
       html_table(F(""));
 
-      {                                     // Headers on a separate line
-        html_TR_TD(); addHtml(F("&nbsp;")); // 2 blank columns
-        html_TD(); addHtml(F("&nbsp;"));
-
+      addRowLabel(F("Number of Digits *"));
+      addSelector(concat(F("dgts"), grp10),
+                  NR_ELEMENTS(digitOptionValues),
+                  digitOptions,
+                  digitOptionValues, nullptr,
+                  grpDgts,
+                  true, !numberPlan); // 1st and 2nd column
+      {
         // 3rd column = "Digit <nr>" / "(Extra)"
         for (uint8_t dgt = 0; dgt < grpDgts; ++dgt) {
           if ((0 == dgt) && grpRtld) { html_TD(); addHtml(F("(Extra)")); }
@@ -354,15 +363,14 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
 
         if (!grpRtld) { html_TD(); addHtml(F("(Extra)")); }
       }
-
-      addRowLabel(F("Number of Digits *"));
-      addSelector(concat(F("dgts"), grp10),
-                  NR_ELEMENTS(digitOptionValues),
-                  digitOptions,
-                  digitOptionValues, nullptr,
-                  grpDgts,
-                  true, !numberPlan); // 1st and 2nd column
     }
+
+    addFormNumericBox(F("Segment Width pixels"), concat(F("wdth"), grp10),
+                      grpWPxls, 1, P165_SEGMENT_WIDTH_PIXELS,
+                      # if FEATURE_TOOLTIPS
+                      EMPTY_STRING,
+                      # endif // if FEATURE_TOOLTIPS
+                      numberPlan);
 
     dgtOffset += grpOffs;
 
@@ -393,7 +401,8 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                          numberPlan,
                          grpOffs,
                          P165_GET_CONFIG_SPLTG(grp),
-                         grpRtld);
+                         grpRtld,
+                         grpCclkw);
         dgtOffset += (dgtPxls * (grpRtld ? -1 : 1));
       }
 
@@ -404,13 +413,6 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     }
 
     {
-      addFormNumericBox(F("Segment Width pixels"), concat(F("wdth"), grp10),
-                        grpWPxls, 1, P165_SEGMENT_WIDTH_PIXELS,
-                      # if FEATURE_TOOLTIPS
-                        EMPTY_STRING,
-                      # endif // if FEATURE_TOOLTIPS
-                        numberPlan);
-
       addFormNumericBox(F("Segment Height pixels"), concat(F("hght"), grp10),
                         grpHPxls, 1, P165_SEGMENT_HEIGHT_PIXELS,
                         # if FEATURE_TOOLTIPS
@@ -453,7 +455,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                         # endif // if FEATURE_TOOLTIPS
                         true);
     }
-    addFormSeparator(2);
+    addHtml(F("<TR><TD style='height:2px' colspan='2'><hr>")); // Reduce height of separator
 
     {
       addFormNumericBox(F("Pixel-offset before"), concat(F("offs"), grp10),
@@ -477,6 +479,11 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
 
       addFormCheckBox(F("Decimal dot last segment"), concat(F("dend"), grp10),
                       P165_GET_CONFIG_DEND(grp), numberPlan);
+
+      # if P165_FEATURE_C_CLOCKWISE
+      addFormCheckBox(F("Numbering counter-clockwise"), concat(F("cclkw"), grp10),
+                      grpCclkw, numberPlan);
+      # endif // if P165_FEATURE_C_CLOCKWISE
 
       addFormCheckBox(F("Right to Left digits"), concat(F("rtld"), grp10),
                       grpRtld, numberPlan);
@@ -518,7 +525,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
 
   addFormSeparator(2);
 
-  addFormNumericBox(F("Available digits"), F("totdgt"),
+  addFormNumericBox(F("Total digits"), F("totdgt"),
                     totalDigits,
                     0, INT32_MAX,
                     # if FEATURE_TOOLTIPS
@@ -590,6 +597,9 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
       P165_SET_CONFIG_DEND(grp, isFormItemChecked(concat(F("dend"), grp10)));
       P165_SET_CONFIG_RTLD(grp, isFormItemChecked(concat(F("rtld"), grp10)));
       P165_SET_CONFIG_SPLTG(grp, isFormItemChecked(concat(F("spltg"), grp10)));
+      # if P165_FEATURE_C_CLOCKWISE
+      P165_SET_CONFIG_CCLKW(grp, isFormItemChecked(concat(F("cclkw"), grp10)));
+      # endif // if P165_FEATURE_C_CLOCKWISE
       # if P165_SEGMENT_WIDTH_PIXELS > 7 || P165_SEGMENT_HEIGHT_PIXELS > 7
       const uint8_t grpPixels = calculateGroupPixels(1,
                                                      P165_GET_CONFIG_WPIXELS(grp),
@@ -729,7 +739,8 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
                                         const bool     dspPlan, // show number plan
                                         const int16_t  aOffs,   // addon offset
                                         const bool     splitG,  // split segment G in 2 halves
-                                        const bool     rtld) {  // direction ltr or rtl
+                                        const bool     rtld,    // direction ltr or rtl
+                                        const bool     cclkw) { // counter-clockwise
   constexpr uint8_t hrMax  = NR_ELEMENTS(P165_digitMask) - 1;   // Height row max
   constexpr uint8_t hcMask = hrMax / 2;                         // Height center
   const uint8_t     wrMask = 7;                                 // Width right
@@ -786,7 +797,7 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
         const bool showCol = !(w > 0 && w >= wpixels && w < wrMask);
 
         html_TD(showCol ? (dspPlan && (w == maskBits - 1)
-                                        ? F("min-width:" P165_TD_SIZE ";width:4rem;font-size:80%;display:inline-block")
+                                        ? F("min-width:" P165_TD_SIZE ";max-width:4rem;font-size:80%;display:inline-block")
                                         : F("width:" P165_TD_SIZE ";font-size:80%;display:inline-block"))
                         : F("width:" P165_TD_SIZE ";display:none"));
 
@@ -834,7 +845,8 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
                                          dend,
                                          decPt,
                                          addN,
-                                         splitG);
+                                         splitG,
+                                         cclkw);
 
             // pIndex = strformat(F("%d/%d/%d"), hor, ver - 1, seg); // For debugging only
             hor++;
@@ -887,10 +899,11 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
  * - top-left or top-right (0/2)
  * - dot-after-c or dot-at-end (0/1)
  * - g-segment as a single 'block' or split in 2 halves (0/4)
+ * - counter-clockwise numbering (0/8)
  ***********************************************************************/
 
 /* *INDENT-OFF* */
-const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 bytes, values: 0..7 segments, 16/26 => 6, 255 = ignore
+const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 or 144 bytes, values: 0..7 segments, 16/26 => 6, 255 = ignore
   { 0, 1,  2,  7,  3,  4,  6,  5,  255 },      // top-left, dot after c, order: a, b, c, h, d, e, g, f, -
   { 0, 1,  2,  3,  4,  6,  5,  7,  255 },      // top-left, dot as last, order: a, b, c, d, e, g, f, h, -
   { 1, 2,  7,  3,  4,  6,  5,  0,  255 },      // top-right, dot after c, order: b, c, h, d, e, g, f, a, -
@@ -899,6 +912,16 @@ const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 bytes, values: 0..7 segment
   { 0, 1,  16, 2,  3,  4,  26, 5,  7   },      // top-left, dot as last, split g, order: a, b, g1, c, d, e, g2, f, h
   { 1, 16, 2,  7,  3,  4,  26, 5,  0   },      // top-right, dot after c, split g, order: b, g1, c, h, d, e, g2, f, a
   { 1, 16, 2,  3,  4,  26, 5,  0,  7   },      // top-right, dot as last, split g, order: b, g1, c, d, e, g2, f, a, h
+  # if P165_FEATURE_C_CLOCKWISE
+  { 5, 6,  4,  3,  7,  2,  1,  0,  255 },      // cclkw, top-left, dot after c, order: f, g, e, d, h, c, b, a, -
+  { 5, 6,  4,  3,  2,  1,  0,  7,  255 },      // cclkw, top-left, dot as last, order: f, g, e, d, c, b, a, h, -
+  { 0, 5,  6,  4,  3,  7,  2,  1,  255 },      // cclkw, top-right, dot after c, order: a, f, g, e, d, h, c, b, -
+  { 0, 5,  6,  4,  3,  2,  1,  7,  255 },      // cclkw, top-right, dot as last, order: a, f, g, e, d, c, b, h, -
+  { 5, 26, 4,  3,  7,  2,  16, 1,  0   },      // cclkw, top-left, dot after c, split g, order: f, g2, e, d, h, c, g1, b, a
+  { 5, 26, 4,  3,  2,  16, 1,  0,  7   },      // cclkw, top-left, dot as last, split g, order: f, g2, e, d, c, g1, b, a, h
+  { 0, 5,  26, 4,  3,  7,  2,  16, 1   },      // cclkw, top-right, dot after c, split g, order: a, f, g2, e, d, h, c, g1, b
+  { 0, 5,  26, 4,  3,  2,  16, 1,  7   },      // cclkw, top-right, dot as last, split g, order: a, f, g2, e, d, c, g1, b, h
+  # endif // if P165_FEATURE_C_CLOCKWISE
 };
 /* *INDENT-ON* */
 constexpr uint8_t P165_segmentCnt = NR_ELEMENTS(P165_segmentMap[0]);
@@ -906,53 +929,70 @@ constexpr uint8_t P165_segmentCnt = NR_ELEMENTS(P165_segmentMap[0]);
 /*************************************************************************
  * Returns the pixel-index as a string to show in the UI for a pixel
  ************************************************************************/
-String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizontal 'pixel'
-                                             const int8_t   ver,      // vertical 'pixel'
-                                             const uint8_t  seg,      // segment
-                                             const uint16_t offset,   // pre-offset
-                                             const uint8_t  wpixels,  // width pixels
-                                             const uint8_t  hpixels,  // height pixels
-                                             const bool     overlap,  // corner overlap
-                                             const bool     strt,     // start left-top or right-top
-                                             const bool     dend,     // decimal point at end
-                                             const uint8_t  decPt,    // decimal point pixels
-                                             const uint8_t  addN,     // additional pixels
-                                             const bool     splitG) { // split G segment in 2 halves
+String P165_data_struct::calculatePixelIndex(const uint8_t  hor,     // horizontal 'pixel'
+                                             const int8_t   ver,     // vertical 'pixel'
+                                             const uint8_t  seg,     // segment
+                                             const uint16_t offset,  // pre-offset
+                                             const uint8_t  wpixels, // width pixels
+                                             const uint8_t  hpixels, // height pixels
+                                             const bool     overlap, // corner overlap
+                                             const bool     strt,    // start left-top or right-top
+                                             const bool     dend,    // decimal point at end
+                                             const uint8_t  decPt,   // decimal point pixels
+                                             const uint8_t  addN,    // additional pixels
+                                             const bool     splitG,  // split G segment in 2 halves
+                                             const bool     cclkw) { // counter-clockwise
   int16_t result(offset);
-  const uint8_t hpx  = wpixels + (overlap ? 2 : 0);                   // Overlapping pixels checked on horizontal segments
-  const uint8_t vpx  = hpixels;                                       // Vertical pixels
-  const uint8_t smap = (strt ? 2 : 0) + (dend ? 1 : 0) + (splitG ? 4 : 0);
-  const uint8_t rh   = hpx / 2;                                       // Horizontal half part, right
-  const uint8_t lh   = hpx - rh;                                      // Horizontal half part, left
+  const uint8_t hpx  = wpixels + (overlap ? 2 : 0);                  // Overlapping pixels checked on horizontal segments
+  const uint8_t vpx  = hpixels;                                      // Vertical pixels
+  const uint8_t smap = (strt ? 2 : 0) + (dend ? 1 : 0) + (splitG ? 4 : 0) + (cclkw ? 8 : 0);
+  const uint8_t rh   = hpx / 2;                                      // Horizontal half part, right
+  const uint8_t lh   = hpx - rh;                                     // Horizontal half part, left
+  int8_t fh          = 0;                                            // from-h
+  int8_t th          = hpx;                                          // to-h
+  int8_t ih          = 1;                                            // inc-h
+  int8_t vh          = hpx - 1;
+  int8_t mh          = -1;                                           // minmax-h
 
-  result++;                                                           // 1-based index
+  # if P165_FEATURE_C_CLOCKWISE
 
-  for (uint8_t spoint = 0; spoint < P165_segmentCnt; ++spoint) {      // loop over all segments a..i
+  if (cclkw) {
+    fh = hpx - 1;
+    th = -1;
+    ih = -1;
+    vh = 0;
+    mh = hpx;
+  }
+  # endif // if P165_FEATURE_C_CLOCKWISE
+
+  result++;                                                      // 1-based index
+
+  for (uint8_t spoint = 0; spoint < P165_segmentCnt; ++spoint) { // loop over all segments a..i
     const uint8_t segment = pgm_read_byte(&(P165_segmentMap[smap][spoint]));
 
-    if ((0 == segment) || (6 == segment)) {                           // horizontal segments a/g
-      for (uint8_t h = 0; h < hpx; ++h) {
+    if ((0 == segment) || (6 == segment)) {                      // horizontal segments a/g
+      for (int8_t h = fh; h != th; h += ih) {
         if ((seg == segment) && (hor == h)) {
           return String(result);
         }
         result++;
       }
     } else if (16 == segment) { // horizontal segment g, right half
-      for (uint8_t h = rh; h < hpx; ++h) {
+      for (int8_t h = rh; h < hpx; ++h) {
         if ((6 == seg) && (hor == h)) {
           return String(result);
         }
         result++;
       }
     } else if (26 == segment) { // horizontal segment g, left half
-      for (uint8_t h = 0; h < hpx - lh; ++h) {
+      for (int8_t h = 0; h < hpx - lh; ++h) {
         if ((6 == seg) && (hor == h)) {
           return String(result);
         }
         result++;
       }
     } else if (3 == segment) { // horizontal segment d reversed
-      for (int8_t h = hpx - 1; h >= 0; --h) {
+      for (int8_t h = vh; h != mh; h -= ih) {
         if ((seg == segment) && (hor == h)) {
           return String(result);
         }
@@ -961,7 +1001,7 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
     } else if (7 == segment) { // Decimal point segment
       if (seg == segment) {
         String res(result);
-        res.reserve(decPt * 3);
+        res.reserve(decPt * 4);
 
         for (uint8_t dp = 1; dp < decPt; ++dp) {
           result++;
@@ -971,14 +1011,23 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
       } else {
         result += decPt;
       }
-    } else if ((4 == segment) || (5 == segment)) { // Vertical segments e/f
+    } else if ((!cclkw && ((4 == segment) || (5 == segment)))   // Vertical segments e/f
+               # if P165_FEATURE_C_CLOCKWISE
+               || (cclkw && ((1 == segment) || (2 == segment))) // Vertical segments b/c, counter-clockwise
+               # endif // if P165_FEATURE_C_CLOCKWISE
+               ) {
       for (int8_t v = vpx - 1; v >= 0; --v) {
         if ((seg == segment) && (ver == v)) {
           return String(result);
         }
         result++;
       }
-    } else if (255 != segment) { // Vertical segments b/c
+    } else if ((!cclkw && ((1 == segment) || (2 == segment)))   // Vertical segments b/c
+               # if P165_FEATURE_C_CLOCKWISE
+               || (cclkw && ((4 == segment) || (5 == segment))) // Vertical segments e/f, counter-clockwise
+               # endif // if P165_FEATURE_C_CLOCKWISE
+               ) {
+      // } else if (255 != segment) { // Vertical segments b/c
       for (uint8_t v = 0; v < vpx; ++v) {
         if ((seg == segment) && (ver == v)) {
           return String(result);
@@ -990,7 +1039,6 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,      // horizon
 
   if ((seg == 8) && (addN > 0)) {
     String res(result);
-
     res.reserve(addN * 4);
 
     for (uint8_t a = 1; a < addN; ++a) {
@@ -1013,7 +1061,7 @@ void P165_data_struct::fillSegmentBitmap(const uint8_t       grp,
   const uint8_t hpx = pixCfg.wpix + (pixCfg.crnr ? 2 : 0); // Overlapping pixels checked on horizontal segments
   const uint8_t vpx = pixCfg.hpix;                         // Vertical pixels = height pixels
   // smap: Determine the segment(part) order
-  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.wpix > pixCfg.splt ? 4 : 0);
+  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.wpix > pixCfg.splt ? 4 : 0) + (pixCfg.cclkw ? 8 : 0);
   const uint8_t rh   = hpx / 2;                            // Horizontal half part, right
   const uint8_t lh   = hpx - rh;                           // Horizontal half part, left
 
@@ -1024,64 +1072,64 @@ void P165_data_struct::fillSegmentBitmap(const uint8_t       grp,
     if ((0 == segment) || (3 == segment) || (6 == segment)) { // horizontal segments a/d/g
       if (pixCfg.crnr) {
         for (uint8_t h = 0; h < hpx && pbit < 64; ++h) {
-          bitSetULL(segments[grp][segment], pbit);
+          bitSetULL(_segments[grp][segment], pbit);
 
           if ((0 == segment) && (h == 0)) {       // left pixel (a,f)
-            bitSetULL(segments[grp][5], pbit);
+            bitSetULL(_segments[grp][5], pbit);
           } else
           if ((0 == segment) && (h == hpx - 1)) { // right pixel (a,b)
-            bitSetULL(segments[grp][1], pbit);
+            bitSetULL(_segments[grp][1], pbit);
           } else
           if ((3 == segment) && (h == 0)) {       // right pixel (d,c), (other direction)
-            bitSetULL(segments[grp][2], pbit);
+            bitSetULL(_segments[grp][2], pbit);
           } else
           if ((3 == segment) && (h == hpx - 1)) { // left pixel (d,e), (other direction)
-            bitSetULL(segments[grp][4], pbit);
+            bitSetULL(_segments[grp][4], pbit);
           } else
           if ((6 == segment) && (h == 0)) {       // left pixel (g,e,f)
-            bitSetULL(segments[grp][4], pbit);
-            bitSetULL(segments[grp][5], pbit);
+            bitSetULL(_segments[grp][4], pbit);
+            bitSetULL(_segments[grp][5], pbit);
           } else
           if ((6 == segment) && (h == hpx - 1)) { // right pixel (g,b,c)
-            bitSetULL(segments[grp][1], pbit);
-            bitSetULL(segments[grp][2], pbit);
+            bitSetULL(_segments[grp][1], pbit);
+            bitSetULL(_segments[grp][2], pbit);
           }
           pbit++; // next pixel
         }
       } else {
         for (uint8_t h = 0; h < hpx && pbit < 64; ++h) {
-          bitSetULL(segments[grp][segment], pbit);
+          bitSetULL(_segments[grp][segment], pbit);
           pbit++;
         }
       }
     } else if (16 == segment) { // Horizontal segment g, right half
       for (uint8_t h = rh; h < hpx && pbit < 64; ++h) {
-        bitSetULL(segments[grp][6], pbit);
+        bitSetULL(_segments[grp][6], pbit);
 
         if (pixCfg.crnr && (h == hpx - 1)) { // right pixel (g,b,c)
-          bitSetULL(segments[grp][1], pbit);
-          bitSetULL(segments[grp][2], pbit);
+          bitSetULL(_segments[grp][1], pbit);
+          bitSetULL(_segments[grp][2], pbit);
         }
         pbit++;
       }
     } else if (26 == segment) { // Horizontal segment g, left half
       for (uint8_t h = 0; h < hpx - lh && pbit < 64; ++h) {
-        bitSetULL(segments[grp][6], pbit);
+        bitSetULL(_segments[grp][6], pbit);
 
         if (pixCfg.crnr && (h == 0)) { // left pixel (g,e,f)
-          bitSetULL(segments[grp][4], pbit);
-          bitSetULL(segments[grp][5], pbit);
+          bitSetULL(_segments[grp][4], pbit);
+          bitSetULL(_segments[grp][5], pbit);
         }
         pbit++;
       }
     } else if (7 == segment) { // Decimal point segment
       for (uint8_t dp = 0; dp < pixCfg.dotp && pbit < 64; ++dp) {
-        bitSetULL(segments[grp][segment], pbit);
+        bitSetULL(_segments[grp][segment], pbit);
         pbit++;
       }
     } else if (255 != segment) { // Vertical segments b/c/e/f
       for (uint8_t v = 0; v < vpx && pbit < 64; ++v) {
-        bitSetULL(segments[grp][segment], pbit);
+        bitSetULL(_segments[grp][segment], pbit);
         pbit++;
       }
     }
@@ -2013,7 +2061,7 @@ segsize_t P165_data_struct::digit2SegmentMap(uint8_t grp, uint8_t digit) {
 
   for (byte i = 0; i < 8; i++) {
     if (digit & (1UL << i)) {   // UL not necessary, but uses less Flash than if you leave it away
-      currentBitmap |= segments[grp][i];
+      currentBitmap |= _segments[grp][i];
     }
   }
 

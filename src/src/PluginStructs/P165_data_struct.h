@@ -37,7 +37,7 @@
 #  ifndef LIMIT_BUILD_SIZE
 #   define P165_FEATURE_GROUPCOLOR    1
 #  else // ifndef LIMIT_BUILD_SIZE
-#   define P165_FEATURE_GROUPCOLOR    0
+#   define P165_FEATURE_GROUPCOLOR    1 // Enabled while it still fits in the ESP8266 Neopixel build
 #  endif // ifndef LIMIT_BUILD_SIZE
 # endif // ifndef P165_FEATURE_GROUPCOLOR
 
@@ -45,9 +45,17 @@
 #  ifndef LIMIT_BUILD_SIZE
 #   define P165_FEATURE_DIGITCOLOR    1
 #  else // ifndef LIMIT_BUILD_SIZE
-#   define P165_FEATURE_DIGITCOLOR    0
+#   define P165_FEATURE_DIGITCOLOR    1 // Enabled while it still fits in the ESP8266 Neopixel build
 #  endif // ifndef LIMIT_BUILD_SIZE
 # endif // ifndef P165_FEATURE_DIGITCOLOR
+
+# ifndef P165_FEATURE_C_CLOCKWISE
+#  ifndef LIMIT_BUILD_SIZE
+#   define P165_FEATURE_C_CLOCKWISE   1
+#  else // ifndef LIMIT_BUILD_SIZE
+#   define P165_FEATURE_C_CLOCKWISE   1 // Enabled while it still fits in the ESP8266 Neopixel build
+#  endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P165_FEATURE_C_CLOCKWISE
 
 # define P165_PIXEL_CHARACTER     "&#x2638;" // The character to draw for a pixel. When changing, also update cHcrnr() in p165_digit.js
 
@@ -222,7 +230,8 @@ private:
                                const bool     dspPlan,
                                const int16_t  aOffs,
                                const bool     splitG,
-                               const bool     rtld);
+                               const bool     rtld,
+                               const bool     cclkw);
   static String calculatePixelIndex(const uint8_t  hor,
                                     const int8_t   ver,
                                     const uint8_t  seg,
@@ -234,7 +243,8 @@ private:
                                     const bool     dend,
                                     const uint8_t  decPt,
                                     const uint8_t  addN,
-                                    const bool     splitG);
+                                    const bool     splitG,
+                                    const bool     cclkw);
   static void  addJavascript();
   uint16_t     calculateDisplayPixels();
   uint16_t     calculateDisplayDigits();
@@ -249,19 +259,19 @@ private:
                                   uint8_t       sevendgt_seconds,
                                   const bool    flag12h,
                                   const bool    suppressLeading0,
-                                  const uint8_t offset = 0);
+                                  const uint8_t offset);
   void fillBufferWithDate(const bool    sevendgt_now,
                           uint8_t       sevendgt_day,
                           uint8_t       sevendgt_month,
                           const int     sevendgt_year,
                           const bool    suppressLeading0,
-                          const uint8_t offset = 0);
+                          const uint8_t offset);
   void put4NumbersInBuffer(const uint8_t nr1,
                            const uint8_t nr2,
                            const uint8_t nr3,
                            const int8_t  nr4,
                            const bool    suppressLeading0,
-                           const uint8_t offset = 0);
+                           const uint8_t offset);
   void clearBuffer();
 
   void writeCharacterToDisplay(uint8_t group,
@@ -306,7 +316,7 @@ private:
   NeoPixelBus_wrapper     *strip = nullptr;
   Noiasca_NeopixelDisplay *display[PLUGIN_CONFIGLONGVAR_MAX]{ nullptr };
 
-  segsize_t     segments[PLUGIN_CONFIGLONGVAR_MAX][8]{}; // 4*8*uint64_t = 256 bytes...
+  segsize_t     _segments[PLUGIN_CONFIGLONGVAR_MAX][8]{}; // 4*8*uint64_t = 256 bytes...
   PixelGroupCfg _pixelGroupCfg[PLUGIN_CONFIGLONGVAR_MAX]{};
 
   uint16_t _fgColor          = ADAGFX_RED;
