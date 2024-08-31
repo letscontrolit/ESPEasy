@@ -11,7 +11,8 @@ DeviceStruct::DeviceStruct() :
   DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
   PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
   TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false),
-  I2CMax100kHz(false), HasFormatUserVar(false) {}
+  I2CMax100kHz(false), HasFormatUserVar(false), Pin1Direction(gpio_direction::gpio_direction_MAX),
+  Pin2Direction(gpio_direction::gpio_direction_MAX), Pin3Direction(gpio_direction::gpio_direction_MAX) {}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {
@@ -68,3 +69,33 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM3);
 }
 
+gpio_direction DeviceStruct::getPinDirection(int pin) const {
+  switch (pin) {
+    case 1:
+      return Pin1Direction;
+    case 2:
+      return Pin2Direction;
+    case 3:
+      return Pin3Direction;
+  }
+  return gpio_direction::gpio_direction_MAX;
+}
+
+PinSelectPurpose DeviceStruct::pinDirectionToPurpose(gpio_direction direction) const {
+  switch (direction) {
+  case gpio_direction::gpio_input:
+    return PinSelectPurpose::Generic_input;
+  case gpio_direction::gpio_output:
+    return PinSelectPurpose::Generic_output;
+  case gpio_direction::gpio_bidirectional:
+    return PinSelectPurpose::Generic_bidir;
+  case gpio_direction::gpio_direction_MAX:
+    break;
+  }
+  return PinSelectPurpose::Generic;
+}
+
+
+PinSelectPurpose DeviceStruct::getPinSelectPurpose(int pin) const {
+  return pinDirectionToPurpose(getPinDirection(pin));
+}
