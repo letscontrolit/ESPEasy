@@ -1107,7 +1107,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummy);
 
     if (device.usesTaskDevicePin(1)) {
-      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+      PinSelectPurpose purpose = device.getPinSelectPurpose(1); // PinSelectPurpose::Generic;
 
       if (device.isSerial())
       {
@@ -1123,7 +1123,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (device.usesTaskDevicePin(2)) {
-      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+      PinSelectPurpose purpose = device.getPinSelectPurpose(2); // PinSelectPurpose::Generic;
 
       if (device.isSerial())
       {
@@ -1139,7 +1139,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (device.usesTaskDevicePin(3)) {
-      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+      PinSelectPurpose purpose = device.getPinSelectPurpose(3); // PinSelectPurpose::Generic;
 
       if (device.isSPI())
       {
