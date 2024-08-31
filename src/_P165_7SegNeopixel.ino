@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-31 tonhuisman: Apply Device[].PinXDirection feature so only an output-capable GPIO can be selected for the Strip
  * 2024-08-29 tonhuisman: Add Counter-clockwise numbering option pe group. Enable GroupColor and DigitColor features also fog
  *                        LIMIT_BUILD_SIZE builds, as the ESP8266 NeoPixel builds still have enough space available.
  * 2024-08-28 tonhuisman: Fix digit mapping when using Right to Left digit ordering
@@ -47,20 +48,16 @@ boolean Plugin_165(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number = PLUGIN_ID_165;
-      Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[++deviceCount].Number      = PLUGIN_ID_165;
+      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Pin1Direction = gpio_direction::gpio_output;
       break;
     }
 
     case PLUGIN_GET_DEVICENAME:
     {
       string = F(PLUGIN_NAME_165);
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    {
       break;
     }
 
@@ -117,7 +114,7 @@ boolean Plugin_165(uint8_t function, struct EventStruct *event, String& string)
     {
       P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success =  (nullptr != P165_data && P165_data->plugin_once_a_second(event));
+      success = (nullptr != P165_data && P165_data->plugin_once_a_second(event));
       break;
     }
 
@@ -125,14 +122,14 @@ boolean Plugin_165(uint8_t function, struct EventStruct *event, String& string)
     {
       P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success =  (nullptr != P165_data && P165_data->plugin_ten_per_second(event));
+      success = (nullptr != P165_data && P165_data->plugin_ten_per_second(event));
       break;
     }
     case PLUGIN_WRITE:
     {
       P165_data_struct *P165_data = static_cast<P165_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success =  (nullptr != P165_data && P165_data->plugin_write(event, string));
+      success = (nullptr != P165_data && P165_data->plugin_write(event, string));
       break;
     }
   }
