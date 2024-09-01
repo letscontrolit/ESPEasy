@@ -154,6 +154,7 @@ void    P073_display_output_selector(const __FlashStringHelper *id,
 void    P073_font_selector(const __FlashStringHelper *id,
                            int16_t                    value);
 # endif // ifdef P073_EXTRA_FONTS
+uint8_t P073_revert7bits(uint8_t character);
 // FIXME End of part to merge from PR #5091
 
 struct P073_data_struct : public PluginTaskData_base {

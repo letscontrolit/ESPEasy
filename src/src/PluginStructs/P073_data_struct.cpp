@@ -134,6 +134,20 @@ void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
 
 # endif // ifdef P073_EXTRA_FONTS
 
+/**
+ * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
+ * Dot/colon bit is still bit 8
+ */
+uint8_t P073_revert7bits(uint8_t character) {
+  uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
+
+  for (int b = 0; b < 7; ++b) {
+    if (character & (0x01 << b)) {
+      newCharacter |= (0x40 >> b);
+    }
+  }
+  return newCharacter;
+}
 // FIXME End of part to merge from PR #5091
 
 void P073_data_struct::init(struct EventStruct *event)
