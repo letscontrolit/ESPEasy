@@ -548,6 +548,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P169   // Environment - AS3935 Lightning Detector
 // #define USES_P170   // Input - I2C Liquid level sensor
 // #define USES_P172   // BMP3xx SPI.
+// #define USES_P173   // Environment - SHTC3
 
 /*
  #######################################################################################################
