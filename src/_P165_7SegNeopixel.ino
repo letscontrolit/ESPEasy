@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-09-01 tonhuisman: Fixing some bugs/typos: g-split was enabled for width-pixels > 1, P073 font characters must have 7 bits reverted.
+ *                        7groupcolor wasn't handling arguments correctly. Restoring groupcolor after digitcolor fixed.
  * 2024-08-31 tonhuisman: Apply Device[].PinXDirection feature so only an output-capable GPIO can be selected for the Strip
  * 2024-08-29 tonhuisman: Add Counter-clockwise numbering option pe group. Enable GroupColor and DigitColor features also fog
  *                        LIMIT_BUILD_SIZE builds, as the ESP8266 NeoPixel builds still have enough space available.

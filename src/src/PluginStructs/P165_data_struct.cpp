@@ -1061,7 +1061,7 @@ void P165_data_struct::fillSegmentBitmap(const uint8_t       grp,
   const uint8_t hpx = pixCfg.wpix + (pixCfg.crnr ? 2 : 0); // Overlapping pixels checked on horizontal segments
   const uint8_t vpx = pixCfg.hpix;                         // Vertical pixels = height pixels
   // smap: Determine the segment(part) order
-  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.wpix > pixCfg.splt ? 4 : 0) + (pixCfg.cclkw ? 8 : 0);
+  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.splt ? 4 : 0) + (pixCfg.cclkw ? 8 : 0);
   const uint8_t rh   = hpx / 2;                            // Horizontal half part, right
   const uint8_t lh   = hpx - rh;                           // Horizontal half part, left
 
@@ -1416,7 +1416,7 @@ bool P165_data_struct::plugin_write(struct EventStruct *event,
     case p165_commands_e::c7digitcolor: // 7digitcolor,grp,dgt,[-|fg_r,fg_g,fg_b[,fg_w][,bg_r,bg_g,bg_b[,bg_w]]]
     # endif // if P165_FEATURE_DIGITCOLOR
     # if P165_FEATURE_GROUPCOLOR
-    case p165_commands_e::c7groupcolor: // 7digitcolor,grp,[-|fg_r,fg_g,fg_b[,fg_w][,bg_r,bg_g,bg_b[,bg_w]]]
+    case p165_commands_e::c7groupcolor: // 7groupcolor,grp,[-|fg_r,fg_g,fg_b[,fg_w][,bg_r,bg_g,bg_b[,bg_w]]]
     # endif // if P165_FEATURE_GROUPCOLOR
     # if P165_FEATURE_DIGITCOLOR || P165_FEATURE_GROUPCOLOR
     {
@@ -1439,7 +1439,7 @@ bool P165_data_struct::plugin_write(struct EventStruct *event,
         grp = event->Par1;
       }
 
-      if ((grp > 0) && (grpColor || ((event->Par2 > 0) && (event->Par2 <= _pixelGroupCfg[grp - 1].dgts)))) {
+      if ((grp > 0) && !grpColor && ((event->Par2 > 0) && (event->Par2 <= _pixelGroupCfg[grp - 1].dgts))) {
         dgt = event->Par2;
       }
 
@@ -1451,7 +1451,8 @@ bool P165_data_struct::plugin_write(struct EventStruct *event,
       const uint16_t grp200dgt = 0x200 + (grp << 4) + (dgt - 1);
       const uint16_t grp300    = 0x300 + (grp << 4);
       const uint16_t grp400    = 0x400 + (grp << 4);
-      const String   par4      = parseString(string, 4);
+      const uint8_t  parIdx    = grpColor ? 3 : 4;
+      const String   par4      = parseString(string, parIdx);
 
       // Next argument: delete digit/groupcolor?
       if (equals(par4, F("-"))) {                                  // use dash to remove a digit/group color setting
@@ -1467,7 +1468,7 @@ bool P165_data_struct::plugin_write(struct EventStruct *event,
         }
         success = true;
       } else
-      if (parseRGBWColors(parseStringToEnd(string, 4), rgbW, fgColor, bgColor, fgSet, bgSet)) {
+      if (parseRGBWColors(parseStringToEnd(string, parIdx), rgbW, fgColor, bgColor, fgSet, bgSet)) {
         if (fgSet) {
           auto it = digitColors.find(grpColor ? grp300 : grp100dgt);     // fg color
 
@@ -1935,7 +1936,7 @@ void P165_data_struct::writeCharacterToDisplay(uint8_t group, uint8_t digit, uin
     # endif // if P165_FEATURE_P073
     character
     # if P165_FEATURE_P073 // Use P073 7-segment fonts and buffer content when available
-    : P073_getFontChar(character, _fontset)
+    : P073_revert7bits(P073_getFontChar(character, _fontset))
     # endif // if P165_FEATURE_P073
   ;
 
@@ -1969,6 +1970,8 @@ void P165_data_struct::writeBufferToDisplay(uint8_t group) {
   # endif // if P165_DEBUG_DEBUG
 
   for (uint8_t grp = from; grp < to; ++grp) {
+    uint32_t fgColor = AdaGFXrgb565ToRgb888(_fgColor);
+    uint32_t bgColor = AdaGFXrgb565ToRgb888(_bgColor);
     # if P165_FEATURE_GROUPCOLOR
     bool fgColorGrp       = false;
     bool bgColorGrp       = false;
@@ -1977,13 +1980,15 @@ void P165_data_struct::writeBufferToDisplay(uint8_t group) {
     auto itgrp            = digitColors.find(grp300); // fg color
 
     if (itgrp != digitColors.end()) {
-      display[grp]->setColorFont(itgrp->second);
+      fgColor = itgrp->second;
+      display[grp]->setColorFont(fgColor);
       fgColorGrp = true;
     }
     itgrp = digitColors.find(grp400); // bg color
 
     if (itgrp != digitColors.end()) {
-      display[grp]->setColorBack(itgrp->second);
+      bgColor = itgrp->second;
+      display[grp]->setColorBack(bgColor);
       bgColorGrp = true;
     }
     # endif // if P165_FEATURE_GROUPCOLOR
@@ -2022,11 +2027,11 @@ void P165_data_struct::writeBufferToDisplay(uint8_t group) {
 
       // Restore global colors
       if (fgColorSet) {
-        display[grp]->setColorFont(AdaGFXrgb565ToRgb888(_fgColor));
+        display[grp]->setColorFont(fgColor);
       }
 
       if (bgColorSet) {
-        display[grp]->setColorBack(AdaGFXrgb565ToRgb888(_bgColor));
+        display[grp]->setColorBack(bgColor);
       }
       # endif // if P165_FEATURE_DIGITCOLOR
 
