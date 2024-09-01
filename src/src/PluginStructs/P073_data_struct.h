@@ -212,6 +212,7 @@ void    P073_display_output_selector(const __FlashStringHelper *id,
 void    P073_font_selector(const __FlashStringHelper *id,
                            int16_t                    value);
 # endif // if P073_EXTRA_FONTS
+uint8_t P073_revert7bits(uint8_t character);
 
 struct P073_data_struct : public PluginTaskData_base {
 public:
@@ -278,7 +279,6 @@ public:
   void    FillBufferWithDash();
   void    ClearBuffer();
 
-  uint8_t mapMAX7219FontToTM1637Font(uint8_t character);
   uint8_t tm1637_getFontChar(uint8_t index,
                              uint8_t fontset);
 

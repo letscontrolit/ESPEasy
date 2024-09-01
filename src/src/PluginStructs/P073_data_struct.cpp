@@ -159,6 +159,20 @@ void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
 
 # endif // if P073_EXTRA_FONTS
 
+/**
+ * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
+ * Dot/colon bit is still bit 8
+ */
+uint8_t P073_revert7bits(uint8_t character) {
+  uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
+
+  for (int b = 0; b < 7; ++b) {
+    if (character & (0x01 << b)) {
+      newCharacter |= (0x40 >> b);
+    }
+  }
+  return newCharacter;
+}
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
@@ -360,7 +374,7 @@ void P073_data_struct::hc595_ToOutputBuffer() {
     if (showperiods[i]) {
       value &= 0x7F;
     }
-    outputbuffer[i] = mapMAX7219FontToTM1637Font(value); // Rotate bits 6..0
+    outputbuffer[i] = P073_getFontChar(value); // Rotate bits 6..0
   }
 }
 
@@ -791,24 +805,9 @@ void P073_data_struct::ClearBuffer() {
   }
 }
 
-/**
- * This function reverts the 7 databits/segmentbits so TM1637 and 74HC595 displays work with fonts designed for MAX7219.
- * Dot/colon bit is still bit 8
- */
-uint8_t P073_data_struct::mapMAX7219FontToTM1637Font(uint8_t character) {
-  uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
-
-  for (int b = 0; b < 7; ++b) {
-    if (character & (0x01 << b)) {
-      newCharacter |= (0x40 >> b);
-    }
-  }
-  return newCharacter;
-}
-
 uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
                                              uint8_t fontset) {
-  return mapMAX7219FontToTM1637Font(P073_getFontChar(index, fontset));
+  return P073_getFontChar(P073_getFontChar(index, fontset));
 }
 
 bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
@@ -1534,7 +1533,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       if (validIntFromString(argValue, byteValue) && (byteValue < 256) && (byteValue > -1)) {
         data += static_cast<char>(displayModel == P073_MAX7219_8DGT ?
                                   byteValue :
-                                  mapMAX7219FontToTM1637Font(byteValue));
+                                  P073_getFontChar(byteValue));
       }
       arg++;
       argValue = parseString(text, arg);
