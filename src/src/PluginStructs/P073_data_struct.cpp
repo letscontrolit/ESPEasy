@@ -374,7 +374,7 @@ void P073_data_struct::hc595_ToOutputBuffer() {
     if (showperiods[i]) {
       value &= 0x7F;
     }
-    outputbuffer[i] = P073_getFontChar(value); // Rotate bits 6..0
+    outputbuffer[i] = P073_revert7bits(value); // Rotate bits 6..0
   }
 }
 
@@ -807,7 +807,7 @@ void P073_data_struct::ClearBuffer() {
 
 uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
                                              uint8_t fontset) {
-  return P073_getFontChar(P073_getFontChar(index, fontset));
+  return P073_revert7bits(P073_getFontChar(index, fontset));
 }
 
 bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
@@ -1533,7 +1533,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       if (validIntFromString(argValue, byteValue) && (byteValue < 256) && (byteValue > -1)) {
         data += static_cast<char>(displayModel == P073_MAX7219_8DGT ?
                                   byteValue :
-                                  P073_getFontChar(byteValue));
+                                  P073_revert7bits(byteValue));
       }
       arg++;
       argValue = parseString(text, arg);
