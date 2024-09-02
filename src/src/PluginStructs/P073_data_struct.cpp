@@ -164,15 +164,24 @@ void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
  * Dot/colon bit is still bit 8
  */
 uint8_t P073_revert7bits(uint8_t character) {
-  uint8_t newCharacter = character & 0x80; // Keep dot-bit if passed in
+  uint8_t dpBit = character & 0x80; // Keep dot-bit if passed in
+  uint8_t b     = character << 1;   // Pre-shift as only 7 bits to revert
 
-  for (int b = 0; b < 7; ++b) {
-    if (character & (0x01 << b)) {
-      newCharacter |= (0x40 >> b);
-    }
-  }
-  return newCharacter;
+  // Source: https://graphics.stanford.edu/~seander/bithacks.html#BitReverseObvious
+  # ifdef ESP8266
+
+  // 32 bit 7 operations variant, 64 bit operations is quite slow on ESP8266, but fast on most ESP32 variants
+  b = ((b * 0x0802LU & 0x22110LU) | (b * 0x8020LU & 0x88440LU)) * 0x10101LU >> 16;
+  # endif // ifdef ESP8266
+  # ifdef ESP32
+
+  // 64 bit 4 operations variant
+  b = ((b * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32;
+  # endif // ifdef ESP32
+
+  return b | dpBit; // Restore dot-bit
 }
+
 void P073_data_struct::init(struct EventStruct *event)
 {
   ClearBuffer();
