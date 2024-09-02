@@ -906,7 +906,6 @@ void P021_evaluate(struct EventStruct *event)
       relay_output = false; // Relay output state
       break;
   }
-  const int output_value = relay_output;
 
   // Actuate the output pin taking output invert flag into account
   if (validGpio(P021_GPIO_RELAY))
