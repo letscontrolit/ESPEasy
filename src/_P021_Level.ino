@@ -18,23 +18,39 @@
 //                         cleanup source, prevent crashing when hysteresis is 0.0, run Uncrustify source formatter,
 //                         apply float/double math compare functions instead of regular comparisons
 
+// NOTE: Due to lack of flash memory for most ESP8266 builds the extensions are only available on a limited set of builds.
+//       Code size and functionality is controlled by several build flags:
+//       PLUGIN_021_DEBUG     When defined: Additional debugging available for logging and webform
+//       P021_MIN_BUILD_SIZE  When defined: Leave out some less important functionality
+//       FEATURE_P021_EXTRAS  0 : No additional functionality
+//                            1 : New functionality per change 2024-07-07
+//                            > : Reserved for future functionality improvements
+//       Debugging is expected to be switched off when build size is limited by the other flags
+//       Minimum build size is expected to be true when extras >=1
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 # include "src/Helpers/ESPEasy_math.h"
 # include "src/Globals/RulesCalculate.h"
 # include "src/WebServer/ESPEasy_WebServer.h"
 
+//// #define LIMIT_BUILD_SIZE
+# define PLUGIN_021_DEBUG
+
+// For additional debugging information use PLUGIN_021_DEBUG (see note)
 # ifdef BUILD_NO_DEBUG
 # undef PLUGIN_021_DEBUG
 # else // ifdef BUILD_NO_DEBUG
 ////# define PLUGIN_021_DEBUG
 # endif // ifndef/else BUILD_NO_DEBUG
 
-# ifdef LIMIT_BUILD_SIZE
-# define P021_MIN_BUILD_SIZE
-# undef PLUGIN_021_DEBUG
-# endif // ifdef LIMIT_BUILD_SIZE
-
-// Force minimal build size for development/debugging purposes
-////# define P021_MIN_BUILD_SIZE
+// See note at top of file
+#ifdef LIMIT_BUILD_SIZE
+#define FEATURE_P021_EXTRAS  0
+#define P021_MIN_BUILD_SIZE
+#undef PLUGIN_021_DEBUG
+#else // ifdef LIMIT_BUILD_SIZE
+#define FEATURE_P021_EXTRAS  1
+#endif // ifdef LIMIT_BUILD_SIZE
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
@@ -122,6 +138,7 @@
 // And from seconds to the millis domain used for the actual control
 // Note that these simple conversion may lose precision due to rough rounding
 
+# if FEATURE_P021_EXTRAS >= 1
 int millis2seconds(int32_t x) {
   return (uint)(x / 1000);
 }
@@ -129,6 +146,8 @@ int millis2seconds(int32_t x) {
 int32_t seconds2millis(int x) {
   return (uint32_t)(x * 1000);
 }
+
+# endif // if FEATURE_P021_EXTRAS >= 1
 
 # ifndef P021_MIN_BUILD_SIZE
 int minutes2seconds(int x) {
@@ -170,8 +189,11 @@ enum P021_control_state
 };
 
 // Static storage for global state info. Track per ESPeasy plugin instance
-static bool P021_remote[TASKS_MAX];        // Static storage for remote control.
-static uint32_t P021_timestamp[TASKS_MAX]; // Static storage for timestamp last change
+static bool P021_remote[TASKS_MAX]; // Static storage for remote control.
+// Static storage for last change timestamp. Not required with extended features disabled
+# if FEATURE_P021_EXTRAS >= 1
+static uint32_t P021_timestamp[TASKS_MAX];
+# endif // if FEATURE_P021_EXTRAS >= 1
 
 ///////////////////////////////////////////////////////////////////////////////
 // ESPeasy main entry point for a plugin
@@ -244,10 +266,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      # if FEATURE_P021_EXTRAS >= 1
       const uint16_t flags   = P021_FLAGS;                     // shortcut to read existing configuration flags
       const bool     extFunc = bitRead(flags, P021_EXT_FUNCT); // Extended functionality selected
+      # endif // if FEATURE_P021_EXTRAS >= 1
 
-       # ifdef PLUGIN_021_DEBUG
+      // For debugging purposes the webform provides some internal data
+      # ifdef PLUGIN_021_DEBUG
       {
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
@@ -260,6 +285,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                               millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex]))));
       }
       # endif // ifdef PLUGIN_021_DEBUG
+
       const taskIndex_t check_task = P021_CHECK_TASK; // Optimze reference
       addRowLabel(F("Input Task"));
       addTaskSelect(F(P021_GUID_CHECK_TASK), check_task);
@@ -290,6 +316,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
       # endif // ifndef P021_MIN_BUILD_SIZE
+
+      // Next are settings introduced with the extension for state dependend features
+      # if FEATURE_P021_EXTRAS >= 1
 
       // Settings extension for new operation modes. Will reload the page.
       addFormSelector_YesNo(F("Extended functionality"), F(P021_GUID_EXT_FUNCT), extFunc, true);
@@ -368,6 +397,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // Provide the controller state as second sensor output value [checkbox]
         addFormCheckBox(F("State as output value"), F(P021_GUID_STATE_OUTP),     bitRead(flags, P021_STATE_OUTP));
       }
+      #endif // FEATURE_P021_EXTRAS >= 1
 
       success = true;
       break;
@@ -375,8 +405,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      const bool newExtFunct  =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
-      uint16_t   flags = P021_FLAGS; // Reduce expensive access to P021 to write new flags
+      uint16_t flags = P021_FLAGS; // Reduce expensive access to P021 to write new flags
 
       P021_CHECK_TASK       = getFormItemInt(F(P021_GUID_CHECK_TASK));
       P021_CHECK_VALUE      = getFormItemInt(F(P021_GUID_CHECK_VALUE));
@@ -386,6 +415,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       P021_HYSTERESIS       = getFormItemFloat(F(P021_GUID_HYSTERESIS));
       P021_AUTOSAVE_TIMER   = getFormItemInt(F(P021_GUID_AUTOSAVE_TIMER)) * 60; // Store in seconds
       bitWrite(flags, (P021_INV_OUTPUT), isFormItemChecked(F(P021_GUID_INV_OUTPUT)));
+
+      # if FEATURE_P021_EXTRAS >= 1
+      const bool newExtFunct =  (getFormItemInt(F(P021_GUID_EXT_FUNCT)) != 0);
 
       // Save extended parameters only when they are selected and are shown on the page
       if (newExtFunct && (bitRead(flags, P021_EXT_FUNCT)))
@@ -428,7 +460,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Set extended parameters to backwards compatible values when extension is disabled
       if (!newExtFunct)
       {
-        P021_OPMODE = P021_OPMODE_CLASSIC;                  // Switch to classic control algorithm
+        P021_OPMODE = P021_OPMODE_CLASSIC;           // Switch to classic control algorithm
         bitWrite(flags, P021_INV_INPUT,      false); // Standard input direction
         bitWrite(flags, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
         bitWrite(flags, P021_SLOW_EVAL,      false); // 10Hz evaluation
@@ -437,6 +469,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       }
 
       bitWrite(flags, P021_EXT_FUNCT, newExtFunct);
+      #endif //if FEATURE_P021_EXTRAS >= 1
+
       P021_FLAGS = flags; // Don't forget to write back the new flags
       success    = true;
       break;
@@ -524,8 +558,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // I am not sure we want to reset the state at every init.
       // UserVar seems to be persistent
       UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
-      P021_remote[event->TaskIndex]    = false;    // Remote control state is "off"
+      P021_remote[event->TaskIndex] = false;       // Remote control state is "off"
+      # if FEATURE_P021_EXTRAS >= 1
       P021_timestamp[event->TaskIndex] = millis(); // Initialize last switching time
+      # endif // if FEATURE_P021_EXTRAS >= 1
       P021_evaluate(event);                        // Calculate the new control outputs
       sendData(event);                             // Force an update event for the plugin
       success = true;
@@ -541,7 +577,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Expected commands:
       // * levelcontrol,remote, [on|off]
 
-      # ifndef P021_MIN_BUILD_SIZE
+      # if FEATURE_P021_EXTRAS >= 1
 
       // parse string to extract the command
       const String command  = parseString(string, 1); // already converted to lowercase
@@ -579,7 +615,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_P021_EXTRAS >= 1
+
       if (!bitRead(P021_FLAGS, P021_SLOW_EVAL))
+      # endif // if FEATURE_P021_EXTRAS >= 1
       {
         P021_evaluate(event);
       }
@@ -590,15 +629,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       P021_check_autosave(event); // This function relies on being called exactly once a second
 
+      # if FEATURE_P021_EXTRAS >= 1
+
       if (bitRead(P021_FLAGS, P021_SLOW_EVAL))
       {
         P021_evaluate(event);
       }
+      # endif // if FEATURE_P021_EXTRAS >= 1
       success = true;
       break;
     }
   }
-
   return success;
 }
 
@@ -670,8 +711,10 @@ void P021_check_autosave(struct EventStruct *event)
   }
 }
 
+# if FEATURE_P021_EXTRAS >= 1
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Main control algorithm
+// Main control algorithm  -- Full feature set enabled
 // Evaluation shall not be dependent on when or how often this function is called
 // All stateful information is stored in the plugin context environment accessible through parameter event or
 // stored in a static variable indexed by the TaskIndex
@@ -746,7 +789,8 @@ void P021_evaluate(struct EventStruct *event)
           new_control_state = P021_STATE_FORCE;
         }
       }
-      else if (beyond_force)
+      // Note any other state implies the output is active
+      else if (!beyond_force)
       {
         // Output was active shorter than the forced on time
         new_control_state = P021_STATE_FORCE; // Keep running in state FORCE
@@ -880,7 +924,7 @@ void P021_evaluate(struct EventStruct *event)
                          P021_printControlState(new_control_state),
                          relay_output,
                          millis2seconds(timePassedSince(timestamp)),
-                         P021_printControlMode(P021_OPMODE),
+                         P021_printControlMode((P021_opmode)P021_OPMODE),
                          value,
                          remote_state));
   }
@@ -892,7 +936,7 @@ void P021_evaluate(struct EventStruct *event)
   // - Timestamp for last change of the output signal
   // Note: the actual state of the output is not stored, it can be calculated from the control_state
   // UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(((P021_control_state)new_control_state == P021_STATE_IDLE) ? 0 : 1));
-  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(output_value));
+  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, relay_output ? 1.0f : 0.0f);
   UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE,  (float)new_control_state);
   P021_timestamp[event->TaskIndex] = timestamp;
 
@@ -901,6 +945,90 @@ void P021_evaluate(struct EventStruct *event)
     sendData(event);
   }
 }
+
+# else // if FEATURE_P021_EXTRAS >= 1
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Main control algorithm -- no state dependend control (old behavior ony to prevent out of flash memory)
+// Evaluation shall not be dependent on when or how often this function is called
+// All stateful information is stored in the plugin context environment accessible through parameter event or
+// stored in a static variable indexed by the TaskIndex
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void P021_evaluate(struct EventStruct *event)
+{
+  // Note: several const values are defined here to reduce the code size when accessing the value multiple times
+  const taskIndex_t TaskIndex                = P021_CHECK_TASK; // TaskIndex for supplying sensor plugin
+  float value                                = 0.0f;            // Input value for control algorithm
+  const P021_control_state old_control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
+  P021_control_state new_control_state       = old_control_state;
+  bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
+
+  const float hysteresis = P021_HYSTERESIS;
+  const float setpoint   = P021_SETPOINT;
+
+  // Get the control value from the external task. If task does not exist use the default
+  if (validTaskIndex(TaskIndex))
+  {
+    value = UserVar.getFloat(TaskIndex, P021_CHECK_VALUE);
+  }
+
+  // The real calculation based upon current measurement, setpoint and hysteresis
+  // All new goodies to default (backwards compatible with previous versions)
+  if (P021_check_on(value, setpoint, hysteresis, false, true, false))
+  {
+    new_control_state = P021_STATE_ACTIVE;
+  }
+  else if (P021_check_off(value, setpoint, hysteresis, false, true, false))
+  {
+    new_control_state = P021_STATE_IDLE;
+  }
+
+  // Calculate output state from the newly calculated control state
+  switch (new_control_state)
+  {
+    case P021_STATE_IDLE:
+      relay_output = false; // Relay output state
+      break;
+    case P021_STATE_ACTIVE:
+      relay_output = true;  // Relay output state
+      break;
+    default:                // unexpected state, switch pump off
+      relay_output = false; // Relay output state
+      break;
+  }
+
+  // Actuate the output pin taking output invert flag into account
+  relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
+  if (validGpio(P021_GPIO_RELAY))
+  {
+    digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
+  }
+
+  # ifdef PLUGIN_021_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+  {
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("P021: Calculated State= %s; GPIO= %d; value= %f"),
+                         P021_printControlState(new_control_state),
+                         relay_output,
+                         value));
+  }
+  # endif // ifdef PLUGIN_021_DEBUG
+
+  // Write back updated persistant control data:
+  // - The physical state of the output signal [on,OFF]
+  // - The state of the internal state machine
+  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, relay_output ? 1.0f : 0.0f );
+  UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE,  (float)new_control_state);
+
+  if (new_control_state != old_control_state)
+  {
+    sendData(event);
+  }
+}
+
+# endif // if FEATURE_P021_EXTRAS >= 1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Helper function for P021_check_on() and P021_check_off() to reduce code size
