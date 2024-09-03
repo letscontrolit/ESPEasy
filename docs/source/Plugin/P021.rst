@@ -37,6 +37,8 @@ The control algorithm can be a simple value to setpoint comparator with hysteres
 Pumps like used for floor heating have some additional requirements like running once in a while and keeping the pump running for a minimum time. 
 The plugin provides a simple "Classic" mode of operation which can be extended with additional features.
 
+Note: Due to size limitations some builds contain limited functionality. State control extension and remote control will not be available on these standard builds for ESPeasy. You can always create a custom build with full functionality.
+
 Basic control algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -134,27 +136,29 @@ Sensor
 
 * **Auto-save interval** Here a time in minutes can be set after which any changed 'Set Level' via the ``config,task,<taskname>,SetLevel,<value>`` command will be saved. This *requires* that the above setting **Save 'Set Level' after change via config command** is **disabled**! When used, a setting of ca. 30 minutes, or even longer when the Set Level is changed often, seems apropriate, unless the unit often reboots, but then that cause should be investigated and solved. The timer, when activated, should survive a warm reboot.
 
-* **Extended functionality** Enable new functionality. Changing this will reload the form showing/hiding the new options below.
+* **Extended functionality**:sup:`1)` Enable new functionality. Changing this will reload the form showing/hiding the new options below.
 
-* **Long time span** Timer values are per default entered in [seconds], enabling this option timing settings are tuned to long intervals using [hours] or [seconds]. Changing this will reload the form showing rescaled values and new units.
+* **Long time span**:sup:`1)` Timer values are per default entered in [seconds], enabling this option timing settings are tuned to long intervals using [hours] or [seconds]. Changing this will reload the form showing rescaled values and new units.
 
-* **Control mode** Selection of the Control mode, see Operation mode above.
+* **Control mode**:sup:`1)` Selection of the Control mode, see Operation mode above.
 
-* **Minimum running time** Once switched on the Output shall be active for at least this time. See State control extension. Time is either in [seconds] or in [minutes].
+* **Minimum running time**:sup:`1)` Once switched on the Output shall be active for at least this time. See State control extension. Time is either in [seconds] or in [minutes].
 
-* **Maximum idle time** Output will be forced to active if it has been idle for this time. See State control extension. Time is either in [seconds] or in [hours].
+* **Maximum idle time**:sup:`1)` Output will be forced to active if it has been idle for this time. See State control extension. Time is either in [seconds] or in [hours].
 
-* **Forced circulation time** Output will be active for this duration once it is forced active. See State control extension. Time is either in [seconds] or in [minutes].
+* **Forced circulation time**:sup:`1)` Output will be active for this duration once it is forced active. See State control extension. Time is either in [seconds] or in [minutes].
 
-* **Symetrical hysteress** If checked the Hysteresis is symerical around the Setpoint. Otherwise it is asymertical. See basic control algorithm.
+* **Symetrical hysteress**:sup:`1)` If checked the Hysteresis is symerical around the Setpoint. Otherwise it is asymertical. See basic control algorithm.
 
-* **Extend at end** If checked the extension period is started after demand dropt, otherwise the extension period timing is started when the Output is switched to active.
+* **Extend at end**:sup:`1)` If checked the extension period is started after demand dropt, otherwise the extension period timing is started when the Output is switched to active.
 
-* **Invert Input** If checked the input compare direction is inverted. See basic control algorithm above.
+* **Invert Input**:sup:`1)` If checked the input compare direction is inverted. See basic control algorithm above.
 
-* **Slow evaluation** By default the control algorithm is evaluated 10 times per second. Many applications don't need this speed. Checking this setting evaluates the control algorithm once per second to reduce the CPU load.
+* **Slow evaluation**:sup:`1)` By default the control algorithm is evaluated 10 times per second. Many applications don't need this speed. Checking this setting evaluates the control algorithm once per second to reduce the CPU load.
 
-* **State as output value** This adds the calculated state as a second value. This can be used in rules to show what the controller is doing.
+* **State as output value**:sup:`1)` This adds the calculated state as a second value. This can be used in rules to show what the controller is doing.
+
+:sup:`1)` Configuration may not be available due to build size limitations.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^

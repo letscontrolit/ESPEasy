@@ -31,12 +31,12 @@
         Using this command, either from rules, via http or mqtt, the remote control state of the plugin can be changed. When result is true and control mode is remote the Output will be set to active. When result is false local control algorithm is used. This value is never saved.
         "
         "
-        ``levelcontrol,Remote,[on|off]``
+        ``levelcontrol,Remote,[0|1]``
 
-        Value: {**on** or **off** }
+        Value: {**0** or **1** }
 
         ","
-        Using this command, either from rules, via http or mqtt, the remote control state of the plugin can be changed. If the value is **on** and control mode is remote the Output will be set to active. If the value is **off** local control algorithm is used. This value is never saved.
+        Using this command, either from rules, via http or mqtt, the remote control state of the plugin can be changed. If the value is **1** and control mode is remote the Output will be set to active. If the value is **0** local control algorithm is used. This value is never saved.
         "
         "
         ``[<taskname>#GetLevel]``
