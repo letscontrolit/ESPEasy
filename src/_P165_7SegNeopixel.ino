@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-09-05 tonhuisman: Disable automatic period handling if no decimal dots are defined.
  * 2024-09-01 tonhuisman: Fixing some bugs/typos: g-split was enabled for width-pixels > 1, P073 font characters must have 7 bits reverted.
  *                        7groupcolor wasn't handling arguments correctly. Restoring groupcolor after digitcolor fixed.
  * 2024-08-31 tonhuisman: Apply Device[].PinXDirection feature so only an output-capable GPIO can be selected for the Strip

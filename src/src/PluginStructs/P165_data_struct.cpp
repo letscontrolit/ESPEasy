@@ -24,14 +24,17 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
   _scrollFull       = P165_GET_FLAG_SCROLL_FULL;
   _stdOffset        = P165_GET_FLAG_STD_OFFSET;
 
+  _periods = false; // If we don't have any digits with a decimal dot, disable using that for displaying dots...
+
   for (uint8_t grp = 0; grp < _pixelGroups; ++grp) {
     memcpy(&_pixelGroupCfg[grp], &P165_GROUP_CFG(grp), sizeof(P165_GROUP_CFG(grp)));
     _pixelGroupCfg[grp].aoffs = 0;
     _pixelGroupCfg[grp].boffs = 0;
     _totalDigits             += _pixelGroupCfg[grp].dgts;
+    _periods                 |= _pixelGroupCfg[grp].dotp > 0; // Check decimal dot pixelsS
   }
 
-  const uint16_t pxlCount = calculateDisplayPixels(); // Needs the _pixelGroupCfg filled
+  const uint16_t pxlCount = calculateDisplayPixels();         // Needs the _pixelGroupCfg filled
 
   # if P165_DEBUG_INFO
   addLog(LOG_LEVEL_INFO, strformat(F("NeoPixel7Segment: Start stripe for %d pixels, %d digits."), pxlCount, _totalDigits));
@@ -114,7 +117,7 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
                                                                 pxlDigit,
                                                                 pxlOffset,
                                                                 _pixelGroupCfg[grp].addn,
-                                                                nullptr /*offsetLogic_callback*/);
+                                                                offsetLogic_callback);
       pxlOffset += (pxlDigit * _pixelGroupCfg[grp].dgts);
 
       if (_pixelGroupCfg[grp].addn > 0) {
@@ -145,7 +148,7 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
 }
 
 int P165_data_struct::offsetLogic_callback(uint16_t position) {
-  uint16_t offset = 0;
+  int offset = 0;
 
   // if (position > 1 ) offset = addPixels;
   return offset;

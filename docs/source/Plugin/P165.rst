@@ -119,7 +119,7 @@ The four marked characters, Ä, Ö, Ü and ß, are *not* included, as they can n
 The ``^`` character is again used to display the degree symbol, and the degree symbol is not recognized!
 
 
-.. note:: Any periods used in tekst to be displayed by the plugin will be placed at the previous digit decimal point position and removed from the text, regardless of a decimal point is defined for the digit!
+.. note:: By default, any periods used in tekst to be displayed by the plugin will be placed at the previous digit decimal point position and removed from the text, regardless of a decimal point is defined for the digit! When non of the groups has decimal dot pixels defined then this feature will be disabled, and the dot/period character defined in the font will be used.
 
 Options
 ^^^^^^^
