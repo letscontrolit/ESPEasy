@@ -11,12 +11,23 @@
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
 
+ExtraTaskSettingsStruct::ExtraTaskSettingsStruct()
+{
+  memset(this, 0, sizeof(ExtraTaskSettingsStruct));
+  TaskIndex = INVALID_TASK_INDEX;
+  version = EXTRA_TASK_SETTINGS_VERSION;
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
+    TaskDeviceValueDecimals[i] = 2;
+    TaskDeviceErrorValue[i] = NAN;
+  }
+}
+
 void ExtraTaskSettingsStruct::clear() {
   // Need to make sure every byte between the members is also zero
   // Otherwise the checksum will fail and settings will be saved too often.
   memset(this, 0, sizeof(ExtraTaskSettingsStruct));
   TaskIndex = INVALID_TASK_INDEX;
-  dummy1 = 0;
+  //dummy1 = 0;
   version = EXTRA_TASK_SETTINGS_VERSION;
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     TaskDeviceValueDecimals[i] = 2;
