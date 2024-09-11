@@ -520,7 +520,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                         grpCount));
       addHtml(strformat(_fmt, FsP(F("addn")), grp10, FsP(F("chAddn")), FsP(F("value")), grp10, grpDgts, true, "",
                         grpCount));
-      addHtml(strformat(F("document.getElementById('offs%d').onclick=function(){dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};"),
+      addHtml(strformat(F("document.getElementById('offs%d').onchange=function(){dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};"),
                         grp10, grpCount));
       addHtml(F("</script>"));
     }
