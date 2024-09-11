@@ -31,7 +31,9 @@ enum class PinSelectPurpose : uint8_t {
   #if FEATURE_SD
   SD_Card,
   #endif
-
+  #if FEATURE_CAN
+  CAN,
+  #endif
 };
 
 

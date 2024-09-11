@@ -975,6 +975,18 @@ bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isCAN_valid() const {
+  return CAN_Rx_pin != -1 && CAN_Tx_pin != -1 && CAN_baudrate == 500e3;
+}
+
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isCAN_pin(int8_t pin) const {
+  if (pin < 0) { return false; }
+  return CAN_Rx_pin == pin || CAN_Tx_pin == pin;
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;

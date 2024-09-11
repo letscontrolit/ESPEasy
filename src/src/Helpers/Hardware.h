@@ -65,6 +65,9 @@ int  getCPU_MinFreqMHz();
 #endif // ifdef ESP32
 
 
+#if FEATURE_CAN
+void initCAN();
+#endif
 
 /*********************************************************************************************\
 * High entropy hardware random generator

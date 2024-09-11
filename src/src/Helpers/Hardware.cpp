@@ -125,7 +125,9 @@
 # include <SD.h>
 #endif // if FEATURE_SD
 
-
+#if FEATURE_CAN
+#include <CAN.h>
+#endif
 #include <SPI.h>
 
 
@@ -292,6 +294,10 @@ void hardwareInit()
   } else {
     addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
+
+  #if FEATURE_CAN
+  initCAN();
+  #endif
 }
 
 
@@ -1031,3 +1037,26 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   Settings.TaskDevicePin2[taskIndex] = pins[1];
   Settings.TaskDevicePin3[taskIndex] = pins[2];
 }
+
+#if FEATURE_CAN
+void initCAN()
+{
+  if (Settings.isCAN_valid())
+  {
+    CAN.end(); //Make sure we clear any previous configuration
+    CAN.setPins(Settings.CAN_Rx_pin, Settings.CAN_Tx_pin);
+    if (!CAN.begin(Settings.CAN_baudrate))
+    {
+      addLog(LOG_LEVEL_ERROR, F("CAN  : Unable to initialize CAN interface"));
+    }
+    else
+    {
+      addLog(LOG_LEVEL_INFO, F("CAN  : CAN interface initialized"));
+    }
+  }
+  else
+  {
+    addLog(LOG_LEVEL_INFO, F("CAN  : CAN not enabled"));
+  }
+}
+#endif

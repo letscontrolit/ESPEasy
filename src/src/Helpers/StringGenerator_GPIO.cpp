@@ -224,6 +224,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   bool includeEthernet = true;
   #endif // if FEATURE_ETHERNET
 
+  #if FEATURE_CAN
+  bool includeCAN = true;
+  #endif
+
   switch (purpose) {
     case PinSelectPurpose::I2C:
       includeI2C = false;
@@ -251,6 +255,11 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     case PinSelectPurpose::SD_Card:
       includeSDCard = false;
       break;
+    #endif
+    #if FEATURE_CAN
+    case PinSelectPurpose::CAN:
+      includeCAN = false;
+    break;
     #endif
   }
 
@@ -313,7 +322,12 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
   #endif // if FEATURE_ETHERNET
 
-
+  #if FEATURE_CAN
+  if (includeCAN && Settings.isCAN_pin(gpio))
+  {
+    return (Settings.CAN_Rx_pin == gpio) ? F("CAN RX") : F("CAN TX");
+  }
+  #endif
 
   return F("");
 }

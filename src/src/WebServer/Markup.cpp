@@ -267,6 +267,9 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       #if FEATURE_SD
       bool includeSDCard = true;
       #endif // if FEATURE_SD
+      #if FEATURE_CAN
+      bool includeCAN = true;
+      #endif
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
@@ -336,6 +339,11 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           }
           break;
         #endif
+        #if FEATURE_CAN
+        case PinSelectPurpose::CAN:
+          includeCAN = false;
+          break;
+        #endif
       }
 
       if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -349,6 +357,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       if (includeSPI && Settings.isSPI_pin(gpio)) {
         disabled = true;
       }
+
+  #if FEATURE_CAN
+      if (includeCAN && Settings.isCAN_pin(gpio)) {
+        disabled = true;
+      }
+  #endif
 
   #if FEATURE_ETHERNET
 

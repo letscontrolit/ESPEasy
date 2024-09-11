@@ -389,6 +389,10 @@
 #endif
 
 
+#ifndef DEFAULT_CAN_BAUDRATE
+#define DEFAULT_CAN_BAUDRATE                   500e3
+#endif
+
 
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
 #if FEATURE_CUSTOM_PROVISIONING
