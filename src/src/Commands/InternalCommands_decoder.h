@@ -232,6 +232,11 @@ enum class ESPEasy_cmd_e : uint8_t {
   wdread,
 #endif // ifndef LIMIT_BUILD_SIZE
 
+#ifdef FEATURE_CAN
+  sendcan,
+  sendtocan,
+#endif
+
 
   NotMatched  // Keep as last one
 };
