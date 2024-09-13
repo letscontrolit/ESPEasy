@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-09-13 tonhuisman: ROI settings can be selected by dragging the Optical Center Index matrix and the O.C. can be selected
+ *                        by double-clicking or alt-clicking an index. With validation.
  * 2024-07-29 tonhuisman: Add Region of Interest (ROI) settings for reducing the Field of View (FoV) of the sensor
  * 2024-04-25 tonhuisman: Add Direction value (1/0/-1), code improvements
  * 2023-08-11 tonhuisman: Fix issue not surfacing before, that the library right-shifts the I2C address when that is set...
@@ -36,19 +38,16 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_113;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number       = PLUGIN_ID_113;
+      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].ValueCount     = 3;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 
@@ -130,16 +129,52 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifndef LIMIT_BUILD_SIZE
 
       # if P113_USE_ROI
+
       addFormSubHeader(F("Region Of Interest (ROI)"));
+      addRowLabel(F("Configure ROI"));
+      P113_data_struct::loadJavascript();
+      P113_data_struct::loadCss();
 
       P113_CheckMinMaxValues(event);
+
+      html_table(F(""));
+
+      html_TR_TD();
+      html_TD(2);
+      addHtml(F("Select ROI area, min. 4 x 4 SPADs"));
+
       addFormNumericBox(F("ROI 'x' SPADs"), F("roix"), P113_ROI_X, 4, 16);
       addUnit(F("4..16"));
+
+      P113_data_struct::drawSelectionArea(P113_ROI_X, P113_ROI_Y, P113_OPT_CENTER);
+
       addFormNumericBox(F("ROI 'y' SPADs"), F("roiy"), P113_ROI_Y, 4, 16);
       addUnit(F("4..16"));
-      addFormNumericBox(F("Optical Center index for ROI"), F("optcent"), P113_OPT_CENTER, 0, 255);
-      addFormNote(F("Default: 199 = sensor-center, please check the documentation."));
 
+      addFormNumericBox(F("Optical Center index for ROI"), F("optc"), P113_OPT_CENTER, 0, 255);
+
+      html_TR_TD();
+      addHtmlDiv(F("note"), F("Default: 199 = sensor-center."));
+      html_TR_TD();
+      addHtmlDiv(F("note"), F("Click &amp; Drag to select ROI."));
+      html_TR_TD();
+      addHtmlDiv(F("note"), F("Alt-Click/Dbl-Click to select Optical Center."));
+
+      int rws = 7; // Above should be fixed number of rows, matching with ~80% selection area
+
+      for (; rws < 16; ++rws) {
+        html_TR_TD();
+        addHtml(F("&nbsp;"));
+      }
+
+      html_end_table();
+      html_add_script(false);
+      addHtml(F("document.addEventListener('DOMContentLoaded', p113_main);"));
+      const __FlashStringHelper *_fmt = F("document.getElementById('%s').onchange=function(){p113_main.upDsp()};");
+      addHtml(strformat(_fmt, String(F("roix")).c_str()));
+      addHtml(strformat(_fmt, String(F("roiy")).c_str()));
+      addHtml(strformat(_fmt, String(F("optc")).c_str()));
+      html_add_script_end();
       # endif // if P113_USE_ROI
 
       success = true;
@@ -156,7 +191,7 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       # if P113_USE_ROI
       P113_ROI_X      = getFormItemInt(F("roix"));
       P113_ROI_Y      = getFormItemInt(F("roiy"));
-      P113_OPT_CENTER = getFormItemInt(F("optcent"));
+      P113_OPT_CENTER = getFormItemInt(F("optc"));
       P113_CheckMinMaxValues(event);
       # endif // if P113_USE_ROI
 

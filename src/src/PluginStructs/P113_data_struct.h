@@ -43,12 +43,25 @@ public:
   P113_data_struct() = delete;
   virtual ~P113_data_struct();
 
-  bool     begin(struct EventStruct *event);
-  bool     startRead();
-  bool     readAvailable();
-  uint16_t readDistance();
-  uint16_t readAmbient();
-  bool     isReadSuccessful();
+  bool           begin(struct EventStruct *event);
+  bool           startRead();
+  bool           readAvailable();
+  uint16_t       readDistance();
+  uint16_t       readAmbient();
+  bool           isReadSuccessful();
+
+  # if P113_USE_ROI
+  static uint8_t getSPAD(uint8_t x,
+                         uint8_t y);
+  static void    opticalIndexToXy(uint8_t  oi,
+                                  uint8_t& y,
+                                  uint8_t& x);
+  static void    drawSelectionArea(uint8_t roix,
+                                   uint8_t roiy,
+                                   uint8_t opticalCenter);
+  static void    loadJavascript();
+  static void    loadCss();
+  # endif // if P113_USE_ROI
 
 private:
 
