@@ -1,8 +1,14 @@
 // Javascript functions for updating the Digit drawn in the P165 Device Configuration page as an 11x9 subtable
 // Should be minified and loaded from CDN or filesystem
 // Change-handlers start with 'ch', value/checked is the content, id is the table-id that should change
+function elId(e) {
+  return document.getElementById(e);
+}
+function elTR(e) {
+  return elId(e)?.getElementsByTagName('TR');
+}
 function sh_col(tbl, col, show) { // Show/Hide column, minimal checks
-  s = document.getElementById(tbl).getElementsByTagName('TR');
+  s = elTR(tbl);
   for (r of s) { // row of rows
     c = r?.children[col]; // Cell
     if (c?.tagName == 'TD') {
@@ -12,11 +18,11 @@ function sh_col(tbl, col, show) { // Show/Hide column, minimal checks
   }
 };
 function sh_row(tbl, row, show) { // Show/Hide row, minimal checks
-  r = document.getElementById(tbl).getElementsByTagName('TR')[row];
+  r = elTR(tbl)[row];
   if (r) r.style.display = show ? 'block' : 'none';
 };
 function set_td(tbl, fill, row, col, td) { // Set <TD> content if fill is true, else non-breaking space, minimal checks
-  c = document.getElementById(tbl)?.getElementsByTagName('TR')[row].children[col];
+  c = elTR(tbl)[row].children[col];
   if (c?.tagName == 'TD') c.innerHTML = fill ? td : '&nbsp;';
 };
 // Next functions: 4th & 5th parameters are used only in 1 function, but to keep the calling logic simple, leave it there
@@ -49,20 +55,19 @@ function chDecp(value, base, count, max, colr) { // Change Decimal point pixels
     set_td('dgtbl' + t, value > 0, 16, 9, '' + value);
 };
 function chAddn(value, base, count, max, colr) { // Change Additional pixels
-  for (t = base; t < base + count; t++)
-    set_td('dxtbl' + t, value > 0 && max, 8, 0, '' + value);
+  set_td('dxtbl' + base + count, value > 0 && max, 8, 0, '' + value);
 };
 function dgts(gps, flds) { // Update pixel counts per group and total pixels
   z = 0;
   for (q = 0; q < gps; q++) {
     v = [];
     for (f of flds) {
-      v.push(parseInt(document.getElementById(f + q * 10).value));
+      v.push(parseInt(elId(f + q * 10).value));
     }
-    c = document.getElementById('crnr' + q * 10).checked;
+    c = elId('crnr' + q * 10).checked;
     x = v[5] * (3 * v[0] + 4 * v[1] + (c ? 6 : 0) + v[2]) + v[3];
     z += x + v[4];
-    document.getElementById('totp' + q * 10).value = x;
+    elId('totp' + q * 10).value = x;
   }
-  document.getElementById('totpx').value = z;
+  elId('totpx').value = z;
 };
