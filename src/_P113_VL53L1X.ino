@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-09-15 tonhuisman: Fix ROI selection for tablet/mobile devices (touch-only) as click&drag doesn't work there.
+ *                        Fix some bugs, and optimize the js code a bit. Move static minified js to WebStaticData.h
  * 2024-09-13 tonhuisman: ROI settings can be selected by dragging the Optical Center Index matrix and the O.C. can be selected
  *                        by double-clicking or alt-clicking an index. With validation.
  * 2024-07-29 tonhuisman: Add Region of Interest (ROI) settings for reducing the Field of View (FoV) of the sensor
@@ -160,7 +162,14 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       html_TR_TD();
       addHtmlDiv(F("note"), F("Alt-Click/Dbl-Click to select Optical Center."));
 
-      int rws = 7; // Above should be fixed number of rows, matching with ~80% selection area
+      html_TR_TD();
+      addHtml(F("&nbsp;"));
+
+      addFormCheckBox(F("Use click-lock"), F("lck"), false);
+      html_TR_TD();
+      addHtmlDiv(F("note"), F("(For touch devices, not saved.)"));
+
+      int rws = 10; // Above should be fixed number of rows, matching with ~80% selection area
 
       for (; rws < 16; ++rws) {
         html_TR_TD();
@@ -258,11 +267,11 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
 # if P113_USE_ROI
 void P113_CheckMinMaxValues(struct EventStruct *event) {
-  if (0 == P113_ROI_X) { P113_ROI_X = 16; }                              // Default
+  if (0 == P113_ROI_X) { P113_ROI_X = 16; } // Default
 
-  if (0 == P113_ROI_Y) { P113_ROI_Y = 16; }                              // Default
+  if (0 == P113_ROI_Y) { P113_ROI_Y = 16; } // Default
 
-  if (0 == P113_OPT_CENTER) { P113_OPT_CENTER = 199; }                   // Optical Center @ Center of sensor. See matrix in documentation
+  if (0 == P113_OPT_CENTER) { P113_OPT_CENTER = 199; } // Optical Center @ Center of sensor. See matrix in documentation
 
   if ((P113_ROI_X > 10) || (P113_ROI_Y > 10)) { P113_OPT_CENTER = 199; } // Driver behavior
 }
