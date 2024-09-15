@@ -254,7 +254,7 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 
   if (isFloatOutputDataType(sensorType)) {
     const float value = getFloat(varNr);
-    if (nrDecimals = 255) {
+    if (nrDecimals == 254) {  // FIXME TD-er: Must use defines for these special situations
       nrDecimals = maxNrDecimals_fpType(value);
     }
     result = toString(value, nrDecimals);
@@ -262,7 +262,7 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   } else if (isDoubleOutputDataType(sensorType)) {
     const double value = getDouble(varNr);
-    if (nrDecimals = 255) {
+    if (nrDecimals == 254) {  // FIXME TD-er: Must use defines for these special situations
       nrDecimals = maxNrDecimals_fpType(value);
     }
     result = doubleToString(value, nrDecimals);

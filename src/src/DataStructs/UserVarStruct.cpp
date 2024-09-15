@@ -382,7 +382,7 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
 
 
       // Should not apply set nr. of decimals when calculating a formula
-      const uint8_t nrDecimals = 255;
+      const uint8_t nrDecimals = 254;
       const String value   = getAsString(taskIndex, varNr, sensorType, nrDecimals, true);
 
       constexpr bool applyNow = true;
@@ -482,7 +482,7 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
   tmp.set(varNr, value, sensorType);
 
   // Should not apply set nr. of decimals when calculating a formula
-  const uint8_t nrDecimals = 255;
+  const uint8_t nrDecimals = 254;
   const String  value_str  = tmp.getAsString(varNr, sensorType, nrDecimals);
 
   constexpr bool applyNow = false;

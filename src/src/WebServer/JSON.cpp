@@ -452,8 +452,8 @@ void handle_json()
         for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
-          const String value = formatUserVarNoCheck(&TempEvent, x);
           uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
+          const String value = formatUserVarNoCheck(&TempEvent, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
