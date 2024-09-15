@@ -134,11 +134,11 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
-  client.setTimeout((CONTROLLER_CLIENTTIMEOUT_MAX + 500) / 1000); // in seconds!!!!
+  client.setTimeout((notificationsettings.Timeout_ms + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
-  pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
+  pClient->setTimeout(notificationsettings.Timeout_ms);
   # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX); // in msec as it should be!
+  client.setTimeout(notificationsettings.Timeout_ms); // in msec as it should be!
   # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   # ifndef BUILD_NO_DEBUG
@@ -172,7 +172,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
       );
 
-    uint16_t clientTimeout = notificationsettings.Timeout * 1000; // Convert to mS.
+    uint16_t clientTimeout = notificationsettings.Timeout_ms;
 
     if ((clientTimeout < NPLUGIN_001_MIN_TM) || (clientTimeout > NPLUGIN_001_MAX_TM)) {
       clientTimeout = NPLUGIN_001_DEF_TM;
