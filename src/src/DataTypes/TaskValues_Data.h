@@ -5,7 +5,7 @@
 
 #include "../DataTypes/SensorVType.h"
 
-struct TaskValues_Data_t {
+struct alignas(uint32_t) TaskValues_Data_t {
   TaskValues_Data_t();
 
   TaskValues_Data_t(const TaskValues_Data_t& other);
