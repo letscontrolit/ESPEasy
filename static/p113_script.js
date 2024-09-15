@@ -22,8 +22,8 @@ function p113_main() {
   }
   const vi = elId('vi');
   const sl = elId('sL');
-  let imd = false;
-  let ims = false;
+  let imd = 0;
+  let ims = 0;
   let st = {},
     se = {};
   let sr = {};
@@ -33,16 +33,29 @@ function p113_main() {
   let ptg = 0;
   let scx = vi.offsetWidth - vi.clientWidth;
   let scy = vi.offsetHeight - vi.clientHeight;
+  let lck = 0;
   let sm = {
     w: 96,
     h: 96,
   };
   // console.log('p113_main', vi, sl);
 
+  function clr() {
+    vi.querySelectorAll('.cel')
+      .forEach((c) => {
+        c.classList.remove('sel');
+        c.classList.remove('oc');
+      });
+  }
   vi.addEventListener('mousedown', (e) => {
     if (e.altKey) {
       cntr(e);
     } else {
+      lck = elId('lck').checked;
+      if (imd && lck) {
+        lck = 0;
+        return;
+      }
       imd = true;
       if (!ims) {
         se = {
@@ -59,8 +72,8 @@ function p113_main() {
     }
   });
   vi.addEventListener('mouseup', (e) => {
-    if (!imd) return;
-    imd = false;
+    if (lck || !imd) return;
+    imd = 0;
     const vc = vi.getBoundingClientRect();
     se = {
       x: e.x + window.scrollX - vi.offsetLeft,
@@ -80,6 +93,8 @@ function p113_main() {
     pntSel(xr, yr, oC);
   });
   vi.addEventListener('dblclick', (e) => {
+    lck = 0;
+    imd = 0;
     cntr(e);
     // console.log('dblclick', e.x, e.y);
   });
@@ -115,18 +130,14 @@ function p113_main() {
     if (!ims)
       clr();
   });
-  function clr() {
-    vi.querySelectorAll('.cel')
-      .forEach((c) => { c.classList.remove('sel'); c.classList.remove('oc') });
-  }
   function gSelCls() {
     let sc = [];
     const cl = vi.querySelectorAll('.cel');
     sl.style.visibility = 'visible';
     cl.forEach((c) => {
       const b = c.getBoundingClientRect();
-      wx=window.scrollX;
-      wy=window.scrollY;
+      wx = window.scrollX;
+      wy = window.scrollY;
       if (
         sr.x1 - wx <= ((b.left) - vi.offsetLeft + 16) &&
         sr.y1 - wy <= ((b.top) - vi.offsetTop + 16) &&
@@ -215,10 +226,10 @@ function p113_main() {
         }
       }
       // console.log('dsp oCen:', getSPAD(ocy, ocx), oCen);
-      clr = vi.querySelectorAll('.cel');
+      cs = vi.querySelectorAll('.cel');
       for (y = 0; y < 16; ++y) {
         for (x = 0; x < 16; ++x) {
-          cc = clr[y * 16 + x].classList;
+          cc = cs[y * 16 + x].classList;
           if (x >= lx && x <= rx && y >= ly && y <= ry)
             cc.add('sel');
           else
