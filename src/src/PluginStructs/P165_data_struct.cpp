@@ -506,7 +506,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     {
       // Bind handlers on input fields to update the 7 segment simulation and digit counts
       addHtml(F("\n<script type='text/javascript'>"));
-      const __FlashStringHelper *_fmt = F("document.getElementById('%s%d').onchange=function(){%s(this.%s,%d,%d,%d,'%s'),"
+      const __FlashStringHelper *_fmt = F("elId('%s%d').onchange=function(){%s(this.%s,%d,%d,%d,'%s'),"
                                           "dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};");
 
       //                          fieldname   index        function    fieldattribute   function arguments
@@ -520,7 +520,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                         grpCount));
       addHtml(strformat(_fmt, FsP(F("addn")), grp10, FsP(F("chAddn")), FsP(F("value")), grp10, grpRtld ? 0 : (grpDgts - 1), true, "",
                         grpCount));
-      addHtml(strformat(F("document.getElementById('offs%d').onchange=function(){dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};"),
+      addHtml(strformat(F("elId('offs%d').onchange=function(){dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};"),
                         grp10, grpCount));
       addHtml(F("</script>"));
     }
