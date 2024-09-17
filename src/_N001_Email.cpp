@@ -151,7 +151,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (!connectClient(client, notificationsettings.Server, notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
+  if (!connectClient(client, notificationsettings.Server, notificationsettings.Port, notificationsettings.Timeout_ms)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       addLog(LOG_LEVEL_ERROR, strformat(
                F("Email: Error connecting to %s:%d"),
@@ -161,17 +161,6 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     myStatus = false;
     failFlag = true;
   } else {
-    String mailheader = F(
-      "From: $nodename <$emailfrom>\r\n"
-      "To: $ato\r\n"
-      "Subject: $subject\r\n"
-      "Reply-To: $nodename <$emailfrom>\r\n"
-      "Date: $date\r\n"
-      "MIME-VERSION: 1.0\r\n"
-      "Content-type: text/html; charset=UTF-8\r\n"
-      "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
-      );
-
     uint16_t clientTimeout = notificationsettings.Timeout_ms;
 
     if ((clientTimeout < NPLUGIN_001_MIN_TM) || (clientTimeout > NPLUGIN_001_MAX_TM)) {
@@ -239,6 +228,18 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     tmp_ato.replace(";", ",");
     tmp_ato.replace(" ", "");
 
+    String mailheader = F(
+      "From: $nodename <$emailfrom>\r\n"
+      "To: $ato\r\n"
+      "Subject: $subject\r\n"
+      "Reply-To: $nodename <$emailfrom>\r\n"
+      "Date: $date\r\n"
+      "MIME-VERSION: 1.0\r\n"
+      "Content-type: text/html; charset=UTF-8\r\n"
+      "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
+      );
+
+
     mailheader.replace(F("$nodename"),       senderName);
     mailheader.replace(F("$emailfrom"),      email_address);
     mailheader.replace(F("$ato"),            tmp_ato);
@@ -262,7 +263,10 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
       addLog(LOG_LEVEL_INFO, strformat(F("Email: Max Allowed Timeout is %d secs"), clientTimeout / 1000));
       # endif // ifndef BUILD_NO_DEBUG
 
-      while (true) {
+      while (true) {  // FIXME TD-er: Use of while here can be useful so you can
+                      // exit using break; 
+                      // However this is way too complex using both a failFlag and break
+                      // and not even consistently.
         if (!NPlugin_001_MTA(client, EMPTY_STRING, 220, clientTimeout)) {
           # ifndef BUILD_NO_DEBUG
 
@@ -426,14 +430,13 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
   }
   base64 encoder;
 
-  bool mta1 = NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout);
-  bool mta2 = NPlugin_001_MTA(client, encoder.encode(user), 334, timeout);
-  bool mta3 = NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout);
-
-  if (mta1 && mta2 && mta3) {
+  if (NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout) &&
+      NPlugin_001_MTA(client, encoder.encode(user), 334, timeout) &&
+      NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) {
     addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
+    return true;
   }
-  return mta1 && mta2 && mta3;
+  return false;
 }
 
 bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
@@ -456,7 +459,7 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
 
   const String aWaitForPattern_str = strformat(F("%d "), aWaitForPattern);
 
-  while (true) {
+  while (true) {   // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
     if (timeOutReached(timer)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLogMove(LOG_LEVEL_ERROR,
