@@ -230,7 +230,7 @@ void serve_JS(JSfiles_e JSfile) {
 #endif
 #ifdef USES_P165
             case JSfiles_e::P165_digit:
-              TXBuffer.addFlashString((PGM_P)FPSTR(p165_digit_script));
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_P165_DIGIT_JS));
               break;
 #endif // ifdef USES_P165
           }

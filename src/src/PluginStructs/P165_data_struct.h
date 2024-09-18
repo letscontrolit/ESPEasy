@@ -108,6 +108,7 @@
 # define P165_CONFIG_IDX_RTLD     26u // 1 bit
 # define P165_CONFIG_IDX_SPLTG    27u // 1 bit
 # define P165_CONFIG_IDX_CCLKW    28u // 1 bit
+# define P165_CONFIG_IDX_GSTRT    29u // 1 bit
 
 # define P165_GET_CONFIG_WPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS))
 # define P165_GET_CONFIG_HPIXELS(D) (get4BitFromUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS))
@@ -121,6 +122,7 @@
 # define P165_GET_CONFIG_RTLD(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD))
 # define P165_GET_CONFIG_SPLTG(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG))
 # define P165_GET_CONFIG_CCLKW(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_CCLKW))
+# define P165_GET_CONFIG_GSTRT(D) (bitRead(P165_GROUP_CFG(D), P165_CONFIG_IDX_GSTRT))
 
 # define P165_SET_CONFIG_WPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_WPIXELS, V))
 # define P165_SET_CONFIG_HPIXELS(D, V) (set4BitToUL(P165_GROUP_CFG(D), P165_CONFIG_IDX_HPIXELS, V))
@@ -134,6 +136,7 @@
 # define P165_SET_CONFIG_RTLD(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_RTLD, V))
 # define P165_SET_CONFIG_SPLTG(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_SPLTG, V))
 # define P165_SET_CONFIG_CCLKW(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_CCLKW, V))
+# define P165_SET_CONFIG_GSTRT(D, V) (bitWrite(P165_GROUP_CFG(D), P165_CONFIG_IDX_GSTRT, V))
 
 # define P165_SHOW_BUFFER_SIZE  16 // Max number of characters in the buffer to show (1..4 groups of 1..4 digits)
 
@@ -183,7 +186,8 @@ private:
     uint32_t rtld   : 1;  // right to left display
     uint32_t splt   : 1;  // split g-segment (best enabled > 3 horizontal pixels)
     uint32_t cclkw  : 1;  // number-plan counter-clockwise (tbd)
-    uint32_t unused : 3;
+    uint32_t gstrt  : 1;  // start numbering at g-segment
+    uint32_t unused : 2;
     uint32_t aoffs  : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
     uint32_t boffs  : 16; // Before pixels offset
   };
@@ -231,7 +235,8 @@ private:
                                const int16_t  aOffs,
                                const bool     splitG,
                                const bool     rtld,
-                               const bool     cclkw);
+                               const bool     cclkw,
+                               const bool     gstrt);
   static String calculatePixelIndex(const uint8_t  hor,
                                     const int8_t   ver,
                                     const uint8_t  seg,
@@ -244,7 +249,8 @@ private:
                                     const uint8_t  decPt,
                                     const uint8_t  addN,
                                     const bool     splitG,
-                                    const bool     cclkw);
+                                    const bool     cclkw,
+                                    const bool     gstrt);
   static void  addJavascript();
   uint16_t     calculateDisplayPixels();
   uint16_t     calculateDisplayDigits();

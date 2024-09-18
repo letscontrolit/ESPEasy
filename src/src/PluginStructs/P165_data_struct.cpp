@@ -274,7 +274,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
 
   const __FlashStringHelper *digitOptions[]      = { F("1"), F("2"), F("3"), F("4") };
   const int digitOptionValues[]                  = { 1, 2, 3, 4 };
-  const __FlashStringHelper *startPixelOptions[] = { F("Left-top"), F("Right-top") };
+  const __FlashStringHelper *startPixelOptions[] = { F("a (top)"), F("b/f (right/left)"), F("g (center)") };
 
   const String fgColor = ADAGFX_WHITE == P165_CONFIG_FG_COLOR || ADAGFX_BLACK == P165_CONFIG_FG_COLOR
                           ? EMPTY_STRING
@@ -333,7 +333,9 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     const uint8_t grpDotP  = P165_GET_CONFIG_DOT(grp);
     const uint8_t grpAddN  = P165_GET_CONFIG_EXTRA(grp);
     const uint8_t grpOffs  = P165_GET_CONFIG_OFFSET(grp);
+    const uint8_t grpStart = P165_GET_CONFIG_START(grp);
     const uint8_t grpRtld  = P165_GET_CONFIG_RTLD(grp);
+    const uint8_t grpGstrt = P165_GET_CONFIG_GSTRT(grp);
     # if P165_FEATURE_C_CLOCKWISE
     const uint8_t grpCclkw = P165_GET_CONFIG_CCLKW(grp);
     # else // if P165_FEATURE_C_CLOCKWISE
@@ -398,14 +400,15 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                          grpAddN,
                          grpDgts - 1,
                          dgtOffset,
-                         P165_GET_CONFIG_START(grp),
+                         grpStart,
                          P165_GET_CONFIG_DEND(grp),
                          fgColor,
                          numberPlan,
                          grpOffs,
                          P165_GET_CONFIG_SPLTG(grp),
                          grpRtld,
-                         grpCclkw);
+                         grpCclkw,
+                         grpGstrt);
         dgtOffset += (dgtPxls * (grpRtld ? -1 : 1));
       }
 
@@ -469,19 +472,20 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                         numberPlan);
       totalPixels += grpOffs;
 
-      addRowLabel(F("Starting pixel"));
+      const uint8_t strt = grpStart + grpGstrt << 1;
+      addRowLabel(F("Starting segment"));
       addSelector(concat(F("strt"), grp10),
                   NR_ELEMENTS(startPixelOptions),
                   startPixelOptions,
                   nullptr, nullptr,
-                  P165_GET_CONFIG_START(grp), false,
+                  strt, false,
                   !numberPlan);
 
       addFormCheckBox(F("Split g-segment pixels"), concat(F("spltg"), grp10),
-                      P165_GET_CONFIG_SPLTG(grp), numberPlan);
+                      P165_GET_CONFIG_SPLTG(grp), numberPlan || grpGstrt);
 
       addFormCheckBox(F("Decimal dot last segment"), concat(F("dend"), grp10),
-                      P165_GET_CONFIG_DEND(grp), numberPlan);
+                      P165_GET_CONFIG_DEND(grp), numberPlan || grpGstrt);
 
       # if P165_FEATURE_C_CLOCKWISE
       addFormCheckBox(F("Numbering counter-clockwise"), concat(F("cclkw"), grp10),
@@ -522,6 +526,8 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                         grpCount));
       addHtml(strformat(F("elId('offs%d').onchange=function(){dgts(%d,['wdth','hght','decp','addn','offs','dgts'])};"),
                         grp10, grpCount));
+      addHtml(strformat(F("elId('strt%d').onchange=function(){stSeg(this,%d)};"),
+                        grp10, grp10));
       addHtml(F("</script>"));
     }
   }
@@ -586,9 +592,10 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
   color                = webArg(F("bgcolor"));
   P165_CONFIG_BG_COLOR = AdaGFXparseColor(color);   // Empty = black
 
-  if (!prevNumberPlan) {                            // Don't save now as the read-only inputs will return empty values
+  if (!prevNumberPlan) {                            // Don't save now as the disabled inputs will return empty values
     for (int grp = 0; grp < grps; ++grp) {
-      const uint8_t grp10 = grp * 10;
+      const uint8_t grp10   = grp * 10;
+      const uint8_t grpStrt = getFormItemInt(concat(F("strt"), grp10));
       P165_SET_CONFIG_WPIXELS(grp, getFormItemInt(concat(F("wdth"), grp10)));
       P165_SET_CONFIG_HPIXELS(grp, getFormItemInt(concat(F("hght"), grp10)));
       P165_SET_CONFIG_CORNER(grp, isFormItemChecked(concat(F("crnr"), grp10)));
@@ -596,10 +603,14 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
       P165_SET_CONFIG_EXTRA(grp, getFormItemInt(concat(F("addn"), grp10)));
       P165_SET_CONFIG_OFFSET(grp, getFormItemInt(concat(F("offs"), grp10)));
       P165_SET_CONFIG_DIGITS(grp, getFormItemInt(concat(F("dgts"), grp10)));
-      P165_SET_CONFIG_START(grp, getFormItemInt(concat(F("strt"), grp10)));
-      P165_SET_CONFIG_DEND(grp, isFormItemChecked(concat(F("dend"), grp10)));
+      P165_SET_CONFIG_START(grp, (grpStrt & 0x01) == 0x01); // split into 2 settings
+      P165_SET_CONFIG_GSTRT(grp, (grpStrt & 0x02) == 0x02);
       P165_SET_CONFIG_RTLD(grp, isFormItemChecked(concat(F("rtld"), grp10)));
-      P165_SET_CONFIG_SPLTG(grp, isFormItemChecked(concat(F("spltg"), grp10)));
+
+      if ((grpStrt & 0x02) == 0x02) { // Can't read disabled inputs
+        P165_SET_CONFIG_DEND(grp, isFormItemChecked(concat(F("dend"), grp10)));
+        P165_SET_CONFIG_SPLTG(grp, isFormItemChecked(concat(F("spltg"), grp10)));
+      }
       # if P165_FEATURE_C_CLOCKWISE
       P165_SET_CONFIG_CCLKW(grp, isFormItemChecked(concat(F("cclkw"), grp10)));
       # endif // if P165_FEATURE_C_CLOCKWISE
@@ -736,14 +747,15 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
                                         const uint8_t  addN,    // additional pixels
                                         const uint8_t  max,     // max already has 1 subtracted
                                         const uint16_t offset,  // pre-offset
-                                        const bool     strt,    // start left-top or right-top
+                                        const bool     strt,    // start a (top) or b/f (right/left)
                                         const bool     dend,    // decimal point at end
                                         const String & fgColor, // foreground color
                                         const bool     dspPlan, // show number plan
                                         const int16_t  aOffs,   // addon offset
                                         const bool     splitG,  // split segment G in 2 halves
                                         const bool     rtld,    // direction ltr or rtl
-                                        const bool     cclkw) { // counter-clockwise
+                                        const bool     cclkw,   // counter-clockwise
+                                        const bool     gstrt) { // g-segment-start
   constexpr uint8_t hrMax  = NR_ELEMENTS(P165_digitMask) - 1;   // Height row max
   constexpr uint8_t hcMask = hrMax / 2;                         // Height center
   const uint8_t     wrMask = 7;                                 // Width right
@@ -849,7 +861,8 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
                                          decPt,
                                          addN,
                                          splitG,
-                                         cclkw);
+                                         cclkw,
+                                         gstrt);
 
             // pIndex = strformat(F("%d/%d/%d"), hor, ver - 1, seg); // For debugging only
             hor++;
@@ -906,7 +919,7 @@ void P165_data_struct::drawSevenSegment(const uint8_t  digit,   // Digit
  ***********************************************************************/
 
 /* *INDENT-OFF* */
-const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 or 144 bytes, values: 0..7 segments, 16/26 => 6, 255 = ignore
+const uint8_t P165_segmentMap[][9] PROGMEM = { // 81 or 162 bytes, values: 0..7 segments, 16/26 => 6, 255 = ignore
   { 0, 1,  2,  7,  3,  4,  6,  5,  255 },      // top-left, dot after c, order: a, b, c, h, d, e, g, f, -
   { 0, 1,  2,  3,  4,  6,  5,  7,  255 },      // top-left, dot as last, order: a, b, c, d, e, g, f, h, -
   { 1, 2,  7,  3,  4,  6,  5,  0,  255 },      // top-right, dot after c, order: b, c, h, d, e, g, f, a, -
@@ -915,6 +928,7 @@ const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 or 144 bytes, values: 0..7 
   { 0, 1,  16, 2,  3,  4,  26, 5,  7   },      // top-left, dot as last, split g, order: a, b, g1, c, d, e, g2, f, h
   { 1, 16, 2,  7,  3,  4,  26, 5,  0   },      // top-right, dot after c, split g, order: b, g1, c, h, d, e, g2, f, a
   { 1, 16, 2,  3,  4,  26, 5,  0,  7   },      // top-right, dot as last, split g, order: b, g1, c, d, e, g2, f, a, h
+  { 6, 2,  7,  3,  4,  5,  0,  1,  255 },      // mid-left, dot after c, order: g, c, h, d, e, f, a, b -
   # if P165_FEATURE_C_CLOCKWISE
   { 5, 6,  4,  3,  7,  2,  1,  0,  255 },      // cclkw, top-left, dot after c, order: f, g, e, d, h, c, b, a, -
   { 5, 6,  4,  3,  2,  1,  0,  7,  255 },      // cclkw, top-left, dot as last, order: f, g, e, d, c, b, a, h, -
@@ -924,6 +938,7 @@ const uint8_t P165_segmentMap[][9] PROGMEM = { // 72 or 144 bytes, values: 0..7 
   { 5, 26, 4,  3,  2,  16, 1,  0,  7   },      // cclkw, top-left, dot as last, split g, order: f, g2, e, d, c, g1, b, a, h
   { 0, 5,  26, 4,  3,  7,  2,  16, 1   },      // cclkw, top-right, dot after c, split g, order: a, f, g2, e, d, h, c, g1, b
   { 0, 5,  26, 4,  3,  2,  16, 1,  7   },      // cclkw, top-right, dot as last, split g, order: a, f, g2, e, d, c, g1, b, h
+  { 6, 4,  3,  7,  2,  1,  0,  5,  255 },      // cclkw, mid-left, dot after c, order: g, e, d, h, c, b, a, f, -
   # endif // if P165_FEATURE_C_CLOCKWISE
 };
 /* *INDENT-ON* */
@@ -944,11 +959,13 @@ String P165_data_struct::calculatePixelIndex(const uint8_t  hor,     // horizont
                                              const uint8_t  decPt,   // decimal point pixels
                                              const uint8_t  addN,    // additional pixels
                                              const bool     splitG,  // split G segment in 2 halves
-                                             const bool     cclkw) { // counter-clockwise
+                                             const bool     cclkw,   // counter-clockwise
+                                             const bool     gstrt) { // g-segment-start
   int16_t result(offset);
-  const uint8_t hpx  = wpixels + (overlap ? 2 : 0);                  // Overlapping pixels checked on horizontal segments
-  const uint8_t vpx  = hpixels;                                      // Vertical pixels
-  const uint8_t smap = (strt ? 2 : 0) + (dend ? 1 : 0) + (splitG ? 4 : 0) + (cclkw ? 8 : 0);
+  const uint8_t hpx = wpixels + (overlap ? 2 : 0);                   // Overlapping pixels checked on horizontal segments
+  const uint8_t vpx = hpixels;                                       // Vertical pixels
+  // smap: Determine the segment(part) order, g-segment start inhibits top-left/right, g-split and dot-at-end!
+  const uint8_t smap = (gstrt ? 8 : ((strt ? 2 : 0) + (dend ? 1 : 0) + (splitG ? 4 : 0))) + (cclkw ? 9 : 0);
   const uint8_t rh   = hpx / 2;                                      // Horizontal half part, right
   const uint8_t lh   = hpx - rh;                                     // Horizontal half part, left
   int8_t fh          = 0;                                            // from-h
@@ -1063,8 +1080,8 @@ void P165_data_struct::fillSegmentBitmap(const uint8_t       grp,
   segsize_t pbit    = 0;
   const uint8_t hpx = pixCfg.wpix + (pixCfg.crnr ? 2 : 0); // Overlapping pixels checked on horizontal segments
   const uint8_t vpx = pixCfg.hpix;                         // Vertical pixels = height pixels
-  // smap: Determine the segment(part) order
-  const uint8_t smap = (pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.splt ? 4 : 0) + (pixCfg.cclkw ? 8 : 0);
+  // smap: Determine the segment(part) order, g-segment start inhibits top-left/right, g-split and dot-at-end!
+  const uint8_t smap = (pixCfg.gstrt ? 8 : ((pixCfg.strt ? 2 : 0) + (pixCfg.dend ? 1 : 0) + (pixCfg.splt ? 4 : 0))) + (pixCfg.cclkw ? 9 : 0);
   const uint8_t rh   = hpx / 2;                            // Horizontal half part, right
   const uint8_t lh   = hpx - rh;                           // Horizontal half part, left
 

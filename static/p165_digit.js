@@ -71,3 +71,18 @@ function dgts(gps, flds) { // Update pixel counts per group and total pixels
   }
   elId('totpx').value = z;
 };
+function cbDis(c, s) { // change checkbox disabled state
+  l = 'disabled';
+  elId(c).disabled = s;
+  c = elId('cs' + c);
+  if (s)
+    c.classList.add(l);
+  else
+    c.classList.remove(l);
+}
+function stSeg(e, g) {
+  s = e.value == 2;
+  ['spltg', 'dend'].forEach((a) => {
+    cbDis(a + g, s)
+  });
+}
