@@ -9,6 +9,7 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
   }
 
   _stripType     = P165_CONFIG_STRIP_TYPE;
+  _output        = P165_CONFIG_OUTPUTTYPE;
   _pixelGroups   = P165_CONFIG_GROUPCOUNT;
   _defBrightness = P165_CONFIG_DEF_BRIGHT;
   _maxBrightness = P165_CONFIG_MAX_BRIGHT;
