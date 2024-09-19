@@ -78,6 +78,7 @@
 # define P165_FLAG_SCROLL_FULL    3          // 1 bit
 # define P165_FLAG_STD_OFFSET     4          // 4 bit
 # define P165_FLAG_CLEAR_EXIT     8          // 1 bit
+# define P165_FLAG_BLINK_DOT      9          // 1 bit
 
 # define P165_GET_FLAG_SUPP0 (bitRead(P165_FLAGS, P165_FLAG_SUPPRESS_0))
 # define P165_GET_FLAG_NUMBERPLAN (bitRead(P165_FLAGS, P165_FLAG_NUMBERPLAN))
@@ -85,6 +86,7 @@
 # define P165_GET_FLAG_SCROLL_FULL (bitRead(P165_FLAGS, P165_FLAG_SCROLL_FULL))
 # define P165_GET_FLAG_STD_OFFSET (get4BitFromUL(P165_FLAGS, P165_FLAG_STD_OFFSET))
 # define P165_GET_FLAG_CLEAR_EXIT (bitRead(P165_FLAGS, P165_FLAG_CLEAR_EXIT))
+# define P165_GET_FLAG_BLINK_DOT (bitRead(P165_FLAGS, P165_FLAG_BLINK_DOT))
 
 # define P165_SET_FLAG_SUPP0(V) (bitWrite(P165_FLAGS, P165_FLAG_SUPPRESS_0, V))
 # define P165_SET_FLAG_NUMBERPLAN(V) (bitWrite(P165_FLAGS, P165_FLAG_NUMBERPLAN, V))
@@ -92,6 +94,7 @@
 # define P165_SET_FLAG_SCROLL_FULL(V) (bitWrite(P165_FLAGS, P165_FLAG_SCROLL_FULL, V))
 # define P165_SET_FLAG_STD_OFFSET(V) (set4BitToUL(P165_FLAGS, P165_FLAG_STD_OFFSET, V))
 # define P165_SET_FLAG_CLEAR_EXIT(V) (bitWrite(P165_FLAGS, P165_FLAG_CLEAR_EXIT, V))
+# define P165_SET_FLAG_BLINK_DOT(V) (bitWrite(P165_FLAGS, P165_FLAG_BLINK_DOT, V))
 
 // Config per display group, all 4 PCONFIG_(U)LONG variables used
 # define P165_GROUP_CFG(N) PCONFIG_ULONG(N)
@@ -339,6 +342,7 @@ private:
   bool     _timesep          = false;
   bool     _suppressLeading0 = false;
   bool     _clearOnExit      = false;
+  bool     _blinkDot         = false;
 
   String   _textToScroll;
   bool     _txtScrolling  = false;

@@ -20,6 +20,7 @@ P165_data_struct::P165_data_struct(struct EventStruct *event) {
   _scrollSpeed      = P165_CONFIG_SCROLLSPEED;
   _suppressLeading0 = P165_GET_FLAG_SUPP0;
   _clearOnExit      = P165_GET_FLAG_CLEAR_EXIT;
+  _blinkDot         = P165_GET_FLAG_BLINK_DOT;
   _txtScrolling     = P165_GET_FLAG_SCROLL_TEXT;
   _scrollFull       = P165_GET_FLAG_SCROLL_FULL;
   _stdOffset        = P165_GET_FLAG_STD_OFFSET;
@@ -258,6 +259,7 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
     addFormSubHeader(F("Options"));
 
     addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"),   P165_GET_FLAG_SUPP0);
+    addFormCheckBox(F("Use decimal dot for blink"),      F("bldot"),   P165_GET_FLAG_BLINK_DOT);
 
     addFormCheckBox(F("Scroll text &gt; display width"), F("scrltxt"), P165_GET_FLAG_SCROLL_TEXT);
     addFormCheckBox(F("Scroll text in from right"),      F("scrlfll"), P165_GET_FLAG_SCROLL_FULL);
@@ -572,6 +574,7 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
   P165_SET_FLAG_SCROLL_TEXT(isFormItemChecked(F("scrltxt")) ? 1 : 0);
   P165_SET_FLAG_SCROLL_FULL(isFormItemChecked(F("scrlfll")) ? 1 : 0);
   P165_SET_FLAG_CLEAR_EXIT(isFormItemChecked(F("clrexit")) ? 1 : 0);
+  P165_SET_FLAG_BLINK_DOT(isFormItemChecked(F("bldot")) ? 1 : 0);
   int stdoff = 1;
 
   if (update_whenset_FormItemInt(F("stdoff"), stdoff)) {
@@ -607,7 +610,7 @@ bool P165_data_struct::plugin_webform_save(struct EventStruct *event) {
       P165_SET_CONFIG_GSTRT(grp, (grpStrt & 0x02) == 0x02);
       P165_SET_CONFIG_RTLD(grp, isFormItemChecked(concat(F("rtld"), grp10)));
 
-      if ((grpStrt & 0x02) == 0x02) { // Can't read disabled inputs
+      if ((grpStrt & 0x02) != 0x02) { // Can't read disabled inputs
         P165_SET_CONFIG_DEND(grp, isFormItemChecked(concat(F("dend"), grp10)));
         P165_SET_CONFIG_SPLTG(grp, isFormItemChecked(concat(F("spltg"), grp10)));
       }
@@ -1189,18 +1192,27 @@ bool P165_data_struct::plugin_once_a_second(struct EventStruct *event) {
                        _suppressLeading0,
                        _stdOffset);
   }
+
+  if (_blinkDot &&
+      (_output == P165_DISP_CLOCK24BLNK) ||
+      (_output == P165_DISP_CLOCK12BLNK)) {
+    showperiods[showmap[1 + _stdOffset]] = _timesep; // Blink dot on second digit
+  }
+
   writeBufferToDisplay();
 
   // FIXME Determine what group(s) are used and set the extra pixels for those groups
-  uint8_t dgts             = 0;
-  const uint8_t dgtsNeeded = std::min(_totalDigits, static_cast<uint8_t>(P165_DISP_DATE == _output ? 8 : 6));
+  if (!_blinkDot) {
+    uint8_t dgts             = 0;
+    const uint8_t dgtsNeeded = std::min(_totalDigits, static_cast<uint8_t>(P165_DISP_DATE == _output ? 8 : 6));
 
-  for (uint8_t grp = 0; grp < _pixelGroups; ++grp) {
-    dgts += _pixelGroupCfg[grp].dgts;
-    addLog(LOG_LEVEL_INFO, strformat(F("P165 : seconds marker %d Group %d, digits %d offset %d"), _timesep, grp, dgts, _stdOffset));
+    for (uint8_t grp = 0; grp < _pixelGroups; ++grp) {
+      dgts += _pixelGroupCfg[grp].dgts;
+      addLog(LOG_LEVEL_INFO, strformat(F("P165 : seconds marker %d Group %d, digits %d offset %d"), _timesep, grp, dgts, _stdOffset));
 
-    if ((_stdOffset <= dgts) && (dgtsNeeded - _stdOffset > dgts)) {
-      extraPixelsState(grp + 1, _timesep ? 1 : 0, AdaGFXrgb565ToRgb888(_timesep ? _fgColor : _bgColor));
+      if ((_stdOffset <= dgts) && (dgtsNeeded - _stdOffset > dgts)) {
+        extraPixelsState(grp + 1, _timesep ? 1 : 0, AdaGFXrgb565ToRgb888(_timesep ? _fgColor : _bgColor));
+      }
     }
   }
 

@@ -6,6 +6,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-09-19 tonhuisman: Add option to use decimal dot of second digit for blinking time indicator (with applied offset).
+ * 2024-09-17 tonhuisman: Add numbering start a g-segment. That disables the g-split and dot-at-end options, as those are then not useful.
+ *                        Also supported for counter-clockwise numbering, but then the right-to-left option should best also be enabled.
  * 2024-09-05 tonhuisman: Disable automatic period handling if no decimal dots are defined.
  * 2024-09-01 tonhuisman: Fixing some bugs/typos: g-split was enabled for width-pixels > 1, P073 font characters must have 7 bits reverted.
  *                        7groupcolor wasn't handling arguments correctly. Restoring groupcolor after digitcolor fixed.
