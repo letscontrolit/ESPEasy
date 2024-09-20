@@ -448,9 +448,10 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  client.PR_9453_FLUSH_TO_CLEAR();
-
-  if (aStr.length()) { client.println(aStr); }
+  if (aStr.length()) { 
+    client.PR_9453_FLUSH_TO_CLEAR(); // have to send msg to server so flush data first
+    client.println(aStr);
+  }
 
   // Wait For Response
   unsigned long timer = millis() + timeout;
