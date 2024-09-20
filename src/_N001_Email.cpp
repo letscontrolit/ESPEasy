@@ -458,8 +458,6 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
 
   backgroundtasks();
 
-  const String aWaitForPattern_str = strformat(F("%d "), aWaitForPattern);
-
   while (true) {   // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
     if (timeOutReached(timer)) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -474,9 +472,14 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
     String line;
     safeReadStringUntil(client, line, '\n', 1024, timeout);
 
-    line.replace("-", " "); // Must Remove optional dash from MTA response code.
+    // response could be like: '220 domain', '220-domain','220+domain'
+    const String pattern_str_space = strformat(F("%d "), aWaitForPattern);
+    const String pattern_str_minus = strformat(F("%d-"), aWaitForPattern);
+    const String pattern_str_plus  = strformat(F("%d+"), aWaitForPattern);
 
-    const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
+    const bool patternFound = line.indexOf(pattern_str_space) >= 0 
+                           || line.indexOf(pattern_str_minus) >= 0
+                           || line.indexOf(pattern_str_plus) >= 0;
 
     # ifndef BUILD_NO_DEBUG
 
