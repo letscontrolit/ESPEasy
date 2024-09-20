@@ -448,16 +448,15 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  client.PR_9453_FLUSH_TO_CLEAR();
-
-  if (aStr.length()) { client.println(aStr); }
+  if (aStr.length()) { 
+    client.PR_9453_FLUSH_TO_CLEAR(); // have to send msg to server so flush data first
+    client.println(aStr);
+  }
 
   // Wait For Response
   unsigned long timer = millis() + timeout;
 
   backgroundtasks();
-
-  const String aWaitForPattern_str = strformat(F("%d "), aWaitForPattern);
 
   while (true) {   // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
     if (timeOutReached(timer)) {
@@ -473,9 +472,14 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
     String line;
     safeReadStringUntil(client, line, '\n', 1024, timeout);
 
-    line.replace("-", " "); // Must Remove optional dash from MTA response code.
+    // response could be like: '220 domain', '220-domain','220+domain'
+    const String pattern_str_space = strformat(F("%d "), aWaitForPattern);
+    const String pattern_str_minus = strformat(F("%d-"), aWaitForPattern);
+    const String pattern_str_plus  = strformat(F("%d+"), aWaitForPattern);
 
-    const bool patternFound = line.indexOf(aWaitForPattern_str) >= 0;
+    const bool patternFound = line.indexOf(pattern_str_space) >= 0 
+                           || line.indexOf(pattern_str_minus) >= 0
+                           || line.indexOf(pattern_str_plus) >= 0;
 
     # ifndef BUILD_NO_DEBUG
 
