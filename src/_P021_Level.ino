@@ -728,6 +728,7 @@ void P021_evaluate(struct EventStruct *event)
   P021_control_state new_control_state       = old_control_state;
   const bool invert_input                    = bitRead(P021_FLAGS, P021_INV_INPUT);
   const bool symetric_hyst                   = bitRead(P021_FLAGS, P021_SYM_HYSTERESIS);
+  const bool extend_at_end                   = bitRead(P021_FLAGS, P021_EXTEND_END);
   bool relay_output                          = UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT);
   bool remote_state                          = P021_remote[event->TaskIndex];
   uint32_t    timestamp                      = P021_timestamp[event->TaskIndex];
@@ -833,7 +834,7 @@ void P021_evaluate(struct EventStruct *event)
 
           if (P021_check_off(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
-            if (beyond_min_time)
+            if ((beyond_min_time) && (!extend_at_end))
             {
               timestamp         = millis();
               new_control_state = P021_STATE_IDLE;
@@ -841,7 +842,7 @@ void P021_evaluate(struct EventStruct *event)
             else
             {
               // Take timestamp if extending from stop condition otherwise keep timestamp from moment output was swiched
-              if (bitRead(P021_FLAGS, P021_EXTEND_END))
+              if (extend_at_end)
               {
                 timestamp = millis();
               }
