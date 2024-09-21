@@ -5,11 +5,13 @@ function p113_main() {
   function elVal(e) {
     return elId(e).value;
   }
+  function getCel() {
+    return vi.querySelectorAll('.cel');
+  }
   function cntr(e) {
     if (elVal('roix') > 10 || elVal('roiy') > 10) return;
     let sc = [];
-    const cs = vi.querySelectorAll('.cel');
-    cs.forEach((c) => {
+    getCel().forEach((c) => {
       const b = c.getBoundingClientRect();
       if (
         e.x >= b.left &&
@@ -41,7 +43,7 @@ function p113_main() {
   // console.log('p113_main', vi, sl);
 
   function clr() {
-    vi.querySelectorAll('.cel')
+    getCel()
       .forEach((c) => {
         c.classList.remove('sel');
         c.classList.remove('oc');
@@ -56,7 +58,7 @@ function p113_main() {
         lck = 0;
         return;
       }
-      imd = true;
+      imd = 1;
       if (!ims) {
         se = {
           x: null,
@@ -80,11 +82,12 @@ function p113_main() {
       y: e.y + window.scrollY - vi.offsetTop
     };
     // console.log('mouseup', sr, se, vc.left, vc.top, window.scrollY);
-    sl.style.top = `0px`;
-    sl.style.left = `0px`;
-    sl.style.bottom = 'unset';
-    sl.style.right = 'unset';
-    sl.style.visibility = 'hidden';
+    slt = sl.style;
+    slt.top = `0px`;
+    slt.left = `0px`;
+    slt.bottom = 'unset';
+    slt.right = 'unset';
+    slt.visibility = 'hidden';
     if (
       Math.abs(se.x - st.x) < sm.w ||
       Math.abs(se.y - st.y) < sm.h
@@ -110,31 +113,31 @@ function p113_main() {
       x2: Math.max(st.x, se.x) + scx,
       y2: Math.max(st.y, se.y) + scy
     };
-    sl.style.top = `${scx + Math.min(
+    slt = sl.style;
+    slt.top = `${scx + Math.min(
       sr.y1,
       sr.y2
     )}px`;
-    sl.style.left = `${scy + Math.min(
+    slt.left = `${scy + Math.min(
       sr.x1,
       sr.x2
     )}px`;
-    sl.style.bottom = `${vi.offsetHeight +
+    slt.bottom = `${vi.offsetHeight +
       vi.offsetTop -
       Math.max(sr.y1, sr.y2)
       }px`;
-    sl.style.right = `${vi.offsetWidth +
+    slt.right = `${vi.offsetWidth +
       vi.offsetLeft -
       Math.max(sr.x1, sr.x2)
       }px`;
-    sl.style.visibility = 'visible';
+    slt.visibility = 'visible';
     if (!ims)
       clr();
   });
   function gSelCls() {
     let sc = [];
-    const cl = vi.querySelectorAll('.cel');
     sl.style.visibility = 'visible';
-    cl.forEach((c) => {
+    getCel().forEach((c) => {
       const b = c.getBoundingClientRect();
       wx = window.scrollX;
       wy = window.scrollY;
@@ -226,7 +229,7 @@ function p113_main() {
         }
       }
       // console.log('dsp oCen:', getSPAD(ocy, ocx), oCen);
-      cs = vi.querySelectorAll('.cel');
+      cs = getCel();
       for (y = 0; y < 16; ++y) {
         for (x = 0; x < 16; ++x) {
           cc = cs[y * 16 + x].classList;
