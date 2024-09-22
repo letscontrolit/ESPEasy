@@ -168,7 +168,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   sdcard,
   sdremove,
 #endif // #if FEATURE_SD
-#ifdef FEATURE_CAN
+#if FEATURE_CAN
   sendcan,
   sendtocan,
 #endif

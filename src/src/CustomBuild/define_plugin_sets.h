@@ -3421,8 +3421,8 @@ To create/register a plugin, you have to :
 
 #ifdef FEATURE_CAN
  #if FEATURE_CAN
-  #if defined(ESP8266) || defined(ESP32C2)
-   #undef FEATURE_CAN  // No HW support
+  #if defined(ESP8266) || defined(ESP32C2)|| defined(ESP32C3)|| defined(ESP32C6)|| defined(ESP32S2)|| defined(ESP32S3)
+   #undef FEATURE_CAN  // No HW support or massive changes needed in library
    #define FEATURE_CAN 0
   #endif
  #endif

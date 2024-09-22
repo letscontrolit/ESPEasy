@@ -204,7 +204,7 @@ const char Internal_commands_s[] PROGMEM =
   "sdcard|"
   "sdremove|"
 #endif // #if FEATURE_SD
-#ifdef FEATURE_CAN
+#if FEATURE_CAN
   "sendcan|"
   "sendtocan|"
 #endif
