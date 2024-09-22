@@ -17,6 +17,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -82,6 +83,7 @@ void handle_hardware() {
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
     #endif // if FEATURE_ETHERNET
     #if FEATURE_CAN
+    // FIXME TD-er: Should this be in the global settings?
     Settings.CAN_Rx_pin   = getFormItemInt(F("canrxpin"), -1);
     Settings.CAN_Tx_pin   = getFormItemInt(F("cantxpin"), -1);
     Settings.CAN_baudrate = getFormItemInt(F("canbaudrate"), DEFAULT_CAN_BAUDRATE);

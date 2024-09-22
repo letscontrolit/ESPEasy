@@ -66,6 +66,7 @@ int  getCPU_MinFreqMHz();
 
 
 #if FEATURE_CAN
+// FIXME TD-er: Move to Hardware_CAN.h/.cpp
 void initCAN();
 #endif
 

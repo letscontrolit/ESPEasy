@@ -1,7 +1,11 @@
 #include "_Plugin_Helper_CAN.h"
+
+#if FEATURE_CAN
+
 #include "../Globals/Settings.h"
 #include "../Globals/RuntimeData.h"
-#include "../Commands/InternalCommands.h"
+//#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 # include <CAN.h>
 
 # define CAN_HELPER_MSG_DATA     ((uint8_t)0)
@@ -207,3 +211,4 @@ bool canHelper_sendCmd(EventStruct *event)
 
   return false;
 }
+#endif

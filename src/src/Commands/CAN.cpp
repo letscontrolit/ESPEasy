@@ -1,4 +1,7 @@
-#include "CAN.h"
+#include "../Commands/CAN.h"
+
+#if FEATURE_CAN
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Helpers/_Plugin_Helper_CAN.h"
 
@@ -19,3 +22,5 @@ const __FlashStringHelper* Command_CAN_SendCAN(struct EventStruct *event, const 
 
     return F("ERROR");
 }
+
+#endif

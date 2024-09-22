@@ -23,7 +23,25 @@ bool CPlugin_020(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_020;
-      proto.bits   = 0;
+      /*
+        // These are by default already set to false
+        proto.usesMQTT = false;
+        proto.usesAccount = false;
+        proto.usesPassword = false;
+        proto.usesTemplate = false;
+        proto.usesID = false;
+        proto.Custom = false;
+        proto.usesSampleSets = false;
+        proto.usesExtCreds = false;
+        proto.allowLocalSystemTime = false;
+      */
+      proto.usesHost = false;
+      proto.usesPort = false;
+      proto.usesQueue = false;
+      proto.usesCheckReply = false;
+      proto.usesTimeout = false;
+      proto.needsNetwork = false;
+      proto.allowsExpire = false;
       break;
     }
 
