@@ -3419,10 +3419,26 @@ To create/register a plugin, you have to :
 #endif
 #endif
 
+#ifdef FEATURE_CAN
+ #if FEATURE_CAN
+  #ifdef ESP8266
+   #undef FEATURE_CAN  // Do not use CAN bus for ESP8266
+   #define FEATURE_CAN 0
+  #endif
+ #endif
+#endif
+
 #ifndef FEATURE_CAN
   #define FEATURE_CAN 0
 #endif
-
+#if FEATURE_CAN
+  #ifndef USES_C022 // CAN Controller
+    #define USE_C022
+  #endif
+  #ifndef USES_P174
+    #define USES_P174 // CAN Import plugin
+  #endif
+#endif
 
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins

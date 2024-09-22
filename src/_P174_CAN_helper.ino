@@ -33,8 +33,7 @@ void P174_check_timeout(EventStruct *event, int idx)
   {
     if (!(PCONFIG(3) & idx_flag))
     {
-      String log_debug = F("Disconnected");
-      addLogMove(LOG_LEVEL_INFO, log_debug);
+      addLogMove(LOG_LEVEL_INFO, F("Disconnected"));
     }
     PCONFIG(3) |= idx_flag;
   }
@@ -175,9 +174,12 @@ boolean Plugin_174(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      String log = "CAN Import :" + String(event->TaskIndex) + " got READ event with values: " +
-          String(event->Par1) + String(" ") + String(event->Par2);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+
+      addLogMove(LOG_LEVEL_DEBUG, strformat(
+        F("CAN Import : %u got READ event with values: %d %d"), 
+        event->TaskIndex,
+        event->Par1,
+        event->Par2));
       if (event->Par1 == PCONFIG(0) && event->Par2 == PCONFIG(2))
       {
         const int16_t sensorTypeVal = static_cast<int16_t>(event->sensorType);

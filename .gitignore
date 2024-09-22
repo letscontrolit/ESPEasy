@@ -71,3 +71,5 @@ docs/source/Plugin/_plugin_sets_overview.repl
 
 
 .platformio/
+
+*.Identifier
