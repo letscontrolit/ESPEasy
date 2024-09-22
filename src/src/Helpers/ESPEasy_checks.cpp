@@ -80,7 +80,7 @@ void run_compiletime_checks() {
   constexpr unsigned int SettingsStructSize = (352 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  constexpr unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (328 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();
