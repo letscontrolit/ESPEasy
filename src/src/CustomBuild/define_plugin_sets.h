@@ -3448,8 +3448,8 @@ To create/register a plugin, you have to :
 
 
 #if FEATURE_CAN
-  #define USES_C020 //CAN
-  #define USES_P155
+  #define USES_C022 //CAN
+  #define USES_P174
 #endif
 
   

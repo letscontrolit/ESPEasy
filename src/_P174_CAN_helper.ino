@@ -1,8 +1,8 @@
 #include "_Plugin_Helper.h"
-#ifdef USES_P155
+#ifdef USES_P174
 
 // #######################################################################################################
-// ################################### Plugin 155: CAN SJA1000 Importer ##################################
+// ################################### Plugin 174: CAN SJA1000 Importer ##################################
 // #######################################################################################################
 
 
@@ -10,22 +10,22 @@
 # include <CAN.h>
 
 
-# define PLUGIN_155
-# define PLUGIN_ID_155         155
-# define PLUGIN_NAME_155       "Communication - CAN Importer"
+# define PLUGIN_174
+# define PLUGIN_ID_174         174
+# define PLUGIN_NAME_174       "Communication - CAN Importer"
 
-# define P155_MAX_NODES      255
-# define P155_TOPIC_MAX_SIZE 16
-# define P155_TIMEOUT        50
+# define P174_MAX_NODES      255
+# define P174_TOPIC_MAX_SIZE 16
+# define P174_TIMEOUT        50
 
-# define P155_VAL1_FLAG 0x01
-# define P155_VAL2_FLAG 0x02
-# define P155_VAL3_FLAG 0x04
-# define P155_VAL4_FLAG 0x10
+# define P174_VAL1_FLAG 0x01
+# define P174_VAL2_FLAG 0x02
+# define P174_VAL3_FLAG 0x04
+# define P174_VAL4_FLAG 0x10
 
-#define PLUGIN_VALUENAME1_155 "Status"
+#define PLUGIN_VALUENAME1_174 "Status"
 
-void P155_check_timeout(EventStruct *event, int idx)
+void P174_check_timeout(EventStruct *event, int idx)
 {
   int16_t idx_flag = (0x01 << idx);
 
@@ -44,7 +44,7 @@ void P155_check_timeout(EventStruct *event, int idx)
   }
 }
 
-boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
+boolean Plugin_174(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -52,7 +52,7 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_155;
+      Device[++deviceCount].Number           = PLUGIN_ID_174;
       Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
       Device[deviceCount].Ports              = 0;
@@ -71,7 +71,7 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICENAME:
     {
-      string = F(PLUGIN_NAME_155);
+      string = F(PLUGIN_NAME_174);
       break;
     }
 
@@ -127,13 +127,13 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
       String lines[VARS_PER_TASK];
 
       addRowLabel(F("Node"));
-      addNumericBox(F("p155_node"), PCONFIG(0), 0, 0xFFFF);
+      addNumericBox(F("p174_node"), PCONFIG(0), 0, 0xFFFF);
 
       addRowLabel(F("Task Id"));
-      addNumericBox(F("p155_task_id"), PCONFIG(2) + 1, 0, 0xFFFF);
+      addNumericBox(F("p174_task_id"), PCONFIG(2) + 1, 0, 0xFFFF);
 
       addRowLabel(F("Sensor Type"));
-      addTextBox(F("p155_sensor_type"),
+      addTextBox(F("p174_sensor_type"),
                 getSensorTypeLabel(static_cast<Sensor_VType>(PCONFIG(1))),
                 32,
                 true);
@@ -145,7 +145,7 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
         if (lines[i].length() == 0) {
           lines[i] = concat(F("val"), i + 1);
         }
-        addTextBox(concat(F("p155_value"), i), lines[i], 0);
+        addTextBox(concat(F("p174_value"), i), lines[i], 0);
       }
 
       success = true;
@@ -157,11 +157,11 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
       String lines[VARS_PER_TASK];
 
       addRowLabel(F("Node"));
-      PCONFIG(0) = getFormItemInt(F("p155_node"));
-      PCONFIG(2) = getFormItemInt(F("p155_task_id"))-1;
+      PCONFIG(0) = getFormItemInt(F("p174_node"));
+      PCONFIG(2) = getFormItemInt(F("p174_task_id"))-1;
 
       for (int i = 0; i < VARS_PER_TASK; ++i) {
-        lines[i] = webArg(concat(F("p155_value"), i));
+        lines[i] = webArg(concat(F("p174_value"), i));
         if (lines[i].length() == 0) {
           lines[i] = concat(F("val"), i + 1);
         }
@@ -199,10 +199,10 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      // P155_check_timeout(event, 0);
-      // P155_check_timeout(event, 1);
-      // P155_check_timeout(event, 2);
-      // P155_check_timeout(event, 3);
+      // P174_check_timeout(event, 0);
+      // P174_check_timeout(event, 1);
+      // P174_check_timeout(event, 2);
+      // P174_check_timeout(event, 3);
       break;
     }
 
@@ -228,4 +228,4 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // USES_P155
+#endif // USES_P174

@@ -1,20 +1,20 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 
-#ifdef USES_C020
+#ifdef USES_C022
 
 // #######################################################################################################
-// ########################### Controller Plugin 020: CAN - SJA1000 ######################################
+// ########################### Controller Plugin 022: CAN - SJA1000 ######################################
 // #######################################################################################################
 
-# define CPLUGIN_020
-# define CPLUGIN_ID_020         20
-# define CPLUGIN_NAME_020       "CAN 2.0 - TWAI"
+# define CPLUGIN_022
+# define CPLUGIN_ID_022         22
+# define CPLUGIN_NAME_022       "CAN 2.0 - TWAI"
 
 # include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
 # include "src/Helpers/_Plugin_Helper_CAN.h"
 
-bool CPlugin_020(CPlugin::Function function, struct EventStruct *event, String& string)
+bool CPlugin_022(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
@@ -22,7 +22,7 @@ bool CPlugin_020(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_020;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //        = CPLUGIN_ID_022;
       /*
         // These are by default already set to false
         proto.usesMQTT = false;
@@ -47,7 +47,7 @@ bool CPlugin_020(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
-      string = F(CPLUGIN_NAME_020);
+      string = F(CPLUGIN_NAME_022);
       break;
     }
 
@@ -105,4 +105,4 @@ bool CPlugin_020(CPlugin::Function function, struct EventStruct *event, String& 
   return success;
 }
 
-#endif // ifdef USES_C020
+#endif // ifdef USES_C022
