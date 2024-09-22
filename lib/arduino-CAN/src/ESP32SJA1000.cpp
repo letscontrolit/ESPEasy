@@ -3,9 +3,12 @@
 
 #ifdef ARDUINO_ARCH_ESP32
 
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "soc/dport_reg.h"
 #include "driver/gpio.h"
+
+#include "esp32-hal-matrix.h"
+#include "soc/gpio_pins.h"
 
 #include "ESP32SJA1000.h"
 
@@ -58,14 +61,21 @@ int ESP32SJA1000Class::begin(long baudRate)
 
   // RX pin
   gpio_set_direction(_rxPin, GPIO_MODE_INPUT);
-  gpio_matrix_in(_rxPin, CAN_RX_IDX, 0);
+  pinMatrixInAttach(_rxPin, CAN_RX_IDX, 0);
+  #if ESP_IDF_VERSION_MAJOR <5
   gpio_pad_select_gpio(_rxPin);
+  #else
+  esp_rom_gpio_pad_select_gpio(_rxPin);
+  #endif
 
   // TX pin
   gpio_set_direction(_txPin, GPIO_MODE_OUTPUT);
-  gpio_matrix_out(_txPin, CAN_TX_IDX, 0, 0);
+  pinMatrixOutAttach(_txPin, CAN_TX_IDX, 0, 0);
+  #if ESP_IDF_VERSION_MAJOR <5
   gpio_pad_select_gpio(_txPin);
-
+  #else
+  esp_rom_gpio_pad_select_gpio(_txPin);
+  #endif
   modifyRegister(REG_CDR, 0x80, 0x80); // pelican mode
   modifyRegister(REG_BTR0, 0xc0, 0x40); // SJW = 1
   modifyRegister(REG_BTR1, 0x70, 0x10); // TSEG2 = 1
