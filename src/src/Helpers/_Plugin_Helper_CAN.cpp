@@ -1,4 +1,4 @@
-#include "_Plugin_Helper_CAN.h"
+#include "../Helpers/_Plugin_Helper_CAN.h"
 
 #if FEATURE_CAN
 
