@@ -17,7 +17,8 @@ function saveRulesFile() {
         } else {
             fetch("/upload", {
                 method: "POST",
-                body: formData
+                body: formData,
+                mode: "no-cors"
             }).then(response => response.text()).then(l => {
                 let url = "/rules" + ruleNumber + ".txt?callback=" + Date.now();
                 fetch(url).then(res => res.text()).then(ruleTextNewCheck => {
