@@ -68,14 +68,6 @@ bool GPIO_plugin_helper_data_t::init(
     newStatus.task++;
   }
 
-
-  // @giig1967g-20181022: set initial UserVar of the switch
-  if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
-    UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
-  } else {
-    UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
-  }
-
   // if boot pinState must be send, inverse default pinState
   // this is done to force the trigger in PLUGIN_TEN_PER_SECOND
   if (_sendBootState) {
@@ -90,6 +82,14 @@ bool GPIO_plugin_helper_data_t::init(
 
   // setPinState(PLUGIN_ID_009, _mcpPin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
   savePortStatus(_portStatus_key, newStatus);
+
+  // @giig1967g-20181022: set initial UserVar of the switch
+  if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
+    UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
+  } else {
+    UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
+  }
+
   return true;
 }
 
