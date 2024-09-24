@@ -1,34 +1,33 @@
 function saveRulesFile() {
     'use strict';
-    let e = document.getElementById('size');
-    let t = document
+    let size = document.getElementById('size');
+    let ruleTextNew = document
         .getElementById('rules')
         .value;
-    t = t.replace(/\\r?\\n/g, '\\r\\n');
+    ruleTextNew = ruleTextNew.replace(/\\r?\\n/g, '\\r\\n');
     let n = document
         .getElementById('set')
         .value;
-    let l = new File([t], 'rules' + n + '.txt', {type: 'text/plain'});
-    let a = new FormData();
-    a.append('file', l);
-    a.append('enctype', 'multipart/form-data');
-    let o = '/rules' + n + '.txt?callback=' + Date.now();
-    fetch(o)
-        .then(e => e.text())
-        .then(l => {
-            if (t === l) 
+    let ruleTextFileData = new File([ruleTextNew], 'rules' + n + '.txt', {type: 'text/plain'});
+    let formData = new FormData();
+    formData.append('file', ruleTextFileData);
+    formData.append('enctype', 'multipart/form-data');
+    let url = '/rules' + n + '.txt?callback=' + Date.now();
+    fetch(url)
+        .then(size => size.text())
+        .then(ruleTextFileData => {
+            if (ruleTextNew === ruleTextFileData) 
                 console.log('nothing to save...');
             else {
                 setTimeout(() => fetch('/upload', {
                     method: 'POST',
-                    body: a,
+                    body: formData,
                     mode: 'no-cors'
-                }).then(e => e.text()).then(l => {
-                    let a = '/rules' + n + '.txt?callback=' + Date.now();
-                    setTimeout(() => fetch(a).then(e => e.text()).then(n => {
-                        if (t === n) {
+                }).then(size => size.text()).then(ruleTextFileData => {
+                    setTimeout(() => fetch(url).then(size => size.text()).then(n => {
+                        if (ruleTextNew === n) {
                             toasting();
-                            e.innerHTML = t.length;
+                            size.innerHTML = ruleTextNew.length;
                         } else {
                             console.log('error when saving...');
                         }
