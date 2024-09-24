@@ -390,7 +390,15 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   if (!cacheable)
     web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
+#if ESP_IDF_VERSION_MAJOR>4
+  if (origin.equals("*")) {
+    web_server.enableCORS(true);
+  } else
+#endif
   if (origin.length() > 0) {
+#if ESP_IDF_VERSION_MAJOR>4
+    web_server.enableCORS(false);
+#endif
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);

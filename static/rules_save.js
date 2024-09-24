@@ -1,35 +1,39 @@
 function saveRulesFile() {
-    "use strict";
-    let size = document.getElementById("size");
-    let ruleTextNew = document.getElementById("rules").value;
-    ruleTextNew = ruleTextNew.replace(/\\r?\\n/g, "\\r\\n");
-    let ruleNumber = document.getElementById("set").value;
-    let ruleTextFileData = new File([ruleTextNew], "rules" + ruleNumber + ".txt", {
-        type: "text/plain"
-    });
-    let formData = new FormData();
-    formData.append("file", ruleTextFileData);
-    formData.append("enctype", "multipart/form-data");
-    let url = "/rules" + ruleNumber + ".txt?callback=" + Date.now();
-    fetch(url).then(res => res.text()).then(ruleTextOld => {
-        if (ruleTextNew === ruleTextOld) {
-            console.log("nothing to save...");
-        } else {
-            fetch("/upload", {
-                method: "POST",
-                body: formData,
-                mode: "no-cors"
-            }).then(response => response.text()).then(l => {
-                let url = "/rules" + ruleNumber + ".txt?callback=" + Date.now();
-                fetch(url).then(res => res.text()).then(ruleTextNewCheck => {
-                    if (ruleTextNew === ruleTextNewCheck) {
-                        toasting();
-                        size.innerHTML = ruleTextNew.length;
-                    } else {
-                        console.log("error when saving...");
-                    }
-                });
-            });
-        }
-    });
+    'use strict';
+    let e = document.getElementById('size');
+    let t = document
+        .getElementById('rules')
+        .value;
+    t = t.replace(/\\r?\\n/g, '\\r\\n');
+    let n = document
+        .getElementById('set')
+        .value;
+    let l = new File([t], 'rules' + n + '.txt', {type: 'text/plain'});
+    let a = new FormData();
+    a.append('file', l);
+    a.append('enctype', 'multipart/form-data');
+    let o = '/rules' + n + '.txt?callback=' + Date.now();
+    fetch(o)
+        .then(e => e.text())
+        .then(l => {
+            if (t === l) 
+                console.log('nothing to save...');
+            else {
+                setTimeout(() => fetch('/upload', {
+                    method: 'POST',
+                    body: a,
+                    mode: 'no-cors'
+                }).then(e => e.text()).then(l => {
+                    let a = '/rules' + n + '.txt?callback=' + Date.now();
+                    setTimeout(() => fetch(a).then(e => e.text()).then(n => {
+                        if (t === n) {
+                            toasting();
+                            e.innerHTML = t.length;
+                        } else {
+                            console.log('error when saving...');
+                        }
+                    }), 200);
+                }), 100);
+            }
+        });
 }
