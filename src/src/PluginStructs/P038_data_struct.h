@@ -16,6 +16,14 @@
 # define P038_STRIP_TYPE_RGB   1
 # define P038_STRIP_TYPE_RGBW  2
 
+# ifndef P038_FEATURE_NEOPIXELFOR
+#  ifdef ESP32
+#   define P038_FEATURE_NEOPIXELFOR  1
+#  else // ifdef ESP32
+#   define P038_FEATURE_NEOPIXELFOR  0
+#  endif // ifdef ESP32
+# endif // ifndef P038_FEATURE_NEOPIXELFOR
+
 struct P038_data_struct : public PluginTaskData_base {
 public:
 

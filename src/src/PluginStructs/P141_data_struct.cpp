@@ -27,11 +27,19 @@ P141_data_struct::P141_data_struct(uint8_t             rotation,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    bool                textBackFill,
-                                   bool                displayInverted)
+                                   bool                displayInverted
+                                   # if                ADAGFX_FONTS_INCLUDED
+                                   ,
+                                   const uint8_t       defaultFontId
+                                   # endif // if ADAGFX_FONTS_INCLUDED
+                                   )
   : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _contrast(contrast), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _textBackFill(textBackFill), _displayInverted(displayInverted)
+  # if ADAGFX_FONTS_INCLUDED
+  , _defaultFontId(defaultFontId)
+  # endif // if ADAGFX_FONTS_INCLUDED
 {
   _commandTrigger.toLowerCase();
   _commandTriggerCmd = concat(_commandTrigger, F("cmd"));
@@ -89,7 +97,11 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
                                                       _fgcolor,
                                                       _bgcolor,
                                                       true,
-                                                      _textBackFill);
+                                                      _textBackFill
+                                                      # if ADAGFX_FONTS_INCLUDED
+                                                      , _defaultFontId
+                                                      # endif // if ADAGFX_FONTS_INCLUDED
+                                                      );
 
     displayOnOff(true);
 

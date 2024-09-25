@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-17 tonhuisman: Disable preview of on-display content for LIMIT_BUILD_SIZE builds.
  * 2023-10-16 tonhuisman: Bugfix: Template parsing stopped after initial display since previous updates :-(
  * 2023-03-18 tonhuisman: Show current on-display content on Devices page (75% size, omits trailing empty lines)
  *                        Manually set content via command: oled,x,y,<content> is included in the Devices page content
@@ -39,17 +40,13 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_023;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      Device[++deviceCount].Number      = PLUGIN_ID_023;
+      Device[deviceCount].Type          = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports         = 0;
+      Device[deviceCount].ValueCount    = 0;
+      Device[deviceCount].TimerOption   = true;
+      Device[deviceCount].TimerOptional = true;
       break;
     }
 
@@ -242,24 +239,22 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if P023_FEATURE_DISPLAY_PREVIEW
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
       P023_data_struct *P023_data =
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P023_data) {
-        success = P023_data->web_show_values();
-      }
+      success = nullptr != P023_data && P023_data->web_show_values();
       break;
     }
+    # endif // if P023_FEATURE_DISPLAY_PREVIEW
 
     case PLUGIN_WRITE:
     {
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P023_data) {
-        success = P023_data->plugin_write(event, string);
-      }
+      success = nullptr != P023_data && P023_data->plugin_write(event, string);
       break;
     }
   }

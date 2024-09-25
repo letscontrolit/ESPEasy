@@ -141,6 +141,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
 
     if (operation != SCD4x_Operations_e::None) {
       switch (operation) {
+        #  if P135_FEATURE_FACTORYRESET
         case SCD4x_Operations_e::RunFactoryReset: { // May take up to 1200 mSec
           success = scd4x->performFactoryReset();
 
@@ -158,6 +159,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
           addLog(lvl, log);
           break;
         }
+        #  endif // if P135_FEATURE_FACTORYRESET
         case SCD4x_Operations_e::RunSelfTest: { // May take up to 10 seconds!
           success = scd4x->performSelfTest();
 
@@ -227,7 +229,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
       // scd4x,factoryreset[,code] : SLOWER! Restore factory settings for sensor, code logged at ERROR level
       // scd4x,selftest[,code] : SLOWEST! Self-test for sensor, code logged at ERROR level
-    } else if ((equals(sub, F("factoryreset"))) || doSelftest) {
+    } else if (
+      #  if P135_FEATURE_FACTORYRESET
+      equals(sub, F("factoryreset")) ||
+      #  endif // if P135_FEATURE_FACTORYRESET
+      doSelftest) {
       if (factoryResetCode.isEmpty()) {
         factoryResetCode = F("Scd4x");
 
@@ -235,9 +241,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
           if (doSelftest) {
             factoryResetCode += strformat(F("%c%c%c%c"),
                                           char(serialNumber[3]), char(serialNumber[1]), char(serialNumber[10]), char(serialNumber[6]));
+          #  if P135_FEATURE_FACTORYRESET
           } else {
             factoryResetCode += strformat(F("%c%c%c%c"),
                                           char(serialNumber[1]), char(serialNumber[3]), char(serialNumber[7]), char(serialNumber[10]));
+          #  endif // if P135_FEATURE_FACTORYRESET
           }
         } else {
           factoryResetCode += F("2022");
@@ -245,16 +253,20 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
         if (doSelftest) {
           factoryResetCode += F("SelF");
+        #  if P135_FEATURE_FACTORYRESET
         } else {
           factoryResetCode += F("reseT");
+        #  endif // if P135_FEATURE_FACTORYRESET
         }
         {
           String log = F("SCD4x: ");
 
           if (doSelftest) {
             log += F("Selftest");
+          #  if P135_FEATURE_FACTORYRESET
           } else {
             log += F("Factory reset");
+          #  endif // if P135_FEATURE_FACTORYRESET
           }
           log += concat(F(" code: "), factoryResetCode);
           addLog(LOG_LEVEL_ERROR, log);
@@ -267,9 +279,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
           if (doSelftest) {
             addLog(LOG_LEVEL_ERROR, F("SCD4x: Selftest starting... (may take up to 11 seconds!)"));
             operation = SCD4x_Operations_e::RunSelfTest;
+          #  if P135_FEATURE_FACTORYRESET
           } else {
             addLog(LOG_LEVEL_ERROR, F("SCD4x: Factory reset starting... (may take up to 2.5 seconds!)"));
             operation = SCD4x_Operations_e::RunFactoryReset;
+          #  endif // if P135_FEATURE_FACTORYRESET
           }
         }
         factoryResetCode.clear();

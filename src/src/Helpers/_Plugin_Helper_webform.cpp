@@ -8,16 +8,10 @@
 #include "../WebServer/Markup_Forms.h"
 
 
+#define SWITCH_DOUBLECLICK_MIN_INTERVAL      1000
 #define SWITCH_DOUBLECLICK_MAX_INTERVAL      3000
+#define SWITCH_LONGPRESS_MIN_INTERVAL        500
 #define SWITCH_LONGPRESS_MAX_INTERVAL        5000
-#define SWITCH_DC_DISABLED                   0
-#define SWITCH_DC_LOW                        1
-#define SWITCH_DC_HIGH                       2
-#define SWITCH_DC_BOTH                       3
-#define SWITCH_LONGPRESS_DISABLED            0
-#define SWITCH_LONGPRESS_LOW                 1
-#define SWITCH_LONGPRESS_HIGH                2
-#define SWITCH_LONGPRESS_BOTH                3
 
 
 void SwitchWebformLoad(
@@ -34,7 +28,11 @@ void SwitchWebformLoad(
 
   addFormSubHeader(F("Advanced event management"));
 
-  addFormNumericBox(F("De-bounce (ms)"), F("sw_debounce"), lround(debounce_ms), 0, 250);
+  addFormNumericBox(
+    F("De-bounce (ms)"),
+    F("sw_debounce"),
+    static_cast<int>(debounce_ms),
+    0, 250);
 
   // set minimum value for doubleclick MIN max speed
   if (doubleClickMaxInterval < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
@@ -42,16 +40,25 @@ void SwitchWebformLoad(
   }
 
   {
-    uint8_t choiceDC                       = doubleClickEvent;
-    const __FlashStringHelper *buttonDC[4] = {
+    const __FlashStringHelper *buttonDC[] = {
       F("Disabled"),
       F("Active only on LOW (EVENT=3)"),
       F("Active only on HIGH (EVENT=3)"),
       F("Active on LOW & HIGH (EVENT=3)")
     };
-    int buttonDCValues[4] = { SWITCH_DC_DISABLED, SWITCH_DC_LOW, SWITCH_DC_HIGH, SWITCH_DC_BOTH };
+    const int buttonDCValues[] = {
+      SWITCH_DC_DISABLED,
+      SWITCH_DC_LOW,
+      SWITCH_DC_HIGH,
+      SWITCH_DC_BOTH };
 
-    addFormSelector(F("Doubleclick event"), F("sw_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+    addFormSelector(
+      F("Doubleclick event"),
+      F("sw_dc"),
+      NR_ELEMENTS(buttonDCValues),
+      buttonDC,
+      buttonDCValues,
+      doubleClickEvent);
   }
 
   addFormNumericBox(F("Doubleclick max. interval (ms)"),
@@ -66,16 +73,24 @@ void SwitchWebformLoad(
   }
 
   {
-    uint8_t choiceLP                       = longPressEvent;
-    const __FlashStringHelper *buttonLP[4] = {
+    const __FlashStringHelper *buttonLP[] = {
       F("Disabled"),
       F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"),
       F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"),
       F("Active on LOW & HIGH (EVENT= 10 or 11)")
     };
-    int buttonLPValues[4] =
-    { SWITCH_LONGPRESS_DISABLED, SWITCH_LONGPRESS_LOW, SWITCH_LONGPRESS_HIGH, SWITCH_LONGPRESS_BOTH };
-    addFormSelector(F("Longpress event"), F("sw_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+    const int buttonLPValues[] = {
+      SWITCH_LONGPRESS_DISABLED,
+      SWITCH_LONGPRESS_LOW,
+      SWITCH_LONGPRESS_HIGH,
+      SWITCH_LONGPRESS_BOTH };
+    addFormSelector(
+      F("Longpress event"),
+      F("sw_lp"),
+      NR_ELEMENTS(buttonLPValues),
+      buttonLP,
+      buttonLPValues,
+      longPressEvent);
   }
 
   addFormNumericBox(F("Longpress min. interval (ms)"),
@@ -109,6 +124,9 @@ void SwitchWebformSave(
   doubleClickEvent       = getFormItemInt(F("sw_dc"));
   doubleClickMaxInterval = getFormItemInt(F("sw_dcmaxinterval"));
 
+  doubleClickMaxInterval  = constrain(doubleClickMaxInterval, SWITCH_DOUBLECLICK_MIN_INTERVAL, SWITCH_DOUBLECLICK_MAX_INTERVAL);
+  longPressMinInterval_ms = constrain(longPressMinInterval_ms, SWITCH_LONGPRESS_MIN_INTERVAL, SWITCH_LONGPRESS_MAX_INTERVAL);
+
   longPressEvent          = getFormItemInt(F("sw_lp"));
   longPressMinInterval_ms = getFormItemInt(F("sw_lpmininterval"));
 
@@ -119,7 +137,7 @@ void SwitchWebformSave(
   // PCONFIG_LONG(2) = getFormItemInt(F("sw_elpmininterval"));
 
   // check if a task has been edited and remove 'task' bit from the previous pin
-  for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
+  for (auto it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
     if ((it->second.previousTask == TaskIndex) && (getPluginFromKey(it->first) == pluginID)) {
       globalMapPortStatus[it->first].previousTask = -1;
       removeTaskFromPort(it->first);
