@@ -89,8 +89,8 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
 
 int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) {
   peekFileNr = _peekfilenr;
+  constexpr size_t errorcode = (size_t)-1;
   if (fp) {
-    constexpr size_t errorcode = (size_t)-1;
     size_t pos = fp.position();
     if (pos == errorcode) {
       _peekreadpos = 0;
