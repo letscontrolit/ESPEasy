@@ -49,7 +49,7 @@ esp_err_t do_read_internal_temperature(float& celsius) {
     --retries;
   }
 #   ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
+//  addLog(LOG_LEVEL_DEBUG, concat(F("ESP32: Raw temperature value: "), raw));
 #   endif // ifndef BUILD_NO_DEBUG
 
   if (raw != 128) {

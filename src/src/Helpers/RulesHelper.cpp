@@ -219,7 +219,9 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
   }
 
   if (it->second.position() != pos) {
-    it->second.seek(pos);
+    if (!it->second.seek(pos)) {
+      return 0;
+    }
   }
   const size_t ret = it->second.read(buffer, length);
 
@@ -366,6 +368,12 @@ String RulesHelperClass::readLn(const String& filename,
     const size_t startPos = pos;
     int len               = read(filename, pos, &buf[0], RULES_BUFFER_SIZE);
     moreAvailable = len != 0;
+    // Due to change in Arduino code, pos may now also be (size_t)-1
+    // See: https://github.com/espressif/arduino-esp32/commit/0ab2c58b6c14f6dbc8b9ab0e61d776cd3ac5de66
+    constexpr size_t errorcode = (size_t)-1;
+    if (pos == errorcode) {
+      moreAvailable = false;
+    }
 
     if (!moreAvailable) { done = true; }
 
