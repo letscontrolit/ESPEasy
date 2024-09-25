@@ -314,9 +314,9 @@ String RulesHelperClass::readLn(const String& filename,
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         addLogMove(LOG_LEVEL_DEBUG, strformat(
-          F("Rules : Read %u  lines from %s"), 
-          lines.size(), 
-          filename.c_str()));
+                     F("Rules : Read %u  lines from %s"),
+                     lines.size(),
+                     filename.c_str()));
       }
 # endif // ifndef BUILD_NO_DEBUG
       _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
@@ -345,10 +345,11 @@ String RulesHelperClass::readLn(const String& filename,
                                 bool        & moreAvailable,
                                 bool          searchNextOnBlock)
 {
-  #ifdef USE_SECOND_HEAP
+  # ifdef USE_SECOND_HEAP
+
   // Do not store in 2nd heap, this is only temporary and needs to be as fast as possible
   HeapSelectDram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
+  # endif // ifdef USE_SECOND_HEAP
 
   std::vector<uint8_t> buf;
 
@@ -368,9 +369,11 @@ String RulesHelperClass::readLn(const String& filename,
     const size_t startPos = pos;
     int len               = read(filename, pos, &buf[0], RULES_BUFFER_SIZE);
     moreAvailable = len != 0;
+
     // Due to change in Arduino code, pos may now also be (size_t)-1
     // See: https://github.com/espressif/arduino-esp32/commit/0ab2c58b6c14f6dbc8b9ab0e61d776cd3ac5de66
     constexpr size_t errorcode = (size_t)-1;
+
     if (pos == errorcode) {
       moreAvailable = false;
     }
