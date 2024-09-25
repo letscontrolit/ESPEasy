@@ -939,7 +939,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_EXIT) {
           UserVar.clear_computed(event->TaskIndex);
           clearPluginTaskData(event->TaskIndex);
-          clearTaskCache(event->TaskIndex);
+//          clearTaskCache(event->TaskIndex);
 
           //            initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
