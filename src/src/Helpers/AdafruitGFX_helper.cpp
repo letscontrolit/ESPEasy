@@ -3328,7 +3328,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               }
 
               constexpr size_t errorcode = (size_t)-1;
-              size_t pos = fp.position();
+              size_t pos = file.position();
               if (pos == errorcode) {
                 pos = 0;
               }
