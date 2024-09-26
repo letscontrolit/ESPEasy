@@ -316,12 +316,14 @@ bool loadFromFS(String path) {
       }
       web_server.streamFile(f, String(contentType));
       f.close();
+      web_server.client().PR_9453_FLUSH_TO_CLEAR();
     }
 
     if (!fileEmbedded) {
       return false;
     }
     serveEmbedded(path, contentType, false);
+    web_server.client().PR_9453_FLUSH_TO_CLEAR();
   }
 
   statusLED(true);
