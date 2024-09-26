@@ -15,8 +15,8 @@
 #include "../Helpers/StringParser.h"
 
 #if FEATURE_SD
-#include <SD.h>
-#endif
+# include <SD.h>
+#endif // if FEATURE_SD
 
 
 bool remoteConfig(struct EventStruct *event, const String& string)
@@ -103,9 +103,10 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
     if (!enabled) {
       PluginCall(PLUGIN_EXIT, event, dummy);
     }
+
     // Toggle enable/disable state via command
     // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
-    //Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+    // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
     Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
     if (enabled) {
@@ -131,6 +132,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     struct EventStruct TempEvent(taskIndex);
     String dummy;
@@ -138,7 +140,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   }
   Settings.clearTask(taskIndex);
   clearTaskCache(taskIndex); // Invalidate any cached values.
-  ExtraTaskSettings.clear(); 
+  ExtraTaskSettings.clear();
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
@@ -232,6 +234,7 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
  \*********************************************************************************************/
 String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
   const int valueCount = getValueCountForTask(TaskIndex);
+
   if (TaskValueIndex < valueCount) {
     return Cache.getTaskDeviceValueName(TaskIndex, TaskValueIndex);
   }
@@ -300,39 +303,41 @@ void SendValueLogger(taskIndex_t TaskIndex)
   featureSD = true;
   # endif // if FEATURE_SD
 
-  if (featureSD 
+  if (featureSD
       # ifndef BUILD_NO_DEBUG
       || loglevelActiveFor(LOG_LEVEL_DEBUG)
-      #endif
-  ) {
+      # endif // ifndef BUILD_NO_DEBUG
+      ) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
     if (validDeviceIndex(DeviceIndex)) {
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      const String logline_prefix = strformat(F("%s %s,%d,%s")
-        , node_time.getDateString('-').c_str()
-        , node_time.getTimeString(':').c_str()
-        , Settings.Unit
-        , getTaskDeviceName(TaskIndex).c_str()
-        );
+      const String logline_prefix =
+        strformat(F("%s %s,%d,%s")
+                  , node_time.getDateString('-').c_str()
+                  , node_time.getTimeString(':').c_str()
+                  , Settings.Unit
+                  , getTaskDeviceName(TaskIndex).c_str()
+                  );
 
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         logger += strformat(F("%s,%s,%s\r\n")
-        , logline_prefix.c_str()
-        , Cache.getTaskDeviceValueName(TaskIndex, varNr).c_str()
-        , formatUserVarNoCheck(TaskIndex, varNr).c_str()
-        );
+                            , logline_prefix.c_str()
+                            , Cache.getTaskDeviceValueName(TaskIndex, varNr).c_str()
+                            , formatUserVarNoCheck(TaskIndex, varNr).c_str()
+                            );
       }
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
-      #endif
+      # endif // ifndef BUILD_NO_DEBUG
     }
   }
 #endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
 #if FEATURE_SD
+
   if (!logger.isEmpty()) {
     String   filename = patch_fname(F("VALUES.CSV"));
     fs::File logFile  = SD.open(filename, "a+");
@@ -355,52 +360,54 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   // FIXME TD-er:   Why not just call HSV2RGBW and leave out the W part?
 
   int rgbw[4]{};
+
   HSV2RGBW(H, S, I, rgbw);
   memcpy(rgb, rgbw, 3 * sizeof(int));
+
   /*
 
-  int r, g, b;
+     int r, g, b;
 
-  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
-  constexpr float deg2rad = 3.14159f / 180.0f;
-  H *= deg2rad;                               // Convert to radians.
-  S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
-  I = I / 100;
-  I = I > 0 ? (I < 1 ? I : 1) : 0;
+     H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+     constexpr float deg2rad = 3.14159f / 180.0f;
+     H *= deg2rad;                               // Convert to radians.
+     S = S / 100;
+     S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
+     I = I / 100;
+     I = I > 0 ? (I < 1 ? I : 1) : 0;
 
-  // Math! Thanks in part to Kyle Miller.
-  if (H < 2.09439f) {
-    r = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
-    g = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
-    b = 255 * I / 3 * (1 - S);
-  } else if (H < 4.188787f) {
-    H = H - 2.09439f;
-    g = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
-    b = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
-    r = 255 * I / 3 * (1 - S);
-  } else {
-    H = H - 4.188787f;
-    b = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
-    r = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
-    g = 255 * I / 3 * (1 - S);
-  }
-  rgb[0] = r;
-  rgb[1] = g;
-  rgb[2] = b;
-  */
+     // Math! Thanks in part to Kyle Miller.
+     if (H < 2.09439f) {
+     r = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+     g = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
+     b = 255 * I / 3 * (1 - S);
+     } else if (H < 4.188787f) {
+     H = H - 2.09439f;
+     g = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+     b = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
+     r = 255 * I / 3 * (1 - S);
+     } else {
+     H = H - 4.188787f;
+     b = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+     r = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
+     g = 255 * I / 3 * (1 - S);
+     }
+     rgb[0] = r;
+     rgb[1] = g;
+     rgb[2] = b;
+   */
 }
 
 // uses H 0..360 S 1..100 I/V 1..100 (according to homie convention)
 // Source https://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
 void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
-  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+  H = fmod(H, 360);                 // cycle H around to 0-360 degrees
   constexpr float deg2rad = 3.14159f / 180.0f;
-  H *= deg2rad;                               // Convert to radians.
-  S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
-  I = I / 100;
-  I = I > 0 ? (I < 1 ? I : 1) : 0;
+  H *= deg2rad;                     // Convert to radians.
+  S  = S / 100;
+  S  = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  I  = I / 100;
+  I  = I > 0 ? (I < 1 ? I : 1) : 0;
 
   #define RGB_ORDER 0
   #define GBR_ORDER 1
@@ -427,7 +434,7 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   const int r = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
   const int g = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
   const int b = 0;
-  rgbw[3]     = 255 * (1 - S) * I;
+  rgbw[3] = 255 * (1 - S) * I;
 
   if (RGB_ORDER == order) {
     rgbw[0] = r;
@@ -446,10 +453,10 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
 
 // Convert RGB Color to HSV Color
 void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
-  const float rf     = static_cast<float>(r) / 255.0f;
-  const float gf     = static_cast<float>(g) / 255.0f;
-  const float bf     = static_cast<float>(b) / 255.0f;
-  float maxval = rf;
+  const float rf = static_cast<float>(r) / 255.0f;
+  const float gf = static_cast<float>(g) / 255.0f;
+  const float bf = static_cast<float>(b) / 255.0f;
+  float maxval   = rf;
 
   if (gf > maxval) { maxval = gf; }
 
@@ -481,8 +488,6 @@ void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
   hsv[1] = s * 255.0f;
   hsv[2] = v * 255.0f;
 }
-
-
 
 float getCPUload() {
   return 100.0f - Scheduler.getIdleTimePct();
@@ -522,6 +527,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
+
     if (log.reserve(128)) {
       log  = F("After ");
       log += function;

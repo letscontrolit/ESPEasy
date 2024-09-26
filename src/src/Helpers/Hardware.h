@@ -14,10 +14,10 @@
 #include "../Helpers/Hardware_defines.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 5
-#include <esp_adc/adc_cali.h>
-#include <esp_adc/adc_cali_scheme.h>
+# include <esp_adc/adc_cali.h>
+# include <esp_adc/adc_cali_scheme.h>
 
-#endif
+#endif // if ESP_IDF_VERSION_MAJOR >= 5
 
 
 /********************************************************************************************\
@@ -26,41 +26,61 @@
 void hardwareInit();
 
 
-void    checkResetFactoryPin();
+void checkResetFactoryPin();
 
 #ifdef ESP8266
 extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
 
-int espeasy_analogRead(int pin);
+int   espeasy_analogRead(int pin);
 #endif // ifdef ESP8266
 
 float mapADCtoFloat(float float_value,
-                             float adc1,
-                             float adc2,
-                             float out1,
-                             float out2);
+                    float adc1,
+                    float adc2,
+                    float out1,
+                    float out2);
 
 
 #ifdef ESP32
-void                       initADC();
-float                      applyADCFactoryCalibration(
-    float raw_value, 
-    adc_atten_t attenuation);
+void  initADC();
+float applyADCFactoryCalibration(
+  float       raw_value,
+  adc_atten_t attenuation);
 
 bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();
 
-float getADC_factory_calibrated_min(adc_atten_t attenuation);
-float getADC_factory_calibrated_max(adc_atten_t attenuation);
+float                      getADC_factory_calibrated_min(adc_atten_t attenuation);
+float                      getADC_factory_calibrated_max(adc_atten_t attenuation);
 
 int                        getADC_num_for_gpio(int pin);
-int                        getADC_num_for_gpio(int pin, int& channel);
+int                        getADC_num_for_gpio(int  pin,
+                                               int& channel);
 
 int                        espeasy_analogRead(int  pin,
                                               bool readAsTouch = false);
 
-int  getCPU_MaxFreqMHz();
-int  getCPU_MinFreqMHz();
+int                        getCPU_MaxFreqMHz();
+int                        getCPU_MinFreqMHz();
+
+# if ESP_IDF_VERSION_MAJOR < 5
+#  if CONFIG_IDF_TARGET_ESP32
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32_t
+#  elif CONFIG_IDF_TARGET_ESP32S3
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32s3_t
+#  elif CONFIG_IDF_TARGET_ESP32S2
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32s2_t
+#  elif CONFIG_IDF_TARGET_ESP32C6
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32c3_t
+#  elif CONFIG_IDF_TARGET_ESP32C3
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32c3_t
+#  elif CONFIG_IDF_TARGET_ESP32C2
+#   define ESP_PM_CONFIG_T esp_pm_config_esp32c2_t
+#  endif // if CONFIG_IDF_TARGET_ESP32
+# else // if ESP_IDF_VERSION_MAJOR < 5
+#  define ESP_PM_CONFIG_T esp_pm_config_t
+# endif // if ESP_IDF_VERSION_MAJOR < 5
+
 
 #endif // ifdef ESP32
 
@@ -78,9 +98,10 @@ void initCAN();
 // Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
 uint32_t HwRandom();
 
-long HwRandom(long howbig);
+long     HwRandom(long howbig);
 
-long HwRandom(long howsmall, long howbig);
+long     HwRandom(long howsmall,
+                  long howbig);
 
 
 /********************************************************************************************\
