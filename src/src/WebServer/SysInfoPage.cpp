@@ -597,6 +597,9 @@ void handle_sysinfo_Firmware() {
   addHtml(F(BUILD_NOTES));
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
+#ifdef ESP32
+  addRowLabelValue_copy(LabelType::ESP_IDF_SDK_VERSION);
+#endif
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
   addHtml(' ');

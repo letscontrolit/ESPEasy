@@ -253,7 +253,9 @@ void handle_hardware() {
       toString(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
       toString(EthPhyType_t::RTL8201),				
+#if ETH_TYPE_JL1101_SUPPORTED
       toString(EthPhyType_t::JL1101),				  
+#endif
       toString(EthPhyType_t::DP83848),				
       toString(EthPhyType_t::KSZ8041),				
       toString(EthPhyType_t::KSZ8081),				
@@ -279,8 +281,10 @@ void handle_hardware() {
       static_cast<int>(EthPhyType_t::LAN8720),			  
       static_cast<int>(EthPhyType_t::TLK110),				  
 #if ESP_IDF_VERSION_MAJOR > 3
-      static_cast<int>(EthPhyType_t::RTL8201),				
+      static_cast<int>(EthPhyType_t::RTL8201),			
+#if ETH_TYPE_JL1101_SUPPORTED	
       static_cast<int>(EthPhyType_t::JL1101),				  
+#endif
       static_cast<int>(EthPhyType_t::DP83848),				
       static_cast<int>(EthPhyType_t::KSZ8041),				
       static_cast<int>(EthPhyType_t::KSZ8081),				

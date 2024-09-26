@@ -217,6 +217,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BUILD_DESC:             return F("Build");
     case LabelType::GIT_BUILD:              return F("Git Build");
     case LabelType::SYSTEM_LIBRARIES:       return F("System Libraries");
+#ifdef ESP32
+    case LabelType::ESP_IDF_SDK_VERSION:    return F("ESP-IDF Version");
+#endif
     case LabelType::PLUGIN_COUNT:           return F("Plugin Count");
     case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin Description");
     case LabelType::BUILD_TIME:             return F("Build Time");
@@ -560,6 +563,14 @@ String getValue(LabelType::Enum label) {
       return get_git_head();
     }
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
+#ifdef ESP32
+    case LabelType::ESP_IDF_SDK_VERSION:    return strformat(
+      F("%d.%d.%d"), 
+      ESP_IDF_VERSION_MAJOR, 
+      ESP_IDF_VERSION_MINOR, 
+      ESP_IDF_VERSION_PATCH);
+#endif
+
     case LabelType::PLUGIN_COUNT:           retval = getDeviceCount() + 1; break;
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
     case LabelType::BUILD_TIME:             return String(get_build_date()) + ' ' + get_build_time();

@@ -157,6 +157,9 @@ struct LabelType {
     BUILD_DESC,
     GIT_BUILD,
     SYSTEM_LIBRARIES,
+#ifdef ESP32
+    ESP_IDF_SDK_VERSION,
+#endif
     PLUGIN_COUNT,
     PLUGIN_DESCRIPTION,
     BUILD_TIME,

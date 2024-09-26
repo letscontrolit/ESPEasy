@@ -163,6 +163,9 @@ void handle_json()
         LabelType::BUILD_DESC,
         LabelType::GIT_BUILD,
         LabelType::SYSTEM_LIBRARIES,
+#ifdef ESP32
+        LabelType::ESP_IDF_SDK_VERSION,
+#endif
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
         LabelType::BUILD_TIME,
@@ -452,8 +455,8 @@ void handle_json()
         for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
-          const String value = formatUserVarNoCheck(&TempEvent, x);
           uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
+          const String value = formatUserVarNoCheck(&TempEvent, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
@@ -668,6 +671,9 @@ void handle_buildinfo() {
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);
+#ifdef ESP32
+  json_prop(LabelType::ESP_IDF_SDK_VERSION);
+#endif
   json_prop(LabelType::PLUGIN_COUNT);
   json_prop(LabelType::PLUGIN_DESCRIPTION);
   json_close();
