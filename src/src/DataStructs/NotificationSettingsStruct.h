@@ -31,7 +31,7 @@ struct NotificationSettingsStruct
   int8_t        Pin2;
   char          User[49];
   char          Pass[33];
-  unsigned int  Timeout;
+  unsigned int  Timeout_ms;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
