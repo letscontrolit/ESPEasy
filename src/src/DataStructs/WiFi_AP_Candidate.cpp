@@ -35,6 +35,17 @@ country({
   memset(&bits, 0, sizeof(bits));
 }
 
+WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
+{
+  // All members other than ssid can be mem-copied
+  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
+
+  // Make sure ssid isn't some kind of valid String with heap allocated memory
+  memset(&ssid, 0, sizeof(ssid));
+  // Now copy the ssid String
+  ssid = other.ssid;
+}
+
 WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
   last_seen(0), rssi(0), channel(0), index(index_c), enc_type(0)
 {
@@ -155,6 +166,18 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 
   // RSSI values are negative, so the larger value is the better one.
   return rssi > other.rssi;
+}
+
+WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other)
+{
+  // All members other than ssid can be mem-copied
+  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
+
+  // Make sure ssid isn't some kind of valid String with heap allocated memory
+  memset(&ssid, 0, sizeof(ssid));
+  // Now copy the ssid String
+  ssid = other.ssid;
+  return *this;
 }
 
 bool WiFi_AP_Candidate::usable() const {

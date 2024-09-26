@@ -55,7 +55,8 @@ class PanasonicAltDKEHeatpumpIR : public HeatpumpIR
 {
   public:
     PanasonicAltDKEHeatpumpIR();
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd);
+    using HeatpumpIR::send;
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd) override;
     void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool ionizerCmd);
     void send(IRSender& IR, bool quiet, bool powerful);
 
