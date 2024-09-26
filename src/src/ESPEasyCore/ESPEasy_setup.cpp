@@ -314,58 +314,19 @@ void ESPEasy_setup()
   #endif
 
 #ifdef ESP32
-  if (Settings.EcoPowerMode()) {
-    // Configure dynamic frequency scaling:
-    // maximum and minimum frequencies are set in sdkconfig,
-    // automatic light sleep is enabled if tickless idle support is enabled.
-#if ESP_IDF_VERSION_MAJOR < 5
-#if CONFIG_IDF_TARGET_ESP32
-    esp_pm_config_esp32_t pm_config =
-#elif CONFIG_IDF_TARGET_ESP32S3
-    esp_pm_config_esp32s3_t pm_config =
-#elif CONFIG_IDF_TARGET_ESP32S2
-    esp_pm_config_esp32s2_t pm_config =
-#elif CONFIG_IDF_TARGET_ESP32C6
-    esp_pm_config_esp32c3_t pm_config =
-#elif CONFIG_IDF_TARGET_ESP32C3
-    esp_pm_config_esp32c3_t pm_config =
-#elif CONFIG_IDF_TARGET_ESP32C2
-    esp_pm_config_esp32c2_t pm_config =
-#endif
-    {
+  // Configure dynamic frequency scaling:
+  // maximum and minimum frequencies are set in sdkconfig,
+  // automatic light sleep is enabled if tickless idle support is enabled.
+  ESP_PM_CONFIG_T pm_config = {
             .max_freq_mhz = getCPU_MaxFreqMHz(),
-
-            .min_freq_mhz = getCPU_MinFreqMHz(),
+            .min_freq_mhz = Settings.EcoPowerMode() ? getCPU_MinFreqMHz() : getCPU_MaxFreqMHz(),
 #if CONFIG_FREERTOS_USE_TICKLESS_IDLE
-            .light_sleep_enable = true
-#endif
-    };
-#else
-  esp_pm_config_t pm_config = {
-            .max_freq_mhz = getCPU_MaxFreqMHz(),
-            .min_freq_mhz = 80,
-#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
-            .light_sleep_enable = true
+            .light_sleep_enable = Settings.EcoPowerMode()
 #else
             .light_sleep_enable = false
 #endif
-    };
-#endif
-    esp_pm_configure(&pm_config);
-#if CONFIG_IDF_TARGET_ESP32
-  } else {
-    // Set the max/min frequency based on what's being reported by the efuses.
-    // Only ESP32 seems to have this function.
-    esp_pm_config_esp32_t pm_config = {
-            .max_freq_mhz = getCPU_MaxFreqMHz(),
-            .min_freq_mhz = getCPU_MinFreqMHz(),
-#if CONFIG_FREERTOS_USE_TICKLESS_IDLE
-            .light_sleep_enable = false
-#endif
-    };
-    esp_pm_configure(&pm_config);
-#endif
-  }
+  };
+  esp_pm_configure(&pm_config);
 #endif
 
 

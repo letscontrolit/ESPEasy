@@ -14,12 +14,12 @@ enum class ESPEasySerialPort : uint8_t {
 #ifdef ESP8266
   serial0_swap = 3,
 #endif // ifdef ESP8266
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
   serial1 = 4,
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
   serial2 = 5,
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
 #if USES_SW_SERIAL
   software = 6,
 #endif // if USES_SW_SERIAL

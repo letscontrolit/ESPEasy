@@ -253,7 +253,7 @@ void WebTemplateParser::getErrorNotifications() {
       const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
 
       if (Settings.ControllerEnabled[x] &&
-          validProtocolIndex(ProtocolIndex) && 
+          validProtocolIndex(ProtocolIndex) &&
           getProtocolStruct(ProtocolIndex).usesMQTT) {
         ++nrMQTTenabled;
       }
@@ -295,24 +295,27 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if (equals(varName, F("css")))
       {
         serve_favicon();
-/*
-        bool defaultCssServed = false;
 
-        if (MENU_INDEX_SETUP == navMenuIndex) {
-          // Serve embedded CSS
-          defaultCssServed = serve_CSS_inline();
-        }
-        if (!defaultCssServed) {
-*/
-          serve_CSS(CSSfiles_e::ESPEasy_default);
-//        }
+        /*
+                bool defaultCssServed = false;
+
+                if (MENU_INDEX_SETUP == navMenuIndex) {
+                  // Serve embedded CSS
+                  defaultCssServed = serve_CSS_inline();
+                }
+                if (!defaultCssServed) {
+         */
+        serve_CSS(CSSfiles_e::ESPEasy_default);
+
+        //        }
     #if FEATURE_RULES_EASY_COLOR_CODE
+
         if (!Settings.DisableRulesCodeCompletion() &&
-          (MENU_INDEX_RULES == navMenuIndex ||
-            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+            ((MENU_INDEX_RULES == navMenuIndex) ||
+             (MENU_INDEX_CUSTOM_PAGE == navMenuIndex))) {
           serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
         }
-    #endif
+    #endif // if FEATURE_RULES_EASY_COLOR_CODE
         return;
       }
       break;
@@ -353,9 +356,10 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
+
         if (!Settings.DisableRulesCodeCompletion() &&
-           (MENU_INDEX_RULES == navMenuIndex ||
-            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+            ((MENU_INDEX_RULES == navMenuIndex) ||
+             (MENU_INDEX_CUSTOM_PAGE == navMenuIndex))) {
           html_add_Easy_color_code_script();
         }
     #endif // if FEATURE_RULES_EASY_COLOR_CODE

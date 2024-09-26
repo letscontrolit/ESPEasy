@@ -10,9 +10,9 @@ IRSender::IRSender(uint8_t pin)
 
 
 // Send a uint8_t (8 bits) over IR
-void IRSender::sendIRbyte(uint8_t sendByte, int bitMarkLength, int zeroSpaceLength, int oneSpaceLength)
+void IRSender::sendIRbyte(uint8_t sendByte, int bitMarkLength, int zeroSpaceLength, int oneSpaceLength, uint8_t bitCount)
 {
-  for (int i=0; i<8 ; i++)
+  for (int i=0; i<bitCount ; i++)
   {
     if (sendByte & 0x01)
     {
@@ -41,6 +41,14 @@ uint8_t IRSender::bitReverse(uint8_t x)
   //          00001111  |         11110000
   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
   return x;
+}
+
+
+// Some boards have inverted signals, so we need to set the pin to HIGH to turn the IR transmitter off
+// For example M5Stick-C where LED positive on VCC and negative on pin 9
+void IRSender::invert(bool inverted)
+{
+  _inverted = inverted;
 }
 
 

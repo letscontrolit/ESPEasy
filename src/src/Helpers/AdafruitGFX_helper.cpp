@@ -3357,7 +3357,13 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 bitIn   = 7 - (loadX & 7);
               }
 
-              if (file.position() != bmpPos) {        // Need seek?
+              constexpr size_t errorcode = (size_t)-1;
+              size_t pos = file.position();
+              if (pos == errorcode) {
+                pos = 0;
+              }
+
+              if (pos != bmpPos) {        // Need seek?
                 if (transact && canTransact) {
                   _tft->dmaWait();
                   _tft->endWrite();                   // End TFT SPI transaction
