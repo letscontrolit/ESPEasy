@@ -658,40 +658,9 @@ static const char jsClipboardCopyPart3[] PROGMEM = {
 
 #ifdef WEBSERVER_INCLUDE_JS
 // Manually minified js
+// setTimeout needed or else the upload may fail right after fetching the existing rules file
 static const char jsSaveRules[] PROGMEM = {
-"function saveRulesFile() {"
-"'use strict';"
-"let e=document.getElementById('size');"
-"let t=document.getElementById('rules').value;"
-"t=t.replace(/\\r?\\n/g, '\\r\\n');"
-"let n=document.getElementById('set').value;"
-"let l=new File([t],'rules'+n+'.txt',{"
-"type:'text/plain'"
-"});"
-"let a=new FormData();"
-"a.append('file',l);"
-"a.append('enctype','multipart/form-data');"
-"let o='/rules'+n+'.txt?callback='+Date.now();"
-"fetch(o).then(e=>e.text()).then(l=>{"
-"if(t===l)"
-"console.log('nothing to save...');"
-"else{"
-"fetch('/upload',{"
-"method:'POST',"
-"body:a,"
-"mode:'no-cors'"
-"}).then(e=>e.text()).then(l=>{"
-"let a='/rules'+n+'.txt?callback='+Date.now();"
-"fetch(a).then(e=>e.text()).then(n=>{"
-"if(t===n){"
-"toasting();"
-"e.innerHTML=t.length;"
-"}else{"
-"console.log('error when saving...');"
-"}});"
-"});"
-"}});"
-"}"
+"function saveRulesFile(){'use strict';let e=document.getElementById('size'),t=document.getElementById('rules').value;t=t.replace(/\\r?\\n/g,'\\r\\n');let n=document.getElementById('set').value,l=new File([t],'rules'+n+'.txt',{type:'text/plain'}),o=new FormData;o.append('file',l),o.append('enctype','multipart/form-data');let a='/rules'+n+'.txt?callback='+Date.now();fetch(a).then((e=>e.text())).then((n=>{t===n?console.log('nothing to save...'):setTimeout((()=>fetch('/upload',{method:'POST',body:o,mode:'no-cors'}).then((e=>e.text())).then((n=>{setTimeout((()=>fetch(a).then((e=>e.text())).then((n=>{t===n?(toasting(),e.innerHTML=t.length):console.log('error when saving...')}))),200)}))),100)}))}"
 };
 #endif
 

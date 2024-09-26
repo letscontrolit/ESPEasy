@@ -6,7 +6,7 @@
 #include "../DataStructs/MAC_address.h"
 struct WiFi_AP_Candidate {
   WiFi_AP_Candidate();
-  WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
+  WiFi_AP_Candidate(const WiFi_AP_Candidate& other);
 
 
   // Construct from stored credentials
@@ -33,7 +33,7 @@ struct WiFi_AP_Candidate {
     return bssid_match(other.bssid) && ssid.equals(other.ssid); // && key.equals(other.key);
   }
 
-  WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other) = default;
+  WiFi_AP_Candidate& operator=(const WiFi_AP_Candidate& other);
 
   // Check if the candidate data can be used to actually connect to an AP.
   bool               usable() const;
