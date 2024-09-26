@@ -75,7 +75,12 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
 
   if (_peekfilenr == RTC_cache.writeFileNr) {
     if (fw) {
-      return ((_peekreadpos + 1) < fw.position());
+      constexpr size_t errorcode = (size_t)-1;
+      size_t pos = fp.position();
+      if (pos == errorcode) {
+        pos = 0;
+      }
+      return ((_peekreadpos + 1) < pos);
     }
 //    return true;
   }
@@ -84,9 +89,18 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
 
 int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) {
   peekFileNr = _peekfilenr;
+  constexpr size_t errorcode = (size_t)-1;
   if (fp) {
-    _peekreadpos = fp.position();
+    size_t pos = fp.position();
+    if (pos == errorcode) {
+      _peekreadpos = 0;
+      return -1;
+    }      
+    _peekreadpos = pos;
   }
+
+  if (_peekreadpos == errorcode)
+    return -1;
   return _peekreadpos;
 }
 
@@ -101,7 +115,13 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
   if (fp) {
-    if (newPeekReadPos < static_cast<int>(fp.position())) {
+    constexpr size_t errorcode = (size_t)-1;
+    size_t pos = fp.position();
+    if (pos == errorcode) {
+      pos = 0;
+    }
+
+    if (newPeekReadPos < static_cast<int>(pos)) {
       _peekfilenr = newPeekFileNr;
       _peekreadpos = newPeekReadPos;
       fp.close();
@@ -135,7 +155,14 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
 
       if (fileSize <= newPeekReadPos) {
         fp.seek(0, fs::SeekEnd);
-        _peekreadpos = fp.position();
+
+        constexpr size_t errorcode = (size_t)-1;
+        size_t pos = fp.position();
+        if (pos == errorcode) {
+          pos = 0;
+        }
+
+        _peekreadpos = pos;
         return;
       }
 
@@ -170,7 +197,13 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
 
   const size_t bytesRead = fp.read(data, size);
 
-  _peekreadpos = fp.position();
+  constexpr size_t errorcode = (size_t)-1;
+  size_t pos = fp.position();
+  if (pos == errorcode) {
+    pos = 0;
+  }
+
+  _peekreadpos = pos;
 
   if (_peekreadpos >= fp.size()) {
     if (_peekfilenr < RTC_cache.writeFileNr) {

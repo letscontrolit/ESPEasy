@@ -74,7 +74,7 @@
 // #include <hal/ledc_hal.h>
 
 # endif // if ESP_IDF_VERSION_MAJOR >= 5
-#endif // ifdef ESP32
+#endif  // ifdef ESP32
 
 /********************************************************************************************\
    Hardware information
@@ -124,59 +124,62 @@ int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_
 
 
 bool isFlashInterfacePin_ESPEasy(int gpio) {
-# if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32
 
   // GPIO-6 ... 11: SPI flash and PSRAM
   // GPIO-16 & 17: CS for PSRAM, thus only unuable when PSRAM is present
-  return ((gpio) >= 6 && (gpio) <= 11);
+  return (gpio) >= 6 && (gpio) <= 11;
 
-# elif CONFIG_IDF_TARGET_ESP32S3
+#elif CONFIG_IDF_TARGET_ESP32S3
 
   // GPIO-26 ... 32: SPI flash and PSRAM
   // GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
-  return ((gpio) >= 26 && (gpio) <= 32);
+  return (gpio) >= 26 && (gpio) <= 32;
 
-# elif CONFIG_IDF_TARGET_ESP32S2
+#elif CONFIG_IDF_TARGET_ESP32S2
 
   // GPIO-22 ... 25: SPI flash and PSRAM
   // GPIO-26: CS for PSRAM, thus only unuable when PSRAM is present
   // GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
-  return ((gpio) >= 22 && (gpio) <= 25);
+  return (gpio) >= 22 && (gpio) <= 25;
 
-# elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C6
 
   // FIXME TD-er: Must know whether we have internal or external flash
 
   // For chip variants with an in-package flash, this pin can not be used.
-  if (gpio == 10 || gpio == 11) 
+  if ((gpio == 10) || (gpio == 11)) {
     return true;
+  }
 
   // For chip variants without an in-package flash, this pin can not be used.
-//  if (gpio == 14) 
-//    return true;
-  
+  //  if (gpio == 14)
+  //    return true;
+
   // GPIO-27: Flash voltage selector
   // GPIO-24 ... 30: Connected to internal flash (might be available when using external flash???)
-  return ((gpio) >= 24 && (gpio) <= 30 && gpio != 27);
+  return (gpio) >= 24 && (gpio) <= 30 && gpio != 27;
 
-# elif CONFIG_IDF_TARGET_ESP32C3
+#elif CONFIG_IDF_TARGET_ESP32C3
 
   // GPIO-11: Flash voltage selector
   // GPIO-12 ... 17: Connected to flash
-  return ((gpio) >= 12 && (gpio) <= 17);
+  return (gpio) >= 12 && (gpio) <= 17;
 
-# elif CONFIG_IDF_TARGET_ESP32C2
+#elif CONFIG_IDF_TARGET_ESP32C2
 
   // GPIO-11: Flash voltage selector
   // For chip variants with a SiP flash built in, GPIO11~ GPIO17 are dedicated to connecting SiP flash, not for other uses
-  return ((gpio) >= 12 && (gpio) <= 17);
+  return (gpio) >= 12 && (gpio) <= 17;
 
-# elif defined(ESP8266)
-  if (isESP8285())
-    return ((gpio) == 6 || (gpio) == 7 || (gpio) == 8 || (gpio) == 11);
-  return ((gpio) >= 6 && (gpio) <= 11);
+#elif defined(ESP8266)
 
-# endif // if CONFIG_IDF_TARGET_ESP32
+  if (isESP8285()) {
+    return (gpio) == 6 || (gpio) == 7 || (gpio) == 8 || (gpio) == 11;
+  }
+  return (gpio) >= 6 && (gpio) <= 11;
+
+#endif // if CONFIG_IDF_TARGET_ESP32
 }
 
 uint32_t getFlashChipId() {
@@ -251,25 +254,25 @@ String getChipFeaturesString() {
 
   const int32_t flash_cap = getEmbeddedFlashSize();
 
-  if (getChipFeatures().embeddedFlash || (flash_cap != 0)) { 
+  if (getChipFeatures().embeddedFlash || (flash_cap != 0)) {
     if (flash_cap > 0) {
       features += strformat(F("%dMB "), flash_cap);
     } else if (flash_cap < 0) {
       features += strformat(F("(%d) "), flash_cap);
     }
-    features += F("Emb. Flash"); 
-    features += F(" / "); 
+    features += F("Emb. Flash");
+    features += F(" / ");
   }
 
   const int32_t psram_cap = getEmbeddedPSRAMSize();
 
-  if (getChipFeatures().embeddedPSRAM || (psram_cap != 0)) { 
+  if (getChipFeatures().embeddedPSRAM || (psram_cap != 0)) {
     if (psram_cap > 0) {
       features += strformat(F("%dMB "), psram_cap);
     } else if (psram_cap < 0) {
       features += strformat(F("(%d) "), psram_cap);
     }
-    features += F("Emb. PSRAM"); 
+    features += F("Emb. PSRAM");
   }
   features.trim();
 
@@ -289,27 +292,35 @@ bool getFlashChipOPI_wired() {
   # endif // ifdef ESP32_CLASSIC
 }
 
-#endif // ifdef ESP32
+#endif    // ifdef ESP32
 
 
 uint32_t getFlashChipSpeed() {
   #ifdef ESP8266
   return ESP.getFlashChipSpeed();
   #else // ifdef ESP8266
+# if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
+
+  // ESP IDF still needs to patch those SPI registers
+  // for which patches have been submitted and somehow they managed to merge it completely wrong.
+  return ESP.getFlashChipSpeed();
+# else // if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
+
   // All ESP32-variants have the SPI flash wired to SPI peripheral 1
   const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(1));
 
-/*
-  addLog(LOG_LEVEL_INFO,   strformat(
-    F("SPI_clock: %x  FSPI: %d SPI_CLOCK_REG(1): %x"), 
-    spi_clock, FSPI, SPI_CLOCK_REG(1)));
-*/
+  /*
+     addLog(LOG_LEVEL_INFO,   strformat(
+      F("SPI_clock: %x  FSPI: %d SPI_CLOCK_REG(1): %x"),
+      spi_clock, FSPI, SPI_CLOCK_REG(1)));
+   */
 
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
     return getApbFrequency();
   }
   return spiClockDivToFrequency(spi_clock);
+# endif // if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
   #endif // ifdef ESP8266
 }
 
@@ -430,8 +441,11 @@ const __FlashStringHelper* getChipModel() {
           CHIP_ESP32S3    = 9,  //!< ESP32-S3
           CHIP_ESP32C3    = 5,  //!< ESP32-C3
           CHIP_ESP32C2    = 12, //!< ESP32-C2
+          CHIP_ESP32C5    = 17, //!< ESP32-C5 beta3 (MPW)
+          CHIP_ESP32C5    = 23, //!< ESP32-C5 MP
           CHIP_ESP32C6_b  = 7,  //!< ESP32-C6(beta)
           CHIP_ESP32C6    = 13, //!< ESP32-C6
+          CHIP_ESP32C61   = 20, //!< ESP32-C61
           CHIP_ESP32H2_b1 = 10, //!< ESP32-H2(beta1)
           CHIP_ESP32H2_b2 = 14, //!< ESP32-H2(beta2)
           CHIP_ESP32H2    = 16, //!< ESP32-H2
@@ -459,7 +473,12 @@ const __FlashStringHelper* getChipModel() {
   esp_chip_info(&chip_info);
 
   uint32_t chip_model    = chip_info.model;
-  uint32_t chip_revision = chip_info.revision;
+  const uint32_t chip_revision =
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    chip_info.revision / 100;
+#else
+    chip_info.revision;
+#endif
 
   uint32_t pkg_version = 0;
 # if (ESP_IDF_VERSION_MAJOR >= 5)
@@ -495,14 +514,14 @@ const __FlashStringHelper* getChipModel() {
     switch (pkg_version) {
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:
 
-        if (single_core) { return F("ESP32-S0WDQ6"); } // Max 240MHz, Single core, QFN 6*6
+        if (single_core) { return F("ESP32-S0WDQ6"); }    // Max 240MHz, Single core, QFN 6*6
         else if (rev3)   { return F("ESP32-D0WDQ6-V3"); } // Max 240MHz, Dual core, QFN 6*6
-        else {             return F("ESP32-D0WDQ6"); } // Max 240MHz, Dual core, QFN 6*6
+        else {             return F("ESP32-D0WDQ6"); }    // Max 240MHz, Dual core, QFN 6*6
       case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:
 
         if (single_core) { return F("ESP32-S0WD"); }   // Max 160MHz, Single core, QFN 5*5, ESP32-SOLO-1, ESP32-DevKitC
         else if (rev3)   { return F("ESP32-D0WDQ5-V3"); } // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32E, ESP32_WROVER-E, ESP32-DevKitC
-        else {             return F("ESP32-D0WDQ5"); } // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
+        else {             return F("ESP32-D0WDQ5"); }    // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
       case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
         return F("ESP32-D2WDQ5");                      // Max 160MHz, Dual core, QFN 5*5, 2MB embedded flash
       case 3:
@@ -519,6 +538,8 @@ const __FlashStringHelper* getChipModel() {
       case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302:
         return F("ESP32-PICO-V3-02");                    // Max 240MHz, Dual core, LGA 7*7, 8MB embedded flash, 2MB embedded PSRAM,
                                                          // ESP32-PICO-MINI-02, ESP32-PICO-DevKitM-2
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3:
+        return F("ESP32-D0WDR2-V3");
     }
 # endif // if CONFIG_IDF_TARGET_ESP32
     return F("ESP32");
@@ -610,13 +631,13 @@ const __FlashStringHelper* getChipModel() {
           the HMAC peripheral, “World Controller”
      */
 
-/*
+    /*
 
-        efuse_reg.h:
-        EFUSE_RD_MAC_SPI_SYS_0_REG = block1_addr
-        EFUSE_RD_MAC_SPI_SYS_3_REG = block1_addr + (4 * num_word)) // (num_word = 3)
+            efuse_reg.h:
+            EFUSE_RD_MAC_SPI_SYS_0_REG = block1_addr
+            EFUSE_RD_MAC_SPI_SYS_3_REG = block1_addr + (4 * num_word)) // (num_word = 3)
 
-*/
+     */
 
 # ifdef CONFIG_IDF_TARGET_ESP32S3
 #  if (ESP_IDF_VERSION_MAJOR >= 5)
@@ -712,24 +733,34 @@ const __FlashStringHelper* getChipModel() {
 # endif // CONFIG_IDF_TARGET_ESP32P4
     return F("ESP32-P4");
   }
+  else if (17 == chip_model) {  // ESP32-C5 beta3 (MPW)
+    return F("ESP32-C5 beta3");
+  }
+  else if (23 == chip_model) {  // ESP32-C5 MP
+    return F("ESP32-C5");
+  }
+  else if (20 == chip_model) {  // ESP32-C61
+    return F("ESP32-C61");
+  }
 
   return F("ESP32");
 #elif defined(ESP8266)
   uint32_t pkg_version{};
-  bool high_temp_version{};
+  bool     high_temp_version{};
+
   if (isESP8285(pkg_version, high_temp_version)) {
     switch (pkg_version) {
       case 1:
-        return (high_temp_version) 
-          ? F("ESP8285H08")  // 1M flash
+        return (high_temp_version)
+          ? F("ESP8285H08") // 1M flash
           : F("ESP8285N08");
       case 2:
-        return (high_temp_version) 
-          ? F("ESP8285H16")  // 2M flash
+        return (high_temp_version)
+          ? F("ESP8285H16") // 2M flash
           : F("ESP8285N16");
       case 4:
-        return (high_temp_version) 
-          ? F("ESP8285H32")  // 4M flash
+        return (high_temp_version)
+          ? F("ESP8285H32") // 4M flash
           : F("ESP8285N32");
     }
     return F("ESP8285");
@@ -745,28 +776,32 @@ bool isESP8285(uint32_t& pkg_version, bool& high_temp_version)
   // https://github.com/arendst/Tasmota/blob/62675a37a0e7b46283e2fdfe459bb8fd29d1cc2a/tasmota/tasmota_support/support_esp.ino#L151
 
   /*
-  ESP8266 SoCs
-  - 32-bit MCU & 2.4 GHz Wi-Fi
-  - High-performance 160 MHz single-core CPU
-  - +19.5 dBm output power ensures a good physical range
-  - Sleep current is less than 20 μA, making it suitable for battery-powered and wearable-electronics applications
-  - Peripherals include UART, GPIO, I2C, I2S, SDIO, PWM, ADC and SPI
-  */
-  // esptool.py get_efuses
-  uint32_t efuse0 = *(uint32_t*)(0x3FF00050);
-//  uint32_t efuse1 = *(uint32_t*)(0x3FF00054);
-  uint32_t efuse2 = *(uint32_t*)(0x3FF00058);
-  uint32_t efuse3 = *(uint32_t*)(0x3FF0005C);
+     ESP8266 SoCs
+     - 32-bit MCU & 2.4 GHz Wi-Fi
+     - High-performance 160 MHz single-core CPU
+     - +19.5 dBm output power ensures a good physical range
+     - Sleep current is less than 20 μA, making it suitable for battery-powered and wearable-electronics applications
+     - Peripherals include UART, GPIO, I2C, I2S, SDIO, PWM, ADC and SPI
+   */
 
-  bool r0_4 = efuse0 & (1 << 4);                   // ESP8285
-  bool r2_16 = efuse2 & (1 << 16);                 // ESP8285
-  if (r0_4 || r2_16) {                             // ESP8285
+  // esptool.py get_efuses
+  uint32_t efuse0 = *(uint32_t *)(0x3FF00050);
+
+  //  uint32_t efuse1 = *(uint32_t*)(0x3FF00054);
+  uint32_t efuse2 = *(uint32_t *)(0x3FF00058);
+  uint32_t efuse3 = *(uint32_t *)(0x3FF0005C);
+
+  bool r0_4  = efuse0 & (1 << 4);    // ESP8285
+  bool r2_16 = efuse2 & (1 << 16);   // ESP8285
+
+  if (r0_4 || r2_16) {               // ESP8285
     //                                                              1M 2M 2M 4M flash size
     //   r0_4                                                       1  1  0  0
-    bool r3_25 = efuse3 & (1 << 25);               // flash matrix  0  0  1  1
-    bool r3_26 = efuse3 & (1 << 26);               // flash matrix  0  1  0  1
-    bool r3_27 = efuse3 & (1 << 27);               // flash matrix  0  0  0  0
+    bool r3_25 = efuse3 & (1 << 25); // flash matrix  0  0  1  1
+    bool r3_26 = efuse3 & (1 << 26); // flash matrix  0  1  0  1
+    bool r3_27 = efuse3 & (1 << 27); // flash matrix  0  0  0  0
     pkg_version = 0;
+
     if (!r3_27) {
       if (r0_4 && !r3_25) {
         pkg_version = (r3_26) ? 2 : 1;
@@ -775,17 +810,16 @@ bool isESP8285(uint32_t& pkg_version, bool& high_temp_version)
         pkg_version = (r3_26) ? 4 : 2;
       }
     }
-    high_temp_version = efuse0 & (1 << 5);         // Max flash temperature (0 = 85C, 1 = 105C)
+    high_temp_version = efuse0 & (1 << 5); // Max flash temperature (0 = 85C, 1 = 105C)
     return true;
   }
   return false;
 }
 
-
 bool isESP8285() {
   #ifdef ESP8266
   uint32_t pkg_version{};
-  bool high_temp_version{};
+  bool     high_temp_version{};
   return isESP8285(pkg_version, high_temp_version);
   #else // ifdef ESP8266
   return false;
@@ -808,11 +842,7 @@ String getChipRevision() {
     # endif // if ESP_IDF_VERSION_MAJOR < 5
   }
   #endif // ifdef ESP32
-  String res;
-  res += rev / 100;
-  res += '.';
-  res += rev % 100;
-  return res;
+  return strformat(F("%d.%02d"), rev / 100, rev % 100);
 }
 
 uint32_t getSketchSize() {
@@ -846,7 +876,7 @@ bool FoundPSRAM() {
   # else // if ESP_IDF_VERSION_MAJOR >= 5
 #  if CONFIG_IDF_TARGET_ESP32C3
   return psramFound();
-#  else // if CONFIG_IDF_TARGET_ESP32C3
+#  else  // if CONFIG_IDF_TARGET_ESP32C3
   return psramFound() && esp_spiram_is_initialized();
 #  endif // if CONFIG_IDF_TARGET_ESP32C3
   # endif // if ESP_IDF_VERSION_MAJOR >= 5
@@ -878,7 +908,13 @@ bool CanUsePSRAM() {
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
-  if ((CHIP_ESP32 == chip_info.model) && (chip_info.revision < 3)) {
+  if ((CHIP_ESP32 == chip_info.model) && 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+  (chip_info.revision < 300)
+#else
+  (chip_info.revision < 3)
+#endif
+  ) {
     return false;
   }
 #  if ESP_IDF_VERSION_MAJOR < 4
@@ -929,4 +965,4 @@ bool isPSRAMInterfacePin(int gpio) {
 
 # endif // ifndef isPSRAMInterfacePin
 
-#endif // ESP32
+#endif  // ESP32

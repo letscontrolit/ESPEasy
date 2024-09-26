@@ -80,17 +80,17 @@ void HitachiHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operati
     temperature = temperatureCmd;
   }
 
-  switch (swingV)
+  switch (swingVcmd)
   {
-    case HDIR_AUTO:
+    case VDIR_AUTO:
       swingV = HITACHI_AIRCON1_VDIR_AUTO;
       break;
-    case HDIR_SWING:
+    case VDIR_SWING:
       swingV = HITACHI_AIRCON1_VDIR_SWING;
       break;
   }
 
-  switch (swingH)
+  switch (swingHcmd)
   {
     case HDIR_AUTO:
       swingH = HITACHI_AIRCON1_HDIR_AUTO;
@@ -99,7 +99,7 @@ void HitachiHeatpumpIR::send(IRSender& IR, uint8_t powerModeCmd, uint8_t operati
       swingH = HITACHI_AIRCON1_HDIR_SWING;
       break;
   }
-
+  
   sendHitachi(IR, powerMode, operatingMode, fanSpeed, temperature, swingV, swingH);
 }
 
@@ -125,7 +125,7 @@ void HitachiHeatpumpIR::sendHitachi(IRSender& IR, uint8_t powerMode, uint8_t ope
 
   //Checksum calculation
   int checksum = 1086;
-  for (uint8_t i = 0; i < 27; i++) {
+  for (byte i = 0; i < 27; i++) {
     checksum -= hitachiTemplate[i];
   }
   hitachiTemplate[27] = checksum;
