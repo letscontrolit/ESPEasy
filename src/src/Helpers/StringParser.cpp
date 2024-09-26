@@ -34,12 +34,12 @@ bool hasEscapedCharacter(String& str, const char EscapeChar)
 
 void stripEscapeCharacters(String& str)
 {
-  const uint8_t braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
   constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
 
   for (uint8_t i = 0; i < nrbraces; ++i) {
     const String s(concat(F("\\"), braces[i]));
-    str.replace(s, s.substring(2));
+    str.replace(s, s.substring(1));
   }
 }
 
