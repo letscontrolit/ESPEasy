@@ -465,7 +465,7 @@ void parse_string_commands(String& line) {
   bool mustReplaceMaskedChars = false;
   bool mustReplaceEscapedBracket = false;
   bool mustReplaceEscapedCurlyBracket = false;
-  String MaskEscapedBracket = "";
+  String MaskEscapedBracket;
 
   if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
     // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.

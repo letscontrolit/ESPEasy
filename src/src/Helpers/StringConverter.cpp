@@ -1317,7 +1317,7 @@ void parseSingleControllerVariable(String            & s,
 
 void parseSystemVariables(String& s, bool useURLencode)
 {
-  String MaskEscapedPercent = "";
+  String MaskEscapedPercent;
   bool mustReplaceEscapedPercent = hasEscapedCharacter(s, '%');
 
   if (mustReplaceEscapedPercent) {

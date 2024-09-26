@@ -28,20 +28,19 @@
  \*********************************************************************************************/
 bool hasEscapedCharacter(String& str, const char EscapeChar)
 {
-  String EscStr = F("\\");
-  EscStr += EscapeChar;
+  const String EscStr = concat(F("\\"), EscapeChar);
   return (str.indexOf(EscStr)>=0);
 }
 
 void stripEscapeCharacters(String& str)
 {
-  str.replace(F("\\%"), "%"); // Allow system vars to be passed in by using \% instead of %
-  str.replace(F("\\["), "["); // Allow task values to be passed in by using \[ instead of [
-  str.replace(F("\\]"), "]"); // Allow task values to be passed in by using \] instead of ]
-  str.replace(F("\\{"), "{"); // Allow commands to be passed in by using \{ instead of {
-  str.replace(F("\\}"), "}"); // Allow commands to be passed in by using \} instead of }
-  str.replace(F("\\("), "("); // Allow commands to be passed in by using \( instead of (
-  str.replace(F("\\)"), ")"); // Allow commands to be passed in by using \) instead of )
+  const uint8_t braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
+
+  for (uint8_t i = 0; i < nrbraces; ++i) {
+    const String s(concat(F("\\"), braces[i]));
+    str.replace(s, s.substring(2));
+  }
 }
 
 String parseTemplate(String& tmpString)
@@ -80,7 +79,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   int lastStartpos = 0;
   int endpos = 0;
   bool mustReplaceEscapedSquareBracket = false;
-  String MaskEscapedBracket = "";
+  String MaskEscapedBracket;
 
   if (hasEscapedCharacter(tmpString, '[') || hasEscapedCharacter(tmpString, ']')) {
     // replace the \[ and \] with other characters to mask the escaped square brackets so we can continue parsing.
