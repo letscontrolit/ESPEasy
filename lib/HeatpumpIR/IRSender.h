@@ -27,13 +27,15 @@ class IRSender
   public:
     virtual ~IRSender() = default;
     virtual void setFrequency(int frequency);
-    void sendIRbyte(uint8_t sendByte, int bitMarkLength, int zeroSpaceLength, int oneSpaceLength);
+    void sendIRbyte(uint8_t sendByte, int bitMarkLength, int zeroSpaceLength, int oneSpaceLength, uint8_t bitCount = 8);
     uint8_t bitReverse(uint8_t x);
+    virtual void invert(bool inverted);
     virtual void space(int spaceLength);
     virtual void mark(int markLength);
 
   protected:
     uint8_t _pin;
+    bool _inverted = false;
 };
 
 

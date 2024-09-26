@@ -257,7 +257,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     blinkLED();
 
     rulesEngine(serial_buffer);
-    ser2netClient.flush();
+    ser2netClient.PR_9453_FLUSH_TO_CLEAR();
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2Net: data sent!"));

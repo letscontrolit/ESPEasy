@@ -121,6 +121,7 @@ class MitsubishiHeavyHeatpumpIR : public HeatpumpIR
 {
   protected: // Cannot create generic MitsubishiHeavy heatpump instances
     MitsubishiHeavyHeatpumpIR();
+    using HeatpumpIR::send;
     uint8_t _mitsubishiModel;  // Tells whether this is ZJ or ZM (or other supported model...)
 
   public:
@@ -132,7 +133,7 @@ class MitsubishiHeavyZJHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
     MitsubishiHeavyZJHeatpumpIR();
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd) override;
 
   private:
     void sendMitsubishiHeavy(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t cleanMode);
@@ -142,7 +143,7 @@ class MitsubishiHeavyZMHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
     MitsubishiHeavyZMHeatpumpIR();
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd) override;
 
   private:
     void sendMitsubishiHeavy(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t cleanMode, uint8_t silentMode, uint8_t _3DAuto);
@@ -152,7 +153,7 @@ class MitsubishiHeavyZMPHeatpumpIR : public MitsubishiHeavyHeatpumpIR
 {
   public:
     MitsubishiHeavyZMPHeatpumpIR();
-    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd);
+    void send(IRSender& IR, uint8_t powerModeCmd, uint8_t operatingModeCmd, uint8_t fanSpeedCmd, uint8_t temperatureCmd, uint8_t swingVCmd, uint8_t swingHCmd, bool cleanModeCmd, bool silentModeCmd, bool _3DAutoCmd) override;
 
   private:
     void sendMitsubishiHeavy(IRSender& IR, uint8_t powerMode, uint8_t operatingMode, uint8_t fanSpeed, uint8_t temperature, uint8_t swingV, uint8_t swingH, uint8_t cleanMode);
