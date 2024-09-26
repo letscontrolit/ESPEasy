@@ -379,7 +379,10 @@ const TaskValues_Data_t * UserVarStruct::getRawOrComputed(
     if ((it == _computed.end()) || !it->second.isSet(varNr)) {
       // Try to compute values which do have a formula but not yet a 'computed' value cached.
       // FIXME TD-er: This may yield unexpected results when formula contains references to %pvalue%
-      const int nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+
+
+      // Should not apply set nr. of decimals when calculating a formula
+      const uint8_t nrDecimals = 254;
       const String value   = getAsString(taskIndex, varNr, sensorType, nrDecimals, true);
 
       constexpr bool applyNow = true;
@@ -477,7 +480,9 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
   TaskValues_Data_t tmp;
 
   tmp.set(varNr, value, sensorType);
-  const uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(taskIndex, varNr);
+
+  // Should not apply set nr. of decimals when calculating a formula
+  const uint8_t nrDecimals = 254;
   const String  value_str  = tmp.getAsString(varNr, sensorType, nrDecimals);
 
   constexpr bool applyNow = false;
