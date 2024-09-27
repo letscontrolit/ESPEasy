@@ -268,7 +268,7 @@ void Web_StreamingBuffer::endStream() {
     buf.clear();
     sendContentBlocking(buf);
 
-    web_server.client().flush();
+    web_server.client().PR_9453_FLUSH_TO_CLEAR();
 
     finalRam = ESP.getFreeHeap();
 
@@ -368,7 +368,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   checkRAM(F("sendHeaderBlocking"));
   #endif
   
-  web_server.client().flush();
+  web_server.client().PR_9453_FLUSH_TO_CLEAR();
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -390,7 +390,15 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   if (!cacheable)
     web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
+#if ESP_IDF_VERSION_MAJOR>4
+  if (origin.equals("*")) {
+    web_server.enableCORS(true);
+  } else
+#endif
   if (origin.length() > 0) {
+#if ESP_IDF_VERSION_MAJOR>4
+    web_server.enableCORS(false);
+#endif
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);

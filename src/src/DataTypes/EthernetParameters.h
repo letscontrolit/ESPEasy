@@ -27,7 +27,9 @@ enum class EthPhyType_t : uint8_t {
 #if ESP_IDF_VERSION_MAJOR > 3
 
   RTL8201 = 2,
+#if ETH_TYPE_JL1101_SUPPORTED
   JL1101 = 3, 
+#endif
   DP83848 = 4, 
   KSZ8041 = 5, 
   KSZ8081 = 6,
