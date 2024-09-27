@@ -11,12 +11,12 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port, bo
     case ESPEasySerialPort::serial0_swap:    return shortName ? F("serial0swap") : F("HW Serial0 swap");
 #endif // ifdef ESP8266
     case ESPEasySerialPort::serial0:         return shortName ? F("serial0") : F("HW Serial0");
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
     case ESPEasySerialPort::serial1:         return shortName ? F("serial1") : F("HW Serial1");
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:         return shortName ? F("serial2") : F("HW Serial2");
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:        return shortName ? F("serialsw") : F("SW Serial");
 #endif // if USES_SW_SERIAL
@@ -43,12 +43,12 @@ bool isHWserial(ESPEasySerialPort port)
     case ESPEasySerialPort::serial0_swap:
 #endif // ifdef ESP8266
     case ESPEasySerialPort::serial0:
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
     case ESPEasySerialPort::serial1:
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
       return true;
     default:
       break;
@@ -63,12 +63,12 @@ bool useGPIOpins(ESPEasySerialPort port)
 #ifdef ESP8266
     case ESPEasySerialPort::serial0_swap:
 #endif // ifdef ESP8266
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
     case ESPEasySerialPort::serial1:
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:
 #endif // if USES_SW_SERIAL
@@ -90,12 +90,12 @@ bool validSerialPort(ESPEasySerialPort port)
 #ifdef ESP8266
     case ESPEasySerialPort::serial0_swap:
 #endif // ifdef ESP8266
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
     case ESPEasySerialPort::serial1:
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:
 #endif // if USES_SW_SERIAL
