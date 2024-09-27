@@ -15,6 +15,22 @@ static_assert(false, "Implement processor architecture");
 # endif // ifdef ESP8266
 #endif // ifndef SOC_UART_NUM
 
+#ifndef USABLE_SOC_UART_NUM
+# ifdef SOC_UART_HP_NUM
+
+// In ESP-IDF 5.3 the actual difference in high-power and low-power UART ports was defined.
+#  define USABLE_SOC_UART_NUM SOC_UART_HP_NUM
+# else // ifdef SOC_UART_HP_NUM
+#  ifdef ESP32C6
+
+// ESP32-C6 has 3 UARTs (2 HP UART, and 1 LP UART)
+// We can only use the high-power ones
+#   define USABLE_SOC_UART_NUM 2
+#  else // ifdef ESP32C6
+#   define USABLE_SOC_UART_NUM SOC_UART_NUM
+#  endif // ifdef ESP32C6
+# endif // ifdef SOC_UART_HP_NUM
+#endif // ifndef USABLE_SOC_UART_NUM
 
 #ifdef ESP32
 
