@@ -31,6 +31,7 @@
 # define P073_OPTION_SCROLLTEXT  3 // Scroll text > 8 characters
 # define P073_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 # define P073_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
+# define P073_OPTION_BLINK_DOT   6 // Use dot on second digit for flashing instead of colon
 
 # ifndef P073_USE_74HC595_OVERRIDE
 #  define P073_USE_74HC595_OVERRIDE 0
@@ -51,6 +52,9 @@
 # ifndef P073_SUPPRESS_ZERO
 #  define P073_SUPPRESS_ZERO    1   // Enable Suppress leading zero on day/hour
 # endif // ifndef P073_SUPPRESS_ZERO
+# ifndef P073_BLINK_DOT
+#  define P073_BLINK_DOT        1   // Use dot for blinking time
+# endif // ifndef P073_BLINK_DOT
 # ifndef P073_USE_74HC595
 #  define P073_USE_74HC595      1   // Enable support for 74HC595 based sequential displays
 # endif // ifndef P073_USE_74HC595
@@ -79,6 +83,10 @@
 #   undef P073_SUPPRESS_ZERO // Optionally activate if .bin file space is problematic, remove the Suppress leading zero feature
 #   define P073_SUPPRESS_ZERO   0
 #  endif // if P073_SUPPRESS_ZERO
+#  if P073_BLINK_DOT
+#   undef P073_BLINK_DOT // Optionally activate if .bin file space is problematic, remove the Blink dot feature
+#   define P073_BLINK_DOT       0
+#  endif // if P073_BLINK_DOT
 # else // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 // #  define P073_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
@@ -300,6 +308,9 @@ public:
   bool    rightAlignTempMAX7219 = false;
   bool    suppressLeading0      = false;
   uint8_t fontset               = 0;
+  #if P073_BLINK_DOT
+  bool blinkdot = false;
+  #endif // if P073_BLINK_DOT
   # if P073_7DBIN_COMMAND
   bool binaryData = false;
   # endif // P073_7DBIN_COMMAND

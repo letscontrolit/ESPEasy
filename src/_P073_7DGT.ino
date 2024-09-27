@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2024-09-27 tonhuisman: Add option to flash dot on second digit instead of the colon for blinking time
  * 2024-08-24 tonhuisman: Add compiletime define P073_USE_74HC595_OVERRIDE that, when, set to 1, allows 74HC595 displays to be included
  *                        for ESP8266 builds (f.e. Custom builds), also added to Custom-sample.h
  * 2024-08-23 tonhuisman: The 74HC595 Matrix displays mostly work, with the higest possible refresh rate. Still a bit of flickering,
@@ -225,6 +226,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       # if P073_SUPPRESS_ZERO
       addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"), bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0));
       # endif // if P073_SUPPRESS_ZERO
+      #if P073_BLINK_DOT
+      addFormCheckBox(F("Use decimal dot for blink"),      F("bldot"), bitRead(P073_CFG_FLAGS, P073_OPTION_BLINK_DOT));
+      #endif // if P073_BLINK_DOT
 
       # if P073_SCROLL_TEXT
       addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(P073_CFG_FLAGS, P073_OPTION_SCROLLTEXT));
@@ -264,6 +268,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       # if P073_SUPPRESS_ZERO
       bitWrite(lSettings, P073_OPTION_SUPPRESS0, isFormItemChecked(F("supp0")));
       # endif // if P073_SUPPRESS_ZERO
+      #if P073_BLINK_DOT
+      bitWrite(lSettings, P073_OPTION_BLINK_DOT, isFormItemChecked(F("bldot")));
+      #endif // if P073_BLINK_DOT
       # if P073_EXTRA_FONTS
       P073_CFG_FONTSET = getFormItemInt(F("fontset"));
       # endif // if P073_EXTRA_FONTS

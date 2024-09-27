@@ -200,7 +200,10 @@ void P073_data_struct::init(struct EventStruct *event)
   # endif // if P073_SCROLL_TEXT
   rightAlignTempMAX7219 = bitRead(P073_CFG_FLAGS, P073_OPTION_RIGHTALIGN);
   suppressLeading0      = bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0);
-  timesep               = true;
+  #if P073_BLINK_DOT
+  blinkdot = bitRead(P073_CFG_FLAGS, P073_OPTION_BLINK_DOT);
+  #endif // if P073_BLINK_DOT
+  timesep = true;
   # if P073_EXTRA_FONTS
   fontset = P073_CFG_FONTSET;
   # endif // if P073_EXTRA_FONTS
@@ -849,6 +852,15 @@ bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
                        # endif // if P073_SUPPRESS_ZERO
                        );
   }
+
+  #if P073_BLINK_DOT
+
+  if (blinkdot &&
+      ((output == P073_DISP_CLOCK24BLNK) ||
+       (output == P073_DISP_CLOCK12BLNK))) {
+    showperiods[1] = timesep; // Blink dot on second digit
+  }
+  #endif // if P073_BLINK_DOT
 
   switch (displayModel) {
     case P073_TM1637_4DGTCOLON:
