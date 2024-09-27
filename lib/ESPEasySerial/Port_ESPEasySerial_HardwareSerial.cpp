@@ -7,6 +7,7 @@
 #include <hal/uart_types.h>
 #endif
 
+
 Port_ESPEasySerial_HardwareSerial_t::Port_ESPEasySerial_HardwareSerial_t() {}
 
 Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {}
@@ -33,12 +34,12 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
 
   switch (config.port) {
     case  ESPEasySerialPort::serial0:
-    #if SOC_UART_NUM > 1
+    #if USABLE_SOC_UART_NUM > 1
     case  ESPEasySerialPort::serial1:
-    #endif // if SOC_UART_NUM > 1
-    #if SOC_UART_NUM > 2
+    #endif // if USABLE_SOC_UART_NUM > 1
+    #if USABLE_SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
-    #endif // if SOC_UART_NUM > 2
+    #endif // if USABLE_SOC_UART_NUM > 2
       _config.port = config.port;
       break;
     default:
@@ -55,14 +56,14 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
   } else if (_config.port == ESPEasySerialPort::serial0_swap) {
     _serial = &Serial;
 #endif // ifdef ESP8266
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
   } else if (_config.port == ESPEasySerialPort::serial1) {
     _serial = &Serial1;
-#endif // if SOC_UART_NUM > 1
-#if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 2
   } else if (_config.port == ESPEasySerialPort::serial2) {
     _serial = &Serial2;
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
   } else {
     _config.port = ESPEasySerialPort::not_set;
   }
