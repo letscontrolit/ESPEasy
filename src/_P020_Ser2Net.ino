@@ -495,7 +495,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         } else if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
           task->ser2netClient.print(string.substring(18));
-          task->ser2netClient.flush();
+          task->ser2netClient.PR_9453_FLUSH_TO_CLEAR();
           success = true;
         }
         break;

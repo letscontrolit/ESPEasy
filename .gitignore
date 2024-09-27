@@ -67,3 +67,7 @@ src/CustomIR.h
 
 
 docs/source/Plugin/_plugin_sets_overview.repl
+*.PVS-Studio.stacktrace.txt
+
+
+.platformio/

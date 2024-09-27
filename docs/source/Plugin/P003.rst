@@ -26,17 +26,11 @@ Supported hardware
 
 |P003_usedby|
 
-SETUP
------
+Configuration
+-------------
 
-The setup dialog:
-
-.. image:: P003_Setup.jpg
-    :width: 664px
-    :height: 378px
-    :scale: 100 %
+.. image:: P003_DeviceConfiguration.png
     :alt: Pulse Counter Setup
-    :align: center
 
 
 Task's Sensor Parameters
@@ -45,13 +39,24 @@ Task's Sensor Parameters
 :GPIO <- Pulse:
    Select the GPIO pin at which the pulse is counted
 
-:Debounce Time (mSec):
+:Debounce Time:
   Period in which you allow the signal to be unstable (bouncing) after a level change (high -> low / low -> high).
   The specific use of this parameter to filter out valid signals, depends on the Mode Type (cf. description below).
 
 :Counter Type:
-  (practical use of this parameter is unclear, but kept for compatibility reasons)
+  Select the output values desired. Available options:
 
+.. image:: P003_CounterTypeOptions.png
+
+* **Delta**: Count only.
+* **Delta/Total/Time**: Count, Total count and Time since last pulse in msec.
+* **Total**: Total count only.
+* **Delta/Total**: Count and Total count.
+* **Time**: Time since last pulse in msec.
+* **Total/Time**: Total count and Time since last pulse in msec.
+* **Time/Delta**: Time since last pulse in msec. and count.
+
+After saving the settings, the Values section is adjusted to show the number of values needed to output the selected Counter Type. The names are not updated!
 
 :Mode Type:
   Determines if you want to count **edges** or **pulses** and
@@ -62,20 +67,39 @@ Task's Sensor Parameters
   
   See Description below.
 
+Available options:
+
+.. image:: P003_ModeTypeOptions.png
+
+:Ignore multiple Delta = 0:
+  When enabled doesn't generate events or send data to Controllers if multiple Delta (Count) values of 0 are read. The first 0 after a non-zero Count *will* be sent out to Controllers, and generate events (when Rules are enabled).
+
+|
+
+:Interval: The interval between reading the pulses from the counter logic. If the Interval is set to 0 *AND* **Ignore multiple Delta = 0** is enabled, the check for new pulses is performed much more often (up to ca. 50 times per second). This has the advantage that any infrequent pulse can be captured very close to the time it occurs, but also has a disadvantage, see the warning:
+
+.. warning:: The Interval for this plugin can be set to **0**, but when receiving high-frequency pulses, this should better not be used, as it can overload the ESP *and* any Controller, and it's backend service, configured for the task, as it's sending data, processing the Controllers, and processing events for the task values!
+
+With **Interval** set to 0, but **Ignore multiple Delta = 0** not enabled, then No data is sent to Controllers and no events are generated, unless a ``TaskRun`` command is executed for this task!
+
+|
+
 For setup of some specific device examples see: |P003_usedby|
 
 Description
 -----------
 P003 is a general purpose pulse counter for counting high/low state changes and pulses at an ESP GPIO.
 It may be used to count water or gas meter pulses or speed measurement of fans, etc.
-It provides three values:
+It provides up to three values:
 
 :``Count``:
   Number of counted pulses since last transmission (Delta)
 :``Total``:
-  Total number of counted pulses (since power on or cold restart)
+  Total number of counted pulses (since power on, cold restart or use of ``resetpulsecounter`` or ``setpulsecountertotal`` commands)
 :``Time``:
   Time between current and most recent pulse in milliseconds
+
+.. warning:: The number of Values depends on the selected Counter Type setting, but the names are not updated when the selection is changed, tough values *are* set to the Counter Type(s) selected.
 
 This allows you to simply count the pulses using ``Total`` or use Count and Time to calculate the number of pulses per time unit.
 But please note: When ``Count`` > 1, the ``Time`` only applies to the most recent of the counted pulses and you have to guess how long the previous were. 
@@ -121,8 +145,8 @@ Electrical signal quality
 Make sure physical connections are electrically well separated so no crossover of the signals happen. 
 Especially with edge pulse mode at rates above ~5'000 RPM with longer lines. Best use a cable with ground and signal twisted.
 
-Statistical logging for PUSE modes
-----------------------------------
+Statistical logging for PULSE modes
+-----------------------------------
 
 The **Pulse** modes provide at runtime statistical information in the log output in order to support problem finding and the tuning of debounce time. 
 The interpretation is a little tricky, as it is related to the implemented step by step detection method. 
@@ -137,7 +161,7 @@ It is temporary possible to output the logging in log level ``Info`` by use of t
     :width: 688px
     :height: 20px
     :scale: 100 %
-    :alt: Pule statistic log record
+    :alt: Pulse statistic log record
     :align: center
 
 Records like the above are written to log output, whenever a new valid pulse level was detected.
@@ -223,6 +247,8 @@ Change log
 
 .. versionchanged:: 2.2
   ...
+
+  |added| 2024-08-07 New Counter Type options, counter type now correctly sets the Values available.
 
   |added|
   Added new PULSE mode types.

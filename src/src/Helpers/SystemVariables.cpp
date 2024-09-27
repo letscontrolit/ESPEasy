@@ -289,10 +289,12 @@ bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
 
         if (s.indexOf(key) != -1) {
           const bool trimTrailingZeros = true;
+          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(i);
+          const unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
           #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+          const String value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
           #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          const String value = floatToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+          const String value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
           #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           if (repl(key, value, s, useURLencode)) {
             somethingReplaced = true;

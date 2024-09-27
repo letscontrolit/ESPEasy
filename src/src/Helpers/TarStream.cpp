@@ -446,6 +446,8 @@ int TarStream::read() {
       if (!((TarStreamState_e::ReadingSlack == _streamState) && (_currentIndex.fileSize == 0))) {
         break; // Special 0-file case
       }
+
+      // Fall through
     }
     case TarStreamState_e::ReadingFile:
     {
