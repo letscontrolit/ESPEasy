@@ -106,7 +106,10 @@ void log_connecting_fail(const __FlashStringHelper *prefix, cpluginID_t cpluginI
 }
 
 bool count_connection_results(bool success, const __FlashStringHelper *prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart) {
-  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(cpluginID);
+#if FEATURE_TIMING_STATS
+  const protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(cpluginID);
+#endif
+
   if (!success)
   {
     ++WiFiEventData.connectionFailures;

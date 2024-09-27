@@ -76,7 +76,10 @@ bool NodesHandler::addNode(const NodeStruct& node)
       #endif
       _nodes[node.unit] = node;
     }
+    // Make sure to set first as NTP candidate, as it was set to time since
+    // last time sync by the sender node before sending.
     _ntp_candidate.set(node);
+    // Now set lastUpdated so we can keep track of its age.
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);
@@ -92,28 +95,30 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
 
   // Check whether the current time source is considered "worse" than received from p2p node.
-  if (!node_time.systemTimePresent() || 
-      node_time.timeSource > timeSource_t::ESPEASY_p2p_UDP ||
-      ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
-       (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) )) {
-    double unixTime;
-    uint8_t unit;
-    if (_ntp_candidate.getUnixTime(unixTime, unit)) {
-      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
+  if (!node_time.systemTimePresent() ||
+      (node_time.getTimeSource() > timeSource_t::ESPEASY_p2p_UDP) ||
+      (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC)) {
+    double  unixTime{};
+    uint8_t unit                  = 0;
+    int32_t wander                = -1;
+    const timeSource_t timeSource = _ntp_candidate.getUnixTime(unixTime, wander, unit);
+
+    if (timeSource != timeSource_t::No_time_source) {
+      node_time.setExternalTimeSource_withTimeWander(unixTime, timeSource, wander, unit);
     }
   }
 
   if (isNewNode) {
-    if (Settings.UseRules && node.unit != 0)
+    if (Settings.UseRules && (node.unit != 0))
     {
       // Generate event announcing new p2p node
       // TODO TD-er: Maybe also add other info like ESP type, IP-address, etc?
       eventQueue.addMove(strformat(
-        F("p2pNode#Connected=%d,'%s','%s'"), 
-        node.unit,
-        node.getNodeName().c_str(),
-        formatSystemBuildNr(node.build).c_str()
-      ));
+                           F("p2pNode#Connected=%d,'%s','%s'"),
+                           node.unit,
+                           node.getNodeName().c_str(),
+                           formatSystemBuildNr(node.build).c_str()
+                           ));
     }
   }
 
@@ -411,9 +416,9 @@ void NodesHandler::updateThisNode() {
   } else {
     thisNode.load = load_int;
   }
-  thisNode.timeSource = static_cast<uint8_t>(node_time.timeSource);
+  thisNode.timeSource = static_cast<uint8_t>(node_time.getTimeSource());
 
-  switch (node_time.timeSource) {
+  switch (node_time.getTimeSource()) {
     case timeSource_t::No_time_source:
       thisNode.lastUpdated = (1 << 30);
       break;

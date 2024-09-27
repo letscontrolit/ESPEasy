@@ -33,9 +33,15 @@
 // # endif // ifndef LIMIT_BUILD_SIZE
 
 # if P135_FEATURE_RESET_COMMANDS
+#  ifndef P135_FEATURE_FACTORYRESET
+#   define P135_FEATURE_FACTORYRESET 0 // Disable really dangerous factory reset command by default, enable from a Custom build
+#  endif // ifndef P135_FEATURE_FACTORYRESET
+
 enum class SCD4x_Operations_e : uint8_t {
   None,
+  #  if P135_FEATURE_FACTORYRESET
   RunFactoryReset,
+  #  endif // if P135_FEATURE_FACTORYRESET
   RunSelfTest,
   RunForcedRecalibration,
 };

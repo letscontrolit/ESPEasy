@@ -7,6 +7,10 @@
 
 #include <memory> // For std::shared_ptr
 
+# define NPLUGIN_001_DEF_TM     8000  // Email Server Default Response Time, in mS.
+# define NPLUGIN_001_MIN_TM     5000
+# define NPLUGIN_001_MAX_TM     20000
+
 /*********************************************************************************************\
  * NotificationSettingsStruct
 \*********************************************************************************************/
@@ -27,6 +31,7 @@ struct NotificationSettingsStruct
   int8_t        Pin2;
   char          User[49];
   char          Pass[33];
+  unsigned int  Timeout_ms;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 

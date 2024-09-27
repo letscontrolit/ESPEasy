@@ -73,6 +73,14 @@
 //                                the coordinate set.
 //
 // History:
+// 2023-10-15 tonhuisman: Code improvements, now using NR_ELEMENTS macro instead of multiple #ifdefs and increments
+//                        Re-enable use of settings-version V3 after some more testing
+// 2023-10-08 tonhuisman: Disable use of settings-version V3 for backward compatibility
+// 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, and use that to significantly improve saving the settings on LittleFS by
+//                        a) only storing the settings-version (V3) in regular CustomTaskSettings file, and the rest in the Extended
+//                           CustomTaskSettings file, by using the offset as a starting location for the data elements
+//                        b) Combine storing the size and the data-block in a single save action
+//                        Apply toStringNoZero() converter to reduce the settings-data to be saved
 // 2023-08-13 tonhuisman: Add Dot subcommand for pixel-drawing in a zone. Can be applied on any type of zone (so can be overwritten by the
 //                        original content when that's updated...)
 //                        Set default Hardware type to FC16, as that's the most used for modules found on Aliexpress

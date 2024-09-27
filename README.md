@@ -110,7 +110,7 @@ Flash size | Description                 |
 16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
 
-N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.1, to support newer ESP32 chips like ESP32-C2 and ESP32-C6. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer available in IDF 5 and later. A migration plan will be made available in 2024.
+N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.1, to support newer ESP32 chips like ESP32-C2 and ESP32-C6 and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer available in IDF 5 and later. A migration plan will be made available in 2024.
 
 *[opt-build-features]* can be any of:
 Build features  | Description                                                                                               |
@@ -121,24 +121,24 @@ OTA             | Arduino OTA (Over The Air) update feature enabled             
 Domoticz        | Only Domoticz controllers (HTTP) and plugins included                                                     |
 Domoticz_MQTT   | Only Domoticz controllers (MQTT) and plugins included                                                     |
 FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included                                  |
-ETH             | Ethernet interface enabled (ESP32-classic only)                                                           |
+ETH             | Ethernet interface enabled (ESP32-classic and IDF 5.x based builds)                                       |
 OPI_PSRAM       | Specific configuration to enable PSRAM detection, ESP32-S3 only                                           |
 CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2, ESP32-S3 and ESP32-C6                          |
 noOTA/NO_OTA    | Does not support OTA (Over The Air-updating of the firmware) Use [the flash page](https://td-er.nl/ESPEasy/) or ESPTool via USB Serial |
 
 Some example firmware names:
-Firmware name                                                     | Hardware                              | Included plugins                 |
-------------------------------------------------------------------|---------------------------------------|----------------------------------|
-ESPEasy_mega-20230822_normal_ESP8266_1M.bin                       | ESP8266/ESP8285 with 1MB flash        | Stable                           |
-ESPEasy_mega-20230822_normal_ESP8266_4M1M.bin                     | ESP8266 with 4MB flash                | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin               | ESP8266 with 4MB flash                | Stable + Collection base + set A |
-ESPEasy_mega-20230822_normal_ESP32_4M316k.bin                     | ESP32 with 4MB flash                  | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP32_4M316k.bin               | ESP32 with 4MB flash                  | Stable + Collection base + set A |
-ESPEasy_mega-20230822_collection_B_ESP32_4M316k.bin               | ESP32 with 4MB flash                  | Stable + Collection base + set B |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_CDC.bin           | ESP32-S3 with 8MB flash, CDC-serial   | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_CDC.bin | ESP32-S3 8MB flash, PSRAM, CDC-serial | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M1M.bin                         | ESP32 with 16MB flash                 | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS.bin                | ESP32 with 16MB flash                 | All available plugins            |
+Firmware name                                                         | Hardware                                        | Included plugins                 |
+----------------------------------------------------------------------|-------------------------------------------------|----------------------------------|
+ESPEasy_mega-20230822_normal_ESP8266_1M.bin                           | ESP8266/ESP8285 with 1MB flash                  | Stable                           |
+ESPEasy_mega-20230822_normal_ESP8266_4M1M.bin                         | ESP8266 with 4MB flash                          | Stable                           |
+ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin                   | ESP8266 with 4MB flash                          | Stable + Collection base + set A |
+ESPEasy_mega-20230822_normal_ESP32_4M316k.bin                         | ESP32 with 4MB flash                            | Stable                           |
+ESPEasy_mega-20230822_collection_A_ESP32_4M316k.bin                   | ESP32 with 4MB flash                            | Stable + Collection base + set A |
+ESPEasy_mega-20230822_collection_B_ESP32_4M316k.bin                   | ESP32 with 4MB flash                            | Stable + Collection base + set B |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_CDC_ETH.bin           | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_CDC_ETH.bin | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32_16M1M.bin                             | ESP32 with 16MB flash                           | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS_ETH.bin                | ESP32 with 16MB flash, Ethernet                 | All available plugins            |
 
 The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, 'Classic') are available in separate archives.
 
@@ -152,6 +152,9 @@ Additional details and discussion are on the "Experimental" section of the forum
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/letscontrolit/ESPEasy) 
 
+## SAST Tools
+
+[PVS-Studio](https://pvs-studio.com/en/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
 
 ## Icons used
 

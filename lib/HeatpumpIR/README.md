@@ -28,9 +28,11 @@ An Arduino library to control pump/split unit air conditioner. Currently support
 * Mitsubishi MSZ FD-25, probably also FD-35 (remote control P/N KM09D 0052376)
    * Also FH series has been confirmed to work
 * Mitsubishi Electric MSC-GA20VB, MSC-GA25VB, MSC-GA35VB (remote control P/N KP1A)
+* Nibe AG-WL10-4, probably AG-WT10
 * Panasonic E9/E12-CKP (Panasonic remote control P/N A75C2295)
 * Panasonic E9/E12-DKE (Panasonic remote control P/N A75C2616)
 * Panasonic E9/E12-JKE and E9/E12-NKE
+* Philco PHS32
 * Samsung
    * AQV12PSBN / AQV09ASA
    * AQV12MSAN, Remote Control ARH-1362
