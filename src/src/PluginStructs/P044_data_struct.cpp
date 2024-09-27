@@ -299,7 +299,7 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
   if (done) {
     P1GatewayClient.print(serial_buffer);
-    P1GatewayClient.flush();
+    P1GatewayClient.PR_9453_FLUSH_TO_CLEAR();
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
     # endif // ifndef BUILD_NO_DEBUG

@@ -176,7 +176,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));
   #endif
 
-  client.flush();
+  client.PR_9453_FLUSH_TO_CLEAR();
   client.stop();
 
   // important - backgroundtasks - free mem
