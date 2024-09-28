@@ -1,8 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P055
-//#######################################################################################################
-//#################################### Plugin 055: Chiming Mechanism ####################################
-//#######################################################################################################
+
+// #######################################################################################################
+// #################################### Plugin 055: Chiming Mechanism ####################################
+// #######################################################################################################
 
 // ESPEasy plugin to strike up to 4 physical bells and gongs with chiming sequences.
 // You also can use an antique door bell as a single strikes (not ringing) notification.
@@ -15,7 +16,8 @@
 // (3) CHIMEPLAY,<name>           Play saved tokens given name out of FFS
 
 // List of tokens:
-// (a) '1'...'9', 'A'...'F'       Bell number - 1=1st bell, 2=2nd bell, 4=3rd bell, 8=4th bell, numbers can be added to strike simultaniouly, F=all bells
+// (a) '1'...'9', 'A'...'F'       Bell number - 1=1st bell, 2=2nd bell, 4=3rd bell, 8=4th bell, numbers can be added to strike
+// simultaniouly, F=all bells
 // (b) '!'                        Double strike prev. token
 // (c) '-' or ' '                 Normal Pause
 // (d) '='                        Long Pause (3 times normal)
@@ -25,12 +27,14 @@
 // Note: If no pause is specified, a normal pause will be inserted "111" -> "1-1-1"
 
 // Usage as Hourly Chime Clock:
-// save twelve comma separated tokens with name "hours", enable checkbox "Hourly Chiming Clock Strike" in plugin web interface and enable NTP (advanced settings)
+// save twelve comma separated tokens with name "hours", enable checkbox "Hourly Chiming Clock Strike" in plugin web interface and enable
+// NTP (advanced settings)
 //
 // examples:
 // Historical coded with 1 bell:              "1,11,111,1111,11111,111111,1111111,11111111,111111111,1111111111,11111111111,111111111111"
 // Binary coded with 2 bells (2nd bell=1):    "1112,1121,1122,1211,1212,1221,1222,2111,2112,2121,2122,2211"
-// Binary coded with 1 bell (short pause=1):  "1_1_1_11,1_1_11_1,1_1_111,1_11_1_1,1_11_11,1_111_1,1_1111,11_1_1_1,11_1_11,11_11_1,11_111,111_1_1"
+// Binary coded with 1 bell (short pause=1):
+//  "1_1_1_11,1_1_11_1,1_1_111,1_11_1_1,1_11_11,1_111_1,1_1111,11_1_1_1,11_1_11,11_11_1,11_111,111_1_1"
 // Binary coded with 1 bell (double strike=1):"1111!,111!1,111!1!,11!11,11!11!,11!1!1,11!1!1!,1!111,1!111!,1!11!1,1!11!1!,1!1!11"
 //
 // CHIMESAVE,hours,1111!,111!1,111!1!,11!11,11!11!,11!1!1,11!1!1!,1!111,1!111!,1!11!1,1!11!1!,1!1!11
@@ -47,35 +51,34 @@
 // Use a power-FET or an ULN2003 to switch on the bells coil with 12 or 24 volts
 
 
+// #include <*.h>   - no external lib required
 
-//#include <*.h>   - no external lib required
+# include "src/WebServer/Markup_Buttons.h"
 
-#include "src/WebServer/Markup_Buttons.h"
+# define PLUGIN_055
+# define PLUGIN_ID_055         55
+# define PLUGIN_NAME_055       "Notify - Chiming"
 
-#define PLUGIN_055
-#define PLUGIN_ID_055         55
-#define PLUGIN_NAME_055       "Notify - Chiming"
+# define PLUGIN_055_FIFO_SIZE 64 // must be power of 2
+# define PLUGIN_055_FIFO_MASK (PLUGIN_055_FIFO_SIZE - 1)
 
-#define PLUGIN_055_FIFO_SIZE 64   // must be power of 2
-#define PLUGIN_055_FIFO_MASK (PLUGIN_055_FIFO_SIZE-1)
-
-class CPlugin_055_Data
-{
+class CPlugin_055_Data {
 public:
-  long millisStateEnd = 0;
+
+  long millisStateEnd  = 0;
   long millisChimeTime = 60;
   long millisPauseTime = 400;
 
-  int pin[4] = {0};
-  uint8_t lowActive = false;
+  int pin[4]         = { 0 };
+  uint8_t lowActive  = false;
   uint8_t chimeClock = true;
 
-  char FIFO[PLUGIN_055_FIFO_SIZE] = {0};
-  uint8_t FIFO_IndexR = 0;
-  uint8_t FIFO_IndexW = 0;
+  char FIFO[PLUGIN_055_FIFO_SIZE] = { 0 };
+  uint8_t FIFO_IndexR             = 0;
+  uint8_t FIFO_IndexW             = 0;
 };
 
-static CPlugin_055_Data* Plugin_055_Data = nullptr;
+static CPlugin_055_Data *Plugin_055_Data = nullptr;
 
 
 boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
@@ -85,35 +88,33 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_055;
-        Device[deviceCount].Type = DEVICE_TYPE_TRIPLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = true;
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;
-        Device[deviceCount].SendDataOption = false;
-        Device[deviceCount].TimerOption = false;
-        Device[deviceCount].TimerOptional = false;
-        Device[deviceCount].GlobalSyncOption = true;
-        break;
-      }
+    {
+      Device[++deviceCount].Number           = PLUGIN_ID_055;
+      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].InverseLogicOption = true;
+      Device[deviceCount].ValueCount         = 0;
+      Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].Pin1Direction      = gpio_direction::gpio_output;
+      Device[deviceCount].Pin2Direction      = gpio_direction::gpio_output;
+      Device[deviceCount].Pin3Direction      = gpio_direction::gpio_output;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_055);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_055);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        event->String1 = formatGpioName_output(F("Driver#1"));
-        event->String2 = formatGpioName_output(F("Driver#2"));
-        event->String3 = formatGpioName_output(F("Driver#4"));
-        break;
-      }
+    {
+      event->String1 = formatGpioName_output(F("Driver#1"));
+      event->String2 = formatGpioName_output(F("Driver#2"));
+      event->String3 = formatGpioName_output(F("Driver#4"));
+      break;
+    }
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
@@ -123,266 +124,295 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_LOAD:
-      {
-        //default values
-        if (PCONFIG(0) <= 0)   //Plugin_055_millisChimeTime
-          PCONFIG(0) = 60;
-        if (PCONFIG(1) <= 0)   //Plugin_055_millisPauseTime
-          PCONFIG(1) = 400;
-
-        // FIXME TD-er: Should we add support for 4 pin definitions?
-        addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Driver#8")), F("TDP4"), static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]));
-
-        addFormSubHeader(F("Timing"));
-
-        addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), PCONFIG(0));
-        addUnit(F("ms"));
-
-        addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), PCONFIG(1));
-        addUnit(F("ms"));
-
-        addFormNote(F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
-
-
-        addFormSubHeader(F("Chiming Clock"));
-
-        addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), PCONFIG(2));
-        //addHtml(F("<TR><TD><TD>"));
-        addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
-
-        if (PCONFIG(2) && !(Settings.UseNTP()))
-          addFormNote(F("Enable and configure NTP!"));
-
-        success = true;
-        break;
+    {
+      // default values
+      if (PCONFIG(0) <= 0) { // Plugin_055_millisChimeTime
+        PCONFIG(0) = 60;
       }
+
+      if (PCONFIG(1) <= 0) { // Plugin_055_millisPauseTime
+        PCONFIG(1) = 400;
+      }
+
+      // FIXME TD-er: Should we add support for 4 pin definitions?
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Driver#8")), F("TDP4"),
+                       static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]));
+
+      addFormSubHeader(F("Timing"));
+
+      addFormNumericBox(F("Chiming/Strike Time (ct)"), F("chimetime"), PCONFIG(0));
+      addUnit(F("ms"));
+
+      addFormNumericBox(F("Normal Pause Time (t)"), F("pausetime"), PCONFIG(1));
+      addUnit(F("ms"));
+
+      addFormNote(F("'1=1'&rArr;3t, '1-1' or '11'&rArr;1t, '1.1'&rArr;&#8531;t, '1|1'&rArr;&frac12;ct"));
+
+
+      addFormSubHeader(F("Chiming Clock"));
+
+      addFormCheckBox(F("Hourly Chiming Clock Strike"), F("chimeclock"), PCONFIG(2));
+
+      // addHtml(F("<TR><TD><TD>"));
+      addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
+
+      if (PCONFIG(2) && !(Settings.UseNTP())) {
+        addFormNote(F("Enable and configure NTP!"));
+      }
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        Settings.TaskDevicePin[3][event->TaskIndex] = (int8_t)getFormItemInt(F("TDP4"));
+    {
+      Settings.TaskDevicePin[3][event->TaskIndex] = (int8_t)getFormItemInt(F("TDP4"));
 
-        PCONFIG(0) = getFormItemInt(F("chimetime"));
-        PCONFIG(1) = getFormItemInt(F("pausetime"));
-        PCONFIG(2) = isFormItemChecked(F("chimeclock"));
+      PCONFIG(0) = getFormItemInt(F("chimetime"));
+      PCONFIG(1) = getFormItemInt(F("pausetime"));
+      PCONFIG(2) = isFormItemChecked(F("chimeclock"));
 
-        success = true;
-        break;
-      }
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        if (!Plugin_055_Data)
-          Plugin_055_Data = new (std::nothrow) CPlugin_055_Data();
+    {
+      if (!Plugin_055_Data) {
+        Plugin_055_Data = new (std::nothrow) CPlugin_055_Data();
+      }
 
-        if (Plugin_055_Data != nullptr) {
-          Plugin_055_Data->lowActive = Settings.TaskDevicePin1Inversed[event->TaskIndex];
-          Plugin_055_Data->millisChimeTime = PCONFIG(0);
-          Plugin_055_Data->millisPauseTime = PCONFIG(1);
-          Plugin_055_Data->chimeClock = PCONFIG(2);
+      if (Plugin_055_Data != nullptr) {
+        Plugin_055_Data->lowActive       = Settings.TaskDevicePin1Inversed[event->TaskIndex];
+        Plugin_055_Data->millisChimeTime = PCONFIG(0);
+        Plugin_055_Data->millisPauseTime = PCONFIG(1);
+        Plugin_055_Data->chimeClock      = PCONFIG(2);
 
-          String log = F("Chime: GPIO: ");
-          for (uint8_t i = 0; i < 4; ++i)
+        String log = F("Chime: GPIO: ");
+
+        for (uint8_t i = 0; i < 4; ++i)
+        {
+          int pin = Settings.TaskDevicePin[i][event->TaskIndex];
+          Plugin_055_Data->pin[i] = pin;
+
+          if (pin >= 0)
           {
-            int pin = Settings.TaskDevicePin[i][event->TaskIndex];
-            Plugin_055_Data->pin[i] = pin;
-            if (pin >= 0)
-            {
-              pinMode(pin, OUTPUT);
-              digitalWrite(pin, Plugin_055_Data->lowActive);
-            }
-            log += pin;
-            log += ' ';
+            pinMode(pin, OUTPUT);
+            digitalWrite(pin, Plugin_055_Data->lowActive);
           }
-          if (Plugin_055_Data->lowActive)
-            log += F("!");
-          addLogMove(LOG_LEVEL_INFO, log);
-          success = true;
+          log += pin;
+          log += ' ';
         }
 
-        break;
+        if (Plugin_055_Data->lowActive) {
+          log += F("!");
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
+        success = true;
       }
+
+      break;
+    }
 
     case PLUGIN_EXIT:
-      {
-        if (Plugin_055_Data != nullptr) {
-          delete Plugin_055_Data;
-          Plugin_055_Data = nullptr;
-        }
-        break;
+    {
+      if (Plugin_055_Data != nullptr) {
+        delete Plugin_055_Data;
+        Plugin_055_Data = nullptr;
       }
+      break;
+    }
 
     case PLUGIN_WRITE:
-      {
-        if (!Plugin_055_Data)
-          break;
-
-        String command = parseString(string, 1);
-
-        if (equals(command, F("chime")))
-        {
-          String param = parseStringToEndKeepCase(string, 2);
-          if (param.length() > 0) {
-            Plugin_055_AddStringFIFO(param);
-          }
-          success = true;
-        }
-        if (equals(command, F("chimeplay")))
-        {
-          String name = parseString(string, 2);
-          if (name.length() > 0) {
-            String param;
-            Plugin_055_ReadChime(name, param);
-            Plugin_055_AddStringFIFO(param);
-          }
-          success = true;
-        }
-        if (equals(command, F("chimesave")))
-        {
-          String name = parseString(string, 2);
-          String param = parseStringToEndKeepCase(string, 3);
-          if (name.length() > 0 && param.length() > 0) {
-            Plugin_055_WriteChime(name, param);
-            Plugin_055_AddStringFIFO("1");
-          }
-          success = true;
-        }
-
+    {
+      if (!Plugin_055_Data) {
         break;
       }
 
-      case PLUGIN_CLOCK_IN:
+      String command = parseString(string, 1);
+
+      if (equals(command, F("chime")))
+      {
+        String param = parseStringToEndKeepCase(string, 2);
+
+        if (param.length() > 0) {
+          Plugin_055_AddStringFIFO(param);
+        }
+        success = true;
+      }
+
+      if (equals(command, F("chimeplay")))
+      {
+        String name = parseString(string, 2);
+
+        if (name.length() > 0) {
+          String param;
+          Plugin_055_ReadChime(name, param);
+          Plugin_055_AddStringFIFO(param);
+        }
+        success = true;
+      }
+
+      if (equals(command, F("chimesave")))
+      {
+        String name  = parseString(string, 2);
+        String param = parseStringToEndKeepCase(string, 3);
+
+        if ((name.length() > 0) && (param.length() > 0)) {
+          Plugin_055_WriteChime(name, param);
+          Plugin_055_AddStringFIFO("1");
+        }
+        success = true;
+      }
+
+      break;
+    }
+
+    case PLUGIN_CLOCK_IN:
+    {
+      if (!Plugin_055_Data) {
+        break;
+      }
+
+      String  tokens;
+      uint8_t hours         = node_time.hour();
+      const uint8_t minutes = node_time.minute();
+
+      if (Plugin_055_Data->chimeClock)
+      {
+        const String tmpString = strformat(F("%02d%02d"), hours, minutes);
+
+        if (Plugin_055_ReadChime(tmpString, tokens)) {
+          Plugin_055_AddStringFIFO(tokens);
+        }
+
+        if (minutes == 0)
         {
-          if (!Plugin_055_Data)
-            break;
-
-          String tokens;
-          uint8_t hours = node_time.hour();
-          const uint8_t minutes = node_time.minute();
-
-          if (Plugin_055_Data->chimeClock)
-          {
-            const String tmpString = strformat(F("%02d%02d"), hours, minutes);
-            if (Plugin_055_ReadChime(tmpString, tokens))
-              Plugin_055_AddStringFIFO(tokens);
-
-            if (minutes == 0)
-            {
-              if (Plugin_055_ReadChime("hours", tokens) == 0)
-                tokens = F("1111!,111!1,111!1!,11!11,11!11!,11!1!1,11!1!1!,1!111,1!111!,1!11!1,1!11!1!,1!1!11");   //1..12
-
-              // hours 0..23 -> 1..12
-              hours = hours % 12;
-              if (hours == 0)
-                hours = 12;
-
-              tokens = parseString(tokens, hours);
-              Plugin_055_AddStringFIFO(tokens);
-            }
+          if (Plugin_055_ReadChime("hours", tokens) == 0) {
+            tokens = F("1111!,111!1,111!1!,11!11,11!11!,11!1!1,11!1!1!,1!111,1!111!,1!11!1,1!11!1!,1!1!11"); // 1..12
           }
 
-          success = true;
-          break;
+          // hours 0..23 -> 1..12
+          hours = hours % 12;
+
+          if (hours == 0) {
+            hours = 12;
+          }
+
+          tokens = parseString(tokens, hours);
+          Plugin_055_AddStringFIFO(tokens);
         }
+      }
+
+      success = true;
+      break;
+    }
 
 
     case PLUGIN_FIFTY_PER_SECOND:
-    //case PLUGIN_TEN_PER_SECOND:
-      {
-        if (!Plugin_055_Data)
-          break;
-
-        long millisAct = millis();
-
-        if (Plugin_055_Data->millisStateEnd > 0)   // just striking?
-        {
-          if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0)   // end reached?
-          {
-            for (uint8_t i = 0; i < 4; ++i)
-            {
-              if (Plugin_055_Data->pin[i] >= 0)
-                digitalWrite(Plugin_055_Data->pin[i], Plugin_055_Data->lowActive);
-            }
-            Plugin_055_Data->millisStateEnd = 0;
-          }
-        }
-
-        if (Plugin_055_Data->millisStateEnd == 0)   // just finished?
-        {
-          if (! Plugin_055_IsEmptyFIFO())
-          {
-            char c = Plugin_055_ReadFIFO();
-            # ifndef BUILD_NO_DEBUG
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              addLog(LOG_LEVEL_DEBUG, strformat(F("Chime: Process '%c'"), c));
-            }
-            #endif
-
-            switch (c)
-            {
-              case 'a':
-              case 'b':
-              case 'c':
-              case 'd':
-              case 'e':
-              case 'f':
-              case 'A':
-              case 'B':
-              case 'C':
-              case 'D':
-              case 'E':
-              case 'F':
-                c -= 'A' - '0' - 10;
-                //vvv
-
-              case '0':   //strikes 1=1st bell, 2=2nd bell, 4=3rd bell, 8=4rd bell
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9':
-              {
-                uint8_t mask = 1;
-                for (uint8_t i = 0; i < 4; ++i)
-                {
-                  if (Plugin_055_Data->pin[i] >= 0)
-                    if (c & mask)
-                      digitalWrite(Plugin_055_Data->pin[i], !Plugin_055_Data->lowActive);
-                  mask <<= 1;
-                }
-                Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisChimeTime;
-                break;
-              }
-              case '=':   //long pause
-              case ' ':
-              case ',':
-                Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime*3;
-                break;
-              case '-':   //single pause
-                Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime;
-                break;
-              case '.':   //short pause
-                Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime/3;
-                break;
-              case '|':   //shortest pause
-                Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisChimeTime/2;
-                break;
-              case '#':   //comment -> eat till FIFO is empty
-                while (Plugin_055_ReadFIFO());
-                break;
-              default:   //unknown char -> do nothing
-                break;
-            }
-          }
-
-        }
-        success = true;
+      // case PLUGIN_TEN_PER_SECOND:
+    {
+      if (!Plugin_055_Data) {
         break;
       }
 
+      long millisAct = millis();
+
+      if (Plugin_055_Data->millisStateEnd > 0)                         // just striking?
+      {
+        if (timeDiff(millisAct, Plugin_055_Data->millisStateEnd) <= 0) // end reached?
+        {
+          for (uint8_t i = 0; i < 4; ++i)
+          {
+            if (Plugin_055_Data->pin[i] >= 0) {
+              digitalWrite(Plugin_055_Data->pin[i], Plugin_055_Data->lowActive);
+            }
+          }
+          Plugin_055_Data->millisStateEnd = 0;
+        }
+      }
+
+      if (Plugin_055_Data->millisStateEnd == 0) // just finished?
+      {
+        if (!Plugin_055_IsEmptyFIFO())
+        {
+          char c = Plugin_055_ReadFIFO();
+            # ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            addLog(LOG_LEVEL_DEBUG, strformat(F("Chime: Process '%c'"), c));
+          }
+            # endif // ifndef BUILD_NO_DEBUG
+
+          switch (c)
+          {
+            case 'a':
+            case 'b':
+            case 'c':
+            case 'd':
+            case 'e':
+            case 'f':
+            case 'A':
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'E':
+            case 'F':
+              c -= 'A' - '0' - 10;
+
+            // vvv
+
+            case '0': // strikes 1=1st bell, 2=2nd bell, 4=3rd bell, 8=4rd bell
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            {
+              uint8_t mask = 1;
+
+              for (uint8_t i = 0; i < 4; ++i)
+              {
+                if (Plugin_055_Data->pin[i] >= 0) {
+                  if (c & mask) {
+                    digitalWrite(Plugin_055_Data->pin[i], !Plugin_055_Data->lowActive);
+                  }
+                }
+                mask <<= 1;
+              }
+              Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisChimeTime;
+              break;
+            }
+            case '=': // long pause
+            case ' ':
+            case ',':
+              Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime * 3;
+              break;
+            case '-': // single pause
+              Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime;
+              break;
+            case '.': // short pause
+              Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisPauseTime / 3;
+              break;
+            case '|': // shortest pause
+              Plugin_055_Data->millisStateEnd = millisAct + Plugin_055_Data->millisChimeTime / 2;
+              break;
+            case '#': // comment -> eat till FIFO is empty
+
+              while (Plugin_055_ReadFIFO()) {}
+              break;
+            default: // unknown char -> do nothing
+              break;
+          }
+        }
+      }
+      success = true;
+      break;
+    }
   }
   return success;
 }
@@ -391,8 +421,9 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
 
 void Plugin_055_WriteFIFO(char c)
 {
-  if (Plugin_055_Data->FIFO_IndexR == ((Plugin_055_Data->FIFO_IndexW+1) & PLUGIN_055_FIFO_MASK))   // FIFO full?
+  if (Plugin_055_Data->FIFO_IndexR == ((Plugin_055_Data->FIFO_IndexW + 1) & PLUGIN_055_FIFO_MASK)) { // FIFO full?
     return;
+  }
 
   Plugin_055_Data->FIFO[Plugin_055_Data->FIFO_IndexW] = c;
   Plugin_055_Data->FIFO_IndexW++;
@@ -401,10 +432,12 @@ void Plugin_055_WriteFIFO(char c)
 
 char Plugin_055_ReadFIFO()
 {
-  if (Plugin_055_IsEmptyFIFO())
+  if (Plugin_055_IsEmptyFIFO()) {
     return '\0';
+  }
 
   char c = Plugin_055_Data->FIFO[Plugin_055_Data->FIFO_IndexR];
+
   Plugin_055_Data->FIFO_IndexR++;
   Plugin_055_Data->FIFO_IndexR &= PLUGIN_055_FIFO_MASK;
 
@@ -413,31 +446,35 @@ char Plugin_055_ReadFIFO()
 
 char Plugin_055_PeekFIFO()
 {
-  if (Plugin_055_IsEmptyFIFO())
+  if (Plugin_055_IsEmptyFIFO()) {
     return '\0';
+  }
 
   return Plugin_055_Data->FIFO[Plugin_055_Data->FIFO_IndexR];
 }
 
 boolean Plugin_055_IsEmptyFIFO()
 {
-  return (Plugin_055_Data->FIFO_IndexR == Plugin_055_Data->FIFO_IndexW);
+  return Plugin_055_Data->FIFO_IndexR == Plugin_055_Data->FIFO_IndexW;
 }
 
 void Plugin_055_AddStringFIFO(const String& param)
 {
-  if (param.isEmpty())
+  if (param.isEmpty()) {
     return;
+  }
 
-  uint8_t i = 0;
-  char c = param[i];
-  char c_last = '\0';
+  uint8_t i      = 0;
+  char    c      = param[i];
+  char    c_last = '\0';
 
   while (c != 0)
   {
-    if (isDigit(c) && isDigit(c_last))   // "11" is shortcut for "1-1" -> add pause
+    if (isDigit(c) && isDigit(c_last)) { // "11" is shortcut for "1-1" -> add pause
       Plugin_055_WriteFIFO('-');
-    if (c == '!')   //double strike -> add shortest pause and repeat last strike
+    }
+
+    if (c == '!') // double strike -> add shortest pause and repeat last strike
     {
       Plugin_055_WriteFIFO('|');
       c = c_last;
@@ -451,24 +488,29 @@ void Plugin_055_AddStringFIFO(const String& param)
   Plugin_055_WriteFIFO('=');
 }
 
-//File I/O functions
+// File I/O functions
 
 void Plugin_055_WriteChime(const String& name, const String& tokens)
 {
   const String fileName = strformat(F("chime_%s.txt"), name.c_str());
 
   String log;
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log = strformat(F("Chime: write %s "), fileName.c_str());
+  }
 
   fs::File f = tryOpenFile(fileName, "w");
+
   if (f)
   {
     f.print(tokens);
     f.close();
-    //flashCount();
-    if (loglevelActiveFor(LOG_LEVEL_INFO))
+
+    // flashCount();
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += tokens;
+    }
   }
 
   addLogMove(LOG_LEVEL_INFO, log);
@@ -479,23 +521,29 @@ uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
   const String fileName = strformat(F("chime_%s.txt"), name.c_str());
 
   String log;
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log = strformat(F("Chime: read %s "), fileName.c_str());
+  }
 
   tokens = String();
   fs::File f = tryOpenFile(fileName, "r");
+
   if (f)
   {
     tokens.reserve(f.size());
     char c;
+
     while (f.available())
     {
-      c = f.read();
+      c       = f.read();
       tokens += c;
     }
     f.close();
-    if (loglevelActiveFor(LOG_LEVEL_INFO))
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += tokens;
+    }
   }
 
   addLogMove(LOG_LEVEL_INFO, log);

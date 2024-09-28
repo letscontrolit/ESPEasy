@@ -92,17 +92,14 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_042;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
+      Device[++deviceCount].Number       = PLUGIN_ID_042;
+      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].ValueCount     = 3;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].Pin1Direction  = gpio_direction::gpio_output;
       break;
     }
 

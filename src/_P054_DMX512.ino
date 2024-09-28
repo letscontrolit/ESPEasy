@@ -1,8 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P054
-//#######################################################################################################
-//######################################## Plugin 054: DMX512 TX ########################################
-//#######################################################################################################
+
+// #######################################################################################################
+// ######################################## Plugin 054: DMX512 TX ########################################
+// #######################################################################################################
 
 // ESPEasy Plugin to control DMX-512 Devices (DMX 512/1990; DIN 56930-2) like Dimmer-Packs, LED-Bars, Moving-Heads, Event-Lighting
 // written by Jochen Krapf (jk@nerd2nerd.org)
@@ -49,24 +50,26 @@
 // Note: The ESP serial FIFO has size of 128 uint8_t. Therefore it is rcommented to use DMX buffer sizes below 128
 
 
-//#include <*.h>   //no lib needed
+// #include <*.h>   //no lib needed
 
 
-#define PLUGIN_054
-#define PLUGIN_ID_054         54
-#define PLUGIN_NAME_054       "Communication - DMX512 TX"
+# define PLUGIN_054
+# define PLUGIN_ID_054         54
+# define PLUGIN_NAME_054       "Communication - DMX512 TX"
 
-uint8_t* Plugin_054_DMXBuffer = 0;
-int16_t Plugin_054_DMXSize = 32;
+uint8_t *Plugin_054_DMXBuffer = 0;
+int16_t  Plugin_054_DMXSize   = 32;
 
 static inline void PLUGIN_054_Limit(int16_t& value, int16_t min, int16_t max)
 {
-  if (value < min)
+  if (value < min) {
     value = min;
-  if (value > max)
-    value = max;
-}
+  }
 
+  if (value > max) {
+    value = max;
+  }
+}
 
 boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -75,198 +78,200 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_054;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 0;
-        Device[deviceCount].SendDataOption = false;
-        Device[deviceCount].TimerOption = false;
-        Device[deviceCount].TimerOptional = false;
-        Device[deviceCount].GlobalSyncOption = true;
-        break;
-      }
+    {
+      Device[++deviceCount].Number      = PLUGIN_ID_054;
+      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].Ports         = 0;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].ValueCount    = 0;
+      Device[deviceCount].Pin1Direction = gpio_direction::gpio_output;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_054);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_054);
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
-      {
-        CONFIG_PIN1 = 2;
-        PCONFIG(0) = Plugin_054_DMXSize;
-        addFormNote(F("Only GPIO-2 (D4) can be used as TX1!"));
-        addFormNumericBox(F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
-        success = true;
-        break;
-      }
+    {
+      CONFIG_PIN1 = 2;
+      PCONFIG(0)  = Plugin_054_DMXSize;
+      addFormNote(F("Only GPIO-2 (D4) can be used as TX1!"));
+      addFormNumericBox(F("Channels"), F("channels"), Plugin_054_DMXSize, 1, 512);
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        CONFIG_PIN1 = 2;
-        if (Settings.Pin_status_led == 2)   //Status LED assigned to TX1?
-          Settings.Pin_status_led = -1;
-        Plugin_054_DMXSize = getFormItemInt(F("channels"));
-        PLUGIN_054_Limit (Plugin_054_DMXSize, 1, 512);
-        PCONFIG(0) = Plugin_054_DMXSize;
-        success = true;
-        break;
+    {
+      CONFIG_PIN1 = 2;
+
+      if (Settings.Pin_status_led == 2) { // Status LED assigned to TX1?
+        Settings.Pin_status_led = -1;
       }
+      Plugin_054_DMXSize = getFormItemInt(F("channels"));
+      PLUGIN_054_Limit(Plugin_054_DMXSize, 1, 512);
+      PCONFIG(0) = Plugin_054_DMXSize;
+      success    = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        CONFIG_PIN1 = 2;   //TX1 fix to GPIO2 (D4) == onboard LED
-        Plugin_054_DMXSize = PCONFIG(0);
+    {
+      CONFIG_PIN1        = 2; // TX1 fix to GPIO2 (D4) == onboard LED
+      Plugin_054_DMXSize = PCONFIG(0);
 
-        if (Plugin_054_DMXBuffer) {
-          delete [] Plugin_054_DMXBuffer;
-        }
-        Plugin_054_DMXBuffer = new (std::nothrow) uint8_t[Plugin_054_DMXSize];
-        if (Plugin_054_DMXBuffer != nullptr) {
-          memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
-        }
-
-        success = Plugin_054_DMXBuffer != nullptr;
-        break;
+      if (Plugin_054_DMXBuffer) {
+        delete[] Plugin_054_DMXBuffer;
       }
+      Plugin_054_DMXBuffer = new (std::nothrow) uint8_t[Plugin_054_DMXSize];
+
+      if (Plugin_054_DMXBuffer != nullptr) {
+        memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+      }
+
+      success = Plugin_054_DMXBuffer != nullptr;
+      break;
+    }
 
     case PLUGIN_EXIT:
-      {
-        if (Plugin_054_DMXBuffer) {
-          delete [] Plugin_054_DMXBuffer;
-        }
-        break;
+    {
+      if (Plugin_054_DMXBuffer) {
+        delete[] Plugin_054_DMXBuffer;
       }
+      break;
+    }
 
     case PLUGIN_WRITE:
+    {
+      String lowerString = string;
+      lowerString.toLowerCase();
+      String command = parseString(lowerString, 1);
+
+      if (equals(command, F("dmx")))
       {
-        String lowerString=string;
-        lowerString.toLowerCase();
-        String command = parseString(lowerString, 1);
+        String  param;
+        String  paramKey;
+        String  paramVal;
+        uint8_t paramIdx = 2;
+        int16_t channel  = 1;
+        int16_t value    = 0;
 
-        if (equals(command, F("dmx")))
+        // FIXME TD-er: Same code in _P057
+        lowerString.replace(F("  "), " ");
+        lowerString.replace(F(" ="), "=");
+        lowerString.replace(F("= "), "=");
+
+        param = parseString(lowerString, paramIdx++);
+
+        if (param.length())
         {
-          String param;
-          String paramKey;
-          String paramVal;
-          uint8_t paramIdx = 2;
-          int16_t channel = 1;
-          int16_t value = 0;
-          //FIXME TD-er: Same code in _P057
-          lowerString.replace(F("  "), " ");
-          lowerString.replace(F(" ="), "=");
-          lowerString.replace(F("= "), "=");
-
-          param = parseString(lowerString, paramIdx++);
-          if (param.length())
+          while (param.length())
           {
-            while (param.length())
+              # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG_MORE, param);
+              # endif // ifndef BUILD_NO_DEBUG
+
+            if (equals(param, F("log")))
             {
-              #ifndef BUILD_NO_DEBUG
-              addLog(LOG_LEVEL_DEBUG_MORE, param);
-              #endif
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("DMX  : ");
 
-              if (equals(param, F("log")))
-              {
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("DMX  : ");
-                  for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
-                  {
-                    log += Plugin_054_DMXBuffer[i];
-                    log += F(", ");
-                  }
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                success = true;
-              }
-
-              else if (equals(param, F("test")))
-              {
                 for (int16_t i = 0; i < Plugin_054_DMXSize; i++)
-                  //Plugin_054_DMXBuffer[i] = i+1;
-                  Plugin_054_DMXBuffer[i] = rand()&255;
-                success = true;
-              }
-
-              else if (equals(param, F("on")))
-              {
-                memset(Plugin_054_DMXBuffer, 255, Plugin_054_DMXSize);
-                success = true;
-              }
-
-              else if (equals(param, F("off")))
-              {
-                memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
-                success = true;
-              }
-
-              else
-              {
-                int16_t index = param.indexOf('=');
-                if (index > 0)   //syntax: "<channel>=<value>"
                 {
-                  paramKey = param.substring(0, index);
-                  paramVal = param.substring(index+1);
-                  channel = paramKey.toInt();
+                  log += Plugin_054_DMXBuffer[i];
+                  log += F(", ");
                 }
-                else   //syntax: "<value>"
-                {
-                  paramVal = param;
-                }
-
-                value = paramVal.toInt();
-                PLUGIN_054_Limit (value, 0, 255);
-
-                if (channel > 0 && channel <= Plugin_054_DMXSize)
-                  Plugin_054_DMXBuffer[channel-1] = value;
-                channel++;
+                addLogMove(LOG_LEVEL_INFO, log);
               }
-
-              param = parseString(lowerString, paramIdx++);
+              success = true;
             }
-          }
-          else
-          {
-            //??? no params
-          }
 
-          success = true;
+            else if (equals(param, F("test")))
+            {
+              for (int16_t i = 0; i < Plugin_054_DMXSize; i++) {
+                // Plugin_054_DMXBuffer[i] = i+1;
+                Plugin_054_DMXBuffer[i] = rand() & 255;
+              }
+              success = true;
+            }
+
+            else if (equals(param, F("on")))
+            {
+              memset(Plugin_054_DMXBuffer, 255, Plugin_054_DMXSize);
+              success = true;
+            }
+
+            else if (equals(param, F("off")))
+            {
+              memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+              success = true;
+            }
+
+            else
+            {
+              int16_t index = param.indexOf('=');
+
+              if (index > 0) // syntax: "<channel>=<value>"
+              {
+                paramKey = param.substring(0, index);
+                paramVal = param.substring(index + 1);
+                channel  = paramKey.toInt();
+              }
+              else // syntax: "<value>"
+              {
+                paramVal = param;
+              }
+
+              value = paramVal.toInt();
+              PLUGIN_054_Limit(value, 0, 255);
+
+              if ((channel > 0) && (channel <= Plugin_054_DMXSize)) {
+                Plugin_054_DMXBuffer[channel - 1] = value;
+              }
+              channel++;
+            }
+
+            param = parseString(lowerString, paramIdx++);
+          }
+        }
+        else
+        {
+          // ??? no params
         }
 
-        break;
+        success = true;
       }
+
+      break;
+    }
 
     case PLUGIN_TEN_PER_SECOND:
+    {
+      if (Plugin_054_DMXBuffer)
       {
-        if (Plugin_054_DMXBuffer)
-        {
-          int16_t sendPin = 2;   //TX1 fix to GPIO2 (D4) == onboard LED
+        int16_t sendPin = 2; // TX1 fix to GPIO2 (D4) == onboard LED
 
-          //empty serial from prev. transmit
-          Serial1.flush();
+        // empty serial from prev. transmit
+        Serial1.flush();
 
-          //send break
-          Serial1.end();
-          pinMode(sendPin, OUTPUT);
-          digitalWrite(sendPin, LOW);
-          delayMicroseconds(120);   //88µs ... inf
-          digitalWrite(sendPin, HIGH);
-          delayMicroseconds(12);   //8µs ... 1s
+        // send break
+        Serial1.end();
+        pinMode(sendPin, OUTPUT);
+        digitalWrite(sendPin, LOW);
+        delayMicroseconds(120); // 88µs ... inf
+        digitalWrite(sendPin, HIGH);
+        delayMicroseconds(12);  // 8µs ... 1s
 
-          //send DMX data
-          Serial1.begin(250000, SERIAL_8N2);
-          Serial1.write(0);   //start uint8_t
-          Serial1.write(Plugin_054_DMXBuffer, Plugin_054_DMXSize);
-        }
-        break;
+        // send DMX data
+        Serial1.begin(250000, SERIAL_8N2);
+        Serial1.write(0); // start uint8_t
+        Serial1.write(Plugin_054_DMXBuffer, Plugin_054_DMXSize);
       }
-
+      break;
+    }
   }
   return success;
 }
