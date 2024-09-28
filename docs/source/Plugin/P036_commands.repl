@@ -42,6 +42,14 @@
         The line text can also be restored from the settings by the command ``restore``.
 
         All template notations can be used, like system variables, or reference to a task value.
+        They will be interpreted once (while issuing the command) to generate the new line content.
+
+        To use template notations that are to be reinterpreted each time before the line is displayed, the **<line> parameter must be negative**.
+
+        Additionally to the **negative** <line> parameter following conditions must also be met:
+                * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
+                * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
         After receiving text this way, the frame where the text is placed is shown, if the setting for 'Wake display on receiving text' is checked.
         "
@@ -79,15 +87,21 @@
         ``oledframedcmd,userDef1,'<user Defined Header1>'``
         ","
         Set the user defined header nr. 1 with any desired text value.
+                * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
+                * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
         "
         ``oledframedcmd,userDef2,'<user Defined Header2>'``
         ","
         Set the user defined header nr. 2 with any desired text value.
+                * use ``\%<sysvar>\%`` instead of ``%<sysvar>%`` for system variables
+                * use ``\[<TaskName>#<TaskValue>\]`` instead of ``[<TaskName>#<TaskValue>]`` for task values
+                * use ``\{some_function\}`` instead of ``{some_function}`` for function calls
 
-        Use ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables.
+        **Note:** The use of ``$<sysvar>$`` instead of ``%<sysvar>%`` to use system variables will be deprecated in the near future.
         "
         "
         ``oledframedcmd,restore,<line>``

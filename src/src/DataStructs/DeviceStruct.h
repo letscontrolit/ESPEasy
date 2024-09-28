@@ -10,6 +10,8 @@
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/SensorVType.h"
 
+#include "../Helpers/StringGenerator_GPIO.h"
+
 
 #define DEVICE_TYPE_SINGLE                  1 // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
@@ -67,6 +69,10 @@ struct __attribute__((__packed__)) DeviceStruct
     return pluginID_t::toPluginID(Number);
   }
 
+  gpio_direction   getPinDirection(int pin) const;
+  PinSelectPurpose pinDirectionToPurpose(gpio_direction direction) const;
+  PinSelectPurpose getPinSelectPurpose(int pin) const;
+
 
   PLUGINID_BASE_TYPE Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t            Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
@@ -74,6 +80,10 @@ struct __attribute__((__packed__)) DeviceStruct
   uint8_t            Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
   uint8_t            ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   Output_Data_type_t OutputDataType; // Subset of selectable output data types (Default = no selection)
+
+  gpio_direction Pin1Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
+  gpio_direction Pin2Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
+  gpio_direction Pin3Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
                                      
   bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
   bool InverseLogicOption : 1;       // Allow to invert the boolean state (e.g. a switch)

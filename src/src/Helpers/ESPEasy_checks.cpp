@@ -109,9 +109,9 @@ void run_compiletime_checks() {
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
 #if FEATURE_SUPPORT_OVER_255_PLUGINS
-  check_size<DeviceStruct,                          10u>(); // Is not stored
+  check_size<DeviceStruct,                          11u>(); // Is not stored
 #else
-  check_size<DeviceStruct,                          9u>(); // Is not stored
+  check_size<DeviceStruct,                          10u>(); // Is not stored
 #endif
   check_size<ProtocolStruct,                        4u>();
   #if FEATURE_NOTIFIER
