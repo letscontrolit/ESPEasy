@@ -126,6 +126,8 @@ Options
 
 * **Suppress leading 0 on day/hour**: When enabled, will show the hours of the time and days of the date without a leading 0 when < 10.
 
+* **Use decimal dot for blink**: When enabled will use the decimal dot on the second digit (with offset accounted for) for blinking, when no extra pixels are available.
+
 * **Scroll text > display width**: Normally the ``7dtext,<text>`` command only show the left n characters the display can hold. This option enables the Scroll Text feature, that will scroll text sent using the ``7dtext`` or ``7dbin`` commands from right to left when the content is longer than the display can show at once.
 
 * **Scroll text in from right**: Normally the Scroll Text feature starts with the display filled with the left part of the text to scroll, with this option enabled, the display starts empty and the text is scrolled in from the right side of the display to the left, until all text is scrolled off. Then the scrolling restarts.
@@ -181,13 +183,25 @@ These options determine the number-plan of the pixels in this group:
 
 * **Pixel-offset before**: The number of pixels to skip before the first digit is planned. Sometimes used to 'fix' the signal level for the pixels if the strip is connected to the ESP without a level converter, but that's an unreliable fix, so a level converter should best be used when powering the pixels with the 'suggested' (strongly advised) 5V. These pixels can also be used as an extra indicator, as the ``7dbefore`` command can be used to set these pixels to a color.
 
-* **Starting pixel**: By default the number-plan starts at the left-top pixel of a digit, and flows clock-wise along all pixels for a single digit. With this setting you can select to start at the right-top of the digit, for assigning the number-plan. (See remark when using **counter-clockwise** option, below.)
+* **Starting segment**: By default the number-plan starts at the left pixel of the top segment (a) of a digit, and flows clock-wise along all pixels for a single digit. With this setting you can select to start at the top of the top-right segment (b) or the left of the center-segment (g), when assigning the number-plan. (See remark when using **counter-clockwise** option, below.)
+
+.. image:: P165_StartingSegmentOptions.png
+
+* *a (top)*: The default starting segment.
+
+* *b/f (right/left)*: For the default clockwise numbering, the b-segment is the first segment to be numbered. Starting point is the f-segment when **Numbering counter-clockwise** is enabled.
+
+* *g (center)*: This is a very optimal numbering plan, as the segment-order is g, c, dp, d, e, f, a, b, and as it ends at the b-segment the next digit can easily be coupled to this one. When this option is selected, the **Split g-segment pixels** and **Decimal dot last segment** options are disabled (and ignored), as they don't make sense to be used.
+
+.. image:: P165_StartingSegmentOption-g.png
+
+|
 
 * **Split g-segment pixels**: The default number-plan assigns pixel-indexes to the g-segment between the e and f segment. When using a larger number of Width pixels, wiring the g-segment can be challenging. When enabled, this option assigns pixel-indexes to the right-half set of pixels between the b and c segment, and the remaining pixels between the e and f segment.
 
 * **Decimal dot last segment**: Similar to the g-segment, also the dp-segment can be challening to wire, as by default the f-segment is assigned the last pixel-index. So the default here is to assign pixel-indexes to the dp-segment between the c and d-segments. If you explicitly want to have these dp-pixels assigned as the last pixel-indexes, this option can be enabled.
 
-* **Numbering counter-clockwise**: By default the pixel-indexes are assigned in a clock-wise order, but if your wiring-plan works better when numbering counter-clockwise, this is the setting to enable. This also changes how the **Starting pixel** is interpreted: Top-left will start from the f-segment, and end with the a-segment, and top-right will start assigning pixel-indexes from the right side of the a-segment, and work down the f, g, e, d, dp, c and b segments.
+* **Numbering counter-clockwise**: By default the pixel-indexes are assigned in a clock-wise order, but if your wiring-plan works better when numbering counter-clockwise, this is the setting to enable. This also changes how the **Starting pixel** is interpreted: Top-left will start from the f-segment, and end with the a-segment, and top-right will start assigning pixel-indexes from the right side of the a-segment, and work down the f, g, e, d, dp, c and b segments. When this option is used with the **Starting segment** set to **g (center)**, also the **Right to left digits** option should best be enabled too, for most optimal result
 
 * **Right to Left digits**: When creating larger displays, or building a 2 1/2 or 3 1/2 digit display for displaying f.e. numbers up to 100 or 1000, starting the digits at the left is not efficient, as the entire left digit will get pixel-indexes assigned. When using the Right to Left digits option, the digits will be virtually reverted, and pixel-indexes assigned from the right digit to the left digit. The extra pixels, not needed to show anything else than ``1`` can be left out of the display. An example config is included below, showing this.
 
