@@ -1649,6 +1649,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P162
     #define USES_P162   // Output - MCP42xxx Digipot
   #endif
+  #ifdef ESP32 // These plugins no longer fit in an ESP8266 build
+    #ifndef USES_P163
+      #define USES_P163   // Environment - RadSens I2C radiation counter
+    #endif
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -1661,12 +1666,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
-  #ifdef ESP32 // These plugins no longer fit in an ESP8266 build
-    #ifndef USES_P163
-      #define USES_P163   // Environment - RadSens I2C radiation counter
-    #endif
+  #if !defined(USES_P173) && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
   #endif
-
 #endif // ifdef PLUGIN_SET_COLLECTION_G
 
 // Collection of all energy related plugins.
@@ -1988,6 +1990,9 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  #if !defined(USES_P173) // && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
   #endif
   
   // Controllers
@@ -2440,6 +2445,9 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  #ifndef USES_P173
+    #define USES_P173   // Environment - SHTC3
   #endif
 
   // Controllers
