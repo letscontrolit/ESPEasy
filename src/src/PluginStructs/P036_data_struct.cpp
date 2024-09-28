@@ -284,6 +284,18 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
   return isInitialized();
 }
 
+void P036_data_struct::CleanEscapeCharacters(String& str, const bool ForHeaderOnly = false)
+{
+  stripEscapeCharacters(str);
+
+  /***** WILL BE DEPRECATED - DO NOT USE *****/
+  if (ForHeaderOnly) {
+    str.replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
+  }
+
+  /***** WILL BE DEPRECATED - DO NOT USE *****/
+}
+
 const char p036_subcommands[] PROGMEM = "display|frame"
                                         # if P036_ENABLE_LINECOUNT
                                         "|linecount"
@@ -329,7 +341,8 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
   uint8_t eventId     = 0;
 
   const String subcommand = parseString(string, 2);
-  int LineNo              = event->Par1;
+  int  LineNo             = event->Par1;
+  bool Parsing            = (LineNo >= 0);
 
       # if P036_SEND_EVENTS
   const bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
@@ -338,32 +351,42 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
   int command_i = GetCommandCode(subcommand.c_str(), p036_subcommands);
 
   if (command_i == -1) {
+    String parseString = parseStringKeepCaseNoTrim(string, 3);
+
+    if (!Parsing) {
+      LineNo = -LineNo;
+      CleanEscapeCharacters(parseString); // Allow system vars and task values to be passed to the line
+    }
+
     if ((LineNo > 0) && (LineNo <= P36_Nlines)) {
       // content functions
       success = true;
       String *currentLine = &LineContent->DisplayLinesV1[LineNo - 1].Content;
-      *currentLine = parseStringKeepCaseNoTrim(string, 3);
-      *currentLine = P36_parseTemplate(*currentLine, LineNo - 1);
+      *currentLine = parseString;
 
-          # if P036_ENABLE_TICKER
+      if (Parsing) {
+        *currentLine = P36_parseTemplate(*currentLine, LineNo - 1);
 
-      if (!bUseTicker)
-          # endif // if P036_ENABLE_TICKER
-      {
-        // calculate Pix length of new content, not necessary for ticker
-        uint16_t PixLength = CalcPixLength(LineNo - 1);
+        # if P036_ENABLE_TICKER
 
-        if (PixLength > 255) {
-          addHtmlError(strformat(F("Pixel length of %d too long for line! Max. 255 pix!"), PixLength));
+        if (!bUseTicker)
+        # endif // if P036_ENABLE_TICKER
+        {
+          // calculate Pix length of new content, not necessary for ticker
+          uint16_t PixLength = CalcPixLength(LineNo - 1);
 
-          const unsigned int strlen = currentLine->length();
+          if (PixLength > 255) {
+            addHtmlError(strformat(F("Pixel length of %d too long for line! Max. 255 pix!"), PixLength));
 
-          if (strlen > 0) {
-            const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
-            const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+            const unsigned int strlen = currentLine->length();
 
-            // shorten string because OLED controller can not handle such long strings
-            *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+            if (strlen > 0) {
+              const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
+              const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
+
+              // shorten string because OLED controller can not handle such long strings
+              *currentLine = currentLine->substring(0, strlen - iCharToRemove);
+            }
           }
         }
       }
@@ -578,14 +601,16 @@ bool P036_data_struct::plugin_write(struct EventStruct *event, const String& str
       case p036_subcommands_e::userdef1:
       {
         userDef1 = parseStringKeepCase(string, 3);
-        userDef1.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
+        CleanEscapeCharacters(userDef1, true); // Allow system vars and task values to be passed to the
+        // user defined header1
         break;
       }
 
       case p036_subcommands_e::userdef2:
       {
         userDef2 = parseStringKeepCase(string, 3);
-        userDef2.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
+        CleanEscapeCharacters(userDef2, true); // Allow system vars and task values to be passed to the
+        // user defined header2
         break;
       }
       # endif // if P036_USERDEF_HEADERS
@@ -787,8 +812,7 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
       break;
     case eHeaderContent::ePageNo:
       use_newString_f = false;
-      strHeader       = F("page ");
-      strHeader      += (currentFrameToDisplay + 1);
+      strHeader       = strformat(F("page %d"), currentFrameToDisplay + 1);
 
       if (MaxFramesToDisplay != 0xFF) {
         strHeader += F("/");

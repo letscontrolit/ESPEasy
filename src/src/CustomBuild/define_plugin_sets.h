@@ -2078,6 +2078,9 @@ To create/register a plugin, you have to :
   #ifdef USES_P039
     #undef USES_P039  // Environment - Thermocouple
   #endif
+  #ifdef USES_P040
+    #undef USES_P040  // RFID - ID12LA/RDM6300
+  #endif
 #endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
 // EXPERIMENTAL (playground) #######################
