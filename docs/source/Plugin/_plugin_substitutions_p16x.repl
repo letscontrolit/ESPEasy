@@ -11,6 +11,19 @@
 .. |P162_compileinfo| replace:: `.`
 .. |P162_usedlibraries| replace:: `SPI`
 
+.. |P163_name| replace:: :cyan:`RadSens I2C radiation counter`
+.. |P163_type| replace:: :cyan:`Environment`
+.. |P163_typename| replace:: :cyan:`Environment - RadSens I2C radiation counter`
+.. |P163_porttype| replace:: `.`
+.. |P163_status| replace:: :yellow:`COLLECTION G`
+.. |P163_github| replace:: P163_RadSens.ino
+.. _P163_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P163_RadSens.ino
+.. |P163_usedby| replace:: `.`
+.. |P163_shortinfo| replace:: `RadSens I2C radiation counter`
+.. |P163_maintainer| replace:: `tonhuisman`
+.. |P163_compileinfo| replace:: `.`
+.. |P163_usedlibraries| replace:: `ClimateGuard/RadSens`
+
 .. |P164_name| replace:: :cyan:`ENS16x TVOC/eCO2`
 .. |P164_type| replace:: :cyan:`Gases`
 .. |P164_typename| replace:: :cyan:`Gases - ENS16x TVOC/eCO2`
@@ -23,6 +36,19 @@
 .. |P164_maintainer| replace:: `flashmark`
 .. |P164_compileinfo| replace:: `.`
 .. |P164_usedlibraries| replace:: `I2C`
+
+.. |P165_name| replace:: :cyan:`NeoPixel (7-Segment)`
+.. |P165_type| replace:: :cyan:`Display`
+.. |P165_typename| replace:: :cyan:`Display - NeoPixel (7-Segment)`
+.. |P165_porttype| replace:: `.`
+.. |P165_status| replace:: :yellow:`DISPLAY` :yellow:`NEOPIXEL`
+.. |P165_github| replace:: P165_7SegNeopixel.ino
+.. _P165_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P165_7SegNeopixel.ino
+.. |P165_usedby| replace:: `.`
+.. |P165_shortinfo| replace:: `NeoPixel 7-Segment display`
+.. |P165_maintainer| replace:: `tonhuisman`
+.. |P165_compileinfo| replace:: `.`
+.. |P165_usedlibraries| replace:: `Noiasca NeopixelDisplay (modified)`
 
 .. |P166_name| replace:: :cyan:`GP8403 Dual channel DAC 0-10V`
 .. |P166_type| replace:: :cyan:`Output`

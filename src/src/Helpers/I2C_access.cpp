@@ -190,6 +190,23 @@ bool I2C_write8_reg(uint8_t i2caddr, uint8_t reg, uint8_t value) {
 }
 
 // **************************************************************************/
+// Writes an 16 bit value over I2C
+// **************************************************************************/
+bool I2C_write16(uint8_t i2caddr, uint16_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes an 16 bit LE value over I2C
+// **************************************************************************/
+bool I2C_write16_LE(uint8_t i2caddr, uint16_t value) {
+  return I2C_write16(i2caddr, (value << 8) | (value >> 8));
+}
+
+// **************************************************************************/
 // Writes an 16 bit value over I2C to a register
 // **************************************************************************/
 bool I2C_write16_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
