@@ -108,7 +108,7 @@ void run_compiletime_checks() {
   const unsigned int LogStructSize = ((13u + 20 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          9u>(); // Is not stored
+  check_size<DeviceStruct,                          10u>(); // Is not stored
   #if FEATURE_MQTT_TLS
   check_size<ProtocolStruct,                        6u>();
   #else

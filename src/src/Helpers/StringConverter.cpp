@@ -1329,9 +1329,21 @@ void parseSingleControllerVariable(String            & s,
 
 void parseSystemVariables(String& s, bool useURLencode)
 {
+  String MaskEscapedPercent;
+  bool mustReplaceEscapedPercent = hasEscapedCharacter(s, '%');
+
+  if (mustReplaceEscapedPercent) {
+    MaskEscapedPercent = static_cast<char>(0x04); // ASCII 0x04 = End of transmit
+    s.replace(F("\\%"), MaskEscapedPercent);
+  }
+
   parseSpecialCharacters(s, useURLencode);
 
   SystemVariables::parseSystemVariables(s, useURLencode);
+
+  if (mustReplaceEscapedPercent) {
+    s.replace(MaskEscapedPercent, F("\\%"));
+  }
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)

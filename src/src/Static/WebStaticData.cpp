@@ -168,6 +168,16 @@ void serve_JS(JSfiles_e JSfile) {
           #endif
           break;
 #endif
+#ifdef USES_P113
+        case JSfiles_e::P113_script:
+          url = F("p113_script.js");
+          break;
+#endif // ifdef USES_P113
+#ifdef USES_P165
+        case JSfiles_e::P165_digit:
+          url = F("p165_digit.js");
+          break;
+#endif // ifdef USES_P165
 
     }
 
@@ -223,6 +233,16 @@ void serve_JS(JSfiles_e JSfile) {
             case JSfiles_e::EasyColorCode_cm_plugins:
               break;
 #endif
+#ifdef USES_P113
+            case JSfiles_e::P113_script:
+              TXBuffer.addFlashString((PGM_P)FPSTR(p113_script));
+              break;
+#endif // ifdef USES_P113
+#ifdef USES_P165
+            case JSfiles_e::P165_digit:
+              TXBuffer.addFlashString((PGM_P)FPSTR(DATA_P165_DIGIT_JS));
+              break;
+#endif // ifdef USES_P165
           }
           html_add_script_end();
           return;

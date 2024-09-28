@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For NoiascaLedControl
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Noiasca_NeopixelDisplay	KEYWORD1
+segsize_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+clear	KEYWORD2
+setColorBack	KEYWORD2
+setColorFont	KEYWORD2
+setCursor	KEYWORD2
+setPixelColor	KEYWORD2
+setRightToLeft	KEYWORD2
+#setEndOfDevice	KEYWORD2
+show	KEYWORD2
+writeLowLevel	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
