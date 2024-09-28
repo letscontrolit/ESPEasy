@@ -1464,7 +1464,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     if (device.FormulaOption)
     {
-      html_table_header(F("Formula"), F("EasyFormula"), 500);
+      html_table_header(F("Formula"), F("RTDPlugin/_Plugin.html#formula"), 500);
       ++colCount;
     }
 

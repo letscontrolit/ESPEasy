@@ -1661,6 +1661,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
+  #ifdef ESP32 // These plugins no longer fit in an ESP8266 build
+    #ifndef USES_P163
+      #define USES_P163   // Environment - RadSens I2C radiation counter
+    #endif
+  #endif
 
 #endif // ifdef PLUGIN_SET_COLLECTION_G
 
@@ -2084,6 +2089,9 @@ To create/register a plugin, you have to :
   #ifdef USES_P039
     #undef USES_P039  // Environment - Thermocouple
   #endif
+  #ifdef USES_P040
+    #undef USES_P040  // RFID - ID12LA/RDM6300
+  #endif
 #endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
 // EXPERIMENTAL (playground) #######################
@@ -2413,6 +2421,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P165
     #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+  #ifndef USES_P163
+    #define USES_P163   // Environment - RadSens I2C radiation counter
   #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
