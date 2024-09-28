@@ -440,6 +440,10 @@ String AdaGFXcolorToString(const uint16_t        & color,
 # if ADAGFX_SUPPORT_7COLOR
 uint16_t AdaGFXrgb565ToColor7(const uint16_t& color); // Convert rgb565 color to 7-color
 # endif // if ADAGFX_SUPPORT_7COLOR
+uint32_t AdaGFXrgb565ToRgb888(uint16_t rgb565);
+String   AdaGFXrgb565ToWebColor(uint16_t rgb565);
+uint16_t AdaGFXrgb888ToRgb565(uint32_t rgb888);
+
 void     AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                                uint8_t                    selectedIndex);
 String   AdaGFXgetFontName(uint8_t fontId,

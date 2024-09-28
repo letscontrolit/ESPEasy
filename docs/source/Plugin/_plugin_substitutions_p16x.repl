@@ -37,6 +37,19 @@
 .. |P164_compileinfo| replace:: `.`
 .. |P164_usedlibraries| replace:: `I2C`
 
+.. |P165_name| replace:: :cyan:`NeoPixel (7-Segment)`
+.. |P165_type| replace:: :cyan:`Display`
+.. |P165_typename| replace:: :cyan:`Display - NeoPixel (7-Segment)`
+.. |P165_porttype| replace:: `.`
+.. |P165_status| replace:: :yellow:`DISPLAY` :yellow:`NEOPIXEL`
+.. |P165_github| replace:: P165_7SegNeopixel.ino
+.. _P165_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P165_7SegNeopixel.ino
+.. |P165_usedby| replace:: `.`
+.. |P165_shortinfo| replace:: `NeoPixel 7-Segment display`
+.. |P165_maintainer| replace:: `tonhuisman`
+.. |P165_compileinfo| replace:: `.`
+.. |P165_usedlibraries| replace:: `Noiasca NeopixelDisplay (modified)`
+
 .. |P166_name| replace:: :cyan:`GP8403 Dual channel DAC 0-10V`
 .. |P166_type| replace:: :cyan:`Output`
 .. |P166_typename| replace:: :cyan:`Output - GP8403 Dual channel DAC 0-10V`

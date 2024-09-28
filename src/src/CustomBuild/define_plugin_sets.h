@@ -1523,7 +1523,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION
 
 #ifdef PLUGIN_SET_COLLECTION_A
 
@@ -1549,7 +1549,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_A
 
 #ifdef PLUGIN_SET_COLLECTION_B
     #define USES_P069   // LM75A
@@ -1564,7 +1564,7 @@ To create/register a plugin, you have to :
     //#define USES_P109   // ThermoOLED
     #define USES_P110   // VL53L0X Time of Flight sensor
     #define USES_P113   // VL53L1X ToF
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_B
 
 #ifdef PLUGIN_SET_COLLECTION_C
     #define USES_P085   // AcuDC24x
@@ -1575,7 +1575,7 @@ To create/register a plugin, you have to :
 
     #define USES_P111   // RC522 RFID reader
     #define USES_P143   // I2C Rotary encoders
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_C
 
 #ifdef PLUGIN_SET_COLLECTION_D
     #define USES_P093   // Mitsubishi Heat Pump
@@ -1590,7 +1590,7 @@ To create/register a plugin, you have to :
     #define USES_P117  // SCD30
     #define USES_P124  // I2C MultiRelay
     #define USES_P127  // CDM7160
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_D
 
 #ifdef PLUGIN_SET_COLLECTION_E
     #define USES_P119   // ITG3205 Gyro
@@ -1602,7 +1602,7 @@ To create/register a plugin, you have to :
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
     #define USES_P133     // LTR390 UV
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_E
 
 #ifdef PLUGIN_SET_COLLECTION_F
   #ifndef USES_P112
@@ -1631,7 +1631,7 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
 
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_F
 
 #ifdef PLUGIN_SET_COLLECTION_G
   #ifndef USES_P142
@@ -1669,7 +1669,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P173) && defined(ESP32)
     #define USES_P173   // Environment - SHTC3
   #endif
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_G
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
@@ -1730,7 +1730,7 @@ To create/register a plugin, you have to :
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
 
-#endif
+#endif // ifdef PLUGIN_ENERGY_COLLECTION
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
@@ -1832,7 +1832,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-#endif
+  #if !defined(USES_P165) && defined(ESP32)
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+#endif // ifdef PLUGIN_DISPLAY_COLLECTION
 
 // Collection of all climate plugins.
 #ifdef PLUGIN_CLIMATE_COLLECTION
@@ -1996,7 +1999,7 @@ To create/register a plugin, you have to :
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
   #endif
-#endif
+#endif // ifdef PLUGIN_CLIMATE_COLLECTION
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
@@ -2050,7 +2053,10 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-#endif
+  #if !defined(USES_P165) // && defined(ESP32)
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+#endif // ifdef PLUGIN_NEOPIXEL_COLLECTION
 
 #ifdef CONTROLLER_SET_COLLECTION
   #ifndef USES_C011
@@ -2076,7 +2082,7 @@ To create/register a plugin, you have to :
   #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
   #endif
-#endif
+#endif // ifdef CONTROLLER_SET_COLLECTION
 
 
 #ifdef NOTIFIER_SET_COLLECTION
@@ -2418,6 +2424,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P162
     #define USES_P162   // Output - MCP42xxx Digipot
   #endif
+  #ifndef USES_P165
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
   #ifndef USES_P163
     #define USES_P163   // Environment - RadSens I2C radiation counter
   #endif
@@ -2501,7 +2510,7 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) // Add any plugin that uses AdafruitGFX_Helper
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) || defined(USES_P165) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
@@ -3448,6 +3457,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_P131
   #undef USES_P131
+  #endif
+  #ifdef USES_P165
+    #undef USES_P165
   #endif
 #endif
 
