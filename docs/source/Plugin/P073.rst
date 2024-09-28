@@ -137,6 +137,8 @@ Options
 
 * **Suppress leading 0 on day/hour**: When enabled, will show the hours of the time and days of the date without a leading 0 when < 10. (Not available in all builds for size reasons)
 
+* **Use decimal dot for blink**: When enabled will use the decimal dot on the second digit for blinking, when no colon is available. Not applicable for MAX7219 and TM1637 6-digit displays, as they already use alternative blink options.
+
 * **Scroll text > display width**: Normally the ``7dtext,<text>`` command only show the left n characters the display can hold. This option enables the Scroll Text feature, that will scroll text sent using the ``7dtext`` command (or ``7dbin`` command when available) from right to left when the content is longer than the display can show at once.
 
 * **Scroll text in from right**: Normally the Scroll Text feature starts with the display filled with the left part of the text to scroll, with this option enabled, the display starts empty and the text is scrolled in from the right side of the display to the left, until all text is scrolled off. Then the scrolling restarts.
