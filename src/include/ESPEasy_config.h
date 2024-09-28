@@ -142,6 +142,27 @@ constexpr unsigned CEIL_LOG2(unsigned x)
 # endif // ifdef ESP8266
 
 
+// Start: Copied from PR #4977 (P139)
+# ifdef ESP8266
+
+  // (ESP8266) FsP: FlashstringHelper to String-Pointer
+  #  define FsP(F) String(F).c_str()
+# endif // ifdef ESP8266
+
+# ifdef ESP32
+  #  if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
+
+    // (ESP32) FsP: FlashstringHelper to String-Pointer
+    #   define FsP
+  #  endif // if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
+  #  if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3)
+
+    // (ESP32) FsP: FlashstringHelper to String-Pointer
+    #   define FsP
+  #  endif // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3)
+# endif // ifdef ESP32
+// End: Copied from PR #4977 (P139)
+
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h.
 # ifdef USE_CUSTOM_H

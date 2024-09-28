@@ -23,3 +23,16 @@
 .. |P172_maintainer| replace:: `TD-er, tonhuisman`
 .. |P172_compileinfo| replace:: `.`
 .. |P172_usedlibraries| replace:: `Adafruit BMP3XX Library`
+
+.. |P173_name| replace:: :cyan:`SHTC3`
+.. |P173_type| replace:: :cyan:`Environment`
+.. |P173_typename| replace:: :cyan:`Environment - SHTC3`
+.. |P173_porttype| replace:: `.`
+.. |P173_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P173_github| replace:: P173_SHTC3.ino
+.. _P173_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P173_SHTC3.ino
+.. |P173_usedby| replace:: `.`
+.. |P173_shortinfo| replace:: `SHTC3 Temperature and Humidity sensor`
+.. |P173_maintainer| replace:: `tonhuisman`
+.. |P173_compileinfo| replace:: `.`
+.. |P173_usedlibraries| replace:: `.`
