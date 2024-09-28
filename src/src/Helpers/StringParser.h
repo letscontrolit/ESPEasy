@@ -8,6 +8,13 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+// Checks str for the given escaped character
+bool hasEscapedCharacter(String& str, const char EscapeChar);
+
+// Cleans str from escaped characters
+// So far \\% \\[ \\] \\{ \\} \\( and \\) are used (all with single backslash!)
+void   stripEscapeCharacters(String& str);
+
 String parseTemplate(String& tmpString);
 
 String parseTemplate(String& tmpString,

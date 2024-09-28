@@ -29,16 +29,17 @@
 # define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
 # define P073_SUPPRESS_ZERO        // Enable Suppress leading zero on day/hour
 
-# ifndef PLUGIN_SET_COLLECTION
+# if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
-// #  define P073_DEBUG        // Leave out some debugging on demand, activates extra log info in the debug
-# else // ifndef PLUGIN_SET_COLLECTION
 #  undef P073_7DDT_COMMAND  // Optionally activate if .bin file space is really problematic, to remove the 7ddt command
 #  undef P073_EXTRA_FONTS   // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
 #  undef P073_SCROLL_TEXT   // Optionally activate if .bin file space is really problematic, to remove the scrolling text feature
 #  undef P073_7DBIN_COMMAND // Optionally activate if .bin file space is really problematic, to remove the 7dbin command
 #  undef P073_SUPPRESS_ZERO // Optionally activate if .bin file space is really problematic, to remove the Suppress leading zero feature
-# endif // ifndef PLUGIN_SET_COLLECTION
+# else // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
+
+// #  define P073_DEBUG        // Leave out some debugging on demand, activates extra log info in the debug
+# endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
@@ -139,6 +140,22 @@ static const uint8_t Dseg7CharTable[42] PROGMEM = {
   0b00011100, 0b00111110, 0b00111111, 0b00110111, 0b00111011, 0b01101100 };
 
 # endif // P073_EXTRA_FONTS
+
+// FIXME Next part should be merged from PR #5091 for use of #if vs. #ifdef !!!
+uint8_t P073_mapCharToFontPosition(char    character,
+                                   uint8_t fontset);
+uint8_t P073_getFontChar(uint8_t index,
+                         uint8_t fontset);
+int32_t P073_parse_7dfont(struct EventStruct *event,
+                          const String      & text);
+void    P073_display_output_selector(const __FlashStringHelper *id,
+                                     int16_t                    value);
+# ifdef P073_EXTRA_FONTS
+void    P073_font_selector(const __FlashStringHelper *id,
+                           int16_t                    value);
+# endif // ifdef P073_EXTRA_FONTS
+uint8_t P073_revert7bits(uint8_t character);
+// FIXME End of part to merge from PR #5091
 
 struct P073_data_struct : public PluginTaskData_base {
 public:

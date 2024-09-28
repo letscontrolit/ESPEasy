@@ -567,7 +567,7 @@ h6 {
 }
 
 .button,
-.container input:checked~.checkmark,
+.container input:checked~.checkmark:not(.disabled),
 .container2 input:checked~.dotmark {
 	background-color: var(--bg10)
 }
