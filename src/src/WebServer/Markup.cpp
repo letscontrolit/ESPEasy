@@ -658,7 +658,9 @@ void addCheckBox(const String& id, bool    checked, bool disabled
   }
 
   if (disabled) { addDisabled(); }
-  addHtml(F("><span class='checkmark"));
+  addHtml(F("><span "));
+  addHtmlAttribute(F("id"), concat(F("cs"), id)); // cs=checkbox span
+  addHtml(F(" class='checkmark"));
 
   if (disabled) { addDisabled(); }
   addHtml('\'');

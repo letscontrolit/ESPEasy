@@ -69,6 +69,10 @@ public:
     return numLEDs;
   }
 
+  void fill(uint32_t c     = 0,
+            uint16_t first = 0,
+            uint16_t count = 0);
+
   static uint32_t Color(uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0) {
     return static_cast<uint32_t>(w) << 24 |
            static_cast<uint32_t>(r) << 16 |

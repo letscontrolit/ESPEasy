@@ -13,7 +13,8 @@
 enum class gpio_direction : uint8_t {
   gpio_input,
   gpio_output,
-  gpio_bidirectional
+  gpio_bidirectional,
+  gpio_direction_MAX // Keep last, used as bit-size value and dummy-default value
 };
 
 enum class PinSelectPurpose : uint8_t {

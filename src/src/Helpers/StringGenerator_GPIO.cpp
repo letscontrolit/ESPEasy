@@ -14,6 +14,7 @@ const __FlashStringHelper* formatGpioDirection(gpio_direction direction) {
     case gpio_direction::gpio_input:         return F("&larr; ");
     case gpio_direction::gpio_output:        return F("&rarr; ");
     case gpio_direction::gpio_bidirectional: return F("&#8644; ");
+    case gpio_direction::gpio_direction_MAX: break;
   }
   return F("");
 }
