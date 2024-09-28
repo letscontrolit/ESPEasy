@@ -1739,10 +1739,8 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  // pinMode(pin1, OUTPUT);
-  // pinMode(pin2, OUTPUT);
-  directModeOutput(pin1);
-  directModeOutput(pin2);
+  DIRECT_PINMODE_OUTPUT(pin1);
+  DIRECT_PINMODE_OUTPUT(pin2);
   CLK_HIGH();
   DIO_HIGH();
 
