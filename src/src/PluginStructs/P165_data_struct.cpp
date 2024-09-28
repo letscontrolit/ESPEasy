@@ -1195,8 +1195,8 @@ bool P165_data_struct::plugin_once_a_second(struct EventStruct *event) {
   }
 
   if (_blinkDot &&
-      (_output == P165_DISP_CLOCK24BLNK) ||
-      (_output == P165_DISP_CLOCK12BLNK)) {
+      ((_output == P165_DISP_CLOCK24BLNK) ||
+       (_output == P165_DISP_CLOCK12BLNK))) {
     showperiods[showmap[1 + _stdOffset]] = _timesep; // Blink dot on second digit
   }
 
