@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2024-09-28 tonhuisman: Switch to using DIRECT_PIN_IO, to get better timing-accuracy for TM1637 displays
  * 2024-09-27 tonhuisman: Add option to flash dot on second digit instead of the colon for blinking time
  * 2024-08-24 tonhuisman: Add compiletime define P073_USE_74HC595_OVERRIDE that, when, set to 1, allows 74HC595 displays to be included
  *                        for ESP8266 builds (f.e. Custom builds), also added to Custom-sample.h

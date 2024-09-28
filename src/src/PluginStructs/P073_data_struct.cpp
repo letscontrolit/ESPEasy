@@ -2,6 +2,8 @@
 
 #ifdef USES_P073
 
+# include <GPIO_Direct_Access.h>
+
 uint8_t P073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits) {
   const uint8_t digitsSet[] = { 4, 4, 6, 8, 0 }; // Fixed except 74HC595
@@ -1610,10 +1612,10 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-# define CLK_HIGH() digitalWrite(this->pin1, HIGH)
-# define CLK_LOW() digitalWrite(this->pin1, LOW)
-# define DIO_HIGH() pinMode(this->pin2, INPUT)
-# define DIO_LOW() pinMode(this->pin2, OUTPUT)
+# define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
+# define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
+# define DIO_HIGH() DIRECT_PINMODE_INPUT(this->pin2)
+# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) //; DIRECT_pinWrite(this->pin2, LOW)
 
 void P073_data_struct::tm1637_i2cStart() {
   # ifdef P073_DEBUG
@@ -1649,7 +1651,7 @@ void P073_data_struct::tm1637_i2cAck() {
   # ifdef P073_DEBUG
   const bool dummyAck =
   # endif // ifdef P073_DEBUG
-  digitalRead(pin2);
+  DIRECT_pinRead(pin2);
 
   # ifdef P073_DEBUG
 
@@ -1667,11 +1669,17 @@ void P073_data_struct::tm1637_i2cAck() {
   CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_LOW();
-  pinMode(pin2, OUTPUT);
+  DIO_LOW();
 }
 
 void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                                            uint8_t length) {
+  #ifdef P073_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, concat(F("7DGT : TM1637 databuffer: 0x"), formatToHex_array(bytesToPrint, length)));
+  }
+  #endif // ifdef P073_DEBUG
   tm1637_i2cStart();
 
   for (uint8_t i = 0; i < length; ++i) {
@@ -1731,8 +1739,10 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  pinMode(pin1, OUTPUT);
-  pinMode(pin2, OUTPUT);
+  // pinMode(pin1, OUTPUT);
+  // pinMode(pin2, OUTPUT);
+  directModeOutput(pin1);
+  directModeOutput(pin2);
   CLK_HIGH();
   DIO_HIGH();
 
