@@ -212,11 +212,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Ports          = 0;
       Device[deviceCount].ValueCount     = 1;
       Device[deviceCount].SendDataOption = true;
-
-      // Device[deviceCount].PullUpOption       = false;
-      // Device[deviceCount].InverseLogicOption = false;
-      // Device[deviceCount].FormulaOption      = false;
-      // Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].Pin1Direction  = gpio_direction::gpio_output;
       break;
     }
 
@@ -306,9 +302,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                       F(P021_GUID_DONT_ALWAYS_SAVE),
                       P021_DONT_ALWAYS_SAVE == 0);
 
-      # ifndef P021_MIN_BUILD_SIZE
+      // # ifndef BUILD_NO_DEBUG
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
-      # endif // ifndef P021_MIN_BUILD_SIZE
+
+      // # endif // ifndef BUILD_NO_DEBUG
 
       addFormNumericBox(F("Auto-save interval"), F(P021_GUID_AUTOSAVE_TIMER), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       # ifndef P021_MIN_BUILD_SIZE
