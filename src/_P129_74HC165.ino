@@ -81,8 +81,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption      = true; // Used to update the Devices page
       Device[deviceCount].TimerOptional    = true;
       Device[deviceCount].HasFormatUserVar = true;
-      Device[deviceCount].Pin2Direction    = gpio_direction::gpio_output;
-      Device[deviceCount].Pin3Direction    = gpio_direction::gpio_output;
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
