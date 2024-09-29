@@ -185,6 +185,12 @@ void run_compiletime_checks() {
   //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);
   //check_size<SettingsStruct, offset>();
 
+
+  // ESP8266 toolchain does not support constexpr macros in struct defines
+  // to determine nr of bits in a struct.
+  static_assert(GPIO_DIRECTION_NR_BITS== NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), "Correct GPIO_DIRECTION_NR_BITS");
+
+
   #endif
 }
 

@@ -62,7 +62,7 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number       = PLUGIN_ID_035;
       Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
       Device[deviceCount].SendDataOption = false;
-      Device[deviceCount].Pin1Direction  = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

@@ -98,9 +98,9 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption      = true;
       Device[deviceCount].TimerOptional    = true;
       Device[deviceCount].HasFormatUserVar = true;
-      Device[deviceCount].Pin1Direction    = gpio_direction::gpio_output;
-      Device[deviceCount].Pin2Direction    = gpio_direction::gpio_output;
-      Device[deviceCount].Pin3Direction    = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
