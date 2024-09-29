@@ -490,6 +490,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               } else {
                 LoadControllerSettings(controllerindex, *ControllerSettings);
 
+                // FIXME TD-er: Implement retrieval of certificate
+                /*
+
                 addFormSubHeader(F("Peer Certificate"));
 
                 {
@@ -522,10 +525,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
                   int error {0};
                   while (chain != nullptr && error == 0) {
-                    /*
-                    const bool mustShow = !chain->ca_istrue || chain->next == nullptr;
-                    if (mustShow) {
-                      */
+//                    const bool mustShow = !chain->ca_istrue || chain->next == nullptr;
+//                    if (mustShow) {
                       String pem, subject;
                       error = ESPEasy_WiFiClientSecure::cert_to_pem(chain, pem, subject);
                       {
@@ -567,6 +568,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                     chain = chain->next;
                   }
                 }
+                */
               }
             }
             #endif

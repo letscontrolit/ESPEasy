@@ -11,11 +11,7 @@
 # include <PubSubClient.h>
 
 # if FEATURE_MQTT_TLS
-# ifdef ESP32
-#  include "../Helpers/ESPEasy_WiFiClientSecure.h"
-# else
-#  include <WiFiClientSecure.h>
-# endif
+  #include <WiFiClientSecureLightBearSSL.h>
 # endif // if FEATURE_MQTT_TLS
 
 // MQTT client
@@ -23,14 +19,8 @@ extern WiFiClient mqtt;
 # if FEATURE_MQTT_TLS
 extern String  mqtt_tls_last_errorstr;
 extern int32_t mqtt_tls_last_error;
-#  ifdef ESP32
-extern ESPEasy_WiFiClientSecure* mqtt_tls;
-#  endif // ifdef ESP32
-#  ifdef ESP8266
-extern BearSSL::WiFiClientSecure* mqtt_tls;
-extern BearSSL::X509List mqtt_X509List;
-
-#  endif // ifdef ESP8266
+extern BearSSL::WiFiClientSecure_light* mqtt_tls;
+//extern BearSSL::X509List mqtt_X509List;
 
 extern String mqtt_rootCA;
 extern String mqtt_fingerprint;

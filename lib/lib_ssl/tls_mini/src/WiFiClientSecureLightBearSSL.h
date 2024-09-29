@@ -24,7 +24,7 @@
 
 #ifndef wificlientlightbearssl_h
 #define wificlientlightbearssl_h
-#ifdef USE_TLS
+#if FEATURE_TLS
 #include <vector>
 #include "WiFiClient.h"
 #include <t_bearssl.h>
@@ -33,8 +33,14 @@ namespace BearSSL {
 
 class WiFiClientSecure_light : public WiFiClient {
   public:
+    typedef std::function<uint32_t()> UtcTime_fcn;
+    typedef std::function<uint32_t()> CfgTime_fcn;
+
     WiFiClientSecure_light(int recv, int xmit);
     ~WiFiClientSecure_light() override;
+
+    void setUtcTime_fcn(UtcTime_fcn fcn) { _UtcTime = fcn; }
+    void setCfgTime_fcn(CfgTime_fcn fcn) { _CfgTime = fcn; }
 
     void allocateBuffers(void);
 
@@ -184,6 +190,13 @@ class WiFiClientSecure_light : public WiFiClient {
     const char ** _alpn_names;
     size_t        _alpn_num;
 
+    uint32_t UtcTime(void) const;
+    uint32_t CfgTime(void) const;
+
+
+    UtcTime_fcn _UtcTime{nullptr};
+    CfgTime_fcn _CfgTime{nullptr};
+
 };
 
 #define ERR_OOM             -1000
@@ -296,5 +309,5 @@ class WiFiClientSecure_light : public WiFiClient {
 
 };
 
-#endif  // USE_TLS
+#endif  // FEATURE_MQTT
 #endif  // wificlientlightbearssl_h

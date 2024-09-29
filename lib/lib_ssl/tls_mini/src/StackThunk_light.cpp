@@ -25,9 +25,8 @@
   Modified 8 May 2015 by Hristo Gochkov (proper post and file upload handling)
 */
 
-#include "tasmota_options.h"
 
-#if defined(ESP8266) && defined(USE_TLS)
+#if defined(ESP8266) && FEATURE_TLS
 #include <stdint.h>
 #include <stdlib.h>
 #include "StackThunk_light.h"

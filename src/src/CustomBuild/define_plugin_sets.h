@@ -2970,6 +2970,15 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#if FEATURE_MQTT_TLS
+  #if defined(FEATURE_TLS) && !FEATURE_TLS
+    #undef FEATURE_TLS
+  #endif
+  #ifndef FEATURE_TLS
+    #define FEATURE_TLS 1
+  #endif
+#endif
+
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
     // Will not fit on ESP8266 along with IR plugins included

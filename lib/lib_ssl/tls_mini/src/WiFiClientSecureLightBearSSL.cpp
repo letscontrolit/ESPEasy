@@ -20,8 +20,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "tasmota_options.h"
-#ifdef USE_TLS
+
+#if FEATURE_TLS
 
 // #define DEBUG_TLS
 // #define DEBUG_ESP_SSL
@@ -33,8 +33,15 @@
 #include <algorithm>
 
 #include "WiFiClientSecureLightBearSSL.h"	// needs to be before "ESP8266WiFi.h" to avoid conflict with Arduino headers
-#include "ESP8266WiFi.h"
-#include "WiFiHelper.h"
+
+#ifdef ESP32
+  #include <WiFi.h>
+#endif
+
+#ifdef ESP8266
+  #include <ESP8266WiFi.h>
+#endif
+
 #include "WiFiClient.h"
 #include "StackThunk_light.h"
 #include "lwip/opt.h"
@@ -68,9 +75,6 @@ void _Log_heap_size(const char *msg) {
 #define LOG_HEAP_SIZE(a)
 #endif
 
-// get UTC time from Tasmota
-extern uint32_t UtcTime(void);
-extern uint32_t CfgTime(void);
 
 #ifdef ESP8266    // Stack thunk is not needed with ESP32
 // Stack thunked versions of calls
@@ -319,7 +323,7 @@ int WiFiClientSecure_light::connect(const char* name, uint16_t port, int32_t tim
   DEBUG_BSSL("connect(%s,%d)\n", name, port);
   IPAddress remote_addr;
   clearLastError();
-  if (!WiFiHelper::hostByName(name, remote_addr)) {
+  if (WiFi.hostByName(name, remote_addr) != 1) {
     DEBUG_BSSL("connect: Name loopup failure\n");
     setLastError(ERR_CANT_RESOLVE_IP);
     return 0;
@@ -338,7 +342,7 @@ int WiFiClientSecure_light::connect(const char* name, uint16_t port) {
   DEBUG_BSSL("connect(%s,%d)\n", name, port);
   IPAddress remote_addr;
   clearLastError();
-  if (!WiFiHelper::hostByName(name, remote_addr)) {
+  if (WiFi.hostByName(name, remote_addr, 1000) != 1) {
     DEBUG_BSSL("connect: Name loopup failure\n");
     setLastError(ERR_CANT_RESOLVE_IP);
     return 0;
@@ -1010,8 +1014,26 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
   return false;
 }
 
+uint32_t WiFiClientSecure_light::UtcTime(void) const
+{
+  if (_UtcTime == nullptr) {
+    return 0u;
+  }
+  return _UtcTime();
+}
+
+uint32_t WiFiClientSecure_light::CfgTime(void) const
+{
+  if (_CfgTime == nullptr) {
+    return 0u;
+  }
+  return _CfgTime();
+}
+
+
 };
 
 #include "t_bearssl_tasmota_config.h"
 
-#endif  // USE_TLS
+
+#endif  // FEATURE_MQTT

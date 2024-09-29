@@ -7,6 +7,8 @@
 
 #include "../ControllerQueue/MQTT_queue_element.h"
 
+#include "../CustomBuild/Certificate_CA.h"
+
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
@@ -210,18 +212,24 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   const TLS_types TLS_type = ControllerSettings->TLStype();
 
   if ((TLS_type != TLS_types::NoTLS) && (nullptr == mqtt_tls)) {
-    #  ifdef ESP32
-    mqtt_tls = new ESPEasy_WiFiClientSecure;
-    #  endif // ifdef ESP32
-    #  ifdef ESP8266
-    mqtt_tls = new BearSSL::WiFiClientSecure;
-    #  endif // ifdef ESP8266
+#ifdef ESP32
+  #if MQTT_MAX_PACKET_SIZE > 2000
+    mqtt_tls = new BearSSL::WiFiClientSecure_light(4096,4096);
+  #else
+    mqtt_tls = new BearSSL::WiFiClientSecure_light(2048,2048);
+  #endif
+#else // ESP32 - ESP8266
+    mqtt_tls = new BearSSL::WiFiClientSecure_light(1024,1024);
+#endif
     mqtt_rootCA.clear();
 
     if (mqtt_tls == nullptr) {
       mqtt_tls_last_errorstr = F("MQTT : Could not create TLS client, out of memory");
       addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
       return false;
+    } else {
+      mqtt_tls->setUtcTime_fcn(getUnixTime);
+      mqtt_tls->setCfgTime_fcn(get_build_unixtime);
     }
   }
 
@@ -257,24 +265,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     case TLS_types::TLS_CA_CERT:
     {
       mqtt_rootCA.clear();
-
       /*
-         {
-         static int previousFree = FreeMem();
-         const int freemem = FreeMem();
-
-         String analyse = F(" free memory: ");
-         analyse += freemem;
-         analyse += F(" largest free block: ");
-         analyse += getMaxFreeBlock();
-
-         analyse += F(" Difference: ");
-         analyse += previousFree - freemem;
-
-         addLog(LOG_LEVEL_INFO, analyse);
-         previousFree = freemem;
-         }
-       */
+      // FIXME TD-er: Must convert rootCA from file to format accepted by bearSSL
 
       if (mqtt_rootCA.isEmpty() && (mqtt_tls != nullptr)) {
         LoadCertificate(ControllerSettings->getCertificateFilename(), mqtt_rootCA);
@@ -286,13 +278,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
           return false;
         }
 
-        #  ifdef ESP32
-        mqtt_tls->setCACert(mqtt_rootCA.c_str());
-        #  endif // ifdef ESP32
-        #  ifdef ESP8266
-        mqtt_X509List.append(mqtt_rootCA.c_str());
-        mqtt_tls->setTrustAnchors(&mqtt_X509List);
-        #  endif // ifdef ESP8266
+
+
+        //mqtt_X509List.append(mqtt_rootCA.c_str());
+//        mqtt_tls->setTrustAnchors(&mqtt_X509List);
+      }
+      */
+      if (mqtt_tls != nullptr) {
+        mqtt_tls->setTrustAnchor(Tasmota_TA, Tasmota_TA_size);
       }
       break;
     }
@@ -451,15 +444,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   if (mqtt_tls != nullptr)
   {
-    char buf[128] = { 0 };
-    #   ifdef ESP8266
-    mqtt_tls_last_error = mqtt_tls->getLastSSLError(buf, 128);
-    #   endif // ifdef ESP8266
     #   ifdef ESP32
-    mqtt_tls_last_error = mqtt_tls->lastError(buf, 128);
+    mqtt_tls_last_error = mqtt_tls->getLastError();
     mqtt_tls->clearLastError();
     #   endif // ifdef ESP32
-    mqtt_tls_last_errorstr = buf;
+    //mqtt_tls_last_errorstr = buf;
   }
   #   ifdef ESP32
 
@@ -489,6 +478,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         dn.trim();
       }
 
+      // FIXME TD-er: Must implement fingerprint verification
+      /*
       if (mqtt_tls != nullptr) {
         if (!mqtt_tls->verify(
               fp.c_str(),
@@ -499,6 +490,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
           MQTTresult = false;
         }
       }
+      */
     }
   }
   #   endif // ifdef ESP32
@@ -538,6 +530,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #  if FEATURE_MQTT_TLS
   #   ifdef ESP32
 
+  // FIXME TD-er: Must get certificate info
+  /*
+
   if ((mqtt_tls != nullptr) && loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("MQTT : Peer certificate info: ");
@@ -546,6 +541,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     log += mqtt_tls->getPeerCertificateInfo();
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  */
   #   endif // ifdef ESP32
   #  endif  // if FEATURE_MQTT_TLS
 
@@ -902,13 +898,12 @@ bool GetTLSfingerprint(String& fp)
   #  ifdef ESP32
 
   if (MQTTclient_connected && (mqtt_tls != nullptr)) {
-    uint8_t sha256_result[32] = { 0 };
-
-    if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
+    const uint8_t *recv_fingerprint = mqtt_tls->getRecvPubKeyFingerprint();
+    if (recv_fingerprint != nullptr) {
       fp.reserve(64);
 
-      for (size_t i = 0; i < 32; ++i) {
-        const String tmp(sha256_result[i], HEX);
+      for (size_t i = 0; i < 21; ++i) {
+        const String tmp(recv_fingerprint[i], HEX);
 
         switch (tmp.length()) {
           case 0:
@@ -933,6 +928,9 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 {
   #  ifdef ESP32
 
+  // FIXME TD-er: Implement retrieval of certificate
+  /*
+
   if (MQTTclient_connected && (mqtt_tls != nullptr)) {
     String subject;
 
@@ -940,6 +938,7 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
       return true;
     }
   }
+  */
   #  endif // ifdef ESP32
   return false;
 }
