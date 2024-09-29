@@ -427,6 +427,10 @@ void WiFiClientSecure_light::setInsecure() {
   _insecure = true;
 }
 
+size_t WiFiClientSecure_light::write(uint8_t data) {
+  return _write(&data, 1, false);
+}
+
 size_t WiFiClientSecure_light::write(const uint8_t *buf, size_t size) {
   return _write(buf, size, false);
 }

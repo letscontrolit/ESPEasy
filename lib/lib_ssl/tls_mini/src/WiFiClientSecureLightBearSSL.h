@@ -26,12 +26,12 @@
 #define wificlientlightbearssl_h
 #if FEATURE_TLS
 #include <vector>
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include <t_bearssl.h>
 
 namespace BearSSL {
 
-class WiFiClientSecure_light : public WiFiClient {
+class WiFiClientSecure_light : public NetworkClient {
   public:
     typedef std::function<uint32_t()> UtcTime_fcn;
     typedef std::function<uint32_t()> CfgTime_fcn;
@@ -53,6 +53,7 @@ class WiFiClientSecure_light : public WiFiClient {
   #endif
 
     uint8_t connected() override;
+    size_t write(uint8_t data) override;
     size_t write(const uint8_t *buf, size_t size) override;
   #ifdef ESP8266
     size_t write_P(PGM_P buf, size_t size) override;
