@@ -1,0 +1,20 @@
+Examples to come up with this libraries
+
+00 strand test          shortest version
+02 basic example        some basic print write methods
+03 segment check        A - G , .  0 to 9
+05 all chars            
+04 print                letters, dots, ...
+
+1x lot of pixels        more pixels per Segment
+
+2x additional pixels
+
+3x clock 00:00
+32 clock 00:00:00
+
+4x Scoreboard
+4x Scoreboard mit Countdown Timter 02 02   02:59
+4x Scoreboard - Serial Interface
+
+8x ESP8266 - Webinterface

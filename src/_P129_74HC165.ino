@@ -62,15 +62,11 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_129;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = false;
-      Device[deviceCount].ValueCount         =
+      Device[++deviceCount].Number   = PLUGIN_ID_129;
+      Device[deviceCount].Type       = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].VType      = Sensor_VType::SENSOR_TYPE_QUAD;
+      Device[deviceCount].Ports      = 0;
+      Device[deviceCount].ValueCount =
       # if P129_MAX_CHIP_COUNT <= 4
         1
       # elif P129_MAX_CHIP_COUNT <= 8
@@ -81,10 +77,12 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         4
       # endif // if P129_MAX_CHIP_COUNT <= 4
       ;
-      Device[deviceCount].SendDataOption = true; // No use in sending the Values to a controller
-      Device[deviceCount].TimerOption    = true; // Used to update the Devices page
-      Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].SendDataOption   = true; // No use in sending the Values to a controller
+      Device[deviceCount].TimerOption      = true; // Used to update the Devices page
+      Device[deviceCount].TimerOptional    = true;
       Device[deviceCount].HasFormatUserVar = true;
+      Device[deviceCount].Pin2Direction    = gpio_direction::gpio_output;
+      Device[deviceCount].Pin3Direction    = gpio_direction::gpio_output;
 
       break;
     }
