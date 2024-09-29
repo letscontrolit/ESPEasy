@@ -133,9 +133,17 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      addFormNote(F("An on-chip ESP Serial port must be selected!"));
+      addFormNote(F("An on-chip ESP Serial port"
+                    #if USES_USBCDC
+                    " (<B>not</B> USB CDC)"
+                    #endif // if USES_USBCDC
+                    #if USES_HWCDC
+                    " (<B>not</B> USB HWCDC)"
+                    #endif // if USES_HWCDC
+                    " must be selected!"));
       break;
     }
 
@@ -217,6 +225,7 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Plugin_054_DMXBuffer) {
         delete[] Plugin_054_DMXBuffer;
+        Plugin_054_DMXBuffer = nullptr;
       }
       delete Plugin_054_Serial;
       Plugin_054_Serial = nullptr;
