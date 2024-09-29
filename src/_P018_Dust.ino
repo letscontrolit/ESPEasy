@@ -33,7 +33,7 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
         Device[deviceCount].PluginStats = true;
-        Device[deviceCount].Pin1Direction = gpio_direction::gpio_output;
+        Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
         break;
       }
 

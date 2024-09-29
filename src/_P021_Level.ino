@@ -47,7 +47,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Ports          = 0;
       Device[deviceCount].ValueCount     = 1;
       Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].Pin1Direction  = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

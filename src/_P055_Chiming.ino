@@ -96,9 +96,9 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = true;
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].Pin1Direction      = gpio_direction::gpio_output;
-      Device[deviceCount].Pin2Direction      = gpio_direction::gpio_output;
-      Device[deviceCount].Pin3Direction      = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
       break;
     }
 
