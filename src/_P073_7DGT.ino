@@ -92,9 +92,9 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
       Device[deviceCount].Ports         = 0;
       Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].Pin1Direction = gpio_direction::gpio_output;
-      Device[deviceCount].Pin2Direction = gpio_direction::gpio_output;
-      Device[deviceCount].Pin3Direction = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
