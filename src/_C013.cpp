@@ -157,11 +157,9 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
 
   const TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(event->TaskIndex);
 
+
   if (taskValues != nullptr) {
-    for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
-    {
-      dataReply.values.copyValue(*taskValues, x, dataReply.sensorType);
-    }
+    memcpy(dataReply.taskValues_Data, taskValues->binary, sizeof(dataReply.taskValues_Data));
   }
   dataReply.destUnit = destUnit;
 
@@ -389,10 +387,7 @@ void C013_Receive(struct EventStruct *event) {
               TaskValues_Data_t *taskValues = UserVar.getRawTaskValues_Data(dataReply.destTaskIndex);
 
               if (taskValues != nullptr) {
-                for (taskVarIndex_t x = 0; x < VARS_PER_TASK; ++x)
-                {
-                  taskValues->copyValue(dataReply.values, x, sensorType);
-                }
+                memcpy(taskValues->binary, dataReply.taskValues_Data, sizeof(dataReply.taskValues_Data));
               }
               STOP_TIMER(C013_RECEIVE_SENSOR_DATA);
 

@@ -47,7 +47,7 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
   // Will be set to 0 (= INVALID_PLUGIN_ID) when a plugin ID > 255 is used
   uint8_t           deviceNumber_lsb = INVALID_PLUGIN_ID.value;
   Sensor_VType      sensorType       = Sensor_VType::SENSOR_TYPE_NONE;
-  TaskValues_Data_t values{};
+  uint8_t           taskValues_Data[sizeof(TaskValues_Data_t)]{};
 
   // Extra info added on 20240619 (build ID 20871)
   ShortChecksumType checksum;
