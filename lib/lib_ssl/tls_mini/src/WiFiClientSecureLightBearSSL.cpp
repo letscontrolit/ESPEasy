@@ -297,6 +297,18 @@ void WiFiClientSecure_light::flush(void) {
 #endif
 
 #ifdef ESP32
+
+int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port)
+{
+  return connect(ip, port, _timeout);
+}
+
+int WiFiClientSecure_light::connect(const char* name, uint16_t port) 
+{
+  return connect(name, port, _timeout);
+}
+
+
 int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port, int32_t timeout) {
   DEBUG_BSSL("connect(%s,%d)", ip.toString().c_str(), port);
   clearLastError();

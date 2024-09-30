@@ -254,6 +254,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       mqtt.setTimeout(timeout); // in msec as it should be!
   #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
+      MQTTclient.setKeepAlive(10);
+      MQTTclient.setSocketTimeout(timeout);
       break;
     }
 
@@ -357,6 +359,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_tls->setBufferSizes(1024, 1024);
     #  endif // ifdef ESP8266
     MQTTclient.setClient(*mqtt_tls);
+    MQTTclient.setKeepAlive(10);
+    MQTTclient.setSocketTimeout(timeout);
+
 
     if (mqttPort == 1883) {
       mqttPort = 8883;
