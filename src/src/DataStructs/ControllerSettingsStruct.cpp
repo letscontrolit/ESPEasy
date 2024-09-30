@@ -335,14 +335,16 @@ String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) cons
     case TLS_types::NoTLS:
     case TLS_types::TLS_insecure:
       return EMPTY_STRING;
+/*
     case TLS_types::TLS_PSK:
       certFile += F(".psk");
       break;
-    /*
+*/
+/*
     case TLS_types::TLS_CA_CLI_CERT:
       certFile += F(".caclicert");
       break;
-    */
+*/
     case TLS_types::TLS_CA_CERT:
       certFile += F(".cacert");
       break;

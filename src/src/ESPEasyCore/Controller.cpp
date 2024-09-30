@@ -256,12 +256,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       MQTTclient.setClient(mqtt);
       break;
     }
+    /*
     case TLS_types::TLS_PSK:
     {
       // if (mqtt_tls != nullptr)
       //  mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
       break;
     }
+    */
     case TLS_types::TLS_CA_CERT:
     {
       mqtt_rootCA.clear();

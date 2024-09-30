@@ -187,43 +187,37 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
 #if FEATURE_MQTT_TLS
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
-      #if FEATURE_MQTT_TLS
       const int choice = static_cast<int>(ControllerSettings.TLStype());
-      #define NR_MQTT_TLS_TYPES 4
-      const __FlashStringHelper * options[NR_MQTT_TLS_TYPES] = {
-       toString(TLS_types::NoTLS),
+      const __FlashStringHelper * options[] = {
+        toString(TLS_types::NoTLS),
 //       toString(TLS_types::TLS_PSK),
-       toString(TLS_types::TLS_CA_CERT),
-       toString(TLS_types::TLS_FINGERPRINT),
-       toString(TLS_types::TLS_insecure)
+        toString(TLS_types::TLS_CA_CERT),
+        toString(TLS_types::TLS_FINGERPRINT),
+        toString(TLS_types::TLS_insecure)
       };
-      const int indices[NR_MQTT_TLS_TYPES] = {
+      const int indices[] = {
         static_cast<int>(TLS_types::NoTLS),
 //        static_cast<int>(TLS_types::TLS_PSK),
         static_cast<int>(TLS_types::TLS_CA_CERT),
         static_cast<int>(TLS_types::TLS_FINGERPRINT),
         static_cast<int>(TLS_types::TLS_insecure)
       };
-      addFormSelector(displayName, internalName, NR_MQTT_TLS_TYPES, options, indices, choice, true);
-      #undef NR_MQTT_TLS_TYPES
-      addCertificateFileNote(ControllerSettings, F("Certificate or PSK must be stored on the filesystem in"), ControllerSettings.TLStype());
-      #endif
+      constexpr int nrOptions = NR_ELEMENTS(indices);
+      addFormSelector(displayName, internalName, nrOptions, options, indices, choice, true);
+      addCertificateFileNote(ControllerSettings, F("Certificate or FingerPrint must be stored on the filesystem in"), ControllerSettings.TLStype());
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
     {
-      #if FEATURE_MQTT_TLS
       const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT));
       addFormCheckBox(displayName, internalName, false, saveDisabled);
       addCertificateFileNote(ControllerSettings, F("Store fingerprint in"), TLS_types::TLS_FINGERPRINT);
-      #endif
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT: 
       // fall through
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
     {
-      #if FEATURE_MQTT_TLS
       /*
       const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
          TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
@@ -234,7 +228,6 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         addUnit(F("File Exists"));
       }
       addCertificateFileNote(ControllerSettings, F("Store CA Certificate in"), TLS_types::TLS_CA_CERT);
-      #endif
       break;
     }
 #endif
