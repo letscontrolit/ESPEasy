@@ -87,18 +87,14 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_073;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[++deviceCount].Number      = PLUGIN_ID_073;
+      Device[deviceCount].Type          = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports         = 0;
+      Device[deviceCount].ValueCount    = 0;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -868,7 +864,7 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
   }
 
   if (!text.isEmpty()) {
-    String fontArg = parseString(text, 1);
+    String  fontArg = parseString(text, 1);
     int32_t fontNr  = -1;
 
     if ((equals(fontArg, F("default"))) || (equals(fontArg, F("7dgt")))) {
@@ -912,10 +908,10 @@ bool p073_plugin_write_7dbin(struct EventStruct *event,
   }
 
   if (!text.isEmpty()) {
-    String data;
+    String  data;
     int32_t byteValue{};
-    int    arg      = 1;
-    String argValue = parseString(text, arg);
+    int     arg      = 1;
+    String  argValue = parseString(text, arg);
 
     while (!argValue.isEmpty()) {
       if (validIntFromString(argValue, byteValue) && (byteValue < 256) && (byteValue > -1)) {
@@ -1297,10 +1293,10 @@ void tm1637_ShowBuffer(struct EventStruct *event,
 # define OP_SHUTDOWN    12
 # define OP_DISPLAYTEST 15
 
-void max7219_spiTransfer(struct EventStruct *event,
-                         uint8_t             din_pin,
-                         uint8_t             clk_pin,
-                         uint8_t             cs_pin,
+void max7219_spiTransfer(struct EventStruct       *event,
+                         uint8_t                   din_pin,
+                         uint8_t                   clk_pin,
+                         uint8_t                   cs_pin,
                          ESPEASY_VOLATILE(uint8_t) opcode,
                          ESPEASY_VOLATILE(uint8_t) data) {
   P073_data_struct *P073_data =
