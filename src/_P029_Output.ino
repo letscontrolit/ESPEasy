@@ -29,11 +29,8 @@ boolean Plugin_029(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
       Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = false;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

@@ -102,12 +102,14 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number         = PLUGIN_ID_073;
-      Device[deviceCount].Type             = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].ValueCount       = 0;
-      Device[deviceCount].GlobalSyncOption = true;
+      Device[++deviceCount].Number      = PLUGIN_ID_073;
+      Device[deviceCount].Type          = DEVICE_TYPE_TRIPLE;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports         = 0;
+      Device[deviceCount].ValueCount    = 0;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
