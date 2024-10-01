@@ -79,66 +79,25 @@ before WiFi connection is made or during lost connection.
 TLS configuration
 -----------------
 
-Added: 2021-09-26
+Added: 2024-10-02
 
-Some protocols like MQTT may use TLS to provide a secure connection to the broker.
+Some protocols like MQTT may use TLS to provide a secure connection to the host.
+Where the default port for not encrypted connections to a MQTT broker is port 1883, its TLS counterpart is by default using port 8883.
 
+.. note:: The current (2024-10-02) implementation does only allow to set to use TLS for MQTT controllers. There is not yet a proper validation of the used certificate.
 
-Still under development.
-Notes:
+Future implementations will add various ways to validate the used certificates using:
 
-BearSSL::WiFiClientSecure net;
+- Root CA, allowing to validate whether a certificate was signed by a known certificate authority (CA).
+- Fingerprint, check whether a certificate is still the same as before.
+- Check whether a certificate has expired.
 
-Retrieve CA root certificate:
-net.setCACert(local_root_ca);
-BearSSL::X509List cert(digicert);
-net.setTrustAnchors(&cert);
+To summarize, the current implementation does allow to encrypt the connection to the MQTT broker.
+However a man-in-the-middle attack is still perfectly possible as the used certificates are not validated.
 
+This does make using it extremely simple as even self-signed certificates can be used.
+However do not consider this to be a 'secure' method since some attacker can redirect to another host and serve some false certificate.
 
-Retrieve public key of a specific certificate: ``openssl x509 -pubkey -noout -in ca.crt``
-BearSSL::PublicKey key(pubkey);
-net.setKnownKey(&key);
-
-
-Use certificate fingerprint (HEX checksum of certificate):
-openssl x509 -fingerrint -in ca.crt
-
-net.setFingerprint(fp);
-
-Self Signed certificate Mosquitto: http://www.steves-internet-guide.com/mosquitto-tls/
-Let's encrypt Mosquitto: https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-the-mosquitto-mqtt-messaging-broker-on-ubuntu-18-04-quickstart
-
-See: https://www.youtube.com/watch?v=ytQUbyab4es
-
-https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt
-
------BEGIN CERTIFICATE-----
-MIIEkjCCA3qgAwIBAgIQCgFBQgAAAVOFc2oLheynCDANBgkqhkiG9w0BAQsFADA/
-MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
-DkRTVCBSb290IENBIFgzMB4XDTE2MDMxNzE2NDA0NloXDTIxMDMxNzE2NDA0Nlow
-SjELMAkGA1UEBhMCVVMxFjAUBgNVBAoTDUxldCdzIEVuY3J5cHQxIzAhBgNVBAMT
-GkxldCdzIEVuY3J5cHQgQXV0aG9yaXR5IFgzMIIBIjANBgkqhkiG9w0BAQEFAAOC
-AQ8AMIIBCgKCAQEAnNMM8FrlLke3cl03g7NoYzDq1zUmGSXhvb418XCSL7e4S0EF
-q6meNQhY7LEqxGiHC6PjdeTm86dicbp5gWAf15Gan/PQeGdxyGkOlZHP/uaZ6WA8
-SMx+yk13EiSdRxta67nsHjcAHJyse6cF6s5K671B5TaYucv9bTyWaN8jKkKQDIZ0
-Z8h/pZq4UmEUEz9l6YKHy9v6Dlb2honzhT+Xhq+w3Brvaw2VFn3EK6BlspkENnWA
-a6xK8xuQSXgvopZPKiAlKQTGdMDQMc2PMTiVFrqoM7hD8bEfwzB/onkxEz0tNvjj
-/PIzark5McWvxI0NHWQWM6r6hCm21AvA2H3DkwIDAQABo4IBfTCCAXkwEgYDVR0T
-AQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAYYwfwYIKwYBBQUHAQEEczBxMDIG
-CCsGAQUFBzABhiZodHRwOi8vaXNyZy50cnVzdGlkLm9jc3AuaWRlbnRydXN0LmNv
-bTA7BggrBgEFBQcwAoYvaHR0cDovL2FwcHMuaWRlbnRydXN0LmNvbS9yb290cy9k
-c3Ryb290Y2F4My5wN2MwHwYDVR0jBBgwFoAUxKexpHsscfrb4UuQdf/EFWCFiRAw
-VAYDVR0gBE0wSzAIBgZngQwBAgEwPwYLKwYBBAGC3xMBAQEwMDAuBggrBgEFBQcC
-ARYiaHR0cDovL2Nwcy5yb290LXgxLmxldHNlbmNyeXB0Lm9yZzA8BgNVHR8ENTAz
-MDGgL6AthitodHRwOi8vY3JsLmlkZW50cnVzdC5jb20vRFNUUk9PVENBWDNDUkwu
-Y3JsMB0GA1UdDgQWBBSoSmpjBH3duubRObemRWXv86jsoTANBgkqhkiG9w0BAQsF
-AAOCAQEA3TPXEfNjWDjdGBX7CVW+dla5cEilaUcne8IkCJLxWh9KEik3JHRRHGJo
-uM2VcGfl96S8TihRzZvoroed6ti6WqEBmtzw3Wodatg+VyOeph4EYpr/1wXKtx8/
-wApIvJSwtmVi4MFU5aMqrSDE6ea73Mj2tcMyo5jMd6jmeWUHK8so/joWUoHOUgwu
-X4Po1QYz+3dszkDqMp4fklxBwXRsW10KXzPMTZ+sOPAveyxindmjkW8lGy+QsRlG
-PfZ+G6Z6h7mjem0Y+iWlkYcV4PIWL1iwBi8saCbGS5jN2p8M+X+Q7UNKEkROb3N6
-KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==
------END CERTIFICATE-----
 
 
 Sample ThingSpeak configuration
