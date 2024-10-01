@@ -198,16 +198,24 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
         toString(TLS_types::NoTLS),
 
         //       toString(TLS_types::TLS_PSK),
+
+/*
+        // FIXME TD-er: Disabled for now, will add selection later
         toString(TLS_types::TLS_CA_CERT),
         toString(TLS_types::TLS_FINGERPRINT),
+*/
         toString(TLS_types::TLS_insecure)
       };
       const int indices[] = {
         static_cast<int>(TLS_types::NoTLS),
 
         //        static_cast<int>(TLS_types::TLS_PSK),
+
+  /*
+        // FIXME TD-er: Disabled for now, will add selection later
         static_cast<int>(TLS_types::TLS_CA_CERT),
         static_cast<int>(TLS_types::TLS_FINGERPRINT),
+*/
         static_cast<int>(TLS_types::TLS_insecure)
       };
       constexpr int nrOptions = NR_ELEMENTS(indices);
@@ -219,19 +227,22 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
     {
+/*
+      // FIXME TD-er: Disabled for now, will add selection later
       const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT));
       addFormCheckBox(displayName, internalName, false, saveDisabled);
       addCertificateFileNote(ControllerSettings, F("Store fingerprint in"), TLS_types::TLS_FINGERPRINT);
+*/
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:
     // fall through
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
     {
-      /*
-         const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
-         TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
-       */
+  /*
+      // FIXME TD-er: Disabled for now, will add selection later      
+      //   const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
+      //         TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
       const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_CA_CERT));
       addFormCheckBox(displayName, internalName, false, saveDisabled);
 
@@ -239,6 +250,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
         addUnit(F("File Exists"));
       }
       addCertificateFileNote(ControllerSettings, F("Store CA Certificate in"), TLS_types::TLS_CA_CERT);
+*/
       break;
     }
 #endif // if FEATURE_MQTT_TLS
