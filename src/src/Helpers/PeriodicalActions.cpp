@@ -96,12 +96,15 @@ void run10TimesPerSecond() {
   }
   
   #ifdef USES_C015
-  if (NetworkConnected())
-      Blynk_Run_c015();
+  if (NetworkConnected()) {
+    Blynk_Run_c015();
+  }
   #endif
-  #ifndef USE_RTOS_MULTITASKING
+  if (!UseRTOSMultitasking) {
+    START_TIMER
     web_server.handleClient();
-  #endif
+    STOP_TIMER(WEBSERVER_HANDLE_CLIENT);
+  }
 }
 
 

@@ -592,8 +592,8 @@ void ESPEasy_setup()
   #endif
 
 
-  UseRTOSMultitasking = Settings.UseRTOSMultitasking;
   #ifdef USE_RTOS_MULTITASKING
+  UseRTOSMultitasking = Settings.UseRTOSMultitasking;
 
   if (UseRTOSMultitasking) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
