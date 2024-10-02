@@ -824,7 +824,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   }
 
-
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
