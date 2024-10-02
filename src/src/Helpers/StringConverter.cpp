@@ -29,6 +29,18 @@
 
 // -V::569
 
+unsigned int count_newlines(const String& str)
+{
+  unsigned int count = 0;
+  const size_t strlength = str.length();
+  size_t pos = 0;
+  while (pos < strlength) {
+    if (str[pos] == '\n') ++count;
+    ++pos;
+  }
+  return count;
+}
+
 String concat(const __FlashStringHelper * str, const String &val) {
   String res;
   reserve_special(res, strlen_P((PGM_P)str) + val.length());

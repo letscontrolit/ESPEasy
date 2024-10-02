@@ -458,6 +458,7 @@ bool PubSubClient::loop_read() {
 }
 
 boolean PubSubClient::loop() {
+    delay(0);
     loop_read();
     if (connected()) {
         unsigned long t = millis();

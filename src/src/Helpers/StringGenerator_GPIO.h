@@ -9,7 +9,7 @@
 #define HTML_SYMBOL_OUTPUT  "&#8658;"
 #define HTML_SYMBOL_I_O     "&#8660;"
 
-
+#define GPIO_DIRECTION_NR_BITS 2
 enum class gpio_direction : uint8_t {
   gpio_input,
   gpio_output,

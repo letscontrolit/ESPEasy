@@ -32,7 +32,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].Pin2Direction  = gpio_direction::gpio_output;
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 

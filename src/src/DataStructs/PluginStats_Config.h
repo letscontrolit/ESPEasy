@@ -20,6 +20,8 @@ struct PluginStats_Config_t {
     setStored(stored_value);
   }
 
+  PluginStats_Config_t(const PluginStats_Config_t& other);
+
   PluginStats_Config_t& operator=(const PluginStats_Config_t& other);
 
   AxisPosition          getAxisPosition() const {

@@ -489,7 +489,7 @@ public:
       uint32_t CheckI2Cdevice               : 1;  // Bit 30  Inverted
       uint32_t DoNotUse_31                  : 1;  // Bit 31  Was used to detect whether various bits were even set
 
-  } VariousBits_1;
+  } VariousBits_1;    //-V730
 
   uint32_t      ResetFactoryDefaultPreference = 0; // Do not clear this one in the clearAll()
   uint32_t      I2C_clockSpeed = 400000;
@@ -564,7 +564,7 @@ public:
     uint32_t unused_30                        : 1; // Bit 30
     uint32_t unused_31                        : 1; // Bit 31
 
-  } VariousBits_2;
+  } VariousBits_2;  //-V730
 
   uint8_t       console_serial_port = DEFAULT_CONSOLE_PORT; 
   int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
