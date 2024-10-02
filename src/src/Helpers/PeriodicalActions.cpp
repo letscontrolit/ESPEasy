@@ -96,12 +96,15 @@ void run10TimesPerSecond() {
   }
   
   #ifdef USES_C015
-  if (NetworkConnected())
-      Blynk_Run_c015();
+  if (NetworkConnected()) {
+    Blynk_Run_c015();
+  }
   #endif
-  #ifndef USE_RTOS_MULTITASKING
+  if (!UseRTOSMultitasking) {
+    START_TIMER
     web_server.handleClient();
-  #endif
+    STOP_TIMER(WEBSERVER_HANDLE_CLIENT);
+  }
 }
 
 
@@ -365,10 +368,10 @@ void updateMQTTclient_connected() {
   if (!MQTTclient_connected) {
     // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
     if (timermqtt_interval < 30000) {
-      timermqtt_interval += 5000;
+      timermqtt_interval += 500;
     }
   } else {
-    timermqtt_interval = 250;
+    timermqtt_interval = 100;
   }
   Scheduler.setIntervalTimer(SchedulerIntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
