@@ -11,7 +11,6 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/Protocol.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -29,7 +28,7 @@
   # define CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME 10000
 #endif // ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
 
-typedef bool (*do_process_function)(int,
+typedef bool (*do_process_function)(cpluginID_t,
                                     const Queue_element_base&,
                                     ControllerSettingsStruct&);
 
@@ -72,10 +71,10 @@ struct ControllerDelayHandlerStruct {
   size_t getQueueMemorySize() const;
 
   void   process(
-    int                                controller_number,
+    cpluginID_t                        cpluginID,
     do_process_function                func,
     TimingStatsElements                timerstats_id,
-    ESPEasy_Scheduler::IntervalTimer_e timerID);
+    SchedulerIntervalTimer_e timerID);
 
   std::list<std::unique_ptr<Queue_element_base> >sendQueue;
   mutable UnitLastMessageCount_map               unitLastMessageCount;

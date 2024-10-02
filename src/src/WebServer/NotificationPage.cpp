@@ -2,20 +2,29 @@
 
 #if FEATURE_NOTIFIER
 
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+// #######################################################################################################
+// ############################### Notifification Page: Email ############################################
+// #######################################################################################################
 
-#include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataStructs/NotificationSettingsStruct.h"
+/** Changelog:
+ * 2024-07-30 ThomasB   : Added Read-the-Docs Help Button to email and buzzer plugins.
+ * 2024-07-01 ThomasB   : Added User Setting for SMTP email server timeout. Display in Seconds.
+ * 2024-07-01 ThomasB   : Start of changelog, older changes not logged.
+ */
 
-#include "../Helpers/ESPEasy_Storage.h"
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
 
-#include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/Settings.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../DataStructs/NotificationSettingsStruct.h"
 
+# include "../Helpers/ESPEasy_Storage.h"
+
+# include "../Globals/ESPEasy_Scheduler.h"
+# include "../Globals/Settings.h"
 
 
 // ********************************************************************************
@@ -23,13 +32,13 @@
 // ********************************************************************************
 
 
-#include "../Globals/NPlugins.h"
+# include "../Globals/NPlugins.h"
 
 
 void handle_notifications() {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_notifications"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_NOTIFICATIONS;
@@ -41,54 +50,67 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  uint8_t notificationindex          = getFormItemInt(F("index"), 0);
+  // 'index' value in the URL
+  uint8_t notificationindex       = getFormItemInt(F("index"), 0);
   boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
 
-  const int notification = getFormItemInt(F("notification"), -1);
+  const int notification_webarg_value = getFormItemInt(F("notification"), -1);
 
-  if ((notification != -1) && !notificationindexNotSet)
+  if (!notificationindexNotSet && (notification_webarg_value != -1))
   {
-    MakeNotificationSettings(NotificationSettings);
+    const npluginID_t notification = npluginID_t::toPluginID(notification_webarg_value);
 
-    if (Settings.Notification[notificationindex] != notification)
-    {
-      Settings.Notification[notificationindex] = notification;
-    }
-    else
-    {
-      if (Settings.Notification[notificationindex] != 0)
+    if (notification == INVALID_N_PLUGIN_ID) {
+      Settings.Notification[notificationindex]        = INVALID_N_PLUGIN_ID.value;
+      Settings.NotificationEnabled[notificationindex] = false;
+    } else {
+      MakeNotificationSettings(NotificationSettings);
+
+      if (Settings.Notification[notificationindex] != notification.value)
       {
-        nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
-
-        if (validNProtocolIndex(NotificationProtocolIndex)) {
-          String dummyString;
-          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
-        }
-        NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
-        NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
-        NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
-        Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-        strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
-        strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
-        strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
-        strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
-        strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
-        strncpy_webserver_arg(NotificationSettings.User,     F("user"));
-        strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
-        strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+        Settings.Notification[notificationindex] = notification.value;
       }
+      else
+      {
+        if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
+        {
+          nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
+
+          if (validNProtocolIndex(NotificationProtocolIndex)) {
+            String dummyString;
+            NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+          }
+          NotificationSettings.Port = getFormItemInt(F("port"), 0);
+
+          // FIXME TD-er: Must convert this to msec in the user interface as every other timeout in ESPEasy is in msec.
+          NotificationSettings.Timeout_ms                 = 1000 * getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM / 1000);
+          NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
+          NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
+          Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
+          strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
+          strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
+          strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
+          strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
+          strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
+          strncpy_webserver_arg(NotificationSettings.User,     F("user"));
+          strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
+          strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+        }
+      }
+      addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings),
+                                            sizeof(NotificationSettingsStruct)));
     }
 
     // Save the settings.
-    addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
     if (hasArg(F("test"))) {
       // Perform tests with the settings in the form.
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-      if (validNProtocolIndex(NotificationProtocolIndex))
+      if (validNProtocolIndex(NotificationProtocolIndex) &&
+          Settings.NotificationEnabled[notificationindex])
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
@@ -103,7 +125,7 @@ void handle_notifications() {
   {
     html_table_class_multirow();
     html_TR();
-    html_table_header(F(""),           70);
+    html_table_header(F(""),        70);
     html_table_header(F("Nr"),      50);
     html_table_header(F("Enabled"), 100);
     html_table_header(F("Service"));
@@ -125,13 +147,13 @@ void handle_notifications() {
       addHtmlInt(x + 1);
       html_TD();
 
-      if (Settings.Notification[x] != 0)
+      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
       {
         addEnabled(Settings.NotificationEnabled[x]);
 
         html_TD();
-        uint8_t   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
-        String NotificationName          = F("(plugin not found?)");
+        uint8_t NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
+        String  NotificationName          = F("(plugin not found?)");
 
         if (validNProtocolIndex(NotificationProtocolIndex))
         {
@@ -141,20 +163,21 @@ void handle_notifications() {
         html_TD();
         addHtml(NotificationSettings.Server);
         html_TD();
-        if (NotificationSettings.Port){
+
+        if (NotificationSettings.Port) {
           addHtmlInt(NotificationSettings.Port);
         } else {
-          //MFD: we display the GPIO 
+          // MFD: we display the GPIO
           addGpioHtml(NotificationSettings.Pin1);
 
-          if (NotificationSettings.Pin2>=0)
+          if (NotificationSettings.Pin2 >= 0)
           {
             html_BR();
             addGpioHtml(NotificationSettings.Pin2);
           }
         }
       }
-      else{
+      else {
         html_TD(3);
       }
     }
@@ -181,8 +204,9 @@ void handle_notifications() {
     addSelector_Foot();
 
     addHelpButton(F("EasyNotifications"));
+    addRTDHelpButton(F("Notify/_Notifications.html"));
 
-    if (Settings.Notification[notificationindex])
+    if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
@@ -196,7 +220,34 @@ void handle_notifications() {
         {
           addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
-          addFormNumericBox(F("Port"), F("port"), NotificationSettings.Port, 1, 65535);
+          addFormNumericBox(
+            F("Port"), F("port"),
+            NotificationSettings.Port,
+            1,
+            65535
+# if FEATURE_TOOLTIPS
+            , F("NOTE: SSL/TLS servers NOT supported!")
+# endif // if FEATURE_TOOLTIPS
+            );
+
+          if ((NotificationSettings.Timeout_ms < NPLUGIN_001_MIN_TM) ||
+              (NotificationSettings.Timeout_ms > NPLUGIN_001_MAX_TM))
+          {
+            NotificationSettings.Timeout_ms = NPLUGIN_001_DEF_TM;
+          }
+
+          // FIXME TD-er: Must convert to msec as every other timeout used/configured in ESPEasy is in msec
+          addFormNumericBox(
+            F("Timeout"), F("timeout"),
+            NotificationSettings.Timeout_ms / 1000,
+            NPLUGIN_001_MIN_TM / 1000,
+            NPLUGIN_001_MAX_TM / 1000
+# if FEATURE_TOOLTIPS
+            , F("Maximum Server Response Time")
+# endif // if FEATURE_TOOLTIPS
+            );
+
+          addUnit(F("Seconds"));
 
           addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
           addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);

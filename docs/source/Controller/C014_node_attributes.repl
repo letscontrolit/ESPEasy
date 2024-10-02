@@ -4,4 +4,4 @@
 
         "``$name``","Friendly name of the Node","SYSTEM", "YES",":green:`required`", "YES",":green:`required`"
         "``$type``","Type of the node","System commands", "YES",":green:`required`", "YES",":green:`required`"
-        "``$properties``","Exposed properties. Separated by , for multiple ones.","value1,value2", "YES",":green:`required`", "YES",":green:`required`"
+        "``$properties``","Exposed properties. Separated by ``,`` for multiple properties.","value1,value2", "YES",":green:`required`", "YES",":green:`required`"

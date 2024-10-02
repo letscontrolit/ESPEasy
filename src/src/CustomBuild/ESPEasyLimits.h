@@ -94,7 +94,7 @@
   #define PLUGIN_MAX                         255
 #endif
 #ifndef CPLUGIN_MAX
-  #define CPLUGIN_MAX                        20
+  #define CPLUGIN_MAX                        255
 #endif
 #ifndef NPLUGIN_MAX
   #define NPLUGIN_MAX                         4
@@ -151,7 +151,7 @@
   #define MAX_FLASHWRITES_PER_DAY           100 // per 24 hour window
 #endif
 #ifndef UDP_PACKETSIZE_MAX
-  #define UDP_PACKETSIZE_MAX               256 // Currently only needed for C013_Receive
+  #define UDP_PACKETSIZE_MAX               512 // Currently only needed for C013_Receive
 #endif
 #ifndef TIMER_GRATUITOUS_ARP_MAX
   #define TIMER_GRATUITOUS_ARP_MAX           5000

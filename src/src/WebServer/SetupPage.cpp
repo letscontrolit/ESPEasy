@@ -111,7 +111,12 @@ void handle_setup() {
               safe_strncpy(SecuritySettings.WifiKey,  password.c_str(), sizeof(SecuritySettings.WifiKey));
               safe_strncpy(SecuritySettings.WifiSSID, ssid.c_str(),     sizeof(SecuritySettings.WifiSSID));
               // Hidden SSID
-              Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+              Settings.IncludeHiddenSSID(isFormItemChecked(LabelType::CONNECT_HIDDEN_SSID));
+              Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
+#ifdef ESP32
+              Settings.PassiveWiFiScan(isFormItemChecked(LabelType::WIFI_PASSIVE_SCAN));
+#endif
+
               addHtmlError(SaveSettings());
               WiFiEventData.wifiSetupConnect         = true;
               WiFiEventData.wifiConnectAttemptNeeded = true;
@@ -200,8 +205,13 @@ void handle_setup() {
 
       addFormHeader(F("Advanced WiFi settings"));
 
-      addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
-      addFormNote(F("Must be checked to connect to a hidden SSID"));
+      addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
+
+#ifdef ESP32
+      addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN, Settings.PassiveWiFiScan());
+#endif
+
+      addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
 
       html_BR();
       html_BR();
@@ -226,13 +236,16 @@ void handle_setup() {
   TXBuffer.endStream();
   delay(10);
   if (clearWiFiCredentials) {
-    reboot(ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings);
+    reboot(IntendedRebootReason_e::RestoreSettings);
   }
 }
 
 void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
   int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
-  const bool needsRescan = scanCompleteStatus <= 0 || WiFiScanAllowed();
+  const bool needsRescan = 
+    (scanCompleteStatus == 0 || // No AP found
+     scanCompleteStatus == -2)  // Scan not triggered
+    && WiFiScanAllowed();
   if (needsRescan) {
     WiFiMode_t cur_wifimode = WiFi.getMode();
     WifiScan(false);
@@ -262,7 +275,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
       addHtml('>');
 
       addHtml(F("<input type='radio' name='ssid' value='"));
-      if (it->isHidden) {
+      if (it->bits.isHidden) {
         addHtml(F("#Hidden#' disabled"));
       } else {
         String escapeBuffer = it->ssid;

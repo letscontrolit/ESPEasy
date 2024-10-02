@@ -2,7 +2,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -28,7 +28,7 @@
 #include <math.h>
 #include <vector>
 
-
+#ifdef WEBSERVER_NEW_RULES
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
@@ -58,6 +58,7 @@ String FileNameToEvent(const String& fileName) {
   eventName.replace(RULE_FILE_SEPARAROR, '#');
   return eventName;
 }
+#endif
 
 void checkRuleSets() {
   Cache.rulesHelper.closeAllFiles();
@@ -98,9 +99,7 @@ void rulesProcessing(const String& event) {
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("EVENT: ");
-    log += event;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
 
   if (Settings.OldRulesEngine()) {
@@ -126,25 +125,19 @@ void rulesProcessing(const String& event) {
     if (fileExists(fileName)) {
       rulesProcessingFile(fileName, event);
     }
-# ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     else {
-      addLog(LOG_LEVEL_DEBUG, String(F("EVENT: ")) + event +
-             F(" is ingnored. File ") + fileName +
-             F(" not found."));
+      addLog(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s is ingnored. File %s not found."),
+             event.c_str(), fileName.c_str()));
     }
-# endif    // ifndef BUILD_NO_DEBUG
+    # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
   }
 
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("EVENT: ");
-    log += event;
-    log += F(" Processing time:");
-    log += timePassedSince(timer);
-    log += F(" milliSeconds");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s Processing: %d ms"), event.c_str(), timePassedSince(timer)));
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
@@ -343,8 +336,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
     return false;
   }
 
-  char tmp[10]{};
-  int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), bitwise_functions);
+  int command_i = GetCommandCode(cmd_s_lower.c_str(), bitwise_functions);
   if (command_i == -1) {
     // No matching function found
     return false;
@@ -471,6 +463,28 @@ void parse_string_commands(String& line) {
   int closingIndex;
 
   bool mustReplaceMaskedChars = false;
+  bool mustReplaceEscapedBracket = false;
+  bool mustReplaceEscapedCurlyBracket = false;
+  String MaskEscapedBracket;
+
+  if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
+    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(F("\\("), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(F("\\)"), MaskEscapedBracket);
+    mustReplaceEscapedBracket = true;
+  }
+  if (hasEscapedCharacter(line,'{') || hasEscapedCharacter(line,'}')) {
+    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(F("\\{"), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(F("\\}"), MaskEscapedBracket);
+    mustReplaceEscapedCurlyBracket = true;
+  }
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
@@ -485,7 +499,7 @@ void parse_string_commands(String& line) {
       uint64_t iarg1, iarg2 = 0;
       ESPEASY_RULES_FLOAT_TYPE fresult{};
       int64_t  iresult = 0;
-      int startpos, endpos = -1;
+      int32_t startpos, endpos = -1;
       const bool arg1valid = validIntFromString(arg1, startpos);
       const bool arg2valid = validIntFromString(arg2, endpos);
 
@@ -500,12 +514,12 @@ void parse_string_commands(String& line) {
         replacement = ull2String(iresult);
       } else {
 
-        char tmp[12]{};
-        int command_i = GetCommandCode(tmp, sizeof(tmp), cmd_s_lower.c_str(), string_commands);
+        int command_i = GetCommandCode(cmd_s_lower.c_str(), string_commands);
         if (command_i != -1) {
           const string_commands_e command = static_cast<string_commands_e>(command_i);
 
-          //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
+              //  addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s %s %s %s"), 
+              // cmd_s_lower.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str()));
 
           switch (command) {
             case string_commands_e::substring:
@@ -526,7 +540,7 @@ void parse_string_commands(String& line) {
 
               if (!arg1.isEmpty()
                   && !arg2.isEmpty()) {
-                unsigned int offset = 0;
+                uint32_t offset = 0;
                 validUIntFromString(arg3, offset);
                 if (command == string_commands_e::indexof_ci) {
                   String arg1copy(arg1);
@@ -633,7 +647,7 @@ void parse_string_commands(String& line) {
 
       /*
          if (replacement.length() > 0) {
-         addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
+         addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s -> %s"), fullCommand.c_str(), replacement.c_str());
          }
        */
     }
@@ -644,6 +658,24 @@ void parse_string_commands(String& line) {
     // Let's hope we don't mess up any Unicode here.
     line.replace(static_cast<char>(0x02), '{');
     line.replace(static_cast<char>(0x03), '}');
+  }
+
+  if (mustReplaceEscapedBracket) {
+    // We now have to check if we did mask some escaped bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(MaskEscapedBracket, F("\\("));
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(MaskEscapedBracket, F("\\)"));
+  }
+
+  if (mustReplaceEscapedCurlyBracket) {
+    // We now have to check if we did mask some escaped curly bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(MaskEscapedBracket, F("\\{"));
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(MaskEscapedBracket, F("\\}"));
   }
 }
 
@@ -792,7 +824,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   }
 
-
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
@@ -834,11 +865,10 @@ void parseCompleteNonCommentLine(String& line, const String& event,
   }
 
   if (isCommand && lineStartsWith_pct_event) {
-    action = String(F("restrict,")) + action;
+    action = concat(F("restrict,"), action);
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Rules : Prefix command with 'restrict': ");
-      log += action;
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, 
+        concat(F("Rules : Prefix command with 'restrict': "), action));
     }
   }
 
@@ -987,9 +1017,10 @@ void processMatchedRule(String& action, const String& event,
     }
 
     if (executeRestricted) {
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2).c_str());
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2)});
     } else {
-      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+      // Use action.c_str() here as we need to preserve the action string.
+      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str()});
     }
     delay(0);
   }
@@ -1120,9 +1151,9 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   }
 
   time_seconds = -1;
-  int hours   = 0;
-  int minutes = 0;
-  int seconds = 0;
+  int32_t hours   = 0;
+  int32_t minutes = 0;
+  int32_t seconds = 0;
 
   int tmpIndex = 0;
   String hours_str, minutes_str, seconds_str;
@@ -1301,32 +1332,27 @@ void createRuleEvents(struct EventStruct *event) {
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
-  #ifdef USE_SECOND_HEAP
-//  HeapSelectIram ephemeral;  
-// TD-er: Disabled for now, suspect for causing crashes
-  #endif
-
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
   if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
-    expectedSize += getTaskValueName(event->TaskIndex, 0).length();
+    expectedSize += Cache.getTaskDeviceValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
-    String eventString;
 
-    if (eventString.reserve(expectedSize + event->String2.length())) {
+    String eventString;
+    if (reserve_special(eventString, expectedSize + event->String2.length())) {
       appendCompleteStringvalue = true;
-    } else if (!eventString.reserve(expectedSize + 24)) {
+    } else if (!reserve_special(eventString, expectedSize + 24)) {
       // No need to continue as we can't even allocate the event, we probably also cannot process it
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
     }
     eventString += getTaskDeviceName(event->TaskIndex);
     eventString += '#';
-    eventString += getTaskValueName(event->TaskIndex, 0);
+    eventString += Cache.getTaskDeviceValueName(event->TaskIndex, 0);
     eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
@@ -1340,7 +1366,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventQueue.addMove(std::move(eventString));    
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventvalues;
-    eventvalues.reserve(32); // Enough for most use cases, prevent lots of memory allocations.
+    reserve_special(eventvalues, 32); // Enough for most use cases, prevent lots of memory allocations.
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       if (varNr != 0) {
@@ -1351,7 +1377,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-      eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
+      eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
   }
 }

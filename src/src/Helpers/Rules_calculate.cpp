@@ -647,14 +647,17 @@ String RulesCalculate_t::preProces(const String& input)
 
   };
 
-  constexpr size_t nrOperators = sizeof(operators) / sizeof(operators[0]);
+  constexpr size_t nrOperators = NR_ELEMENTS(operators);
 
   for (size_t i = 0; i < nrOperators; ++i) {
     const UnaryOperator op = operators[i];
+#if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
     if (op == UnaryOperator::ArcSin && preprocessed.indexOf(F("sin")) == -1) i += 3;
     else if (op == UnaryOperator::ArcCos && preprocessed.indexOf(F("cos")) == -1) i += 3;
     else if (op == UnaryOperator::ArcTan && preprocessed.indexOf(F("tan")) == -1) i += 3;
-    else {
+    else 
+#endif
+    {
       preProcessReplace(preprocessed, op);
     }
   }

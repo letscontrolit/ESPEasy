@@ -55,7 +55,18 @@ inline bool usecTimeOutReached(const uint64_t& timer) {
   return usecPassedSince(timer) >= 0;
 }
 
+uint32_t unix_time_frac_to_millis(uint32_t unix_time_frac);
+uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac);
+uint32_t millis_to_unix_time_frac(uint32_t millis);
+uint32_t micros_to_unix_time_frac(uint32_t micros);
 
+uint32_t micros_to_sec_time_frac(int64_t micros, uint32_t& unix_time_frac);
+uint64_t sec_time_frac_to_Micros(uint32_t seconds, uint32_t time_frac);
+
+uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec);
+
+uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
+                                   uint32_t        time_frac = 0);
 
 /********************************************************************************************\
    Unix Time computations
@@ -65,6 +76,7 @@ bool isLeapYear(int year);
 // Get number of days in a month.
 // Month starts at 0 for January.
 uint8_t getMonthDays(int year, uint8_t month);
+uint8_t getMonthDays(const struct tm& tm);
 
 uint32_t makeTime(const struct tm& tm);
 
@@ -78,11 +90,14 @@ void breakTime(unsigned long timeInput, struct tm& tm);
 // date format example with '-' delimiter: 2016-12-31 (YYYY-MM-DD)
 String formatDateString(const struct tm& ts, char delimiter);
 
-// returns the current Time separated by the given delimiter
+// returns the given Time formatted like this 23:59:59 (HH:MM:SS)
+String formatTimeString(const struct tm& ts);
+
+// returns the given Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
 String formatTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix = '\0');
 
-// returns the current Date and Time separated by the given delimiter
+// returns the given Date and Time separated by the given delimiter
 // if called like this: getDateTimeString('\0', '\0', '\0');
 // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
 String formatDateTimeString(const struct tm& ts, char dateDelimiter = '-', char timeDelimiter = ':',  char dateTimeDelimiter = ' ', bool am_pm = false);

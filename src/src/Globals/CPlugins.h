@@ -45,7 +45,12 @@ bool              anyControllerEnabled();
 controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid);
 
 bool              validProtocolIndex(protocolIndex_t index);
-bool              validControllerIndex(controllerIndex_t index);
+
+
+// bool              validControllerIndex(controllerIndex_t index);
+#define validControllerIndex(C_X)  ((C_X) < CONTROLLER_MAX)
+
+// Check whether CPlugin is included in build.
 bool              validCPluginID(cpluginID_t cpluginID);
 
 // Check if cplugin is included in build.

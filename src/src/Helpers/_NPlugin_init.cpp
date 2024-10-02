@@ -8,7 +8,6 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Globals/NPlugins.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"

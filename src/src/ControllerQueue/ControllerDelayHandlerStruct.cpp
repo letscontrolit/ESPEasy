@@ -62,7 +62,7 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (Protocol[protocolIndex].needsNetwork) {
+  if (getProtocolStruct(protocolIndex).needsNetwork) {
     return NetworkConnected(10);
   }
   return true;
@@ -74,6 +74,7 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
   // Number of elements is not exceeding the limit, check memory
   int freeHeap = FreeMem();
   {
+    /*
       #ifdef USE_SECOND_HEAP
     const int freeHeap2 = FreeMem2ndHeap();
 
@@ -81,6 +82,7 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
       freeHeap = freeHeap2;
     }
       #endif // ifdef USE_SECOND_HEAP
+      */
   }
 
 #ifdef ESP32
@@ -132,9 +134,7 @@ bool ControllerDelayHandlerStruct::isDuplicate(const Queue_element_base& element
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->get()->_controller_idx);
-          String log                  = get_formatted_Controller_number(cpluginID);
-          log += F(" : Remove duplicate");
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, concat(get_formatted_Controller_number(cpluginID), F(" : Remove duplicate")));
         }
 #endif // ifndef BUILD_NO_DEBUG
         return true;
@@ -164,6 +164,11 @@ bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base
   }
 
   if (!queueFull(element->_controller_idx)) {
+    #ifdef USE_SECOND_HEAP
+    // Do not store in 2nd heap, std::list cannot handle 2nd heap well
+    HeapSelectDram ephemeral;
+    #endif // ifdef USE_SECOND_HEAP
+
     sendQueue.push_back(std::move(element));
 
     return true;
@@ -172,9 +177,7 @@ bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex((*element)._controller_idx);
-    String log                  = get_formatted_Controller_number(cpluginID);
-    log += F(" : queue full");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, concat(get_formatted_Controller_number(cpluginID), F(" : queue full")));
   }
 #endif // ifndef BUILD_NO_DEBUG
   return false;
@@ -255,10 +258,10 @@ size_t ControllerDelayHandlerStruct::getQueueMemorySize() const {
 }
 
 void ControllerDelayHandlerStruct::process(
-  int                                controller_number,
+  cpluginID_t                        cpluginID,
   do_process_function                func,
   TimingStatsElements                timerstats_id,
-  ESPEasy_Scheduler::IntervalTimer_e timerID) 
+  SchedulerIntervalTimer_e timerID) 
 {
   Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));
 
@@ -271,7 +274,7 @@ void ControllerDelayHandlerStruct::process(
       LoadControllerSettings(element->_controller_idx, *ControllerSettings);
       cacheControllerSettings(*ControllerSettings);
       START_TIMER;
-      markProcessed(func(controller_number, *element, *ControllerSettings));
+      markProcessed(func(cpluginID, *element, *ControllerSettings));
       #if FEATURE_TIMING_STATS
       STOP_TIMER_VAR(timerstats_id);
       #endif

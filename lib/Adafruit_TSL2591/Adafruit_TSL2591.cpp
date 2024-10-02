@@ -141,7 +141,8 @@ void Adafruit_TSL2591::setGain(tsl2591Gain_t gain)
 
   enable();
   _gain = gain;
-  write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, _integration | _gain);
+  const uint8_t value = static_cast<uint8_t>(_integration) | static_cast<uint8_t>(_gain);
+  write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, value);
   disable();
 }
 
@@ -162,7 +163,8 @@ void Adafruit_TSL2591::setTiming(tsl2591IntegrationTime_t integration)
 
   enable();
   _integration = integration;
-  write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, _integration | _gain);
+  const uint8_t value = static_cast<uint8_t>(_integration) | static_cast<uint8_t>(_gain);
+  write8(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL, value);
   disable();
 }
 

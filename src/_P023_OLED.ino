@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-08-17 tonhuisman: Disable preview of on-display content for LIMIT_BUILD_SIZE builds.
+ * 2023-10-16 tonhuisman: Bugfix: Template parsing stopped after initial display since previous updates :-(
  * 2023-03-18 tonhuisman: Show current on-display content on Devices page (75% size, omits trailing empty lines)
  *                        Manually set content via command: oled,x,y,<content> is included in the Devices page content
  *                        Make Interval optional
@@ -38,17 +40,13 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_023;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      Device[++deviceCount].Number      = PLUGIN_ID_023;
+      Device[deviceCount].Type          = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      Device[deviceCount].Ports         = 0;
+      Device[deviceCount].ValueCount    = 0;
+      Device[deviceCount].TimerOption   = true;
+      Device[deviceCount].TimerOptional = true;
       break;
     }
 
@@ -83,8 +81,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Btn: ");
-      string += formatGpioLabel(CONFIG_PIN3, false);
+      string  = concat(F("Btn: "), formatGpioLabel(CONFIG_PIN3, false));
       success = true;
       break;
     }
@@ -97,13 +94,13 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      const int controllerValues[2] = { 0, 1 };
+      const int controllerValues[] = { 0, 1 };
       OLedFormController(F("use_sh1106"), controllerValues, PCONFIG(5));
 
       OLedFormRotation(F("rotate"), PCONFIG(1));
 
       {
-        const int optionValues3[3] = { 1, 3, 2 };
+        const int optionValues3[] = { 1, 3, 2 };
         OLedFormSizes(F("size"), optionValues3, PCONFIG(3));
       }
       {
@@ -115,7 +112,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (int varNr = 0; varNr < 8; varNr++)
+        for (int varNr = 0; varNr < 8; ++varNr)
         {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
@@ -144,7 +141,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       char   deviceTemplate[P23_Nlines][P23_Nchars] = {};
       String error;
 
-      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P23_Nlines; ++varNr) {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
@@ -242,24 +239,22 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if P023_FEATURE_DISPLAY_PREVIEW
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
       P023_data_struct *P023_data =
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P023_data) {
-        success = P023_data->web_show_values();
-      }
+      success = nullptr != P023_data && P023_data->web_show_values();
       break;
     }
+    # endif // if P023_FEATURE_DISPLAY_PREVIEW
 
     case PLUGIN_WRITE:
     {
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P023_data) {
-        success = P023_data->plugin_write(event, string);
-      }
+      success = nullptr != P023_data && P023_data->plugin_write(event, string);
       break;
     }
   }

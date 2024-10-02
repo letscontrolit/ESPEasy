@@ -18,14 +18,14 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_008;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_008;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = true;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = true;
       break;
     }
 
@@ -76,10 +76,10 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
         pubname = ControllerSettings->Publish;
       }
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
 
-      
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      std::unique_ptr<C008_queue_element> element(new C008_queue_element(event, valueCount));
+      std::unique_ptr<C008_queue_element> element(new (std::nothrow) C008_queue_element(event, valueCount));
       success = C008_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
@@ -95,21 +95,37 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
-          const String formattedValue = formatUserVar(event, x, isvalid);
+          const String formattedValue = formatUserVar(event, x , isvalid);
 
           if (isvalid) {
-            element.txt[x]  = '/';
-            element.txt[x] += pubname;
-            parseSingleControllerVariable(element.txt[x], event, x, true);
-            element.txt[x].replace(F("%value%"), formattedValue);
+            // First store in a temporary string, so we can use move_special to allocate on the best heap
+            String txt;
+            txt += '/';
+            txt += pubname;
+            if (contains_valname) {
+              parseSingleControllerVariable(txt, event, x, true);
+            }
+
 # ifndef BUILD_NO_DEBUG
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-              addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              addLog(LOG_LEVEL_DEBUG, strformat(
+                F("C008 : pubname: %s value: %s"),
+                pubname.c_str(),
+                formattedValue.c_str()
+              ));
+            }
+#endif
+            txt.replace(F("%value%"), formattedValue);
+            move_special(element.txt[x], std::move(txt));
+# ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+              addLog(LOG_LEVEL_DEBUG_MORE, concat(F("C008 : "), element.txt[x]));
+            }
 # endif // ifndef BUILD_NO_DEBUG
           }
         }
       }
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C008_DELAY_QUEUE, C008_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -132,7 +148,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c008_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c008_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C008_queue_element& element = static_cast<const C008_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {
@@ -145,7 +161,7 @@ bool do_process_c008_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     element.txt[element.valuesSent],

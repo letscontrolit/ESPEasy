@@ -7,6 +7,8 @@
 
 #include "../Globals/Plugins.h"
 
+#include "../Helpers/Hardware_I2C.h"
+
 #include <vector>
 
 I2C_bus_state I2C_check_bus(int8_t scl,
@@ -40,6 +42,18 @@ bool I2C_write8_reg(uint8_t i2caddr,
                     uint8_t value);
 
 // **************************************************************************/
+// Writes an 16 bit value over I2C
+// **************************************************************************/
+bool I2C_write16(uint8_t  i2caddr,
+                 uint16_t value);
+
+// **************************************************************************/
+// Writes an 16 bit LE value over I2C
+// **************************************************************************/
+bool I2C_write16_LE(uint8_t  i2caddr,
+                    uint16_t value);
+
+// **************************************************************************/
 // Writes an 16 bit value over I2C to a register
 // **************************************************************************/
 bool I2C_write16_reg(uint8_t  i2caddr,
@@ -66,6 +80,12 @@ bool I2C_writeBytes_reg(uint8_t  i2caddr,
 // **************************************************************************/
 uint8_t I2C_read8(uint8_t i2caddr,
                   bool   *is_ok);
+
+// **************************************************************************/
+// Reads an 16 bit value over I2C
+// **************************************************************************/
+uint16_t I2C_read16(uint8_t i2caddr,
+                    bool   *is_ok);
 
 // **************************************************************************/
 // Reads an 8 bit value from a register over I2C

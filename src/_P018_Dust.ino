@@ -27,14 +27,13 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
         Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
         Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
         Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
         Device[deviceCount].FormulaOption = true;
         Device[deviceCount].ValueCount = 1;
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
         Device[deviceCount].PluginStats = true;
+        Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
         break;
       }
 
@@ -80,7 +79,7 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
           delayMicroseconds(9680);
         }
         ISR_interrupts();
-        UserVar[event->BaseVarIndex] = value;
+        UserVar.setFloat(event->TaskIndex, 0, value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, concat(F("GPY  : Dust value: "), value));

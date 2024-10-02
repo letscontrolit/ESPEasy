@@ -12,7 +12,7 @@
 
 #include "../../ESPEasy-Globals.h"
 
-# include "../Commands/InternalCommands.h"
+# include "../Commands/ExecuteCommand.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
@@ -98,6 +98,9 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+  # ifdef WEBSERVER_SETUP
+  addWideButtonPlusDescription(F("setup"),                F("Setup WiFi"), F("WiFi setup page"));
+  #endif // ifdef WEBSERVER_SETUP
 
   # ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
@@ -112,8 +115,21 @@ void handle_tools() {
   addFormSubHeader(F("Settings"));
 
   addWideButtonPlusDescription(F("upload"), F("Load"), F("Loads a settings file"));
-  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
-  addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
+  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!"
+                #if FEATURE_TARSTREAM_SUPPORT
+                " Or a .tar file containing \"config.dat\" and other files can be uploaded"
+                #endif // if FEATURE_TARSTREAM_SUPPORT
+                ")"));
+  addWideButtonPlusDescription(F("download"), F("Save"),
+                               # if FEATURE_TARSTREAM_SUPPORT
+                               F("Save all configuration in a single .tar archive")
+                               # else // if FEATURE_TARSTREAM_SUPPORT
+                               F("Saves a settings file")
+                               # endif // if FEATURE_TARSTREAM_SUPPORT
+                               );
+  #if FEATURE_TARSTREAM_SUPPORT
+  addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI
   #  if defined(ESP8266)
@@ -161,10 +177,16 @@ void handle_tools() {
   }
 # endif     // if defined(ESP8266)
 
+  # if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
   addFormSubHeader(F("Filesystem"));
+  # endif // if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
 
+  # ifdef WEBSERVER_FILELIST
   addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
+  # endif // ifdef WEBSERVER_FILELIST
+  # ifdef WEBSERVER_FACTORY_RESET
   addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
+  # endif // ifdef WEBSERVER_FACTORY_RESET
   # if FEATURE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
   # endif // if FEATURE_SETTINGS_ARCHIVE

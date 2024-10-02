@@ -20,12 +20,12 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_007;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_007;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = true;
       break;
     }
 
@@ -68,10 +68,10 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C007_queue_element> element(new C007_queue_element(event));
+      std::unique_ptr<C007_queue_element> element(new (std::nothrow) C007_queue_element(event));
       success = C007_DelayHandler->addToQueue(std::move(element));
 
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -90,7 +90,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c007_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c007_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C007_queue_element& element = static_cast<const C007_queue_element&>(element_base);
 // *INDENT-ON*
   String url = F("/emoncms/input/post.json?node=");
@@ -117,7 +117,7 @@ bool do_process_c007_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     url,

@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_DALLAS_HELPER
+
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
 
@@ -124,7 +126,8 @@ bool Dallas_readTemp(const uint8_t ROM[8],
 #ifdef USES_P080
 bool Dallas_readiButton(const uint8_t addr[8],
                         int8_t     gpio_pin_rx,
-                        int8_t     gpio_pin_tx);
+                        int8_t     gpio_pin_tx,
+                        int8_t     lastState = -1);
 #endif
 
 #ifdef USES_P100
@@ -226,5 +229,6 @@ uint16_t Dallas_crc16(const uint8_t *input,
                       uint16_t       crc);
 
 
+#endif // if FEATURE_DALLAS_HELPER
 
 #endif // ifndef HELPERS_DALLAS1WIREHELPER_H

@@ -16,17 +16,21 @@
 
 // Macros
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
-# define P036_SetDisplayOn(_state) (UserVar[event->BaseVarIndex] = _state)
+# define P036_SetDisplayOn(_state) (UserVar.setFloat(event->TaskIndex, 0, _state))
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 // # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
-// # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
+// # define P036_CHECK_INDIVIDUAL_FONT // Enable to add extra logging for individual font calculation
 # ifndef P036_FEATURE_DISPLAY_PREVIEW
-#  define P036_FEATURE_DISPLAY_PREVIEW   1
+#  ifdef ESP8266_1M
+#   define P036_FEATURE_DISPLAY_PREVIEW   0 // Disabled for 1M builds
+#  else // ifdef ESP8266_1M
+#   define P036_FEATURE_DISPLAY_PREVIEW   1
+#  endif // ifdef ESP8266_1M
 # endif // ifndef P036_FEATURE_DISPLAY_PREVIEW
-# ifdef P036_FEATURE_ALIGN_PREVIEW
+# ifndef P036_FEATURE_ALIGN_PREVIEW
 #  define P036_FEATURE_ALIGN_PREVIEW     1
 # endif // ifdef P036_FEATURE_ALIGN_PREVIEW
 
@@ -45,6 +49,9 @@
 #  ifndef P036_USERDEF_HEADERS
 #   define P036_USERDEF_HEADERS   1 // Enable User defined headers
 #  endif // ifndef P036_USERDEF_HEADERS
+#  ifndef P036_ENABLE_TICKER
+#   define P036_ENABLE_TICKER   1   // Enable ticker function
+#  endif // ifndef
 # else // ifndef P036_LIMIT_BUILD_SIZE
 #  if defined(P036_SEND_EVENTS) && P036_SEND_EVENTS
 #   undef P036_SEND_EVENTS
@@ -65,6 +72,9 @@
 // #  ifndef P036_USERDEF_HEADERS
 // #   define P036_USERDEF_HEADERS   0 // Disable User defined headers
 // #  endif // ifndef P036_USERDEF_HEADERS
+#  ifndef P036_ENABLE_TICKER
+#   define P036_ENABLE_TICKER   0 // Disable ticker function
+#  endif // ifndef
 # endif // ifndef P036_LIMIT_BUILD_SIZE
 # ifndef P036_USERDEF_HEADERS
 #  define P036_USERDEF_HEADERS   1  // Enable User defined headers if not handled yet
@@ -75,16 +85,17 @@
 # ifndef P036_ENABLE_LEFT_ALIGN
 #  define P036_ENABLE_LEFT_ALIGN  1 // Enable the Left-align content option and leftalign subcommand
 # endif // ifndef P036_ENABLE_LEFT_ALIGN
+# ifndef P036_ENABLE_TIME_FORMAT
+#  ifdef LIMIT_BUILD_SIZE
+#   define P036_ENABLE_TIME_FORMAT 0 // Disable Header Time format selection for limited builds
+#  else // ifdef LIMIT_BUILD_SIZE
+#   define P036_ENABLE_TIME_FORMAT 1 // Enable Header Time format selection
+#  endif // ifdef LIMIT_BUILD_SIZE
+# endif // ifndef P036_ENABLE_TIME_FORMAT
 
-# define P36_Nlines 12              // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0 32            // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1 64            // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3        // number of different OLED sizes
-# ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 3        // number of different fonts
-# else // ifdef P036_LIMIT_BUILD_SIZE
-#  define P36_MaxFontCount 5        // number of different fonts
-# endif // ifdef P036_LIMIT_BUILD_SIZE
+# define P36_Nlines 12   // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0 32 // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1 64 // max chars per line from 22.11.2019 (V1)
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
@@ -128,7 +139,7 @@
 # define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
 # define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
 # define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
-// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 no longer used
+// # define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
@@ -136,8 +147,20 @@
 // P036_FLAGS_1
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
 # define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
+# define P036_FLAG_TIME_FORMAT         3  // Bit 3..6 Time format options, max. 16
+
+
+# define P036_EVENT_DISPLAY  0            // event: <taskname>#display=0/1
+# define P036_EVENT_CONTRAST 1            // event: <taskname>#contrast=0/1/2
+# define P036_EVENT_FRAME    2            // event: <taskname>#frame=1..n
+# define P036_EVENT_LINE     3            // event: <taskname>#line=1..n
+# define P036_EVENT_LINECNT  4            // event: <taskname>#linecount=1..4
+# define P036_EVENT_RESTORE  5            // event: <taskname>#restore=1..n
+# define P036_EVENT_SCROLL   6            // event: <taskname>#scroll=ePSS_VerySlow..ePSS_Ticker
+
 
 enum class eHeaderContent : uint8_t {
+  eNone     = 0u,
   eSSID     = 1u,
   eSysName  = 2u,
   eIP       = 3u,
@@ -165,11 +188,12 @@ enum class p036_resolution : uint8_t {
 };
 
 enum class ePageScrollSpeed : uint8_t {
-  ePSS_VerySlow = 1u, // 800ms
-  ePSS_Slow     = 2u, // 400ms
-  ePSS_Fast     = 4u, // 200ms
-  ePSS_VeryFast = 8u, // 100ms
-  ePSS_Instant  = 32u // 20ms
+  ePSS_VerySlow = 1u,  // 800ms
+  ePSS_Slow     = 2u,  // 400ms
+  ePSS_Fast     = 4u,  // 200ms
+  ePSS_VeryFast = 8u,  // 100ms
+  ePSS_Instant  = 32u, // 20ms
+  ePSS_Ticker   = 255u // tickerspeed depends on line length
 };
 
 enum class eP036pinmode : uint8_t {
@@ -185,11 +209,30 @@ typedef struct {
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
   uint8_t  SLidx       = 0;    // index to DisplayLinesV1
+  uint8_t  reserved22{};       // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t  reserved23{};
+  uint8_t  reserved24{};
 } tScrollLine;
 
 typedef struct {
+  String   Tcontent;                // content (all parsed lines)
+  uint16_t len                 = 0; // length of content
+  uint16_t IdxStart            = 0; // Start index of TickerContent for displaying (left side)
+  uint16_t IdxEnd              = 0; // End index of TickerContent for displaying (right side)
+  uint16_t TickerAvgPixPerChar = 0; // max of average pixel per character or pix change per scroll time (100ms)
+  int16_t  MaxPixLen           = 0; // Max pix length to display (display width + 2*TickerAvgPixPerChar)
+  # ifdef ESP8266                   // Helpful on ESP8266 only, it seems
+  uint8_t reserved15{};             // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved16{};
+  # endif // ifdef ESP8266
+} tTicker;
+
+typedef struct {
   tScrollLine SLine[P36_MAX_LinesPerPage]{};
-  uint16_t    wait = 0; // waiting time before scrolling
+# if P036_ENABLE_TICKER
+  tTicker Ticker;
+# endif // if P036_ENABLE_TICKER
+  uint16_t wait = 0; // waiting time before scrolling
 } tScrollingLines;
 
 typedef struct {
@@ -203,7 +246,7 @@ typedef struct {
   tScrollingPageLines Out[P36_MAX_LinesPerPage]{};
   int                 dPixSum          = 0; // act pix change
   uint8_t             Scrolling        = 0; // 0=Ready, 1=Scrolling
-  uint8_t             dPix             = 0; // pix change per scroll time (25ms)
+  uint8_t             dPix             = 0; // pix change per scroll time (25ms per page, 100ms per line)
   uint8_t             linesPerFrameDef = 0; // the default number of lines in frame in/out
   uint8_t             linesPerFrameIn  = 0; // the number of lines in frame in
   uint8_t             linesPerFrameOut = 0; // the number of lines in frame out
@@ -293,6 +336,8 @@ typedef struct {
   uint8_t MaxLines;           // max. line count
   uint8_t WiFiIndicatorLeft;  // left of WiFi indicator
   uint8_t WiFiIndicatorWidth; // width of WiFi indicator
+  uint8_t reserved7;          // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved8;
 } tSizeSettings;
 
 typedef struct {
@@ -301,6 +346,11 @@ typedef struct {
   uint8_t ypos            = 0; // ypos for this line
   uint8_t fontIdx         = 0; // font index for this line
   uint8_t FontHeight      = 0; // font height for this line
+  # ifdef ESP8266              // Helpful on ESP8266 only, it seems
+  uint8_t reserved6;           // Fillers added to achieve better instance/memory alignment (multiple of 8)
+  uint8_t reserved7;
+  uint8_t reserved8;
+  # endif // ifdef ESP8266
 } tLineSettings;
 
 typedef struct {
@@ -312,6 +362,10 @@ class P036_LineContent {
 public:
 
   P036_LineContent() {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
     DisplayLinesV1.resize(P36_Nlines);
   }
 
@@ -333,20 +387,23 @@ struct P036_data_struct : public PluginTaskData_base {
 
   static const tSizeSettings& getDisplaySizeSettings(p036_resolution disp_resolution);
 
-  bool                        init(taskIndex_t     taskIndex,
-                                   uint8_t         LoadVersion,
-                                   uint8_t         Type,
-                                   uint8_t         Address,
-                                   uint8_t         Sda,
-                                   uint8_t         Scl,
-                                   p036_resolution Disp_resolution,
-                                   bool            Rotated,
-                                   uint8_t         Contrast,
-                                   uint16_t        DisplayTimer,
-                                   uint8_t         NrLines);
+  bool                        init(taskIndex_t      taskIndex,
+                                   uint8_t          LoadVersion,
+                                   uint8_t          Type,
+                                   uint8_t          Address,
+                                   uint8_t          Sda,
+                                   uint8_t          Scl,
+                                   p036_resolution  Disp_resolution,
+                                   bool             Rotated,
+                                   uint8_t          Contrast,
+                                   uint16_t         DisplayTimer,
+                                   ePageScrollSpeed ScrollSpeed,
+                                   uint8_t          NrLines);
+
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
 
   bool isInitialized() const;
-
 
   // Set the display contrast
   // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
@@ -355,9 +412,22 @@ struct P036_data_struct : public PluginTaskData_base {
 
   void setOrientationRotated(bool rotated);
   # if P036_ENABLE_LINECOUNT
-  void setNrLines(uint8_t NrLines);
+  void setNrLines(struct EventStruct *event,
+                  uint8_t             NrLines);
   # endif // if P036_ENABLE_LINECOUNT
 
+  // Restores line content from flash memory
+  // LineNo == 0: all line contents
+  // otherwise just the line content of the given LineNo
+  void RestoreLineContent(taskIndex_t taskIndex,
+                          uint8_t     LoadVersion,
+                          uint8_t     LineNo);
+
+private:
+
+  String create_display_header_text(eHeaderContent iHeaderContent) const;
+
+public:
 
   // The screen is set up as:
   // - 10 rows at the top for the header
@@ -368,7 +438,8 @@ struct P036_data_struct : public PluginTaskData_base {
   void    display_title(const String& title);
   void    display_logo();
   void    display_indicator();
-  void    prepare_pagescrolling();
+  void    prepare_pagescrolling(ePageScrollSpeed lscrollspeed,
+                                uint8_t          NrLines);
   uint8_t display_scroll(ePageScrollSpeed lscrollspeed,
                          int              lTaskTimer);
   uint8_t display_scroll_timer(bool             initialScroll = false,
@@ -417,8 +488,8 @@ struct P036_data_struct : public PluginTaskData_base {
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
 
-  tScrollingLines ScrollingLines{};
-  tScrollingPages ScrollingPages{};
+  tScrollingLines ScrollingLines{}; // scrolling lines in from right, out to left
+  tScrollingPages ScrollingPages{}; // scrolling pages in from left, out to right
 
   // CustomTaskSettings
   P036_LineContent *LineContent = nullptr;
@@ -446,13 +517,21 @@ struct P036_data_struct : public PluginTaskData_base {
   bool           bAlternativHeader        = false;
   bool           bReduceLinesPerFrame     = false;
 
+  # if P036_ENABLE_TIME_FORMAT
+  uint8_t timeFormat = 0; // Time format index
+  # endif // if P036_ENABLE_TIME_FORMAT
+
   // frames
-  uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display
+  uint8_t MaxFramesToDisplay    = 0;     // total number of frames to display
   uint8_t currentFrameToDisplay = 0;
-  uint8_t nextFrameToDisplay    = 0;    // next frame because content changed in PLUGIN_WRITE
-  uint8_t frameCounter          = 0;    // need to keep track of framecounter from call to call
-  uint8_t disableFrameChangeCnt = 0;    // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
-  bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
+  uint8_t nextFrameToDisplay    = 0;     // next frame because content changed in PLUGIN_WRITE
+  uint8_t frameCounter          = 0;     // need to keep track of framecounter from call to call
+  uint8_t disableFrameChangeCnt = 0;     // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
+  bool    bPageScrollDisabled   = true;  // first page after INIT or after JumpToPage without scrolling
+  bool    bRunning              = false; // page updates are rumming = (NetworkConnected() || bScrollWithoutWifi)
+  # if P036_ENABLE_TICKER
+  bool bUseTicker = false;               // scroll line like a ticker
+  # endif // if P036_ENABLE_TICKER
 
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;
 
@@ -479,10 +558,21 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
+  void     CleanEscapeCharacters(String&    str,
+                                 const bool ForHeaderOnly);
 
   # if P036_FEATURE_DISPLAY_PREVIEW
   String currentLines[P36_MAX_LinesPerPage]{};
   # endif // if P036_FEATURE_DISPLAY_PREVIEW
+
+# if P036_SEND_EVENTS
+
+public:
+
+  static void P036_SendEvent(struct EventStruct *event,
+                             uint8_t             eventId,
+                             int16_t             eventValue);
+# endif // if P036_SEND_EVENTS
 };
 
 #endif // ifdef USES_P036

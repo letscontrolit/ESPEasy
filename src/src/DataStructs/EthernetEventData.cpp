@@ -3,6 +3,7 @@
 #if FEATURE_ETHERNET
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/Networking.h"
 
 #include <ETH.h>
@@ -11,6 +12,19 @@
 #define ESPEASY_ETH_CONNECTED               0
 #define ESPEASY_ETH_GOT_IP                  1
 #define ESPEASY_ETH_SERVICES_INITIALIZED    2
+
+
+#if FEATURE_USE_IPV6
+#include <esp_netif.h>
+
+// -----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------- Private functions ------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+#endif
+
+
 
 bool EthernetEventData_t::EthConnectAllowed() const {
   if (!ethConnectAttemptNeeded) return false;
@@ -24,7 +38,11 @@ bool EthernetEventData_t::EthConnectAllowed() const {
 }
 
 bool EthernetEventData_t::unprocessedEthEvents() const {
-  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
+#if FEATURE_USE_IPV6
+      && processedGotIP6
+#endif
+  )
   {
     return false;
   }
@@ -44,6 +62,9 @@ void EthernetEventData_t::clearAll() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
   ethConnectAttemptNeeded  = true;
   dns0_cache = IPAddress();
@@ -81,6 +102,9 @@ void EthernetEventData_t::setEthDisconnected() {
   processedConnect          = true;
   processedDisconnect       = true;
   processedGotIP            = true;
+  #if FEATURE_USE_IPV6
+  processedGotIP6           = true;
+  #endif
   processedDHCPTimeout      = true;
 
   ethStatus = ESPEASY_ETH_DISCONNECTED;
@@ -127,6 +151,14 @@ void EthernetEventData_t::markGotIP() {
   processedGotIP = false;
 }
 
+#if FEATURE_USE_IPV6
+void EthernetEventData_t::markGotIPv6(const IPAddress& ip6) {
+  processedGotIP6 = false;
+  unprocessed_IP6 = ip6;
+}
+#endif
+
+
 void EthernetEventData_t::markLostIP() {
   bitClear(ethStatus, ESPEASY_ETH_GOT_IP);
   bitClear(ethStatus, ESPEASY_ETH_SERVICES_INITIALIZED);
@@ -145,11 +177,23 @@ void EthernetEventData_t::markDisconnect() {
   }
   lastConnectMoment.clear();
   processedDisconnect  = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  WiFi.STA.setDefault();
+#endif
 }
 
 void EthernetEventData_t::markConnected() {
   lastConnectMoment.setNow();
   processedConnect    = false;
+#if ESP_IDF_VERSION_MAJOR >= 5
+  ETH.setDefault();
+#endif
+
+#if FEATURE_USE_IPV6
+  if (Settings.EnableIPv6()) {
+    ETH.enableIPv6(true);
+  }
+#endif
 }
 
 String EthernetEventData_t::ESPEasyEthStatusToString() const {

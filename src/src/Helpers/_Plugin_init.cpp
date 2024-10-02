@@ -16,7 +16,7 @@
 
 
 // Vector to match a "DeviceIndex" to a plugin ID.
-const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
+constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 {
 #ifdef USES_P001
   1,
@@ -407,11 +407,11 @@ const pluginID_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
+  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
   // Touch (ESP32)
   97,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
+  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -1052,7 +1052,7 @@ typedef boolean (*Plugin_ptr_t)(uint8_t,
                         String&);
 
 // Array of function pointers to call plugins.
-const Plugin_ptr_t PROGMEM Plugin_ptr[] =
+constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 {
 #ifdef USES_P001
   &Plugin_001,
@@ -1443,11 +1443,11 @@ const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
+  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
   // Touch (ESP32)
   &Plugin_097,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
+  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -2083,35 +2083,131 @@ const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P255
 };
 
-deviceIndex_t* Plugin_id_to_DeviceIndex = nullptr;
-size_t Plugin_id_to_DeviceIndex_size = 0;
+bool _Plugin_init_setupDone = false;
 
-constexpr size_t DeviceIndex_to_Plugin_id_size = sizeof(DeviceIndex_to_Plugin_id);
+
+constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
+
+// Lowest plugin ID included in the build
+constexpr size_t Lowest_Plugin_id = DeviceIndex_to_Plugin_id_size == 0 ? 0 : DeviceIndex_to_Plugin_id[0];
+
+// Highest plugin ID included in the build
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 1 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
+
+// Array size including index of highest plugin ID.
+constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_Plugin_id;
+
+// Array filled during init.
+// Valid index: 1 ... Highest_Plugin_id
+// Returns index to the DeviceIndex_to_Plugin_id array
+//
+// Vector size should is lowest pluginID ... highest pluginID
+deviceIndex_t Plugin_id_to_DeviceIndex[Plugin_id_to_DeviceIndex_size]{};
+
+// Used as lookup for getting an alfabetically sorted deviceIndex
+deviceIndex_t DeviceIndex_sorted[DeviceIndex_to_Plugin_id_size];
+
+
+size_t get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID_t pluginID)
+{
+  if (pluginID.value >= Lowest_Plugin_id)
+  {
+    const size_t arrIndex = static_cast<size_t>(pluginID.value) - Lowest_Plugin_id;
+    if (arrIndex < Plugin_id_to_DeviceIndex_size) {
+      return arrIndex;
+    }
+  }
+  return Plugin_id_to_DeviceIndex_size;
+}
+
+
+/*
+// TD-er: Test to make constexpr array Plugin_id_to_DeviceIndex
+// Have to postpone, since std::integer_sequence is not available in Espressif SDK
+
+// Constexpr functions to create Plugin_id_to_DeviceIndex at compile time
+constexpr uint8_t getDevId_from_PId(unsigned p_id, unsigned d_id) {
+  return (p_id == 0 || d_id == DeviceIndex_to_Plugin_id_size) ? DEVICE_INDEX_MAX
+  :  (p_id == DeviceIndex_to_Plugin_id[d_id]) ? d_id : getDevId_from_PId(p_id, d_id+1);
+}
+
+constexpr uint8_t getDevId_from_PId(unsigned p_id) {
+  return getDevId_from_PId(p_id, 0);
+}
+constexpr auto test = getDevId_from_PId(30);
+
+
+#include <array>
+#include <utility>
+#include <type_traits>
+
+
+template <unsigned... Is>
+constexpr auto get_DevId_from_PId_array(std::integer_sequence<unsigned, Is...> a) -> std::array<uint8_t, a.size()> {
+    std::array<uint8_t, a.size()> vals{};
+    ((vals[Is] = getDevId_from_PId(Is)), ...);
+    return vals;
+}
+
+constexpr auto x = get_DevId_from_PId_array(std::make_integer_sequence<unsigned, Plugin_id_to_DeviceIndex_size>{});
+*/
+
+unsigned getNrBitsDeviceIndex()
+{
+  // FIXME TD-er: Must somehow make this a constexpr function
+  constexpr unsigned nrBits = NR_BITS(DeviceIndex_to_Plugin_id_size);
+  return nrBits;
+}
+
+unsigned getNrBuiltInDeviceIndex()
+{
+  return DeviceIndex_to_Plugin_id_size;
+}
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
-  if (pluginID < Plugin_id_to_DeviceIndex_size)
-  {
-    return static_cast<deviceIndex_t>(Plugin_id_to_DeviceIndex[pluginID]);
+  if (validPluginID(pluginID)) {
+    const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+    if (arrayIndex < Plugin_id_to_DeviceIndex_size)
+    {
+      return Plugin_id_to_DeviceIndex[arrayIndex];
+    }
   }
   return INVALID_DEVICE_INDEX;
 }
 
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  if (validDeviceIndex_init(deviceIndex))
   {
-//    return static_cast<pluginID_t>(DeviceIndex_to_Plugin_id[deviceIndex]);
-    return static_cast<pluginID_t>(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex));
+    return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
 }
 
+bool validDeviceIndex_init(deviceIndex_t deviceIndex)
+{
+  if (_Plugin_init_setupDone) {
+    return deviceIndex < DeviceIndex_to_Plugin_id_size;
+  }
+  return false;
+}
+
+// Array containing "DeviceIndex" alfabetically sorted.
+deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
+{
+  if (validDeviceIndex_init(deviceIndex)) {
+    return DeviceIndex_sorted[deviceIndex.value];
+  }
+  return INVALID_DEVICE_INDEX;
+}
+
+
 boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  if (validDeviceIndex_init(deviceIndex))
   {
-    Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex);
+    Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex.value);
     return plugin_call(function, event, string);
   }
   return false;
@@ -2119,36 +2215,34 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 
 void PluginSetup()
 {
-  static bool setupDone = false;
-  if (setupDone) return;
+  if (_Plugin_init_setupDone) return;
 
-  setupDone = true;
-  
-  if (DeviceIndex_to_Plugin_id_size > 0) {
-    // Get highest PluginID
-    // The last usable index of the Plugin_id_to_DeviceIndex array 
-    // must be usable to store the highest plugin ID.
-    // Thus size of array must be highest pluginID + 1.
-    Plugin_id_to_DeviceIndex_size = DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] + 1;
-    Plugin_id_to_DeviceIndex = new deviceIndex_t[Plugin_id_to_DeviceIndex_size];
-  }
-
+  _Plugin_init_setupDone = true;
 
   for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {
     Plugin_id_to_DeviceIndex[id] = INVALID_DEVICE_INDEX;
   }
+  #ifdef ESP8266
+  Device = new (std::nothrow) DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  #else
   Device.resize(DeviceIndex_to_Plugin_id_size);
+  #endif
 
-  for (deviceIndex_t deviceIndex = 0; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
+  for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
     if (validPluginID(pluginID)) { 
-      Plugin_id_to_DeviceIndex[pluginID] = deviceIndex;
-      struct EventStruct TempEvent;
-      String dummy;
-      PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+      const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+      if (arrayIndex < Plugin_id_to_DeviceIndex_size) {
+        // Should never be outside these limits.
+        Plugin_id_to_DeviceIndex[arrayIndex] = deviceIndex;
+        struct EventStruct TempEvent;
+        TempEvent.idx = deviceIndex.value;
+        String dummy;
+        PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+      }
     }
   }
 #ifndef BUILD_NO_RAM_TRACKER
@@ -2162,9 +2256,8 @@ void PluginSetup()
   // ********************************************************************************
 
   // First fill the existing number of the DeviceIndex.
-  DeviceIndex_sorted.resize(deviceCount + 1);
-  for (deviceIndex_t x = 0; x <= deviceCount; x++) {
-    DeviceIndex_sorted[x] = x;
+  for (deviceIndex_t x; x < DeviceIndex_to_Plugin_id_size; ++x) {
+    DeviceIndex_sorted[x.value] = x;
   }
 
   struct
@@ -2175,7 +2268,7 @@ void PluginSetup()
     }
   }
   customLess;
-  std::sort(DeviceIndex_sorted.begin(), DeviceIndex_sorted.end(), customLess);
+  std::sort(DeviceIndex_sorted, DeviceIndex_sorted + DeviceIndex_to_Plugin_id_size, customLess);
 }
 
 void PluginInit(bool priorityOnly)
@@ -2183,7 +2276,7 @@ void PluginInit(bool priorityOnly)
 
   // Set all not supported plugins to disabled.
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
-    if (!supportedPluginID(Settings.TaskDeviceNumber[taskIndex])) {
+    if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex))) {
       Settings.TaskDeviceEnabled[taskIndex] = false;
     }
   }

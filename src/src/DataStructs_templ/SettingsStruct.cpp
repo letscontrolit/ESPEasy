@@ -1,19 +1,29 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../../ESPEasy_common.h"
-#include "../CustomBuild/CompiletimeDefines.h"
-#include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/DeviceStruct.h"
-#include "../DataTypes/SPI_options.h"
-#include "../Globals/Plugins.h"
-#include "../Globals/CPlugins.h"
-#include "../Helpers/Misc.h"
-#include "../Helpers/StringParser.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 
+#include "../CustomBuild/CompiletimeDefines.h"
+#include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/SPI_options.h"
+#include "../DataTypes/NPluginID.h"
+#include "../DataTypes/PluginID.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
+#include "../Helpers/Misc.h"
+#include "../Helpers/StringParser.h"
+
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <driver/gpio.h>
+#include "include/esp32x_fixes.h"
+#endif
+
+/*
 // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::appendUnitToHostname()  const {
@@ -178,6 +188,7 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
   bitWrite(VariousBits1, 16, value);
 }
+*/
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
@@ -193,7 +204,7 @@ void SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t tas
     bitWrite(TaskDeviceSendDataFlags[taskIndex], 0, value);
   }
 }
-
+/*
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::DoNotStartAP() const {
   return bitRead(VariousBits1, 17);
@@ -328,8 +339,8 @@ void SettingsStruct_tmpl<N_TASKS>::CheckI2Cdevice(bool value) { // Inverted
   bitWrite(VariousBits1, 30, !value);
 }
 #endif // if FEATURE_I2C_DEVICE_CHECK
-
-
+*/
+/*
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WaitWiFiConnect() const { 
   return bitRead(VariousBits2, 0);
@@ -364,6 +375,18 @@ void SettingsStruct_tmpl<N_TASKS>::DisableRulesCodeCompletion(bool value) {
 }
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
 
+#if FEATURE_TARSTREAM_SUPPORT
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar() const { 
+  return bitRead(VariousBits2, 3); // Using bit 4 now...
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::DisableSaveConfigAsTar(bool value) { 
+  bitWrite(VariousBits2, 3, value); // Using bit 4 now...
+}
+#endif // if FEATURE_TARSTREAM_SUPPORT
+*/
 
 
 template<unsigned int N_TASKS>
@@ -439,7 +462,7 @@ void SettingsStruct_tmpl<N_TASKS>::validate() {
 
   if ((Longitude < -180.0f) || (Longitude > 180.0f)) { Longitude = 0.0f; }
 
-  if (VariousBits1 > (1u << 31)) { VariousBits1 = 0; } // FIXME: Check really needed/useful?
+  if (getVariousBits1() > (1u << 31)) { setVariousBits1(0); } // FIXME: Check really needed/useful?
   ZERO_TERMINATE(Name);
   ZERO_TERMINATE(NTPHost);
 
@@ -502,7 +525,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
   for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-    Notification[i]        = 0;
+    Notification[i]        = 0u;// .setInvalid();
     NotificationEnabled[i] = false;
   }
 }
@@ -529,8 +552,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearLogSettings() {
   WebLogLevel    = 0;
   SDLogLevel     = 0;
   SyslogFacility = DEFAULT_SYSLOG_FACILITY;
-
-  for (uint8_t i = 0; i < 4; ++i) {  Syslog_IP[i] = 0; }
+  ZERO_FILL(Syslog_IP);
 }
 
 template<unsigned int N_TASKS>
@@ -555,9 +577,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
 #ifdef ESP32
   // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
-  ETH_Pin_mdc              = DEFAULT_ETH_PIN_MDC;
-  ETH_Pin_mdio             = DEFAULT_ETH_PIN_MDIO;
-  ETH_Pin_power            = DEFAULT_ETH_PIN_POWER;
+  ETH_Pin_mdc_cs           = DEFAULT_ETH_PIN_MDC;
+  ETH_Pin_mdio_irq         = DEFAULT_ETH_PIN_MDIO;
+  ETH_Pin_power_rst        = DEFAULT_ETH_PIN_POWER;
   ETH_Phy_Type             = DEFAULT_ETH_PHY_TYPE;
   ETH_Clock_Mode           = DEFAULT_ETH_CLOCK_MODE;
 #endif
@@ -566,26 +588,17 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   I2C_clockSpeed_Slow      = DEFAULT_I2C_CLOCK_SPEED_SLOW;
   I2C_Multiplexer_Type     = I2C_MULTIPLEXER_NONE;
   I2C_Multiplexer_Addr     = -1;
-  for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
-    I2C_Multiplexer_Channel[x] = -1;
-  }
+  memset(I2C_Multiplexer_Channel, -1, sizeof(I2C_Multiplexer_Channel));
   I2C_Multiplexer_ResetPin = -1;
 
   {
     // Here we initialize all data to 0, so this is the ONLY reason why PinBootStates 
     // can now be directly accessed.
     // In all other use cases, use the get and set functions for it.
-    constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
 
-    for (uint8_t i = 0; i < maxStates; ++i) {
-      PinBootStates[i] = 0;
-    }
+    ZERO_FILL(PinBootStates);
     # ifdef ESP32
-    constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
-
-    for (uint8_t i = 0; i < maxStatesesp32; ++i) {
-      PinBootStates_ESP32[i] = 0;
-    }
+    ZERO_FILL(PinBootStates_ESP32);
     # endif // ifdef ESP32
   }
   BaudRate                         = DEFAULT_SERIAL_BAUD;
@@ -611,13 +624,13 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_Reset                        = -1;
   StructSize                       = sizeof(SettingsStruct_tmpl<N_TASKS>);
   MQTTUseUnitNameAsClientId_unused = 0;
-  VariousBits1                     = 0;
+  setVariousBits1(0);
+  setVariousBits2(0);
 
   console_serial_port              = DEFAULT_CONSOLE_PORT; 
   console_serial_rxpin             = DEFAULT_CONSOLE_PORT_RXPIN;
   console_serial_txpin             = DEFAULT_CONSOLE_PORT_TXPIN;
   console_serial0_fallback         = DEFAULT_CONSOLE_SER0_FALLBACK;
-
 
   OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   ForceWiFi_bg_mode(DEFAULT_WIFI_FORCE_BG_MODE);
@@ -645,7 +658,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = 0u;
+  TaskDeviceNumber[task]     = 0u; //.setInvalid();
   OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
@@ -669,6 +682,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   VariousTaskBits[task]         = 0;
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
+//  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
   TaskDeviceEnabled[task]       = false;
   I2C_Multiplexer_Channel[task] = -1;
 }
@@ -698,7 +712,7 @@ String SettingsStruct_tmpl<N_TASKS>::getName() const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
-  uint8_t   gpio_pin,
+  int8_t  gpio_pin,
   int8_t& index_low
     # ifdef ESP32
   , int8_t& index_high
@@ -707,21 +721,20 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
   index_low = -1;
 # ifdef ESP32
   index_high = -1;
-
-  if (!GPIO_IS_VALID_GPIO(gpio_pin)) { return false; }
+  if ((gpio_pin < 0) || !(GPIO_IS_VALID_GPIO(gpio_pin))) { return false; }
 # endif // ifdef ESP32
-  constexpr uint8_t maxStates = sizeof(PinBootStates) / sizeof(PinBootStates[0]);
+  constexpr int maxStates = NR_ELEMENTS(PinBootStates);
 
   if (gpio_pin < maxStates) {
     index_low = gpio_pin;
     return true;
   }
 # ifdef ESP32
-  constexpr uint8_t maxStatesesp32 = sizeof(PinBootStates_ESP32) / sizeof(PinBootStates_ESP32[0]);
+  constexpr int maxStatesesp32 = NR_ELEMENTS(PinBootStates_ESP32);
 
   index_high = gpio_pin - maxStates;
 
-#  if defined(ESP32_CLASSIC) || defined(ESP32C3)
+#  if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C3)|| defined(ESP32C6)
 
   // These can all store in the PinBootStates_ESP32 array
   return (index_high < maxStatesesp32);
@@ -772,7 +785,8 @@ bool SettingsStruct_tmpl<N_TASKS>::getPinBootStateIndex(
 }
 
 template<unsigned int N_TASKS>
-PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) const {
+PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(int8_t gpio_pin) const {
+  if (gpio_pin < 0) return PinBootState::Default_state;
 # ifdef ESP8266
   int8_t index_low{};
 
@@ -799,7 +813,8 @@ PinBootState SettingsStruct_tmpl<N_TASKS>::getPinBootState(uint8_t gpio_pin) con
 }
 
 template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setPinBootState(uint8_t gpio_pin, PinBootState state) {
+void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState state) {
+  if (gpio_pin < 0) return;
 # ifdef ESP8266
   int8_t index_low{};
 
@@ -870,6 +885,53 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   return false;
 }
 
+#ifdef ESP32
+template<unsigned int N_TASKS>
+spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
+{
+  if (isSPI_valid()) {
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi_Fspi:
+      {
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
+        #else
+        return static_cast<spi_host_device_t>(VSPI_HOST);
+        #endif
+      }
+#ifdef ESP32_CLASSIC
+      case SPI_Options_e::Hspi:
+      {
+        return static_cast<spi_host_device_t>(HSPI_HOST);
+      }
+#endif
+      case SPI_Options_e::UserDefined:
+      {
+        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        return static_cast<spi_host_device_t>(FSPI_HOST);
+        #else
+        return static_cast<spi_host_device_t>(VSPI_HOST);
+        #endif
+      }
+      case SPI_Options_e::None:
+        break;
+    }
+
+  }
+  #if ESP_IDF_VERSION_MAJOR < 5
+  #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  return static_cast<spi_host_device_t>(FSPI_HOST);
+  #else
+  return static_cast<spi_host_device_t>(VSPI_HOST);
+  #endif
+  #else
+  return spi_host_device_t::SPI_HOST_MAX;
+  #endif
+}
+#endif
+
+
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
   if (pin < 0) { return false; }
@@ -916,7 +978,8 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
-  if (NetworkMedium == NetworkMedium_t::Ethernet) {
+  if (NetworkMedium == NetworkMedium_t::Ethernet &&
+      !isSPI_EthernetType(ETH_Phy_Type)) {
     if (19 == pin) return true; // ETH TXD0
     if (21 == pin) return true; // ETH TX EN
     if (22 == pin) return true; // ETH TXD1
@@ -934,10 +997,10 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
-    if (isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
-    if (ETH_Pin_mdc == pin) return true;
-    if (ETH_Pin_mdio == pin) return true;
-    if (ETH_Pin_power == pin) return true;
+    if (!isSPI_EthernetType(ETH_Phy_Type) && isGpioUsedInETHClockMode(ETH_Clock_Mode, pin)) return true;
+    if (ETH_Pin_mdc_cs == pin) return true;
+    if (ETH_Pin_mdio_irq == pin) return true;
+    if (ETH_Pin_power_rst == pin) return true;
   }
   #endif // if FEATURE_ETHERNET
   return false;
@@ -963,6 +1026,17 @@ float SettingsStruct_tmpl<N_TASKS>::getWiFi_TX_power() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
+}
+
+template<unsigned int N_TASKS>
+pluginID_t SettingsStruct_tmpl<N_TASKS>::getPluginID_for_task(taskIndex_t taskIndex) const {
+  if (validTaskIndex(taskIndex)) {
+    const uint8_t tdn = TaskDeviceNumber[taskIndex];
+    if (tdn > 0) {
+      return pluginID_t::toPluginID(tdn);
+    }
+  }
+  return INVALID_PLUGIN_ID;
 }
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

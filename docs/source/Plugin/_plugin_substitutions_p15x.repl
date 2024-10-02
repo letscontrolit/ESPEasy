@@ -49,3 +49,29 @@
 .. |P153_maintainer| replace:: `tonhuisman`
 .. |P153_compileinfo| replace:: `.`
 .. |P153_usedlibraries| replace:: `.`
+
+.. |P154_name| replace:: :cyan:`BMP3xx (I2C)`
+.. |P154_type| replace:: :cyan:`Environment`
+.. |P154_typename| replace:: :cyan:`Environment - BMP3xx (I2C)`
+.. |P154_porttype| replace:: `.`
+.. |P154_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P154_github| replace:: P154_BMP3xx.ino
+.. _P154_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P154_BMP3xx.ino
+.. |P154_usedby| replace:: `.`
+.. |P154_shortinfo| replace:: `BMP3xx Temperature and Pressure sensors`
+.. |P154_maintainer| replace:: `TD-er`
+.. |P154_compileinfo| replace:: `.`
+.. |P154_usedlibraries| replace:: `Adafruit BMP3XX Library`
+
+.. |P159_name| replace:: :cyan:`LD2410`
+.. |P159_type| replace:: :cyan:`Presence`
+.. |P159_typename| replace:: :cyan:`Presence - LD2410`
+.. |P159_porttype| replace:: `.`
+.. |P159_status| replace:: :yellow:`COLLECTION G`
+.. |P159_github| replace:: P159_LD2410.ino
+.. _P159_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P159_LD2410.ino
+.. |P159_usedby| replace:: `.`
+.. |P159_shortinfo| replace:: `LD2410 24 GHz Radar human presence detection sensor`
+.. |P159_maintainer| replace:: `tonhuisman`
+.. |P159_compileinfo| replace:: `.`
+.. |P159_usedlibraries| replace:: `ncmreynolds/ld2410, with 'skoona' and ESPEasy specific enhancements`

@@ -38,6 +38,13 @@ using std::min;
 #define IRAM_ATTR
 #endif
 
+#if defined(__GNUC__)
+#undef ALWAYS_INLINE_ATTR
+#define ALWAYS_INLINE_ATTR __attribute__((always_inline))
+#else
+#define ALWAYS_INLINE_ATTR
+#endif
+
 /*!
     @brief	Instance class for a single-producer, single-consumer circular queue / ring buffer (FIFO).
             This implementation is lock-free between producer and consumer for the available(), peek(),
@@ -160,9 +167,7 @@ public:
         if (next == m_outPos.load(std::memory_order_relaxed)) {
             return false;
         }
-    
-        std::atomic_thread_fence(std::memory_order_acquire);
-    
+        std::atomic_thread_fence(std::memory_order_release);
         m_inPos.store(next, std::memory_order_release);
         return true;
     }
@@ -179,13 +184,8 @@ public:
         if (next == m_outPos.load(std::memory_order_relaxed)) {
             return false;
         }
-    
-        std::atomic_thread_fence(std::memory_order_acquire);
-    
         m_buffer[inPos] = std::move(val);
-    
         std::atomic_thread_fence(std::memory_order_release);
-    
         m_inPos.store(next, std::memory_order_release);
         return true;
     }
@@ -195,7 +195,7 @@ public:
         @return true if the queue accepted the value, false if the queue
                 was full.
     */
-    bool IRAM_ATTR push(const T& val)
+    inline bool IRAM_ATTR push(const T& val) ALWAYS_INLINE_ATTR
     {
         T v(val);
         return push(std::move(v));
@@ -251,7 +251,6 @@ public:
 #endif
 
 protected:
-    const T defaultValue {};
     size_t m_bufSize;
 #if defined(ESP8266) || defined(ESP32) || !defined(ARDUINO)
     std::unique_ptr<T[]> m_buffer;
@@ -271,9 +270,8 @@ bool circular_queue<T, ForEachArg>::capacity(const size_t cap)
     const auto available = pop_n(buffer, cap);
     m_buffer.reset(buffer);
     m_bufSize = cap + 1;
-    std::atomic_thread_fence(std::memory_order_release);
     m_inPos.store(available, std::memory_order_relaxed);
-    m_outPos.store(0, std::memory_order_release);
+    m_outPos.store(0, std::memory_order_relaxed);
     return true;
 }
 
@@ -289,8 +287,6 @@ size_t circular_queue<T, ForEachArg>::push_n(const T* buffer, size_t size)
     if (!blockSize) return 0;
     int next = (inPos + blockSize) % m_bufSize;
 
-    std::atomic_thread_fence(std::memory_order_acquire);
-
     auto dest = m_buffer.get() + inPos;
     std::copy_n(std::make_move_iterator(buffer), blockSize, dest);
     size = min(size - blockSize, outPos > 1 ? static_cast<size_t>(outPos - next - 1) : 0);
@@ -299,7 +295,6 @@ size_t circular_queue<T, ForEachArg>::push_n(const T* buffer, size_t size)
     std::copy_n(std::make_move_iterator(buffer + blockSize), size, dest);
 
     std::atomic_thread_fence(std::memory_order_release);
-
     m_inPos.store(next, std::memory_order_release);
     return blockSize + size;
 }
@@ -309,13 +304,11 @@ template< typename T, typename ForEachArg >
 T circular_queue<T, ForEachArg>::pop()
 {
     const auto outPos = m_outPos.load(std::memory_order_acquire);
-    if (m_inPos.load(std::memory_order_relaxed) == outPos) return defaultValue;
+    if (m_inPos.load(std::memory_order_relaxed) == outPos) return {};
 
     std::atomic_thread_fence(std::memory_order_acquire);
 
     auto val = std::move(m_buffer[outPos]);
-
-    std::atomic_thread_fence(std::memory_order_release);
 
     m_outPos.store((outPos + 1) % m_bufSize, std::memory_order_release);
     return val;
@@ -337,8 +330,6 @@ size_t circular_queue<T, ForEachArg>::pop_n(T* buffer, size_t size) {
         std::copy_n(std::make_move_iterator(m_buffer.get()), avail, buffer);
     }
 
-    std::atomic_thread_fence(std::memory_order_release);
-
     m_outPos.store((outPos + size) % m_bufSize, std::memory_order_release);
     return size;
 }
@@ -357,7 +348,6 @@ void circular_queue<T, ForEachArg>::for_each(Delegate<void(T&&), ForEachArg> fun
     while (outPos != inPos)
     {
         fun(std::move(m_buffer[outPos]));
-        std::atomic_thread_fence(std::memory_order_release);
         outPos = (outPos + 1) % m_bufSize;
         m_outPos.store(outPos, std::memory_order_release);
     }
@@ -372,11 +362,11 @@ bool circular_queue<T, ForEachArg>::for_each_rev_requeue(Delegate<bool(T&), ForE
 {
     auto inPos0 = circular_queue<T, ForEachArg>::m_inPos.load(std::memory_order_acquire);
     auto outPos = circular_queue<T, ForEachArg>::m_outPos.load(std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_acquire);
     if (outPos == inPos0) return false;
     auto pos = inPos0;
     auto outPos1 = inPos0;
     const auto posDecr = circular_queue<T, ForEachArg>::m_bufSize - 1;
+    std::atomic_thread_fence(std::memory_order_acquire);
     do {
         pos = (pos + posDecr) % circular_queue<T, ForEachArg>::m_bufSize;
         T&& val = std::move(circular_queue<T, ForEachArg>::m_buffer[pos]);
@@ -386,6 +376,7 @@ bool circular_queue<T, ForEachArg>::for_each_rev_requeue(Delegate<bool(T&), ForE
             if (outPos1 != pos) circular_queue<T, ForEachArg>::m_buffer[outPos1] = std::move(val);
         }
     } while (pos != outPos);
+    std::atomic_thread_fence(std::memory_order_release);
     circular_queue<T, ForEachArg>::m_outPos.store(outPos1, std::memory_order_release);
     return true;
 }

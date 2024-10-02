@@ -27,7 +27,7 @@ void removeMonitorFromPort(uint32_t key);
 
 void addMonitorToPort(uint32_t key);
 
-uint32_t createKey(uint16_t pluginNumber, uint16_t portNumber);
+uint32_t createKey(pluginID_t pluginNumber, uint16_t portNumber);
 
 pluginID_t getPluginFromKey(uint32_t key);
 

@@ -1,0 +1,246 @@
+
+
+Touch configuration
+^^^^^^^^^^^^^^^^^^^
+
+.. note:: This part of the configuration describes the generic ESPEasy Touch Helper module, used for all touch-screen plugins.
+
+.. image:: Touch_DeviceConfiguration.png
+
+
+* **Flip rotation 180°**: This checkbox allowes to compensate for when the touch overlay is mounted rotated on the display.
+
+* **Events**: Select the events that should be generated on touch actions.
+
+.. image:: Touch_EventsOptions.png
+
+* *None*: No events will be generated.
+
+* *X and Y*: Only an event with the X and Y positions on touch will be generated.
+
+* *X, Y and Z*: Similar to the X and Y event, but with the Z value, pressure strength, added.
+
+* *Objectnames and Button groups*: An event is generated only when a defined object, see below, is touched, or a button group is changed.
+
+* *Objectnames, Button groups, X and Y*: An event is generated when a defined object is touched, or a button group is changed. Also an event with the X and Y touch position is generated.
+
+* *Objectnames, Button groups, X, Y and Z*: An event is generated when a defined object is touched, or a button group is changed. Also an event with the X and Y touch position and Z pressure strength is generated.
+
+.. .. separator
+
+* **Draw buttons when started**: When enabled the objects (often touch-buttons) will be drawn when the plugin is started. This requires that the display is already initialized, so that should have a lower task number than this task.
+
+* **Prevent duplicate events**: Suppress duplicate events.
+
+* **Ignore touch-screen**: When enabled will not get any touch data from the touch-screen, so the plugin can be used to draw objects, and control them using other buttons, usually below or at a side of the display. For example when using a M5Stack Core, that doesn't have a touch-screen, but does have 3 buttons below the display.
+
+Calibration
+^^^^^^^^^^^
+
+To be able to adjust for an improper aligned touch overlay on a display, there is an option for calibration available. When changing the **Calibrate to screen resolution** setting from No to Yes, the page will be submitted, and the calibration input fields will be available.
+
+.. image:: Touch_CalibrationSettings.png
+
+* **Top-left**: Enter the adjusted X and Y position for the most top/left position that matches with the touch screen.
+
+* **Bottom-right**: Enter the adjusted X and Y position for the most bottom/right position that matches with the touch screen.
+
+To get accurate values, a touch-pen could be used to touch the screen, and enabling the **Enable logging for calibration** option will add Info logging with the exact coordinates that are touched. It might help to set the **Events** temporarily to *None*.
+
+NB: This calibration is usually only needed for Resistive touch panels, that can also use this generic TouchHelper module, so for a Capacitive touch screen it can be set to No.
+
+Object settings
+^^^^^^^^^^^^^^^
+
+This section has some generic and default settings for the Touch Objects defined below.
+
+.. note:: *Definition*: **An On/Off button is any defined object that's not a slider (Layout)**
+
+* **Default On/Off button colors**: The default state-colors to be used for On/Off buttons: On, Off, Border, Caption, Disabled, Disabled caption.
+
+The colors can be selected by name (limited set available), ``#RRGGBB`` (24 bit) value or ``#hhhh`` (RGB565) (16 bit) value (and that's also how they are stored).
+
+Color input fields have a list of predefined color names available, that can be filtered/selected by typing a part of the name, or using the dropdown arrow in the input field (Chromium-based browsers):
+
+.. image:: Touch_ColorSelectionPart.png
+
+To select another value from the list, the input has to be (partially) cleared before it will show other options.
+
+Customized colors can be selected from a color picker that supports RGB565 color selection. For example `here <https://chrishewett.com/blog/true-rgb565-colour-picker/>`_
+
+* **Initial button group**: Select the button group that should be activated on plugin start (Button groups will be explained below). Should be left at 0 if no button groups are used.
+
+* **Draw buttons via Rules**: This setting should be left disabled, as it requires specific rules for drawing the buttons on the display. Documentation to be added.
+
+* **Enable/Disable page buttons**: Paging buttons (navigation, + or - 10 action), disabled by default, can be enabled here, when they need to be used.
+
+* **Navigation Left/Right/Up/Down menu reversed**: Navigation across button groups can be seen as 'Moving the view up, down, left or right' (normal) or 'Moving the buttons behind the viewport' (reversed). Enabling this setting will also revert the ``nextgrp``, ``prevgrp``, ``nextpage`` and ``prevpage`` subcommands, to move in the other direction.
+
+* **Swipe Left/Right/Up/Down menu reversed**: Similar to the navigation buttons, this setting is for reversing the swipe actions left/right and up/down. Swipe actions have to be processed in Rules, no default actions are currently available.
+
+* **Debounce delay for On/Off buttons**: The minimum time a button has to be touched before it's toggled.
+
+* **Minimal swipe movement**: When dragging this amount of pixels a swipe action is recognized.
+
+* **Maximum swipe margin**: The margin for a swipe to be completed.
+
+Touch objects
+^^^^^^^^^^^^^
+
+For each column, or related group of columns, a description is available:
+
+.. image:: Touch_Touch_On.png
+
+* **#**: The (internal) object number, can be used to address an object in the commands (see below).
+
+* **On**: Enable or Disable the button (shown disabled and not state changed when touched). A Slide control that is set to disabled, can not be changed by dragging the handle up/down or left/right (depending on orientation), but the value **can** be set using the ``touch,set,...`` command, see below.
+
+.. image:: Touch_Touch_Name.png
+
+* **Objectname**: The name is a required field, when this is left or made empty, **the object will be removed from the list!** when saved. When no Caption is set, this will be used as the caption, with any underscore characters ``_`` replaced by a space.
+
+* **Button-group**: For paging to work, buttons (objects) have to be placed in Button groups. Buttons in group 0 are *always* drawn, so buttons in group 0 are intended to be used as global navigation buttons, or non-menu buttons/objects.
+
+.. image:: Touch_Touch_Position.png
+
+* **Top-left x**: The X position for the top/left corner of the button.
+
+* **Width**: The width of the button.
+
+* **Top-left y**: The Y position for the top/left corner of the button.
+
+* **Height**: The height of the button.
+
+(All positions and sizes are in pixels)
+
+.. image:: Touch_Touch_Shape.png
+
+* **Button**: This selection defines the shape of the button on screen:
+
+* *None*: No button is drawn.
+
+* *Square*: A square button is drawn.
+
+* *Rounded*: A rounded button with a corner radius of 5% of the longest side is drawn.
+
+* *Circle*: A circle or ellipsis is drawn within the width/height defined.
+
+* *Arrow, left*, *Arrow, up*, *Arrow, right*, *Arrow, down*: A triangle button, pointing in the direction as named, is drawn. To be used as navigation or +/- button.
+
+.. .. separator
+
+* **Inverted**: Invert the On/Off values for the button, so the value can immediately be used to set f.e. a GPIO state.
+
+.. image:: Touch_Touch_Layout.png
+
+* **Layout**: Select the layout of the caption within the button, it determines a) the caption alignment of the button, or b) the button to be a bitmap-button or c) the button to behave like a slide control:
+
+* *Centered*, *Left-aligned*, *Top-aligned*, *Right-aligned*, *Bottom-aligned*, *Left-Top-aligned*, *Right-Top-aligned*, *Left-Bottom-aligned*, *Right-Bottom-aligned*: Align the caption as the layout implies.
+
+* *No caption*: Just draw a button without any caption.
+
+* *Bitmap image*: Draw a bitmap, starting at the left-top, instead of a caption. The color is drawn first, so when using a smaller bitmap, the surface color is still reflecting the On/Off state. The name of the bitmap is to be entered in the ON caption/OFF caption fields, and can be *prepended* with an x/y offset in pixels to 'move' the bitmap to a desired position on the button. Example: ``5,5,shape.bmp`` will draw shape.bmp starting at offset 5,5 from the left top of the button.
+
+* *Slide control*: Draw the configured button shape, and include a slide-bar that can be swiped up/down or left/right, determined by the width/height. In the center of the button, the current value is shown. By default the range is 0..100%, but the min/max values can be set by entering a ``<from>,<to>`` value-pair in the **OFF caption** field. The direction can be reverted by swapping the ``<from>`` and ``<to>`` values. An initial value can be set in the **ON caption** field. These values can use decimals for fine control, f.e. ``18.5,24.9``.
+
+.. .. separator
+
+* **Font scale**: Sets the font-size of the currently active font for drawing the captions on a button, or the value of the slide control. Range 0..10, 0 works as if 1 was set.
+
+.. image:: Touch_Touch_Color.png
+
+* **ON color**: A non-default ON color can be set here.
+
+* **OFF color**: A non-default OFF color can be set here.
+
+.. image:: Touch_Touch_Caption.png
+
+* **ON caption**: The caption to show if the button-state is ON. When empty, and the layout is not set to No caption, the Objectname will be used as ON caption. Any underscores ``_`` will be replaced by a space.
+
+* **OFF caption**: The caption to show if the button-state is OFF. When empty, the ON caption will also be used for the OFF state, though the color(s) will change to either the default or configured OFF color.
+
+Also, variables can be used for ON and OFF captions, that will be evaluated when the button is (re-)drawn. The caption content can be updated from rules, see the ``touch,updatebutton...`` command, below.
+
+For a Bitmap layout, the name of the bitmap file should be set in the ON caption field, and for the Off state, another bitmap (or the same if it is to be used as a single-action button) filename can be entered. To shift the bitmap across the button, an x and or y offset for the image can be prepended to the filename, like ``[<x>,[<y>,]]<filename.ext>``. The x/y offset will be applied from the top/left position of the button.
+
+.. image:: Touch_Touch_Border.png
+
+* **Border color**: The color to use for drawing a 1 pixel border around the button. When not set the default border color is used, and when that's also not set, no border is drawn.
+
+* **Caption color**: A specific caption color, instead of the default Caption color, can be used.
+
+.. image:: Touch_Touch_Disabled.png
+
+* **Disab. cap clr**: Disabled-caption color, the caption color to use when the button is disabled.
+
+* **Disabled clr**: Disabled color, the button surface color when the button is disabled. When empty, the default disabled color is used.
+
+.. image:: Touch_Touch_Action.png
+
+* **Touch action**: What action to perform when the object is activated (touched).
+
+* *Default*: The regular On/Off action will be applied.
+
+* *Activate Group*: Activate the group configured in **Action group**. For the Home button this could activate group 1, the first set of buttons.
+
+* *Next Group*: Increment the currently active group by 1, if that group is defined.
+
+* *Previous Group*: Decrement the currently active group by 1, unless that would activate group 0, as group 0 is always active.
+
+* *Next Page (+10)*: Increment the current group by 10, to go to the next 'page', if that group is defined.
+
+* *Previous Page (-10)*: Decrement the current group by 10, to go to the previous 'page', if that group is defined, and \> 0.
+
+.. .. separator
+
+The Next/Previous Group and Page buttons will be automatically enabled and disabled, based on availability of the Button Group they are supposed to jump to.
+
+.. .. separator
+
+* **Action group**: The group to activate for the *Activate group* touch action.
+
+Button groups
+~~~~~~~~~~~~~
+
+To show a larger number of button-like touch objects in a small space, button groups have been designed.
+
+The basic idea is that all buttons in a group are displayed when the group is activated. To be able to navigate from group to group, some navigation controls are required, and these reside by default in the always visible group 0, though they can also be included in a group, but would immediately disappear when touched and a different group is activated. Groups are identified by positive numbers in range 0..255.
+
+To enable not only linear navigation across these groups, paging is also implemented, where switching to the next page implies adding or subtracting 10 to/from the current group number.
+
+The navigation buttons check themselves if it is possible to navigate in their configured direction, and depending on a group they can navigate to, the button is disabled or enabled accordingly. These navigation buttons will ignore switching to group 0, as that's the group these navigation buttons should be in.
+
+Example layout with Groups and Pages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Below image shows a possible menu system, to be displayed in a small area on the display. The numbers on the buttons are the Button group they belong to. There is only 1 group visible, and of course the navigation- or base-group 0. 2 button sizes are used, defining smaller buttons makes it quite hard to show a meaningful caption on each button.
+
+The display that is used for this setup has a resolution of 480x320 pixels, and is used in landscape mode. The menu is drawn at the bottom of the display, where the height of all buttons is 49 (pixels). The small buttons, like in group 1, have a width of 99, and not 100, to have a 1 pixel gap between the buttons that makes it look better then when they are flush next to each other. The wide buttons, like group 11, are 149 pixels wide.
+
+The navigation buttons are all 49x49 pixels, and except for the Home button, have a triangle shape matching their direction. The navigation, by default, is 'moving' the [Visible area] window across the menu sections, though enabling the **Navigation Left/Right/Up/Down menu reversed** option, above, will change that to virtually move the buttons behind the viewport.
+
+.. image:: Touch_GroupLayoutExample.png
+
+Swiping
+~~~~~~~
+
+To support slider controls and generic swipe actions, as available on smartphones, tablets and even some computer screens, swipe support has been included.
+
+Swiping is supported by generating events during the swipe action, that include the directionId (1..8), and x,y offset since the last swipe action. See Get Config Values for ``swipedir``, below.
+
+Commands available
+------------------
+
+.. include:: Touch_commands.repl
+
+Events
+------
+
+.. include:: Touch_events.repl
+
+Get Config Values
+-----------------
+
+Get Config Values retrieves values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
+
+.. include:: Touch_config_values.repl

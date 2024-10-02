@@ -17,12 +17,12 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_003;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].defaultPort  = 23;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_003;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = true;
+      proto.defaultPort  = 23;
+      proto.usesID       = true;
       break;
     }
 
@@ -53,18 +53,19 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-
       // We now create a URI for the request
-      String url = F("variableset ");
-      url    += event->idx;
-      url    += ',';
-      url    += formatUserVarNoCheck(event, 0);
-      url    += '\n';
-
-      std::unique_ptr<C003_queue_element> element(new C003_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+      String url = strformat(
+        F("variableset %d,%s\n"),
+        event->idx,
+        formatUserVarNoCheck(event, 0).c_str());
+      std::unique_ptr<C003_queue_element> element(
+        new (std::nothrow) C003_queue_element(
+          event->ControllerIndex, 
+          event->TaskIndex, 
+          std::move(url)));
 
       success = C003_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C003_DELAY_QUEUE, C003_DelayHandler->getNextScheduleTime());
 
       break;
     }
@@ -84,7 +85,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c003_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c003_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C003_queue_element& element = static_cast<const C003_queue_element&>(element_base);
 // *INDENT-ON*
   bool success = false;
@@ -92,7 +93,7 @@ bool do_process_c003_delay_queue(int controller_number, const Queue_element_base
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
 
-  if (!try_connect_host(controller_number, client, ControllerSettings, F("TELNT: ")))
+  if (!try_connect_host(cpluginID, client, ControllerSettings, F("TELNT: ")))
   {
     return success;
   }

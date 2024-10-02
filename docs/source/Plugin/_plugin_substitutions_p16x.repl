@@ -1,0 +1,103 @@
+.. |P162_name| replace:: :cyan:`MCP42xxx Digipot`
+.. |P162_type| replace:: :cyan:`Output`
+.. |P162_typename| replace:: :cyan:`Output - MCP42xxx Digipot`
+.. |P162_porttype| replace:: `.`
+.. |P162_status| replace:: :yellow:`COLLECTION G`
+.. |P162_github| replace:: P162_MCP42xxx.ino
+.. _P162_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P162_MCP42xxx.ino
+.. |P162_usedby| replace:: `.`
+.. |P162_shortinfo| replace:: `MCP42xxx/MCP41xxx Digital potentiometers`
+.. |P162_maintainer| replace:: `tonhuisman`
+.. |P162_compileinfo| replace:: `.`
+.. |P162_usedlibraries| replace:: `SPI`
+
+.. |P163_name| replace:: :cyan:`RadSens I2C radiation counter`
+.. |P163_type| replace:: :cyan:`Environment`
+.. |P163_typename| replace:: :cyan:`Environment - RadSens I2C radiation counter`
+.. |P163_porttype| replace:: `.`
+.. |P163_status| replace:: :yellow:`COLLECTION G`
+.. |P163_github| replace:: P163_RadSens.ino
+.. _P163_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P163_RadSens.ino
+.. |P163_usedby| replace:: `.`
+.. |P163_shortinfo| replace:: `RadSens I2C radiation counter`
+.. |P163_maintainer| replace:: `tonhuisman`
+.. |P163_compileinfo| replace:: `.`
+.. |P163_usedlibraries| replace:: `ClimateGuard/RadSens`
+
+.. |P164_name| replace:: :cyan:`ENS16x TVOC/eCO2`
+.. |P164_type| replace:: :cyan:`Gases`
+.. |P164_typename| replace:: :cyan:`Gases - ENS16x TVOC/eCO2`
+.. |P164_porttype| replace:: `.`
+.. |P164_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P164_github| replace:: P164_gases_ens160.ino
+.. _P164_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P164_gases_ens160.ino
+.. |P164_usedby| replace:: `.`
+.. |P164_shortinfo| replace:: `ENS16x TVOC/eCO2 sensors`
+.. |P164_maintainer| replace:: `flashmark`
+.. |P164_compileinfo| replace:: `.`
+.. |P164_usedlibraries| replace:: `I2C`
+
+.. |P165_name| replace:: :cyan:`NeoPixel (7-Segment)`
+.. |P165_type| replace:: :cyan:`Display`
+.. |P165_typename| replace:: :cyan:`Display - NeoPixel (7-Segment)`
+.. |P165_porttype| replace:: `.`
+.. |P165_status| replace:: :yellow:`DISPLAY` :yellow:`NEOPIXEL`
+.. |P165_github| replace:: P165_7SegNeopixel.ino
+.. _P165_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P165_7SegNeopixel.ino
+.. |P165_usedby| replace:: `.`
+.. |P165_shortinfo| replace:: `NeoPixel 7-Segment display`
+.. |P165_maintainer| replace:: `tonhuisman`
+.. |P165_compileinfo| replace:: `.`
+.. |P165_usedlibraries| replace:: `Noiasca NeopixelDisplay (modified)`
+
+.. |P166_name| replace:: :cyan:`GP8403 Dual channel DAC 0-10V`
+.. |P166_type| replace:: :cyan:`Output`
+.. |P166_typename| replace:: :cyan:`Output - GP8403 Dual channel DAC 0-10V`
+.. |P166_porttype| replace:: `.`
+.. |P166_status| replace:: :yellow:`COLLECTION G`
+.. |P166_github| replace:: P166_GP8403.ino
+.. _P166_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P166_GP8403.ino
+.. |P166_usedby| replace:: `.`
+.. |P166_shortinfo| replace:: `GP8403 Dual channel DAC 0-10V`
+.. |P166_maintainer| replace:: `tonhuisman`
+.. |P166_compileinfo| replace:: `.`
+.. |P166_usedlibraries| replace:: `modified version of DFRobot_GP8403`
+
+.. |P167_name| replace:: :cyan:`Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_type| replace:: :cyan:`Environment`
+.. |P167_typename| replace:: :cyan:`Environment - Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_porttype| replace:: `.`
+.. |P167_status| replace:: :yellow:`CLIMATE`
+.. |P167_github| replace:: P167_Vindstyrka.ino
+.. _P167_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P167_Vindstyrka.ino
+.. |P167_usedby| replace:: `.`
+.. |P167_shortinfo| replace:: `Sensirion SEN5x (IKEA Vindstyrka)`
+.. |P167_maintainer| replace:: `AndiBaciu, tonhuisman`
+.. |P167_compileinfo| replace:: `.`
+.. |P167_usedlibraries| replace:: `.`
+
+.. |P168_name| replace:: :cyan:`VEML6030/VEML7700`
+.. |P168_type| replace:: :cyan:`Light/Lux`
+.. |P168_typename| replace:: :cyan:`Light/Lux - VEML6030/VEML7700`
+.. |P168_porttype| replace:: `.`
+.. |P168_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P168_github| replace:: P168_VEML6030_7700.ino
+.. _P168_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P168_VEML6030_7700.ino
+.. |P168_usedby| replace:: `.`
+.. |P168_shortinfo| replace:: `VEML6030/VEML7700 Light/Lux sensor`
+.. |P168_maintainer| replace:: `tonhuisman`
+.. |P168_compileinfo| replace:: `.`
+.. |P168_usedlibraries| replace:: `modified version of Adafruit_VEML7700`
+
+.. |P169_name| replace:: :cyan:`AS3935 Lightning Detector`
+.. |P169_type| replace:: :cyan:`Environment`
+.. |P169_typename| replace:: :cyan:`Environment - AS3935 Lightning Detector`
+.. |P169_porttype| replace:: `.`
+.. |P169_status| replace:: :yellow:`CLIMATE`
+.. |P169_github| replace:: P169_AS3935_LightningDetector.ino
+.. _P169_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P169_AS3935_LightningDetector.ino
+.. |P169_usedby| replace:: `.`
+.. |P169_shortinfo| replace:: `AS3935 Franklin Lightning Sensor IC / Lightning Detector`
+.. |P169_maintainer| replace:: `TD-er`
+.. |P169_compileinfo| replace:: `.`
+.. |P169_usedlibraries| replace:: `https://bitbucket.org/christandlg/as3935mi/src/master/`

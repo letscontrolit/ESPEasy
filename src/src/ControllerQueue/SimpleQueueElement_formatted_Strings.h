@@ -29,11 +29,7 @@ public:
                                        uint8_t                   value_count);
 
 
-#ifdef USE_SECOND_HEAP
-  SimpleQueueElement_formatted_Strings(const SimpleQueueElement_formatted_Strings& rval) = default;
-#else // ifdef USE_SECOND_HEAP
   SimpleQueueElement_formatted_Strings(const SimpleQueueElement_formatted_Strings& rval) = delete;
-#endif // ifdef USE_SECOND_HEAP
 
   SimpleQueueElement_formatted_Strings(SimpleQueueElement_formatted_Strings&& rval);
 

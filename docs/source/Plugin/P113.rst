@@ -28,26 +28,28 @@ This I2C sensor with 2 ranges offers distance measurement based on a Laser Time-
 
 The VL53L1X sensor can measure either 0 - 130cm (Normal range) or 0 - 400cm (Long range), where the closely related VL53L0X can measure up to 200cm. The API's for these sensors are not compatible, so different libraries are used.
 
+The VL53L1X sensor allows for the Region of Interest (ROI) to be configured, resulting in a smaller Field of View (FoV).
+
 Configuration
 --------------
 
 .. image:: P113_DeviceConfiguration.png
 
-**Name** A unique name should be entered here.
+* **Name** A unique name should be entered here.
 
-**Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 I2C Options 
 ^^^^^^^^^^^^
 
 The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
 
-**I2C Address**: The address the device is using. Because of an issue with changing the I2C address of the sensor, this list is limited to 1 item, and the address isn't changed/set.
+* **I2C Address**: The address the device is using. Because of an issue with changing the I2C address of the sensor, this list is limited to 1 item, and the address isn't changed/set.
 
 Device Settings
 ^^^^^^^^^^^^^^^^
 
-**Timing**: The timing setting of the sensor determines the accuracy of the measurement. There are 6 options available:
+* **Timing**: The timing setting of the sensor determines the accuracy of the measurement. There are 6 options available:
 
 .. image:: P113_TimingOptions.png
 
@@ -63,7 +65,7 @@ Device Settings
 
 *500ms* The longest integration time available. For use with long read interval settings.
 
-**Range**: the measuring ranges:
+* **Range**: the measuring ranges:
 
 .. image:: P113_RangeOptions.png
 
@@ -71,34 +73,96 @@ Device Settings
 
 *Long (~400cm)* For measurements in the 0 to 4000 millimeter (400cm) range (but somewhat less accurate).
 
-**Send event when value unchanged** To avoid many of the same events when the measurement is stable, this option is off by default. When enabled, every measurement will cause an event, and send the data to any enabled Controller.
+* **Send event when value unchanged** To avoid many of the same events when the measurement is stable, this option is off by default. When enabled, every measurement will cause an event, and send the data to any enabled Controller.
 
-**Trigger delta** To avoid triggering many events with only a small difference in distance the 'Trigger delta' option is available. This can be set to only trigger an event when the new distance is at least the delta less or more than the previous measurement.
+* **Trigger delta** To avoid triggering many events with only a small difference in distance the 'Trigger delta' option is available. This can be set to only trigger an event when the new distance is at least the delta less or more than the previous measurement.
 
 NB: This setting is ignored if 'Send event when value unchanged' is checked!
 
+Region Of Interest (ROI)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For reducing the Field of View (FoV) angle of the sensor from 27 degrees to a more narrow angle, the number of actually used SPADs (Single Photon Avalance Diode) can be configured, to limit the FoV angle to as low as 15 degrees. See the **Field of View considerations** section, below.
+
+To divert the Optical Center of the selected, rectangle, group of SPADs from the physical center of the sensor, the desired position can be selected from a table, shown below. If the ``x`` or ``y`` ROI settings are set \> 10, the Optical Center index is fixed to index 199, the physical center, by the low-level driver, to ensure that the configured number of SPADs can be used.
+
+* **ROI 'x' SPADs**: Select the number of SPADs in ``x`` direction. Default and max. value is 16, lowest value is 4.
+
+* **ROI 'y' SPADs**: Select the number of SPADs in ``y`` direction. Default and max. value is 16, lowest value is 4.
+
+* **Optical Center index for ROI**: Select the Optical Center index for the ROI area configured. The current Optical Center position is marked in the table by changing the font to Italic and Underscored.
+
+The Region of Interest area can be selected by click&select in the table, shown. The minimum selected area has to cover 4x4 SPADs, else the previous selection will be restored. When selecting an area this way, the values for **ROI x**, **ROI y** and **Optical Center** are updated automatically.
+
+If a ROI of less than 11x11 SPADs is selected, the Optical Center can be changed from the default value 199 (device center). The Optical Center can also be changed via double-click on the desired cell, or by alt-clicking (press the Alt key on the keyboard and click the mouse-button).
+
+When any of the values is changed manually, the selected area in the table will be adjusted to match the current settings.
+
+If a value is selected that's invalid, like when the optical center is too close to the borders of the table, the value(s) will be adjusted as needed, specified in the datasheet of the sensor.
+
+* **Use click-lock**: For touch-only devices, like tablets and mobile phones, where no mouse is available, this checkbox can be enabled to start the selection by the first click on a table-cell, and completing the selection by clicking another cell. The same validations are applied, like minimum 4x4 SPAD selection, and resetting the Optical Center to 199 when either the **ROI x** or **ROI y** values exceed 10 SPADs. The selection-rectangle shown when using click&select ROI selection is not shown for touch-only devices, due to technical limitations. The state of this checkbox is *not* saved.
+
+.. note:: To not overly complicate/expand the used javascript code, ROI selection works from left-top to right-bottom, and not in other directions.
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
 
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. Setting this to 1 or 2 seconds, usually offers a reasonable response time.
+* **Interval** By default, Interval will be set to 60 sec. Setting this to 1 or 2 seconds, usually offers a reasonable response time.
 
 Values
 ^^^^^^
 
-The measured distance is available in ``Distance``. A formula can be set to recalculate, f.e. to centimeters using ``%value%/10``. The number of decimals is by default set to 2, but for use with millimeters distance it can be set to 0, as no decimals are provided from the measurement.
+The measured distance is available in ``Distance``. A formula can be set to recalculate, f.e. to centimeters using ``%value%/10``. The number of decimals can be set to 0, when using millimeters, as no decimals are provided from the measurement.
 
 The Ambient lighting condition during measurement is available in ``Ambient``. The unit is kcps (Photons per second, recalculated to kilo count per second)
+
+Value ``Direction`` holds the direction relative to the *previous* distance value: ``-1`` = smaller distance, ``0`` = unchanged distance, ``1`` = greater distance.
+
+In selected builds, per Value are a **Stats** and **Hide** checkbox available, and a coordinate Chart Axis combo, that when Stats is checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
 .. Events
 .. ~~~~~~
 
 .. .. include:: P113_events.repl
 
+|
 
+Field of View considerations
+----------------------------
+
+An approximation of the FoV for a few ROI configurations:
+
+.. csv-table:: 
+  :header: "ROI zone size (SPADs)", "Diagonal Field of View"
+  :width: 40%
+  :widths: 20, 20
+  :align: left
+
+  "16 x 16", "27° (full FoV)"
+  "8 x 8", "20°"
+  "4 x 4", "15° (smallest)"
+
+
+When using a smaller number of SPADs, the sensitivity, and thus the max. distance range, of the sensor will be reduced. When reducing the number of SPADs to the minimum of 4 x 4, the max. usable distance is ca. 1.7 meter.
+
+The actual Field of View can be seen as a cone, similar to this image:
+
+.. image:: P113_FieldOfView_27deg.png
+
+The light-colored cone in the center of the pink cone is a projection of the theoretical FoV when 4 x 4 SPADs are configured for the ROI. The max. distance available is reduced, as described above.
+
+|
 
 Change log
 ----------
 
 .. versionchanged:: 2.0
+  ...
+
+  |added| 2024-07-30 Add configuration and description for ROI and FoV.
+
+  |added| 2024-04-27 Add value ``Direction``.
 
   |added| 2021-04-05 Added to main repository as Plugin 113 Distance - VL53L1X (400cm), based on a copy of Plugin 110 Distance - VL53L0X (200cm)

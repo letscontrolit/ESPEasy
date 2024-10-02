@@ -8,6 +8,13 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+// Checks str for the given escaped character
+bool hasEscapedCharacter(String& str, const char EscapeChar);
+
+// Cleans str from escaped characters
+// So far \\% \\[ \\] \\{ \\} \\( and \\) are used (all with single backslash!)
+void   stripEscapeCharacters(String& str);
+
 String parseTemplate(String& tmpString);
 
 String parseTemplate(String& tmpString,
@@ -76,7 +83,8 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string,
    Get int from command argument (argc = 0 => command)
  \*********************************************************************************************/
 int parseCommandArgumentInt(const String& string,
-                            unsigned int  argc);
+                            unsigned int  argc,
+                            int errorValue = 0);
 
 /********************************************************************************************\
    Parse a command string to event struct

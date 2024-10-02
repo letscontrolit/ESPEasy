@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/PluginStats.h"
+#include "../DataStructs/PluginStats_array.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/TaskIndex.h"
@@ -18,21 +18,31 @@
 //      This is a compile time check.
 struct PluginTaskData_base {
   PluginTaskData_base();
+
   virtual ~PluginTaskData_base();
 
-  bool    baseClassOnly() const { return _baseClassOnly; }
+  bool baseClassOnly() const {
+    return _baseClassOnly;
+  }
 
-  bool    hasPluginStats() const;
-  bool    hasPeaks() const;
-  uint8_t nrSamplesPresent() const;
+  bool   hasPluginStats() const;
+
+  bool   hasPeaks() const;
+
+  size_t nrSamplesPresent() const;
+
   #if FEATURE_PLUGIN_STATS
-  void    initPluginStats(taskVarIndex_t taskVarIndex);
-  void    clearPluginStats(taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex);
+  void   clearPluginStats(taskVarIndex_t taskVarIndex);
+
+  // Update any logged timestamp with this newly set system time.
+  void   processTimeSet(const double& time_offset);
   #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event,
-                             bool                trackPeaks);
+                             bool                trackPeaks,
+                             bool                onlyUpdateTimestampWhenSame);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
@@ -44,8 +54,22 @@ struct PluginTaskData_base {
 
 #if FEATURE_PLUGIN_STATS
   bool webformLoad_show_stats(struct EventStruct *event) const;
+
 # if FEATURE_CHART_JS
-  void plot_ChartJS() const;
+  void plot_ChartJS(bool onlyJSON = false) const;
+
+  void plot_ChartJS_scatter(
+    taskVarIndex_t                values_X_axis_index,
+    taskVarIndex_t                values_Y_axis_index,
+    const __FlashStringHelper    *id,
+    const ChartJS_title         & chartTitle,
+    const ChartJS_dataset_config& datasetConfig,
+    int                           width,
+    int                           height,
+    bool                          showAverage = true,
+    const String                & options     = EMPTY_STRING,
+    bool                          onlyJSON    = false) const;
+
 # endif // if FEATURE_CHART_JS
 #endif  // if FEATURE_PLUGIN_STATS
 
@@ -60,15 +84,15 @@ struct PluginTaskData_base {
 
   PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
 
-private:
+protected:
 
   // Array of pointers to PluginStats. One per task value.
   PluginStats_array *_plugin_stats_array = nullptr;
 #endif // if FEATURE_PLUGIN_STATS
 
 protected:
-  bool _baseClassOnly = false;
 
+  bool _baseClassOnly = false;
 };
 
 #endif // ifndef DATASTRUCTS_PLUGINTASKDATA_BASE_H

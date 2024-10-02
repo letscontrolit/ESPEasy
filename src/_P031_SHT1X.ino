@@ -22,18 +22,17 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_031;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = true;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number       = PLUGIN_ID_031;
+      Device[deviceCount].Type           = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].PullUpOption   = true;
+      Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].ValueCount     = 2;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].PluginStats    = true;
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -129,10 +128,10 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P031_data) {
         if (P031_data->measurementReady()) {
-          UserVar[event->BaseVarIndex]     = P031_data->tempC;
-          UserVar[event->BaseVarIndex + 1] = P031_data->rhTrue;
-          success                          = true;
-          P031_data->state                 = P031_IDLE;
+          UserVar.setFloat(event->TaskIndex, 0, P031_data->tempC);
+          UserVar.setFloat(event->TaskIndex, 1, P031_data->rhTrue);
+          success          = true;
+          P031_data->state = P031_IDLE;
         } else if (P031_data->state == P031_IDLE) {
           P031_data->startMeasurement();
         } else if (P031_data->hasError()) {

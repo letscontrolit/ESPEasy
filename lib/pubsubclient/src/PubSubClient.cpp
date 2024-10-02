@@ -11,10 +11,18 @@
 #include <WiFiClient.h>
 #endif
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
+
 PubSubClient::PubSubClient() {
     this->_state = MQTT_DISCONNECTED;
     this->_client = NULL;
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
+
     setCallback(NULL);
 }
 
@@ -22,6 +30,8 @@ PubSubClient::PubSubClient(Client& client) {
     this->_state = MQTT_DISCONNECTED;
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client) {
@@ -29,12 +39,16 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client) {
     setServer(addr, port);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
     setServer(addr,port);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client) {
     this->_state = MQTT_DISCONNECTED;
@@ -42,6 +56,8 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATUR
     setCallback(callback);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
@@ -49,6 +65,8 @@ PubSubClient::PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATUR
     setCallback(callback);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client) {
@@ -56,12 +74,16 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client) {
     setServer(ip, port);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
     setServer(ip,port);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client) {
     this->_state = MQTT_DISCONNECTED;
@@ -69,6 +91,8 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, 
     setCallback(callback);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
@@ -76,6 +100,8 @@ PubSubClient::PubSubClient(uint8_t *ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, 
     setCallback(callback);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 
 PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client) {
@@ -83,12 +109,16 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client) {
     setServer(domain,port);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(const char* domain, uint16_t port, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
     setServer(domain,port);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client) {
     this->_state = MQTT_DISCONNECTED;
@@ -96,6 +126,8 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
     setCallback(callback);
     setClient(client);
     this->stream = NULL;
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
 }
 PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream) {
     this->_state = MQTT_DISCONNECTED;
@@ -103,6 +135,16 @@ PubSubClient::PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGN
     setCallback(callback);
     setClient(client);
     setStream(stream);
+    this->keepAlive_sec = MQTT_KEEPALIVE;
+    this->socketTimeout_msec = MQTT_SOCKET_TIMEOUT * 1000;
+}
+
+PubSubClient::~PubSubClient()
+{
+    if (buffer != nullptr) {
+        free(buffer);
+        buffer = nullptr;
+    }
 }
 
 boolean PubSubClient::connect(const char *id) {
@@ -122,6 +164,10 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 }
 
 boolean PubSubClient::connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage, boolean cleanSession) {
+    if (!initBuffer()) {
+        return false;
+    }
+
     if (!connected()) {
         int result = 0;
 
@@ -132,16 +178,16 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
             result = 1;
         } else {
             if (domain.length() != 0) {
-#ifdef ESP32
+#if defined(ESP32) && ESP_IDF_VERSION_MAJOR < 5 
                 WiFiClient* wfc = (WiFiClient*)_client;
-                result = wfc->connect(this->domain.c_str(), this->port, ESP32_CONNECTION_TIMEOUT);
+                result = wfc->connect(this->domain.c_str(), this->port, _client->getTimeout());
 #else
                 result = _client->connect(this->domain.c_str(), this->port);
 #endif
             } else {
-#ifdef ESP32
+#if defined(ESP32) && ESP_IDF_VERSION_MAJOR < 5 
                 WiFiClient* wfc = (WiFiClient*)_client;
-                result = wfc->connect(this->ip, this->port, ESP32_CONNECTION_TIMEOUT);
+                result = wfc->connect(this->ip, this->port, _client->getTimeout());
 #else
                 result = _client->connect(this->ip, this->port);
 #endif
@@ -184,8 +230,8 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
 
             buffer[length++] = v;
 
-            buffer[length++] = ((MQTT_KEEPALIVE) >> 8);
-            buffer[length++] = ((MQTT_KEEPALIVE) & 0xFF);
+            buffer[length++] = ((keepAlive_sec) >> 8);
+            buffer[length++] = ((keepAlive_sec) & 0xFF);
 
             CHECK_STRING_LENGTH(length,id)
             length = writeString(id,buffer,length);
@@ -213,7 +259,7 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
             while (!_client->available()) {
                 delay(0);  // Prevent watchdog crashes
                 unsigned long t = millis();
-                if (t-lastInActivity >= ((int32_t) MQTT_SOCKET_TIMEOUT*1000UL)) {
+                if ((int32_t)(t - lastInActivity) >= socketTimeout_msec) {
                     _state = MQTT_CONNECTION_TIMEOUT;
                     _client->stop();
                     return false;
@@ -247,10 +293,11 @@ boolean PubSubClient::readByte(uint8_t * result) {
      return false;
    }
    uint32_t previousMillis = millis();
-   while(!_client->available()) {
+
+   while(!_client->available() && _client->connected()) {
      delay(1);  // Prevent watchdog crashes
-     uint32_t currentMillis = millis();
-     if(currentMillis - previousMillis >= ((int32_t) MQTT_SOCKET_TIMEOUT * 1000)){
+
+     if((int32_t)(millis() - previousMillis) >= socketTimeout_msec){
        return false;
      }
    }
@@ -270,6 +317,10 @@ boolean PubSubClient::readByte(uint8_t * result, uint16_t * index){
 }
 
 uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
+    if (!initBuffer()) {
+        return 0;
+    }
+
     uint16_t len = 0;
     if(!readByte(buffer, &len)) return 0;
     bool isPublish = (buffer[0]&0xF0) == MQTTPUBLISH;
@@ -326,6 +377,10 @@ uint16_t PubSubClient::readPacket(uint8_t* lengthLength) {
 }
 
 bool PubSubClient::loop_read() {
+    if (!initBuffer()) {
+        return false;
+    }
+
     if (_client == nullptr) {
         return false;
     }
@@ -385,7 +440,9 @@ bool PubSubClient::loop_read() {
             if (_client->connected()) {
                 buffer[0] = MQTTPINGRESP;
                 buffer[1] = 0;
-                _client->write(buffer,2);
+                if (_client->write(buffer,2) != 0) {
+                    lastOutActivity = t;
+                }
             }
             break;
         } 
@@ -401,10 +458,18 @@ bool PubSubClient::loop_read() {
 }
 
 boolean PubSubClient::loop() {
+    delay(0);
     loop_read();
     if (connected()) {
         unsigned long t = millis();
-        if ((t - lastInActivity > MQTT_KEEPALIVE*1000UL) || (t - lastOutActivity > MQTT_KEEPALIVE*1000UL)) {
+        // Send message at 2/3 of keepalive interval
+        // Wait for server-sent keep-alive till 3/2 of keepalive interval
+        // Just to make sure the broker will not disconnect us
+        const int32_t keepalive_66pct = pingOutstanding
+            ? keepAlive_sec * 1500
+            : keepAlive_sec * 666;
+        if (((int32_t)(t - lastInActivity) > keepalive_66pct) || 
+            ((int32_t)(t - lastOutActivity) > keepalive_66pct)) {
             if (pingOutstanding) {
                 this->_state = MQTT_CONNECTION_TIMEOUT;
                 _client->stop();
@@ -558,6 +623,9 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint32_t length) {
         result = (rc == bytesToWrite);
         bytesRemaining -= rc;
         writeBuf += rc;
+        if (rc != 0) {
+            lastOutActivity = millis();
+        }
     }
     return result;
 #else
@@ -617,6 +685,13 @@ boolean PubSubClient::unsubscribe(const char* topic) {
 }
 
 void PubSubClient::disconnect() {
+    if (_state == MQTT_DISCONNECTED || !initBuffer()) {
+        _state = MQTT_DISCONNECTED;
+        lastInActivity = lastOutActivity = millis();
+
+        return;
+    }
+
     buffer[0] = MQTTDISCONNECT;
     buffer[1] = 0;
     if (_client != nullptr) {
@@ -642,6 +717,10 @@ uint16_t PubSubClient::writeString(const char* string, uint8_t* buf, uint16_t po
 }
 
 size_t PubSubClient::appendBuffer(uint8_t data) {
+    if (!initBuffer()) {
+        return 0;
+    }
+
     buffer[_bufferWritePos] = data;
     ++_bufferWritePos;
     if (_bufferWritePos >= MQTT_MAX_PACKET_SIZE) {
@@ -669,6 +748,34 @@ size_t PubSubClient::flushBuffer() {
         _bufferWritePos = 0;
     }
     return rc;
+}
+
+bool PubSubClient::initBuffer()
+{
+    constexpr size_t size = sizeof(uint8_t) * MQTT_MAX_PACKET_SIZE;
+    if (buffer == nullptr) {
+#ifdef ESP32
+        buffer = (uint8_t*) heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (buffer == nullptr) {
+          buffer = (uint8_t*) malloc(size);
+        }
+#else
+        {
+#ifdef USE_SECOND_HEAP
+            // Try allocating on ESP8266 2nd heap
+            HeapSelectIram ephemeral;
+#endif
+            buffer = (uint8_t*) malloc(size);
+            if (buffer != nullptr) return true;
+        }
+#ifdef USE_SECOND_HEAP
+        // Not successful, try allocating on (ESP8266) main heap
+        HeapSelectDram ephemeral;
+#endif
+        buffer = (uint8_t*) malloc(size);
+#endif
+    }
+    return buffer != nullptr;
 }
 
 boolean PubSubClient::connected() {
@@ -722,4 +829,14 @@ PubSubClient& PubSubClient::setStream(Stream& stream){
 
 int PubSubClient::state() {
     return this->_state;
+}
+
+PubSubClient& PubSubClient::setKeepAlive(uint16_t keepAlive_sec) {
+    this->keepAlive_sec = keepAlive_sec;
+    return *this;
+}
+
+PubSubClient& PubSubClient::setSocketTimeout(uint16_t timeout_ms) {
+    this->socketTimeout_msec = timeout_ms;
+    return *this;
 }

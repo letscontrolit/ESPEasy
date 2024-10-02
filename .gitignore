@@ -54,7 +54,7 @@ build_output/
 **/__tmpfile.cpp
 
 src/_Custom.h
-src/_*Custom.h
+src/*_*Custom.h
 
 dist/Espressif_flash_download_tool_v3.8.5/logs/
 
@@ -65,3 +65,9 @@ dist/Espressif_flash_download_tool_v3.8.5/dl_temp/_temp_by_dltool/
 dist/Espressif_flash_download_tool_v3.8.5/configure/esp32/spi_download.conf
 src/CustomIR.h
 
+
+docs/source/Plugin/_plugin_sets_overview.repl
+*.PVS-Studio.stacktrace.txt
+
+
+.platformio/

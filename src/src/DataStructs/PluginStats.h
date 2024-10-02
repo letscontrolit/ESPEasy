@@ -6,19 +6,14 @@
 #if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
-#include "../DataTypes/TaskIndex.h"
+# include "../DataStructs/PluginStats_size.h"
+# include "../DataStructs/PluginStats_timestamp.h"
+# include "../DataTypes/TaskIndex.h"
 
 
-# include <CircularBuffer.h>
-
-# ifndef PLUGIN_STATS_NR_ELEMENTS
-#  ifdef ESP8266
-#   define PLUGIN_STATS_NR_ELEMENTS 16
-#  endif // ifdef ESP8266
-#  ifdef ESP32
-#   define PLUGIN_STATS_NR_ELEMENTS 64
-#  endif // ifdef ESP32
-# endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
+# if FEATURE_CHART_JS
+#  include "../WebServer/Chart_JS_title.h"
+# endif // if FEATURE_CHART_JS
 
 class PluginStats {
 public:
@@ -29,15 +24,26 @@ public:
   PluginStats(uint8_t nrDecimals,
               float   errorValue);
 
+  ~PluginStats();
+
+  void processTimeSet(const double& time_offset);
+
+  void setPluginStats_timestamp(PluginStats_timestamp *plugin_stats_timestamps)
+  {
+    _plugin_stats_timestamps = plugin_stats_timestamps;
+  }
 
   // Add a sample to the _sample buffer
   // This does not also track peaks as the peaks could be raw sensor data and the samples processed data.
   bool push(float value);
 
+  // When only updating the timestamp of the last entry, we should look at the last 
+  bool matchesLastTwoEntries(float value) const;
+
   // Keep track of peaks.
   // Use this for sensors that need to take several samples before actually output a task value.
   // For example the ADC with oversampling
-  void  trackPeak(float value);
+  void  trackPeak(float value, int64_t timestamp = 0u);
 
   // Get lowest recorded value since reset
   float getPeakLow() const {
@@ -49,47 +55,64 @@ public:
     return hasPeaks() ? _maxValue : _errorValue;
   }
 
-  bool hasPeaks() const {
+  int64_t getPeakLowTimestamp() const {
+    return hasPeaks() ? _minValueTimestamp : 0;
+  }
+
+  int64_t getPeakHighTimestamp() const {
+    return hasPeaks() ? _maxValueTimestamp : 0;
+  }
+
+  bool     hasPeaks() const {
     return _maxValue >= _minValue;
   }
 
   // Set the peaks to unset values
-  void resetPeaks();
+  void   resetPeaks();
 
-  void clearSamples() {
-    _samples.clear();
-  }
+  void   clearSamples();
 
-  size_t getNrSamples() const {
-    return _samples.size();
-  }
+  size_t getNrSamples() const;
 
   // Compute average over all stored values
-  float getSampleAvg() const {
-    return getSampleAvg(_samples.size());
-  }
+  float  getSampleAvg() const;
 
   // Compute average over last N stored values
-  float getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  float  getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute the standard deviation over all stored values
-  float getSampleStdDev() const {
-    return getSampleStdDev(_samples.size());
+  float  getSampleStdDev() const {
+    return getSampleStdDev(getNrSamples());
   }
+
+  // Compute average over all stored values, taking timestamp into account.
+  // Returns average per second.
+  float getSampleAvg_time(uint64_t& totalDuration_usec) const {
+    return getSampleAvg_time(getNrSamples(), totalDuration_usec);
+  }
+
+  // Compute average over last N stored values, taking timestamp into account.
+  // Returns average per second.
+  float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
+                          uint64_t                   & totalDuration_usec) const;
 
   // Compute the standard deviation  over last N stored values
   float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute min/max over last N stored values
-  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples, bool getMax) const;
-   
+  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples,
+                         bool                         getMax) const;
+
   // Compute sample stored values
   float getSample(int lastNrSamples) const;
-  
+
   float operator[](PluginStatsBuffer_t::index_t index) const;
 
 private:
-  static bool matchedCommand(const String& command, const __FlashStringHelper *cmd_match, int& nrSamples);
+
+  static bool matchedCommand(const String             & command,
+                             const __FlashStringHelper *cmd_match,
+                             int                      & nrSamples);
 
 public:
 
@@ -104,11 +127,17 @@ public:
   bool webformLoad_show_stdev(struct EventStruct *event) const;
   bool webformLoad_show_peaks(struct EventStruct *event,
                               bool                include_peak_to_peak = true) const;
+  bool webformLoad_show_peaks(struct EventStruct *event,
+                              const String& label,
+                              const String& lowValue,
+                              const String& highValue,
+                              bool                include_peak_to_peak = true) const;
+
   void webformLoad_show_val(
-    struct EventStruct *event,
-    const String      & label,
-    ESPEASY_RULES_FLOAT_TYPE              value,
-    const String      & unit) const;
+    struct EventStruct      *event,
+    const String           & label,
+    ESPEASY_RULES_FLOAT_TYPE value,
+    const String           & unit) const;
 
 
   const String& getLabel() const {
@@ -152,52 +181,18 @@ private:
 
   float _minValue;
   float _maxValue;
+  int64_t _minValueTimestamp;
+  int64_t _maxValueTimestamp;
 
-  PluginStatsBuffer_t _samples;
+  PluginStatsBuffer_t *_samples = nullptr;
   float _errorValue;
   bool _errorValueIsNaN;
 
   uint8_t _nrDecimals = 3u;
+
+  PluginStats_timestamp *_plugin_stats_timestamps = nullptr;
 };
 
-class PluginStats_array {
-public:
-
-  PluginStats_array() = default;
-  ~PluginStats_array();
-
-  void    initPluginStats(taskVarIndex_t taskVarIndex);
-  void    clearPluginStats(taskVarIndex_t taskVarIndex);
-
-  bool    hasStats() const;
-  bool    hasPeaks() const;
-
-  uint8_t nrSamplesPresent() const;
-
-  void    pushPluginStatsValues(struct EventStruct *event,
-                                bool                trackPeaks);
-
-  bool    plugin_get_config_value_base(struct EventStruct *event,
-                                       String            & string) const;
-
-  bool    plugin_write_base(struct EventStruct *event,
-                            const String      & string);
-
-  bool    webformLoad_show_stats(struct EventStruct *event) const;
-
-# if FEATURE_CHART_JS
-  void    plot_ChartJS() const;
-# endif // if FEATURE_CHART_JS
-
-
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
-
-  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
-
-private:
-
-  PluginStats *_plugin_stats[VARS_PER_TASK] = {};
-};
 
 #endif // if FEATURE_PLUGIN_STATS
 #endif // ifndef HELPERS_PLUGINSTATS_H

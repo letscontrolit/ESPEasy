@@ -12,6 +12,8 @@ A controller is a component to enable a plugin to send data elsewhere.
 For example, Domoticz needs an 'IDX' value to identify the configured entry in
 Domoticz for which new data is sent.
 
+.. _Controller Plugins:
+
 Controller Plugins
 ==================
 
@@ -73,6 +75,28 @@ before WiFi connection is made or during lost connection.
   Be careful when setting the timeout too high.
   For almost all controllers, sending data is a blocking call, so it may halt execution of other code on the node.
   With timouts longer than 2 seconds, the ESP may reboot as the software watchdog may step in.
+
+TLS configuration
+-----------------
+
+Added: 2024-10-02
+
+Some protocols like MQTT may use TLS to provide a secure connection to the host.
+Where the default port for not encrypted connections to a MQTT broker is port 1883, its TLS counterpart is by default using port 8883.
+
+.. note:: The current (2024-10-02) implementation does only allow to set to use TLS for MQTT controllers. There is not yet a proper validation of the used certificate.
+
+Future implementations will add various ways to validate the used certificates using:
+
+- Root CA, allowing to validate whether a certificate was signed by a known certificate authority (CA).
+- Fingerprint, check whether a certificate is still the same as before.
+- Check whether a certificate has expired.
+
+To summarize, the current implementation does allow to encrypt the connection to the MQTT broker.
+However a man-in-the-middle attack is still perfectly possible as the used certificates are not validated.
+
+This does make using it extremely simple as even self-signed certificates can be used.
+However do not consider this to be a 'secure' method since some attacker can redirect to another host and serve some false certificate.
 
 
 

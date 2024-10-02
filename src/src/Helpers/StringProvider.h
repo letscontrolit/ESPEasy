@@ -72,7 +72,9 @@ struct LabelType {
 //    ENABLE_RULES_EVENT_REORDER, // TD-er: Disabled for now
     TASKVALUESET_ALL_PLUGINS,
     ALLOW_OTA_UNLIMITED,
+#if FEATURE_CLEAR_I2C_STUCK
     ENABLE_CLEAR_HUNG_I2C_BUS,
+#endif
     #if FEATURE_I2C_DEVICE_CHECK
     ENABLE_I2C_DEVICE_CHECK,
     #endif // if FEATURE_I2C_DEVICE_CHECK
@@ -85,6 +87,9 @@ struct LabelType {
 #if FEATURE_RULES_EASY_COLOR_CODE
     DISABLE_RULES_AUTOCOMPLETE,
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
+#if FEATURE_TARSTREAM_SUPPORT
+    DISABLE_SAVE_CONFIG_AS_TAR,
+#endif // if FEATURE_TARSTREAM_SUPPORT
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -102,6 +107,13 @@ struct LabelType {
     IP_SUBNET,               // 255.255.255.0
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
+#if FEATURE_USE_IPV6
+    IP6_LOCAL,
+    IP6_GLOBAL,
+//    IP6_ALL_ADDRESSES,
+//    IP6_ADDRESS_CDIR,
+//    IP6_GATEWAY,
+#endif
     CLIENT_IP,               // 192.168.1.67
     #if FEATURE_MDNS
     M_DNS,                   // breadboard.local
@@ -129,12 +141,25 @@ struct LabelType {
     FORCE_WIFI_NOSLEEP,
     PERIODICAL_GRAT_ARP,
     CONNECTION_FAIL_THRESH,
+#ifndef ESP32
     WAIT_WIFI_CONNECT,
+#endif
+    HIDDEN_SSID_SLOW_CONNECT,
+    CONNECT_HIDDEN_SSID,
+#ifdef ESP32
+    WIFI_PASSIVE_SCAN,
+#endif
     SDK_WIFI_AUTORECONNECT,
+#if FEATURE_USE_IPV6
+    ENABLE_IPV6,
+#endif
 
     BUILD_DESC,
     GIT_BUILD,
     SYSTEM_LIBRARIES,
+#ifdef ESP32
+    ESP_IDF_SDK_VERSION,
+#endif
     PLUGIN_COUNT,
     PLUGIN_DESCRIPTION,
     BUILD_TIME,
@@ -165,7 +190,7 @@ struct LabelType {
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,
-    ESP_BOARD_NAME,
+    BOARD_NAME,
 
     FLASH_CHIP_ID,
     FLASH_CHIP_VENDOR,
@@ -183,18 +208,25 @@ struct LabelType {
     MAX_OTA_SKETCH_SIZE,
     OTA_2STEP,
     OTA_POSSIBLE,
+    #if FEATURE_INTERNAL_TEMPERATURE
+    INTERNAL_TEMPERATURE,
+    #endif // if FEATURE_INTERNAL_TEMPERATURE
 #if FEATURE_ETHERNET
     ETH_IP_ADDRESS,
     ETH_IP_SUBNET,
     ETH_IP_ADDRESS_SUBNET,
     ETH_IP_GATEWAY,
     ETH_IP_DNS,
+#if FEATURE_USE_IPV6
+    ETH_IP6_LOCAL,
+#endif
     ETH_MAC,
     ETH_DUPLEX,
     ETH_SPEED,
     ETH_STATE,
     ETH_SPEED_STATE,
     ETH_CONNECTED,
+    ETH_CHIP,
 #endif // if FEATURE_ETHERNET
 # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     ETH_WIFI_MODE,
@@ -228,6 +260,9 @@ String getInternalLabel(LabelType::Enum label,
 const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
+
+String getFormNote(LabelType::Enum label);
+String getFormUnit(LabelType::Enum label);
 
 
 #endif // STRING_PROVIDER_TYPES_H

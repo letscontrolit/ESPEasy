@@ -91,7 +91,7 @@ void handle_metrics() {
 void handle_metrics_devices() {
   for (taskIndex_t x = 0; validTaskIndex(x); x++) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.TaskDeviceNumber[x];
+    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.getPluginID_for_task(x);
 
     if (pluginID_set) {
       if (Settings.TaskDeviceEnabled[x]) {
@@ -116,15 +116,16 @@ void handle_metrics_devices() {
 
           if (!customValues) {
             const uint8_t valueCount = getValueCountForTask(x);
+            struct EventStruct TempEvent(x);
 
             for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-              if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x])) {
+              if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                 addHtml(F("espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F("{valueName=\""));
-                addHtml(getTaskValueName(x, varNr));
+                addHtml(Cache.getTaskDeviceValueName(x, varNr));
                 addHtml(F("\"} "));
-                addHtml(formatUserVarNoCheck(x, varNr));
+                addHtml(formatUserVarNoCheck(&TempEvent, varNr));
                 addHtml('\n');
               }
             }

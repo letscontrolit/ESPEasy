@@ -2,6 +2,7 @@
 
 #include "../DataStructs/TimingStats.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringConverter_Numerical.h"
 
 RulesCalculate_t RulesCalculate{};
@@ -9,13 +10,19 @@ RulesCalculate_t RulesCalculate{};
 /*******************************************************************************************
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
-int CalculateParam(const String& TmpStr) {
-  int returnValue = 0;
+int CalculateParam(const String& TmpStr, int errorValue) {
+  int32_t returnValue = errorValue;
+
+  if (TmpStr.length() == 0) {
+    return returnValue;
+  }
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    validIntFromString(TmpStr, returnValue);
+    if (!validIntFromString(TmpStr, returnValue)) {
+      return errorValue;
+    }
   } else {
     ESPEASY_RULES_FLOAT_TYPE param{};
 
@@ -26,27 +33,38 @@ int CalculateParam(const String& TmpStr) {
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CALCULATE PARAM: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += roundf(param);
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG,
+                   strformat(F("CALCULATE PARAM: %s = %.6g"), TmpStr.c_str(), roundf(param)));
       }
 #endif // ifndef BUILD_NO_DEBUG
+    } else {
+      return errorValue;
     }
     returnValue = roundf(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
 
-CalculateReturnCode Calculate(const String& input,
+CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
                               ESPEASY_RULES_FLOAT_TYPE      & result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
-    RulesCalculate_t::preProces(input).c_str(),
+    preprocessd_input.c_str(),
     &result);
 
+  STOP_TIMER(COMPUTE_STATS);
+  return returnCode;
+}
+
+
+CalculateReturnCode Calculate(const String& input,
+                              ESPEASY_RULES_FLOAT_TYPE      & result)
+{
+  CalculateReturnCode returnCode = Calculate_preProcessed(
+    RulesCalculate_t::preProces(input),
+    result);
+#ifndef LIMIT_BUILD_SIZE
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Calculate: ");
@@ -65,7 +83,7 @@ CalculateReturnCode Calculate(const String& input,
           log += F("Unknown token");
           break;
         case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
-          log += String(F("Exceeded token length (")) + TOKEN_LENGTH + ')';
+          log += strformat(F("Exceeded token length (%d)"), TOKEN_LENGTH);
           break;
         case CalculateReturnCode::OK:
           // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
@@ -88,7 +106,7 @@ CalculateReturnCode Calculate(const String& input,
       addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
-  STOP_TIMER(COMPUTE_STATS);
+#endif
   return returnCode;
 }
 

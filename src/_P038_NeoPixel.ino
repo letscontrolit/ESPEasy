@@ -7,6 +7,10 @@
 // #######################################################################################################
 
 // Changelog:
+// 2024-08-21, tonhuisman:  Add NeoPixelFor and NeoPixelForHSV commands for setting pixels in a for-loop with variable increment
+//                          to a color, optionally clearing the other pixels. Can also use a negative increment if 'from' > 'to'.
+//                          Displays the result once the for command is completed (like the other commands).
+// 2023-10-26, tonhuisman:  Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
 // 2022-12-26, tonhuisman:  Set initial brightness with default value 255, and allow 'only' values 1..255
 // 2022-11-06, tonhuisman:  Add Initial and Max brightness settings, and NeoPixelBright[,0..255] command, 0 = initial
 //                          Code optimizations
@@ -53,9 +57,10 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number    = PLUGIN_ID_038;
-      Device[deviceCount].Type        = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].TimerOption = false;
+      Device[++deviceCount].Number      = PLUGIN_ID_038;
+      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].TimerOption   = false;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

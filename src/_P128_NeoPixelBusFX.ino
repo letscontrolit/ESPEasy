@@ -154,18 +154,14 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       # if defined(ESP8266)
       Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
       # endif // if defined(ESP8266)
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Custom             = true;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].DecimalsOnly       = false;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      Device[deviceCount].Custom         = true;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].ValueCount     = 4;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -237,10 +233,8 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P128_CONFIG_MAX_BRIGHT == 0) { P128_CONFIG_MAX_BRIGHT = 255; } // Set to default for existing installations
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT, P128_CONFIG_MAX_BRIGHT));
-      P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = nullptr != P128_data;
+      success = initPluginTaskData(event->TaskIndex,
+                                   new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT, P128_CONFIG_MAX_BRIGHT));
       break;
     }
 

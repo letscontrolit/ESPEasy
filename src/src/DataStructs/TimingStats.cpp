@@ -92,10 +92,11 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
     case PLUGIN_EXIT:                  return F("EXIT");
     case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
-    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
+//    case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
     case PLUGIN_PROCESS_CONTROLLER_DATA: return F("PROCESS_CONTROLLER_DATA");
     case PLUGIN_I2C_GET_ADDRESS:       return F("I2C_CHECK_DEVICE");
+    case PLUGIN_READ_ERROR_OCCURED:    return F("PLUGIN_READ_ERROR_OCCURED");
   }
   return F("Unknown");
 }
@@ -117,8 +118,8 @@ bool mustLogFunction(int function) {
     case PLUGIN_FORMAT_USERVAR:        return true;
     case PLUGIN_GET_DEVICENAME:        return true;
 //    case PLUGIN_GET_DEVICEVALUENAMES:  return false;
-//    case PLUGIN_GET_DEVICEVALUECOUNT:  return false;
-//    case PLUGIN_GET_DEVICEVTYPE:       return false;
+//    case PLUGIN_GET_DEVICEVALUECOUNT:  return true;
+//    case PLUGIN_GET_DEVICEVTYPE:       return true;
     case PLUGIN_WRITE:                 return true;
 //    case PLUGIN_WEBFORM_SHOW_CONFIG:   return false;
     case PLUGIN_SERIAL_IN:             return true;
@@ -134,6 +135,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_REQUEST:               return true;
     case PLUGIN_I2C_GET_ADDRESS:       return true;
     case PLUGIN_PROCESS_CONTROLLER_DATA: return true;
+    case PLUGIN_READ_ERROR_OCCURED:    return true;
   }
   return false;
 }
@@ -141,6 +143,8 @@ bool mustLogFunction(int function) {
 const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return F("CPLUGIN_PROTOCOL_ADD");
+    case CPlugin::Function::CPLUGIN_CONNECT_SUCCESS:           return F("CPLUGIN_CONNECT_SUCCESS");
+    case CPlugin::Function::CPLUGIN_CONNECT_FAIL:              return F("CPLUGIN_CONNECT_FAIL");
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return F("CPLUGIN_PROTOCOL_TEMPLATE");
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return F("CPLUGIN_PROTOCOL_SEND");
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return F("CPLUGIN_PROTOCOL_RECV");
@@ -173,6 +177,8 @@ bool mustLogCFunction(CPlugin::Function function) {
 
   switch (function) {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:              return false;
+    case CPlugin::Function::CPLUGIN_CONNECT_SUCCESS:           return true;
+    case CPlugin::Function::CPLUGIN_CONNECT_FAIL:              return true;
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:         return false;
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:             return true;
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:             return true;
@@ -214,6 +220,7 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::CPLUGIN_CALL_10PS:          return F("CPlugin call 10 p/s");
     case TimingStatsElements::SENSOR_SEND_TASK:           return F("SensorSendTask()");
     case TimingStatsElements::COMMAND_EXEC_INTERNAL:      return F("Exec Internal Command");
+    case TimingStatsElements::COMMAND_DECODE_INTERNAL:    return F("Decode Internal Command");
     case TimingStatsElements::CONSOLE_LOOP:               return F("Console loop()");
     case TimingStatsElements::CONSOLE_WRITE_SERIAL:       return F("Console out");
     case TimingStatsElements::SEND_DATA_STATS:            return F("sendData()");
@@ -246,10 +253,15 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::GRAT_ARP_STATS:             return F("sendGratuitousARP()");
     case TimingStatsElements::SAVE_TO_RTC:                return F("saveToRTC()");
     case TimingStatsElements::BACKGROUND_TASKS:           return F("backgroundtasks()");
+    case TimingStatsElements::UPDATE_RTTTL:               return F("update_rtttl()");
+    case TimingStatsElements::CHECK_UDP:                  return F("checkUDP()");
+    case TimingStatsElements::C013_SEND_UDP:              return F("C013_sendUDP() SUCCESS");
+    case TimingStatsElements::C013_SEND_UDP_FAIL:         return F("C013_sendUDP() FAIL");
+    case TimingStatsElements::C013_RECEIVE_SENSOR_DATA:   return F("C013 Receive sensor data");
+    case TimingStatsElements::WEBSERVER_HANDLE_CLIENT:    return F("web_server.handleClient()");
     case TimingStatsElements::PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case TimingStatsElements::FORMAT_USER_VAR:            return F("doFormatUserVar()");
     case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
-    case TimingStatsElements::GET_TASKVALUE_AS_STRING:    return F("TaskValueGetAsString()");
     case TimingStatsElements::HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
     case TimingStatsElements::HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
@@ -311,7 +323,7 @@ String getMiscStatsName(TimingStatsElements stat) {
 
 void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
 }
 
 void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)

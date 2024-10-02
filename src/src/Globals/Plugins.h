@@ -41,19 +41,25 @@
 
 struct EventStruct;
 
-extern int deviceCount;
-
-
-// Array containing "DeviceIndex" alfabetically sorted.
-extern std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index);
-bool validTaskIndex(taskIndex_t index);
-bool validPluginID(pluginID_t pluginID);
+
+// TD-er: Converted simple functions to defines to reduce bin size
+
+// bool validTaskIndex(taskIndex_t index);
+#define validTaskIndex(X) ((X) < (TASKS_MAX))
+
+// bool validPluginID(pluginID_t pluginID);
+#define validPluginID(P_ID) ((P_ID) != (INVALID_PLUGIN_ID))
+
 bool validPluginID_fullcheck(pluginID_t pluginID);
-bool validUserVarIndex(userVarIndex_t index);
-bool validTaskVarIndex(taskVarIndex_t index);
+
+// bool validUserVarIndex(userVarIndex_t index);
+#define validUserVarIndex(U_VAR_X)  ((U_VAR_X) < (USERVAR_MAX_INDEX))
+
+// bool validTaskVarIndex(taskVarIndex_t index);
+#define validTaskVarIndex(T_VAR_X)  ((T_VAR_X) < (VARS_PER_TASK))
 
 // Check if plugin is included in build.
 // N.B. Invalid plugin is also not considered supported.
@@ -79,6 +85,11 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 #if FEATURE_I2C_DEVICE_SCAN
 bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
 #endif // if FEATURE_I2C_DEVICE_SCAN
+bool          getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex,
+                                                      uint16_t  & x,
+                                                      uint16_t  & y,
+                                                      uint16_t  & r,
+                                                      uint16_t  & colorDepth);
 #if FEATURE_I2C_GET_ADDRESS
 uint8_t getTaskI2CAddress(taskIndex_t taskIndex);
 #endif // if FEATURE_I2C_GET_ADDRESS

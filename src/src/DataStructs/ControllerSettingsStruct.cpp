@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -13,6 +14,7 @@
 #include <WString.h>
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
+
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
@@ -25,16 +27,25 @@ void ControllerSettingsStruct::reset() {
   // Otherwise the checksum will fail and settings will be saved too often.
   memset(this, 0, sizeof(ControllerSettingsStruct));
 
-  UseDNS                     = DEFAULT_SERVER_USEDNS;
-  Port                       = DEFAULT_PORT;
-  MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
-  MaxQueueDepth              = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-  MaxRetry                   = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  DeleteOldest               = DEFAULT_CONTROLLER_DELETE_OLDEST;
-  ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
-  MustCheckReply             = DEFAULT_CONTROLLER_MUST_CHECK_REPLY ;
-  SampleSetInitiator         = INVALID_TASK_INDEX;
-  VariousFlags               = 0;
+  UseDNS                                        = DEFAULT_SERVER_USEDNS;
+  Port                                          = DEFAULT_PORT;
+  MinimalTimeBetweenMessages                    = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+  MaxQueueDepth                                 = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  MaxRetry                                      = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  DeleteOldest                                  = DEFAULT_CONTROLLER_DELETE_OLDEST;
+  ClientTimeout                                 = CONTROLLER_CLIENTTIMEOUT_DFLT;
+  MustCheckReply                                = DEFAULT_CONTROLLER_MUST_CHECK_REPLY;
+  SampleSetInitiator                            = INVALID_TASK_INDEX;
+  VariousBits1.mqtt_cleanSession                = 0;
+  VariousBits1.mqtt_not_sendLWT                 = 0;
+  VariousBits1.mqtt_not_willRetain              = 0;
+  VariousBits1.mqtt_uniqueMQTTclientIdReconnect = 0;
+  VariousBits1.mqtt_retainFlag                  = 0;
+  VariousBits1.useExtendedCredentials           = 0;
+  VariousBits1.sendBinary                       = 0;
+  VariousBits1.allowExpire                      = 0;
+  VariousBits1.deduplicate                      = 0;
+  VariousBits1.useLocalSystemTime               = 0;
 
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
@@ -70,16 +81,29 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(MQTTLwtTopic);
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
-}
 
-ChecksumType ControllerSettingsStruct::computeChecksum() const {
-  return ChecksumType(reinterpret_cast<const uint8_t *>(this), sizeof(ControllerSettingsStruct));
-}
+  #if FEATURE_MQTT
+    #if FEATURE_MQTT_TLS
+    if (TLStype() == TLS_types::NoTLS) {
+      if (Port == 8883) {
+        Port = 1883;
+        addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+      }
+    } else {
+      if (Port == 1883) {
+        Port = 8883;
+        addLog(LOG_LEVEL_ERROR, F("Using TLS, but port set to insecure port 1883. Use port 8883 instead"));
+      }
+    }
+    #else
+    if (Port == 8883) {
+      // No TLS support, so when switching builds, make sure it can still work.
+      Port = 1883;
+      addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+    }
+    #endif
+  #endif
 
-IPAddress ControllerSettingsStruct::getIP() const {
-  IPAddress host(IP[0], IP[1], IP[2], IP[3]);
-
-  return host;
 }
 
 String ControllerSettingsStruct::getHost() const {
@@ -99,6 +123,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
     // No IP/hostname set
     return false;
   }
+
   if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
@@ -120,7 +145,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
     return false; // Host not reachable
   }
   uint8_t retry     = 2;
-  bool connected = false;
+  bool    connected = false;
 
   while (retry > 0 && !connected) {
     --retry;
@@ -134,16 +159,19 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   }
   return false;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  uint8_t retry     = 2;
+  uint8_t retry = 2;
+
   while (retry > 0) {
     --retry;
     FeedSW_watchdog();
+
     if (client.beginPacket(getIP(), Port) == 1) {
       return true;
     }
@@ -188,102 +216,148 @@ bool ControllerSettingsStruct::updateIPcache() {
   return false;
 }
 
+/*
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-  return bitRead(VariousFlags, 1);
-}
+   return bitRead(VariousFlags, 1);
+   }
 
-void ControllerSettingsStruct::mqtt_cleanSession(bool value)
-{
-  bitWrite(VariousFlags, 1, value);
-}
+   void ControllerSettingsStruct::mqtt_cleanSession(bool value)
+   {
+   bitWrite(VariousFlags, 1, value);
+   }
 
-bool ControllerSettingsStruct::mqtt_sendLWT() const
-{
-  return !bitRead(VariousFlags, 2);
-}
+   bool ControllerSettingsStruct::mqtt_sendLWT() const
+   {
+   return !bitRead(VariousFlags, 2);
+   }
 
-void ControllerSettingsStruct::mqtt_sendLWT(bool value)
-{
-  bitWrite(VariousFlags, 2, !value);
-}
+   void ControllerSettingsStruct::mqtt_sendLWT(bool value)
+   {
+   bitWrite(VariousFlags, 2, !value);
+   }
 
-bool ControllerSettingsStruct::mqtt_willRetain() const
-{
-  return !bitRead(VariousFlags, 3);
-}
+   bool ControllerSettingsStruct::mqtt_willRetain() const
+   {
+   return !bitRead(VariousFlags, 3);
+   }
 
-void ControllerSettingsStruct::mqtt_willRetain(bool value)
-{
-  bitWrite(VariousFlags, 3, !value);
-}
+   void ControllerSettingsStruct::mqtt_willRetain(bool value)
+   {
+   bitWrite(VariousFlags, 3, !value);
+   }
 
-bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
-{
-  return bitRead(VariousFlags, 4);
-}
+   bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
+   {
+   return bitRead(VariousFlags, 4);
+   }
 
-void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
-{
-  bitWrite(VariousFlags, 4, value);
-}
+   void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
+   {
+   bitWrite(VariousFlags, 4, value);
+   }
 
-bool ControllerSettingsStruct::mqtt_retainFlag() const
-{
-  return bitRead(VariousFlags, 5);
-}
+   bool ControllerSettingsStruct::mqtt_retainFlag() const
+   {
+   return bitRead(VariousFlags, 5);
+   }
 
-void ControllerSettingsStruct::mqtt_retainFlag(bool value)
-{
-  bitWrite(VariousFlags, 5, value);
-}
+   void ControllerSettingsStruct::mqtt_retainFlag(bool value)
+   {
+   bitWrite(VariousFlags, 5, value);
+   }
 
-bool ControllerSettingsStruct::useExtendedCredentials() const
-{
-  return bitRead(VariousFlags, 6);
-}
+   bool ControllerSettingsStruct::useExtendedCredentials() const
+   {
+   return bitRead(VariousFlags, 6);
+   }
 
-void ControllerSettingsStruct::useExtendedCredentials(bool value)
-{
-  bitWrite(VariousFlags, 6, value);
-}
+   void ControllerSettingsStruct::useExtendedCredentials(bool value)
+   {
+   bitWrite(VariousFlags, 6, value);
+   }
 
-bool ControllerSettingsStruct::sendBinary() const
-{
-  return bitRead(VariousFlags, 7);
-}
+   bool ControllerSettingsStruct::sendBinary() const
+   {
+   return bitRead(VariousFlags, 7);
+   }
 
-void ControllerSettingsStruct::sendBinary(bool value)
-{
-  bitWrite(VariousFlags, 7, value);
-}
+   void ControllerSettingsStruct::sendBinary(bool value)
+   {
+   bitWrite(VariousFlags, 7, value);
+   }
 
-bool ControllerSettingsStruct::allowExpire() const
-{
-  return bitRead(VariousFlags, 9);
-}
+   bool ControllerSettingsStruct::allowExpire() const
+   {
+   return bitRead(VariousFlags, 9);
+   }
 
-void ControllerSettingsStruct::allowExpire(bool value)
-{
-  bitWrite(VariousFlags, 9, value);
-}
+   void ControllerSettingsStruct::allowExpire(bool value)
+   {
+   bitWrite(VariousFlags, 9, value);
+   }
 
-bool ControllerSettingsStruct::deduplicate() const
-{
-  return bitRead(VariousFlags, 10);
-}
+   bool ControllerSettingsStruct::deduplicate() const
+   {
+   return bitRead(VariousFlags, 10);
+   }
 
-void ControllerSettingsStruct::deduplicate(bool value)
-{
-  bitWrite(VariousFlags, 10, value);
-}
+   void ControllerSettingsStruct::deduplicate(bool value)
+   {
+   bitWrite(VariousFlags, 10, value);
+   }
 
-bool ControllerSettingsStruct::useLocalSystemTime() const
-{
-  return bitRead(VariousFlags, 11);
-}
+   bool ControllerSettingsStruct::useLocalSystemTime() const
+   {
+   return bitRead(VariousFlags, 11);
+   }
 
-void ControllerSettingsStruct::useLocalSystemTime(bool value)
-{
+   void ControllerSettingsStruct::useLocalSystemTime(bool value)
+   {
   bitWrite(VariousFlags, 11, value);
 }
+*/
+
+#if FEATURE_MQTT_TLS
+String ControllerSettingsStruct::getCertificateFilename() const
+{
+  return getCertificateFilename(TLStype());
+}
+
+String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) const
+{
+  String certFile = HostName;
+  if (certFile.isEmpty()) {
+    certFile = F("<HostName>");
+  }
+
+  switch (tls_type) {
+    case TLS_types::NoTLS:
+    case TLS_types::TLS_insecure:
+      return EMPTY_STRING;
+/*
+    case TLS_types::TLS_PSK:
+      certFile += F(".psk");
+      break;
+*/
+/*
+    case TLS_types::TLS_CA_CLI_CERT:
+      certFile += F(".caclicert");
+      break;
+*/
+    case TLS_types::TLS_CA_CERT:
+      certFile += F(".cacert");
+      break;
+    case TLS_types::TLS_FINGERPRINT:
+      certFile += F(".fp");
+      break;
+  }
+
+  // Only use the last 29 bytes of the filename
+  if (certFile.length() > 28) {
+    certFile = certFile.substring(certFile.length() - 28);
+  }
+  
+  return certFile;
+}
+#endif

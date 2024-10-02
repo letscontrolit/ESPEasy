@@ -10,6 +10,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2023-12-26 tonhuisman: Clear the splash from the display after 5 seconds if not already overwritten
  * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
  * 2023-03: First changelog added, older changes not logged
  */
@@ -216,6 +217,19 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         char deviceTemplate[P12_Nlines][P12_Nchars];
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
 
+        switch (P012_data->splashState) {
+          case P012_splashState_e::SplashCleared:
+            // Most common route
+            break;
+          case P012_splashState_e::SplashInitial:
+            P012_data->splashState = P012_splashState_e::SplashTimerRunning;
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 5000);
+            break;
+          case P012_splashState_e::SplashTimerRunning:
+            P012_data->lcdWrite(F("        "), 0, 0); // Wipe 'ESP Easy' splash text, will reset splashState
+            break;
+        }
+
         for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
         {
           String tmpString = deviceTemplate[x];
@@ -252,6 +266,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (arg1.equalsIgnoreCase(F("Clear"))) {
             P012_data->lcd.clear();
+            P012_data->splashState = P012_splashState_e::SplashCleared;
           }
         }
         else if (cmd.equalsIgnoreCase(F("LCD")))

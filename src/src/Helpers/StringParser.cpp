@@ -10,10 +10,10 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
-#include "../Globals/Protocol.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
@@ -26,6 +26,23 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+bool hasEscapedCharacter(String& str, const char EscapeChar)
+{
+  const String EscStr = concat(F("\\"), EscapeChar);
+  return (str.indexOf(EscStr)>=0);
+}
+
+void stripEscapeCharacters(String& str)
+{
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
+
+  for (uint8_t i = 0; i < nrbraces; ++i) {
+    const String s(concat(F("\\"), braces[i]));
+    str.replace(s, s.substring(1));
+  }
+}
+
 String parseTemplate(String& tmpString)
 {
   return parseTemplate(tmpString, false);
@@ -51,19 +68,29 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   // Keep current loaded taskSettings to restore at the end.
   const taskIndex_t currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
-
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
-
 
   if (parseTemplate_CallBack_ptr != nullptr) {
     parseTemplate_CallBack_ptr(tmpString, useURLencode);
   }
   parseSystemVariables(tmpString, useURLencode);
 
-
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
+  bool mustReplaceEscapedSquareBracket = false;
+  String MaskEscapedBracket;
+
+  if (hasEscapedCharacter(tmpString, '[') || hasEscapedCharacter(tmpString, ']')) {
+    // replace the \[ and \] with other characters to mask the escaped square brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
+    tmpString.replace(F("\\["), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
+    tmpString.replace(F("\\]"), MaskEscapedBracket);
+    mustReplaceEscapedSquareBracket = true;
+  }
+
   {
     String deviceName, valueName, format;
 
@@ -77,10 +104,11 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       {
         // Address an internal variable either as float or as int
         // For example: Let,10,[VAR#9]
-        unsigned int varNum;
+        uint32_t varNum;
 
         if (validUIntFromString(valueName, varNum)) {
-          unsigned char nr_decimals = maxNrDecimals_fpType(getCustomFloatVar(varNum));
+          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(varNum);
+          unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
           bool trimTrailingZeros    = true;
 
           if (devNameEqInt) {
@@ -91,9 +119,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             trimTrailingZeros = false;
           }
           #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
           #else
-          String value = floatToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
           #endif
           transformValue(
             newString, 
@@ -108,11 +136,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
         // The command is stored in valueName & format
-        String command;
-        command.reserve(valueName.length() + format.length() + 1);
-        command  = valueName;
-        command += '#';
-        command += format;
+        String command = strformat(F("%s#%s"), valueName.c_str(), format.c_str());
         command.replace('#', ',');
 
         if (getGPIOPinStateValues(command)) {
@@ -165,14 +189,14 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
           if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
             if (valueName.endsWith(F(".enabled"))) {           // Task state
-              value = Settings.TaskDeviceEnabled[taskIndex];
+              value = Settings.TaskDeviceEnabled[taskIndex] ? '1' : '0';
             } else if (valueName.endsWith(F(".interval"))) {   // Task interval
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
               value = getValueCountForTask(taskIndex);
             } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
               String ctrl = valueName.substring(19, 20);
-              int ctrlNr = 0;
+              int32_t ctrlNr = 0;
               if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
                   Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
@@ -181,7 +205,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
                   if (validProtocolIndex(ProtocolIndex) && 
-                      Protocol[ProtocolIndex].usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
+                      getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
                     value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
                   }
                 }
@@ -211,6 +235,15 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (mustReplaceEscapedSquareBracket) {
+    // We now have to check if we did mask some escaped square bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
+    newString.replace(MaskEscapedBracket, F("\\["));
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
+    newString.replace(MaskEscapedBracket, F("\\]"));
+  }
 
   // Restore previous loaded taskSettings
   if (validTaskIndex(currentTaskIndex))
@@ -615,13 +648,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
   deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
-  #ifdef USE_SECOND_HEAP
-  HeapSelectDram ephemeral;
-  auto result = Cache.taskIndexName.find(String(deviceName));
-  #else
   auto result = Cache.taskIndexName.find(deviceName);
-  #endif
-
 
   if (result != Cache.taskIndexName.end()) {
     return result->second;
@@ -637,11 +664,10 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
         {
-          #ifdef USE_SECOND_HEAP
-          Cache.taskIndexName[String(deviceName)] = taskIndex;
-          #else
-          Cache.taskIndexName[deviceName] = taskIndex;
-          #endif
+          Cache.taskIndexName.emplace(
+            std::make_pair(
+              std::move(deviceName), 
+              taskIndex));
           return taskIndex;
         }
       }
@@ -666,14 +692,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
   // to allow several tasks to have the same value names.
-  String cache_valueName;
-
-  cache_valueName.reserve(valueName.length() + 4);
-  cache_valueName  = valueName;
-  cache_valueName += '#';        // The '#' cannot exist in a value name, use it in the cache key.
-  cache_valueName += taskIndex;
-  cache_valueName.toLowerCase(); // No need to store multiple versions of the same entry with only different case.
-
+  String cache_valueName = strformat(
+    F("%s#%d"),                   // The '#' cannot exist in a value name, use it in the cache key.
+    valueName.c_str(),
+    static_cast<int>(taskIndex));
+  cache_valueName.toLowerCase();  // No need to store multiple versions of the same entry with only different case.
+  
   auto result = Cache.taskIndexValueName.find(cache_valueName);
 
   if (result != Cache.taskIndexValueName.end()) {
@@ -684,9 +708,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
-    if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
+    if (valueName.equalsIgnoreCase(Cache.getTaskDeviceValueName(taskIndex, valueNr)))
     {
-      Cache.taskIndexValueName[cache_valueName] = valueNr;
+      Cache.taskIndexValueName.emplace(
+        std::make_pair(
+          std::move(cache_valueName), 
+          valueNr));
       return valueNr;
     }
   }
@@ -732,14 +759,15 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
   int hashpos;
 
   if (!findNextValMarkInString(input, startpos, hashpos, endpos)) { return false; }
-  deviceName = input.substring(startpos + 1, hashpos);
-  valueName  = input.substring(hashpos + 1, endpos);
-  hashpos    = valueName.indexOf('#');
+
+  move_special(deviceName, input.substring(startpos + 1, hashpos));
+  move_special(valueName , input.substring(hashpos + 1, endpos));
+  hashpos = valueName.indexOf('#');
 
   if (hashpos != -1) {
     // Found an extra '#' in the valueName, will split valueName and format.
-    format    = valueName.substring(hashpos + 1);
-    valueName = valueName.substring(0, hashpos);
+    move_special(format,    valueName.substring(hashpos + 1));
+    move_special(valueName, valueName.substring(0, hashpos));
   } else {
     format = String();
   }
@@ -766,7 +794,8 @@ taskIndex_t parseCommandArgumentTaskIndex(const String& string, unsigned int arg
 /********************************************************************************************\
    Get int from command argument (argc = 0 => command)
  \*********************************************************************************************/
-int parseCommandArgumentInt(const String& string, unsigned int argc)
+int parseCommandArgumentInt(const String& string, unsigned int argc,
+                            int errorValue)
 {
   int value = 0;
 
@@ -775,7 +804,7 @@ int parseCommandArgumentInt(const String& string, unsigned int argc)
     String TmpStr;
 
     if (GetArgv(string.c_str(), TmpStr, argc + 1)) {
-      value = CalculateParam(TmpStr);
+      value = CalculateParam(TmpStr, errorValue);
     }
   }
   return value;

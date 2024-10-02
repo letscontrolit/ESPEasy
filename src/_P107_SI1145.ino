@@ -90,22 +90,16 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       }
       delay(8); // Measurement Rate: 255 * 31.25uS = 8ms
 
-      UserVar[event->BaseVarIndex]     = P107_data->uv.readVisible();
-      UserVar[event->BaseVarIndex + 1] = P107_data->uv.readIR();
-      UserVar[event->BaseVarIndex + 2] = P107_data->uv.readUV() / 100.0f;
+      UserVar.setFloat(event->TaskIndex, 0, P107_data->uv.readVisible());
+      UserVar.setFloat(event->TaskIndex, 1, P107_data->uv.readIR());
+      UserVar.setFloat(event->TaskIndex, 2, P107_data->uv.readUV() / 100.0f);
 
       P107_data->uv.reset(); // Stop the sensor reading
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SI1145: Visible: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLogMove(LOG_LEVEL_INFO, log);
-        log  = F("SI1145: Infrared: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 1);
-        addLogMove(LOG_LEVEL_INFO, log);
-        log  = F("SI1145: UV index: ");
-        log += formatUserVarNoCheck(event->TaskIndex, 2);
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Visible: "), formatUserVarNoCheck(event, 0)));
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Infrared: "), formatUserVarNoCheck(event, 1)));
+        addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: UV index: "), formatUserVarNoCheck(event, 2)));
       }
       success = true;
       break;

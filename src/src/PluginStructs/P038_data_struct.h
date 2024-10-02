@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P038
 
-# include <Adafruit_NeoPixel.h>
+# include <NeoPixelBus_wrapper.h>
 
 // # define P038_DEBUG_LOG // Enable for some (extra) logging
 
@@ -15,6 +15,14 @@
 
 # define P038_STRIP_TYPE_RGB   1
 # define P038_STRIP_TYPE_RGBW  2
+
+# ifndef P038_FEATURE_NEOPIXELFOR
+#  ifdef ESP32
+#   define P038_FEATURE_NEOPIXELFOR  1
+#  else // ifdef ESP32
+#   define P038_FEATURE_NEOPIXELFOR  0
+#  endif // ifdef ESP32
+# endif // ifndef P038_FEATURE_NEOPIXELFOR
 
 struct P038_data_struct : public PluginTaskData_base {
 public:
@@ -39,7 +47,7 @@ public:
 
 private:
 
-  Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
+  NeoPixelBus_wrapper *Plugin_038_pixels = nullptr;
 
   void HSV2RGBWorRGBandLog(float H,
                            float S,

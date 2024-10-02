@@ -142,7 +142,7 @@ void handle_cache_json() {
     if (taskIndex != 0) {
       addHtml(',');
     }
-    addHtmlInt(getPluginID_from_TaskIndex(taskIndex));
+    addHtmlInt(getPluginID_from_TaskIndex(taskIndex).value);
   }
   addHtml(F("],\n"));
   stream_next_json_object_value(F("separator"), F(";"));

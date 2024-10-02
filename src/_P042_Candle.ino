@@ -9,6 +9,7 @@
 // Wifi Candle for ESPEasy by Dominik Schmidt (10.2016)
 
 /** Changelog:
+ * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
  * 2023-01-21 tonhuisman: Move to PluginStruct_base to enable multi-instance use of this plugin
  * 2023-01-21 tonhuisman: Further refactor and improve code, including GH feedback
  *                        Add setting for Led Count, defaults to 20 (was fixed size)
@@ -91,17 +92,14 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_042;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
+      Device[++deviceCount].Number       = PLUGIN_ID_042;
+      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].ValueCount     = 3;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

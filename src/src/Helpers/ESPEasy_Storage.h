@@ -6,6 +6,8 @@
 
 #include "../Helpers/FS_Helper.h"
 
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
@@ -33,6 +35,8 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 
 bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
+
+int fileSize(const String& fname);
 
 enum class FileDestination_e : uint8_t {
   ANY   = 0,
@@ -168,6 +172,14 @@ String SaveTaskSettings(taskIndex_t TaskIndex);
 String LoadTaskSettings(taskIndex_t TaskIndex);
 
 /********************************************************************************************\
+   Load/Save CDN custom setting from file system
+ \*********************************************************************************************/
+#if FEATURE_ALTERNATIVE_CDN_URL
+String get_CDN_url_custom();
+void set_CDN_url_custom(const String &url);
+#endif // if FEATURE_ALTERNATIVE_CDN_URL
+
+/********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize, uint32_t posInBlock = 0);
@@ -184,6 +196,13 @@ String getCustomTaskSettingsError(uint8_t varNr);
    Clear custom task settings
  \*********************************************************************************************/
 String ClearCustomTaskSettings(taskIndex_t TaskIndex);
+
+/********************************************************************************************\
+   Delete Extended custom task settings file if it exists, with validity checks
+ \*********************************************************************************************/
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index);
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
 /********************************************************************************************\
    Load Custom Task settings from file system
@@ -247,8 +266,18 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
    Load Controller settings to file system
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
-
 #endif
+
+
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+#if FEATURE_MQTT_TLS
+String SaveCertificate(const String& fname, const String& certificate);
+String LoadCertificate(const String& fname, String& certificate, bool cleanup = true);
+#endif
+
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -285,6 +314,8 @@ String ClearInFile(const char *fname, int index, int datasize);
    Load data from config file on file system
  \*********************************************************************************************/
 String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int datasize);
+
+String LoadFromFile(const char *fname, String& data, int offset = 0);
 
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings
@@ -345,6 +376,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 
 #endif // ifdef ESP32
 
+bool validateUploadConfigDat(const uint8_t *buf);
 
 /********************************************************************************************\
    Download ESPEasy file types from HTTP server

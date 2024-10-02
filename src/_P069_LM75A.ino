@@ -94,11 +94,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
-      P069_data_struct *P069_data =
-        static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P069_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
       break;
     }
 
@@ -111,11 +107,9 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      P069_data->setAddress((uint8_t)PCONFIG(0));
-
       const float tempC = P069_data->getTemperatureInDegrees();
-      UserVar[event->BaseVarIndex] = tempC;
-      success                      = !isnan(tempC);
+      UserVar.setFloat(event->TaskIndex, 0, tempC);
+      success = !isnan(tempC);
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
@@ -123,9 +117,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         }
         else
         {
-          String log = F("LM75A: Temperature: ");
-          log += tempC;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event,0)));
         }
       }
       break;

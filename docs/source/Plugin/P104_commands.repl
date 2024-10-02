@@ -190,3 +190,20 @@
                          +-- Zero-point
 
         "
+        "
+        ``DotMatrix,Dot,<zone>,<r>,<c>[,0][,...]``
+
+        ``r`` Row coordinate, range 1..8.
+
+        ``c`` Column coordinate, range 1..8 x module-count.
+
+        ``0`` Optional zero value to turn the dot off.
+        ","
+        Draw individual dots on the display, in a row/column fashion, where an optional 0 can be added to turn a dot off, as the default is to turn a dot on. The row/column data doesn't have to be quoted.
+
+        The row and colum have to stay within the confines of the zone. Each zone is 8 dots high, and a multiple of 8 dots wide, depending on the number of modules in the zone.
+
+        While drawing the dots, the zone is paused, so there is no animation effect while drawing the dots.
+
+        Dots can be drawn independent of the type of content set for the zone, but once the original content is being updated or redrawn, the dots will be overwritten.
+        "

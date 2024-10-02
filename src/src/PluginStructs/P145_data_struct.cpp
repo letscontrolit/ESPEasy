@@ -13,7 +13,6 @@
 //#define P145_CALIBRATION_INTERVAL (5*60*1000)
 
 #include "../Globals/ESPEasyWiFiEvent.h"   // Need to know when WiFi is ruining the ADC measurements
-#include "../Helpers/Hardware.h"           // Need to know the ADC properties
 
 // The table sensorDefs[] contains string items for representation. 
 // Storage is in PROGMEM where a (fixed format) C-style string does not fit well
@@ -211,7 +210,7 @@ const P145_SENSORDEF sensorDefs[] PROGMEM
   }
 };
 /// @brief The number of types stored in the sensorDefs[] table
-constexpr const int nbrOfTypes = (int)(sizeof(sensorDefs) / sizeof(struct P145_SENSORDEF));
+constexpr const int nbrOfTypes = NR_ELEMENTS(sensorDefs);
 
 // Digital ouput value to swicth heater ON/OFF 
 #define P145_HEATER_OFF  LOW
@@ -283,6 +282,7 @@ float P145_data_struct::getRZero(float rSensor) const
       break;
     case p145AlgNone:
       newValue = rzero;
+      break;
     default:
       if (sensordef.cleanRatio > 0.0f)
       {
@@ -306,7 +306,7 @@ float P145_data_struct::getRZero(float rSensor) const
 /*****************************************************************************/
 float P145_data_struct::getCorrectedRZero(float rSensor, float temperature, float humidity) const
 {
-  float c = getTempHumCorrection(temperature, humidity);
+  const float c = getTempHumCorrection(temperature, humidity);
   return getRZero(rSensor/c);
 }
 
@@ -353,7 +353,7 @@ float P145_data_struct::getPPM(float rSensor)
 /*****************************************************************************/
 float P145_data_struct::getCorrectedPPM(float rSensor, float temperature, float humidity)
 {
-  float c = getTempHumCorrection(temperature, humidity);
+  const float c = getTempHumCorrection(temperature, humidity);
   return getPPM(rSensor/c);
 }
 

@@ -17,7 +17,11 @@
 
 #define WIFI_RECONNECT_WAIT                 30000 // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION         300000 // in milliSeconds
-#define WIFI_CONNECTION_CONSIDERED_STABLE  300000 // in milliSeconds
+#if FEATURE_CUSTOM_PROVISIONING
+#define WIFI_CONNECTION_CONSIDERED_STABLE   60000 // in milliSeconds
+#else
+#define WIFI_CONNECTION_CONSIDERED_STABLE  60000 // in milliSeconds
+#endif
 #define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5      // in minutes
 #define WIFI_SCAN_INTERVAL_AP_USED         125000 // in milliSeconds
 #define WIFI_SCAN_INTERVAL_MINIMAL          60000 // in milliSeconds
@@ -119,7 +123,17 @@ void SetWiFiTXpower(float dBm); // 0-20.5
 void SetWiFiTXpower(float dBm, float rssi);
 #endif
 float GetRSSIthreshold(float& maxTXpwr);
+// Return some quality based on RSSI.
+// <-97 => 0 , >-50 => 10
+// -97 ... -50 => 1 ... 9
+int GetRSSI_quality();
 WiFiConnectionProtocol getConnectionProtocol();
+#ifdef ESP32
+// TSF time is 64-bit timer in usec, sent by the AP along with other packets.
+// On tested access points, this seems to be the uptime in usec.
+// Could be used among nodes connected to the same AP to increase time sync accuracy.
+int64_t WiFi_get_TSF_time();
+#endif
 void WifiDisconnect();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);

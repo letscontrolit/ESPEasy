@@ -136,20 +136,16 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
 
-      #ifdef ESP32
+      # ifdef ESP32
       addFormCheckBox(F("Enable Collision Detection"), F(P078_FLAG_COLL_DETECT_LABEL), P078_GET_FLAG_COLL_DETECT);
       addFormNote(F("/RE connected to GND, only supported on hardware serial"));
-      #endif
-
+      # endif // ifdef ESP32
 
 
       if (Plugin_078_SDM != nullptr) {
         addRowLabel(F("Checksum (pass/fail)"));
-        String chksumStats;
-        chksumStats  = Plugin_078_SDM->getSuccCount();
-        chksumStats += '/';
-        chksumStats += Plugin_078_SDM->getErrCount();
-        addHtml(chksumStats);
+        addHtml(strformat(F("%d/%d"),
+                          Plugin_078_SDM->getSuccCount(), Plugin_078_SDM->getErrCount()));
       }
 
       break;
@@ -178,7 +174,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("SDM72_V2"),
           F("SDM320C")
         };
-        constexpr size_t nrOptions = sizeof(options_model) / sizeof(options_model[0]);
+        constexpr size_t nrOptions = NR_ELEMENTS(options_model);
         addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
@@ -205,9 +201,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       P078_DEV_ID   = getFormItemInt(P078_DEV_ID_LABEL);
       P078_MODEL    = getFormItemInt(P078_MODEL_LABEL);
       P078_BAUDRATE = getFormItemInt(P078_BAUDRATE_LABEL);
-      #ifdef ESP32
+      # ifdef ESP32
       P078_SET_FLAG_COLL_DETECT(isFormItemChecked(F(P078_FLAG_COLL_DETECT_LABEL)));
-      #endif
+      # endif // ifdef ESP32
 
       Plugin_078_init = false; // Force device setup next time
       success         = true;
@@ -236,9 +232,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (Plugin_078_ESPEasySerial->setRS485Mode(P078_DEPIN, P078_GET_FLAG_COLL_DETECT)) {
-        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate);
+        Plugin_078_SDM = new (std::nothrow) SDM(*Plugin_078_ESPEasySerial, baudrate);
       } else {
-        Plugin_078_SDM = new SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
+        Plugin_078_SDM = new (std::nothrow) SDM(*Plugin_078_ESPEasySerial, baudrate, P078_DEPIN);
       }
 
       if (Plugin_078_SDM != nullptr) {
@@ -280,7 +276,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
         // Need a few seconds to read the first sample, so trigger a new read a few seconds after init.
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 2000);
-
       }
       break;
     }
@@ -293,15 +288,12 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
       Plugin_078_init = false;
 
-      if (Plugin_078_ESPEasySerial != nullptr) {
-        delete Plugin_078_ESPEasySerial;
-        Plugin_078_ESPEasySerial = nullptr;
-      }
+      delete Plugin_078_ESPEasySerial;
+      Plugin_078_ESPEasySerial = nullptr;
 
-      if (Plugin_078_SDM != nullptr) {
-        delete Plugin_078_SDM;
-        Plugin_078_SDM = nullptr;
-      }
+      delete Plugin_078_SDM;
+      Plugin_078_SDM = nullptr;
+
       break;
     }
 
@@ -378,7 +370,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
               if (new_baud > 5) {
                 const int baudrates[]     = { 2400, 4800, 9600, 19200, 38400, 1200 };
-                constexpr int nrBaudRates = sizeof(baudrates) / sizeof(baudrates[0]);
+                constexpr int nrBaudRates = NR_ELEMENTS(baudrates);
 
                 for (int i = 0; i < nrBaudRates && new_baud > 5; ++i) {
                   if (new_baud == baudrates[i]) {

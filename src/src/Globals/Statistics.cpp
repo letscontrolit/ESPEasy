@@ -9,7 +9,7 @@ String   lowestFreeStackfunction;
 #endif
 
 uint8_t lastBootCause                           = BOOT_CAUSE_MANUAL_REBOOT;
-unsigned long lastMixedSchedulerId_beforereboot = 0;
+SchedulerTimerID lastMixedSchedulerId_beforereboot(0);
 
 unsigned long idle_msec_per_sec = 0;
 unsigned long elapsed10ps       = 0;
@@ -26,7 +26,8 @@ float loop_usec_duration_total  = 0.0f;
 
 
 unsigned long dailyResetCounter                   = 0;
-volatile unsigned long sw_watchdog_callback_count = 0;
+
+ESPEASY_VOLATILE(unsigned long) sw_watchdog_callback_count{};
 
 
 I2C_bus_state I2C_state = I2C_bus_state::OK;

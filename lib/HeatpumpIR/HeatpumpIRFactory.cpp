@@ -17,6 +17,8 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new DaikinHeatpumpARC480A14IR();
   } else if (strcmp_P(modelName, PSTR("daikin")) == 0) {
     return new DaikinHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("electroluxyal")) == 0) {
+    return new ElectroluxYALHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("fuego")) == 0) {
     return new FuegoHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("fujitsu_awyz")) == 0) {
@@ -27,6 +29,10 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new GreeYAAHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("greeyan")) == 0) {
     return new GreeYANHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("greeyac")) == 0) {
+    return new GreeYACHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("greeyt")) == 0) {
+    return new GreeYTHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("hisense_aud")) == 0) {
     return new HisenseHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("hitachi")) == 0) {
@@ -35,6 +41,8 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new HyundaiHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("ivt")) == 0) {
     return new IVTHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("nibe")) == 0) {
+	return new NibeHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("midea")) == 0) {
     return new MideaHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("mitsubishi_fa")) == 0) {
@@ -67,6 +75,8 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new PanasonicLKEHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("panasonic_nke")) == 0) {
     return new PanasonicNKEHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("philco_phs32")) == 0) {
+    return new PhilcoPHS32HeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("samsung_aqv")) == 0) {
     return new SamsungAQVHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("samsung_fjm")) == 0) {
@@ -77,6 +87,12 @@ HeatpumpIR* HeatpumpIRFactory::create(const char *modelName) {
     return new ToshibaDaiseikaiHeatpumpIR();
   } else if (strcmp_P(modelName, PSTR("toshiba")) == 0) {
     return new ToshibaHeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("ZHJG01")) == 0) {
+    return new ZHJG01HeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("ZHLT01")) == 0) {
+    return new ZHLT01HeatpumpIR();
+  } else if (strcmp_P(modelName, PSTR("KY-26")) == 0) {
+    return new KY26HeatpumpIR();
   }
 
    return NULL;

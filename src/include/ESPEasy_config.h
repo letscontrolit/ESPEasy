@@ -83,6 +83,31 @@
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
+#define NR_ELEMENTS(ARR)   (sizeof (ARR) / sizeof *(ARR))
+//#define NR_ELEMENTS(ARR) sizeof(ARR) / sizeof(ARR[0])
+
+
+constexpr unsigned FLOOR_LOG2(unsigned x)
+{
+  return x == 1 ? 0 : (1 + FLOOR_LOG2(x >> 1));
+}
+
+constexpr unsigned CEIL_LOG2(unsigned x)
+{
+  return x == 1 ? 0 : (FLOOR_LOG2(x - 1) + 1);
+}
+
+// Compute at compile time the number of bits required to store N states
+# define NR_BITS(NR_STATES) CEIL_LOG2(NR_STATES)
+
+// Compute a mask given number of bits
+# define MASK_BITS(x) ((1 << (x)) - 1)
+
+
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
+
 #ifdef ESP32
   // Special macros to disable interrupts from within an ISR function.
   //
@@ -96,12 +121,47 @@
   portTRY_ENTER_CRITICAL_ISR(&updateMux, 1000);
 
   #  define ISR_interrupts() portEXIT_CRITICAL(&updateMux);
+
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+  #include <atomic>
+
+  #define ESPEASY_VOLATILE(T)  std::atomic<T>
+#else
+  #define ESPEASY_VOLATILE(T)  volatile T
+#endif
+  
+
+
 # endif // ifdef ESP32
 # ifdef ESP8266
   #  define ISR_noInterrupts() noInterrupts();
   #  define ISR_interrupts() interrupts();
+
+  #define ESPEASY_VOLATILE(T)  volatile T
 # endif // ifdef ESP8266
 
+
+// Start: Copied from PR #4977 (P139)
+# ifdef ESP8266
+
+  // (ESP8266) FsP: FlashstringHelper to String-Pointer
+  #  define FsP(F) String(F).c_str()
+# endif // ifdef ESP8266
+
+# ifdef ESP32
+  #  if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
+
+    // (ESP32) FsP: FlashstringHelper to String-Pointer
+    #   define FsP
+  #  endif // if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
+  #  if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3)
+
+    // (ESP32) FsP: FlashstringHelper to String-Pointer
+    #   define FsP
+  #  endif // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3)
+# endif // ifdef ESP32
+// End: Copied from PR #4977 (P139)
 
 // User configuration
 // Include Custom.h before ESPEasyDefaults.h.

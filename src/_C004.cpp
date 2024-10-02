@@ -17,12 +17,12 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_004;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = true;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_004;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = true;
+      proto.usesPassword = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = true;
       break;
     }
 
@@ -71,10 +71,10 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C004_queue_element> element(new C004_queue_element(event));
+      std::unique_ptr<C004_queue_element> element(new (std::nothrow) C004_queue_element(event));
 
       success = C004_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
 
       break;
     }
@@ -94,7 +94,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c004_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c004_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C004_queue_element& element = static_cast<const C004_queue_element&>(element_base);
 // *INDENT-ON*
   String postDataStr = F("api_key=");
@@ -122,7 +122,7 @@ bool do_process_c004_delay_queue(int controller_number, const Queue_element_base
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     F("/update"), // uri

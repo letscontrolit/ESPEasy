@@ -15,11 +15,7 @@ public:
 
   simple_queue_element_string_only() = default;
 
-  #ifdef USE_SECOND_HEAP
-  simple_queue_element_string_only(const simple_queue_element_string_only& other) = default;
-  #else // ifdef USE_SECOND_HEAP
   simple_queue_element_string_only(const simple_queue_element_string_only& other) = delete;
-  #endif // ifdef USE_SECOND_HEAP
 
   simple_queue_element_string_only(simple_queue_element_string_only&& other) = default;
 

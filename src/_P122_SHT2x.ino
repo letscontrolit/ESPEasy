@@ -194,9 +194,9 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->reset();
         success = true;
       }
-      UserVar[event->BaseVarIndex]     = NAN;
-      UserVar[event->BaseVarIndex + 1] = NAN;
-      UserVar[event->BaseVarIndex + 2] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      UserVar.setFloat(event->TaskIndex, 1, NAN);
+      UserVar.setFloat(event->TaskIndex, 2, NAN);
       break;
     }
 
@@ -210,34 +210,28 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P122_data->inError())
         {
-          UserVar[event->BaseVarIndex]     = NAN;
-          UserVar[event->BaseVarIndex + 1] = NAN;
+          UserVar.setFloat(event->TaskIndex, 0, NAN);
+          UserVar.setFloat(event->TaskIndex, 1, NAN);
           addLog(LOG_LEVEL_ERROR, F("SHT2x: in Error!"));
         }
         else if (P122_data->newValues())
         {
-          UserVar[event->BaseVarIndex]     = P122_data->getTemperature();
-          UserVar[event->BaseVarIndex + 1] = P122_data->getHumidity();
+          UserVar.setFloat(event->TaskIndex, 0, P122_data->getTemperature());
+          UserVar.setFloat(event->TaskIndex, 1, P122_data->getHumidity());
           P122_data->startMeasurements(); // getting ready for another read cycle
         }
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
-        String log = F("P122: Temperature: ");
-        log += UserVar[event->BaseVarIndex + 0];
-        log += F(" Humidity: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO,
+               strformat(F("P122: Temperature: %s Humidity: %s"),
+                         formatUserVarNoCheck(event, 0).c_str(),
+                         formatUserVarNoCheck(event, 1).c_str()
+                         ));
       }
       success = true;
       break;
-    }
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      // code to be executed once a second. Tasks which do not require fast response can be added here
-      success = true;
     }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -251,6 +245,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->update(); // SHT2x FSM evaluation
       }
       success = true;
+      break;
     }
   } // switch
   return success;

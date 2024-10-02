@@ -2,21 +2,36 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/PluginStats_Config.h"
+
+#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_Plugin.h"
 
 #define EXTRA_TASK_SETTINGS_VERSION 1
 
 
+ExtraTaskSettingsStruct::ExtraTaskSettingsStruct()
+{
+  memset(this, 0, sizeof(ExtraTaskSettingsStruct));
+  TaskIndex = INVALID_TASK_INDEX;
+  version = EXTRA_TASK_SETTINGS_VERSION;
+  for (int i = 0; i < VARS_PER_TASK; ++i) {
+    TaskDeviceValueDecimals[i] = 2;
+    TaskDeviceErrorValue[i] = NAN;
+  }
+}
+
 void ExtraTaskSettingsStruct::clear() {
   // Need to make sure every byte between the members is also zero
   // Otherwise the checksum will fail and settings will be saved too often.
   memset(this, 0, sizeof(ExtraTaskSettingsStruct));
   TaskIndex = INVALID_TASK_INDEX;
-  dummy1 = 0;
+  //dummy1 = 0;
   version = EXTRA_TASK_SETTINGS_VERSION;
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     TaskDeviceValueDecimals[i] = 2;
+    TaskDeviceErrorValue[i] = NAN;
   }
 }
 
@@ -40,7 +55,7 @@ void ExtraTaskSettingsStruct::validate() {
       // Need to initialize the newly added fields
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         setIgnoreRangeCheck(i);
-        TaskDeviceErrorValue[i] = 0.0f;
+        TaskDeviceErrorValue[i] = NAN;
         VariousBits[i]          = 0u;
       }
     }
@@ -71,7 +86,7 @@ void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
     ZERO_FILL(TaskDeviceValueNames[i]);
     TaskDeviceValueDecimals[i] = 2;
     setIgnoreRangeCheck(i);
-    TaskDeviceErrorValue[i] = 0.0f;
+    TaskDeviceErrorValue[i] = NAN;
     VariousBits[i]          = 0;
   }
 }
@@ -213,6 +228,24 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
   }
   return false;
 }
+
+PluginStats_Config_t ExtraTaskSettingsStruct::getPluginStatsConfig(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return PluginStats_Config_t(); }
+
+  PluginStats_Config_t res(get8BitFromUL(VariousBits[taskVarIndex], 0));
+  return res;
+}
+
+void ExtraTaskSettingsStruct::setPluginStatsConfig(taskVarIndex_t taskVarIndex, PluginStats_Config_t config)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    uint8_t value = config.getStoredBits();
+    bitWrite(value, 1, bitRead(VariousBits[taskVarIndex], 1));
+    set8BitToUL(VariousBits[taskVarIndex], 0, value);
+  }
+}
+
 
 #endif // if FEATURE_PLUGIN_STATS
 

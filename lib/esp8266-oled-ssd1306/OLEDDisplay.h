@@ -190,6 +190,11 @@ class OLEDDisplay : public Print {
     // Convencience method for the const char version
     uint16_t getStringWidth(const String& text);
 
+    // Returns the width of c with the already set fontData
+    // returns a 0 if c is non-ascii
+    // in this case the next char must be converted
+    uint8_t getCharWidth(const char c);
+
     // Specifies relative to which anchor point
     // the text is rendered. Available constants:
     // TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER_BOTH
@@ -253,6 +258,17 @@ class OLEDDisplay : public Print {
     #endif
 
   protected:
+
+#ifdef OLEDDISPLAY_DOUBLE_BUFFER
+    // Get bounding box of changed pixels
+    // @retval True when there have been pixels changed    
+    bool getChangedBoundingBox(
+      uint8_t& minBoundX, 
+      uint8_t& minBoundY, 
+      uint8_t& maxBoundX, 
+      uint8_t& maxBoundY);
+#endif
+
 
     OLEDDISPLAY_TEXT_ALIGNMENT   textAlignment = TEXT_ALIGN_LEFT;
     OLEDDISPLAY_COLOR            color         = WHITE;

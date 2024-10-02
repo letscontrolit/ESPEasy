@@ -109,7 +109,8 @@ void json_prop(LabelType::Enum label);
 // PCONFIG() and not in extra settings
 // ********************************************************************************
 void addTaskSelect(const String& name,
-                   taskIndex_t   choice);
+                   taskIndex_t   choice,
+                   const String& cssclass = "wide");
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
@@ -129,6 +130,15 @@ String  getControllerSymbol(uint8_t index);
 /*
    String getValueSymbol(uint8_t index);
  */
+void    addSVG_param(const char key,
+                     int         value);
+
+void    addSVG_param(const char key,
+                     float         value);
+
+void    addSVG_param(const char key,
+                     const String& value);
+
 void    addSVG_param(const __FlashStringHelper * key,
                      int         value);
 
@@ -180,21 +190,21 @@ void write_SVG_image_header(int  width,
 void getWiFi_RSSI_icon(int rssi,
                        int width_pixels);
 
-#ifndef BUILD_MINIMAL_OTA
+#if FEATURE_CHART_STORAGE_LAYOUT
 void getConfig_dat_file_layout();
 
 void getStorageTableSVG(SettingsType::Enum settingsType);
 
-#endif // ifndef BUILD_MINIMAL_OTA
-
 #ifdef ESP32
 
-void getPartitionTableSVG(uint8_t         pType,
+void getPartitionTableSVG(uint8_t      pType,
                           unsigned int partitionColor);
 
 #endif // ifdef ESP32
 #ifdef ESP8266
 void getPartitionTableSVG();
+#endif
+
 #endif
 
 bool webArg2ip(const __FlashStringHelper * arg,

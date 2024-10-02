@@ -14,8 +14,28 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @uwekaditz: 2024-08-06
+// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time before the line is displayed,
+//      not only once while issuing the command and creating the new line content
+// @tonhuisman: 2024-07-14
+// ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
+// @tonhuisman: 2023-09-16
+// CHG: Some improvements and optimizations, improved struct alignment to reduce bin size, uncrustify sources
+// @uwekaditz: 2023-08-10
+// BUG: Individual font setting can only enlarge or maximize the font, if more than 1 line should be displayed
+//      (it was buggy not only for ticker!)
+// BUG: CalculateIndividualFontSettings() must be called until the font fits (it was buggy not only for ticker!)
+// BUG: Compiler error for '#ifdef P036_FONT_CALC_LOG'
 // @tonhuisman: 2023-08-08
 // CHG: Enable Userdefined headers feature, even on LIMIT_BUILD_SIZE builds
+// @uwekaditz: 2023-07-25
+// BUG: Calculation for ticker IdxStart and IdxEnd was wrong for 64x48 display
+// CHG: Start page updates after network has connected in PLUGIN_ONCE_A_SECOND, faster than waiting for the next PLUGIN_READ
+// @uwekaditz: 2023-07-23
+// NEW: Add ticker for scrolling speed, solves issue #4188
+// ADD: Setting and support for oledframedcmd,restore,<0|<nn>> subcommand  par2: (0=all|Line Content<nn>)
+// ADD: Setting and support for oledframedcmd,scroll,<1..6> subcommand, par2: (casted to ePageScrollSpeeds)
+// CHG: Minor change in debug messages (addLogMove() for dynamic messages)
 // @tonhuisman: 2023-07-01
 // CHG: Make compile-time defines for P036_SEND_EVENTS boolean
 // CHG: Make compile-time defines for P036_ENABLE_LINECOUNT boolean
@@ -201,22 +221,13 @@
 # ifdef P036_CHECK_HEAP
 #  include "src/Helpers/Memory.h"
 # endif // ifdef P036_CHECK_HEAP
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
 
 # define PLUGIN_036
 # define PLUGIN_ID_036         36
 # define PLUGIN_NAME_036       "Display - OLED SSD1306/SH1106 Framed"
 # define PLUGIN_VALUENAME1_036 "OLED"
 
-# if P036_SEND_EVENTS
-#  define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
-#  define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
-#  define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
-#  define P036_EVENT_LINE     3 // event: <taskname>#line=1..n
-#  define P036_EVENT_LINECNT  4 // event: <taskname>#linecount=1..4
-void P036_SendEvent(struct EventStruct *event,
-                    uint8_t             eventId,
-                    int16_t             eventValue);
-# endif // if P036_SEND_EVENTS
 
 # ifdef P036_CHECK_HEAP
 void    P036_CheckHeap(String dbgtxt);
@@ -275,8 +286,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("Btn: ");
-      string += formatGpioLabel(CONFIG_PIN3, false);
+      string  = concat(F("Btn: "), formatGpioLabel(CONFIG_PIN3, false));
       success = true;
       break;
     }
@@ -295,7 +305,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       OLedFormController(F("controller"), nullptr, P036_CONTROLLER);
 
       {
-        const int optionValues[P36_MaxSizesCount] =
+        const int optionValues[] =
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
           static_cast<int>(p036_resolution::pix64x48) };
@@ -321,28 +331,36 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 # endif // if P036_ENABLE_LEFT_ALIGN
       {
-        const __FlashStringHelper *options[5] = {
+        const __FlashStringHelper *options[] = {
           F("Very Slow"),
           F("Slow"),
           F("Fast"),
           F("Very Fast"),
-          F("Instant")
+          F("Instant"),
+# if P036_ENABLE_TICKER
+          F("Ticker"),
+# endif // if P036_ENABLE_TICKER
         };
-        const int optionValues[5] =
+        const int optionValues[] =
         { static_cast<int>(ePageScrollSpeed::ePSS_VerySlow),
           static_cast<int>(ePageScrollSpeed::ePSS_Slow),
           static_cast<int>(ePageScrollSpeed::ePSS_Fast),
           static_cast<int>(ePageScrollSpeed::ePSS_VeryFast),
-          static_cast<int>(ePageScrollSpeed::ePSS_Instant) };
-        addFormSelector(F("Scroll"), F("scroll"), 5, options, optionValues, P036_SCROLL);
+          static_cast<int>(ePageScrollSpeed::ePSS_Instant),
+# if P036_ENABLE_TICKER
+          static_cast<int>(ePageScrollSpeed::ePSS_Ticker),
+# endif // if P036_ENABLE_TICKER
+        };
+        constexpr int optionCnt = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Scroll"), F("scroll"), optionCnt, options, optionValues, P036_SCROLL);
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Display button")), F("taskdevicepin3"), CONFIG_PIN3);
 
       {
-        const __FlashStringHelper *options[2] = { F("Input"), F("Input pullup") };
-        const int optionValues[2]             =
+        const __FlashStringHelper *options[] = { F("Input"), F("Input pullup") };
+        const int optionValues[]             =
         { static_cast<int>(eP036pinmode::ePPM_Input),
           static_cast<int>(eP036pinmode::ePPM_InputPullUp) };
         addFormSelector(F("Pin mode"), F("pinmode"), 2, options, optionValues,
@@ -368,12 +386,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = 0;
         bitWrite(choice, 0, bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS));
         bitWrite(choice, 1, bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE));
-        const __FlashStringHelper *options[3] = {
+        const __FlashStringHelper *options[] = {
           F("None"),
           F("Display &amp; Contrast"),
           F("Display, Contrast, Frame, Line &amp; Linecount")
         };
-        const int optionValues[3] = { 0, 1, 3 }; // Bitmap
+        const int optionValues[] = { 0, 1, 3 }; // Bitmap
         addFormSelector(F("Generate events"), F("generateEvents"), 3, options, optionValues, choice);
 
 #  ifndef P036_LIMIT_BUILD_SIZE
@@ -396,13 +414,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *options9[] =
-        { F("SSID"),           F("SysName"),               F("IP"),              F("MAC"),                    F("RSSI"),
-          F("BSSID"),          F("WiFi channel"),          F("Unit"),            F("SysLoad"),                F("SysHeap"),
-          F("SysStack"),       F("Date"),                  F("Time"),            F("PageNumbers"),
+        {
+          /* *INDENT-OFF* */
+          F("SSID"),     F("SysName"),      F("IP"),   F("MAC"),         F("RSSI"),
+          F("BSSID"),    F("WiFi channel"), F("Unit"), F("SysLoad"),     F("SysHeap"),
+          F("SysStack"), F("Date"),         F("Time"), F("PageNumbers"),
           # if P036_USERDEF_HEADERS
           F("User defined 1"),
           F("User defined 2"),
           # endif // if P036_USERDEF_HEADERS
+ /* *INDENT-ON* */
         };
         const int optionValues9[] =
         { static_cast<int>(eHeaderContent::eSSID),
@@ -424,12 +445,29 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eHeaderContent::eUserDef2),
           # endif // if P036_USERDEF_HEADERS
         };
-        constexpr int nrOptions9 = sizeof(options9) / sizeof(options9[0]);
+        constexpr int nrOptions9 = NR_ELEMENTS(options9);
         addFormSelector(F("Header"), F("header"), nrOptions9, options9, optionValues9,
                         get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));             // HeaderContent
         addFormSelector(F("Header (alternate)"), F("headerAlternate"), nrOptions9, options9, optionValues9,
                         get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // HeaderContentAlternative
       }
+      # if P036_ENABLE_TIME_FORMAT
+      {
+        // From SystemVariables enum:
+        // SYSTIME,
+        // SYSTM_HM_0,
+        // SYSTIME_AM_0,
+        // SYSTM_HM_AM_0,
+        const __FlashStringHelper *options[] = { // ! Order has to be the same as array in display_time() function !
+          F("HH:MM:SS (24h)"),
+          F("HH:MM (24h)"),
+          F("HH:MM:SS (am/pm)"),
+          F("HH:MM (am/pm)"),
+        };
+        addFormSelector(F("Header Time format"), F("timeFmt"), NR_ELEMENTS(options), options, nullptr,
+                        get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT));
+      }
+      # endif // if P036_ENABLE_TIME_FORMAT
 
       addFormCheckBox(F("Scroll long lines"),              F("ScrollLines"), bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_LINES));
 
@@ -442,9 +480,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Lines"));
 # if P036_ENABLE_LEFT_ALIGN
       {
-        const __FlashStringHelper *optionsAlignment[3] =
+        const __FlashStringHelper *optionsAlignment[] =
         { F("left"), F("center"), F("right") };
-        const int optionValuesAlignment[3] =
+        const int optionValuesAlignment[] =
         { static_cast<int>(eAlignment::eLeft),
           static_cast<int>(eAlignment::eCenter),
           static_cast<int>(eAlignment::eRight)
@@ -473,9 +511,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_CheckHeap(F("_LOAD: After loadDisplayLines()"));
 # endif // P036_CHECK_HEAP
 
-          const __FlashStringHelper *optionsFont[5] =
+          const __FlashStringHelper *optionsFont[] =
           { F("Use smallest"), F("Reduce to smaller"), F("None"), F("Enlarge to bigger"), F("Use biggest") };
-          const int optionValuesFont[5] =
+          const int optionValuesFont[] =
           { static_cast<int>(eModifyFont::eMinimize),
             static_cast<int>(eModifyFont::eReduce),
             static_cast<int>(eModifyFont::eNone),
@@ -483,15 +521,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(eModifyFont::eMaximize)
           };
 
-          const __FlashStringHelper *optionsAlignment[4] =
+          const __FlashStringHelper *optionsAlignment[] =
           { F("Use global"), F("left"), F("center"), F("right") };
-          const int optionValuesAlignment[4] =
+          const int optionValuesAlignment[] =
           { static_cast<int>(eAlignment::eGlobal),
             static_cast<int>(eAlignment::eLeft),
             static_cast<int>(eAlignment::eCenter),
             static_cast<int>(eAlignment::eRight)
           };
-          uint8_t AlignmentChoice[P36_Nlines];
 
           addRowLabel(F("Line"));
           html_table(F("sub"));
@@ -500,14 +537,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
 
-          for (int varNr = 0; varNr < P36_Nlines; varNr++)
+          for (int varNr = 0; varNr < P36_Nlines; ++varNr)
           {
             html_TR_TD();                     // All columns use max. width available
             addHtml(F("&nbsp;"));
             addHtmlInt(varNr + 1);
             html_TD(F("padding-right: 8px")); // text box is (100% - 8 pixel) on right side wide
             addTextBox(getPluginCustomArgName(varNr),
-                       String(P036_lines.DisplayLinesV1[varNr].Content),
+                       P036_lines.DisplayLinesV1[varNr].Content,
                        P36_NcharsV1 - 1,
                        false,        // readonly,
                        false,        // required,
@@ -527,16 +564,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         F("")       // class name
                         );
             html_TD();              // alignment
-            AlignmentChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+            const uint8_t AlignmentChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout,
+                                                          P036_FLAG_ModifyLayout_Alignment);
             addSelector(getPluginCustomArgName(varNr + 200),
                         4,
                         optionsAlignment,
                         optionValuesAlignment,
-                        nullptr,                // attr[],
-                        AlignmentChoice[varNr], // selectedIndex,
-                        false,                  // reloadonchange,
-                        true,                   // enabled,
-                        F("")                   // class name
+                        nullptr,         // attr[],
+                        AlignmentChoice, // selectedIndex,
+                        false,           // reloadonchange,
+                        true,            // enabled,
+                        F("")            // class name
                         );
           }
           html_end_table();
@@ -598,12 +636,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       P036_FLAGS_0 = lSettings;
 
-# if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
       lSettings = 0;
-      set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, uint8_t(getFormItemInt(F("LeftAlign")) & 0xff)); // Alignment
-      bitWrite(lSettings, P036_FLAG_REDUCE_LINE_NO, isFormItemChecked(F("ReduceLineNo")));            // Reduce line numbers
+      # endif // if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
+      # if P036_ENABLE_LEFT_ALIGN
+      set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, getFormItemInt(F("LeftAlign")) & 0x03); // Alignment
+      bitWrite(lSettings, P036_FLAG_REDUCE_LINE_NO, isFormItemChecked(F("ReduceLineNo")));   // Reduce line numbers
+      # endif // if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_TIME_FORMAT
+      set4BitToUL(lSettings, P036_FLAG_TIME_FORMAT, getFormItemInt(F("timeFmt")) & 0x0f);    // Time format
+      # endif // if P036_ENABLE_TIME_FORMAT
+      # if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
       P036_FLAGS_1 = lSettings;
-# endif // if P036_ENABLE_LEFT_ALIGN
+      # endif // if P036_ENABLE_LEFT_ALIGN || P036_ENABLE_TIME_FORMAT
 
       {
         // For load and save of the display lines, we must not rely on the data in memory.
@@ -621,16 +666,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           P036_CheckHeap(F("_SAVE: After (*P036_lines = new)"));
 # endif // P036_CHECK_HEAP
 
-          for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
+          for (uint8_t varNr = 0; varNr < P36_Nlines; ++varNr)
           {
             P036_lines.DisplayLinesV1[varNr].Content  = webArg(getPluginCustomArgName(varNr));
             P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
             lModifyLayout                             = 0xC0; // keep 2 upper bits untouched
             // ModifyFont
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 100)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Font,      uint8_t(getFormItemIntCustomArgName(varNr + 100) & 0xff));
 
             // Alignment
-            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(getPluginCustomArgName(varNr + 200)) & 0xff));
+            set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemIntCustomArgName(varNr + 200) & 0xff));
             P036_lines.DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
             P036_lines.DisplayLinesV1[varNr].FontSpace    = 0xff;
             P036_lines.DisplayLinesV1[varNr].reserved     = 0xff;
@@ -659,8 +704,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Entering"));
 # endif // P036_CHECK_HEAP
+      {
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P036_data_struct());
+      }
 # ifdef P036_CHECK_HEAP
       P036_CheckHeap(F("_INIT: Before (*P036_data = static_cast<P036_data_struct *>)"));
 # endif // P036_CHECK_HEAP
@@ -682,6 +732,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_data->setTextAlignment(static_cast<eAlignment>(get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED)));
       P036_data->bReduceLinesPerFrame = bitRead(P036_FLAGS_1, P036_FLAG_REDUCE_LINE_NO); // Bit 2 Reduce line number
       # endif // if P036_ENABLE_LEFT_ALIGN
+      # if P036_ENABLE_TIME_FORMAT
+      P036_data->timeFormat = get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT);        // Bit 3..6, 4 bits time format
+      # endif // if P036_ENABLE_TIME_FORMAT
 
       // Init the display and turn it on
 # ifdef P036_CHECK_HEAP
@@ -698,6 +751,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                             (P036_ROTATE == 2),                                      // 1 = Normal, 2 = Rotated
                             P036_CONTRAST,
                             P036_TIMER,
+                            static_cast<ePageScrollSpeed>(P036_SCROLL),              // Scroll speed
                             P036_NLINES
                             ))) {
         clearPluginTaskData(event->TaskIndex);
@@ -715,13 +769,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       # if P036_SEND_EVENTS
 
       if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
-        P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
+        P036_data_struct::P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
 
         if (bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) {
           #  if P036_ENABLE_LINECOUNT
-          P036_SendEvent(event, P036_EVENT_LINECNT, P036_NLINES); // Send the current nr. of lines per frame
+          P036_data_struct::P036_SendEvent(event, P036_EVENT_LINECNT, P036_NLINES); // Send the current nr. of lines per frame
           #  endif // if P036_ENABLE_LINECOUNT
-          P036_SendEvent(event, P036_EVENT_FRAME,   P036_data->currentFrameToDisplay + 1);
+          P036_data_struct::P036_SendEvent(event, P036_EVENT_FRAME,   P036_data->currentFrameToDisplay + 1);
         }
       }
       # endif // if P036_SEND_EVENTS
@@ -824,7 +878,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           # if P036_SEND_EVENTS
 
           if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
-            P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
+            P036_data_struct::P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
           }
           # endif // if P036_SEND_EVENTS
         }
@@ -849,7 +903,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS) &&
             bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) &&
             (currentFrame != P036_data->currentFrameToDisplay)) { // Bit 28 Send Events && Bit 29 Send Events Frame & Line
-          P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
+          P036_data_struct::P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
         }
         # endif // if P036_SEND_EVENTS
       }
@@ -887,7 +941,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           # if P036_SEND_EVENTS
 
           if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
-            P036_SendEvent(event, P036_EVENT_DISPLAY, 0);
+            P036_data_struct::P036_SendEvent(event, P036_EVENT_DISPLAY, 0);
           }
           # endif // if P036_SEND_EVENTS
         }
@@ -896,15 +950,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (P036_DisplayIsOn) {
         // Display is on.
 
-        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // HeaderContent
-        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
+        if (!P036_data->bRunning && NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
+          // start page updates after network has connected
+          P036_data->P036_DisplayPage(event);
+        }
+        else {
+          P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // HeaderContent
+          P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
 
-        // HeaderContentAlternative
-        P036_data->display_header(); // Update Header
+          // HeaderContentAlternative
+          P036_data->display_header(); // Update Header
 
-        if (P036_data->isInitialized() && P036_data->display_wifibars()) {
-          // WiFi symbol was updated.
-          P036_data->update_display();
+          if (P036_data->isInitialized() && P036_data->display_wifibars()) {
+            // WiFi symbol was updated.
+            P036_data->update_display();
+          }
         }
       }
 
@@ -944,7 +1004,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS) &&
           bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) &&
           (currentFrame != P036_data->currentFrameToDisplay)) { // Bit 28 Send Events && Bit 29 Send Events Frame & Line
-        P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
+        P036_data_struct::P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
       }
       # endif // if P036_SEND_EVENTS
       return success;
@@ -1008,342 +1068,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P036_data) {
-# ifdef PLUGIN_036_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE NoData"));
-# endif // PLUGIN_036_DEBUG
-        return success;
+      if (nullptr != P036_data) {
+        success = P036_data->plugin_write(event, string);
       }
 
-      else if (!P036_data->isInitialized()) {
-        return success;
-      }
-
-# ifdef PLUGIN_036_DEBUG
-      addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE ..."));
-# endif // PLUGIN_036_DEBUG
-
-      const String command = parseString(string, 1);
-      const int    LineNo  = event->Par1;
-      # if P036_SEND_EVENTS
-      const bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
-      # endif // if P036_SEND_EVENTS
-
-      if ((equals(command, F("oledframedcmd"))) && P036_data->isInitialized()) {
-        const String subcommand = parseString(string, 2);
-
-        if (equals(subcommand, F("display"))) {
-          // display functions
-          const String para1 = parseString(string, 3);
-
-          if (equals(para1, F("on"))) {
-            success                 = true;
-            P036_data->displayTimer = P036_TIMER;
-            P036_data->display->displayOn();
-
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-            }
-            # endif // if P036_SEND_EVENTS
-          }
-
-          else if (equals(para1, F("off"))) {
-            success                 = true;
-            P036_data->displayTimer = 0;
-            P036_data->display->displayOff();
-
-            P036_SetDisplayOn(0); //  Save the fact that the display is now OFF
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_DISPLAY, 0);
-            }
-            # endif // if P036_SEND_EVENTS
-          }
-
-          else if (equals(para1, F("low"))) {
-            success = true;
-            P036_data->setContrast(OLED_CONTRAST_LOW);
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_CONTRAST, 0);
-
-              if (!P036_DisplayIsOn) {
-                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-              }
-            }
-            # endif // if P036_SEND_EVENTS
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-          }
-
-          else if (equals(para1, F("med"))) {
-            success = true;
-            P036_data->setContrast(OLED_CONTRAST_MED);
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_CONTRAST, 1);
-
-              if (!P036_DisplayIsOn) {
-                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-              }
-            }
-            # endif // if P036_SEND_EVENTS
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-          }
-
-          else if (equals(para1, F("high"))) {
-            success = true;
-            P036_data->setContrast(OLED_CONTRAST_HIGH);
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_CONTRAST, 2);
-
-              if (!P036_DisplayIsOn) {
-                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-              }
-            }
-            # endif // if P036_SEND_EVENTS
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-          }
-
-          else if (equals(para1, F("user")) &&
-                   (event->Par3 >= 1) && (event->Par3 <= 255) && // contrast
-                   (event->Par4 >= 0) && (event->Par4 <= 255) && // precharge
-                   (event->Par5 >= 0) && (event->Par5 <= 255))   // comdetect
-          {
-            success = true;
-            P036_data->display->setContrast(static_cast<uint8_t>(event->Par3), static_cast<uint8_t>(event->Par4),
-                                            static_cast<uint8_t>(event->Par5));
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_CONTRAST, 3);
-
-              if (!P036_DisplayIsOn) {
-                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-              }
-            }
-            # endif // if P036_SEND_EVENTS
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-          }
-        } else if ((equals(subcommand, F("frame"))) &&
-                   (event->Par2 >= 0) &&
-                   (event->Par2 <= P036_data->MaxFramesToDisplay + 1)) {
-          success = true;
-
-          if (!P036_DisplayIsOn) {
-            // display was OFF, turn it ON
-            P036_data->display->displayOn();
-            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-            }
-            # endif // if P036_SEND_EVENTS
-          }
-          uint8_t nextFrame = (event->Par2 == 0 ? 0xFF : event->Par2 - 1);
-          P036_data->P036_JumpToPage(event, nextFrame);                           //  Start to display the selected page, function needs
-                                                                                  // 65ms!
-          # if P036_SEND_EVENTS
-
-          if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
-            P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
-          }
-          # endif // if P036_SEND_EVENTS
-        }
-        # if P036_ENABLE_LINECOUNT
-        else if ((equals(subcommand, F("linecount"))) &&
-                 (event->Par2 >= 1) &&
-                 (event->Par2 <= 4)) {
-          success = true;
-
-          if (P036_NLINES != event->Par2) {
-            P036_NLINES = event->Par2;
-            P036_data->setNrLines(P036_NLINES);
-            #  if P036_SEND_EVENTS
-
-            if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
-              P036_SendEvent(event, P036_EVENT_LINECNT, P036_NLINES);
-            }
-            #  endif // if P036_SEND_EVENTS
-          }
-        }
-        # endif // if P036_ENABLE_LINECOUNT
-        # if P036_ENABLE_LEFT_ALIGN
-        else if ((equals(subcommand, F("leftalign"))) &&
-                 ((event->Par2 == 0) ||
-                  (event->Par2 == 1))) {
-          success = true;
-          eAlignment aAlignment = (event->Par2 == 1 ? eAlignment::eLeft : eAlignment::eCenter);
-          P036_data->setTextAlignment(aAlignment);
-          uint32_t lSettings = P036_FLAGS_1;
-          set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, static_cast<uint8_t>(aAlignment)); // Alignment
-          P036_FLAGS_1 = lSettings;
-        }
-        else if (equals(subcommand, F("align")) &&
-                 ((event->Par2 >= 0) &&
-                  (event->Par2 <= 2))) {
-          success = true;
-          const eAlignment aAlignment = static_cast<eAlignment>(event->Par2);
-
-          P036_data->setTextAlignment(aAlignment);
-          uint32_t lSettings = P036_FLAGS_1;
-          set2BitToUL(lSettings, P036_FLAG_LEFT_ALIGNED, static_cast<uint8_t>(aAlignment)); // Alignment
-          P036_FLAGS_1 = lSettings;
-        }
-        # endif // if P036_ENABLE_LEFT_ALIGN
-        # if P036_USERDEF_HEADERS
-        else if (equals(subcommand, F("userdef1"))) {
-          P036_data->userDef1 = parseStringKeepCase(string, 3);
-          P036_data->userDef1.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
-          success = true;
-        }
-        else if (equals(subcommand, F("userdef2"))) {
-          P036_data->userDef2 = parseStringKeepCase(string, 3);
-          P036_data->userDef2.replace('$', '%'); // Allow system vars to be passed in by using $ instead of %
-          success = true;
-        }
-        # endif // if P036_USERDEF_HEADERS
-        else if ((LineNo > 0) &&
-                 (LineNo <= P36_Nlines)) {
-          // content functions
-          success = true;
-          String *currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
-          *currentLine = parseStringKeepCaseNoTrim(string, 3);
-          *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
-
-          // calculate Pix length of new Content
-          uint16_t PixLength = P036_data->CalcPixLength(LineNo - 1);
-
-          if (PixLength > 255) {
-            String str_error = F("Pixel length of ");
-            str_error += PixLength;
-            str_error += F(" too long for line! Max. 255 pix!");
-            addHtmlError(str_error);
-
-            const unsigned int strlen = currentLine->length();
-
-            if (strlen > 0) {
-              const float fAvgPixPerChar       = static_cast<float>(PixLength) / strlen;
-              const unsigned int iCharToRemove = ceilf((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
-
-              // shorten string because OLED controller can not handle such long strings
-              *currentLine = currentLine->substring(0, strlen - iCharToRemove);
-            }
-          }
-          P036_data->MaxFramesToDisplay = 0xff; // update frame count
-
-          # if P036_SEND_EVENTS
-          const uint8_t currentFrame = P036_data->currentFrameToDisplay;
-          # endif // if P036_SEND_EVENTS
-
-          if (!P036_DisplayIsOn &&
-              !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)) { // Bit 18 NoDisplayOnReceivedText
-            // display was OFF, turn it ON
-            P036_data->display->displayOn();
-            P036_SetDisplayOn(1);                                      //  Save the fact that the display is now ON
-            # if P036_SEND_EVENTS
-
-            if (sendEvents) {
-              P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
-
-              if (bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
-                P036_SendEvent(event, P036_EVENT_LINE, LineNo);
-              }
-            }
-            # endif // if P036_SEND_EVENTS
-          }
-
-          if (P036_DisplayIsOn) {
-            P036_data->P036_JumpToPageOfLine(event, LineNo - 1); // Start to display the selected page
-            // function needs 65ms!
-            # if P036_SEND_EVENTS
-
-            if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE) && (currentFrame != P036_data->currentFrameToDisplay)) {
-              P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
-            }
-            # endif // if P036_SEND_EVENTS
-          }
-
-# ifdef PLUGIN_036_DEBUG
-          String log;
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-              log.reserve(200)) { // estimated
-            log += F("[P36] Line: ");
-            log += LineNo;
-            log += F(" NewContent:");
-            log += NewContent;
-            log += F(" Content:");
-            log += P036_data->DisplayLinesV1[LineNo - 1].Content;
-            log += F(" Length:");
-            log += P036_data->DisplayLinesV1[LineNo - 1].Content.length();
-            log += F(" Pix: ");
-            log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
-            log += F(" Reserved:");
-            log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-# endif // PLUGIN_036_DEBUG
-        }
-      }
-# ifdef PLUGIN_036_DEBUG
-
-      if (!success && loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("[P36] Cmd: ");
-        log += command;
-        log += F(" SubCmd:");
-        log += subcommand;
-        log += F(" Success:");
-        log += boolToString(success);
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-# endif // PLUGIN_036_DEBUG
       break;
     }
   }
   return success;
 }
 
-# if P036_SEND_EVENTS
-const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
-{
-  switch (eventId) {
-    case P036_EVENT_DISPLAY:   return F("display");
-    case P036_EVENT_CONTRAST:  return F("contrast");
-    case P036_EVENT_FRAME:     return F("frame");
-    case P036_EVENT_LINE:      return F("line");
-    #  if P036_ENABLE_LINECOUNT
-    case P036_EVENT_LINECNT:   return F("linecount");
-    #  endif // if P036_ENABLE_LINECOUNT
-  }
-  return F("");
-}
-
-void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
-  eventQueue.add(event->TaskIndex, P36_eventId_toString(eventId), eventValue);
-}
-
-# endif // if P036_SEND_EVENTS
-
 # ifdef P036_CHECK_HEAP
 void P036_CheckHeap(String dbgtxt) {
-  String log;
-
-  log.reserve(80);
-  log += dbgtxt;
-  log += F(" FreeHeap:");
-  log += ESP.getFreeHeap();
-  log += F(" FreeStack:");
-  log += getCurrentFreeStack();
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO,
+         strformat(F("%s FreeHeap:%d FreeStack:%d"),
+                   dbgtxt.c_str(), ESP.getFreeHeap(), getCurrentFreeStack()));
 }
 
 # endif // ifdef P036_CHECK_HEAP

@@ -32,6 +32,8 @@ enum Error : uint8_t {
   ERROR_UNKNOWN_RPC       = 0x02,
   ERROR_UNABLE_TO_CONNECT = 0x03,
   ERROR_NOT_AUTHORIZED    = 0x04,
+  ERROR_INVALID_CHECKSUM  = 0x05,
+  ERROR_EMPTY_SSID        = 0x06,
   ERROR_UNKNOWN           = 0xFF,
 };
 
@@ -81,6 +83,8 @@ struct ImprovWiFiParamsStruct {
     "ESP32-S2"
 #elif defined(CONFIG_IDF_TARGET_ESP32S3)
     "ESP32-S3"
+#elif defined(CONFIG_IDF_TARGET_ESP32C2)
+    "ESP32-C2"
 #elif defined(CONFIG_IDF_TARGET_ESP32C3)
     "ESP32-C3"
 #elif defined(CONFIG_IDF_TARGET_ESP32C6)

@@ -16,19 +16,17 @@ P038_data_struct::P038_data_struct(int8_t   gpioPin,
 // Destructor
 // **************************************************************************/
 P038_data_struct::~P038_data_struct() {
-  if (Plugin_038_pixels != nullptr) {
-    delete Plugin_038_pixels;
-    Plugin_038_pixels = nullptr;
-  }
+  delete Plugin_038_pixels;
+  Plugin_038_pixels = nullptr;
 }
 
 bool P038_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (!isInitialized()) {
-    Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(_maxPixels,
-                                                             _gpioPin,
-                                                             (_stripType == P038_STRIP_TYPE_RGBW ? NEO_GRBW : NEO_GRB) + NEO_KHZ800);
+    Plugin_038_pixels = new (std::nothrow) NeoPixelBus_wrapper(_maxPixels,
+                                                               _gpioPin,
+                                                               (_stripType == P038_STRIP_TYPE_RGBW ? NEO_GRBW : NEO_GRB) + NEO_KHZ800);
 
     if (Plugin_038_pixels != nullptr) {
       Plugin_038_pixels->begin();                                          // This initializes the NeoPixel library.
@@ -41,12 +39,38 @@ bool P038_data_struct::plugin_init(struct EventStruct *event) {
 }
 
 bool P038_data_struct::plugin_exit(struct EventStruct *event) {
-  if (isInitialized()) {
-    delete Plugin_038_pixels;
-    Plugin_038_pixels = nullptr;
-  }
+  delete Plugin_038_pixels;
+  Plugin_038_pixels = nullptr;
   return true;
 }
+
+const char p038_commands[] PROGMEM =
+  "neopixel|"
+  "neopixelbright|"
+  "neopixelhsv|"
+  "neopixelall|"
+  "neopixelallhsv|"
+  "neopixelline|"
+  "neopixellinehsv|"
+  # if P038_FEATURE_NEOPIXELFOR
+  "neopixelfor|"
+  "neopixelforhsv|"
+  # endif // if P038_FEATURE_NEOPIXELFOR
+;
+enum class p038_commands_e : int8_t {
+  invalid = -1,
+  neopixel,
+  neopixelbright,
+  neopixelhsv,
+  neopixelall,
+  neopixelallhsv,
+  neopixelline,
+  neopixellinehsv,
+  # if P038_FEATURE_NEOPIXELFOR
+  neopixelfor,
+  neopixelforhsv,
+  # endif // if P038_FEATURE_NEOPIXELFOR
+};
 
 bool P038_data_struct::plugin_write(struct EventStruct *event, const String& string) {
   bool success = false;
@@ -54,87 +78,144 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
   if (isInitialized()) {
     const String cmd = parseString(string, 1);
 
-    if (!cmd.startsWith(F("neo"))) {
-      return success;
-    }
+    const int cmd_i = GetCommandCode(cmd.c_str(), p038_commands);
 
-    {
-      String log;
+    if (cmd_i < 0) { return false; } // Fail fast
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-          log.reserve(64)) {
-        log += F("P038 : write - ");
-        log += string;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("P038 : write - "), string));
     }
+    const p038_commands_e cmde = static_cast<p038_commands_e>(cmd_i);
 
     success = true;
 
-    if (equals(cmd, F("neopixel"))) { // NeoPixel
-      Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));
-    } else
+    switch (cmde) {
+      case p038_commands_e::invalid:
+        break;
+      case p038_commands_e::neopixel:
+        Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));
+        break;
+      case p038_commands_e::neopixelbright:
 
-    if (equals(cmd, F("neopixelbright")) && (event->Par1 >= 0) && (event->Par1 <= 255)) {
-      if (parseString(string, 2).isEmpty() || (event->Par1 == 0)) {          // No argument or 0, then
-        Plugin_038_pixels->setBrightness(std::min(_maxbright, _brightness)); // use initial brightness
-      } else {
-        Plugin_038_pixels->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par1)));
+        if (parseString(string, 2).isEmpty() || (event->Par1 == 0)) {          // No argument or 0, then
+          Plugin_038_pixels->setBrightness(std::min(_maxbright, _brightness)); // use initial brightness
+        } else {
+          Plugin_038_pixels->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par1)));
+        }
+        break;
+      case p038_commands_e::neopixelhsv:
+      {
+        // extra function to receive HSV values (i.e. homie controller)
+        int rgbw[4];
+        rgbw[3] = 0;
+
+        HSV2RGBWorRGBandLog(event->Par2, event->Par3, event->Par4, rgbw);
+
+        Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+        break;
       }
-    } else
+      case p038_commands_e::neopixelall:
 
-    // extra function to receive HSV values (i.e. homie controler)
-    if (equals(cmd, F("neopixelhsv"))) { // NeoPixelHSV
-      int rgbw[4];
-      rgbw[3] = 0;
+        for (int i = 0; i < _maxPixels; ++i) {
+          Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
+        }
+        break;
+      case p038_commands_e::neopixelallhsv:
+      {
+        int rgbw[4];
+        rgbw[3] = 0;
 
-      HSV2RGBWorRGBandLog(event->Par2, event->Par3, event->Par4, rgbw);
+        HSV2RGBWorRGBandLog(event->Par1, event->Par2, event->Par3, rgbw);
 
-      Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
-    } else
-
-    if (equals(cmd, F("neopixelall"))) { // NeoPixelAll
-      for (int i = 0; i < _maxPixels; i++) {
-        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par1, event->Par2, event->Par3, event->Par4));
+        for (int i = 0; i < _maxPixels; ++i) {
+          Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+        }
+        break;
       }
-    } else
+      case p038_commands_e::neopixelline:
+      {
+        int32_t brightness = 0;
+        validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
 
-    if (equals(cmd, F("neopixelallhsv"))) { // NeoPixelAllHSV
-      int rgbw[4];
-      rgbw[3] = 0;
-
-      HSV2RGBWorRGBandLog(event->Par1, event->Par2, event->Par3, rgbw);
-
-      for (int i = 0; i < _maxPixels; i++) {
-        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+        for (int i = event->Par1 - 1; i < event->Par2; ++i) {
+          Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5, brightness));
+        }
+        break;
       }
-    } else
+      case p038_commands_e::neopixellinehsv:
+      {
+        int rgbw[4];
+        rgbw[3] = 0;
 
-    if (equals(cmd, F("neopixelline"))) {                      // NeoPixelLine
-      int brightness = 0;
-      validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
+        HSV2RGBWorRGBandLog(event->Par3, event->Par4, event->Par5, rgbw);
 
-      for (int i = event->Par1 - 1; i < event->Par2; i++) {
-        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5, brightness));
+        for (int i = event->Par1 - 1; i < event->Par2; ++i) {
+          Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+        }
+        break;
       }
-    } else
+      # if P038_FEATURE_NEOPIXELFOR
+      case p038_commands_e::neopixelfor:
+      case p038_commands_e::neopixelforhsv:
+      {
+        if (event->Par3 != 0) { // endless loop protection
+          const bool useHsv = p038_commands_e::neopixelforhsv == cmde;
+          int rgbw[4];
+          int32_t par6 = 0;
+          int32_t par7 = 0;
+          int32_t par8 = 0;
+          validIntFromString(parseString(string, 7), par6);
+          const String str8 = parseString(string, 8);
+          const String str9 = parseString(string, 9);
 
-    if (equals(cmd, F("neopixellinehsv"))) { // NeoPixelLineHSV
-      int rgbw[4];
-      rgbw[3] = 0;
+          if (!str9.isEmpty()) { // Check last expected argument first
+            validIntFromString(str9, par8);
+          }
 
-      HSV2RGBWorRGBandLog(event->Par3, event->Par4, event->Par5, rgbw);
+          if (!str8.isEmpty()) {
+            validIntFromString(str8, par7);
 
-      for (int i = event->Par1 - 1; i < event->Par2; i++) {
-        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+            if ((P038_STRIP_TYPE_RGBW != _stripType) || useHsv) {
+              par8 = par7;
+            }
+          }
+
+          if (useHsv) {
+            rgbw[3] = 0;
+            HSV2RGBWorRGBandLog(event->Par4, event->Par5, par6, rgbw);
+          } else {
+            rgbw[0] = event->Par4;
+            rgbw[1] = event->Par5;
+            rgbw[2] = par6;
+            rgbw[3] = (P038_STRIP_TYPE_RGBW == _stripType) ? par7 : 0;
+          }
+
+          const int inc = event->Par3 < 0 ? -1 : 1;
+          int i         = event->Par1 - 1;
+          int j         = i;
+
+          for (; (event->Par3 < 0 ? (i >= event->Par2 - 1) : (i < event->Par2)) && i >= 0; i += inc) {
+            // addLog(LOG_LEVEL_INFO, strformat(F("P038 : %d/%d %c for: %d; %d; %d; color: 0x%02x %02x %02x %02x"),
+            //                                  i, j, i == j ? '*' : ' ', event->Par1, event->Par2, event->Par3,
+            //                                  rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+
+            if (i == j) { // Color pixel
+              Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
+              j += event->Par3;
+            }
+            else if (par8 == 1) { // Clear pixel
+              Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(0, 0, 0, 0));
+            }
+          }
+        } else {
+          success = false;
+        }
+        break;
       }
-    } else {
-      success = false;
+      # endif // if P038_FEATURE_NEOPIXELFOR
     }
 
-    if (success) {
-      Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
-    }
+    Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
   }
   return success;
 }
@@ -145,20 +226,14 @@ void P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw[4
   } else {                                  // RGB
     HSV2RGB(H, S, V, rgbw);
   }
-  String log;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(48)) {
-    log += F("P038 HSV converted to RGB(W):");
-    log += rgbw[0];
-    log += ',';
-    log += rgbw[1];
-    log += ',';
-    log += rgbw[2];
-    log += ',';
-    log += rgbw[3];
-    addLogMove(LOG_LEVEL_INFO, log);
+  # ifndef LIMIT_BUILD_SIZE
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO,
+           strformat(F("P038 HSV converted to RGB(W):%d,%d,%d,%d"), rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
   }
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 #endif // ifdef USES_P038

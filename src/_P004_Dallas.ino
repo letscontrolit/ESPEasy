@@ -8,6 +8,9 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 /** Changelog:
+ * 2024-05-11 tonhuisman: Add Get Config Value support for sensor statistics: Read success, Read retry, Read failed,
+ *                        Read init failed, Resolution and Address (formatted)
+ *                        [<taskname>#sensorstats,<sensorindex>,success|retry|failed|initfailed|resolution|address]
  * 2023-04-18 tonhuisman: Add warning on statistics section for Parasite Powered sensors, as these are unsupported.
  * 2023-04-17 tonhuisman: Use actual sensor resolution, even when using multiple sensors with different resolutions
  * 2023-04-16 tonhuisman: Rename from DS18b20 to 1-Wire Temperature, as it supports several 1-Wire temperature sensors
@@ -48,19 +51,18 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_004;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number         = PLUGIN_ID_004;
+      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
+      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].Ports            = 0;
+      Device[deviceCount].FormulaOption    = true;
+      Device[deviceCount].ValueCount       = 1;
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].GlobalSyncOption = true;
+      Device[deviceCount].OutputDataType   = Output_Data_type_t::Simple;
+      Device[deviceCount].PluginStats      = true;
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -206,7 +208,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
-      const int valueCount = P004_NR_OUTPUT_VALUES;
+      const int valueCount           = P004_NR_OUTPUT_VALUES;
 
       if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
@@ -243,18 +245,24 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       int8_t Plugin_004_DallasPin_RX = CONFIG_PIN1;
       int8_t Plugin_004_DallasPin_TX = CONFIG_PIN2;
       const uint8_t res              = P004_RESOLUTION;
-      const int valueCount = P004_NR_OUTPUT_VALUES;
+      const int     valueCount       = P004_NR_OUTPUT_VALUES;
 
       if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(
-                           event->TaskIndex,
-                           Plugin_004_DallasPin_RX,
-                           Plugin_004_DallasPin_TX,
-                           res,
-                           valueCount == 1 && P004_SCAN_ON_INIT));
+      {
+        # ifdef USE_SECOND_HEAP
+        HeapSelectIram ephemeral;
+        # endif // ifdef USE_SECOND_HEAP
+
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(
+                             event->TaskIndex,
+                             Plugin_004_DallasPin_RX,
+                             Plugin_004_DallasPin_TX,
+                             res,
+                             valueCount == 1 && P004_SCAN_ON_INIT));
+      }
       P004_data_struct *P004_data =
         static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -278,6 +286,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P004_data) {
         const int valueCount = P004_NR_OUTPUT_VALUES;
+
         if ((valueCount == 1) && P004_SCAN_ON_INIT) {
           if (!P004_data->sensorAddressSet()) {
             P004_data->init();
@@ -302,8 +311,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
               if (P004_data->read_temp(value, i))
               {
-                UserVar[event->BaseVarIndex + i] = value;
-                success                          = true;
+                UserVar.setFloat(event->TaskIndex, i, value);
+                success = true;
               }
               else
               {
@@ -317,7 +326,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                     default:
                       break;
                   }
-                  UserVar[event->BaseVarIndex + i] = errorValue;
+                  UserVar.setFloat(event->TaskIndex, i, errorValue);
                 }
               }
 
@@ -341,6 +350,53 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if P004_FEATURE_GET_CONFIG_VALUE
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P004_data_struct *P004_data =
+        static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P004_data) {
+        const String cmd = parseString(string, 1, '.');
+
+        if (equals(cmd, F("sensorstats"))) { // To distinguish from 'DeviceStats'
+          const String par1 = parseString(string, 2, '.');
+          int32_t nPar1;
+
+          if (validIntFromString(par1, nPar1) && (nPar1 > 0) && (nPar1 <= P004_NR_OUTPUT_VALUES)) {
+            nPar1--; // From DeviceNr to array index
+            const String subcmd          = parseString(string, 3, '.');
+            Dallas_SensorData sensorData = P004_data->get_sensor_data(nPar1);
+            success = true;
+
+            if (equals(subcmd, F("success"))) {
+              string = sensorData.read_success;
+            }  else
+            if (equals(subcmd, F("retry"))) {
+              string = sensorData.read_retry;
+            } else
+            if (equals(subcmd, F("failed"))) {
+              string = sensorData.read_failed;
+            } else
+            if (equals(subcmd, F("initfailed"))) {
+              string = sensorData.start_read_failed;
+            } else
+            if (equals(subcmd, F("resolution"))) {
+              string = sensorData.actual_res;
+            } else
+            if (equals(subcmd, F("address"))) {
+              string = sensorData.get_formatted_address();
+            } else
+            { // Unsupported stat
+              success = false;
+            }
+          }
+        }
+      }
+      break;
+    }
+    # endif // if P004_FEATURE_GET_CONFIG_VALUE
   }
   return success;
 }

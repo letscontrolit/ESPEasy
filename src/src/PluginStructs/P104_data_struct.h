@@ -13,7 +13,6 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Plugins.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 
@@ -33,8 +32,15 @@
 # define P104_USE_BAR_GRAPH                  // Enables the use of Bar-graph feature
 # define P104_USE_ZONE_ACTIONS               // Enables the use of Actions per zone (New above/New below/Delete)
 # define P104_USE_ZONE_ORDERING              // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
+# define P104_USE_DOT_SET                    // Enables the use of Dot-set feature
 
 # define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
+
+# if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     1      // Only enable saving in storage for ESP32
+# else // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     0
+# endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
 
 // To make it fit in the ESP8266 display build
 # if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
@@ -84,7 +90,7 @@
 # define P104_MAX_MESG             20        // Message size for time/date (dd-mm-yyyy hh:mm:ss\0)
 
 # ifdef ESP32
-#  define P104_MAX_ZONES           16u       // 1..P104_MAX_ZONES zones selectable
+#  define P104_MAX_ZONES           16        // 1..P104_MAX_ZONES zones selectable
 #  define P104_SETTINGS_BUFFER_V1  1020      // Bigger buffer possible on ESP32
 # else // ifdef ESP32
 #  define P104_MAX_ZONES           8u        // 1..P104_MAX_ZONES zones selectable
@@ -306,7 +312,7 @@
 
 struct P104_zone_struct {
   P104_zone_struct() = delete; // Not used, so leave out explicitly
-  P104_zone_struct(uint8_t _zone) :  text(F("\"\"")), zone(_zone) {}
+  P104_zone_struct(uint8_t _zone);
 
   String   text;
   int32_t  repeatDelay  = -1;
@@ -326,11 +332,15 @@ struct P104_zone_struct {
   int8_t   brightness    = -1;
   int8_t   inverted      = 0;
   int8_t   _lastChecked  = -1;
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
   uint16_t _lower       = 0u;
   uint16_t _upper       = 0u; // lower and upper pixel numbers
   uint8_t  _startModule = 0u; // starting module, end module is _startModule + size - 1
-  # endif // ifdef P104_USE_BAR_GRAPH
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+
+  // Used to loop over member values
+  bool getIntValue(uint8_t offset, int32_t& value) const;
+  bool setIntValue(uint8_t offset, int32_t value);
 };
 
 # ifdef P104_USE_BAR_GRAPH
@@ -338,12 +348,12 @@ struct P104_bargraph_struct {
   P104_bargraph_struct() = delete; // Not used, so leave out explicitly
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
-  ESPEASY_RULES_FLOAT_TYPE  value{};
-  ESPEASY_RULES_FLOAT_TYPE  max{};
-  ESPEASY_RULES_FLOAT_TYPE  min{};
-  uint8_t graph;
-  uint8_t barType   = 0u;
-  uint8_t direction = 0u;
+  ESPEASY_RULES_FLOAT_TYPE value{};
+  ESPEASY_RULES_FLOAT_TYPE max{};
+  ESPEASY_RULES_FLOAT_TYPE min{};
+  uint8_t                  graph;
+  uint8_t                  barType   = 0u;
+  uint8_t                  direction = 0u;
 };
 # endif // ifdef P104_USE_BAR_GRAPH
 
@@ -384,14 +394,16 @@ private:
   bool saveSettings();
   void updateZone(uint8_t                 zone,
                   const P104_zone_struct& zstruct);
-  # ifdef P104_USE_BAR_GRAPH
+  # if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
   MD_MAX72XX *pM = nullptr;
-  void displayBarGraph(uint8_t                 zone,
-                       const P104_zone_struct& zstruct,
-                       const String          & graph);
   void modulesOnOff(uint8_t                    start,
                     uint8_t                    end,
                     MD_MAX72XX::controlValue_t on_off);
+  # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+  # ifdef P104_USE_BAR_GRAPH
+  void displayBarGraph(uint8_t                 zone,
+                       const P104_zone_struct& zstruct,
+                       const String          & graph);
   void drawOneBarGraph(uint16_t lower,
                        uint16_t upper,
                        int16_t  pixBottom,
@@ -401,6 +413,12 @@ private:
                        uint8_t  barType,
                        uint8_t  row);
   # endif // ifdef P104_USE_BAR_GRAPH
+
+  # ifdef P104_USE_DOT_SET
+  void displayDots(uint8_t                 zone,
+                   const P104_zone_struct& zstruct,
+                   const String          & dots);
+  # endif // ifdef P104_USE_DOT_SET
 
   void displayOneZoneText(uint8_t                 currentZone,
                           const P104_zone_struct& idx,
@@ -459,6 +477,13 @@ private:
   void createHString(String& string);
   # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   void reverseStr(String& str);
+  union {
+    struct {
+      uint16_t P104_dataSize;
+      char     P104_data[P104_SETTINGS_BUFFER_V2 + 1];
+    };
+    uint8_t P104_storeThis[P104_SETTINGS_BUFFER_V2 + 1 + sizeof(uint16_t)]{};
+  };
 };
 
 #endif // ifdef USES_P104

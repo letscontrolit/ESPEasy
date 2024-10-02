@@ -57,7 +57,7 @@ From ESP Easy v2.0.0 its possible to play melodies via `RTTTL <https://en.wikipe
 
 .. code-block:: none
 
-   http://<ESP IP address>/control?cmd=rtttl,14:d=4,o=5,b=112:8a,8a,a,8a,8a,a,8a,8c6,8f.,16g,2a,8a-,8a-,8a-.,16a-,8a-,8a,8a.,16a,8a,8g,8g,8a,g,c6
+   http://<ESP IP address>/control?cmd=rtttl,14,:d=4,o=5,b=112:8a,8a,a,8a,8a,a,8a,8c6,8f.,16g,2a,8a-,8a-,8a-.,16a-,8a-,8a,8a.,16a,8a,8g,8g,8a,g,c6
 
 This plays a melody on pin 14.
 
@@ -68,7 +68,7 @@ To make a boot-sound on startup, create a rule like this:
 .. code-block:: none
 
    On System#Boot do
-     rtttl,14:d=10,o=6,b=180,c,e,g
+     rtttl,14,:d=10,o=6,b=180,c,e,g
    endon
 
 `A place to find more tunes <http://www.picaxe.com/RTTTL-Ringtones-for-Tune-Command/>`_, all saved as txt files.
@@ -90,6 +90,11 @@ Commands
 --------
 
 .. include:: P001_commands_RTTTL.repl
+
+Events
+------
+
+.. include:: P001_events_RTTTL.repl
 
 Where to buy
 ------------

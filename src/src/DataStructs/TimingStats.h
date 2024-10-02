@@ -25,6 +25,9 @@ enum class TimingStatsElements {
 
   // Controller queue
   MQTT_DELAY_QUEUE,
+
+  // Do not interrupt this sequence of Cxxx_DELAY_QUEUE 
+  // as its order is used to generate MiscStatsName
   C001_DELAY_QUEUE,
   C002_DELAY_QUEUE,
   C003_DELAY_QUEUE,
@@ -43,7 +46,6 @@ enum class TimingStatsElements {
   C016_DELAY_QUEUE,
   C017_DELAY_QUEUE,
   C018_DELAY_QUEUE,
-  C018_AIR_TIME,
   C019_DELAY_QUEUE,
   C020_DELAY_QUEUE,
   C021_DELAY_QUEUE,
@@ -51,6 +53,9 @@ enum class TimingStatsElements {
   C023_DELAY_QUEUE,
   C024_DELAY_QUEUE,
   C025_DELAY_QUEUE,
+
+  // Controller specific timing stats
+  C018_AIR_TIME,   
 
   
   // Related to Task runs & sending data + rules
@@ -68,7 +73,6 @@ enum class TimingStatsElements {
   PARSE_SYSVAR_NOCHANGE,
   PARSE_TEMPLATE_PADDED,
   IS_NUMERICAL,
-  GET_TASKVALUE_AS_STRING,
   FORMAT_USER_VAR,
   PROCESS_SYSTEM_EVENT_QUEUE,
   RULES_MATCH,
@@ -76,6 +80,7 @@ enum class TimingStatsElements {
   RULES_PROCESS_MATCHED,
   RULES_PARSE_LINE,
   COMMAND_EXEC_INTERNAL,
+  COMMAND_DECODE_INTERNAL,
   CONSOLE_LOOP,
   CONSOLE_WRITE_SERIAL,
   
@@ -101,6 +106,12 @@ enum class TimingStatsElements {
   HANDLE_SCHEDULER_TASK,
   HANDLE_SCHEDULER_IDLE,
   BACKGROUND_TASKS,
+  CHECK_UDP,
+  C013_SEND_UDP,
+  C013_SEND_UDP_FAIL,
+  C013_RECEIVE_SENSOR_DATA,
+  WEBSERVER_HANDLE_CLIENT,
+  UPDATE_RTTTL,
 
   // Web serving
   HANDLE_SERVING_WEBPAGE,

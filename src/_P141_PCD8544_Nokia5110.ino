@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2024-08-12 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
  * 2022-10-08 tonhuisman: Enable PLUGIN_GET_CONFIG_VALUE event to get runtime info from plugin
  * 2022-09-24 tonhuisman: Store inverted setting when changed via inv subcommand (not saved)
  * 2022-09-23 tonhuisman: Allow backlight form 0% instead of from 1% to be able to completely turn it off
@@ -130,6 +131,10 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("pmode"), P141_CONFIG_FLAG_GET_MODE);
 
+      # if ADAGFX_FONTS_INCLUDED
+      AdaGFXFormDefaultFont(F("deffont"), P141_CONFIG_DEFAULT_FONT);
+      # endif // if ADAGFX_FONTS_INCLUDED
+
       AdaGFXFormFontScaling(F("pfontscale"), P141_CONFIG_FLAG_GET_FONTSCALE);
 
       addFormCheckBox(F("Invert display"),        F("pinvert"),      bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED));
@@ -147,7 +152,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Write Command trigger"),
                         F("pcmdtrigger"),
-                        sizeof(commandTriggerOptions) / sizeof(int),
+                        NR_ELEMENTS(commandTriggerOptions),
                         commandTriggers,
                         commandTriggerOptions,
                         P141_CONFIG_FLAG_GET_CMD_TRIGGER);
@@ -175,7 +180,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       uint16_t remain = P141_Nlines * (P141_Nchars + 1); // DAT_TASKS_CUSTOM_SIZE;
       # endif // ifndef LIMIT_BUILD_SIZE
 
-      for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P141_Nlines; ++varNr) {
         addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P141_Nchars);
         # ifndef LIMIT_BUILD_SIZE
         remain -= (strings[varNr].length() + 1);
@@ -198,6 +203,9 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       P141_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("pbacklight"));
       P141_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("pbackpercent"));
       P141_CONFIG_CONTRAST          = getFormItemInt(F("pcontrast"));
+      # if ADAGFX_FONTS_INCLUDED
+      P141_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
+      # endif // if ADAGFX_FONTS_INCLUDED
 
       uint32_t lSettings = 0;
       bitWrite(lSettings, P141_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("pNoDisplay")));  // Bit 0 NoDisplayOnReceivingText,
@@ -219,7 +227,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       String strings[P141_Nlines];
       String error;
 
-      for (uint8_t varNr = 0; varNr < P141_Nlines; varNr++) {
+      for (uint8_t varNr = 0; varNr < P141_Nlines; ++varNr) {
         strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
       }
 
@@ -260,7 +268,12 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                ADAGFX_WHITE,
                                                                ADAGFX_BLACK,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,
-                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1));
+                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1
+                                                               # if ADAGFX_FONTS_INCLUDED
+                                                               ,
+                                                               P141_CONFIG_DEFAULT_FONT
+                                                               # endif // if ADAGFX_FONTS_INCLUDED
+                                                               ));
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P141_data) && P141_data->plugin_init(event); // Start the display

@@ -117,14 +117,16 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
       String log = F("QEI  : GPIO: ");
 
-      for (uint8_t i = 0; i < 3; i++)
+      for (uint8_t i = 0; i < 3; ++i)
       {
         int pin = PIN(i);
 
         if (pin >= 0)
         {
           // pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-          const uint32_t key = createKey(PLUGIN_ID_059, pin);
+          constexpr pluginID_t P059_PLUGIN_ID{PLUGIN_ID_059};
+
+          const uint32_t key = createKey(P059_PLUGIN_ID, pin);
 
           // WARNING: operator [] creates an entry in the map if key does not exist
           newStatus = globalMapPortStatus[key];
@@ -157,13 +159,11 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
           long c = P_059_sensordefs[event->TaskIndex]->read();
-          UserVar[event->BaseVarIndex] = c;
+          UserVar.setFloat(event->TaskIndex, 0, c);
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("QEI  : ");
-            log += c;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), c));
           }
 
           sendData(event);
@@ -177,7 +177,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P_059_sensordefs.count(event->TaskIndex) != 0)
       {
-        UserVar[event->BaseVarIndex] = P_059_sensordefs[event->TaskIndex]->read();
+        UserVar.setFloat(event->TaskIndex, 0, P_059_sensordefs[event->TaskIndex]->read());
       }
       success = true;
       break;
@@ -194,9 +194,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
           if (event->Par1 >= 0)
           {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("QEI  : ");
-              log += string;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), string));
             }
             P_059_sensordefs[event->TaskIndex]->write(event->Par1);
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis());

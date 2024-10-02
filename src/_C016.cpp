@@ -45,23 +45,23 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number             = CPLUGIN_ID_016;
-      Protocol[protocolCount].usesMQTT             = false;
-      Protocol[protocolCount].usesTemplate         = false;
-      Protocol[protocolCount].usesAccount          = false;
-      Protocol[protocolCount].usesPassword         = false;
-      Protocol[protocolCount].usesExtCreds         = false;
-      Protocol[protocolCount].defaultPort          = 80;
-      Protocol[protocolCount].usesID               = false;
-      Protocol[protocolCount].usesHost             = false;
-      Protocol[protocolCount].usesPort             = false;
-      Protocol[protocolCount].usesQueue            = false;
-      Protocol[protocolCount].usesCheckReply       = false;
-      Protocol[protocolCount].usesTimeout          = false;
-      Protocol[protocolCount].usesSampleSets       = false;
-      Protocol[protocolCount].needsNetwork         = false;
-      Protocol[protocolCount].allowsExpire         = false;
-      Protocol[protocolCount].allowLocalSystemTime = true;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //              = CPLUGIN_ID_016;
+      proto.usesMQTT             = false;
+      proto.usesTemplate         = false;
+      proto.usesAccount          = false;
+      proto.usesPassword         = false;
+      proto.usesExtCreds         = false;
+      proto.defaultPort          = 80;
+      proto.usesID               = false;
+      proto.usesHost             = false;
+      proto.usesPort             = false;
+      proto.usesQueue            = false;
+      proto.usesCheckReply       = false;
+      proto.usesTimeout          = false;
+      proto.usesSampleSets       = false;
+      proto.needsNetwork         = false;
+      proto.allowsExpire         = false;
+      proto.allowLocalSystemTime = true;
       break;
     }
 
@@ -114,8 +114,11 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      if (event->timestamp == 0) {
-        event->timestamp = C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime();
+      if (event->timestamp_sec == 0) {
+        if (C016_allowLocalSystemTime)
+          event->setLocalTimeTimestamp();
+        else 
+          event->setUnixTimeTimestamp();
       }
       const C016_queue_element element(
         event,
@@ -150,6 +153,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
+    case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    {
+      string = F("-");
+      break;
+    }
+
     default:
       break;
   }
@@ -161,7 +170,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c016_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c016_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
 return true;
 

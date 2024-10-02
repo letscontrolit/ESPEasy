@@ -82,13 +82,13 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_015;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = true;
-      Protocol[protocolCount].usesExtCreds = true;
-      Protocol[protocolCount].defaultPort  = 80;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_015;
+      proto.usesMQTT     = false;
+      proto.usesAccount  = false;
+      proto.usesPassword = true;
+      proto.usesExtCreds = true;
+      proto.defaultPort  = 80;
+      proto.usesID       = false;
       break;
     }
 
@@ -137,10 +137,11 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (isFormItemChecked(F("controllerenabled"))) {
         for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-          protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
+          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
 
           if (validProtocolIndex(ProtocolIndex)) {
-            if ((i != event->ControllerIndex) && (Protocol[ProtocolIndex].Number == 15) && Settings.ControllerEnabled[i]) {
+            const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
+            if ((i != event->ControllerIndex) && (number == 15) && Settings.ControllerEnabled[i]) {
               success = false;
 
               // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
@@ -183,7 +184,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      std::unique_ptr<C015_queue_element> element(new C015_queue_element(event, valueCount));
+      std::unique_ptr<C015_queue_element> element(new (std::nothrow) C015_queue_element(event, valueCount));
       success = C015_DelayHandler->addToQueue(std::move(element));
 
       if (success) {
@@ -191,6 +192,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = static_cast<C015_queue_element&>(*(C015_DelayHandler->sendQueue.back()));
+
+        const String taskDeviceName = getTaskDeviceName(event->TaskIndex);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -202,14 +205,15 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             formattedValue = String();
           }
 
-          const String valueName = getTaskValueName(event->TaskIndex, x);
-          String valueFullName   = getTaskDeviceName(event->TaskIndex);
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
+          const String valueName = Cache.getTaskDeviceValueName(event->TaskIndex, x);
+          const String valueFullName = strformat(
+            F("%s.%s"),          
+            taskDeviceName.c_str(),
+            valueName.c_str());
+          const String vPinNumberStr = valueName.substring(1, 4);
           int    vPinNumber    = vPinNumberStr.toInt();
 
-          if (!(vPinNumber > 0) && (vPinNumber < 256)) {
+          if ((vPinNumber < 0) || (vPinNumber > 255)) {
             vPinNumber = -1;
           }
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -217,25 +221,24 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             log += Blynk.connected() ? F("(online): ") : F("(offline): ");
 
             if ((vPinNumber > 0) && (vPinNumber < 256)) {
-              log += F("send ");
-              log += valueFullName;
-              log += F(" = ");
-              log += formattedValue;
-              log += F(" to blynk pin v");
-              log += vPinNumber;
+              log += strformat(
+                F("send %s = %s to blynk pin v%d"),
+                valueFullName.c_str(),
+                formattedValue.c_str(),
+                vPinNumber);
             } else {
-              log += F("error got vPin number for ");
-              log += valueFullName;
-              log += F(", got not valid value: ");
-              log += vPinNumberStr;
+              log += strformat(
+              F("error got vPin number for %s, got not valid value: %s"),
+              valueFullName.c_str(),
+              vPinNumberStr.c_str());
             }
             addLogMove(LOG_LEVEL_INFO, log);
           }
           element.vPin[x] = vPinNumber;
-          element.txt[x]  = formattedValue;
+          move_special(element.txt[x], std::move(formattedValue));
         }
       }
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -252,7 +255,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c015_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c015_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C015_queue_element& element = static_cast<const C015_queue_element&>(element_base);
 // *INDENT-ON*
   if (!Settings.ControllerEnabled[element._controller_idx]) {
@@ -407,26 +410,20 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
   int vPin = event->Par1;
 
   if ((vPin < 0)  || (vPin > 255)) {
-    String err = F("Not correct blynk vPin number ");
-    err += vPin;
-    return err;
+    return concat(F("Not correct blynk vPin number "), vPin);
   }
 
   String data = parseString(Line, 3);
 
   if (data.isEmpty()) {
-    String err = F("Skip sending empty data to blynk vPin ");
-    err += vPin;
-    return err;
+    return concat(F("Skip sending empty data to blynk vPin "), vPin);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
-
-    log += vPin;
-    log += F(" = ");
-    log += data;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F(C015_LOG_PREFIX "(online): send blynk pin v%d = %s"),
+      vPin,
+      data.c_str()));
   }
 
   Blynk.virtualWrite(vPin, data);
@@ -447,23 +444,21 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  uint8_t  vPin     = request.pin;
-  float pinValue = param.asFloat();
+  const unsigned int  vPin     = request.pin;
+  const float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "server set v");
-    log += vPin;
-    log += F(" to ");
-    log += pinValue;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+      F(C015_LOG_PREFIX "server set v%u to %f"), 
+      vPin, 
+      pinValue));
   }
 
   if (Settings.UseRules) {
-    String eventCommand = F("blynkv");
-    eventCommand += vPin;
-    eventCommand += '=';
-    eventCommand += pinValue;
-    eventQueue.addMove(std::move(eventCommand));
+    eventQueue.addMove(strformat(    
+      F("blynkv%d=%f"),
+      vPin, 
+      pinValue));
   }
 }
 

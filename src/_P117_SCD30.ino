@@ -11,6 +11,7 @@
 
 // Changelog:
 //
+// 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
 // 2022-02-26 tonhuisman: Implement commands for get/set measurement interval, and a setting too. Bugfix.
 // 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
 // 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
@@ -56,6 +57,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
       break;
     }
 
@@ -171,10 +173,10 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       switch (P117_data->read_sensor(&scd30_CO2, &scd30_CO2EAvg, &scd30_Temp, &scd30_Humid))
       {
         case ERROR_SCD30_NO_ERROR:
-          UserVar[event->BaseVarIndex]     = scd30_CO2EAvg;
-          UserVar[event->BaseVarIndex + 1] = scd30_Humid;
-          UserVar[event->BaseVarIndex + 2] = scd30_Temp;
-          UserVar[event->BaseVarIndex + 3] = scd30_CO2;
+          UserVar.setFloat(event->TaskIndex, 0, scd30_CO2EAvg);
+          UserVar.setFloat(event->TaskIndex, 1, scd30_Humid);
+          UserVar.setFloat(event->TaskIndex, 2, scd30_Temp);
+          UserVar.setFloat(event->TaskIndex, 3, scd30_CO2);
 
           if (scd30_CO2EAvg > 5000) {
             addLog(LOG_LEVEL_INFO, F("SCD30: Sensor saturated! > 5000 ppm"));
@@ -200,52 +202,42 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P117_data) {
         return success;
       }
-      String   command = parseString(string, 1);
-      uint16_t value   = 0;
-      String   log;
-      float    temp;
+      const String command = parseString(string, 1);
+      uint16_t     value   = 0;
+      String log;
+      float  temp;
 
       if (equals(command, F("scdgetabc"))) {
         P117_data->getCalibrationType(&value);
-        log    += F("ABC: ");
-        log    += value;
+        log    += concat(F("ABC: "), value);
         success = true;
       } else if (equals(command, F("scdgetalt"))) {
         P117_data->getAltitudeCompensation(&value);
-        log    += F("Altitude: ");
-        log    += value;
+        log    += concat(F("Altitude: "), value);
         success = true;
       } else if (equals(command, F("scdgettmp"))) {
         P117_data->getTemperatureOffset(&temp);
-        log    += F("Temp offset: ");
-        log    += toString(temp, 2);
+        log    += concat(F("Temp offset: "), toString(temp, 2));
         success = true;
       } else if (equals(command, F("scdsetcalibration")) && (event->Par1 >= 0) && (event->Par1 <= 1)) {
         P117_data->setCalibrationMode(event->Par1 == 1);
         P117_AUTO_CALIBRATION = event->Par1; // Update device configuration
-        log                  += F("Calibration: ");
-        log                  += event->Par1 == 1 ? F("auto") : F("manual");
+        log                  += concat(F("Calibration: "), event->Par1 == 1 ? F("auto") : F("manual"));
         success               = true;
       } else if (equals(command, F("scdsetfrc")) && (event->Par1 >= 400) && (event->Par1 <= 2000)) {
         int res = P117_data->setForcedRecalibrationFactor(event->Par1);
-        log    += F("SCD30 Forced calibration: ");
-        log    += event->Par1;
-        log    += F(", result: ");
-        log    += res;
+        log    += strformat(F("SCD30 Forced calibration: %d, result: %d"), event->Par1, res);
         success = true;
       } else if (equals(command, F("scdgetinterval"))) {
         P117_data->getMeasurementInterval(&value);
-        log    += F("Interval: ");
-        log    += value;
+        log    += concat(F("Interval: "), value);
         success = true;
       } else if (equals(command, F("scdsetinterval")) && (event->Par1 >= 2) && (event->Par1 <= 1800)) {
         int res = P117_data->setMeasurementInterval(event->Par1);
         P117_MEASURE_INTERVAL = event->Par1; // Update device configuration
-        log                  += F("SCD30 Measurement Interval: ");
-        log                  += event->Par1;
-        log                  += F(", result: ");
-        log                  += res;
-        success               = true;
+        log                  += strformat(F("SCD30 Measurement Interval: %d, result: %d"),
+                                          event->Par1, res);
+        success = true;
       }
 
       if (success) {

@@ -17,13 +17,13 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
   {
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
-      Protocol[++protocolCount].Number     = CPLUGIN_ID_010;
-      Protocol[protocolCount].usesMQTT     = false;
-      Protocol[protocolCount].usesTemplate = true;
-      Protocol[protocolCount].usesAccount  = false;
-      Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 514;
-      Protocol[protocolCount].usesID       = false;
+      ProtocolStruct& proto = getProtocolStruct(event->idx); //      = CPLUGIN_ID_010;
+      proto.usesMQTT     = false;
+      proto.usesTemplate = true;
+      proto.usesAccount  = false;
+      proto.usesPassword = false;
+      proto.defaultPort  = 514;
+      proto.usesID       = false;
       break;
     }
 
@@ -69,7 +69,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
-      std::unique_ptr<C010_queue_element> element(new C010_queue_element(event, valueCount));
+      std::unique_ptr<C010_queue_element> element(new (std::nothrow) C010_queue_element(event, valueCount));
 
 
       {
@@ -83,8 +83,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
           pubname = ControllerSettings->Publish;
         }
-
         parseControllerVariables(pubname, event, false);
+        const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -92,9 +92,13 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
           const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element->txt[x] = pubname;
-            parseSingleControllerVariable(element->txt[x], event, x, false);
-            element->txt[x].replace(F("%value%"), formattedValue);
+            String txt;
+            txt = pubname;
+            if (contains_valname) {
+              parseSingleControllerVariable(txt, event, x, false);
+            }
+            txt.replace(F("%value%"), formattedValue);
+            move_special(element->txt[x], std::move(txt));
 #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
               addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
@@ -103,9 +107,8 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         }
       }
 
-      
       success = C010_DelayHandler->addToQueue(std::move(element));
-      Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
+      Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
       break;
     }
 
@@ -128,7 +131,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c010_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c010_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C010_queue_element& element = static_cast<const C010_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {
@@ -142,7 +145,7 @@ bool do_process_c010_delay_queue(int controller_number, const Queue_element_base
 
   if (!beginWiFiUDP_randomPort(C010_portUDP)) { return false; }
 
-  if (!try_connect_host(controller_number, C010_portUDP, ControllerSettings)) {
+  if (!try_connect_host(cpluginID, C010_portUDP, ControllerSettings)) {
     return false;
   }
 

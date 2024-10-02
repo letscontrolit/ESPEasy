@@ -207,6 +207,14 @@
 
     ``ExecuteRules,<filename>``"
     "
+    FactoryReset","
+    :red:`Internal`","
+    Reset config to factory default. Caution, all settings will be lost!
+
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset`` to avoid accidentally wiping the configuration when ``Reboot`` was the intended action...
+
+    ``FactoryReset``"
+    "
     Gateway","
     :red:`Internal`","
     Get or set the gateway configuration
@@ -232,16 +240,36 @@
     :red:`Internal`","
     Run I2C scanner to find connected I2C chips. Output will be sent to the serial port.
 
-    ``I2Cscanner``
+    ``I2Cscanner[,1]``
     
+    Added: 2024-06-14:
+    With the optional debug argument ``1`` provided, the returned I2C status (error) code will be listed for *all* tested I2C addresses.
+
+    Added: 2024-06-14:
+    Scan is performed at the Low I2C speed configured (default 100 kHz). When having an I2C multiplexer configured, all channels of the multiplexer will also be scanned.
+
     Example output:
 
     .. code-block:: none
 
-     4500043 : Info  : Command: i2cscanner
+     >i2cscanner
+     Standard I2C bus
      I2C  : Found 0x3c
      I2C  : Found 0x40
      I2C  : Found 0x5a
+
+     >i2cscanner,1
+     Standard I2C bus
+     I2C  : Error 2 at 0x01
+     I2C  : Error 2 at 0x02
+     I2C  : Error 2 at 0x03
+     ...
+     I2C  : Error 2 at 0x3f
+     I2C  : Found 0x40
+     I2C  : Error 2 at 0x41
+     ...
+     I2C  : Error 2 at 0x7e
+     I2C  : Error 2 at 0x7f
 
     "
     "
@@ -363,6 +391,18 @@
 
     ``Name,<new name>``"
     "
+    Notify","
+    :green:`Rules`","
+    Trigger a notification. Requires the notifier at the numbered index (1..3) to be enabled.
+
+    Optionally include the message body (quoted) and subject (quoted) to be passed. NB: The buzzer doesn't support a message body or subject.
+
+    Syntax: ``Notify,<notifier>[,<message>[,<subject>]]``
+
+    Example:
+
+    ``Notify,1,'The temperature is currently [ds#temp] degrees!','Temperature warning'``"
+    "
     NTPHost[,<host-name_or_ip>]","
     :red:`Internal`","
     Set the name of the NTP-host
@@ -370,6 +410,23 @@
     ``NTPHost,192.168.1.1`` -> Set an IP for the NTP host (local NTP server)
     
     ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
+    "
+    OWScan","
+    :red:`Internal`","
+    Scan for & list 1-wire (One Wire = OW) devices on a GPIO pin.
+
+    Syntax: ``owscan,<rx-pin>[,<txpin>]``
+
+    If no separate TX pin is provided, the RX pin will be used as the TX pin too, as is the normal behavior for 1-wire communication. The separate TX pin is used on a Shelly device when adding the Shelly Temperature add-on (RX = GPIO-0 and TX = GPIO-3).
+
+    Example:
+
+    .. code-block:: none
+
+      >owscan,5
+      01-6e-56-8c-01-00-00-84 [DS1990A]    
+
+    "
     "
     Password","
     :red:`Internal`","
@@ -469,9 +526,15 @@
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
+    Send command using MQTT broker service. The 'Will Retain' option as configured in the MQTT Controller settings is used. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PublishR","
+    :green:`Rules`","
+    Send command using MQTT broker service, with the MQTT 'Will Retain' flag enabled. Uses the first enabled MQTT Controller.
+
+    ``PublishR,<topic>[,<payload>]``"
     "
     PutToHTTP","
     :green:`Rules`","
@@ -539,10 +602,9 @@
     ``Reboot``"
     "
     Reset","
-    :red:`Internal`","
-    Reset config to factory default. Caution, all settings will be lost!
-
-    ``Reset``"
+    :gray:`Renamed`","
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset``.
+    "
     "
     Reset Flash Write Counter","
     :red:`Internal`","

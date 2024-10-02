@@ -1,2 +1,4 @@
 platformio>=6.1.9
 pygit2>=1.10.1
+cryptography==43.0.1
+setuptools

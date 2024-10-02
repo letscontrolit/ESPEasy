@@ -80,7 +80,12 @@ void handle_config() {
     copyFormPassword(F("key2"),  SecuritySettings.WifiKey2,  sizeof(SecuritySettings.WifiKey2));
 
     // Hidden SSID
-    Settings.IncludeHiddenSSID(isFormItemChecked(F("hiddenssid")));
+    Settings.IncludeHiddenSSID(isFormItemChecked(LabelType::CONNECT_HIDDEN_SSID));
+    Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
+
+#ifdef ESP32
+    Settings.PassiveWiFiScan(isFormItemChecked(LabelType::WIFI_PASSIVE_SCAN));
+#endif
 
     // Access point password.
     copyFormPassword(F("apkey"), SecuritySettings.WifiAPKey, sizeof(SecuritySettings.WifiAPKey));
@@ -146,6 +151,9 @@ void handle_config() {
     webArg2ip(F("espethsubnet"),  Settings.ETH_Subnet);
     webArg2ip(F("espethdns"),     Settings.ETH_DNS);
 #endif // if FEATURE_ETHERNET
+    #if FEATURE_ALTERNATIVE_CDN_URL
+    set_CDN_url_custom(webArg(F("alturl")));
+    #endif // if FEATURE_ALTERNATIVE_CDN_URL
     addHtmlError(SaveSettings());
   }
 
@@ -170,8 +178,13 @@ void handle_config() {
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
   addFormNote(F("WPA Key must be at least 8 characters long"));
 
-  addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
-  addFormNote(F("Must be checked to connect to a hidden SSID"));
+  addFormCheckBox(LabelType::CONNECT_HIDDEN_SSID,      Settings.IncludeHiddenSSID());
+
+#ifdef ESP32
+  addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN, Settings.PassiveWiFiScan());
+#endif
+  
+  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT,      Settings.HiddenSSID_SlowConnectPerBSSID());
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
@@ -258,6 +271,15 @@ void handle_config() {
   addFormCheckBox(F("Sleep on connection failure"), F("deepsleeponfail"), Settings.deepSleepOnFail);
 
   addFormSeparator(2);
+
+  #if FEATURE_ALTERNATIVE_CDN_URL
+  addFormSubHeader(F("CDN (Content delivery network)"));
+
+  addFormTextBox(F("Custom CDN URL"), F("alturl"), get_CDN_url_custom(), 255);
+  addFormNote(concat(F("Leave empty for default CDN url: "), get_CDN_url_prefix()));
+
+  addFormSeparator(2);
+  #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
   html_TR_TD();
   html_TD();
