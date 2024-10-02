@@ -69,6 +69,11 @@ struct __attribute__((__packed__)) DeviceStruct
     return pluginID_t::toPluginID(Number);
   }
 
+  void setPinDirection(int pin, gpio_direction direction);
+  void setPin1Direction(gpio_direction direction) { setPinDirection(1, direction); }
+  void setPin2Direction(gpio_direction direction) { setPinDirection(2, direction); }
+  void setPin3Direction(gpio_direction direction) { setPinDirection(3, direction); }
+
   gpio_direction   getPinDirection(int pin) const;
   PinSelectPurpose pinDirectionToPurpose(gpio_direction direction) const;
   PinSelectPurpose getPinSelectPurpose(int pin) const;
@@ -80,10 +85,9 @@ struct __attribute__((__packed__)) DeviceStruct
   uint8_t            Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
   uint8_t            ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   Output_Data_type_t OutputDataType; // Subset of selectable output data types (Default = no selection)
-
-  gpio_direction Pin1Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
-  gpio_direction Pin2Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
-  gpio_direction Pin3Direction : NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX));
+  uint8_t Pin1Direction : GPIO_DIRECTION_NR_BITS;
+  uint8_t Pin2Direction : GPIO_DIRECTION_NR_BITS;
+  uint8_t Pin3Direction : GPIO_DIRECTION_NR_BITS;
                                      
   bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
   bool InverseLogicOption : 1;       // Allow to invert the boolean state (e.g. a switch)

@@ -62,7 +62,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].GlobalSyncOption = true;
       Device[deviceCount].OutputDataType   = Output_Data_type_t::Simple;
       Device[deviceCount].PluginStats      = true;
-      Device[deviceCount].Pin2Direction    = gpio_direction::gpio_output;
+      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 

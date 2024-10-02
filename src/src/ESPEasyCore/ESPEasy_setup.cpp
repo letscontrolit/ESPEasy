@@ -459,7 +459,7 @@ void ESPEasy_setup()
   }
 #endif
 
-  timermqtt_interval      = 250; // Interval for checking MQTT
+  timermqtt_interval      = 100; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
   CPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -592,8 +592,8 @@ void ESPEasy_setup()
   #endif
 
 
-  UseRTOSMultitasking = Settings.UseRTOSMultitasking;
   #ifdef USE_RTOS_MULTITASKING
+  UseRTOSMultitasking = Settings.UseRTOSMultitasking;
 
   if (UseRTOSMultitasking) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
