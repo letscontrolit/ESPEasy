@@ -30,7 +30,7 @@
         ``7ddt,[BME280#Temperature],[DS18b20#Temperature]``
 
         ","
-        To display two temperatures measured by a BME280 sensor and a DS18b20 sensor. Only applicable for the MAX7219 - 8 digit display, as the other devices don't have enough digits to show 2 temperatures.
+        To display two temperatures measured, f.e. by a BME280 sensor and a DS18b20 sensor. Applicable for the MAX7219 and 74HC595 8 digit displays, as the other devices don't have enough digits to show 2 temperatures.
         "
         "
         ``7dst,<hh>,<mm>,<ss>``

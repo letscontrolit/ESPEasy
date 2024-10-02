@@ -439,6 +439,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7-segment display
+// #define P073_USE_74HC595 1  // Enable 74HC595 displays
+// #define P073_USE_74HC595_OVERRIDE 1  // Allow 74HC595 displays feature for ESP8266 builds
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
 // #define USES_P076   // HLW8012/BL0937 (Shelly Plug S, Sonoff POW R1, Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23)
