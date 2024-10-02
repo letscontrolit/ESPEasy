@@ -5,5 +5,7 @@ ProtocolStruct::ProtocolStruct() :
     usesTemplate(false), usesID(false), Custom(false), usesHost(true), usesPort(true),
     usesQueue(true), usesCheckReply(true), usesTimeout(true), usesSampleSets(false), 
     usesExtCreds(false), needsNetwork(true), allowsExpire(true), allowLocalSystemTime(false)
+  #if FEATURE_MQTT_TLS
+  , usesTLS(false)
+  #endif
     {}
-

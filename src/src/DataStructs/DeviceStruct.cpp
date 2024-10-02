@@ -5,14 +5,17 @@
 DeviceStruct::DeviceStruct() :
   Number(0), Type(0), VType(Sensor_VType::SENSOR_TYPE_NONE), Ports(0), ValueCount(0),
   OutputDataType(Output_Data_type_t::Default),
+  Pin1Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
+  Pin2Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), 
+  Pin3Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
   PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
   Custom(false), SendDataOption(false), GlobalSyncOption(false),
   TimerOption(false), TimerOptional(false), DecimalsOnly(false),
   DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
   PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
   TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false),
-  I2CMax100kHz(false), HasFormatUserVar(false), Pin1Direction(gpio_direction::gpio_direction_MAX),
-  Pin2Direction(gpio_direction::gpio_direction_MAX), Pin3Direction(gpio_direction::gpio_direction_MAX) {}
+  I2CMax100kHz(false), HasFormatUserVar(false) 
+{}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {
@@ -69,14 +72,24 @@ bool DeviceStruct::isCustom() const {
          (Type == DEVICE_TYPE_CUSTOM3);
 }
 
+void DeviceStruct::setPinDirection(int pin, gpio_direction direction)
+{
+  const uint8_t val = static_cast<uint8_t>(direction) & ((1 << GPIO_DIRECTION_NR_BITS) - 1);
+  switch (pin) {
+    case 1: Pin1Direction = val; break;
+    case 2: Pin2Direction = val; break;
+    case 3: Pin3Direction = val; break;
+  }
+}
+
 gpio_direction DeviceStruct::getPinDirection(int pin) const {
   switch (pin) {
     case 1:
-      return Pin1Direction;
+      return static_cast<gpio_direction>(Pin1Direction);
     case 2:
-      return Pin2Direction;
+      return static_cast<gpio_direction>(Pin2Direction);
     case 3:
-      return Pin3Direction;
+      return static_cast<gpio_direction>(Pin3Direction);
   }
   return gpio_direction::gpio_direction_MAX;
 }

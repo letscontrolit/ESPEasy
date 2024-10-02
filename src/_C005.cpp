@@ -36,6 +36,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = false;
+      #if FEATURE_MQTT_TLS
+      proto.usesTLS      = true;
+      #endif
       break;
     }
 

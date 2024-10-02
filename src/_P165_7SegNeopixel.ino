@@ -57,7 +57,7 @@ boolean Plugin_165(uint8_t function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number      = PLUGIN_ID_165;
       Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
       Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Pin1Direction = gpio_direction::gpio_output;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

@@ -33,6 +33,7 @@ else:
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P037",  # MQTT import
     "-DUSES_P038",  # Neopixel
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
@@ -66,6 +67,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
     "-DUSES_C019",  # ESPEasy-NOW
 
+    "-DFEATURE_MQTT_TLS=1",
     "-DUSES_ESPEASY_NOW",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",

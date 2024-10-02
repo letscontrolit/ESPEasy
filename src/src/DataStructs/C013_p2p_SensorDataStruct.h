@@ -41,7 +41,7 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
   // Thus should not be checked
   pluginID_t        deviceNumber = INVALID_PLUGIN_ID;
   Sensor_VType      sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
-  TaskValues_Data_t values{};
+  uint8_t           taskValues_Data[sizeof(TaskValues_Data_t)]{};
 
   // Extra info added on 20240619 (build ID 20871)
   ShortChecksumType checksum;
