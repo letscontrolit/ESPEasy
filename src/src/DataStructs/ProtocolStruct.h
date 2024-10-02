@@ -11,6 +11,7 @@ struct ProtocolStruct
 {
   ProtocolStruct();
 
+
   bool useCredentials() const {
     return usesAccount || usesPassword;
   }
@@ -38,6 +39,9 @@ struct ProtocolStruct
     uint16_t allowsExpire         : 1;
     uint16_t allowLocalSystemTime : 1;
   };
+#if FEATURE_MQTT_TLS
+  bool     usesTLS              : 1; // May offer TLS related settings and options
+#endif
 
 //  uint8_t Number{};
 };

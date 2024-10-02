@@ -36,6 +36,8 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 bool fileExists(const __FlashStringHelper * fname);
 bool fileExists(const String& fname);
 
+int fileSize(const String& fname);
+
 enum class FileDestination_e : uint8_t {
   ANY   = 0,
   FLASH = 1,
@@ -264,8 +266,18 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
    Load Controller settings to file system
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
-
 #endif
+
+
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+#if FEATURE_MQTT_TLS
+String SaveCertificate(const String& fname, const String& certificate);
+String LoadCertificate(const String& fname, String& certificate, bool cleanup = true);
+#endif
+
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -302,6 +314,8 @@ String ClearInFile(const char *fname, int index, int datasize);
    Load data from config file on file system
  \*********************************************************************************************/
 String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int datasize);
+
+String LoadFromFile(const char *fname, String& data, int offset = 0);
 
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings
