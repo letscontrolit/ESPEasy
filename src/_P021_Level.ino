@@ -41,16 +41,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_021;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
+      Device[++deviceCount].Number       = PLUGIN_ID_021;
+      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].ValueCount     = 1;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -100,14 +97,18 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Save 'Set Level'/'Hysteresis' after change via <pre>config</pre> command"),
                       F("psave_always"),
                       P021_DONT_ALWAYS_SAVE == 0);
+
       // # ifndef BUILD_NO_DEBUG
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
+
       // # endif // ifndef BUILD_NO_DEBUG
 
       addFormNumericBox(F("Auto-save interval"), F("pautosave"), P021_AUTOSAVE_TIMER / 60, 0, 1440); // Present in minutes
       addUnit(F("minutes"));
+
       // # ifndef BUILD_NO_DEBUG
       addFormNote(F("Interval to check if settings are changed via <pre>config</pre> command and saves that. Max. 24h, 0 = Off"));
+
       // # endif // ifndef BUILD_NO_DEBUG
 
       success = true;

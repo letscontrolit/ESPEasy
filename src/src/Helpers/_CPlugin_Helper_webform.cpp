@@ -16,50 +16,61 @@
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
 \*********************************************************************************************/
-const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameterIdx, bool displayName)
+const __FlashStringHelper* toString(ControllerSettingsStruct::VarType parameterIdx, bool displayName)
 {
   switch (parameterIdx) {
-    case ControllerSettingsStruct::CONTROLLER_USE_DNS:                  return  F("Locate Controller");      
-    case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 return  F("Controller Hostname");    
-    case ControllerSettingsStruct::CONTROLLER_IP:                       return  F("Controller IP");          
-    case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");        
-    case ControllerSettingsStruct::CONTROLLER_USER:                     return  F("Controller User");        
-    case ControllerSettingsStruct::CONTROLLER_PASS:                     return  F("Controller Password");    
+    case ControllerSettingsStruct::CONTROLLER_USE_DNS:                  return F("Locate Controller");
+    case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 return F("Controller Hostname");
+    case ControllerSettingsStruct::CONTROLLER_IP:                       return F("Controller IP");
+    case ControllerSettingsStruct::CONTROLLER_PORT:                     return F("Controller Port");
+#if FEATURE_MQTT_TLS
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:            return F("Use TLS");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT: return F("Store Fingerprint");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:      return F("Store Certificate");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:    return F("Store CA Certificate");
+#endif // if FEATURE_MQTT_TLS
 
-    case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:        return  F("Minimum Send Interval");  
-    case ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH:          return  F("Max Queue Depth");        
-    case ControllerSettingsStruct::CONTROLLER_MAX_RETRIES:              return  F("Max Retries");            
-    case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        return  F("Full Queue Action");      
-    case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             return  F("Allow Expire");           
-    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              return  F("De-duplicate");           
-    case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:    return  F("Use Local System Time");
-    
-    case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              return  F("Check Reply");            
+    case ControllerSettingsStruct::CONTROLLER_USER:                     return F("Controller User");
+    case ControllerSettingsStruct::CONTROLLER_PASS:                     return F("Controller Password");
 
-    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:                return  F("Controller Client ID");   
-    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT: return  F("Unique Client ID on Reconnect");   
-    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:               return  F("Publish Retain Flag");    
-    case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:                return  F("Controller Subscribe");   
-    case ControllerSettingsStruct::CONTROLLER_PUBLISH:                  return  F("Controller Publish");     
-    case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:                return  F("Controller LWT Topic");   
-    case ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE:      return  F("LWT Connect Message");    
-    case ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE:   return  F("LWT Disconnect Message"); 
-    case ControllerSettingsStruct::CONTROLLER_SEND_LWT:                 return  F("Send LWT to broker");     
-    case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              return  F("Will Retain");            
-    case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            return  F("Clean Session");          
-    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: return  F("Use Extended Credentials");  
-    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              return  F("Send Binary");            
-    case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  return  F("Client Timeout");         
-    case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     return  F("Sample Set Initiator");   
+    case ControllerSettingsStruct::CONTROLLER_MIN_SEND_INTERVAL:        return F("Minimum Send Interval");
+    case ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH:          return F("Max Queue Depth");
+    case ControllerSettingsStruct::CONTROLLER_MAX_RETRIES:              return F("Max Retries");
+    case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        return F("Full Queue Action");
+    case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             return F("Allow Expire");
+    case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              return F("De-duplicate");
+    case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:    return F("Use Local System Time");
+
+    case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              return F("Check Reply");
+
+    case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:                return F("Controller Client ID");
+#if FEATURE_MQTT
+    case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT: return F("Unique Client ID on Reconnect");
+    case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:               return F("Publish Retain Flag");
+#endif // if FEATURE_MQTT
+    case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:                return F("Controller Subscribe");
+    case ControllerSettingsStruct::CONTROLLER_PUBLISH:                  return F("Controller Publish");
+#if FEATURE_MQTT
+    case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:                return F("Controller LWT Topic");
+    case ControllerSettingsStruct::CONTROLLER_LWT_CONNECT_MESSAGE:      return F("LWT Connect Message");
+    case ControllerSettingsStruct::CONTROLLER_LWT_DISCONNECT_MESSAGE:   return F("LWT Disconnect Message");
+    case ControllerSettingsStruct::CONTROLLER_SEND_LWT:                 return F("Send LWT to broker");
+    case ControllerSettingsStruct::CONTROLLER_WILL_RETAIN:              return F("Will Retain");
+    case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:            return F("Clean Session");
+#endif // if FEATURE_MQTT
+    case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS: return F("Use Extended Credentials");
+    case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              return F("Send Binary");
+    case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  return F("Client Timeout");
+    case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     return F("Sample Set Initiator");
 
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
 
-      if (displayName) { return  F("Enabled"); }
-      else {             return  F("controllerenabled"); }
-      
+      if (displayName) { return F("Enabled"); }
+      else {             return F("controllerenabled"); }
+
 
     default:
-      return  F("Undefined");
+      return F("Undefined");
   }
 }
 
@@ -113,26 +124,51 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
 
   ControllerSettingsStruct::VarType varType = ControllerSettingsStruct::CONTROLLER_ENABLED;
 
-  bool   isAlternativeDisplayName = false;
-  const String displayName        = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
-  const String internalName       = getControllerParameterInternalName(ProtocolIndex, varType);
+  bool isAlternativeDisplayName = false;
+  const String displayName      = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  const String internalName     = getControllerParameterInternalName(ProtocolIndex, varType);
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
-void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType) {
-  protocolIndex_t  ProtocolIndex  = getProtocolIndex_from_ControllerIndex(controllerindex);
+#if FEATURE_MQTT_TLS
+void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description, TLS_types tls_type) {
+  const String certFile = ControllerSettings.getCertificateFilename(tls_type);
+
+  if (!certFile.isEmpty())
+  {
+    String note = description;
+    note += F(" <tt>");
+    note += certFile;
+    note += F("</tt> ");
+
+    if (fileExists(certFile)) {
+      note += F("(File exists)");
+    } else {
+      note += F("(Not found)");
+    }
+    addFormNote(note);
+  }
+}
+
+#endif // if FEATURE_MQTT_TLS
+
+void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSettings,
+                                controllerIndex_t                 controllerindex,
+                                ControllerSettingsStruct::VarType varType) {
+  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
+
   if (!validProtocolIndex(ProtocolIndex)) {
     return;
   }
 
-  bool   isAlternativeDisplayName = false;
-  const String displayName        = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
-  const String internalName       = getControllerParameterInternalName(ProtocolIndex, varType);
+  bool isAlternativeDisplayName = false;
+  const String displayName      = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
+  const String internalName     = getControllerParameterInternalName(ProtocolIndex, varType);
 
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
     {
-      const __FlashStringHelper * options[2] = {
+      const __FlashStringHelper *options[2] = {
         F("Use IP address"),
         F("Use Hostname")
       };
@@ -154,6 +190,70 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       addFormNumericBox(displayName, internalName, ControllerSettings.Port, 1, 65535);
       break;
     }
+#if FEATURE_MQTT_TLS
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
+    {
+      const int choice                     = static_cast<int>(ControllerSettings.TLStype());
+      const __FlashStringHelper *options[] = {
+        toString(TLS_types::NoTLS),
+
+        //       toString(TLS_types::TLS_PSK),
+
+/*
+        // FIXME TD-er: Disabled for now, will add selection later
+        toString(TLS_types::TLS_CA_CERT),
+        toString(TLS_types::TLS_FINGERPRINT),
+*/
+        toString(TLS_types::TLS_insecure)
+      };
+      const int indices[] = {
+        static_cast<int>(TLS_types::NoTLS),
+
+        //        static_cast<int>(TLS_types::TLS_PSK),
+
+  /*
+        // FIXME TD-er: Disabled for now, will add selection later
+        static_cast<int>(TLS_types::TLS_CA_CERT),
+        static_cast<int>(TLS_types::TLS_FINGERPRINT),
+*/
+        static_cast<int>(TLS_types::TLS_insecure)
+      };
+      constexpr int nrOptions = NR_ELEMENTS(indices);
+      addFormSelector(displayName, internalName, nrOptions, options, indices, choice, true);
+      addCertificateFileNote(ControllerSettings,
+                             F("Certificate or FingerPrint must be stored on the filesystem in"),
+                             ControllerSettings.TLStype());
+      break;
+    }
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
+    {
+/*
+      // FIXME TD-er: Disabled for now, will add selection later
+      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT));
+      addFormCheckBox(displayName, internalName, false, saveDisabled);
+      addCertificateFileNote(ControllerSettings, F("Store fingerprint in"), TLS_types::TLS_FINGERPRINT);
+*/
+      break;
+    }
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:
+    // fall through
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
+    {
+  /*
+      // FIXME TD-er: Disabled for now, will add selection later      
+      //   const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
+      //         TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
+      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_CA_CERT));
+      addFormCheckBox(displayName, internalName, false, saveDisabled);
+
+      if (saveDisabled) {
+        addUnit(F("File Exists"));
+      }
+      addCertificateFileNote(ControllerSettings, F("Store CA Certificate in"), TLS_types::TLS_CA_CERT);
+*/
+      break;
+    }
+#endif // if FEATURE_MQTT_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
       const size_t fieldMaxLength =
@@ -166,10 +266,12 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_PASS:
     {
-      const size_t fieldMaxLength = ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.ControllerPassword[0]) - 1;
+      const size_t fieldMaxLength =
+        ControllerSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.ControllerPassword[0]) - 1;
+
       if (isAlternativeDisplayName) {
         // It is not a regular password, thus use normal text field.
-        addFormTextBox(displayName, internalName, 
+        addFormTextBox(displayName, internalName,
                        getControllerPass(controllerindex, ControllerSettings),
                        fieldMaxLength);
       } else {
@@ -197,7 +299,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     }
     case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:
     {
-      const __FlashStringHelper * options[2] {
+      const __FlashStringHelper *options[2] {
         F("Ignore New"),
         F("Delete Oldest")
       };
@@ -212,10 +314,10 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       break;
     case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:
       addFormCheckBox(displayName, internalName, ControllerSettings.useLocalSystemTime());
-      break;      
+      break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
     {
-      const __FlashStringHelper * options[2] = {
+      const __FlashStringHelper *options[2] = {
         F("Ignore Acknowledgement"),
         F("Check Acknowledgement")
       };
@@ -225,18 +327,21 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
       addFormTextBox(displayName, internalName, ControllerSettings.ClientID, sizeof(ControllerSettings.ClientID) - 1);
       break;
+#if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
       addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_uniqueMQTTclientIdReconnect());
       break;
     case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:
       addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_retainFlag());
       break;
+#endif // if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:
-      addFormTextBox(displayName, internalName, ControllerSettings.Subscribe,            sizeof(ControllerSettings.Subscribe) - 1);
+      addFormTextBox(displayName, internalName, ControllerSettings.Subscribe, sizeof(ControllerSettings.Subscribe) - 1);
       break;
     case ControllerSettingsStruct::CONTROLLER_PUBLISH:
-      addFormTextBox(displayName, internalName, ControllerSettings.Publish,              sizeof(ControllerSettings.Publish) - 1);
+      addFormTextBox(displayName, internalName, ControllerSettings.Publish,   sizeof(ControllerSettings.Publish) - 1);
       break;
+#if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:
       addFormTextBox(displayName, internalName, ControllerSettings.MQTTLwtTopic,         sizeof(ControllerSettings.MQTTLwtTopic) - 1);
       break;
@@ -255,6 +360,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:
       addFormCheckBox(displayName, internalName, ControllerSettings.mqtt_cleanSession());
       break;
+#endif // if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       addFormCheckBox(displayName, internalName, ControllerSettings.useExtendedCredentials());
       break;
@@ -277,7 +383,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
 void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSettings,
                                  controllerIndex_t                 controllerindex,
                                  ControllerSettingsStruct::VarType varType) {
-  const protocolIndex_t ProtocolIndex = 
+  const protocolIndex_t ProtocolIndex =
     getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (!validProtocolIndex(ProtocolIndex)) {
@@ -310,6 +416,53 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_PORT:
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
+#if FEATURE_MQTT_TLS
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
+    {
+      # if FEATURE_MQTT_TLS
+      const int current        = static_cast<int>(ControllerSettings.TLStype());
+      const TLS_types tls_type = static_cast<TLS_types>(getFormItemInt(internalName, current));
+      ControllerSettings.TLStype(tls_type);
+      # endif // if FEATURE_MQTT_TLS
+      break;
+    }
+
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
+    {
+      # if FEATURE_MQTT_TLS
+
+      if (isFormItemChecked(internalName)) {
+        String fingerprint;
+
+        if (GetTLSfingerprint(fingerprint)) {
+          if (ControllerSettings.UseDNS) {
+            fingerprint += '\n';
+            fingerprint += ControllerSettings.getHost();
+          }
+          SaveCertificate(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT), fingerprint);
+        }
+      }
+      # endif // if FEATURE_MQTT_TLS
+      break;
+    }
+
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:
+    // fall through
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
+    {
+      # if FEATURE_MQTT_TLS
+
+      if (isFormItemChecked(internalName)) {
+        String cacert;
+
+        if (GetTLS_Certificate(cacert, true)) {
+          SaveCertificate(ControllerSettings.getCertificateFilename(TLS_types::TLS_CA_CERT), cacert);
+        }
+      }
+      # endif // if FEATURE_MQTT_TLS
+      break;
+    }
+#endif // if FEATURE_MQTT_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));
       break;
@@ -350,18 +503,21 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
       strncpy_webserver_arg(ControllerSettings.ClientID, internalName);
       break;
+#if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT:
       ControllerSettings.mqtt_uniqueMQTTclientIdReconnect(isFormItemChecked(internalName));
       break;
     case ControllerSettingsStruct::CONTROLLER_RETAINFLAG:
       ControllerSettings.mqtt_retainFlag(isFormItemChecked(internalName));
       break;
+#endif // if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_SUBSCRIBE:
-      strncpy_webserver_arg(ControllerSettings.Subscribe,            internalName);
+      strncpy_webserver_arg(ControllerSettings.Subscribe, internalName);
       break;
     case ControllerSettingsStruct::CONTROLLER_PUBLISH:
-      strncpy_webserver_arg(ControllerSettings.Publish,              internalName);
+      strncpy_webserver_arg(ControllerSettings.Publish,   internalName);
       break;
+#if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_LWT_TOPIC:
       strncpy_webserver_arg(ControllerSettings.MQTTLwtTopic,         internalName);
       break;
@@ -380,6 +536,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION:
       ControllerSettings.mqtt_cleanSession(isFormItemChecked(internalName));
       break;
+#endif // if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
       ControllerSettings.useExtendedCredentials(isFormItemChecked(internalName));
       break;

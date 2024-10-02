@@ -1117,6 +1117,12 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_RULES_EASY_COLOR_CODE
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
+    #define FEATURE_MQTT_TLS 1
+
+    #ifdef FEATURE_CUSTOM_PROVISIONING
+        #undef FEATURE_CUSTOM_PROVISIONING
+    #endif
+    #define FEATURE_CUSTOM_PROVISIONING 1
 
     #ifdef FEATURE_CUSTOM_PROVISIONING
         #undef FEATURE_CUSTOM_PROVISIONING
@@ -1523,7 +1529,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION
 
 #ifdef PLUGIN_SET_COLLECTION_A
 
@@ -1549,7 +1555,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_A
 
 #ifdef PLUGIN_SET_COLLECTION_B
     #define USES_P069   // LM75A
@@ -1564,7 +1570,7 @@ To create/register a plugin, you have to :
     //#define USES_P109   // ThermoOLED
     #define USES_P110   // VL53L0X Time of Flight sensor
     #define USES_P113   // VL53L1X ToF
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_B
 
 #ifdef PLUGIN_SET_COLLECTION_C
     #define USES_P085   // AcuDC24x
@@ -1575,7 +1581,7 @@ To create/register a plugin, you have to :
 
     #define USES_P111   // RC522 RFID reader
     #define USES_P143   // I2C Rotary encoders
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_C
 
 #ifdef PLUGIN_SET_COLLECTION_D
     #define USES_P093   // Mitsubishi Heat Pump
@@ -1590,7 +1596,7 @@ To create/register a plugin, you have to :
     #define USES_P117  // SCD30
     #define USES_P124  // I2C MultiRelay
     #define USES_P127  // CDM7160
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_D
 
 #ifdef PLUGIN_SET_COLLECTION_E
     #define USES_P119   // ITG3205 Gyro
@@ -1602,7 +1608,7 @@ To create/register a plugin, you have to :
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
     #define USES_P133     // LTR390 UV
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_E
 
 #ifdef PLUGIN_SET_COLLECTION_F
   #ifndef USES_P112
@@ -1631,7 +1637,7 @@ To create/register a plugin, you have to :
     #define USES_P153   // Environment - SHT4x
   #endif
 
-#endif
+#endif // ifdef PLUGIN_SET_COLLECTION_F
 
 #ifdef PLUGIN_SET_COLLECTION_G
   #ifndef USES_P142
@@ -1649,6 +1655,11 @@ To create/register a plugin, you have to :
   #ifndef USES_P162
     #define USES_P162   // Output - MCP42xxx Digipot
   #endif
+  #ifdef ESP32 // These plugins no longer fit in an ESP8266 build
+    #ifndef USES_P163
+      #define USES_P163   // Environment - RadSens I2C radiation counter
+    #endif
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -1661,8 +1672,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
-
-#endif
+  #if !defined(USES_P173) && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
+  #endif
+#endif // ifdef PLUGIN_SET_COLLECTION_G
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
@@ -1723,7 +1736,7 @@ To create/register a plugin, you have to :
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
 
-#endif
+#endif // ifdef PLUGIN_ENERGY_COLLECTION
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
@@ -1825,7 +1838,10 @@ To create/register a plugin, you have to :
   #ifndef USES_P148
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-#endif
+  #if !defined(USES_P165) && defined(ESP32)
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+#endif // ifdef PLUGIN_DISPLAY_COLLECTION
 
 // Collection of all climate plugins.
 #ifdef PLUGIN_CLIMATE_COLLECTION
@@ -1981,12 +1997,15 @@ To create/register a plugin, you have to :
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
+  #if !defined(USES_P173) // && defined(ESP32)
+    #define USES_P173   // Environment - SHTC3
+  #endif
   
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
   #endif
-#endif
+#endif // ifdef PLUGIN_CLIMATE_COLLECTION
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
@@ -2040,7 +2059,10 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-#endif
+  #if !defined(USES_P165) // && defined(ESP32)
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+#endif // ifdef PLUGIN_NEOPIXEL_COLLECTION
 
 #ifdef CONTROLLER_SET_COLLECTION
   #ifndef USES_C011
@@ -2066,7 +2088,7 @@ To create/register a plugin, you have to :
   #ifndef USES_C019
     // #define USES_C019   // ESPEasy-NOW
   #endif
-#endif
+#endif // ifdef CONTROLLER_SET_COLLECTION
 
 
 #ifdef NOTIFIER_SET_COLLECTION
@@ -2077,6 +2099,9 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
   #ifdef USES_P039
     #undef USES_P039  // Environment - Thermocouple
+  #endif
+  #ifdef USES_P040
+    #undef USES_P040  // RFID - ID12LA/RDM6300
   #endif
 #endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
@@ -2189,6 +2214,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef FEATURE_I2C_DEVICE_SCAN
     #define FEATURE_I2C_DEVICE_SCAN   1
+  #endif
+  #ifndef FEATURE_MQTT_TLS
+    #define FEATURE_MQTT_TLS 1
   #endif
 
   // Plugins
@@ -2405,6 +2433,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P162
     #define USES_P162   // Output - MCP42xxx Digipot
   #endif
+  #ifndef USES_P165
+    #define USES_P165   // Display - NeoPixel (7-Segment)
+  #endif
+  #ifndef USES_P163
+    #define USES_P163   // Environment - RadSens I2C radiation counter
+  #endif
   #ifndef USES_P166
     #define USES_P166   // Output - GP8403 DAC 0-10V
   #endif
@@ -2420,6 +2454,9 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+  #ifndef USES_P173
+    #define USES_P173   // Environment - SHTC3
   #endif
 
   // Controllers
@@ -2482,7 +2519,7 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) // Add any plugin that uses AdafruitGFX_Helper
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) || defined(USES_P165) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
@@ -2920,6 +2957,28 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_MQTT_TLS
+#define FEATURE_MQTT_TLS 0
+#endif
+
+#ifdef ESP8266
+// It just doesn't work on ESP8266, too slow, too high memory requirements
+//#if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M)
+  #if FEATURE_MQTT_TLS
+    #undef FEATURE_MQTT_TLS
+    #define FEATURE_MQTT_TLS 0
+  #endif
+#endif
+
+#if FEATURE_MQTT_TLS
+  #if defined(FEATURE_TLS) && !FEATURE_TLS
+    #undef FEATURE_TLS
+  #endif
+  #ifndef FEATURE_TLS
+    #define FEATURE_TLS 1
+  #endif
+#endif
+
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
     // Will not fit on ESP8266 along with IR plugins included
@@ -2935,7 +2994,6 @@ To create/register a plugin, you have to :
 #if defined(USES_C019) && !defined(FEATURE_PACKED_RAW_DATA)
   #define FEATURE_PACKED_RAW_DATA  1
 #endif
-
 
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
@@ -3429,6 +3487,9 @@ To create/register a plugin, you have to :
   #endif
   #ifdef USES_P131
   #undef USES_P131
+  #endif
+  #ifdef USES_P165
+    #undef USES_P165
   #endif
 #endif
 
