@@ -116,5 +116,16 @@ uint32_t NeoPixelBus_wrapper::getPixelColor(uint16_t n) {
   return 0u; // Fall-through value...
 }
 
+void NeoPixelBus_wrapper::fill(uint32_t c,
+                               uint16_t first,
+                               uint16_t count) {
+  if (nullptr != neopixels_grb) {
+    neopixels_grb->ClearTo(RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF), first, first + count); // Unfold the Color(r,g,b,w) static
+  } else
+  if (nullptr != neopixels_grbw) {
+    neopixels_grbw->ClearTo(RgbwColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF, (c >> 24) & 0xFF), first, first + count);
+  }
+}
+
 #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 #endif // ifndef _NEOPIXELBUS_WRAPPER_CPP
