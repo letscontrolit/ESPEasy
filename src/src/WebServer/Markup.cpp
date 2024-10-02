@@ -431,6 +431,7 @@ void addUnit(const __FlashStringHelper *unit)
 
 void addUnit(const String& unit)
 {
+  if (unit.isEmpty()) return;
   addHtml(F(" ["));
   addHtml(unit);
   addHtml(']');
@@ -517,6 +518,7 @@ void addRowLabel(LabelType::Enum label) {
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
   addHtml(getValue(label));
+  addUnit(getFormUnit(label));
 }
 
 void addRowLabelValues(const LabelType::Enum labels[]) {
@@ -537,6 +539,7 @@ void addRowLabelValues(const LabelType::Enum labels[]) {
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));
+  addUnit(getFormUnit(label));
 }
 
 // ********************************************************************************
@@ -641,7 +644,9 @@ void addCheckBox(const String& id, bool    checked, bool disabled
   }
 
   if (disabled) { addDisabled(); }
-  addHtml(F("><span class='checkmark"));
+  addHtml(F("><span "));
+  addHtmlAttribute(F("id"), concat(F("cs"), id)); // cs=checkbox span
+  addHtml(F(" class='checkmark"));
 
   if (disabled) { addDisabled(); }
   addHtml('\'');
@@ -833,16 +838,23 @@ void addTextArea(const String  & id,
                  #endif // if FEATURE_TOOLTIPS
                  )
 {
+  if (rows < 0) {
+    rows = count_newlines(value) + 1;
+  }
   addHtml(F("<textarea "));
-  addHtmlAttribute(F("class"),     F("wide"));
+//  addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("id"),        id);
   if (maxlength > 0) {
     addHtmlAttribute(F("maxlength"), maxlength);
   }
-  addHtmlAttribute(F("rows"),      rows);
-  addHtmlAttribute(F("cols"),      columns);
+  if (rows > 0) {
+    addHtmlAttribute(F("rows"),      rows);
+  }
+  if (columns > 0) {
+    addHtmlAttribute(F("cols"),      columns);
+  }
 
   if (readonly) {
     addHtml(F(" readonly "));

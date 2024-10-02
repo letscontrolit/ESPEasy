@@ -189,6 +189,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = false;
+      #if FEATURE_MQTT_TLS
+      proto.usesTLS      = true;
+      #endif
       break;
     }
 
@@ -878,6 +881,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       String pubname         = CPlugin_014_pubname;
+      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
       bool   mqtt_retainFlag = CPlugin_014_mqtt_retainFlag;
 
       statusLED(true);
@@ -891,7 +895,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String tmppubname = pubname;
         String value;
-        parseSingleControllerVariable(tmppubname, event, x, false);
+        if (contains_valname) {
+          parseSingleControllerVariable(tmppubname, event, x, false);
+        }
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {

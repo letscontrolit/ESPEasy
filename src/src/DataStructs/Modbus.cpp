@@ -11,7 +11,7 @@ Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
 
 Modbus::~Modbus() {
   if (ModbusClient) {
-    ModbusClient->flush();
+    ModbusClient->PR_9453_FLUSH_TO_CLEAR();
     ModbusClient->stop();
     delete (ModbusClient);
     delay(1);
@@ -26,7 +26,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   incomingValue   = type;
   resultReceived  = false;
   if (ModbusClient) {
-    ModbusClient->flush();
+    ModbusClient->PR_9453_FLUSH_TO_CLEAR();
     ModbusClient->stop();
     delete (ModbusClient);
     delay(1);
@@ -39,7 +39,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   ModbusClient->setNoDelay(true);
   ModbusClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
   timeout = millis();
-  ModbusClient->flush();
+  ModbusClient->PR_9453_FLUSH_TO_CLEAR();
 
   if (ModbusClient->connected()) {
     #ifndef BUILD_NO_DEBUG
@@ -87,7 +87,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   if ((incomingValue == signed16) || (incomingValue == unsigned16)) {
     sendBuffer[11] = 1;
   }
-  ModbusClient->flush();
+  ModbusClient->PR_9453_FLUSH_TO_CLEAR();
   ModbusClient->write(&sendBuffer[0], sizeof(sendBuffer));
 
   #ifndef BUILD_NO_DEBUG
@@ -117,7 +117,7 @@ bool Modbus::handle() {
 
       // clean up;
       if (ModbusClient) {
-        ModbusClient->flush();
+        ModbusClient->PR_9453_FLUSH_TO_CLEAR();
         ModbusClient->stop();
         delete (ModbusClient);
         delay(1);

@@ -11,6 +11,19 @@
 .. |P141_compileinfo| replace:: `.`
 .. |P141_usedlibraries| replace:: `https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library`
 
+.. |P142_name| replace:: :cyan:`AS5600(L) Magnetic angle`
+.. |P142_type| replace:: :cyan:`Position`
+.. |P142_typename| replace:: :cyan:`Position - AS5600(L) Magnetic angle`
+.. |P142_porttype| replace:: `.`
+.. |P142_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P142_github| replace:: P142_AS5600.ino
+.. _P142_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P142_AS5600.ino
+.. |P142_usedby| replace:: `.`
+.. |P142_shortinfo| replace:: `AS5600 Magnetic angle and rotation sensor`
+.. |P142_maintainer| replace:: `tonhuisman`
+.. |P142_compileinfo| replace:: `.`
+.. |P142_usedlibraries| replace:: `https://github.com/RobTillaart/AS5600`
+
 .. |P143_name| replace:: :cyan:`I2C Rotary encoders`
 .. |P143_type| replace:: :cyan:`Switch input`
 .. |P143_typename| replace:: :cyan:`Switch input - I2C Rotary encoders`

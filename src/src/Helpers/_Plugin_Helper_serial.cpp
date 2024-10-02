@@ -212,13 +212,13 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 //"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX0) ";"
 //"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX0) ";"
 "   style = '';"
-# if SOC_UART_NUM > 1
+# if USABLE_SOC_UART_NUM > 1
 "	} else if (elem.value == 4) {"
 //"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX1) ";"
 //"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX1) ";"
 "   style = '';"
 #endif
-# if SOC_UART_NUM > 2
+# if USABLE_SOC_UART_NUM > 2
 "	} else if (elem.value == 5) {"
 //"	  document.querySelector('#taskdevicepin1').value =" STRINGIFY(SOC_RX2) ";"
 //"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX2) ";"
@@ -247,12 +247,12 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #ifdef ESP8266
     ,static_cast<int>(ESPEasySerialPort::serial0_swap)
 #endif // ifdef ESP8266
-#if SOC_UART_NUM > 1
+#if USABLE_SOC_UART_NUM > 1
     ,static_cast<int>(ESPEasySerialPort::serial1)
 #endif
-#if SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 2
     ,static_cast<int>(ESPEasySerialPort::serial2)
-#endif // if SOC_UART_NUM > 2
+#endif // if USABLE_SOC_UART_NUM > 2
 #if USES_SW_SERIAL
     ,static_cast<int>(ESPEasySerialPort::software)
 #endif // if USES_SW_SERIAL

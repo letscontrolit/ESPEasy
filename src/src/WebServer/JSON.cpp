@@ -74,7 +74,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(getTaskValueName(taskNr, x));
+            addHtml(Cache.getTaskDeviceValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');
@@ -124,7 +124,7 @@ void handle_json()
   bool showNodes           = true;
   #endif
   #if FEATURE_PLUGIN_STATS
-  bool showPluginStats     = isFormItemChecked(F("showpluginstats"));
+  bool showPluginStats     = getFormItemInt(F("showpluginstats"), 0) != 0;
   #endif
 
   if (equals(webArg(F("view")), F("sensorupdate"))) {
@@ -139,7 +139,7 @@ void handle_json()
     showNodes           = false;
     #endif
     #if FEATURE_PLUGIN_STATS
-    showPluginStats     = false;
+    showPluginStats     = hasArg(F("showpluginstats"));
     #endif
   }
 
@@ -163,6 +163,9 @@ void handle_json()
         LabelType::BUILD_DESC,
         LabelType::GIT_BUILD,
         LabelType::SYSTEM_LIBRARIES,
+#ifdef ESP32
+        LabelType::ESP_IDF_SDK_VERSION,
+#endif
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
         LabelType::BUILD_TIME,
@@ -178,6 +181,9 @@ void handle_json()
         LabelType::UNIT_NAME,
         LabelType::UPTIME,
         LabelType::UPTIME_MS,
+#if FEATURE_INTERNAL_TEMPERATURE
+        LabelType::INTERNAL_TEMPERATURE,
+#endif
         LabelType::BOOT_TYPE,
         LabelType::RESET_REASON,
         LabelType::CPU_ECO_MODE,
@@ -288,10 +294,14 @@ void handle_json()
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
 #endif
         LabelType::WIFI_NR_EXTRA_SCANS,
+#ifdef ESP32
+        LabelType::WIFI_PASSIVE_SCAN,
+#endif
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
-
+#ifndef ESP32
         LabelType::WAIT_WIFI_CONNECT,
+#endif
         LabelType::HIDDEN_SSID_SLOW_CONNECT,
         LabelType::CONNECT_HIDDEN_SSID,
         LabelType::SDK_WIFI_AUTORECONNECT,
@@ -442,8 +452,8 @@ void handle_json()
         for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
-          const String value = formatUserVarNoCheck(&TempEvent, x);
           uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
+          const String value = formatUserVarNoCheck(&TempEvent, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
@@ -658,6 +668,9 @@ void handle_buildinfo() {
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);
+#ifdef ESP32
+  json_prop(LabelType::ESP_IDF_SDK_VERSION);
+#endif
   json_prop(LabelType::PLUGIN_COUNT);
   json_prop(LabelType::PLUGIN_DESCRIPTION);
   json_close();

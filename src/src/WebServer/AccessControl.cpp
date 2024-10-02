@@ -88,7 +88,7 @@ boolean clientIPallowed()
 {
   #if ESP_IDF_VERSION_MAJOR>=5
   // FIXME TD-er: remoteIP() is reporting incorrect value
-  return true;
+//  return true;
   #endif
   // TD-er Must implement "safe time after boot"
   IPAddress low, high;

@@ -358,9 +358,9 @@ float mapADCtoFloat(float float_value,
 
 // FIXME TD-er: For now keep a local array of the adc calibration 
 #if ESP_IDF_VERSION_MAJOR < 5
-Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTEN_MAX];
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTEN_MAX]{};
 #else
-Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTENDB_MAX];
+Hardware_ADC_cali_t ESP32_ADC_cali[ADC_ATTENDB_MAX]{};
 #endif
 
 
@@ -918,7 +918,7 @@ void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool a
   Settings.TaskDevicePin1PullUp[taskIndex] = true;
 
   if (activeLow) {
-    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW;
+    Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // SWITCH_TYPE_PUSH_ACTIVE_LOW;
   }
   Settings.TaskDevicePluginConfig[taskIndex][3] = 1;   // "Send Boot state" checked.
 }

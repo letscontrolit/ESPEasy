@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+
 /********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
@@ -23,45 +24,10 @@ unsigned long str2int(const char *string)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, unsigned int decimalPlaces)
+String toString(const float& value, unsigned int decimalPlaces, bool trimTrailingZeros)
 {
-  START_TIMER
-  String sValue;
-  #ifndef LIMIT_BUILD_SIZE
-
-  if (decimalPlaces == 0) {
-    if ((value > -2e9f) && (value < 2e9f)) {
-      const int32_t l_value = static_cast<int32_t>(roundf(value));
-      sValue = l_value;
-    } else if ((value > -1e18f) && (value < 1e18f)) {
-      // Work-around to perform a faster conversion
-      const int64_t ll_value = static_cast<int64_t>(roundf(value));
-      sValue = ll2String(ll_value);
-    }
-    if (sValue.length() > 0) {
-      return std::move(sValue);
-    }
-  }
-  #endif // ifndef LIMIT_BUILD_SIZE
-// #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-  //  #ifdef ESP8266
-
-  char buf[decimalPlaces + 42];
-  #ifdef USE_SECOND_HEAP
-  move_special(sValue, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
-  #else
-  sValue = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
-  #endif
-
-/*
-#else
-  String sValue = String(value, decimalPlaces);
-#endif
-*/
-  sValue.trim();
-  return std::move(sValue);
+  const double value_d(value);
+  return doubleToString(value_d, decimalPlaces, trimTrailingZeros);
 }
 
 String ull2String(uint64_t value, uint8_t base) {
@@ -69,7 +35,7 @@ String ull2String(uint64_t value, uint8_t base) {
 
   if (value == 0) {
     res = '0';
-    return std::move(res);
+    return res;
   }
 
   while (value > 0) {
@@ -88,7 +54,7 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
-  return std::move(res);
+  return res;
 }
 
 String ll2String(int64_t value, uint8_t  base) {
@@ -120,7 +86,7 @@ String trimTrailingZeros(const String& value) {
       res.trim();
     }
   }
-  return std::move(res);
+  return res;
 
 }
 
@@ -135,39 +101,94 @@ String toStringNoZero(int64_t value) {
   }
 }
 
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
-  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
-  // https://github.com/espressif/arduino-esp32/pull/6138/files
-  //  #ifdef ESP8266
-  unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
-
-  if ((value > 1e32) || (value < -1e32)) {
-    expectedChars += 308;                         // Just assume the worst
-  } else {
-    expectedChars += 33;
-  }
-  char *buf = (char *)malloc(expectedChars);
-
-  if (nullptr == buf) {
-    return F("nan");
-  }
   String res;
-  move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-  free(buf);
+  // We use some trick here to prevent rounding errors 
+  // like when representing 23.8, which will be printed like 23.799999...
+  // 
+  // First calculate factor to represent the value with N decimal places as integer
+  // Use maximum of 18 decimals or else the factor will not fit in a 64-bit int
+  uint64_t factor = (decimalPlaces > 18) ? 1 : computeDecimalFactorForDecimals(decimalPlaces);
 
-  //  #else
-  //  String res(value, decimalPlaces);
-  //  #endif
+  // Calculate floating point value which could be cast to int64_t later to
+  // format the value with N decimal places and later insert the decimal dot.
+  const double tmp_value = std::abs(value * factor);
+  constexpr double max_uint64 = std::numeric_limits<uint64_t>::max();
+
+  if ((decimalPlaces > 18) || (tmp_value > max_uint64)) {
+#endif
+    // Cannot use int64_t as intermediate variable
+    unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
+    if (value > 1e33 || value < -1e33) {
+      expectedChars += 308; // Just assume the worst
+    } else {
+      expectedChars += 33;
+    }
+    char *buf = (char *)malloc(expectedChars);
+
+    if (nullptr == buf) {
+      return F("nan");
+    }
+    move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
+
+    free(buf);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  } else {
+    // Round the double value, multiplied with the factor 10^decimalPlaces, 
+    // to make sure we will not end up with values like 23.799999...
+    uint64_t int_value = round(tmp_value);
+
+    if (trimTrailingZeros_b) {
+      while (decimalPlaces > 0 && int_value % 10 == 0) {
+        int_value /= 10;
+        factor /= 10;
+        --decimalPlaces;
+      }
+
+      if (decimalPlaces > 2) {
+        const uint32_t last2digits = int_value % 100;
+        if (last2digits == 99u) {
+          ++int_value;
+        } else if (last2digits == 1u) {
+          --int_value;
+        }
+      }
+    }
+
+    // The value before the decimal point can be larger than what a 32-bit int can represent.
+    // Those cannot be used in the string format, so use it as a preformatted string
+    const String tmp_str_before_dot = ull2String(int_value / factor);
+    if (decimalPlaces == 0) {
+      res = tmp_str_before_dot;
+    } else {
+      String tmp_str_after_dot;
+      tmp_str_after_dot.reserve(decimalPlaces);
+      tmp_str_after_dot = ull2String(int_value % factor);
+      while (tmp_str_after_dot.length() < decimalPlaces) {
+        // prepend leading zeroes on the fraction part.
+        tmp_str_after_dot = concat('0', tmp_str_after_dot);
+      }
+
+      res = strformat(
+        F("%s.%s"), 
+        tmp_str_before_dot.c_str(), 
+        tmp_str_after_dot.c_str());
+    }
+    if (value < 0) {
+      res = concat('-', res);
+    }
+  }
+  #endif
+
   res.trim();
 
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return std::move(res);
+  return res;
 }
-#endif
 
 String floatToString(const float& value,
                       unsigned int  decimalPlaces,
@@ -178,7 +199,7 @@ String floatToString(const float& value,
   if (trimTrailingZeros_b) {
     return trimTrailingZeros(res);
   }
-  return std::move(res);
+  return res;
 }
 
 

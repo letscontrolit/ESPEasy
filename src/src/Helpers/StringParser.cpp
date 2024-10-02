@@ -26,6 +26,23 @@
 /********************************************************************************************\
    Parse string template
  \*********************************************************************************************/
+bool hasEscapedCharacter(String& str, const char EscapeChar)
+{
+  const String EscStr = concat(F("\\"), EscapeChar);
+  return (str.indexOf(EscStr)>=0);
+}
+
+void stripEscapeCharacters(String& str)
+{
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
+
+  for (uint8_t i = 0; i < nrbraces; ++i) {
+    const String s(concat(F("\\"), braces[i]));
+    str.replace(s, s.substring(1));
+  }
+}
+
 String parseTemplate(String& tmpString)
 {
   return parseTemplate(tmpString, false);
@@ -58,10 +75,22 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   }
   parseSystemVariables(tmpString, useURLencode);
 
-
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
+  bool mustReplaceEscapedSquareBracket = false;
+  String MaskEscapedBracket;
+
+  if (hasEscapedCharacter(tmpString, '[') || hasEscapedCharacter(tmpString, ']')) {
+    // replace the \[ and \] with other characters to mask the escaped square brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
+    tmpString.replace(F("\\["), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
+    tmpString.replace(F("\\]"), MaskEscapedBracket);
+    mustReplaceEscapedSquareBracket = true;
+  }
+
   {
     String deviceName, valueName, format;
 
@@ -78,7 +107,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         uint32_t varNum;
 
         if (validUIntFromString(valueName, varNum)) {
-          unsigned char nr_decimals = maxNrDecimals_fpType(getCustomFloatVar(varNum));
+          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(varNum);
+          unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
           bool trimTrailingZeros    = true;
 
           if (devNameEqInt) {
@@ -89,9 +119,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             trimTrailingZeros = false;
           }
           #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
           #else
-          String value = floatToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          String value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
           #endif
           transformValue(
             newString, 
@@ -205,6 +235,15 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (mustReplaceEscapedSquareBracket) {
+    // We now have to check if we did mask some escaped square bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x05); // ASCII 0x05 = Enquiry ENQ
+    newString.replace(MaskEscapedBracket, F("\\["));
+    MaskEscapedBracket = static_cast<char>(0x06); // ASCII 0x06 = Acknowledge ACK
+    newString.replace(MaskEscapedBracket, F("\\]"));
+  }
 
   // Restore previous loaded taskSettings
   if (validTaskIndex(currentTaskIndex))
@@ -669,7 +708,7 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
-    if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
+    if (valueName.equalsIgnoreCase(Cache.getTaskDeviceValueName(taskIndex, valueNr)))
     {
       Cache.taskIndexValueName.emplace(
         std::make_pair(

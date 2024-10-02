@@ -132,6 +132,9 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
         }
       }
       return true;
+    case CPlugin::Function::CPLUGIN_CONNECT_SUCCESS:
+    case CPlugin::Function::CPLUGIN_CONNECT_FAIL:
+      break;
   }
 
   return false;

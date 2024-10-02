@@ -325,7 +325,7 @@ This console can be accessed via a serial port.
 * Serial Port - The selected serial port to use for the console.
 * ESP RX GPIO ← TX - GPIO pin used as RX, to connect with the TX of the other device.
 * ESP TX GPIO → RX - GPIO pin used as TX, to connect with the RX of the other device.
-* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3) Configure HW Serial0 port as secondary port for the ESPEasy console.
+* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3) Configure HW Serial0 port as secondary port for the ESPEasy console. When unchecked, the Fallback RX/TX pins will be available for selection in the GPIO pin selector and GPIO boot-states configuration on the Hardware tab.
 
 GPIO pin selection will only be shown for Serial Port types which require action GPIO pins.
 For example USB CDC and HW CDC ports do not need specific GPIO pins for their configuration.

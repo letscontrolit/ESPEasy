@@ -29,6 +29,18 @@
 
 // -V::569
 
+unsigned int count_newlines(const String& str)
+{
+  unsigned int count = 0;
+  const size_t strlength = str.length();
+  size_t pos = 0;
+  while (pos < strlength) {
+    if (str[pos] == '\n') ++count;
+    ++pos;
+  }
+  return count;
+}
+
 String concat(const __FlashStringHelper * str, const String &val) {
   String res;
   reserve_special(res, strlen_P((PGM_P)str) + val.length());
@@ -497,7 +509,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
   }
   String res =  UserVar.getAsString(event->TaskIndex, rel_index, sensorType, nrDecimals);
   STOP_TIMER(FORMAT_USER_VAR);
-  return std::move(res);
+  return res;
 }
 
 String formatUserVarNoCheck(taskIndex_t TaskIndex, uint8_t rel_index) {
@@ -986,11 +998,14 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
         j += 2;
 
         // Skip characters we need to ignore
-        int c = -1;
-        do {
-          ++j;
-          c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
-        } while (c > -1);
+        if ((j + 1 < arg.length()) && (skipChars.indexOf(arg[j + 1]) != -1)) {
+          int c = -1;
+
+          do {
+            ++j;
+            c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
+          } while (c > -1);
+        }
       }
     } else {
       for (size_t s = 0; s < arg.length(); s++) {
@@ -1314,9 +1329,21 @@ void parseSingleControllerVariable(String            & s,
 
 void parseSystemVariables(String& s, bool useURLencode)
 {
+  String MaskEscapedPercent;
+  bool mustReplaceEscapedPercent = hasEscapedCharacter(s, '%');
+
+  if (mustReplaceEscapedPercent) {
+    MaskEscapedPercent = static_cast<char>(0x04); // ASCII 0x04 = End of transmit
+    s.replace(F("\\%"), MaskEscapedPercent);
+  }
+
   parseSpecialCharacters(s, useURLencode);
 
   SystemVariables::parseSystemVariables(s, useURLencode);
+
+  if (mustReplaceEscapedPercent) {
+    s.replace(MaskEscapedPercent, F("\\%"));
+  }
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
@@ -1343,12 +1370,13 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
-    for (uint8_t i = 0; i < 4; ++i) {
+    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+    for (uint8_t i = 0; i < valueCount; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
 
-      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
+      SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
   }
 }

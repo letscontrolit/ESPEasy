@@ -141,9 +141,14 @@ struct LabelType {
     FORCE_WIFI_NOSLEEP,
     PERIODICAL_GRAT_ARP,
     CONNECTION_FAIL_THRESH,
+#ifndef ESP32
     WAIT_WIFI_CONNECT,
+#endif
     HIDDEN_SSID_SLOW_CONNECT,
     CONNECT_HIDDEN_SSID,
+#ifdef ESP32
+    WIFI_PASSIVE_SCAN,
+#endif
     SDK_WIFI_AUTORECONNECT,
 #if FEATURE_USE_IPV6
     ENABLE_IPV6,
@@ -152,6 +157,9 @@ struct LabelType {
     BUILD_DESC,
     GIT_BUILD,
     SYSTEM_LIBRARIES,
+#ifdef ESP32
+    ESP_IDF_SDK_VERSION,
+#endif
     PLUGIN_COUNT,
     PLUGIN_DESCRIPTION,
     BUILD_TIME,
@@ -252,6 +260,9 @@ String getInternalLabel(LabelType::Enum label,
 const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
+
+String getFormNote(LabelType::Enum label);
+String getFormUnit(LabelType::Enum label);
 
 
 #endif // STRING_PROVIDER_TYPES_H

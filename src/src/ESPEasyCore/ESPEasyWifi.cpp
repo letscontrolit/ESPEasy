@@ -241,11 +241,18 @@ bool WiFiConnected() {
   }
 
 
-  if (lastCheckedTime != 0 && timePassedSince(lastCheckedTime) < 100) {
-    if (WiFiEventData.lastDisconnectMoment.isSet() &&
-        WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassedSince(lastCheckedTime))
-    {
-      // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+  const int32_t timePassed = timePassedSince(lastCheckedTime);
+  if (lastCheckedTime != 0) {
+    if (timePassed < 100) {
+      if (WiFiEventData.lastDisconnectMoment.isSet() &&
+          WiFiEventData.lastDisconnectMoment.millisPassedSince() > timePassed)
+      {
+        // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+        return lastState;
+      }
+    }
+    if (timePassed < 10) {
+      // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
       return lastState;
     }
   }
@@ -367,6 +374,9 @@ bool WiFiConnected() {
 }
 
 void WiFiConnectRelaxed() {
+  if (!WiFiEventData.processedDisconnect) {
+    processDisconnect();
+  }
   if (!WiFiEventData.WiFiConnectAllowed() || WiFiEventData.wifiConnectInProgress) {
     if (WiFiEventData.wifiConnectInProgress) {
       if (WiFiEventData.last_wifi_connect_attempt_moment.isSet()) { 
@@ -462,6 +472,7 @@ void AttemptWiFiConnect() {
   if (WiFiEventData.unprocessedWifiEvents()) {
     return;
   }
+  setSTA(false);
 
   setSTA(true);
 
@@ -518,10 +529,15 @@ void AttemptWiFiConnect() {
       } else {
         WiFi.begin(candidate.ssid.c_str(), key.c_str());
       }
+#ifdef ESP32
+  // Always wait for a second on ESP32
+      WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
+#else
       if (Settings.WaitWiFiConnect() || candidate.bits.isHidden) {
 //        WiFi.waitForConnectResult(candidate.isHidden ? 3000 : 1000);  // https://github.com/arendst/Tasmota/issues/14985
         WiFi.waitForConnectResult(1000);  // https://github.com/arendst/Tasmota/issues/14985
       }
+#endif
       delay(1);
     } else {
       WiFiEventData.wifiConnectInProgress = false;
@@ -846,6 +862,11 @@ float GetRSSIthreshold(float& maxTXpwr) {
       if (maxTXpwr > MAX_TX_PWR_DBM_n) maxTXpwr = MAX_TX_PWR_DBM_n;
       break;
 #ifdef ESP32
+#if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(5, 2, 0)
+    case WiFiConnectionProtocol::WiFi_Protocol_11a:
+    case WiFiConnectionProtocol::WiFi_Protocol_VHT20:
+      // FIXME TD-er: Must determine max. TX power for these 5 GHz modi
+#endif
     case WiFiConnectionProtocol::WiFi_Protocol_LR:
 #endif
     case WiFiConnectionProtocol::Unknown:
@@ -881,12 +902,17 @@ WiFiConnectionProtocol getConnectionProtocol() {
     wifi_phy_mode_t phymode;
     esp_wifi_sta_get_negotiated_phymode(&phymode);
     switch (phymode) {
-      case WIFI_PHY_MODE_11B: return WiFiConnectionProtocol::WiFi_Protocol_11b;
-      case WIFI_PHY_MODE_11G: return WiFiConnectionProtocol::WiFi_Protocol_11g;
-      case WIFI_PHY_MODE_HT20: return WiFiConnectionProtocol::WiFi_Protocol_HT20;
-      case WIFI_PHY_MODE_HT40: return WiFiConnectionProtocol::WiFi_Protocol_HT40;
-      case WIFI_PHY_MODE_HE20: return WiFiConnectionProtocol::WiFi_Protocol_HE20;
-      case WIFI_PHY_MODE_LR: return WiFiConnectionProtocol::WiFi_Protocol_LR;
+      case WIFI_PHY_MODE_11B:   return WiFiConnectionProtocol::WiFi_Protocol_11b;
+      case WIFI_PHY_MODE_11G:   return WiFiConnectionProtocol::WiFi_Protocol_11g;
+      case WIFI_PHY_MODE_HT20:  return WiFiConnectionProtocol::WiFi_Protocol_HT20;
+      case WIFI_PHY_MODE_HT40:  return WiFiConnectionProtocol::WiFi_Protocol_HT40;
+      case WIFI_PHY_MODE_HE20:  return WiFiConnectionProtocol::WiFi_Protocol_HE20;
+      case WIFI_PHY_MODE_LR:    return WiFiConnectionProtocol::WiFi_Protocol_LR;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 0)
+      // 5 GHz
+      case WIFI_PHY_MODE_11A:   return WiFiConnectionProtocol::WiFi_Protocol_11a;
+      case WIFI_PHY_MODE_VHT20: return WiFiConnectionProtocol::WiFi_Protocol_VHT20;
+#endif
     }
     #endif
   }
@@ -908,6 +934,9 @@ void WifiDisconnect()
 {
   if (!WiFiEventData.processedDisconnect || 
        WiFiEventData.processingDisconnect.isSet()) {
+    return;
+  }
+  if (WiFi.status() == WL_DISCONNECTED) {
     return;
   }
   // Prevent recursion
@@ -1115,8 +1144,8 @@ void WifiScan(bool async, uint8_t channel) {
 #endif
 #endif
 #ifdef ESP32
-    const bool passive = false;
-    const uint32_t max_ms_per_chan = 300;
+    const bool passive = Settings.PassiveWiFiScan();
+    const uint32_t max_ms_per_chan = 120;
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
 #endif
     if (!async) {

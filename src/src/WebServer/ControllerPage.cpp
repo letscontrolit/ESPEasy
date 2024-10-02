@@ -16,12 +16,20 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Settings.h"
 
+# if FEATURE_MQTT
+#  include "../Globals/MQTT.h"
+# endif // if FEATURE_MQTT
+
 # include "../Helpers/_CPlugin_init.h"
 # include "../Helpers/_CPlugin_Helper_webform.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/StringConverter.h"
 
+# include "../Helpers/_CPlugin_Helper_webform.h"
+# include "../Helpers/_Plugin_SensorTypeHelper.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
 // ********************************************************************************
 // Web Interface controller page
@@ -47,11 +55,11 @@ void handle_controllers() {
   if ((protocol_webarg_value != -1) && !controllerNotSet)
   {
     const protocolIndex_t protocolIndex = protocol_webarg_value;
-    bool mustInit            = false;
-    bool mustCallCpluginSave = false;
+    bool mustInit                       = false;
+    bool mustCallCpluginSave            = false;
     {
       // Place in a scope to free ControllerSettings memory ASAP
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Not enough free memory to save settings"));
@@ -144,6 +152,9 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
   const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
 
   ControllerSettings.reset();
+# if FEATURE_MQTT_TLS
+  ControllerSettings.TLStype(TLS_types::NoTLS);
+# endif // if FEATURE_MQTT_TLS
   ControllerSettings.Port = proto.defaultPort;
 
   // Load some templates from the controller.
@@ -211,7 +222,7 @@ void handle_controllers_ShowAllControllersTable()
   html_table_header(F("Host"));
   html_table_header(F("Port"));
 
-  MakeControllerSettings(ControllerSettings); //-V522
+  MakeControllerSettings(ControllerSettings); // -V522
 
   if (AllocatedControllerSettings()) {
     for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
@@ -263,6 +274,7 @@ void handle_controllers_ShowAllControllersTable()
 
         html_TD();
         const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
+
         if ((INVALID_PROTOCOL_INDEX == ProtocolIndex) || proto.usesPort) {
           addHtmlInt(13 == Settings.Protocol[x] ? Settings.UDPPort : ControllerSettings->Port); // P2P/C013 exception
         }
@@ -295,10 +307,11 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
   protocolIndex_t protocolIndex = 0;
+
   while (validProtocolIndex(protocolIndex))
   {
     const cpluginID_t number = getCPluginID_from_ProtocolIndex(protocolIndex);
-    boolean disabled = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
+    boolean disabled         = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
     addSelector_Item(getCPluginNameFromProtocolIndex(protocolIndex),
                      number,
                      choice == number,
@@ -310,7 +323,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addHelpButton(F("EasyProtocols"));
 
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
-  const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
+  const ProtocolStruct& proto         = getProtocolStruct(ProtocolIndex);
 
   # ifndef LIMIT_BUILD_SIZE
   addRTDControllerButton(getCPluginID_from_ProtocolIndex(ProtocolIndex));
@@ -319,7 +332,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   if (Settings.Protocol[controllerindex])
   {
     {
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Out of memory, cannot load page"));
@@ -340,14 +353,23 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
             }
           }
+
           if (proto.usesPort) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
+          # if FEATURE_MQTT_TLS
+
+          if (proto.usesMQTT && proto.usesTLS) {
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
+            addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
+          }
+          # endif // if FEATURE_MQTT_TLS
       # ifdef USES_ESPEASY_NOW
 
           if (proto.usesMQTT) {
             // FIXME TD-er: Currently only enabled for MQTT protocols, later for more
-            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
+            addControllerParameterForm(*ControllerSettings, controllerindex,
+                                       ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
           }
       # endif // ifdef USES_ESPEASY_NOW
 
@@ -370,11 +392,16 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
           if (proto.usesTimeout) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_TIMEOUT);
+
+            if (proto.usesHost) {
+              addFormNote(F("Typical timeout: 100...300 msec for local host, >500 msec for internet hosts"));
+            }
           }
 
           if (proto.usesSampleSets) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
+
           if (proto.allowLocalSystemTime) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
           }
@@ -397,7 +424,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
           }
-          #if FEATURE_MQTT
+          # if FEATURE_MQTT
+
           if (proto.usesMQTT) {
             addTableSeparator(F("MQTT"), 2, 3);
 
@@ -411,12 +439,17 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           # endif // if FEATURE_MQTT
 
 
-          if (proto.usesTemplate || proto.usesMQTT)
+          if (proto.usesTemplate
+          # if FEATURE_MQTT
+              || proto.usesMQTT
+          # endif // if FEATURE_MQTT
+              )
           {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
           }
-          #if FEATURE_MQTT
+          # if FEATURE_MQTT
+
           if (proto.usesMQTT)
           {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
@@ -443,6 +476,127 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       if (webformLoadString.length() > 0) {
         addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
+    }
+    {
+# if FEATURE_MQTT
+
+      if (proto.usesMQTT) {
+        addFormSubHeader(F("Connection Status"));
+        addRowLabel(F("MQTT Client Connected"));
+        addEnabled(MQTTclient_connected);
+
+#  if FEATURE_MQTT_TLS
+
+        if (proto.usesTLS) {
+          addRowLabel(F("Last Error"));
+          addHtmlInt(mqtt_tls_last_error);
+          addHtml(F(": "));
+          addHtml(mqtt_tls_last_errorstr);
+
+            #   ifdef ESP32
+
+          if (MQTTclient_connected && (mqtt_tls != nullptr)) {
+            MakeControllerSettings(ControllerSettings); // -V522
+
+            if (!AllocatedControllerSettings()) {
+              addHtmlError(F("Out of memory, cannot load page"));
+            } else {
+              LoadControllerSettings(controllerindex, *ControllerSettings);
+
+              // FIXME TD-er: Implement retrieval of certificate
+/*
+
+              addFormSubHeader(F("Peer Certificate"));
+
+              {
+                addFormTextArea(
+                  F("Certificate Info"),
+                  F("certinfo"),
+                  mqtt_tls->getPeerCertificateInfo(),
+                  -1,
+                  -1,
+                  -1,
+                  true);
+              }
+              {
+                String fingerprint;
+
+                if (GetTLSfingerprint(fingerprint)) {
+                  addFormTextBox(F("Certificate Fingerprint"),
+                                 F("fingerprint"),
+                                 fingerprint,
+                                 64,
+                                 true); // ReadOnly
+                  addControllerParameterForm(*ControllerSettings, controllerindex,
+                                             ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
+                }
+              }
+              addFormSubHeader(F("Peer Certificate Chain"));
+              {
+                // FIXME TD-er: Must wrap this in divs to be able to fold it by default.
+                const mbedtls_x509_crt *chain;
+
+                chain = mqtt_tls->getPeerCertificate();
+
+                int error { 0 };
+
+                while (chain != nullptr && error == 0) {
+                  //                    const bool mustShow = !chain->ca_istrue || chain->next == nullptr;
+                  //                    if (mustShow) {
+                  String pem, subject;
+                  error = ESPEasy_WiFiClientSecure::cert_to_pem(chain, pem, subject);
+                  {
+                    String label;
+
+                    if (chain->ca_istrue) {
+                      label = F("CA ");
+                    }
+                    label += F("Certificate <tt>");
+                    label += subject;
+                    label += F("</tt>");
+                    addRowLabel(label);
+                  }
+
+                  if (error == 0) {
+                    addTextArea(
+                      F("peerCertInfo"),
+                      mqtt_tls->getPeerCertificateInfo(chain),
+                      -1,
+                      -1,
+                      -1,
+                      true,
+                      false);
+
+                    addTextArea(
+                      F("pem"),
+                      pem,
+                      -1,
+                      -1,
+                      -1,
+                      true,
+                      false);
+                  } else {
+                    addHtmlInt(error);
+                  }
+
+                  if (chain->ca_istrue && (chain->next == nullptr)) {
+                    // Add checkbox to store CA cert
+                    addControllerParameterForm(*ControllerSettings, controllerindex,
+                                               ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
+                  }
+
+                  //                    }
+                  chain = chain->next;
+                }
+              }
+*/
+            }
+          }
+            #   endif // ifdef ESP32
+        }
+#  endif // if FEATURE_MQTT_TLS
+      }
+# endif // if FEATURE_MQTT
     }
 
     // Separate enabled checkbox as it doesn't need to use the ControllerSettings.

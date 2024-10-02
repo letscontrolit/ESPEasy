@@ -29,6 +29,7 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options   = EMPTY_STRING,
+  bool                       enableZoom = false,
   size_t                     nrSamples = 0,
   bool                       onlyJSON  = false);
 
@@ -39,11 +40,13 @@ void add_ChartJS_chart_header(
   int                        width,
   int                        height,
   const String             & options   = EMPTY_STRING,
+  bool                       enableZoom = false,
   size_t                     nrSamples = 0,
   bool                       onlyJSON  = false);
 
 void add_ChartJS_chart_JSON_header(
   const __FlashStringHelper *chartType,
+  const String             & plugins,
   const ChartJS_title      & chartTitle,
   const String             & options,
   size_t                     nrSamples);

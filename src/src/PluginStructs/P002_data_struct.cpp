@@ -189,7 +189,15 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     #  if FEATURE_CHART_JS
     webformLoad_calibrationCurve(event);
     #  endif // if FEATURE_CHART_JS
-    formatADC_statistics(F("Current ADC to mV"), raw_value);
+    # ifdef ESP32
+    if (_useFactoryCalibration) {
+      formatADC_statistics(F("Current Voltage"), raw_value);
+    } else {
+      formatADC_statistics(F("Current ADC raw value"), raw_value);
+    }
+    #else
+    formatADC_statistics(F("Current ADC raw value"), raw_value);
+    #endif
 
     for (size_t att = 0; att < P002_ADC_ATTEN_MAX; ++att) {
       const adc_atten_t attenuation = static_cast<adc_atten_t>(att);
@@ -332,6 +340,10 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
 
+  if (_plugin_stats_array != nullptr) {
+    somethingAdded = _plugin_stats_array->webformLoad_show_stats(event, false);
+  }
+
   const PluginStats *stats = getPluginStats(0);
 
   if (stats != nullptr) {
@@ -340,9 +352,19 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
     if (stats->webformLoad_show_stdev(event)) { somethingAdded = true; }
 
     if (stats->hasPeaks()) {
-      formatADC_statistics(F("ADC Peak Low"),  stats->getPeakLow(),  true);
-      formatADC_statistics(F("ADC Peak High"), stats->getPeakHigh(), true);
-      somethingAdded = true;
+      float floatvalue_low, floatvalue_high;
+
+      if (stats->webformLoad_show_peaks(
+            event,
+            stats->getLabel(),
+            formatADC_statistics_to_str(stats->getPeakLow(),  floatvalue_low,  true),
+            formatADC_statistics_to_str(stats->getPeakHigh(), floatvalue_high, true),
+            false))
+      {
+        addRowLabel(concat(stats->getLabel(),  F(" Peak-to-peak")));
+        addHtmlFloat(floatvalue_high - floatvalue_low, _nrDecimals);
+        somethingAdded = true;
+      }
     }
   }
   return somethingAdded;
@@ -528,24 +550,37 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
 void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw, bool includeOutputValue) const
 {
   addRowLabel(label);
-  addHtmlInt(raw);
+  float float_value{};
 
-  float float_value = raw;
+  addHtml(formatADC_statistics_to_str(raw, float_value, includeOutputValue));
+}
+
+String P002_data_struct::formatADC_statistics_to_str(
+  int    raw,
+  float& float_value,
+  bool   includeOutputValue) const
+{
+  String res;
+
+  float_value = raw;
 
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
     float_value = applyADCFactoryCalibration(raw, _attenuation);
-
-    html_add_estimate_symbol();
-    addHtmlFloat(float_value, _nrDecimals);
-    addUnit(F("mV"));
+    res = strformat(
+      F("%s [mV]  &#8793; %d [ADC]"),
+      toString(float_value, _nrDecimals).c_str(),
+      raw);
+  } else {
+    res += raw;
   }
+#else
+  res += raw;
 # endif // ifdef ESP32
 
   if (includeOutputValue) {
-    addHtml(' ');
-    addHtml(F("&rarr; "));
+    res        += F(" &rarr; ");
     float_value =  applyCalibration(float_value);
 
 # ifndef LIMIT_BUILD_SIZE
@@ -566,8 +601,10 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
       }
     }
 # endif // ifndef LIMIT_BUILD_SIZE
-    addHtmlFloat(float_value, _nrDecimals);
+    res += toString(float_value, _nrDecimals);
   }
+
+  return res;
 }
 
 void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper *label, int raw, float float_value) const

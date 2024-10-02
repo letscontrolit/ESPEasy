@@ -15,6 +15,7 @@ int maxNrDecimals_fpType(const double& value);
 #endif
 int maxNrDecimals_fpType(const float& value);
 
+uint64_t computeDecimalFactorForDecimals(int nrDecimals);
 
 // The following definitions are from The art of computer programming by Knuth
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE

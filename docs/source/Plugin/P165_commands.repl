@@ -1,0 +1,135 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``7don``
+    ","
+    Turn the display on, if it was turned off before using the ``7doff`` command. (Not implemented yet)
+    "
+    "
+    ``7doff``
+    ","
+    Turn the display off, can later be turned on again by using the ``7don`` command. (Not implemented yet)
+    "
+    "
+    ``7db,<brightness>``
+
+    ``<brightness>``: Set the brightness between 0 and 255. Will be limited to the max. value configured in **Maximum allowed brightness** setting.
+    ","
+    Changes the **Initial brightness** config setting, and the brightness of the strip. The setting is not saved unless the ``save`` command is used.
+    "
+    "
+    ``7output,<output option>``
+    ","
+    Change the Display Output setting, available options:
+    
+    * 0 - Manual
+    * 1 - Clock 24h - Blink
+    * 2 - Clock 24h - No Blink
+    * 3 - Clock 12h - Blink
+    * 4 - Clock 12h - No Blink
+    * 5 - Date
+    "
+    "
+    ``7dfont,<font>``
+
+    ","
+    Select a different font, either by name: ``Default`` or ``7dgt`` for the original font (0), ``Siekoo`` for standard Siekoo font (1), ``Siekoo_Upper`` for the Siekoo font with uppercase 'CHNORUX' characters (2), and ``dSEG7`` for the dSEG7 font (3). Numbers can also be used, 0, 1, 2, or 3 as noted. Fontnames are not case-sensitive.
+    "
+    "
+    ``7dtext,<text>``
+
+    Examples:
+
+    ``7dtext,OUT [BLK#Temperature#d2.1]^``
+
+    ``7dtext,HU. [BLK#Humidity#d2.1]^o`` Will result in 'HU. 57.2°o' being displayed
+    ","
+    To display a text on the display. Any variable can be used. Unsupported characters (like accented letters) will show as a space (empty digit).
+
+    With the Scroll Text option disabled, the first n characters the display can show are displayed, if the Scroll Text option is enabled, longer texts will scroll from right to left across the display, at the set speed.
+    "
+    "
+    ``7digit,<grp>,<dgt>,<char>[.]``
+    ","
+    Draw a single character in the exact group & digit. When followed by a period, the decimal point will also be used.
+    "
+    "
+    ``7dbin,<byte>,...``
+
+    Example:
+
+    ``7dbin,0x40,0x20,0x10,0x08,0x04,0x02,0x01,0x80``
+    ","
+    To display any bit pattern on the display.
+
+    The example shows each digit with a different segment on, including the dot/colon, and assuming an 8 digit configuration, or Scroll Text enabled.
+
+    See explanation on how the bits map to segments, below.
+    "
+    "
+    ``7dgroup,<group>``
+
+    ``<group>`` Range 0..<number of configured groups>
+    ","
+    Set the default group any command should be applied to. Group 0 is the entire display, and the default.
+    "
+    "
+    ``7color,<fg_r>,<fg_g>,<fg_b>[,<fg_w>],<bg_r>,<bg_g>,<bg_b>[,<bg_w>]``
+    ","
+    Set the foreground, and/or background colors for the entire display. When a GRBW strip is configured, the brightness/white values have to be provided too. For only setting the background colors, leave out values for the foreground colors, but keep the commas.
+
+    Color values can be in range 0..255.
+
+    When group or digit colors are configured, then those will get priority.
+    "
+    "
+    ``7digitcolor,<grp>,<dgt>,<fg_r>,<fg_g>,<fg_b>[,<fg_w>],<bg_r>,<bg_g>,<bg_b>[,<bg_w>]``
+    ","
+    Set the foreground, and/or background colors for a specific digit of a group. When a GRBW strip is configured, the brightness/white values have to be provided too. For only setting the background colors, leave out values for the foreground colors, but keep the commas.
+
+    Both <grp> (group) and <dgt> (digit) are required, and must be in range 1..<available groups/digits for that group>.
+
+    Color values can be in range 0..255.
+
+    To clear a digit color, to use the group or global defaults, provide ``-`` instead of the <fg_r> value. The rest of the arguments will then be ignored.
+
+    Digit colors have highest priority.
+    "
+    "
+    ``7groupcolor,<grp>,<fg_r>,<fg_g>,<fg_b>[,<fg_w>],<bg_r>,<bg_g>,<bg_b>[,<bg_w>]``
+    ","
+    Set the foreground, and/or background colors for a all digits of a group. When a GRBW strip is configured, the brightness/white values have to be provided too. For only setting the background colors, leave out values for the foreground colors, but keep the commas.
+
+    Group <grp> is required, and must be in range 1..<available groups>.
+
+    Color values can be in range 0..255.
+
+    To clear a group color, to use the global defaults, provide ``-`` instead of the <fg_r> value. The rest of the arguments will then be ignored.
+
+    Group color will be overridden by a digit color, when set.
+    "
+    "
+    ``7dextra,<grp>,<state>[,<r>,<g>,<b>[,<w>]]``
+
+    ``7dbefore,<grp>,<state>[,<r>,<g>,<b>[,<w>]]``
+
+    ``<state>`` : 0, 1, 2, 3, 4 or 5
+    ","
+    Set the extra pixels after or before the digit On or Off, according to the state. The optionally supplied color will be used for the state. If not used, the the global background color will be used for Off, and the global foreground color for On.
+
+    State:
+
+    * ``0`` : All Off
+    
+    * ``1`` : All On
+    
+    * ``2`` : Low-numbered half of pixels Off
+    
+    * ``3`` : Low-numbered half of pixels On
+    
+    * ``4`` : High-numbered half of pixels Off
+    
+    * ``5`` : High-numbered half of pixels On
+    "

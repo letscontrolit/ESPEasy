@@ -72,16 +72,16 @@
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
-  if (hasArg(arg)) { 
-    safe_strncpy(dest, webArg(arg).c_str(), max_size); 
+  if (hasArg(arg)) {
+    safe_strncpy(dest, webArg(arg).c_str(), max_size);
   }
 }
 
-void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size) {
+void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper *arg, size_t max_size) {
   safe_strncpy_webserver_arg(dest, String(arg), max_size);
 }
 
-void sendHeadandTail(const __FlashStringHelper * tmplName, bool Tail, bool rebooting) {
+void sendHeadandTail(const __FlashStringHelper *tmplName, bool Tail, bool rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -94,12 +94,14 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, bool Tail, bool reboo
   #endif // if FEATURE_TIMING_STATS
   {
     const String fileName = concat(tmplName, F(".htm"));
-    fs::File f = tryOpenFile(fileName, "r");
+    fs::File     f        = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
+
     if (f) {
       bool success = true;
-      while (f.available() && success) { 
+
+      while (f.available() && success) {
         success = templateParser.process((char)f.read());
       }
       f.close();
@@ -130,36 +132,38 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
     }
 
     #ifndef BUILD_NO_DEBUG
-/*
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      const int nrArgs = web_server.args();
 
-      if (nrArgs > 0) {
-        String log = F(" Webserver ");
-        log += nrArgs;
-        log += F(" Arguments");
+    /*
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          const int nrArgs = web_server.args();
 
-        if (nrArgs > 20) {
-          log += F(" (First 20)");
+          if (nrArgs > 0) {
+            String log = F(" Webserver ");
+            log += nrArgs;
+            log += F(" Arguments");
+
+            if (nrArgs > 20) {
+              log += F(" (First 20)");
+            }
+            log += ':';
+
+            for (int i = 0; i < nrArgs && i < 20; ++i) {
+              log += ' ';
+              log += i;
+              log += F(": '");
+              log += web_server.argName(i);
+              log += F("' length: ");
+              log += webArg(i).length();
+            }
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
         }
-        log += ':';
-
-        for (int i = 0; i < nrArgs && i < 20; ++i) {
-          log += ' ';
-          log += i;
-          log += F(": '");
-          log += web_server.argName(i);
-          log += F("' length: ");
-          log += webArg(i).length();
-        }
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-    }
-  */
+     */
     #endif // ifndef BUILD_NO_DEBUG
   }
+
   // We have sent a lot of data at once.
-  // try to flush it to the connected client to free up some RAM 
+  // try to flush it to the connected client to free up some RAM
   // from pending transfers
   TXBuffer.flush();
   delay(10);
@@ -167,26 +171,29 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 
 bool captivePortal() {
   const IPAddress client_localIP = web_server.client().localIP();
-  const bool fromAP = client_localIP == apIP;
-  const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();
+  const bool fromAP              = client_localIP == apIP;
+  const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();
+
   if (hasWiFiCredentials || !fromAP) {
     return false;
   }
-  if (!isIP(web_server.hostHeader()) && web_server.hostHeader() != (NetworkGetHostname() + F(".local"))) {
+
+  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (NetworkGetHostname() + F(".local")))) {
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
+
     if (fromAP && !hasWiFiCredentials) {
       redirectURL += F("/setup");
     }
-    #endif
+    #endif // ifdef WEBSERVER_SETUP
     sendHeader(F("Location"), redirectURL, true);
-    web_server.send(302, F("text/plain"), EMPTY_STRING);   // Empty content inhibits Content-length header so we have to close the socket ourselves.
-    web_server.client().stop(); // Stop is needed because we sent no content length
+    web_server.send(302, F("text/plain"), EMPTY_STRING); // Empty content inhibits Content-length header so we have to close the socket
+                                                         // ourselves.
+    web_server.client().stop();                          // Stop is needed because we sent no content length
     return true;
   }
   return false;
 }
-
 
 // ********************************************************************************
 // Web Interface init
@@ -201,17 +208,18 @@ void WebServerInit()
 
   // Prepare webserver pages
   #ifdef WEBSERVER_ROOT
-  web_server.on(F("/"),             handle_root);
+  web_server.on(F("/"), handle_root);
+
   // Entries for several captive portal URLs.
   // Maybe not needed. Might be handled by notFound handler.
-  web_server.on(UriGlob("/generate_204*"), handle_root);  // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
-  web_server.on(F("/fwlink"),       handle_root);  //Microsoft captive portal.
+  web_server.on(UriGlob("/generate_204*"), handle_root); // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
+  web_server.on(F("/fwlink"),              handle_root); // Microsoft captive portal.
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
-  web_server.on(F("/advanced"),    handle_advanced);
-  #if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
-  web_server.on(F("/backup"),      handle_full_backup);
-  #endif // if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
+  web_server.on(F("/advanced"),            handle_advanced);
+  # if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
+  web_server.on(F("/backup"),              handle_full_backup);
+  # endif // if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
   #endif // ifdef WEBSERVER_ADVANCED
   #ifdef WEBSERVER_CONFIG
   web_server.on(F("/config"),      handle_config);
@@ -231,7 +239,7 @@ void WebServerInit()
 
 #ifdef USES_C016
 
-  web_server.on(F("/dumpcache"),     handle_dumpcache);  // C016 specific entrie
+  web_server.on(F("/dumpcache"),  handle_dumpcache);  // C016 specific entrie
   web_server.on(F("/cache_json"), handle_cache_json); // C016 specific entrie
   web_server.on(F("/cache_csv"),  handle_cache_csv);  // C016 specific entrie
 #endif // USES_C016
@@ -251,7 +259,7 @@ void WebServerInit()
   #ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
-  web_server.on(F("/json"),            handle_json); // Also part of WEBSERVER_NEW_UI
+  web_server.on(F("/json"),            handle_json);     // Also part of WEBSERVER_NEW_UI
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
@@ -311,30 +319,31 @@ void WebServerInit()
   web_server.on(F("/factoryreset_json"), handle_factoryreset_json);
   web_server.on(F("/filelist_json"),     handle_filelist_json);
   web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
-  #if FEATURE_ESPEASY_P2P
+  # if FEATURE_ESPEASY_P2P
   web_server.on(F("/node_list_json"),    handle_nodes_list_json);
-  #endif
+  # endif // if FEATURE_ESPEASY_P2P
   web_server.on(F("/pinstates_json"),    handle_pinstates_json);
   web_server.on(F("/timingstats_json"),  handle_timingstats_json);
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
   web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
 #if SHOW_SYSINFO_JSON
-    web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
-#endif//SHOW_SYSINFO_JSON
+  web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
+#endif// SHOW_SYSINFO_JSON
 
   web_server.onNotFound(handleNotFound);
 
   // List of headers to be recorded
   // "If-None-Match" is used to see whether we need to serve a static file, or simply can reply with a 304 (not modified)
-  const char * headerkeys[] = {"If-None-Match"};
+  const char *headerkeys[]        = { "If-None-Match" };
   constexpr size_t headerkeyssize = NR_ELEMENTS(headerkeys);
-  web_server.collectHeaders(headerkeys, headerkeyssize );
+  web_server.collectHeaders(headerkeys, headerkeyssize);
   #if defined(ESP8266) || defined(ESP32)
   {
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
+
     // allow OTA to smaller version of ESPEasy/other firmware
     if (Settings.AllowOTAUnlimited() || OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&web_server);
@@ -350,15 +359,15 @@ void WebServerInit()
   if (Settings.UseSSDP)
   {
     web_server.on(F("/ssdp.xml"), HTTP_GET, []() {
-      #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      #  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
       web_server.client().setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
-      Client &pClient = web_server.client();
+      Client& pClient = web_server.client();
       pClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-      #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-      web_server.client().setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
-      #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      #  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      web_server.client().setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT); // in msec as it should be!
+      #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       SSDP_schema();
     });
@@ -391,34 +400,35 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addJS   = true;
   const bool addMeta = true;
 
-/*
-  if (equals(tmplName, F("TmplAP")))
-  {
+  /*
+     if (equals(tmplName, F("TmplAP")))
+     {
 
-    getWebPageTemplateDefaultHead(parser, addMeta, !addJS);
+      getWebPageTemplateDefaultHead(parser, addMeta, !addJS);
 
-    if (!parser.isTail()) {
-      #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-      parser.process(F("<body"
-                       #if FEATURE_AUTO_DARK_MODE
-                       " data-theme='auto'"
-                       #endif // FEATURE_AUTO_DARK_MODE
-                       "><header class='apheader'>"
-                       "<h1>Welcome to ESP Easy Mega AP</h1>"));
-      #else
-      parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
-      #endif
+      if (!parser.isTail()) {
+   #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+        parser.process(F("<body"
+   #if FEATURE_AUTO_DARK_MODE
+                         " data-theme='auto'"
+   #endif // FEATURE_AUTO_DARK_MODE
+                         "><header class='apheader'>"
+                         "<h1>Welcome to ESP Easy Mega AP</h1>"));
+   #else
+        parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
+   #endif
 
-      parser.process(F("</header>"));
-    }
-    getWebPageTemplateDefaultContentSection(parser);
-    getWebPageTemplateDefaultFooter(parser);
-  }
-  else 
-  */
+        parser.process(F("</header>"));
+      }
+      getWebPageTemplateDefaultContentSection(parser);
+      getWebPageTemplateDefaultFooter(parser);
+     }
+     else
+   */
   if (equals(tmplName, F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
+
     if (!parser.isTail()) {
       parser.process(F("<body"
                        #if FEATURE_AUTO_DARK_MODE
@@ -435,6 +445,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
     parser.process(F("<body"));
     #if FEATURE_AUTO_DARK_MODE
+
     if (0 == Settings.getCssMode()) {
       parser.process(F(" data-theme='auto'"));
     } else if (2 == Settings.getCssMode()) {
@@ -448,9 +459,11 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
+
     if (!parser.isTail()) {
       parser.process(F("<body class='bodymenu'"));
       #if FEATURE_AUTO_DARK_MODE
+
       if (0 == Settings.getCssMode()) {
         parser.process(F(" data-theme='auto'"));
       } else if (2 == Settings.getCssMode()) {
@@ -463,16 +476,17 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-//  addLog(LOG_LEVEL_INFO, concat(F("tmpl.length(): "), tmpl.length()));
+
+  //  addLog(LOG_LEVEL_INFO, concat(F("tmpl.length(): "), tmpl.length()));
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
-  if (parser.isTail()) return;
+  if (parser.isTail()) { return; }
   parser.process(F("<!DOCTYPE html><html lang='en'>"
-            "<head>"
-            "<meta charset='utf-8'/>"
-            "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-            "<title>{{name}}</title>"));
+                   "<head>"
+                   "<meta charset='utf-8'/>"
+                   "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                   "<title>{{name}}</title>"));
 
   if (addMeta) { parser.process(F("{{meta}}")); }
 
@@ -482,15 +496,17 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
                    "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper *title, bool addMenu) {
   {
-    if (parser.isTail()) return;
+    if (parser.isTail()) { return; }
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
     parser.process(title);
-    #if BUILD_IN_WEBHEADER
-    parser.process(F("<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"));
-    #endif // #if BUILD_IN_WEBHEADER
+    # if BUILD_IN_WEBHEADER
+    parser.process(F(
+                     "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX
+                     "</div>"));
+    # endif // #if BUILD_IN_WEBHEADER
     parser.process(F("</h1><BR>"));
   #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     String tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
@@ -505,63 +521,61 @@ void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStr
 
 void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
   parser.process(F("<section>"
-            "<span class='message error'>"
-            "{{error}}"
-            "</span>"
-            "{{content}}"
-            "</section>"
-            ));
+                   "<span class='message error'>"
+                   "{{error}}"
+                   "</span>"
+                   "{{content}}"
+                   "</section>"
+                   ));
 }
 
 void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
-  if (!parser.isTail()) return;
+  if (!parser.isTail()) { return; }
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   parser.process(F("<footer>"
-            "<br>"
-            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
-            #if BUILD_IN_WEBFOOTER
-            "<div style='float: right'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{build}} {{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
-            #endif // #if BUILD_IN_WEBFOOTER
-            "</h6>"
-            "</footer>"
-            "</body></html>"
-            ));
+                   "<br>"
+                   "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
+            # if BUILD_IN_WEBFOOTER
+                   "<div style='float: right'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{build}} {{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
+            # endif // #if BUILD_IN_WEBFOOTER
+                   "</h6>"
+                   "</footer>"
+                   "</body></html>"
+                   ));
 #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   parser.process(F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER));
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
 }
 
-
-
 void writeDefaultCSS(void)
 {
   return; // TODO
 
-/*
-#ifndef WEBSERVER_USE_CDN_JS_CSS
+  /*
+   #ifndef WEBSERVER_USE_CDN_JS_CSS
 
-  if (!fileExists(F("esp.css")))
-  {
-    fs::File f = tryOpenFile(F("esp.css"), "w");
+     if (!fileExists(F("esp.css")))
+     {
+      fs::File f = tryOpenFile(F("esp.css"), "w");
 
-    if (f)
-    {
-      String defaultCSS;
-      defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
+      if (f)
+      {
+        String defaultCSS;
+        defaultCSS = PGMT(DATA_ESPEASY_DEFAULT_MIN_CSS);
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("CSS  : Writing default CSS file to FS (");
-        log += defaultCSS.length();
-        log += F(" bytes)");
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("CSS  : Writing default CSS file to FS (");
+          log += defaultCSS.length();
+          log += F(" bytes)");
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        f.write((const unsigned char *)defaultCSS.c_str(), defaultCSS.length()); // note: content must be in RAM - a write of F("XXX") does
+                                                                                 // not work
+        f.close();
       }
-      f.write((const unsigned char *)defaultCSS.c_str(), defaultCSS.length()); // note: content must be in RAM - a write of F("XXX") does
-                                                                               // not work
-      f.close();
-    }
-  }
-#endif
-*/
+     }
+   #endif
+   */
 }
 
 // ********************************************************************************
@@ -573,7 +587,7 @@ void writeDefaultCSS(void)
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
-void json_quote_name(const __FlashStringHelper * val) {
+void json_quote_name(const __FlashStringHelper *val) {
   json_quote_name(String(val));
 }
 
@@ -598,7 +612,7 @@ void json_open(bool arr) {
   json_open(arr, EMPTY_STRING);
 }
 
-void json_open(bool arr, const __FlashStringHelper * name) {
+void json_open(bool arr, const __FlashStringHelper *name) {
   json_quote_name(name);
   addHtml(arr ? '[' : '{');
   lastLevel = level;
@@ -627,23 +641,21 @@ void json_close(bool arr) {
   lastLevel = level;
 }
 
-void json_number(const __FlashStringHelper * name, const String& value)
+void json_number(const __FlashStringHelper *name, const String& value)
 {
   json_prop(name, value);
 }
-
 
 void json_number(const String& name, const String& value) {
   json_prop(name, value);
 }
 
-void json_prop(const __FlashStringHelper * name, const String& value) 
+void json_prop(const __FlashStringHelper *name, const String& value)
 {
   json_quote_name(name);
   json_quote_val(value);
   lastLevel = level;
 }
-
 
 void json_prop(const String& name, const String& value) {
   json_quote_name(name);
@@ -664,10 +676,11 @@ void addTaskSelect(const String& name,  taskIndex_t choice, const String& csscla
   String deviceName;
 
   addHtml(F("<select "));
-  addHtmlAttribute(F("id"),       F("selectwidth"));
-  addHtmlAttribute(F("name"),     name);
+  addHtmlAttribute(F("id"),   F("selectwidth"));
+  addHtmlAttribute(F("name"), name);
+
   if (!cssclass.isEmpty()) {
-    addHtmlAttribute(F("class"),  cssclass);
+    addHtmlAttribute(F("class"), cssclass);
   }
   addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
   addHtml('>');
@@ -695,6 +708,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice, const String& csscla
     }
     {
       addHtml('>');
+
       if (validTaskIndex(x)) {
         addHtmlInt(x + 1);
       }
@@ -735,11 +749,10 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(getTaskValueName(TaskIndex, x));
+    addHtml(Cache.getTaskDeviceValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }
-
 
 // ********************************************************************************
 // Login state check
@@ -749,13 +762,14 @@ bool isLoggedIn(bool mustProvideLogin)
   if (!clientIPallowed()) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
-  
+
   if (!mustProvideLogin) {
     return false;
   }
-  
+
   {
     String www_username = F(DEFAULT_ADMIN_USERNAME);
+
     if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
 
     // Basic Auth Method with Custom realm and Failure Response
@@ -810,7 +824,6 @@ String getControllerSymbol(uint8_t index)
    return ret;
    }
  */
-
 void addSVG_param(const char key, int value)
 {
   addHtml(strformat(F(" %c=\"%d\""), key, value));
@@ -826,34 +839,41 @@ void addSVG_param(const char key, const String& value)
   addHtml(strformat(F(" %c=\"%s\""), key, value.c_str()));
 }
 
-
-void addSVG_param(const __FlashStringHelper * key, int value) {
+void addSVG_param(const __FlashStringHelper *key, int value) {
   addHtml(strformat(F(" %s=\"%d\""), key, value));
 }
 
-void addSVG_param(const __FlashStringHelper * key, float value) {
+void addSVG_param(const __FlashStringHelper *key, float value) {
   addSVG_param(key, toString(value, 2));
 }
 
-void addSVG_param(const __FlashStringHelper * key, const String& value) {
+void addSVG_param(const __FlashStringHelper *key, const String& value) {
   addHtml(strformat(F(" %s=\"%s\""), key, value.c_str()));
 }
 
-void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
+void createSvgRect_noStroke(const __FlashStringHelper *classname,
+                            unsigned int               fillColor,
+                            float                      xoffset,
+                            float                      yoffset,
+                            float                      width,
+                            float                      height,
+                            float                      rx,
+                            float                      ry) {
   createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
 }
 
 void createSvgRect(const String& classname,
-                   unsigned int fillColor,
-                   unsigned int strokeColor,
-                   float        xoffset,
-                   float        yoffset,
-                   float        width,
-                   float        height,
-                   float        strokeWidth,
-                   float        rx,
-                   float        ry) {
+                   unsigned int  fillColor,
+                   unsigned int  strokeColor,
+                   float         xoffset,
+                   float         yoffset,
+                   float         width,
+                   float         height,
+                   float         strokeWidth,
+                   float         rx,
+                   float         ry) {
   addHtml(F("<rect"));
+
   if (!classname.isEmpty()) {
     addSVG_param(F("class"), classname);
   }
@@ -924,15 +944,17 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
   addHtml('>');
   addHtml(F("<style>text{line-height:1.25;stroke-width:.3;font-family:sans-serif;font-size:8;letter-spacing:0;word-spacing:0;"));
   #if FEATURE_AUTO_DARK_MODE
+
   if (2 == Settings.getCssMode()) { // Dark
     addHtml(F("fill:#c3c3c3;"));    // Copied from espeasy_default.css var(--c4) in dark section
   }
   addHtml('}');
-  if (0 == Settings.getCssMode()) { // Auto
+
+  if (0 == Settings.getCssMode()) {                                       // Auto
     addHtml(F("@media(prefers-color-scheme:dark){text{fill:#c3c3c3;}}")); // ditto
   }
   #else // FEATURE_AUTO_DARK_MODE
-  addHtml('}'); // close 'text' style
+  addHtml('}');                                                           // close 'text' style
   #endif // FEATURE_AUTO_DARK_MODE
   addHtml(F("</style>"));
 }
@@ -955,17 +977,24 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2f;
 
   if (white_between_bar < 1) { white_between_bar = 1; }
-  const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
+  const int barWidth         = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
   const int svg_width_pixels = nbars * barWidth + (nbars - 1) * white_between_bar;
 
   write_SVG_image_header(svg_width_pixels, svg_width_pixels, true);
-  const float scale         = 100.0f / svg_width_pixels;
-  const int bar_height_step = 100 / nbars;
+  const float scale           = 100.0f / svg_width_pixels;
+  const int   bar_height_step = 100 / nbars;
 
   for (int i = 0; i < nbars; ++i) {
     const unsigned int color = i < nbars_filled ? 0x07d : 0xBFa1a1a1; // Blue/Grey75%
     const int barHeight      = (i + 1) * bar_height_step;
-    createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"), color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
+    createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"),
+                           color,
+                           i * (barWidth + white_between_bar) * scale,
+                           100 - barHeight,
+                           barWidth,
+                           barHeight,
+                           0,
+                           0);
   }
   addHtml(F("</svg>\n"));
 }
@@ -990,6 +1019,7 @@ void getConfig_dat_file_layout() {
 
     if (SettingsType::getSettingsFile(settingsType) == SettingsType::SettingsFileEnum::FILE_CONFIG_type) {
       unsigned int color = SettingsType::getSVGcolor(settingsType);
+
       if (SettingsType::getSettingsParameters(settingsType, 0, max_index, offset, max_size, struct_size))
       {
         for (int i = 0; i < max_index; ++i) {
@@ -1004,7 +1034,7 @@ void getConfig_dat_file_layout() {
 
   // Text labels
   constexpr float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
+  float textYoffset           = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
@@ -1076,28 +1106,28 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 }
 
 void drawPartitionChartSVG(
-                          float yOffset, 
-                          uint32_t realSize, 
-                          uint32_t partitionAddress, 
-                          uint32_t partitionSize,
-                          unsigned int partitionColor,
-                          const String& label,
-                          const String& name)
+  float         yOffset,
+  uint32_t      realSize,
+  uint32_t      partitionAddress,
+  uint32_t      partitionSize,
+  unsigned int  partitionColor,
+  const String& label,
+  const String& name)
 {
   createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
   createSvgHorRectPath(partitionColor, partitionAddress, yOffset, partitionSize, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
-  float textXoffset = SVG_BAR_WIDTH + 2;
+  float textXoffset       = SVG_BAR_WIDTH + 2;
   const float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
-  createSvgTextElement(formatHumanReadable(partitionSize, 1024),          textXoffset, textYoffset);
+  createSvgTextElement(formatHumanReadable(partitionSize, 1024), textXoffset, textYoffset);
   textXoffset = SVG_BAR_WIDTH + 60;
-  createSvgTextElement(label, textXoffset, textYoffset);
+  createSvgTextElement(label,                                    textXoffset, textYoffset);
   textXoffset = SVG_BAR_WIDTH + 130;
-  createSvgTextElement(name, textXoffset, textYoffset);
+  createSvgTextElement(name,                                     textXoffset, textYoffset);
 }
 
-#ifdef ESP32
+# ifdef ESP32
 
-# include <esp_partition.h>
+#  include <esp_partition.h>
 
 
 void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
@@ -1118,11 +1148,11 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
     do {
       _mypart = esp_partition_get(_mypartiterator);
       drawPartitionChartSVG(
-        yOffset, 
-        realSize, 
-        _mypart->address, 
-        _mypart->size, 
-        partitionColor, 
+        yOffset,
+        realSize,
+        _mypart->address,
+        _mypart->size,
+        partitionColor,
         _mypart->label,
         getPartitionType(_mypart->type, _mypart->subtype));
       yOffset += SVG_BAR_HEIGHT;
@@ -1132,85 +1162,87 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   esp_partition_iterator_release(_mypartiterator);
 }
 
-#endif // ifdef ESP32
+# endif // ifdef ESP32
 
-#ifdef ESP8266
+# ifdef ESP8266
 void getPartitionTableSVG() {
   // sketch / OTA / FS / EEPROM / RFcal / wifi
   const int nrPartitions = 6;
-  const int shiftY = 2;
+  const int shiftY       = 2;
+
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
 
   for (int i = 0; i < nrPartitions; ++i) {
     const ESP8266_partition_type ptype = static_cast<ESP8266_partition_type>(i);
-    uint32_t partitionAddress = 0;
-    int32_t partitionSize = 0;
-    const int32_t partitionSector = getPartitionInfo(ptype, partitionAddress, partitionSize);
+    uint32_t partitionAddress          = 0;
+    int32_t  partitionSize             = 0;
+    const int32_t partitionSector      = getPartitionInfo(ptype, partitionAddress, partitionSize);
 
-    const __FlashStringHelper * label = F("");
+    const __FlashStringHelper *label = F("");
     String descr;
     unsigned int partitionColor = 0xab56e6;
+
     switch (ptype) {
       case ESP8266_partition_type::sketch:
-        label = F("sketch");
+        label          = F("sketch");
         partitionColor = 0xab56e6;
         break;
       case ESP8266_partition_type::ota:
-        label = F("ota");
+        label          = F("ota");
         partitionColor = 0x5856e6;
         break;
       case ESP8266_partition_type::fs:
-        label = F("fs");
+        label          = F("fs");
         partitionColor = 0xff7f00;
-        #ifdef USE_LITTLEFS
+        #  ifdef USE_LITTLEFS
         descr = F("LittleFS");
-        #else
+        #  else // ifdef USE_LITTLEFS
         descr = F("SPIFFS");
-        #endif
+        #  endif // ifdef USE_LITTLEFS
         break;
       case ESP8266_partition_type::eeprom:
-        label = F("eeprom");
-        descr = concat(F("sector:"), partitionSector);
+        label          = F("eeprom");
+        descr          = concat(F("sector:"), partitionSector);
         partitionColor = 0x7fff00;
         break;
       case ESP8266_partition_type::rf_cal:
-        label = F("RFcal");
+        label          = F("RFcal");
         partitionColor = 0xff007f;
         break;
       case ESP8266_partition_type::wifi:
-        label = F("WiFi");
+        label          = F("WiFi");
         partitionColor = 0xff00ff;
         break;
-
     }
 
     drawPartitionChartSVG(
-        yOffset, 
-        getFlashRealSizeInBytes(), 
-        partitionAddress, 
-        partitionSize, 
-        partitionColor, 
-        label,
-        descr);
+      yOffset,
+      getFlashRealSizeInBytes(),
+      partitionAddress,
+      partitionSize,
+      partitionColor,
+      label,
+      descr);
     yOffset += SVG_BAR_HEIGHT;
 
-/*
-    String debuglog = concat(F("partition: "), (i+1));
-    debuglog += concat(F(" FS_st: "), formatToHex((uint32_t)&_FS_start));
-    debuglog += concat(F(" FS_end: "), formatToHex((uint32_t)&_FS_end));
-    debuglog += concat(F(" EEPROM: "), formatToHex((uint32_t)&_EEPROM_start));
-    debuglog += concat(F(" addr: "), formatToHex(partitionAddress, 8));
-    debuglog += concat(F(" part.size: "), partitionSize);
-    debuglog += concat(F(" label: "), label);
-    addLog(LOG_LEVEL_INFO, debuglog);
-*/
+    /*
+        String debuglog = concat(F("partition: "), (i+1));
+        debuglog += concat(F(" FS_st: "), formatToHex((uint32_t)&_FS_start));
+        debuglog += concat(F(" FS_end: "), formatToHex((uint32_t)&_FS_end));
+        debuglog += concat(F(" EEPROM: "), formatToHex((uint32_t)&_EEPROM_start));
+        debuglog += concat(F(" addr: "), formatToHex(partitionAddress, 8));
+        debuglog += concat(F(" part.size: "), partitionSize);
+        debuglog += concat(F(" label: "), label);
+        addLog(LOG_LEVEL_INFO, debuglog);
+     */
   }
   addHtml(F("</svg>\n"));
 }
-#endif
-#endif
 
-bool webArg2ip(const __FlashStringHelper * arg, uint8_t *IP) {
+# endif // ifdef ESP8266
+#endif // if FEATURE_CHART_STORAGE_LAYOUT
+
+bool webArg2ip(const __FlashStringHelper *arg, uint8_t *IP) {
   return str2ip(webArg(arg), IP);
 }

@@ -463,6 +463,28 @@ void parse_string_commands(String& line) {
   int closingIndex;
 
   bool mustReplaceMaskedChars = false;
+  bool mustReplaceEscapedBracket = false;
+  bool mustReplaceEscapedCurlyBracket = false;
+  String MaskEscapedBracket;
+
+  if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
+    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(F("\\("), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(F("\\)"), MaskEscapedBracket);
+    mustReplaceEscapedBracket = true;
+  }
+  if (hasEscapedCharacter(line,'{') || hasEscapedCharacter(line,'}')) {
+    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(F("\\{"), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(F("\\}"), MaskEscapedBracket);
+    mustReplaceEscapedCurlyBracket = true;
+  }
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
@@ -637,6 +659,24 @@ void parse_string_commands(String& line) {
     line.replace(static_cast<char>(0x02), '{');
     line.replace(static_cast<char>(0x03), '}');
   }
+
+  if (mustReplaceEscapedBracket) {
+    // We now have to check if we did mask some escaped bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(MaskEscapedBracket, F("\\("));
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(MaskEscapedBracket, F("\\)"));
+  }
+
+  if (mustReplaceEscapedCurlyBracket) {
+    // We now have to check if we did mask some escaped curly bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(MaskEscapedBracket, F("\\{"));
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(MaskEscapedBracket, F("\\}"));
+  }
 }
 
 void substitute_eventvalue(String& line, const String& event) {
@@ -783,7 +823,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
       line = parseTemplate(line);
     }
   }
-
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
@@ -1299,7 +1338,7 @@ void createRuleEvents(struct EventStruct *event) {
   // These also only yield a single value, so no need to check for combining task values.
   if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
-    expectedSize += getTaskValueName(event->TaskIndex, 0).length();
+    expectedSize += Cache.getTaskDeviceValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
 
@@ -1313,7 +1352,7 @@ void createRuleEvents(struct EventStruct *event) {
     }
     eventString += getTaskDeviceName(event->TaskIndex);
     eventString += '#';
-    eventString += getTaskValueName(event->TaskIndex, 0);
+    eventString += Cache.getTaskDeviceValueName(event->TaskIndex, 0);
     eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
@@ -1338,7 +1377,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
-      eventQueue.add(event->TaskIndex, getTaskValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
+      eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
   }
 }
