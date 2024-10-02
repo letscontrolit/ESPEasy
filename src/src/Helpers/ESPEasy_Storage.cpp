@@ -165,7 +165,7 @@ bool fileExists(const String& fname) {
   }
 
   if (Cache.fileCacheClearMoment == 0) {
-    if (node_time.timeSource == timeSource_t::No_time_source) {
+    if (node_time.getTimeSource() == timeSource_t::No_time_source) {
       // use some random value as we don't have a time yet
       Cache.fileCacheClearMoment = HwRandom();
     } else {
@@ -1549,7 +1549,117 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
   return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
-#endif // if FEATURE_NOTIFIER
+#endif
+
+
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+#if FEATURE_MQTT_TLS
+static inline bool is_base64(char c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+bool cleanupCertificate(String & certificate, bool &changed)
+{
+  changed = false;
+  // "-----BEGIN CERTIFICATE-----" positions in dash_pos[0] and dash_pos[1]
+  // "-----END CERTIFICATE-----"   positions in dash_pos[2] and dash_pos[3]
+  int dash_pos[4] = { 0 };
+  int last_pos = 0;
+  for (int i = 0; i < 4 && last_pos != -1; ++i) {
+    dash_pos[i] = certificate.indexOf(F("-----"), last_pos);
+    last_pos = dash_pos[i] + 5;
+//    addLog(LOG_LEVEL_INFO, String(F(" dash_pos: ")) + String(dash_pos[i]));
+  }
+  if (last_pos == -1) return false;
+
+  int read_pos = dash_pos[1] + 5; // next char after "-----BEGIN CERTIFICATE-----"
+  String newCert;
+  newCert.reserve((dash_pos[3] + 6) - dash_pos[0]);
+
+  // "-----BEGIN CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[0], read_pos); 
+
+  char last_char = certificate[read_pos - 1];
+  for (; read_pos < dash_pos[2]; ++read_pos) {
+    const char c = certificate[read_pos];
+    if ((c == 'n' && last_char == '\\') || (c == '\n')) {
+      if (!newCert.endsWith(String('\n'))) {
+        newCert += '\n';
+      }
+    } else if (is_base64(c) || c == '=') {
+      newCert += c;
+    }
+    last_char = c;
+  }
+
+  // "-----END CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[2], dash_pos[3] + 5);
+  newCert += '\n';
+
+  changed = !certificate.equals(newCert);
+  certificate = std::move(newCert);
+  return true;
+}
+
+String SaveCertificate(const String& fname, const String& certificate)
+{
+  return SaveToFile(fname.c_str(), 0, (const uint8_t *)certificate.c_str(), certificate.length() + 1);
+}
+
+String LoadCertificate(const String& fname, String& certificate, bool cleanup)
+{
+  bool changed = false;
+  if (fileExists(fname)) {
+    fs::File f = tryOpenFile(fname, "r");
+    SPIFFS_CHECK(f, fname.c_str());
+    #ifndef BUILD_NO_DEBUG
+    String log = F("LoadCertificate: ");
+    log += fname;
+    #else
+    String log = F("LoadCertificate error");
+    #endif
+
+    certificate.clear();
+
+    if (!certificate.reserve(f.size())) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+    bool done = false;
+    while (f.available() && !done) { 
+      const char c = (char)f.read(); 
+      if (c == '\0') {
+        done = true;
+      } else {
+        certificate += c;
+      }
+    }
+    f.close();
+
+    if (cleanup) {
+      if (!cleanupCertificate(certificate, changed)) {
+        certificate.clear();
+        #ifndef BUILD_NO_DEBUG
+        log += F(" ERROR, Invalid certificate format");
+        #endif
+        addLog(LOG_LEVEL_ERROR, log);
+        return log;
+      } else if (changed) {
+        //return SaveCertificate(fname, certificate);
+      }
+    }
+  }
+
+  return EMPTY_STRING;
+}
+#endif
 
 /********************************************************************************************\
    Init a file with zeros on file system
@@ -1593,7 +1703,9 @@ String InitFile(SettingsType::SettingsFileEnum file_type)
  \*********************************************************************************************/
 String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize)
 {
-  return doSaveToFile(fname, index, memAddress, datasize, "r+");
+  return doSaveToFile(
+    fname, index, memAddress, datasize,
+    fileExists(fname) ? "r+" : "w+");
 }
 
 String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize)
@@ -1643,7 +1755,9 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (f) {
     clearAllButTaskCaches();
     SPIFFS_CHECK(f,                          fname);
-    SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    if (index > 0) {
+      SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    }
     const uint8_t *pointerToByteToSave = memAddress;
 
     for (int x = 0; x < datasize; x++)
@@ -1783,6 +1897,52 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   delay(0);
 
   return EMPTY_STRING;
+}
+
+String LoadFromFile(const char *fname, String& data, int offset)
+{
+  fs::File f = tryOpenFile(fname, "r");
+  SPIFFS_CHECK(f, fname);
+  #ifndef BUILD_NO_DEBUG
+  String log = F("LoadFromFile: ");
+  log += fname;
+  #else
+  String log = F("Load error");
+  #endif
+
+  if (!f || offset < 0 || (offset >= static_cast<int>(f.size()))) {
+    #ifndef BUILD_NO_DEBUG
+    log += F(" ERROR, invalid position in file");
+    #endif
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+  delay(0);
+  START_TIMER;
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("LoadFromFile"));
+  #endif
+  
+  SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
+  if (f) {
+    if (!data.reserve(f.size() - offset)) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+
+    while (f.available()) { data += (char)f.read(); }
+    f.close();
+  }
+  
+
+  STOP_TIMER(LOADFILE_STATS);
+  delay(0);
+
+  return String();
 }
 
 /********************************************************************************************\

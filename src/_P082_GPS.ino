@@ -31,10 +31,6 @@
 
 
 
-// Must use volatile declared variable (which will end up in iRAM)
-volatile unsigned long P082_pps_time = 0;
-void    Plugin_082_interrupt() IRAM_ATTR;
-
 boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
@@ -329,14 +325,10 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P082_data->init(port, serial_rx, serial_tx)) {
+      if (P082_data->init(port, serial_rx, serial_tx, pps_pin)) {
         success = true;
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
 
-        if (validGpio(pps_pin)) {
-          //          pinMode(pps_pin, INPUT_PULLUP);
-          attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
-        }
         # ifdef P082_USE_U_BLOX_SPECIFIC
         P082_data->setPowerMode(static_cast<P082_PowerMode>(P082_POWER_MODE));
         P082_data->setDynamicModel(static_cast<P082_DynamicModel>(P082_DYNAMIC_MODEL));
@@ -724,12 +716,7 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
-  uint32_t  age;
-  bool updated;
-  bool pps_sync;
-
-  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
-    dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
+  if (P082_data->getDateTime(dateTime)) {
     addHtml(formatDateTimeString(dateTime));
   } else {
     addHtml('-');
@@ -756,6 +743,12 @@ void P082_html_show_stats(struct EventStruct *event) {
     chksumStats += P082_data->gps->invalidData();
     addHtml(chksumStats);
   }
+#ifndef BUILD_NO_DEBUG
+/*
+  addRowLabel(F("SW PPS stats"));
+  addHtml(P082_data->getPPSStats());
+*/
+#endif
 }
 
 void P082_setSystemTime(struct EventStruct *event) {
@@ -766,36 +759,7 @@ void P082_setSystemTime(struct EventStruct *event) {
     return;
   }
 
-  if ((timeSource_t::GPS_time_source == node_time.timeSource) &&
-      (P082_data->_last_setSystemTime != 0) &&
-      (timePassedSince(P082_data->_last_setSystemTime) < EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC))
-  {
-    // Only update the system time every hour from the same time source.
-    return;
-  }
-
-  struct tm dateTime;
-  uint32_t  age;
-  bool updated;
-  bool pps_sync;
-
-  P082_data->_pps_time = P082_pps_time; // Must copy the interrupt gathered time first.
-
-  if (P082_data->getDateTime(dateTime, age, updated, pps_sync)) {
-    if (updated) {
-      // Use floating point precision to use the time since last update from GPS
-      // and the given offset in centisecond.
-      ESPEASY_RULES_FLOAT_TYPE time = makeTime(dateTime);
-      time += (static_cast<ESPEASY_RULES_FLOAT_TYPE>(age) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1000));
-      node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
-      P082_data->_last_setSystemTime = millis();
-    }
-  }
-  P082_pps_time = 0;
-}
-
-void Plugin_082_interrupt() {
-  P082_pps_time = millis();
+  P082_data->tryUpdateSystemTime();
 }
 
 #endif // USES_P082

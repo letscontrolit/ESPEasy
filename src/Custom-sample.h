@@ -399,6 +399,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P037_FILTER_SUPPORT  1 // Enable filtering support
 //   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
+//   #define P038_FEATURE_NEOPIXELFOR 1 // Enable NeoPixelFor/NeoPixelForHSV commands (default enabled for ESP32)
 // #define USES_P039   // Thermocouple
 
 // #define USES_P040   // RFID - ID12LA/RDM6300
@@ -518,6 +519,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P138   // IP5306
 
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
+// #define USES_P142   // Position - AS5600
 // #define USES_P143   // I2C Rotary encoders
 //   #define P143_FEATURE_INCLUDE_M5STACK      0 // Enabled by default, can be turned off here
 //   #define P143_FEATURE_INCLUDE_DFROBOT      0 // Enabled by default, can be turned off here
@@ -534,15 +536,20 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P151   // Honeywell Pressure
 // #define USES_P152   // ESP32 DAC
 // #define USES_P153   // SHT4x
-// #define USES_P154   // BMP3xx
+// #define USES_P154   // BMP3xx I2C
 
 // #define USES_P159   // Presence - LD2410 Radar detection
 
 // #define USES_P162   // Output - MCP42xxx Digipot
+// #define USES_P163   // Environment - RadSens I2C radiation counter
 // #define USES_P164   // Gases - ENS16x TVOC/eCO2
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 // #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
+// #define USES_P168   // Light - VEML6030/VEML7700
 // #define USES_P169   // Environment - AS3935 Lightning Detector
+// #define USES_P170   // Input - I2C Liquid level sensor
+// #define USES_P172   // BMP3xx SPI.
+// #define USES_P173   // Environment - SHTC3
 
 /*
  #######################################################################################################

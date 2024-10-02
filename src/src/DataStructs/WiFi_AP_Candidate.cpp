@@ -25,7 +25,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate() :
 country({
     .cc = "01",
     .schan = 1,
-    .nchan = 11,
+    .nchan = 14,
     .policy = WIFI_COUNTRY_POLICY_AUTO,
 }),
 #endif
@@ -35,7 +35,28 @@ country({
   memset(&bits, 0, sizeof(bits));
 }
 
+WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
+{
+  // All members other than ssid can be mem-copied
+  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
+
+  // Make sure ssid isn't some kind of valid String with heap allocated memory
+  memset(&ssid, 0, sizeof(ssid));
+  // Now copy the ssid String
+  ssid = other.ssid;
+}
+
 WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
+#ifdef ESP32
+# if ESP_IDF_VERSION_MAJOR >= 5
+country({
+    .cc = "01",
+    .schan = 1,
+    .nchan = 14,
+    .policy = WIFI_COUNTRY_POLICY_AUTO,
+}),
+#endif
+#endif
   last_seen(0), rssi(0), channel(0), index(index_c), enc_type(0)
 {
   memset(&bits, 0, sizeof(bits));
@@ -155,6 +176,18 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 
   // RSSI values are negative, so the larger value is the better one.
   return rssi > other.rssi;
+}
+
+WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other)
+{
+  // All members other than ssid can be mem-copied
+  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
+
+  // Make sure ssid isn't some kind of valid String with heap allocated memory
+  memset(&ssid, 0, sizeof(ssid));
+  // Now copy the ssid String
+  ssid = other.ssid;
+  return *this;
 }
 
 bool WiFi_AP_Candidate::usable() const {

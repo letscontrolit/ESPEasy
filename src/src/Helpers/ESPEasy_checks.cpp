@@ -83,12 +83,12 @@ void run_compiletime_checks() {
   constexpr unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
-  check_size<ProvisioningStruct,                    256u>();  
+  check_size<ProvisioningStruct,                    256u>();
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
   #if FEATURE_NOTIFIER
-  check_size<NotificationSettingsStruct,            996u>();
+  check_size<NotificationSettingsStruct,            1000u>();
   #endif // if FEATURE_NOTIFIER
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
@@ -108,8 +108,12 @@ void run_compiletime_checks() {
   const unsigned int LogStructSize = ((13u + 20 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
-  check_size<DeviceStruct,                          9u>(); // Is not stored
+  check_size<DeviceStruct,                          10u>(); // Is not stored
+  #if FEATURE_MQTT_TLS
+  check_size<ProtocolStruct,                        6u>();
+  #else
   check_size<ProtocolStruct,                        4u>();
+  #endif
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER
@@ -175,11 +179,17 @@ void run_compiletime_checks() {
 
   // All settings related to N_TASKS
   static_assert((200 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
-  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), ""); 
+  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), "");
 
   // Used to compute true offset.
   //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);
   //check_size<SettingsStruct, offset>();
+
+
+  // ESP8266 toolchain does not support constexpr macros in struct defines
+  // to determine nr of bits in a struct.
+  static_assert(GPIO_DIRECTION_NR_BITS== NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), "Correct GPIO_DIRECTION_NR_BITS");
+
 
   #endif
 }
@@ -260,7 +270,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   }
 
   err += LoadTaskSettings(taskIndex);
-  #endif 
+  #endif
   return err;
 }
 #endif

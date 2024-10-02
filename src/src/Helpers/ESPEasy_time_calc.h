@@ -65,6 +65,9 @@ uint64_t sec_time_frac_to_Micros(uint32_t seconds, uint32_t time_frac);
 
 uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec);
 
+uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
+                                   uint32_t        time_frac = 0);
+
 /********************************************************************************************\
    Unix Time computations
  \*********************************************************************************************/

@@ -12,12 +12,13 @@ bool ruleMatch(String event,
 
 
 bool compareIntValues(char       compare,
-                      const int& Value1,
-                      const int& Value2);
+                      int64_t Value1,
+                      int64_t Value2);
 
 bool compareDoubleValues(char          compare,
                          const ESPEASY_RULES_FLOAT_TYPE& Value1,
-                         const ESPEASY_RULES_FLOAT_TYPE& Value2);
+                         const ESPEASY_RULES_FLOAT_TYPE& Value2,
+                         int nrDecimals = -1);
 
 bool findCompareCondition(const String& check,
                           char        & compare,

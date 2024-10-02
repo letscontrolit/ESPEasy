@@ -45,7 +45,7 @@ Each time a plugin sends data to this controller, a sample set is stored.
 
 A typical sample set contains:
 
-- Timestamp (Default: Unix Time, but can be switched to "local time" in the controller settings)
+- Timestamp (Default: Unix Time, but can be switched to "local time" in the controller settings with the "Use Local System Time" checkbox)
 - task index delivering the data
 - 4 float values
 

@@ -10,7 +10,7 @@
   "
   ``MCPGPIO,<MCPGPIO>,<state>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
 
   State:
 
@@ -29,7 +29,7 @@
   "
   ``MCPGPIOtoggle,<MCPGPIO>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
 
   ","
   **Toggle on/off.**.
@@ -39,7 +39,7 @@
   "
   ``MCPLongPulse,<MCPGPIO>,<state>,<duration>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
 
   State: 1/0
 
@@ -53,7 +53,7 @@
   "
   ``MCPLongPulse_mS,<MCPGPIO>,<state>,<duration>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
 
   State: 1/0
 
@@ -65,7 +65,7 @@
   "
   ``MCPPulse,<MCPGPIO>,<state>,<duration>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
 
   State: 1/0
 
@@ -78,7 +78,7 @@
   "
   ``Status,MCP,<MCPGPIO>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
   ","
   **Returns the status of a pin.**
   By the use of the command you will receive the status of the relevant pin.
@@ -86,7 +86,7 @@
   "
   ``Monitor,MCP,<MCPGPIO>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
   ","
   **To monitor a MCPGPIO state.**
   By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -94,23 +94,23 @@
   "
   ``UnMonitor,MCP,<MCPGPIO>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO: 1 ... 128
   ","
   **To cancel the monitor of a MCPGPIO state.**
   By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
   "
   "
-  ``MonitorRange,MCP,<MCPGPIO>``
+  ``MonitorRange,MCP,<MCPGPIO start>,<MCPGPIO end>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIOfrom/MCPGPIOto: 1 ... 128 (end has to be \> start)
   ","
   **To monitor a MCPGPIO state.**
   By the use of the command you will receive events when the state of that pin is changed from 1 to 0 and from 0 to 1.
   "
   "
-  ``UnMonitorRange,MCP,<MCPGPIO>``
+  ``UnMonitorRange,MCP,<MCPGPIO start>,<MCPGPIO end>``
 
-  MCPGPIO: 0 ... 255
+  MCPGPIO start/MCPGPIO end: 1 ... 128 (end has to be \> start)
   ","
   **To cancel the monitor of a MCPGPIO state.**
   By the use of the command you will stop receiving events when the state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -118,9 +118,9 @@
   "
   ``MCPGPIOrange,<MCPGPIO start pin>,<MCPGPIO end pin>,<value> [,optional bitmask]``
 
-  | MCPGPIO start pin: 0 ... 255
+  | MCPGPIO start pin: 1 ... 128
   |
-  | MCPGPIO end pin: 0 ... 255
+  | MCPGPIO end pin: 1 ... 128 (end has to be \> start)
   |
   | value: 0 or 1
   |
@@ -150,9 +150,9 @@
   "
   ``MCPGPIOpattern,<MCPGPIO start pin>,<MCPGPIO end pin>,<write pattern> [,optional bitmask]``
 
-  | MCPGPIO start pin: 0 ... 255
+  | MCPGPIO start pin: 1 ... 128
   |
-  | MCPGPIO end pin: 0 ... 255
+  | MCPGPIO end pin: 1 ... 128
   |
   | write pattern: it's a write pattern. Write 0 or 1.
   | - Example: use decimal number 15 (in binary is 00001111) to set to 1 pin 1,2,3 and 4 and to set to 0 pins 5,6,7,8
@@ -188,7 +188,7 @@
   "
   ``MCPmode,<MCPGPIO>,<mode>``
 
-  | MCPGPIO: 0 ... 255
+  | MCPGPIO: 1 ... 128
   | 
   | mode: 
   | 0 = OUTPUT
@@ -202,9 +202,9 @@
   "
   ``MCPmodeRange,<MCPGPIO start pin>,<MCPGPIO end pin>, <mode>``
 
-  | MCPGPIO start pin: 0 ... 255
+  | MCPGPIO start pin: 1 ... 128
   | 
-  | MCPGPIO end pin: 0 ... 255
+  | MCPGPIO end pin: 1 ... 128 (end has to be \> start)
   |
   | mode: 
   | 0 = OUTPUT

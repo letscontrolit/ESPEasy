@@ -53,7 +53,7 @@ public:
         return client.write((const uint8_t*)buf, len);
     }
 
-    void flush() { client.flush(); }
+    void flush() { client.PR_9453_FLUSH_TO_CLEAR(); }
     bool connected() { return client.connected(); }
     int available() { return client.available(); }
 

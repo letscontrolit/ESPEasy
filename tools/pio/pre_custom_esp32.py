@@ -33,6 +33,7 @@ else:
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P037",  # MQTT import
     "-DUSES_P038",  # Neopixel
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
@@ -62,6 +63,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
+    "-DFEATURE_MQTT_TLS=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",
     "-DFEATURE_I2CMULTIPLEXER=1",

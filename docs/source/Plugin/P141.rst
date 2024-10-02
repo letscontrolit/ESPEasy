@@ -123,6 +123,8 @@ Available options:
 
 Default setting is *Clear then truncate exceeding message*.
 
+* **Default font**: If extra fonts are available in the build (excluded from some builds because of .bin size issues), the default font at initialization can be selected. The names/numbers that can be used in the ``<trigger>,font,<fontname|fontnr>`` are shown in the combobox, and documented below in the **AdafruitGFX_Helper** documentation. The font numbers aren't consecutive if all fonts aren't included, to keep them consistent across builds.
+
 * **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 10.
 
 * **Invert display**: This monochrome display supports inverting the content. The default can be set here.

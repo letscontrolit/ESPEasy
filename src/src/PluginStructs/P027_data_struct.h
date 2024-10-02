@@ -4,13 +4,20 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P027
 
+# ifndef P027_FEATURE_POWERDOWN
+#  ifndef LIMIT_BUILD_SIZE
+#   define P027_FEATURE_POWERDOWN 1
+#  else // ifndef LIMIT_BUILD_SIZE
+#   define P027_FEATURE_POWERDOWN 0
+#  endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P027_FEATURE_POWERDOWN
 
 struct P027_data_struct : public PluginTaskData_base {
 public:
 
   P027_data_struct(uint8_t i2c_addr);
 
-  P027_data_struct() = delete;
+  P027_data_struct()          = delete;
   virtual ~P027_data_struct() = default;
 
 
@@ -34,6 +41,19 @@ public:
   // Configures to INA219 to be able to measure up to 26V and 8A
   // **************************************************************************/
   void setCalibration_26V_8A();
+
+  # if P027_FEATURE_POWERDOWN
+
+  // **************************************************************************/
+  // Configure INA219 to Powerdown mode, keeping current configuration
+  // **************************************************************************/
+  void setPowerDown();
+
+  // **************************************************************************/
+  // Configure INA219 to Active working mode, keeping current configuration
+  // **************************************************************************/
+  void setActiveMode();
+  # endif // if P027_FEATURE_POWERDOWN
 
 private:
 
