@@ -789,7 +789,7 @@ void SendStatus(struct EventStruct *event, const __FlashStringHelper *status)
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
-  if (status.isEmpty()) {}
+  if (status.isEmpty()) { return; }
 
   switch (event->Source)
   {
@@ -998,6 +998,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
 
     if (DomoticzMQTT_controllerIndex == enabledMqttController) {
       // Do not send MQTT status updates to Domoticz
+      return;
     }
     String pubname;
     bool   mqtt_retainFlag;
@@ -1099,7 +1100,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(event->TaskIndex)) {}
+  if (!validTaskIndex(event->TaskIndex)) { return; }
 
   // FIXME TD-er: Should a 'disabled' task be rescheduled?
   // If not, then it should be rescheduled after the check to see if it is enabled.
