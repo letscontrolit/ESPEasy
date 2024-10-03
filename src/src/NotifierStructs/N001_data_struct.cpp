@@ -1,5 +1,6 @@
 #include "../NotifierStructs/N001_data_struct.h"
 
+#ifdef USES_N001
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -443,3 +444,5 @@ bool getNextMailAddress(const String& data, String& address, int index)
   }
   return false;
 }
+
+#endif
