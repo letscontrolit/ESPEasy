@@ -224,11 +224,12 @@ void handle_notifications() {
             F("Port"), F("port"),
             NotificationSettings.Port,
             1,
-            65535
-# if FEATURE_TOOLTIPS
-            , F("NOTE: SSL/TLS servers NOT supported!")
-# endif // if FEATURE_TOOLTIPS
-            );
+            65535);
+#if FEATURE_EMAIL_TLS
+          addFormNote(F("default port SSL: 465, TLS: 587"));
+#else
+          addFormNote(F("SSL/TLS servers NOT supported!"));
+#endif
 
           if ((NotificationSettings.Timeout_ms < NPLUGIN_001_MIN_TM) ||
               (NotificationSettings.Timeout_ms > NPLUGIN_001_MAX_TM))

@@ -12,6 +12,12 @@
 #include "../Helpers/_CPlugin_Helper.h" // safeReadStringUntil
 #include "../Helpers/_NPlugin_init.h"
 
+#if FEATURE_EMAIL_TLS
+
+  # include <WiFiClientSecureLightBearSSL.h>
+  # include "../CustomBuild/Certificate_CA.h"
+
+#endif // if FEATURE_EMAIL_TLS
 
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
@@ -19,8 +25,21 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
   bool myStatus = false;
   bool failFlag = false;
 
+#if FEATURE_EMAIL_TLS
+
+  // values are based on the NPLUGIN_001_PKT_SZ
+  BearSSL::WiFiClientSecure_light client(4096, 4096);
+  client.setUtcTime_fcn(getUnixTime);
+  client.setCfgTime_fcn(get_build_unixtime);
+  client.setTrustAnchor(Tasmota_TA, Tasmota_TA_size);
+
+  client.setInsecure();
+
+#else // if FEATURE_EMAIL_TLS
+
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
+#endif // if FEATURE_EMAIL_TLS
 
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -57,6 +76,8 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     if ((clientTimeout < NPLUGIN_001_MIN_TM) || (clientTimeout > NPLUGIN_001_MAX_TM)) {
       clientTimeout = NPLUGIN_001_DEF_TM;
     }
+
+    addLog(LOG_LEVEL_DEBUG, concat(F("NPlugin_001_send: timeout: "), clientTimeout));
 
     String email_address(notificationsettings.Sender);
     int    pos_less   = email_address.indexOf('<');
@@ -119,25 +140,28 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     tmp_ato.replace(";", ",");
     tmp_ato.replace(" ", "");
 
-    String mailheader = F(
-      "From: $nodename <$emailfrom>\r\n"
-      "To: $ato\r\n"
-      "Subject: $subject\r\n"
-      "Reply-To: $nodename <$emailfrom>\r\n"
-      "Date: $date\r\n"
-      "MIME-VERSION: 1.0\r\n"
-      "Content-type: text/html; charset=UTF-8\r\n"
-      "X-Mailer: EspEasy v$espeasyversion\r\n\r\n"
-      );
 
+    const String nodename_emailfrom = strformat(F("%s <%s>"), senderName.c_str(), email_address.c_str());
+    String dateFmtHdr               = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
 
-    mailheader.replace(F("$nodename"),       senderName);
-    mailheader.replace(F("$emailfrom"),      email_address);
-    mailheader.replace(F("$ato"),            tmp_ato);
-    mailheader.replace(F("$subject"),        aSub);
-    String dateFmtHdr = F("%sysweekday_s%, %sysday_0% %sysmonth_s% %sysyear% %systime% %systzoffset%");
-    mailheader.replace(F("$date"),           parseTemplate(dateFmtHdr));
-    mailheader.replace(F("$espeasyversion"), getSystemBuildString());
+    const String mailheader = strformat(
+      F(
+        "From: %s\r\n"
+        "To: %s\r\n"
+        "Subject: %s\r\n"
+        "Reply-To: %s\r\n"
+        "Date: %s\r\n"
+        "MIME-VERSION: 1.0\r\n"
+        "Content-type: text/html; charset=UTF-8\r\n"
+        "X-Mailer: EspEasy v%s\r\n\r\n"
+        ),
+      nodename_emailfrom.c_str(),
+      tmp_ato.c_str(),
+      aSub.c_str(),
+      nodename_emailfrom.c_str(),
+      parseTemplate(dateFmtHdr).c_str(),
+      getSystemBuildString().c_str());
+
 
     // Make sure to replace the char '\r' and not the string "\r"
     // See: https://github.com/letscontrolit/ESPEasy/issues/4967
@@ -270,7 +294,10 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
               addLog(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
             }
 
-            if (!NPlugin_001_MTA(client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250, clientTimeout)) { break; }
+            if (!NPlugin_001_MTA(client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250, clientTimeout))
+            {
+              break;
+            }
             ++i;
             nextAddressAvailable = getNextMailAddress(receiver, emailTo, i);
           }
@@ -299,7 +326,8 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
         break;
       }
     }
-    client.PR_9453_FLUSH_TO_CLEAR();
+
+    //    client.PR_9453_FLUSH_TO_CLEAR();
     client.stop();
 
     if (myStatus == true) {
@@ -321,13 +349,18 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
   }
   base64 encoder;
 
-  if (NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout) &&
-      NPlugin_001_MTA(client, encoder.encode(user), 334, timeout) &&
-      NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) {
+  bool success = true;
+
+  if (!NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout)) { success = false; }
+
+  if (!NPlugin_001_MTA(client, encoder.encode(user), 334, timeout)) { success = false; }
+
+  if (!NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) { success = false; }
+
+  if (success) {
     addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
-    return true;
   }
-  return false;
+  return success;
 }
 
 bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
@@ -335,7 +368,11 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, aStr);
+    addLog(LOG_LEVEL_DEBUG, strformat(
+             F("NPlugin_001_MTA:  Waitfor: %u Timeout: %u ms Send: '%s'"),
+             aWaitForPattern,
+             timeout,
+             aStr.c_str()));
   }
   #endif // ifndef BUILD_NO_DEBUG
 
@@ -345,23 +382,22 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   }
 
   // Wait For Response
-  unsigned long timer = millis() + timeout;
-
+  const unsigned long timer = millis() + timeout;
   backgroundtasks();
 
-  while (true) { // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
-    if (timeOutReached(timer)) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR,
-                   concat(F("NPlugin_001_MTA: timeout. "), aStr));
-      }
-      break;
-    }
-
+  do { // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
     delay(0);
 
     String line;
-    safeReadStringUntil(client, line, '\n', 1024, timeout);
+    safeReadStringUntil(client, line, '\n', 1024); // , timeout);
+
+    #ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("NPlugin_001_MTA: read line: "), line));
+    }
+    #endif // ifndef BUILD_NO_DEBUG
+
 
     // response could be like: '220 domain', '220-domain','220+domain'
     const String pattern_str_space = strformat(F("%d "), aWaitForPattern);
@@ -372,14 +408,16 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
                               || line.indexOf(pattern_str_minus) >= 0
                               || line.indexOf(pattern_str_plus) >= 0;
 
-    #ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      addLogMove(LOG_LEVEL_DEBUG, line);
+    if (patternFound) {
+      return true;
     }
-    #endif // ifndef BUILD_NO_DEBUG
+  } while (!timeOutReached(timer));
 
-    return patternFound;
+  if (timeOutReached(timer)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR,
+                 concat(F("NPlugin_001_MTA: timeout. "), aStr));
+    }
   }
 
   return false;
