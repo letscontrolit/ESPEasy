@@ -77,8 +77,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
     if ((clientTimeout < NPLUGIN_001_MIN_TM) || (clientTimeout > NPLUGIN_001_MAX_TM)) {
       clientTimeout = NPLUGIN_001_DEF_TM;
     }
-
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, concat(F("NPlugin_001_send: timeout: "), clientTimeout));
+#endif
 
     String email_address(notificationsettings.Sender);
     int    pos_less   = email_address.indexOf('<');
