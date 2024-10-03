@@ -667,6 +667,17 @@ To create/register a plugin, you have to :
     #define NOTIFIER_SET_STABLE
     #define USES_P029      // Output - Domoticz MQTT Helper
     #define PLUGIN_SET_ONLY_TEMP_HUM
+
+    #ifdef USES_P038
+      #undef USES_P038   // NeoPixel
+    #endif
+    #ifdef USES_P043
+      #undef USES_P043   // ClkOutput
+    #endif
+    #ifdef USES_P079
+      #undef USES_P079   // Wemos Motoshield
+    #endif
+
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
@@ -2097,11 +2108,20 @@ To create/register a plugin, you have to :
 
 // Disable few plugin(s) to make the build fit :/
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
+  #ifdef USES_P038
+    #undef USES_P038   // NeoPixel
+  #endif
   #ifdef USES_P039
     #undef USES_P039  // Environment - Thermocouple
   #endif
   #ifdef USES_P040
     #undef USES_P040  // RFID - ID12LA/RDM6300
+  #endif
+  #ifdef USES_P043
+    #undef USES_P043   // ClkOutput
+  #endif
+  #ifdef USES_P079
+    #undef USES_P079   // Wemos Motoshield
   #endif
 #endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
