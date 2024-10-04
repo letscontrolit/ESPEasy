@@ -79,8 +79,6 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
       if (!event->String2.isEmpty()) {
         subject = event->String2;
       }
-      subject = parseTemplate(subject);
-      body    = parseTemplate(body);
       NPlugin_001_send(NotificationSettings, subject, body);
       success = true;
       break;

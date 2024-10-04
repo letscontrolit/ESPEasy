@@ -6,7 +6,7 @@
 #ifdef USES_N001
 
 // FIXME TD-er: Must we add a complete inheritance structure like done with pluginTaskData?
-// We do not have multiple instances of these notifiers, so let's keep it simple.
+// We do not have multiple instances of these notifiers that need to keep track of run-time members, so let's keep it simple.
 
 
 # define NPLUGIN_001_PKT_SZ     256
@@ -18,8 +18,8 @@
 
 
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
-                      const String                    & aSub,
-                      String                          & aMesg);
+                      String                          & subject,
+                      String                          & body);
 bool NPlugin_001_Auth(WiFiClient  & client,
                       const String& user,
                       const String& pass,
