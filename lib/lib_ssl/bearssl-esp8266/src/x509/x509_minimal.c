@@ -489,6 +489,8 @@ static int check_single_trust_anchor_CA(br_x509_minimal_context *ctx,
         return 0;
 }
 
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
 
 
 
@@ -1086,7 +1088,7 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 11: {
 				/* -rot */
- T0_NROT();
+ T0_NROT(); 
 				}
 				break;
 			case 12: {
@@ -1269,35 +1271,43 @@ br_x509_minimal_run(void *t0ctx)
 	uint32_t nas = T0_POP();
 	uint32_t nad = T0_POP();
 	int r;
-	uint32_t vd = CTX->days;
-	uint32_t vs = CTX->seconds;
-	if (vd == 0 && vs == 0) {
+	if (CTX->itime != 0) {
+		r = CTX->itime(CTX->itime_ctx, nbd, nbs, nad, nas);
+		if (r < -1 || r > 1) {
+			CTX->err = BR_ERR_X509_TIME_UNKNOWN;
+			T0_CO();
+		}
+	} else {
+		uint32_t vd = CTX->days;
+		uint32_t vs = CTX->seconds;
+		if (vd == 0 && vs == 0) {
 #if BR_USE_UNIX_TIME
-		time_t x = time(NULL);
+			time_t x = time(NULL);
 
-		vd = (uint32_t)(x / 86400) + 719528;
-		vs = (uint32_t)(x % 86400);
+			vd = (uint32_t)(x / 86400) + 719528;
+			vs = (uint32_t)(x % 86400);
 #elif BR_USE_WIN32_TIME
-		FILETIME ft;
-		uint64_t x;
+			FILETIME ft;
+			uint64_t x;
 
-		GetSystemTimeAsFileTime(&ft);
-		x = ((uint64_t)ft.dwHighDateTime << 32)
-			+ (uint64_t)ft.dwLowDateTime;
-		x = (x / 10000000);
-		vd = (uint32_t)(x / 86400) + 584754;
-		vs = (uint32_t)(x % 86400);
+			GetSystemTimeAsFileTime(&ft);
+			x = ((uint64_t)ft.dwHighDateTime << 32)
+				+ (uint64_t)ft.dwLowDateTime;
+			x = (x / 10000000);
+			vd = (uint32_t)(x / 86400) + 584754;
+			vs = (uint32_t)(x % 86400);
 #else
-		CTX->err = BR_ERR_X509_TIME_UNKNOWN;
+			CTX->err = BR_ERR_X509_TIME_UNKNOWN;
 			T0_CO();
 #endif
-	}
-	if (vd < nbd || (vd == nbd && vs < nbs)) {
-		r = -1;
-	} else if (vd > nad || (vd == nad && vs > nas)) {
-		r = 1;
-	} else {
-		r = 0;
+		}
+		if (vd < nbd || (vd == nbd && vs < nbs)) {
+			r = -1;
+		} else if (vd > nad || (vd == nad && vs > nas)) {
+			r = 1;
+		} else {
+			r = 0;
+		}
 	}
 	T0_PUSHi(r);
 
@@ -1305,7 +1315,7 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 26: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 27: {
@@ -1453,12 +1463,12 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 37: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 38: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 39: {
@@ -1599,7 +1609,7 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 48: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 49: {
@@ -1649,7 +1659,7 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 51: {
 				/* rot */
- T0_ROT();
+ T0_ROT(); 
 				}
 				break;
 			case 52: {
@@ -1701,7 +1711,7 @@ br_x509_minimal_run(void *t0ctx)
 				break;
 			case 58: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			case 59: {
@@ -1775,3 +1785,5 @@ verify_signature(br_x509_minimal_context *ctx, const br_x509_pkey *pk)
 		return BR_ERR_X509_UNSUPPORTED;
 	}
 }
+
+

@@ -100,6 +100,9 @@ br_skey_decoder_push(br_skey_decoder_context *ctx,
 	br_skey_decoder_run(&ctx->cpu);
 }
 
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
+
 
 
 static const unsigned char t0_datablock[] PROGMEM = {
@@ -408,7 +411,7 @@ br_skey_decoder_run(void *t0ctx)
 				break;
 			case 9: {
 				/* -rot */
- T0_NROT();
+ T0_NROT(); 
 				}
 				break;
 			case 10: {
@@ -485,17 +488,17 @@ br_skey_decoder_run(void *t0ctx)
 				break;
 			case 18: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 19: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 20: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 21: {
@@ -540,7 +543,7 @@ br_skey_decoder_run(void *t0ctx)
 				break;
 			case 25: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 26: {
@@ -576,7 +579,7 @@ br_skey_decoder_run(void *t0ctx)
 				break;
 			case 28: {
 				/* rot */
- T0_ROT();
+ T0_ROT(); 
 				}
 				break;
 			case 29: {
@@ -629,7 +632,7 @@ br_skey_decoder_run(void *t0ctx)
 				break;
 			case 32: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			case 33: {
