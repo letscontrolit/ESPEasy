@@ -351,8 +351,11 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
 bool getFormPassword(const String& id, String& password)
 {
   password = webArg(id);
-
-  addLog(LOG_LEVEL_INFO, concat(F("getFormPassword: "), password));
+  /*
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, concat(F("getFormPassword: "), password));
+  } 
+  */ 
   return !equals(password, F("*****"));
 }
 

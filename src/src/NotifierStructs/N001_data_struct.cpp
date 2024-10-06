@@ -70,12 +70,12 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
                notificationsettings.Port,
                client.getLastError()));
 
-#else
+# else // if FEATURE_EMAIL_TLS
       addLog(LOG_LEVEL_ERROR, strformat(
                F("Email: Error connecting to %s:%u"),
                notificationsettings.Server,
                notificationsettings.Port));
-#endif
+# endif // if FEATURE_EMAIL_TLS
     }
     myStatus = false;
     failFlag = true;
@@ -174,6 +174,11 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
         parseTemplate(dateFmtHdr).c_str(),
         getSystemBuildString().c_str());
     }
+
+# if FEATURE_EMAIL_TLS
+    client.setDomainName(notificationsettings.Domain);
+
+# endif // if FEATURE_EMAIL_TLS
 
     // Make sure to replace the char '\r' and not the string "\r"
     // See: https://github.com/letscontrolit/ESPEasy/issues/4967

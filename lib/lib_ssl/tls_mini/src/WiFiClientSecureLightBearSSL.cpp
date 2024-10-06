@@ -653,7 +653,7 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
 		  This is unrecoverable here, so we report an error.
 		 */
 		if (state & BR_SSL_RECVAPP) {
-      DEBUG_BSSL("_run_until: Fatal protocol state\n"); 
+			DEBUG_BSSL("_run_until: Fatal protocol state\n"); 
 			return -1;
 		}
 
