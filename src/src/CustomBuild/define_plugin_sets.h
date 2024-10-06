@@ -2982,7 +2982,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_MQTT_TLS
-  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5
+  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5 && FEATURE_MQTT
     #define FEATURE_MQTT_TLS 1
   #else
     #define FEATURE_MQTT_TLS 0
@@ -2990,7 +2990,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_EMAIL_TLS
-  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5
+  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5 && USES_N001
     #define FEATURE_EMAIL_TLS 1
   #else
     #define FEATURE_EMAIL_TLS 0
