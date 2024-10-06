@@ -1,0 +1,183 @@
+#!/bin/bash
+PROG=$( basename $0 )
+DATETIME=$( date "+%Y%m%d-%H%M%S-" )
+PREREQS="curl jq"
+MAXTIME=30
+JSONTIME=6
+HWPROVIDERRE="5c:cf:7f:|18:fe:34:|60:01:94:|a0:20:a6:|b4:e6:2d:|68:c6:3a:"
+
+IPLIST=()
+
+function dbgprint {
+	[[ -n "${DBGPRINT}" ]] && echo "$PROG debug: $*" >&2
+}
+
+function peerlist {
+    local H="$1"
+	local O="${DATETIME}${H}.json"
+
+	if [[ -s "${O}" ]]
+	then
+		dbgprint "PROG: Reading json file from $O ..."
+	else
+		dbgprint "PROG: Downloading json file from $H ..."
+		curl -s -m ${JSONTIME} "http://${H}/json" > "${O}"
+	fi
+	if [[ -s "${O}" ]]
+	then
+		jq '.nodes[]|{ IPaddr: .ip}' "${O}" | tr -d '"' | awk '{ if ( $1 == "IPaddr:" ) print $2 }'
+	else
+		rm "${O}"
+		echo "$PROG: Warning: Empty response from http://${H}/json" >&2
+	fi
+}
+
+function collectip {
+	local H="$1"
+	local IP I NIDX  
+	for IP in $( peerlist ${H} )
+	do
+        NIDX=${#IPLIST[*]}
+        for ((I=0; I < ${NIDX}; I++))
+        do
+            [[ ${IPLIST[$I]} == ${IP} ]] && break
+        done
+        # if we made it to end of list without matches
+        if [[ ${I} == ${NIDX} ]]
+        then
+            IPLIST[$NIDX]="${IP}"
+            dbgprint "Found new $IP (index $NIDX ) ..." 
+        fi
+	done
+}
+
+
+if [[ "$1" == "-h" ]] || [[ -z "$1" ]]
+then
+	echo "Usage: $PROG [-a][-z zipfilefullpath|-Z] IPorHostname ..." >&2
+	exit 1
+fi
+
+#
+# put CURLARGS='-u username:password' in ~/.espeasy , then chmod 600 ~/.espeasy
+#
+if [[ -r "${HOME}/.espeasy" ]]
+then
+	dbgprint "PROG: sourcing ${HOME}/.espeasy"
+	source "${HOME}/.espeasy"
+else
+    echo "$PROG: Cannot read ${HOME}/.espeasy" >&2
+    exit 1
+fi
+
+
+if [[ "$1" == "-a" ]]
+then
+	shift
+	ARPADDR=$( /usr/sbin/arp -an | awk "/${HWPROVIDERRE}/  { print \$2 }" | tr -d '()' | tr '\n' ' ' ) 
+	dbgprint "PROG: arp address list: $ARPADDR"
+fi
+
+if [[ "$1" == "-z" ]]
+then
+	ZIP="$2" ; shift ; shift
+	DATETIME=""
+	PREPREQS="${PREREQS} zip"
+	mkdir "/tmp/${PROG}-$$" && cd "/tmp/${PROG}-$$"
+elif [[ "$1" == "-Z" ]]
+then
+	shift
+	ZIP="/tmp/config-$(hostname -s)-$( date +%F )"
+	DATETIME=""
+	PREPREQS="${PREREQS} zip"
+	mkdir "/tmp/${PROG}-$$" && cd "/tmp/${PROG}-$$"
+fi
+
+[[ -n "${MAILTO}" ]] && PREPREQS="${PREREQS} mail"
+
+for CMD in ${PREREQS}
+do
+	type $CMD > /dev/null 2>&1 && continue
+	echo "$PROG: Please install all prereqs: ${PREREQS}"
+	exit 2
+done
+
+
+if [[ $# -gt 1 ]] || [[ -n "${ARPADDR}" ]]
+then
+	echo "$PROG: Initial list $* $ARPADDR ..."
+	for H in $* ${ARPADDR}
+	do
+		collectip "${H}"
+	done
+
+	echo "$PROG: Secondary list: ${IPLIST[*]} ..."
+	for H in ${IPLIST}
+	do
+		collectip "${H}"
+	done
+
+else
+	collectip "$1"
+	IPLIST=( $1 )
+fi
+
+echo "$PROG: Backup list has ${#IPLIST[*]} nodes: ${IPLIST[*]} "
+
+for H in ${IPLIST[*]}
+do 
+	O="${DATETIME}${H}.json"
+
+	if [[ ! -s "${O}" ]]
+	then
+		dbgprint "PROG: Downloading missing json file from $H ..."
+		curl -s -m ${JSONTIME} "http://${H}/json" > "${O}"
+	fi
+
+	NAME=$( jq '.WiFi.Hostname' "${O}" | tr -d '"')
+	NAME="${NAME:-$H}"
+	for F in config.dat security.dat notification.dat rules1.txt rules2.txt rules3.txt rules4.txt esp.css 
+	do
+		O="${DATETIME}${NAME}-${F}"
+        echo -n "$PROG: Backup $H $F --> ${O} ..."
+        curl -s -m ${MAXTIME} ${CURLARGS} "http://${H}/${F}" > "${O}"
+		if [[ -s "${O}" ]]
+		then
+			if grep -q "URI: /${F}" "${O}"
+			then
+				echo "Header only - removed"
+				rm "${O}"
+			else
+				echo " OK"
+			fi
+		else 
+			echo "empty - removed" 
+			rm "${O}"
+		fi
+	done
+	#
+	# We're done with this IP address. Rename to hostname if relevant ...
+	#
+	[[ ${NAME} != ${H} ]] && mv "${DATETIME}${H}.json" "${DATETIME}${NAME}.json"
+done
+
+if [[ -n "${ZIP}" ]]
+then
+	echo "$PROG: Sending ZIP file $ZIP to $MAILTO ..."
+	dbgprint "PROG: Creating zip-file ${ZIP}.zip from ${PWD}"
+	zip -rq9 "${ZIP}" .
+    NFILES=$( ls -1 | wc -l )
+	cd "${HOME}"
+    rm -rf "/tmp/${PROG}-$$" 
+	if [[ -n "${MAILTO}" ]]
+	then 
+		dbgprint "Email to ${MAILTO}"
+        SUB="$PROG backup from $( hostname -s ) on $( date +%F ) (${#IPLIST[*]} nodes, ${NFILES} files)"
+		#mpack -s "${SUB}" "${ZIP}.zip" ${MAILTO} 
+        echo -e "Backup file attached from ${#IPLIST[*]} nodes, total of ${NFILES} files\n\n" | \
+        mail -s "${SUB}" --content-type=application/zip -A "${ZIP}.zip" ${MAILTO}
+	fi
+fi
+
+# :tabSize=4:indentSize=4:noTabs=true
+# vim:ts=4:sw=4

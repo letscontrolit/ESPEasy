@@ -1,0 +1,53 @@
+#!/bin/bash
+PROG=$( basename $0 .sh )
+
+[[ "$1" == "-f" ]] && FORCEUPDATE=1 && shift
+[[ "$1" == "-n" ]] && NOUPDATE=1 && shift
+[[ "$1" == "-f" ]] && FORCEUPDATE=1 && shift
+
+FILE="$1" 
+FILEFW=$( echo ${FILE%.bi*} | sed 's/_20[[:digit:]]*//' )
+FILEFW=$( basename ${FILEFW} )
+
+if [[ $# -lt 1 ]] || [[ ! -r "${FILE}" ]]
+then
+	echo "Usage: $PROG [-n|-f] filename NameOrIP [ NameOrIP ... ]"  >&2
+	exit 2
+fi
+shift
+
+#
+# put CURLARGS='-u username:password' in ~/.espeasy - file readable only by user 
+#
+if [[ -r "${HOME}/.espeasy" ]]
+then
+	source "${HOME}/.espeasy"
+fi
+
+for H in $*
+do
+	echo "$PROG: Updating $H ..."
+	VER=$( curl -s "http://${H}/json"| jq -r '.System."Git Build"' )
+	if [[ "${VER#Custom}" != "${VER}" ]]
+	then
+		if strings "${FILE}" | grep -q "^${VER}"
+		then
+			echo "$PROG: ${H} already has '${VER}'"
+			[ -z "${FORCEUPDATE}" ] && continue
+		fi
+	fi
+	DEVFW=$( curl -s "http://${H}/json"| jq -r '.System."Binary Filename"' )
+	[[ -n "${DEVFW}" ]] && DEVFW=$( sed 's/_20[[:digit:]]*//' <<< ${DEVFW} )
+	if [[ "${DEVFW}" != "${FILEFW}" ]]
+	then
+		echo "$PROG: Firmware on file (${FILEFW}) different from device (${DEVFW}). Use -f to force update."
+		[ -z "${FORCEUPDATE}" ] && continue
+	fi
+	if [ -n "${NOUPDATE}" ]
+	then
+		echo "curl ${CURLARGS} -X POST -F \"name=@${FILE}\" -F \"value=Update\" \"http://${H}/update\""
+		continue
+	fi
+	curl ${CURLARGS} -X POST -F "name=@${FILE}" -F "value=Update" "http://${H}/update"
+done
+# vim:ts=4:sw=4
