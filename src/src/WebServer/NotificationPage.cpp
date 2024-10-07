@@ -95,7 +95,8 @@ void handle_notifications() {
           strncpy_webserver_arg(NotificationSettings.User,     F("username"));
           strncpy_webserver_arg(NotificationSettings.Pass,     F("password"));
           strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
-//          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
+
+          //          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
         }
       }
       addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings),
@@ -218,6 +219,14 @@ void handle_notifications() {
       {
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
+          if (NotificationSettings.Port == 0) {
+# if FEATURE_EMAIL_TLS
+            NotificationSettings.Port = 465;
+# else // if FEATURE_EMAIL_TLS
+            NotificationSettings.Port = 25;
+# endif // if FEATURE_EMAIL_TLS
+          }
+
           addFormSubHeader(F("SMTP Server Settings"));
           addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
@@ -226,11 +235,11 @@ void handle_notifications() {
             NotificationSettings.Port,
             1,
             65535);
-#if FEATURE_EMAIL_TLS
-          addFormNote(F("default port SSL: 465, TLS: 587"));
-#else
-          addFormNote(F("SSL/TLS servers NOT supported!"));
-#endif
+# if FEATURE_EMAIL_TLS
+          addFormNote(F("default port SSL: 465"));
+# else // if FEATURE_EMAIL_TLS
+          addFormNote(F("default port: 25, SSL/TLS servers NOT supported!"));
+# endif // if FEATURE_EMAIL_TLS
 
           if ((NotificationSettings.Timeout_ms < NPLUGIN_001_MIN_TM) ||
               (NotificationSettings.Timeout_ms > NPLUGIN_001_MAX_TM))
@@ -254,15 +263,17 @@ void handle_notifications() {
           ZERO_TERMINATE(NotificationSettings.Pass);
           addFormSubHeader(F("Credentials"));
 
-          addFormTextBox(F("Username"),     F("username"), NotificationSettings.User,     sizeof(NotificationSettings.User) - 1);
-          addFormTextBox(F("Password"), F("password"), NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) - 1);
-//          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) - 1);
+          addFormTextBox(F("Username"), F("username"), NotificationSettings.User, sizeof(NotificationSettings.User) - 1);
+          addFormTextBox(F("Password"), F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass) - 1);
+
+          //          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) -
+          // 1);
 
           addFormSubHeader(F("Email Attributes"));
 
-          addFormTextBox(F("Sender"),   F("sender"),       NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
-          addFormTextBox(F("Receiver"), F("receiver"),     NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);
-          addFormTextBox(F("Subject"),  F("subject"),      NotificationSettings.Subject,  sizeof(NotificationSettings.Subject) - 1);
+          addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
+          addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);
+          addFormTextBox(F("Subject"),  F("subject"),  NotificationSettings.Subject,  sizeof(NotificationSettings.Subject) - 1);
 
           addRowLabel(F("Body"));
           addHtml(F("<textarea name='body' rows='20' size=512 wrap='off'>"));

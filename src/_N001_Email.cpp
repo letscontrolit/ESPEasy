@@ -69,6 +69,7 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
       MakeNotificationSettings(NotificationSettings);
       LoadNotificationSettings(event->NotificationIndex, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
+
       String subject = NotificationSettings.Subject;
       String body    = NotificationSettings.Body;
 
