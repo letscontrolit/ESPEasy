@@ -67,7 +67,10 @@ else:
     "-DUSES_C018",  # TTN/RN2483
     "-DUSES_C019",  # ESPEasy-NOW
 
+    "-DUSES_N001",  # E-mail
+
     "-DFEATURE_MQTT_TLS=1",
+    "-DFEATURE_EMAIL_TLS=1",
     "-DUSES_ESPEASY_NOW",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",

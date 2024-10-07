@@ -63,6 +63,7 @@ else:
     "-DUSES_C019",  # ESPEasy-NOW
 
     "-DFEATURE_MQTT_TLS=0",
+    "-DFEATURE_EMAIL_TLS=0",
     "-DUSES_ESPEASY_NOW",
 #    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",

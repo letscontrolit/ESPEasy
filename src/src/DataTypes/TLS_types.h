@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_TLS
 #include <stdint.h>
 #include <Arduino.h>
 

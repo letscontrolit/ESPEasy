@@ -1088,6 +1088,14 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
     client.stop();
     return false;
   }
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(
+      F("connectClient: '%s' port: %u"),
+      ip.toString().c_str(),
+      port));
+  }
+#endif
 
   // In case of domain name resolution error result can be negative.
   // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
@@ -1097,6 +1105,15 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
   delay(0);
 
   if (!connected) {
+#ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_ERROR, strformat(
+      F("connectClient: connect failed to '%s' port: %u"),
+      ip.toString().c_str(),
+      port));
+  }
+#endif
+
     Scheduler.sendGratuitousARP_now();
     client.stop(); // Make sure to start over without some stale connection
   }
