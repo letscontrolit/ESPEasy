@@ -26,12 +26,25 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
   #endif // if FEATURE_ALTERNATIVE_CDN_URL
 }
 
-void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
+void serve_CDN_CSS(const __FlashStringHelper * fname, const __FlashStringHelper * fname_alt, bool isEmbedded) {
   const String url = generate_external_URL(fname, isEmbedded);
+
+  // FIXME TD-er: For now just retry loading the same as failed loading the embedded one
+  //  may slow down next page loads until the browser finally was able to fetch the embedded one.
+  const String url2 = generate_external_URL(fname, isEmbedded);
+//  const String url2 = generate_external_URL(fname_alt, !isEmbedded);
+
+  // Use 'onerror' to try to reload the CSS when first attempt loading failed
+  // See: https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event#element.onerror
   addHtml(strformat(
-    F("<link rel=\"stylesheet\" href=\"%s\">"),
-    url.c_str()
+    F("<link rel=\"stylesheet\" href=\"%s\" onerror=\"this.onerror=null;this.href='%s';\" />"),
+    url.c_str(),
+    url2.c_str()
   ));
+
+
+  // <link rel="stylesheet" href="%s" onerror="this.onerror=null;this.href='%s';" />
+
   /*
   // Delay loading CSS till after page has loaded.
   // Disabled as it adds 'flickering' to the page loading
@@ -40,6 +53,10 @@ void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
     url.c_str(), url.c_str()
   ));
   */
+}
+
+void serve_CDN_CSS(const __FlashStringHelper * fname, bool isEmbedded) {
+  serve_CDN_CSS(fname, fname, isEmbedded);
 }
 
 void serve_CDN_JS(const __FlashStringHelper * fname, 
@@ -70,9 +87,8 @@ void serve_CSS(CSSfiles_e cssfile) {
       // Send CSS in chunks
 #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
       useCDN = false;
-#else
-      url = F("espeasy_default.min.css");
 #endif      
+      url = F("espeasy_default.min.css");
       break;
 #if FEATURE_RULES_EASY_COLOR_CODE
     case CSSfiles_e::EasyColorCode_codemirror:
@@ -100,7 +116,11 @@ void serve_CSS(CSSfiles_e cssfile) {
   }
   #endif
   #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
-  serve_CDN_CSS(cssFile, true);
+  if (cssfile == CSSfiles_e::ESPEasy_default) {
+    serve_CDN_CSS(cssFile, url, true);
+  } else {
+    serve_CDN_CSS(cssFile, true);
+  }
   #endif
 }
 
