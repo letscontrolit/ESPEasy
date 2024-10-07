@@ -81,6 +81,10 @@ void handle_notifications() {
             String dummyString;
             NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
           }
+
+          // Reload & overwrite
+          LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
+          NotificationSettings.validate();
           NotificationSettings.Port = getFormItemInt(F("port"), 0);
 
           NotificationSettings.Timeout_ms                 = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
@@ -93,10 +97,9 @@ void handle_notifications() {
           strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
           strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
           strncpy_webserver_arg(NotificationSettings.User,     F("username"));
-          strncpy_webserver_arg(NotificationSettings.Pass,     F("password"));
           strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
 
-          //          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
+          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
         }
       }
       addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings),
@@ -247,7 +250,6 @@ void handle_notifications() {
             NotificationSettings.Timeout_ms = NPLUGIN_001_DEF_TM;
           }
 
-          // FIXME TD-er: Must convert to msec as every other timeout used/configured in ESPEasy is in msec
           addFormNumericBox(
             F("Timeout"), F("timeout"),
             NotificationSettings.Timeout_ms,
@@ -264,10 +266,7 @@ void handle_notifications() {
           addFormSubHeader(F("Credentials"));
 
           addFormTextBox(F("Username"), F("username"), NotificationSettings.User, sizeof(NotificationSettings.User) - 1);
-          addFormTextBox(F("Password"), F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass) - 1);
-
-          //          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) -
-          // 1);
+          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass) - 1);
 
           addFormSubHeader(F("Email Attributes"));
 
