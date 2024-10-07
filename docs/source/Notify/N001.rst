@@ -76,32 +76,64 @@ From the *Notifications* page, press *Edit* on an available *Nr* option. Next, C
 .. image:: NotifyEmail2.png
     :alt: Email Configuration Example
 
-* **Domain :** Mail provider domain.
-* **Server :** Mail server address (DNS or IP number). Must support non-secure SMTP.
-* **Port :** Server port number. TLS / SSL ports are NOT supported.
-* **Timeout :** Maximum allowed time for server reply. Increase value if server timeouts occur.
-* **Sender :** Sender's email address ("From:").
-* **Receiver :** Recipient's email address ("To:"). Multiple allowed, use comma (,) between each address.
-* **Subject :** Text for email's subject line.
-* **User :** Server user name.
-* **Pass :** Server password.
-* **Body :** Message text. System variables allowed. Use <br> for new line. Maximum 512 characters.
+* SMTP Server Settings
+
+  * **Domain :** Mail provider domain.
+  * **Server :** Mail server address (DNS or IP number). Must support non-secure SMTP.
+  * **Port :** Server port number. (see note below)
+  * **Timeout :** Maximum allowed time for server reply. Increase value if server timeouts occur.
+
+* Credentials
+
+  * **Username :** Server user name.
+  * **Password :** Server password.
+
+* Email Attributes
+
+  * **Sender :** Sender's email address ("From:").
+  * **Receiver :** Recipient's email address ("To:"). Multiple allowed, use comma (,) between each address.
+  * **Subject :** Text for email's subject line.
+  * **Body :** Message text. System variables allowed. Use <br> for new line. Maximum 512 characters.
+
 * **Enabled :** Check this box to enable the email feature.
 
 Be sure to press *Submit* to save your settings.
 
 Note: For more flexibility, there are :ref:`adv_feat` within the notify command for changing the recipient(s), subject line, and message body.
 
+.. note:: Whenever the email service allows to use temporary passwords, please use those to make sure your main password isn't stored (unencrypted) on any ESPEasy device.  
+   For example, GMail allows to use `App Passwords <https://support.google.com/accounts/answer/185833?hl=en>`_ .
+
+SSL Port
+--------
+
+Added: 2024-10-07
+
+Only ESP32-xx builds will have SSL support for sending emails.
+ESP8266 simply doesn't have enough free memory available to setup a SSL connection.
+
+Only SSL port 465 is supported, as for using port 587 (typically named "TLS") extra steps are required to make a connection.
+This may be added later.
 |
 
-Email Server Requirements
---------------------------
+Email Server Requirements with SSL
+----------------------------------
 
-ESPEasy doesn't support the SSL protocol.
+For ESP32-builds made after 2024-10-07, it is possible to use SSL (port 465) to connect to a mail server.
+Make sure the mail-server supports this port as the alternative on port 587 is not yet supported.
+
+Not all hosting providers support this port as it is considered 'deprecated'.
+However large mail providers like GMail, AOL and others still support this port.
+
+
+Email Server Requirements without SSL
+-------------------------------------
+
+ESPEasy doesn't support the SSL protocol on ESP8266
 Unfortunately most Email service providers ended support for non-secure SMTP (without TLS / SSL) several years ago.
-This means that ESPEasy's email is **not** directly compatible with popular providers such as gmail.com, yahoo.com, aol.com, and many others.
+This means that for ESP8266 ESPEasy's email is **not** directly compatible with popular providers such as gmail.com, yahoo.com, aol.com, and many others.
 
-But there are two workarounds for the SSL issue, as follows:
+However, there are two workarounds for the SSL issue, as follows:
 
 * Operate a mail server inside your local network.
 * Use an SMTP Email account from a provider that still supports non-secure SMTP (e.g. SMTP2go.com, smart-mail.de).
