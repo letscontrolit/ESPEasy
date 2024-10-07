@@ -69,6 +69,7 @@ cc_choose(const br_ssl_client_certificate_class **pctx,
 			choices->hash_id = -1;
 			choices->chain = zc->chain;
 			choices->chain_len = zc->chain_len;
+			return;
 		}
 	}
 

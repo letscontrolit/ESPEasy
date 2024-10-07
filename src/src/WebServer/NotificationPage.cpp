@@ -83,8 +83,7 @@ void handle_notifications() {
           }
           NotificationSettings.Port = getFormItemInt(F("port"), 0);
 
-          // FIXME TD-er: Must convert this to msec in the user interface as every other timeout in ESPEasy is in msec.
-          NotificationSettings.Timeout_ms                 = 1000 * getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM / 1000);
+          NotificationSettings.Timeout_ms                 = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
           NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
           NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
           Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
@@ -93,9 +92,11 @@ void handle_notifications() {
           strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
           strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
           strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
-          strncpy_webserver_arg(NotificationSettings.User,     F("user"));
-          strncpy_webserver_arg(NotificationSettings.Pass,     F("pass"));
+          strncpy_webserver_arg(NotificationSettings.User,     F("username"));
+          strncpy_webserver_arg(NotificationSettings.Pass,     F("password"));
           strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
+
+          //          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
         }
       }
       addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings),
@@ -218,17 +219,27 @@ void handle_notifications() {
       {
         if (Notification[NotificationProtocolIndex].usesMessaging)
         {
+          if (NotificationSettings.Port == 0) {
+# if FEATURE_EMAIL_TLS
+            NotificationSettings.Port = 465;
+# else // if FEATURE_EMAIL_TLS
+            NotificationSettings.Port = 25;
+# endif // if FEATURE_EMAIL_TLS
+          }
+
+          addFormSubHeader(F("SMTP Server Settings"));
           addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
           addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
           addFormNumericBox(
             F("Port"), F("port"),
             NotificationSettings.Port,
             1,
-            65535
-# if FEATURE_TOOLTIPS
-            , F("NOTE: SSL/TLS servers NOT supported!")
-# endif // if FEATURE_TOOLTIPS
-            );
+            65535);
+# if FEATURE_EMAIL_TLS
+          addFormNote(F("default port SSL: 465"));
+# else // if FEATURE_EMAIL_TLS
+          addFormNote(F("default port: 25, SSL/TLS servers NOT supported!"));
+# endif // if FEATURE_EMAIL_TLS
 
           if ((NotificationSettings.Timeout_ms < NPLUGIN_001_MIN_TM) ||
               (NotificationSettings.Timeout_ms > NPLUGIN_001_MAX_TM))
@@ -239,22 +250,30 @@ void handle_notifications() {
           // FIXME TD-er: Must convert to msec as every other timeout used/configured in ESPEasy is in msec
           addFormNumericBox(
             F("Timeout"), F("timeout"),
-            NotificationSettings.Timeout_ms / 1000,
-            NPLUGIN_001_MIN_TM / 1000,
-            NPLUGIN_001_MAX_TM / 1000
+            NotificationSettings.Timeout_ms,
+            NPLUGIN_001_MIN_TM,
+            NPLUGIN_001_MAX_TM
 # if FEATURE_TOOLTIPS
             , F("Maximum Server Response Time")
 # endif // if FEATURE_TOOLTIPS
             );
 
-          addUnit(F("Seconds"));
+          addUnit(F("ms"));
+
+          ZERO_TERMINATE(NotificationSettings.Pass);
+          addFormSubHeader(F("Credentials"));
+
+          addFormTextBox(F("Username"), F("username"), NotificationSettings.User, sizeof(NotificationSettings.User) - 1);
+          addFormTextBox(F("Password"), F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass) - 1);
+
+          //          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) -
+          // 1);
+
+          addFormSubHeader(F("Email Attributes"));
 
           addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
           addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);
           addFormTextBox(F("Subject"),  F("subject"),  NotificationSettings.Subject,  sizeof(NotificationSettings.Subject) - 1);
-
-          addFormTextBox(F("User"),     F("user"),     NotificationSettings.User,     sizeof(NotificationSettings.User) - 1);
-          addFormTextBox(F("Pass"),     F("pass"),     NotificationSettings.Pass,     sizeof(NotificationSettings.Pass) - 1);
 
           addRowLabel(F("Body"));
           addHtml(F("<textarea name='body' rows='20' size=512 wrap='off'>"));

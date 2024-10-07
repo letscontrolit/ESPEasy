@@ -1556,7 +1556,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
    Handle certificate files on the file system.
    The content will be stripped from unusable character like quotes, spaces etc.
  \*********************************************************************************************/
-#if FEATURE_MQTT_TLS
+#if FEATURE_TLS
 static inline bool is_base64(char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
