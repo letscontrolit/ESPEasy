@@ -395,6 +395,9 @@ make_client_sign(br_ssl_client_context *ctx)
 		ctx->eng.pad, sizeof ctx->eng.pad);
 }
 
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
+
 
 
 static const unsigned char t0_datablock[] PROGMEM = {
@@ -1199,7 +1202,7 @@ br_ssl_hs_client_run(void *t0ctx)
 				break;
 			case 27: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 28: {
@@ -1327,12 +1330,12 @@ br_ssl_hs_client_run(void *t0ctx)
 				break;
 			case 37: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 38: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 39: {
@@ -1508,7 +1511,7 @@ br_ssl_hs_client_run(void *t0ctx)
 				break;
 			case 56: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 57: {
@@ -1649,7 +1652,7 @@ br_ssl_hs_client_run(void *t0ctx)
 				break;
 			case 69: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			case 70: {

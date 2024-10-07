@@ -412,7 +412,7 @@ br_pem_decoder_run(void *t0ctx)
 				break;
 			case 17: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 18: {
@@ -425,12 +425,12 @@ br_pem_decoder_run(void *t0ctx)
 				break;
 			case 19: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 20: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 21: {
@@ -474,7 +474,7 @@ br_pem_decoder_run(void *t0ctx)
 				break;
 			case 24: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 25: {
@@ -506,7 +506,7 @@ br_pem_decoder_run(void *t0ctx)
 				break;
 			case 27: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			case 28: {
