@@ -606,66 +606,72 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
     }
 #endif
 
-    /*
-       If there is some record data to send, do it. This takes
-       precedence over everything else.
-    */
-    if (state & BR_SSL_SENDREC) {
-      unsigned char *buf;
-      size_t len;
-      int wlen;
+		/*
+		  If there is some record data to send, do it. This takes
+		  precedence over everything else.
+		 */
+		if (state & BR_SSL_SENDREC) {
+			unsigned char *buf;
+			size_t len;
+			int wlen;
 
-      buf = br_ssl_engine_sendrec_buf(_eng, &len);
-      wlen = WiFiClient::write(buf, len);
-      if (wlen <= 0) {
-        /*
-           If we received a close_notify and we
-           still send something, then we have our
-           own response close_notify to send, and
-           the peer is allowed by RFC 5246 not to
-           wait for it.
-        */
-        return -1;
-      }
-      if (wlen > 0) {
-        br_ssl_engine_sendrec_ack(_eng, wlen);
-      }
+			buf = br_ssl_engine_sendrec_buf(_eng, &len);
+			wlen = WiFiClient::write(buf, len);
+			if (wlen < 0) {
+				/*
+				  If we received a close_notify and we
+				  still send something, then we have our
+				  own response close_notify to send, and
+				  the peer is allowed by RFC 5246 not to
+				  wait for it.
+				 */
+				if (!_eng->shutdown_recv) {
+//					br_ssl_engine_fail(_eng, BR_ERR_IO);
+				}
+				return -1;
+			}
+			if (wlen > 0) {
+				br_ssl_engine_sendrec_ack(_eng, wlen);
+			}
       no_work = 0;
-      continue;
-    }
+			continue;
+		}
 
-    /*
-       If we reached our target, then we are finished.
-    */
-    if (state & target) {
-      return 0;
-    }
-    /*
-       If some application data must be read, and we did not
-       exit, then this means that we are trying to write data,
-       and that's not possible until the application data is
-       read. This may happen if using a shared in/out buffer,
-       and the underlying protocol is not strictly half-duplex.
-       This is unrecoverable here, so we report an error.
-    */
-    if (state & BR_SSL_RECVAPP) {
-      DEBUG_BSSL("_run_until: Fatal protocol state\n");
-      return -1;
-    }
-    /*
-       If we reached that point, then either we are trying
-       to read data and there is some, or the engine is stuck
-       until a new record is obtained.
-    */
-    if (state & BR_SSL_RECVREC) {
-      if (WiFiClient::available()) {
+		/*
+		  If we reached our target, then we are finished.
+		 */
+		if (state & target) {
+			return 0;
+		}
+
+		/*
+		  If some application data must be read, and we did not
+		  exit, then this means that we are trying to write data,
+		  and that's not possible until the application data is
+		  read. This may happen if using a shared in/out buffer,
+		  and the underlying protocol is not strictly half-duplex.
+		  This is unrecoverable here, so we report an error.
+		 */
+		if (state & BR_SSL_RECVAPP) {
+			DEBUG_BSSL("_run_until: Fatal protocol state\n"); 
+			return -1;
+		}
+
+		/*
+		  If we reached that point, then either we are trying
+		  to read data and there is some, or the engine is stuck
+		  until a new record is obtained.
+		 */
+		if (state & BR_SSL_RECVREC) {
+      if (WiFiClient::available()) { 
         unsigned char *buf;
         size_t len;
         int rlen;
 
         buf = br_ssl_engine_recvrec_buf(_eng, &len);
-        rlen = WiFiClient::read(buf, len);
+        rlen = WiFiClient::read(buf, len); 
         if (rlen < 0) {
+//          br_ssl_engine_fail(_eng, BR_ERR_IO);
           return -1;
         }
         if (rlen > 0) {
@@ -674,15 +680,16 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
         no_work = 0;
         continue;
       }
-    }
-    /*
-       We can reach that point if the target RECVAPP, and
-       the state contains SENDAPP only. This may happen with
-       a shared in/out buffer. In that case, we must flush
-       the buffered data to "make room" for a new incoming
-       record.
-    */
-    br_ssl_engine_flush(_eng, 0);
+		}
+
+		/*
+		  We can reach that point if the target RECVAPP, and
+		  the state contains SENDAPP only. This may happen with
+		  a shared in/out buffer. In that case, we must flush
+		  the buffered data to "make room" for a new incoming
+		  record.
+		 */
+		br_ssl_engine_flush(_eng, 0);
 
     no_work++; // We didn't actually advance here
   }
@@ -928,6 +935,8 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
 
   LOG_HEAP_SIZE("_connectSSL.start");
 
+  bool OOM_error_occured = true;
+
   do {    // used to exit on Out of Memory error and keep all cleanup code at the same place
     // ============================================================
     // allocate Thunk stack, move to alternate stack and initialize
@@ -993,7 +1002,10 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
 
     // ============================================================
     // Start TLS connection, ALL
-    if (!br_ssl_client_reset(_sc.get(), hostName, 0)) break;
+    if (!br_ssl_client_reset(_sc.get(), hostName, 0)) {
+      OOM_error_occured = false;
+      break;
+    }
 
     auto ret = _wait_for_handshake();
   #ifdef DEBUG_ESP_SSL
@@ -1019,8 +1031,10 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
 
   // ============================================================
   // if we arrived here, this means we had an OOM error, cleaning up
-  setLastError(ERR_OOM);
-  DEBUG_BSSL("_connectSSL: Out of memory\n");
+  if (OOM_error_occured) {
+    setLastError(ERR_OOM);
+    DEBUG_BSSL("_connectSSL: Out of memory\n");
+  }
 #ifdef ESP8266
   stack_thunk_light_del_ref();
 #endif

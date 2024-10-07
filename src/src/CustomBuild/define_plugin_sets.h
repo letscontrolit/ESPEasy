@@ -667,6 +667,17 @@ To create/register a plugin, you have to :
     #define NOTIFIER_SET_STABLE
     #define USES_P029      // Output - Domoticz MQTT Helper
     #define PLUGIN_SET_ONLY_TEMP_HUM
+
+    #ifdef USES_P038
+      #undef USES_P038   // NeoPixel
+    #endif
+    #ifdef USES_P043
+      #undef USES_P043   // ClkOutput
+    #endif
+    #ifdef USES_P079
+      #undef USES_P079   // Wemos Motoshield
+    #endif
+
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
@@ -1118,6 +1129,7 @@ To create/register a plugin, you have to :
         #define FEATURE_RULES_EASY_COLOR_CODE 1
     #endif
     #define FEATURE_MQTT_TLS 1
+    #define FEATURE_EMAIL_TLS 1
 
     #ifdef FEATURE_CUSTOM_PROVISIONING
         #undef FEATURE_CUSTOM_PROVISIONING
@@ -2101,11 +2113,20 @@ To create/register a plugin, you have to :
 
 // Disable few plugin(s) to make the build fit :/
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
+  #ifdef USES_P038
+    #undef USES_P038   // NeoPixel
+  #endif
   #ifdef USES_P039
     #undef USES_P039  // Environment - Thermocouple
   #endif
   #ifdef USES_P040
     #undef USES_P040  // RFID - ID12LA/RDM6300
+  #endif
+  #ifdef USES_P043
+    #undef USES_P043   // ClkOutput
+  #endif
+  #ifdef USES_P079
+    #undef USES_P079   // Wemos Motoshield
   #endif
 #endif // ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
 
@@ -2221,6 +2242,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef FEATURE_MQTT_TLS
     #define FEATURE_MQTT_TLS 1
+  #endif
+  #ifndef FEATURE_EMAIL_TLS
+    #define FEATURE_EMAIL_TLS 1
   #endif
 
   // Plugins
@@ -2962,8 +2986,21 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_MQTT_TLS
-#define FEATURE_MQTT_TLS 0
+  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5 && FEATURE_MQTT
+    #define FEATURE_MQTT_TLS 1
+  #else
+    #define FEATURE_MQTT_TLS 0
+  #endif
 #endif
+
+#ifndef FEATURE_EMAIL_TLS
+  #if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5 && defined(USES_N001)
+    #define FEATURE_EMAIL_TLS 1
+  #else
+    #define FEATURE_EMAIL_TLS 0
+  #endif
+#endif
+
 
 #ifdef ESP8266
 // It just doesn't work on ESP8266, too slow, too high memory requirements
@@ -2971,6 +3008,10 @@ To create/register a plugin, you have to :
   #if FEATURE_MQTT_TLS
     #undef FEATURE_MQTT_TLS
     #define FEATURE_MQTT_TLS 0
+  #endif
+  #if FEATURE_EMAIL_TLS
+    #undef FEATURE_EMAIL_TLS
+    #define FEATURE_EMAIL_TLS 0
   #endif
 #endif
 
@@ -2982,6 +3023,17 @@ To create/register a plugin, you have to :
     #define FEATURE_TLS 1
   #endif
 #endif
+
+
+#if FEATURE_EMAIL_TLS
+  #if defined(FEATURE_TLS) && !FEATURE_TLS
+    #undef FEATURE_TLS
+  #endif
+  #ifndef FEATURE_TLS
+    #define FEATURE_TLS 1
+  #endif
+#endif
+  
 
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
