@@ -1541,7 +1541,10 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
-#endif // ifdef PLUGIN_SET_COLLECTION
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
+#endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
 
@@ -1744,6 +1747,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
   #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
    #if !defined(USES_P148) && defined(ESP32)
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
    #endif
@@ -1840,6 +1846,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
@@ -2053,6 +2062,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
   #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
@@ -2401,7 +2413,7 @@ To create/register a plugin, you have to :
     #define USES_P138   // IP5306
   #endif
   #ifndef USES_P139
-//    #define USES_P139   //
+    #define USES_P139   // AXP2101
   #endif
   #ifndef USES_P140
 //    #define USES_P140   //
@@ -3368,7 +3380,7 @@ To create/register a plugin, you have to :
 #endif // ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
 
-#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) || defined(USES_P139))
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
 #endif
