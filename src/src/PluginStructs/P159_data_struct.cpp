@@ -113,7 +113,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
 
             for (uint8_t i = 0; i <= mMax; ++i) {
               addLog(LOG_LEVEL_INFO, strformat(F("LD2410: Sensitivity, gate %d (%.2f - %.2f mtr): moving:%3d, stationary:%3d"),
-                                               i, i * 0.75f, (i + 1) * 0.75f,
+                                               i, i * P159_GATE_DISTANCE_METERS, (i + 1) * P159_GATE_DISTANCE_METERS,
                                                i <= mMvGate ? radar->cfgMovingGateSensitivity(i) : 0,
                                                i <= mStGate ? radar->cfgStationaryGateSensitivity(i) : 0));
             }
@@ -297,11 +297,11 @@ bool P159_data_struct::plugin_webform_load(struct EventStruct *event) {
 
       for (uint8_t i = 0; i <= mMax; ++i) {
         html_TR_TD();
-        addHtml(strformat(F("Gate %d (%.2f - %.2f mtr)"), i, i * 0.75f, (i + 1) * 0.75f));
+        addHtml(strformat(F("Gate %d (%.2f - %.2f mtr)"), i, i * P159_GATE_DISTANCE_METERS, (i + 1) * P159_GATE_DISTANCE_METERS));
         html_TD();
-        addNumericBox(getPluginCustomArgName(idx++), radar->cfgMovingGateSensitivity(i), 0, 100, true);
+        addNumericBox(getPluginCustomArgName(idx++), radar->cfgMovingGateSensitivity(i), 0, P159_MAX_SENSITIVITY_VALUE, true);
         html_TD();
-        addNumericBox(getPluginCustomArgName(idx++), radar->cfgStationaryGateSensitivity(i), 0, 100, true);
+        addNumericBox(getPluginCustomArgName(idx++), radar->cfgStationaryGateSensitivity(i), 0, P159_MAX_SENSITIVITY_VALUE, true);
       }
       html_end_table();
       addHtml(strformat(F("\n<script type='text/javascript'>document.getElementById('saveSens')."
@@ -332,7 +332,9 @@ bool P159_data_struct::plugin_webform_save(struct EventStruct *event) {
       const uint16_t sStat = getFormItemIntCustomArgName(idx++);
 
       // Set sensitivity (level) to 100 to effectively disable sensitivity
-      radar->setGateSensitivityThreshold(gate, gate <= gMove ? sMove : 100, gate <= gStat ? sStat : 100);
+      radar->setGateSensitivityThreshold(gate,
+                                         gate <= gMove ? sMove : P159_MAX_SENSITIVITY_VALUE,
+                                         gate <= gStat ? sStat : P159_MAX_SENSITIVITY_VALUE);
     }
     radar->requestConfigurationModeEnd();
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, done."));
