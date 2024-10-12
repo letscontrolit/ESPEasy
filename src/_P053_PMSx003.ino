@@ -198,7 +198,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
                     nullptr,
                     PLUGIN_053_SENSOR_MODEL_SELECTOR,
                     false,
-                    !P053_for_P175);
+                    #  ifdef USES_P175
+                    !P053_for_P175
+                    #  else // ifdef USES_P175
+                    true
+                    #  endif // ifdef USES_P175
+                    );
       }
 
       addFormSubHeader(F("Output"));
@@ -277,7 +282,11 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       const int oldOutputSelector = PLUGIN_053_OUTPUT_SELECTOR;
 
-      if (!P053_for_P175) {
+      #  ifdef USES_P175
+
+      if (!P053_for_P175)
+      #  endif // ifdef USES_P175
+      {
         PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("model"));
       }
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("output"));
