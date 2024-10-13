@@ -58,9 +58,15 @@ P053_data_struct::P053_data_struct(
   PMSx003_type            sensortype,
   uint32_t                delay_read_after_wakeup_ms
   # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
-  , bool                  oversample
-  , bool                  splitCntBins
+  ,
+  bool                    oversample
+  ,
+  bool                    splitCntBins
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef USES_P175
+  ,
+  bool    P053_for_P175
+  # endif // ifdef USES_P175
   )
   : _taskIndex(TaskIndex),
   _rxPin(rxPin),
@@ -73,11 +79,10 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
-{
   # ifdef USES_P175
-  _P053_for_P175 = PMSx003_type::PMSA003i == sensortype;
+  , _P053_for_P175(P053_for_P175)
   # endif // ifdef USES_P175
-}
+{}
 
 bool P053_data_struct::init() {
   # ifndef BUILD_NO_DEBUG
@@ -246,7 +251,12 @@ bool P053_data_struct::packetAvailable()
 
   if (_i2c_init) {
     if (I2C_wakeup(P175_I2C_ADDR) == 0) {
-      _packetPos = expectedSize; // We always have the data ready for reading
+      if (Wire.requestFrom((uint8_t)P175_I2C_ADDR, expectedSize) == expectedSize) {
+        // Read all bytes into packet-buffer
+        for (_packetPos = 0; _packetPos < expectedSize; ++_packetPos) {
+          _packet[_packetPos] = Wire.read(); // Read data bytes
+        }
+      }
     }
   }
   # endif // ifdef USES_P175
@@ -290,79 +300,35 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength   = 0;
   uint16_t packet_header = 0;
-  uint16_t data[PMS_I2C_BUFFER_SIZE]{}; // uint8_t data_low, data_high;
+  uint16_t data[PMS_RECEIVE_BUFFER_SIZE]{}; // uint8_t data_low, data_high;
 
   _packetPos = 0;
 
-  # ifdef USES_P175
+  PacketRead16(packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
 
-  if (_i2c_init) {
-    // Read data from I2C
-    if (I2C_wakeup(P175_I2C_ADDR) == 0) {
-      const uint8_t nrBytes = packetSize();
+  if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
+    // Not the start of the packet, stop reading.
+    return false;
+  }
 
-      if (Wire.requestFrom((uint8_t)P175_I2C_ADDR, nrBytes) == nrBytes) {
-        // Read all bytes into word-buffer, and calculate the checksum
-        uint8_t hbyte = Wire.read(); // Skip the ID bytes SIG1 = 0x42, SIG2 = 0x4d
-        checksum += hbyte;           // but still have to count them in the checksum
-        uint8_t lbyte = Wire.read();
-        checksum += lbyte;
+  PacketRead16(framelength, &checksum);
 
-        if ((hbyte != PMSx003_SIG1) && (lbyte != PMSx003_SIG2)) {
-          return false;
-        }
-        hbyte     = Wire.read(); // Skip the length bytes
-        checksum += hbyte;       // but still have to count them in the checksum
-        lbyte     = Wire.read();
-        checksum += lbyte;
-
-        // Read the data, (packetSize / 2) - 3, excluding SIG, Length and checksum
-        const uint8_t nrBytes2 = (nrBytes / 2) - 3;
-
-        for (uint8_t i = 0; i < nrBytes2; ++i) {
-          const uint8_t hbyte = Wire.read(); // Read data bytes, counting them into the checksum
-          checksum += hbyte;
-          const uint8_t lbyte = Wire.read();
-          checksum += lbyte;
-          data[i]   = (hbyte << 8) | lbyte;
-        }
-
-        hbyte     = Wire.read();          // Read the checksum bytes, not counting them into the checksum
-        lbyte     = Wire.read();
-        checksum2 = (hbyte << 8) | lbyte; // Received checksum
-      }
-    } else {
-      return false;                       // No device
+  if ((framelength + 4) != packetSize()) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLog(LOG_LEVEL_ERROR, concat(F("PMSx003 : invalid framelength - "), framelength));
     }
-  } else if (!_P053_for_P175)
-  # endif // ifdef USES_P175
-  {
-    PacketRead16(packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+    return false;
+  }
 
-    if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
-      // Not the start of the packet, stop reading.
-      return false;
-    }
+  uint8_t frameData = packetSize();
 
-    PacketRead16(framelength, &checksum);
+  if (frameData > 0u) {
+    frameData /= 2; // Each value is 16 bits
+    frameData -= 3; // start markers, length, checksum
+  }
 
-    if ((framelength + 4) != packetSize()) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, concat(F("PMSx003 : invalid framelength - "), framelength));
-      }
-      return false;
-    }
-
-    uint8_t frameData = packetSize();
-
-    if (frameData > 0u) {
-      frameData /= 2; // Each value is 16 bits
-      frameData -= 3; // start markers, length, checksum
-    }
-
-    for (uint8_t i = 0; i < frameData && i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
-      PacketRead16(data[i], &checksum);
-    }
+  for (uint8_t i = 0; i < frameData && i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+    PacketRead16(data[i], &checksum);
   }
 
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -424,15 +390,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   #  endif     // ifdef P053_LOW_LEVEL_DEBUG
   # endif      // ifndef BUILD_NO_DEBUG
 
-  # ifdef USES_P175
-
-  if (!_P053_for_P175)
-  # endif // ifdef USES_P175
-  {
-    // Compare checksums
-    PacketRead16(checksum2, nullptr);
-    SerialFlush(); // Make sure no data is lost due to full buffer.
-  }
+  // Compare checksums
+  PacketRead16(checksum2, nullptr);
+  SerialFlush(); // Make sure no data is lost due to full buffer.
 
   if (checksum != checksum2) {
     addLog(LOG_LEVEL_ERROR, strformat(F("PMSx003 : Checksum error (0x%x expected: 0x%x)"), checksum, checksum2));
@@ -441,13 +401,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
   if (_last_wakeup_moment.isSet() && !_last_wakeup_moment.timeReached()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      if (log.reserve(80)) {
-        addLog(LOG_LEVEL_INFO,
-               strformat(F("PMSx003 : Less than %d sec since sensor wakeup => Ignoring sample"),
-                         _delay_read_after_wakeup_ms / 1000ul));
-      }
+      addLog(LOG_LEVEL_INFO,
+             strformat(F("PMSx003 : Less than %d sec since sensor wakeup => Ignoring sample"),
+                       _delay_read_after_wakeup_ms / 1000ul));
     }
     return false;
   }

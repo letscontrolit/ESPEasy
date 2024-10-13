@@ -5,7 +5,8 @@
 // ################################# Plugin 175: Plantower PMSx003i (I2C) ################################
 // #######################################################################################################
 
-/** History:
+/** Changelog:
+ * 2024-10-13 tonhuisman: Better employ existing code for handling incoming data.
  * 2024-10-12 tonhuisman: Start plugin for Plantower PMSx003i I2C dust/particle sensor, similar to PMSx003_S & _ST serial sensors.
  *                        Shares most code with P053, so that's required to be enabled if this plugin is enabled.
  *                        P053 has been adjusted to handle the I2C communication with the sensor, instead of the serial comms
@@ -97,9 +98,10 @@ boolean Plugin_175(uint8_t function, struct EventStruct *event, String& string)
           PLUGIN_053_RST_PIN,
           PLUGIN_053_PWR_PIN,
           Plugin_053_sensortype,
-          PLUGIN_053_SEC_IGNORE_AFTER_WAKE * 1000u
-          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
-          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
+          PLUGIN_053_SEC_IGNORE_AFTER_WAKE * 1000u,
+          bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT),
+          bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT),
+          P053_for_P175
           ));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));

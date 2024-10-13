@@ -11,6 +11,11 @@
 // together with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
+/** Changelog:
+ * 2024-10-12 tonhuisman: Add support for PMSA003i (I2C) via P175 and maximal code-reuse.
+ * 2024-10-12 tonhuisman: Start Changelog (older changes not registered).
+ */
+
 # include "src/PluginStructs/P053_data_struct.h"
 
 # define PLUGIN_053
@@ -369,6 +374,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
           # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+          # ifdef USES_P175
+          , P053_for_P175
+          # endif // ifdef USES_P175
           ));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));

@@ -123,7 +123,6 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS_Reserved              15
 # define PMS_FW_rev_error          16
 # define PMS_RECEIVE_BUFFER_SIZE   ((PMSx003_PACKET_BUFFER_SIZE / 2) - 3)
-# define PMS_I2C_BUFFER_SIZE       (PMSx003_PACKET_BUFFER_SIZE / 2)
 
 
 struct P053_data_struct : public PluginTaskData_base {
@@ -144,6 +143,10 @@ public:
     ,
     bool                    splitCntBins
     # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # ifdef USES_P175
+    ,
+    bool    P053_for_P175
+    # endif // ifdef USES_P175
     );
 
   P053_data_struct() = delete;
@@ -223,19 +226,19 @@ public:
 
 private:
 
-  ESPeasySerial          *_easySerial                         = nullptr;
-  uint8_t                 _packet[PMSx003_PACKET_BUFFER_SIZE] = { 0 };
-  uint8_t                 _packetPos                          = 0;
-  const taskIndex_t       _taskIndex                          = INVALID_TASK_INDEX;
-  const int8_t            _rxPin                              = -1;
-  const int8_t            _txPin                              = -1;
-  const ESPEasySerialPort _port                               = ESPEasySerialPort::not_set;
+  ESPeasySerial          *_easySerial = nullptr;
+  uint8_t                 _packet[PMSx003_PACKET_BUFFER_SIZE]{};
+  uint8_t                 _packetPos = 0;
+  const taskIndex_t       _taskIndex = INVALID_TASK_INDEX;
+  const int8_t            _rxPin     = -1;
+  const int8_t            _txPin     = -1;
+  const ESPEasySerialPort _port      = ESPEasySerialPort::not_set;
   const PMSx003_type      _sensortype;
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  const bool _oversample                    = false;
-  const bool _splitCntBins                  = false;
-  float      _data[PMS_RECEIVE_BUFFER_SIZE] = { 0 };
-  uint32_t   _value_mask                    = 0; // Keeping track of values already sent.
+  const bool _oversample   = false;
+  const bool _splitCntBins = false;
+  float      _data[PMS_RECEIVE_BUFFER_SIZE]{};
+  uint32_t   _value_mask = 0; // Keeping track of values already sent.
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   LongTermTimer  _last_wakeup_moment;
   const uint32_t _delay_read_after_wakeup_ms = 0;
@@ -245,8 +248,8 @@ private:
   const int8_t   _pwrPin                     = -1;
 
   # ifdef USES_P175
-  bool _P053_for_P175 = false;
-  bool _i2c_init      = false;
+  const bool _P053_for_P175 = false;
+  bool       _i2c_init      = false;
   # endif // ifdef USES_P175
   bool _activeReadingModeEnabled = true;
 };
