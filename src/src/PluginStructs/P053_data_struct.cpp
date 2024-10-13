@@ -303,28 +303,36 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
       if (Wire.requestFrom((uint8_t)P175_I2C_ADDR, nrBytes) == nrBytes) {
         // Read all bytes into word-buffer, and calculate the checksum
-        const uint8_t nrBytes2 = nrBytes / 2;
-        const uint8_t hbyte    = Wire.read(); // Skip the ID bytes SIG1 = 0x42, SIG2 = 0x4d
-        checksum += hbyte;                    // but still have to count them in the checksum
-        const uint8_t lbyte = Wire.read();
+        uint8_t hbyte = Wire.read(); // Skip the ID bytes SIG1 = 0x42, SIG2 = 0x4d
+        checksum += hbyte;           // but still have to count them in the checksum
+        uint8_t lbyte = Wire.read();
         checksum += lbyte;
 
         if ((hbyte != PMSx003_SIG1) && (lbyte != PMSx003_SIG2)) {
           return false;
         }
+        hbyte     = Wire.read(); // Skip the length bytes
+        checksum += hbyte;       // but still have to count them in the checksum
+        lbyte     = Wire.read();
+        checksum += lbyte;
 
-        for (uint8_t i = 0; i < nrBytes2 - 1; ++i) {
-          const uint8_t hbyte = Wire.read();
+        // Read the data, (packetSize / 2) - 3, excluding SIG, Length and checksum
+        const uint8_t nrBytes2 = (nrBytes / 2) - 3;
+
+        for (uint8_t i = 0; i < nrBytes2; ++i) {
+          const uint8_t hbyte = Wire.read(); // Read data bytes, counting them into the checksum
           checksum += hbyte;
           const uint8_t lbyte = Wire.read();
           checksum += lbyte;
-          data[i]   = hbyte << 8 | lbyte;
+          data[i]   = (hbyte << 8) | lbyte;
         }
 
-        checksum2 = data[nrBytes2 - 1]; // Received checksum
+        hbyte     = Wire.read();          // Read the checksum bytes, not counting them into the checksum
+        lbyte     = Wire.read();
+        checksum2 = (hbyte << 8) | lbyte; // Received checksum
       }
     } else {
-      return false;                     // No device
+      return false;                       // No device
     }
   } else if (!_P053_for_P175)
   # endif // ifdef USES_P175
@@ -427,7 +435,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   }
 
   if (checksum != checksum2) {
-    addLog(LOG_LEVEL_ERROR, F("PMSx003 : Checksum error"));
+    addLog(LOG_LEVEL_ERROR, strformat(F("PMSx003 : Checksum error (0x%x expected: 0x%x)"), checksum, checksum2));
     return false;
   }
 
