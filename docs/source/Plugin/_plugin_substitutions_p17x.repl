@@ -36,3 +36,16 @@
 .. |P173_maintainer| replace:: `tonhuisman`
 .. |P173_compileinfo| replace:: `.`
 .. |P173_usedlibraries| replace:: `.`
+
+.. |P175_name| replace:: :cyan:`PMSx003i (I2C)`
+.. |P175_type| replace:: :cyan:`Dust`
+.. |P175_typename| replace:: :cyan:`Dust - PMSx003i (I2C)`
+.. |P175_porttype| replace:: `I2C`
+.. |P175_status| replace:: :yellow:`CLIMATE`
+.. |P175_github| replace:: P175_PMSx003i.ino
+.. _P175_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P175_PMSx003i.ino
+.. |P175_usedby| replace:: `.`
+.. |P175_shortinfo| replace:: `.`
+.. |P175_maintainer| replace:: `.`
+.. |P175_compileinfo| replace:: `.`
+.. |P175_usedlibraries| replace:: `.`
