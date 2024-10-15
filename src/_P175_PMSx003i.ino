@@ -50,7 +50,6 @@ boolean Plugin_175(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_WEBFORM_SHOW_CONFIG:
-    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       break;
     }
