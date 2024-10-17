@@ -409,25 +409,21 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   I  = I / 100;
   I  = I > 0 ? (I < 1 ? I : 1) : 0;
 
-  #define RGB_ORDER 0
-  #define BRG_ORDER 1
-  #define GBR_ORDER 2
-
-  int order = RGB_ORDER;
-
   constexpr float ANGLE_120_DEG = 120.0f * deg2rad;
   constexpr float ANGLE_240_DEG = 240.0f * deg2rad;
   constexpr float ANGLE_60_DEG  =  60.0f * deg2rad;
 
+  int order;
   if (H < ANGLE_120_DEG) {
-    order = RGB_ORDER;
+      order = 0; // RGB_ORDER
   } else if (H < ANGLE_240_DEG) {
-    H     = H - ANGLE_120_DEG;
-    order = BRG_ORDER;
+      H -= ANGLE_120_DEG;
+      order = 1; // BRG_ORDER
   } else {
-    H     = H - ANGLE_240_DEG;
-    order = GBR_ORDER;
+      H -= ANGLE_240_DEG;
+      order = 2; // GBR_ORDER
   }
+
   const float cos_h      = cosf(H);
   const float cos_1047_h = cosf(ANGLE_60_DEG - H);
 
@@ -436,18 +432,22 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   const int b = 0;
   rgbw[3] = 255 * (1 - S) * I;
 
-  if (RGB_ORDER == order) {
-    rgbw[0] = r;
-    rgbw[1] = g;
-    rgbw[2] = b;
-  } else if (BRG_ORDER == order) {
-    rgbw[0] = b;
-    rgbw[1] = r;
-    rgbw[2] = g;
-  } else if (GBR_ORDER == order) {
-    rgbw[0] = g;
-    rgbw[1] = b;
-    rgbw[2] = r;
+  switch (order) {
+      case 0: // RGB_ORDER
+          rgbw[0] = r;
+          rgbw[1] = g;
+          rgbw[2] = b;
+          break;
+      case 1: // BRG_ORDER
+          rgbw[0] = b;
+          rgbw[1] = r;
+          rgbw[2] = g;
+          break;
+      case 2: // GBR_ORDER
+          rgbw[0] = g;
+          rgbw[1] = b;
+          rgbw[2] = r;
+          break;
   }
 }
 
