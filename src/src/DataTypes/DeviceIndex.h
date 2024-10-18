@@ -5,6 +5,12 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
+#if FEATURE_SUPPORT_OVER_255_PLUGINS
+#define DEVICEINDEX_BASE_TYPE  uint16_t
+#else
+#define DEVICEINDEX_BASE_TYPE  uint8_t
+#endif
+
 struct deviceIndex_t {
   deviceIndex_t() = default;
 
@@ -57,7 +63,9 @@ struct deviceIndex_t {
     return *this;
   }
 
-  uint8_t value{}; // Init this to 0, so we can easily iterate over it.
+  // FIXME TD-er: This should also be set to 16 bit if we support > 255 plugins, 
+  // we should also support builds with > 255 plugins included
+  DEVICEINDEX_BASE_TYPE value{}; // Init this to 0, so we can easily iterate over it.
 };
 
 

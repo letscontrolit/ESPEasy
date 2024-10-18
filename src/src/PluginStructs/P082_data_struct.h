@@ -47,6 +47,12 @@
 # define P082_QUERY3_DFLT         P082_query::P082_QUERY_ALT
 # define P082_QUERY4_DFLT         P082_query::P082_QUERY_SPD
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#define P082_MAX_NR_DECIMALS  9
+#else
+#define P082_MAX_NR_DECIMALS  6
+#endif
+
 
 enum class P082_query : uint8_t {
   P082_QUERY_LONG        = 0,
@@ -254,7 +260,7 @@ public:
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
+  ESPEASY_RULES_FLOAT_TYPE _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)]{};
 
   OversamplingHelper<uint64_t, uint64_t>_oversampling_gps_time_offset_usec;
 

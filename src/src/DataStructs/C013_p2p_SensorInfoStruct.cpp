@@ -17,7 +17,7 @@ bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
 {
   if (!(validTaskIndex(sourceTaskIndex) &&
         validTaskIndex(destTaskIndex) &&
-        validPluginID(deviceNumber))) {
+        validPluginID(getPluginID()))) {
     return false;
   }
 
@@ -47,13 +47,13 @@ bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
       TaskDeviceErrorValue[x]    = ExtraTaskSettings.TaskDeviceErrorValue[x];
       VariousBits[x]             = ExtraTaskSettings.VariousBits[x];
 
-/*
-      ZERO_FILL(TaskDeviceFormula[x]);
+      /*
+            ZERO_FILL(TaskDeviceFormula[x]);
 
-      if (ExtraTaskSettings.TaskDeviceFormula[x][0] != 0) {
-        safe_strncpy(TaskDeviceFormula[x], ExtraTaskSettings.TaskDeviceFormula[x], sizeof(TaskDeviceFormula[x]));
-      }
-*/
+            if (ExtraTaskSettings.TaskDeviceFormula[x][0] != 0) {
+              safe_strncpy(TaskDeviceFormula[x], ExtraTaskSettings.TaskDeviceFormula[x], sizeof(TaskDeviceFormula[x]));
+            }
+       */
     }
 
     for (uint8_t x = 0; x < PLUGIN_CONFIGVAR_MAX; ++x) {
@@ -121,8 +121,8 @@ bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
   }
 
   if (size <= 138) {
-    deviceNumber = INVALID_PLUGIN_ID;
-    sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
+    setPluginID(INVALID_PLUGIN_ID);
+    sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 
     NodeStruct *sourceNode = Nodes.getNode(data[2]); // sourceUnit
 
@@ -141,7 +141,42 @@ bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
 
   return validTaskIndex(sourceTaskIndex) &&
          validTaskIndex(destTaskIndex) &&
-         validPluginID(deviceNumber);
+         validPluginID(getPluginID());
+}
+
+pluginID_t C013_SensorInfoStruct::getPluginID() const
+{
+# if FEATURE_SUPPORT_OVER_255_PLUGINS
+
+  // Support for pluginID > 255 added in build 20240708 (build ID 20890)
+  if ((deviceNumber_lsb == 0) &&
+      (deviceNumber_msb != 0) &&
+      (sourceNodeBuild >= 20890)) {
+    return pluginID_t::toPluginID(deviceNumber_msb);
+  }
+# endif // if FEATURE_SUPPORT_OVER_255_PLUGINS
+  return pluginID_t::toPluginID(deviceNumber_lsb);
+}
+
+void C013_SensorInfoStruct::setPluginID(pluginID_t pluginID)
+{
+  deviceNumber_lsb = 0u;
+  deviceNumber_msb = 0u;
+
+  if (validPluginID(pluginID)) {
+# if FEATURE_SUPPORT_OVER_255_PLUGINS
+
+    if (pluginID.value <= 255) {
+      // Compatible with older builds
+      deviceNumber_lsb = (pluginID.value & 0xFF);
+    } else {
+      // Store in new 16bit member and set deviceNumber_lsb to invalid for older builds
+      deviceNumber_msb = pluginID.value;
+    }
+# else // if FEATURE_SUPPORT_OVER_255_PLUGINS
+    deviceNumber_lsb = pluginID.value;
+# endif // if FEATURE_SUPPORT_OVER_255_PLUGINS
+  }
 }
 
 #endif // ifdef USES_C013

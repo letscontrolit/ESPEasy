@@ -269,7 +269,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
-  Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
+  Settings.setPluginID_for_task(taskIndex, taskdevicenumber);
 
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;
@@ -1513,7 +1513,12 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
-        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        constexpr int max_nr_decimals = 9;
+#else
+        constexpr int max_nr_decimals = 6;
+#endif
+        addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, max_nr_decimals);
       }
 
 # if FEATURE_PLUGIN_STATS

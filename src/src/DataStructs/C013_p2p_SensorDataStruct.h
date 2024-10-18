@@ -19,14 +19,17 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
 {
   C013_SensorDataStruct() = default;
 
-  bool setData(const uint8_t *data,
-               size_t         size);
+  bool       setData(const uint8_t *data,
+                     size_t         size);
 
-  bool prepareForSend();
+  bool       prepareForSend();
 
-  bool matchesPluginID(pluginID_t pluginID) const;
+  bool       matchesPluginID(pluginID_t pluginID) const;
 
-  bool matchesSensorType(Sensor_VType sensor_type) const;
+  bool       matchesSensorType(Sensor_VType sensor_type) const;
+
+  pluginID_t getPluginID() const;
+  void       setPluginID(pluginID_t pluginID);
 
   uint8_t     header          = 255;
   uint8_t     ID              = 5;
@@ -39,19 +42,27 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
   // See:
   // https://github.com/letscontrolit/ESPEasy/commit/cf791527eeaf31ca98b07c45c1b64e2561a7b041#diff-86b42dd78398b103e272503f05f55ee0870ae5fb907d713c2505d63279bb0321
   // Thus should not be checked
-  pluginID_t        deviceNumber = INVALID_PLUGIN_ID;
-  Sensor_VType      sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
+
+  // PluginID least significant byte, to remain compatible with older builds
+  // Will be set to 0 (= INVALID_PLUGIN_ID) when a plugin ID > 255 is used
+  uint8_t           deviceNumber_lsb = INVALID_PLUGIN_ID.value;
+  Sensor_VType      sensorType       = Sensor_VType::SENSOR_TYPE_NONE;
   uint8_t           taskValues_Data[sizeof(TaskValues_Data_t)]{};
 
   // Extra info added on 20240619 (build ID 20871)
   ShortChecksumType checksum;
-  uint16_t          sourceNodeBuild = 0;
-  uint16_t          timestamp_frac  = 0;
-  uint32_t          timestamp_sec   = 0;
+  uint16_t          sourceNodeBuild{};
+  uint16_t          timestamp_frac{};
+  uint32_t          timestamp_sec{};
 
-  // Optional IDX value to allow receiving remote 
+  // Optional IDX value to allow receiving remote
   // feed data on a different task index as is used on the sender node.
-  uint32_t          IDX             = 0;
+  uint32_t IDX{};
+
+  // Used for PluginID with values > 255.
+  // This way older builds only "see" invalid pluginID
+  // Added in build 20240708 (build ID 20890)
+  uint16_t deviceNumber_msb{};
 };
 
 #endif // ifdef USES_C013

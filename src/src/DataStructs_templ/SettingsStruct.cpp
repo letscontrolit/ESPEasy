@@ -658,7 +658,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceID[i][task]       = 0u;
     TaskDeviceSendData[i][task] = false;
   }
-  TaskDeviceNumber[task]     = 0u; //.setInvalid();
+  setPluginID_for_task(task, INVALID_PLUGIN_ID); //.setInvalid();
   OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
@@ -1031,12 +1031,22 @@ void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
 template<unsigned int N_TASKS>
 pluginID_t SettingsStruct_tmpl<N_TASKS>::getPluginID_for_task(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
-    const uint8_t tdn = TaskDeviceNumber[taskIndex];
+    // FIXME TD-er: Must find a few more unused bits to store larger pluginIDs
+    const uint8_t tdn = TaskDeviceNumber_lsb[taskIndex];
     if (tdn > 0) {
       return pluginID_t::toPluginID(tdn);
     }
   }
   return INVALID_PLUGIN_ID;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setPluginID_for_task(taskIndex_t taskIndex, pluginID_t pluginID)
+{
+  if (validTaskIndex(taskIndex) && validPluginID(pluginID)) {
+    // FIXME TD-er: Must find a few more unused bits to store larger pluginIDs
+    TaskDeviceNumber_lsb[taskIndex] = static_cast<uint8_t>(pluginID.value);
+  }
 }
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

@@ -88,7 +88,7 @@ void P082_software_pps::setSentenceType(
     const uint64_t endOfLine_received_usec = getMicros64() - bytesToUsec(bytesAvailableInSerialBuffer);
     const int64_t  sentence_duration       = timeDiff64(_cur_start_sentence_usec, endOfLine_received_usec);
 
-//    if (usecPassedSince(_cur_start_sentence_usec) < 1000000ll) {
+    //    if (usecPassedSince(_cur_start_sentence_usec) < 1000000ll) {
 
     // Assume a NMEA sentence cannot be over 80 bytes
     // Apply some tolerance, thus check for duration to receive 120 bytes
@@ -143,16 +143,16 @@ uint64_t P082_software_pps::bytesToUsec(uint32_t bytes) const
   return duration_usec;
 }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 String P082_software_pps::getStats() const
 {
   String res;
   constexpr uint32_t nrelements = NR_ELEMENTS(_second_frac_in_usec);
+
   for (size_t i = 0; i < nrelements; ++i) {
     uint32_t value{};
     _second_frac_in_usec[i].peek(value);
     {
-
       switch (i) {
         case TinyGPSPlus::GPS_SENTENCE_GPGGA: res += F("GGA"); break;
         case TinyGPSPlus::GPS_SENTENCE_GPRMC: res += F("RMC"); break;
@@ -161,16 +161,16 @@ String P082_software_pps::getStats() const
         case TinyGPSPlus::GPS_SENTENCE_GPGLL: res += F("GLL"); break;
         case TinyGPSPlus::GPS_SENTENCE_GPTXT: res += F("TXT"); break;
         default:
-        res += F("---");
-        break;
+          res += F("---");
+          break;
       }
       res += strformat(F(": %06d (%d)<br>"), value, _second_frac_in_usec[i].getCount());
     }
   }
-  return res;  
+  return res;
 }
-#endif
 
+# endif // ifndef BUILD_NO_DEBUG
 
 
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
@@ -351,6 +351,7 @@ bool P082_data_struct::loop() {
             available = easySerial->available();
             _softwarePPS.addStartOfSentence(available);
           }
+
           if (available == 0) {
             available = easySerial->available();
           }
@@ -771,12 +772,13 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
 #  endif // if FEATURE_CHART_JS
 # endif  // if FEATURE_PLUGIN_STATS
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 String P082_data_struct::getPPSStats() const
 {
   return _softwarePPS.getStats();
 }
-#endif
+
+# endif // ifndef BUILD_NO_DEBUG
 
 
-#endif   // ifdef USES_P082
+#endif // ifdef USES_P082

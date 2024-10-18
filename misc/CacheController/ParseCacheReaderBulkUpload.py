@@ -26,6 +26,8 @@ def decode(bytestream):
     #        uint8_t           valueCount{};
     #    };
 
+    # FIXME TD-er: Must fix fetching pluginID > 255. See C016_binary_element
+
     class C016_binary_element(ctypes.Structure):
         _fields_ = (
             ('val1', ctypes.c_float),

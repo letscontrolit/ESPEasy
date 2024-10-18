@@ -46,7 +46,7 @@ struct EventStruct C016_getTaskSample(
   }
 
   timestamp  = element.unixTime;
-  valueCount = element.valueCount;
+  valueCount = element.getValueCount();
   val1       = element.values.getFloat(0);
   val2       = element.values.getFloat(1);
   val3       = element.values.getFloat(2);
