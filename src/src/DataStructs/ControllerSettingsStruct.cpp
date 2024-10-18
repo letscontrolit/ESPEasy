@@ -219,101 +219,111 @@ bool ControllerSettingsStruct::updateIPcache() {
 /*
 bool ControllerSettingsStruct::mqtt_cleanSession() const
 {
-   return bitRead(VariousFlags, 1);
-   }
+  return bitRead(VariousFlags, 1);
+}
 
-   void ControllerSettingsStruct::mqtt_cleanSession(bool value)
-   {
-   bitWrite(VariousFlags, 1, value);
-   }
+void ControllerSettingsStruct::mqtt_cleanSession(bool value)
+{
+  bitWrite(VariousFlags, 1, value);
+}
 
-   bool ControllerSettingsStruct::mqtt_sendLWT() const
-   {
-   return !bitRead(VariousFlags, 2);
-   }
+bool ControllerSettingsStruct::mqtt_sendLWT() const
+{
+  return !bitRead(VariousFlags, 2);
+}
 
-   void ControllerSettingsStruct::mqtt_sendLWT(bool value)
-   {
-   bitWrite(VariousFlags, 2, !value);
-   }
+void ControllerSettingsStruct::mqtt_sendLWT(bool value)
+{
+  bitWrite(VariousFlags, 2, !value);
+}
 
-   bool ControllerSettingsStruct::mqtt_willRetain() const
-   {
-   return !bitRead(VariousFlags, 3);
-   }
+bool ControllerSettingsStruct::mqtt_willRetain() const
+{
+  return !bitRead(VariousFlags, 3);
+}
 
-   void ControllerSettingsStruct::mqtt_willRetain(bool value)
-   {
-   bitWrite(VariousFlags, 3, !value);
-   }
+void ControllerSettingsStruct::mqtt_willRetain(bool value)
+{
+  bitWrite(VariousFlags, 3, !value);
+}
 
-   bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
-   {
-   return bitRead(VariousFlags, 4);
-   }
+bool ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect() const
+{
+  return bitRead(VariousFlags, 4);
+}
 
-   void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
-   {
-   bitWrite(VariousFlags, 4, value);
-   }
+void ControllerSettingsStruct::mqtt_uniqueMQTTclientIdReconnect(bool value)
+{
+  bitWrite(VariousFlags, 4, value);
+}
 
-   bool ControllerSettingsStruct::mqtt_retainFlag() const
-   {
-   return bitRead(VariousFlags, 5);
-   }
+bool ControllerSettingsStruct::mqtt_retainFlag() const
+{
+  return bitRead(VariousFlags, 5);
+}
 
-   void ControllerSettingsStruct::mqtt_retainFlag(bool value)
-   {
-   bitWrite(VariousFlags, 5, value);
-   }
+void ControllerSettingsStruct::mqtt_retainFlag(bool value)
+{
+  bitWrite(VariousFlags, 5, value);
+}
 
-   bool ControllerSettingsStruct::useExtendedCredentials() const
-   {
-   return bitRead(VariousFlags, 6);
-   }
+bool ControllerSettingsStruct::useExtendedCredentials() const
+{
+  return bitRead(VariousFlags, 6);
+}
 
-   void ControllerSettingsStruct::useExtendedCredentials(bool value)
-   {
-   bitWrite(VariousFlags, 6, value);
-   }
+void ControllerSettingsStruct::useExtendedCredentials(bool value)
+{
+  bitWrite(VariousFlags, 6, value);
+}
 
-   bool ControllerSettingsStruct::sendBinary() const
-   {
-   return bitRead(VariousFlags, 7);
-   }
+bool ControllerSettingsStruct::sendBinary() const
+{
+  return bitRead(VariousFlags, 7);
+}
 
-   void ControllerSettingsStruct::sendBinary(bool value)
-   {
-   bitWrite(VariousFlags, 7, value);
-   }
+void ControllerSettingsStruct::sendBinary(bool value)
+{
+  bitWrite(VariousFlags, 7, value);
+}
 
-   bool ControllerSettingsStruct::allowExpire() const
-   {
-   return bitRead(VariousFlags, 9);
-   }
+bool ControllerSettingsStruct::enableESPEasyNowFallback() const
+{
+  return bitRead(VariousFlags, 8);
+}
 
-   void ControllerSettingsStruct::allowExpire(bool value)
-   {
-   bitWrite(VariousFlags, 9, value);
-   }
+void ControllerSettingsStruct::enableESPEasyNowFallback(bool value)
+{
+  bitWrite(VariousFlags, 8, value);
+}
 
-   bool ControllerSettingsStruct::deduplicate() const
-   {
-   return bitRead(VariousFlags, 10);
-   }
+bool ControllerSettingsStruct::allowExpire() const
+{
+  return bitRead(VariousFlags, 9);
+}
 
-   void ControllerSettingsStruct::deduplicate(bool value)
-   {
-   bitWrite(VariousFlags, 10, value);
-   }
+void ControllerSettingsStruct::allowExpire(bool value)
+{
+  bitWrite(VariousFlags, 9, value);
+}
 
-   bool ControllerSettingsStruct::useLocalSystemTime() const
-   {
-   return bitRead(VariousFlags, 11);
-   }
+bool ControllerSettingsStruct::deduplicate() const
+{
+  return bitRead(VariousFlags, 10);
+}
 
-   void ControllerSettingsStruct::useLocalSystemTime(bool value)
-   {
+void ControllerSettingsStruct::deduplicate(bool value)
+{
+  bitWrite(VariousFlags, 10, value);
+}
+
+bool ControllerSettingsStruct::useLocalSystemTime() const
+{
+  return bitRead(VariousFlags, 11);
+}
+
+void ControllerSettingsStruct::useLocalSystemTime(bool value)
+{
   bitWrite(VariousFlags, 11, value);
 }
 */

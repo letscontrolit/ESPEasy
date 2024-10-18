@@ -7,7 +7,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -77,7 +77,7 @@ struct ControllerDelayHandlerStruct {
     SchedulerIntervalTimer_e timerID);
 
   std::list<std::unique_ptr<Queue_element_base> >sendQueue;
-  mutable UnitLastMessageCount_map               unitLastMessageCount;
+  mutable UnitMessageRouteInfo_map               unitMessageRouteInfo_map;
   unsigned long                                  lastSend               = 0;
   unsigned int                                   minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
   unsigned long                                  expire_timeout         = 0;
@@ -88,6 +88,7 @@ struct ControllerDelayHandlerStruct {
   bool                                           must_check_reply       = false;
   bool                                           deduplicate            = false;
   bool                                           useLocalSystemTime     = false;
+  bool                                           enableESPEasyNowFallback = false;
 };
 
 

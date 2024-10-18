@@ -7,11 +7,11 @@
 
 # include "../ControllerQueue/Queue_element_base.h"
 # include "../CustomBuild/ESPEasyLimits.h"
+# include "../DataStructs/MessageRouteInfo.h"
 # include "../Globals/CPlugins.h"
 
 
 struct EventStruct;
-struct UnitMessageCount_t;
 
 /*********************************************************************************************\
 * C018_queue_element for queueing requests for C018: TTN/RN2483
@@ -34,11 +34,11 @@ public:
 
   bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const MessageRouteInfo_t* getMessageRouteInfo() const {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  MessageRouteInfo_t* getMessageRouteInfo() {
     return nullptr;
   }
 

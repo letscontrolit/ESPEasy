@@ -2216,7 +2216,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_MAX
   // Features
   #ifndef USES_ESPEASY_NOW
-//    #define USES_ESPEASY_NOW
+    #define USES_ESPEASY_NOW
   #endif
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
@@ -2492,6 +2492,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_C018
     #define USES_C018 // TTN RN2483
+  #endif
+  #ifndef USES_C019
+    #define USES_C019 // ESPEasy-NOW
   #endif
 
   // Notifiers

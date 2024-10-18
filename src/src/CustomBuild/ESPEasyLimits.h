@@ -71,6 +71,16 @@
 
 #define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
+
+// ***********************************************************************
+// * ESPEasy-NOW related limits
+// ***********************************************************************
+
+#ifndef ESPEASY_NOW_PEER_MAX
+  #define ESPEASY_NOW_PEER_MAX                10 // 10 when using encryption, 20 without encryption
+#endif
+
+
 // ***********************************************************************
 // * The next limits affect memory usage
 // ***********************************************************************

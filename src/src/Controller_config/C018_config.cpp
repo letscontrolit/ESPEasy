@@ -179,10 +179,11 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
 
 void C018_ConfigStruct::webform_save() {
   reset();
-  String deveui  = webArg(F("deveui"));
-  String devaddr = webArg(F("devaddr"));
-  String nskey   = webArg(F("nskey"));
-  String appskey = webArg(F("appskey"));
+
+  const String deveui  = webArg(F("deveui"));
+  const String devaddr = webArg(F("devaddr"));
+  const String nskey   = webArg(F("nskey"));
+  const String appskey = webArg(F("appskey"));
 
   strlcpy(DeviceEUI,         deveui.c_str(),  sizeof(DeviceEUI));
   strlcpy(DeviceAddr,        devaddr.c_str(), sizeof(DeviceAddr));

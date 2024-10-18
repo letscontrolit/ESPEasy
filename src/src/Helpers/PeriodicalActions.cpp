@@ -8,6 +8,7 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -28,12 +29,17 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#include "../Globals/SendData_DuplicateChecker.h"
+#endif
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware_temperature_sensor.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringGenerator_WiFi.h"
@@ -64,6 +70,17 @@ void run50TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_50PS);
   }
+  #ifdef USES_ESPEASY_NOW
+  {
+    if (ESPEasy_now_handler.loop()) {
+      // FIXME TD-er: Must check if enabled, etc.
+    }
+    START_TIMER;
+    SendData_DuplicateChecker.loop();
+    STOP_TIMER(ESPEASY_NOW_DEDUP_LOOP);
+  }
+  #endif
+
   processNextEvent();
 }
 
@@ -263,7 +280,16 @@ void runEach30Seconds()
 
 void scheduleNextMQTTdelayQueue() {
   if (MQTTDelayHandler != nullptr) {
-    Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+    unsigned long nextScheduled(MQTTDelayHandler->getNextScheduleTime());
+    #ifdef USES_ESPEASY_NOW
+    if (!MQTTclient_connected) {
+      // Sending via the mesh may be retried at shorter intervals
+      if (timePassedSince(nextScheduled) < -5) {
+        nextScheduled = millis() + 5;
+      }
+    }
+    #endif
+    Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, nextScheduled);
   }
 }
 
@@ -288,59 +314,121 @@ void schedule_all_MQTTimport_tasks() {
   }
 }
 
+
 void processMQTTdelayQueue() {
   if (MQTTDelayHandler == nullptr) {
     return;
   }
   runPeriodicalMQTT(); // Update MQTT connected state.
+  #ifndef USES_ESPEASY_NOW
+  // When using ESPEasy_NOW we may still send MQTT messages even when we're not connected.
+  // For all other situations no need to continue.
   if (!MQTTclient_connected) {
     scheduleNextMQTTdelayQueue();
     return;
   }
+  #endif
 
   START_TIMER;
   MQTT_queue_element *element(static_cast<MQTT_queue_element *>(MQTTDelayHandler->getNext()));
 
   if (element == nullptr) { return; }
 
-  bool handled = false;
+  bool processed = false;
 
   if (element->_call_PLUGIN_PROCESS_CONTROLLER_DATA) {
     struct EventStruct TempEvent(element->_taskIndex);
     String dummy;
 
-    // FIXME TD-er: Do we need anything from the element in the event?
-//    TempEvent.String1 = element->_topic;
-//    TempEvent.String2 = element->_payload;
     if (PluginCall(PLUGIN_PROCESS_CONTROLLER_DATA, &TempEvent, dummy)) {
-      handled = true;
-      MQTTDelayHandler->markProcessed(true);
-    } else {
-      MQTTDelayHandler->markProcessed(false);
+      processed = true;
     }
-  } else
-  if (!handled) {
-    if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
+  }
+  if (!processed) {
+#ifdef USES_ESPEASY_NOW
+    MessageRouteInfo_t messageRouteInfo;
+    if (element->getMessageRouteInfo() != nullptr) {
+      messageRouteInfo = *(element->getMessageRouteInfo());
+    }
+    messageRouteInfo.appendUnit(Settings.Unit);
+
+    if (element->_topic.startsWith(F("traceroute/")) || element->_topic.indexOf(F("/traceroute/")) != -1) {
+      // Special debug feature for ESPEasy-NOW to perform a traceroute of packets.
+      // The message is prepended by each unit number handling the message.
+      const String replacement = getValue(LabelType::UNIT_NR);
+      String message;
+      message.reserve(replacement.length() + 1 + element->_payload.length());
+      message  = replacement;
+      message += ';';
+      message += element->_payload;
+
+      processed = processMQTT_message(element->_controller_idx, element->_topic, message, element->_retained, &messageRouteInfo);
+    } else {
+      processed = processMQTT_message(element->_controller_idx, element->_topic, element->_payload, element->_retained, &messageRouteInfo);
+    }
+#else
+    processed = processMQTT_message(element->_controller_idx, element->_topic, element->_payload, element->_retained);
+#endif
+  }
+  MQTTDelayHandler->markProcessed(processed);
+  if (processed) {
+    statusLED(true);
+  } else {
+#ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("MQTT : process MQTT queue not published, ");
+      log += MQTTDelayHandler->sendQueue.size();
+      log += F(" items left in queue");
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
+  }
+
+
+  Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 1); // Make sure the MQTT is being processed as soon as possible.
+  scheduleNextMQTTdelayQueue();
+  STOP_TIMER(MQTT_DELAY_QUEUE);
+}
+
+
+bool processMQTT_message(controllerIndex_t controllerIndex,
+                        const String    & topic,
+                        const String    & payload,
+                        bool retained
+#ifdef USES_ESPEASY_NOW
+                        , const MessageRouteInfo_t* messageRouteInfo
+#endif
+                        ) 
+{
+  START_TIMER;
+  bool processed = false;
+
+  #ifdef USES_ESPEASY_NOW
+  if (!MQTTclient_connected) {
+    processed = ESPEasy_now_handler.sendToMQTT(controllerIndex, topic, payload, messageRouteInfo);
+  }
+  #endif
+
+  if (!processed) {
+    if (MQTTclient.publish(topic.c_str(), payload.c_str(), retained)) {
+      // FIXME TD-er: Must check if connected via WiFi or Ethernet
       if (WiFiEventData.connectionFailures > 0) {
         --WiFiEventData.connectionFailures;
       }
-      MQTTDelayHandler->markProcessed(true);
-    } else {
-      MQTTDelayHandler->markProcessed(false);
 #ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("MQTT : process MQTT queue not published, ");
-        log += MQTTDelayHandler->sendQueue.size();
-        log += F(" items left in queue");
-        addLogMove(LOG_LEVEL_DEBUG, log);
+#ifdef USES_ESPEASY_NOW
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG) && messageRouteInfo != nullptr) {
+        addLogMove(LOG_LEVEL_DEBUG, concat(F("MQTT : published from mesh: "), messageRouteInfo->toString()));
       }
+#endif
 #endif // ifndef BUILD_NO_DEBUG
+      processed = true;
     }
   }
   Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
   scheduleNextMQTTdelayQueue();
   STOP_TIMER(MQTT_DELAY_QUEUE);
+  return processed;
 }
 
 void updateMQTTclient_connected() {
@@ -406,6 +494,12 @@ void runPeriodicalMQTT() {
 
 
 void logTimerStatistics() {
+  static bool firstRun = true;
+  if (firstRun) {
+    Scheduler.setIntervalTimerOverride(SchedulerIntervalTimer_e::TIMER_STATISTICS, 1000);
+    firstRun = false;
+  }
+
 # ifndef BUILD_NO_DEBUG
   const uint8_t loglevel = LOG_LEVEL_DEBUG;
 #else
@@ -491,6 +585,9 @@ void prepareShutdown(IntendedRebootReason_e reason)
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
   setWifiMode(WIFI_OFF);
+  #if FEATURE_ETHERNET
+  ethPower(false);
+  #endif
   ESPEASY_FS.end();
   process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep

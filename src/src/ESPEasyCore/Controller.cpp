@@ -22,6 +22,10 @@
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#ifdef USES_ESPEASY_NOW
+# include "../Globals/ESPEasy_now_handler.h"
+# include "../Globals/SendData_DuplicateChecker.h"
+#endif // ifdef USES_ESPEASY_NOW
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RulesCalculate.h"
@@ -88,6 +92,31 @@ void sendData(struct EventStruct *event, bool sendEvents)
   STOP_TIMER(SEND_DATA_STATS);
 }
 
+// ********************************************************************************
+// Send to controllers, via a duplicate check
+// Some plugins may receive the same data among nodes, so check first if
+// another node may already have sent it.
+// The compare_key is computed by the sender plugin, with plugin specific knowledge
+// to make sure the key describes enough to detect duplicates.
+// ********************************************************************************
+void sendData_checkDuplicates(struct EventStruct *event, const String& compare_key)
+{
+#ifdef USES_ESPEASY_NOW
+  uint32_t key = SendData_DuplicateChecker.add(event, compare_key);
+
+  if (key != SendData_DuplicateChecker_struct::DUPLICATE_CHECKER_INVALID_KEY) {
+    // Must send out request to other nodes to see if any other has already processed it.
+    uint8_t broadcastMac[6];
+    ESPEasy_now_handler.sendSendData_DuplicateCheck(
+      key,
+      ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck,
+      broadcastMac);
+  }
+#else // ifdef USES_ESPEASY_NOW
+  sendData(event);
+#endif // ifdef USES_ESPEASY_NOW
+}
+
 bool validUserVar(struct EventStruct *event) {
   if (!validTaskIndex(event->TaskIndex)) { return false; }
   const Sensor_VType vtype = event->getSensorType();
@@ -97,6 +126,7 @@ bool validUserVar(struct EventStruct *event) {
   {
     return true;
   }
+
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
@@ -811,6 +841,102 @@ bool MQTT_queueFull(controllerIndex_t controller_idx) {
   return false;
 }
 
+# ifdef USES_ESPEASY_NOW
+
+bool MQTTpublish(controllerIndex_t         controller_idx,
+                 taskIndex_t               taskIndex,
+                 const ESPEasy_now_merger& message,
+                 const MessageRouteInfo_t& messageRouteInfo,
+                 bool                      retained,
+                 bool                      callbackTask)
+{
+  bool success = false;
+
+  if (!MQTT_queueFull(controller_idx))
+  {
+    {
+      size_t pos = 0;
+      const size_t payloadSize = message.getPayloadSize();
+      MessageRouteInfo_t routeinfo = messageRouteInfo;
+      String topic, payload;
+
+      if (message.getString(topic, pos) && message.getString(payload, pos)) {
+        const size_t bytesLeft = payloadSize - pos;
+
+        if (callbackTask && validTaskIndex(taskIndex)) {
+          struct EventStruct TempEvent(taskIndex);
+          String dummy;
+          TempEvent.String1 = std::move(topic);
+          TempEvent.String2 = std::move(payload);
+
+          // Filter function to check if data should be forwarded or not.
+          // Since all plugins/tasks not supporting this function call will return false, 
+          // the "true" result is about the non-standard action; to filter out the message.
+          if (PluginCall(PLUGIN_FILTEROUT_CONTROLLER_DATA, &TempEvent, dummy)) {
+            scheduleNextMQTTdelayQueue();
+            return true;
+          } 
+          topic   = std::move(TempEvent.String1);
+          payload = std::move(TempEvent.String2);
+        }
+
+        if (bytesLeft >= 4) {
+          bool validMessageRouteInfo = false;
+
+          // There is some MessageRouteInfo left
+          MessageRouteInfo_t::uint8_t_vector routeInfoData;
+          routeInfoData.resize(bytesLeft);
+
+          // Use temp position as we don't yet know the true size of the message route info
+          size_t tmp_pos = pos;
+
+          if (message.getBinaryData(&routeInfoData[0], bytesLeft, tmp_pos) == bytesLeft) {
+            validMessageRouteInfo = routeinfo.deserialize(routeInfoData);
+
+            if (validMessageRouteInfo) {
+              // Move pos for the actual number of bytes we read.
+              pos += routeinfo.getSerializedSize();
+            }
+            if (loglevelActiveFor(LOG_LEVEL_INFO))
+            {
+              String log = F("MQTT  : MQTTpublish MessageRouteInfo: ");
+              log += routeinfo.toString();
+              log += F(" bytesLeft: ");
+              log += bytesLeft;
+              addLog(LOG_LEVEL_INFO, log);
+            }
+          }
+
+          if (!validMessageRouteInfo) {
+            // Whatever may have been present, it could not be loaded, so clear just to be sure.
+            routeinfo = messageRouteInfo;
+          }
+
+          // Append our own unit number
+          routeinfo.appendUnit(Settings.Unit);
+        }
+        std::unique_ptr<MQTT_queue_element> element = std::unique_ptr<MQTT_queue_element>(
+          new MQTT_queue_element(
+            controller_idx,
+            taskIndex,
+            std::move(topic),
+            std::move(payload),
+            retained,
+            false));
+
+        if (element) {
+          element->MessageRouteInfo = routeinfo;
+          success                   = MQTTDelayHandler->addToQueue(std::move(element));
+        }
+      }
+    }
+  }
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
+# endif // ifdef USES_ESPEASY_NOW
+
 bool MQTTpublish(controllerIndex_t controller_idx,
                  taskIndex_t       taskIndex,
                  const char       *topic,
@@ -822,24 +948,26 @@ bool MQTTpublish(controllerIndex_t controller_idx,
     return false;
   }
 
-  if (MQTT_queueFull(controller_idx)) {
-    return false;
-  }
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic,
-                                                                                                           payload, retained,
-                                                                                                           callbackTask)));
+  std::unique_ptr<MQTT_queue_element> element =
+    std::unique_ptr<MQTT_queue_element>(
+      new (std::nothrow) MQTT_queue_element(
+        controller_idx,
+        taskIndex,
+        topic,
+        payload,
+        retained,
+        callbackTask));
+
+  if (!element) { return false; }
+
+  const bool success = MQTTDelayHandler->addToQueue(std::move(element));
 
   scheduleNextMQTTdelayQueue();
   return success;
 }
 
-bool MQTTpublish(controllerIndex_t controller_idx,
-                 taskIndex_t       taskIndex,
-                 String         && topic,
-                 String         && payload,
-                 bool              retained,
-                 bool              callbackTask) {
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained,
+                 bool callbackTask) {
   if (MQTTDelayHandler == nullptr) {
     return false;
   }

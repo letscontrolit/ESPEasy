@@ -152,6 +152,11 @@ void handle_advanced() {
     Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
     #endif
 
+#ifdef USES_ESPEASY_NOW
+    Settings.UseESPEasyNow(isFormItemChecked(getInternalLabel(LabelType::ESPEASY_NOW_ENABLED)));
+    Settings.ForceESPEasyNOWchannel = getFormItemInt(getInternalLabel(LabelType::ESPEASY_NOW_FORCED_CHANNEL));
+#endif
+
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
 //    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER)); // TD-er: Disabled for now
 
@@ -391,6 +396,17 @@ void handle_advanced() {
 #endif
 
 
+
+#ifdef USES_ESPEASY_NOW
+  addFormCheckBox(LabelType::ESPEASY_NOW_ENABLED, Settings.UseESPEasyNow());
+  {
+    addFormNumericBox(LabelType::ESPEASY_NOW_FORCED_CHANNEL, Settings.ForceESPEasyNOWchannel, 0, 14);
+    addFormNote(F("Force channel to use for " 
+                  ESPEASY_NOW_NAME 
+                  "-only mode (0 = use any channel)"));
+  }
+
+#endif
 
   addFormSeparator(2);
 

@@ -283,8 +283,11 @@ void handle_json()
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
 #ifdef USES_ESPEASY_NOW
-        LabelType::USE_ESPEASY_NOW,
-        LabelType::FORCE_ESPEASY_NOW_CHANNEL,
+        LabelType::ESPEASY_NOW_ENABLED,
+        LabelType::ESPEASY_NOW_CHANNEL,
+        LabelType::ESPEASY_NOW_FORCED_CHANNEL,
+        LabelType::ESPEASY_NOW_MQTT,
+        LabelType::ESPEASY_NOW_DISTANCE,
 #endif
         LabelType::CONNECTION_FAIL_THRESH,
 #if FEATURE_SET_WIFI_TX_PWR

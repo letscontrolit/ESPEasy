@@ -8,6 +8,7 @@
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_peermanager.h"
 #include "../Globals/ESPEasy_now_state.h"
+#include "../Globals/EventQueue.h"
 #endif
 
 #include "../Globals/EventQueue.h"
@@ -241,7 +242,7 @@ const NodeStruct * NodesHandler::getPreferredNode() const {
   return getPreferredNode_notMatching(dummy);
 }
 
-const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) const {
+const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr, bool checkMQTT_QueueState) const {
   MAC_address not_matching;
   if (unit_nr != 0 && unit_nr != 255) {
     const NodeStruct* node = getNode(unit_nr);
@@ -249,19 +250,21 @@ const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) co
       not_matching = node->ESPEasy_Now_MAC();
     }
   }
-  return getPreferredNode_notMatching(not_matching);
+  return getPreferredNode_notMatching(not_matching, checkMQTT_QueueState);
 }
 
-const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
-  MAC_address this_mac = NetworkMacAddress();
-  const NodeStruct *thisNode = getNodeByMac(this_mac);
-  const NodeStruct *reject   = getNodeByMac(not_matching);
+const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching, bool checkMQTT_QueueState) const {
+  const NodeStruct *thisNodeSTA = getNodeByMac(NetworkMacAddress());
+  const NodeStruct *thisNodeAP  = getNodeByMac(WifiSoftAPmacAddress());
+  const NodeStruct *reject      = getNodeByMac(not_matching);
 
   const NodeStruct *res = nullptr;
 
   for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
   {
-    if ((&(it->second) != reject) && (&(it->second) != thisNode)) {
+    if ((&(it->second) != reject) && 
+        (&(it->second) != thisNodeSTA) && 
+        (&(it->second) != thisNodeAP)) {
       bool mustSet = false;
       if (res == nullptr) {
         mustSet = true;
@@ -304,6 +307,21 @@ const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address&
         }
         #endif
       }
+      #ifdef USES_ESPEASY_NOW
+      if (checkMQTT_QueueState)
+      {
+        if (res != nullptr) {
+          const bool mqttState_res_empty = getMQTTQueueState(res->unit) == ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty;
+          const bool mqttState_new_empty = getMQTTQueueState(it->second.unit) == ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty;
+          if (!mqttState_res_empty && mqttState_new_empty) {
+            mustSet = true;
+          } else if (mqttState_res_empty && !mqttState_new_empty) {
+            mustSet = false;
+          }
+        }
+      }
+      #endif
+
       if (mustSet) {
         #ifdef USES_ESPEASY_NOW
         if (it->second.ESPEasyNowPeer && it->second.distance < 255) {
@@ -503,6 +521,11 @@ void NodesHandler::updateThisNode() {
     // Since we're the end node, claim highest success rate
     updateSuccessRate(thisNode.unit, 255);
   }
+  if (thisNode.distance != lastDistance) {
+    if (Settings.UseRules) {
+      eventQueue.addMove(std::move(concat(F("nodep2p#distance="), thisNode.distance)));
+    }
+  }
   #else
   addNode(thisNode);
   #endif
@@ -606,14 +629,16 @@ bool NodesHandler::isEndpoint() const
 #ifdef USES_ESPEASY_NOW
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
-  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
-    return WiFi.channel();
-  }
   if (Settings.ForceESPEasyNOWchannel > 0) {
     return Settings.ForceESPEasyNOWchannel;
   }
+  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
+    // FIXME TD-er: We can't be sure about the actual WiFi channel reported here.
+    return WiFi.channel();
+  }
   if (isEndpoint()) {
     if (active_network_medium == NetworkMedium_t::WIFI) {
+      // FIXME TD-er: We can't be sure about the actual WiFi channel reported here.
       return WiFi.channel();
     }
   }
@@ -635,21 +660,23 @@ bool NodesHandler::recentlyBecameDistanceZero() {
   return true;
 }
 
-void NodesHandler::setRSSI(const MAC_address& mac, int rssi)
+bool NodesHandler::setRSSI(const MAC_address& mac, int rssi)
 {
-  setRSSI(getNodeByMac(mac), rssi);
+  return setRSSI(getNodeByMac(mac), rssi);
 }
 
-void NodesHandler::setRSSI(uint8_t unit, int rssi)
+bool NodesHandler::setRSSI(uint8_t unit, int rssi)
 {
-  setRSSI(getNode(unit), rssi);
+  return setRSSI(getNode(unit), rssi);
 }
 
-void NodesHandler::setRSSI(NodeStruct * node, int rssi)
+bool NodesHandler::setRSSI(NodeStruct * node, int rssi)
 {
   if (node != nullptr) {
     node->setRSSI(rssi);
+    return true;
   }
+  return false;
 }
 
 bool NodesHandler::lastTimeValidDistanceExpired() const
@@ -706,7 +733,6 @@ ESPEasy_Now_MQTT_QueueCheckState::Enum NodesHandler::getMQTTQueueState(uint8_t u
     return it->second.getMQTTQueueState();
   }
   return ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
-
 }
 
 void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_QueueCheckState::Enum state)
@@ -722,6 +748,16 @@ void NodesHandler::setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_Qu
   const NodeStruct * node = getNodeByMac(mac);
   if (node != nullptr) {
     setMQTTQueueState(node->unit, state);
+  }
+}
+
+void NodesHandler::updateMQTT_checkQueue() {
+  for (auto it = _nodes.begin(); it != _nodes.end(); ++it) {
+    if (it->second.ESPEasyNowPeer) {
+      if (getMQTTQueueState(it->second.unit) != ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty) {
+        ESPEasy_now_MQTT_check_queue.push_back(it->second.ESPEasy_Now_MAC());
+      }
+    }
   }
 }
 

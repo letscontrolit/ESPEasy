@@ -105,7 +105,11 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
 
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
       // Receive probe request packet in soft-AP interface
-      // TODO TD-er: Must implement like onProbeRequestAPmode for ESP8266
+      #ifdef USES_ESPEASY_NOW
+      WiFiEventData.processedProbeRequestAPmode = false;
+      APModeProbeRequestReceived_list.push_back(info.wifi_ap_probereqrecved);
+      #endif
+
       # ifndef BUILD_NO_DEBUG
       //addLog(LOG_LEVEL_INFO, F("WiFi : Event AP got probed"));
       #endif
@@ -189,6 +193,10 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       #else
       WiFiEventData.markDisconnectedAPmode(info.sta_disconnected.mac);
       #endif
+      break;
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      // Assigned an IP to the connected STA client while ESP is in AP mode.
+      // Not sure if it makes sense to record this information.
       break;
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
       WiFiEventData.processedScanDone = false;
@@ -392,6 +400,13 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event) {
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   WiFiEventData.markDisconnectedAPmode(event.mac);
 }
+
+#ifdef USES_ESPEASY_NOW
+void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event) {
+  APModeProbeRequestReceived_list.push_back(event);
+  WiFiEventData.processedProbeRequestAPmode = false;
+}
+#endif
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event) {
   WiFiEventData.setAuthMode(event.newMode);

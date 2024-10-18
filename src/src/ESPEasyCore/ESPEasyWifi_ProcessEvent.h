@@ -11,6 +11,9 @@ void processGotIP();
 void processGotIPv6();
 #endif
 void processDisconnectAPmode();
+#ifdef USES_ESPEASY_NOW
+void processProbeRequestAPmode();
+#endif
 void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();

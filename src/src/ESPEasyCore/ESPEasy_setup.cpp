@@ -1,7 +1,5 @@
 #include "../ESPEasyCore/ESPEasy_setup.h"
 
-#include "../../ESPEasy_fdwdecl.h" // Needed for PluginInit() and CPluginInit()
-
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../Commands/InternalCommands_decoder.h"
@@ -501,6 +499,19 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("clearAllCaches()"));
   #endif
+
+  #ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only() || Settings.UseESPEasyNow()) {
+    RTC.lastWiFiSettingsIndex     = 0; // Force to load the first settings.
+    RTC.lastWiFiChannel = 0; // Force slow connect
+  }
+#endif
+
+  #ifdef USES_ESPEASY_NOW
+  // Disable ESPEasy_now for 20 seconds to give opportunity to connect to WiFi.
+  temp_disable_EspEasy_now_timer = millis() + 20000;
+  #endif
+  
 
   if (Settings.UseRules && isDeepSleepEnabled())
   {

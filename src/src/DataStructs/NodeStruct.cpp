@@ -28,6 +28,11 @@ bool NodeStruct::valid() const {
   return true;
 }
 
+bool NodeStruct::validate() {
+  IPAddress tmp(0, 0, 0, 0);
+  return validate(tmp);
+}
+
 bool NodeStruct::validate(const IPAddress& remoteIP) {
   if (build < 20107) {
     // webserverPort introduced in 20107
@@ -232,17 +237,18 @@ String NodeStruct::getSummary() const {
 
 bool NodeStruct::setESPEasyNow_mac(const MAC_address& received_mac)
 {
-  if (received_mac.all_zero()) return false;
-  if (received_mac == sta_mac) {
-    ESPEasyNowPeer   = 1;
-    useAP_ESPEasyNow = 0;
-    return true;
-  }
+  if (!received_mac.all_zero()) {
+    if (received_mac == sta_mac) {
+      ESPEasyNowPeer   = 1;
+      useAP_ESPEasyNow = 0;
+      return true;
+    }
 
-  if (received_mac == ap_mac) {
-    ESPEasyNowPeer   = 1;
-    useAP_ESPEasyNow = 1;
-    return true;
+    if (received_mac == ap_mac) {
+      ESPEasyNowPeer   = 1;
+      useAP_ESPEasyNow = 1;
+      return true;
+    }
   }
   return false;
 }

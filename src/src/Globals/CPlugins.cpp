@@ -51,6 +51,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:
     case CPlugin::Function::CPLUGIN_WRITE:
     {
+      // Only CPLUGIN_WRITE might return a false
       const bool success = Function != CPlugin::Function::CPLUGIN_WRITE;
 
       if (Function == CPlugin::Function::CPLUGIN_INIT_ALL) {
@@ -204,6 +205,7 @@ cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
 
   return getCPluginID_from_ProtocolIndex(protocolIndex);
 }
+
 
 String getCPluginNameFromProtocolIndex(protocolIndex_t ProtocolIndex) {
   String controllerName;

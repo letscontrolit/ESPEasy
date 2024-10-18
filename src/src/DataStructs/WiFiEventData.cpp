@@ -1,7 +1,7 @@
 #include "../DataStructs/WiFiEventData.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-
+#include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -54,7 +54,7 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
   return true;
 }
 
-bool WiFiEventData_t::unprocessedWifiEvents() const {
+bool WiFiEventData_t::unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout
 #if FEATURE_USE_IPV6
       && processedGotIP6
@@ -65,22 +65,24 @@ bool WiFiEventData_t::unprocessedWifiEvents() const {
   }
   if (!processedConnect) {
     if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedConnect = true;
     }
   }
   if (!processedGotIP) {
     if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedGotIP = true;;
     }
   }
   if (!processedDisconnect) {
     if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedDisconnect = true;
     }
   }
-  if (!processedDHCPTimeout) {
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  {
     return false;
   }
+
   return true;
 }
 
@@ -118,6 +120,9 @@ void WiFiEventData_t::clear_processed_flags() {
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
   processedScanDone         = true;
+  #ifdef USES_ESPEASY_NOW
+  processedProbeRequestAPmode = true;
+  #endif
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();
@@ -134,6 +139,9 @@ void WiFiEventData_t::markWiFiBegin() {
   if (!timerAPstart.isSet()) {
     timerAPstart.setMillisFromNow(3 * WIFI_RECONNECT_WAIT);
   }
+  #ifdef USES_ESPEASY_NOW
+  temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
+  #endif
 }
 
 
@@ -167,6 +175,10 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
     wifiConnectAttemptNeeded = false;
+
+    #ifdef USES_ESPEASY_NOW
+    temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
+    #endif
     dns0_cache = WiFi.dnsIP(0);
     dns1_cache = WiFi.dnsIP(1);
   }

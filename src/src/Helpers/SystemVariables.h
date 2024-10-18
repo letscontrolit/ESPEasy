@@ -21,6 +21,15 @@ public:
     ESP_CHIP_ID,
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
+    
+#ifdef USES_ESPEASY_NOW
+    ESPEASY_NOW_ENABLED,
+    ESPEASY_NOW_FORCED_CHANNEL,
+    ESPEASY_NOW_CHANNEL,
+    ESPEASY_NOW_MQTT,
+    ESPEASY_NOW_DISTANCE,
+#endif
+
 #if FEATURE_ETHERNET
     ETHCONNECTED,
     ETHDUPLEX,
@@ -116,7 +125,6 @@ public:
     VCC,
     VARIABLE, // Can not be the first 'v' variable, as the name is only 1 character long
     WI_CH,
-
 
     // Keep UNKNOWN as last
     UNKNOWN

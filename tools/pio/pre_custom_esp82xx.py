@@ -47,23 +47,27 @@ else:
 #    "-DUSES_P098",  # PWM motor
 #   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
-#   "-DUSES_P094",  # CUL Reader
+    "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
+#    "-DUSES_P098",  # PWM motor
+#    "-DUSES_P100",  # Pulse Counter - DS2423
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
-    "-DUSES_P146",  # Cache Reader
-    "-DUSES_P169",  # AS3935 Lightning Detector 
+#    "-DUSES_P146",  # Cache Reader
+#    "-DUSES_P169",  # AS3935 Lightning Detector 
 
-    "-DUSES_C016",  # Cache Controller
-#    "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
+#   "-DUSES_C016",  # Cache Controller
+#    "-DUSES_C018",  # TTN/RN2483
+    "-DUSES_C019",  # ESPEasy-NOW
 
     "-DFEATURE_MQTT_TLS=0",
     "-DFEATURE_EMAIL_TLS=0",
+    "-DUSES_ESPEASY_NOW",
 #    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
-    "-DFEATURE_EXT_RTC=1",
+#    "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",
     "-DFEATURE_TRIGONOMETRIC_FUNCTIONS_RULES=1",
     "-DFEATURE_CUSTOM_PROVISIONING=1",
@@ -73,8 +77,8 @@ else:
     "-DEMBED_ESPEASY_DEFAULT_MIN_CSS",
 
 #    "-DPLUGIN_STATS_NR_ELEMENTS=30",
-    "-DFEATURE_PLUGIN_STATS=1",
-    "-DFEATURE_CHART_JS=1",
+#    "-DFEATURE_PLUGIN_STATS=1",
+#    "-DFEATURE_CHART_JS=1",
 
 #    "-DFEATURE_ADC_VCC=1",
 

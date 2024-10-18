@@ -278,6 +278,10 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
+#ifdef USES_ESPEASY_NOW
+  handle_sysinfo_ESPEasyNow();
+#endif
+
 # if FEATURE_ETHERNET
   handle_sysinfo_Ethernet();
 # endif // if FEATURE_ETHERNET
@@ -416,6 +420,18 @@ void handle_sysinfo_memory() {
 }
 #endif
 
+#ifdef USES_ESPEASY_NOW
+void handle_sysinfo_ESPEasyNow() {
+  addTableSeparator(F(ESPEASY_NOW_NAME), 2, 3);
+  addRowLabelValue(LabelType::ESPEASY_NOW_ENABLED);
+  addRowLabelValue(LabelType::ESPEASY_NOW_CHANNEL);
+  addRowLabelValue(LabelType::ESPEASY_NOW_FORCED_CHANNEL);
+  addRowLabelValue(LabelType::ESPEASY_NOW_MQTT);
+  addRowLabelValue(LabelType::ESPEASY_NOW_DISTANCE);
+}
+#endif
+
+
 # if FEATURE_ETHERNET
 void handle_sysinfo_Ethernet() {
   if (active_network_medium == NetworkMedium_t::Ethernet) {
@@ -549,8 +565,8 @@ void handle_sysinfo_WiFiSettings() {
 #endif
     LabelType::WIFI_NR_EXTRA_SCANS,
 #ifdef USES_ESPEASY_NOW
-    LabelType::USE_ESPEASY_NOW,
-    LabelType::FORCE_ESPEASY_NOW_CHANNEL,
+    LabelType::ESPEASY_NOW_ENABLED,
+    LabelType::ESPEASY_NOW_FORCED_CHANNEL,
 #endif
     LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
 #ifndef ESP32

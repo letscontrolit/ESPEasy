@@ -128,6 +128,18 @@ enum class TimingStatsElements {
   WIFI_SCAN_ASYNC,
   WIFI_SCAN_SYNC,
 
+  // ESPEasy_NOW related
+  #ifdef USES_ESPEASY_NOW
+  HANDLE_ESPEASY_NOW_LOOP       ,
+  EXPIRED_ESPEASY_NOW_LOOP      , 
+  INVALID_ESPEASY_NOW_LOOP      , 
+  RECEIVE_ESPEASY_NOW_LOOP      , 
+  ESPEASY_NOW_SEND_MSG_SUC      , 
+  ESPEASY_NOW_SEND_MSG_FAIL     , 
+  ESPEASY_NOW_SEND_PCKT         , 
+  ESPEASY_NOW_DEDUP_LOOP        , 
+  #endif
+
   // Time sync (also network related)
   NTP_SUCCESS,
   NTP_FAIL,

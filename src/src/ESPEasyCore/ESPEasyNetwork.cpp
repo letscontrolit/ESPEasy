@@ -3,6 +3,12 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_state.h"
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
@@ -39,37 +45,89 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
   if (active_network_medium == new_medium) {
     return;
   }
-  switch (active_network_medium) {
-    case NetworkMedium_t::Ethernet:
-      #if FEATURE_ETHERNET
-      // FIXME TD-er: How to 'end' ETH?
-//      ETH.end();
-      if (new_medium == NetworkMedium_t::WIFI) {
-        WiFiEventData.clearAll();
-#if ESP_IDF_VERSION_MAJOR >= 5
-        WiFi.STA.setDefault();
+  bool process_exit_active_medium = true;
+#ifdef USES_ESPEASY_NOW
+  if (new_medium == NetworkMedium_t::ESPEasyNOW_only) {
+    if (!Settings.UseESPEasyNow()) {
+      return;
+    }
+    if (WiFiEventData.unprocessedWifiEvents() ||
+        WiFiEventData.wifiConnectInProgress) { 
+      return; 
+    }
+    if (WiFiEventData.WiFiServicesInitialized()) {
+      return;
+    }
+    if (active_network_medium != NetworkMedium_t::WIFI) {
+      // Only allow to set to ESPEasyNOW_only from WiFi
+      return;
+    }
+    #ifdef USES_ESPEASY_NOW
+    if (use_EspEasy_now) {
+      ESPEasy_now_handler.end();
+      active_network_medium = new_medium;
+      ESPEasy_now_handler.begin();
+      process_exit_active_medium = false;
+    }
+
+    #endif
+  }
 #endif
-      }
-      #endif
-      break;
-    case NetworkMedium_t::WIFI:
-      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
-      WiFiEventData.timerAPstart.clear();
-      if (new_medium == NetworkMedium_t::Ethernet) {
+  if (process_exit_active_medium) {
+    switch (active_network_medium) {
+      case NetworkMedium_t::Ethernet:
+        #if FEATURE_ETHERNET
+        // FIXME TD-er: How to 'end' ETH?
+  //      ETH.end();
+        if (new_medium == NetworkMedium_t::WIFI) {
+          WiFiEventData.clearAll();
+#if ESP_IDF_VERSION_MAJOR >= 5
+          WiFi.STA.setDefault();
+#endif
+        }
+        #endif
+        break;
+      case NetworkMedium_t::WIFI:
+        WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
+        WiFiEventData.timerAPstart.clear();
+        if (new_medium == NetworkMedium_t::Ethernet) {
 #if ESP_IDF_VERSION_MAJOR >= 5
 #if FEATURE_ETHERNET
-        ETH.setDefault();
+          ETH.setDefault();
 #endif
 #endif
-        WifiDisconnect();
-      }
-      break;
-    case NetworkMedium_t::NotSet:
-      break;
+          WifiDisconnect();
+        }
+        break;
+#ifdef USES_ESPEASY_NOW
+      case NetworkMedium_t::ESPEasyNOW_only:
+        if (use_EspEasy_now) {
+          ESPEasy_now_handler.end();
+        }
+
+        //WiFiEventData.clearAll();
+        break;
+#endif
+      case NetworkMedium_t::NotSet:
+        break;
+    }
   }
   statusLED(true);
   active_network_medium = new_medium;
-  addLog(LOG_LEVEL_INFO, concat(F("Set Network mode: "), toString(active_network_medium)));
+  last_network_medium_set_moment.setNow();
+  addLog(LOG_LEVEL_INFO, String(F("Set Network mode: ")) + toString(active_network_medium));
+}
+
+bool isESPEasy_now_only() {
+  #ifdef USES_ESPEASY_NOW
+    if (active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
+      return true;
+    }
+    if (use_EspEasy_now) {
+      return !NetworkConnected();
+    }
+  #endif
+  return false;
 }
 
 
@@ -83,9 +141,6 @@ void NetworkConnectRelaxed() {
     if (ETHConnectRelaxed()) {
       return;
     }
-    // Failed to start the Ethernet network, probably not present of wrong parameters.
-    // So set the runtime active medium to WiFi to try connecting to WiFi or at least start the AP.
-    setNetworkMedium(NetworkMedium_t::WIFI);
   }
 #endif
   // Failed to start the Ethernet network, probably not present of wrong parameters.
@@ -296,9 +351,7 @@ MAC_address NetworkMacAddress() {
     return ETHMacAddress();
   }
   #endif
-  MAC_address mac;
-  WiFi.macAddress(mac.mac);
-  return mac;
+  return WifiSTAmacAddress();
 }
 
 String NetworkGetHostname() {
@@ -387,7 +440,11 @@ void CheckRunningServices() {
     node_time.initTime();
   }
 #if FEATURE_SET_WIFI_TX_PWR
-  if (active_network_medium == NetworkMedium_t::WIFI) 
+  if (active_network_medium == NetworkMedium_t::WIFI 
+  #ifdef USES_ESPEASY_NOW
+      || active_network_medium == NetworkMedium_t::ESPEasyNOW_only
+  #endif
+  ) 
   {
     SetWiFiTXpower();
   }
@@ -423,4 +480,21 @@ uint8_t EthLinkSpeed()
   }
   return 0;
 }
+
+
+void stop_eth_dhcps() {
+# if ESP_IDF_VERSION_MAJOR<5
+  esp_err_t err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_ETH);
+  if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+/*
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("ETH   : DHCP server could not be stopped! Error: ");
+      log += err;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+*/
+  }
+#endif
+}
+
 #endif

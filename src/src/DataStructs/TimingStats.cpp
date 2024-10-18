@@ -275,6 +275,18 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::NTP_FAIL:                   return F("NTP Fail");
     case TimingStatsElements::SYSTIME_UPDATED:            return F("Systime Set");
     case TimingStatsElements::C018_AIR_TIME:              return F("C018 LoRa TTN - Air Time");
+
+#ifdef USES_ESPEASY_NOW
+    case TimingStatsElements::HANDLE_ESPEASY_NOW_LOOP:   return F(ESPEASY_NOW_NAME " handle received message");
+    case TimingStatsElements::EXPIRED_ESPEASY_NOW_LOOP:  return F(ESPEASY_NOW_NAME " incomplete expired");
+    case TimingStatsElements::INVALID_ESPEASY_NOW_LOOP:  return F(ESPEASY_NOW_NAME " incomplete invalid");
+    case TimingStatsElements::RECEIVE_ESPEASY_NOW_LOOP:  return F(ESPEASY_NOW_NAME " onReceive()");
+    case TimingStatsElements::ESPEASY_NOW_SEND_MSG_SUC:  return F(ESPEASY_NOW_NAME " send Message Success");
+    case TimingStatsElements::ESPEASY_NOW_SEND_MSG_FAIL: return F(ESPEASY_NOW_NAME " send Message Fail");
+    case TimingStatsElements::ESPEASY_NOW_SEND_PCKT:     return F(ESPEASY_NOW_NAME " send Packet");
+    case TimingStatsElements::ESPEASY_NOW_DEDUP_LOOP:    return F(ESPEASY_NOW_NAME " DuplicateCheck loop");
+#endif
+
 #ifdef LIMIT_BUILD_SIZE
     default: break;
 #else

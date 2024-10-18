@@ -33,6 +33,9 @@ void ControllerDelayHandlerStruct::cacheControllerSettings(const ControllerSetti
   must_check_reply       = settings.MustCheckReply;
   deduplicate            = settings.deduplicate();
   useLocalSystemTime     = settings.useLocalSystemTime();
+#ifdef USES_ESPEASY_NOW
+  enableESPEasyNowFallback = settings.enableESPEasyNowFallback();
+#endif
 
   if (settings.allowExpire()) {
     expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
@@ -62,14 +65,16 @@ bool ControllerDelayHandlerStruct::readyToProcess(const Queue_element_base& elem
     return false;
   }
 
-  if (getProtocolStruct(protocolIndex).needsNetwork) {
+  if (!enableESPEasyNowFallback && getProtocolStruct(protocolIndex).needsNetwork) {
     return NetworkConnected(10);
   }
   return true;
 }
 
 bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) const {
-  if (sendQueue.size() >= max_queue_depth) { return true; }
+  if (sendQueue.size() >= max_queue_depth) { 
+    return true; 
+  }
 
   // Number of elements is not exceeding the limit, check memory
   int freeHeap = FreeMem();
@@ -95,7 +100,7 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
   }
 #ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Controller-");
     log += controller_idx + 1;
     log += F(" : Memory used: ");
@@ -115,13 +120,13 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
 bool ControllerDelayHandlerStruct::isDuplicate(const Queue_element_base& element) const {
   // Some controllers may receive duplicate messages, due to lost acknowledgement
   // This is actually the same message, so this should not be processed.
-  if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
+  if (!unitMessageRouteInfo_map.isNew(element.getMessageRouteInfo())) {
     return true;
   }
 
   // The unit message count is still stored to make sure a new one with the same count
   // is considered a duplicate, even when the queue is empty.
-  unitLastMessageCount.add(element.getUnitMessageCount());
+  unitMessageRouteInfo_map.add(element.getMessageRouteInfo());
 
   // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
   if (deduplicate && !sendQueue.empty()) {
@@ -267,7 +272,7 @@ void ControllerDelayHandlerStruct::process(
 
   if (element == nullptr) { return; }
 
-  if (readyToProcess(*element)) {
+  if (enableESPEasyNowFallback || readyToProcess(*element)) {
     MakeControllerSettings(ControllerSettings);
 
     if (AllocatedControllerSettings()) {

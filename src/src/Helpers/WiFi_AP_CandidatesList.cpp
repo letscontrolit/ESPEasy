@@ -23,6 +23,12 @@
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
 #define WIFI_CREDENTIALS_FALLBACK_SSID_INDEX 5
 
+
+#ifdef USES_ESPEASY_NOW
+#define ESPEASY_NOW_TMP_SSID       "ESPEASY_NOW"
+#define ESPEASY_NOW_TMP_PASSPHRASE "random_passphrase"
+#endif
+
 WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   known.clear();
   candidates.clear();
@@ -280,7 +286,6 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
   return (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
 }
 
-
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   // Make sure list operations are not done on the 2nd heap
   # ifdef USE_SECOND_HEAP
@@ -529,8 +534,6 @@ bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& k
   }
 
   // TODO TD-er: Read other credentials from extra file.
-
-
 
   // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
   return true;

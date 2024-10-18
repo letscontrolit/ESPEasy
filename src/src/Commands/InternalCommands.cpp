@@ -13,6 +13,7 @@
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
 #include "../Commands/Diagnostic.h"
+#include "../Commands/ESPEasy_Now_cmd.h"
 #include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
 #include "../Commands/InternalCommands_decoder.h"
@@ -255,6 +256,7 @@ bool InternalCommands::executeInternalCommand()
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
+
   switch (cmd) {
     case ESPEasy_cmd_e::accessinfo:                 COMMAND_CASE_A(Command_AccessInfo_Ls,       0); // Network Command
     case ESPEasy_cmd_e::asyncevent:                 COMMAND_CASE_A(Command_Rules_Async_Events, -1); // Rule.h
@@ -303,6 +305,10 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::ethwifimode:                COMMAND_CASE_R(Command_ETH_Wifi_Mode,  1);               // Network Command
 #endif // FEATURE_ETHERNET
     case ESPEasy_cmd_e::erasesdkwifi:               COMMAND_CASE_R(Command_WiFi_Erase,     0);               // WiFi.h
+#ifdef USES_ESPEASY_NOW
+    case ESPEasy_cmd_e::espeasynowdisable:          COMMAND_CASE_R(Command_ESPEasy_Now_Disable, 0);          // ESPEasy_Now_cmd.h
+    case ESPEasy_cmd_e::espeasynowenable:           COMMAND_CASE_R(Command_ESPEasy_Now_Enable,  0);          // ESPEasy_Now_cmd.h
+#endif
     case ESPEasy_cmd_e::event:                      COMMAND_CASE_A(Command_Rules_Events,  -1);               // Rule.h
     case ESPEasy_cmd_e::executerules:               COMMAND_CASE_A(Command_Rules_Execute, -1);               // Rule.h
     case ESPEasy_cmd_e::factoryreset:               COMMAND_CASE_R(Command_Settings_FactoryReset, 0);        // Settings.h

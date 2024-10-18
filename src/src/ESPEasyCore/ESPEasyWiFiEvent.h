@@ -62,6 +62,10 @@ void onConnectedAPmode(const WiFiEventSoftAPModeStationConnected& event);
 
 void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event);
 
+#ifdef USES_ESPEASY_NOW
+void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event);
+#endif
+
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event);
 
 #if FEATURE_ESP8266_DIRECT_WIFI_SCAN

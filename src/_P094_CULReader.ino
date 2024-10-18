@@ -447,6 +447,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
+
 #ifdef USES_ESPEASY_NOW
     case PLUGIN_FILTEROUT_CONTROLLER_DATA:
     {
@@ -484,6 +485,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received, const S
 
   mBusPacket_t packet;
   bool res = P094_data->parsePacket(received, packet);
+
 
   # ifdef ESP8266
 

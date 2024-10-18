@@ -95,7 +95,25 @@ void handle_sysvars() {
     };
     addSysVar_enum_html(vars, NR_ELEMENTS(vars));
   }
-  # if FEATURE_ETHERNET
+
+#ifdef USES_ESPEASY_NOW
+  addTableSeparator(F(ESPEASY_NOW_NAME), 3, 3);
+  {
+    const SystemVariables::Enum vars[] = {
+
+      SystemVariables::ESPEASY_NOW_ENABLED,
+      SystemVariables::ESPEASY_NOW_CHANNEL,
+      SystemVariables::ESPEASY_NOW_FORCED_CHANNEL,
+      SystemVariables::ESPEASY_NOW_MQTT,
+      SystemVariables::ESPEASY_NOW_DISTANCE
+    };
+    addSysVar_enum_html(vars, NR_ELEMENTS(vars));
+  }
+      
+#endif
+
+  
+# if FEATURE_ETHERNET
   addTableSeparator(F("Ethernet"), 3, 3);
   {
     const SystemVariables::Enum vars[] = {

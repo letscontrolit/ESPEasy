@@ -5,6 +5,7 @@
 #endif // if FEATURE_ETHERNET
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
@@ -18,6 +19,7 @@
 #include "../Globals/ESPEasy_Console.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
+#include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 
 #if FEATURE_ETHERNET
@@ -25,6 +27,11 @@
 #endif
 
 #include "../Globals/NetworkState.h"
+
+#if FEATURE_ESPEASY_P2P
+#include "../Globals/Nodes.h"
+#endif
+
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
@@ -266,9 +273,19 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
-    #if FEATURE_INTERNAL_TEMPERATURE
+
+#ifdef USES_ESPEASY_NOW
+    case LabelType::ESPEASY_NOW_ENABLED:        return F(ESPEASY_NOW_NAME " Enabled");
+    case LabelType::ESPEASY_NOW_CHANNEL:        return F(ESPEASY_NOW_NAME " Channel");
+    case LabelType::ESPEASY_NOW_MQTT:           return F(ESPEASY_NOW_NAME " Route to MQTT broker");
+    case LabelType::ESPEASY_NOW_DISTANCE:       return F(ESPEASY_NOW_NAME " Distance");
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW:   return F(ESPEASY_NOW_NAME " Temporary disabled");
+    case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return F(ESPEASY_NOW_NAME " Forced Channel");
+#endif
+
+#if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:   return F("Internal Temperature");
-    #endif // if FEATURE_INTERNAL_TEMPERATURE
+#endif // if FEATURE_INTERNAL_TEMPERATURE
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
@@ -604,6 +621,17 @@ String getValue(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
+
+#ifdef USES_ESPEASY_NOW
+    case LabelType::ESPEASY_NOW_ENABLED:        return jsonBool(Settings.UseESPEasyNow());
+    case LabelType::TEMP_DISABLE_ESPEASY_NOW:   return jsonBool(temp_disable_EspEasy_now_timer != 0);
+    case LabelType::ESPEASY_NOW_FORCED_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
+    case LabelType::ESPEASY_NOW_CHANNEL:        return String(Nodes.getESPEasyNOW_channel());  // FIXME TD-er: Must send intended channel and what to do when mesh is off?
+    case LabelType::ESPEASY_NOW_MQTT:           return jsonBool(Nodes.getDistance() < 255); // FIXME TD-er: update this when definition of "distance" no longer reflects presence of connected MQTT broker
+    case LabelType::ESPEASY_NOW_DISTANCE:       return String(Nodes.getDistance());
+#endif
+
+
 #if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return formatIP(NetworkLocalIP());
     case LabelType::ETH_IP_SUBNET:          return formatIP(NetworkSubnetMask());

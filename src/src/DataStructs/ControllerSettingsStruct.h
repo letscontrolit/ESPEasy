@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
 #define DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 /*********************************************************************************************\
 * ControllerSettingsStruct definition
 \*********************************************************************************************/
@@ -103,6 +105,9 @@ struct ControllerSettingsStruct
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
     CONTROLLER_SEND_BINARY,
+#ifdef USES_ESPEASY_NOW
+    CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK,
+#endif
 
     // Keep this as last, is used to loop over all parameters
     CONTROLLER_ENABLED
@@ -161,6 +166,9 @@ struct ControllerSettingsStruct
   bool         sendBinary() const { return VariousBits1.sendBinary; }
   void         sendBinary(bool value) { VariousBits1.sendBinary = value; }
 
+  bool         enableESPEasyNowFallback() const { return VariousBits1.enableESPEasyNowFallback; }
+  void         enableESPEasyNowFallback(bool value) { VariousBits1.enableESPEasyNowFallback = value; }
+
   bool         allowExpire() const { return VariousBits1.allowExpire; }
   void         allowExpire(bool value) { VariousBits1.allowExpire = value; }
 
@@ -209,7 +217,7 @@ struct ControllerSettingsStruct
     uint32_t mqtt_retainFlag                  : 1; // Bit 05
     uint32_t useExtendedCredentials           : 1; // Bit 06
     uint32_t sendBinary                       : 1; // Bit 07
-    uint32_t unused_08                        : 1; // Bit 08
+    uint32_t enableESPEasyNowFallback         : 1; // Bit 08
     uint32_t allowExpire                      : 1; // Bit 09
     uint32_t deduplicate                      : 1; // Bit 10
     uint32_t useLocalSystemTime               : 1; // Bit 11
@@ -231,6 +239,7 @@ struct ControllerSettingsStruct
     uint32_t unused_30                        : 1; // Bit 30
     uint32_t unused_31                        : 1; // Bit 31
   }    VariousBits1;
+  
   char ClientID[65];                                 // Used to define the Client ID used by the controller
 
 private:
