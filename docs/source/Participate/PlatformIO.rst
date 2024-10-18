@@ -162,6 +162,80 @@ All builds will be made in a directory with the same name as the environment use
 
 Once the build is successful, the .bin file(s) and .bin.gz file (where applicable) are copied to the ``build_output/bin`` folder.
 
+VS-Code with WSL2
+=================
+
+Building ESPEasy on Windows has become more and more tedious due to various issues:
+
+* Maximum path lengh limits
+* Maximum command line length limits
+* Extremely long build times
+
+All these mainly apply to the latest ESP32-xx builds using ESP-IDF5.x.
+
+On a beefy desktop PC, like an AMD Ryzen9 with 12 CPU cores, building a ``MAX`` build for ESP32-S3 takes about 10 - 15 minutes on Windows.
+The same build when using WSL2 via VS-Code takes only 2 minutes to build.
+
+
+Installing WSL2
+---------------
+
+
+Linking USB serial adapter to WSL2
+----------------------------------
+
+In short, a specific USB device must first be shared (using ``usbipd bind --busid <busid>`` ) and thus made unavailable from Windows.
+After the USB device is 'bound' (shared), it must be attached to a specific wsl instance.
+
+N.B. this must be repeated after a device was unplugged and replugged.
+
+The required steps are described `here <https://learn.microsoft.com/en-us/windows/wsl/connect-usb#attach-a-usb-device>`_
+However since this is rather tedious and error prone, it is strongly adviced to use a GUI tool like `WSL USB Manager <https://gitlab.com/alelec/wsl-usb-gui>`_ to perform these steps.
+
+After attaching an USB device to a WSL instance, it is best to check whether it was found using `dmesg` via the command line on WSL2.
+
+If only an USB device was detected but no `/dev/ttyUSBxx` was assigned, then a modprobe call is needed:
+
+* ``sudo modprobe usbserial`` - Probably needed for any USB to serial adapter
+* ``sudo modprobe ch341`` - For CH340/CH341 USB to serial chips (rectangular form chip)
+* ``sudo modprobe cp210x`` - For FTDI CP210x USB to serial chips (small square form factor)
+* ``sudo modprobe ftdi_sio`` - For FTDI USB to serial chips with multiple serial ports like the FTDI4232H which has 4 serial ports.
+
+After calling these 'modprobe' commands, the result can be verified using ``lsmod`` and rechecking ``dmesg`` to see which ``/dev/ttyUSBxx`` ports were assigned.
+
+The ownerchip and permissions of these ``/dev/ttyUSBxx`` are probably set like this:
+
+.. highlight::sh
+
+.. code-block::
+    
+    ll /dev/ttyUSB0
+    crw------- 1 root root 188, 0 Oct 18 22:02 /dev/ttyUSB0
+
+The simplest way to get this to work without constantly using ``sudo`` or run as ``root`` is to change permissions like this:
+
+.. highlight::sh
+
+.. code-block::
+    
+    sudo chmod 666 /dev/ttyUSB0
+    ll /dev/ttyUSB0
+    crw-rw-rw- 1 root root 188, 0 Oct 18 22:02 /dev/ttyUSB0
+
+.. note:: This is not the best way from a security point of view.
+
+A probably more preferred method is to change ownership of the device to ``dialout`` group:
+
+.. highlight::sh
+
+.. code-block::
+
+    sudo adduser $(whoami) dialout
+    sudo chown root.dialout /dev/ttyUSB0
+    sudo chmod 660 /dev/ttyUSB0
+    ll /dev/ttyUSB0
+    crw-rw---- 1 root dialout 188, 0 Oct 18 22:14 /dev/ttyUSB0
+
 
 
 Upload to ESP
@@ -447,7 +521,7 @@ After the commit is completed, more commits can be added, if desired. It is good
 
 To have the commit(s) to be presented as a pull request, they must be published, and the easiest way to accomplish that is to use the Publish Changes button in VSCode:
 
-.. image:: VSCode_Publish_changes.png
+.. image:: VSCode_publish_changes.png
     :alt: VSCode publish change button
 
 After clicking that button, you have to select the source the changes should be published to. As we don't have (direct) write access to the upstream ESPEasy repository, we can only publish to the 'origin' (git terminology), our own fork of the repository, so that option should be selected by clicking it, or pressing the Enter key:
