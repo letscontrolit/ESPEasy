@@ -1451,7 +1451,6 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-
 #ifdef CONTROLLER_SET_STABLE
   #if !FEATURE_NO_HTTP_CLIENT
     #define USES_C001   // Domoticz HTTP
@@ -1617,6 +1616,8 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
     #define USES_P129   // 74HC165 Input shiftregisters
+    #define USES_P130   // Current Sensor Irms - ADS1015
+    #define USES_P133   // LTR390 UV
     #define USES_P135   // SCD4x
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
     #define USES_P133     // LTR390 UV
@@ -2169,7 +2170,7 @@ To create/register a plugin, you have to :
 	//#define USES_P124	// Ventus_W266_RFM69
 	#define USES_P125	// ArduCAM
 	#define USES_P127	// Teleinfo
-	#define USES_P130	// VEML6075
+	#define USES_P130	// [Irms - ADS1015](https://github.com/letscontrolit/ESPEasy/issues/3839)
 	#define USES_P131	// SHT3X
 	#define USES_P133	// VL53L0X
 	#define USES_P141	// LedStrip

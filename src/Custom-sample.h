@@ -508,7 +508,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P128_USES_RBG
 //   #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 // #define USES_P129   // 74HC165 Input shiftregisters
-
+// #define USES_P130   // Current Sensor Irms - ADS1015
 // #define USES_P131   // NeoPixel Matrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
