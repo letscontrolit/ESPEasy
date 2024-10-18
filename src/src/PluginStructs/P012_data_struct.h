@@ -7,19 +7,27 @@
 
 # include <LiquidCrystal_I2C.h>
 
+enum class P012_DisplaySize_e : uint8_t {
+  LCD_2x16 = 1u, // Value is stored in user settings, so don't change!
+  LCD_4x20,
+  LCD_2x16_ST7032,
+};
+
 enum class P012_splashState_e : uint8_t {
   SplashCleared      = 0u,
   SplashTimerRunning = 1u,
   SplashInitial      = 2u
 };
 
+const __FlashStringHelper* toString(P012_DisplaySize_e display);
+
 struct P012_data_struct : public PluginTaskData_base {
-  P012_data_struct(uint8_t addr,
-                   uint8_t lcd_size,
-                   uint8_t mode,
-                   uint8_t timer);
-  P012_data_struct()          = delete;
-  virtual ~P012_data_struct() = default;
+  P012_data_struct(uint8_t            addr,
+                   P012_DisplaySize_e lcd_size,
+                   uint8_t            mode,
+                   uint8_t            timer);
+  P012_data_struct() = delete;
+  virtual ~P012_data_struct();
 
   void init();
 
@@ -36,8 +44,11 @@ struct P012_data_struct : public PluginTaskData_base {
 
   void   createCustomChars();
 
+  bool   isValid() {
+    return nullptr != lcd;
+  }
 
-  LiquidCrystal_I2C  lcd;
+  LiquidCrystal_I2C *lcd             = nullptr;
   int                Plugin_012_cols = 16;
   int                Plugin_012_rows = 2;
   int                Plugin_012_mode = 1;

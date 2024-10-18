@@ -11,6 +11,8 @@
 
 /** Changelog:
  * 2023-12-26 tonhuisman: Clear the splash from the display after 5 seconds if not already overwritten
+ * 2023-11-21 tonhuisman: Add support for contrast for ST7032 based displays
+ * 2023-11-18 tonhuisman: Trying to include support for Midas displays MD21605B6W-FTPLWI3 ST7032 (16x2 at I2C 0x3E)
  * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
  * 2023-03: First changelog added, older changes not logged
  */
@@ -96,19 +98,24 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *options2[] = {
-          F("2 x 16"),
-          F("4 x 20"),
+          toString(P012_DisplaySize_e::LCD_2x16),
+          toString(P012_DisplaySize_e::LCD_4x20),
+          toString(P012_DisplaySize_e::LCD_2x16_ST7032),
         };
-        const int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Display Size"), F("psize"), 2, options2, optionValues2, P012_SIZE);
+        const int optionValues2[] = {
+          static_cast<int>(P012_DisplaySize_e::LCD_2x16),
+          static_cast<int>(P012_DisplaySize_e::LCD_4x20),
+          static_cast<int>(P012_DisplaySize_e::LCD_2x16_ST7032),
+        };
+        constexpr int optionCount2 = NR_ELEMENTS(optionValues2);
+        addFormSelector(F("Display Size"), F("psize"), optionCount2, options2, optionValues2, P012_SIZE);
       }
 
       {
         String strings[P12_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
 
-        for (int varNr = 0; varNr < P12_Nlines; varNr++)
-        {
+        for (int varNr = 0; varNr < P12_Nlines; ++varNr) {
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
         }
       }
@@ -126,8 +133,9 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           F("Truncate exceeding message"),
           F("Clear then truncate exceeding message"),
         };
-        const int optionValues3[] = { 0, 1, 2 };
-        addFormSelector(F("LCD command Mode"), F("pmode"), 3, options3, optionValues3, P012_MODE);
+        const int optionValues3[]  = { 0, 1, 2 };
+        constexpr int optionCount3 = NR_ELEMENTS(optionValues3);
+        addFormSelector(F("LCD command Mode"), F("pmode"), optionCount3, options3, optionValues3, P012_MODE);
       }
 
       success = true;
@@ -146,8 +154,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       char   deviceTemplate[P12_Nlines][P12_Nchars] = {};
       String error;
 
-      for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)
-      {
+      for (uint8_t varNr = 0; varNr < P12_Nlines; ++varNr) {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P12_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
@@ -163,7 +170,10 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P012_data_struct(P012_I2C_ADDR, P012_SIZE, P012_MODE, P012_TIMER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P012_data_struct(P012_I2C_ADDR,
+                                                                               static_cast<P012_DisplaySize_e>(P012_SIZE),
+                                                                               P012_MODE,
+                                                                               P012_TIMER));
       P012_data_struct *P012_data =
         static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -181,10 +191,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (validGpio(CONFIG_PIN3))
-      {
-        if (digitalRead(CONFIG_PIN3) == P012_INVERSE_BTN)
-        {
+      if (validGpio(CONFIG_PIN3)) {
+        if (digitalRead(CONFIG_PIN3) == P012_INVERSE_BTN) {
           P012_data_struct *P012_data =
             static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -230,13 +238,11 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
             break;
         }
 
-        for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
-        {
+        for (uint8_t x = 0; x < P012_data->Plugin_012_rows; ++x) {
           String tmpString = deviceTemplate[x];
 
-          if (tmpString.length())
-          {
-            String newString = P012_data->P012_parseTemplate(tmpString, P012_data->Plugin_012_cols);
+          if (!tmpString.isEmpty()) {
+            const String newString = P012_data->P012_parseTemplate(tmpString, P012_data->Plugin_012_cols);
             P012_data->lcdWrite(newString, 0, x);
           }
         }
@@ -250,37 +256,44 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       P012_data_struct *P012_data =
         static_cast<P012_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P012_data) {
-        String cmd = parseString(string, 1);
+      if ((nullptr != P012_data) && P012_data->isValid()) {
+        const String cmd = parseString(string, 1);
 
-        if (cmd.equalsIgnoreCase(F("LCDCMD")))
-        {
-          success = true;
-          String arg1 = parseString(string, 2);
+        if (equals(cmd, F("lcdcmd"))) {
+          const String arg1 = parseString(string, 2);
 
-          if (arg1.equalsIgnoreCase(F("Off"))) {
-            P012_data->lcd.noBacklight();
+          if (equals(arg1, F("off"))) {
+            P012_data->lcd->noBacklight();
+            success = true;
           }
-          else if (arg1.equalsIgnoreCase(F("On"))) {
-            P012_data->lcd.backlight();
+          else if (equals(arg1, F("on"))) {
+            P012_data->lcd->backlight();
+            success = true;
           }
-          else if (arg1.equalsIgnoreCase(F("Clear"))) {
-            P012_data->lcd.clear();
+          else if (equals(arg1, F("clear"))) {
+            P012_data->lcd->clear();
             P012_data->splashState = P012_splashState_e::SplashCleared;
+            success                = true;
+          }
+          else if (equals(arg1, F("contrast")) &&
+                   (P012_DisplaySize_e::LCD_2x16_ST7032 == static_cast<P012_DisplaySize_e>(P012_SIZE)) &&
+                   (event->Par2 >= LCD_CONTRAST_MIN) &&
+                   (event->Par2 <= LCD_CONTRAST_MAX)) {
+            P012_data->lcd->setContrast(event->Par2);
+            success = true;
           }
         }
-        else if (cmd.equalsIgnoreCase(F("LCD")))
-        {
+        else if (equals(cmd, F("lcd"))) {
           success = true;
-          int colPos  = event->Par2 - 1;
-          int rowPos  = event->Par1 - 1;
-          String text = parseStringKeepCaseNoTrim(string, 4);
+          const int colPos = event->Par2 - 1;
+          const int rowPos = event->Par1 - 1;
+          String    text   = parseStringKeepCaseNoTrim(string, 4);
           text = P012_data->P012_parseTemplate(text, P012_data->Plugin_012_cols);
 
           P012_data->lcdWrite(text, colPos, rowPos);
         }
-        break;
       }
+      break;
     }
   }
   return success;
