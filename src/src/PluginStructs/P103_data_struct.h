@@ -51,12 +51,13 @@ enum class AtlasEZO_Sensors_e : uint8_t {
 
 # define P103_FIXED_TEMP_VALUE          20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
 
+// Forward declarations
 const __FlashStringHelper* toString(AtlasEZO_Sensors_e sensor);
-
+const __FlashStringHelper* P103_statusToString(char status);
 
 bool                       P103_send_I2C_command(uint8_t       I2Caddress,
                                                  const String& cmd,
-                                                 char         *sensordata); // Forward declarations
+                                                 char         *sensordata);
 
 void P103_addDisabler();
 void P103_html_color_message(const __FlashStringHelper *color,
@@ -85,9 +86,9 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
                                     uint8_t             nrDecimals,
                                     float               stepsize);
 bool P103_getHUMOutputOptions(struct EventStruct *event,
-                               bool              & _HUMhasHum,
-                               bool              & _HUMhasTemp,
-                               bool              & _HUMhasDew);
+                              bool              & _HUMhasHum,
+                              bool              & _HUMhasTemp,
+                              bool              & _HUMhasDew);
 
 #endif  // ifdef USED_P103
 #endif  // ifndef PLUGINSTRUCTS_P103_DATA_STRUCT_H

@@ -16,6 +16,7 @@
 // only i2c mode is supported
 
 /** Changelog:
+ * 2024-10-19 tonhuisman: Fix javascript errors, some code improvements
  * 2023-10-23 tonhuisman: Handle EZO-HUM firmware issue of including 'Dew,' in the result values
  * // TODO Rewrite plugin using PluginDataStruct so it will allow proper async handling of commands requiring 300 msec delay before reading
  *         responses
@@ -61,7 +62,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
   };
   constexpr int i2c_nr_elements = NR_ELEMENTS(i2cAddressValues);
 
-  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE]{};
 
   bool _HUMhasHum  = true; // EZO-HUM options (& defaults)
   bool _HUMhasTemp = false;
@@ -71,17 +72,14 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_103;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      Device[++deviceCount].Number       = PLUGIN_ID_103;
+      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].ValueCount     = 2;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
       break;
     }
 
@@ -248,34 +246,16 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         addRowLabel(F("Board status"));
         addHtml(boardStatus);
 
-        addRowLabel(F("Board restart code"));
-
         # ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_DEBUG, boardStatus);
+        addLog(LOG_LEVEL_DEBUG, concat(F("Board status: "), boardStatus));
         # endif // ifndef BUILD_NO_DEBUG
 
-        // FIXME tonhuisman: To improve
+        addRowLabel(F("Board restart code"));
+
         const String stat = parseStringKeepCase(boardStatus, 2);
 
         if (!stat.isEmpty()) {
-          switch (stat[0]) {
-            case 'P':
-              addHtml(F("powered off"));
-              break;
-            case 'S':
-              addHtml(F("software reset"));
-              break;
-            case 'B':
-              addHtml(F("brown out"));
-              break;
-            case 'W':
-              addHtml(F("watch dog"));
-              break;
-            case 'U':
-            default:
-              addHtml(F("unknown"));
-              break;
-          }
+          addHtml(P103_statusToString(stat[0]));
         }
 
         addRowLabel(F("Board voltage"));
@@ -283,7 +263,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         addUnit('V');
 
         addRowLabel(F("Sensor Data"));
-        addHtmlFloat(UserVar[event->BaseVarIndex]);
+        addHtmlFloat(UserVar.getFloat(event->TaskIndex, 0));
 
         switch (board_type) {
           case AtlasEZO_Sensors_e::PH:
@@ -298,8 +278,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           case AtlasEZO_Sensors_e::DO:
             addUnit(F("mg/L"));
             break;
-          case AtlasEZO_Sensors_e::HUM:                        // TODO Show Temp & Dew point also
-          {
+          case AtlasEZO_Sensors_e::HUM:
             addUnit(F("%RH"));
             memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
 
@@ -309,24 +288,21 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
                                          _HUMhasDew)) {
               if (_HUMhasTemp) {
                 addRowLabel(F("Temperature"));
-                addHtmlFloat(UserVar[event->BaseVarIndex + 2]);
+                addHtmlFloat(UserVar.getFloat(event->TaskIndex, 2));
                 addUnit(F("&deg;C"));
               }
 
               if (_HUMhasDew) {
                 addRowLabel(F("Dew point"));
-                addHtmlFloat(UserVar[event->BaseVarIndex + 3]);
+                addHtmlFloat(UserVar.getFloat(event->TaskIndex, 3));
                 addUnit(F("&deg;C"));
               }
             }
             break;
-          }
           # if P103_USE_RTD
           case AtlasEZO_Sensors_e::RTD:
-          {
             addUnit(F("&deg;C")); // TODO Read current scale (C/F/K) from device, show flow
             break;
-          }
           # endif // if P103_USE_RTD
           # if P103_USE_FLOW
           case AtlasEZO_Sensors_e::FLOW:
@@ -418,11 +394,11 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
         ESPEASY_RULES_FLOAT_TYPE value{};
 
         addFormSubHeader(F("Temperature compensation"));
-        char deviceTemperatureTemplate[40] = { 0 };
+        char deviceTemperatureTemplate[40]{};
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
         ZERO_TERMINATE(deviceTemperatureTemplate);
         addFormTextBox(F("Temperature "), F("_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
-        addFormNote(F("You can use a formula and idealy refer to a temp sensor"
+        addFormNote(F("You can use a formula and ideally refer to a temp sensor"
                       # ifndef LIMIT_BUILD_SIZE
                       " (directly, via ESPEasyP2P or MQTT import),"
                       " e.g. '[Pool#Temperature]'. If you don't have a sensor, you could"
@@ -463,20 +439,15 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       P103_SENSOR_VERSION = getFormItemFloat(F("sensorVersion"));
 
-      P103_STATUS_LED = isFormItemChecked(F("status_led"));
+      P103_STATUS_LED = isFormItemChecked(F("status_led")) ? 1 : 0;
 
-      if (P103_STATUS_LED) {
-        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,1"), boarddata);
-      } else {
-        P103_send_I2C_command(P103_I2C_ADDRESS, F("L,0"), boarddata);
-      }
+      P103_send_I2C_command(P103_I2C_ADDRESS, concat(F("L,"), P103_STATUS_LED), boarddata);
 
       if ((board_type == AtlasEZO_Sensors_e::EC) && isFormItemChecked(F("en_set_probe_type"))) {
         # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
         # endif // ifndef BUILD_NO_DEBUG
-        String probeType(F("K,"));
-        probeType += webArg(F("ec_probe_type"));
+        const String probeType = concat(F("K,"), webArg(F("ec_probe_type")));
         memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
         P103_send_I2C_command(P103_I2C_ADDRESS, probeType, boarddata);
       }
@@ -532,8 +503,8 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       if ((AtlasEZO_Sensors_e::PH == board_type) ||
           (AtlasEZO_Sensors_e::EC == board_type) ||
           (AtlasEZO_Sensors_e::DO == board_type)) {
-        char   deviceTemperatureTemplate[40] = { 0 };
-        String tmpString                     = webArg(F("_template"));
+        char   deviceTemperatureTemplate[40]{};
+        String tmpString = webArg(F("_template"));
         safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
         ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 
@@ -581,12 +552,12 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
           (AtlasEZO_Sensors_e::DO == board_type))
       {
         // first set the temperature of reading
-        char deviceTemperatureTemplate[40] = { 0 };
+        char deviceTemperatureTemplate[40]{};
         LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
         ZERO_TERMINATE(deviceTemperatureTemplate);
 
         String deviceTemperatureTemplateString(deviceTemperatureTemplate);
-        String temperatureString(parseTemplate(deviceTemperatureTemplateString));
+        const String temperatureString(parseTemplate(deviceTemperatureTemplateString));
 
         readCommand = F("RT,");
         ESPEASY_RULES_FLOAT_TYPE temperatureReading{};
@@ -610,7 +581,6 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // ok, now we can read the sensor data
-      // char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
       memset(boarddata, 0, ATLAS_EZO_RETURN_ARRAY_SIZE); // Cleanup
       UserVar.setFloat(event->TaskIndex, 0, -1);
 
