@@ -168,6 +168,10 @@ enum class ESPEasy_cmd_e : uint8_t {
   sdcard,
   sdremove,
 #endif // #if FEATURE_SD
+#if FEATURE_CAN
+  sendcan,
+  sendtocan,
+#endif
 #if FEATURE_ESPEASY_P2P
   sendto,
 #endif // #if FEATURE_ESPEASY_P2P
@@ -231,7 +235,6 @@ enum class ESPEasy_cmd_e : uint8_t {
   wdconfig,
   wdread,
 #endif // ifndef LIMIT_BUILD_SIZE
-
 
   NotMatched  // Keep as last one
 };

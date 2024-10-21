@@ -17,6 +17,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -81,6 +82,16 @@ void handle_hardware() {
 #endif
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
     #endif // if FEATURE_ETHERNET
+    #if FEATURE_CAN
+    // FIXME TD-er: Should this be in the global settings?
+    Settings.CAN_Rx_pin   = getFormItemInt(F("canrxpin"), -1);
+    Settings.CAN_Tx_pin   = getFormItemInt(F("cantxpin"), -1);
+    Settings.CAN_baudrate = getFormItemInt(F("canbaudrate"), DEFAULT_CAN_BAUDRATE);
+    Settings.CAN_node_id  = getFormItemInt(F("cannodeid"), 0);
+    if (!Settings.isCAN_valid()) {
+      error += F("User-defined CAN is not configured correctly!\n");
+    }
+    #endif
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -100,6 +111,9 @@ void handle_hardware() {
     if (error.isEmpty()) {
       // Apply I2C settings.
       initI2C();
+      #if FEATURE_CAN
+      initCAN();
+      #endif
     }
   }
 
@@ -227,6 +241,15 @@ void handle_hardware() {
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
+
+  #if FEATURE_CAN
+  addFormSubHeader(F("CAN Interface"));
+  addFormPinSelect(PinSelectPurpose::CAN, F("TX"),F("cantxpin"), Settings.CAN_Tx_pin);
+  addFormPinSelect(PinSelectPurpose::CAN, F("RX"),F("canrxpin"), Settings.CAN_Rx_pin);
+  addFormNumericBox(F("Baudrate"), F("canbaudrate"), Settings.CAN_baudrate, 50E3, 1000E3);
+  addUnit(F("Hz"));
+  addFormNumericBox(F("Node ID"), F("cannodeid"), Settings.CAN_node_id, 0, 0x7FF);
+  #endif
   
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));

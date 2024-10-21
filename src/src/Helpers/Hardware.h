@@ -85,6 +85,11 @@ int                        getCPU_MinFreqMHz();
 #endif // ifdef ESP32
 
 
+#if FEATURE_CAN
+// FIXME TD-er: Move to Hardware_CAN.h/.cpp
+void initCAN();
+#endif
+
 /*********************************************************************************************\
 * High entropy hardware random generator
 * Thanks to DigitalAlchemist

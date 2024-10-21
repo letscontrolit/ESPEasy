@@ -354,6 +354,9 @@ public:
     memcpy(&VariousBits_2, &value, sizeof(VariousBits_2));
   }
 
+  bool isCAN_valid() const;
+
+  bool isCAN_pin(int8_t pin) const;
 
   unsigned long PID = 0;
   int           Version = 0;
@@ -567,6 +570,15 @@ public:
   int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
   int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
   uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
+
+  long    CAN_baudrate = DEFAULT_CAN_BAUDRATE;
+  int     CAN_node_id  = 0;
+  uint8_t CAN_Tx_pin   = -1;
+  uint8_t CAN_Rx_pin   = -1;
+
+  // Added extra bytes which can be used for something else to make sure we're not having gaps in the settings
+  uint8_t unused_afterCAN1 = 0;
+  uint8_t unused_afterCAN2 = 0;
   
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 };

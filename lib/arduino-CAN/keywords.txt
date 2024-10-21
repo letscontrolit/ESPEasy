@@ -1,0 +1,49 @@
+#######################################
+# Syntax Coloring Map For CAN
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+CAN	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+
+beginPacket	KEYWORD2
+beginExtendedPacket	KEYWORD2
+endPacket	KEYWORD2
+
+parsePacket	KEYWORD2
+packetId	KEYWORD2
+packetExtended	KEYWORD2
+packetRtr	KEYWORD2
+packetDlc	KEYWORD2
+
+write	KEYWORD2
+
+available	KEYWORD2
+read	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+
+onReceive	KEYWORD2
+filter	KEYWORD2
+filterExtended	KEYWORD2
+loopback	KEYWORD2
+sleep	KEYWORD2
+wakeup	KEYWORD2
+
+setPins	KEYWORD2
+setSPIFrequency	KEYWORD2
+setClockFrequency	KEYWORD2
+dumpRegisters	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

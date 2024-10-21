@@ -1142,6 +1142,11 @@ To create/register a plugin, you have to :
     // FIXME TD-er: Should this be enabled on non-Custom builds???
     #define FEATURE_CUSTOM_PROVISIONING 1
 
+    #ifndef FEATURE_CAN
+      #define FEATURE_CAN 1
+    #endif
+
+
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -1469,7 +1474,6 @@ To create/register a plugin, you have to :
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
 #endif
-
 
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
@@ -3520,6 +3524,27 @@ To create/register a plugin, you have to :
 #endif
 #endif
 
+#ifdef FEATURE_CAN
+ #if FEATURE_CAN
+  #if defined(ESP8266) || defined(ESP32C2)|| defined(ESP32C3)|| defined(ESP32C6)|| defined(ESP32S2)|| defined(ESP32S3)
+   #undef FEATURE_CAN  // No HW support or massive changes needed in library
+   #define FEATURE_CAN 0
+  #endif
+ #endif
+#endif
+
+#ifndef FEATURE_CAN
+  #define FEATURE_CAN 0
+#endif
+#if FEATURE_CAN
+  #ifndef USES_C022 // CAN Controller
+    #define USE_C022
+  #endif
+  #ifndef USES_P174
+    #define USES_P174 // CAN Import plugin
+  #endif
+#endif
+
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins
   #ifdef USES_P038
@@ -3546,7 +3571,11 @@ To create/register a plugin, you have to :
 #endif
 
 
-  
+#if FEATURE_CAN
+  #define USES_C022 //CAN
+  #define USES_P174
+#endif
+
   
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
   #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)

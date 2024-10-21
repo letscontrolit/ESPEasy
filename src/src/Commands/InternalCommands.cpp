@@ -17,6 +17,9 @@
 #include "../Commands/HTTP.h"
 #include "../Commands/InternalCommands_decoder.h"
 #include "../Commands/i2c.h"
+#if FEATURE_CAN
+#include "../Commands/CAN.h"
+#endif
 
 #if FEATURE_MQTT
 # include "../Commands/MQTT.h"
@@ -473,7 +476,10 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::wifissid:                   COMMAND_CASE_R(Command_Wifi_SSID,       1);      // WiFi.h
     case ESPEasy_cmd_e::wifissid2:                  COMMAND_CASE_R(Command_Wifi_SSID2,      1);      // WiFi.h
     case ESPEasy_cmd_e::wifistamode:                COMMAND_CASE_R(Command_Wifi_STAMode,    0);      // WiFi.h
-
+#if FEATURE_CAN
+    case ESPEasy_cmd_e::sendcan:                    COMMAND_CASE_A(Command_CAN_SendCAN,    -1);      //CAN.h
+    case ESPEasy_cmd_e::sendtocan:                  COMMAND_CASE_A(Command_CAN_SendToCAN,  -1);      //CAN.h
+#endif
 
     case ESPEasy_cmd_e::NotMatched:
       return false;
