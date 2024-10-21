@@ -193,9 +193,7 @@ void PluginStats_array::pushPluginStatsValues(
 
         while (isSame && i < valueCount) {
           if (_plugin_stats[i] != nullptr) {
-            const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
-
-            if (!_plugin_stats[i]->matchesLastTwoEntries(value)) {
+            if (!_plugin_stats[i]->matchesLastTwoEntries(UserVar.getAsString(event->TaskIndex, i, sensorType))) {
               isSame = false;
             }
           }
@@ -214,7 +212,7 @@ void PluginStats_array::pushPluginStatsValues(
 
       for (size_t i = 0; i < valueCount; ++i) {
         if (_plugin_stats[i] != nullptr) {
-          const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
+          const ESPEASY_RULES_FLOAT_TYPE value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
           _plugin_stats[i]->push(value);
 
           if (trackPeaks) {
