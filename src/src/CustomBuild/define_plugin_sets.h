@@ -2751,10 +2751,10 @@ To create/register a plugin, you have to :
   #define FEATURE_SETTINGS_ARCHIVE  0
 
   #ifndef PLUGIN_BUILD_CUSTOM
-  #ifdef FEATURE_SERVO
-    #undef FEATURE_SERVO
-  #endif
-  #define FEATURE_SERVO 0
+  // #ifdef FEATURE_SERVO
+  //   #undef FEATURE_SERVO
+  // #endif
+  // #define FEATURE_SERVO 0
   #endif
   #ifdef FEATURE_RTTTL
     #undef FEATURE_RTTTL
@@ -3213,7 +3213,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_SERVO
-#define FEATURE_SERVO                         0
+#define FEATURE_SERVO                         1
 #endif
 
 #ifndef FEATURE_SETTINGS_ARCHIVE              

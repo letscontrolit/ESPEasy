@@ -23,6 +23,7 @@ const __FlashStringHelper* Plugin_082_valuename(P082_query value_nr, bool displa
     case P082_query::P082_QUERY_CHKSUM_FAIL: return displayString ? F("Checksum Fail")      : F("chksum_fail");
     case P082_query::P082_QUERY_DISTANCE:    return displayString ? F("Distance (ODO)")     : F("dist");
     case P082_query::P082_QUERY_DIST_REF:    return displayString ? F("Distance from Reference Point") : F("dist_ref");
+    case P082_query::P082_QUERY_COURSE:      return displayString ? F("Course (BeaRinG)")   : F("course");
     case P082_query::P082_NR_OUTPUT_OPTIONS: break;
   }
   return F("");

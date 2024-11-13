@@ -61,6 +61,7 @@ enum class P082_query : uint8_t {
   P082_QUERY_CHKSUM_FAIL = 9,
   P082_QUERY_DISTANCE    = 10,
   P082_QUERY_DIST_REF    = 11,
+  P082_QUERY_COURSE      = 12,
   P082_NR_OUTPUT_OPTIONS
 };
 

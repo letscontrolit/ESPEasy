@@ -435,6 +435,14 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
             # endif // ifndef BUILD_NO_DEBUG
             success = true;
           }
+
+          if (P082_data->gps->course.isUpdated()) {
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_COURSE), P082_data->gps->course.deg());
+            # ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("GPS: Course update."));
+            # endif // ifndef BUILD_NO_DEBUG
+            success = true;
+          }
         }
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SATVIS),      P082_data->gps->satellitesStats.nrSatsVisible());
         P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SATUSE),      P082_data->gps->satellitesStats.nrSatsTracked());

@@ -1,0 +1,71 @@
+#!/bin/bash
+PROG=$( basename $0 .sh )
+TMP="/tmp/${PROG}-$$/"
+
+[[ "$1" == "-r" ]] && REBOOTESP="Y" && shift 
+H="$1"; shift
+FILE="$1" 
+
+if [[ $# -lt 1 ]] || [[ ! -r "${FILE}" ]]
+then
+	echo "Usage: $PROG [-r] NameOrIP file [ file  ... ]"  >&2
+	exit 2
+fi
+
+#
+# put CURLARGS='-u username:password' in ~/.espeasy 
+#
+if [[ -r "${HOME}/.espeasy" ]]
+then
+	source "${HOME}/.espeasy"
+else
+    echo "$PROG: Cannot read ${HOME}/.espeasy" >&2
+    exit 1
+fi
+
+mkdir "${TMP}" || exit 2
+
+for FILE in $*
+do
+    for NAME in notification.dat security.dat config.dat rules1.txt rules2.txt rules3.txt rules4.txt esp.css
+	do
+		if [[ ${FILE} =~ "${NAME}" ]]
+		then 
+			MATCH="${NAME}"
+			echo -n "$PROG: File name ${NAME}: "
+			cp -v "${FILE}" "${TMP}/${MATCH}"
+			break;
+		fi
+	done
+	[[ -z "${MATCH}" ]] && echo "$PROG: Cannot determine name of $FILE ... Skipping"
+done
+
+cd "${TMP}" || exit 2
+
+for FILE in *
+do
+    echo -n "Upload $FILE: "
+	if curl  ${CURLARGS} --progress-bar -X POST -F "name=@${FILE}" -F "type=file"  "http://${H}/upload" | grep -q "Upload OK"
+ 	then
+		echo "$PROG: $FILE upload OK "
+	else
+		echo "$PROG: $FILE upload FAILED" >&2
+	fi
+done
+if [[ -n "${REBOOTESP}" ]]
+then
+    echo -n "Reboot: "
+	if curl ${CURLARGS}  --progress-bar   "http://${H}/?cmd=reboot" | grep -q '>OK'
+ 	then
+		echo "$PROG: Reboot OK "
+	else
+		echo "$PROG: Reboot FAILED" >&2
+	fi
+fi
+cd
+#echo "$PROG: Please do a manual rm -rf $TMP"
+
+rm -rf "${TMP}"
+
+# vim:ts=4:sw=4
+
