@@ -31,6 +31,8 @@ var commonPlugins = [
   //P019
   "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF",
   "MonitorRange,PCF", "UnMonitorRange,PCF", "UnMonitor,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
+  //P020/P044
+  "SerialSend", "SerialSendMix", "Ser2NetClientSend",
   //P022
   "pcapwm", "pcafrq", "mode2",
   //P023
@@ -43,6 +45,8 @@ var commonPlugins = [
   "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
   "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
+  //P049
+  "MHZCalibrateZero", "MHZReset", "MHZABCEnable", "MHZABCDisable",
   //P052
   "Sensair_SetRelay",
   //P053
@@ -65,6 +69,8 @@ var commonPlugins = [
   "GPS", "GPS,Sleep", "GPS,Wake", "GPS#GotFix", "GPS#LostFix", "GPS#Travelled",
   //P086
   "homieValueSet",
+  //P087
+  "SerialProxy_Write", "SerialProxy_WriteMix", "SerialProxy_Test",
   //P088
   "HeatPumpir",
   //P093

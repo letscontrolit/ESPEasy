@@ -91,6 +91,8 @@ Often used matrix keypads, in 16 and 12 key configuration:
 
 (Image sourced from Aliexpress)
 
+.. include:: MCP23017_rev_d.repl
+
 Configuration
 -------------
 

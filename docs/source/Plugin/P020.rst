@@ -81,7 +81,7 @@ When selecting the **Event processing** options *Generic* or *RFLink*, after sub
 
 * *(Unchecked)* -> ``Serial``
 * *HW Serial0* -> ``serial0``
-* *HW Serial0 swap* -> ``serial0``
+* *HW Serial0 swap* -> ``serial0swap``
 * *HW Serial1* -> ``serial1``
 * *HW Serial2* -> ``serial2``
 * *SW Serial* -> ``serialsw``

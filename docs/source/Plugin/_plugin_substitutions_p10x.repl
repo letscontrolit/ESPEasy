@@ -37,16 +37,16 @@
 .. |P102_compileinfo| replace:: `.`
 .. |P102_usedlibraries| replace::  https://github.com/olehs/PZEM004T
 
-.. |P103_name| replace:: :cyan:`Atlas Scientific EZO pH`
+.. |P103_name| replace:: :cyan:`Atlas Scientific EZO pH ORP EC DO HUM`
 .. |P103_type| replace:: :cyan:`Environment`
-.. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH`
+.. |P103_typename| replace:: :cyan:`Environment - Atlas Scientific EZO pH ORP EC DO HUM`
 .. |P103_porttype| replace:: `.`
 .. |P103_status| replace:: :yellow:`CLIMATE`
-.. |P103_github| replace:: P103_Atlas_EZO_pH.ino 
-.. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH.ino 
+.. |P103_github| replace:: P103_Atlas_EZO_pH_ORP_EC_DO.ino 
+.. _P103_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P103_Atlas_EZO_pH_ORP_EC_DO.ino 
 .. |P103_usedby| replace:: `.`
 .. |P103_shortinfo| replace:: `.`
-.. |P103_maintainer| replace:: TD-er
+.. |P103_maintainer| replace:: `TD-er tonhuisman`
 .. |P103_compileinfo| replace:: `.`
 .. |P103_usedlibraries| replace::  `.`
 .. |P103_datasheet| replace::  https://atlas-scientific.com/files/pH_EZO_Datasheet.pdf

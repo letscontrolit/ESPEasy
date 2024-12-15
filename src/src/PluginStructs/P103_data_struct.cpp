@@ -2,9 +2,40 @@
 
 #ifdef USES_P103
 
-// Call this function with two char arrays, one containing the command
-// The other containing an allocatted char array for answer
-// Returns true on success, false otherwise
+const __FlashStringHelper* toString(AtlasEZO_Sensors_e sensor) {
+  switch (sensor) {
+    case AtlasEZO_Sensors_e::PH: return F("pH (Potential of Hydrogen)");
+    case AtlasEZO_Sensors_e::ORP: return F("ORP (Oxidation Reduction Potential)");
+    case AtlasEZO_Sensors_e::EC: return F("EC (Electric conductivity)");
+    case AtlasEZO_Sensors_e::DO: return F("DO (Dissolved Oxigen)");
+    case AtlasEZO_Sensors_e::HUM: return F("HUM (Humidity)");
+    # if P103_USE_RTD
+    case AtlasEZO_Sensors_e::RTD: return F("RTD (Thermosensor)");
+    # endif // if P103_USE_RTD
+    # if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::FLOW: return F("FLOW (Flow meter)");
+    # endif // if P103_USE_FLOW
+    case AtlasEZO_Sensors_e::UNKNOWN: break;
+  }
+  return F("Unknown");
+}
+
+const __FlashStringHelper* P103_statusToString(char status) {
+  switch (status) {
+    case 'P':
+      return F("powered off");
+    case 'S':
+      return F("software reset");
+    case 'B':
+      return F("brown out");
+    case 'W':
+      return F("watch dog");
+    case 'U':
+    default:
+      break;
+  }
+  return F("unknown");
+}
 
 bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensordata)
 {
@@ -23,6 +54,7 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
   }
   # endif // ifndef BUILD_NO_DEBUG
   Wire.beginTransmission(I2Caddress);
+
   for (size_t i = 0; i < cmd.length(); ++i)  {
     Wire.write(static_cast<uint8_t>(cmd[i]));
   }
@@ -30,7 +62,14 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
 
   if (error != 0)
   {
-    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC and DO are supported."));
+    addLog(LOG_LEVEL_ERROR, F("Wire.endTransmission() returns error: Check Atlas shield, pH, ORP, EC, DO, HUM"
+                              # if P103_USE_RTD
+                              ", RTD"
+                              # endif // if P103_USE_RTD
+                              # if P103_USE_FLOW
+                              ", FLOW"
+                              # endif // if P103_USE_FLOW
+                              " are supported."));
     return false;
   }
 
@@ -53,7 +92,7 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
       in_char = Wire.read();
 
       if (in_char == 0)
-      {   // if we receive a null caracter, we're done
+      {   // if we receive a null character, we're done
         while (Wire.available())
         { // purge the data line if needed
           Wire.read();
@@ -63,7 +102,7 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
       }
       else
       {
-        if (sensor_bytes_received > ATLAS_EZO_RETURN_ARRAY_SIZE)
+        if (sensor_bytes_received >= ATLAS_EZO_RETURN_ARRAY_SIZE)
         {
           addLog(LOG_LEVEL_ERROR, F("< result array to short!"));
           return false;
@@ -77,7 +116,6 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
     switch (i2c_response_code)
     {
       case 1:
-      {
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -85,7 +123,6 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
         }
         # endif // ifndef BUILD_NO_DEBUG
         break;
-      }
 
       case 2:
         # ifndef BUILD_NO_DEBUG
@@ -112,8 +149,8 @@ bool P103_send_I2C_command(uint8_t I2Caddress, const String& cmd, char *sensorda
 
 int P103_getCalibrationPoints(uint8_t i2cAddress)
 {
-  int  nb_calibration_points                   = -1;
-  char sensordata[ATLAS_EZO_RETURN_ARRAY_SIZE] = { 0 };
+  int  nb_calibration_points = -1;
+  char sensordata[ATLAS_EZO_RETURN_ARRAY_SIZE]{};
 
   if (P103_send_I2C_command(i2cAddress, F("Cal,?"), sensordata))
   {
@@ -152,25 +189,29 @@ void P103_html_green(const String& message) {
 void P103_addDisabler() {
   // disabler(): argument(s) on 'true' will set that checkbox to false! non-boolean ignores argument
   // addHtml(F("\n<script type='text/javascript'>"
+  //           "function elId(e){return document.getElementById(e)}"
+  //           "function chkd(e, y) { x = elId(e); if (x) x.checked = y }"
   //           "function disabler(clear,single,l,h,dry,nul,atm)"
-  //           "{if (clear===true){document.getElementById('en_cal_clear').checked=false;}"
-  //           "if (single===true){document.getElementById('en_cal_single').checked=false;}"
-  //           "if(l===true){document.getElementById('en_cal_L').checked=false;}"
-  //           "if(h===true){document.getElementById('en_cal_H').checked=false;}"
-  //           "if(dry===true){document.getElementById('en_cal_dry').checked=false;}"
-  //           "if(nul===true){document.getElementById('en_cal_0').checked=false;}"
-  //           "if(atm===true){document.getElementById('en_cal_atm').checked=false;}};"
+  //           "{if (clear===true){chkd('en_cal_clear',false);}"
+  //           "if (single===true){chkd('en_cal_single',false);}"
+  //           "if(l===true){chkd('en_cal_L',false);}"
+  //           "if(h===true){chkd('en_cal_H',false);}"
+  //           "if(dry===true){chkd('en_cal_dry',false);}"
+  //           "if(nul===true){chkd('en_cal_0',false);}"
+  //           "if(atm===true){chkd('en_cal_atm',false);}};"
   //           "</script>"));
   // Minified:
   addHtml(F("\n<script type='text/javascript'>"
+            "function elId(e){return document.getElementById(e)}"
+            "function chkd(n,c){(x=elId(n))&&(x.checked=c)}"
             "function disabler(e,l,c,a,n,d,t)"
-            "{!0===e&&(document.getElementById('en_cal_clear').checked=!1)"
-            ",!0===l&&(document.getElementById('en_cal_single').checked=!1)"
-            ",!0===c&&(document.getElementById('en_cal_L').checked=!1)"
-            ",!0===a&&(document.getElementById('en_cal_H').checked=!1)"
-            ",!0===n&&(document.getElementById('en_cal_dry').checked=!1)"
-            ",!0===d&&(document.getElementById('en_cal_0').checked=!1)"
-            ",!0===t&&(document.getElementById('en_cal_atm').checked=!1)};"
+            "{!0===e&&(chkd('en_cal_clear',!1))"
+            ",!0===l&&(chkd('en_cal_single',!1))"
+            ",!0===c&&(chkd('en_cal_L',!1))"
+            ",!0===a&&(chkd('en_cal_H',!1))"
+            ",!0===n&&(chkd('en_cal_dry',!1))"
+            ",!0===d&&(chkd('en_cal_0',!1))"
+            ",!0===t&&(chkd('en_cal_atm',!1))};"
             "</script>"));
 }
 
@@ -178,7 +219,7 @@ void P103_addClearCalibration()
 {
   addRowLabel(F("<strong>Clear calibration</strong>"));
   addFormCheckBox(F("Clear"), F("en_cal_clear"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_clear').onclick=disabler(0,true,true,true,true,0,0);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_clear').onclick=function(){disabler(0,true,true,true,true,0,0)}</script>"));
   addFormNote(F("Attention! This will reset all calibrated data. New calibration will be needed!!!"));
 }
 
@@ -196,11 +237,11 @@ int P103_addDOCalibration(uint8_t I2Cchoice)
 
   addRowLabel(F("<strong>Calibrate to atmospheric oxygen levels</strong>"));
   addFormCheckBox(F("Enable"), F("en_cal_atm"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_atm').onclick=disabler(true,0,0,0,0,true,true);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_atm').onclick=function(){disabler(0,0,0,0,0,true,0)}</script>"));
 
   addRowLabel(F("<strong>Calibrate device to 0 dissolved oxygen</strong>"));
   addFormCheckBox(F("Enable"), F("en_cal_0"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_0').onclick=disabler(true,0,0,0,0,true,true);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_0').onclick=function(){disabler(0,0,0,0,0,0,true)}</script>"));
 
   if (nb_calibration_points > 0)
   {
@@ -218,7 +259,7 @@ void P103_addCreateDryCalibration()
 {
   addRowLabel(F("<strong>Dry calibration</strong>"));
   addFormCheckBox(F("Enable"), F("en_cal_dry"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_dry').onclick=disabler(true,true,true,true,0,0,0);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_dry').onclick=function(){disabler(true,true,true,true,0,0,0)}</script>"));
   addFormNote(F("Dry calibration must always be done first!"));
   addFormNote(F("Calibration for pH-Probe could be 1 (single) or 2 point (low, high)."));
 }
@@ -263,7 +304,7 @@ int P103_addCreateSinglePointCalibration(AtlasEZO_Sensors_e  board_type,
     }
   }
   addFormCheckBox(F("Enable"), F("en_cal_single"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_single').onclick=disabler(true,0,true,true,true,0,0);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_single').onclick=function(){disabler(true,0,true,true,true,0,0)}</script>"));
 
   return nb_calibration_points;
 }
@@ -292,7 +333,7 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
     P103_html_orange(F("Not yet calibrated"));
   }
   addFormCheckBox(F("Enable"), F("en_cal_L"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_L').onclick=disabler(true,true,0,true,true,0,0);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_L').onclick=function(){disabler(true,true,0,true,true,0,0)}</script>"));
 
   addRowLabel(F("<strong>High calibration</strong>"));
   addFormFloatNumberBox(F("Ref high point"), F("ref_cal_H"), P103_CALIBRATION_HIGH, min, max, nrDecimals, stepsize);
@@ -308,9 +349,39 @@ int P103_addCreate3PointCalibration(AtlasEZO_Sensors_e  board_type,
     P103_html_orange(F("Not yet calibrated"));
   }
   addFormCheckBox(F("Enable"), F("en_cal_H"), false);
-  addHtml(F("\n<script type='text/javascript'>document.getElementById('en_cal_H').onclick=disabler(true,true,true,0,true,0,0);</script>"));
+  addHtml(F("\n<script type='text/javascript'>elId('en_cal_H').onclick=function(){disabler(true,true,true,0,true,0,0)}</script>"));
 
   return nb_calibration_points;
+}
+
+bool P103_getHUMOutputOptions(struct EventStruct *event,
+                              bool              & _HUMhasHum,
+                              bool              & _HUMhasTemp,
+                              bool              & _HUMhasDew) {
+  bool result = false;
+
+  char boarddata[ATLAS_EZO_RETURN_ARRAY_SIZE]{};
+
+  if ((result = P103_send_I2C_command(P103_I2C_ADDRESS, F("O,?"), boarddata))) {
+    String outputs(boarddata);
+    int    o      = 2;
+    String outPar = parseString(outputs, o);
+
+    while (!outPar.isEmpty()) {
+      if (equals(outPar, F("hum"))) {
+        _HUMhasHum = true;
+      } else
+      if (equals(outPar, F("t"))) {
+        _HUMhasTemp = true;
+      } else
+      if (equals(outPar, F("dew"))) {
+        _HUMhasDew = true;
+      }
+      o++;
+      outPar = parseString(outputs, o);
+    }
+  }
+  return result;
 }
 
 #endif  // ifdef USES_P103

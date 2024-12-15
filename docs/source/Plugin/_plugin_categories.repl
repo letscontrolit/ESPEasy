@@ -1,10 +1,10 @@
 .. |Plugin_Analog_input| replace:: :ref:`P002_page`, :ref:`P007_page`, :ref:`P025_page`, :ref:`P060_page`, :ref:`P097_page`
 .. |Plugin_Acceleration| replace:: :ref:`P120_page`, :ref:`P125_page`
 .. |Plugin_Color| replace:: :ref:`P112_page`
-.. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`, :ref:`P035_page`, :ref:`P044_page`, :ref:`P054_page`, :ref:`P071_page`, :ref:`P087_page`, :ref:`P089_page`, :ref:`P094_page`, :ref:`P101_page`, :ref:`P118_page`
+.. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`, :ref:`P035_page`, :ref:`P044_page`, :ref:`P054_page`, :ref:`P071_page`, :ref:`P087_page`, :ref:`P089_page`, :ref:`P094_page`, :ref:`P101_page`, :ref:`P118_page`, :ref:`P176_page`
 .. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`, :ref:`P095_page`, :ref:`P104_page`, :ref:`P116_page`, :ref:`P131_page`, :ref:`P148_page`
 .. |Plugin_Distance| replace:: :ref:`P013_page`, :ref:`P110_page`, :ref:`P113_page`, :ref:`P134_page`
-.. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`, :ref:`P144_page`
+.. |Plugin_Dust| replace:: :ref:`P018_page`, :ref:`P053_page`, :ref:`P056_page`, :ref:`P144_page`, :ref:`P175_page`
 .. |Plugin_Energy_AC| replace:: :ref:`P076_page`, :ref:`P077_page`, :ref:`P078_page`, :ref:`P102_page`, :ref:`P108_page`
 .. |Plugin_Energy_DC| replace:: :ref:`P027_page`, :ref:`P085_page`, :ref:`P115_page`, :ref:`P132_page`
 .. |Plugin_Energy_Heat| replace:: :ref:`P088_page`, :ref:`P093_page`

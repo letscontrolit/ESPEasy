@@ -540,10 +540,11 @@ const __FlashStringHelper* getChipModel() {
      */
 #  if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    pkg_version = chip_ver & 0x7;
 #  else // if ESP_IDF_VERSION_MAJOR < 5
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
 #  endif // if ESP_IDF_VERSION_MAJOR < 5
-    pkg_version = chip_ver & 0x7;
+    
 
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
