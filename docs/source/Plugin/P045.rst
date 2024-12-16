@@ -33,9 +33,9 @@ Configuration
 
 .. image:: P045_DeviceConfiguration.png
 
-**Name** A unique name should be entered here.
+**Name**: A unique name should be entered here.
 
-**Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+**Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 I2C Options 
 ^^^^^^^^^^^^
@@ -47,7 +47,7 @@ The available settings here depend on the build used. At least the **Force Slow 
 Device Settings
 ^^^^^^^^^^^^^^^^
 
-* **Function** Select the function this task should perform.
+* **Function**: Select the function this task should perform.
 
 Available options:
 
@@ -61,11 +61,11 @@ When selecting the **Movement detection** function, additional configuration is 
 
 The Detection threshold can be configured per X, Y and Z axis (range 0..65535) and will be triggered when it exceeds the set threshold, where the axis is ignored if the threshold is set to 0. An actual threshold can be determined by selecting one of the Acceleration X/Y/Z functions, and making note of the value measured while an expected movement is applied to the sensor.
 
-* **Detection on all 3 axes** When this option is enabled, all 3 axes need to exceed the configured threshold for the counter to be increased. When disabled, only one of the axis need to exceed the threshold to cause an increment.
+* **Detection on all 3 axes**: When this option is enabled, all 3 axes need to exceed the configured threshold for the counter to be increased. When disabled, only one of the axis need to exceed the threshold to cause an increment.
 
-* **Min. detection count** The minimum count of movements during the **Detection window** before the count is reset.
+* **Min. detection count**: The minimum count of movements during the **Detection window** before the count is reset.
 
-* **Detection window** The number of interval passes before the counter is actually increased.
+* **Detection window**: The number of interval passes before the counter is actually increased.
 
 Every 30 seconds a counter for the detection window is increased plus all axis are checked and if they *all* (or any when **Detection on all 3 axes** is unchecked) that are enabled exceeded the threshold values, a counter is increased.
 
@@ -73,17 +73,30 @@ Each period, defined by the **Detection window**, the counter is checked against
 
 If in the next window the **Min. detection count** value is not met, movement has stopped. The **Detection window** cannot be smaller than the **Min. detection count**.
 
+Other measurements
+~~~~~~~~~~~~~~~~~~
+
+When **Function** is set to one of the measurement options, **Range acceleration**, **Acceleration** or **G-force**, the settings related to Movement detection will be hidden:
+
+.. image:: P045_All3ValuesCheckbox.png
+
+* **Provide all 3 values (X/Y/X)**: When unchecked (default), the selected raw X/Y/Z value will be available as the single value in the **Values** section, below. When *checked*, all 3 X, Y and Z values for the selected function will be available in the **Values** section, always in ``X``, ``Y``, ``Z`` order. Most usable would be to name them accordingly.
+
+.. image:: P045_All3Values.png
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
-The Single event with all values, Send to Controller and Interval settings are standard available configuration items. Send to Controller is only shown when one or more Controllers are configured.
+This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
+**Interval**: By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
 
 Values
 ^^^^^^
 
 The measured value or the counter are available here, by default no name is given for the value, as this is usually chosen based on the function. No formula or decimals are available.
+
+In selected builds, per Value a **Stats** and **Hide** checkbox and an **Axis** selection combobox are available, that when Statis is checked, gathers the data and presents recent data, based on the **Interval**, in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
 
 Change log
@@ -91,6 +104,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2024-11-03 Checkbox for selecting all 3 X/Y/Z values for a measurement.
 
   |added|
   2022-05-05 Checkbox for selecting ALL or ANY axis movement detection.

@@ -186,6 +186,8 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("VEML6075,I2C_MultiRelay");
       break;
     case 0x12:
+      result += F("I2C_MultiRelay,PMSx003i");
+      break;
     case 0x13:
     case 0x16:
     case 0x17:

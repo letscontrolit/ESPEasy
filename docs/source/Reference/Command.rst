@@ -423,10 +423,10 @@ P048 :ref:`P048_page`
 .. include:: ../Plugin/P048_commands.repl
 
 
-.. P049 :ref:`P049_page`
-.. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+P049 :ref:`P049_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. .. include:: ../Plugin/P049_commands.repl
+.. include:: ../Plugin/P049_commands.repl
 
 
 .. P050 :ref:`P050_page`
@@ -824,6 +824,11 @@ P169 :ref:`P169_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P169_commands.repl
+
+P175 :ref:`P175_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P175_commands.repl
 
 .. .. *** Insert regular plugin commands above this remark! ***
 

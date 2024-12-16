@@ -67,11 +67,17 @@ Available options:
 
 .. image:: P105_SensorModelOptions.png
 
-**AHT1x** AHT10/AHT15. These sensor models should better be avoided, as it doesn't always work with other devices on the same I2C bus.
+* **AHT1x** AHT10/AHT15. These sensor models should better be avoided, as it doesn't always work with other devices on the same I2C bus.
 
-**AHT20** An more modern version of the sensor. Use this option also when connecting a DHT20 or AM2301B sensor.
+* **AHT20** An more modern version of the sensor. Use this option also when connecting a DHT20 or AM2301B sensor.
 
-**AHT21** An more modern version of the sensor, very similar to the AHT20, in a more compact chip package.
+* **AHT21** An more modern version of the sensor, very similar to the AHT20, in a more compact chip package.
+
+When selecting the **AHT1x** Sensor model, an extra option is made available:
+
+.. image:: P105_AHT10_alt_init.png
+
+* **AHT10 Alternative initialization**: Some AHT10 clone sensors do not seem to like the regular AHT10/AHT15 initialization sequence. They do however accept a soft reset command. By enabling this checkbox, only the soft reset is sent to the device. Only available for AHT1x devices.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
@@ -91,5 +97,7 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |changed| 2024-12-03 Add alternative initialization option
 
   |added| 2021-08-01 Moved from ESPEasy PluginPlayground to the main repository.

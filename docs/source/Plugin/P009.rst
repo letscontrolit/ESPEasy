@@ -37,6 +37,8 @@ Supported hardware
 
 The chip can be used on specifically designed hardware, or a generic module can be used. These are available from several sources.
 
+.. include:: MCP23017_rev_d.repl
+
 |P009_usedby|
 
 Configuration

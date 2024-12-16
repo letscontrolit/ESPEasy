@@ -53,7 +53,7 @@
 .. |P054_name| replace:: :cyan:`DMX512 TX`
 .. |P054_type| replace:: :cyan:`Communication`
 .. |P054_typename| replace:: :cyan:`Communication - DMX512 TX`
-.. |P054_porttype| replace:: `.`
+.. |P054_porttype| replace:: `Serial`
 .. |P054_status| replace:: :yellow:`COLLECTION`
 .. |P054_github| replace:: P054_DMX512.ino
 .. _P054_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P054_DMX512.ino

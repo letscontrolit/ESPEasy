@@ -27,6 +27,8 @@
  */
 
 /** History:
+ * 2024-12-03 tonhuisman: Add alternative initialization for AHT10 (clone), see https://github.com/letscontrolit/ESPEasy/issues/5172
+ *                        Small code optimization.
  * 2024-04-28 tonhuisman: Update plugin name and documentation as DHT20 and AM2301B actually contain an AHT20!
  *                        DHT20: https://www.adafruit.com/product/5183 (Description)
  *                        AM2301B: https://www.adafruit.com/product/5181 (Description)
@@ -54,18 +56,15 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_105;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      Device[++deviceCount].Number       = PLUGIN_ID_105;
+      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
+      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      Device[deviceCount].Ports          = 0;
+      Device[deviceCount].FormulaOption  = true;
+      Device[deviceCount].ValueCount     = 2;
+      Device[deviceCount].SendDataOption = true;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 
@@ -146,6 +145,10 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
         addFormSelector(F("Sensor model"), F("ahttype"), 3, options, indices, PCONFIG(1), true);
         addFormNote(F("Changing Sensor model will reload the page."));
+
+        if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == PCONFIG(1)) {
+          addFormCheckBox(F("AHT10 Alternative initialization"), F("altinit"), PCONFIG(2));
+        }
       }
 
       success = true;
@@ -160,6 +163,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG(0) = 0x38; // AHT20/AHT21 only support a single I2C address.
       } else {
         PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+        PCONFIG(2) = isFormItemChecked(F("altinit")) ? 1 : 0;
       }
       success = true;
       break;
@@ -169,7 +173,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     {
       success = initPluginTaskData(
         event->TaskIndex,
-        new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1))));
+        new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1)), 1 == PCONFIG(2)));
       break;
     }
 

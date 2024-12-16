@@ -22,11 +22,12 @@ struct AHTx_Status {
   const uint8_t status;
 };
 
-AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type) :
+AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type, bool altInit) :
   i2cAddress(addr),
   device_type(type),
   last_hum_val(0.0f),
-  last_temp_val(0.0f) {}
+  last_temp_val(0.0f),
+  alt_init(altInit) {}
 
 const __FlashStringHelper * AHTx_Device::getDeviceName() const {
   switch (device_type) {
@@ -38,8 +39,11 @@ const __FlashStringHelper * AHTx_Device::getDeviceName() const {
 }
 
 bool AHTx_Device::initialize() {
-  const uint8_t cmd_init = (device_type == AHTx_device_type::AHT10_DEVICE) ? 0xE1 : 0xBE;
+  const uint8_t cmd_init = (AHTx_device_type::AHT10_DEVICE == device_type) ? 0xE1 : 0xBE;
 
+  if ((AHTx_device_type::AHT10_DEVICE == device_type) && alt_init) {
+    return I2C_write8(i2cAddress, 0xBA); // Soft reset only
+  }
   return I2C_write16_reg(i2cAddress, cmd_init, 0x0800);
 }
 
@@ -92,8 +96,8 @@ bool AHTx_Device::readData() {
   return true;
 }
 
-P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev) :
-  device(addr, dev),
+P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev, bool altInit) :
+  device(addr, dev, altInit),
   state(AHTx_state::AHTx_Uninitialized),
   last_measurement(0),
   trigger_time(0) {}

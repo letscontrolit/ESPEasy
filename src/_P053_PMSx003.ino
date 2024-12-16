@@ -11,6 +11,11 @@
 // together with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
+/** Changelog:
+ * 2024-10-12 tonhuisman: Add support for PMSA003i (I2C) via P175 and maximal code-reuse.
+ * 2024-10-12 tonhuisman: Start Changelog (older changes not registered).
+ */
+
 # include "src/PluginStructs/P053_data_struct.h"
 
 # define PLUGIN_053
@@ -27,6 +32,9 @@
 # define PLUGIN_VALUENAME3_053 "pm10"
 # define PLUGIN_VALUENAME4_053 "HCHO" // Is not set into the Values on purpose.
 
+# ifdef USES_P175                     // Support stuff for P175
+bool P053_for_P175 = false;
+# endif // ifdef USES_P175
 
 boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -167,22 +175,40 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
-        int unitModelCount                      = 5;
         const __FlashStringHelper *unitModels[] = {
           toString(PMSx003_type::PMS1003_5003_7003),
           toString(PMSx003_type::PMS2003_3003),
           toString(PMSx003_type::PMS5003_S),
           toString(PMSx003_type::PMS5003_T),
-          toString(PMSx003_type::PMS5003_ST)
+          toString(PMSx003_type::PMS5003_ST),
+          #  ifdef USES_P175
+          toString(PMSx003_type::PMSA003i),
+          #  endif // ifdef USES_P175
         };
         const int unitModelOptions[] = {
           static_cast<int>(PMSx003_type::PMS1003_5003_7003),
           static_cast<int>(PMSx003_type::PMS2003_3003),
           static_cast<int>(PMSx003_type::PMS5003_S),
           static_cast<int>(PMSx003_type::PMS5003_T),
-          static_cast<int>(PMSx003_type::PMS5003_ST)
+          static_cast<int>(PMSx003_type::PMS5003_ST),
+          #  ifdef USES_P175
+          static_cast<int>(PMSx003_type::PMSA003i),
+          #  endif // ifdef USES_P175
         };
-        addFormSelector(F("Sensor model"), F("model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
+        addRowLabel(F("Sensor model"));
+        addSelector(F("model"),
+                    NR_ELEMENTS(unitModelOptions),
+                    unitModels,
+                    unitModelOptions,
+                    nullptr,
+                    PLUGIN_053_SENSOR_MODEL_SELECTOR,
+                    false,
+                    #  ifdef USES_P175
+                    !P053_for_P175
+                    #  else // ifdef USES_P175
+                    true
+                    #  endif // ifdef USES_P175
+                    );
       }
 
       addFormSubHeader(F("Output"));
@@ -197,7 +223,13 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
-        addFormSelector(F("Output values"), F("output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
+        addFormSelector(F("Output values"),
+                        F("output"),
+                        NR_ELEMENTS(outputOptionValues),
+                        outputOptions,
+                        outputOptionValues,
+                        PLUGIN_053_OUTPUT_SELECTOR,
+                        true);
         addFormNote(F("Changing this reloads the page and updates task value names + nr decimals."));
       }
       {
@@ -211,10 +243,16 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
           static_cast<int>(PMSx003_event_datatype::Event_All_count_bins),
           static_cast<int>(PMSx003_event_datatype::Event_All) };
-        addFormSelector(F("Events for non-output values"), F("events"), 4, eventOptions, eventOptionValues,
+        addFormSelector(F("Events for non-output values"),
+                        F("events"),
+                        NR_ELEMENTS(eventOptionValues),
+                        eventOptions,
+                        eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
-        addFormNote(F(
-                      "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
+        addFormNote(F("Only generates the 'missing' events, "
+                      "(taskname#temp/humi/hcho, "
+                      "taskname#pm1.0/pm2.5/pm10, "
+                      "taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
@@ -248,7 +286,14 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       const int oldOutputSelector = PLUGIN_053_OUTPUT_SELECTOR;
-      PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("model"));
+
+      #  ifdef USES_P175
+
+      if (!P053_for_P175)
+      #  endif // ifdef USES_P175
+      {
+        PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("model"));
+      }
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("output"));
       PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("events"));
       PLUGIN_053_SEC_IGNORE_AFTER_WAKE = getFormItemInt(F("delay_wake"));
@@ -267,6 +312,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       switch (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR) {
         case PMSx003_type::PMS1003_5003_7003:
+        #  ifdef USES_P175
+        case PMSx003_type::PMSA003i:
+        #  endif // ifdef USES_P175
 
           // Base models only support particle values, no use in setting other output values
           if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PM2_5_TempHum_Formaldehyde) {
@@ -281,7 +329,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           PLUGIN_053_OUTPUT_SELECTOR    = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
           break;
-        default:
+        case PMSx003_type::PMS5003_S:
+        case PMSx003_type::PMS5003_T:
+        case PMSx003_type::PMS5003_ST:
           break;
       }
 
@@ -324,6 +374,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
           # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+          # ifdef USES_P175
+          , P053_for_P175
+          # endif // ifdef USES_P175
           ));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -372,10 +425,11 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P053_data) && P053_data->initialized()) {
-        String command    = parseString(string, 1);
-        String subcommand = parseString(string, 2);
+        const String command = parseString(string, 1);
 
         if (equals(command, F("pmsx003"))) {
+          const String subcommand = parseString(string, 2);
+
           if (equals(subcommand, F("wake"))) {
             success = P053_data->wakeSensor();
           } else if (equals(subcommand, F("sleep"))) {
