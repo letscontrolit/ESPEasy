@@ -36,3 +36,29 @@
 .. |P173_maintainer| replace:: `tonhuisman`
 .. |P173_compileinfo| replace:: `.`
 .. |P173_usedlibraries| replace:: `.`
+
+.. |P175_name| replace:: :cyan:`PMSx003i (I2C)`
+.. |P175_type| replace:: :cyan:`Dust`
+.. |P175_typename| replace:: :cyan:`Dust - PMSx003i (I2C)`
+.. |P175_porttype| replace:: `I2C`
+.. |P175_status| replace:: :yellow:`CLIMATE`
+.. |P175_github| replace:: P175_PMSx003i.ino
+.. _P175_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P175_PMSx003i.ino
+.. |P175_usedby| replace:: `.`
+.. |P175_shortinfo| replace:: `.`
+.. |P175_maintainer| replace:: `.`
+.. |P175_compileinfo| replace:: `.`
+.. |P175_usedlibraries| replace:: `.`
+
+.. |P176_name| replace:: :cyan:`Victron VE.Direct`
+.. |P176_type| replace:: :cyan:`Communication`
+.. |P176_typename| replace:: :cyan:`Communication - Victron VE.Direct`
+.. |P176_porttype| replace:: `.`
+.. |P176_status| replace:: :yellow:`ENERGY`
+.. |P176_github| replace:: P176_VE_Direct.ino
+.. _P176_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P176_VE_Direct.ino
+.. |P176_usedby| replace:: `Victron Energy devices supporting the VE.Direct protocol`
+.. |P176_shortinfo| replace:: `Victron VE.Direct protocol reader`
+.. |P176_maintainer| replace:: `tonhuisman`
+.. |P176_compileinfo| replace:: `.`
+.. |P176_usedlibraries| replace:: `.`

@@ -2092,7 +2092,7 @@ constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plug
 constexpr size_t Lowest_Plugin_id = DeviceIndex_to_Plugin_id_size == 0 ? 0 : DeviceIndex_to_Plugin_id[0];
 
 // Highest plugin ID included in the build
-constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 1 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 0 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
 
 // Array size including index of highest plugin ID.
 constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_Plugin_id;

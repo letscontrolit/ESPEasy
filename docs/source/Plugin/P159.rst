@@ -137,9 +137,9 @@ After checking the checkbox to enabled state, the settings will be available imm
 * **Idle seconds**: The number of seconds the *Presence* stays active after presence is removed, can be set here. Default value 5 sec. max. value is 65535 sec.
 * **Max. Moving gates**: The number of active gates for detecting Moving presence. Range 2 .. 8.
 * **Max. Stationary gates**: The number of active gates for detecting Stationary presence. Range 2 .. 8.
-* **Sensitivity, Gate 0 .. 8**: For each type of detection, the sensitivity treshold can be set, range 0 .. 100, where 0 is the most sensitive, and 100 means it won't trigger, as that's the max. value that will be reported.
+* **Sensitivity, Gate 0 .. 8**: For each type of detection, the sensitivity treshold can be set, range 0 .. 101, where 0 is the most sensitive, and 101 means it won't trigger, as 100 is the max. value that will be reported.
 
-For each gate the distance range in meters is also shown. When the highest enabled Gate is less that the default 8, then only up to that gate-number is shown and configurable.
+For each gate the distance range in meters is also shown. When the highest enabled Gate is less than the default 8, then only up to that gate-number is shown and configurable.
 
 If the **Modify sensor settings** checkbox is checked when submitting the page, the settings are sent to the sensor, and the sensor will be restarted to activate them. The configured values are persistently stored in the LD2410 sensor.
 

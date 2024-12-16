@@ -259,7 +259,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     output = false;
   }
 
-  if ((gpio >= 6) && (gpio <= 11)) {
+  if (isFlashInterfacePin_ESPEasy(gpio)) {
     // Connected to the integrated SPI flash.
     input   = false;
     output  = false;

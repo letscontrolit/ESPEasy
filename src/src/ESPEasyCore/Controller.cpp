@@ -204,9 +204,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
+# if FEATURE_MQTT_TLS
+
   uint16_t mqttPort = ControllerSettings->Port;
 
-# if FEATURE_MQTT_TLS
   mqtt_tls_last_errorstr.clear();
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings->TLStype();
