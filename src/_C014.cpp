@@ -886,7 +886,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       statusLED(true);
 
-      parseControllerVariables(pubname, event, false);
       LoadTaskSettings(event->TaskIndex);
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
@@ -898,6 +897,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         if (contains_valname) {
           parseSingleControllerVariable(tmppubname, event, x, false);
         }
+        parseControllerVariables(tmppubname, event, false);
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {

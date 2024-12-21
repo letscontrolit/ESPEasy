@@ -90,7 +90,6 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
         // Collect the values at the same run, to make sure all are from the same sample
         //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-        parseControllerVariables(pubname, event, true);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -105,6 +104,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
             if (contains_valname) {
               parseSingleControllerVariable(txt, event, x, true);
             }
+            parseControllerVariables(txt, event, true);
 
 # ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

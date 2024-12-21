@@ -121,7 +121,6 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       statusLED(true);
 
       //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-      parseControllerVariables(pubname, event, false);
 
       const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
@@ -131,6 +130,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         if (contains_valname) {
           parseSingleControllerVariable(tmppubname, event, x, false);
         }
+        parseControllerVariables(tmppubname, event, false);
 
         // Small optimization so we don't try to copy potentially large strings
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {

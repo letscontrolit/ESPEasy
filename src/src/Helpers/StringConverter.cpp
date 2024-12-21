@@ -1311,8 +1311,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, bool useURLencode) {
-  s = parseTemplate(s, useURLencode);
   parseEventVariables(s, event, useURLencode);
+  s = parseTemplate(s, useURLencode);
 }
 
 // FIXME TD-er: These macros really increase build size.

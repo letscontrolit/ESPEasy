@@ -61,6 +61,9 @@ void ResetFactory(bool formatFS)
     mustApplySafebootDefaults = true;
   }
   #endif // ifdef ESP32
+  #ifdef ESP8266 // Apply defaults on clean setup
+  mustApplySafebootDefaults = 0 == Settings.ResetFactoryDefaultPreference;
+  #endif // ifdef ESP8266
 
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {

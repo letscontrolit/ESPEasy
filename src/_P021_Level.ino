@@ -9,6 +9,9 @@
 // Extended by timer based state control to support pumps with additional requirements (floor heating ciculation pump)
 
 // Changelog:
+// 2024-12-14, tonhuisman: Move most defines to .h file to avoid compiler warnings, as Arduino doesn't support #ifdef in .ino files
+//                         Format source using Uncrustify
+//                         Remove unneeded includes
 // 2024-07-07, flashmark:  Reworked to support floor heating pump (added state machine control)
 // 2023-03-13, tonhuisman: Add setting to invert the Output state
 // 2022-08-22, tonhuisman: Add setting to auto-save a changed setting after x minutes, size optimizations, add PCONFIG defines
@@ -29,114 +32,15 @@
 //       Minimum build size is expected to be true when extras >=1
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-# include "src/Helpers/ESPEasy_math.h"
 # include "src/Globals/RulesCalculate.h"
-# include "src/WebServer/ESPEasy_WebServer.h"
 
-//// #define LIMIT_BUILD_SIZE
-# define PLUGIN_021_DEBUG
-
-// For additional debugging information use PLUGIN_021_DEBUG (see note)
-# ifdef BUILD_NO_DEBUG
-# undef PLUGIN_021_DEBUG
-# else // ifdef BUILD_NO_DEBUG
-////# define PLUGIN_021_DEBUG
-# endif // ifndef/else BUILD_NO_DEBUG
-
-// See note at top of file
-# ifdef LIMIT_BUILD_SIZE
-# define FEATURE_P021_EXTRAS  0
-# define P021_MIN_BUILD_SIZE
-# undef PLUGIN_021_DEBUG
-# else // ifdef LIMIT_BUILD_SIZE
-# define FEATURE_P021_EXTRAS  1
-# endif // ifdef LIMIT_BUILD_SIZE
+# include "src/PluginStructs/P021_data_struct.h"
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
 # define PLUGIN_NAME_021        "Regulator - Level Control"
 # define PLUGIN_VALUENAME1_021  "Output"
 # define PLUGIN_VALUENAME2_021  "State"
-
-# define P021_GPIO_RELAY            CONFIG_PIN1
-
-// Define the configuration options using ESPeasy standard structures
-// For unique identification on the HTML form use P021_GUID_<option>
-// ------------------------------------------------------------------
-
-// Input signal is read from another task (plugin) by accessing its TASK & VALUE
-# define P021_CHECK_TASK            PCONFIG(0)
-# define P021_GUID_CHECK_TASK       "f0"
-# define P021_CHECK_VALUE           PCONFIG(1)
-# define P021_GUID_CHECK_VALUE      "f1"
-
-// Flag to prevent excessive writing. Backwards compatible with previous version
-# define P021_DONT_ALWAYS_SAVE      PCONFIG(2)
-# define P021_GUID_DONT_ALWAYS_SAVE "f2"
-
-// Set of individual bits packed in a single PCONFIG(3)
-// Use bitRead() and bitWrite() to access the individual bits
-// For backwards compatibility first bit shall be equal original P021_INVERT_OUTPUT
-# define P021_FLAGS                 PCONFIG(3)
-# define P021_INV_OUTPUT            0 // Invert output signal
-# define P021_GUID_INV_OUTPUT       "b0"
-# define P021_EXT_FUNCT             1 // Extended functionality on setup screen
-# define P021_GUID_EXT_FUNCT        "b1"
-# define P021_INV_INPUT             2 // Invert input comparator
-# define P021_GUID_INV_INPUT        "b2"
-# define P021_SYM_HYSTERESIS        3 // Use symetrical hysteresis
-# define P021_GUID_SYM_HYSTERESIS   "b3"
-# define P021_SLOW_EVAL             4 // 1Hz evaluation i.s.o. 10Hz
-# define P021_GUID_SLOW_EVAL        "b4"
-# define P021_STATE_OUTP            5 // Add state as additional output value
-# define P021_GUID_STATE_OUTP       "b5"
-# define P021_EXTEND_END            6 // Extend state timed from start
-# define P021_GUID_EXTEND_END       "b6"
-# define P021_LONG_TIMER_UNIT       7 // Use longer timer units on setup screen
-# define P021_GUID_LONG_TIMER_UNIT  "b7"
-
-// Operation mode [enum]
-# define P021_OPMODE                PCONFIG(4)
-# define P021_GUID_OPMODE           "f4"
-
-// Setpoint (set level)
-# define P021_SETPOINT              PCONFIG_FLOAT(0)
-# define P021_GUID_SETPOINT         "f5"
-
-// Hysteresis
-# define P021_HYSTERESIS            PCONFIG_FLOAT(1)
-# define P021_GUID_HYSTERESIS       "f6"
-
-// SETP_LAST_STORED is not available on form. Used as storage for autosave function
-# define P021_SETP_LAST_STORED      PCONFIG_FLOAT(2)
-# define P021_GUID_SETP_LAST_STORED "f7"
-
-// Auto save time interval to update remotely changed setpoints to flash
-# define P021_AUTOSAVE_TIMER        PCONFIG_ULONG(0)
-# define P021_GUID_AUTOSAVE_TIMER   "f8"
-
-// Minimum time output shall be active [sec]/[min]
-# define P021_MIN_TIME              PCONFIG_ULONG(1)
-# define P021_GUID_MIN_TIME         "f9"
-
-// Maximum time output may be idle [sec]/[hour]
-# define P021_INTERVAL_TIME         PCONFIG_ULONG(2)
-# define P021_GUID_INTERVAL_TIME    "f10"
-
-// Duration for forced circulation [sec]/[min]
-# define P021_FORCE_TIME            PCONFIG_ULONG(3)
-# define P021_GUID_FORCE_TIME       "f11"
-
-// Positions in userVar array for the output values of this plugin
-// For now we only advertise output & state. Autosave bookkeeping is hidden and used as static storage
-#define P021_VALUE_OUTPUT           0 // Switch output, logical state [inactive/active]
-#define P021_VALUE_STATE            1 // Control state, see P021_control_state
-#define P021_VALUE_AUTOSAVE_FLAG    2 // Autosave bookkeeping
-#define P021_VALUE_AUTOSAVE_TIME    3 // Autosave bookkeeping
-
-// Simple conversion from parameter settings in hours/minutes to seconds (administration unit)
-// And from seconds to the millis domain used for the actual control
-// Note that these simple conversion may lose precision due to rough rounding
 
 # if FEATURE_P021_EXTRAS >= 1
 int millis2seconds(int32_t x) {
@@ -322,11 +226,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       if (extFunc)
       {
-        # ifndef P021_MIN_BUILD_SIZE
+        #  ifndef P021_MIN_BUILD_SIZE
 
         // Selection of timer units. Will reload the page.
         addFormSelector_YesNo(F("Long time span"), F(P021_GUID_LONG_TIMER_UNIT), bitRead(flags, P021_LONG_TIMER_UNIT), true);
-        # endif // ifndef P021_MIN_BUILD_SIZE
+        #  endif // ifndef P021_MIN_BUILD_SIZE
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
@@ -337,7 +241,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // Add timer values depending on build size
         //  - minimum build size: units are always in seconds; drop the units on the form
         //  - standard build size: units are either seconds or minutes/hours
-        # ifdef P021_MIN_BUILD_SIZE
+        #  ifdef P021_MIN_BUILD_SIZE
 
         // Minimum on time
         addFormNumericBox(F("Minimum running time"),    F(P021_GUID_MIN_TIME),      P021_MIN_TIME,      0);
@@ -348,7 +252,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // Interval circulation time (forced circulation)
         addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME),    P021_FORCE_TIME,    1);
 
-        # else // ifdef P021_MIN_BUILD_SIZE
+        #  else // ifdef P021_MIN_BUILD_SIZE
         uint32_t min_time      = P021_MIN_TIME;          // Value to display for minimum timer
         uint32_t interval_time = P021_INTERVAL_TIME;     // Value to display for max idling time
         uint32_t force_time    = P021_FORCE_TIME;        // Value for forces run
@@ -376,7 +280,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // Interval circulation time (forced circulation)
         addFormNumericBox(F("Forced circulation time"), F(P021_GUID_FORCE_TIME), force_time, 1);
         addUnit(unit1);
-        #endif // ifdef P021_MIN_BUILD_SIZE - else
+        #  endif // ifdef P021_MIN_BUILD_SIZE - else
 
 
         // Symetrical/asymetrical hysteresis [checkbox]
@@ -394,7 +298,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // Provide the controller state as second sensor output value [checkbox]
         addFormCheckBox(F("State as output value"), F(P021_GUID_STATE_OUTP),     bitRead(flags, P021_STATE_OUTP));
       }
-      #endif // FEATURE_P021_EXTRAS >= 1
+      # endif // FEATURE_P021_EXTRAS >= 1
 
       success = true;
       break;
@@ -420,7 +324,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (newExtFunct && (bitRead(flags, P021_EXT_FUNCT)))
       {
         P021_OPMODE = getFormItemInt(F(P021_GUID_OPMODE));
-        # ifndef P021_MIN_BUILD_SIZE
+        #  ifndef P021_MIN_BUILD_SIZE
         const bool new_units = getFormItemInt(F(P021_GUID_LONG_TIMER_UNIT)) != 0;
         const bool old_units = bitRead(flags, P021_LONG_TIMER_UNIT) != 0;
 
@@ -441,11 +345,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           }
         }
         bitWrite(flags, P021_LONG_TIMER_UNIT, new_units);
-        # else // ifndef P021_MIN_BUILD_SIZE
+        #  else // ifndef P021_MIN_BUILD_SIZE
         P021_MIN_TIME      = getFormItemInt(F(P021_GUID_MIN_TIME));
         P021_INTERVAL_TIME = getFormItemInt(F(P021_GUID_INTERVAL_TIME));
         P021_FORCE_TIME    = getFormItemInt(F(P021_GUID_FORCE_TIME));
-        # endif // ifndef P021_MIN_BUILD_SIZE
+        #  endif // ifndef P021_MIN_BUILD_SIZE
 
         bitWrite(flags, P021_INV_INPUT,      isFormItemChecked(F(P021_GUID_INV_INPUT)));
         bitWrite(flags, P021_EXTEND_END,     isFormItemChecked(F(P021_GUID_EXTEND_END)));
@@ -466,7 +370,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       }
 
       bitWrite(flags, P021_EXT_FUNCT, newExtFunct);
-      #endif //if FEATURE_P021_EXTRAS >= 1
+      # endif // if FEATURE_P021_EXTRAS >= 1
 
       P021_FLAGS = flags; // Don't forget to write back the new flags
       success    = true;
@@ -487,7 +391,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       if (isRemote) {
         P021_remote[event->TaskIndex] = !essentiallyZero(result);
       }
-      #endif // ifndef P021_MIN_BUILD_SIZE
+      # endif // ifndef P021_MIN_BUILD_SIZE
 
       if (isSetLevel || isHysteresis) {
         if (!isError(Calculate(value, result))) {
@@ -588,17 +492,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
           if (event->Par2 == 1)
           {
             P021_remote[event->TaskIndex] = true;
-            # ifndef P021_MIN_BUILD_SIZE
+            #  ifndef P021_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=on"));
-            # endif // ifndef P021_MIN_BUILD_SIZE
+            #  endif // ifndef P021_MIN_BUILD_SIZE
             success = true;
           }
           else if (event->Par2 == 0)
           {
             P021_remote[event->TaskIndex] = false;
-            # ifndef P021_MIN_BUILD_SIZE
+            #  ifndef P021_MIN_BUILD_SIZE
             addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=off"));
-            # endif // ifndef P021_MIN_BUILD_SIZE
+            #  endif // ifndef P021_MIN_BUILD_SIZE
             success = true;
           }
         }
@@ -787,6 +691,7 @@ void P021_evaluate(struct EventStruct *event)
           new_control_state = P021_STATE_FORCE;
         }
       }
+
       // Note any other state implies the output is active
       else if (!beyond_force)
       {
@@ -912,7 +817,7 @@ void P021_evaluate(struct EventStruct *event)
     digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
   }
 
-  # ifdef PLUGIN_021_DEBUG
+  #  ifdef PLUGIN_021_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
@@ -925,7 +830,7 @@ void P021_evaluate(struct EventStruct *event)
                          value,
                          remote_state));
   }
-  # endif // ifdef PLUGIN_021_DEBUG
+  #  endif // ifdef PLUGIN_021_DEBUG
 
   // Write back updated persistant control data:
   // - The logical state of the output signal [on,OFF]
@@ -996,12 +901,13 @@ void P021_evaluate(struct EventStruct *event)
 
   // Actuate the output pin taking output invert flag into account
   relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
+
   if (validGpio(P021_GPIO_RELAY))
   {
     digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
   }
 
-  # ifdef PLUGIN_021_DEBUG
+  #  ifdef PLUGIN_021_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
@@ -1011,12 +917,12 @@ void P021_evaluate(struct EventStruct *event)
                          relay_output,
                          value));
   }
-  # endif // ifdef PLUGIN_021_DEBUG
+  #  endif // ifdef PLUGIN_021_DEBUG
 
   // Write back updated persistant control data:
   // - The physical state of the output signal [on,OFF]
   // - The state of the internal state machine
-  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, relay_output ? 1.0f : 0.0f );
+  UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, relay_output ? 1.0f : 0.0f);
   UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE,  (float)new_control_state);
 
   if (new_control_state != old_control_state)
