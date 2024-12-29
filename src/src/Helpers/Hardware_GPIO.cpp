@@ -168,17 +168,35 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   if (gpio == 11) {
-    // By default VDD_SPI is the power supply pin for embedded flash or external flash. It can only be used as GPIO11
-    // only when the chip is connected to an external flash, and this flash is powered by an external power supply
-    input   = false;
-    output  = false;
+    if (getChipFeatures().embeddedFlash) {
+      // See: https://www.letscontrolit.com/forum/viewtopic.php?p=71880#p71874
+      //
+      // By default VDD_SPI is the power supply pin for embedded flash or external flash. 
+      // It can only be used as GPIO11 only when the chip is connected to an 
+      // external flash, and this flash is powered by an external power supply
+      input   = false;
+      output  = false;
+    }
     warning = true;
   }
 
   if (isFlashInterfacePin_ESPEasy(gpio)) {
-    // Connected to the integrated SPI flash.
-    input   = false;
-    output  = false;
+    if (getChipFeatures().embeddedFlash) {
+      // Connected to the integrated SPI flash.
+      input   = false;
+      output  = false;
+    } else {
+      // See: https://www.letscontrolit.com/forum/viewtopic.php?p=71880#p71874
+      if (gpio == 12 || gpio == 13) {
+        // SPIHD/GPIO12
+        // SPIWP/GPIO13
+        if (ESP.getFlashChipMode() != FM_DOUT && 
+            ESP.getFlashChipMode() != FM_DIO) {
+          input   = false;
+          output  = false;
+        }
+      }
+    }
     warning = true;
   }
 

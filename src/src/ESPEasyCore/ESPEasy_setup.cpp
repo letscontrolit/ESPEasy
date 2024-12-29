@@ -162,8 +162,8 @@ void ESPEasy_setup()
 
     if (pkg_version <= 7) { // D0WD, S0WD, D2WD
 #ifdef CORE32SOLO1
-      gpio_num_t PSRAM_CLK = GPIO_NUM_17;
-      gpio_num_t PSRAM_CS  = GPIO_NUM_16;
+      gpio_num_t PSRAM_CLK = GPIO_NUM_NC; //GPIO_NUM_17;
+      gpio_num_t PSRAM_CS  = GPIO_NUM_NC; //GPIO_NUM_16;
 #else
       gpio_num_t PSRAM_CLK = static_cast<gpio_num_t>(CONFIG_D0WD_PSRAM_CLK_IO);
       gpio_num_t PSRAM_CS  = static_cast<gpio_num_t>(CONFIG_D0WD_PSRAM_CS_IO);
@@ -187,14 +187,18 @@ void ESPEasy_setup()
       if (PSRAM_CLK != GPIO_NUM_NC) {
         esp_gpio_revoke(BIT64(PSRAM_CLK) | BIT64(PSRAM_CS));
       } else {
-        esp_gpio_revoke(BIT64(PSRAM_CS));
+        if (PSRAM_CS != GPIO_NUM_NC) {
+          esp_gpio_revoke(BIT64(PSRAM_CS));
+        }
       }
 #  endif // if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(5, 2, 0)
 
       if (PSRAM_CLK != GPIO_NUM_NC) {
         gpio_reset_pin(PSRAM_CLK);
       }
-      gpio_reset_pin(PSRAM_CS);
+      if (PSRAM_CS != GPIO_NUM_NC) {
+        gpio_reset_pin(PSRAM_CS);
+      }
     }
   }
 # endif  // if CONFIG_IDF_TARGET_ESP32
@@ -359,6 +363,7 @@ void ESPEasy_setup()
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
 #ifdef ESP32
+#ifndef CORE32SOLO1
 
   // Configure dynamic frequency scaling:
   // maximum and minimum frequencies are set in sdkconfig,
@@ -373,6 +378,7 @@ void ESPEasy_setup()
 # endif // if CONFIG_FREERTOS_USE_TICKLESS_IDLE
   };
   esp_pm_configure(&pm_config);
+#endif
 #endif // ifdef ESP32
 
 

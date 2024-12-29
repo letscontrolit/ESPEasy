@@ -4,6 +4,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/RamTracker.h"
 #include "../Helpers/ESPEasy_math.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
@@ -69,6 +70,14 @@ bool RulesCalculate_t::is_unary_operator(char c)
   }
   return false;
   */
+}
+
+// quinary = 5-argument functions
+bool RulesCalculate_t::is_quinary_operator(char c)
+{
+  const UnaryOperator op = static_cast<UnaryOperator>(c);
+
+  return op == UnaryOperator::Map;
 }
 
 CalculateReturnCode RulesCalculate_t::push(ESPEASY_RULES_FLOAT_TYPE value)
@@ -261,6 +270,22 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
   return ret;
 }
 
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_quinary_operator(char op, 
+                                                                  ESPEASY_RULES_FLOAT_TYPE first,
+                                                                  ESPEASY_RULES_FLOAT_TYPE second,
+                                                                  ESPEASY_RULES_FLOAT_TYPE third,
+                                                                  ESPEASY_RULES_FLOAT_TYPE fourth,
+                                                                  ESPEASY_RULES_FLOAT_TYPE fifth)
+{
+  ESPEASY_RULES_FLOAT_TYPE ret{};
+  const UnaryOperator qu_op = static_cast<UnaryOperator>(op);
+
+  if (UnaryOperator::Map == qu_op) {
+    return mapADCtoFloat(first, second, third, fourth, fifth);
+  }
+  return ret;
+}
+
 /*
    char * RulesCalculate_t::next_token(char *linep)
    {
@@ -295,6 +320,16 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
+  } else if (is_quinary_operator(token[0]) && (token[1] == 0))
+  {
+    ESPEASY_RULES_FLOAT_TYPE fifth  = pop();
+    ESPEASY_RULES_FLOAT_TYPE fourth = pop();
+    ESPEASY_RULES_FLOAT_TYPE third  = pop();
+    ESPEASY_RULES_FLOAT_TYPE second = pop();
+    ESPEASY_RULES_FLOAT_TYPE first  = pop();
+
+    ret = push(apply_quinary_operator(token[0], first, second, third, fourth, fifth));
+
   } else {
     // Fetch next if there is any
     ESPEASY_RULES_FLOAT_TYPE value{};
@@ -352,6 +387,8 @@ unsigned int RulesCalculate_t::op_arg_count(const char c)
   if (is_unary_operator(c)) { return 1; }
 
   if (is_operator(c)) { return 2; }
+
+  if (is_quinary_operator(c)) { return 5; }
   return 0;
 }
 
@@ -399,7 +436,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
       }
 
       // If the token is an operator, op1, then:
-      else if (is_operator(c) || is_unary_operator(c))
+      else if (is_operator(c) || is_unary_operator(c) || is_quinary_operator(c))
       {
         *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
@@ -441,6 +478,14 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         // push op1 onto the stack.
         stack[sl] = c;
         ++sl;
+      }
+
+      // Process the token at a colon (separator)
+      else if (c == ':')
+      {
+        *(TokenPos) = 0; // Mark end of token string
+        error       = RPNCalculate(token);
+        TokenPos    = token;
       }
 
       // If the token is a left parenthesis, then push it onto the stack.
@@ -609,6 +654,8 @@ const __FlashStringHelper* toString(UnaryOperator op)
       return F("atan");
     case UnaryOperator::ArcTan_d:
       return F("atan_d");
+    case UnaryOperator::Map:
+      return F("map");
   }
   return F("");
 }
@@ -644,6 +691,7 @@ String RulesCalculate_t::preProces(const String& input)
     ,UnaryOperator::Tan
     ,UnaryOperator::Tan_d
     #endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    ,UnaryOperator::Map
 
   };
 

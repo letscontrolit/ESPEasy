@@ -1,9 +1,5 @@
 {
   "build": {
-    "arduino":{
-      "ldscript": "esp32_out.ld",
-      "memory_type": "dio_qspi"
-    },
     "core": "esp32",
     "extra_flags": "-DARDUINO_TASMOTA -DARDUINO_ESP32_DEV -DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_4M -DCORE32SOLO1  -DESP32_CLASSIC",
     "f_cpu": "160000000L",

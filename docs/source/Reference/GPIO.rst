@@ -366,8 +366,13 @@ ESP32-C3 SPI flash pins
 
 Pins connected to flash or PSRAM should not be used for anything else.
 
+On boards with embedded flash, these pins cannot be used:
+
 * GPIO-11: Flash voltage selector
 * GPIO-12 ... -17: Connected to flash
+
+On boards with external flash, GPIO-11, GPIO-12 and GPIO-13 can be selected.
+However special care should be taken as some boards can still have these pins wired to the flash chip.
 
 .. note:: By default VDD_SPI is the power supply pin for embedded flash or external flash.  It can only be used as GPIO-11 only when the chip is connected to an external flash, and this flash is powered by an external power supply.
 

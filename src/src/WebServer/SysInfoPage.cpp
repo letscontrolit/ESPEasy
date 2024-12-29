@@ -837,7 +837,7 @@ void handle_sysinfo_Storage() {
 
   # ifdef ESP32
   addTableSeparator(F("Partitions"), 2, 3,
-                    F("https://dl.espressif.com/doc/esp-idf/latest/api-guides/partition-tables.html"));
+                    F("https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/partition-tables.html"));
 
   addRowLabel(F("Data Partition Table"));
 

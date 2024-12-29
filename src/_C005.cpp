@@ -88,8 +88,6 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
       bool mqtt_retainFlag        = CPlugin_005_mqtt_retainFlag;
 
-      parseControllerVariables(pubname, event, false);
-
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       for (uint8_t x = 0; x < valueCount; x++)
@@ -104,6 +102,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         if (contains_valname) {
           parseSingleControllerVariable(tmppubname, event, x, false);
         }
+        parseControllerVariables(tmppubname, event, false);
         String value;
 
         if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {

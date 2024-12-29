@@ -8,6 +8,11 @@
 // ESPEasy Plugin to control a 16x8 LED matrix or 8 7-segment displays with chip HT16K33
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
+/** Changelog:
+ * 2024-12-14 tonhuisman: Fix mprint command to skip the colon segment when printing a non-colon character in that position.
+ * 2024-12 tonhuisman: Start changelog.
+ */
+
 // List of commands:
 // (1) M,<param>,<param>,<param>, ...    with decimal values
 // (2) MX,<param>,<param>,<param>, ...    with hexadecimal values
@@ -194,6 +199,10 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
           {
             setDot = (txt < text.length() - 1 && text[txt + 1] == '.');
             char c = text[txt];
+
+            if ((':' != c) && (PCONFIG(6) > -1) && (seg == PCONFIG(6))) { // skip the colon segment when not putting a colon there
+              seg++;
+            }
             P057_data->ledMatrix.SetDigit(seg, c, setDot);
             seg++;
             txt++;
