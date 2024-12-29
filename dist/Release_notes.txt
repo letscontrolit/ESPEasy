@@ -1,4 +1,390 @@
 -------------------------------------------------
+Changes in release mega-20241222 (since mega-20240822)
+-------------------------------------------------
+
+Release date: Sun Dec 22 11:08:22 PM CET 2024
+
+Bartłomiej Zimoń (2):
+      if we wait for data from SMTP - do not flush received data
+      EMail - correct response checking
+
+Hans-Rune Bue (4):
+      Initial ESPeasy tools add
+      ESPeasy tools readme
+      Missing $ in
+      Document enhancements on requirements, security + linting
+
+TD-er (204):
+      [MQTT TLS] Add TLS support for MQTT
+      [MQTT TLS] Add cert.py to extract certificate info
+      [MQTT TLS] Allow to load CA root cert from file
+      [Web] Allow to stream from file system (e.g. CSS inline)
+      [MQTT TLS] Patch CA root cert to match strict layout
+      [MQTT TLS] Work-around for memory leak in MbedTLS (not finished)
+      [MQTT TLS] Fix memory leak... finally
+      [MQTT TLS] Clear CA certificate when starting a new connection
+      [Cleanup] Fix lots of missing delete calls to free memory
+      [Webserver] Fix serving CSS
+      [TLS] Add ALPN protocol
+      [TLS] Add fix for WiFiClientSecure connection timeout
+      [MQTT TLS]Display connection info on controller page
+      [Cleanup] Use .clear() on strings instead of assigning empty string
+      [TLS] Making proper datastructure init
+      [MQTT TLS] Improve controller setup page show peer certificate
+      [MQTT TLS] Add certificate fingerprint validation
+      [MQTT TLS] Add view of certificates + option to store
+      [MQTT TLS] Add TLS support for MQTT
+      [MQTT TLS] Add cert.py to extract certificate info
+      [MQTT TLS] Allow to load CA root cert from file
+      [Web] Allow to stream from file system (e.g. CSS inline)
+      [MQTT TLS] Patch CA root cert to match strict layout
+      [MQTT TLS] Work-around for memory leak in MbedTLS (not finished)
+      [MQTT TLS] Fix memory leak... finally
+      [MQTT TLS] Clear CA certificate when starting a new connection
+      [Cleanup] Fix lots of missing delete calls to free memory
+      [Webserver] Fix serving CSS
+      [TLS] Add ALPN protocol
+      [TLS] Add fix for WiFiClientSecure connection timeout
+      [MQTT TLS]Display connection info on controller page
+      [Cleanup] Use .clear() on strings instead of assigning empty string
+      [TLS] Making proper datastructure init
+      [MQTT TLS] Improve controller setup page show peer certificate
+      [MQTT TLS] Add certificate fingerprint validation
+      [MQTT TLS] Add view of certificates + option to store
+      [Webserver] Fix merge issue (MQTT TLS)
+      [Merge Fix] Restore P095 and P096 from mega branch
+      [MQTT TLS] Fix missing include mbedtls/oid.h
+      [MQTT TLS] Fix missing include <vector>
+      [Build] Fix merge issue.
+      [MQTT TLS] Fix build issues
+      [MQTT TLS] Disable fingerprint verify on ESP8266 as not implemented
+      [MQTT TLS] Disable USE_MQTT_TLS for LIMIT_BUILD_SIZE and 1M builds
+      [MQTT TLS] Disable TLS for ESP8266 completely
+      [MQTT TLS] Rename USE_MQTT_TLS to FEATURE_MQTT_TLS
+      [MQTT TLS] Resize certificate info textareas
+      [MQTT TLS] Fix layout controller page
+      [MQTT TLS] Cleanup, reducing build size when no MQTT TLS is set
+      [Build] Disable ext. RTC on limited build size builds
+      [Build] Reduce bin size by excluding libs from 1M builds
+      [GPS] Fix set system time via GPS
+      [MQTT TLS] Add MQTT TLS feature to ESP32 MAX builds
+      [GPS] Use custom GPS view of plugin stats data
+      [MQTT TLS] Fix crashes due to null pointer dereference.
+      [Controller] Allow system variables in controller username
+      [Cache Reader] Add intended nr of 'samples' per bulk message
+      [Cache Reader] Cleanup Export dump to CSV & fix separator
+      [Cache Reader] Allow bulk dump CSV to MQTT
+      [Cache Reader] Fix serving 'last line' of stored data
+      [Cache Reader] Send bulk taskinfo in either CSV or JSON, using settings
+      [TaskRun] Reschedule task to set Interval
+      [TaskRun] Cleanup code
+      [Build] Cleanup code + reduce build size
+      [TaskRun] Fix new command ScheduleTaskRun
+      [Cleanup] Simplify generating task events
+      [Cleanup] Reduce build size by omitting some conversions
+      [ADC] Add config commands to set calibration
+      [ADC] Document new ADC set calibration commands
+      [SenseAir] Fix reading error state from sensor
+      [Provisioning] Fix setting allowed file types to download via rules
+      Revert accidentally committed pre_custom_esp32.py
+      [Provisioning] Fix cache and mDNS updates after provisioning
+      [SenseAir] Add more sensor info + begin implementing setting ABC
+      [Provisioning] Only allow downloading firmware update from set host
+      [Cache Reader] Add option to delete files after upload
+      [SenseAir] Temperature is 2-complement signed value
+      [SenseAir] Fix reading temperature on non-S8 sensors
+      [SenseAir] Keep SenseAir code in sync with PR #4550
+      [ESP32 IDF] Update to IDF 4.4.5 (2023-06-14)
+      [Build] Fix merge issues
+      [Build] Fix merge issues MQTT TLS
+      [MQTT TLS] Add MQTT import to Custom ESP32
+      [MQTT TLS] Fix merge issues
+      [MQTT TLS] Fix static_assert check after update with 'mega' branch
+      [Math] Improve intuitively matching & printing floating point values
+      [Build] Reduce bin size on ESP8266 Collection D
+      [Build] Reduce build size, disabling float print optimization on ESP8266
+      [MQTT-TLS] Fix merge issue
+      [MQTT-TLS] Fix merge issues
+      [Build] Remove CUL reader from ESP8266 collection D build due to size
+      [P001] Reduse build size
+      [P001] Fix Uncrustify formatting
+      [P001] Change runtime counters from PCONFIG to datastruct members
+      [P001] Cleanup code using less macro code
+      [P001] Cleanup code
+      [P001] Cleanup code & add comments
+      [P009] Apply same code restructure as for P001
+      [P019] Apply same code restructure as for P009
+      [P009] Remove temp files
+      [P001] Use aliases for PCONFIG to access settings
+      [GPIO] Move duplicate code for init P001/009/019 to shared function
+      [GPIO] Create generic handler for GPIO plugins
+      [GPIO] Deduplicate code in PCF and MCP code for P019 and P009.
+      [GPIO] Try to match P009 and P019 code to be the same as P001 code
+      [GPIO] Make P001/P009/P019 share the same code
+      [GPIO] Fix missing check to recover from offline mode
+      [ESP-IDF5.3] Add support for ESP-IDF5.3 and SPIFFS builds for IDF5.1
+      [ESP-IDF5.3] Fix crashes on sysinfo page
+      [ESP-IDF5.1] Add LTO to reduce bin size for ESP-IDF5.1 SPIFFS build
+      [ESP-IDF5.3] Fix usable UART ports on ESP32-C6
+      [Build] Fix build error on ESP32 Minimal OTA builds (debug/test builds)
+      [ESP-IDF5.3] Add 5 GHz WiFi modes for upcoming ESP32-C5
+      [HeatpumpIR] Update lib to latest code
+      [Sysinfo] Add used ESP-IDF version to sysinfo page
+      [HeatpumpIR] make the library compile again in ESP-IDF5.3
+      [ESP-IDF] Make ESP32-S2 build again
+      [Arduino] Add define as workaround for Arduino change flush() to clear()
+      [Uncrustify] Cleanup _P091_SerSwitch.ino
+      [ESP-IDF5.3] Fix building on Windows
+      [ESP-IDF 5.x] Fix detection of ESP32-rev3
+      [EDP-IDF] Update to latest IDF5.1 (SPIFFS) & IDF5.3(LittleFS) Arduino304
+      [ESP-IDF] Simplify eco mode power management
+      [ESP-IDF5.3] Update to latest IDF5.3/Arduino3.0.5
+      [ESP-IDF] Revert IDF5.3 to IDF5.1 due to WiFi scan issues
+      [WiFi] Add copy constructor to WiFi_AP_Candidate
+      [Cleanup] simplify ExtraTaskSettings constructor
+      [ESP-IDF5.3] Switch back to IDF5.3 for LittleFS builds
+      [N001_Email] Increase parse buffer size + cleanup
+      [ESP-IDF5.3] Fix build solo1 builds
+      [Email] Set timeout on the connection itself
+      Do not apply nr. of decimals before calculating formula (#5123)
+      [GPIO] Revert some changes regarding send bootstate on P001
+      Add .platformio to gitignore
+      [GPIO] Revert some changes regarding send bootstate on P001
+      Fix formatting nr. decimals with formula (#5123)
+      [Email] Early exit on failing Auth calls + some cleanup
+      [ESP-IDF5.3] Move to latest Arduino 3.1 / ESP-IDF 5.3.1 (LittleFS build)
+      [ESP-IDF5.3] Move to latest Arduino/IDF code
+      [Email] Fix issues with different mail server versions
+      [Email] Add missing define
+      [Email] Fix ESP8266 2.7.4 builds
+      [Email] Add missing changes in NotificationPage.cpp
+      [Rules] Fix saving rules on ESP-IDF5.3
+      [Cleanup] Reduce SaveRules.js
+      Fix saving task names when rules are enabled
+      Add work-around for changes in File::position()
+      [Build] Fix copy/paste error
+      [Cleanup] Remove duplicate define from platformio ini file
+      [Build] Fix max builds
+      [Uncrustify] Update config for latest version of Uncrustify
+      [uncrustify] Apply new uncrustify version on some recently changed code
+      [ESP-IDF5.3] Update to SDK IDF5.3.1/Arduino3.0.5 20240924
+      [ESP-IDF5.3] Update to 20240926
+      [GPIO] Fix build warnings on ESP8266 for GPIO direction
+      [ESPEasy p2p] Fix sending task value data on ESP8266
+      [LibSSL] Add LightBearSSL lib made by Tasmota
+      [MQTT-TLS] Switch to Tasmota's Light-Weight BearSSL lib
+      [MQTT TLS] Fix build hidden write(uint8_t)
+      [MQTT-TLS] Enable TLS for MQTT on all ESP32-xx Custom builds
+      [MQTT TLS] Disable PSK option
+      [MQTT TLS] Uncrustify controller source files
+      [MQTT-TLS] Improve stability of MQTT connection while serving JSON pages
+      [PVS-Studio] Add fixes suggested by PVS-Studio
+      [MQTT-TLS] Make connection to broker more stable
+      [MQTT TLS] Disable certificate validation options for now
+      [MQTT TLS] Add some documentation about using TLS for MQTT
+      [Controller] Fix really strange merge issue (return statement got lost)
+      [HeatpumpIR] Rename lib folder to make it compile on Windows
+      [HeatpumpIR] Make IRext builds fit again on ESP8266
+      [Build] Add already a shorter folder name for core_dir for future builds
+      [Email] Split N001_Email.ino into N001_data_struct
+      [Email] Add SSL support for email
+      [Email] Fix builds + include N001 in all ESP32-xx custom builds
+      [Build] Fix builds which do not have DEBUG log level included
+      [Email] Clean-up code
+      [BearSSL] Update to latest BearSSL code
+      [Email] Enable SSL for email and MQTT on all ESP32-xx builds
+      [Email] Fix failed builds
+      [Email] Fix silly mistake
+      [Email] Add documentation describing SSL port 465
+      [CSS] Add retry to load CSS when first attempt failed
+      [Docs] Add info how to use USB serial with WSL2
+      [WSL2] Add simple script to set permissions for USB to serial in WSL2
+      [ESP-IDF] Switch to latest ESP-IDF/ESP32-Arduino 3.0.7
+      Fix custom build with <2 included plugins (#5150)
+      [P176] Simplify handling temporary values before checksum checked
+      [GPS] Add course (bearing) as output option
+      [PSRAM] Free GPIO-16 and -17 on ESP32-classic when no PSRAM present
+      [PSRAM] Fix build on ESP-IDF 5.1 + add special case of ESP32-picoD4
+      [PSRAM] Cleanup code
+      [PSRAM] Fix solo1 builds
+      [PSRAM] Fix solo1 builds
+      [GPIO] Allow to select GPIO-10 on ESP32-U4WDH
+      [GPIO] Fix missing check on ESP32-classic for GPIO-10 with emb. flash
+      [ESP32C3] Allow GPIO 11, 12, 13 to be used on specific boards
+      [ESP-IDF] Update to latest ESP-IDF5.3 for ESP32-xx LittleFS builds
+      [ESP32-solo1] Update to latest ESP-IDF5.3 for solo1
+      [ESP-IDF5.3] Fix build platform for Solo1
+      [Webserver] Fix stalled web requests and not saving rules via Ethernet
+      [ESP32] Update to latest Arduino 3.1.0 release
+      [Build] Fix building ESP8266 builds
+      [Build] Fix merge issues in platformio.ini
+      [ESP32-solo1] Fix bootloop on Solo1 boards
+
+Ton Huisman (113):
+      [P103] Add support for EZO-HUM sensor
+      [P103] Fix some issues, add logging for analysis
+      [P103] Fix more issues, add/apply settings for EZO-HUM
+      [P103] Handle EZO-HUM firmware issue of unexpected 'Dew' in output
+      [P103] Fix to apply new `UserVar` usage
+      [P113] Add Region of Interest configuration
+      [Devices] Update/Add help links for Stats
+      [P113] Check invalid ROI settings after in-place update
+      [P163] Add plugin Counter - RadSens I2C radiation counter
+      [DevicesPage] Fix clearing the Low I2C speed setting when reusing a task
+      [P163] Enable plugin in ESP32 Collection G builds
+      [P163] Prevent protential memory leak
+      [P163] Add to Custom-sample.h
+      [P163] Use Count-average when available, change to Environment category
+      [P163] Add documentation
+      [P163] Fix missing nullptr check if Count stats not enabled but other stats is
+      [Lib] RadSens: Add non-incremental pulses reading and reset of incremental counter
+      [P163] Add optional non-incremental counting and reset command/option
+      [P163] Update documentation
+      [P165] Add plugin Display - NeoPixel (7-segment)
+      [P165] Add code from #4977
+      [P165] Add code from #5091
+      [AdaGFX] Add rgb565/rgb888 color conversions
+      [P165] Add Clear display on exit, add manual g-segment split, rework UI for better Extra pixel display, many bugfixes
+      [P165] Breaking Settings change! (delete & re-add) Allow 7 pixels/segment for w/h/dot, add 7dbefore command
+      [P173] Add plugin Environment - SHTC3
+      [I2C] Add functions I2C_write16() and I2C_write16_LE()
+      [P165] Add digitmapping for having all RTL groups, UI improvements and fixes
+      [P173] Add to I2C scanner
+      [P165] Add counter-clockwise numbering, enable digit/group color commands for all builds
+      [P173] Add documentation, include in standard C6 Custom build
+      [DeviceStruct] Add PinDirection flag for PIN1..PIN3
+      [DeviceStruct] Add PinDirection flag for PIN1..PIN3
+      [P165] Apply PinXDirection feature
+      [P165] Add new commands to EasyColorCode (some are defined for P073)
+      [P165] Add documentation and a few configuration examples
+      [DeviceStruct] Apply PinXDirection flags for all plugins where appropriate, cleanup unneeded Device flags, reformatted some plugin sources
+      [P173] Add to Custom-sample.h
+      [EasyColorCode] Command Reset is renamed to FactoryReset
+      [P165] Add more code from #5091
+      [P165] Fix some bugs found during testing
+      [EasyColorCode] Also update minified js file
+      [P165] Add more code from #5091
+      [P165] Disable periods handling if no decimal dot pixels defined
+      [P165] Small bugfix
+      [P113] Add UI selection of ROI area (single area selection only)
+      [Build] Possible fix for unstable builds
+      [Build] Possible fix, part 2, for unstable builds
+      [P165] Bugfixes and javascript optimizations
+      [P165] Bugfixes and javascript optimizations
+      [P113] Improve UI selection of ROI area for touch devices, code improvements
+      [P113] Update documentation
+      [P113] Improve UI selection of ROI area for touch devices, code improvements
+      [UI] Fix disabled-checked Checkbox styling, and allow to enable/disable from js
+      [P165] Add option to start numbering at g-segment
+      [P165] Add option to use decimal dot for blinking time indicator
+      [P165] Fix initialization of output mode
+      [Scripts] Fix some issues and upgrade to external changes
+      [P054] Allow GPIO configuration for ESP32 units
+      [P054] Use Direct-GPIO and implement ESPEasySerial
+      [P113] Further minify embedded js
+      [P165] Small bugfix
+      [P165] Update documentation
+      [P054] Add documentation, small UI improvement
+      [N001] Email password should use a password input field
+      [P159] Extend max threshold
+      [P175] Add Dust - PMSx003i (I2C) Sensor
+      [P175]/[P053] Check for useable variables
+      [P175] Fix reading checksum and data frame correctly
+      [P175]/[P053] Optimize re-use of code, add sensor to I2C Scanner
+      [P175] Add documentation (partially shared with P053)
+      [P175] Show GPIO config on Devices page
+      [P103] Javascript fixes, code improvements
+      [Build] Fix: Use package with Solo1 'autodetect' (Solo1 specific packaged removed)
+      [Build] Fix: Use package with Solo1 'autodetect' (Solo1 specific packaged removed)
+      [P176] Add plugin Communication - Victron VE.Direct
+      [P176] Add some features and code improvements
+      [P176] Fix ESP8266 build issue
+      [P176] Update taskvalues at receiving data, other improvements
+      [P176] Fix use of plugin compiletime feature flags
+      [P176] Move Led initialization to DataStruct initialization function
+      [P176] Add documentation
+      [P176] Refactorings to optimize performance (lower load), remove RX Timeout setting
+      [P176] Update documentation
+      [P176] Avoid calling serial->available() too often, uncrustify some recent changes
+      [P176] Update changelog (and GH Actions failed)
+      [P176] Handle ON and OFF values as 1 and 0
+      [P176] Fix checksum validation, was ignoring the first line after receiving a valid checksum
+      [P045] Add optional data collection for all axis
+      [P045] Update documentation
+      [P045] Set correct Sensor_VType for 3 values
+      [Build] Enable Servo support for most builds
+      [P176] Add variables `successcount`, `errorcount` and `ischanged`
+      [Docs] Updates and fixes, November 2024
+      [Docs] Rewording a few phrases
+      [P176] Rename variable `ischanged` to `updated`
+      [P103] Add documentation
+      [P103] Fix cast issue
+      [EasyColorCode] P020/P044/P087 serial commands
+      [P020] Fix docs typo
+      [P176] Add Events only when updated option and docs
+      [P176] Fix bug in screenshot :-)
+      [P009]/[P061] Add note about possible non-working input for MCP23017 PA7/PB7 pins
+      [C002] Bugfix: Use correct GPIO pin for controlling P001
+      [P105] Add Alternative initialization option for AHT10 clones
+      [P041][P042] Update documentation (no longer in Normal builds)
+      [P159] Allow max threshold of 101, to resolve an off-by-one error
+      [P159] Update documentation
+      [P021] Move ifdef to .h file to avoid compiler warnings
+      [P057] Fix mprint command to skip the colon segment
+      [Controllers] Process % variables before functions
+      [Controllers] Change variable replacement order so string functions can be used
+      [FactoryReset, ESP8266] Use settings from Custom.h on clean install
+
+chromoxdor (8):
+      Update Misc.cpp
+      Update Misc.cpp
+      Update Misc.cpp
+      [P049] added commands
+      Update P049_commands.repl
+      Update P049.rst
+      Update P049.rst
+      Update Command.rst
+
+dependabot[bot] (1):
+      Bump cryptography from 38.0.3 to 43.0.1
+
+flashmark (18):
+      Added state extension
+      Fix backwards compatibility issue and tidy up
+      Reworked after pull request
+      Rework after review
+      Cleanup, fix init issue
+      Update documentation
+      Minor fixes
+      P021 Optimize memory footprint
+      P021 fixed issue in control algoritm
+      P021 Squeeze out some flash usage
+      P021 timer initialization
+      P021 another set of shaving flash memory consumption
+      P021 fixed an oops and reworked review comments
+      [P021] disable new feaures for low memory builds. Fix issues.
+      [p021] fixed unused variable
+      [P021] Documentataion update to refect limited build versions
+      [P021] Bugfix
+      Minor style change
+
+uwekaditz (13):
+      Changes for PR5097
+      Code uncrustified
+      Function ReplaceTokenDelimiters() to be used for user defined headers and line content
+      Changes requested by tonhuisman
+      Documentation formatted
+      NEW: functions stripEscapeCharacters() and hasEscapeCharacters()
+      More advanced parsing as requested by @tonhuisman
+      Reuse of 0x11/0x12 also for the \( and \)  changed to 0x05/0x06
+      Documentation updated
+      Documentation updated for functions
+      Removed unneeded string init, code simplified
+      BUG: simplified stripEscapeCharacters() did not work
+      Disable P040 (RFID - ID12LA/RDM6300) for PLUGIN_BUILD_IR_EXTENDED_NO_RX  due to limited size
+
+
+-------------------------------------------------
 Changes in release mega-20240822 (since mega-20240414)
 -------------------------------------------------
 
