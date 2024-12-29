@@ -53,7 +53,8 @@ enum class UnaryOperator : uint8_t {
   ArcCos,    // Arc Cosine (radian)
   ArcCos_d,  // Arc Cosine (degree)
   ArcTan,    // Arc Tangent (radian)
-  ArcTan_d   // Arc Tangent (degree)
+  ArcTan_d,  // Arc Tangent (degree)
+  Map,       // Map (value, lowFrom, highFrom, lowTo, highTo) (not really unary...)
 };
 
 void   preProcessReplace(String      & input,
@@ -78,6 +79,8 @@ private:
 
   bool                is_unary_operator(char c);
 
+  bool                is_quinary_operator(char c);
+
   CalculateReturnCode push(ESPEASY_RULES_FLOAT_TYPE value);
 
   ESPEASY_RULES_FLOAT_TYPE              pop();
@@ -88,6 +91,13 @@ private:
 
   ESPEASY_RULES_FLOAT_TYPE apply_unary_operator(char   op,
                               ESPEASY_RULES_FLOAT_TYPE first);
+
+  ESPEASY_RULES_FLOAT_TYPE apply_quinary_operator(char op, 
+                                                  ESPEASY_RULES_FLOAT_TYPE first,
+                                                  ESPEASY_RULES_FLOAT_TYPE second,
+                                                  ESPEASY_RULES_FLOAT_TYPE third,
+                                                  ESPEASY_RULES_FLOAT_TYPE fourth,
+                                                  ESPEASY_RULES_FLOAT_TYPE fifth);
 
   //  char              * next_token(char *linep);
 

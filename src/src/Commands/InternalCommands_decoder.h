@@ -81,6 +81,8 @@ enum class ESPEasy_cmd_e : uint8_t {
   logentry,
   looptimerset,
   looptimerset_ms,
+  looptimersetandrun,
+  looptimersetandrun_ms,
   longpulse,
   longpulse_ms,
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

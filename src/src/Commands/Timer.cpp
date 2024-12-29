@@ -17,14 +17,14 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 
-const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount) {
+const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount, bool startImmediately = false) {
   if (msecFromNow < 0)
   {
     addLog(LOG_LEVEL_ERROR, F("TIMER: time must be positive"));
   } else {
     // start new timer when msecFromNow > 0
     // Clear timer when msecFromNow == 0
-    if (Scheduler.setRulesTimer(msecFromNow, timerIndex, recurringCount))
+    if (Scheduler.setRulesTimer(msecFromNow, timerIndex, recurringCount, startImmediately))
     { 
       return return_command_success_flashstr();
     }
@@ -76,6 +76,34 @@ const __FlashStringHelper * Command_Loop_Timer_Set_ms (struct EventStruct *event
     event->Par1, // timer index
     recurringCount
     );
+}
+
+const __FlashStringHelper * Command_Loop_Timer_SetAndRun (struct EventStruct *event, const char* Line)
+{
+  int recurringCount = event->Par3;
+  if (recurringCount == 0) {
+    // if the optional 3rd parameter is not given, set it to "run always"
+    recurringCount = -1;
+  }
+  return command_setRulesTimer(
+    event->Par2 * 1000, // msec from now
+    event->Par1,        // timer index
+    recurringCount,
+    true);
+}
+
+const __FlashStringHelper * Command_Loop_Timer_SetAndRun_ms (struct EventStruct *event, const char* Line)
+{
+  int recurringCount = event->Par3;
+  if (recurringCount == 0) {
+    // if the optional 3rd parameter is not given, set it to "run always"
+    recurringCount = -1;
+  }
+  return command_setRulesTimer(
+    event->Par2, // interval
+    event->Par1, // timer index
+    recurringCount,
+    true);
 }
 
 const __FlashStringHelper * Command_Timer_Pause(struct EventStruct *event, const char *Line)

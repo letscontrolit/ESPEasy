@@ -161,9 +161,11 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   // @param msecFromNow   Number of milli seconds from now (also used as interval for recurring)
   // @param timerIndex    The index of the timer used. (1 ... max)
   // @param recurringCount  Number of times needed to run (-1 for always)
+  // @param startImmediately  Run immediately
   bool setRulesTimer(unsigned long msecFromNow,
                      unsigned int  timerIndex,
-                     int           recurringCount = 0);
+                     int           recurringCount = 0,
+                     bool          startImmediately = false);
 
   void process_rules_timer(SchedulerTimerID timerID,
                            unsigned long lasttimer);
