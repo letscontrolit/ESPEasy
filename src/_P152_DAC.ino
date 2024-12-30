@@ -13,6 +13,8 @@
 
 #include "_Plugin_Helper.h"
 
+#if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED
+
 #define PLUGIN_152
 #define PLUGIN_ID_152         152
 #define PLUGIN_NAME_152       "Output - ESP32 DAC"
@@ -21,9 +23,6 @@
 #define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
 #define P152_SET_DAC_VALUE(x) UserVar.setFloat(event->TaskIndex, 0, x)
 
-#if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
-# error P152 ESP32 DAC not supported on this CPU type!
-#endif // if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
 
 boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -121,5 +120,7 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 
   return success;
 }
+
+#endif
 
 #endif // USES_P152

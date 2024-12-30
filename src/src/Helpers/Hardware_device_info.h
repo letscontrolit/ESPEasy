@@ -30,7 +30,6 @@ int32_t getPartitionInfo(ESP8266_partition_type ptype, uint32_t& address, int32_
 // had to rename the function to isFlashInterfacePin_ESPEasy
 bool isFlashInterfacePin_ESPEasy(int gpio);
 
-
 uint32_t                   getFlashChipId();
 
 uint32_t                   getFlashRealSizeInBytes();
@@ -51,6 +50,8 @@ struct esp32_chip_features {
 
 esp32_chip_features        getChipFeatures();
 String                     getChipFeaturesString();
+
+bool                      flashVddPinCanBeUsedAsGPIO();
 
 int32_t                   getEmbeddedFlashSize();
 int32_t                   getEmbeddedPSRAMSize();
@@ -74,6 +75,15 @@ uint32_t                   getChipId();
 uint8_t                    getChipCores();
 
 const __FlashStringHelper* getChipModel();
+
+#ifdef ESP32
+const __FlashStringHelper* getChipModel(
+  uint32_t chip_model, 
+  uint32_t chip_revision, 
+  uint32_t pkg_version, 
+  bool single_core);
+#endif
+
 
 bool                       isESP8285(uint32_t& pkg_version, bool& high_temp_version);
 bool                       isESP8285();
