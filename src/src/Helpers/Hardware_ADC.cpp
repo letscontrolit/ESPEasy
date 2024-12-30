@@ -47,9 +47,9 @@ bool Hardware_ADC_t::init(int pin, adc_atten_t attenuation)
     return false;
   }
   _pin = pin;
-# if HAS_TOUCH_GPIO
+#if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
   _isTouchPin = t >= 0;
-# endif // if HAS_TOUCH_GPIO
+#endif
   _attenuation = attenuation;
 
 # if ESP_IDF_VERSION_MAJOR >= 5
@@ -103,7 +103,7 @@ int Hardware_ADC_t::read(bool readAsTouch) {
 # endif // if HAS_HALL_EFFECT_SENSOR
 
 # if ESP_IDF_VERSION_MAJOR >= 5
-  // Starting with IDF 5.x, you can apparently no use ADC2 along with WiFi running.
+  // Starting with IDF 5.x, you can apparently now use ADC2 along with WiFi running.
   // See: https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32/api-reference/peripherals/adc_oneshot.html#hardware-limitations
   const bool canread = true;
 #else
@@ -115,12 +115,12 @@ int Hardware_ADC_t::read(bool readAsTouch) {
 #endif
 
   if (canread) {
-# if HAS_TOUCH_GPIO
+#if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
 
     if (readAsTouch && _isTouchPin) {
       return touchRead(_pin);
     }
-# endif // if HAS_TOUCH_GPIO
+# endif
 
 # if ESP_IDF_VERSION_MAJOR >= 5
 

@@ -407,11 +407,8 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
-
   // Touch (ESP32)
   97,
-  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -1443,11 +1440,8 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
-
   // Touch (ESP32)
   &Plugin_097,
-  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
