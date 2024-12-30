@@ -1446,7 +1446,7 @@ To create/register a plugin, you have to :
     #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
 
-    #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+    #if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED // Only supported on ESP32 and ESP32-S2
       #define USES_P152 // ESP32 DAC
     #endif
 #endif
@@ -2445,7 +2445,7 @@ To create/register a plugin, you have to :
   #ifndef USES_P151
     #define USES_P151   // Environment - I2C Honeywell Pressure
   #endif
-  #if !defined(USES_P152) && (defined(ESP32_CLASSIC) || defined(ESP32S2)) // Only supported on ESP32 and ESP32-S2
+  #if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED // Only supported on ESP32 and ESP32-S2
     #define USES_P152   // ESP32 DAC
   #endif
   #ifndef USES_P153
@@ -3627,5 +3627,18 @@ To create/register a plugin, you have to :
       #define FEATURE_THINGSPEAK_EVENT 1
     #endif
   #endif
+
+  #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
+    #ifdef USES_P152
+      #undef USES_P152
+    #endif
+  #endif
+
+  #if !(defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED)
+    #ifdef USES_P097
+      #undef USES_P097
+    #endif
+  #endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

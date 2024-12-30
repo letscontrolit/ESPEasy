@@ -19,7 +19,7 @@
   #if ESP_IDF_VERSION_MAJOR < 5
   #  define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
   #else
-  #  define MAX_ADC_VALUE ((1 << SOC_ADC_RTC_MAX_BITWIDTH) - 1)
+  #  define MAX_ADC_VALUE ((1 << SOC_ADC_DIGI_MAX_BITWIDTH) - 1)
   #endif
 # endif  // if CONFIG_IDF_TARGET_ESP32
 #endif  // ifdef ESP32

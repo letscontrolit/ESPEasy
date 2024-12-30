@@ -35,6 +35,7 @@
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
+  # include <soc/soc_caps.h>
 #endif // if defined(ESP32)
 
 
