@@ -68,7 +68,7 @@ alt_wifi        | Alternative WiFi configuration     |
 beta            | Arduino Beta release               |
 sdk3            | Arduino SDK v.3                    |
 core_274        | Arduino Core 2.7.4 release         |
-core_302        | Arduino Core 3.0.2 release         |
+core_312        | Arduino Core 3.1.2 release         |
 core_274_sdk3   | Arduino Core 2.7.4 SDK v.3 release |
 
 
@@ -110,7 +110,7 @@ Flash size | Description                 |
 16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
 
-N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.1, to support newer ESP32 chips like ESP32-C2 and ESP32-C6 and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer available in IDF 5 and later. A migration plan will be made available in 2024.
+N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.3, to support newer ESP32 chips like ESP32-C2 and ESP32-C6, and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer officially available in IDF 5 and later. As a temporary solution, a specially crafted IDF 5.1 build that still includes SPIFFS, is used for the SPIFFS builds. A migration plan will be made available in 2025.
 
 *[opt-build-features]* can be any of:
 Build features  | Description                                                                                               |
@@ -140,7 +140,7 @@ ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_CDC_ETH.bin | ESP32-S3
 ESPEasy_mega-20230822_max_ESP32_16M1M.bin                             | ESP32 with 16MB flash                           | All available plugins            |
 ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS_ETH.bin                | ESP32 with 16MB flash, Ethernet                 | All available plugins            |
 
-The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, 'Classic') are available in separate archives.
+The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, Solo1, 'Classic') are available in separate archives.
 
 To see what plugins are included in which collection set, you can find that on the [ESPEasy Plugin overview page](https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html)
 

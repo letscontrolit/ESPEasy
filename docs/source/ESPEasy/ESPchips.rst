@@ -297,7 +297,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 20, 21, 22, 24, 25, 26
       - 20, 21, 22, 24, 25, 26
       - 
-      - 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+      - N/A
    *  - UART
       - 1.5 (Serial1 out only)
       - 3

@@ -1067,26 +1067,30 @@ Example use case:
 As a use case, imagine the output of ser2net (P020) from an OpenTherm gateway.
 
 * Message coming from the serial interface: **T101813C0**
+
   * The B denotes that the message is from the
-  * The next 4 bytes (actually 2bytes hex encoded) denote the status and type of the message.
-  * the last 4 bytes (actually 2bytes hex encoded) denote the payload.
+
+  * The next 4 characters (actually 2bytes hex encoded) denote the status and type of the message.
+
+  * the last 4 characters (actually 2bytes hex encoded) denote the payload.
+
 * Message that ends up in rules when using ser2net (P020) and Generic handling: ``!Serial#BT101813C0``
 
 The room temperature in this sample is 19.75 C
 
 Get the last four bytes in packs of two bytes:
 
-* ``{substring:13:15:%eventvalue1%}``
-* ``{substring:15:17:%eventvalue1%}``
+* ``{substring:13:15:%eventvalue%}``
+* ``{substring:15:17:%eventvalue%}``
 
 Parsing them to decimal representation each (using a base 16 call to strtol):
 
-* ``{strtol:16:{substring:13:15:%eventvalue1%}}``
-* ``{strtol:16:{substring:15:17:%eventvalue1%}}``
+* ``{strtol:16:{substring:13:15:%eventvalue%}}``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}``
 
 Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
 
-* ``{strtol:16:{substring:15:17:%eventvalue1%}}*100/255``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}*100/255``
 
 Complete rule used to parse this and set a variable in a dummy device:
 
@@ -1094,7 +1098,7 @@ Complete rule used to parse this and set a variable in a dummy device:
 
  // Room temperature
  on !Serial#T1018* do
-   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue1%}}.{strtol:16:{substring:15:17:%eventvalue1%}}*100/255
+   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
  endon
 
 

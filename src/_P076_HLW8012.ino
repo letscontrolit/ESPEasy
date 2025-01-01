@@ -19,6 +19,8 @@
 //
 
 /** Changelog:
+ * 2024-12-26 tonhuisman: Add preset for Shelly Plus PLUG-S (ESP32 device), only enabled for ESP32 builds
+ *                        Preset data provided by 'dsiggy' in https://www.letscontrolit.com/forum/viewtopic.php?t=10503#p71477
  * 2023-01-03 tonhuisman: Uncrustify source, apply some code improvements
  *                        Older changelog not registered.
  */
@@ -67,6 +69,7 @@ float p076_hpowfact{};
 # define P076_TeckinUS     8
 # define P076_Gosund       9
 # define P076_Shelly_PLUG_S 10
+# define P076_Shelly_Plus_PLUG_S 11
 
 # if ESP_IDF_VERSION_MAJOR >= 5
 
@@ -98,6 +101,10 @@ bool p076_getDeviceParameters(int      device,
     case P076_Shelly_PLUG_S: SEL_Pin = 12; CF_Pin =  5; CF1_Pin = 14; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Teckin:    // SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
     case P076_Gosund: SEL_Pin = 12; CF_Pin =  4; CF1_Pin =  5; Cur_read =  LOW; CF_Trigger = FALLING; CF1_Trigger = CHANGE; break;
+    # ifdef ESP32
+    case P076_Shelly_Plus_PLUG_S: SEL_Pin = 19; CF_Pin =  10; CF1_Pin =  22; Cur_read =  LOW; CF_Trigger = CHANGE; CF1_Trigger = CHANGE;
+      break;
+    # endif // ifdef ESP32
     default:
       return false;
   }
@@ -163,7 +170,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           F("Teckin"),
           F("Teckin US"),
           F("Gosund SP1 v23"),
-          F("Shelly PLUG-S")
+          F("Shelly PLUG-S"),
+          # ifdef ESP32
+          F("Shelly Plus PLUG-S"),
+          # endif // ifdef ESP32
         };
         const int predefinedId[] = {
           P076_Custom,
@@ -176,7 +186,10 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string) 
           P076_Teckin,
           P076_TeckinUS,
           P076_Gosund,
-          P076_Shelly_PLUG_S
+          P076_Shelly_PLUG_S,
+          # ifdef ESP32
+          P076_Shelly_Plus_PLUG_S,
+          # endif // ifdef ESP32
         };
         constexpr int nrElements = NR_ELEMENTS(predefinedId);
         addFormSelector(F("Device"),

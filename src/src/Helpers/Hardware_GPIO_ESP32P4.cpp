@@ -19,26 +19,22 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   if ((gpio < 0) || !(GPIO_IS_VALID_GPIO(gpio))) { return false; }
 
-
-  if (isFlashInterfacePin_ESPEasy(gpio)) {
-    // Connected to the integrated SPI flash.
-    input   = false;
-    output  = false;
-    warning = true;
-  }
+  // P4 does not use GPIO-pins for accessing flash or PSRAM
 
 # if FEATURE_ETHERNET
 
   // Check pins used for RMII Ethernet PHY
   if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
     switch (gpio) {
-      case 0:
-      case 21:
-      case 19:
-      case 22:
-      case 25:
-      case 26:
-      case 27:
+      case 28: // RMII_RXDV
+      case 29: // RMII_RXD0
+      case 30: // RMII_RXD1
+      case 34: // RMII_TXD0
+      case 35: // RMII_TXD1
+      case 49: // RMII_TXEN
+      case 50: // RMII_CLK
+      case 51: // PHY_RSTN
+      case 52: // MDIO
         warning = true;
         break;
     }

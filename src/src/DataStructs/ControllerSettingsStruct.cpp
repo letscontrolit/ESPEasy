@@ -36,6 +36,7 @@ void ControllerSettingsStruct::reset() {
   ClientTimeout                                 = CONTROLLER_CLIENTTIMEOUT_DFLT;
   MustCheckReply                                = DEFAULT_CONTROLLER_MUST_CHECK_REPLY;
   SampleSetInitiator                            = INVALID_TASK_INDEX;
+  KeepAliveTime                                 = CONTROLLER_KEEP_ALIVE_TIME_DFLT;
   VariousBits1.mqtt_cleanSession                = 0;
   VariousBits1.mqtt_not_sendLWT                 = 0;
   VariousBits1.mqtt_not_willRetain              = 0;
@@ -46,6 +47,7 @@ void ControllerSettingsStruct::reset() {
   VariousBits1.allowExpire                      = 0;
   VariousBits1.deduplicate                      = 0;
   VariousBits1.useLocalSystemTime               = 0;
+  VariousBits1.TLStype                          = 0;
 
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }

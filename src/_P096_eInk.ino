@@ -355,6 +355,10 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("_mode"), P096_CONFIG_FLAG_GET_MODE);
 
+      # if ADAGFX_FONTS_INCLUDED
+      AdaGFXFormDefaultFont(F("deffont"), P096_CONFIG_DEFAULT_FONT);
+      # endif // if ADAGFX_FONTS_INCLUDED
+
       AdaGFXFormFontScaling(F("_fontscale"), P096_CONFIG_FLAG_GET_FONTSCALE);
 
       {
@@ -439,6 +443,9 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       P096_CONFIG_WIDTH  = getFormItemInt(F("_width"));
       P096_CONFIG_HEIGHT = getFormItemInt(F("_height"));
       # endif // if !P096_USE_EXTENDED_SETTINGS
+      # if ADAGFX_FONTS_INCLUDED
+      P096_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
+      # endif // if ADAGFX_FONTS_INCLUDED
 
       # if P096_USE_EXTENDED_SETTINGS
 
