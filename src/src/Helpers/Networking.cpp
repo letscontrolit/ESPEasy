@@ -16,8 +16,8 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 
 #ifdef USES_ESPEASY_NOW
-#include "../Globals/ESPEasy_now_handler.h"
-#endif
+# include "../Globals/ESPEasy_now_handler.h"
+#endif // ifdef USES_ESPEASY_NOW
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
@@ -50,18 +50,18 @@
 // SSDP
 //  #if LWIP_VERSION_MAJOR == 2
 #define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), \
-  (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+        (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
 
 //  #endif
 
 #include <lwip/netif.h>
 
 #ifdef ESP8266
-#include <lwip/opt.h>
-#include <lwip/udp.h>
-#include <lwip/igmp.h>
-#include <include/UdpContext.h>
-#endif
+# include <lwip/opt.h>
+# include <lwip/udp.h>
+# include <lwip/igmp.h>
+# include <include/UdpContext.h>
+#endif // ifdef ESP8266
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -133,7 +133,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
       header += F(" EspEasy: ");
       header.trim();
       header.replace(' ', '_');
-      
+
       #ifdef ESP8266
       portUDP.write(header.c_str(),                                    header.length());
       #endif // ifdef ESP8266
@@ -143,7 +143,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
     }
 
     #ifdef ESP8266
-    portUDP.write(message.c_str(), message.length());
+    portUDP.write(message.c_str(),                                    message.length());
     #endif // ifdef ESP8266
     #ifdef ESP32
     portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
@@ -199,11 +199,11 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE,  strformat(
-      F("UDP  : Send UDP message to %d (%s)"), 
-      unit,
-      remoteNodeIP.toString().c_str()
-      ));
+    addLogMove(LOG_LEVEL_DEBUG_MORE, strformat(
+                 F("UDP  : Send UDP message to %d (%s)"),
+                 unit,
+                 remoteNodeIP.toString().c_str()
+                 ));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -223,7 +223,7 @@ void updateUDPport(bool force)
 {
   static uint16_t lastUsedUDPPort = 0;
 
-  if (!force && Settings.UDPPort == lastUsedUDPPort) {
+  if (!force && (Settings.UDPPort == lastUsedUDPPort)) {
     return;
   }
 
@@ -257,8 +257,10 @@ void updateUDPport(bool force)
 boolean runningUPDCheck = false;
 void checkUDP()
 {
-  if (!NetworkConnected())
+  if (!NetworkConnected()) {
     return;
+  }
+
   if (Settings.UDPPort == 0) {
     return;
   }
@@ -268,7 +270,7 @@ void checkUDP()
   }
   START_TIMER
 
-  runningUPDCheck = true;
+    runningUPDCheck = true;
 
   // UDP events
   int packetSize = portUDP.parsePacket();
@@ -297,7 +299,7 @@ void checkUDP()
     // and then crash due to memory allocation failures
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
-      // Resize it to be 1 byte larger so we can 0-terminate it 
+      // Resize it to be 1 byte larger so we can 0-terminate it
       // in case it is some plain text string
       std::vector<char> packetBuffer;
       packetBuffer.resize(packetSize + 1);
@@ -313,14 +315,14 @@ void checkUDP()
             # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              addLogMove(LOG_LEVEL_DEBUG,  
-                strformat(F("UDP  : %s  Command: %s"), 
-                  formatIP(remoteIP, true).c_str(), 
-                  wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
-                  ));
+              addLogMove(LOG_LEVEL_DEBUG,
+                         strformat(F("UDP  : %s  Command: %s"),
+                                   formatIP(remoteIP, true).c_str(),
+                                   wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
+                                   ));
             }
-            #endif
-            ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]}, true);
+            # endif // ifndef BUILD_NO_DEBUG
+            ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0] }, true);
           }
           else
           {
@@ -333,6 +335,7 @@ void checkUDP()
                   break;
                 }
                 int copy_length = sizeof(NodeStruct);
+
                 // Older versions sent 80 bytes, regardless of the size of NodeStruct
                 // Make sure the extra data received is ignored as it was also not initialized
                 if (len == 80) {
@@ -351,16 +354,16 @@ void checkUDP()
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                    addLogMove(LOG_LEVEL_DEBUG_MORE,  
-                      strformat(F("UDP  : %s (%d) %s,%s,%d"), 
-                        formatIP(remoteIP).c_str(), 
-                        received.unit,
-                        received.STA_MAC().toString().c_str(), 
-                        formatIP(received.IP(), true).c_str(), 
-                        received.unit));
+                    addLogMove(LOG_LEVEL_DEBUG_MORE,
+                               strformat(F("UDP  : %s (%d) %s,%s,%d"),
+                                         formatIP(remoteIP).c_str(),
+                                         received.unit,
+                                         received.STA_MAC().toString().c_str(),
+                                         formatIP(received.IP(), true).c_str(),
+                                         received.unit));
                   }
 
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
                 }
                 break;
               }
@@ -372,8 +375,9 @@ void checkUDP()
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
+
                 // TD-er: Disabled the PLUGIN_UDP_IN call as we don't have any plugin using this.
-                //PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
+                // PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
                 CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
                 break;
               }
@@ -425,29 +429,29 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
   }
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.ip[0] == 0) {
+  if ((it == Nodes.end()) || (it->second.ip[0] == 0)) {
     IPAddress ip;
     return ip;
   }
-#if FEATURE_USE_IPV6
-/*
-  // FIXME TD-er: for now do not try to send to IPv6
-  if (it->second.hasIPv6_mac_based_link_local) {
-    return it->second.IPv6_link_local();
-  }
-  if (it->second.hasIPv6_mac_based_link_global) {
-    return it->second.IPv6_global();
-  }
-*/
-#endif
+# if FEATURE_USE_IPV6
+
+  /*
+     // FIXME TD-er: for now do not try to send to IPv6
+     if (it->second.hasIPv6_mac_based_link_local) {
+      return it->second.IPv6_link_local();
+     }
+     if (it->second.hasIPv6_mac_based_link_global) {
+      return it->second.IPv6_global();
+     }
+   */
+# endif // if FEATURE_USE_IPV6
   return it->second.IP();
 }
-
 
 String getNameForUnit(uint8_t unit) {
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.getNodeName().isEmpty()) {
+  if ((it == Nodes.end()) || it->second.getNodeName().isEmpty()) {
     return EMPTY_STRING;
   }
   return it->second.getNodeName();
@@ -465,7 +469,7 @@ long getAgeForUnit(uint8_t unit) {
 uint16_t getBuildnrForUnit(uint8_t unit) {
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.build == 0) {
+  if ((it == Nodes.end()) || (it->second.build == 0)) {
     return 0;
   }
   return it->second.build;
@@ -508,20 +512,22 @@ void refreshNodeList()
 
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
-  #ifdef USES_ESPEASY_NOW
-  #ifdef ESP8266
+  # ifdef USES_ESPEASY_NOW
+  #  ifdef ESP8266
+
   // FIXME TD-er: Do not perform regular scans on ESP32 as long as we cannot scan per channel
   if (!Nodes.isEndpoint()) {
     WifiScan(true, Nodes.getESPEasyNOW_channel());
   }
-  #endif
-  #endif
+  #  endif // ifdef ESP8266
+  # endif // ifdef USES_ESPEASY_NOW
 
   if (max_age > (0.75 * max_age_allowed)) {
     Scheduler.sendGratuitousARP_now();
   }
   sendSysInfoUDP(1);
-  #ifdef USES_ESPEASY_NOW
+  # ifdef USES_ESPEASY_NOW
+
   if (Nodes.recentlyBecameDistanceZero()) {
     // Send to all channels
     ESPEasy_now_handler.sendDiscoveryAnnounce(-1);
@@ -530,7 +536,7 @@ void refreshNodeList()
   }
   ESPEasy_now_handler.sendNTPquery();
   ESPEasy_now_handler.sendTraceRoute();
-  #endif // ifdef USES_ESPEASY_NOW
+  # endif // ifdef USES_ESPEASY_NOW
 }
 
 /*********************************************************************************************\
@@ -560,7 +566,7 @@ void sendSysInfoUDP(uint8_t repeats)
 
   // Prepare UDP packet to send
   constexpr size_t data_size = sizeof(NodeStruct) + 2;
-  uint8_t data[data_size] = {0};
+  uint8_t data[data_size]    = { 0 };
   data[0] = 255;
   data[1] = 1;
   memcpy(&data[2], thisNode, sizeof(NodeStruct));
@@ -606,42 +612,42 @@ void SSDP_schema() {
             (uint16_t)chipId        & 0xff);
 
   web_server.client().print(F(
-                 "HTTP/1.1 200 OK\r\n"
-                 "Content-Type: text/xml\r\n"
-                 "Connection: close\r\n"
-                 "Access-Control-Allow-Origin: *\r\n"
-                 "\r\n"
-                 "<?xml version=\"1.0\"?>"
-                 "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
-                 "<specVersion>"
-                 "<major>1</major>"
-                 "<minor>0</minor>"
-                 "</specVersion>"
-                 "<URLBase>http://"));
+                              "HTTP/1.1 200 OK\r\n"
+                              "Content-Type: text/xml\r\n"
+                              "Connection: close\r\n"
+                              "Access-Control-Allow-Origin: *\r\n"
+                              "\r\n"
+                              "<?xml version=\"1.0\"?>"
+                              "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
+                              "<specVersion>"
+                              "<major>1</major>"
+                              "<minor>0</minor>"
+                              "</specVersion>"
+                              "<URLBase>http://"));
 
   web_server.client().print(formatIP(ip));
   web_server.client().print(F(":80/</URLBase>"
-                 "<device>"
-                 "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                 "<friendlyName>"));
+                              "<device>"
+                              "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
+                              "<friendlyName>"));
   web_server.client().print(Settings.getName());
   web_server.client().print(F("</friendlyName>"
-                 "<presentationURL>/</presentationURL>"
-                 "<serialNumber>"));
+                              "<presentationURL>/</presentationURL>"
+                              "<serialNumber>"));
   web_server.client().print(String(ESP.getChipId()));
   web_server.client().print(F("</serialNumber>"
-                 "<modelName>ESP Easy</modelName>"
-                 "<modelNumber>"));
+                              "<modelName>ESP Easy</modelName>"
+                              "<modelNumber>"));
   web_server.client().print(getValue(LabelType::GIT_BUILD));
   web_server.client().print(F("</modelNumber>"
-                 "<modelURL>http://www.letscontrolit.com</modelURL>"
-                 "<manufacturer>http://www.letscontrolit.com</manufacturer>"
-                 "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                 "<UDN>uuid:"));
+                              "<modelURL>http://www.letscontrolit.com</modelURL>"
+                              "<manufacturer>http://www.letscontrolit.com</manufacturer>"
+                              "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
+                              "<UDN>uuid:"));
   web_server.client().print(String(uuid));
   web_server.client().print(F("</UDN></device>"
-                 "</root>\r\n"
-                 "\r\n"));
+                              "</root>\r\n"
+                              "\r\n"));
 }
 
 /********************************************************************************************\
@@ -1000,21 +1006,22 @@ bool hasIPaddr() {
 
 bool useStaticIP() {
   #if FEATURE_ETHERNET
+
   if (active_network_medium == NetworkMedium_t::Ethernet) {
     return ethUseStaticIP();
   }
-  #endif
+  #endif // if FEATURE_ETHERNET
   return WiFiUseStaticIP();
 }
 
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
-
 #ifdef USES_ESPEASY_NOW
+
   if (isESPEasy_now_only()) {
     return false;
   }
-#endif
+#endif // ifdef USES_ESPEASY_NOW
 
   if (timeout_ms > 500) {
     timeout_ms = 500;
@@ -1090,14 +1097,15 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
     client.stop();
     return false;
   }
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, strformat(
-      F("connectClient: '%s' port: %u"),
-      ip.toString().c_str(),
-      port));
+             F("connectClient: '%s' port: %u"),
+             ip.toString().c_str(),
+             port));
   }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
 
   // In case of domain name resolution error result can be negative.
   // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
@@ -1107,32 +1115,35 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
   delay(0);
 
   if (!connected) {
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_ERROR, strformat(
-      F("connectClient: connect failed to '%s' port: %u"),
-      ip.toString().c_str(),
-      port));
-  }
-#endif
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_ERROR, strformat(
+               F("connectClient: connect failed to '%s' port: %u"),
+               ip.toString().c_str(),
+               port));
+    }
+# endif // ifndef BUILD_NO_DEBUG
 
     Scheduler.sendGratuitousARP_now();
     client.stop(); // Make sure to start over without some stale connection
   }
   STOP_TIMER(CONNECT_CLIENT_STATS);
-#if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
-#else
+# if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
+# else
 
   if (connected) {
     client.keepAlive(); // Use default keep alive values
   }
-#endif // if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
+# endif // if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
   return connected;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 void scrubDNS() {
   #if FEATURE_ETHERNET
+
   if (active_network_medium == NetworkMedium_t::Ethernet) {
     if (EthEventData.EthServicesInitialized()) {
       setDNS(0, EthEventData.dns0_cache);
@@ -1140,7 +1151,8 @@ void scrubDNS() {
     }
     return;
   }
-  #endif
+  #endif // if FEATURE_ETHERNET
+
   if (WiFiEventData.WiFiServicesInitialized()) {
     setDNS(0, WiFiEventData.dns0_cache);
     setDNS(1, WiFiEventData.dns1_cache);
@@ -1148,48 +1160,53 @@ void scrubDNS() {
 }
 
 bool valid_DNS_address(const IPAddress& dns) {
-  return (/*dns.v4() != (uint32_t)0x00000000 && */
-          dns != IPAddress((uint32_t)0xFD000000) && 
+  return /*dns.v4() != (uint32_t)0x00000000 && */
+         dns != IPAddress((uint32_t)0xFD000000) &&
 #ifdef ESP32
-          // Bug where IPv6 global prefix is set as DNS
-          // Global IPv6 prefixes currently start with 2xxx::
-          (dns[0] & 0xF0) != 0x20 && 
-#endif
-          dns != INADDR_NONE);
+
+         // Bug where IPv6 global prefix is set as DNS
+         // Global IPv6 prefixes currently start with 2xxx::
+         (dns[0] & 0xF0) != 0x20 &&
+#endif // ifdef ESP32
+         dns != INADDR_NONE;
 }
 
 bool setDNS(int index, const IPAddress& dns) {
-  if (index >= 2) return false;
+  if (index >= 2) { return false; }
   #ifdef ESP8266
-  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
+
+  if (dns.isSet() && (dns != WiFi.dnsIP(index))) {
     dns_setserver(index, dns);
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
     }
-    #endif
+    # endif // ifndef BUILD_NO_DEBUG
     return true;
   }
-  #endif
+  #endif // ifdef ESP8266
   #ifdef ESP32
   ip_addr_t d;
   d.type = IPADDR_TYPE_V4;
 
-  if (valid_DNS_address(dns) || dns == INADDR_NONE) {
+  if (valid_DNS_address(dns) || (dns == INADDR_NONE)) {
     // Set DNS0-Server
     d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
-    const ip_addr_t* cur_dns = dns_getserver(index);
-    if (cur_dns != nullptr && cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr) {
+    const ip_addr_t*cur_dns = dns_getserver(index);
+
+    if ((cur_dns != nullptr) && (cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr)) {
       // Still the same as before
       return false;
     }
     dns_setserver(index, &d);
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
     }
     return true;
   }
-  #endif
+  #endif // ifdef ESP32
   return false;
 }
 
@@ -1228,7 +1245,7 @@ bool hostReachable(const String& hostname) {
   }
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    addLogMove(LOG_LEVEL_ERROR,  concat(F("Hostname cannot be resolved: "), hostname));
+    addLogMove(LOG_LEVEL_ERROR, concat(F("Hostname cannot be resolved: "), hostname));
   }
   return false;
 }
@@ -1437,11 +1454,11 @@ String getDigestAuth(const String& authReq,
   // return authorization
   return strformat(
     F("Digest username=\"%s\""
-    ", realm=\"%s\""
-    ", nonce=\"%s\""
-    ", uri=\"%s\""
-    ", algorithm=\"MD5\", qop=auth, nc=%s, cnonce=\"%s\""
-    ", response=\"%s\""),
+      ", realm=\"%s\""
+      ", nonce=\"%s\""
+      ", uri=\"%s\""
+      ", algorithm=\"MD5\", qop=auth, nc=%s, cnonce=\"%s\""
+      ", response=\"%s\""),
     username.c_str(),
     realm.c_str(),
     nonce.c_str(),
@@ -1451,7 +1468,7 @@ String getDigestAuth(const String& authReq,
     md5.toString().c_str()); // response
 }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 void log_http_result(const HTTPClient& http,
                      const String    & logIdentifier,
                      const String    & host,
@@ -1471,8 +1488,8 @@ void log_http_result(const HTTPClient& http,
   }
 
   if (loglevelActiveFor(loglevel)) {
-    String log = strformat(F("HTTP : %s %s %s"), 
-                          logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
+    String log = strformat(F("HTTP : %s %s %s"),
+                           logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
 
     if (!success) {
       log += F("failed ");
@@ -1490,7 +1507,8 @@ void log_http_result(const HTTPClient& http,
     addLogMove(loglevel, log);
   }
 }
-#endif
+
+# endif // ifndef BUILD_NO_DEBUG
 
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
@@ -1522,17 +1540,17 @@ int http_authenticate(const String& logIdentifier,
       postStr,
       must_check_reply);
   }
-  int httpCode = 0;
+  int httpCode              = 0;
   const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
   if (hasCredentials) {
     must_check_reply = true;
     http.setAuthorization(user.c_str(), pass.c_str());
   } else {
-    http.setAuthorization(""); // Clear Basic authorization
-#ifdef ESP32
+    http.setAuthorization("");     // Clear Basic authorization
+# ifdef ESP32
     http.setAuthorizationType(""); // Default type is "Basic"
-#endif
+# endif // ifdef ESP32
   }
   http.setTimeout(timeout);
   http.setUserAgent(get_user_agent_string());
@@ -1542,31 +1560,31 @@ int http_authenticate(const String& logIdentifier,
     http.setRedirectLimit(2);
   }
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
   pClient->setTimeout(timeout);
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(timeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout); // in msec as it should be!
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // Add request header as fall back.
   // When adding another "accept" header, it may be interpreted as:
   // "if you have XXX, send it; or failing that, just give me what you've got."
-  http.addHeader(F("Accept"), F("*/*;q=0.1"));
+  http.addHeader(F("Accept"),          F("*/*;q=0.1"));
 
   // Add client IP
   http.addHeader(F("X-Forwarded-For"), formatIP(NetworkLocalIP()));
 
   delay(0);
   scrubDNS();
-#if defined(CORE_POST_2_6_0) || defined(ESP32)
+# if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
-#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# else // if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri);
-#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
 
   const char *keys[] = { "WWW-Authenticate" };
   http.collectHeaders(keys, 1);
@@ -1576,17 +1594,18 @@ int http_authenticate(const String& logIdentifier,
     String name, value;
 
     while (splitHeaders(headerpos, header, name, value)) {
-      // Disabled the check to exclude "Authorization", due to: 
+      // Disabled the check to exclude "Authorization", due to:
       //   https://github.com/letscontrolit/ESPEasy/issues/4364
       // Check was added for: https://github.com/letscontrolit/ESPEasy/issues/4355
       // However, I doubt this was the actual bug. More likely the supplied credential strings were not entirely empty for whatever reason.
       //
       // Work-around to not add Authorization header since the HTTPClient code
       // only ignores this when base64Authorication is set.
-      
-//      if (!name.equalsIgnoreCase(F("Authorization"))) {
-        http.addHeader(name, value);
-//      }
+
+      //      if (!name.equalsIgnoreCase(F("Authorization"))) {
+      http.addHeader(name, value);
+
+      //      }
     }
   }
 
@@ -1607,18 +1626,18 @@ int http_authenticate(const String& logIdentifier,
         addLogMove(LOG_LEVEL_INFO, concat(F("HTTP : Start Digest Authorization for "), host));
       }
 
-      http.setAuthorization(""); // Clear Basic authorization
-#ifdef ESP32
+      http.setAuthorization("");     // Clear Basic authorization
+# ifdef ESP32
       http.setAuthorizationType(""); // Default type is "Basic" and "Digest" is already part of the string generated by getDigestAuth()
-#endif
+# endif // ifdef ESP32
       const String authorization = getDigestAuth(authReq, user, pass, F("GET"), uri, 1);
 
       http.end();
-#if defined(CORE_POST_2_6_0) || defined(ESP32)
+# if defined(CORE_POST_2_6_0) || defined(ESP32)
       http.begin(client, host, port, uri, false); // HTTP, not HTTPS
-#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# else // if defined(CORE_POST_2_6_0) || defined(ESP32)
       http.begin(client, host, port, uri);
-#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
 
       http.addHeader(F("Authorization"), authorization);
 
@@ -1643,51 +1662,192 @@ int http_authenticate(const String& logIdentifier,
     // Generate event with the HTTP return code
     // e.g. http#hostname=401
     eventQueue.addMove(strformat(F("http#%s=%d"), host.c_str(), httpCode));
-    
-    #if FEATURE_THINGSPEAK_EVENT
-      // Generate event with the response of a 
-      // thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html &
-      // https://de.mathworks.com/help/thingspeak/readdata.html)
-      // e.g. command for a specific field: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last.csv"
-      // command for all fields: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/feeds/last.csv"
-      // where first eventvalue is the channel number and the second to the nineth event values 
-      // are the field values
-      // Example of the event: "EVENT: ThingspeakReply=1637928,5,24.2,12,900,..."
-      //                                                  ^    ^ └------┬------┘
-      //                                   channel number ┘    |        └ received values
-      //                                                   field number (only available for a "single-value-event")
-      // In rules you can grep the reply by "On ThingspeakReply Do ..."
-      //-----------------------------------------------------------------------------------------------------------------------------
-      // 2024-02-05 - Added the option to get a single value of a field or all values of a channel at a certain time (not only the last entry)
-      // Examples:
-      // Single channel: "sendtohttp,api.thingspeak.com,80,channels/1637928/fields/1.csv?end=2024-01-01%2023:59:00&results=1"
-      // => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 1637928
-      // All channels: "sendtohttp,api.thingspeak.com,80,channels/1637928/feeds.csv?end=2024-01-01%2023:59:00&results=1"
-      // => gets the value of each field of the channel 1637928 at (or the last entry before) 23:59:00 
-      //-----------------------------------------------------------------------------------------------------------------------------
 
-    if (httpCode == 200 && equals(host, F("api.thingspeak.com")) && (uri.endsWith(F("/last.csv")) || (uri.indexOf(F("results=1")) >= 0 && uri.indexOf(F(".csv")) >= 0))){
+    # if FEATURE_THINGSPEAK_EVENT
+
+    // Generate event with the response of a
+    // thingspeak request (https://de.mathworks.com/help/thingspeak/readlastfieldentry.html &
+    // https://de.mathworks.com/help/thingspeak/readdata.html)
+    // e.g. command for a specific field: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/fields/5/last.csv"
+    // command for all fields: "sendToHTTP,api.thingspeak.com,80,/channels/1637928/feeds/last.csv"
+    // where first eventvalue is the channel number and the second to the nineth event values
+    // are the field values
+    // Example of the event: "EVENT: ThingspeakReply=1637928,5,24.2,12,900,..."
+    //                                                  ^    ^ └------┬------┘
+    //                                   channel number ┘    |        └ received values
+    //                                                   field number (only available for a "single-value-event")
+    // In rules you can grep the reply by "On ThingspeakReply Do ..."
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // 2024-02-05 - Added the option to get a single value of a field or all values of a channel at a certain time (not only the last entry)
+    // Examples:
+    // Single channel: "sendtohttp,api.thingspeak.com,80,channels/1637928/fields/1.csv?end=2024-01-01%2023:59:00&results=1"
+    // => gets the value of field 1 at (or the last entry before) 23:59:00 of the channel 1637928
+    // All channels: "sendtohttp,api.thingspeak.com,80,channels/1637928/feeds.csv?end=2024-01-01%2023:59:00&results=1"
+    // => gets the value of each field of the channel 1637928 at (or the last entry before) 23:59:00
+    // -----------------------------------------------------------------------------------------------------------------------------
+
+    if ((httpCode == 200) && equals(host,
+                                    F("api.thingspeak.com")) &&
+        (uri.endsWith(F("/last.csv")) || ((uri.indexOf(F("results=1")) >= 0) && (uri.indexOf(F(".csv")) >= 0)))) {
       String result = http.getString();
       result.replace(' ', '_'); // if using a single field with a certain time, the result contains a space and would break the code
       const int posTimestamp = result.lastIndexOf(':');
-      if (posTimestamp >= 0){
+
+      if (posTimestamp >= 0) {
         result = parseStringToEndKeepCase(result.substring(posTimestamp), 3);
-        if (uri.indexOf(F("fields")) >= 0){                                                                           // when there is a single field call add the field number before the value
-          result = parseStringKeepCase(uri, 4, '/').substring(0, 1) + "," + result; // since the field number is always the fourth part of the url and is always a single digit, we can use this to extact the fieldnumber
+
+        if (uri.indexOf(F("fields")) >= 0) {                                        // when there is a single field call add the field
+                                                                                    // number before the value
+          result = parseStringKeepCase(uri, 4, '/').substring(0, 1) + "," + result; // since the field number is always the fourth part of
+                                                                                    // the url and is always a single digit, we can use this
+                                                                                    // to extact the fieldnumber
         }
         eventQueue.addMove(strformat(
-            F("ThingspeakReply=%s,%s"),
-            parseStringKeepCase(uri, 2, '/').c_str(),
-            result.c_str()));
+                             F("ThingspeakReply=%s,%s"),
+                             parseStringKeepCase(uri, 2, '/').c_str(),
+                             result.c_str()));
       }
     }
-    #endif
-  }
+    # endif // if FEATURE_THINGSPEAK_EVENT
+    # if FEATURE_OMETEO_EVENT
 
-#ifndef BUILD_NO_DEBUG
-  log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
-#endif
-  return httpCode;
+    // Generate an event with the response of an open-meteo request (https://open-meteo.com/en/docs)
+    // Example command:
+    // sendtohttp,api.open-meteo.com,80,/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1
+    // No need for an api key and it is free (daily requests are limited to 10,000 in the free version)
+    // Visit the URL and build your personal URL by selecting the location and values you want to receive.
+    // Supported variable kinds are current, hourly, daily!
+    // In rules you can grep the reply by the kind of weather variables with "On Openmeteo#<type> Do ..."
+    // e.g. "On Openmeteo#current Do ...""
+    // Note: hourly and daily results are arrays which can become very long.
+    // Best to make seperate calls. Especially for hourly results.
+
+    if ((httpCode == 200) && equals(host, F("api.open-meteo.com")))
+    {
+      // Length of the response is limited to 5000 characters
+      // ToDo: What would be right size?
+      if (uri.length() > 5000) {
+        addLog(LOG_LEVEL_ERROR, F("Response exceeds 5000 characters"));
+      }
+      else {
+        String str = http.getString();
+
+        // Process URL to get unique keys
+
+
+        auto getCombinedParams = [](String url, String paramName) {
+                                   int start = url.indexOf(paramName + "=");
+
+                                   if (start == -1) { return String(""); }
+                                   start += paramName.length() + 1;
+                                   int end = url.indexOf('&', start);
+                                   return (end == -1) ? url.substring(start) : url.substring(start, end);
+                                 };
+
+        // Extract current and daily parameters
+        String currentParams = getCombinedParams(uri, "current");
+        String hourlyParams  = getCombinedParams(uri, "hourly");
+        String dailyParams   = getCombinedParams(uri, "daily");
+
+        auto processAndQueueParams = [](String& params, String& str, String eventName) {
+                                       if (!params.isEmpty()) {
+                                         String keys[20];
+                                         int    keyCount = 0;
+
+                                         int startIndex = 0;
+                                         int commaIndex = params.indexOf(',');
+
+                                         // Split and add keys to the array
+                                         while (commaIndex != -1) {
+                                           String key = params.substring(startIndex, commaIndex);
+
+
+                                           keys[keyCount++] = key;
+
+                                           startIndex = commaIndex + 1;
+                                           commaIndex = params.indexOf(',', startIndex);
+                                         }
+
+                                         // Add the last key
+                                         String lastKey = params.substring(startIndex);
+
+
+                                         keys[keyCount++] = lastKey;
+
+                                         String csv              = "";
+                                         int    startStringIndex = str.indexOf("\"" + eventName + "\":") + eventName.length() + 4;
+                                         int    endStringIndex   = str.indexOf("}", startStringIndex);
+
+                                         for (int i = 0; i < keyCount; i++) // Use keyCount to limit the iteration
+                                         {
+                                           String key        = keys[i];
+                                           String value      = "";
+                                           int    startIndex = str.indexOf(key + "\":", startStringIndex);
+
+                                           if (startIndex == -1)
+                                           {
+                                             // Handle case where key is not found
+                                             value = "-256"; // Placeholder value
+                                           }
+                                           else
+                                           {
+                                             int endIndex = 0;
+
+                                             if (eventName != "current") { // in daily and hourly the values are stored in an
+                                               // array
+                                               // so
+                                               // get rid of the brackets and put the values in a csv
+                                               startIndex += key.length() + 3; // Move index past the key
+                                               endIndex    = str.indexOf("]", startIndex);
+                                             }
+                                             else {
+                                               startIndex += key.length() + 2; // Move index past the key
+                                               endIndex    = str.indexOf(",", startIndex);
+                                             }
+
+                                             // Find the index of the next comma
+                                             if ((endIndex == -1) || (endIndex > str.indexOf("}", startIndex)))
+                                             {
+                                               endIndex = str.indexOf("}", startIndex); // If no comma is found or comma comes after },
+                                                                                        // take
+                                                                                        // the
+                                                                                        // rest of the string
+                                             }
+
+                                             value = str.substring(startIndex, endIndex);
+                                             value.trim(); // Remove any surrounding whitespace
+                                           }
+
+                                           if (!csv.isEmpty())
+                                           {
+                                             csv += ",";
+                                           }
+                                           csv += value;
+                                         }
+                                         eventName = "OpenMeteo#" + eventName;
+                                         eventQueue.addMove(strformat(F("%s=%s"), eventName.c_str(), csv.c_str()));
+                                       }
+                                     };
+
+
+        // Process currentParams
+        processAndQueueParams(currentParams, str, "current");
+
+        // Process hourlyParams
+        processAndQueueParams(hourlyParams,  str, "hourly");
+
+        // Process dailyParams
+        processAndQueueParams(dailyParams,   str, "daily");
+      }
+
+      # endif // if FEATURE_OMETEO_EVENT
+  }
+}
+
+# ifndef BUILD_NO_DEBUG
+log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
+# endif // ifndef BUILD_NO_DEBUG
+return httpCode;
 }
 
 String send_via_http(const String& logIdentifier,
@@ -1704,6 +1864,7 @@ String send_via_http(const String& logIdentifier,
                      bool          must_check_reply) {
   WiFiClient client;
   HTTPClient http;
+
   http.setReuse(false);
 
   httpCode = http_authenticate(
@@ -1725,19 +1886,22 @@ String send_via_http(const String& logIdentifier,
 
   if ((httpCode > 0) && must_check_reply) {
     response = http.getString();
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
     if (!response.isEmpty()) {
       log_http_result(http, logIdentifier, host, HttpMethod, httpCode, response);
     }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
   }
   http.end();
+
   // http.end() does not call client.stop() if it is no longer connected.
-  // However the client may still keep its internal state which may prevent 
+  // However the client may still keep its internal state which may prevent
   // future connections to the same host until there has been a connection to another host inbetween.
-  client.stop(); 
+  client.stop();
   return response;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD
@@ -1779,7 +1943,7 @@ bool start_downloadFile(WiFiClient  & client,
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(F("downloadFile: URL: %s decoded: %s:%d%s"), 
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("downloadFile: URL: %s decoded: %s:%d%s"),
                                           url.c_str(), host.c_str(), port, uri.c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
@@ -1807,7 +1971,7 @@ bool start_downloadFile(WiFiClient  & client,
     );
 
   if (httpCode != HTTP_CODE_OK) {
-    error  = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
+    error = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
 
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
@@ -1820,6 +1984,7 @@ bool start_downloadFile(WiFiClient  & client,
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
   WiFiClient client;
   HTTPClient http;
+
   http.setReuse(false);
 
   if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
@@ -1827,7 +1992,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   if (fileExists(file_save)) {
-    error  = concat(F("File exists: "), file_save);
+    error = concat(F("File exists: "), file_save);
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
     client.stop();
@@ -1860,7 +2025,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (f.write(buff, c) != c) {
-          error  = strformat(F("Error saving file: %s %d Bytes written"), file_save.c_str(), bytesWritten);
+          error = strformat(F("Error saving file: %s %d Bytes written"), file_save.c_str(), bytesWritten);
           addLog(LOG_LEVEL_ERROR, error);
           http.end();
           client.stop();
@@ -1872,7 +2037,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       }
 
       if (timeOutReached(timeout)) {
-        error  = concat(F("Timeout: "), file_save);
+        error = concat(F("Timeout: "), file_save);
         addLog(LOG_LEVEL_ERROR, error);
         delay(0);
         http.end();
@@ -1892,7 +2057,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
   http.end();
   client.stop();
-  error  = concat(F("Failed to open file for writing: "), file_save);
+  error = concat(F("Failed to open file for writing: "), file_save);
   addLog(LOG_LEVEL_ERROR, error);
   return false;
 }
@@ -1900,18 +2065,20 @@ bool downloadFile(const String& url, String file_save, const String& user, const
 bool downloadFirmware(String filename, String& error)
 {
   String baseurl, user, pass;
+
 # if FEATURE_CUSTOM_PROVISIONING
   MakeProvisioningSettings(ProvisioningSettings);
 
   if (ProvisioningSettings.get()) {
     loadProvisioningSettings(*ProvisioningSettings);
+
     if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
       error = F("Not Allowed");
       return false;
     }
     baseurl = ProvisioningSettings->url;
-    user = ProvisioningSettings->user;
-    pass = ProvisioningSettings->pass;
+    user    = ProvisioningSettings->user;
+    pass    = ProvisioningSettings->pass;
   }
 # endif // if FEATURE_CUSTOM_PROVISIONING
 
@@ -1924,6 +2091,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
 {
   WiFiClient client;
   HTTPClient http;
+
   error.clear();
 
   if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
@@ -1954,8 +2122,8 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (Update.write(buff, c) != c) {
-          error  = strformat(F("Error saving firmware update: %s %d Bytes written"),
-                             file_save.c_str(), bytesWritten);
+          error = strformat(F("Error saving firmware update: %s %d Bytes written"),
+                            file_save.c_str(), bytesWritten);
           break;
         }
         bytesWritten += c;
@@ -1964,7 +2132,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
       }
 
       if (timeOutReached(timeout)) {
-        error  = concat(F("Timeout: "), file_save);
+        error = concat(F("Timeout: "), file_save);
         break;
       }
 
@@ -1983,10 +2151,12 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   }
 
   uint8_t errorcode = 0;
+
   if (!Update.end()) {
     errorcode = Update.getError();
-#ifdef ESP32
-    const __FlashStringHelper * err_fstr = F("Unknown");
+# ifdef ESP32
+    const __FlashStringHelper *err_fstr = F("Unknown");
+
     switch (errorcode) {
       case UPDATE_ERROR_OK:                  err_fstr = F("OK");           break;
       case UPDATE_ERROR_WRITE:               err_fstr = F("WRITE");        break;
@@ -2003,9 +2173,9 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
       case UPDATE_ERROR_ABORT:               err_fstr = F("ABORT");        break;
     }
     error += concat(F(" Error: "), err_fstr);
-#else
+# else // ifdef ESP32
     error += concat(F(" Error: "), errorcode);
-#endif
+# endif // ifdef ESP32
   } else {
     if (Settings.UseRules) {
       eventQueue.addMove(concat(F("ProvisionFirmware#success="), file_save));
@@ -2014,6 +2184,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   }
 
   backgroundtasks();
+
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     addLog(LOG_LEVEL_ERROR, concat(F("Failed update firmware: "), error));
   }
@@ -2048,4 +2219,3 @@ String joinUrlFilename(const String& url, String& filename)
 }
 
 #endif // if FEATURE_DOWNLOAD
-
