@@ -11,7 +11,6 @@
 # define PCA9685_LED0               0x06 // location for start of LED0 registers
 # define PCA9685_ADDRESS            0x40 // I2C address
 # define PCA9685_MAX_ADDRESS        0x7F
-# define PCA9685_NUMS_ADDRESS       (PCA9685_MAX_ADDRESS - PCA9685_ADDRESS)
 # define PCA9685_MAX_PINS           15
 # define PCA9685_MAX_PWM            4095
 # define PCA9685_MIN_FREQUENCY      23   // Min possible PWM cycle frequency

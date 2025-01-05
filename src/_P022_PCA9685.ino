@@ -82,13 +82,14 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t optionValues[PCA9685_NUMS_ADDRESS];
+      constexpr size_t nrOptions = PCA9685_MAX_ADDRESS - PCA9685_ADDRESS + 1;
+      uint8_t optionValues[nrOptions];
 
-      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; ++i)
+      for (uint8_t i = 0; i < nrOptions; ++i)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
-      addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+      addFormSelectorI2C(F("i2c_addr"), nrOptions, optionValues, address);
       break;
     }
 
