@@ -16,6 +16,8 @@
 
 #include <Wire.h>
 
+#define I2C_SCANNER_NR_ADDRESSES 256
+
 #ifdef WEBSERVER_NEW_UI
 
 // ********************************************************************************
@@ -121,8 +123,8 @@ void handle_i2cscanner_json() {
   I2CSelect_Max100kHz_ClockSpeed();    // Always scan in low speed to also find old/slow devices
   #if FEATURE_I2CMULTIPLEXER
   i2c_addresses_t mainBusDevices;
-  mainBusDevices.resize(128);
-  for (int i = 0; i < 128; i++) {
+  mainBusDevices.resize(I2C_SCANNER_NR_ADDRESSES);
+  for (int i = 0; i < I2C_SCANNER_NR_ADDRESSES; i++) {
     mainBusDevices[i] = false;
   }
   nDevices = scanI2CbusForDevices_json(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
@@ -392,7 +394,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
 ) {
   uint8_t error, address;
 
-  for (address = 1; address <= 127; address++)
+  for (address = 1; address < I2C_SCANNER_NR_ADDRESSES; address++)
   {
     #if FEATURE_I2CMULTIPLEXER
     bool skipCheck = false;
@@ -484,8 +486,8 @@ void handle_i2cscanner() {
     I2CSelect_Max100kHz_ClockSpeed();  // Scan bus using low speed
     #if FEATURE_I2CMULTIPLEXER
     i2c_addresses_t mainBusDevices;
-    mainBusDevices.resize(128);
-    for (int i = 0; i < 128; i++) {
+    mainBusDevices.resize(I2C_SCANNER_NR_ADDRESSES);
+    for (int i = 0; i < I2C_SCANNER_NR_ADDRESSES; i++) {
       mainBusDevices[i] = false;
     }
     nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
