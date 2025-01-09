@@ -81,11 +81,14 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     delete _display;
     _display = nullptr;
   }
-  _taskIndex       = event->TaskIndex;
-  _varIndex        = event->BaseVarIndex;
-  _relaypin        = P109_CONFIG_RELAYPIN;
-  _relayInverted   = P109_GET_RELAY_INVERT;
-  _setpointTimeout = P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET;
+  _taskIndex          = event->TaskIndex;
+  _varIndex           = event->BaseVarIndex;
+  _relaypin           = P109_CONFIG_RELAYPIN;
+  _relayInverted      = P109_GET_RELAY_INVERT;
+  _buttonIntPullup[0] = !P109_GET_BUTTON1_INT_PULL_UP;
+  _buttonIntPullup[1] = !P109_GET_BUTTON2_INT_PULL_UP;
+  _buttonIntPullup[2] = !P109_GET_BUTTON3_INT_PULL_UP;
+  _setpointTimeout    = P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET;
 
   if (P109_CONFIG_DISPLAYTYPE == 1) {
     _display = new (std::nothrow) SSD1306Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
@@ -120,7 +123,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 
   for (uint8_t pin = 0; pin < 3; ++pin) {
     if (validGpio(PIN(pin))) {
-      pinMode(PIN(pin), INPUT_PULLUP);
+      pinMode(PIN(pin), _buttonIntPullup[pin] ? INPUT_PULLUP : INPUT);
     }
   }
 
@@ -198,7 +201,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if (_initialized) {
     uint32_t current_time;
 
-    if (validGpio(CONFIG_PIN1) && !digitalRead(CONFIG_PIN1)) {
+    if (validGpio(CONFIG_PIN1) && (_buttonIntPullup[0] ? !digitalRead(CONFIG_PIN1) : digitalRead(CONFIG_PIN1))) {
       current_time = millis();
 
       if (_buttons[0] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
@@ -207,7 +210,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (validGpio(CONFIG_PIN2) && !digitalRead(CONFIG_PIN2)) {
+    if (validGpio(CONFIG_PIN2) && (_buttonIntPullup[1] ? !digitalRead(CONFIG_PIN2) : digitalRead(CONFIG_PIN2))) {
       current_time = millis();
 
       if (_buttons[1] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
@@ -216,7 +219,7 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
     }
 
-    if (validGpio(CONFIG_PIN3) && !digitalRead(CONFIG_PIN3)) {
+    if (validGpio(CONFIG_PIN3) && (_buttonIntPullup[2] ? !digitalRead(CONFIG_PIN3) : digitalRead(CONFIG_PIN3))) {
       current_time = millis();
 
       if (_buttons[2] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
@@ -437,10 +440,10 @@ void P109_data_struct::actionLeft(struct EventStruct *event) {
       break;
     }
     case 2: { // manual on mode, timer dec
-      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS);
+      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] - P109_CONFIG_STEP_TIMEOUT * 60);
 
       if (UserVar[event->BaseVarIndex + 3] < 0) {
-        UserVar.setFloat(event->TaskIndex, 3, 5400);
+        UserVar.setFloat(event->TaskIndex, 3, P109_CONFIG_MAX_TIMEOUT * 60);
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
       break;
@@ -461,9 +464,9 @@ void P109_data_struct::actionRight(struct EventStruct *event) {
       break;
     }
     case 2: { // manual on mode, timer dec
-      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS);
+      UserVar.setFloat(event->TaskIndex, 3, UserVar[event->BaseVarIndex + 3] + P109_CONFIG_STEP_TIMEOUT * 60);
 
-      if (UserVar[event->BaseVarIndex + 3] > 5400) {
+      if (UserVar[event->BaseVarIndex + 3] > P109_CONFIG_MAX_TIMEOUT * 60) {
         UserVar.setFloat(event->TaskIndex, 3, 60);
       }
       _prev_timeout = P109_TIMEOUT_STATE_UNSET;
@@ -482,7 +485,7 @@ void P109_data_struct::actionMode(struct EventStruct *event) {
       break;
     }
     case 1: { // auto mode, next
-      setMode(F("m"), F("5"));
+      setMode(F("m"), toString(P109_CONFIG_TIMEOUT));
       break;
     }
     case 2: { // manual on mode, next
