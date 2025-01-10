@@ -22,9 +22,6 @@
  */
 
 # include "src/PluginStructs/P121_data_struct.h"
-# include <Adafruit_Sensor.h>
-# include <Adafruit_HMC5883_U.h>
-# include <math.h>
 
 # define PLUGIN_121
 # define PLUGIN_ID_121          121
@@ -42,19 +39,16 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_121;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      success                                = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_121;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      success            = true;
       break;
     }
 

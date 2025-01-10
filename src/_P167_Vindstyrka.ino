@@ -32,21 +32,18 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_DEVICE_ADD:
     {
       // This case defines the device characteristics
-      Device[++deviceCount].Number           = PLUGIN_ID_167;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].I2CNoDeviceCheck   = true;
-      Device[deviceCount].I2CMax100kHz       = true; // SEN5x only supports up to 100 kHz
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_167;
+      dev.Type             = DEVICE_TYPE_I2C;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 4;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.I2CNoDeviceCheck = true;
+      dev.I2CMax100kHz     = true; // SEN5x only supports up to 100 kHz
+      dev.PluginStats      = true;
+      dev.OutputDataType   = Output_Data_type_t::Simple;
       break;
     }
 

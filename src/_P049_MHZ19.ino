@@ -4,7 +4,8 @@
 # include "src/PluginStructs/P049_data_struct.h"
 
 /** Changelog:
- * 2024-01-04 tonhuisman: Add Device[].ExitBeforeSeve = false so ABD can be enabled during settings save
+ * 2025-01-03 tonhuisman: Small code size reductions
+ * 2024-01-04 tonhuisman: Add Device[].ExitBeforeSeve = false so ABC can be enabled during settings save
  * 2024-01-04 tonhuisman: Start changelog, most recent change on top
  */
 
@@ -47,19 +48,16 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_049;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].ExitTaskBeforeSave = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_049;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption      = true;
+      dev.ValueCount         = 3;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.PluginStats        = true;
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 
@@ -160,15 +158,15 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P049_data) {
         return success;
       }
-      bool expectReset  = false;
-      unsigned int ppm  = 0;
-      signed int   temp = 0;
-      unsigned int s    = 0;
-      float u           = 0;
+      bool expectReset   = false;
+      unsigned int ppm   = 0;
+      signed int   temp  = 0;
+      unsigned int s     = 0;
+      float u            = 0;
+      const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
 
       if (P049_data->read_ppm(ppm, temp, s, u)) {
-        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
-        String     log;
+        String log;
 
         if (mustLog) {
           log = F("MHZ19: ");
@@ -247,7 +245,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
       } else {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        if (mustLog) {
           addLog(LOG_LEVEL_INFO,
                  concat(F("MHZ19: Unknown response:"), P049_data->getBufferHexDump()));
         }

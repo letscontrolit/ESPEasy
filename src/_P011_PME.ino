@@ -40,16 +40,15 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_011;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].Ports              = PLUGIN_011_PORTS;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_011;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.Ports          = PLUGIN_011_PORTS;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -84,7 +83,8 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     {
       const __FlashStringHelper *options[] = { F("Digital"), F("Analog"), F("Input (switch)") };
       const int optionValues[]             = { P011_TYPE_DIGITAL, P011_TYPE_ANALOG, P011_TYPE_SWITCH };
-      addFormSelector(F("Port Type"), F("p011"), NR_ELEMENTS(options), options, optionValues, P011_PORT_TYPE);
+      constexpr size_t optionCount         = NR_ELEMENTS(options);
+      addFormSelector(F("Port Type"), F("p011"), optionCount, options, optionValues, P011_PORT_TYPE);
 
       success = true;
       break;

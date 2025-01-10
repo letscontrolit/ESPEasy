@@ -45,16 +45,11 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_012;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number      = PLUGIN_ID_012;
+      dev.Type        = DEVICE_TYPE_I2C;
+      dev.VType       = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption = true;
       break;
     }
 
@@ -74,11 +69,12 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
+      constexpr size_t optionCount     = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P012_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), optionCount, i2cAddressValues, P012_I2C_ADDR);
       } else {
-        success = intArrayContains(16, i2cAddressValues, event->Par1);
+        success = intArrayContains(optionCount, i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -99,8 +95,9 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           F("2 x 16"),
           F("4 x 20"),
         };
-        const int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Display Size"), F("psize"), 2, options2, optionValues2, P012_SIZE);
+        const int optionValues2[2]   = { 1, 2 };
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues2);
+        addFormSelector(F("Display Size"), F("psize"), optionCount, options2, optionValues2, P012_SIZE);
       }
 
       {
@@ -126,8 +123,9 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
           F("Truncate exceeding message"),
           F("Clear then truncate exceeding message"),
         };
-        const int optionValues3[] = { 0, 1, 2 };
-        addFormSelector(F("LCD command Mode"), F("pmode"), 3, options3, optionValues3, P012_MODE);
+        const int optionValues3[]    = { 0, 1, 2 };
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues3);
+        addFormSelector(F("LCD command Mode"), F("pmode"), optionCount, options3, optionValues3, P012_MODE);
       }
 
       success = true;
@@ -253,23 +251,23 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P012_data) {
         String cmd = parseString(string, 1);
 
-        if (cmd.equalsIgnoreCase(F("LCDCMD")))
+        if (equals(cmd, F("lcdcmd")))
         {
           success = true;
           String arg1 = parseString(string, 2);
 
-          if (arg1.equalsIgnoreCase(F("Off"))) {
+          if (equals(arg1, F("off"))) {
             P012_data->lcd.noBacklight();
           }
-          else if (arg1.equalsIgnoreCase(F("On"))) {
+          else if (equals(arg1, F("on"))) {
             P012_data->lcd.backlight();
           }
-          else if (arg1.equalsIgnoreCase(F("Clear"))) {
+          else if (equals(arg1, F("clear"))) {
             P012_data->lcd.clear();
             P012_data->splashState = P012_splashState_e::SplashCleared;
           }
         }
-        else if (cmd.equalsIgnoreCase(F("LCD")))
+        else if (equals(cmd, F("lcd")))
         {
           success = true;
           int colPos  = event->Par2 - 1;

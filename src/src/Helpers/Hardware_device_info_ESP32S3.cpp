@@ -8,6 +8,7 @@
 # include <soc/soc.h>
 # include <soc/efuse_reg.h>
 # include <soc/spi_reg.h>
+# include <soc/spi_pins.h>
 # include <soc/rtc.h>
 # include <esp_chip_info.h>
 # include <bootloader_common.h>
@@ -46,7 +47,18 @@
 bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-26 ... 32: SPI flash and PSRAM
   // GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
-  return (gpio) >= 26 && (gpio) <= 32;
+//  return (gpio) >= 26 && (gpio) <= 32;
+  switch (gpio) {
+    case 26: // SPICS1   Only when PSRAM is present???
+    case SPI_IOMUX_PIN_NUM_HD:
+    case SPI_IOMUX_PIN_NUM_CS:
+    case SPI_IOMUX_PIN_NUM_MOSI:
+    case SPI_IOMUX_PIN_NUM_CLK:
+    case SPI_IOMUX_PIN_NUM_MISO:
+    case SPI_IOMUX_PIN_NUM_WP:
+      return true;
+  }
+  return false;
 }
 
 int32_t getEmbeddedFlashSize()

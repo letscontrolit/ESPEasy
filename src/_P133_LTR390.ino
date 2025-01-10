@@ -27,18 +27,15 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_133;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_133;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -99,7 +96,8 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P133_selectMode_e::UVMode),
           static_cast<int>(P133_selectMode_e::ALSMode)
         };
-        addFormSelector(F("Read mode"), F("mode"), 3, selectModeOptions, selectModeValues, P133_SELECT_MODE, true);
+        constexpr size_t optionCount = NR_ELEMENTS(selectModeValues);
+        addFormSelector(F("Read mode"), F("mode"), optionCount, selectModeOptions, selectModeValues, P133_SELECT_MODE, true);
       }
 
       const __FlashStringHelper *gainOptions[] = { F("1x"), F("3x"), F("6x"), F("9x"), F("18x") };
@@ -110,6 +108,7 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
         LTR390_GAIN_9,
         LTR390_GAIN_18
       };
+      constexpr size_t gainCount = NR_ELEMENTS(gainValues);
 
       const __FlashStringHelper *resolutionOptions[] = {
         F("20 bit"),
@@ -127,15 +126,16 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
         LTR390_RESOLUTION_16BIT,
         LTR390_RESOLUTION_13BIT,
       };
+      constexpr size_t resolutionCount = NR_ELEMENTS(resolutionValues);
 
       if (static_cast<P133_selectMode_e>(P133_SELECT_MODE) != P133_selectMode_e::ALSMode) {
-        addFormSelector(F("UV Gain"),       F("uvgain"), 5, gainOptions,       gainValues,       P133_UVGAIN);
-        addFormSelector(F("UV Resolution"), F("uvres"),  6, resolutionOptions, resolutionValues, P133_UVRESOLUTION);
+        addFormSelector(F("UV Gain"),       F("uvgain"), gainCount,       gainOptions,       gainValues,       P133_UVGAIN);
+        addFormSelector(F("UV Resolution"), F("uvres"),  resolutionCount, resolutionOptions, resolutionValues, P133_UVRESOLUTION);
       }
 
       if (static_cast<P133_selectMode_e>(P133_SELECT_MODE) != P133_selectMode_e::UVMode) {
-        addFormSelector(F("Ambient Gain"),       F("alsgain"), 5, gainOptions,       gainValues,       P133_ALSGAIN);
-        addFormSelector(F("Ambient Resolution"), F("alsres"),  6, resolutionOptions, resolutionValues, P133_ALSRESOLUTION);
+        addFormSelector(F("Ambient Gain"),       F("alsgain"), gainCount,       gainOptions,       gainValues,       P133_ALSGAIN);
+        addFormSelector(F("Ambient Resolution"), F("alsres"),  resolutionCount, resolutionOptions, resolutionValues, P133_ALSRESOLUTION);
       }
 
       addFormCheckBox(F("Reset sensor on init"), F("initreset"), P133_INITRESET == 1);

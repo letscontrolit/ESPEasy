@@ -22,17 +22,16 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_031;
-      Device[deviceCount].Type           = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].PullUpOption   = true;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 2;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_031;
+      dev.Type          = DEVICE_TYPE_DUAL;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      dev.PullUpOption  = true;
+      dev.FormulaOption = true;
+      dev.ValueCount    = 2;
+      dev.TimerOption   = true;
+      dev.PluginStats   = true;
+      dev.setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -88,20 +87,16 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
         CONFIG_PIN1, CONFIG_PIN2,
         Settings.TaskDevicePin1PullUp[event->TaskIndex],
         PCONFIG(0));
-        # ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("SHT1x : Status uint8_t: ");
-        log += String(status, HEX);
-        log += F(" - resolution: ");
-        log += ((status & 1) ? F("low") : F("high"));
-        log += F(" reload from OTP: ");
-        log += (((status >> 1) & 1) ? F("yes") : F("no"));
-        log += F(", heater: ");
-        log += (((status >> 2) & 1) ? F("on") : F("off"));
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG, strformat(F("SHT1x : Status uint8_t: %x - resolution: %s reload from OTP: %s, heater: %s"),
+                                          status,
+                                          FsP((status & 1) ? F("low") : F("high")),
+                                          FsP(((status >> 1) & 1) ? F("yes") : F("no")),
+                                          FsP(((status >> 2) & 1) ? F("on") : F("off"))));
       }
-        # endif // ifndef BUILD_NO_DEBUG
+      # endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }

@@ -21,7 +21,7 @@
 # include "src/PluginStructs/P077_data_struct.h"
 
 # define PLUGIN_077
-# define PLUGIN_ID_077         77
+# define PLUGIN_ID_077            77
 # ifdef PLUGIN_SET_SONOFF_POW
   #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766 (POW r2)"
 # else // ifdef PLUGIN_SET_SONOFF_POW
@@ -40,21 +40,18 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_077;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].TaskLogsOwnPeaks   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_077;
+      dev.Type             = DEVICE_TYPE_SERIAL;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 4;
+      dev.OutputDataType   = Output_Data_type_t::Simple;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.TimerOptional    = true;
+      dev.PluginStats      = true;
+      dev.TaskLogsOwnPeaks = true;
       break;
     }
 

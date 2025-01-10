@@ -110,13 +110,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_021;
-      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].ValueCount     = 1;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_021;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -236,7 +236,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
         const int optionValues[]             =
         { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), NR_ELEMENTS(optionValues), options, optionValues, P021_OPMODE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), optionCount, options, optionValues, P021_OPMODE);
 
         // Add timer values depending on build size
         //  - minimum build size: units are always in seconds; drop the units on the form
@@ -487,24 +488,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("levelcontrol")))
       {
-        if (equals(subcmd, F("remote")) && hasValue)
+        if (equals(subcmd, F("remote")) && hasValue && ((event->Par2 == 0) || (event->Par2 == 1)))
         {
-          if (event->Par2 == 1)
-          {
-            P021_remote[event->TaskIndex] = true;
-            #  ifndef P021_MIN_BUILD_SIZE
-            addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=on"));
-            #  endif // ifndef P021_MIN_BUILD_SIZE
-            success = true;
-          }
-          else if (event->Par2 == 0)
-          {
-            P021_remote[event->TaskIndex] = false;
-            #  ifndef P021_MIN_BUILD_SIZE
-            addLogMove(LOG_LEVEL_INFO, F("P021 write: levelcontrol remote=off"));
-            #  endif // ifndef P021_MIN_BUILD_SIZE
-            success = true;
-          }
+          P021_remote[event->TaskIndex] = event->Par2 != 0;
+          #  ifndef P021_MIN_BUILD_SIZE
+          addLogMove(LOG_LEVEL_INFO, concat(F("P021 write: levelcontrol remote="), P021_remote[event->TaskIndex] ? F("on") : F("off")));
+          #  endif // ifndef P021_MIN_BUILD_SIZE
+          success = true;
         }
 
         // If not successful rely upon ESPeasy framework to report the issue
@@ -552,11 +542,11 @@ const __FlashStringHelper* P021_printControlState(int state)
 {
   switch (state)
   {
-    case P021_STATE_IDLE:     return F("Idle");
-    case P021_STATE_ACTIVE:  return F("Active");
-    case P021_STATE_EXTEND:   return F("Extend");
-    case P021_STATE_FORCE:    return F("Force");
-    default:                  return F("***ERROR***");
+    case P021_STATE_IDLE:   return F("Idle");
+    case P021_STATE_ACTIVE: return F("Active");
+    case P021_STATE_EXTEND: return F("Extend");
+    case P021_STATE_FORCE:  return F("Force");
+    default:                return F("***ERROR***");
   }
 }
 

@@ -32,20 +32,16 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_112;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::All;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_112;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.DecimalsOnly   = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.OutputDataType = Output_Data_type_t::All;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -120,7 +116,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_GAIN_16X,
           AS7265X_GAIN_64X,
         };
-        addFormSelector(F("Gain"), F("Gain"), 4, optionsMode, optionValuesMode, PCONFIG_LONG(0));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode);
+        addFormSelector(F("Gain"), F("Gain"), optionCount, optionsMode, optionValuesMode, PCONFIG_LONG(0));
       }
       {
         // Integration cycles from 0 (2.78ms) to 255 (711ms)
@@ -142,7 +139,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           99,
           254,
         };
-        addFormSelector(F("Integration Time"), F("IntegrationTime"), 6, optionsMode2, optionValuesMode2, PCONFIG_LONG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
+        addFormSelector(F("Integration Time"), F("IntegrationTime"), optionCount, optionsMode2, optionValuesMode2, PCONFIG_LONG(1));
       }
       # ifndef BUILD_NO_DEBUG
       addFormNote(F("Raw Readings shall not reach the upper limit of 65535 (Sensor Saturation)."));
@@ -168,7 +166,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_INDICATOR_CURRENT_LIMIT_4MA,
           AS7265X_INDICATOR_CURRENT_LIMIT_8MA,
         };
-        addFormSelector(EMPTY_STRING, PCONFIG_LABEL(1), 4, optionsMode3, optionValuesMode3, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode3);
+        addFormSelector(EMPTY_STRING, PCONFIG_LABEL(1), optionCount, optionsMode3, optionValuesMode3, PCONFIG(1));
       }
       addHtml(F(" Current Limit"));
       # ifndef BUILD_NO_DEBUG
@@ -193,7 +192,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_LED_CURRENT_LIMIT_50MA,
           AS7265X_LED_CURRENT_LIMIT_100MA,
         };
-        addFormSelector(F("White"), PCONFIG_LABEL(2), 4, optionsMode4, optionValuesMode4, PCONFIG(2));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode4);
+        addFormSelector(F("White"), PCONFIG_LABEL(2), optionCount, optionsMode4, optionValuesMode4, PCONFIG(2));
       }
       addHtml(F(" Current Limit"));
 
@@ -213,7 +213,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_LED_CURRENT_LIMIT_25MA,
           AS7265X_LED_CURRENT_LIMIT_50MA,
         };
-        addFormSelector(F("IR"), PCONFIG_LABEL(3), 3, optionsMode5, optionValuesMode5, PCONFIG(3));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode5);
+        addFormSelector(F("IR"), PCONFIG_LABEL(3), optionCount, optionsMode5, optionValuesMode5, PCONFIG(3));
       }
 
       {
@@ -224,7 +225,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_UV-bad); //Not allowed
         const __FlashStringHelper *optionsMode6[] = { F("12.5 mA (default)") };
         const int optionValuesMode6[]             = { AS7265X_LED_CURRENT_LIMIT_12_5MA };
-        addFormSelector(F("UV"), PCONFIG_LABEL(4), 1, optionsMode6, optionValuesMode6, PCONFIG(4));
+        constexpr size_t optionCount              = NR_ELEMENTS(optionValuesMode6);
+        addFormSelector(F("UV"), PCONFIG_LABEL(4), optionCount, optionsMode6, optionValuesMode6, PCONFIG(4));
       }
       addFormNote(F("Control Gain and Integration Time after any change to avoid Sensor Saturation!"));
 

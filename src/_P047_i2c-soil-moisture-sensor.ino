@@ -46,18 +46,15 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_047;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_047;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -170,7 +167,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         # if P047_FEATURE_BEFLE_V3
 
         if (P047_MODEL_CATNIP == static_cast<P047_SensorModels>(P047_MODEL))
-        # endif // if !P047_FEATURE_BEFLE_V3
+        # endif // if P047_FEATURE_BEFLE_V3
         {
           addFormCheckBox(F("Check sensor version"), F("version"), P047_CHECK_VERSION);
         }

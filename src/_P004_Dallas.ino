@@ -51,18 +51,17 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_004;
-      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 1;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].OutputDataType   = Output_Data_type_t::Simple;
-      Device[deviceCount].PluginStats      = true;
-      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_004;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.PluginStats    = true;
+      dev.setPin2Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -139,18 +138,20 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          const __FlashStringHelper *resultsOptions[4] = { F("9"), F("10"), F("11"), F("12") };
-          int resultsOptionValues[4]                   = { 9, 10, 11, 12 };
-          addFormSelector(F("Device Resolution"), F("res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
+          const __FlashStringHelper *resultsOptions[] = { F("9"), F("10"), F("11"), F("12") };
+          const int resultsOptionValues[]             = { 9, 10, 11, 12 };
+          constexpr size_t optionCount                = NR_ELEMENTS(resultsOptionValues);
+          addFormSelector(F("Device Resolution"), F("res"), optionCount, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
         }
 
         {
           // Value in case of Error
-          const __FlashStringHelper *resultsOptions[5] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
-          int resultsOptionValues[5]                   =
+          const __FlashStringHelper *resultsOptions[] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+          int resultsOptionValues[]                   =
           { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
-          addFormSelector(F("Error State Value"), F("err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
+          constexpr size_t optionCount = NR_ELEMENTS(resultsOptionValues);
+          addFormSelector(F("Error State Value"), F("err"), optionCount, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
         addFormNote(F("External pull up resistor is needed, see docs!"));
 
@@ -338,9 +339,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 } else {
                   log += F("Error!");
                 }
-                log += F(" (");
-                log += P004_data->get_formatted_address(i);
-                log += ')';
+                log += strformat(F(" (%s)"), P004_data->get_formatted_address(i).c_str());
                 addLogMove(LOG_LEVEL_INFO, log);
               }
             }

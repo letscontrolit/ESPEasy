@@ -22,14 +22,15 @@ bool isError(CalculateReturnCode returnCode) {
   return returnCode != CalculateReturnCode::OK;
 }
 
-bool RulesCalculate_t::is_number(char oc, char c)
+bool RulesCalculate_t::is_number(char oc, char c, char pc)
 {
   // Check if it matches part of a number (identifier)
   return
     (c == '.')   ||                                // A decimal point of a floating point number.
     ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
     isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
-    (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
+    ((is_operator(oc) || ('\0' == oc)) && (c == '-') 
+        && (isdigit(pc) || ('\0' == pc))) // Beginning of a negative number after an operator or 'separator' and before a digit or end-of-digit.
   ;
 }
 
@@ -309,6 +310,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.2f 2: %.2f"), token[0], first, second));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
@@ -317,6 +319,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.2f"), token[0], first));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
@@ -329,12 +332,17 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_quinary_operator(token[0], first, second, third, fourth, fifth));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.2f 2: %.2f 3: %.2f 4: %.2f 5: %.2f"), token[0], first, second, third, fourth, fifth));
 
   } else {
     // Fetch next if there is any
     ESPEASY_RULES_FLOAT_TYPE value{};
-    validDoubleFromString(token, value);
+    if (validDoubleFromString(token, value)) {
 
+    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.2f token: %s"), value, token));
+    // } else {
+    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unknown token: %s"), token));
+    }
     ret = push(value); // If it is a value, push to the stack
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
@@ -382,6 +390,7 @@ bool RulesCalculate_t::op_left_assoc(const char c)
   return false;
 }
 
+/* unused:
 unsigned int RulesCalculate_t::op_arg_count(const char c)
 {
   if (is_unary_operator(c)) { return 1; }
@@ -391,6 +400,7 @@ unsigned int RulesCalculate_t::op_arg_count(const char c)
   if (is_quinary_operator(c)) { return 5; }
   return 0;
 }
+*/
 
 CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RULES_FLOAT_TYPE *result)
 {
@@ -399,11 +409,12 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
   checkRAM(F("Calculate"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   const char *strpos = input, *strend = input + strlen(input);
-  char token[TOKEN_LENGTH];
-  char c, oc, *TokenPos = token;
-  char stack[OPERATOR_STACK_SIZE]; // operator stack
-  unsigned int sl = 0;             // stack length
-  char sc;                         // used for record stack element
+  char token[TOKEN_LENGTH]{};
+  char c, oc, pc, *TokenPos = token;
+  const char *pcpos;
+  char stack[OPERATOR_STACK_SIZE]{}; // operator stack
+  unsigned int sl = 0;               // stack length
+  char sc;                           // used for record stack element
   CalculateReturnCode error = CalculateReturnCode::OK;
 
   // *sp=0; // bug, it stops calculating after 50 times
@@ -428,14 +439,26 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
 
     if (c != ' ')
     {
+      // Get peek-ahead char
+      pcpos = strpos + 1;
+      pc = *pcpos;
+      while ((pcpos < strend) && (' ' == pc)) {
+        ++pcpos;
+        pc = *pcpos;
+      }
+      // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate is_number: oc: %d c: %d/%c pc: %d token: %s input: %s sl: %u"), oc, c, c, pc, token, input, sl));
+      if ((pcpos >= strend)) {
+        pc = '\0';
+      }
       // If the token is a number (identifier), then add it to the token queue.
-      if (is_number(oc, c))
+      if (is_number(oc, c, pc))
       {
         *TokenPos = c;
         ++TokenPos;
+        *(TokenPos) = 0; // Mark current end of token string
       }
 
-      // If the token is an operator, op1, then:
+      // If the token is any operator, op1, then:
       else if (is_operator(c) || is_unary_operator(c) || is_quinary_operator(c))
       {
         *(TokenPos) = 0; // Mark end of token string
@@ -486,6 +509,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
         TokenPos    = token;
+        c           = 0; // reset
       }
 
       // If the token is a left parenthesis, then push it onto the stack.
@@ -494,36 +518,63 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         if (sl >= OPERATOR_STACK_SIZE) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
         stack[sl] = c;
         ++sl;
+        c = 0; // reset
       }
 
       // If the token is a right parenthesis:
       else if (c == ')')
       {
         bool pe = false;
+        sc = '\0';
+        // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack), sl + 1).c_str()));
 
         // Until the token at the top of the stack is a left parenthesis,
         // pop operators off the stack onto the token queue
-        while (sl > 0)
+        while (sl < OPERATOR_STACK_SIZE)
         {
           *(TokenPos) = 0; // Mark end of token string
-          error       = RPNCalculate(token);
-          TokenPos    = token;
+          // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate popping stack sl: %u token: %s sc: %d"), sl, token, sc));
+          if (sc == '(') {
+            ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
+            error = push(first); // push back
+            error = push(first); // Push as a result of ()
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate pop&push 2x last value: %.2f sl: %u"), first, sl));
+          } else {
+            error = RPNCalculate(token);
+            // ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
+            // error = push(first); // push back
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.2f sl: %u"), first, sl));
+          }
+          TokenPos = token;
 
           if (isError(error)) { return error; }
 
-          if (sl > OPERATOR_STACK_SIZE) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
-          sc = stack[sl - 1];
+          // we're not growing the stack: if (sl > OPERATOR_STACK_SIZE) { return CalculateReturnCode::ERROR_STACK_OVERFLOW; }
+          if (sl > 0) {
+            sc = stack[sl - 1];
+          }
+          if (pe || (sl == 0)) {
+            break;
+          }
 
           if (sc == '(')
           {
             pe = true;
-            break;
+            if (sl > 1) {
+              sc = stack[sl - 2];
+              if (!(is_operator(sc) || is_unary_operator(sc) || is_quinary_operator(sc))) {
+                sc = '(';
+              }
+            }
           }
-          else
+          // else
           {
             *TokenPos = sc;
             ++TokenPos;
-            sl--;
+            if (sl > 0) {
+              sl--;
+            }
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate next token: %s sl: %u sc: %d"), token, sl, sc));
           }
         }
 
@@ -533,13 +584,15 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         }
 
         // Pop the left parenthesis from the stack, but not onto the token queue.
-        sl--;
+        if (sl > 0) {
+          sl--;
+        }
 
         // If the token at the top of the stack is a function token, pop it onto the token queue.
         // FIXME TD-er: This sc value is never used, it is re-assigned a new value before it is being checked.
-        if ((sl > 0) && (sl < OPERATOR_STACK_SIZE)) {
-          sc = stack[sl - 1];
-        }
+        // if ((sl > 0) && (sl < OPERATOR_STACK_SIZE)) {
+        //   sc = stack[sl - 1];
+        // }
       }
       else {
         return CalculateReturnCode::ERROR_UNKNOWN_TOKEN;

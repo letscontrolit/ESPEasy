@@ -7,6 +7,7 @@
 # include <soc/soc.h>
 # include <soc/efuse_reg.h>
 # include <soc/spi_reg.h>
+# include <soc/spi_pins.h>
 # include <soc/rtc.h>
 # include <esp_chip_info.h>
 # include <bootloader_common.h>
@@ -28,7 +29,18 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-22 ... 25: SPI flash and PSRAM
   // GPIO-26: CS for PSRAM, thus only unuable when PSRAM is present
   // GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
-  return (gpio) >= 22 && (gpio) <= 25;
+//  return (gpio) >= 22 && (gpio) <= 25;
+  switch (gpio) {
+    case SPI_IOMUX_PIN_NUM_HD:
+    case SPI_IOMUX_PIN_NUM_CS:
+    case SPI_IOMUX_PIN_NUM_MOSI:
+    case SPI_IOMUX_PIN_NUM_CLK:
+    case SPI_IOMUX_PIN_NUM_MISO:
+    case SPI_IOMUX_PIN_NUM_WP:
+      return true;
+  }
+  return false;
+
 }
 
 bool flashVddPinCanBeUsedAsGPIO()

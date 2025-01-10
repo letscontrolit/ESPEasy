@@ -5,6 +5,11 @@
 // #################################### Plugin 063: TTP229 KeyPad ########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-04 tonhuisman: Make plugin multi-instance by not using a static variable for lastKey, but reading back from UserVar
+ *                        Minor code optimizations
+ */
+
 // ESPEasy Plugin to scan a 16 key touch pad chip TTP229
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
@@ -71,16 +76,15 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_063;
-      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].ValueCount       = 1;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].TimerOptional    = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_063;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -168,9 +172,9 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      static uint16_t keyLast = 0;
-      int16_t pinSCL          = CONFIG_PIN1;
-      int16_t pinSDO          = CONFIG_PIN2;
+      const uint16_t keyLast = UserVar.getFloat(event->TaskIndex, 0); // Last set value, makes plugin multi-instance
+      const int16_t  pinSCL  = CONFIG_PIN1;
+      const int16_t  pinSDO  = CONFIG_PIN2;
 
       uint16_t key = readTTP229(pinSCL, pinSDO);
 
@@ -191,9 +195,7 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
       if (keyLast != key)
       {
-        keyLast = key;
         UserVar.setFloat(event->TaskIndex, 0, key);
-        event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("Tkey : ");

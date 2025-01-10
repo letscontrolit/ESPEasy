@@ -48,16 +48,17 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_138;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 4;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_138;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -143,12 +144,13 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P138_valueOptions_e::ChargeLevel),
           static_cast<int>(P138_valueOptions_e::PowerSource),
         };
+        constexpr size_t optionCount = NR_ELEMENTS(valValues);
 
         for (uint8_t i = 0; i < P138_NR_OUTPUT_VALUES; i++) {
           sensorTypeHelper_loadOutputSelector(event,
                                               P138_CONFIG_BASE + i,
                                               i,
-                                              sizeof(valValues) / sizeof(int),
+                                              optionCount,
                                               valOptions,
                                               valValues);
         }

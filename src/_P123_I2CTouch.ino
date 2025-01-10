@@ -71,19 +71,13 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_123;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].ExitTaskBeforeSave = false;
-      Device[deviceCount].I2CNoDeviceCheck   = true;
-      success                                = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_123;
+      dev.Type               = DEVICE_TYPE_I2C;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount         = 3;
+      dev.ExitTaskBeforeSave = false;
+      dev.I2CNoDeviceCheck   = true;
       break;
     }
 
@@ -206,9 +200,10 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(P123_TouchType_e::CHSC5816),
             static_cast<int>(P123_TouchType_e::Automatic),
           };
+          constexpr size_t optionCount = NR_ELEMENTS(touchTypeOptions);
           addFormSelector(F("Touchscreen type (address)"),
                           F("ttype"),
-                          NR_ELEMENTS(touchTypeOptions),
+                          optionCount,
                           touchTypes,
                           touchTypeOptions,
                           P123_GET_TOUCH_TYPE);

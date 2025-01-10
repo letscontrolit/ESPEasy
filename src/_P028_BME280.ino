@@ -33,19 +33,16 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_028;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].ErrorStateValues   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_028;
+      dev.Type             = DEVICE_TYPE_I2C;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 3;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.ErrorStateValues = true;
+      dev.PluginStats      = true;
       break;
     }
 
@@ -209,7 +206,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P028_data) {
         if ((P028_data_struct::BMx_DetectMode::BMP280 != static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE)) &&
-            P028_data->hasHumidity()) 
+            P028_data->hasHumidity())
         {
           P028_data->plot_ChartJS_scatter(
             0,
@@ -221,10 +218,11 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             500);
         }
       }
+
       // Do not set success = true, since we're not actually adding stats, but just plotting a scatter plot
       break;
     }
-#endif
+# endif // if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
 
 
     case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
@@ -350,17 +348,17 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String hum;
+
             if (P028_data->hasHumidity()) {
               hum = formatUserVarNoCheck(event, 1);
             }
-            addLogMove(LOG_LEVEL_INFO, concat(
-              P028_data_struct::getDeviceName(P028_data->sensorID),
-              strformat(
-                F(": Addr: %s T: %s H: %s P: %s"), 
-                formatToHex(P028_I2C_ADDRESS, 2).c_str(),
-                formatUserVarNoCheck(event, 0).c_str(),
-                hum.c_str(),
-                formatUserVarNoCheck(event, 2).c_str())));
+            addLogMove(LOG_LEVEL_INFO,
+                       strformat(F("%s: Addr: %s T: %s H: %s P: %s"),
+                                 FsP(P028_data_struct::getDeviceName(P028_data->sensorID)),
+                                 formatToHex(P028_I2C_ADDRESS, 2).c_str(),
+                                 formatUserVarNoCheck(event, 0).c_str(),
+                                 hum.c_str(),
+                                 formatUserVarNoCheck(event, 2).c_str()));
           }
           # endif // ifndef LIMIT_BUILD_SIZE
           success = true;

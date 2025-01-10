@@ -21,23 +21,24 @@
 boolean Plugin_175(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
+
   P053_for_P175 = true; // Ignore this error, compiler can see it as all .ino files are smart-copied into ESPEasy.ino
 
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_175;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 4;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].I2CMax100kHz   = true; // Max I2C Clock speed 100 kHz
-      success                            = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_175;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.I2CMax100kHz   = true; // Max I2C Clock speed 100 kHz
+
       break;
     }
 

@@ -6,7 +6,7 @@
 // #######################################################################################################
 // P164 "GASES - ENS16x (TVOC, eCO2)"
 // Plugin for ENS160 & ENS161 TVOC and eCO2 sensor with I2C interface from ScioSense
-// For documentation of the ENS160 hardware device see 
+// For documentation of the ENS160 hardware device see
 // https://www.sciosense.com/wp-content/uploads/documents/SC-001224-DS-9-ENS160-Datasheet.pdf
 //
 // PLugin code:
@@ -29,18 +29,15 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_164;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_164;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -85,7 +82,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       P164_PCONFIG_I2C_ADDR = P164_ENS160_I2CADDR_1;
-      success = true;
+      success               = true;
       break;
     }
 
@@ -107,10 +104,10 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      float temperature = 20.0f;  // A reasonable value in case temperature source task is invalid
-      float humidity = 50.0f;     // A reasonable value in case humidity source task is invalid
-      float tvoc = 0.0f;          // tvoc value to be retrieved from device
-      float eco2 = 0.0f;          // eCO2 value to be retrieved from device
+      float temperature = 20.0f; // A reasonable value in case temperature source task is invalid
+      float humidity    = 50.0f; // A reasonable value in case humidity source task is invalid
+      float tvoc        = 0.0f;  // tvoc value to be retrieved from device
+      float eco2        = 0.0f;  // eCO2 value to be retrieved from device
 
       if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
       {
@@ -140,6 +137,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     {
       P164_data_struct *P164_data =
         static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (nullptr == P164_data) {
         break;
       }

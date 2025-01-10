@@ -37,19 +37,16 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_115;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;                  // how the device is connected
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE; // type of value the plugin will return
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_115;
+      dev.Type           = DEVICE_TYPE_I2C;                  // how the device is connected
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE; // type of value the plugin will return
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.DecimalsOnly   = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -109,7 +106,8 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
           MAX1704X_MAX17044,
           MAX1704X_MAX17048,
           MAX1704X_MAX17049 };
-        addFormSelector(F("Device"), F("device"), 4, options, optionValues, choice);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Device"), F("device"), optionCount, options, optionValues, choice);
       }
 
       addFormNumericBox(F("Alert threshold"), F("threshold"), P115_THRESHOLD, 1, 32);

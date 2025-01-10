@@ -34,7 +34,7 @@
  *
  * The parameters are (in this order)
  * * The type of the heatpump as a string, see the implementations of different models, like
- *https://github.com/ToniA/arduino-heatpumpir/blob/master/MitsubishiHeatpumpIR.cpp
+ * https://github.com/ToniA/arduino-heatpumpir/blob/master/MitsubishiHeatpumpIR.cpp
  * * power state (see https://github.com/ToniA/arduino-heatpumpir/blob/master/HeatpumpIR.h for modes)
  * * operating mode
  * * fan speed
@@ -61,12 +61,11 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_088;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_088;
+      dev.Type     = DEVICE_TYPE_SINGLE;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       break;
     }

@@ -15,13 +15,13 @@
 
 #if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED
 
-#define PLUGIN_152
-#define PLUGIN_ID_152         152
-#define PLUGIN_NAME_152       "Output - ESP32 DAC"
-#define PLUGIN_VALUENAME1_152 "Output"
+# define PLUGIN_152
+# define PLUGIN_ID_152         152
+# define PLUGIN_NAME_152       "Output - ESP32 DAC"
+# define PLUGIN_VALUENAME1_152 "Output"
 
-#define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
-#define P152_SET_DAC_VALUE(x) UserVar.setFloat(event->TaskIndex, 0, x)
+# define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
+# define P152_SET_DAC_VALUE(x) UserVar.setFloat(event->TaskIndex, 0, x)
 
 
 boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
@@ -32,14 +32,13 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_152;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Custom             = true;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_152;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.Custom        = true;
+      dev.FormulaOption = true;
+      dev.ValueCount    = 1;
       break;
     }
 
@@ -121,6 +120,6 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif
+#endif // if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED
 
 #endif // USES_P152

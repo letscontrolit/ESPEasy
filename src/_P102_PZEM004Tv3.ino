@@ -58,18 +58,15 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_102;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_102;
+      dev.Type           = DEVICE_TYPE_SERIAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -147,21 +144,24 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       if (P102_PZEM_FIRST == event->TaskIndex)                               // If first PZEM, serial config available
       {
         addHtml(F("<br><B>This PZEM is the first. Its configuration of serial Pins will affect next PZEM. </B>"));
-        addHtml(F(
-                  "<span style=\"color:red\"> <br><B>If several PZEMs foreseen, don't use HW serial (or invert Tx and Rx to configure as SW serial).</B></span>"));
+        addHtml(F("<span style=\"color:red\"> <br><B>If several PZEMs foreseen, "
+                  "don't use HW serial (or invert Tx and Rx to configure as SW serial).</B></span>"));
         addFormSubHeader(F("PZEM actions"));
         {
-          const __FlashStringHelper *options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
+          const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
+          constexpr size_t optionCount               = NR_ELEMENTS(options_model);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
         {
-          addHtml(F(
-                    "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
+          addHtml(F("<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. "
+                    "Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
           {
-            const __FlashStringHelper *options_confirm[2] = { F("NO"), F("YES") };
-            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
+            const __FlashStringHelper *options_confirm[] = { F("NO"), F("YES") };
+            constexpr size_t optionCount                 = NR_ELEMENTS(options_confirm);
+            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), optionCount, options_confirm, nullptr,
+                            P102_PZEM_ADDR_SET);
           }
           addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
@@ -182,8 +182,9 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       {
         addFormSubHeader(F("PZEM actions"));
         {
-          const __FlashStringHelper *options_model[2] = { F("Read_value"), F("Reset_Energy") };
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
+          const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy") };
+          constexpr size_t optionCount               = NR_ELEMENTS(options_model);
+          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 1, 247);
@@ -223,8 +224,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       // FIXME TD-er: This will fail if the set to be first taskindex is no longer enabled
       if (P102_PZEM_FIRST == event->TaskIndex) // If first PZEM, serial config available
       {
-        int rxPin                    = CONFIG_PIN1;
-        int txPin                    = CONFIG_PIN2;
+        const int rxPin              = CONFIG_PIN1;
+        const int txPin              = CONFIG_PIN2;
         const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
         if (P102_PZEM_sensor != nullptr) {
@@ -349,7 +350,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
     {
       if (Plugin_102_init)
       {
-        String command = parseString(string, 1);
+        const String command = parseString(string, 1);
 
         if ((equals(command, F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
         {

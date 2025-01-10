@@ -90,19 +90,15 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_092;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_092;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.DecimalsOnly   = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -145,22 +141,23 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("ppinmode"), 2, options, optionValues, choice);
       }
       {
-        const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = {
+        const __FlashStringHelper *Devices[] = {
           F("ESR21"),
           F("UVR31"),
           F("UVR42"),
           F("UVR1611"),
           F("UVR 61-3 (up to v8.2)"),
           F("UVR 61-3 (v8.3 or higher)") };
-        const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 42, 1611, 6132, 6133 };
+        const int DevTypes[]         = { 21, 31, 42, 1611, 6132, 6133 };
+        constexpr size_t optionCount = NR_ELEMENTS(Devices);
 
-        addFormSelector(F("DL-Bus Type"), F("pdlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
+        addFormSelector(F("DL-Bus Type"), F("pdlbtype"), optionCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
       }
       {
         int P092_ValueType, P092_ValueIdx;
         P092_Last_DLB_Pin = CONFIG_PIN1;
-        const String plugin_092_DefValueName                  = F(PLUGIN_VALUENAME1_092);
-        const int    P092_OptionTypes[P092_DLbus_OptionCount] = {
+        const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
+        const int    P092_OptionTypes[]      = {
           // Index der Variablen
           0, // F("None")
           1, // F("Sensor")
@@ -171,7 +168,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           6, // F("Heat power (kW)")
           7  // F("Heat meter (MWh)")
         };
-        const __FlashStringHelper *Options[P092_DLbus_OptionCount] = {
+        constexpr size_t optionCount         = NR_ELEMENTS(P092_OptionTypes);
+        const __FlashStringHelper *Options[] = {
           F("None"),
           F("Sensor"),
           F("Ext. sensor"),
@@ -182,18 +180,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           F("Heat meter (MWh)")
         };
 
-        uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
-
-        // Calculation of the max indices for each sensor type
-        // default indizes for UVR31
-        P092_MaxIdx[0] = 0;      // None
-        P092_MaxIdx[1] = 3;      // Sensor
-        P092_MaxIdx[2] = 0;      // Ext. sensor
-        P092_MaxIdx[3] = 1;      // Digital output
-        P092_MaxIdx[4] = 0;      // Speed step
-        P092_MaxIdx[5] = 0;      // Analog output
-        P092_MaxIdx[6] = 0;      // Heat power (kW)
-        P092_MaxIdx[7] = 0;      // Heat meter (MWh)
+        uint8_t P092_MaxIdx[] {
+          // Calculation of the max indices for each sensor type
+          // default indizes for UVR31
+          0, // None
+          3, // Sensor
+          0, // Ext. sensor
+          1, // Digital output
+          0, // Speed step
+          0, // Analog output
+          0, // Heat power (kW)
+          0, // Heat meter (MWh)
+        };
 
         switch (PCONFIG(0)) {
           case 21:               // ESR21
@@ -240,7 +238,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         addFormSelector(plugin_092_DefValueName,
                         F("pValue"),
-                        P092_DLbus_OptionCount,
+                        optionCount,
                         Options,
                         P092_OptionTypes,
                         nullptr,
@@ -288,8 +286,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_OptionValueDecimals[6] = 2;
       }
 
-      int OptionIdx = getFormItemInt(F("pValue"));
-      int CurIdx    = getFormItemInt(F("pIdx"));
+      const int OptionIdx = getFormItemInt(F("pValue"));
+      int CurIdx          = getFormItemInt(F("pIdx"));
 
       if (CurIdx < 1) {
         CurIdx = 1;
@@ -324,13 +322,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         String log = F("PLUGIN_WEBFORM_SAVE :");
         log += F(" DLB_Pin:");
         log += CONFIG_PIN1;
-        log += F(" DLbus_MinPulseWidth:");
+        log += F(" MinPulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MinPulseWidth;
-        log += F(" DLbus_MaxPulseWidth:");
+        log += F(" MaxPulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MaxPulseWidth;
-        log += F(" DLbus_MinDoublePulseWidth:");
+        log += F(" MinDoublePulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MinDoublePulseWidth;
-        log += F(" DLbus_MaxDoublePulseWidth:");
+        log += F(" MaxDoublePulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MaxDoublePulseWidth;
         log += F(" IdxSensor:");
         log += P092_data->P092_DataSettings.IdxSensor;

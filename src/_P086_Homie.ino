@@ -42,13 +42,13 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number     = PLUGIN_ID_086;
-      Device[deviceCount].Type         = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType        = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports        = 0;
-      Device[deviceCount].DecimalsOnly = true;
-      Device[deviceCount].ValueCount   = PLUGIN_086_VALUE_MAX;
-      Device[deviceCount].Custom       = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number       = PLUGIN_ID_086;
+      dev.Type         = DEVICE_TYPE_DUMMY;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.DecimalsOnly = true;
+      dev.ValueCount   = PLUGIN_086_VALUE_MAX;
+      dev.Custom       = true;
       break;
     }
 
