@@ -28,18 +28,15 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_009;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = true;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_009;
+      dev.Type               = DEVICE_TYPE_I2C;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.InverseLogicOption = true;
+      dev.ValueCount         = 1;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.TimerOptional      = true;
       break;
     }
 

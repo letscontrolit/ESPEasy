@@ -154,7 +154,11 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
                                                         _fgcolor,
                                                         _bgcolor,
                                                         true,
-                                                        _textBackFill);
+                                                        _textBackFill
+                                                        #  if ADAGFX_FONTS_INCLUDED
+                                                        , P096_CONFIG_DEFAULT_FONT
+                                                        #  endif // if ADAGFX_FONTS_INCLUDED
+                                                        );
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
@@ -283,7 +287,7 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar.setFloat(event->TaskIndex, 0, curX);                                               // and put into Values
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                           // and put into Values
       UserVar.setFloat(event->TaskIndex, 1, curY);
 
       eInkScreen->display();
@@ -357,11 +361,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       success                         = true;
     }
     else if (equals(arg1, F("inv"))) {
-      String arg2 = parseString(string, 3);
-      int32_t    nArg2;
+      const int nArg2 = event->Par2;
 
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0) &&
+      if ((nArg2 >= 0) &&
           (nArg2 <= 1)) {
         eInkScreen->invertDisplay(nArg2);
         eInkScreen->display();
@@ -371,11 +373,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
-      String arg2 = parseString(string, 3);
-      int32_t    nArg2;
+      const int nArg2 = event->Par2;
 
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0)) {
+      if ((nArg2 >= 0)) {
         eInkScreen->setRotation(nArg2 % 4);
         eInkScreen->display();
         success = true;

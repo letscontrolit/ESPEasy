@@ -1,0 +1,65 @@
+.. csv-table::
+  :header: "Command", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``lu9685,servo,<pin>,<angle>``
+
+  ``[<taskname>].lu9685,servo,<pin>,<angle>``
+
+  pin: 0 ... 19 or ``all``
+
+  angle: 0 ... 180  (``-1`` will disable the output on the given pin)
+
+  ","
+  **Set specified pin to output a pulse duration for a servo**
+
+  The pulse width from 0.5 msec ... 2.5 msec is interpreted by a servo as an angle from 0 ... 180 degree.
+  Some servos have a range of 270 degree. However the input value for this command is still from 0 ... 180.
+
+  When ``all`` is used as pin, these commands refer to all pins on the addressed LU9685.
+
+  Examples: 
+
+  * ``lu9685,servo,all,123``
+  * ``lu9685,servo,1,123``
+  "
+  "
+  ``lu9685,enable,<pin>``
+
+  ``lu9685,disable,<pin>``
+
+  ``[<taskname>].lu9685,enable,<pin>``
+
+  ``[<taskname>].lu9685,disable,<pin>``
+
+  pin: 0 ... 19 or ``all``
+  ","
+  **Enable or disable pulse output on specified pin(s)** 
+  
+  ``enable`` will restore the last set 'angle' to be output on the specified pin(s).
+
+  ``disable`` will stop outputting the servo pulse on the specified pin(s).
+  "
+  "
+  ``[<taskname>].lu9685,setrange,<startpin>,<startVarIndex>,<nrPins>``
+
+  startpin: 0 ... 19 or ``all``
+
+  startVarIndex: first index of a variable referring to 'N' similar to ``[int#N]``
+
+  nrPins: 1 ... 19
+  ","
+  **Set a range of pins to output a value as defined in variables.**
+
+  This command will copy the set values of a sequence of variables to a set range of pins.
+
+  If a referred variable was never set, the matching pin will be disabled.
+
+  This command will set all pins in a single I2C call, which limits communication overhead and also results in all pins being set at the same time.
+
+  .. note:: This will only update the pins when calling this command. It is not a continuous synchronisation between variables and pins.
+
+  For example:
+  ``lu9685,setrange,10,1000,2`` Will use the values stored in ``[int#1000]`` and ``[int#1001]`` to set pins ``10`` and ``11``.
+  "

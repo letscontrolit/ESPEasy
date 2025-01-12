@@ -199,21 +199,20 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number = PLUGIN_ID_016;
-      Device[deviceCount].Type     = DEVICE_TYPE_SINGLE;
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_016;
+      dev.Type     = DEVICE_TYPE_SINGLE;
       # if P016_SEND_IR_TO_CONTROLLER
-      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_STRING;
+      dev.VType = Sensor_VType::SENSOR_TYPE_STRING;
       # else // if P016_SEND_IR_TO_CONTROLLER
-      Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.VType = Sensor_VType::SENSOR_TYPE_ULONG;
       # endif // if P016_SEND_IR_TO_CONTROLLER
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = true;
-      Device[deviceCount].InverseLogicOption = true;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
+      dev.PullUpOption       = true;
+      dev.InverseLogicOption = true;
+      dev.ValueCount         = 1;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.TimerOptional      = true;
       break;
     }
 
@@ -378,7 +377,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           int protocolCount = 0;
 
           for (int i = static_cast<int>(decode_type_t::UNKNOWN); i < size; i++) {
-              const String protocol = typeToString(static_cast<decode_type_t>(i), false);
+            const String protocol = typeToString(static_cast<decode_type_t>(i), false);
 
             if ((!bAcceptUnknownType) && (static_cast<decode_type_t>(i) == UNKNOWN)) {
               continue;

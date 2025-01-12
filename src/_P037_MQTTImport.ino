@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2025-01-03, tonhuisman: Small code cleanup
  * 2023-06-17, tonhuisman: Replace Device[].FormulaOption by Device[].DecimalsOnly option, as no (successful) PLUGIN_READ is done
  * 2023-03-06, tonhuisman: Fix PLUGIN_INIT behavior to now always return success = true
  * 2022-12-13, tonhuisman: Implement separator character input selector
@@ -61,7 +62,7 @@ String P037_getMQTTLastTopicPart(const String& topic) {
   const int16_t lastSlash = topic.lastIndexOf('/');
 
   if (lastSlash >= static_cast<int16_t>(topic.length() - 1)) {
-    return F("");
+    return EMPTY_STRING;
   }
   String result = topic.substring(lastSlash + 1); // Take last part of the topic
 
@@ -80,8 +81,8 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     # if P037_REPLACE_BY_COMMA_SUPPORT
 
     if (P037_REPLACE_BY_COMMA != 0x0) {
-      const String character = String(static_cast<char>(P037_REPLACE_BY_COMMA));
-      newEvent.replace(character, F(","));
+      const char character = static_cast<char>(P037_REPLACE_BY_COMMA);
+      newEvent.replace(character, ',');
     }
     # endif // if P037_REPLACE_BY_COMMA_SUPPORT
     eventQueue.add(newEvent, P037_DEDUPLICATE_EVENTS);
@@ -112,16 +113,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_037;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE; // This means it has a single pin
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].DecimalsOnly       = true; // We only want to have the decimals option
-      Device[deviceCount].ValueCount         = VARS_PER_TASK;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number       = PLUGIN_ID_037;
+      dev.Type         = DEVICE_TYPE_DUMMY;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_SINGLE; // This means it has a single pin
+      dev.DecimalsOnly = true;                             // We only want to have the decimals option
+      dev.ValueCount   = VARS_PER_TASK;
       break;
     }
 
@@ -166,7 +163,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Options"));
 
       addFormCheckBox(F("Generate events for accepted topics"),
-                      F("p037_send_events"), P037_SEND_EVENTS);
+                      F("psend_events"), P037_SEND_EVENTS);
       # if !defined(P037_LIMIT_BUILD_SIZE)
       addFormNote(F("Event: &lt;TaskName&gt;#&lt;topic&gt;=&lt;payload&gt;"));
       #  if P037_JSON_SUPPORT
@@ -248,7 +245,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # if P037_FILTER_SUPPORT
       P037_APPLY_FILTERS = getFormItemInt(F("pfilters"));
       # endif // if P037_FILTER_SUPPORT
-      P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
+      P037_SEND_EVENTS        = isFormItemChecked(F("psend_events")) ? 1 : 0;
       P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("pdedupe")) ? 1 : 0;
       P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("pquedepth"));
 
@@ -331,11 +328,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # ifdef PLUGIN_037_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String info = F("P037 : topic: ");
-        info += event->String1;
-        info += F(" value: ");
-        info += Payload;
-        addLog(LOG_LEVEL_INFO, info);
+        addLog(LOG_LEVEL_INFO, strformat(F("P037 : topic: %s value: %s"),
+                                         event->String1.c_str(),
+                                         Payload.c_str()));
       }
       # endif // ifdef PLUGIN_037_DEBUG
 
@@ -379,7 +374,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       if (matchedTopic &&
           P037_PARSE_JSON &&
-          Payload.startsWith(F("{"))) { // With JSON enabled and rudimentary check for JSon content
+          Payload.startsWith(F("{"))) { // With JSON enabled a rudimentary check for JSon content
         #  ifdef PLUGIN_037_DEBUG
         addLog(LOG_LEVEL_INFO, F("IMPT : MQTT JSON data detected."));
         #  endif // ifdef PLUGIN_037_DEBUG
@@ -459,9 +454,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
           loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
-        String log = F("IMPT : MQTT filter result: ");
-        log += processData ? F("true") : F("false");
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLog(LOG_LEVEL_DEBUG, concat(F("IMPT : MQTT filter result: "), boolToString(processData)));
       }
       #  endif // ifndef BUILD_NO_DEBUG
       # endif // if P037_FILTER_SUPPORT
@@ -540,11 +533,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   #  if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    String log = F("IMPT : MQTT fetched json attribute: ");
-                    log.reserve(48);
-                    log += key;
-                    log += F(" payload: ");
-                    log += Payload;
+                    String log = strformat(F("IMPT : MQTT fetched json attribute: %s payload: "),
+                                           key.c_str(),
+                                           Payload.c_str());
 
                     if (!jsonIndex.isEmpty()) {
                       log += F(" index: ");
@@ -562,16 +553,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 #  ifdef PLUGIN_037_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("P037 json key: ");
-                  log.reserve(48);
-                  log += key;
-                  log += F(" payload: ");
-                  #   if P037_MAPPING_SUPPORT
-                  log += (P037_APPLY_MAPPINGS ? P037_data->mapValue(Payload, key) : Payload);
-                  #   else // if P037_MAPPING_SUPPORT
-                  log += Payload;
-                  #   endif // if P037_MAPPING_SUPPORT
-                  addLogMove(LOG_LEVEL_INFO, log);
+                  addLog(LOG_LEVEL_INFO, strformat(F("P037 json key: %s payload: %s"),
+                                                   key.c_str(),
+                                                   #   if P037_MAPPING_SUPPORT
+                                                   P037_APPLY_MAPPINGS ? P037_data->mapValue(Payload, key).c_str() : Payload.c_str()
+                                                   #   else // if P037_MAPPING_SUPPORT
+                                                   Payload.c_str()
+                                                   #   endif // if P037_MAPPING_SUPPORT
+                                                   ));
                 }
                 #  endif // ifdef PLUGIN_037_DEBUG
                 ++P037_data->iter;
@@ -590,19 +579,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                 if (!validDoubleFromString(Payload, doublePayload)) {
                   if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here
-                    String log = F("IMPT : Bad Import MQTT Command ");
-                    log.reserve(64);
-                    log += event->String1;
-                    addLog(LOG_LEVEL_ERROR, log);
+                    addLog(LOG_LEVEL_ERROR, concat(F("IMPT : Bad Import MQTT Command "), event->String1));
                     # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                      log.clear();
-                      log += F("ERR  : Illegal Payload ");
-                      log += Payload;
-                      log += ' ';
-                      log += getTaskDeviceName(event->TaskIndex);
-                      addLogMove(LOG_LEVEL_INFO, log);
+                      addLog(LOG_LEVEL_INFO, strformat(F("ERR  : Illegal Payload %s %s"),
+                                                       Payload.c_str(),
+                                                       getTaskDeviceName(event->TaskIndex).c_str()));
                     }
                     # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
                     success = false;
@@ -611,16 +594,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   numericPayload = false;                                  // No, it isn't numeric
                   doublePayload  = NAN;                                    // Invalid value
                 }
-                UserVar.setFloat(event->TaskIndex, x, doublePayload);          // Save the new value
+                UserVar.setFloat(event->TaskIndex, x, doublePayload);      // Save the new value
 
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
-                  String RuleEvent;
-                  RuleEvent.reserve(64);
-                  RuleEvent += getTaskDeviceName(event->TaskIndex);
-                  RuleEvent += '#';
-                  RuleEvent += event->String1;
-                  RuleEvent += '=';
-                  RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload);
+                  String RuleEvent = strformat(F("%s#%s=%s"),
+                                               getTaskDeviceName(event->TaskIndex).c_str(),
+                                               event->String1.c_str(),
+                                               wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload).c_str());
                   P037_addEventToQueue(event, RuleEvent);
                 }
 
@@ -628,18 +608,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("IMPT : [");
-                  log += getTaskDeviceName(event->TaskIndex);
-                  log += '#';
-
-                  if (checkJson) {
-                    log += key;
-                  } else {
-                    log += getTaskValueName(event->TaskIndex, x);
-                  }
-                  log += F("] : ");
-                  log += doublePayload;
-                  addLogMove(LOG_LEVEL_INFO, log);
+                  addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %.3f"),
+                                                   getTaskDeviceName(event->TaskIndex).c_str(),
+                                                   checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
+                                                   doublePayload));
                 }
                 # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
@@ -738,7 +710,8 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
 
     for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
       if (task != event->TaskIndex) {
-        constexpr pluginID_t P037_PLUGIN_ID{PLUGIN_ID_037};
+        constexpr pluginID_t P037_PLUGIN_ID{ PLUGIN_ID_037 };
+
         if (Settings.TaskDeviceEnabled[task] &&
             (Settings.getPluginID_for_task(task) == P037_PLUGIN_ID)) {
           P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
@@ -748,15 +721,11 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
               canUnsubscribe = false;
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("IMPT : Cannot unsubscribe topic: ");
-                log += topic;
-                log += F(" used by: [");
-                log += getTaskDeviceName(event->TaskIndex);
-                log += '#';
-                log += getTaskValueName(event->TaskIndex, x);
-                log += ']';
-                log += topic;
-                addLogMove(LOG_LEVEL_INFO, log);
+                addLog(LOG_LEVEL_INFO, strformat(F("IMPT : Cannot unsubscribe topic: %s used by: [%s#%s]%s"),
+                                                 topic.c_str(),
+                                                 getTaskDeviceName(event->TaskIndex).c_str(),
+                                                 getTaskValueName(event->TaskIndex, x).c_str(),
+                                                 topic.c_str()));
               }
             }
           }
@@ -766,13 +735,10 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
 
     if (canUnsubscribe && (topic.length() > 0) && MQTTclient.unsubscribe(topic.c_str())) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("IMPT : [");
-        log += getTaskDeviceName(event->TaskIndex);
-        log += '#';
-        log += getTaskValueName(event->TaskIndex, x);
-        log += F("] : Unsubscribe topic: ");
-        log += topic;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : Unsubscribe topic: %s"),
+                                         getTaskDeviceName(event->TaskIndex).c_str(),
+                                         getTaskValueName(event->TaskIndex, x).c_str(),
+                                         topic.c_str()));
       }
     }
   }
@@ -800,19 +766,14 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 
       if (MQTTclient.subscribe(subscribeTo.c_str())) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("IMPT : [");
-          log += getTaskDeviceName(event->TaskIndex);
-          log += F("#");
-          log += getTaskValueName(event->TaskIndex, x);
-          log += F("] subscribed to ");
-          log += subscribeTo;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] subscribed to %s"),
+                                           getTaskDeviceName(event->TaskIndex).c_str(),
+                                           getTaskValueName(event->TaskIndex, x).c_str(),
+                                           subscribeTo.c_str()));
         }
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("IMPT : Error subscribing to ");
-          log += subscribeTo;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLog(LOG_LEVEL_ERROR, concat(F("IMPT : Error subscribing to "), subscribeTo));
         }
         return false;
       }
@@ -846,7 +807,7 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
   if (equals(tmpSub, '#')) { return true; } // If the subscription is for '#' then all topics are accepted
 
   if (tmpSub.endsWith(F("/#"))) {           // A valid MQTT multi-level wildcard is a # at the end of the topic that's preceded by a /
-    bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
+    const bool multiLevelWildcard = tmpTopic.startsWith(tmpSub.substring(0, tmpSub.length() - 1));
 
     if (tmpSub.indexOf('+') == -1) {
       return multiLevelWildcard;                   // It matched, or not
@@ -858,11 +819,11 @@ bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) 
 
   // Add trailing / if required
 
-  int lenTopic = tmpTopic.length();
+  const int lenTopic = tmpTopic.length();
 
   if (tmpTopic.substring(lenTopic - 1, lenTopic) != "/") { tmpTopic += '/'; }
 
-  int lenSub = tmpSub.length();
+  const int lenSub = tmpSub.length();
 
   if (tmpSub.substring(lenSub - 1, lenSub) != "/") { tmpSub += '/'; }
 

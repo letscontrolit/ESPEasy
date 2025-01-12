@@ -44,23 +44,24 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_053;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_053;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.Ports              = 0;
+      dev.PullUpOption       = false;
+      dev.InverseLogicOption = false;
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption = true;
-      Device[deviceCount].ValueCount    = 4;
+      dev.FormulaOption = true;
+      dev.ValueCount    = 4;
       # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption = false;
-      Device[deviceCount].ValueCount    = 3;
+      dev.FormulaOption = false;
+      dev.ValueCount    = 3;
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].PluginStats      = true;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.GlobalSyncOption = true;
+      dev.PluginStats      = true;
       success                              = true;
       break;
     }

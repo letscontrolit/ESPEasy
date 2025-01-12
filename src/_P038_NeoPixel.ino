@@ -57,10 +57,11 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_038;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].TimerOption   = false;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_038;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.TimerOption   = false;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 

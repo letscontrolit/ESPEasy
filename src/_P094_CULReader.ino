@@ -53,22 +53,18 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_094;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
-      Device[deviceCount].DuplicateDetection = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_094;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_STRING;
+      dev.OutputDataType     = Output_Data_type_t::Default;
+      dev.ValueCount         = 1;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.DuplicateDetection = true;
 
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
-      Device[deviceCount].ExitTaskBeforeSave = true;
+      dev.ExitTaskBeforeSave = true;
       break;
     }
 
@@ -318,10 +314,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
           # endif // if P094_DEBUG_OPTIONS
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("CUL Reader: Sending: ");
-            log += event->String2.substring(0, 20);
-            log += F("...");
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(F("CUL Reader: Sending: %s..."),
+                                                 event->String2.substring(0, 20).c_str()));
           }
 
           //          sendData_checkDuplicates(event, event->String2.substring(0, 22));
@@ -447,7 +441,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
-#ifdef USES_ESPEASY_NOW
+# ifdef USES_ESPEASY_NOW
     case PLUGIN_FILTEROUT_CONTROLLER_DATA:
     {
       // event->String1 => topic;
@@ -463,7 +457,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
-#endif
+# endif // ifdef USES_ESPEASY_NOW
   }
   return success;
 }

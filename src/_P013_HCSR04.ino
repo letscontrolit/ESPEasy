@@ -47,18 +47,17 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_013;
-      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 1;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].TimerOptional    = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].PluginStats      = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_013;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -131,13 +130,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Combined"),
           # endif // if P013_FEATURE_COMBINED_MODE
         };
-        addFormSelector(F("Mode"), F("pmode"),
-                        # if P013_FEATURE_COMBINED_MODE
-                        3
-                        # else // if P013_FEATURE_COMBINED_MODE
-                        2
-                        # endif // if P013_FEATURE_COMBINED_MODE
-                        , optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesOpMode);
+        addFormSelector(F("Mode"), F("pmode"), optionCount, optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
       }
 
       if ((P013_OPERATINGMODE == OPMODE_STATE)
@@ -155,21 +149,23 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       addUnit(strUnit);
 
       {
-        const int optionValuesUnit[2] = { UNIT_CM, UNIT_INCH };
+        const int optionValuesUnit[] = { UNIT_CM, UNIT_INCH };
         const __FlashStringHelper *optionsUnit[] {
           F("Metric"),
           F("Imperial"),
         };
-        addFormSelector(F("Unit"), F("pUnit"), 2, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesUnit);
+        addFormSelector(F("Unit"), F("pUnit"), optionCount, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
       }
 
       {
-        const int optionValuesFilter[2] = { FILTER_NONE, FILTER_MEDIAN };
+        const int optionValuesFilter[] = { FILTER_NONE, FILTER_MEDIAN };
         const __FlashStringHelper *optionsFilter[] {
           F("None"),
           F("Median"),
         };
-        addFormSelector(F("Filter"), F("fltr"), 2, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesFilter);
+        addFormSelector(F("Filter"), F("fltr"), optionCount, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,

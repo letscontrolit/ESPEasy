@@ -2176,7 +2176,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  if ADAGFX_ARGUMENT_VALIDATION
         const int16_t curWin = getWindow();
 
-        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+        if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
         if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -2313,10 +2313,15 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     case adagfx_getcommands_e::textheight:
       // length/textheight: get text length or height
     {
-      int16_t  x1, y1;
-      uint16_t w1, h1;
-      String   newString = AdaGFXparseTemplate(parseStringToEndKeepCaseNoTrim(string, 2), 0);
-      _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
+      int16_t  x1{}, y1{};
+      uint16_t w1{}, h1{};
+      String   newString = parseStringToEndKeepCaseNoTrim(string, 2, sep);
+
+      if (!newString.isEmpty()) {
+        newString = AdaGFXparseTemplate(newString, 0);
+
+        _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
+      }
 
       if (adagfx_getcommands_e::length == cmd) {
         string = w1;
@@ -3358,12 +3363,13 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               }
 
               constexpr size_t errorcode = (size_t)-1;
-              size_t pos = file.position();
+              size_t pos                 = file.position();
+
               if (pos == errorcode) {
                 pos = 0;
               }
 
-              if (pos != bmpPos) {        // Need seek?
+              if (pos != bmpPos) {                    // Need seek?
                 if (transact && canTransact) {
                   _tft->dmaWait();
                   _tft->endWrite();                   // End TFT SPI transaction

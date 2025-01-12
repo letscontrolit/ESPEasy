@@ -79,6 +79,9 @@ When selecting the **AHT1x** Sensor model, an extra option is made available:
 
 * **AHT10 Alternative initialization**: Some AHT10 clone sensors do not seem to like the regular AHT10/AHT15 initialization sequence. They do however accept a soft reset command. By enabling this checkbox, only the soft reset is sent to the device. Only available for AHT1x devices.
 
+* **Temperature offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set in steps of 0.1 degree. This also applies a compensation to the **Humidity** reading.
+
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
@@ -97,6 +100,7 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+  |changed| 2024/12/21 Add temperature offset
 
   |changed| 2024-12-03 Add alternative initialization option
 

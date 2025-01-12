@@ -41,7 +41,7 @@
 .. |P144_type| replace:: :cyan:`Dust`
 .. |P144_typename| replace:: :cyan:`Dust - PM1006(K) (Vindriktning)`
 .. |P144_porttype| replace:: `.`
-.. |P144_status| replace:: :yellow:`COLLECTION E`
+.. |P144_status| replace:: :yellow:`COLLECTION E` :yellow:`CLIMATE`
 .. |P144_github| replace:: P144_Vindriktning.ino
 .. _P144_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P144_Vindrikning.ino
 .. |P144_usedby| replace:: `.`

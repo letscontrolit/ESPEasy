@@ -39,17 +39,14 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_089;
-      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_089;
+      dev.Type           = DEVICE_TYPE_CUSTOM0;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;
+      dev.DecimalsOnly   = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -131,7 +128,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("pingset")))
       {
-        String taskName       = parseString(string, 2);
+        const String taskName = parseString(string, 2);
         String param1         = parseString(string, 3);
         taskIndex_t taskIndex = findTaskIndexByName(taskName);
 
@@ -147,7 +144,7 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
             // Avoid overflow and weird values
             if ((val_new > -1024) && (val_new < 1024)) {
               UserVar.setFloat(event->TaskIndex, 0, val_new);
-              success                      = true;
+              success = true;
             }
           }
         }

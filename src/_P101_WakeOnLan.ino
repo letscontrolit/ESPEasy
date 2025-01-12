@@ -113,16 +113,10 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_101;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_101;
+      dev.Type     = DEVICE_TYPE_DUMMY;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
       break;
     }
 
@@ -167,7 +161,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       String errorStr;
 
       // Check Task Name.
-      uint8_t nameCode = safeName(event->TaskIndex);
+      const uint8_t nameCode = safeName(event->TaskIndex);
 
       if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {        // Check to see if user submitted safe device name.
         strcpy(ExtraTaskSettings.TaskDeviceName, PSTR(DEF_TASK_NAME_P101)); // Use default name.
@@ -237,7 +231,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_READ: {
-      success = false;
+      // Do nothing on purpose
       break;
     }
 
@@ -362,11 +356,13 @@ bool validateIp(const String& ipStr) {
   if ((length < IP_MIN_SIZE_P101) || (length > IP_ADDR_SIZE_P101)) {
     return false;
   }
-  else if (ip.fromString(ipStr) == false) { // ThomasTech's Trick to Check IP for valid formatting.
-    return false;
-  }
 
-  return true;
+  // else if (ip.fromString(ipStr) == false) { // ThomasTech's Trick to Check IP for valid formatting.
+  //   return false;
+  // }
+
+  // return true;
+  return ip.fromString(ipStr); // Trick is nice, code not so readable :-)
 }
 
 // ************************************************************************************************
@@ -405,19 +401,9 @@ bool validateMac(const String& macStr) {
 // Arg: Port Number String (decimal).
 // Return true if Port string appears legit.
 bool validatePort(const String& portStr) {
-  bool pass = true;
-  long portNumber;
+  uint32_t portNumber{};
 
-  portNumber = portStr.toInt();
-
-  if ((portNumber < 0) || (portNumber > PORT_MAX_P101)) {
-    pass = false;
-  }
-  else if (!isDigit(portStr.charAt(0))) {
-    pass = false;
-  }
-
-  return pass;
+  return validUIntFromString(portStr, portNumber) && portNumber <= PORT_MAX_P101;
 }
 
 // ************************************************************************************************

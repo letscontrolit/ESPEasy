@@ -62,3 +62,16 @@
 .. |P176_maintainer| replace:: `tonhuisman`
 .. |P176_compileinfo| replace:: `.`
 .. |P176_usedlibraries| replace:: `.`
+
+.. |P178_name| replace:: :cyan:`LU9685 Servo controller`
+.. |P178_type| replace:: :cyan:`Extra IO`
+.. |P178_typename| replace:: :cyan:`Extra IO - LU9685 Servo controller`
+.. |P178_porttype| replace:: `.`
+.. |P178_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P178_github| replace:: P178_LU9685.ino
+.. _P178_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P178_LU9685.ino
+.. |P178_usedby| replace:: `LU9685 16/20 channel servo controller`
+.. |P178_shortinfo| replace:: `LU9685 16/20 channel servo controller`
+.. |P178_maintainer| replace:: `TD-er`
+.. |P178_compileinfo| replace:: `.`
+.. |P178_usedlibraries| replace:: `.`

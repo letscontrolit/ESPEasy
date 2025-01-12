@@ -40,16 +40,16 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_113;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 3;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_113;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -110,7 +110,8 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
           F("500ms"),
         };
         const int optionValuesMode2[] = { 100, 20, 33, 50, 200, 500 };
-        addFormSelector(F("Timing"), F("timing"), 6, optionsMode2, optionValuesMode2, P113_TIMING);
+        constexpr size_t optionCount  = NR_ELEMENTS(optionValuesMode2);
+        addFormSelector(F("Timing"), F("timing"), optionCount, optionsMode2, optionValuesMode2, P113_TIMING);
       }
 
       {
@@ -119,7 +120,8 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
           F("Long (~400cm)"),
         };
         const int optionValuesMode3[2] = { 0, 1 };
-        addFormSelector(F("Range"), F("range"), 2, optionsMode3, optionValuesMode3, P113_RANGE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode3);
+        addFormSelector(F("Range"), F("range"), optionCount, optionsMode3, optionValuesMode3, P113_RANGE);
       }
       addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), P113_SEND_ALWAYS == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));
@@ -180,9 +182,9 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       html_add_script(false);
       addHtml(F("document.addEventListener('DOMContentLoaded', p113_main);"));
       const __FlashStringHelper *_fmt = F("document.getElementById('%s').onchange=function(){p113_main.upDsp()};");
-      addHtml(strformat(_fmt, String(F("roix")).c_str()));
-      addHtml(strformat(_fmt, String(F("roiy")).c_str()));
-      addHtml(strformat(_fmt, String(F("optc")).c_str()));
+      addHtml(strformat(_fmt, FsP(F("roix"))));
+      addHtml(strformat(_fmt, FsP(F("roiy"))));
+      addHtml(strformat(_fmt, FsP(F("optc"))));
       html_add_script_end();
       # endif // if P113_USE_ROI
 
@@ -267,11 +269,11 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
 
 # if P113_USE_ROI
 void P113_CheckMinMaxValues(struct EventStruct *event) {
-  if (0 == P113_ROI_X) { P113_ROI_X = 16; } // Default
+  if (0 == P113_ROI_X) { P113_ROI_X = 16; }                              // Default
 
-  if (0 == P113_ROI_Y) { P113_ROI_Y = 16; } // Default
+  if (0 == P113_ROI_Y) { P113_ROI_Y = 16; }                              // Default
 
-  if (0 == P113_OPT_CENTER) { P113_OPT_CENTER = 199; } // Optical Center @ Center of sensor. See matrix in documentation
+  if (0 == P113_OPT_CENTER) { P113_OPT_CENTER = 199; }                   // Optical Center @ Center of sensor. See matrix in documentation
 
   if ((P113_ROI_X > 10) || (P113_ROI_Y > 10)) { P113_OPT_CENTER = 199; } // Driver behavior
 }

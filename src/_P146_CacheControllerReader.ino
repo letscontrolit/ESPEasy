@@ -41,20 +41,13 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_146;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_146;
+      dev.Type           = DEVICE_TYPE_DUMMY;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.OutputDataType = Output_Data_type_t::Default;
       break;
     }
 
@@ -136,7 +129,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
             if (P146_GET_ERASE_BINFILES) {
               // Check whether we must delete the oldest file
-              if (P146_TASKVALUE_FILENR != 0 && P146_TASKVALUE_FILENR  < readFileNr) {
+              if ((P146_TASKVALUE_FILENR != 0) && (P146_TASKVALUE_FILENR  < readFileNr)) {
                 ControllerCache.deleteCacheBlock(P146_TASKVALUE_FILENR);
               }
             }
@@ -174,7 +167,8 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
             if (P146_GET_ERASE_BINFILES) {
               // Check whether we must delete the oldest file
               const int filenr = P146_TASKVALUE_FILENR;
-              if (filenr != 0 && filenr  < readFileNr) {
+
+              if ((filenr != 0) && (filenr  < readFileNr)) {
                 ControllerCache.deleteCacheBlock(filenr);
               }
             }
@@ -226,10 +220,11 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           ',',
           ';'
         };
-        addFormSelector(F("Separator"), F("separator"), 3, separatorLabels, separatorOptions, P146_SEPARATOR_CHARACTER);
+        constexpr size_t optionCount = NR_ELEMENTS(separatorOptions);
+        addFormSelector(F("Separator"), F("separator"), optionCount, separatorLabels, separatorOptions, P146_SEPARATOR_CHARACTER);
       }
       addFormCheckBox(F("Join Samples with same Timestamp"), F("jointimestamp"), P146_GET_JOIN_TIMESTAMP);
-      addFormCheckBox(F("Export only enabled tasks"),            F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
+      addFormCheckBox(F("Export only enabled tasks"),        F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
 
       addFormNote(F("Download button link only updated after saving"));
 
@@ -274,13 +269,12 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_SEPARATOR_CHARACTER = getFormItemInt(F("separator"));
 
       String strings[P146_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P146_Nlines; varNr++) {
         strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
+      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
 
       if (!error.isEmpty()) {
         addHtmlError(error);

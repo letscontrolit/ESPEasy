@@ -123,11 +123,11 @@ private:
                     decode_type_t DecodeType,
                     uint16_t      CodeFlags);
 
-  uint64_t      iLastCmd        = 0;                      // last command send
-  uint32_t      iLastCmdTime    = 0;                      // time while last command was send
-  decode_type_t iLastDecodeType = decode_type_t::UNUSED;  // last decode_type sent
-  uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
-  uint16_t      iLastCodeFlags  = 0;                      // last flags sent
+  uint64_t      iLastCmd        = 0;                     // last command send
+  uint32_t      iLastCmdTime    = 0;                     // time while last command was send
+  decode_type_t iLastDecodeType = decode_type_t::UNUSED; // last decode_type sent
+  uint16_t      iCmdInhibitTime = 0;                     // inhibit time for sending the same command again
+  uint16_t      iLastCodeFlags  = 0;                     // last flags sent
   # endif // if P016_FEATURE_COMMAND_HANDLING
   # ifdef P016_CHECK_HEAP
   void CheckHeap(String dbgtxt);

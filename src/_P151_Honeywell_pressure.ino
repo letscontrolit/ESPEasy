@@ -22,19 +22,16 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_151;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;      
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_151;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -65,16 +62,16 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
       // 136 (88 hex)
       // 152 (98 hex)
       const uint8_t i2cAddressValues[] = {
-        0x28 ,
-        0x38 ,
-        0x48 ,
-        0x58 ,
-        0x68 ,
-        0x78 ,
-        0x88 ,
-        0x98 
+        0x28,
+        0x38,
+        0x48,
+        0x58,
+        0x68,
+        0x78,
+        0x88,
+        0x98
       };
-      constexpr size_t addrCount = sizeof(i2cAddressValues) / sizeof(uint8_t);
+      constexpr size_t addrCount = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("pi2c"), addrCount, i2cAddressValues, P151_I2C_ADDR);
@@ -155,29 +152,30 @@ boolean Plugin_151(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-/*
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P151_data) {
-        success = P151_data->plugin_ten_per_second(event);
-      }
+      /*
+          case PLUGIN_TEN_PER_SECOND:
+          {
+            P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      break;
-    }
+            if (nullptr != P151_data) {
+              success = P151_data->plugin_ten_per_second(event);
+            }
 
-    case PLUGIN_FIFTY_PER_SECOND:
-    {
-      P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
+            break;
+          }
 
-      if (nullptr != P151_data) {
-        success = P151_data->plugin_fifty_per_second(event);
-      }
+          case PLUGIN_FIFTY_PER_SECOND:
+          {
+            P151_data_struct *P151_data = static_cast<P151_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      break;
-    }
-*/
+            if (nullptr != P151_data) {
+              success = P151_data->plugin_fifty_per_second(event);
+            }
+
+            break;
+          }
+       */
   }
   return success;
 }

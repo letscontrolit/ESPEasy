@@ -40,20 +40,17 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_078;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = P078_NR_OUTPUT_VALUES;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].TaskLogsOwnPeaks   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_078;
+      dev.Type             = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = P078_NR_OUTPUT_VALUES;
+      dev.OutputDataType   = Output_Data_type_t::Simple;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.PluginStats      = true;
+      dev.TaskLogsOwnPeaks = true;
       break;
     }
 
@@ -120,9 +117,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         String options_baudrate[6];
 
         for (int i = 0; i < 6; ++i) {
-          options_baudrate[i] = String(p078_storageValueToBaudrate(i));
+          options_baudrate[i] = p078_storageValueToBaudrate(i);
         }
-        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P078_BAUDRATE);
+        constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, optionCount, options_baudrate, nullptr, P078_BAUDRATE);
         addUnit(F("baud"));
       }
 

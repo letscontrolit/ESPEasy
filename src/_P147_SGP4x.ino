@@ -50,18 +50,15 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_147;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_147;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
 
       break;
     }
@@ -121,7 +118,8 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP40),
           static_cast<int>(P147_sensor_e::SGP41),
         };
-        addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
+        constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
+        addFormSelector(F("Sensor model"), F("ptype"), optionCount, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
         # ifndef BUILD_NO_DEBUG
         addFormNote(F("Page will reload on change."));
         # endif // ifndef BUILD_NO_DEBUG
@@ -165,7 +163,7 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      int prevSensor = P147_SENSOR_TYPE;
+      const int prevSensor = P147_SENSOR_TYPE;
       P147_SENSOR_TYPE       = getFormItemInt(F("ptype"));
       P147_LOW_POWER_MEASURE = isFormItemChecked(F("plow")) ? 1 : 0;
       P147_SET_USE_COMPENSATION(getFormItemInt(F("comp")));

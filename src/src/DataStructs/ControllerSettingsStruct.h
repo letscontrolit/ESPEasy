@@ -54,6 +54,14 @@
 # define CONTROLLER_CLIENTTIMEOUT_DFLT     100
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
+// MQTT Keep Alive Timeout
+#ifndef CONTROLLER_KEEP_ALIVE_TIME_MAX
+# define CONTROLLER_KEEP_ALIVE_TIME_MAX    65535
+#endif // ifndef CONTROLLER_KEEP_ALIVE_TIME_MAX
+#ifndef CONTROLLER_KEEP_ALIVE_TIME_DFLT
+# define CONTROLLER_KEEP_ALIVE_TIME_DFLT      60
+#endif // ifndef CONTROLLER_KEEP_ALIVE_TIME_DFLT
+
 #ifndef CONTROLLER_DEFAULT_CLIENTID
 # define CONTROLLER_DEFAULT_CLIENTID  "%sysname%_%unit%"
 #endif // ifndef CONTROLLER_DEFAULT_CLIENTID
@@ -99,6 +107,7 @@ struct ControllerSettingsStruct
     CONTROLLER_SEND_LWT,
     CONTROLLER_WILL_RETAIN,
     CONTROLLER_CLEAN_SESSION,
+    CONTROLLER_KEEP_ALIVE_TIME,
 #endif
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
@@ -198,7 +207,7 @@ struct ControllerSettingsStruct
   unsigned int ClientTimeout;
   bool         MustCheckReply;     // When set to false, a sent message is considered always successful.
   taskIndex_t  SampleSetInitiator; // The first task to start a sample set.
-  uint8_t      UNUSED_4[2];
+  uint16_t     KeepAliveTime;      // The configured Keep Alive time in seconds, can be 0 (disabled) to 65535 (18+ hours)
 
   struct {
     uint32_t unused_00                        : 1; // Bit 00

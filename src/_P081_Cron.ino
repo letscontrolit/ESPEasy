@@ -12,8 +12,8 @@
 # include "src/PluginStructs/P081_data_struct.h"
 
 # define PLUGIN_081
-# define PLUGIN_ID_081      81              // plugin id
-# define PLUGIN_NAME_081   "Generic - CRON" // "Plugin Name" is what will be displayed in the selection list
+# define PLUGIN_ID_081         81               // plugin id
+# define PLUGIN_NAME_081       "Generic - CRON" // "Plugin Name" is what will be displayed in the selection list
 # define PLUGIN_VALUENAME1_081 "LastExecution"
 # define PLUGIN_VALUENAME2_081 "NextExecution"
 
@@ -28,22 +28,13 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics, edit appropriately
 
-      Device[++deviceCount].Number = PLUGIN_ID_081;
-      Device[deviceCount].Type     = DEVICE_TYPE_DUMMY;              // how the device is connected
-      Device[deviceCount].VType    = Sensor_VType::SENSOR_TYPE_NONE; // type of value the plugin will return, used only for
-                                                                     // Domoticz
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 2; // number of output variables. The value should match the number of keys
-                                                  // PLUGIN_VALUENAME1_xxx
-      Device[deviceCount].SendDataOption   = false;
-      Device[deviceCount].TimerOption      = false;
-      Device[deviceCount].TimerOptional    = false;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].DecimalsOnly     = true;
-      Device[deviceCount].HasFormatUserVar = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_081;
+      dev.Type             = DEVICE_TYPE_DUMMY;              // how the device is connected
+      dev.VType            = Sensor_VType::SENSOR_TYPE_NONE; // type of value the plugin will return, used only for Domoticz
+      dev.ValueCount       = 2;                              // number of output variables.
+      dev.DecimalsOnly     = true;
+      dev.HasFormatUserVar = true;
       break;
     }
 

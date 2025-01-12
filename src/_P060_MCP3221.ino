@@ -25,18 +25,15 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_060;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_060;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -126,7 +123,6 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_TEN_PER_SECOND:
     {
       if (PCONFIG(1)) // Oversampling?
@@ -154,10 +150,10 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 
         if (PCONFIG(3)) // Calibration?
         {
-          int   adc1 = PCONFIG_LONG(0);
-          int   adc2 = PCONFIG_LONG(1);
-          float out1 = PCONFIG_FLOAT(0);
-          float out2 = PCONFIG_FLOAT(1);
+          const int   adc1 = PCONFIG_LONG(0);
+          const int   adc2 = PCONFIG_LONG(1);
+          const float out1 = PCONFIG_FLOAT(0);
+          const float out2 = PCONFIG_FLOAT(1);
 
           if (adc1 != adc2)
           {

@@ -144,15 +144,16 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_046;
-        Device[deviceCount].Type = DEVICE_TYPE_DUMMY;           // Nothing else really fit the bill ...
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].ValueCount = 3;
+        auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_046;
+        dev.Type = DEVICE_TYPE_DUMMY;           // Nothing else really fit the bill ...
+        dev.VType = Sensor_VType::SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
+        dev.Ports = 0;
+        dev.PullUpOption = false;
+        dev.InverseLogicOption = false;
+        dev.FormulaOption = true;
+        dev.SendDataOption = true;
+        dev.ValueCount = 3;
         break;
       }
 

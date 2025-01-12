@@ -35,23 +35,20 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_082;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_082;
+      dev.Type           = DEVICE_TYPE_SERIAL_PLUS1;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
 # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
       // Allow to use double type for improved accuracy
-      Device[deviceCount].HasFormatUserVar = true;
+      dev.HasFormatUserVar = true;
 # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       break;
     }
@@ -222,21 +219,22 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       addFormSubHeader(F("U-Blox specific"));
 
       {
-        const __FlashStringHelper *options[3] = {
+        const __FlashStringHelper *options[] = {
           toString(P082_PowerMode::Max_Performance),
           toString(P082_PowerMode::Power_Save),
           toString(P082_PowerMode::Eco)
         };
-        const int indices[3] = {
+        const int indices[] = {
           static_cast<int>(P082_PowerMode::Max_Performance),
           static_cast<int>(P082_PowerMode::Power_Save),
           static_cast<int>(P082_PowerMode::Eco)
         };
-        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_POWER_MODE);
+        constexpr size_t optionCount = NR_ELEMENTS(indices);
+        addFormSelector(F("Power Mode"), F("pwrmode"), optionCount, options, indices, P082_POWER_MODE);
       }
 
       {
-        const __FlashStringHelper *options[10] = {
+        const __FlashStringHelper *options[] = {
           toString(P082_DynamicModel::Portable),
           toString(P082_DynamicModel::Stationary),
           toString(P082_DynamicModel::Pedestrian),
@@ -248,7 +246,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           toString(P082_DynamicModel::Wrist),
           toString(P082_DynamicModel::Bike)
         };
-        const int indices[10] = {
+        const int indices[] = {
           static_cast<int>(P082_DynamicModel::Portable),
           static_cast<int>(P082_DynamicModel::Stationary),
           static_cast<int>(P082_DynamicModel::Pedestrian),
@@ -260,7 +258,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_DynamicModel::Wrist),
           static_cast<int>(P082_DynamicModel::Bike)
         };
-        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), 10, options, indices, P082_DYNAMIC_MODEL);
+        constexpr size_t optionCount = NR_ELEMENTS(indices);
+        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), optionCount, options, indices, P082_DYNAMIC_MODEL);
       }
 # endif // P082_USE_U_BLOX_SPECIFIC
 
@@ -636,25 +635,16 @@ void P082_logStats(struct EventStruct *event) {
   if ((nullptr == P082_data) || !P082_data->isInitialized()) {
     return;
   }
-  String log;
 
-  if (log.reserve(128)) {
-    log  = F("GPS:");
-    log += F(" Fix: ");
-    log += P082_data->hasFix(P082_TIMEOUT) ? 1 : 0;
-    log += F(" #sat: ");
-    log += P082_data->gps->satellites.value();
-    log += F(" #SNR: ");
-    log += P082_data->gps->satellitesStats.getBestSNR();
-    log += F(" HDOP: ");
-    log += P082_data->gps->hdop.value() / 100.0f;
-    log += F(" Chksum(pass/fail): ");
-    log += P082_data->gps->passedChecksum();
-    log += '/';
-    log += P082_data->gps->failedChecksum();
-    log += F(" invalid: ");
-    log += P082_data->gps->invalidData();
-    addLogMove(LOG_LEVEL_DEBUG, log);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("GPS: Fix: %d #sat: %u #SNR: %u HDOP: %.3f Chksum(pass/fail): %u/%u invalid: %u"),
+                                          P082_data->hasFix(P082_TIMEOUT) ? 1 : 0,
+                                          P082_data->gps->satellites.value(),
+                                          P082_data->gps->satellitesStats.getBestSNR(),
+                                          P082_data->gps->hdop.value() / 100.0f,
+                                          P082_data->gps->passedChecksum(),
+                                          P082_data->gps->failedChecksum(),
+                                          P082_data->gps->invalidData()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
@@ -781,16 +771,10 @@ void P082_html_show_stats(struct EventStruct *event) {
   }
 
   addRowLabel(F("Checksum (pass/fail/invalid)"));
-  {
-    String chksumStats;
-
-    chksumStats  = P082_data->gps->passedChecksum();
-    chksumStats += '/';
-    chksumStats += P082_data->gps->failedChecksum();
-    chksumStats += '/';
-    chksumStats += P082_data->gps->invalidData();
-    addHtml(chksumStats);
-  }
+  addHtml(strformat(F("%u/%u/%u"),
+                    P082_data->gps->passedChecksum(),
+                    P082_data->gps->failedChecksum(),
+                    P082_data->gps->invalidData()));
 # ifndef BUILD_NO_DEBUG
 
   /*

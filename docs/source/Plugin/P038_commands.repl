@@ -30,9 +30,9 @@
     | Set the LED to the provided H/S/V color value.
     
     | led nr: 1..<Led Count>
-    | hue: 0..255
-    | saturation: 0..255
-    | value: 0..255
+    | hue: 0..360
+    | saturation: 0..100
+    | value: 0..100
     "
     "
     | ``NeoPixelAllHSV,<hue>,<saturation>,<value>``

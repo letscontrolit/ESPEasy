@@ -47,13 +47,12 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_008;
-      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].ValueCount       = 1;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].GlobalSyncOption = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_008;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
       break;
     }
 
@@ -159,15 +158,6 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       P008_COMPATIBILITY  = isFormItemChecked(F("comp")) ? 0 : 1;    // Inverted logic!
       P008_REMOVE_VALUE   = getFormItemInt(F("rmvval"));
       P008_REMOVE_TIMEOUT = getFormItemInt(F("rmvtime"));
-
-      // uint64_t keyMask = 0LL;
-      // keyMask = (0x1ull << (P008_DATA_BITS - 2));
-      // keyMask--;
-      // String log = F("P008: testing keyMask = 0x");
-      // log += ull2String(keyMask, HEX);
-      // log += F(" bits: ");
-      // log += P008_DATA_BITS;
-      // addLog(LOG_LEVEL_INFO, log);
 
       success = true;
       break;

@@ -42,25 +42,36 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return (input || output);
 }
 
-bool isBootStrapPin(int gpio)
-{
-  if (gpio == 8) {
-    // Strapping pin which must be high during flashing
-    return true;
-  }
-
-  if (gpio == 9) {
-    // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic)
-    return true;
-  }
-
-  if (gpio == 4 || gpio == 5 || gpio == 15) {
-    // FIXME TD-er: See what these do
-    return true;
-  }
-
-  return false;
-}
+bool isBootStrapPin(int gpio) 
+{ 
+  // See: https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf 
+  // Chapter 3 - Boot Configurations 
+  if (gpio == 8) { 
+    // Strapping pin which must be high during flashing 
+    // ROM message printing 
+    return true; 
+  } 
+ 
+  if (gpio == 9) { 
+    // Strapping pin to force download mode (like GPIO-0 on ESP8266/ESP32-classic) 
+    // internal Weak pull-up, must be pulled down to enter download boot mode. 
+    return true; 
+  } 
+ 
+  if (gpio == 4 || gpio == 5) { 
+    // SDIO Sampling and Driving Clock Edge 
+    //  MTMS = GPIO-4 
+    //  MTDI = Gpio-5 
+    return true; 
+  } 
+ 
+  if (gpio == 15) { 
+    // JTAG signal source 
+    return true; 
+  } 
+ 
+  return false; 
+} 
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   hasPullDown = false;

@@ -42,9 +42,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = true;
-      #if FEATURE_MQTT_TLS
-      proto.usesTLS      = true;
-      #endif
+      # if FEATURE_MQTT_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_MQTT_TLS
       break;
     }
 
@@ -155,21 +155,18 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   }
                   break;
                 }
-# if defined(USES_P088)                                       // || defined(USES_P115)
+                # if defined(USES_P088)
                 case 88:                                      // Send heatpump IR (P088) if IDX matches
-                  //                case 115:            // Send heatpump IR (P115) if IDX matches
                 {
                   action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
-# endif // USES_P088 || USES_P115
+                # endif // if defined(USES_P088)
                 default:
                   break;
               }
 
-              const bool validCommand = action.length() > 0;
-
-              if (validCommand) {
+              if (action.length() != 0) {
                 mustSendEvent = true;
 
                 // Try plugin and internal
@@ -207,19 +204,19 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       if (event->idx != 0)
       {
         String json = serializeDomoticzJson(event);
-# ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, concat(F("MQTT : "), json));
         }
-# endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
         // Publish using move operator, thus pubname and json are empty after this call
         success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
-      } // if ixd !=0
+      } // if idx !=0
       else
       {
         addLog(LOG_LEVEL_ERROR, F("MQTT : IDX cannot be zero!"));

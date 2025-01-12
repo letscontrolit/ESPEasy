@@ -458,6 +458,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SEND_LWT);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
+            addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_KEEP_ALIVE_TIME);
           }
           # endif // if FEATURE_MQTT
         }

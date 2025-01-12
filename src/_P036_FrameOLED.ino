@@ -15,7 +15,8 @@
 // As long as the device is not enabled, no RAM is wasted.
 //
 // @uwekaditz: 2024-08-06
-// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time before the line is displayed,
+// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time
+// before the line is displayed,
 //      not only once while issuing the command and creating the new line content
 // @tonhuisman: 2024-07-14
 // ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
@@ -241,17 +242,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_036;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_036;
+      dev.Type          = DEVICE_TYPE_I2C;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 

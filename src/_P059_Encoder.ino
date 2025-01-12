@@ -6,6 +6,10 @@
 // #################################### Plugin 059: Rotary Encoder #######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-04 tonhuisman: Minor code cleanup
+ */
+
 // ESPEasy Plugin to process the quadrature encoder interface signals (e.g. rotary encoder)
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
@@ -34,18 +38,14 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_059;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_059;
+      dev.Type           = DEVICE_TYPE_TRIPLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
       break;
     }
 
@@ -77,9 +77,10 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *options[3] = { F("1"), F("2"), F("4") };
-        int optionValues[3]                   = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("mode"), 3, options, optionValues, PCONFIG(0));
+        const __FlashStringHelper *options[] = { F("1"), F("2"), F("4") };
+        const int optionValues[]             = { 1, 2, 4 };
+        constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Mode"), F("mode"), optionCount, options, optionValues, PCONFIG(0));
         addUnit(F("pulses per cycle"));
       }
 
@@ -119,12 +120,12 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t i = 0; i < 3; ++i)
       {
-        int pin = PIN(i);
+        const int pin = PIN(i);
 
-        if (pin >= 0)
+        if (validGpio(pin))
         {
           // pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-          constexpr pluginID_t P059_PLUGIN_ID{PLUGIN_ID_059};
+          constexpr pluginID_t P059_PLUGIN_ID{ PLUGIN_ID_059 };
 
           const uint32_t key = createKey(P059_PLUGIN_ID, pin);
 
@@ -158,9 +159,8 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
-          long c = P_059_sensordefs[event->TaskIndex]->read();
+          const long c = P_059_sensordefs[event->TaskIndex]->read();
           UserVar.setFloat(event->TaskIndex, 0, c);
-          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), c));
@@ -187,7 +187,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P_059_sensordefs.count(event->TaskIndex) != 0)
       {
-        String command = parseString(string, 1);
+        const String command = parseString(string, 1);
 
         if (equals(command, F("encwrite")))
         {

@@ -36,18 +36,15 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_015;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_015;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -99,38 +96,33 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        # define TSL2561_INTEGRATION_OPTION 3
-        const __FlashStringHelper * options[TSL2561_INTEGRATION_OPTION] = {
+        const __FlashStringHelper *options[] = {
           F("13.7 ms"),
           F("101 ms"),
           F("402 ms"),
         };
-        const int optionValues[TSL2561_INTEGRATION_OPTION] = {
-          0x00,
-          0x01,
-          0x02,
-        };
-        addFormSelector(F("Integration time"), F("pintegration"), TSL2561_INTEGRATION_OPTION, options, optionValues, P015_INTEGRATION);
+        constexpr size_t optionCount = NR_ELEMENTS(options);
+        addFormSelector(F("Integration time"), F("pintegration"), optionCount, options, nullptr, P015_INTEGRATION);
       }
 
       addFormCheckBox(F("Send sensor to sleep:"), F("psleep"),
                       P015_SLEEP);
 
       {
-        # define TSL2561_GAIN_OPTION 4
-        const __FlashStringHelper *options[TSL2561_GAIN_OPTION] = {
+        const __FlashStringHelper *options[] = {
           F("No Gain"),
           F("16x Gain"),
           F("Auto Gain"),
           F("Extended Auto Gain"),
         };
-        const int optionValues[TSL2561_GAIN_OPTION] = {
+        const int optionValues[] = {
           P015_NO_GAIN,
           P015_16X_GAIN,
           P015_AUTO_GAIN,
           P015_EXT_AUTO_GAIN,
         };
-        addFormSelector(F("Gain"), F("pgain"), TSL2561_GAIN_OPTION, options, optionValues, P015_GAIN);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Gain"), F("pgain"), optionCount, options, optionValues, P015_GAIN);
       }
 
       success = true;

@@ -85,15 +85,14 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_109;
-      Device[deviceCount].Type             = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 4;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].GlobalSyncOption = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_109;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -138,16 +137,16 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      const char* separator = event->String1.c_str();
+      const char*separator = event->String1.c_str();
       string = strformat(
         F("Btn L: %s%sBtn R: %s%sBtn M: %s%sRelay: %s"),
-       formatGpioLabel(CONFIG_PIN1, false).c_str(),
-       separator,
-       formatGpioLabel(CONFIG_PIN2, false).c_str(),
-       separator,
-       formatGpioLabel(CONFIG_PIN3, false).c_str(),
-       separator,
-       formatGpioLabel(P109_CONFIG_RELAYPIN, false).c_str());
+        formatGpioLabel(CONFIG_PIN1,          false).c_str(),
+        separator,
+        formatGpioLabel(CONFIG_PIN2,          false).c_str(),
+        separator,
+        formatGpioLabel(CONFIG_PIN3,          false).c_str(),
+        separator,
+        formatGpioLabel(P109_CONFIG_RELAYPIN, false).c_str());
       success = true;
       break;
     }
@@ -181,7 +180,8 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
         const int optionValues4[]             = { 2, 5, 10 };
-        addFormSelector(F("Hysteresis"), F("hyst"), 3, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
+        constexpr size_t optionCount          = NR_ELEMENTS(optionValues4);
+        addFormSelector(F("Hysteresis"), F("hyst"), optionCount, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
       }
 
       {
