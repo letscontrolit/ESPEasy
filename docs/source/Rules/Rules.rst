@@ -1425,6 +1425,8 @@ Basic Math Functions
 * ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
 * ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps value x in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
+* ``mapc(value:fromLow:fromHigh:toLow:toHigh)`` same as map, but constrains the result to the fromLow/fromHigh range.
+
 
 Rules example:
 
@@ -1460,7 +1462,7 @@ Called with event ``eventname2=1.234,100``
  213379 : Info   : ACT : LogEntry,'pow of 1.234^100 = 1353679866.79107'
  213382 : Info   : pow of 1.234^100 = 1353679866.79107
 
-Examples using the ``map()`` function. Map does not constrain the values within the given range, but uses extrapolation when the input value goes outside the ``fromLow`` / ``fromHigh`` range.
+Examples using the ``map()`` & ``mapc()`` function. ``map()`` without the "c" does not constrain the values within the given range, but uses extrapolation when the input value goes outside the ``fromLow`` / ``fromHigh`` range.
 
 Missing values for the map function default to 0.
 
@@ -1476,7 +1478,9 @@ Missing values for the map function default to 0.
 
  on eventname3 do
    let,1,map(%eventvalue1|10%:0:100:100:0) // Reverse mapping of a value, 0..100 will output 100..0
+   let,2,mapc(%eventvalue1|10%:0:100:100:0)
    LogEntry,'Input value %eventvalue1|10% mapped to: %v1%'
+   LogEntry,'Input value %eventvalue1|10% mapped to: %v2% and constrained'
  endon
 
 

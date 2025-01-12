@@ -3,7 +3,7 @@
    :widths: 30, 20
 
    "
-   ``<taskname>#<taskvar>``
+   ``<taskname>#<taskvar1>``
 
    The regular events like in every other task. Only difference here is that you may have an event either when the touch pad is touched, released or both.
    ","
@@ -11,7 +11,7 @@
    .. code-block:: none
 
       on touch#Touch do
-       GPIO,2,1 //LED on
+       LogEntry,'Touch value %eventvalue%'
       endon
 
    "
@@ -37,5 +37,24 @@
       6553653 : Info  : ACT  : LogEntry,'Touch Duration 460 ms'
       6553654 : Info  : Command: LogEntry
       6553655 : Info  : Touch Duration 460 ms
+
+   "
+   "
+   ``<taskname>#<taskvar2>``
+
+   An event is sent every time the state of <taskvar2> changes. 
+   
+   The state can be either **0** for released, **1** for touched and **10** for long press.
+   ","
+
+   .. code-block:: none
+
+      on touch#State do
+       if %eventvalue% != 10
+         GPIO,2,%eventvalue% //LED on or off 
+       else
+         GPIO,3,1 // on longpress turn on another LED
+       endif
+      endon
 
    "

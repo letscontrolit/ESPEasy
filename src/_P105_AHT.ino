@@ -27,6 +27,7 @@
  */
 
 /** History:
+ * 2024-12-21 chromoxdor: Add temperature offset + simple humidity compensation
  * 2024-12-03 tonhuisman: Add alternative initialization for AHT10 (clone), see https://github.com/letscontrolit/ESPEasy/issues/5172
  *                        Small code optimization.
  * 2024-04-28 tonhuisman: Update plugin name and documentation as DHT20 and AM2301B actually contain an AHT20!
@@ -47,6 +48,11 @@
 # define PLUGIN_VALUENAME1_105 "Temperature"
 # define PLUGIN_VALUENAME2_105 "Humidity"
 
+
+# define P105_I2C_ADRESS          PCONFIG(0)
+# define P105_AHT_TYPE            PCONFIG(1)
+# define P105_ALT_INIT            PCONFIG(2)
+# define P105_TEMPERATURE_OFFSET  PCONFIG(3)
 
 boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -87,7 +93,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x38, 0x39 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P105_I2C_ADRESS);
         addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT1x sensors."));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
@@ -99,7 +105,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = PCONFIG(0);
+      event->Par1 = P105_I2C_ADRESS;
       success     = true;
       break;
     }
@@ -107,13 +113,14 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PCONFIG(1) = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
+      P105_AHT_TYPE = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
+      P105_TEMPERATURE_OFFSET = 0;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) ==  AHTx_device_type::AHT10_DEVICE) {
+      if (static_cast<AHTx_device_type>(P105_AHT_TYPE) ==  AHTx_device_type::AHT10_DEVICE) {
         bool hasOtherI2CDevices = false;
 
         for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; ++x) {
@@ -145,29 +152,35 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
                                                  static_cast<int>(AHTx_device_type::AHT20_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Sensor model"), F("ahttype"), optionCount, options, indices, PCONFIG(1), true);
+        addFormSelector(F("Sensor model"), F("ahttype"), optionCount, options, indices, P105_AHT_TYPE, true);
         addFormNote(F("Changing Sensor model will reload the page."));
 
-        if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == PCONFIG(1)) {
-          addFormCheckBox(F("AHT10 Alternative initialization"), F("altinit"), PCONFIG(2));
+        if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == P105_AHT_TYPE) {
+          addFormCheckBox(F("AHT10 Alternative initialization"), F("altinit"), P105_ALT_INIT);
         }
       }
 
+      addFormNumericBox(F("Temperature offset"), F("tempoffset"), P105_TEMPERATURE_OFFSET);
+      addUnit(F("x 0.1C"));
+      addFormNote("Offset in units of 0.1 degree Celsius and also corrects humidity.");
       success = true;
+
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(1) = getFormItemInt(F("ahttype"));
+      P105_AHT_TYPE = getFormItemInt(F("ahttype"));
 
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) != AHTx_device_type::AHT10_DEVICE) {
-        PCONFIG(0) = 0x38; // AHT20/AHT21 only support a single I2C address.
+      if (static_cast<AHTx_device_type>(P105_AHT_TYPE) != AHTx_device_type::AHT10_DEVICE) {
+        P105_I2C_ADRESS = 0x38; // AHT20/AHT21 only support a single I2C address.
       } else {
-        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-        PCONFIG(2) = isFormItemChecked(F("altinit")) ? 1 : 0;
+        P105_I2C_ADRESS = getFormItemInt(F("i2c_addr"));
+        P105_ALT_INIT = isFormItemChecked(F("altinit")) ? 1 : 0;
       }
-      success = true;
+
+      P105_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
+      success    = true;
       break;
     }
 
@@ -175,7 +188,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     {
       success = initPluginTaskData(
         event->TaskIndex,
-        new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1)), 1 == PCONFIG(2)));
+        new (std::nothrow) P105_data_struct(P105_I2C_ADRESS, static_cast<AHTx_device_type>(P105_AHT_TYPE), 1 == P105_ALT_INIT));
       break;
     }
 
@@ -204,11 +217,11 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         }
         P105_data->state = AHTx_state::AHTx_Values_read;
 
-        UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature());
-        UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity());
+        UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature() + (P105_TEMPERATURE_OFFSET / 10.0f));
+        UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity() * (1 - 0.005f * P105_TEMPERATURE_OFFSET));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), PCONFIG(0)));
+          addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), P105_I2C_ADRESS));
           addLogMove(LOG_LEVEL_INFO,
                      strformat(F("%s : Temperature: %s : Humidity: %s"),
                                P105_data->getDeviceName().c_str(),

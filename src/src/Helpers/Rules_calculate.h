@@ -55,6 +55,7 @@ enum class UnaryOperator : uint8_t {
   ArcTan,    // Arc Tangent (radian)
   ArcTan_d,  // Arc Tangent (degree)
   Map,       // Map (value, lowFrom, highFrom, lowTo, highTo) (not really unary...)
+  MapC,      // Map (value, lowFrom, highFrom, lowTo, highTo) and clamp to lowTo/highTo
 };
 
 void   preProcessReplace(String      & input,

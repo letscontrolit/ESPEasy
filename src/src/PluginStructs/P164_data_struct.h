@@ -52,8 +52,8 @@ public:
   virtual ~P164_data_struct() = default;
 
   bool begin();
-  bool read(float& tvoc, float& eco2);
-  bool read(float& tvoc, float& eco2, float temp, float hum);
+  bool read(float& tvoc, float& eco2, float& aqi);
+  bool read(float& tvoc, float& eco2, float& aqi, float temp, float hum);
   static bool webformLoad(struct EventStruct *event);
   static bool webformSave(struct EventStruct *event);
   bool tenPerSecond(struct EventStruct *event);

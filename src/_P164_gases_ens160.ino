@@ -20,6 +20,7 @@
 # define PLUGIN_NAME_164       "Gases - ENS16x"
 # define PLUGIN_VALUENAME1_164 "TVOC"
 # define PLUGIN_VALUENAME2_164 "eCO2"
+# define PLUGIN_VALUENAME3_164 "AQI"
 
 boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -34,7 +35,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       dev.Type           = DEVICE_TYPE_I2C;
       dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
       dev.FormulaOption  = true;
-      dev.ValueCount     = 2;
+      dev.ValueCount     = 3;
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
@@ -51,6 +52,11 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_164));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_164));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_164));
+
+      for (int i = 0; i < 3; ++i) {
+        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
+      }
       break;
     }
 
@@ -108,6 +114,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       float humidity    = 50.0f; // A reasonable value in case humidity source task is invalid
       float tvoc        = 0.0f;  // tvoc value to be retrieved from device
       float eco2        = 0.0f;  // eCO2 value to be retrieved from device
+      float aqi         = 0.0f;  // AQI value to be retrieved from device
 
       if (validTaskIndex(P164_PCONFIG_TEMP_TASK) && validTaskIndex(P164_PCONFIG_HUM_TASK))
       {
@@ -115,9 +122,10 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
         temperature = UserVar.getFloat(P164_PCONFIG_TEMP_TASK, P164_PCONFIG_TEMP_VAL); // in degrees C
         humidity    = UserVar.getFloat(P164_PCONFIG_HUM_TASK, P164_PCONFIG_HUM_VAL);   // in % relative
       }
-      success = P164_data->read(tvoc, eco2, temperature, humidity);
+      success = P164_data->read(tvoc, eco2, aqi, temperature, humidity);
       UserVar.setFloat(event->TaskIndex, 0, tvoc);
       UserVar.setFloat(event->TaskIndex, 1, eco2);
+      UserVar.setFloat(event->TaskIndex, 2, aqi);
       break;
     }
 

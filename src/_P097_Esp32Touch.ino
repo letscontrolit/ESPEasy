@@ -5,48 +5,52 @@
 // #################################### Plugin 097: ESP32 Touch ##########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2024-12-11 chromoxdor: Added extra routine for ESP32S2 and ESP32S3.
+ *                        Added "Wake Up from Sleep", Switch like behaviour + toggle and long press option.
+ */
 
 #if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
 
-# define LAST_TOUCH_INPUT_INDEX    SOC_TOUCH_SENSOR_NUM
+# define LAST_TOUCH_INPUT_INDEX SOC_TOUCH_SENSOR_NUM
+// Device-specific configuration
+#  if defined(ESP32_CLASSIC)
+  #   define HAS_T0_INPUT             1
+  #   define HAS_T10_TO_T14           0
+  #   define LAST_TOUCH_INPUT_INDEX   10
+  #   define P097_MAX_THRESHOLD_VALUE 4095
+#  elif defined(ESP32S2) || defined(ESP32S3)
+  #   define HAS_T0_INPUT             0
 
-#ifdef ESP32_CLASSIC
-  # define HAS_T0_INPUT  1
-  # define HAS_T10_TO_T14 0
-//  # define LAST_TOUCH_INPUT_INDEX 10
-#elif defined(ESP32S2) || defined(ESP32S3)
-  # define HAS_T0_INPUT  0
-  # define HAS_T10_TO_T14 1
-//  # define LAST_TOUCH_INPUT_INDEX 15
-#else
-  static_assert(false, "Implement processor architecture");
-#endif
+// Temporary disabled since T10 to T14 are causing problems
+    #   define HAS_T10_TO_T14           0
+    #   define LAST_TOUCH_INPUT_INDEX   14
+    #   define P097_MAX_THRESHOLD_VALUE 500000 // couldn't find a max value but threshold for ESP32S2 & ESP32S3 is uint32_t
+#  endif // if defined(ESP32_CLASSIC)
 
+#  define PLUGIN_097
+#  define PLUGIN_ID_097              97
+#  define PLUGIN_NAME_097            "Touch (ESP32) - internal"
+#  define PLUGIN_VALUENAME1_097      "Touch"
+#  define PLUGIN_VALUENAME2_097      "State"
+#  define P097_MAX_LONGPRESS_VALUE   10000
 
-
-# define PLUGIN_097
-# define PLUGIN_ID_097         97
-# define PLUGIN_NAME_097       "Touch (ESP32) - internal"
-# define PLUGIN_VALUENAME1_097 "Touch"
-
-
-# ifdef ESP32
-  #  define P097_MAX_ADC_VALUE    4095
-# endif // ifdef ESP32
-# ifdef ESP8266
-  #  define P097_MAX_ADC_VALUE    1023
-# endif // ifdef ESP8266
-
-
-# define P097_SEND_TOUCH_EVENT    PCONFIG(0)
-# define P097_SEND_RELEASE_EVENT  PCONFIG(1)
-# define P097_SEND_DURATION_EVENT PCONFIG(2)
-# define P097_TOUCH_THRESHOLD     PCONFIG(3)
+#  define P097_SEND_TOUCH_EVENT      PCONFIG(0)
+#  define P097_SEND_RELEASE_EVENT    PCONFIG(1)
+#  define P097_SEND_DURATION_EVENT   PCONFIG(2)
+#  define P097_TOUCH_THRESHOLD       PCONFIG(3)
+#  define P097_TYPE_TOGGLE           PCONFIG(4)
+#  define P097_SLEEP_WAKEUP          PCONFIG(5)
+#  define P097_SEND_LONG_PRESS_EVENT PCONFIG(6)
+#  define P097_LONG_PRESS_TIME       PCONFIG(7)
 
 // Share this bitmap among all instances of this plugin
-DRAM_ATTR uint32_t p097_pinTouched     = 0;
-DRAM_ATTR uint32_t p097_pinTouchedPrev = 0;
-DRAM_ATTR uint32_t p097_timestamp[LAST_TOUCH_INPUT_INDEX]  = { 0 };
+DRAM_ATTR uint32_t p097_pinTouched                          = 0;
+DRAM_ATTR uint32_t p097_pinTouchedLong                      = 0;
+DRAM_ATTR uint32_t p097_pinTouchedPrev                      = 0;
+DRAM_ATTR uint32_t p097_timestamp[LAST_TOUCH_INPUT_INDEX]   = { 0 };
+DRAM_ATTR uint32_t p097_touchstart[LAST_TOUCH_INPUT_INDEX]  = { 0 };
+DRAM_ATTR uint32_t p097_togglevalue[LAST_TOUCH_INPUT_INDEX] = { 0 };
 
 boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -61,7 +65,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       dev.Type           = DEVICE_TYPE_ANALOG;
       dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
       dev.FormulaOption  = true;
-      dev.ValueCount     = 1;
+      dev.ValueCount     = 2;
       dev.SendDataOption = true;
       dev.TimerOptional  = true;
       break;
@@ -76,14 +80,24 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_097));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_097));
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0;
+      ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0;
       break;
     }
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P097_SEND_TOUCH_EVENT = 1;
-      P097_SEND_DURATION_EVENT = 1;
+      P097_SEND_TOUCH_EVENT    = 1;
+      P097_SEND_RELEASE_EVENT  = 1;
+      P097_SEND_DURATION_EVENT = 0;
+      P097_LONG_PRESS_TIME     = 1000;
+
+      #  if defined(ESP32S2) || defined(ESP32S3)
+      P097_TOUCH_THRESHOLD = 1500;
+      #  else // if defined(ESP32S2) || defined(ESP32S3)
       P097_TOUCH_THRESHOLD = 20;
+      #  endif // if defined(ESP32S2) || defined(ESP32S3)
       break;
     }
 
@@ -91,13 +105,25 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
     {
       addRowLabel(F("Analog Pin"));
       addADC_PinSelect(AdcPinSelectPurpose::TouchOnly, F("taskdevicepin1"), CONFIG_PIN1);
+      #  if (defined(ESP32S2) || defined(ESP32S3)) && !HAS_T10_TO_T14
+      addFormNote(F("For now touch pins T10 to T14 are not supported!"));
+      #  endif // if (defined(ESP32S2) || defined(ESP32S3)) && !HASS_T10_TO_T14
+
+      addFormCheckBox(F("Toggle State"),          F("typetoggle"),    P097_TYPE_TOGGLE);
+      addFormCheckBox(F("Send Long Press Event"), F("sendlongpress"), P097_SEND_LONG_PRESS_EVENT);
+      addFormNumericBox(F("Long Press Time"), F("longpress"), P097_LONG_PRESS_TIME, 500, P097_MAX_LONGPRESS_VALUE);
+      addUnit(F("500..10000 msec."));
+      addFormCheckBox(F("Wake Up from Sleep"), F("sleepwakeup"), P097_SLEEP_WAKEUP);
+      #  if defined(ESP32S2) || defined(ESP32S3)
+      addFormNote(F("Wake up from sleep is only supported on one touch pin!"));
+      #  endif // if defined(ESP32S2) || defined(ESP32S3)
 
       addFormSubHeader(F("Touch Settings"));
 
       addFormCheckBox(F("Send Touch Event"),    F("sendtouch"),    P097_SEND_TOUCH_EVENT);
       addFormCheckBox(F("Send Release Event"),  F("sendrelease"),  P097_SEND_RELEASE_EVENT);
       addFormCheckBox(F("Send Duration Event"), F("sendduration"), P097_SEND_DURATION_EVENT);
-      addFormNumericBox(F("Touch Threshold"), F("threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_ADC_VALUE);
+      addFormNumericBox(F("Touch Threshold"), F("threshold"), P097_TOUCH_THRESHOLD, 0, P097_MAX_THRESHOLD_VALUE);
 
       // Show current value
       addRowLabel(F("Current Pressure"));
@@ -109,66 +135,155 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P097_SEND_TOUCH_EVENT    = isFormItemChecked(F("sendtouch"));
-      P097_SEND_RELEASE_EVENT  = isFormItemChecked(F("sendrelease"));
-      P097_SEND_DURATION_EVENT = isFormItemChecked(F("sendduration"));
-      P097_TOUCH_THRESHOLD     = getFormItemInt(F("threshold"));
+      P097_SEND_TOUCH_EVENT   = isFormItemChecked(F("sendtouch"));
+      P097_SEND_RELEASE_EVENT = isFormItemChecked(F("sendrelease"));
+      P097_TYPE_TOGGLE        = isFormItemChecked(F("typetoggle"));
 
-      success = true;
+      P097_SEND_LONG_PRESS_EVENT = isFormItemChecked(F("sendlongpress"));
+      P097_LONG_PRESS_TIME       = getFormItemInt(F("longpress"));
+      P097_SEND_DURATION_EVENT   = isFormItemChecked(F("sendduration"));
+      P097_TOUCH_THRESHOLD       = getFormItemInt(F("threshold"));
+      P097_SLEEP_WAKEUP          = isFormItemChecked(F("sleepwakeup"));
+      success                    = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
       P097_setEventParams(CONFIG_PIN1, P097_TOUCH_THRESHOLD);
+
+      if (P097_SLEEP_WAKEUP) {
+        touchSleepWakeUpEnable(CONFIG_PIN1, P097_TOUCH_THRESHOLD);
+      }
       success = true;
       break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if ((p097_pinTouched != 0) || (p097_pinTouchedPrev != 0)) {
-        // Some pin has been touched or released.
-        // Check if it is 'our' pin
-        int adc, ch, t;
+      int adc, ch, t;
 
-        if (getADC_gpio_info(CONFIG_PIN1, adc, ch, t)) {
-          const bool touched      = bitRead(p097_pinTouched, t);
-          const bool touched_prev = bitRead(p097_pinTouchedPrev, t);
-
-          if (touched) {
-            bitClear(p097_pinTouched, t);
+      if (getADC_gpio_info(CONFIG_PIN1, adc, ch, t)) {
+        if (t >= 0) { // check if there is a touch pad "t" since "getADC_gpio_info" returns true even if there is no touch pad
+          if (P097_SEND_LONG_PRESS_EVENT &&
+              (p097_touchstart[t] >= 1) &&
+              (timePassedSince(p097_touchstart[t]) >= P097_LONG_PRESS_TIME)) {
+            UserVar.setFloat(event->TaskIndex, 1, 10);
+            eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 1)), 10);
+            p097_touchstart[t] = 0;
           }
 
-          if (touched != touched_prev) {
-            // state changed
-            UserVar.setFloat(event->TaskIndex, 0, touchRead(CONFIG_PIN1));
+
+          if ((p097_pinTouched != 0) || (p097_pinTouchedPrev != 0)) {
+            // Some pin has been touched or released.
+
+            const bool touched = bitRead(p097_pinTouched, t);
+          #  ifdef ESP32_CLASSIC
+            const bool touched_prev = bitRead(p097_pinTouchedPrev, t);
+          #  endif // ifdef ESP32_CLASSIC
+
+          #  if defined(ESP32S2) || defined(ESP32S3)
 
             if (touched) {
-              if (P097_SEND_TOUCH_EVENT) {
-                // schedule a read to update output values and send to controllers
-                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
-              }
-              bitSet(p097_pinTouchedPrev, t);
-            } else {
-              if (P097_SEND_RELEASE_EVENT) {
-                // schedule a read to update output values and send to controllers
-                Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
-              }
+              bitClear(p097_pinTouched, t);
+              UserVar.setFloat(event->TaskIndex, 0, touchRead(CONFIG_PIN1));
 
-              if (P097_SEND_DURATION_EVENT) {
-                if (Settings.UseRules) {
-                  eventQueue.add(event->TaskIndex, F("Duration"), timePassedSince(p097_timestamp[t]));
+              if (touchInterruptGetLastStatus(CONFIG_PIN1)) {
+                if (p097_touchstart[t] == 0) { p097_touchstart[t] = millis(); }
+
+                if (P097_TYPE_TOGGLE) {
+                  p097_togglevalue[t] = !UserVar.getInt32(event->TaskIndex, 1);
+                } else {
+                  p097_togglevalue[t] = 1;
                 }
+                UserVar.setFloat(event->TaskIndex, 1, p097_togglevalue[t]);
+                eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 1)), p097_togglevalue[t]);
+
+                if (P097_SEND_TOUCH_EVENT) {
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 0)), UserVar.getFloat(event->TaskIndex, 0));
+                }
+              } else { // Touch released
+                p097_touchstart[t] = 0;
+
+                if (!P097_TYPE_TOGGLE) {
+                  UserVar.setFloat(event->TaskIndex, 1, 0);
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 1)), 0);
+                } else {
+                  // set only the taskvalue back to previous state after long press release
+                  if (P097_SEND_LONG_PRESS_EVENT) { UserVar.setFloat(event->TaskIndex, 1, p097_togglevalue[t]); }
+                }
+
+                if (P097_SEND_RELEASE_EVENT) {
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 0)), UserVar.getFloat(event->TaskIndex, 0));
+                }
+
+                if (P097_SEND_DURATION_EVENT) {
+                  if (Settings.UseRules) {
+                    eventQueue.add(event->TaskIndex, F("Duration"), timePassedSince(p097_timestamp[t]));
+                  }
+                }
+
+                p097_timestamp[t] = 0;
               }
-              bitClear(p097_pinTouchedPrev, t);
-              p097_timestamp[t] = 0;
             }
+
+          #  else // if defined(ESP32S2) || defined(ESP32S3)
+
+            if (touched) {
+              bitClear(p097_pinTouched, t);
+            }
+
+            if (touched != touched_prev) {
+              // state changed
+              UserVar.setFloat(event->TaskIndex, 0, touchRead(CONFIG_PIN1));
+
+              if (touched) {
+                if (p097_touchstart[t] == 0) { p097_touchstart[t] = millis(); }
+
+                if (P097_TYPE_TOGGLE) {
+                  p097_togglevalue[t] = !UserVar.getInt32(event->TaskIndex, 1);
+                } else {
+                  p097_togglevalue[t] = 1;
+                }
+                UserVar.setFloat(event->TaskIndex, 1, p097_togglevalue[t]);
+                eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 1)), p097_togglevalue[t]);
+
+                if (P097_SEND_TOUCH_EVENT) {
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 0)), UserVar.getFloat(event->TaskIndex, 0));
+                }
+
+                bitSet(p097_pinTouchedPrev, t);
+              } else { // Touch released
+                p097_touchstart[t] = 0;
+
+                if (!P097_TYPE_TOGGLE) {
+                  UserVar.setFloat(event->TaskIndex, 1, 0);
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 1)), 0);
+                } else {
+                  // set only the taskvalue back to previous state after long press release
+                  if (P097_SEND_LONG_PRESS_EVENT) { UserVar.setFloat(event->TaskIndex, 1, p097_togglevalue[t]); }
+                }
+
+                if (P097_SEND_RELEASE_EVENT) {
+                  eventQueue.add(event->TaskIndex, (getTaskValueName(event->TaskIndex, 0)), UserVar.getFloat(event->TaskIndex, 0));
+                }
+
+                if (P097_SEND_DURATION_EVENT) {
+                  if (Settings.UseRules) {
+                    eventQueue.add(event->TaskIndex, F("Duration"), timePassedSince(p097_timestamp[t]));
+                  }
+                }
+
+                bitClear(p097_pinTouchedPrev, t);
+                p097_timestamp[t] = 0;
+              }
+            }
+          #  endif // if defined(ESP32S2) || defined(ESP32S3)
           }
+          success = true;
+          break;
         }
       }
-      success = true;
-      break;
     }
 
     case PLUGIN_READ:
@@ -183,20 +298,21 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
   }
+
   return success;
 }
 
 /**********************************************************************************
 * Touch pin callback functions
 **********************************************************************************/
-void P097_setEventParams(int pin, uint16_t threshold) {
+void P097_setEventParams(int pin, uint32_t threshold) {
   int adc, ch, t;
 
   if (getADC_gpio_info(pin, adc, ch, t)) {
     switch (t) {
-#if HAS_T0_INPUT
+#  if HAS_T0_INPUT
       case 0: touchAttachInterrupt(T0, P097_got_T0, threshold); break;
-#endif
+#  endif // if HAS_T0_INPUT
       case 1: touchAttachInterrupt(T1, P097_got_T1, threshold); break;
       case 2: touchAttachInterrupt(T2, P097_got_T2, threshold); break;
       case 3: touchAttachInterrupt(T3, P097_got_T3, threshold); break;
@@ -206,22 +322,21 @@ void P097_setEventParams(int pin, uint16_t threshold) {
       case 7: touchAttachInterrupt(T7, P097_got_T7, threshold); break;
       case 8: touchAttachInterrupt(T8, P097_got_T8, threshold); break;
       case 9: touchAttachInterrupt(T9, P097_got_T9, threshold); break;
-#if HAS_T10_TO_T14
-/*
+#  if HAS_T10_TO_T14
       case 10: touchAttachInterrupt(T10, P097_got_T10, threshold); break;
       case 11: touchAttachInterrupt(T11, P097_got_T11, threshold); break;
       case 12: touchAttachInterrupt(T12, P097_got_T12, threshold); break;
       case 13: touchAttachInterrupt(T13, P097_got_T13, threshold); break;
       case 14: touchAttachInterrupt(T14, P097_got_T14, threshold); break;
-*/
-#endif
+
+#  endif // if HAS_T10_TO_T14
     }
   }
 }
 
-#if HAS_T0_INPUT
+#  if HAS_T0_INPUT
 void P097_got_T0() IRAM_ATTR;
-#endif
+#  endif // if HAS_T0_INPUT
 void P097_got_T1() IRAM_ATTR;
 void P097_got_T2() IRAM_ATTR;
 void P097_got_T3() IRAM_ATTR;
@@ -231,20 +346,21 @@ void P097_got_T6() IRAM_ATTR;
 void P097_got_T7() IRAM_ATTR;
 void P097_got_T8() IRAM_ATTR;
 void P097_got_T9() IRAM_ATTR;
-#if HAS_T10_TO_T14
+#  if HAS_T10_TO_T14
 void P097_got_T10() IRAM_ATTR;
 void P097_got_T11() IRAM_ATTR;
 void P097_got_T12() IRAM_ATTR;
 void P097_got_T13() IRAM_ATTR;
 void P097_got_T14() IRAM_ATTR;
-#endif
+#  endif // if HAS_T10_TO_T14
 void P097_got_Touched(int pin) IRAM_ATTR;
 
-#if HAS_T0_INPUT
+#  if HAS_T0_INPUT
 void P097_got_T0() {
   P097_got_Touched(0);
 }
-#endif
+
+#  endif // if HAS_T0_INPUT
 
 void P097_got_T1() {
   P097_got_Touched(1);
@@ -282,7 +398,7 @@ void P097_got_T9() {
   P097_got_Touched(9);
 }
 
-#if HAS_T10_TO_T14
+#  if HAS_T10_TO_T14
 void P097_got_T10() {
   P097_got_Touched(10);
 }
@@ -303,14 +419,15 @@ void P097_got_T14() {
   P097_got_Touched(14);
 }
 
-#endif
+#  endif // if HAS_T10_TO_T14
 
 void P097_got_Touched(int pin) {
   bitSet(p097_pinTouched, pin);
 
   if (p097_timestamp[pin] == 0) { p097_timestamp[pin] = millis(); }
 }
-#endif 
+
+# endif // if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
 
 
 #endif // USES_P097
