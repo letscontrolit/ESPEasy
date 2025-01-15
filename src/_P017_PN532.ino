@@ -84,17 +84,13 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_017;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_017;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOptional  = true;
       break;
     }
 
@@ -149,15 +145,9 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Automatic Tag removal after"), F("removetime"), P017_REMOVAL_TIMEOUT, 250, 60000);
       addUnit(F("mSec."));
 
-
       addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647);
 
-      // Max allowed is int
-      // =
-      // 0x7FFFFFFF ...
-
-      const bool eventOnRemoval = P017_EVENT_ON_TAG_REMOVAL == 1; // Normal state!
-      addFormCheckBox(F("Event on Tag removal"), F("eventremove"), eventOnRemoval);
+      addFormCheckBox(F("Event on Tag removal"), F("eventremove"), P017_EVENT_ON_TAG_REMOVAL == 1);
 
       success = true;
       break;
@@ -339,17 +329,10 @@ bool P017_handle_timer_in(struct EventStruct *event)
         tempcounter++;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("PN532: ");
-
-          if (new_key) {
-            log += F("New Tag: ");
-          } else {
-            log += F("Old Tag: ");
-          }
-          log += key;
-          log += ' ';
-          log += tempcounter;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("PN532: %s Tag: %d %u"),
+                                           FsP(new_key ? F("New") : F("Old")),
+                                           key,
+                                           tempcounter));
         }
 
         if (new_key) { sendData(event); }

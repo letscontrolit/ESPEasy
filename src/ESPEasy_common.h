@@ -9,12 +9,6 @@
 //#define USE_CUSTOM_H
 // *****************************************************************************************
 
-/*
-    To modify the stock configuration without changing this repo file :
-    - define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
-    - add a "Custom.h" file in this folder.
-
-*/
 
 #include <Arduino.h> // See: https://github.com/esp8266/Arduino/issues/8922#issuecomment-1542301697
 #include <cmath>

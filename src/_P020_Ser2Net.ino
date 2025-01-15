@@ -86,22 +86,17 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
+      auto& dev = Device[++deviceCount];
+
       if (P020_Emulate_P044) {
-        Device[++deviceCount].Number       = PLUGIN_ID_020_044;
-        Device[deviceCount].SendDataOption = false;
+        dev.Number         = PLUGIN_ID_020_044;
+        dev.SendDataOption = false;
       } else {
-        Device[++deviceCount].Number       = PLUGIN_ID_020;
-        Device[deviceCount].SendDataOption = true;
+        dev.Number         = PLUGIN_ID_020;
+        dev.SendDataOption = true;
       }
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = false;
+      dev.Type  = DEVICE_TYPE_SERIAL;
+      dev.VType = Sensor_VType::SENSOR_TYPE_STRING;
       break;
     }
     case PLUGIN_GET_DEVICENAME:
@@ -388,8 +383,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, strformat(
-            F("Ser2net  : P020_RESET_TARGET_PIN : %d"), 
-            P020_RESET_TARGET_PIN));
+                       F("Ser2net  : P020_RESET_TARGET_PIN : %d"),
+                       P020_RESET_TARGET_PIN));
         }
         # endif // ifndef BUILD_NO_DEBUG
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
@@ -408,10 +403,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         task->_CRCcheck = P020_GET_BAUDRATE == 115200;
         # ifndef BUILD_NO_DEBUG
 
-        if (task->_CRCcheck) {
-          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 5 meter, CRC on"));
-        } else {
-          addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC off"));
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, strformat(F("P1   : DSMR version %d meter, CRC %s"),
+                                            task->_CRCcheck ? 5 : 4,
+                                            FsP(task->_CRCcheck ? F("on") : F("off"))));
         }
         # endif // ifndef BUILD_NO_DEBUG
       }

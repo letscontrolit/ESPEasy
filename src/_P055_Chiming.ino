@@ -5,6 +5,11 @@
 // #################################### Plugin 055: Chiming Mechanism ####################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-04 tonhuisman: Change check for a timesource to look for more than just NTP, but anything more reliable than 'Restore from RTC'
+ *                        Minor code cleanup
+ */
+
 // ESPEasy plugin to strike up to 4 physical bells and gongs with chiming sequences.
 // You also can use an antique door bell as a single strikes (not ringing) notification.
 // Optional you can use it as hourly chiming clock
@@ -89,16 +94,14 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_055;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].InverseLogicOption = true;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
-      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
-      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_055;
+      dev.Type               = DEVICE_TYPE_TRIPLE;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.InverseLogicOption = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
+      dev.setPin2Direction(gpio_direction::gpio_output);
+      dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -156,8 +159,8 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
       // addHtml(F("<TR><TD><TD>"));
       addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
-      if (PCONFIG(2) && !(Settings.UseNTP())) {
-        addFormNote(F("Enable and configure NTP!"));
+      if (PCONFIG(2) && !(node_time.getTimeSource() < timeSource_t::Restore_RTC_time_source)) { // Somewhat reliable timesource?
+        addFormNote(F("Configure a timesource! (NTP, P2P, RTC, GPS)"));
       }
 
       success = true;

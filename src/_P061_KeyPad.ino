@@ -89,18 +89,14 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_061;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_061;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
       break;
     }
 
@@ -157,12 +153,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
         F("PCF8575 (Direct 16)")
         # endif // ifdef P061_ENABLE_PCF8575
       };
-      const int optionsCount =
-      # ifdef P061_ENABLE_PCF8575
-        6;
-      # else // ifdef P061_ENABLE_PCF8575
-        4;
-      # endif // ifdef P061_ENABLE_PCF8575
+      constexpr int optionsCount = NR_ELEMENTS(options);
       addFormSelector(F("Chip (Mode)"), F("chip"), optionsCount, options, nullptr, P061_CONFIG_KEYPAD_TYPE);
 
       success = true;

@@ -99,7 +99,7 @@ This group of settings, **Single event with all values** and **Send to Controlle
 Values
 ^^^^^^
 
-The plugin provides the ``TVOC`` and ``eCO2`` values. A formula can be set to recalculate. The number of decimals can be set as desired, and defaults to 2.
+The plugin provides the ``TVOC``, ``eCO2`` and ``AQI`` values. A formula can be set to recalculate. The number of decimals can be set as desired, and defaults to 0.
 
 In selected builds, per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
@@ -111,6 +111,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |changed| 2024-12-21 Added AQI value
 
   |added|
   2023-12-27 Initial release version.

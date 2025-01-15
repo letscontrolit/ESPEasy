@@ -1,32 +1,38 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P086
-//#######################################################################################################
-//################################## Plugin 086: Homie receiver##########################################
-//#######################################################################################################
 
+// #######################################################################################################
+// ################################## Plugin 086: Homie receiver##########################################
+// #######################################################################################################
 
-#define PLUGIN_086
-#define PLUGIN_ID_086         86
-#define PLUGIN_NAME_086       "Generic - Homie receiver"
+/** Changelog:
+ * 2023-09-10 tonhuisman: Reduce string usage to lower the .bin footprint
+ * 2023-09-10 tonhuisman: Add changelog, uncrustify source
+ */
+
+# define PLUGIN_086
+# define PLUGIN_ID_086         86
+# define PLUGIN_NAME_086       "Generic - Homie receiver"
 
 // empty default names because settings will be ignored / not used if value name is empty
-#define PLUGIN_VALUENAME1_086 ""
-#define PLUGIN_VALUENAME2_086 ""
-#define PLUGIN_VALUENAME3_086 ""
-#define PLUGIN_VALUENAME4_086 ""
+# define PLUGIN_VALUENAME1_086 ""
 
-#define PLUGIN_086_VALUE_INTEGER    0
-#define PLUGIN_086_VALUE_FLOAT      1
-#define PLUGIN_086_VALUE_BOOLEAN    2
-#define PLUGIN_086_VALUE_STRING     3
-#define PLUGIN_086_VALUE_ENUM       4
-#define PLUGIN_086_VALUE_RGB        5
-#define PLUGIN_086_VALUE_HSV        6
+# define PLUGIN_086_VALUE_INTEGER    0
+# define PLUGIN_086_VALUE_FLOAT      1
+# define PLUGIN_086_VALUE_BOOLEAN    2
+# define PLUGIN_086_VALUE_STRING     3
+# define PLUGIN_086_VALUE_ENUM       4
+# define PLUGIN_086_VALUE_RGB        5
+# define PLUGIN_086_VALUE_HSV        6
 
-#define PLUGIN_086_VALUE_TYPES      7
-#define PLUGIN_086_VALUE_MAX        4
+// Unsupported (yet) value types:
+// - Percent
+// - DateTime (convert to linuxtime?)
+// - Duration
 
-#define PLUGIN_086_DEBUG            true
+# define PLUGIN_086_VALUE_MAX        VARS_PER_TASK
+
+# define PLUGIN_086_DEBUG            true
 
 boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -34,163 +40,135 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
   switch (function)
   {
-
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_086;
-        Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_NONE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].DecimalsOnly = true;
-        Device[deviceCount].ValueCount = PLUGIN_086_VALUE_MAX;
-        Device[deviceCount].SendDataOption = false;
-        Device[deviceCount].TimerOption = false;
-        Device[deviceCount].GlobalSyncOption = false;
-        Device[deviceCount].Custom = true;
-        break;
-      }
+    {
+      auto& dev = Device[++deviceCount];
+      dev.Number       = PLUGIN_ID_086;
+      dev.Type         = DEVICE_TYPE_DUMMY;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.DecimalsOnly = true;
+      dev.ValueCount   = PLUGIN_086_VALUE_MAX;
+      dev.Custom       = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_086);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_086);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_086));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_086));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_086));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_086));
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_086));
 
-        break;
-      }
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
-      {
-        addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
+    {
+      # ifndef BUILD_NO_DEBUG
+      addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
+      # endif // ifndef BUILD_NO_DEBUG
 
-        uint8_t choice = 0;
-        String labelText;
-        String keyName;
-        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES] = {
-          F("integer"),
-          F("float"),
-          F("boolean"),
-          F("string"),
-          F("enum"),
-          F("rgb"),
-          F("hsv")
-        };
-        const int optionValues[PLUGIN_086_VALUE_TYPES] = {
-          PLUGIN_086_VALUE_INTEGER,
-          PLUGIN_086_VALUE_FLOAT,
-          PLUGIN_086_VALUE_BOOLEAN,
-          PLUGIN_086_VALUE_STRING,
-          PLUGIN_086_VALUE_ENUM,
-          PLUGIN_086_VALUE_RGB,
-         PLUGIN_086_VALUE_HSV
-        };
-        for (int i=0;i<PLUGIN_086_VALUE_MAX;i++) {
-          labelText = F("Function #");
-          labelText += (i+1);
-          addFormSubHeader(labelText);
-          choice = PCONFIG(i);
-          if (i==0) addFormNote(F("Triggers an event when a ../%event%/set topic arrives"));
-          labelText = F("Event Name");
-          keyName = F("functionName");
-          keyName += i;
-          addFormTextBox(labelText, keyName, Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
-          labelText = F("Parameter Type");
-          keyName = F("valueType");
-          keyName += i;
-          addFormSelector(labelText, keyName, PLUGIN_086_VALUE_TYPES, options, optionValues, choice );
-          keyName += F("_min");
-          addFormNumericBox(F("Min"),keyName,Cache.getTaskDevicePluginConfig(event->TaskIndex, i));
-          keyName = F("valueType");
-          keyName += i;
-          keyName += F("_max");
-          addFormNumericBox(F("Max"),keyName,Cache.getTaskDevicePluginConfig(event->TaskIndex, i+PLUGIN_086_VALUE_MAX));
-          if (i==0) addFormNote(F("min max values only valid for numeric parameter"));
-          keyName = F("decimals");
-          keyName += i;
-          addFormNumericBox(F("Decimals"),keyName,Cache.getTaskDeviceValueDecimals(event->TaskIndex, i) ,0,8);
-          if (i==0) addFormNote(F("Decimal counts for float parameter"));
-          keyName = F("string");
-          keyName += i;
-          addFormTextBox(F("String or enum"), keyName, Cache.getTaskDeviceFormula(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
-          if (i==0) addFormNote(F("Default string or enumumeration list (comma seperated)."));
-        }
-        success = true;
-        break;
+      const __FlashStringHelper *options[] = {
+        F("integer"),
+        F("float"),
+        F("boolean"),
+        F("string"),
+        F("enum"),
+        F("rgb"),
+        F("hsv")
+      };
+      const int optionValues[] = {
+        PLUGIN_086_VALUE_INTEGER,
+        PLUGIN_086_VALUE_FLOAT,
+        PLUGIN_086_VALUE_BOOLEAN,
+        PLUGIN_086_VALUE_STRING,
+        PLUGIN_086_VALUE_ENUM,
+        PLUGIN_086_VALUE_RGB,
+        PLUGIN_086_VALUE_HSV
+      };
+      constexpr int PLUGIN_086_VALUE_TYPES = NR_ELEMENTS(optionValues);
+
+      for (int i = 0; i < PLUGIN_086_VALUE_MAX; ++i) {
+        addFormSubHeader(concat(F("Function #"), i + 1));
+
+        if (i == 0) { addFormNote(F("Triggers an event when a ../%taskname%/%event%/set MQTT topic arrives")); }
+
+        addFormTextBox(F("Event Name"), getPluginCustomArgName((i * 10) + 0),
+                       Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
+        addFormSelector(F("Parameter Type"), getPluginCustomArgName((i * 10) + 1),
+                        PLUGIN_086_VALUE_TYPES, options, optionValues, PCONFIG(i));
+
+        addFormNumericBox(F("Min"), getPluginCustomArgName((i * 10) + 2),
+                          Cache.getTaskDevicePluginConfig(event->TaskIndex, i));
+        addFormNumericBox(F("Max"), getPluginCustomArgName((i * 10) + 3),
+                          Cache.getTaskDevicePluginConfig(event->TaskIndex, i + PLUGIN_086_VALUE_MAX));
+
+        if (i == 0) { addFormNote(F("min/max values only valid for numeric parameter")); }
+
+        addFormNumericBox(F("Decimals"), getPluginCustomArgName((i * 10) + 4),
+                          Cache.getTaskDeviceValueDecimals(event->TaskIndex, i), 0, 8);
+
+        if (i == 0) { addFormNote(F("Decimal precision for float parameter")); }
+
+        addFormTextBox(F("String or enum"), getPluginCustomArgName((i * 10) + 5),
+                       Cache.getTaskDeviceFormula(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
+
+        if (i == 0) { addFormNote(F("Default string or enumeration list (comma separated)")); }
       }
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_SAVE:
-      {
-        String keyName;
-        for (int i=0;i<PLUGIN_086_VALUE_MAX;i++) {
-          keyName = F("valueType");
-          keyName += i;
-          PCONFIG(i) = getFormItemInt(keyName);
-          keyName = F("functionName");
-          keyName += i;
-          strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], keyName);
-          keyName = F("valueType");
-          keyName += i;
-          keyName += F("_min");
-          ExtraTaskSettings.TaskDevicePluginConfig[i]=getFormItemInt(keyName);
-          keyName = F("valueType");
-          keyName += i;
-          keyName += F("_max");
-          ExtraTaskSettings.TaskDevicePluginConfig[i+PLUGIN_086_VALUE_MAX]=getFormItemInt(keyName);
-          keyName = F("decimals");
-          keyName += i;
-          ExtraTaskSettings.TaskDeviceValueDecimals[i]=getFormItemInt(keyName);
-          keyName = F("string");
-          keyName += i;
-          strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[i], keyName);
-        }
-        success = true;
-        break;
+    {
+      for (int i = 0; i < PLUGIN_086_VALUE_MAX; ++i) {
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[i], getPluginCustomArgName((i * 10) + 0));
+        PCONFIG(i)                                                         = getFormItemInt(getPluginCustomArgName((i * 10) + 1));
+        ExtraTaskSettings.TaskDevicePluginConfig[i]                        = getFormItemInt(getPluginCustomArgName((i * 10) + 2));
+        ExtraTaskSettings.TaskDevicePluginConfig[i + PLUGIN_086_VALUE_MAX] = getFormItemInt(getPluginCustomArgName((i * 10) + 3));
+        ExtraTaskSettings.TaskDeviceValueDecimals[i]                       = getFormItemInt(getPluginCustomArgName((i * 10) + 4));
+        strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[i], getPluginCustomArgName((i * 10) + 5));
       }
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_INIT:
-      {
-        success = true;
-        break;
-      }
+    {
+      success = true;
+      break;
+    }
 
     case PLUGIN_READ:
-      {
-        for (uint8_t x=0; x<PLUGIN_086_VALUE_MAX;x++)
-        {
-          String log = F("P086 : Value ");
-          log += x+1;
-          log += F(": ");
-          log += formatUserVarNoCheck(event, x);
-          addLogMove(LOG_LEVEL_INFO, log);
+    {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        for (uint8_t x = 0; x < PLUGIN_086_VALUE_MAX; ++x) {
+          addLogMove(LOG_LEVEL_INFO, strformat(F("P086 : Value %d: %s"), x + 1, formatUserVarNoCheck(event->TaskIndex, x).c_str()));
         }
-        success = true;
-        break;
       }
+      success = true;
+      break;
+    }
 
     case PLUGIN_WRITE:
-      {
-        String command = parseString(string, 1);
-        if (equals(command, F("homievalueset")))
-        {
-          const taskVarIndex_t taskVarIndex = event->Par2 - 1;
-          const userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;
-          if (validTaskIndex(event->TaskIndex) && 
-              validTaskVarIndex(taskVarIndex) && 
-              validUserVarIndex(userVarIndex) &&  
-              (event->Par1 == (event->TaskIndex + 1))) {// make sure that this instance is the target
-            String parameter = parseStringToEndKeepCase(string,4);
-            String log;
-/*            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    {
+      const String command = parseString(string, 1);
+
+      if (equals(command, F("homievalueset"))) {
+        const taskVarIndex_t taskVarIndex = event->Par2 - 1;
+
+        if (validTaskIndex(event->TaskIndex) &&
+            validTaskVarIndex(taskVarIndex) &&
+            (event->Par1 == (event->TaskIndex + 1))) { // make sure that this instance is the target
+          const String parameter = parseStringToEndKeepCase(string, 4);
+          String log;
+
+          /*
+             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               log = F("P086 : Acknowledge :");
               log += string;
               log += F(" / ");
@@ -224,117 +202,119 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
               log += F(" P5:");
               log += event->Par5;
               addLog(LOG_LEVEL_DEBUG, log);
-            } */
-            float floatValue = 0.0f;
-            String enumList;
-            int i = 0;
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              log = F("P086 : deviceNr:");
-              log += event->TaskIndex + 1;
-              log += F(" valueNr:");
-              log += event->Par2;
-              log += F(" valueType:");
-              log += Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex];
-            }
+             } */
+          float  floatValue = 0.0f;
+          String enumList;
+          int    i = 0;
 
-            switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
-              case PLUGIN_086_VALUE_INTEGER:
-              case PLUGIN_086_VALUE_FLOAT:
-                if (!parameter.isEmpty()) {
-                  if (string2float(parameter,floatValue)) {
-                    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                      log += F(" integer/float set to ");
-                      log += floatValue;
-                      addLogMove(LOG_LEVEL_INFO, log);
-                    }
-                    UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
-                  } else { // float conversion failed!
-                    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-                      log += F(" parameter:");
-                      log += parameter;
-                      log += F(" not a float value!");
-                      addLogMove(LOG_LEVEL_ERROR, log);
-                    }
-                  }
-                } else {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            log = strformat(F("P086 : deviceNr: %d valueNr: %d valueType: %d"),
+                            event->TaskIndex + 1, event->Par2, Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]);
+          }
+
+          switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
+            case PLUGIN_086_VALUE_INTEGER:
+            case PLUGIN_086_VALUE_FLOAT:
+
+              if (!parameter.isEmpty()) {
+                if (string2float(parameter, floatValue)) {
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    log += F(" value:");
-                    log += UserVar[userVarIndex];
+                    log += concat(F(" integer/float set to "), floatValue);
                     addLogMove(LOG_LEVEL_INFO, log);
                   }
-                }
-                break;
-
-              case PLUGIN_086_VALUE_BOOLEAN:
-                if (parameter=="false") {
-                  floatValue = 0.0f;
-                } else {
-                  floatValue = 1.0f;
-                }
-                UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" boolean set to ");
-                  log += floatValue;
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                break;
-
-              case PLUGIN_086_VALUE_STRING:
-                //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" string set to ");
-                  log += parameter;
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                break;
-
-              case PLUGIN_086_VALUE_ENUM:
-                enumList = Cache.getTaskDeviceFormula(event->TaskIndex, taskVarIndex);
-                i = 1;
-                while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
-                  if (parseString(enumList,i)==parameter) {
-                    floatValue = i;
-                    break;
+                  UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
+                } else { // float conversion failed!
+                  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                    log += strformat(F(" parameter: %s not a float value!"), parameter.c_str());
+                    addLogMove(LOG_LEVEL_ERROR, log);
                   }
-                  i++;
                 }
-                UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
+              } else {
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" enum set to ");
-                  log += floatValue;
-                  log += ' ';
-                  log += wrap_braces(parameter);
+                  log += concat(F(" value: "), UserVar.getFloat(event->TaskIndex, taskVarIndex));
                   addLogMove(LOG_LEVEL_INFO, log);
                 }
-                break;
+              }
+              break;
 
-              case PLUGIN_086_VALUE_RGB:
-                //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" RGB received ");
-                  log += parameter;
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                break;
+            case PLUGIN_086_VALUE_BOOLEAN:
 
-              case PLUGIN_086_VALUE_HSV:
-                //String values not stored to conserve flash memory
-                //safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(), sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log += F(" HSV received ");
-                  log += parameter;
-                  addLogMove(LOG_LEVEL_INFO, log);
+              if (parameter.equalsIgnoreCase(F("false"))) { // This should be a case-sensitive check...
+                                                            // and also check for "true"
+                floatValue = 0.0f;
+              } else {
+                floatValue = 1.0f;
+              }
+              UserVar.setFloat(event->TaskIndex, taskVarIndex, floatValue);
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log += concat(F(" boolean set to "), floatValue);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              break;
+
+            case PLUGIN_086_VALUE_STRING:
+
+              // String values not stored to conserve flash memory
+              // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
+              // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log += concat(F(" string set to "), parameter);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              break;
+
+            case PLUGIN_086_VALUE_ENUM:
+            {
+              enumList = Cache.getTaskDeviceFormula(event->TaskIndex, taskVarIndex);
+              i        = 1;
+              String enumItem = parseStringKeepCase(enumList, i);
+
+              while (!enumItem.isEmpty()) {                 // lookup result in enum List
+                if (enumItem.equalsIgnoreCase(parameter)) { // This should be a case-sensitive check...
+                  floatValue = i;
+                  break;
                 }
-                break;
+                i++;
+                enumItem = parseStringKeepCase(enumList, i);
+              }
+              UserVar.setFloat(event->TaskIndex, event->Par2 - 1, floatValue);
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log += strformat(F(" enum set to %.2f %s"), floatValue, wrap_braces(parameter).c_str());
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              break;
             }
-            success = true;
+            case PLUGIN_086_VALUE_RGB:
+
+              // String values not stored to conserve flash memory
+              // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
+              // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log += concat(F(" RGB received "), parameter);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              break;
+
+            case PLUGIN_086_VALUE_HSV:
+
+              // String values not stored to conserve flash memory
+              // safe_strncpy(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex], parameter.c_str(),
+              // sizeof(ExtraTaskSettings.TaskDeviceFormula[taskVarIndex]));
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                log += concat(F(" HSV received "), parameter);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              break;
           }
+          success = true;
         }
       }
       break;
     }
+  }
   return success;
 }
+
 #endif // USES_P086

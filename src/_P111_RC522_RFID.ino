@@ -34,16 +34,12 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_111;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI2;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_111;
+      dev.Type           = DEVICE_TYPE_SPI2;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
       break;
     }
 
@@ -77,24 +73,20 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Options"));
 
       {
-        # ifdef P111_USE_REMOVAL
-        #  define P111_removaltypes 3
-        # else // ifdef P111_USE_REMOVAL
-        #  define P111_removaltypes 2
-        # endif // ifdef P111_USE_REMOVAL
-        const __FlashStringHelper *removaltype[P111_removaltypes] = {
+        const __FlashStringHelper *removaltype[] = {
           F("None"),
           F("Autoremove after Time-out"),
           # ifdef P111_USE_REMOVAL
           F("Tag removal detection + Time-out")
           # endif // ifdef P111_USE_REMOVAL
         };
-        const int    removalopts[P111_removaltypes] = { // A-typical order for logical order and backward compatibility
+        const int removalopts[] = { // A-typical order for logical order and backward compatibility
           1, 0,
           # ifdef P111_USE_REMOVAL
           2
           # endif // P111_USE_REMOVAL
         };
+        constexpr size_t P111_removaltypes = NR_ELEMENTS(removalopts);
         addFormSelector(F("Tag removal mode"), F("autotagremoval"), P111_removaltypes, removaltype, removalopts, P111_TAG_AUTOREMOVAL);
       }
 

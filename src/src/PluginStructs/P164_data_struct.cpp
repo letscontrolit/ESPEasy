@@ -155,23 +155,25 @@ bool P164_data_struct::begin()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Fetch the processed device values as stored in the software object                            //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::read(float& tvoc, float& eco2)
+bool P164_data_struct::read(float& tvoc, float& eco2, float& aqi)
 {
   bool success = measure();       // Read measurement values from device
   tvoc = (float)_data_tvoc;       // Latest acquired TVOC value
   eco2 = (float)_data_eco2;       // Latest aquired eCO2 value
+  aqi = (float)_data_aqi;         // Latest aquired AQI value
   return success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Fetch the processed device values as stored in the software object using compensation         //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-bool P164_data_struct::read(float& tvoc, float& eco2, float temp, float hum)
+bool P164_data_struct::read(float& tvoc, float& eco2, float& aqi, float temp, float hum)
 {
   this->set_envdata(temp, hum);   // Write new compensation temp & hum to device
   bool success = measure();       // Read measurement values from device
   tvoc = (float)_data_tvoc;       // Latest acquired TVOC value
   eco2 = (float)_data_eco2;       // Latest aquired eCO2 value
+  aqi = (float)_data_aqi;         // Latest aquired AQI value
   return success;
 }
 

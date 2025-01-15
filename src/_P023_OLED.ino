@@ -40,13 +40,12 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_023;
-      Device[deviceCount].Type          = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].TimerOption   = true;
-      Device[deviceCount].TimerOptional = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_023;
+      dev.Type          = DEVICE_TYPE_I2C;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 
@@ -104,9 +103,10 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         OLedFormSizes(F("size"), optionValues3, PCONFIG(3));
       }
       {
-        const __FlashStringHelper *options4[2] = { F("Normal"), F("Optimized") };
-        const int optionValues4[2]             = { 1, 2 };
-        addFormSelector(F("Font Width"), F("font_spacing"), 2, options4, optionValues4, PCONFIG(4));
+        const __FlashStringHelper *options4[] = { F("Normal"), F("Optimized") };
+        const int optionValues4[]             = { 1, 2 };
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues4);
+        addFormSelector(F("Font Width"), F("font_spacing"), optionCount, options4, optionValues4, PCONFIG(4));
       }
       {
         String strings[P23_Nlines];

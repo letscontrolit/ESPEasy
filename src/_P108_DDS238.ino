@@ -37,19 +37,17 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_108;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = P108_NR_OUTPUT_VALUES;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_108;
+      dev.Type           = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = P108_NR_OUTPUT_VALUES;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -62,7 +60,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P108_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
+          const uint8_t choice       = PCONFIG(pconfigIndex);
           ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_108_valuename(choice, false));
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);

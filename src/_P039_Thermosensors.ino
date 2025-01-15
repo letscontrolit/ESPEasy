@@ -19,6 +19,7 @@
 // Have fun ... Dominik
 
 /** Changelog:
+ * 2025-01-03 tonhuisman: Small code size reductions, cleanup of DEBUG level logging
  * 2024-01-04 tonhuisman: Minor corrections, formatted source using Uncrustify
  * 2023-01-08 tonhuisman: Add Low temperature threshold setting (default 0 K/-273.15 C) to ignore temperatures below that value
  * 2023-01-02 tonhuisman: Cleanup and uncrustify source
@@ -258,18 +259,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_039;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_039;
+      dev.Type           = DEVICE_TYPE_SPI;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -419,7 +417,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLogMove(LOG_LEVEL_INFO, strformat(F("P039 : %s : SPI Init - DONE"), getTaskDeviceName(event->TaskIndex).c_str()));
+        addLog(LOG_LEVEL_INFO, strformat(F("P039 : %s : SPI Init - DONE"), getTaskDeviceName(event->TaskIndex).c_str()));
       }
       # endif // ifndef BUILD_NO_DEBUG
 
@@ -433,9 +431,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
       const uint8_t family = P039_FAM_TYPE;
       {
-        const __FlashStringHelper *Foptions[2] = { F("Thermocouple"), F("RTD") };
-        const int FoptionValues[2]             = { P039_TC, P039_RTD };
-        addFormSelector(F("Sensor Family Type"), F("famtype"), 2, Foptions, FoptionValues, family, true); // auto reload activated
+        const __FlashStringHelper *Foptions[] = { F("Thermocouple"), F("RTD") };
+        const int FoptionValues[]             = { P039_TC, P039_RTD };
+        constexpr size_t optionCount          = NR_ELEMENTS(FoptionValues);
+        addFormSelector(F("Sensor Family Type"), F("famtype"), optionCount, Foptions, FoptionValues, family, true); // auto reload activated
       }
 
       const uint8_t choice = P039_MAX_TYPE;
@@ -444,15 +443,16 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
       if (family == P039_TC) {
         {
-          const __FlashStringHelper *options[3] = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
-          const int optionValues[3]             = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
-          addFormSelector(F("Adapter IC"), F("maxtype"), 3, options, optionValues, choice, true); // auto reload activated
+          const __FlashStringHelper *options[] = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
+          const int optionValues[]             = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
+          constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
+          addFormSelector(F("Adapter IC"), F("maxtype"), optionCount, options, optionValues, choice, true); // auto reload activated
         }
 
         if (choice == P039_MAX31856) {
           addFormSubHeader(F("Device Settings"));
           {
-            const __FlashStringHelper *Toptions[10] = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
+            const __FlashStringHelper *Toptions[] = { F("B"), F("E"), F("J"), F("K"), F("N"), F("R"), F("S"), F("T"), F("VM8"), F("VM32") };
 
             // 2021-05-17: c.k.i.: values are directly written to device register for configuration, therefore no linear values are used
             // here
@@ -470,13 +470,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             //    11xx = Voltage Mode, Gain = 32. Code = 32 x 1.6 x 217 x VIN
             //    Where Code is 19 bit signed number from TC registers and VIN is thermocouple input voltage
 
-            const int ToptionValues[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 12 };
-            addFormSelector(F("Thermocouple type"), F("tctype"), 10, Toptions, ToptionValues, P039_TC_TYPE);
+            const int ToptionValues[]    = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 12 };
+            constexpr size_t optionCount = NR_ELEMENTS(ToptionValues);
+            addFormSelector(F("Thermocouple type"), F("tctype"), optionCount, Toptions, ToptionValues, P039_TC_TYPE);
           }
           {
-            const __FlashStringHelper *Coptions[5] = { F("1"), F("2"), F("4"), F("8"), F("16") };
-            const int CoptionValues[5]             = { 0, 1, 2, 3, 4 };
-            addFormSelector(F("Averaging"), F("contype"), 5, Coptions, CoptionValues, P039_CONFIG_4);
+            const __FlashStringHelper *Coptions[] = { F("1"), F("2"), F("4"), F("8"), F("16") };
+            const int CoptionValues[]             = { 0, 1, 2, 3, 4 };
+            constexpr size_t optionCount          = NR_ELEMENTS(CoptionValues);
+            addFormSelector(F("Averaging"), F("contype"), optionCount, Coptions, CoptionValues, P039_CONFIG_4);
             addUnit(F("sample(s)"));
           }
           P039_AddMainsFrequencyFilterSelection(event);
@@ -484,9 +486,10 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       }
       else {
         {
-          const __FlashStringHelper *TPoptions[2] = { F("MAX 31865"), F("LM7x") };
-          const int TPoptionValues[2]             = { P039_MAX31865, P039_LM7x };
-          addFormSelector(F("Adapter IC"), F("maxtype"), 2, TPoptions, TPoptionValues, choice, true); // auto reload activated
+          const __FlashStringHelper *TPoptions[] = { F("MAX 31865"), F("LM7x") };
+          const int TPoptionValues[]             = { P039_MAX31865, P039_LM7x };
+          constexpr size_t optionCount           = NR_ELEMENTS(TPoptionValues);
+          addFormSelector(F("Adapter IC"), F("maxtype"), optionCount, TPoptions, TPoptionValues, choice, true); // auto reload activated
           addFormNote(F("LM7x support is experimental."));
         }
 
@@ -497,14 +500,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             addFormSubHeader(F("Device Settings"));
           }
           {
-            const __FlashStringHelper *PToptions[2] = { F("PT100"), F("PT1000") };
-            const int PToptionValues[2]             = { MAX31865_PT100, MAX31865_PT1000 };
-            addFormSelector(F("Resistor Type"), F("rtdtype"), 2, PToptions, PToptionValues, P039_RTD_TYPE);
+            const __FlashStringHelper *PToptions[] = { F("PT100"), F("PT1000") };
+            const int PToptionValues[]             = { MAX31865_PT100, MAX31865_PT1000 };
+            constexpr size_t optionCount           = NR_ELEMENTS(PToptionValues);
+            addFormSelector(F("Resistor Type"), F("rtdtype"), optionCount, PToptions, PToptionValues, P039_RTD_TYPE);
           }
           {
-            const __FlashStringHelper *Coptions[2] = { F("2-/4"), F("3") };
-            const int CoptionValues[2]             = { 0, 1 };
-            addFormSelector(F("Connection Type"), F("contype"), 2, Coptions, CoptionValues, P039_CONFIG_4);
+            const __FlashStringHelper *Coptions[] = { F("2-/4"), F("3") };
+            constexpr size_t optionCount          = NR_ELEMENTS(Coptions);
+            addFormSelector(F("Connection Type"), F("contype"), optionCount, Coptions, nullptr, P039_CONFIG_4);
             addUnit(F("wire"));
           }
 
@@ -531,10 +535,11 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           }
 
           {
-            const __FlashStringHelper *PToptions[8] =
+            const __FlashStringHelper *PToptions[] =
             { F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125") };
-            const int PToptionValues[8] = { LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125 };
-            addFormSelector(F("LM7x device details"), F("rtd_lm_type"), 8, PToptions, PToptionValues, P039_RTD_LM_TYPE);
+            const int PToptionValues[]   = { LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125 };
+            constexpr size_t optionCount = NR_ELEMENTS(PToptionValues);
+            addFormSelector(F("LM7x device details"), F("rtd_lm_type"), optionCount, PToptions, PToptionValues, P039_RTD_LM_TYPE);
             addFormNote(F("TMP122/124 Limited support -> fixed 12 Bit res, no advanced options"));
           }
           {
@@ -737,19 +742,12 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  String log;
-
-                  if ((log.reserve(170u))) {                                 // reserve value derived from example log file
-                    log  = F("P039 : ");                                     // 7 char
-                    log += getTaskDeviceName(event->TaskIndex);              // 41 char ( max length of task device name + 1)
-                    log += F(" : conversionResult: ");                       // 21 char
-                    log += formatToHex_decimal(P039_data->conversionResult); // 11 char
-                    log += F("; deviceFaults: ");                            // 16 char
-                    log += formatToHex_decimal(P039_data->deviceFaults);     // 9 char
-                    log += F("; Next State: ");                              // 13 char
-                    log += event->Par1;                                      // 4 char
-                    addLogMove(LOG_LEVEL_DEBUG, log);
-                  }
+                  addLog(LOG_LEVEL_DEBUG,
+                         strformat(F("P039 : %s : conversionResult: %s; deviceFaults: %s; Next State: %d"),
+                                   getTaskDeviceName(event->TaskIndex).c_str(),
+                                   formatToHex_decimal(P039_data->conversionResult).c_str(),
+                                   formatToHex_decimal(P039_data->deviceFaults).c_str(),
+                                   event->Par1));
                 }
                 # endif // ifndef BUILD_NO_DEBUG
 
@@ -773,18 +771,11 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                 # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-                  String log;
+                  addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : %s : current state: MAX31865_INIT_STATE, "
+                                                      "default; next state: MAX31865_BIAS_ON_STATE"),
+                                                    getTaskDeviceName(event->TaskIndex).c_str()));
 
-                  if ((log.reserve(140u))) {                                  // reserve value derived from example log file
-                    log  = F("P039 : ");                                      // 7 char
-                    log += getTaskDeviceName(event->TaskIndex);               // 41 char
-                    log += F(" : ");                                          // 3 char
-                    log += F("current state: MAX31865_INIT_STATE, default;"); // many char - 44
-                    log += F(" next state: MAX31865_BIAS_ON_STATE");          // a little less char - 35
-                    addLogMove(LOG_LEVEL_DEBUG, log);
-                  }
-
-                  // save current timer for next calculation
+                  // FIXME: Shouldn't this be in active code? // save current timer for next calculation
                   P039_data->timer = millis();
                 }
                 # endif // ifndef BUILD_NO_DEBUG
@@ -822,7 +813,11 @@ void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event)
 
   addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
   addUnit(F("Hz"));
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Filter power net frequency (50/60 Hz)"));
+  # else // ifndef LIMIT_BUILD_SIZE
+  addUnit(F("net frequency"));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 float readMax6675(struct EventStruct *event)
@@ -843,21 +838,12 @@ float readMax6675(struct EventStruct *event)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
-    String log;
-
-    if ((log.reserve(130u))) {                      // reserve value derived from example log file
-      log  = F("P039 : MAX6675 : RAW - BIN: ");     // 27 char
-      log += String(rawvalue, BIN);                 // 18 char
-      log += F(" HEX: ");                           // 5 char
-      log += formatToHex(rawvalue);                 // 4 char
-      log += F(" DEC: ");                           // 5 char
-      log += String(rawvalue);                      // 5 char
-      log += F(" MSB: ");                           // 5 char
-      log += formatToHex_decimal(messageBuffer[0]); // 9 char
-      log += F(" LSB: ");                           // 5 char
-      log += formatToHex_decimal(messageBuffer[1]); // 9 char
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+    addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : MAX6675 : RAW - BIN: %s HEX: %s DEC: %d MSB: %s LSB: %s"),
+                                      String(rawvalue, BIN).c_str(),
+                                      formatToHex(rawvalue).c_str(),
+                                      rawvalue,
+                                      formatToHex_decimal(messageBuffer[0]).c_str(),
+                                      formatToHex_decimal(messageBuffer[1]).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -908,14 +894,11 @@ float readMax31855(struct EventStruct *event)
   {
     String log;
 
-    if ((log.reserve(200u))) {                   // reserve value derived from example log file
-      log  = F("P039 : MAX31855 : RAW - BIN: "); // 35 char
-      log += String(rawvalue, BIN);              // 16 char
-      log += F(" rawvalue,HEX: ");               // 15 char
-      log += formatToHex(rawvalue);              // 4 char
-      log += F(" rawvalue,DEC: ");               // 15 char
-      log += rawvalue;                           // 5 char
-      log += F(" messageBuffer[],HEX:");         // 21 char
+    if ((log.reserve(200u))) { // reserve value derived from example log file
+      log = strformat(F("P039 : MAX31855 : RAW - BIN: %s rawvalue,HEX: %s rawvalue,DEC: %d messageBuffer[],HEX:"),
+                      String(rawvalue, BIN).c_str(),
+                      formatToHex(rawvalue).c_str(),
+                      rawvalue);
 
       for (size_t i = 0u; i < 4; ++i)
       {
@@ -972,16 +955,9 @@ float readMax31855(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
-      String log;
-
-      if ((log.reserve(120u))) { // reserve value derived from example log file
-        log  = F("P039 : MAX31855 : ");
-        log += F("rawvalue: ");
-        log += formatToHex_decimal(rawvalue);
-        log += F(" P039_data->sensorFault: ");
-        log += formatToHex_decimal(P039_data->sensorFault);
-        addLogMove(LOG_LEVEL_DEBUG, log);
-      }
+      addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : MAX31855 : rawvalue: %s P039_data->sensorFault: "),
+                                        formatToHex_decimal(rawvalue).c_str(),
+                                        formatToHex_decimal(P039_data->sensorFault).c_str()));
     }
 
     # endif // ifndef BUILD_NO_DEBUG
@@ -1360,16 +1336,9 @@ float readMax31865(struct EventStruct *event)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
-    String log;
-
-    if ((log.reserve(85u))) {                                // reserve value derived from example log file
-      log  = F("P039 : Temperature :");                      // 20 char
-      log += F(" registers[MAX31865_FAULT]: ");              // 33 char
-      log += formatToHex_decimal(registers[MAX31865_FAULT]); // 7 char
-      log += F(" ValueValid: ");                             // 13 char
-      log += boolToString(ValueValid);                       // 5 char
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+    addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : Temperature : registers[MAX31865_FAULT]: %s ValueValid: %s"),
+                                      formatToHex_decimal(registers[MAX31865_FAULT]).c_str(),
+                                      FsP(boolToString(ValueValid))));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1384,20 +1353,11 @@ float readMax31865(struct EventStruct *event)
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG))
     {
-      String log;
-
-      if ((log.reserve(110u))) {              // reserve value derived from example log file
-        log  = F("P039 : Temperature :");     // 20 char
-        log += F(" rawValue: ");              // 11 char
-        log += formatToHex_decimal(rawValue); // 9 char
-        log += F(" temperature: ");           // 14 char
-        log += temperature;                   // 11 char
-        log += F(" P039_RTD_TYPE: ");         // 16 char
-        log += P039_RTD_TYPE;                 // 1 char
-        log += F(" P039_RTD_RES: ");          // 15 char
-        log += P039_RTD_RES;                  // 4 char
-        addLogMove(LOG_LEVEL_DEBUG, log);
-      }
+      addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : Temperature : rawValue: %s temperature: %.3f P039_RTD_TYPE: %d P039_RTD_RES: %d"),
+                                        formatToHex_decimal(rawValue).c_str(),
+                                        temperature,
+                                        P039_RTD_TYPE,
+                                        P039_RTD_RES));
     }
 
     # endif // ifndef BUILD_NO_DEBUG
@@ -1565,20 +1525,11 @@ float readLM7x(struct EventStruct *event)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
-    String log;
-
-    if ((log.reserve(130u))) { // reserve value derived from example log file
-      log  = F("P039 : LM7x : readLM7x : ");
-      log += F(" rawValue: ");
-      log += formatToHex_decimal(rawValue);
-      log += F(" device_id: ");
-      log += formatToHex(device_id);
-      log += F(" temperature: ");
-      log += temperature;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
+    addLog(LOG_LEVEL_DEBUG, strformat(F("P039 : LM7x : readLM7x :  rawValue: %s device_id: %s temperature: %.3f"),
+                                      formatToHex_decimal(rawValue).c_str(),
+                                      formatToHex(device_id).c_str(),
+                                      temperature));
   }
-
   # endif // ifndef BUILD_NO_DEBUG
 
   return temperature;
@@ -1636,22 +1587,13 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(185u))) { // reserve value derived from example log file
-      log  = F("P039 : LM7x : convertLM7xTemp : ");
-      log += F(" l_returnValue: ");
-      log += formatToHex_decimal(l_returnValue);
-      log += F(" l_LM7xsubtype: ");
-      log += formatToHex_decimal(l_LM7xsubtype);
-      log += F(" l_rawValue: ");
-      log += formatToHex_decimal(l_rawValue);
-      log += F(" l_noBits: ");
-      log += l_noBits;
-      log += F(" l_lsbvalue: ");
-      log += l_lsbvalue;
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE,
+           strformat(F("P039 : LM7x : convertLM7xTemp :  l_returnValue: %s l_LM7xsubtype: %s l_rawValue: %s l_noBits: %d l_lsbvalue: %.3f"),
+                     formatToHex_decimal(l_returnValue).c_str(),
+                     formatToHex_decimal(l_LM7xsubtype).c_str(),
+                     formatToHex_decimal(l_rawValue).c_str(),
+                     l_noBits,
+                     l_lsbvalue));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1774,16 +1716,9 @@ uint16_t readLM7xRegisters(int8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l_
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(115u))) { // reserve value derived from example log file
-      log  = F("P039 : LM7x : readLM7xRegisters : ");
-      log += F(" l_returnValue: ");
-      log += formatToHex_decimal(l_returnValue);
-      log += F(" l_device_id: ");
-      log += formatToHex(*(l_device_id));
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE, strformat(F("P039 : LM7x : readLM7xRegisters :  l_returnValue: %s l_device_id: %s"),
+                                           formatToHex_decimal(l_returnValue).c_str(),
+                                           formatToHex(*(l_device_id)).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1883,16 +1818,9 @@ void write8BitRegister(int8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(100u))) { // reserve value derived from example log file
-      log  = F("P039 : SPI : write8BitRegister : ");
-      log += F("l_address: ");
-      log += formatToHex(l_address);
-      log += F(" value: ");
-      log += formatToHex_decimal(value);
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE, strformat(F("P039 : SPI : write8BitRegister : l_address: %s value: %s"),
+                                           formatToHex(l_address).c_str(),
+                                           formatToHex_decimal(value).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1921,16 +1849,9 @@ void write16BitRegister(int8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(110u))) { // reserve value derived from example log file
-      log  = F("P039 : SPI : write16BitRegister : ");
-      log += F("l_address: ");
-      log += formatToHex(l_address);
-      log += F(" value: ");
-      log += formatToHex_decimal(value);
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE, strformat(F("P039 : SPI : write16BitRegister : l_address: %s value: %s"),
+                                           formatToHex(l_address).c_str(),
+                                           formatToHex_decimal(value).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1958,16 +1879,9 @@ uint8_t read8BitRegister(int8_t l_CS_pin_no, uint8_t l_address)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(100u))) { // reserve value derived from example log file
-      log  = F("P039 : SPI : read8BitRegister : ");
-      log += F("l_address: ");
-      log += formatToHex(l_address);
-      log += F(" returnvalue: ");
-      log += formatToHex_decimal(l_messageBuffer[1]);
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE, strformat(F("P039 : SPI : read8BitRegister : l_address: %s returnvalue: %s"),
+                                           formatToHex(l_address).c_str(),
+                                           formatToHex_decimal(l_messageBuffer[1]).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG
@@ -1999,16 +1913,9 @@ uint16_t read16BitRegister(int8_t l_CS_pin_no, uint8_t l_address)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
   {
-    String log;
-
-    if ((log.reserve(110u))) { // reserve value derived from example log file
-      log  = F("P039 : SPI : read16BitRegister : ");
-      log += F("l_address: ");
-      log += formatToHex(l_address);
-      log += F(" l_returnValue: ");
-      log += formatToHex_decimal(l_returnValue);
-      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-    }
+    addLog(LOG_LEVEL_DEBUG_MORE, strformat(F("P039 : SPI : read16BitRegister : l_address: %s l_returnValue: %s"),
+                                           formatToHex(l_address).c_str(),
+                                           formatToHex_decimal(l_returnValue).c_str()));
   }
 
   # endif // ifndef BUILD_NO_DEBUG

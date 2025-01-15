@@ -23,7 +23,7 @@
 
 # include <jkSDS011.h>
 
-#include "ESPEasy-Globals.h"
+# include "ESPEasy-Globals.h"
 
 
 CjkSDS011 *Plugin_056_SDS = nullptr;
@@ -37,19 +37,15 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_056;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = false;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_056;
+      dev.Type           = DEVICE_TYPE_SERIAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -191,7 +187,7 @@ String Plugin_056_ErrorToString(int error) {
   String log;
 
   if (error < 0) {
-    log  =  concat(F("comm error: "), error);
+    log =  concat(F("comm error: "), error);
   }
   return log;
 }

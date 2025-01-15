@@ -82,14 +82,15 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_045;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
-      Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].FormulaOption  = false;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_045;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
+      dev.SendDataOption = true; //   and I use Domoticz ... so there.
+      dev.TimerOption    = true;
+      dev.FormulaOption  = false;
+      dev.PluginStats    = true;
       break;
     }
 

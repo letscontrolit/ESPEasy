@@ -55,6 +55,7 @@ enum class UnaryOperator : uint8_t {
   ArcTan,    // Arc Tangent (radian)
   ArcTan_d,  // Arc Tangent (degree)
   Map,       // Map (value, lowFrom, highFrom, lowTo, highTo) (not really unary...)
+  MapC,      // Map (value, lowFrom, highFrom, lowTo, highTo) and clamp to lowTo/highTo
 };
 
 void   preProcessReplace(String      & input,
@@ -73,7 +74,8 @@ private:
   // @param oc  Previous character
   // @param c   Current character
   bool                is_number(char oc,
-                                char c);
+                                char c,
+                                char pc);
 
   bool                is_operator(char c);
 
@@ -105,14 +107,15 @@ private:
 
   // operators
   // precedence   operators         associativity
-  // 3            !                 right to left
+  // 4            !                 right to left
+  // 3            ^                 left to right
   // 2            * / %             left to right
-  // 1            + - ^             left to right
+  // 1            + -               left to right
   int          op_preced(const char c);
 
   bool         op_left_assoc(const char c);
 
-  unsigned int op_arg_count(const char c);
+  // unused: unsigned int op_arg_count(const char c);
 
 public:
 

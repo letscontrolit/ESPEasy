@@ -27,18 +27,15 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_114;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_114;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -96,7 +93,8 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           P114_IT_400,
           P114_IT_800,
         };
-        addFormSelector(F("Integration Time"), F("it"), 5, optionsMode2, optionValuesMode2, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
+        addFormSelector(F("Integration Time"), F("it"), optionCount, optionsMode2, optionValuesMode2, PCONFIG(1));
       }
 
       {
@@ -104,7 +102,8 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           F("Normal Dynamic"),
           F("High Dynamic") }
         ;
-        addFormSelector(F("Dynamic Setting"), F("hd"), 2, optionsMode3, nullptr, PCONFIG(2));
+        constexpr size_t optionCount = NR_ELEMENTS(optionsMode3);
+        addFormSelector(F("Dynamic Setting"), F("hd"), optionCount, optionsMode3, nullptr, PCONFIG(2));
       }
 
       success = true;
@@ -136,9 +135,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      float UVA     = 0.0f;
-      float UVB     = 0.0f;
-      float UVIndex = 0.0f;
+      float UVA{};
+      float UVB{};
+      float UVIndex{};
 
       if (P114_data->read_sensor(UVA, UVB, UVIndex)) {
         UserVar.setFloat(event->TaskIndex, 0, UVA);

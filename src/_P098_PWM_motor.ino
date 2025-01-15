@@ -51,17 +51,14 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_098;
-      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_098;
+      dev.Type           = DEVICE_TYPE_CUSTOM0;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
       break;
     }
 
@@ -92,7 +89,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         F("Lim A"),
         F("Lim B")
       };
-      int values[] = {
+      const int values[] = {
         CONFIG_PIN1,
         CONFIG_PIN2,
         CONFIG_PIN3,
@@ -102,7 +99,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
         P098_LIMIT_SWA_GPIO,
         P098_LIMIT_SWB_GPIO
       };
-      constexpr size_t nrElements = sizeof(values) / sizeof(values[0]);
+      constexpr size_t nrElements = NR_ELEMENTS(values);
 
       for (size_t i = 0; i < nrElements; ++i) {
         if (i != 0) { addHtml(event->String1); }
@@ -250,8 +247,8 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       CONFIG_PIN2 = getFormItemInt(F("taskdevicepin2"));
       CONFIG_PIN3 = getFormItemInt(F("taskdevicepin3"));
 
-      P098_ENC_TIMEOUT = getFormItemInt(F("enc_timeout"));
-      P098_VIRTUAL_SPEED = getFormItemInt(F("virtual_speed"));
+      P098_ENC_TIMEOUT      = getFormItemInt(F("enc_timeout"));
+      P098_VIRTUAL_SPEED    = getFormItemInt(F("virtual_speed"));
       P098_POS_0_SUPPLEMENT = getFormItemInt(F("pos0_supplement"));
 
       P098_LIMIT_SWA_GPIO     = getFormItemInt(F("limit_a"));

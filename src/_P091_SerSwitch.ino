@@ -32,7 +32,7 @@
                                                          than return to inverse state (non-blocking)
         - ydim,[DIM_VALUE]                               Set DIM_VALUE to Tuya dimmer switch (value can be 0-255, no range check!)
                                                          Of course, only the Tuya dimmer can do it... dim value can be read from plugin
-                                                          #values.
+ #values.
                                                          There are no checks for is it state on or off.
 
    Command Examples :
@@ -88,18 +88,14 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_091;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_091;
+      dev.Type           = DEVICE_TYPE_DUMMY;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
       break;
     }
     case PLUGIN_GET_DEVICENAME:
@@ -121,53 +117,57 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *options[4] = {
+        const __FlashStringHelper *options[] = {
           F("Yewelink/TUYA"),
           F("Sonoff Dual"),
           F("LC TECH"),
           F("Moes Wifi Dimmer")
         };
-        const int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
-        addFormSelector(F("Switch Type"), F("type"), 4, options, optionValues, PCONFIG(0));
+        const int optionValues[]     = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        addFormSelector(F("Switch Type"), F("type"), optionCount, options, optionValues, PCONFIG(0));
       }
 
       if (PCONFIG(0) == SER_SWITCH_YEWE)
       {
-        const __FlashStringHelper *buttonOptions[4] = {
+        const __FlashStringHelper *buttonOptions[] = {
           F("1"),
           F("2/Dimmer#2"),
           F("3/Dimmer#3"),
           F("4"),
         };
-        const int buttonoptionValues[4] = { 1, 2, 3, 4 };
-        addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
+        const int buttonoptionValues[] = { 1, 2, 3, 4 };
+        constexpr size_t optionCount   = NR_ELEMENTS(buttonoptionValues);
+        addFormSelector(F("Number of relays"), F("button"), optionCount, buttonOptions, buttonoptionValues, PCONFIG(1));
       }
 
       if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
       {
-        const __FlashStringHelper *modeoptions[3] = {
+        const __FlashStringHelper *modeoptions[] = {
           F("Normal"),
           F("Exclude/Blinds mode"),
           F("Simultaneous mode"),
         };
-        addFormSelector(F("Relay working mode"), F("mode"), 3, modeoptions, nullptr, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(modeoptions);
+        addFormSelector(F("Relay working mode"), F("mode"), optionCount, modeoptions, nullptr, PCONFIG(1));
       }
 
       if (PCONFIG(0) == SER_SWITCH_LCTECH)
       {
         {
-          const __FlashStringHelper *buttonOptions[4] = {
+          const __FlashStringHelper *buttonOptions[] = {
             F("1"),
             F("2"),
             F("3"),
             F("4"),
           };
-          const int buttonoptionValues[4] = { 1, 2, 3, 4 };
-          addFormSelector(F("Number of relays"), F("button"), 4, buttonOptions, buttonoptionValues, PCONFIG(1));
+          const int buttonoptionValues[] = { 1, 2, 3, 4 };
+          constexpr size_t optionCount   = NR_ELEMENTS(buttonoptionValues);
+          addFormSelector(F("Number of relays"), F("button"), optionCount, buttonOptions, buttonoptionValues, PCONFIG(1));
         }
 
         {
-          const __FlashStringHelper *speedOptions[8] = {
+          const __FlashStringHelper *speedOptions[] = {
             F("9600"),
             F("19200"),
             F("115200"),
@@ -177,7 +177,8 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             F("38400"),
             F("57600"),
           };
-          addFormSelector(F("Serial speed"), F("speed"), 8, speedOptions, nullptr, PCONFIG(2));
+          constexpr size_t optionCount = NR_ELEMENTS(speedOptions);
+          addFormSelector(F("Serial speed"), F("speed"), optionCount, speedOptions, nullptr, PCONFIG(2));
         }
 
         addFormCheckBox(F("Use command doubling"), F("dbl"), PCONFIG(3));
@@ -540,11 +541,11 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
+      const String command = parseString(string, 1);
       String  log;
-      String  command = parseString(string, 1);
-      uint8_t rnum    = 0;
-      uint8_t rcmd    = 0;
-      uint8_t par3    = 0;
+      uint8_t rnum{};
+      uint8_t rcmd{};
+      uint8_t par3{};
 
       if (Plugin_091_init)
       {
@@ -578,7 +579,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
               if ((par3 == 1) && (rcmd == 1) && (rnum < 2))
               { // exclusive on mode for Dual
-                  // FIXME TD-er: Is this a valid UserVar index?
+                // FIXME TD-er: Is this a valid UserVar index?
                 UserVar.setFloat(event->TaskIndex, 1 - rnum, 0);
               }
 
@@ -629,7 +630,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
               if ((par3 == 1) && (rcmd == 1) && (rnum < 2))
               { // exclusive on mode for Dual
-                  // FIXME TD-er: Is this a valid UserVar index?
+                // FIXME TD-er: Is this a valid UserVar index?
                 UserVar.setFloat(event->TaskIndex, 1 - rnum, 0);
               }
 
@@ -681,7 +682,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
               if ((par3 == 1) && (rcmd == 1) && (rnum < 2))
               { // exclusive on mode for Dual
-                  // FIXME TD-er: Is this a valid UserVar index?
+                // FIXME TD-er: Is this a valid UserVar index?
                 UserVar.setFloat(event->TaskIndex, 1 - rnum, 0);
               }
 
@@ -702,17 +703,12 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             addLogMove(LOG_LEVEL_INFO, strformat(F("SerSW   : SetSwitchPulse r%d:%d Pulse for %d sec"), rnum, rcmd, event->Par3));
           }
         } else
-        if (equals(command, F("ydim")))                                                                                                        //
-                                                                                                                                               // deal
-                                                                                                                                               // with
-                                                                                                                                               // dimmer
-                                                                                                                                               // command
+
+        // deal with dimmer command
+        if (equals(command, F("ydim")))
         {
-          if (((Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { //
-                                                                                                                                               // only
-                                                                                                                                               // on
-                                                                                                                                               // tuya
-                                                                                                                                               // dimmer
+          // only on tuya dimmer
+          if (((Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) {
             success = true;
 
             // LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
@@ -767,7 +763,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
           if ((par3 == 1) && (rcmd == 1) && (rnum < 2))
           { // exclusive on mode for Dual
-              // FIXME TD-er: Is this a valid UserVar index?
+            // FIXME TD-er: Is this a valid UserVar index?
             UserVar.setFloat(event->TaskIndex, 1 - rnum, 0);
           }
 

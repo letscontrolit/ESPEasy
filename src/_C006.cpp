@@ -5,9 +5,16 @@
 // ########################### Controller Plugin 006: PiDome MQTT ########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2023-08-18 tonhuisman: Clean up source for pull request
+ * 2023-03-15 tonhuisman: Handle setting payload to (Dummy) Devices via topic SysName/TaskName/ValueName/set
+ * 2023-03 Changelog started
+ */
+// # include "src/Commands/InternalCommands.h"
 # include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
+# include "src/Helpers/_CPlugin_Helper_mqtt.h"
 # include "src/Helpers/Network.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "_Plugin_Helper.h"
@@ -69,41 +76,46 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
-      // topic structure /Home/Floor/Location/device/<systemname>/gpio/16
-      // Split topic into array
-      String tmpTopic = event->String1.substring(1);
-      String topicSplit[10];
-      int    SlashIndex = tmpTopic.indexOf('/');
-      uint8_t   count      = 0;
+      if (!MQTT_handle_topic_commands(event, false)) { // Only handle /set option
+        // topic structure /Home/Floor/Location/device/<systemname>/gpio/16
+        // Split topic into array
+        String  tmpTopic = event->String1.substring(1);
+        String  topicSplit[10];
+        int     SlashIndex = tmpTopic.indexOf('/');
+        uint8_t count      = 0;
 
-      while (SlashIndex > 0 && count < 10 - 1)
-      {
-        topicSplit[count] = tmpTopic.substring(0, SlashIndex);
-        tmpTopic          = tmpTopic.substring(SlashIndex + 1);
-        SlashIndex        = tmpTopic.indexOf('/');
-        count++;
-      }
-      topicSplit[count] = tmpTopic;
-
-      String name = topicSplit[4];
-
-      if (name.equals(Settings.getName()))
-      {
-        String cmd = topicSplit[5];
-        cmd += ',';
-        cmd += topicSplit[6].toInt(); // Par1
-        cmd += ',';
-
-        if ((event->String2.equalsIgnoreCase(F("false"))) || 
-            (event->String2.equalsIgnoreCase(F("true"))))
+        while (SlashIndex > 0 && count < 10 - 1)
         {
-          cmd += (event->String2.equalsIgnoreCase(F("true"))) ? '1' : '0'; // Par2
+          topicSplit[count] = tmpTopic.substring(0, SlashIndex);
+          tmpTopic          = tmpTopic.substring(SlashIndex + 1);
+          SlashIndex        = tmpTopic.indexOf('/');
+          count++;
         }
-        else
+        topicSplit[count] = tmpTopic;
+
+        const String name = topicSplit[4];
+
+        if (name.equals(Settings.Name))
         {
-          cmd += event->String2; // Par2
+          String cmd = topicSplit[5];
+          cmd += ',';
+          cmd += topicSplit[6].toInt(); // Par1
+          cmd += ',';
+          const bool isTrue = event->String2.equalsIgnoreCase(F("true"));
+
+          if ((event->String2.equalsIgnoreCase(F("false"))) ||
+              (isTrue))
+          {
+            cmd += isTrue ? '1' : '0'; // Par2
+          }
+          else
+          {
+            cmd += event->String2; // Par2
+          }
+
+          // ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+          MQTT_execute_command(cmd);
         }
-        ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_MQTT, std::move(cmd)}, true);
       }
       break;
     }
@@ -114,33 +126,8 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      String pubname              = CPlugin_006_pubname;
-      const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
-      bool   mqtt_retainFlag      = CPlugin_006_mqtt_retainFlag;
+      success = MQTT_protocol_send(event, CPlugin_006_pubname, CPlugin_006_mqtt_retainFlag);
 
-      statusLED(true);
-
-      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
-
-      const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-
-      for (uint8_t x = 0; x < valueCount; x++)
-      {
-        String tmppubname = pubname;
-        if (contains_valname) {
-          parseSingleControllerVariable(tmppubname, event, x, false);
-        }
-        parseControllerVariables(tmppubname, event, false);
-
-        // Small optimization so we don't try to copy potentially large strings
-        if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, tmppubname.c_str(), event->String2.c_str(), mqtt_retainFlag))
-            success = true;
-        } else {
-          if (MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(tmppubname), formatUserVarNoCheck(event, x), mqtt_retainFlag))
-            success = true;
-        }
-      }
       break;
     }
 

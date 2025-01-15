@@ -85,18 +85,10 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_057;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_057;
+      dev.Type     = DEVICE_TYPE_I2C;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
       break;
     }
 
@@ -233,99 +225,91 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         uint8_t  seg      = 0;
         uint16_t value    = 0;
 
-        String lowerString = string;
-        lowerString.toLowerCase();
-        lowerString.replace(F("  "), F(" "));
-        lowerString.replace(F(" ="), F("="));
-        lowerString.replace(F("= "), F("="));
+        String lString = string;
+        lString.replace(F("  "), F(" "));
+        lString.replace(F(" ="), F("="));
+        lString.replace(F("= "), F("="));
 
-        param = parseStringKeepCase(lowerString, paramIdx++);
+        param = parseString(lString, paramIdx++);
 
-        if (param.length())
+        while (!param.isEmpty())
         {
-          while (param.length())
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG_MORE, param);
+          # endif // ifndef BUILD_NO_DEBUG
+
+          if (equals(param, F("log")))
           {
-            # ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG_MORE, param);
-            # endif // ifndef BUILD_NO_DEBUG
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("MX   : ");
 
-            if (equals(param, F("log")))
-            {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("MX   : ");
-
-                for (uint8_t i = 0; i < 8; ++i)
-                {
-                  log += formatToHex_no_prefix(P057_data->ledMatrix.GetRow(i));
-                  log += F("h, ");
-                }
-                addLogMove(LOG_LEVEL_INFO, log);
+              for (uint8_t i = 0; i < 8; ++i)
+              {
+                log += formatToHex_no_prefix(P057_data->ledMatrix.GetRow(i));
+                log += F("h, ");
               }
-              success = true;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
+            success = true;
+          }
+
+          else if (equals(param, F("test")))
+          {
+            for (uint8_t i = 0; i < 8; ++i) {
+              P057_data->ledMatrix.SetRow(i, 1 << i);
+            }
+            success = true;
+          }
+
+          else if (equals(param, F("clear")))
+          {
+            P057_data->ledMatrix.ClearRowBuffer();
+            success = true;
+          }
+
+          else
+          {
+            const int index = param.indexOf('=');
+
+            if (index > 0) // syntax: "<seg>=<value>"
+            {
+              paramKey = param.substring(0, index);
+              paramVal = param.substring(index + 1);
+              seg      = paramKey.toInt();
+            }
+            else // syntax: "<value>"
+            {
+              paramVal = param;
             }
 
-            else if (equals(param, F("test")))
+            if (equals(command, F("mnum")))
             {
-              for (uint8_t i = 0; i < 8; ++i) {
-                P057_data->ledMatrix.SetRow(i, 1 << i);
+              value = paramVal.toInt();
+
+              if (value < 16) {
+                P057_data->ledMatrix.SetDigit(seg, value);
               }
-              success = true;
+              else {
+                P057_data->ledMatrix.SetRow(seg, value);
+              }
             }
-
-            else if (equals(param, F("clear")))
+            else if (equals(command, F("mx")))
             {
-              P057_data->ledMatrix.ClearRowBuffer();
-              success = true;
+              char *ep;
+              value = strtol(paramVal.c_str(), &ep, 16);
+              P057_data->ledMatrix.SetRow(seg, value);
             }
-
             else
             {
-              int index = param.indexOf('=');
-
-              if (index > 0) // syntax: "<seg>=<value>"
-              {
-                paramKey = param.substring(0, index);
-                paramVal = param.substring(index + 1);
-                seg      = paramKey.toInt();
-              }
-              else // syntax: "<value>"
-              {
-                paramVal = param;
-              }
-
-              if (equals(command, F("mnum")))
-              {
-                value = paramVal.toInt();
-
-                if (value < 16) {
-                  P057_data->ledMatrix.SetDigit(seg, value);
-                }
-                else {
-                  P057_data->ledMatrix.SetRow(seg, value);
-                }
-              }
-              else if (equals(command, F("mx")))
-              {
-                char *ep;
-                value = strtol(paramVal.c_str(), &ep, 16);
-                P057_data->ledMatrix.SetRow(seg, value);
-              }
-              else
-              {
-                value = paramVal.toInt();
-                P057_data->ledMatrix.SetRow(seg, value);
-              }
-
-              success = true;
-              seg++;
+              value = paramVal.toInt();
+              P057_data->ledMatrix.SetRow(seg, value);
             }
 
-            param = parseStringKeepCase(lowerString, paramIdx++);
+            success = true;
+            seg++;
           }
-        }
-        else
-        {
-          // ??? no params
+
+          param = parseString(lString, paramIdx++);
         }
 
         if (success) {

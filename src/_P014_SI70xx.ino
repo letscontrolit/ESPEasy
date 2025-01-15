@@ -44,21 +44,17 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_014;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].I2CNoDeviceCheck   = true;
-
-      // Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::All;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_014;
+      dev.Type             = DEVICE_TYPE_I2C;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 3;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.I2CNoDeviceCheck = true;
+      dev.PluginStats      = true;
+      dev.OutputDataType   = Output_Data_type_t::All;
       break;
     }
 
@@ -108,25 +104,22 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      # define P014_RESOLUTION_OPTIONS 4
-
-      const __FlashStringHelper *options[P014_RESOLUTION_OPTIONS] = {
+      const __FlashStringHelper *options[] = {
         F("Temp 14 bits / RH 12 bits"),
         F("Temp 13 bits / RH 10 bits"),
         F("Temp 12 bits / RH  8 bits"),
         F("Temp 11 bits / RH 11 bits"),
       };
-      const int optionValues[P014_RESOLUTION_OPTIONS] = {
+      const int optionValues[] = {
         SI70xx_RESOLUTION_14T_12RH,
         SI70xx_RESOLUTION_13T_10RH,
         SI70xx_RESOLUTION_12T_08RH,
         SI70xx_RESOLUTION_11T_11RH,
       };
-      addFormSelector(F("Resolution"), F("pres"), P014_RESOLUTION_OPTIONS, options, optionValues, P014_RESOLUTION);
+      constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+      addFormSelector(F("Resolution"), F("pres"), optionCount, options, optionValues, P014_RESOLUTION);
 
       addFormNumericBox("ADC Filter Power", F("pfilter"), P014_FILTER_POWER, 0, 4);
-
-      // addUnit(F("bits"));
 
       success = true;
       break;
@@ -137,12 +130,6 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       P014_I2C_ADDRESS  = getFormItemInt(F("i2c_addr"));
       P014_RESOLUTION   = getFormItemInt(F("pres"));
       P014_FILTER_POWER = getFormItemInt(F("pfilter"));
-
-      // Force device setup next time
-      // P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
-      // if (nullptr != P014_data) {
-      //  P014_data->state = P014_state::Uninitialized;
-      // }
 
       success = true;
       break;

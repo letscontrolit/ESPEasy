@@ -5,6 +5,7 @@
 # include <soc/soc.h>
 # include <soc/efuse_reg.h>
 # include <soc/spi_reg.h>
+# include <soc/spi_pins.h>
 # include <soc/rtc.h>
 # include <esp_chip_info.h>
 # include <bootloader_common.h>
@@ -13,7 +14,17 @@
 bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-11: Flash voltage selector
   // For chip variants with a SiP flash built in, GPIO11~ GPIO17 are dedicated to connecting SiP flash, not for other uses
-  return (gpio) >= 12 && (gpio) <= 17;
+  //  return (gpio) >= 12 && (gpio) <= 17;
+  switch (gpio) {
+    case SPI_IOMUX_PIN_NUM_HD:
+    case SPI_IOMUX_PIN_NUM_CS:
+    case SPI_IOMUX_PIN_NUM_MOSI:
+    case SPI_IOMUX_PIN_NUM_CLK:
+    case SPI_IOMUX_PIN_NUM_MISO:
+    case SPI_IOMUX_PIN_NUM_WP:
+      return true;
+  }
+  return false;
 }
 
 bool flashVddPinCanBeUsedAsGPIO()

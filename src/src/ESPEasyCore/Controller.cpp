@@ -255,7 +255,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       mqtt.setTimeout(timeout); // in msec as it should be!
   #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
-      MQTTclient.setKeepAlive(10);
+      MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
       MQTTclient.setSocketTimeout(timeout);
       break;
     }
@@ -360,7 +360,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_tls->setBufferSizes(1024, 1024);
     #  endif // ifdef ESP8266
     MQTTclient.setClient(*mqtt_tls);
-    MQTTclient.setKeepAlive(10);
+    MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
     MQTTclient.setSocketTimeout(timeout);
 
 
@@ -394,7 +394,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   MQTTclient.setClient(mqtt);
-  MQTTclient.setKeepAlive(10);
+  MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
   MQTTclient.setSocketTimeout(timeout);
 # endif // if FEATURE_MQTT_TLS
 

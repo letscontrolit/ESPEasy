@@ -830,6 +830,13 @@ P175 :ref:`P175_page`
 
 .. include:: ../Plugin/P175_commands.repl
 
+P178 :ref:`P178_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P178_commands.repl
+
+
+
 .. .. *** Insert regular plugin commands above this remark! ***
 
 .. _AdafruitGFX Helper commands:

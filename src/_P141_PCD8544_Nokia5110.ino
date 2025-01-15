@@ -43,19 +43,16 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_141;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI3;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number = PLUGIN_ID_141;
+      dev.Type   = DEVICE_TYPE_SPI3;
+      dev.VType  = Sensor_VType::SENSOR_TYPE_NONE;
       # if P141_FEATURE_CURSOR_XY_VALUES
-      Device[deviceCount].ValueCount = 2;
+      dev.ValueCount = 2;
       # endif // if P141_FEATURE_CURSOR_XY_VALUES
-      Device[deviceCount].SendDataOption = false;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
+      dev.SendDataOption = false;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
       break;
     }
 
@@ -150,9 +147,10 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P141_CommandTrigger::pcd8544),
           static_cast<int>(P141_CommandTrigger::lcd),
         };
+        constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
         addFormSelector(F("Write Command trigger"),
                         F("pcmdtrigger"),
-                        NR_ELEMENTS(commandTriggerOptions),
+                        optionCount,
                         commandTriggers,
                         commandTriggerOptions,
                         P141_CONFIG_FLAG_GET_CMD_TRIGGER);
@@ -225,13 +223,12 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       P141_CONFIG_FLAGS = lSettings;
 
       String strings[P141_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P141_Nlines; ++varNr) {
         strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
+      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P141_Nlines, 0);
 
       if (!error.isEmpty()) {
         addHtmlError(error);

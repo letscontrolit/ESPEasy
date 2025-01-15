@@ -146,18 +146,13 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_095;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI3;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      success                                = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_095;
+      dev.Type          = DEVICE_TYPE_SPI3;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.ValueCount    = 2;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 
@@ -265,9 +260,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
           # endif // if P095_ENABLE_ILI948X
         };
+        constexpr size_t optionCount = NR_ELEMENTS(hardwareOptions);
         addFormSelector(F("TFT display model"),
                         F("dsptype"),
-                        NR_ELEMENTS(hardwareOptions),
+                        optionCount,
                         hardwareTypes,
                         hardwareOptions,
                         P095_CONFIG_FLAG_GET_TYPE);
@@ -314,9 +310,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P095_CommandTrigger::ili9488),
           # endif // if P095_ENABLE_ILI948X
         };
+        constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
-                        NR_ELEMENTS(commandTriggerOptions),
+                        optionCount,
                         commandTriggers,
                         commandTriggerOptions,
                         P095_CONFIG_FLAG_GET_CMD_TRIGGER);
@@ -420,7 +417,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           strings[varNr] = webArg(getPluginCustomArgName(varNr));
         }
 
-        String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
+        const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
         if (error.length() > 0) {
           addHtmlError(error);

@@ -23,19 +23,16 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_002;
-      Device[deviceCount].Type               = DEVICE_TYPE_ANALOG;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].TaskLogsOwnPeaks   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_002;
+      dev.Type             = DEVICE_TYPE_ANALOG;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 1;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.PluginStats      = true;
+      dev.TaskLogsOwnPeaks = true;
       break;
     }
 
@@ -133,7 +130,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = strformat(
-            F("ADC  : Analog value: %d = %s"), 
+            F("ADC  : Analog value: %d = %s"),
             raw_value,
             formatUserVarNoCheck(event, 0).c_str());
 

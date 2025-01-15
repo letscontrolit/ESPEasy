@@ -40,19 +40,16 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_110;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_110;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -97,20 +94,21 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *optionsMode2[3] = {
+        const __FlashStringHelper *optionsMode2[] = {
           F("Normal"),
           F("Fast"),
           F("Accurate") };
-        const int optionValuesMode2[3] = { 80, 20, 320 };
-        addFormSelector(F("Timing"), F("ptiming"), 3, optionsMode2, optionValuesMode2, P110_TIMING);
+        const int optionValuesMode2[] = { 80, 20, 320 };
+        constexpr size_t optionCount  = NR_ELEMENTS(optionValuesMode2);
+        addFormSelector(F("Timing"), F("ptiming"), optionCount, optionsMode2, optionValuesMode2, P110_TIMING);
       }
 
       {
-        const __FlashStringHelper *optionsMode3[2] = {
+        const __FlashStringHelper *optionsMode3[] = {
           F("Normal"),
           F("Long") };
-        const int optionValuesMode3[2] = { 0, 1 };
-        addFormSelector(F("Range"), F("prange"), 2, optionsMode3, optionValuesMode3, P110_RANGE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionsMode3);
+        addFormSelector(F("Range"), F("prange"), optionCount, optionsMode3, nullptr, P110_RANGE);
       }
       addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), P110_SEND_ALWAYS == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));

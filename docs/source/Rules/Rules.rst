@@ -1067,26 +1067,30 @@ Example use case:
 As a use case, imagine the output of ser2net (P020) from an OpenTherm gateway.
 
 * Message coming from the serial interface: **T101813C0**
+
   * The B denotes that the message is from the
-  * The next 4 bytes (actually 2bytes hex encoded) denote the status and type of the message.
-  * the last 4 bytes (actually 2bytes hex encoded) denote the payload.
+
+  * The next 4 characters (actually 2bytes hex encoded) denote the status and type of the message.
+
+  * the last 4 characters (actually 2bytes hex encoded) denote the payload.
+
 * Message that ends up in rules when using ser2net (P020) and Generic handling: ``!Serial#BT101813C0``
 
 The room temperature in this sample is 19.75 C
 
 Get the last four bytes in packs of two bytes:
 
-* ``{substring:13:15:%eventvalue1%}``
-* ``{substring:15:17:%eventvalue1%}``
+* ``{substring:13:15:%eventvalue%}``
+* ``{substring:15:17:%eventvalue%}``
 
 Parsing them to decimal representation each (using a base 16 call to strtol):
 
-* ``{strtol:16:{substring:13:15:%eventvalue1%}}``
-* ``{strtol:16:{substring:15:17:%eventvalue1%}}``
+* ``{strtol:16:{substring:13:15:%eventvalue%}}``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}``
 
 Last but not least the fraction is not correct, it needs to be divided by 256 (and multiplied by 100)
 
-* ``{strtol:16:{substring:15:17:%eventvalue1%}}*100/255``
+* ``{strtol:16:{substring:15:17:%eventvalue%}}*100/255``
 
 Complete rule used to parse this and set a variable in a dummy device:
 
@@ -1094,7 +1098,7 @@ Complete rule used to parse this and set a variable in a dummy device:
 
  // Room temperature
  on !Serial#T1018* do
-   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue1%}}.{strtol:16:{substring:15:17:%eventvalue1%}}*100/255
+   TaskValueSet 2,1,{strtol:16:{substring:13:15:%eventvalue%}}.{strtol:16:{substring:15:17:%eventvalue%}}*100/255
  endon
 
 
@@ -1421,6 +1425,8 @@ Basic Math Functions
 * ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
 * ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps value x in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
+* ``mapc(value:fromLow:fromHigh:toLow:toHigh)`` same as map, but constrains the result to the fromLow/fromHigh range.
+
 
 Rules example:
 
@@ -1456,7 +1462,7 @@ Called with event ``eventname2=1.234,100``
  213379 : Info   : ACT : LogEntry,'pow of 1.234^100 = 1353679866.79107'
  213382 : Info   : pow of 1.234^100 = 1353679866.79107
 
-Examples using the ``map()`` function. Map does not constrain the values within the given range, but uses extrapolation when the input value goes outside the ``fromLow`` / ``fromHigh`` range.
+Examples using the ``map()`` & ``mapc()`` function. ``map()`` without the "c" does not constrain the values within the given range, but uses extrapolation when the input value goes outside the ``fromLow`` / ``fromHigh`` range.
 
 Missing values for the map function default to 0.
 
@@ -1472,7 +1478,9 @@ Missing values for the map function default to 0.
 
  on eventname3 do
    let,1,map(%eventvalue1|10%:0:100:100:0) // Reverse mapping of a value, 0..100 will output 100..0
+   let,2,mapc(%eventvalue1|10%:0:100:100:0)
    LogEntry,'Input value %eventvalue1|10% mapped to: %v1%'
+   LogEntry,'Input value %eventvalue1|10% mapped to: %v2% and constrained'
  endon
 
 

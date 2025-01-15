@@ -42,19 +42,16 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_135;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_135;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.I2CMax100kHz   = true; // Max 100 kHz allowed/supported
 
       break;
     }
@@ -107,7 +104,8 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD40),
           static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41),
         };
-        addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P135_SENSOR_TYPE, true);
+        constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
+        addFormSelector(F("Sensor model"), F("ptype"), optionCount, sensorTypes, sensorTypeOptions, P135_SENSOR_TYPE, true);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Page will reload on change."));
         # endif // ifndef LIMIT_BUILD_SIZE

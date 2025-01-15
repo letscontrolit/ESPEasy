@@ -22,17 +22,14 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_100;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_100;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -65,9 +62,9 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
-        const __FlashStringHelper * resultsOptions[2]      = { F("A"), F("B") };
-        int    resultsOptionValues[2] = { 0, 1 };
-        addFormSelector(F("Counter"), F("counter"), 2, resultsOptions, resultsOptionValues, PCONFIG(0));
+        const __FlashStringHelper *resultsOptions[] = { F("A"), F("B") };
+        constexpr size_t optionCount                = NR_ELEMENTS(resultsOptions);
+        addFormSelector(F("Counter"), F("counter"), optionCount, resultsOptions, nullptr, PCONFIG(0));
         addFormNote(F("Counter value is incremental"));
       }
       success = true;
@@ -142,7 +139,7 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
             } else {
               log += F("Error!");
             }
-            log += concat(F(" (%s)"), Dallas_format_address(addr).c_str());
+            log += strformat(F(" (%s)"), Dallas_format_address(addr).c_str());
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
@@ -152,6 +149,5 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
-
 
 #endif // USES_P100

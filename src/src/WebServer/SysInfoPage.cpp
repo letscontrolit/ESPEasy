@@ -746,19 +746,19 @@ void handle_sysinfo_Storage() {
     static_cast<int>(RTC.flashCounter)));
 
   {
-    // FIXME TD-er: Must also add this for ESP32.
-    addRowLabel(LabelType::SKETCH_SIZE);
-    addHtml(strformat(
-      F("%d [kB] (%d kB free)"),
-      getSketchSize() / 1024,
-      getFreeSketchSpace() / 1024));
-
     uint32_t maxSketchSize;
     bool     use2step;
     # if defined(ESP8266)
     bool otaEnabled =
     # endif // if defined(ESP8266)
     OTA_possible(maxSketchSize, use2step);
+
+    addRowLabel(LabelType::SKETCH_SIZE);
+    addHtml(strformat(
+      F("%d [kB] (%d kB not used)"),
+      getSketchSize() / 1024,
+      (maxSketchSize - getSketchSize()) / 1024));
+
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     addHtml(strformat(
       F("%d [kB] (%d bytes)"),

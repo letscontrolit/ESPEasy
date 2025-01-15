@@ -38,17 +38,17 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_125;
-      Device[deviceCount].Type           = DEVICE_TYPE_SPI;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].ValueCount     = 3;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_125;
+      dev.Type           = DEVICE_TYPE_SPI;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.FormulaOption  = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
 
       break;
     }

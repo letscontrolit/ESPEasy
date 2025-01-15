@@ -58,9 +58,11 @@ bool isBootStrapPin(int gpio)
 
   if (gpio == 46) {
     // Strapping pin which must be low during flashing
+    // ROM message printing
     return true;
   }
 
+  // Chip boot mode
   // GPIO 0  State during boot determines boot mode.
   if (gpio == 0) { return true; }
 

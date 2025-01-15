@@ -84,16 +84,10 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_079;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_079;
+      dev.Type     = DEVICE_TYPE_I2C;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
       break;
     }
 
@@ -130,7 +124,8 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P079_BoardType::WemosMotorshield),
           static_cast<int>(P079_BoardType::LolinMotorshield)
         };
-        addFormSelector(F("Motor Shield Type"), F("shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+        constexpr size_t optionCount = NR_ELEMENTS(indices);
+        addFormSelector(F("Motor Shield Type"), F("shield_type"), optionCount, options, indices, SHIELD_VER_PCFG_P079);
       }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {

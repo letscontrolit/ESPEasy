@@ -67,6 +67,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       if (C004_DelayHandler == nullptr) {
         break;
       }
+
       if (C004_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
@@ -97,40 +98,37 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 bool do_process_c004_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C004_queue_element& element = static_cast<const C004_queue_element&>(element_base);
 // *INDENT-ON*
-  String postDataStr = F("api_key=");
+String postDataStr = concat(F("api_key="),
+                            getControllerPass(element._controller_idx, ControllerSettings)); // used for API key
 
-  postDataStr += getControllerPass(element._controller_idx, ControllerSettings); // used for API key
-
-  if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-    postDataStr += F("&status=");
-    postDataStr += element.txt[0]; // FIXME TD-er: Is this correct?
-    // See: https://nl.mathworks.com/help/thingspeak/writedata.html
-  } else {
-    for (uint8_t x = 0; x < element.valueCount; x++)
-    {
-      postDataStr += F("&field");
-      postDataStr += element.idx + x;
-      postDataStr += '=';
-      postDataStr += element.txt[x];
-    }
+if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+  postDataStr += concat(F("&status="), element.txt[0]);                                      // FIXME TD-er: Is this correct?
+  // See: https://nl.mathworks.com/help/thingspeak/writedata.html
+} else {
+  for (uint8_t x = 0; x < element.valueCount; x++) {
+    postDataStr += strformat(F("&field%d=%s"),
+                             element.idx + x,
+                             element.txt[x].c_str());
   }
-  if (!ControllerSettings.UseDNS) {
-    // Patch the ControllerSettings to make sure we're using a hostname instead of an IP address
-    ControllerSettings.setHostname(F("api.thingspeak.com")); // PM_CZ: HTTP requests must contain host headers.
-    ControllerSettings.UseDNS = true;
-  }
+}
 
-  int httpCode = -1;
-  send_via_http(
-    cpluginID,
-    ControllerSettings,
-    element._controller_idx,
-    F("/update"), // uri
-    F("POST"),
-    F("Content-Type: application/x-www-form-urlencoded\r\n"),
-    postDataStr,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+if (!ControllerSettings.UseDNS) {
+  // Patch the ControllerSettings to make sure we're using a hostname instead of an IP address
+  ControllerSettings.setHostname(F("api.thingspeak.com")); // PM_CZ: HTTP requests must contain host headers.
+  ControllerSettings.UseDNS = true;
+}
+
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  F("/update"), // uri
+  F("POST"),
+  F("Content-Type: application/x-www-form-urlencoded\r\n"),
+  postDataStr,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C004

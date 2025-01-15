@@ -87,14 +87,13 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number      = PLUGIN_ID_073;
-      Device[deviceCount].Type          = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
-      Device[deviceCount].setPin2Direction(gpio_direction::gpio_output);
-      Device[deviceCount].setPin3Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_073;
+      dev.Type     = DEVICE_TYPE_TRIPLE;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.setPin1Direction(gpio_direction::gpio_output);
+      dev.setPin2Direction(gpio_direction::gpio_output);
+      dev.setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -119,7 +118,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                    F("TM1637 - 4 digit (dots)"),
                                                    F("TM1637 - 6 digit"),
                                                    F("MAX7219 - 8 digit") };
-        addFormSelector(F("Display Type"), F("displtype"), 4, displtype, nullptr, PCONFIG(0));
+        constexpr size_t optionCount = NR_ELEMENTS(displtype);
+        addFormSelector(F("Display Type"), F("displtype"), optionCount, displtype, nullptr, PCONFIG(0));
       }
       {
         const __FlashStringHelper *displout[] = { F("Manual"),
@@ -128,7 +128,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Clock 12h - Blink"),
                                                   F("Clock 12h - No Blink"),
                                                   F("Date") };
-        addFormSelector(F("Display Output"), F("displout"), 6, displout, nullptr, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(displout);
+        addFormSelector(F("Display Output"), F("displout"), optionCount, displout, nullptr, PCONFIG(1));
       }
 
       addFormNumericBox(F("Brightness"), F("brightness"), PCONFIG(2), 0, 15);
@@ -136,11 +137,12 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
       # ifdef P073_EXTRA_FONTS
       {
-        const __FlashStringHelper *fontset[4] = { F("Default"),
-                                                  F("Siekoo"),
-                                                  F("Siekoo with uppercase 'CHNORUX'"),
-                                                  F("dSEG7") };
-        addFormSelector(F("Font set"), F("fontset"), 4, fontset, nullptr, PCONFIG(4));
+        const __FlashStringHelper *fontset[] = { F("Default"),
+                                                 F("Siekoo"),
+                                                 F("Siekoo with uppercase 'CHNORUX'"),
+                                                 F("dSEG7") };
+        constexpr size_t optionCount = NR_ELEMENTS(fontset);
+        addFormSelector(F("Font set"), F("fontset"), optionCount, fontset, nullptr, PCONFIG(4));
         addFormNote(F("Check documentation for examples of the font sets."));
       }
       # endif // P073_EXTRA_FONTS

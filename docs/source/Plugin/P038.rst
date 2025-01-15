@@ -84,6 +84,9 @@ Change log
   ...
 
   |improved|
+  2024-12-22: Fix HSV values for ``NeoPixelHSV*`` commands.
+
+  |improved|
   2022-01: Make plugin multi-instance compatible, improve/fix pin selection, allow RGBW color selection for ``NeoPixelLine*`` commands.
 
   |added|

@@ -42,14 +42,13 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_131;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].TimerOption   = true;
-      Device[deviceCount].TimerOptional = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_131;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -271,7 +270,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           if ((P131_CONFIG_TILE_HEIGHT > 1) && (varNr == P131_CONFIG_TILE_HEIGHT - 1)) {
             html_TD();
-            addUnit(concat(F("Remaining: "), static_cast<int>(remain)));
+            addUnit(concat(F("Remaining: "),
+                           static_cast<int>(remain)));
           }
         }
         html_end_table();
@@ -350,7 +350,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       error += SaveCustomTaskSettings(event->TaskIndex, strings, P131_Nlines, 0);
 
-      if (error.length() > 0) {
+      if (!error.isEmpty()) {
         addHtmlError(error);
       }
 
@@ -378,8 +378,9 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                                                                                  P131_CONFIG_FLAG_GET_ROTATION,
                                                                                  P131_CONFIG_FLAG_GET_FONTSCALE,
                                                                                  static_cast<AdaGFXTextPrintMode>(P131_CONFIG_FLAG_GET_MODE),
-                                                                                 P131_CommandTrigger_toString(static_cast<P131_CommandTrigger>(
-                                                                                                                P131_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                                                 P131_CommandTrigger_toString(
+                                                                                   static_cast<P131_CommandTrigger>(
+                                                                                     P131_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                                  P131_CONFIG_FLAG_GET_BRIGHTNESS,
                                                                                  P131_CONFIG_FLAG_GET_MAXBRIGHT,
                                                                                  P131_CONFIG_GET_COLOR_FOREGROUND,

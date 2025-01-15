@@ -5,6 +5,7 @@
 # include <soc/soc.h>
 # include <soc/efuse_reg.h>
 # include <soc/spi_reg.h>
+# include <soc/spi_pins.h>
 # include <soc/rtc.h>
 # include <esp_chip_info.h>
 # include <bootloader_common.h>
@@ -14,9 +15,15 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // FIXME TD-er: Must know whether we have internal or external flash
 
   // For chip variants with an in-package flash, this pin can not be used.
-  if ((gpio == 10) || (gpio == 11)) {
-    return true;
-  }
+
+  // FIXME TD-er: No idea where these pins come from. Disabled for now.
+  // See: https://github.com/letscontrolit/ESPEasy/issues/5220
+
+  /*
+     if ((gpio == 10) || (gpio == 11)) {
+     return true;
+     }
+   */
 
   // For chip variants without an in-package flash, this pin can not be used.
   //  if (gpio == 14)
@@ -24,7 +31,19 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
 
   // GPIO-27: Flash voltage selector
   // GPIO-24 ... 30: Connected to internal flash (might be available when using external flash???)
-  return (gpio) >= 24 && (gpio) <= 30 && gpio != 27;
+
+  switch (gpio) {
+    case SPI_IOMUX_PIN_NUM_CS:
+    case SPI_IOMUX_PIN_NUM_CLK:
+    case SPI_IOMUX_PIN_NUM_MOSI:
+    case SPI_IOMUX_PIN_NUM_MISO:
+    case SPI_IOMUX_PIN_NUM_WP:
+    case SPI_IOMUX_PIN_NUM_HD:
+      return true;
+  }
+  return false;
+
+  //  return (gpio) >= 24 && (gpio) <= 30 && gpio != 27;
 }
 
 bool flashVddPinCanBeUsedAsGPIO()

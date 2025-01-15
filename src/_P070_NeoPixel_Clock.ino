@@ -36,15 +36,15 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_070;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 3;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number     = PLUGIN_ID_070;
+      dev.Type       = DEVICE_TYPE_SINGLE;
+      dev.VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount = 3;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
-      Device[deviceCount].ExitTaskBeforeSave = false;
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 

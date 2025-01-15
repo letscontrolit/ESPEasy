@@ -19,8 +19,8 @@
 // https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
 # define PLUGIN_074
-# define PLUGIN_ID_074 74
-# define PLUGIN_NAME_074 "Light/Lux - TSL2591"
+# define PLUGIN_ID_074         74
+# define PLUGIN_NAME_074       "Light/Lux - TSL2591"
 # define PLUGIN_VALUENAME1_074 "Lux"
 # define PLUGIN_VALUENAME2_074 "Full"
 # define PLUGIN_VALUENAME3_074 "Visible"
@@ -31,19 +31,15 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_074;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = false;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_074;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -100,7 +96,8 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       {
         const __FlashStringHelper *optionsMode[6] = { F("100"), F("200"), F("300"),
                                                       F("400"), F("500"), F("600") };
-        addFormSelector(F("Integration Time"), F("itime"), 6, optionsMode,
+        constexpr size_t optionCount = NR_ELEMENTS(optionsMode);
+        addFormSelector(F("Integration Time"), F("itime"), optionCount, optionsMode,
                         nullptr, PCONFIG(1));
         addUnit(F("ms"));
       }
@@ -112,7 +109,8 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       {
         const __FlashStringHelper *optionsGain[4] = { F("low gain (1x)"),      F("medium gain (25x)"),
                                                       F("medium gain (428x)"), F("max gain (9876x)") };
-        addFormSelector(F("Value Mapping"), F("gain"), 4, optionsGain, nullptr,
+        constexpr size_t optionCount = NR_ELEMENTS(optionsGain);
+        addFormSelector(F("Value Mapping"), F("gain"), optionCount, optionsGain, nullptr,
                         PCONFIG(2));
       }
 

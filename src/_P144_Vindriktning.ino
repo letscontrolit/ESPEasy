@@ -1,31 +1,32 @@
-//#######################################################################################################
-//################################## Plugin 144: Dust Sensor Ikea Vindriktning ##########################
-//#######################################################################################################
-/*
-  Plugin is based upon various open sources on the internet. Plugin uses the serial lib to access a serial port
-  This plugin was written by flashmark
+// #######################################################################################################
+// ################################## Plugin 144: Dust Sensor Ikea Vindriktning ##########################
+// #######################################################################################################
 
-  This plugin reads the particle concentration from the PM1006 sensor in the Ikea Vindriktning
-  The original Ikea processor is controlling the PM1006 sensor, the plugin is eavesdropping the responses
-  DevicePin1 - RX on ESP, TX on PM1006
-  DevicePin2 - TX on ESP, RX on PM1006 (optional, currently not accessed by the plugin)
-  This plugin is intended to be extended with stand alone support for the PM1006 and PM1006K sensors
-  The stand alone support is not implemented yet
-*/
+/*
+   Plugin is based upon various open sources on the internet. Plugin uses the serial lib to access a serial port
+   This plugin was written by flashmark
+
+   This plugin reads the particle concentration from the PM1006 sensor in the Ikea Vindriktning
+   The original Ikea processor is controlling the PM1006 sensor, the plugin is eavesdropping the responses
+   DevicePin1 - RX on ESP, TX on PM1006
+   DevicePin2 - TX on ESP, RX on PM1006 (optional, currently not accessed by the plugin)
+   This plugin is intended to be extended with stand alone support for the PM1006 and PM1006K sensors
+   The stand alone support is not implemented yet
+ */
 
 // #include section
 #include "_Plugin_Helper.h"
 #ifdef USES_P144
-#include "src/PluginStructs/P144_data_struct.h"  // Sensor abstraction for P144
+# include "src/PluginStructs/P144_data_struct.h" // Sensor abstraction for P144
 
 // Standard plugin defines
-#define PLUGIN_144
-#define PLUGIN_ID_144     144                               // plugin id
-#define PLUGIN_NAME_144   "Dust - PM1006(K) (Vindriktning)" // "Plugin Name" is what will be dislpayed in the selection list
-#define PLUGIN_VALUENAME1_144 "PM2.5"                       // variable output of the plugin. The label is in quotation marks
+# define PLUGIN_144
+# define PLUGIN_ID_144     144                               // plugin id
+# define PLUGIN_NAME_144   "Dust - PM1006(K) (Vindriktning)" // "Plugin Name" is what will be dislpayed in the selection list
+# define PLUGIN_VALUENAME1_144 "PM2.5"                       // variable output of the plugin. The label is in quotation marks
 
 //   PIN/port configuration is stored in the following:
-//   CONFIG_PIN1 - Used by plugin_Helper_serial (RX pin) 
+//   CONFIG_PIN1 - Used by plugin_Helper_serial (RX pin)
 //   CONFIG_PIN2 - Used by plugin_Helper_serial (TX pin)
 //   CONFIG_PIN3 - Not used
 //   CONFIG_PORT - Used by the plugin_Helper_serial (serialType)
@@ -37,7 +38,7 @@
 //   N.B. these are aliases for a longer less readable amount of code. See _Plugin_Helper.h
 //
 //
-//   PCONFIG_LABEL(x) is a function to generate a unique label used as HTML id to be able to match 
+//   PCONFIG_LABEL(x) is a function to generate a unique label used as HTML id to be able to match
 //                    returned values when saving a configuration.
 
 
@@ -56,21 +57,15 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics
 
-      Device[++deviceCount].Number           = PLUGIN_ID_144;                    // Plugin ID number.   (PLUGIN_ID_xxx)
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;               // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE; // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-      Device[deviceCount].Ports              = 0;                                // Port to use when device has multiple I/O pins  (N.B. not used much)
-      Device[deviceCount].ValueCount         = 1;                                // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;      // Subset of selectable output data types  (Default = no selection)
-      Device[deviceCount].PullUpOption       = false;                            // Allow to set internal pull-up resistors.
-      Device[deviceCount].InverseLogicOption = false;                            // Allow to invert the boolean state (e.g. a switch)
-      Device[deviceCount].FormulaOption      = true;                             // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-      Device[deviceCount].Custom             = false;
-      Device[deviceCount].SendDataOption     = true;                             // Allow to send data to a controller.
-      Device[deviceCount].GlobalSyncOption   = true;                             // No longer used. Was used for ESPeasy values sync between nodes
-      Device[deviceCount].TimerOption        = true;                             // Allow to set the "Interval" timer for the plugin.
-      Device[deviceCount].TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-      Device[deviceCount].DecimalsOnly       = false;                            // Allow to set the number of decimals (otherwise treated a 0 decimals)
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_144;
+      dev.Type           = DEVICE_TYPE_SERIAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;
+      dev.OutputDataType = Output_Data_type_t::Default;
+      dev.FormulaOption  = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
       break;
     }
 
@@ -103,7 +98,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-    
+
     case PLUGIN_SET_DEFAULTS:
     {
       // Set a default config here, which will be called when a plugin is assigned to a task.
@@ -136,7 +131,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       /// addFormNumericBox(string, F("description"), F("plugin_144_description"), PCONFIG(1), min - value, max - value);
 
       // after the form has been loaded, set success and break
-      //serialHelper_serialconfig_webformLoad(event, true);
+      // serialHelper_serialconfig_webformLoad(event, true);
       success = true;
       break;
     }
@@ -146,7 +141,7 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // this case defines the code to be executed when the form is submitted
       // the plugin settings should be saved to PCONFIG(x)
       // ping configuration should be read from CONFIG_PIN1 and stored
-      //serialHelper_webformSave(event);
+      // serialHelper_webformSave(event);
 
       // after the form has been saved successfuly, set success and break
       success = true;
@@ -155,18 +150,18 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // this case defines code to be executed when the plugin is initialised
-      const int8_t rxPin = serialHelper_getRxPin(event);
-      const int8_t txPin = serialHelper_getTxPin(event);
-      const ESPEasySerialPort portType = serialHelper_getSerialType(event); 
+      const int8_t rxPin               = serialHelper_getRxPin(event);
+      const int8_t txPin               = serialHelper_getTxPin(event);
+      const ESPEasySerialPort portType = serialHelper_getSerialType(event);
 
       // Create the P144_data_struct object that will do all the sensor interaction
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P144_data_struct());
       P144_data_struct *P144_data =
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P144_data != nullptr) 
+      if (P144_data != nullptr)
       {
-        success = P144_data->setSerial(portType, rxPin, txPin);    // Initialize with existing task data
+        success = P144_data->setSerial(portType, rxPin, txPin); // Initialize with existing task data
       }
       break;
     }
@@ -179,13 +174,14 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P144_data != nullptr) {
-        UserVar.setFloat(event->TaskIndex, 0, P144_data->getValue()); 
-        #ifdef PLUGIN_144_DEBUG
+        UserVar.setFloat(event->TaskIndex, 0, P144_data->getValue());
+        # ifdef PLUGIN_144_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO))
         {
           addLogMove(LOG_LEVEL_INFO, concat(F("P144 : READ "), UserVar[event->BaseVarIndex]));
         }
-        #endif
+        # endif // ifdef PLUGIN_144_DEBUG
       }
       success = true;
       break;
@@ -204,9 +200,10 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       // perform cleanup tasks here. For example, free memory
-      
+
       P144_data_struct *P144_data =
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (P144_data != nullptr) {
         P144_data->disconnectSerial();
       }
@@ -227,15 +224,15 @@ boolean Plugin_144(uint8_t function, struct EventStruct *event, String& string)
       // be careful on what is added here. Heavy processing will result in slowing the module down!
       P144_data_struct *P144_data =
         static_cast<P144_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (P144_data != nullptr)
       {
         success = P144_data->processSensor();
       }
       break;
     }
-
   } // switch
   return success;
 }   // function
 
-#endif
+#endif // ifdef USES_P144

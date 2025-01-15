@@ -77,17 +77,15 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_090;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_090;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -111,8 +109,9 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 
       // I2C address choice
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        const __FlashStringHelper *options[2] = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
-        addFormSelector(F("I2C Address"), F("i2c_addr"), 2, options, i2cAddressValues, P090_I2C_ADDR);
+        const __FlashStringHelper *options[] = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
+        constexpr size_t optionCount         = NR_ELEMENTS(options);
+        addFormSelector(F("I2C Address"), F("i2c_addr"), optionCount, options, i2cAddressValues, P090_I2C_ADDR);
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -132,10 +131,11 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         // read frequency
-        int frequencyChoice                            = P090_READ_INTERVAL;
-        const __FlashStringHelper *frequencyOptions[3] = { F("1 second"), F("10 seconds"), F("60 seconds") };
-        const int frequencyValues[3]                   = { 1, 2, 3 };
-        addFormSelector(F("Take reading every"), F("temp_freq"), 3, frequencyOptions, frequencyValues, frequencyChoice);
+        const int frequencyChoice                     = P090_READ_INTERVAL;
+        const __FlashStringHelper *frequencyOptions[] = { F("1 second"), F("10 seconds"), F("60 seconds") };
+        const int frequencyValues[]                   = { 1, 2, 3 };
+        constexpr size_t optionCount                  = NR_ELEMENTS(frequencyValues);
+        addFormSelector(F("Take reading every"), F("temp_freq"), optionCount, frequencyOptions, frequencyValues, frequencyChoice);
       }
 
       addFormSeparator(2);
@@ -175,9 +175,6 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
           }
         }
       }
-
-      //            addFormSeparator(string);
-      // addFormSeparator(2);
 
       success = true;
       break;
@@ -292,35 +289,35 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       if (P090_COMPENSATE_ENABLE)
       {
         // we're checking a var from another task, so calculate that basevar
-        uint8_t TaskIndex = P090_TEMPERATURE_TASK_INDEX;
+        const taskIndex_t TaskIndex = P090_TEMPERATURE_TASK_INDEX;
 
         if (validTaskIndex(TaskIndex)) {
-          uint8_t BaseVarIndex = TaskIndex * VARS_PER_TASK + P090_TEMPERATURE_TASK_VALUE;
-          float   temperature  = UserVar[BaseVarIndex]; // in degrees C
+          float temperature = UserVar.getFloat(TaskIndex, P090_TEMPERATURE_TASK_VALUE); // in degrees C
           // convert to celsius if required
-          int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
-          String temp;
-          temp = 'C';
+          # ifndef BUILD_NO_DEBUG
+          char temp('C');
+          # endif // ifndef BUILD_NO_DEBUG
 
-          if (temperature_in_fahrenheit)
+          if (P090_TEMPERATURE_SCALE)
           {
-            temperature = ((temperature - 32) * 5.0f) / 9.0f;
-            temp        =  'F';
+            temperature = CelsiusToFahrenheit(temperature);
+            # ifndef BUILD_NO_DEBUG
+            temp = 'F';
+            # endif // ifndef BUILD_NO_DEBUG
           }
 
-          uint8_t TaskIndex2 = P090_HUMIDITY_TASK_INDEX;
+          const taskIndex_t TaskIndex2 = P090_HUMIDITY_TASK_INDEX;
 
           if (validTaskIndex(TaskIndex2)) {
-            uint8_t BaseVarIndex2 = TaskIndex2 * VARS_PER_TASK + P090_HUMIDITY_TASK_VALUE;
-            float   humidity      = UserVar[BaseVarIndex2]; // in % relative
+            const float humidity = UserVar.getFloat(TaskIndex2, P090_HUMIDITY_TASK_VALUE); // in % relative
 
-          # ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              addLogMove(LOG_LEVEL_DEBUG, strformat(F("CCS811 : Compensating for Temperature: %s%s & Humidity: %s%%"),
-                                                    toString(temperature).c_str(), temp.c_str(), toString(humidity).c_str()));
+              addLogMove(LOG_LEVEL_DEBUG, strformat(F("CCS811 : Compensating for Temperature: %s%c & Humidity: %s%%"),
+                                                    toString(temperature).c_str(), temp, toString(humidity).c_str()));
             }
-          # endif // ifndef BUILD_NO_DEBUG
+            # endif // ifndef BUILD_NO_DEBUG
 
             P090_data->myCCS811.setEnvironmentalData(humidity, temperature);
           }
@@ -335,7 +332,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       else if (P090_data->myCCS811.checkForStatusError())
       {
         // get error and also clear it
-        String errorMsg = P090_data->myCCS811.getSensorError();
+        const String errorMsg = P090_data->myCCS811.getSensorError();
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           // If the CCS811 found an internal error, print it.
