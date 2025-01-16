@@ -25,15 +25,19 @@ typedef volatile unsigned char HLW8012_VOLATILE_UCHAR;
 
 struct HLW8012_finished_sample
 {
-    bool getPulseFreq(float &pulseFreq) const;
+    bool getPulseFreq(float &pulseFreq);
     void clear()
     {
         duration_usec = 0;
         count = 0;
+        updated = false;
+        valid = false;
     }
 
     int32_t duration_usec{};
     uint32_t count{};
+    HLW8012_VOLATILE_UCHAR updated{};
+    bool valid{};
 };
 
 struct HLW8012_sample
@@ -42,7 +46,6 @@ struct HLW8012_sample
     enum class result_e
     {
         NotEnough = 0,
-        Cleared,
         NoisePeriod,
         Enough,
         Expired
@@ -59,7 +62,19 @@ struct HLW8012_sample
     // Check to make sure we have long enough duration and at least 1 sample
     result_e getState() const HLW8012_IRAM;
 
-    result_e getPulseFreq(float &pulsefreq) const;
+
+    // Use float calculations to compute frequency.
+    // @retval true: Computed value is usable
+    // @retval false: Computed value is 0.
+    bool getPulseFreq(float &pulsefreq);
+
+    // Check to see if there has been a new measurement.
+    // Calling this also clears the updated flag.
+    bool updated(bool& valid);
+
+    void setValid(bool valid) { finished.valid = valid ? 1 : 0; }
+
+    bool isValid() const { return finished.valid == 1; }
 
 private:
     static inline int32_t timeDiff(const unsigned long prev, const unsigned long next)

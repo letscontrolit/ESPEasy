@@ -63,6 +63,24 @@ void set_rtttl_melody(String& melody) {
 
 #  endif // if FEATURE_ANYRTTTL_ASYNC
 
+#  ifdef ESP32
+
+void esp32NoTone(uint8_t pin) {
+  ledcWrite(pin, 0);
+}
+
+void esp32Tone(uint8_t pin, unsigned int frq, unsigned long duration) {
+  ledcWriteTone(pin, frq); // pin, freq
+}
+
+void esp32ToneSetup(uint8_t pin) {
+  const uint8_t channel = attachLedChannel(pin); // Use defaults
+
+  setToneChannel(channel);                       // Claim channel for Tone use
+}
+
+static uint8_t rtttlPin = 255;
+#  endif // ifdef ESP32
 
 bool play_rtttl(int8_t _pin, const char *p) {
   if (!validGpio(_pin)) { return false; }
@@ -73,7 +91,17 @@ bool play_rtttl(int8_t _pin, const char *p) {
   checkRAM(F("play_rtttl"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
 
+  #  ifdef ESP32
+
+  esp32ToneSetup(_pin);
+  rtttlPin = _pin;
+
+  anyrtttl::setToneFunction(&esp32Tone);
+  anyrtttl::setNoToneFunction(&esp32NoTone);
+  #  endif // ifdef ESP32
+  #  ifdef ESP8266
   anyrtttl::setNoToneFunction(&setInternalGPIOPullupMode);
+  #  endif // ifdef ESP8266
   #  if FEATURE_ANYRTTTL_ASYNC
 
   if (!rtttlMelody.isEmpty()) {
@@ -91,6 +119,11 @@ bool play_rtttl(int8_t _pin, const char *p) {
   #   endif // if FEATURE_RTTTL_EVENTS
   #  else // if FEATURE_ANYRTTTL_ASYNC
   anyrtttl::blocking::play(_pin, p);
+  #   ifdef ESP32
+  esp32NoTone(_pin);
+  detachLedChannel(_pin);
+  setInternalGPIOPullupMode(_pin);
+  #   endif // ifdef ESP32
   #  endif // if FEATURE_ANYRTTTL_ASYNC
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl2"));
@@ -101,9 +134,15 @@ bool play_rtttl(int8_t _pin, const char *p) {
 #  if FEATURE_ANYRTTTL_ASYNC
 void update_rtttl() {
   START_TIMER
+
   if (anyrtttl::nonblocking::isPlaying()) {
     anyrtttl::nonblocking::play();
   } else {
+    #   ifdef ESP32
+    esp32NoTone(rtttlPin);
+    detachLedChannel(rtttlPin);
+    setInternalGPIOPullupMode(rtttlPin);
+    #   endif // ifdef ESP32
     #   if FEATURE_RTTTL_EVENTS
 
     if (rtttlPlaying) {
@@ -133,10 +172,10 @@ bool play_rtttl(int8_t _pin, const char *p)
   // FIXME: Absolutely no error checking in here
 
   const int notes[] = { 0,
-                        262, 277,   294,   311,   330,  349,   370,  392,  415,  440,  466,  494,
-                        523, 554,   587,   622,   659,  698,   740,  784,  831,  880,  932,  988,
-                        1047,1109,  1175,  1245,  1319, 1397,  1480, 1568, 1661, 1760, 1865, 1976,
-                        2093,2217,  2349,  2489,  2637, 2794,  2960, 3136, 3322, 3520, 3729, 3951
+                        262, 277,   294,   311,   330,   349,   370,   392,   415,   440,   466,   494,
+                        523, 554,   587,   622,   659,   698,   740,   784,   831,   880,   932,   988,
+                        1047,1109,  1175,  1245,  1319,  1397,  1480,  1568,  1661,  1760,  1865,  1976,
+                        2093,2217,  2349,  2489,  2637,  2794,  2960,  3136,  3322,  3520,  3729,  3951
   };
 
 

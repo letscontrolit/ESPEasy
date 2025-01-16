@@ -97,58 +97,62 @@ float HLW8012::getCurrent(bool &valid) {
 float HLW8012::getCF1Current(bool &valid) {
     _checkCF1Signal();
 
-    float pulsefreq{};
-    const auto res = _current_sample.getPulseFreq(pulsefreq);
-    valid = true; 
+    if (!_current_sample.updated(valid)) {
+        return _cf1_current;
+    }
 
-    if (_current_sample.getPulseFreq(pulsefreq) == HLW8012_sample::result_e::Enough) {
+    float pulsefreq{};
+    if (_current_sample.getPulseFreq(pulsefreq)) {
       _cf1_current = pulsefreq * _current_multiplier / 2.0f;
-    } else if (res == HLW8012_sample::result_e::Cleared ||
-               res == HLW8012_sample::result_e::Expired) {
+
+      // Add limit for CF1 current 
+      // as it is highly unlikely any cos-phi will ever be worse than 0.25 
+      bool tmpvalid{};
+      const float current = getCurrent(tmpvalid);
+      const float upperLimit = 4.0f * current;
+      if (upperLimit < _cf1_current) {
+          _cf1_current = upperLimit;
+      } else if (current > _cf1_current) {
+        // Cos-phi will never be > 1.0, so set it to the same 
+        // as current computed from the CF pin and voltage
+        _cf1_current = current;
+      }
+    } else {
       _cf1_current = 0.0f;
-      valid = res == HLW8012_sample::result_e::Expired;
+      // Consider always valid, as the current will be 0 
+      // when we received no pulse for a while
+      _current_sample.setValid(true);
     }
-    // Add limit for CF1 current 
-    // as it is highly unlikely any cos-phi will ever be worse than 0.25 
-    bool tmpvalid{};
-    const float upperLimit = 4.0f * getCurrent(tmpvalid);
-    valid |= tmpvalid;
-    if (upperLimit < _cf1_current) {
-        _cf1_current = upperLimit;
-    }
+    
     return _cf1_current;
 }
 
 
 float HLW8012::getVoltage(bool &valid) {
     _checkCF1Signal();
-    float pulsefreq{};
-    const auto res = _voltage_sample.getPulseFreq(pulsefreq);
-    valid = true; 
-    if (res == HLW8012_sample::result_e::Enough) {
-      _voltage = pulsefreq * _voltage_multiplier / 2.0f;
-    } else if (res == HLW8012_sample::result_e::Cleared ||
-               res == HLW8012_sample::result_e::Expired) {
-      _voltage = 0.0f;
-      // Do not claim voltage is valid as it is highly unlikely the voltage will ever be 0.
-      // The device will then not be powered.
-      valid = false;
+    if (!_voltage_sample.updated(valid)) {
+        return _voltage;
     }
+    float pulsefreq{};
+    // Do not automatically claim voltage is valid as it is highly unlikely the voltage will ever be 0.
+    // The device will then not be powered.
+    valid = _voltage_sample.getPulseFreq(pulsefreq);
+    _voltage = valid
+       ? pulsefreq * _voltage_multiplier / 2.0f
+       : 0.0;
     return _voltage;
 }
 
 float HLW8012::getActivePower(bool &valid) {
     _checkCFSignal();
-    float pulsefreq{};
-    const auto res = _power_sample.getPulseFreq(pulsefreq);
-    valid = true; 
-    if (res == HLW8012_sample::result_e::Enough) {
-        _power = pulsefreq * _power_multiplier / 2.0f;
-    } else if (res == HLW8012_sample::result_e::Cleared ||
-               res == HLW8012_sample::result_e::Expired) {
-      _power = 0.0f;
-      valid = res == HLW8012_sample::result_e::Expired;
+    if (!_power_sample.updated(valid)) {
+        return _power;
     }
+    float pulsefreq{};
+    valid = _power_sample.getPulseFreq(pulsefreq);
+    _power = valid 
+      ? pulsefreq * _power_multiplier / 2.0f
+      : 0.0f;
     return _power;
 }
 
@@ -251,7 +255,8 @@ void IRAM_ATTR HLW8012::cf_interrupt() {
   	++_cf_pulse_count_total;
     
     const auto res = _power_sample.add();
-    if (res != HLW8012_sample::result_e::NotEnough) {
+    if (res == HLW8012_sample::result_e::Enough ||
+        res == HLW8012_sample::result_e::Expired) {
         _power_sample.reset();
     }
 }

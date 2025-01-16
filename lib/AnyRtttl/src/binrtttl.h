@@ -24,7 +24,7 @@ typedef unsigned char BPM_INDEX;
 // static DURATION_INDEX       INVALID_DURATION_INDEX        = (DURATION_INDEX)-1;
 // static NOTE_LETTER_INDEX    INVALID_NOTE_LETTER_INDEX     = (NOTE_LETTER_INDEX)-1;
 // static OCTAVE_INDEX         INVALID_OCTAVE_INDEX          = (OCTAVE_INDEX)-1;
-static BPM_INDEX            INVALID_BPM_INDEX             = (BPM_INDEX)-1;
+// static BPM_INDEX            INVALID_BPM_INDEX             = (BPM_INDEX)-1;
 
 typedef unsigned short RTTTL_DURATION;
 typedef          char  RTTTL_NOTE_LETTER;
@@ -100,7 +100,7 @@ OCTAVE_INDEX findNoteOctaveIndex(RTTTL_OCTAVE_VALUE n);
 //allowed values: 25, 28, 31, 35, 40, 45, 50, 56, 63, 70, 80, 90, 100, 112, 125, 140, 160, 180, 200, 225, 250, 285, 320, 355, 400, 450, 500, 565, 635, 715, 800 and 900.
 RTTTL_BPM getBpmFromIndex(BPM_INDEX iIndex);
 uint16_t getBpmsCount();
-BPM_INDEX findBpmIndex(RTTTL_BPM n);
+// BPM_INDEX findBpmIndex(RTTTL_BPM n); // tonhuisman: Disabled as we don't use this, and we can avoid a compilation warning
 
 }; //anyrtttl namespace
 
