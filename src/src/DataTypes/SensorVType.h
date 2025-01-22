@@ -33,7 +33,7 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_DOUBLE_SINGLE   =   70,
   SENSOR_TYPE_DOUBLE_DUAL     =   71,
 #endif
-
+  SENSOR_TYPE_EASYFETCH       =   254,
   SENSOR_TYPE_NOT_SET = 255
 };
 

@@ -92,6 +92,7 @@ struct __attribute__((__packed__)) DeviceStruct
   bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
   bool InverseLogicOption : 1;       // Allow to invert the boolean state (e.g. a switch)
   bool FormulaOption      : 1;       // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
+  bool easyfetchOption    : 1;       // Allow to enter optional easyfetch values
   bool Custom             : 1;
   bool SendDataOption     : 1;       // Allow to send data to a controller.
   bool GlobalSyncOption   : 1;       // No longer used. Was used for ESPeasy values sync between nodes

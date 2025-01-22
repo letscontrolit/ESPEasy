@@ -1467,6 +1467,12 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_table_header(F("Formula"), F("RTDPlugin/_Plugin.html#formula"), 500);
       ++colCount;
     }
+    
+    if (device.easyfetchOption)
+    {
+      html_table_header(F("easyfetch"), F("RTDPlugin/_Plugin.html#formula"), 500);
+      ++colCount;
+    }
 
     if (device.configurableDecimals())
     {
@@ -1503,6 +1509,13 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       }
 
       if (device.FormulaOption)
+      {
+        html_TD();
+        const String id = getPluginCustomArgName(F("TDF"), varNr); // ="taskdeviceformula"
+        addTextBox(id, Cache.getTaskDeviceFormula(taskIndex, varNr), NAME_FORMULA_LENGTH_MAX);
+      }
+      
+      if (device.easyfetchOption)
       {
         html_TD();
         const String id = getPluginCustomArgName(F("TDF"), varNr); // ="taskdeviceformula"
