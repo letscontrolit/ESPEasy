@@ -294,6 +294,25 @@ PluginStats_Config_t Caches::getPluginStatsConfig(taskIndex_t TaskIndex, taskVar
 
 #endif // if FEATURE_PLUGIN_STATS
 
+//#if FEATURE_EASYFETCH_ARGS
+String Caches::getTaskDeviceEArgs(taskIndex_t TaskIndex, uint8_t rel_index) 
+{
+   if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
+ #ifdef ESP32
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.TaskDeviceEArgs[rel_index];
+    }
+    #else // ifdef ESP32
+    LoadTaskSettings(TaskIndex);
+    return ExtraTaskSettings.TaskDeviceEArgs[rel_index];
+    #endif // ifdef ESP32
+  }
+  return EMPTY_STRING;
+}
+//#endif
+
 
 void Caches::updateExtraTaskSettingsCache()
 {

@@ -46,7 +46,6 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType)
     case Sensor_VType::SENSOR_TYPE_WIND:
       return 3;
     case Sensor_VType::SENSOR_TYPE_QUAD:          // 4x float
-    case Sensor_VType::SENSOR_TYPE_EASYFETCH:     // 4x float
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
     case Sensor_VType::SENSOR_TYPE_UINT32_QUAD:   // 4x uint32_t
     case Sensor_VType::SENSOR_TYPE_INT32_QUAD:    // 4x int32_t
@@ -93,7 +92,6 @@ const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_WIND:             return F("Wind");
     case Sensor_VType::SENSOR_TYPE_STRING:           return F("String");
     case Sensor_VType::SENSOR_TYPE_NONE:             return F("None");
-    case Sensor_VType::SENSOR_TYPE_EASYFETCH:        return F("easyfetch");
     case Sensor_VType::SENSOR_TYPE_NOT_SET:  break;
   }
   return F("");
@@ -101,11 +99,10 @@ const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
 
 bool isSimpleOutputDataType(Sensor_VType sensorType)
 {
-  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE     ||
-         sensorType == Sensor_VType::SENSOR_TYPE_DUAL       ||
-         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE     ||
-         sensorType == Sensor_VType::SENSOR_TYPE_QUAD       ||
-         sensorType == Sensor_VType::SENSOR_TYPE_EASYFETCH;  
+  return sensorType == Sensor_VType::SENSOR_TYPE_SINGLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_DUAL   ||
+         sensorType == Sensor_VType::SENSOR_TYPE_TRIPLE ||
+         sensorType == Sensor_VType::SENSOR_TYPE_QUAD;
 }
 
 bool isUInt32OutputDataType(Sensor_VType sensorType)

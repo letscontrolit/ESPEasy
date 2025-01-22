@@ -90,7 +90,7 @@ void run_compiletime_checks() {
   #if FEATURE_NOTIFIER
   check_size<NotificationSettingsStruct,            1000u>();
   #endif // if FEATURE_NOTIFIER
-  check_size<ExtraTaskSettingsStruct,               536u>();
+  check_size<ExtraTaskSettingsStruct,               700u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
   check_size<EventStruct,                           124u>(); // Is not stored

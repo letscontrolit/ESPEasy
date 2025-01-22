@@ -462,10 +462,12 @@ void handle_json()
           stream_next_json_object_value(F("ValueNumber"), x + 1);
           stream_next_json_object_value(F("Name"),        Cache.getTaskDeviceValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
-          stream_next_json_object_value(F("Value"), value);
-//#if FEATURE_easyfetch
-          stream_last_json_object_value(F("Options"), Cache.getTaskDeviceFormula(TaskIndex, x));
+//#if FEATURE_EASYFETCH_ARGS
+          if (Cache.getTaskDeviceEArgs(TaskIndex, x).length() > 0) {
+            stream_next_json_object_value(F("Options"), Cache.getTaskDeviceEArgs(TaskIndex, x));
+          }
 //#endif
+          stream_last_json_object_value(F("Value"), value);
 
           if (x < (valueCount - 1)) {
             stream_comma_newline();

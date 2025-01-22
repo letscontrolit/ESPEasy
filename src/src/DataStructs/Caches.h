@@ -42,6 +42,7 @@ struct ExtraTaskSettings_cache_t {
 
   String TaskDeviceValueNames[VARS_PER_TASK];
   String TaskDeviceFormula[VARS_PER_TASK];
+  String TaskDeviceEArgs[VARS_PER_TASK]; 
   #endif // ifdef ESP32
   String       TaskDeviceName;
   ChecksumType md5checksum;
@@ -108,6 +109,8 @@ struct Caches {
 
   #endif // if FEATURE_PLUGIN_STATS
 
+  String  getTaskDeviceEArgs(taskIndex_t TaskIndex,
+                             uint8_t     rel_index);
 
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();
