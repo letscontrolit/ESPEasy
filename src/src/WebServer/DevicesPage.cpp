@@ -396,6 +396,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   for (uint8_t varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], getPluginCustomArgName(F("TDF"), varNr));
+    strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceEArgs[varNr], getPluginCustomArgName(F("TDEF"), varNr));
     update_whenset_FormItemInt(getPluginCustomArgName(F("TDVD"), varNr), ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], getPluginCustomArgName(F("TDVN"), varNr));
 # if FEATURE_PLUGIN_FILTER

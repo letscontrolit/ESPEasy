@@ -94,6 +94,9 @@ struct Caches {
   String  getTaskDeviceFormula(taskIndex_t TaskIndex,
                                uint8_t     rel_index);
 
+  String  getTaskDeviceEArgs(taskIndex_t TaskIndex,
+                              uint8_t     rel_index);
+
   long    getTaskDevicePluginConfigLong(taskIndex_t TaskIndex,
                                         uint8_t     rel_index);
 
@@ -108,9 +111,6 @@ struct Caches {
                                             taskVarIndex_t taskVarIndex);
 
   #endif // if FEATURE_PLUGIN_STATS
-
-  String  getTaskDeviceEArgs(taskIndex_t TaskIndex,
-                             uint8_t     rel_index);
 
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();

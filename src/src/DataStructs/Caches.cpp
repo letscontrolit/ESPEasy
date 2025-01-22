@@ -298,7 +298,7 @@ PluginStats_Config_t Caches::getPluginStatsConfig(taskIndex_t TaskIndex, taskVar
 String Caches::getTaskDeviceEArgs(taskIndex_t TaskIndex, uint8_t rel_index) 
 {
    if (validTaskIndex(TaskIndex) && (rel_index < VARS_PER_TASK)) {
- #ifdef ESP32
+    #ifdef ESP32
     auto it = getExtraTaskSettings(TaskIndex);
 
     if (it != extraTaskSettings_cache.end()) {
