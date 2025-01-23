@@ -91,7 +91,7 @@ struct ExtraTaskSettingsStruct
   float       TaskDeviceMaxValue[VARS_PER_TASK];
   float       TaskDeviceErrorValue[VARS_PER_TASK];
   uint32_t    VariousBits[VARS_PER_TASK];
-  char        TaskDeviceEArgs[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
+  char        TaskDeviceEArgs[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 10];
 };
 
 
