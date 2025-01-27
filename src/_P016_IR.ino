@@ -427,8 +427,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.CodeDecodeType), false, true, F(""));
+              FormSelectorOptions selector(protocolCount, &decodeTypes[0], &decodeTypeOptions[0]);
+              selector.clearClassName();
+              selector.addSelector(
+                getPluginCustomArgName(rowCnt + 0), 
+                static_cast<int>(line.CodeDecodeType));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
@@ -442,8 +445,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.AlternativeCodeDecodeType), false, true, F(""));
+              FormSelectorOptions selector(protocolCount, &decodeTypes[0], &decodeTypeOptions[0]);
+              selector.clearClassName();
+
+              selector.addSelector(
+                getPluginCustomArgName(rowCnt + 3), 
+                static_cast<int>(line.AlternativeCodeDecodeType));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));

@@ -117,7 +117,8 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
         SI70xx_RESOLUTION_11T_11RH,
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-      addFormSelector(F("Resolution"), F("pres"), optionCount, options, optionValues, P014_RESOLUTION);
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Resolution"), F("pres"), P014_RESOLUTION);
 
       addFormNumericBox("ADC Filter Power", F("pfilter"), P014_FILTER_POWER, 0, 4);
 

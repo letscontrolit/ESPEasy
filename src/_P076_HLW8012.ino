@@ -333,38 +333,13 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string)
 #endif // ifdef ESP32
       };
       constexpr int nrElements = NR_ELEMENTS(predefinedId);
-      addFormSelector(F("Device"),
-                      F("preDefDevSel"), nrElements,
-                      predefinedNames, predefinedId, devicePinSettings);
+      const FormSelectorOptions selector(nrElements, predefinedNames, predefinedId);
+      selector.addFormSelector(F("Device"), F("preDefDevSel"), devicePinSettings);
       addFormNote(F("Enable device and select device type first"));
     }
 
     {
       // Place this in a scope, to keep memory usage low.
-      const __FlashStringHelper *modeRaise[] = {
-          F("LOW"),
-          F("CHANGE"),
-          F("RISING"),
-          F("FALLING"),
-      };
-
-      const int modeValues[] = {
-          LOW,
-          CHANGE,
-          RISING,
-          FALLING,
-      };
-
-      const __FlashStringHelper *modeCurr[] = {
-          F("LOW"),
-          F("HIGH"),
-      };
-
-      const int modeCurrValues[] = {
-          LOW,
-          HIGH,
-      };
-
       uint8_t currentRead = P076_SEL_CUR_READ;
 
       if ((currentRead != LOW) && (currentRead != HIGH))
@@ -372,12 +347,39 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string)
         currentRead = LOW;
       }
       addFormSubHeader(F("Custom Pin settings (choose Custom above)"));
-      addFormSelector(F("SEL Current (A) Reading"), F("curr_read"), 2,
-                      modeCurr, modeCurrValues, currentRead);
-      addFormSelector(F("CF1  Interrupt Edge"), F("cf1_edge"), 4,
-                      modeRaise, modeValues, P076_CF1_TRIGGER);
-      addFormSelector(F("CF Interrupt Edge"), F("cf_edge"), 4,
-                      modeRaise, modeValues, P076_CF_TRIGGER);
+      {
+        const __FlashStringHelper *modeCurr[] = {
+            F("LOW"),
+            F("HIGH"),
+        };
+
+        const int modeCurrValues[] = {
+            LOW,
+            HIGH,
+        };
+
+        const FormSelectorOptions selector(NR_ELEMENTS(modeCurr), modeCurr, modeCurrValues);
+        selector.addFormSelector(F("SEL Current (A) Reading"), F("curr_read"), currentRead);
+      }
+      {
+        const __FlashStringHelper *modeRaise[] = {
+            F("LOW"),
+            F("CHANGE"),
+            F("RISING"),
+            F("FALLING"),
+        };
+
+        const int modeValues[] = {
+            LOW,
+            CHANGE,
+            RISING,
+            FALLING,
+        };
+
+        const FormSelectorOptions selector(NR_ELEMENTS(modeRaise), modeRaise, modeValues);
+        selector.addFormSelector(F("CF1  Interrupt Edge"), F("cf1_edge"), P076_CF1_TRIGGER);
+        selector.addFormSelector(F("CF Interrupt Edge"), F("cf_edge"), P076_CF_TRIGGER);
+      }
     }
 
     ESPEASY_RULES_FLOAT_TYPE current, voltage, power;

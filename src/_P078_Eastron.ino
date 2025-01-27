@@ -120,7 +120,8 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           options_baudrate[i] = p078_storageValueToBaudrate(i);
         }
         constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
-        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, optionCount, options_baudrate, nullptr, P078_BAUDRATE);
+        const FormSelectorOptions selector(optionCount, options_baudrate);
+        selector.addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, P078_BAUDRATE);
         addUnit(F("baud"));
       }
 
@@ -173,7 +174,8 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("SDM320C")
         };
         constexpr size_t nrOptions = NR_ELEMENTS(options_model);
-        addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
+        const FormSelectorOptions selector(nrOptions, options_model);
+        selector.addFormSelector(F("Model Type"), P078_MODEL_LABEL, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
       success = true;

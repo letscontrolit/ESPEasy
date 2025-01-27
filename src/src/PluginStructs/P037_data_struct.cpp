@@ -214,12 +214,12 @@ bool P037_data_struct::webform_load(
       addTextBox(concat(F("template"), varNr + 1),
                  mqttTopics[varNr],
                  40,
-                 false, false, EMPTY_STRING, F("xwide"));
+                 F("xwide"));
       html_TD(F("padding-right: 8px"));
       addTextBox(concat(F("attribute"), varNr + 1),
                  jsonAttributes[varNr],
                  20,
-                 false, false, EMPTY_STRING, F("xwide"));
+                 F("xwide"));
       html_TD();
     } else
     # endif // ifdef P037_JSON_SUPPORT
@@ -267,6 +267,9 @@ bool P037_data_struct::webform_load(
       #  endif // if P037_FILTER_COUNT >= 3
     };
 
+    const FormSelectorOptions selector(P037_FILTER_COUNT, filterOptions, filterIndices);
+
+
     String filters = P037_FILTER_LIST; // Anticipate more filters
     int8_t filterIndex;
 
@@ -285,16 +288,18 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, F("xwide"));
+                   32, 
+                   F("xwide"));
       }
       {
         html_TD();
         filterIndex = filters.indexOf(parseString(valueArray[filterOffset], 2, P037_VALUE_SEPARATOR));
-        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex);
+        selector.addSelector(getPluginCustomArgName(idx + 100 + 1), filterIndex);
         html_TD();
 
         addTextBox(getPluginCustomArgName(idx + 100 + 2), parseStringKeepCase(valueArray[filterOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, F(""));
+                   32, 
+                   F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -315,7 +320,7 @@ bool P037_data_struct::webform_load(
     #  ifndef P037_FILTER_PER_TOPIC
     filterIndex = 0;
     uint8_t extraFilters = 0;
-
+    
     while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
       {
         html_TR_TD();
@@ -323,14 +328,16 @@ bool P037_data_struct::webform_load(
         addHtmlInt(filterNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, F("xwide"));
+                   32, 
+                   F("xwide"));
       }
       {
         html_TD();
-        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex);
+        selector.addSelector(getPluginCustomArgName(idx + 100 + 1), filterIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 2), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, EMPTY_STRING);
+                   32, 
+                   F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -380,6 +387,8 @@ bool P037_data_struct::webform_load(
       F("map"),                          // map name to int
       F("percentage") };                 // map attribute value to percentage of provided value
     const int operandIndices[] = { 0, 1 };
+    const FormSelectorOptions selector(P037_OPERAND_COUNT, operandOptions, operandIndices);
+
 
     String operands = P037_OPERAND_LIST; // Anticipate more operations
     int8_t operandIndex;
@@ -395,16 +404,19 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
                    parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, F(""));
+                   32, 
+                   F(""));
       }
       {
         html_TD();
         operandIndex = operands.indexOf(parseString(valueArray[mappingOffset], 2, P037_VALUE_SEPARATOR));
-        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
+
+        selector.addSelector(getPluginCustomArgName(idx + 1), operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR),
-                   32, false, false, EMPTY_STRING, F(""));
+                   32, 
+                   F(""));
         html_TD();
       }
       mapNr++;
@@ -429,15 +441,19 @@ bool P037_data_struct::webform_load(
         addHtml(F("&nbsp;"));
         addHtmlInt(mapNr);
         html_TD();
-        addTextBox(getPluginCustomArgName(idx + 0), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, F(""));
+        addTextBox(getPluginCustomArgName(idx + 0), 
+                   EMPTY_STRING,
+                   32, 
+                   F(""));
       }
       {
         html_TD();
-        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
+        selector.addSelector(getPluginCustomArgName(idx + 1), operandIndex);
         html_TD();
-        addTextBox(getPluginCustomArgName(idx + 2), EMPTY_STRING,
-                   32, false, false, EMPTY_STRING, F(""));
+        addTextBox(getPluginCustomArgName(idx + 2), 
+                   EMPTY_STRING,
+                   32, 
+                   F(""));
         html_TD();
       }
       idx += 3;
@@ -458,10 +474,9 @@ bool P037_data_struct::webform_load(
     addFormNote(F("Both Name and Value must be filled for a valid mapping. Mappings are case-sensitive."));
 
     if (extraMappings == P037_EXTRA_VALUES) {
-      String moreMessage = concat(F("After filling all mappings, submitting this page will make extra mappings available (up to "),
-                                  P037_MAX_MAPPINGS);
-      moreMessage += F(").");
-      addFormNote(moreMessage);
+      addFormNote(strformat(
+        F("After filling all mappings, submitting this page will make extra mappings available (up to %d)."),
+                                  P037_MAX_MAPPINGS));
     }
   }
   # endif // if P037_MAPPING_SUPPORT

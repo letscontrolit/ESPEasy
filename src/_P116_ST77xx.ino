@@ -180,11 +180,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
         constexpr int optCount4 = NR_ELEMENTS(optionValues4);
-        addFormSelector(F("TFT display model"),
+        const FormSelectorOptions selector(optCount4, options4, optionValues4);
+        selector.addFormSelector(F("TFT display model"),
                         F("type"),
-                        optCount4,
-                        options4,
-                        optionValues4,
                         P116_CONFIG_FLAG_GET_TYPE);
       }
 
@@ -218,12 +216,11 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7796)
         };
         constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
-        addFormSelector(F("Write Command trigger"),
-                        F("commandtrigger"),
-                        cmdCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P116_CONFIG_FLAG_GET_CMD_TRIGGER);
+        const FormSelectorOptions selector(cmdCount, commandTriggers, commandTriggerOptions);
+        selector.addFormSelector(
+          F("Write Command trigger"),
+          F("commandtrigger"),
+          P116_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE

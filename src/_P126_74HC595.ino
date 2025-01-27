@@ -167,7 +167,8 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         F("Hex/bin only") };
       const int outputValues[]     = { P126_OUTPUT_BOTH, P126_OUTPUT_DEC_ONLY, P126_OUTPUT_HEXBIN };
       constexpr size_t optionCount = NR_ELEMENTS(outputValues);
-      addFormSelector(F("Output selection"), F("output"), optionCount, outputOptions, outputValues, P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const FormSelectorOptions selector(optionCount, outputOptions, outputValues);
+      selector.addFormSelector(F("Output selection"), F("output"), P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
       addFormCheckBox(F("Restore Values on warm boot"), F("valrestore"), P126_CONFIG_FLAGS_GET_VALUES_RESTORE);
 

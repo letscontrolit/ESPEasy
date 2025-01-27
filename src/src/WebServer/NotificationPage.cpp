@@ -205,7 +205,7 @@ void handle_notifications() {
                        Notification[x].Number,
                        choice == Notification[x].Number);
     }
-    addSelector_Foot();
+    addSelector_Foot(true);
 
     addHelpButton(F("EasyNotifications"));
     addRTDHelpButton(F("Notify/_Notifications.html"));

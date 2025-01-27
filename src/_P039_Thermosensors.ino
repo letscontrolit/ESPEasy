@@ -434,7 +434,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *Foptions[] = { F("Thermocouple"), F("RTD") };
         const int FoptionValues[]             = { P039_TC, P039_RTD };
         constexpr size_t optionCount          = NR_ELEMENTS(FoptionValues);
-        addFormSelector(F("Sensor Family Type"), F("famtype"), optionCount, Foptions, FoptionValues, family, true); // auto reload activated
+        FormSelectorOptions selector( optionCount, Foptions, FoptionValues);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor Family Type"), F("famtype"), family);
       }
 
       const uint8_t choice = P039_MAX_TYPE;
@@ -446,7 +448,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           const __FlashStringHelper *options[] = {   F("MAX 6675"), F("MAX 31855"), F("MAX 31856") };
           const int optionValues[]             = { P039_MAX6675, P039_MAX31855, P039_MAX31856 };
           constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
-          addFormSelector(F("Adapter IC"), F("maxtype"), optionCount, options, optionValues, choice, true); // auto reload activated
+          FormSelectorOptions selector( optionCount, options, optionValues);
+          selector.reloadonchange = true;
+          selector.addFormSelector(F("Adapter IC"), F("maxtype"), choice);
         }
 
         if (choice == P039_MAX31856) {
@@ -472,13 +476,15 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
             const int ToptionValues[]    = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 12 };
             constexpr size_t optionCount = NR_ELEMENTS(ToptionValues);
-            addFormSelector(F("Thermocouple type"), F("tctype"), optionCount, Toptions, ToptionValues, P039_TC_TYPE);
+            const FormSelectorOptions selector( optionCount, Toptions, ToptionValues);
+            selector.addFormSelector(F("Thermocouple type"), F("tctype"), P039_TC_TYPE);
           }
           {
             const __FlashStringHelper *Coptions[] = { F("1"), F("2"), F("4"), F("8"), F("16") };
             const int CoptionValues[]             = { 0, 1, 2, 3, 4 };
             constexpr size_t optionCount          = NR_ELEMENTS(CoptionValues);
-            addFormSelector(F("Averaging"), F("contype"), optionCount, Coptions, CoptionValues, P039_CONFIG_4);
+            const FormSelectorOptions selector(optionCount, Coptions, CoptionValues);
+            selector.addFormSelector(F("Averaging"), F("contype"),  P039_CONFIG_4);
             addUnit(F("sample(s)"));
           }
           P039_AddMainsFrequencyFilterSelection(event);
@@ -489,7 +495,9 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           const __FlashStringHelper *TPoptions[] = { F("MAX 31865"), F("LM7x") };
           const int TPoptionValues[]             = { P039_MAX31865, P039_LM7x };
           constexpr size_t optionCount           = NR_ELEMENTS(TPoptionValues);
-          addFormSelector(F("Adapter IC"), F("maxtype"), optionCount, TPoptions, TPoptionValues, choice, true); // auto reload activated
+          FormSelectorOptions selector(optionCount, TPoptions, TPoptionValues);
+          selector.reloadonchange = true;
+          selector.addFormSelector(F("Adapter IC"), F("maxtype"), choice);
           addFormNote(F("LM7x support is experimental."));
         }
 
@@ -503,12 +511,14 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             const __FlashStringHelper *PToptions[] = { F("PT100"), F("PT1000") };
             const int PToptionValues[]             = { MAX31865_PT100, MAX31865_PT1000 };
             constexpr size_t optionCount           = NR_ELEMENTS(PToptionValues);
-            addFormSelector(F("Resistor Type"), F("rtdtype"), optionCount, PToptions, PToptionValues, P039_RTD_TYPE);
+            const FormSelectorOptions selector(optionCount, PToptions, PToptionValues);
+            selector.addFormSelector(F("Resistor Type"), F("rtdtype"),  P039_RTD_TYPE);
           }
           {
             const __FlashStringHelper *Coptions[] = { F("2-/4"), F("3") };
             constexpr size_t optionCount          = NR_ELEMENTS(Coptions);
-            addFormSelector(F("Connection Type"), F("contype"), optionCount, Coptions, nullptr, P039_CONFIG_4);
+            const FormSelectorOptions selector( optionCount, Coptions);
+            selector.addFormSelector(F("Connection Type"), F("contype"), P039_CONFIG_4);
             addUnit(F("wire"));
           }
 
@@ -539,7 +549,8 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             { F("LM70"), F("LM71"), F("LM74"), F("TMP121"), F("TMP122"), F("TMP123"), F("TMP124"), F("TMP125") };
             const int PToptionValues[]   = { LM7x_SD70, LM7x_SD71, LM7x_SD74, LM7x_SD121, LM7x_SD122, LM7x_SD123, LM7x_SD124, LM7x_SD125 };
             constexpr size_t optionCount = NR_ELEMENTS(PToptionValues);
-            addFormSelector(F("LM7x device details"), F("rtd_lm_type"), optionCount, PToptions, PToptionValues, P039_RTD_LM_TYPE);
+            const FormSelectorOptions selector(optionCount, PToptions, PToptionValues);
+            selector.addFormSelector(F("LM7x device details"), F("rtd_lm_type"), P039_RTD_LM_TYPE);
             addFormNote(F("TMP122/124 Limited support -> fixed 12 Bit res, no advanced options"));
           }
           {
@@ -808,10 +819,11 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 
 void P039_AddMainsFrequencyFilterSelection(struct EventStruct *event)
 {
-  const __FlashStringHelper *FToptions[2] = { F("60"), F("50") };
-  const int FToptionValues[2]             = { 0, 1 };
+  const __FlashStringHelper *FToptions[] = { F("60"), F("50") };
+  const int FToptionValues[]             = { 0, 1 };
 
-  addFormSelector(F("Supply Frequency Filter"), F("filttype"), 2, FToptions, FToptionValues, P039_RTD_FILT_TYPE);
+  const FormSelectorOptions selector(NR_ELEMENTS(FToptions), FToptions, FToptionValues);
+  selector.addFormSelector(F("Supply Frequency Filter"), F("filttype"), P039_RTD_FILT_TYPE);
   addUnit(F("Hz"));
   # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Filter power net frequency (50/60 Hz)"));

@@ -119,7 +119,9 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP41),
         };
         constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
-        addFormSelector(F("Sensor model"), F("ptype"), optionCount, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
+        FormSelectorOptions selector(optionCount, sensorTypes, sensorTypeOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ptype"), P147_SENSOR_TYPE);
         # ifndef BUILD_NO_DEBUG
         addFormNote(F("Page will reload on change."));
         # endif // ifndef BUILD_NO_DEBUG

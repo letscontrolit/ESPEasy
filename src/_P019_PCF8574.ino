@@ -70,7 +70,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += x;
         }
         addFormSelectorI2C(F("pi2c"), 16, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("pport"), 8, portNames, portValues, port);
+        const FormSelectorOptions selector(8, portNames, portValues);
+        selector.addFormSelector(F("Port"), F("pport"),  port);
         addFormNote(F("PCF8574 uses addresses 0x20..0x27, PCF8574<b>A</b> uses addresses 0x38..0x3F."));
       } else {
         success = intArrayContains(16, i2cAddressValues, event->Par1);

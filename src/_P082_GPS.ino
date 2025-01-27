@@ -191,7 +191,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_PowerMode::Eco)
         };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Power Mode"), F("pwrmode"), optionCount, options, indices, P082_POWER_MODE);
+        const FormSelectorOptions selector(optionCount, options, indices);
+        selector.addFormSelector(F("Power Mode"), F("pwrmode"), P082_POWER_MODE);
       }
 
       {
@@ -220,7 +221,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_DynamicModel::Bike)
         };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), optionCount, options, indices, P082_DYNAMIC_MODEL);
+        const FormSelectorOptions selector(optionCount, options, indices);
+        selector.addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), P082_DYNAMIC_MODEL);
       }
 # endif // P082_USE_U_BLOX_SPECIFIC
 

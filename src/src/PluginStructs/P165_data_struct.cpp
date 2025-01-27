@@ -201,7 +201,8 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
   {
     const __FlashStringHelper *stripOptions[] = { F("GRB"), F("GRBW") };
     const int stripOptionValues[]             = { P165_STRIP_TYPE_RGB, P165_STRIP_TYPE_RGBW };
-    addFormSelector(F("Strip Type"), F("stripe"), NR_ELEMENTS(stripOptionValues), stripOptions, stripOptionValues, P165_CONFIG_STRIP_TYPE);
+    const FormSelectorOptions selector(NR_ELEMENTS(stripOptionValues), stripOptions, stripOptionValues);
+    selector.addFormSelector(F("Strip Type"), F("stripe"),  P165_CONFIG_STRIP_TYPE);
   }
 
   if ((0 == P165_CONFIG_DEF_BRIGHT) && (0 == P165_CONFIG_MAX_BRIGHT)) {
@@ -234,8 +235,8 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
       P165_DISP_CLOCK12,
       P165_DISP_DATE,
     };
-    addFormSelector(F("Display Output"), F("dspout"), NR_ELEMENTS(disploutOptions),
-                    displout, disploutOptions, P165_CONFIG_OUTPUTTYPE);
+    const FormSelectorOptions selector(NR_ELEMENTS(disploutOptions), displout, disploutOptions);
+    selector.addFormSelector(F("Display Output"), F("dspout"), P165_CONFIG_OUTPUTTYPE);
     # endif // if P165_FEATURE_P073
 
     int dgtCount = 0;
@@ -283,13 +284,12 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
                           ? EMPTY_STRING
                           : AdaGFXrgb565ToWebColor(P165_CONFIG_FG_COLOR);
 
-  addFormSelector(F("Number of Groups *"),
-                  F("grps"),
-                  NR_ELEMENTS(digitOptionValues),
-                  digitOptions,
-                  digitOptionValues,
-                  grpCount,
-                  true);
+  FormSelectorOptions selector(
+    NR_ELEMENTS(digitOptionValues),
+    digitOptions,
+    digitOptionValues);
+  selector.reloadonchange = true;
+  selector.addFormSelector(F("Number of Groups *"), F("grps"), grpCount);
 
   AdaGFXFormForeAndBackColors(F("fgcolor"),
                               P165_CONFIG_FG_COLOR,
@@ -355,12 +355,15 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
       html_table(F(""));
 
       addRowLabel(F("Number of Digits *"));
-      addSelector(concat(F("dgts"), grp10),
-                  NR_ELEMENTS(digitOptionValues),
-                  digitOptions,
-                  digitOptionValues, nullptr,
-                  grpDgts,
-                  true, !numberPlan); // 1st and 2nd column
+      FormSelectorOptions selector(
+        NR_ELEMENTS(digitOptionValues),
+        digitOptions,
+        digitOptionValues);
+      selector.reloadonchange = true;
+      selector.enabled = !numberPlan;  // 1st and 2nd column
+      selector.addSelector(
+        concat(F("dgts"), grp10),
+        grpDgts);
       {
         // 3rd column = "Digit <nr>" / "(Extra)"
         for (uint8_t dgt = 0; dgt < grpDgts; ++dgt) {
@@ -477,12 +480,13 @@ bool P165_data_struct::plugin_webform_load(struct EventStruct *event) {
 
       const uint8_t strt = grpStart + grpGstrt << 1;
       addRowLabel(F("Starting segment"));
-      addSelector(concat(F("strt"), grp10),
-                  NR_ELEMENTS(startPixelOptions),
-                  startPixelOptions,
-                  nullptr, nullptr,
-                  strt, false,
-                  !numberPlan);
+      FormSelectorOptions selector(
+        NR_ELEMENTS(startPixelOptions),
+        startPixelOptions);
+      selector.enabled = !numberPlan;
+      selector.addSelector(
+        concat(F("strt"), grp10),
+        strt);
 
       addFormCheckBox(F("Split g-segment pixels"), concat(F("spltg"), grp10),
                       P165_GET_CONFIG_SPLTG(grp), numberPlan || grpGstrt);

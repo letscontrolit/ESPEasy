@@ -98,8 +98,9 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 
         addFormTextBox(F("Event Name"), getPluginCustomArgName((i * 10) + 0),
                        Cache.getTaskDeviceValueName(event->TaskIndex, i), NAME_FORMULA_LENGTH_MAX);
-        addFormSelector(F("Parameter Type"), getPluginCustomArgName((i * 10) + 1),
-                        PLUGIN_086_VALUE_TYPES, options, optionValues, PCONFIG(i));
+
+        const FormSelectorOptions selector(PLUGIN_086_VALUE_TYPES, options, optionValues);
+        selector.addFormSelector(F("Parameter Type"), getPluginCustomArgName((i * 10) + 1), PCONFIG(i));
 
         addFormNumericBox(F("Min"), getPluginCustomArgName((i * 10) + 2),
                           Cache.getTaskDevicePluginConfig(event->TaskIndex, i));

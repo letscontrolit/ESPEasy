@@ -138,20 +138,24 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
           int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          const __FlashStringHelper *resultsOptions[] = { F("9"), F("10"), F("11"), F("12") };
-          const int resultsOptionValues[]             = { 9, 10, 11, 12 };
-          constexpr size_t optionCount                = NR_ELEMENTS(resultsOptionValues);
-          addFormSelector(F("Device Resolution"), F("res"), optionCount, resultsOptions, resultsOptionValues, resolutionChoice);
-          addHtml(F(" Bit"));
+          constexpr int resultsOptionValues[] { 9, 10, 11, 12 };
+
+          const FormSelectorOptions selector(
+            NR_ELEMENTS(resultsOptionValues),
+            resultsOptionValues);
+          selector.addFormSelector(F("Device Resolution"), F("res"), resolutionChoice);
+          addUnit(F("bit"));
         }
 
         {
           // Value in case of Error
           const __FlashStringHelper *resultsOptions[] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
-          int resultsOptionValues[]                   =
-          { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
-          constexpr size_t optionCount = NR_ELEMENTS(resultsOptionValues);
-          addFormSelector(F("Error State Value"), F("err"), optionCount, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
+          constexpr int resultsOptionValues[] { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
+
+          const FormSelectorOptions selector(
+            NR_ELEMENTS(resultsOptionValues),
+            resultsOptions, resultsOptionValues);
+          selector.addFormSelector(F("Error State Value"), F("err"), P004_ERROR_STATE_OUTPUT);
         }
         addFormNote(F("External pull up resistor is needed, see docs!"));
 

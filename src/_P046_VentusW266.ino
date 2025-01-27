@@ -161,8 +161,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice = PCONFIG(0);
         {
-          const uint8_t nrchoices = 9;
-          const __FlashStringHelper * options[nrchoices] = {
+          const __FlashStringHelper * options[] = {
             F("Main + Temp/Hygro"),
             F("Wind"),
             F("Rain"),
@@ -175,7 +174,9 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             F("Unknown 3, uint8_t 19"),
           };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice, true);
+          FormSelectorOptions selector(NR_ELEMENTS(options),  options);
+          selector.reloadonchange = true;
+          selector.addFormSelector(F("Plugin function"), F("p046"), choice);
           addFormNote(F("Changing the function will reload this page."));
         }
 

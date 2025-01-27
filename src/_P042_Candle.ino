@@ -139,7 +139,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Led Count"), P042_WEBVAR_PIXELCOUNT, P042_CONFIG_PIXELCOUNT, 1, P042_MAX_PIXELS);
 
       {
-        const __FlashStringHelper *options[P042_FLAME_OPTIONS] = {
+        const __FlashStringHelper *options[] = {
           F("Off"),
           F("Static Light"),
           F("Simple Candle"),
@@ -155,7 +155,8 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE, P042_FLAME_OPTIONS, options, nullptr, P042_CONFIG_CANDLETYPE);
+        const FormSelectorOptions selector(P042_FLAME_OPTIONS, options);
+        selector.addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE,  P042_CONFIG_CANDLETYPE);
       }
 
       // Advanced Color options

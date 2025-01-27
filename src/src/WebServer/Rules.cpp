@@ -81,16 +81,15 @@ void handle_rules() {
       optionValues[x] = x + 1;
     }
 
-    addSelector_reloadOnChange(
-      F("set"),
+    FormSelectorOptions selector(
       RULESETS_MAX,
       options,
-      optionValues,
-      nullptr,
-      choice,
-      F("return rules_set_onchange(rulesselect)"),
-      true,
-      F("wide"));
+      optionValues);
+
+    selector.onChangeCall = F("return rules_set_onchange(rulesselect)");
+    selector.addSelector(
+      F("set"),
+      choice);
     addHelpButton(F("Tutorial_Rules"));
     addRTDHelpButton(F("Rules/Rules.html"));
   }

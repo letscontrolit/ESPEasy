@@ -142,13 +142,13 @@ void sensorTypeHelper_loadOutputSelector(
   if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
   }
-
-  addFormSelector(
-    concat(F("Value "), valuenr + 1),
-    sensorTypeHelper_webformID(pconfigIndex),
+  const FormSelectorOptions selector(
     optionCount,
     options,
-    indices,
+    indices);
+  selector.addFormSelector(
+    concat(F("Value "), valuenr + 1),
+    sensorTypeHelper_webformID(pconfigIndex),
     PCONFIG(pconfigIndex));
 }
 
@@ -159,13 +159,13 @@ void sensorTypeHelper_loadOutputSelector(
   if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
   }
-
-  addFormSelector(
-    concat(F("Value "), valuenr + 1),
-    sensorTypeHelper_webformID(pconfigIndex),
+  const FormSelectorOptions selector(
     optionCount,
     options,
-    indices,
+    indices);
+  selector.addFormSelector(
+    concat(F("Value "), valuenr + 1),
+    sensorTypeHelper_webformID(pconfigIndex),
     PCONFIG(pconfigIndex));
 }
 

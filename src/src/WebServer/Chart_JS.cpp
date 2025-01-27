@@ -95,28 +95,14 @@ void add_ChartJS_chart_header(
   if (enableZoom) {
     plugins = F(
       "\"zoom\":"
-      "{"
-      "\"limits\":{"
-      "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":1000}," // 1 sec min range
-      "},"
-      "\"pan\":{"
-      "\"enabled\":true,"
-      "\"mode\":\"x\","
-      "\"modifierKey\":\"ctrl\","
-      "},"
+      "{\"limits\":{"
+      "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":1000}},"
+      "\"pan\":{\"enabled\":true,\"mode\":\"x\",\"modifierKey\":\"ctrl\"},"
       "\"zoom\":{"
-      "\"wheel\":{"
-      "\"enabled\":true,"
-      "},"
-      "\"drag\":{"
-      "\"enabled\":true,"
-      "},"
-      "\"pinch\":{"
-      "\"enabled\":true"
-      "},"
-      "\"mode\":\"x\","
-      "}"
-      "}"
+      "\"wheel\":{\"enabled\":true},"
+      "\"drag\":{\"enabled\":true},"
+      "\"pinch\":{\"enabled\":true},"
+      "\"mode\":\"x\"}}"
       );
   }
   add_ChartJS_chart_JSON_header(
