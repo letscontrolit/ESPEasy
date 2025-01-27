@@ -889,7 +889,8 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
     };
     const int optionValues3[] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("events"), NR_ELEMENTS(optionValues3), options3, optionValues3, choice3);
+    const FormSelectorOptions selector(NR_ELEMENTS(optionValues3), options3, optionValues3);
+    selector.addFormSelector(F("Events"), F("events"), choice3);
 
     addFormCheckBox(F("Draw buttons when started"), F("initobj"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
     # ifndef LIMIT_BUILD_SIZE
@@ -915,17 +916,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
   addFormSubHeader(F("Calibration"));
 
-  {
-    const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
-    const int noYesOptionValues[2]             = { 0, 1 };
-    addFormSelector(F("Calibrate to screen resolution"),
-                    F("usecalib"),
-                    2,
-                    noYesOptions,
-                    noYesOptionValues,
-                    Touch_Settings.calibrationEnabled ? 1 : 0,
-                    true);
-  }
+  addFormSelector_YesNo(F("Calibrate to screen resolution"),
+                        F("usecalib"),
+                        Touch_Settings.calibrationEnabled ? 1 : 0,
+                        true); // reloadonchange
 
   if (Touch_Settings.calibrationEnabled) {
     addRowLabel(F("Calibration"));
@@ -1220,7 +1214,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       addTextBox(getPluginCustomArgName(objectNr + 100),
                  TouchObjects[objectNr].objectName,
                  TOUCH_MaxObjectNameLength,
-                 false, false, EMPTY_STRING, F("wide"));
+                 F("wide"));
       html_TD(); // top-x
       addNumericBox(getPluginCustomArgName(objectNr + 200),
                     TouchObjects[objectNr].top_left.x, 0, 65535
@@ -1237,27 +1231,39 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                     );
       html_TD(); // (on/off) button (type)
       # if TOUCH_FEATURE_EXTENDED_TOUCH
-      addSelector(getPluginCustomArgName(objectNr + 800),
-                  sizeof(buttonTypeValues) / sizeof(int),
-                  buttonTypeOptions,
-                  buttonTypeValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONTYPE), false, true, F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Button")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
-      html_TD(); // button alignment
-      addSelector(getPluginCustomArgName(objectNr + 900),
-                  sizeof(buttonLayoutValues) / sizeof(int),
-                  buttonLayoutOptions,
-                  buttonLayoutValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONALIGN) << 4, false, true, F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Layout")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
+      {
+        FormSelectorOptions selector(
+          NR_ELEMENTS(buttonTypeValues),
+          buttonTypeOptions,
+          buttonTypeValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip =  F("Button");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 800),
+          get4BitFromUL(
+            TouchObjects[objectNr].flags,
+            TOUCH_OBJECT_FLAG_BUTTONTYPE));
+      }
+      {
+        html_TD(); // button alignment
+        FormSelectorOptions selector(
+          NR_ELEMENTS(buttonLayoutOptions),
+          buttonLayoutOptions,
+          buttonLayoutValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip =  F("Layout");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 900),
+          get4BitFromUL(
+            TouchObjects[objectNr].flags,
+            TOUCH_OBJECT_FLAG_BUTTONALIGN) << 4);
+      }
       # else // if TOUCH_FEATURE_EXTENDED_TOUCH
       addCheckBox(getPluginCustomArgName(objectNr + 600),
                   bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON), false
@@ -1308,20 +1314,23 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  #  endif // if TOUCH_FEATURE_TOOLTIPS
                  , F("adagfx65kcolors")
                  );
-      html_TD(); // button action
-      addSelector(getPluginCustomArgName(objectNr + 2000),
-                  sizeof(touchActionValues) / sizeof(int),
-                  touchActionOptions,
-                  touchActionValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].groupFlags, TOUCH_OBJECT_GROUP_ACTION),
-                  false,
-                  true,
-                  F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Touch action")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
+      {
+        html_TD(); // button action
+        FormSelectorOptions selector(
+          NR_ELEMENTS(touchActionOptions),
+          touchActionOptions,
+          touchActionValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip = F("Touch action");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 2000),
+          get4BitFromUL(
+            TouchObjects[objectNr].groupFlags,
+            TOUCH_OBJECT_GROUP_ACTION));
+      }
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
       html_TR_TD(); // Start new row

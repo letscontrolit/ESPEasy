@@ -192,16 +192,20 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
             F("RFLink"),
             F("P1 WiFi Gateway")
           };
+/*
           const int optionValues[] = {
             static_cast<int>(P020_Events::None),
             static_cast<int>(P020_Events::Generic),
             static_cast<int>(P020_Events::RFLink),
             static_cast<int>(P020_Events::P1WiFiGateway),
           };
-          constexpr int optionCount = NR_ELEMENTS(optionValues);
-          addFormSelector(F("Event processing"), F("pevents"),
-                          optionCount, options, optionValues,
-                          P020_SERIAL_PROCESSING);
+*/
+          constexpr int optionCount = NR_ELEMENTS(options);
+          const FormSelectorOptions selector(optionCount, options /*, optionValues*/);
+          selector.addFormSelector(
+            F("Event processing"), 
+            F("pevents"), 
+            P020_SERIAL_PROCESSING);
         }
         addFormCheckBox(F("P1 #data event with message"), F("pp1event"), P020_GET_P1_EVENT_DATA);
         # ifndef LIMIT_BUILD_SIZE

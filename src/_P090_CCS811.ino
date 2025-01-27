@@ -111,7 +111,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         const __FlashStringHelper *options[] = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
         constexpr size_t optionCount         = NR_ELEMENTS(options);
-        addFormSelector(F("I2C Address"), F("i2c_addr"), optionCount, options, i2cAddressValues, P090_I2C_ADDR);
+        const FormSelectorOptions selector(optionCount, options, i2cAddressValues);
+        selector.addFormSelector(F("I2C Address"), F("i2c_addr"), P090_I2C_ADDR);
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -135,7 +136,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *frequencyOptions[] = { F("1 second"), F("10 seconds"), F("60 seconds") };
         const int frequencyValues[]                   = { 1, 2, 3 };
         constexpr size_t optionCount                  = NR_ELEMENTS(frequencyValues);
-        addFormSelector(F("Take reading every"), F("temp_freq"), optionCount, frequencyOptions, frequencyValues, frequencyChoice);
+        const FormSelectorOptions selector(optionCount, frequencyOptions, frequencyValues);
+        selector.addFormSelector(F("Take reading every"), F("temp_freq"), frequencyChoice);
       }
 
       addFormSeparator(2);

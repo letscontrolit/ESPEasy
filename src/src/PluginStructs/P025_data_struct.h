@@ -6,17 +6,20 @@
 
 
 struct P025_VARIOUS_BITS_t {
-  struct {
-    uint16_t cal           : 1;
-    uint16_t outputVolt    : 1;
-    uint16_t sampleRateSet : 1;
-    uint16_t sampleRate    : 3;
-    uint16_t unused        : 10;
+  union {
+    struct {
+      uint16_t cal           : 1;
+      uint16_t outputVolt    : 1;
+      uint16_t sampleRateSet : 1;
+      uint16_t sampleRate    : 3;
+      uint16_t unused        : 10;
+    };
+    uint16_t _regValue{};
   };
 
   P025_VARIOUS_BITS_t(int16_t value);
 
-  int16_t pconfigvalue() const;
+  int16_t pconfigvalue() const { return _regValue; }
 
   uint16_t getSampleRate() const {
     if (sampleRateSet) { return sampleRate; }

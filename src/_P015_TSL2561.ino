@@ -97,12 +97,14 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *options[] = {
-          F("13.7 ms"),
-          F("101 ms"),
-          F("402 ms"),
+          F("13.7"),
+          F("101"),
+          F("402"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(options);
-        addFormSelector(F("Integration time"), F("pintegration"), optionCount, options, nullptr, P015_INTEGRATION);
+        const FormSelectorOptions selector(optionCount, options);
+        selector.addFormSelector(F("Integration time"), F("pintegration"),  P015_INTEGRATION);
+        addUnit(F("ms"));
       }
 
       addFormCheckBox(F("Send sensor to sleep:"), F("psleep"),
@@ -115,14 +117,17 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
           F("Auto Gain"),
           F("Extended Auto Gain"),
         };
+        /*
         const int optionValues[] = {
           P015_NO_GAIN,
           P015_16X_GAIN,
           P015_AUTO_GAIN,
           P015_EXT_AUTO_GAIN,
         };
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Gain"), F("pgain"), optionCount, options, optionValues, P015_GAIN);
+        */
+        constexpr size_t optionCount = NR_ELEMENTS(options);
+        const FormSelectorOptions selector(optionCount, options/*, optionValues*/);
+        selector.addFormSelector(F("Gain"), F("pgain"),  P015_GAIN);
       }
 
       success = true;

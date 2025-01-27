@@ -131,7 +131,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           # endif // if P013_FEATURE_COMBINED_MODE
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesOpMode);
-        addFormSelector(F("Mode"), F("pmode"), optionCount, optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
+        const FormSelectorOptions selector(optionCount, optionsOpMode, optionValuesOpMode);
+        selector.addFormSelector(F("Mode"), F("pmode"), P013_OPERATINGMODE);
       }
 
       if ((P013_OPERATINGMODE == OPMODE_STATE)
@@ -155,7 +156,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Imperial"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesUnit);
-        addFormSelector(F("Unit"), F("pUnit"), optionCount, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
+        const FormSelectorOptions selector(optionCount, optionsUnit, optionValuesUnit);
+        selector.addFormSelector(F("Unit"), F("pUnit"), P013_MEASURINGUNIT);
       }
 
       {
@@ -165,7 +167,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Median"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesFilter);
-        addFormSelector(F("Filter"), F("fltr"), optionCount, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
+        const FormSelectorOptions selector(optionCount, optionsFilter, optionValuesFilter);
+        selector.addFormSelector(F("Filter"), F("fltr"),  P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,

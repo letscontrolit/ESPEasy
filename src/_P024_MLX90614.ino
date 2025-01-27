@@ -81,7 +81,8 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         (0x06)
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-      addFormSelector(F("Option"), F("option"), optionCount, options, optionValues, PCONFIG(0));
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Option"), F("option"),  PCONFIG(0));
 
       success = true;
       break;

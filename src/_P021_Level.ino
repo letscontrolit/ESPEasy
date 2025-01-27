@@ -234,10 +234,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
+        /*
         const int optionValues[]             =
         { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), optionCount, options, optionValues, P021_OPMODE);
+        */
+        constexpr size_t optionCount = NR_ELEMENTS(options);
+        const FormSelectorOptions selector(optionCount, options/*, optionValues*/);
+        selector.addFormSelector(F("Control mode"), F(P021_GUID_OPMODE),  P021_OPMODE);
 
         // Add timer values depending on build size
         //  - minimum build size: units are always in seconds; drop the units on the form

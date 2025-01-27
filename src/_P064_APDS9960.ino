@@ -129,7 +129,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           F("R/G/B Colors") };
         const int optionsPluginModeValues[] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
         constexpr size_t optionCount        = NR_ELEMENTS(optionsPluginModeValues);
-        addFormSelector(F("Plugin Mode"), F("mode"), optionCount, optionsPluginMode, optionsPluginModeValues, P064_MODE, true);
+        FormSelectorOptions selector(optionCount, optionsPluginMode, optionsPluginModeValues);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Plugin Mode"), F("mode"), P064_MODE);
         # ifndef BUILD_NO_DEBUG
         addFormNote(F("After changing Plugin Mode you may want to change the Values names, below."));
         # endif // ifndef BUILD_NO_DEBUG
@@ -168,60 +170,76 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *optionsGain[] = {
           F("1x"),
           F("2x"),
-          F("4x (default)"),
+          F("4x"),
           F("8x") };
         const int optionsGainValues[]     = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
         constexpr size_t optionsGainCount = NR_ELEMENTS(optionsGainValues);
+        constexpr int optionsGain_default_index = PGAIN_4X;
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
         const __FlashStringHelper *optionsLedDrive[] = {
-          F("100 mA (default)"),
-          F("50 mA"),
-          F("25 mA"),
-          F("12.5 mA") };
+          F("100"),
+          F("50"),
+          F("25"),
+          F("12.5") };
         const int optionsLedDriveValues[]     = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
         constexpr size_t optionsLedDriveCount = NR_ELEMENTS(optionsLedDriveValues);
-
+        constexpr int optionsLedDrive_default_index = LED_DRIVE_100MA;
 
         String lightSensorGainLabel;
         String lightSensorDriveLabel;
 
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           addFormSubHeader(F("Gesture parameters"));
-
-          addFormSelector(F("Gesture Gain"),
-                          F("ggain"),
-                          optionsGainCount,
-                          optionsGain,
-                          optionsGainValues,
-                          P064_GGAIN);
-
-          addFormSelector(F("Gesture LED Drive"),
-                          F("gldrive"),
-                          optionsLedDriveCount,
-                          optionsLedDrive,
-                          optionsLedDriveValues,
-                          P064_GLDRIVE);
+          {
+            FormSelectorOptions selector(
+              optionsGainCount,
+              optionsGain,
+              optionsGainValues);
+            selector.default_index = optionsGain_default_index;
+            selector.addFormSelector(
+              F("Gesture Gain"),
+              F("ggain"),
+              P064_GGAIN);
+          }
+          {
+            FormSelectorOptions selector(
+              optionsLedDriveCount,
+              optionsLedDrive,
+              optionsLedDriveValues);
+            selector.default_index = optionsLedDrive_default_index;
+            selector.addFormSelector(
+              F("Gesture LED Drive"),
+              F("gldrive"),
+              P064_GLDRIVE);
+            addUnit(F("mA"));
+          }
           {
             // Gesture Led-boost values
             const __FlashStringHelper *optionsLedBoost[] = {
-              F("100 %"),
-              F("150 %"),
-              F("200 %"),
-              F("300 % (default)") };
+              F("100"),
+              F("150"),
+              F("200"),
+              F("300") };
             const int optionsLedBoostValues[]     = { LED_BOOST_100, LED_BOOST_150, LED_BOOST_200, LED_BOOST_300 };
             constexpr size_t optionsLedBoostCount = NR_ELEMENTS(optionsLedBoostValues);
-            addFormSelector(F("Gesture LED Boost"),
-                            F("lboost"),
-                            optionsLedBoostCount,
-                            optionsLedBoost,
-                            optionsLedBoostValues,
-                            P064_LED_BOOST);
+            FormSelectorOptions selector(
+              optionsLedBoostCount,
+              optionsLedBoost,
+              optionsLedBoostValues);
+            selector.default_index = LED_BOOST_300;
+            selector.addFormSelector(
+              F("Gesture LED Boost"),
+              F("lboost"),
+              P064_LED_BOOST);
+            addUnit('%');
           }
 
           addFormSubHeader(F("Proximity & Ambient Light Sensor parameters"));
-
-          addFormSelector(F("Proximity Gain"), F("pgain"), optionsGainCount, optionsGain, optionsGainValues, P064_PGAIN);
+          {
+            const FormSelectorOptions selector(optionsGainCount, optionsGain, optionsGainValues);
+            selector.addFormSelector(F("Proximity Gain"), F("pgain"),  P064_PGAIN);
+          }
 
           lightSensorGainLabel  = F("Ambient Light Sensor Gain");
           lightSensorDriveLabel = F("Proximity & ALS LED Drive");
@@ -235,17 +253,24 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
           const __FlashStringHelper *optionsALSGain[] = {
             F("1x"),
-            F("4x (default)"),
+            F("4x"),
             F("16x"),
             F("64x") };
-          addFormSelector(lightSensorGainLabel, F("again"), optionsGainCount, optionsALSGain, optionsGainValues, P064_AGAIN);
+          FormSelectorOptions selector(optionsGainCount, optionsALSGain, optionsGainValues);
+          selector.default_index = 1; // 4x
+          selector.addFormSelector(lightSensorGainLabel, F("again"), P064_AGAIN);
         }
-        addFormSelector(lightSensorDriveLabel,
-                        F("ldrive"),
-                        optionsLedDriveCount,
-                        optionsLedDrive,
-                        optionsLedDriveValues,
-                        P064_LDRIVE);
+        {
+          const FormSelectorOptions selector(
+            optionsLedDriveCount,
+            optionsLedDrive,
+            optionsLedDriveValues);
+          selector.addFormSelector(
+            lightSensorDriveLabel,
+            F("ldrive"),
+            P064_LDRIVE);
+          addUnit(F("mA"));
+        }
       }
 
       addFormSubHeader(F("Event generation"));

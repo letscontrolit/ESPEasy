@@ -135,7 +135,8 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_AVERAGING_64_SAMPLES,
         };
         constexpr size_t optionCount = NR_ELEMENTS(averagingOptions);
-        addFormSelector(F("Averaging"), F("avg"), optionCount, averagingCaptions, averagingOptions, P150_GET_CONF_AVERAGING);
+        const FormSelectorOptions selector(optionCount, averagingCaptions, averagingOptions);
+        selector.addFormSelector(F("Averaging"), F("avg"), P150_GET_CONF_AVERAGING);
       }
 
       {
@@ -148,13 +149,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CONVERSION_ONE_SHOT,
         };
         constexpr size_t optionCount = NR_ELEMENTS(conversionOptions);
-        addFormSelector(F("Conversion mode"),
-                        F("conv"),
-                        optionCount,
-                        conversionCaptions,
-                        conversionOptions,
-                        P150_GET_CONF_CONVERSION_MODE,
-                        true);
+        FormSelectorOptions selector(optionCount, conversionCaptions, conversionOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Conversion mode"), F("conv"), P150_GET_CONF_CONVERSION_MODE);
         # ifndef BUILD_NO_DEBUG
         addFormNote(F("Changing this setting will save and reload this page."));
         # endif // ifndef BUILD_NO_DEBUG
@@ -182,8 +179,8 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CYCLE_16_SEC,
         };
         constexpr size_t optionCount = NR_ELEMENTS(cycleOptions);
-        addFormSelector(F("Continuous conversion cycle time"), F("cycle"), optionCount, cycleCaptions, cycleOptions,
-                        P150_GET_CONF_CYCLE_BITS);
+        const FormSelectorOptions selector(optionCount, cycleCaptions, cycleOptions);
+        selector.addFormSelector(F("Continuous conversion cycle time"), F("cycle"), P150_GET_CONF_CYCLE_BITS);
       }
 
       addFormSubHeader(F("Output"));

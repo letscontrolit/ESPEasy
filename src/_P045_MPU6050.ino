@@ -157,7 +157,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t choice = PCONFIG(1);
       {
-        const __FlashStringHelper *options[10] = {
+        const __FlashStringHelper *options[] = {
           F("Movement detection"),
           F("Range acceleration X"),
           F("Range acceleration Y"),
@@ -169,7 +169,9 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           F("G-force Y"),
           F("G-force Z")
         };
-        addFormSelector(F("Function"), F("pfunction"), 10, options, nullptr, choice);
+
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Function"), F("pfunction"), choice);
       }
 
       if (choice == 0) {

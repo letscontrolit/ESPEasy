@@ -138,7 +138,8 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_RESOLUTION_11T_11RH,
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-      addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, optionCount, options, optionValues, P122_RESOLUTION);
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, P122_RESOLUTION);
 
 # ifndef LIMIT_BUILD_SIZE
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));

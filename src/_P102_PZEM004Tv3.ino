@@ -150,7 +150,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         {
           const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
           constexpr size_t optionCount               = NR_ELEMENTS(options_model);
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
+          const FormSelectorOptions selector(optionCount, options_model);
+          selector.addFormSelector(F("PZEM Mode"), F("PZEM_mode"), P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
@@ -160,8 +161,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
           {
             const __FlashStringHelper *options_confirm[] = { F("NO"), F("YES") };
             constexpr size_t optionCount                 = NR_ELEMENTS(options_confirm);
-            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), optionCount, options_confirm, nullptr,
-                            P102_PZEM_ADDR_SET);
+            const FormSelectorOptions selector(optionCount, options_confirm);
+            selector.addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), P102_PZEM_ADDR_SET);
           }
           addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
@@ -184,7 +185,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         {
           const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy") };
           constexpr size_t optionCount               = NR_ELEMENTS(options_model);
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
+          const FormSelectorOptions selector(optionCount, options_model);
+          selector.addFormSelector(F("PZEM Mode"), F("PZEM_mode"), P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 1, 247);

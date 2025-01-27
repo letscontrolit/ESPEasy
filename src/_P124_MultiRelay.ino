@@ -105,13 +105,17 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      /*
       const __FlashStringHelper *optionsMode2[] = {
         F("2"),
         F("4"),
         F("8") };
+        */
       const int optionValuesMode2[] { 2, 4, 8 };
       constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
-      addFormSelector(F("Number of relays"), F("relays"), optionCount, optionsMode2, optionValuesMode2, P124_CONFIG_RELAY_COUNT, true);
+      FormSelectorOptions selector(optionCount, /*optionsMode2,*/ optionValuesMode2);
+      selector.reloadonchange = true;
+      selector.addFormSelector(F("Number of relays"), F("relays"), P124_CONFIG_RELAY_COUNT);
 
       addFormSelector_YesNo(F("Initialize relays on startup"),
                             getPluginCustomArgName(P124_FLAGS_INIT_RELAYS),

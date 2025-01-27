@@ -87,7 +87,8 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
           # endif // P111_USE_REMOVAL
         };
         constexpr size_t P111_removaltypes = NR_ELEMENTS(removalopts);
-        addFormSelector(F("Tag removal mode"), F("autotagremoval"), P111_removaltypes, removaltype, removalopts, P111_TAG_AUTOREMOVAL);
+        const FormSelectorOptions selector(P111_removaltypes, removaltype, removalopts);
+        selector.addFormSelector(F("Tag removal mode"), F("autotagremoval"), P111_TAG_AUTOREMOVAL);
       }
 
       addFormNumericBox(F("Tag removal Time-out"), F("removaltimeout"), P111_REMOVALTIMEOUT, 0, 60000);         // 0 to 60 seconds

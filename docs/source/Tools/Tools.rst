@@ -351,6 +351,10 @@ See also: `Serial Helper <../Plugin/SerialHelper.html>`__
 
 .. note:: Make sure to either uncheck "Enable Serial Port Console" or configure another serial port for the console, when either HW Serial0 or its pins are used in a task or on the hardware page for I2C, SPI, SD-card or Ethernet.
 
+Correct typing errors: (added: 2025-01-21)
+
+When typing commands in the console (nothing you type is visible until you press <Enter>), typos can be corrected using the backspace key (ctrl-H). Some terminal configurations may use a different key code for backspace, then this can be re-configured in your terminal software, or you can use ``<ctrl-H>`` for correcting typos.
+
 Special notes on Software Serial
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

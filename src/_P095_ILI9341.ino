@@ -261,12 +261,13 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           # endif // if P095_ENABLE_ILI948X
         };
         constexpr size_t optionCount = NR_ELEMENTS(hardwareOptions);
-        addFormSelector(F("TFT display model"),
-                        F("dsptype"),
-                        optionCount,
+        const FormSelectorOptions selector(optionCount,
                         hardwareTypes,
-                        hardwareOptions,
-                        P095_CONFIG_FLAG_GET_TYPE);
+                        hardwareOptions);
+        selector.addFormSelector(
+          F("TFT display model"),
+          F("dsptype"),
+          P095_CONFIG_FLAG_GET_TYPE);
       }
 
       addFormCheckBox(F("Invert display"), F("invert"), P095_CONFIG_FLAG_GET_INVERTDISPLAY);
@@ -311,12 +312,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           # endif // if P095_ENABLE_ILI948X
         };
         constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
-        addFormSelector(F("Write Command trigger"),
-                        F("commandtrigger"),
-                        optionCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P095_CONFIG_FLAG_GET_CMD_TRIGGER);
+        const FormSelectorOptions selector(optionCount, commandTriggers, commandTriggerOptions);
+        selector.addFormSelector(
+          F("Write Command trigger"),
+          F("commandtrigger"), P095_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE

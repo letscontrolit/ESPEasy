@@ -17,7 +17,7 @@ P047_data_struct::P047_data_struct(uint8_t address,
 
 const __FlashStringHelper* toString(P047_SensorModels sensor) {
   switch (sensor) {
-    case P047_SensorModels::CatnipMiceuz: return F("Catnip electronics/miceuz (default)");
+    case P047_SensorModels::CatnipMiceuz: return F("Catnip electronics/miceuz");
     case P047_SensorModels::BeFlE: return F("BeFlE v2.2");
     # if P047_FEATURE_ADAFRUIT
     case P047_SensorModels::Adafruit: return F("Adafruit (4026)");

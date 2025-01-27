@@ -176,9 +176,9 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
         P167_MODEL_SEN55,
       };
       constexpr uint8_t optCount = NR_ELEMENTS(options_model_value);
-
-      addFormSelector(F("Model Type"), P167_MODEL_LABEL, optCount,
-                      options_model, options_model_value, P167_MODEL, true);
+      FormSelectorOptions selector(optCount, options_model, options_model_value);
+      selector.reloadonchange = true;
+      selector.addFormSelector(F("Model Type"), P167_MODEL_LABEL,  P167_MODEL);
       addFormNote(F("Changing the Model Type will reload the page."));
 
       if (P167_MODEL == P167_MODEL_VINDSTYRKA) {
