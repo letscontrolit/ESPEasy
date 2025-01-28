@@ -97,7 +97,9 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P133_selectMode_e::ALSMode)
         };
         constexpr size_t optionCount = NR_ELEMENTS(selectModeValues);
-        addFormSelector(F("Read mode"), F("mode"), optionCount, selectModeOptions, selectModeValues, P133_SELECT_MODE, true);
+        FormSelectorOptions selector(optionCount, selectModeOptions, selectModeValues);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Read mode"), F("mode"), P133_SELECT_MODE);
       }
 
       const __FlashStringHelper *gainOptions[] = { F("1x"), F("3x"), F("6x"), F("9x"), F("18x") };
@@ -127,15 +129,17 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
         LTR390_RESOLUTION_13BIT,
       };
       constexpr size_t resolutionCount = NR_ELEMENTS(resolutionValues);
+      const FormSelectorOptions selGain(gainCount, gainOptions, gainValues);
+      const FormSelectorOptions selRes(resolutionCount, resolutionOptions, resolutionValues);
 
       if (static_cast<P133_selectMode_e>(P133_SELECT_MODE) != P133_selectMode_e::ALSMode) {
-        addFormSelector(F("UV Gain"),       F("uvgain"), gainCount,       gainOptions,       gainValues,       P133_UVGAIN);
-        addFormSelector(F("UV Resolution"), F("uvres"),  resolutionCount, resolutionOptions, resolutionValues, P133_UVRESOLUTION);
+        selGain.addFormSelector(F("UV Gain"),      F("uvgain"), P133_UVGAIN);
+        selRes.addFormSelector(F("UV Resolution"), F("uvres"),  P133_UVRESOLUTION);
       }
 
       if (static_cast<P133_selectMode_e>(P133_SELECT_MODE) != P133_selectMode_e::UVMode) {
-        addFormSelector(F("Ambient Gain"),       F("alsgain"), gainCount,       gainOptions,       gainValues,       P133_ALSGAIN);
-        addFormSelector(F("Ambient Resolution"), F("alsres"),  resolutionCount, resolutionOptions, resolutionValues, P133_ALSRESOLUTION);
+        selGain.addFormSelector(F("Ambient Gain"),      F("alsgain"), P133_ALSGAIN);
+        selRes.addFormSelector(F("Ambient Resolution"), F("alsres"),  P133_ALSRESOLUTION);
       }
 
       addFormCheckBox(F("Reset sensor on init"), F("initreset"), P133_INITRESET == 1);

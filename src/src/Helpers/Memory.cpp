@@ -197,3 +197,73 @@ void* special_calloc(size_t num, size_t size) {
 
   return res;
 }
+
+
+#ifdef ESP8266
+bool String_reserve_special(String& str, size_t size) {
+  if (str.length() >= size) {
+    // Nothing needs to be done
+    return true;
+  }
+  #ifdef USE_SECOND_HEAP
+  if (size >= 32) {
+    // Only try to store larger strings here as those tend to be kept for a longer period.
+    HeapSelectIram ephemeral;
+    // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
+    if (str.reserve(size)) {
+      return true;
+    }
+  }
+  #endif
+  return str.reserve(size);
+}
+#endif
+
+#ifdef ESP32
+
+// Special class to get access to the protected String functions
+// This class only has a constructor which will perform 
+// the requested allocation in PSRAM when possible
+class PSRAM_String : public String {
+  public:
+  PSRAM_String(size_t size) : String() {
+    if (size > capacity() && UsePSRAM()) {
+      size_t newSize = (size + 16) & (~0xf);
+      void *ptr = special_calloc(1, newSize);
+      if (ptr != nullptr) {
+        setSSO(false);
+        setBuffer((char *)ptr);
+        setCapacity(newSize - 1);
+        setLen(newSize - 1); // TD-er: Not sure if needed?
+      }
+    }
+  }
+};
+
+
+bool String_reserve_special(String& str, size_t size) {
+  if (str.length() < size) {
+    // As we like to move this to PSRAM, it also makes sense 
+    // to do this when the length equals size
+    PSRAM_String psram_str(size);
+
+    if (psram_str.length() == 0) {
+      return str.reserve(size);
+    }
+
+    // Copy any existing content
+    String tmp(std::move(str));
+
+    // Move the newly allocated buffer to a tmp String object.
+    // Needs to be empty, so the buffer is moved.
+    // N.B. String::clear() = String::setlen(0))
+    str = std::move(psram_str);
+    str.clear();  
+
+    if (tmp.length()) {
+      str = tmp;
+    }
+  }
+  return true;
+}
+#endif

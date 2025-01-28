@@ -88,3 +88,16 @@
 .. |P138_maintainer| replace:: `tonhuisman`
 .. |P138_compileinfo| replace:: `.`
 .. |P138_usedlibraries| replace:: `https://github.com/codewitch-honey-crisis/htcw_ip5306`
+
+.. |P139_name| replace:: :cyan:`AXP2101 Power management ESP32`
+.. |P139_type| replace:: :cyan:`Power mgt`
+.. |P139_typename| replace:: :cyan:`Power mgt - AXP2101 Power management ESP32`
+.. |P139_porttype| replace:: `.`
+.. |P139_status| replace:: :yellow:`COLLECTION` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
+.. |P139_github| replace:: P139_AXP2101.ino
+.. _P139_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P139_AXP2101.ino
+.. |P139_usedby| replace:: `.`
+.. |P139_shortinfo| replace:: `Power management controller`
+.. |P139_maintainer| replace:: `tonhuisman`
+.. |P139_compileinfo| replace:: `.`
+.. |P139_usedlibraries| replace:: `Own AXP2101 library, loosely based on M5Stack Core2 code`

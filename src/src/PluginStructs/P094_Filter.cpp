@@ -368,19 +368,17 @@ void P094_filter::WebformLoad(uint8_t filterIndex) const
       const P094_Filter_Window filterWindow = static_cast<P094_Filter_Window>(optionValues[i]);
       options[i] = Filter_WindowToString(filterWindow);
     }
-    addSelector(P094_FILTER_WEBARG_FILTER_WINDOW(filterIndex),
-                nrOptions,
-                options,
-                optionValues,
-                nullptr,
-                _filter._filterWindow,
-                false,
-                true,
-                F("widenumber")
-# if FEATURE_TOOLTIPS
-                , F("Filter Window")
-# endif // if FEATURE_TOOLTIPS
-                );
+    FormSelectorOptions selector(
+          nrOptions,
+          options,
+          optionValues);
+    selector.classname = F("widenumber");
+    # if FEATURE_TOOLTIPS
+    selector.tooltip = F("Filter Window");
+    # endif 
+    selector.addSelector(
+      P094_FILTER_WEBARG_FILTER_WINDOW(filterIndex),
+      _filter._filterWindow);
   }
 }
 

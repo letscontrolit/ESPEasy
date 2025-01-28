@@ -25,9 +25,9 @@ void C018_data_struct::reset() {
     delete C018_easySerial;
     C018_easySerial = nullptr;
   }
-  cacheDevAddr     = String();
-  cacheHWEUI       = String();
-  cacheSysVer      = String();
+  free_string(cacheDevAddr);
+  free_string(cacheHWEUI);
+  free_string(cacheSysVer);
   autobaud_success = false;
 }
 
@@ -157,7 +157,7 @@ bool C018_data_struct::initOTAA(const String& AppEUI, const String& AppKey, cons
   if (myLora == nullptr) { return false; }
   bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
 
-  cacheDevAddr = String();
+  free_string(cacheDevAddr);
 
   C018_logError(F("initOTAA()"));
   updateCacheOnInit();
@@ -334,7 +334,7 @@ void C018_data_struct::updateCacheOnInit() {
       cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
       if (cacheDevAddr == F("00000000")) {
-        cacheDevAddr = String();
+        free_string(cacheDevAddr);
       }
     }
   }

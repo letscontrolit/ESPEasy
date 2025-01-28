@@ -138,6 +138,10 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
     }
   }
 
+  if ((SerialInByte == '\b') && (SerialInByteCounter > 0)) // Correct a typo using BackSpace
+  {
+    --SerialInByteCounter;
+  } else
   if ((SerialInByte == '\r') || (SerialInByte == '\n'))
   {
     // Ignore empty command

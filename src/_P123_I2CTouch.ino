@@ -201,12 +201,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(P123_TouchType_e::Automatic),
           };
           constexpr size_t optionCount = NR_ELEMENTS(touchTypeOptions);
-          addFormSelector(F("Touchscreen type (address)"),
-                          F("ttype"),
-                          optionCount,
-                          touchTypes,
-                          touchTypeOptions,
-                          P123_GET_TOUCH_TYPE);
+          const FormSelectorOptions selector(optionCount, touchTypes, touchTypeOptions);
+          selector.addFormSelector(
+            F("Touchscreen type (address)"), F("ttype"), P123_GET_TOUCH_TYPE);
 
           if (nullptr != P123_data) {
             addUnit(concat(F("Detected: "), toString(P123_data->getTouchType())));

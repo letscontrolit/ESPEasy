@@ -92,9 +92,10 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *options[2] = { F("Normal"), F("ABC disabled") };
-        const int optionValues[2]             = { P049_ABC_enabled, P049_ABC_disabled };
-        addFormSelector(F("Auto Base Calibration"), F("abcdisable"), 2, options, optionValues, PCONFIG(0));
+        const __FlashStringHelper *options[] = { F("Normal"), F("ABC disabled") };
+        const int optionValues[]             = { P049_ABC_enabled, P049_ABC_disabled };
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Auto Base Calibration"), F("abcdisable"), PCONFIG(0));
       }
       {
         const __FlashStringHelper *filteroptions[5] =
@@ -105,7 +106,8 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(F("Filter"), F("filter"), 5, filteroptions, filteroptionValues, PCONFIG(1));
+        const FormSelectorOptions selector(NR_ELEMENTS(filteroptions), filteroptions, filteroptionValues);
+        selector.addFormSelector(F("Filter"), F("filter"), PCONFIG(1));
       }
       P049_html_show_stats(event);
 

@@ -71,7 +71,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += (x < 8 ? x : x - 8);
         }
         addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("pport"), 16, portNames, portValues, port);
+        const FormSelectorOptions selector(16, portNames, portValues);
+        selector.addFormSelector(F("Port"), F("pport"),  port);
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }

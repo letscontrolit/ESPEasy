@@ -65,7 +65,7 @@ Hardware outputs AXP192
 
 * *LilyGO T-Beam* Settings for the LilyGO T-Beam series of GPS/LoRa devices with optional OLed display.
 
-* *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
+* *User defined* To be able to configure all available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
 
 When available, new predefined devices will be added. The User defined option will stay the last option.
 

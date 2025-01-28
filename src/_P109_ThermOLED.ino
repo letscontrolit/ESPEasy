@@ -181,7 +181,8 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
         const int optionValues4[]             = { 2, 5, 10 };
         constexpr size_t optionCount          = NR_ELEMENTS(optionValues4);
-        addFormSelector(F("Hysteresis"), F("hyst"), optionCount, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
+        const FormSelectorOptions selector(optionCount, options4, optionValues4);
+        selector.addFormSelector(F("Hysteresis"), F("hyst"), static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
       }
 
       {

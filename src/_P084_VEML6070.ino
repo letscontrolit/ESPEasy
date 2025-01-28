@@ -88,7 +88,8 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     {
       const __FlashStringHelper *optionsMode[] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
       constexpr size_t optionCount             = NR_ELEMENTS(optionsMode);
-      addFormSelector(F("Refresh Time Determination"), F("itime"), optionCount, optionsMode, nullptr, PCONFIG(0));
+      const FormSelectorOptions selector(optionCount, optionsMode);
+      selector.addFormSelector(F("Refresh Time Determination"), F("itime"), PCONFIG(0));
 
       success = true;
       break;

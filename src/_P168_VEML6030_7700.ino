@@ -114,12 +114,8 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
           VEML_LUX_CORRECTED_NOWAIT,
         };
         constexpr size_t optionCount = NR_ELEMENTS(readMethodOptions);
-        addFormSelector(F("Lux Read-method"),
-                        F("rmth"),
-                        optionCount,
-                        readMethod,
-                        readMethodOptions,
-                        P168_READLUX_MODE);
+        const FormSelectorOptions selector(optionCount, readMethod, readMethodOptions);
+        selector.addFormSelector(F("Lux Read-method"), F("rmth"), P168_READLUX_MODE);
         addFormNote(F("For 'Auto' Read-method, the Gain factor and Integration time settings are ignored."));
       }
       {
@@ -136,21 +132,17 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
           0b11,
         };
         constexpr size_t optionCount = NR_ELEMENTS(alsGainOptions);
-        addFormSelector(F("Gain factor"),
-                        F("gain"),
-                        optionCount,
-                        alsGain,
-                        alsGainOptions,
-                        P168_ALS_GAIN);
+        const FormSelectorOptions selector(optionCount, alsGain, alsGainOptions);
+        selector.addFormSelector(F("Gain factor"), F("gain"), P168_ALS_GAIN);
       }
       {
         const __FlashStringHelper *alsIntegration[] = {
-          F("25 ms"),
-          F("50 ms"),
-          F("100 ms"),
-          F("200 ms"),
-          F("400 ms"),
-          F("800 ms"),
+          F("25"),
+          F("50"),
+          F("100"),
+          F("200"),
+          F("400"),
+          F("800"),
         };
         const int alsIntegrationOptions[] = {
           0b1100,
@@ -161,12 +153,9 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
           0b0011,
         };
         constexpr size_t optionCount = NR_ELEMENTS(alsIntegrationOptions);
-        addFormSelector(F("Integration time"),
-                        F("int"),
-                        optionCount,
-                        alsIntegration,
-                        alsIntegrationOptions,
-                        P168_ALS_INTEGRATION);
+        const FormSelectorOptions selector(optionCount, alsIntegration, alsIntegrationOptions);
+        selector.addFormSelector(F("Integration time"), F("int"), P168_ALS_INTEGRATION);
+        addUnit(F("ms"));
       }
       addFormSeparator(2);
       {
@@ -185,12 +174,8 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P168_power_save_mode_e::Mode4),
         };
         constexpr size_t optionCount = NR_ELEMENTS(psmModeOptions);
-        addFormSelector(F("Power Save Mode"),
-                        F("psm"),
-                        optionCount,
-                        psmMode,
-                        psmModeOptions,
-                        P168_PSM_MODE);
+        const FormSelectorOptions selector(optionCount, psmMode, psmModeOptions);
+        selector.addFormSelector(F("Power Save Mode"), F("psm"), P168_PSM_MODE);
       }
 
       success = true;

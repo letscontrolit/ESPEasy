@@ -90,36 +90,30 @@ def deduct_flags_from_pioenv():
     print("\u001b[33m File System:    \u001b[0m  {}".format(fs_str))
 
 
-def gen_compiletime_defines(node):
+def gen_compiletime_defines():
     """
     `node.name` - a name of File System Node
     `node.get_path()` - a relative path
     `node.get_abspath()` - an absolute path
     """
 
-    # do not modify node if file name does not contain "CompiletimeDefines.cpp"
-    if "CompiletimeDefines.cpp" not in node.name:
-        return node
-
     # now, we can override ANY SCons variables (CPPDEFINES, CCFLAGS, etc.,) for the specific file
     # pass SCons variables as extra keyword arguments to `env.Object()` function
     # p.s: run `pio run -t envdump` to see a list with SCons variables
 
-    defines = env["CPPDEFINES"]
-    defines.append(("SET_BUILD_BINARY_FILENAME", '\\"%s\\"' % create_binary_filename()))
-    defines.append(("SET_BOARD_NAME", '\\"%s\\"' % get_board_name()))
-    defines.append(("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform()))
-    defines.append(("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description()))
-    defines.append(("SET_BUILD_CDN_URL",  '\\"%s\\"' % get_cdn_url_prefix()))
-    defines.append(("SET_BUILD_VERSION", compute_version_date()))
-    defines.append(("SET_BUILD_UNIXTIME", create_build_unixtime()))
-    defines.append(("SET_BUILD_TIME_RFC1123", '\\"%s\\"' % create_RFC1123_build_date()))
+    defines = [
+        "-DSET_BUILD_BINARY_FILENAME=\\\"{}\\\"".format(create_binary_filename()),
+        "-DSET_BOARD_NAME=\\\"{}\\\"".format(get_board_name()),
+        "-DSET_BUILD_PLATFORM=\\\"{}\\\"".format(platform.platform()),
+        "-DSET_BUILD_GIT_HEAD=\\\"{}\\\"".format(get_git_description()),
+        "-DSET_BUILD_CDN_URL=\\\"{}\\\"".format(get_cdn_url_prefix()),
+        "-DSET_BUILD_VERSION={}".format(compute_version_date()),
+        "-DSET_BUILD_UNIXTIME={}".format(create_build_unixtime()),
+        "-DSET_BUILD_TIME_RFC1123=\\\"{}\\\"".format(create_RFC1123_build_date())
+    ]
 
-    return env.Object(
-        node,
-        CPPDEFINES=defines,
-        CCFLAGS=env["CCFLAGS"]
-    )
+    env.Append(CXXFLAGS=defines)
+
 
 print("\u001b[32m Compile time defines \u001b[0m")
 deduct_flags_from_pioenv()
@@ -143,5 +137,4 @@ print("\u001b[33m --flash-mode: \u001b[0m  {}".format(env.BoardConfig().get("bui
 if "esp32" in env.BoardConfig().get("build.core"):
   print("\u001b[33m  memory_type: \u001b[0m  {}".format(env.BoardConfig().get("build.arduino.memory_type", "-")))
 
-
-env.AddBuildMiddleware(gen_compiletime_defines)
+gen_compiletime_defines()

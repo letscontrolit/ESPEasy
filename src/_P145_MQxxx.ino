@@ -191,7 +191,8 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       {
         options[i] = concat(concat(P145_data_struct::getTypeName(i), F(" - ")), P145_data_struct::getGasName(i));
       }
-      addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), x, options, nullptr, P145_PCONFIG_SENSORT);
+      const FormSelectorOptions selector(x, options);
+      selector.addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), P145_PCONFIG_SENSORT);
 
 # ifdef ESP32
 

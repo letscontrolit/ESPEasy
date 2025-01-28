@@ -5,6 +5,7 @@
 #include "../Globals/RamTracker.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_PWM.h"
+#include "../Helpers/StringConverter.h"
 
 
 /********************************************************************************************\
@@ -53,7 +54,7 @@ void clear_rtttl_melody() {
     #   endif // if FEATURE_RTTTL_EVENTS
   }
 
-  rtttlMelody = String();
+  free_string(rtttlMelody);
 }
 
 void set_rtttl_melody(String& melody) {

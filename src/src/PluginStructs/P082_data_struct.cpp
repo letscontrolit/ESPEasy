@@ -342,7 +342,7 @@ bool P082_data_struct::loop() {
           // Full sentence received
 # ifdef P082_SEND_GPS_TO_LOG
           _lastSentence    = _currentSentence;
-          _currentSentence = String();
+          free_string(_currentSentence);
 # endif // ifdef P082_SEND_GPS_TO_LOG
           completeSentence = true;
           available        = easySerial->available();

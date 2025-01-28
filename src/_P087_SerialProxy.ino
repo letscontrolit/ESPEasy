@@ -348,13 +348,14 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         optionValues[i] = matchType;
       }
       P087_Match_Type choice = P087_data->getMatchType();
-      addFormSelector(F("Match Type"),
-                      getPluginCustomArgName(P087_MATCH_TYPE_POS),
-                      P087_Match_Type_NR_ELEMENTS,
-                      options,
-                      optionValues,
-                      choice,
-                      false);
+      const FormSelectorOptions selector(
+        P087_Match_Type_NR_ELEMENTS,
+        options,
+        optionValues);
+      selector.addFormSelector(
+        F("Match Type"),
+        getPluginCustomArgName(P087_MATCH_TYPE_POS),
+        choice);
       addFormNote(F("Capture filter can only be used on Global Match"));
     }
 
@@ -386,13 +387,15 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           const int optionValues[] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, F(""));
+          FormSelectorOptions selector(2, options, optionValues);
+          selector.clearClassName();
+          selector.addSelector(id, static_cast<int>(comparator));
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, EMPTY_STRING, F(""));
+          addTextBox(id, filter, 32, F(""));
           break;
         }
       }

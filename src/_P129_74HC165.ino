@@ -155,20 +155,17 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Device configuration"));
 
       {
-        String chipCount[P129_MAX_CHIP_COUNT];
+        //String chipCount[P129_MAX_CHIP_COUNT];
         int    chipOption[P129_MAX_CHIP_COUNT];
 
         for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) {
-          chipCount[i]  = i + 1;
+          //chipCount[i]  = i + 1;
           chipOption[i] = i + 1;
         }
-        addFormSelector(F("Number of chips (Q7 &rarr; DS)"),
-                        F("chipcnt"),
-                        P129_MAX_CHIP_COUNT,
-                        chipCount,
-                        chipOption,
-                        P129_CONFIG_CHIP_COUNT,
-                        true);
+        FormSelectorOptions selector(P129_MAX_CHIP_COUNT, /*chipCount,*/ chipOption);
+        selector.reloadonchange = true;
+        selector.addFormSelector(
+          F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
@@ -180,12 +177,9 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         F("50/sec (20 msec)") };
       const int frequencyValues[]  = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
       constexpr size_t optionCount = NR_ELEMENTS(frequencyValues);
-      addFormSelector(F("Sample frequency"),
-                      F("frequency"),
-                      optionCount,
-                      frequencyOptions,
-                      frequencyValues,
-                      P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
+      const FormSelectorOptions selector(optionCount, frequencyOptions, frequencyValues);
+      selector.addFormSelector(
+        F("Sample frequency"), F("frequency"), P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
 
       addFormSubHeader(F("Display and output"));
 
@@ -199,8 +193,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         F("Hex/bin only") };
       const int outputValues[]     = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
       constexpr size_t outputCount = NR_ELEMENTS(outputValues);
-      addFormSelector(F("Output selection"), F("outputsel"), outputCount, outputOptions, outputValues,
-                      P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const FormSelectorOptions selector_output(outputCount, outputOptions, outputValues);
+      selector_output.addFormSelector(F("Output selection"), F("outputsel"), P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
       addFormCheckBox(F("Separate events per pin"), F("separate_events"), P129_CONFIG_FLAGS_GET_SEPARATE_EVENTS == 1);
 

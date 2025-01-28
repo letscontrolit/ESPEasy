@@ -6,43 +6,20 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-16 tonhuisman: Move technical #defines to P097_data_struct.h to avoid Arduino compiler warning
  * 2024-12-11 chromoxdor: Added extra routine for ESP32S2 and ESP32S3.
  *                        Added "Wake Up from Sleep", Switch like behaviour + toggle and long press option.
  */
 
-#if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
+# if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
 
-# define LAST_TOUCH_INPUT_INDEX SOC_TOUCH_SENSOR_NUM
-// Device-specific configuration
-#  if defined(ESP32_CLASSIC)
-  #   define HAS_T0_INPUT             1
-  #   define HAS_T10_TO_T14           0
-  #   define LAST_TOUCH_INPUT_INDEX   10
-  #   define P097_MAX_THRESHOLD_VALUE 4095
-#  elif defined(ESP32S2) || defined(ESP32S3)
-  #   define HAS_T0_INPUT             0
-
-// Temporary disabled since T10 to T14 are causing problems
-    #   define HAS_T10_TO_T14           0
-    #   define LAST_TOUCH_INPUT_INDEX   14
-    #   define P097_MAX_THRESHOLD_VALUE 500000 // couldn't find a max value but threshold for ESP32S2 & ESP32S3 is uint32_t
-#  endif // if defined(ESP32_CLASSIC)
+#  include "src/PluginStructs/P097_data_struct.h"
 
 #  define PLUGIN_097
 #  define PLUGIN_ID_097              97
 #  define PLUGIN_NAME_097            "Touch (ESP32) - internal"
 #  define PLUGIN_VALUENAME1_097      "Touch"
 #  define PLUGIN_VALUENAME2_097      "State"
-#  define P097_MAX_LONGPRESS_VALUE   10000
-
-#  define P097_SEND_TOUCH_EVENT      PCONFIG(0)
-#  define P097_SEND_RELEASE_EVENT    PCONFIG(1)
-#  define P097_SEND_DURATION_EVENT   PCONFIG(2)
-#  define P097_TOUCH_THRESHOLD       PCONFIG(3)
-#  define P097_TYPE_TOGGLE           PCONFIG(4)
-#  define P097_SLEEP_WAKEUP          PCONFIG(5)
-#  define P097_SEND_LONG_PRESS_EVENT PCONFIG(6)
-#  define P097_LONG_PRESS_TIME       PCONFIG(7)
 
 // Share this bitmap among all instances of this plugin
 DRAM_ATTR uint32_t p097_pinTouched                          = 0;
@@ -92,12 +69,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       P097_SEND_RELEASE_EVENT  = 1;
       P097_SEND_DURATION_EVENT = 0;
       P097_LONG_PRESS_TIME     = 1000;
-
-      #  if defined(ESP32S2) || defined(ESP32S3)
-      P097_TOUCH_THRESHOLD = 1500;
-      #  else // if defined(ESP32S2) || defined(ESP32S3)
-      P097_TOUCH_THRESHOLD = 20;
-      #  endif // if defined(ESP32S2) || defined(ESP32S3)
+      P097_TOUCH_THRESHOLD     = P097_DEFAULT_TOUCH_THRESHOLD;
       break;
     }
 
@@ -178,11 +150,11 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
             // Some pin has been touched or released.
 
             const bool touched = bitRead(p097_pinTouched, t);
-          #  ifdef ESP32_CLASSIC
+            #  ifdef ESP32_CLASSIC
             const bool touched_prev = bitRead(p097_pinTouchedPrev, t);
-          #  endif // ifdef ESP32_CLASSIC
+            #  endif // ifdef ESP32_CLASSIC
 
-          #  if defined(ESP32S2) || defined(ESP32S3)
+            #  if defined(ESP32S2) || defined(ESP32S3)
 
             if (touched) {
               bitClear(p097_pinTouched, t);
@@ -227,7 +199,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-          #  else // if defined(ESP32S2) || defined(ESP32S3)
+            #  else // if defined(ESP32S2) || defined(ESP32S3)
 
             if (touched) {
               bitClear(p097_pinTouched, t);
@@ -278,7 +250,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
                 p097_timestamp[t] = 0;
               }
             }
-          #  endif // if defined(ESP32S2) || defined(ESP32S3)
+            #  endif // if defined(ESP32S2) || defined(ESP32S3)
           }
           success = true;
           break;
@@ -427,7 +399,7 @@ void P097_got_Touched(int pin) {
   if (p097_timestamp[pin] == 0) { p097_timestamp[pin] = millis(); }
 }
 
-# endif // if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
+# endif // if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
 
 
 #endif // USES_P097

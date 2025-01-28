@@ -105,7 +105,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += x;
         }
         addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("pport"), 4, portNames, portValues, port);
+        const FormSelectorOptions selector(4, portNames, portValues);
+        selector.addFormSelector(F("Port"), F("pport"), port);
         addFormNote(F(
                       "Selected Port value will be stored in first 'Values' field and consecutively for 'Number Output Values' &gt; Single."));
       } else {
@@ -142,7 +143,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         0b00110000,
       };
       constexpr size_t optionCount = NR_ELEMENTS(inputModeValues);
-      addFormSelector(F("Input mode"), F("input_mode"), optionCount, inputModeOptions, inputModeValues, P007_INPUT_MODE);
+      const FormSelectorOptions selector(optionCount, inputModeOptions, inputModeValues);
+      selector.addFormSelector(F("Input mode"), F("input_mode"), P007_INPUT_MODE);
 
       addFormCheckBox(F("Enable Analog output (AOUT)"), F("output_mode"), P007_OUTPUT_MODE == P007_OUTPUT_ENABLED);
 

@@ -106,7 +106,8 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 4; ++i) {
         options_baudrate[i] = String(p108_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, 4, options_baudrate, nullptr, P108_BAUDRATE);
+      const FormSelectorOptions selector(4, options_baudrate);
+      selector.addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, P108_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P108_DEV_ID_LABEL, P108_DEV_ID, 1, 247);
       break;

@@ -318,7 +318,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                      disabled);
     ++protocolIndex;
   }
-  addSelector_Foot();
+  addSelector_Foot(true);
 
   addHelpButton(F("EasyProtocols"));
 

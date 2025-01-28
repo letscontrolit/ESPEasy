@@ -173,7 +173,7 @@ bool do_command_case_check(command_case_data         & data,
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status = String();
+  free_string(data.status);
 
   if (!checkSourceFlags(data.event->Source, group)) {
     data.status = return_incorrect_source();

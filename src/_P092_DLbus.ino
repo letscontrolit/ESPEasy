@@ -138,7 +138,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eP092pinmode::ePPM_Input),
           static_cast<int>(eP092pinmode::ePPM_InputPullUp)
         };
-        addFormSelector(F("Pin mode"), F("ppinmode"), 2, options, optionValues, choice);
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Pin mode"), F("ppinmode"), choice);
       }
       {
         const __FlashStringHelper *Devices[] = {
@@ -151,7 +152,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         const int DevTypes[]         = { 21, 31, 42, 1611, 6132, 6133 };
         constexpr size_t optionCount = NR_ELEMENTS(Devices);
 
-        addFormSelector(F("DL-Bus Type"), F("pdlbtype"), optionCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
+        FormSelectorOptions selector(optionCount, Devices, DevTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("DL-Bus Type"), F("pdlbtype"), PCONFIG(0));
       }
       {
         int P092_ValueType, P092_ValueIdx;
@@ -236,14 +239,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_ValueType = PCONFIG(1) >> 8;
         P092_ValueIdx  = PCONFIG(1) & 0x00FF;
 
-        addFormSelector(plugin_092_DefValueName,
-                        F("pValue"),
-                        optionCount,
-                        Options,
-                        P092_OptionTypes,
-                        nullptr,
-                        P092_ValueType,
-                        true);
+        FormSelectorOptions selector(optionCount, Options, P092_OptionTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(plugin_092_DefValueName, F("pValue"), P092_ValueType);
 
         if (P092_MaxIdx[P092_ValueType] > 1) {
           int CurIdx = P092_ValueIdx;

@@ -147,23 +147,19 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P153_configuration_e::HighResolution20mW100msec),
         };
         constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
-        addFormSelector(F("Startup Configuration"),
-                        F("startup"),
-                        optionCount,
-                        configurations,
-                        configurationOptions,
-                        P153_STARTUP_CONFIGURATION);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Startup Configuration"), F("startup"), P153_STARTUP_CONFIGURATION);
         addFormNote(F("Heater should not exceed 10% dutycycle, so 1 sec. heater must have Interval > 10 sec.!"));
 
         addFormNumericBox(F("Use Normal Configuration after"), F("loops"), P153_INTERVAL_LOOPS, 0, 10);
         addUnit(F("Interval runs (0..10)"));
 
-        addFormSelector(F("Normal Configuration"),
-                        F("normal"),
-                        3, // Only non-heater options
-                        configurations,
-                        configurationOptions,
-                        P153_NORMAL_CONFIGURATION);
+        const FormSelectorOptions selector_normal(
+          3, // Only non-heater options
+          configurations, configurationOptions);
+
+        selector_normal.addFormSelector(
+          F("Normal Configuration"), F("normal"), P153_NORMAL_CONFIGURATION);
       }
 
       success = true;

@@ -132,11 +132,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A"), F("26V, 8A") };
-        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, nullptr, PCONFIG(0));
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsMode), optionsMode);
+        selector.addFormSelector(F("Measure range"), F("range"), PCONFIG(0));
       }
       {
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("measuretype"), 4, options, nullptr, PCONFIG(2));
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Measurement Type"), F("measuretype"),  PCONFIG(2));
       }
       # if P027_FEATURE_POWERDOWN
       addFormCheckBox(F("Use Powerdown mode"), F("pwrdwn"), PCONFIG(3) == 1);

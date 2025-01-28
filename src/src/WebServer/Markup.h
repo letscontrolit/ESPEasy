@@ -8,94 +8,13 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
+#if FEATURE_TOOLTIPS
+void addTooltip(const String& tooltip);
+#endif
+
 // ********************************************************************************
 // Add Selector
 // ********************************************************************************
-void addSelector(const __FlashStringHelper *id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange = false,
-                 bool                       enabled = true);
-
-void addSelector(const String             & id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange = false,
-                 bool                       enabled = true);
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 bool          reloadonchange = false,
-                 bool          enabled = true);
-
-
-void addSelector(const String             & id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange,
-                 bool                       enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String             & tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 bool          reloadonchange,
-                 bool          enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String& tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-void addSelector_reloadOnChange(
-                 const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 const String& onChangeCall,
-                 bool          enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String& tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-
-void addSelector_options(int                        optionCount,
-                         const __FlashStringHelper *options[],
-                         const int                  indices[],
-                         const String               attr[],
-                         int                        selectedIndex);
-void addSelector_options(int          optionCount,
-                         const String options[],
-                         const int    indices[],
-                         const String attr[],
-                         int          selectedIndex);
 
 void addSelector_Head(const String& id);
 
@@ -150,7 +69,7 @@ void addSelector_Item(const String& option,
                       bool       disabled = false,
                       const String& attr     = EMPTY_STRING);
 
-void addSelector_Foot();
+void addSelector_Foot(bool reloadonchange = false);
 
 void addUnit(const __FlashStringHelper *unit);
 void addUnit(const String& unit);
@@ -266,6 +185,17 @@ void addNumericBox(const String& id,
 // ********************************************************************************
 // Add Textbox
 // ********************************************************************************
+void addTextBox(const __FlashStringHelper * id,
+                const String& value,
+                int           maxlength,
+                const __FlashStringHelper * classname);
+
+void addTextBox(const String& id,
+                const String& value,
+                int           maxlength,
+                const __FlashStringHelper * classname);
+
+
 void addTextBox(const __FlashStringHelper * id,
                 const String& value,
                 int           maxlength,

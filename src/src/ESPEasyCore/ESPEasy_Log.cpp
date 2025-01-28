@@ -17,6 +17,8 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #endif
 
+#define UPDATE_LOGLEVEL_ACTIVE_CACHE_INTERVAL 5000
+
 /********************************************************************************************\
   Init critical variables for logging (important during initial factory reset stuff )
   \*********************************************************************************************/
@@ -124,6 +126,13 @@ bool loglevelActiveFor(uint8_t logLevel) {
     return false;
   }
   #endif
+  static uint32_t lastUpdateLogLevelCache = 0;
+  if (lastUpdateLogLevelCache == 0 || 
+      timePassedSince(lastUpdateLogLevelCache) > UPDATE_LOGLEVEL_ACTIVE_CACHE_INTERVAL)
+  {
+    lastUpdateLogLevelCache = millis();
+    updateLogLevelCache();
+  }
   return logLevel <= highest_active_log_level;
 }
 
@@ -143,15 +152,13 @@ uint8_t getSerialLogLevel() {
 }
 
 uint8_t getWebLogLevel() {
-  uint8_t logLevelSettings = 0;
   if (Logging.logActiveRead()) {
-    logLevelSettings = Settings.WebLogLevel;
-  } else {
-    if (Settings.WebLogLevel != 0) {
-      updateLogLevelCache();
-    }
+    return Settings.WebLogLevel;
+  } 
+  if (Settings.WebLogLevel != LOG_LEVEL_NONE) {
+    updateLogLevelCache();
   }
-  return logLevelSettings;
+  return LOG_LEVEL_NONE;
 }
 
 bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
@@ -245,7 +252,7 @@ void addLog(uint8_t logLevel, const char *line)
       }
     }
     #else 
-    if (!copy.reserve(strlen_P((PGM_P)line))) {
+    if (!reserve_special(copy, strlen_P((PGM_P)line))) {
       return;
     }
     copy = line;
@@ -353,5 +360,5 @@ void addToLogMove(uint8_t logLevel, String&& string)
     Logging.add(logLevel, std::move(string));
   }
   // Make sure the string may no longer keep up memory
-  string = String();
+  free_string(string);
 }

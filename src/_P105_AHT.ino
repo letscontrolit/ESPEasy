@@ -152,7 +152,9 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
                                                  static_cast<int>(AHTx_device_type::AHT20_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Sensor model"), F("ahttype"), optionCount, options, indices, P105_AHT_TYPE, true);
+        FormSelectorOptions selector(optionCount, options, indices);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ahttype"), P105_AHT_TYPE);
         addFormNote(F("Changing Sensor model will reload the page."));
 
         if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == P105_AHT_TYPE) {

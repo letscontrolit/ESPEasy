@@ -64,7 +64,8 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
         // Counter select
         const __FlashStringHelper *resultsOptions[] = { F("A"), F("B") };
         constexpr size_t optionCount                = NR_ELEMENTS(resultsOptions);
-        addFormSelector(F("Counter"), F("counter"), optionCount, resultsOptions, nullptr, PCONFIG(0));
+        const FormSelectorOptions selector(optionCount, resultsOptions);
+        selector.addFormSelector(F("Counter"), F("counter"), PCONFIG(0));
         addFormNote(F("Counter value is incremental"));
       }
       success = true;

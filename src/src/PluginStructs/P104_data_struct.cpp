@@ -268,7 +268,7 @@ void P104_data_struct::loadSettings() {
         # endif // ifdef P104_DEBUG
       }
 
-      buffer = String();     // Free some memory
+      free_string(buffer);     // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer
@@ -1676,7 +1676,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = String(); // Clear
+  free_string(error); // Clear
 
   # ifdef P104_DEBUG_DEV
 
@@ -1890,12 +1890,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       static_cast<int>(MD_MAX72XX::moduleType_t::DR0CR1RR1_HW),
       static_cast<int>(MD_MAX72XX::moduleType_t::DR1CR0RR1_HW)
     };
-    addFormSelector(F("Hardware type"),
-                    F("hardware"),
-                    P104_hardwareTypeCount,
-                    hardwareTypes,
-                    hardwareOptions,
-                    P104_CONFIG_HARDWARETYPE);
+    const FormSelectorOptions selector(
+      P104_hardwareTypeCount,
+      hardwareTypes,
+      hardwareOptions);
+    selector.addFormSelector(F("Hardware type"), F("hardware"), P104_CONFIG_HARDWARETYPE);
     # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(F("DR = Digits as Rows, CR = Column Reversed, RR = Row Reversed; 0 = no, 1 = yes."));
     # endif // ifdef P104_ADD_SETTINGS_NOTES
@@ -1929,10 +1928,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_FORMAT_US,
       P104_DATE_FORMAT_JP
     };
-    addFormSelector(F("Date format"), F("datefmt"),
-                    3,
-                    dateFormats, dateFormatOptions,
-                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT));
+    const FormSelectorOptions selector(3, dateFormats, dateFormatOptions);
+    selector.addFormSelector(F("Date format"), F("datefmt"),
+                             get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT));
   }
   { // Date separator
     const __FlashStringHelper *dateSeparators[] = {
@@ -1947,10 +1945,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       P104_DATE_SEPARATOR_DASH,
       P104_DATE_SEPARATOR_DOT
     };
-    addFormSelector(F("Date separator"), F("datesep"),
-                    4,
-                    dateSeparators, dateSeparatorOptions,
-                    get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
+    const FormSelectorOptions selector(4, dateSeparators, dateSeparatorOptions);
+    selector.addFormSelector(F("Date separator"), F("datesep"),
+                             get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR));
 
     addFormCheckBox(F("Year uses 4 digits"), F("year4dgt"), bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT));
   }
@@ -1974,11 +1971,13 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       #  endif // ifdef P104_USE_ZONE_ORDERING
                              " will save and reload the page.");
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    addFormSelector(F("Zones"), F("zonecnt"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
-                    # ifdef P104_USE_TOOLTIPS
-                    , zonetip
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
+
+    FormSelectorOptions selector(P104_MAX_ZONES, zonesList, zonesOptions);
+    selector.reloadonchange = true;
+    # ifdef P104_USE_TOOLTIPS
+    selector.tooltip = zonetip;
+    # endif // ifdef P104_USE_TOOLTIPS
+    selector.addFormSelector(F("Zones"), F("zonecnt"), P104_CONFIG_ZONE_COUNT);
 
     # ifdef P104_USE_ZONE_ORDERING
     const String orderTypes[] = {
@@ -1986,12 +1985,13 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Display order (n..1)")
     };
     const int    orderOptions[] = { 0, 1 };
-    addFormSelector(F("Zone order"), F("zoneorder"), 2, orderTypes, orderOptions, nullptr,
-                    bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
-                    #  ifdef P104_USE_TOOLTIPS
-                    , zonetip
-                    #  endif // ifdef P104_USE_TOOLTIPS
-                    );
+    FormSelectorOptions selector_zoneordering(2, orderTypes, orderOptions);
+    selector.reloadonchange = true;
+    #  ifdef P104_USE_TOOLTIPS
+    selector.tooltip = zonetip;
+    #  endif // ifdef P104_USE_TOOLTIPS
+    selector_zoneordering.addFormSelector(F("Zone order"), F("zoneorder"),
+                                          bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0);
     # endif                  // ifdef P104_USE_ZONE_ORDERING
     # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(zonetip);
@@ -2319,48 +2319,37 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
                    zones[zone].text,
                    P104_MAX_TEXT_LENGTH_PER_ZONE,
-                   false,
-                   false,
-                   EMPTY_STRING,
                    F(""));
-
-        html_TD(); // Content
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_CONTENT),
-                    P104_CONTENT_count,
-                    contentTypes,
-                    contentOptions,
-                    nullptr,
-                    zones[zone].content,
-                    false,
-                    true,
-                    F(""));
-
-        html_TD(); // Alignment
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT),
-                    3,
-                    alignmentTypes,
-                    alignmentOptions,
-                    nullptr,
-                    zones[zone].alignment,
-                    false,
-                    true,
-                    F(""));
-
+        {
+          html_TD(); // Content
+          FormSelectorOptions selector(
+            P104_CONTENT_count, contentTypes, contentOptions);
+          selector.clearClassName();
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_CONTENT),
+            zones[zone].content);
+        }
+        {
+          html_TD(); // Alignment
+          FormSelectorOptions selector(3, alignmentTypes, alignmentOptions);
+          selector.clearClassName();
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_ALIGNMENT),
+            zones[zone].alignment);
+        }
         {
           html_TD(); // Animation In (without None by passing the second element index)
-          addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
-                      animationCount - 1,
-                      &animationTypes[1],
-                      &animationOptions[1],
-                      nullptr,
-                      zones[zone].animationIn,
-                      false,
-                      true,
-                      F("")
-                      # ifdef P104_USE_TOOLTIPS
-                      , F("Animation In")
-                      # endif // ifdef P104_USE_TOOLTIPS
-                      );
+          FormSelectorOptions selector(
+            animationCount - 1,
+            &animationTypes[1],
+            &animationOptions[1]);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Animation In");
+          # endif // ifdef P104_USE_TOOLTIPS
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
+            zones[zone].animationIn);
         }
 
         html_TD();                 // Speed In
@@ -2370,37 +2359,36 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       , F("Speed") // title
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
+        {
+          html_TD(); // Font
+          FormSelectorOptions selector(
+            fontCount,
+            fontTypes,
+            fontOptions);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Font");
+          # endif // ifdef P104_USE_TOOLTIPS
 
-        html_TD(); // Font
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_FONT),
-                    fontCount,
-                    fontTypes,
-                    fontOptions,
-                    nullptr,
-                    zones[zone].font,
-                    false,
-                    true,
-                    F("")
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Font") // title
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_FONT),
+            zones[zone].font);
+        }
+        {
+          html_TD(); // Inverted
+          FormSelectorOptions selector(
+            invertedCount,
+            invertedTypes,
+            invertedOptions);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Inverted");
+          # endif // ifdef P104_USE_TOOLTIPS
 
-        html_TD(); // Inverted
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_INVERTED),
-                    invertedCount,
-                    invertedTypes,
-                    invertedOptions,
-                    nullptr,
-                    zones[zone].inverted,
-                    false,
-                    true,
-                    F("")
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Inverted") // title
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
-
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_INVERTED),
+            zones[zone].inverted);
+        }
         html_TD(3); // Fill columns
         # ifdef P104_USE_ZONE_ACTIONS
 
@@ -2427,19 +2415,18 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         {
           html_TD();  // Animation Out
-          addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
-                      animationCount,
-                      animationTypes,
-                      animationOptions,
-                      nullptr,
-                      zones[zone].animationOut,
-                      false,
-                      true,
-                      F("")
-                      # ifdef P104_USE_TOOLTIPS
-                      , F("Animation Out")
-                      # endif // ifdef P104_USE_TOOLTIPS
-                      );
+          FormSelectorOptions selector(
+            animationCount,
+            animationTypes,
+            animationOptions);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Animation Out");
+          # endif // ifdef P104_USE_TOOLTIPS
+
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
+            zones[zone].animationOut);
         }
 
         html_TD();                 // Pause after Animation In
@@ -2449,37 +2436,36 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       , F("Pause") // title
                       # endif // ifdef P104_USE_TOOLTIPS
                       );
+        {
+          html_TD(); // Layout
+          FormSelectorOptions selector(
+            layoutCount,
+            layoutTypes,
+            layoutOptions);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Layout");
+          # endif // ifdef P104_USE_TOOLTIPS
 
-        html_TD(); // Layout
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
-                    layoutCount,
-                    layoutTypes,
-                    layoutOptions,
-                    nullptr,
-                    zones[zone].layout,
-                    false,
-                    true,
-                    F("")
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Layout") // title
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_LAYOUT),
+            zones[zone].layout);
+        }
+        {
+          html_TD(); // Special effects
+          FormSelectorOptions selector(
+            specialEffectCount,
+            specialEffectTypes,
+            specialEffectOptions);
+          selector.clearClassName();
+          # ifdef P104_USE_TOOLTIPS
+          selector.tooltip = F("Special Effects");
+          # endif // ifdef P104_USE_TOOLTIPS
 
-        html_TD(); // Special effects
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
-                    specialEffectCount,
-                    specialEffectTypes,
-                    specialEffectOptions,
-                    nullptr,
-                    zones[zone].specialEffect,
-                    false,
-                    true,
-                    F("")
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Special Effects") // title
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
-
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_SPEC_EFFECT),
+            zones[zone].specialEffect);
+        }
         html_TD(); // Offset
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), zones[zone].offset, 0, 254);
 
@@ -2500,19 +2486,20 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       );
 
         # ifdef P104_USE_ZONE_ACTIONS
-        html_TD(); // Spacer
+        html_TD();   // Spacer
         addHtml('|');
-
-        html_TD(); // Action
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),
-                    actionCount,
-                    actionTypes,
-                    actionOptions,
-                    nullptr,
-                    P104_ACTION_NONE, // Always start with None
-                    true,
-                    true,
-                    F(""));
+        {
+          html_TD(); // Action
+          FormSelectorOptions selector(
+            actionCount,
+            actionTypes,
+            actionOptions);
+          selector.classname      = F("");
+          selector.reloadonchange = true;
+          selector.addSelector(
+            getPluginCustomArgName(index + P104_OFFSET_ACTION),
+            P104_ACTION_NONE); // Always start with None
+        }
         # endif // ifdef P104_USE_ZONE_ACTIONS
 
         delay(0);

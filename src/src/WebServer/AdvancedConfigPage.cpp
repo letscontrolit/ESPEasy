@@ -333,14 +333,16 @@ void handle_advanced() {
     F("Light"),
     F("Dark"),
   };
-  const int cssModeOptions[] = { 0, 1, 2};
-  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeOptions);
-    addFormSelector(getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-                    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-                    nrCssModeOptions,
-                    cssModeNames,
-                    cssModeOptions,
-                    Settings.getCssMode());
+  //const int cssModeOptions[] = { 0, 1, 2};
+  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeNames);
+  const FormSelectorOptions selector(
+    nrCssModeOptions,
+    cssModeNames/*,
+    cssModeOptions*/);
+  selector.addFormSelector(
+    getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+    Settings.getCssMode());
   #endif // FEATURE_AUTO_DARK_MODE
 
   #if FEATURE_RULES_EASY_COLOR_CODE
@@ -418,18 +420,21 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     addRowLabel(concat(
       isStart ? F("Start")  : F("End"),
       F(" (week, dow, month)")));
-    addSelector(
+
+    const FormSelectorOptions selector(NR_ELEMENTS(weekValues), week, weekValues);
+    selector.addSelector(
       isStart ? F("dststartweek")  : F("dstendweek"), 
-      NR_ELEMENTS(weekValues), week, weekValues, nullptr, rule.week);
+      rule.week);
   }
   html_BR();
   {
     const __FlashStringHelper *  dow[] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     constexpr int dowValues[]  = { 1, 2, 3, 4, 5, 6, 7 };
 
-    addSelector(
+    const FormSelectorOptions selector(NR_ELEMENTS(dowValues), dow, dowValues);
+    selector.addSelector(
       isStart ? F("dststartdow")   : F("dstenddow"),
-      NR_ELEMENTS(dowValues), dow, dowValues, nullptr, rule.dow);
+      rule.dow);
   }
   html_BR();
   {
@@ -437,8 +442,10 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
                              "Dec") };
     constexpr int monthValues[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
-    addSelector(isStart ? F("dststartmonth") : F("dstendmonth"),
-                NR_ELEMENTS(monthValues), month, monthValues, nullptr, rule.month);
+    const FormSelectorOptions selector(NR_ELEMENTS(monthValues), month, monthValues);
+    selector.addSelector(
+      isStart ? F("dststartmonth") : F("dstendmonth"),
+      rule.month);
   }
 
   addFormNumericBox(
@@ -461,7 +468,8 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
     static_cast<int>(ExtTimeSource_e::PCF8563)
     };
 
-  addSelector(id, NR_ELEMENTS(optionValues), options, optionValues, nullptr, static_cast<int>(choice));
+  const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
+  selector.addSelector(id, static_cast<int>(choice));
 }
 
 
@@ -480,19 +488,21 @@ void addFormLogLevelSelect(LabelType::Enum label, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(getInternalLabel(label), LOG_LEVEL_NRELEMENTS + 1, options, optionValues, nullptr, choice);
+  const FormSelectorOptions selector(LOG_LEVEL_NRELEMENTS + 1, options, optionValues);
+  selector.addSelector(getInternalLabel(label), choice);
 
 }
 
 void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[12] =
+  const __FlashStringHelper * options[] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
-  const int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  const int optionValues[] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(id, 12, options, optionValues, nullptr, choice);
+  const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+  selector.addSelector(id, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED

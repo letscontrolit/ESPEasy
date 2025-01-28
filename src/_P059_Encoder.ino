@@ -77,10 +77,10 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *options[] = { F("1"), F("2"), F("4") };
         const int optionValues[]             = { 1, 2, 4 };
         constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Mode"), F("mode"), optionCount, options, optionValues, PCONFIG(0));
+        const FormSelectorOptions selector(optionCount, optionValues);
+        selector.addFormSelector(F("Mode"), F("mode"), PCONFIG(0));
         addUnit(F("pulses per cycle"));
       }
 
