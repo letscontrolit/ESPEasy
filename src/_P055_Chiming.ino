@@ -529,7 +529,7 @@ uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
     log = strformat(F("Chime: read %s "), fileName.c_str());
   }
 
-  tokens = String();
+  free_string(tokens);
   fs::File f = tryOpenFile(fileName, "r");
 
   if (f)

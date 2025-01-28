@@ -10,7 +10,7 @@
  * LogStruct
 \*********************************************************************************************/
 #ifdef ESP32
-  #define LOG_STRUCT_MESSAGE_LINES 60
+  #define LOG_STRUCT_MESSAGE_LINES 120
 #else
   #ifdef USE_SECOND_HEAP
     #define LOG_STRUCT_MESSAGE_LINES 60

@@ -136,7 +136,7 @@ void P020_Task::discardClientIn() {
 }
 
 void P020_Task::clearBuffer() {
-  serial_buffer    = String();
+  free_string(serial_buffer);
   _maxDataGramSize = serial_processing == P020_Events::P1WiFiGateway
                     ? P020_P1_DATAGRAM_MAX_SIZE
                     : P020_DATAGRAM_MAX_SIZE;

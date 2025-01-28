@@ -268,7 +268,7 @@ void P104_data_struct::loadSettings() {
         # endif // ifdef P104_DEBUG
       }
 
-      buffer = String();     // Free some memory
+      free_string(buffer);     // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer
@@ -1676,7 +1676,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = String(); // Clear
+  free_string(error); // Clear
 
   # ifdef P104_DEBUG_DEV
 

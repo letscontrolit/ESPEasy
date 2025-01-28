@@ -2220,7 +2220,7 @@ bool P165_data_struct::nextScroll() {
  * Set up the string to scroll across the display, with optional prefixed spaces
  **********************************************************************************/
 void P165_data_struct::setTextToScroll(const String& text) {
-  _textToScroll = String();
+  free_string(_textToScroll);
 
   if (!text.isEmpty()) {
     const int bufToFill = calculateDisplayDigits();

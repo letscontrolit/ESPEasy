@@ -274,7 +274,7 @@ void handle_root() {
         addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
         addHtml(printWebString);
         addHtml(F("</textarea>"));
-        printWebString = String();
+        free_string(printWebString);
       }
     }
     html_end_table();
@@ -460,7 +460,7 @@ void handle_root() {
   # endif // if FEATURE_ESPEASY_P2P
     html_end_form();
 
-    printWebString = String();
+    free_string(printWebString);
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

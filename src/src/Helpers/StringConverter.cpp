@@ -83,13 +83,16 @@ void move_special(String& dest, String&& source) {
     HeapSelectIram ephemeral;
     if (dest.reserve(source.length())) {
       dest = source;
-      source = String();
+      free_string(source);
       return;
     }
     // Could not allocate on 2nd heap, so just move existing string
   }
   #endif // ifdef USE_SECOND_HEAP
   dest = std::move(source);
+  #ifdef ESP32
+  reserve_special(dest, dest.length());
+  #endif
 }
 
 String move_special(String&& source) {
@@ -100,25 +103,16 @@ String move_special(String&& source) {
 
 
 bool reserve_special(String& str, size_t size) {
-  if (str.length() >= size) {
-    // Nothing needs to be done
-    return true;
-  }
-  // FIXME TD-er: Should also use this for ESP32 with PSRAM to allocate on PSRAM
-  #ifdef USE_SECOND_HEAP
-  if (size >= 32) {
-    // Only try to store larger strings here as those tend to be kept for a longer period.
-    HeapSelectIram ephemeral;
-    // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
-    if (str.reserve(size)) {
-      return true;
-    }
-  }
-  #endif
-  return str.reserve(size);
-  // TD-er: should we also log here?
+  return String_reserve_special(str, size);
 }
 
+void free_string(String& str) {
+  // This is a call specifically tailored to what is done in:
+  //  void String::move(String &rhs)
+
+  str.clear(); // Prevent any unneeded copying  
+  String tmp(std::move(str));
+}
 
 /********************************************************************************************\
    Format string using vsnprintf
@@ -1528,7 +1522,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
   int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
 
-  argvString = String();
+  free_string(argvString);
 
   if (!hasArgument) { return false; }
 
