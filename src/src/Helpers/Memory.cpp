@@ -242,7 +242,10 @@ class PSRAM_String : public String {
 
 
 bool String_reserve_special(String& str, size_t size) {
-  if (str.length() < size) {
+  if (!UsePSRAM()) {
+    return str.reserve(size);
+  }
+  if (str.length() <= size) {
     // As we like to move this to PSRAM, it also makes sense 
     // to do this when the length equals size
     PSRAM_String psram_str(size);

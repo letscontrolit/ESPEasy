@@ -1967,7 +1967,7 @@ String LoadFromFile(const char *fname, String& data, int offset)
   STOP_TIMER(LOADFILE_STATS);
   delay(0);
 
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
