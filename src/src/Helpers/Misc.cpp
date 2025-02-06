@@ -528,7 +528,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
-    if (log.reserve(128)) {
+    if (reserve_special(log, 128)) {
       log  = F("After ");
       log += function;
 

@@ -4,6 +4,32 @@
 
 # include "../Commands/ExecuteCommand.h"
 
+tTouchObjects::tTouchObjects() :
+  flags(0u),
+  SurfaceAreas(0u),
+  TouchTimers(0u),
+#ifdef ESP32
+  top_left({0u, 0u}),
+  width_height({0u, 0u}),
+#endif
+  TouchStates(0u)
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  , groupFlags           (0u)
+  , colorOn              (0u)
+  , colorOff             (0u)
+  , colorCaption         (0u)
+  , colorBorder          (0u)
+  , colorDisabled        (0u)
+  , colorDisabledCaption (0u)
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  {
+    objectName.clear();
+    captionOn.clear();
+    captionOff.clear();
+  }
+
+
+
 /****************************************************************************
  * toString: Display-value for the touch action
  ***************************************************************************/
@@ -139,7 +165,7 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   #  endif // if TOUCH_FEATURE_SWIPE
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-  settingsArray[TOUCH_CALIBRATION_START].clear(); // Free a little memory
+  free_string(settingsArray[TOUCH_CALIBRATION_START]); // Free a little memory
 
   // Buffer some settings, mostly for readability, but also to be able to set from write command
   _flipped     = bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED);
@@ -153,44 +179,47 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
 
     for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; ++i) {
       if (!settingsArray[i].isEmpty()) {
-        TouchObjects.push_back(tTouchObjects());
-        TouchObjects[t].flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
+        tTouchObjects touchObject{};
+        touchObject.flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
+        String objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.objectName     = objectName;
+        touchObject.top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
         # if TOUCH_FEATURE_EXTENDED_TOUCH
-        TouchObjects[t].colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorDisabled        = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABLED, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorDisabledCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABCAPT, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].groupFlags           = parseStringToInt(settingsArray[i], TOUCH_OBJECT_GROUPFLAGS, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
+        String captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
+        String captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.captionOn            = captionOn;
+        touchObject.captionOff           = captionOff;
+        touchObject.colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorDisabled        = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABLED, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorDisabledCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABCAPT, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.groupFlags           = parseStringToInt(settingsArray[i], TOUCH_OBJECT_GROUPFLAGS, TOUCH_SETTINGS_SEPARATOR);
 
-        const uint8_t g = get8BitFromUL(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_GROUP);
+        const uint8_t g = get8BitFromUL(touchObject.flags, TOUCH_OBJECT_FLAG_GROUP);
 
         if (!validButtonGroup(g)) {
           _buttonGroups.insert(g);
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-        TouchObjects[t].SurfaceAreas = 0u; // Reset runtime stuff
-        TouchObjects[t].TouchTimers  = 0u;
-        TouchObjects[t].TouchStates  = 0;
+        touchObject.SurfaceAreas = 0u; // Reset runtime stuff
+        touchObject.TouchTimers  = 0u;
+        touchObject.TouchStates  = 0;
 
         # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
         // Check if a slider/gauge with range not including 0 is used, then set starting value closest to 0
-        if (bitRead(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_SLIDER) && !TouchObjects[t].captionOff.isEmpty()) {
+        if (bitRead(touchObject.flags, TOUCH_OBJECT_FLAG_SLIDER) && !touchObject.captionOff.isEmpty()) {
           int16_t _value    = 0;
           int16_t lowRange  = 0;
           int16_t highRange = 100;
 
-          if (parseRangeToInt16(TouchObjects[t].captionOff, lowRange, highRange)) {
+          if (parseRangeToInt16(touchObject.captionOff, lowRange, highRange)) {
             if (lowRange > highRange) {
               if (_value < highRange) {
                 _value = highRange;
@@ -204,14 +233,16 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
                 _value = highRange;
               }
             }
-            TouchObjects[t].TouchStates = _value;
+            touchObject.TouchStates = _value;
           }
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
+        TouchObjects.push_back(std::move(touchObject));
+
         t++;
 
-        settingsArray[i].clear(); // Free a little memory
+        free_string(settingsArray[i]); // Free a little memory
       }
     }
   }

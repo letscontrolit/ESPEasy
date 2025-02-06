@@ -97,8 +97,8 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
     const size_t topic_length = strlen_P(c_topic);
 
     // This is being called from a callback function, so do not try to allocate this on the 2nd heap, but rather on the default heap.
-    if (!(event.String1.reserve(topic_length) &&
-          event.String2.reserve(length))) {
+    if (!(reserve_special(event.String1, topic_length) &&
+          reserve_special(event.String2, length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
       return;
     }

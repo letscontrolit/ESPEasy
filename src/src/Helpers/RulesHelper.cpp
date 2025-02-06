@@ -163,13 +163,11 @@ void RulesHelperClass::init()
 #ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("Cache rules event: ");
-          log += filename;
-          log += F(" pos: ");
-          log += pos_start_line;
-          log += ' ';
-          log += rulesLine;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, strformat(
+            F("Cache rules event: %s pos: %u %s"),
+            filename.c_str(),
+            pos_start_line,
+            rulesLine.c_str()));
         }
 #endif // ifndef BUILD_NO_DEBUG
       }
@@ -296,7 +294,7 @@ String RulesHelperClass::readLn(const String& filename,
 
       while (f.available()) {
         if (addChar(char(f.read()), tmpStr, firstNonSpaceRead)) {
-          lines.push_back(tmpStr);
+          lines.push_back(move_special(std::move(tmpStr)));
           ++readPos;
 
           firstNonSpaceRead = false;
@@ -307,7 +305,7 @@ String RulesHelperClass::readLn(const String& filename,
       if (tmpStr.length() > 0) {
         rules_strip_trailing_comments(tmpStr);
         check_rules_line_user_errors(tmpStr);
-        lines.push_back(tmpStr);
+        lines.push_back(move_special(std::move(tmpStr)));
         tmpStr.clear();
       }
 # ifndef BUILD_NO_DEBUG

@@ -232,6 +232,7 @@ struct tTouch_Point
 // For touch objects we store a name, 2 coordinates, flags and other options
 struct tTouchObjects
 {
+  tTouchObjects();
   uint32_t     flags        = 0u;
   uint32_t     SurfaceAreas = 0u;
   uint32_t     TouchTimers  = 0u;
@@ -383,7 +384,7 @@ private:
   AdaGFXColorDepth _colorDepth = AdaGFXColorDepth::FullColor;
   int16_t _buttonGroup         = 0;
 
-  std::set<int16_t>_buttonGroups;
+  std::set<int16_t>_buttonGroups{};
 
   bool _settingsLoaded = false;
   bool _stillTouching  = false;
@@ -391,13 +392,13 @@ private:
 
   // Used to generate events on touch-release
   int8_t _lastObjectIndex = -1;
-  String _lastObjectName;
+  String _lastObjectName{};
   tTouch_Point _last_point;
   tTouch_Point _last_point_z; // Only used to store z in the x member
   # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
   Swipe_action_e _lastSwipe = Swipe_action_e::None;
-  int16_t _last_delta_x;
-  int16_t _last_delta_y;
+  int16_t _last_delta_x{};
+  int16_t _last_delta_y{};
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
   struct tTouch_Globals
@@ -420,7 +421,7 @@ private:
     bool    logEnabled         = false;
   };
 
-  std::vector<tTouchObjects>TouchObjects;
+  std::vector<tTouchObjects>TouchObjects{};
 
 public:
 
@@ -429,7 +430,7 @@ public:
 
   tTouch_Globals Touch_Settings;
 
-  String settingsArray[TOUCH_ARRAY_SIZE];
+  String settingsArray[TOUCH_ARRAY_SIZE]{};
   uint8_t lastObjectIndex = 0u;
   uint8_t objectCount     = 0u;
 };
