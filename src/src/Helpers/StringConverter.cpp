@@ -854,12 +854,13 @@ String parseStringKeepCase(const String& string, uint8_t indexFind, char separat
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
-    return EMPTY_STRING;
+    return String();
   }
   if (trimResult) {
     result.trim();
   }
-  return stripQuotes(result);
+  result = stripQuotes(result);
+  return result;
 }
 
 String parseStringToEnd(const String& string, uint8_t indexFind, char separator, bool trimResult) {

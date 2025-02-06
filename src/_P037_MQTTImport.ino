@@ -761,9 +761,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
   for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     String subscribeTo = P037_data->getFullMQTTTopic(x);
 
-    if (!subscribeTo.isEmpty()) {
-      parseSystemVariables(subscribeTo, false);
+    parseSystemVariables(subscribeTo, false);
+    subscribeTo.trim();
 
+    if (!subscribeTo.isEmpty()) {
       if (MQTTclient.subscribe(subscribeTo.c_str())) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] subscribed to %s"),

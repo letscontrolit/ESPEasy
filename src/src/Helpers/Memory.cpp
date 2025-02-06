@@ -227,7 +227,8 @@ bool String_reserve_special(String& str, size_t size) {
 class PSRAM_String : public String {
   public:
   PSRAM_String(size_t size) : String() {
-    if (size > capacity() && UsePSRAM()) {
+    init();
+    if (size != 0 && size > capacity() && UsePSRAM()) {
       size_t newSize = (size + 16) & (~0xf);
       void *ptr = special_calloc(1, newSize);
       if (ptr != nullptr) {

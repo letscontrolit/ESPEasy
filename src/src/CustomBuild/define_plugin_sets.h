@@ -1989,6 +1989,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
