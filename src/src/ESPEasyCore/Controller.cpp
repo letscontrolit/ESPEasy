@@ -956,6 +956,7 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
+
   String topic_str;
   String payload_str;
   if (!reserve_special(topic_str, strlen_P(topic)) ||
@@ -964,12 +965,17 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   }
   topic_str = topic;
   payload_str = payload;
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(
-      controller_idx, taskIndex, 
-      std::move(topic_str),
-      std::move(payload_str), retained,
-      callbackTask)));
+
+  std::unique_ptr<MQTT_queue_element> element =
+    std::unique_ptr<MQTT_queue_element>(
+      new (std::nothrow) MQTT_queue_element(
+        controller_idx,
+        taskIndex,
+        std::move(topic_str),
+        std::move(payload_str),
+        retained,
+        callbackTask));
+
 
   if (!element) { return false; }
 
