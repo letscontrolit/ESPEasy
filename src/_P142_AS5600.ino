@@ -44,18 +44,17 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_142;
-      Device[deviceCount].Type             = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].OutputDataType   = Output_Data_type_t::Simple;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 4;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].TimerOptional    = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].PluginStats      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_142;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
 
       break;
     }
@@ -173,12 +172,9 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
           AS5600_MODE_DEGREES,
           AS5600_MODE_RADIANS,
         };
-        addFormSelector(F("Output range"),
-                        F("range"),
-                        NR_ELEMENTS(configurationOptions),
-                        configurations,
-                        configurationOptions,
-                        P142_GET_OUTPUT_MODE);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Output range"), F("range"), P142_GET_OUTPUT_MODE);
       }
       addFormCheckBox(F("Generate Events only when changed"),         F("diff"), P142_GET_UPDATE_DIFF_ONLY);
       addFormCheckBox(F("Generate Events only when magnet detected"), F("cmag"), P142_GET_CHECK_MAGNET);
@@ -211,12 +207,9 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
           AS5600_POWERMODE_LOW2,
           AS5600_POWERMODE_LOW3,
         };
-        addFormSelector(F("Power mode"),
-                        F("pow"),
-                        NR_ELEMENTS(configurationOptions),
-                        configurations,
-                        configurationOptions,
-                        P142_GET_POWER_MODE);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Power mode"), F("pow"), P142_GET_POWER_MODE);
       }
       addFormCheckBox(F("Power watchdog"), F("wdog"), P142_GET_WATCHDOG);
       addFormNote(F("Switches to 'Low power mode 3' after 1 minute of less than 4 LSBs change"));
@@ -235,12 +228,9 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
           AS5600_HYST_LSB2,
           AS5600_HYST_LSB3,
         };
-        addFormSelector(F("Hysteresis"),
-                        F("hyst"),
-                        NR_ELEMENTS(configurationOptions),
-                        configurations,
-                        configurationOptions,
-                        P142_GET_HYSTERESIS);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Hysteresis"), F("hyst"), P142_GET_HYSTERESIS);
       }
       {
         const __FlashStringHelper *configurations[] = {
@@ -255,12 +245,9 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
           AS5600_SLOW_FILT_4X,
           AS5600_SLOW_FILT_2X,
         };
-        addFormSelector(F("Slow filter"),
-                        F("sflt"),
-                        NR_ELEMENTS(configurationOptions),
-                        configurations,
-                        configurationOptions,
-                        P142_GET_SLOW_FILTER);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Slow filter"), F("sflt"), P142_GET_SLOW_FILTER);
       }
       {
         const __FlashStringHelper *configurations[] = {
@@ -283,12 +270,9 @@ boolean Plugin_142(uint8_t function, struct EventStruct *event, String& string)
           AS5600_FAST_FILT_LSB24,
           AS5600_FAST_FILT_LSB10,
         };
-        addFormSelector(F("Fast filter"),
-                        F("fflt"),
-                        NR_ELEMENTS(configurationOptions),
-                        configurations,
-                        configurationOptions,
-                        P142_GET_FAST_FILTER);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Fast filter"), F("fflt"), P142_GET_FAST_FILTER);
       }
       success = true;
       break;

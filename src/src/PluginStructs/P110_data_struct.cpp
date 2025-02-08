@@ -162,7 +162,7 @@ int16_t P110_data_struct::readDistance() {
     addLog(LOG_LEVEL_DEBUG, F("VL53L0X: TIMEOUT"));
 # endif // P110_DEBUG_LOG
     return P110_DISTANCE_READ_TIMEOUT;
-  } else if (dist >= 8190u) {
+  } else if (dist >= 8190) {
 # ifdef P110_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, concat(F("VL53L0X: NO MEASUREMENT: "), dist));
 # endif // P110_DEBUG_LOG

@@ -15,7 +15,8 @@
 // As long as the device is not enabled, no RAM is wasted.
 //
 // @uwekaditz: 2024-08-06
-// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time before the line is displayed,
+// ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time
+// before the line is displayed,
 //      not only once while issuing the command and creating the new line content
 // @tonhuisman: 2024-07-14
 // ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
@@ -241,17 +242,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_036;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_036;
+      dev.Type          = DEVICE_TYPE_I2C;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 
@@ -352,7 +348,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # endif // if P036_ENABLE_TICKER
         };
         constexpr int optionCnt = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Scroll"), F("scroll"), optionCnt, options, optionValues, P036_SCROLL);
+        const FormSelectorOptions selector(optionCnt, options, optionValues);
+        selector.addFormSelector(F("Scroll"), F("scroll"),  P036_SCROLL);
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -363,7 +360,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         const int optionValues[]             =
         { static_cast<int>(eP036pinmode::ePPM_Input),
           static_cast<int>(eP036pinmode::ePPM_InputPullUp) };
-        addFormSelector(F("Pin mode"), F("pinmode"), 2, options, optionValues,
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Pin mode"), F("pinmode"), 
                         bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
       }
 
@@ -392,7 +390,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("Display, Contrast, Frame, Line &amp; Linecount")
         };
         const int optionValues[] = { 0, 1, 3 }; // Bitmap
-        addFormSelector(F("Generate events"), F("generateEvents"), 3, options, optionValues, choice);
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Generate events"), F("generateEvents"), choice);
 
 #  ifndef P036_LIMIT_BUILD_SIZE
         addFormNote(F("Events: &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high),"));
@@ -446,10 +445,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           # endif // if P036_USERDEF_HEADERS
         };
         constexpr int nrOptions9 = NR_ELEMENTS(options9);
-        addFormSelector(F("Header"), F("header"), nrOptions9, options9, optionValues9,
-                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));             // HeaderContent
-        addFormSelector(F("Header (alternate)"), F("headerAlternate"), nrOptions9, options9, optionValues9,
-                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // HeaderContentAlternative
+        const FormSelectorOptions selector(nrOptions9, options9, optionValues9);
+        // HeaderContent
+        selector.addFormSelector(
+          F("Header"), F("header"), 
+          get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));    
+        // HeaderContentAlternative
+        selector.addFormSelector(
+          F("Header (alternate)"), F("headerAlternate"),
+          get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
       }
       # if P036_ENABLE_TIME_FORMAT
       {
@@ -464,7 +468,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("HH:MM:SS (am/pm)"),
           F("HH:MM (am/pm)"),
         };
-        addFormSelector(F("Header Time format"), F("timeFmt"), NR_ELEMENTS(options), options, nullptr,
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Header Time format"), F("timeFmt"),
                         get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT));
       }
       # endif // if P036_ENABLE_TIME_FORMAT
@@ -487,7 +492,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eAlignment::eCenter),
           static_cast<int>(eAlignment::eRight)
         };
-        addFormSelector(F("Align content (global)"), F("LeftAlign"), 3, optionsAlignment, optionValuesAlignment,
+        const FormSelectorOptions selector( NR_ELEMENTS(optionValuesAlignment), optionsAlignment, optionValuesAlignment);
+        selector.addFormSelector(F("Align content (global)"), F("LeftAlign"),
                         get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED));
       }
 # endif // if P036_ENABLE_LEFT_ALIGN
@@ -546,36 +552,36 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             addTextBox(getPluginCustomArgName(varNr),
                        P036_lines.DisplayLinesV1[varNr].Content,
                        P36_NcharsV1 - 1,
-                       false,        // readonly,
-                       false,        // required,
-                       EMPTY_STRING, // pattern,
                        F("xwide")    // class name
                        );
-            html_TD();               // font
-            const uint8_t FontChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
-            addSelector(getPluginCustomArgName(varNr + 100),
-                        5,
-                        optionsFont,
-                        optionValuesFont,
-                        nullptr,    // attr[],
-                        FontChoice, // selectedIndex,
-                        false,      // reloadonchange,
-                        true,       // enabled,
-                        F("")       // class name
-                        );
-            html_TD();              // alignment
-            const uint8_t AlignmentChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout,
-                                                          P036_FLAG_ModifyLayout_Alignment);
-            addSelector(getPluginCustomArgName(varNr + 200),
-                        4,
-                        optionsAlignment,
-                        optionValuesAlignment,
-                        nullptr,         // attr[],
-                        AlignmentChoice, // selectedIndex,
-                        false,           // reloadonchange,
-                        true,            // enabled,
-                        F("")            // class name
-                        );
+            {
+              html_TD();               // font
+
+              FormSelectorOptions selector(
+                5,
+                optionsFont,
+                optionValuesFont);
+              selector.clearClassName();
+    
+              const uint8_t FontChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
+              selector.addSelector(
+                getPluginCustomArgName(varNr + 100),
+                FontChoice); // selectedIndex,
+            }
+            {
+              html_TD();              // alignment
+              FormSelectorOptions selector(
+                4,
+                optionsAlignment,
+                optionValuesAlignment);
+              selector.clearClassName();
+
+              const uint8_t AlignmentChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout,
+                                                            P036_FLAG_ModifyLayout_Alignment);
+              selector.addSelector(
+                getPluginCustomArgName(varNr + 200),
+                AlignmentChoice); // selectedIndex,
+            }
           }
           html_end_table();
         }

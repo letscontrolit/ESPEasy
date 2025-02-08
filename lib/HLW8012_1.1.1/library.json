@@ -1,7 +1,7 @@
 {
     "name": "HLW8012",
     "keywords": "hlw8012,power,current,voltage",
-    "description": "HLW8012 library for Arduino and ESP8266",
+    "description": "HLW8012 library for Arduino and ESP8266 and ESP32, modified for ESPEasy",
     "repository": {
         "type": "git",
         "url": "https://github.com/xoseperez/hlw8012.git"
@@ -10,7 +10,7 @@
     "license": "LGPL-3.0",
     "exclude": "tests",
     "frameworks": "arduino",
-    "platforms": ["atmelavr", "espressif8266", "espressif32"],
+    "platforms": ["espressif8266", "espressif32"],
     "dependencies": [
     ],
     "authors": {

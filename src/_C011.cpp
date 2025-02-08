@@ -102,13 +102,17 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
           uint8_t   choice    = 0;
           const __FlashStringHelper * methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
-          for (uint8_t i = 0; i < 5; i++)
+          constexpr int nrOptions = NR_ELEMENTS(methods);
+
+          for (uint8_t i = 0; i < nrOptions; i++)
           {
             if (HttpMethod.equals(methods[i])) {
               choice = i;
             }
           }
-          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, nullptr, choice);
+
+          const FormSelectorOptions selector(nrOptions, methods);
+          selector.addFormSelector(F("Method"), F("P011httpmethod"), choice);
         }
 
         addFormTextBox(F("URI"), F("P011httpuri"), HttpUri, C011_HTTP_URI_MAX_LEN - 1);

@@ -47,7 +47,8 @@ void Internal_GPIO_pulseHelper::addGPIOtriggerMode(const __FlashStringHelper *la
   for (int i = 0; i < NR_TRIGGER_MODES; ++i) {
     options[i] = Internal_GPIO_pulseHelper::toString(static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(optionValues[i]));
   }
-  addFormSelector(label, id, NR_TRIGGER_MODES, options, optionValues, static_cast<int>(currentSelection));
+  const FormSelectorOptions selector( NR_TRIGGER_MODES, options, optionValues);
+  selector.addFormSelector(label, id, static_cast<int>(currentSelection));
 }
 
 Internal_GPIO_pulseHelper::Internal_GPIO_pulseHelper(Internal_GPIO_pulseHelper::pulseCounterConfig configuration)

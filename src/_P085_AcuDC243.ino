@@ -17,8 +17,8 @@
  */
 
 # define PLUGIN_085
-# define PLUGIN_ID_085 85
-# define PLUGIN_NAME_085 "Energy - AccuEnergy AcuDC24x"
+# define PLUGIN_ID_085         85
+# define PLUGIN_NAME_085       "Energy - AccuEnergy AcuDC24x"
 # define PLUGIN_VALUENAME1_085 ""
 
 
@@ -27,20 +27,18 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_085;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = P085_NR_OUTPUT_VALUES;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].ExitTaskBeforeSave = false;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_085;
+      dev.Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.VType              = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption      = true;
+      dev.ValueCount         = P085_NR_OUTPUT_VALUES;
+      dev.OutputDataType     = Output_Data_type_t::Simple;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.ExitTaskBeforeSave = false;
+      dev.PluginStats        = true;
+      dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -99,7 +97,8 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 6; ++i) {
         options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P085_BAUDRATE);
+      const FormSelectorOptions selector(6, options_baudrate);
+      selector.addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, P085_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
       break;
@@ -131,7 +130,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-        addHtml(strformat(F("%d/%d/%d"), reads_pass, reads_crc_failed, reads_nodata));
+        addHtml(strformat(F("%u/%u/%u"), reads_pass, reads_crc_failed, reads_nodata));
 
         addFormSubHeader(F("Calibration"));
 

@@ -53,7 +53,9 @@ enum class UnaryOperator : uint8_t {
   ArcCos,    // Arc Cosine (radian)
   ArcCos_d,  // Arc Cosine (degree)
   ArcTan,    // Arc Tangent (radian)
-  ArcTan_d   // Arc Tangent (degree)
+  ArcTan_d,  // Arc Tangent (degree)
+  Map,       // Map (value, lowFrom, highFrom, lowTo, highTo) (not really unary...)
+  MapC,      // Map (value, lowFrom, highFrom, lowTo, highTo) and clamp to lowTo/highTo
 };
 
 void   preProcessReplace(String      & input,
@@ -72,11 +74,14 @@ private:
   // @param oc  Previous character
   // @param c   Current character
   bool                is_number(char oc,
-                                char c);
+                                char c,
+                                char pc);
 
   bool                is_operator(char c);
 
   bool                is_unary_operator(char c);
+
+  bool                is_quinary_operator(char c);
 
   CalculateReturnCode push(ESPEASY_RULES_FLOAT_TYPE value);
 
@@ -89,20 +94,28 @@ private:
   ESPEASY_RULES_FLOAT_TYPE apply_unary_operator(char   op,
                               ESPEASY_RULES_FLOAT_TYPE first);
 
+  ESPEASY_RULES_FLOAT_TYPE apply_quinary_operator(char op, 
+                                                  ESPEASY_RULES_FLOAT_TYPE first,
+                                                  ESPEASY_RULES_FLOAT_TYPE second,
+                                                  ESPEASY_RULES_FLOAT_TYPE third,
+                                                  ESPEASY_RULES_FLOAT_TYPE fourth,
+                                                  ESPEASY_RULES_FLOAT_TYPE fifth);
+
   //  char              * next_token(char *linep);
 
   CalculateReturnCode RPNCalculate(char *token);
 
   // operators
   // precedence   operators         associativity
-  // 3            !                 right to left
+  // 4            !                 right to left
+  // 3            ^                 left to right
   // 2            * / %             left to right
-  // 1            + - ^             left to right
+  // 1            + -               left to right
   int          op_preced(const char c);
 
   bool         op_left_assoc(const char c);
 
-  unsigned int op_arg_count(const char c);
+  // unused: unsigned int op_arg_count(const char c);
 
 public:
 

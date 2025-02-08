@@ -3,6 +3,7 @@
 
 #include "../WebServer/common.h"
 
+#include "../DataTypes/FormSelectorOptions.h"
 #include "../DataStructs/MAC_address.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -290,97 +291,6 @@ void addFormSelectorI2C(const String& id,
                         const String& tooltip = EMPTY_STRING
                         #endif
                         );
-
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const String  options[],
-                     const int     indices[],
-                     int           selectedIndex
-                     #if FEATURE_TOOLTIPS
-                     ,
-                     const String& tooltip = EMPTY_STRING
-                     #endif
-                     );
-
-void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
-void addFormSelector(const __FlashStringHelper * label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
-void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
-void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex);
-
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const __FlashStringHelper * options[],
-                     const int     indices[],
-                     int           selectedIndex,
-                     bool          reloadonchange);
-
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const __FlashStringHelper * options[],
-                     const int     indices[],
-                     const String  attr[],
-                     int           selectedIndex,
-                     bool       reloadonchange);
-
-
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const String  options[],
-                     const int     indices[],
-                     int           selectedIndex,
-                     bool          reloadonchange
-                     #if FEATURE_TOOLTIPS
-                     ,
-                     const String& tooltip = EMPTY_STRING
-                     #endif
-                     );
-
-void addFormSelector(const String& label,
-                     const String& id,
-                     int           optionCount,
-                     const String  options[],
-                     const int     indices[],
-                     const String  attr[],
-                     int           selectedIndex,
-                     bool       reloadonchange
-                     #if FEATURE_TOOLTIPS
-                     ,
-                     const String& tooltip = EMPTY_STRING
-                     #endif
-                     );
-
-void addFormSelector_script(const __FlashStringHelper * label,
-                            const __FlashStringHelper * id,
-                            int           optionCount,
-                            const __FlashStringHelper * options[],
-                            const int     indices[],
-                            const String  attr[],
-                            int           selectedIndex,
-                            const __FlashStringHelper * onChangeCall
-                            #if FEATURE_TOOLTIPS
-                            ,
-                            const String& tooltip = EMPTY_STRING
-                            #endif
-                            );
-
-
-void addFormSelector_script(const __FlashStringHelper * label,
-                            const __FlashStringHelper * id,
-                            int           optionCount,
-                            const String  options[],
-                            const int     indices[],
-                            const String  attr[],
-                            int           selectedIndex,
-                            const __FlashStringHelper * onChangeCall
-                            #if FEATURE_TOOLTIPS
-                            ,
-                            const String& tooltip = EMPTY_STRING
-                            #endif
-                            );
 
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,

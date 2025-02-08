@@ -202,7 +202,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = String();
+            free_string(formattedValue);
           }
 
           const String valueName = Cache.getTaskDeviceValueName(event->TaskIndex, x);

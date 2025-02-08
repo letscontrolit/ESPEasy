@@ -7,6 +7,10 @@
 // ############################# Plugin 052: Senseair CO2 Sensors ########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 25025-01-03 tonhuisman: Small code size reduction
+ */
+
 /*
    Plugin originally written by: Daniel Tedenljung
    info__AT__tedenljungconsulting.com
@@ -34,20 +38,17 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_052;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].ExitTaskBeforeSave = false;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_052;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption      = true;
+      dev.ValueCount         = 1;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.OutputDataType     = Output_Data_type_t::Simple;
+      dev.ExitTaskBeforeSave = false;
+      dev.PluginStats        = true;
       break;
     }
 
@@ -151,13 +152,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           {
             uint32_t reads_pass, reads_crc_failed, reads_nodata;
             P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-            String chksumStats;
-            chksumStats  = reads_pass;
-            chksumStats += '/';
-            chksumStats += reads_crc_failed;
-            chksumStats += '/';
-            chksumStats += reads_nodata;
-            addHtml(chksumStats);
+            addHtml(strformat(F("%d/%d/%d"), reads_pass, reads_crc_failed, reads_nodata));
           }
 
           bool hasFactorySettings = false;
@@ -228,8 +223,9 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
               if (P052_data->readHoldingRegister(P052_HR11_MEASUREMENT_MODE, value)) {
                 // Disable selector for now, since single measurement not yet supported.
 
-                const __FlashStringHelper *options[2] = { F("Continuous"), F("Single Measurement") };
-                addFormSelector(F("Measurement Mode"), F("mode"), 2, options, nullptr, value);
+                const __FlashStringHelper *options[] = { F("Continuous"), F("Single Measurement") };
+                const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+                selector.addFormSelector(F("Measurement Mode"), F("mode"), value);
               }
            */
 
@@ -251,10 +247,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
          // ABC functionality disabled for now, due to a bug in the firmware.
          // See https://github.com/letscontrolit/ESPEasy/issues/759
          uint8_t choiceABCperiod = PCONFIG(4);
-         const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
+         const __FlashStringHelper * optionsABCperiod[] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-         addFormSelector(F("ABC period"), F("ABC_period"), 9, optionsABCperiod,
-         nullptr, choiceABCperiod);
+         const FormSelectorOptions selector(NR_ELEMENTS(optionsABCperiod), optionsABCperiod);
+         selector.addFormSelector(F("ABC period"), F("ABC_period"), choiceABCperiod);
        */
 
 

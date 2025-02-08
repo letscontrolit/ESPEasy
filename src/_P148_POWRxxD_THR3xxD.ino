@@ -39,18 +39,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_148;
-      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_148;
+      dev.Type          = DEVICE_TYPE_CUSTOM0;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 
@@ -127,8 +121,8 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P148_data_struct::Tm1621Device::THR3xxD)
         };
         constexpr size_t nrElements = NR_ELEMENTS(optionValues);
-
-        addFormSelector(F("Device Template"), F("devtmpl"), nrElements, options, optionValues, P148_DEVICE_SELECTOR);
+        const FormSelectorOptions selector(nrElements, options, optionValues);
+        selector.addFormSelector(F("Device Template"), F("devtmpl"), P148_DEVICE_SELECTOR);
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));
       }
 
@@ -147,9 +141,9 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       html_TR_TD();
 
       addHtml(F("<label class='nosave'>&nbsp;<input "));
-      addHtmlAttribute(F("type"), F("checkbox"));
-      addHtmlAttribute(F("id"),   F("nosave"));
-      addHtmlAttribute(F("name"), F("nosave"));
+      addHtmlAttribute(F("type"),  F("checkbox"));
+      addHtmlAttribute(F("id"),    F("nosave"));
+      addHtmlAttribute(F("name"),  F("nosave"));
       addHtmlAttribute(F("style"), F("display:none"));
       addHtml(F("><span class='checkmark'></span></label>"));
 

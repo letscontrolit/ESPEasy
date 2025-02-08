@@ -426,6 +426,9 @@ verify_CV_sig(br_ssl_server_context *ctx, size_t sig_len)
 	return 0;
 }
 
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
+
 
 
 static const unsigned char t0_datablock[] PROGMEM = {
@@ -1064,7 +1067,7 @@ br_ssl_hs_server_run(void *t0ctx)
 				break;
 			case 10: {
 				/* -rot */
- T0_NROT();
+ T0_NROT(); 
 				}
 				break;
 			case 11: {
@@ -1238,7 +1241,7 @@ br_ssl_hs_server_run(void *t0ctx)
 				break;
 			case 27: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 28: {
@@ -1402,12 +1405,12 @@ br_ssl_hs_server_run(void *t0ctx)
 				break;
 			case 41: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 42: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 43: {
@@ -1544,12 +1547,12 @@ br_ssl_hs_server_run(void *t0ctx)
 				break;
 			case 58: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 59: {
 				/* pick */
- T0_PICK(T0_POP());
+ T0_PICK(T0_POP()); 
 				}
 				break;
 			case 60: {
@@ -1690,7 +1693,7 @@ br_ssl_hs_server_run(void *t0ctx)
 				break;
 			case 71: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			case 72: {

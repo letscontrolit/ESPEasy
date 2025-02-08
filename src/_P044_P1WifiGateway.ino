@@ -35,10 +35,11 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number    = PLUGIN_ID_044;
-      Device[deviceCount].Type        = DEVICE_TYPE_CUSTOM2;
-      Device[deviceCount].Custom      = true;
-      Device[deviceCount].TimerOption = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number      = PLUGIN_ID_044;
+      dev.Type        = DEVICE_TYPE_CUSTOM2;
+      dev.Custom      = true;
+      dev.TimerOption = false;
       break;
     }
 

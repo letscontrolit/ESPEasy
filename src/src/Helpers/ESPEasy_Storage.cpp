@@ -50,6 +50,9 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+#if FEATURE_MQTT
+#include "../Helpers/_CPlugin_Helper.h"
+#endif
 
 #if FEATURE_RTC_CACHE_STORAGE
 # include "../Globals/C016_ControllerCache.h"
@@ -448,6 +451,28 @@ bool BuildFixes()
     Settings.VariousBits_1.unused_15 = 0;
   }
   #endif // ifdef USES_P053
+
+  if (Settings.Build <= 21066) { // 2024-12-31
+    // (MQTT) Keep Alive time-out is now defined in the controller settings.
+    #if FEATURE_MQTT
+    for (controllerIndex_t controller_idx = 0; controller_idx < CONTROLLER_MAX; ++controller_idx) {
+    // controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
+      const protocolIndex_t protocol_idx = getProtocolIndex_from_ControllerIndex(controller_idx);
+
+    if (validProtocolIndex(protocol_idx) && getProtocolStruct(protocol_idx).usesMQTT) {
+      MakeControllerSettings(ControllerSettings); // -V522
+
+      if (AllocatedControllerSettings()) {
+        LoadControllerSettings(controller_idx, *ControllerSettings);
+
+        // Used to be hardcoded at 10 sec., now default 60 sec. and configurable
+        ControllerSettings->KeepAliveTime = CONTROLLER_KEEP_ALIVE_TIME_DFLT;
+        SaveControllerSettings(controller_idx, *ControllerSettings);
+      }
+    }
+    }
+    #endif // if FEATURE_MQTT
+  }
 
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
@@ -977,7 +1002,7 @@ String LoadStringArray(SettingsType::Enum settingsType,
     #ifndef BUILD_NO_DEBUG
     return F("Invalid index for custom settings");
     #else // ifndef BUILD_NO_DEBUG
-    return F("Save error");
+    return F("Load error");
     #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -1556,7 +1581,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
    Handle certificate files on the file system.
    The content will be stripped from unusable character like quotes, spaces etc.
  \*********************************************************************************************/
-#if FEATURE_MQTT_TLS
+#if FEATURE_TLS
 static inline bool is_base64(char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
@@ -1942,7 +1967,7 @@ String LoadFromFile(const char *fname, String& data, int offset)
   STOP_TIMER(LOADFILE_STATS);
   delay(0);
 
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\

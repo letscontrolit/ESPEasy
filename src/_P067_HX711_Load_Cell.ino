@@ -42,16 +42,16 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_067;
-      Device[deviceCount].Type           = DEVICE_TYPE_DUAL;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 2;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_067;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -86,7 +86,8 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *optionsModeChanA[] = { F("Off"), F("Gain 64"), F("Gain 128") };
-        addFormSelector(F("Mode"), F("modeChA"), 3, optionsModeChanA, nullptr, P067_GET_CHANNEL_A_MODE);
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsModeChanA), optionsModeChanA);
+        selector.addFormSelector(F("Mode"), F("modeChA"), P067_GET_CHANNEL_A_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &valFloat);
@@ -101,7 +102,8 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *optionsModeChanB[] = { F("Off"), F("Gain 32") };
-        addFormSelector(F("Mode"), F("modeChB"), 2, optionsModeChanB, nullptr, P067_GET_CHANNEL_B_MODE);
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsModeChanB), optionsModeChanB);
+        selector.addFormSelector(F("Mode"), F("modeChB"), P067_GET_CHANNEL_B_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &valFloat);

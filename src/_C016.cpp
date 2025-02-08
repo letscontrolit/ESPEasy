@@ -104,8 +104,8 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1 = String();
-      event->String2 = String();
+      free_string(event->String1);
+      free_string(event->String2);
       break;
     }
 

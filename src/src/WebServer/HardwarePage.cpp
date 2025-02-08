@@ -143,7 +143,6 @@ void handle_hardware() {
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
-    # define I2C_MULTIPLEXER_OPTIONCOUNT  5 // Nr. of supported devices + 'None'
     const __FlashStringHelper *i2c_muxtype_options[] = {
       F("- None -"),
       F("TCA9548a - 8 channel"),
@@ -158,8 +157,9 @@ void handle_hardware() {
       I2C_MULTIPLEXER_TCA9543A,
       I2C_MULTIPLEXER_PCA9540
     };
-    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), I2C_MULTIPLEXER_OPTIONCOUNT,
-                    i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+    const FormSelectorOptions selector(NR_ELEMENTS(i2c_muxtype_choices),
+                    i2c_muxtype_options, i2c_muxtype_choices);
+    selector.addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), Settings.I2C_Multiplexer_Type);
   }
   // Select the I2C address for a port multiplexer
   {
@@ -180,7 +180,8 @@ void handle_hardware() {
       }
       i2c_mux_choices[mux_opt] = 0x70 + x;
     }
-    addFormSelector(F("I2C Multiplexer address"), F("pi2cmuxaddr"), mux_opt + 1, i2c_mux_options, i2c_mux_choices, Settings.I2C_Multiplexer_Addr);
+    const FormSelectorOptions selector(mux_opt + 1, i2c_mux_options, i2c_mux_choices);
+    selector.addFormSelector(F("I2C Multiplexer address"), F("pi2cmuxaddr"),  Settings.I2C_Multiplexer_Addr);
   }
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
   addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
@@ -214,7 +215,9 @@ void handle_hardware() {
       static_cast<int>(SPI_Options_e::UserDefined)
     };
     constexpr size_t nrOptions = NR_ELEMENTS(spi_index);
-    addFormSelector_script(F("Init SPI"), F("initspi"), nrOptions, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
+    FormSelectorOptions selector(nrOptions, spi_options, spi_index);
+    selector.onChangeCall = F("spiOptionChanged(this)");
+    selector.addFormSelector(F("Init SPI"), F("initspi"), Settings.InitSPI);
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
     addFormPinSelect(PinSelectPurpose::SPI_MISO, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
@@ -241,7 +244,8 @@ void handle_hardware() {
       toString(NetworkMedium_t::WIFI), 
       toString(NetworkMedium_t::Ethernet) 
       };
-    addSelector(F("ethwifi"), 2, ethWifiOptions, nullptr, nullptr, static_cast<int>(Settings.NetworkMedium), false, true);
+    const FormSelectorOptions selector(2, ethWifiOptions);
+    selector.addSelector(F("ethwifi"), static_cast<int>(Settings.NetworkMedium));
   }
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   {
@@ -311,14 +315,14 @@ void handle_hardware() {
       ? static_cast<int>(Settings.ETH_Phy_Type) 
       : static_cast<int>(EthPhyType_t::notSet);
 
-    addFormSelector(
-      F("Ethernet PHY type"), 
-      F("ethtype"),
+    const FormSelectorOptions selector(      
       nrItems, 
       ethPhyTypes, 
-      ethPhyTypes_index, 
-      choice, 
-      false);
+      ethPhyTypes_index);
+    selector.addFormSelector(
+      F("Ethernet PHY type"), 
+      F("ethtype"),
+      choice);
   }
 
 #if CONFIG_ETH_USE_SPI_ETHERNET && CONFIG_ETH_USE_ESP32_EMAC
@@ -353,13 +357,14 @@ void handle_hardware() {
 #if CONFIG_ETH_USE_ESP32_EMAC
   addRowLabel_tr_id(F("Ethernet Clock"), F("ethclock"));
   {
-    const __FlashStringHelper * ethClockOptions[4] = { 
+    const __FlashStringHelper * ethClockOptions[] = { 
       toString(EthClockMode_t::Ext_crystal_osc),
       toString(EthClockMode_t::Int_50MHz_GPIO_0),
       toString(EthClockMode_t::Int_50MHz_GPIO_16),
       toString(EthClockMode_t::Int_50MHz_GPIO_17_inv)
       };
-    addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
+    const FormSelectorOptions selector(NR_ELEMENTS(ethClockOptions), ethClockOptions);
+    selector.addSelector(F("ethclock"), static_cast<int>(Settings.ETH_Clock_Mode));
   }
 #endif
 #endif // if FEATURE_ETHERNET

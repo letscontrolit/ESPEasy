@@ -407,11 +407,8 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
-
   // Touch (ESP32)
   97,
-  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -1443,11 +1440,8 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C2) && !defined(ESP32C3) && !defined(ESP32C6)
-
   // Touch (ESP32)
   &Plugin_097,
-  # endif // if defined(ESP32) && !defined(ESP32Cxx)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -2092,7 +2086,7 @@ constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plug
 constexpr size_t Lowest_Plugin_id = DeviceIndex_to_Plugin_id_size == 0 ? 0 : DeviceIndex_to_Plugin_id[0];
 
 // Highest plugin ID included in the build
-constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 1 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 0 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
 
 // Array size including index of highest plugin ID.
 constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_Plugin_id;

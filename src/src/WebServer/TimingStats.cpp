@@ -28,14 +28,21 @@ void handle_timingstats() {
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
   html_TR();
-  html_table_header(F("Description"));
-  html_table_header(F("Function"));
-  html_table_header(F("#calls"));
-  html_table_header(F("call/sec"));
-  html_table_header(F("duty (%)"));
-  html_table_header(F("min (ms)"));
-  html_table_header(F("Avg (ms)"));
-  html_table_header(F("max (ms)"));
+  {
+    const __FlashStringHelper * headers[] = {
+      F("Description"),
+      F("Function"),
+      F("#calls"),
+      F("call/sec"),
+      F("duty (%)"),
+      F("min (ms)"),
+      F("Avg (ms)"),
+      F("max (ms)")};
+    for (unsigned int i = 0; i < NR_ELEMENTS(headers); ++i) {
+      html_table_header(headers[i]);
+    }
+  }
+
 
   const long timeSinceLastReset = stream_timing_statistics(true);
   html_end_table();

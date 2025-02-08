@@ -2,7 +2,6 @@
     "name": "HLW8012", 
     "license": "GPL-3.0", 
     "platforms": [
-        "atmelavr",
         "espressif8266",
         "espressif32"
     ], 
@@ -36,5 +35,5 @@
         "voltage"
     ], 
     "id": 1281, 
-    "description": "HLW8012 library for Arduino and ESP8266"
+    "description": "HLW8012 library for Arduino and ESP8266/ESP32, modified for ESPEasy"
 }

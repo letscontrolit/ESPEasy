@@ -9,6 +9,8 @@
 
 /**
  * Changelog:
+ * 2025-01-21 tonhuisman: Bugfix: commands axp,ldo2,x to axp,dcdc3,x weren't working as intended
+ * 2025-01-18 tonhuisman: Add predefined config settings for M5Stack StickC Plus units
  * 2022-12-27 tonhuisman: Add predefined config settings for LilyGO T-Beam LoRa units
  * 2022-12-07 tonhuisman: Re-order device configuration to use PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR
  *                        Enable PluginStats feature
@@ -81,17 +83,18 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_137;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
-      Device[deviceCount].PowerManager   = true; // So it can be started before SPI is initialized
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 4;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_137;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.PowerManager   = true; // So it can be started before SPI is initialized
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -180,6 +183,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           toString(P137_PredefinedDevices_e::M5Stack_StickC),
           toString(P137_PredefinedDevices_e::M5Stack_Core2),
           toString(P137_PredefinedDevices_e::LilyGO_TBeam),
+          toString(P137_PredefinedDevices_e::M5Stack_StickCPlus),
           toString(P137_PredefinedDevices_e::UserDefined) // keep last and at 99 !!
         };
         const int predefinedValues[] = {
@@ -187,10 +191,12 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_StickC),
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_Core2),
           static_cast<int>(P137_PredefinedDevices_e::LilyGO_TBeam),
+          static_cast<int>(P137_PredefinedDevices_e::M5Stack_StickCPlus),
           static_cast<int>(P137_PredefinedDevices_e::UserDefined) }; // keep last and at 99 !!
-        addFormSelector(F("Predefined device configuration"), F("predef"),
-                        sizeof(predefinedValues) / sizeof(int),
-                        predefinedNames, predefinedValues, 0, !Settings.isPowerManagerTask(event->TaskIndex));
+        constexpr size_t optionCount = NR_ELEMENTS(predefinedValues);
+        FormSelectorOptions selector(optionCount, predefinedNames, predefinedValues);
+        selector.reloadonchange = !Settings.isPowerManagerTask(event->TaskIndex);
+        selector.addFormSelector(F("Predefined device configuration"), F("predef"), 0);
 
         if (!Settings.isPowerManagerTask(event->TaskIndex)) {
           addFormNote(F("Page will reload when selection is changed."));
@@ -264,18 +270,16 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           F("disabled"),
           F("disabled"),
         };
+        constexpr size_t optionCount = NR_ELEMENTS(bootStateValues);
 
         for (int i = 0; i < 5; ++i) { // GPIO0..4
           const String id = concat(F("pgpio"), i);
           addRowLabel(concat(F("Initial state GPIO"), i));
-          addSelector(id, sizeof(bootStateValues) / sizeof(int),
-                      bootStates, bootStateValues, bootStateAttributes,
-                      get3BitFromUL(P137_CONFIG_FLAGS, i * 3),
-                      false, !bitRead(P137_CONFIG_DISABLEBITS, i + 3), F("")
-                      #  if FEATURE_TOOLTIPS
-                      , EMPTY_STRING
-                      #  endif // if FEATURE_TOOLTIPS
-                      );
+          FormSelectorOptions selector(
+            optionCount, bootStates, bootStateValues, bootStateAttributes);
+          selector.enabled = !bitRead(P137_CONFIG_DISABLEBITS, i + 3);
+          selector.clearClassName();
+          selector.addSelector(id, get3BitFromUL(P137_CONFIG_FLAGS, i * 3));
 
           if (bitRead(P137_CONFIG_DISABLEBITS, i + 3)) {
             addUnit(notConnected);
@@ -333,12 +337,13 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         static_cast<int>(P137_valueOptions_e::DCDC2),
         static_cast<int>(P137_valueOptions_e::DCDC3),
       };
+      constexpr size_t optionCount = NR_ELEMENTS(valValues);
 
       for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; ++i) {
         sensorTypeHelper_loadOutputSelector(event,
                                             P137_CONFIG_BASE + i,
                                             i,
-                                            sizeof(valValues) / sizeof(int),
+                                            optionCount,
                                             valOptions,
                                             valValues);
       }

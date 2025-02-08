@@ -52,12 +52,15 @@
 # define P159_OUTPUT_MOVING_SENSOR_ENERGY_GATE0   37
 # define P159_OUTPUT_MOVING_SENSOR_ENERGY_GATE8   45
 
-# define P159_NR_OUTPUT_OPTIONS                   8    // Last P159_OUTPUT_*_DISTANCE value + 1 (count)
-# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       28   // Last P159_OUTPUT_*_DISTANCE value + 1 (count) ENGINEERING
-# define P159_NR_MAX_OUTPUT_OPTIONS               46   // Last P159_OUTPUT_*_SENSOR value + 1 (count)
+# define P159_NR_OUTPUT_OPTIONS                   8     // Last P159_OUTPUT_*_DISTANCE value + 1 (count)
+# define P159_NR_ENGINEERING_OUTPUT_OPTIONS       28    // Last P159_OUTPUT_*_DISTANCE value + 1 (count) ENGINEERING
+# define P159_NR_MAX_OUTPUT_OPTIONS               46    // Last P159_OUTPUT_*_SENSOR value + 1 (count)
 
-# define P159_DELAY_RESTART                       2500 // milliseconds to 'wait' (ignore) after a device-restart
-# define P159_DELAY_SENDOUT                       100  // Minimal milliseconds between sending data/events
+# define P159_DELAY_RESTART                       2500  // milliseconds to 'wait' (ignore) after a device-restart
+# define P159_DELAY_SENDOUT                       100   // Minimal milliseconds between sending data/events
+
+# define P159_MAX_SENSITIVITY_VALUE               101   // Max sensitivity 0 = most sensitive, 101 = no output (max = 100) (docs)
+# define P159_GATE_DISTANCE_METERS                0.75f // Size of each gate in meters (0.75f)
 
 enum class P159_state_e : uint8_t {
   Initializing     = 0u,

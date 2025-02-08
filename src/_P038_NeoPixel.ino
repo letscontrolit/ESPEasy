@@ -57,10 +57,11 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_038;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].TimerOption   = false;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_038;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.TimerOption   = false;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -95,7 +96,8 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *options[] = { F("GRB"), F("GRBW") };
         int indices[]                        = { P038_STRIP_TYPE_RGB, P038_STRIP_TYPE_RGBW };
-        addFormSelector(F("Strip Type"), F("pstrip"), 2, options, indices, P038_CONFIG_STRIPTYPE);
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, indices);
+        selector.addFormSelector(F("Strip Type"), F("pstrip"), P038_CONFIG_STRIPTYPE);
       }
 
       if (P038_CONFIG_BRIGHTNESS == 0) { P038_CONFIG_BRIGHTNESS = 255; }

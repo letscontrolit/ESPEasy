@@ -1,0 +1,88 @@
+.. include:: ../Plugin/_plugin_substitutions_p17x.repl
+.. _P178_page:
+
+|P178_typename|
+==================================================
+
+|P178_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P178_type|
+
+Name: |P178_name|
+
+Status: |P178_status|
+
+GitHub: |P178_github|_
+
+Maintainer: |P178_maintainer|
+
+Used libraries: |P178_usedlibraries|
+
+Introduction
+------------
+
+The ``LU9685`` is being sold on a PCB as a 16 channel servo controller by various sellers like AliExpress, E-bay, etc.
+However the chip itself is capable of addressing upto 20 servos.
+
+These "16-channel"-boards resemble the design of many older PCA9685 boards and many sellers claim this ``LU9685`` is a direct replacement for the ``PCA9685``.
+However, these are quite different chips.
+
+The ``LU9685`` is specifically aimed to be used as a servo controller chip as it can only set the PWM pulse per pin between 0.5 ms .. 2.5 ms.
+
+The PWM frequency can be set from 20 Hz - 300 Hz.
+
+Supported hardware
+------------------
+
+|P178_usedby|
+
+Configuration
+-------------
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+I2C options
+^^^^^^^^^^^
+
+The available I2C settings here depend on the build used.
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+* **PWM Frequency**: The frequency of sending the PWM pulses. Range 20 .. 255 Hz.
+
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P178_commands.repl
+
+.. Events
+.. ~~~~~~
+
+.. .. include:: P178_events.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+
+
+
+

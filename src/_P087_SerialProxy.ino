@@ -73,20 +73,16 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_087;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_STRING;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_087;
+      dev.Type           = DEVICE_TYPE_SERIAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_STRING;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
 
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
-      Device[deviceCount].ExitTaskBeforeSave = false;
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 
@@ -352,13 +348,14 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         optionValues[i] = matchType;
       }
       P087_Match_Type choice = P087_data->getMatchType();
-      addFormSelector(F("Match Type"),
-                      getPluginCustomArgName(P087_MATCH_TYPE_POS),
-                      P087_Match_Type_NR_ELEMENTS,
-                      options,
-                      optionValues,
-                      choice,
-                      false);
+      const FormSelectorOptions selector(
+        P087_Match_Type_NR_ELEMENTS,
+        options,
+        optionValues);
+      selector.addFormSelector(
+        F("Match Type"),
+        getPluginCustomArgName(P087_MATCH_TYPE_POS),
+        choice);
       addFormNote(F("Capture filter can only be used on Global Match"));
     }
 
@@ -389,14 +386,16 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           const __FlashStringHelper *options[2];
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
-          const int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, F(""));
+          const int optionValues[] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
+          FormSelectorOptions selector(2, options, optionValues);
+          selector.clearClassName();
+          selector.addSelector(id, static_cast<int>(comparator));
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, EMPTY_STRING, F(""));
+          addTextBox(id, filter, 32, F(""));
           break;
         }
       }

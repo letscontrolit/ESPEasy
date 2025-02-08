@@ -1,6 +1,8 @@
 Changes for 2.3
 
+* New feature: Official support for ESP8266 and ESP32.
 * Fixed issue #2 - Support for PROGMEM / FLASH melodies in non-blocking mode.
+* Fixed issue #6 - Error compiling for board ESP32 Wrover Kit (all versions).
 
 
 Changes for 2.2.1:

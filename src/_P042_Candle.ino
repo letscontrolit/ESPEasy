@@ -92,14 +92,14 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_042;
-      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].ValueCount     = 3;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_042;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -139,7 +139,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Led Count"), P042_WEBVAR_PIXELCOUNT, P042_CONFIG_PIXELCOUNT, 1, P042_MAX_PIXELS);
 
       {
-        const __FlashStringHelper *options[P042_FLAME_OPTIONS] = {
+        const __FlashStringHelper *options[] = {
           F("Off"),
           F("Static Light"),
           F("Simple Candle"),
@@ -155,7 +155,8 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE, P042_FLAME_OPTIONS, options, nullptr, P042_CONFIG_CANDLETYPE);
+        const FormSelectorOptions selector(P042_FLAME_OPTIONS, options);
+        selector.addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE,  P042_CONFIG_CANDLETYPE);
       }
 
       // Advanced Color options
@@ -164,18 +165,16 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       addHtml(F("<input type='radio' id='clrDef' name='" P042_WEBVAR_COLORTYPE_S "' value='0'"));
 
       if (Candle_color == P042_ColorType::ColorDefault) {
-        addHtml(F(" checked>"));
-      } else {
-        addHtml('>');
+        addHtml(F(" checked"));
       }
+      addHtml('>');
       addHtml(F("<label for='clrDef'> Use default color</label><br>"));
       addHtml(F("<input type='radio' id='clrSel' name='" P042_WEBVAR_COLORTYPE_S "' value='1'"));
 
       if (Candle_color == P042_ColorType::ColorSelected) {
-        addHtml(F(" checked>"));
-      } else {
-        addHtml('>');
+        addHtml(F(" checked"));
       }
+      addHtml('>');
       addHtml(F("<label for='clrSel'> Use selected color</label><br>"));
 
       // http://jscolor.com/examples/

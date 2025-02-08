@@ -8,13 +8,13 @@ std::map<uint32_t, ESPEASY_RULES_FLOAT_TYPE> customFloatVar;
 UserVarStruct UserVar;
 
 
-ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index) {
+ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index, ESPEASY_RULES_FLOAT_TYPE defaultValue) {
   auto it = customFloatVar.find(index);
 
   if (it != customFloatVar.end()) {
     return it->second;
   }
-  return 0.0;
+  return defaultValue;
 }
 
 void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value) {

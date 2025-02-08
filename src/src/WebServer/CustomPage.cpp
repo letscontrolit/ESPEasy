@@ -98,7 +98,7 @@ bool handle_custom(const String& path) {
         addSelector_Item(name, it->first, choice == it->first);
       }
     }
-    addSelector_Foot();
+    addSelector_Foot(true);
 
     // create <> navigation buttons
     uint8_t prev = Settings.Unit;
@@ -147,6 +147,9 @@ bool handle_custom(const String& path) {
 
   if (dataFile)
   {
+    if (!dashboardPage) {
+      TXBuffer.startStream(); // Start streaming as it hasn't been started yet, to avoid HTTP/0.9 fallback response
+    }
     // Read the file per line and serve per line to reduce amount of memory needed.
     size_t available = dataFile.available();
     String line;

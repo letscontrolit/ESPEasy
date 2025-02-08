@@ -104,22 +104,24 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       // This case defines the device characteristics, edit appropriately
+      // Attention: dev Values set to 0 or false should be removed to save a few bytes (unneeded assignments)
 
-      Device[++deviceCount].Number           = PLUGIN_ID_xxx;                    // Plugin ID number.   (PLUGIN_ID_xxx)
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;               // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH; // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-      Device[deviceCount].Ports              = 0;                                // Port to use when device has multiple I/O pins  (N.B. not used much)
-      Device[deviceCount].ValueCount         = 0;                                // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;      // Subset of selectable output data types  (Default = no selection)
-      Device[deviceCount].PullUpOption       = false;                            // Allow to set internal pull-up resistors.
-      Device[deviceCount].InverseLogicOption = false;                            // Allow to invert the boolean state (e.g. a switch)
-      Device[deviceCount].FormulaOption      = false;                            // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-      Device[deviceCount].Custom             = false;
-      Device[deviceCount].SendDataOption     = false;                            // Allow to send data to a controller.
-      Device[deviceCount].GlobalSyncOption   = true;                             // No longer used. Was used for ESPeasy values sync between nodes
-      Device[deviceCount].TimerOption        = false;                            // Allow to set the "Interval" timer for the plugin.
-      Device[deviceCount].TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-      Device[deviceCount].DecimalsOnly       = true;                             // Allow to set the number of decimals (otherwise treated a 0 decimals)
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_xxx;                    // Plugin ID number.   (PLUGIN_ID_xxx)
+      dev.Type               = DEVICE_TYPE_SINGLE;               // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SWITCH; // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
+      dev.Ports              = 0;                                // Port to use when device has multiple I/O pins  (N.B. not used much)
+      dev.ValueCount         = 0;                                // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+      dev.OutputDataType     = Output_Data_type_t::Default;      // Subset of selectable output data types  (Default = no selection)
+      dev.PullUpOption       = false;                            // Allow to set internal pull-up resistors.
+      dev.InverseLogicOption = false;                            // Allow to invert the boolean state (e.g. a switch)
+      dev.FormulaOption      = false;                            // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
+      dev.Custom             = false;
+      dev.SendDataOption     = false;                            // Allow to send data to a controller.
+      dev.GlobalSyncOption   = true;                             // No longer used. Was used for ESPeasy values sync between nodes
+      dev.TimerOption        = false;                            // Allow to set the "Interval" timer for the plugin.
+      dev.TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
+      dev.DecimalsOnly       = true;                             // Allow to set the number of decimals (otherwise treated a 0 decimals)
       break;
     }
 
@@ -177,7 +179,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      // This is only called when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
+      // This is only called when dev.OutputDataType is not Output_Data_type_t::Default
       // The position in the config parameters used in this example is PCONFIG(Pxxx_OUTPUT_TYPE_INDEX)
       // Must match the one used in case PLUGIN_GET_DEVICEVTYPE  (best to use a define for it)
       // see P026_Sysinfo.ino for more examples.
@@ -188,7 +190,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVTYPE:
     {
-      // This is only called when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
+      // This is only called when dev.OutputDataType is not Output_Data_type_t::Default
       // The position in the config parameters used in this example is PCONFIG(Pxxx_OUTPUT_TYPE_INDEX)
       // Must match the one used in case PLUGIN_GET_DEVICEVALUECOUNT  (best to use a define for it)
       // IDX is used here to mark the PCONFIG position used to store the Device VType.

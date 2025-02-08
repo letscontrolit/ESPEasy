@@ -42,14 +42,13 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number      = PLUGIN_ID_131;
-      Device[deviceCount].Type          = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType         = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports         = 0;
-      Device[deviceCount].ValueCount    = 0;
-      Device[deviceCount].TimerOption   = true;
-      Device[deviceCount].TimerOptional = true;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_131;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -93,7 +92,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *stripOptions[] = { F("GRB"), F("GRBW") }; // Selection copied from P038
-        addFormSelector(F("Strip Type"), F("striptype"), 2, stripOptions, optionValuesZeroOne, P131_CONFIG_FLAGS_GET_STRIP_TYPE);
+        const FormSelectorOptions selector(2, stripOptions, optionValuesZeroOne);
+        selector.addFormSelector(F("Strip Type"), F("striptype"),  P131_CONFIG_FLAGS_GET_STRIP_TYPE);
       }
 
       {
@@ -119,14 +119,18 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Matrix height"), F("mxheight"),
                           P131_CONFIG_MATRIX_HEIGHT, 1, 100);
 
-        addFormSelector(F("Matrix start-pixel"), F("mxstart"), 4, optionsTop, optionValuesTop,
-                        get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
+        const FormSelectorOptions selTop(4, optionsTop, optionValuesTop);
+        const FormSelectorOptions selRowCol(2, optionsRowCol, optionValuesZeroOne);
+        const FormSelectorOptions selProZig(2, optionsProZig, optionValuesZeroOne);
 
-        addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 2, optionsRowCol, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
+        selTop.addFormSelector(F("Matrix start-pixel"), F("mxstart"), 
+          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
 
-        addFormSelector(F("Matrix flow direction"), F("mxprozig"), 2, optionsProZig, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
+        selRowCol.addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
+
+        selProZig.addFormSelector(F("Matrix flow direction"), F("mxprozig"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
 
         addFormSubHeader(F("Multiple matrices: Tiles"));
 
@@ -135,14 +139,14 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Tile matrix height"), F("tlheight"),
                           P131_CONFIG_TILE_HEIGHT, 1, P131_Nlines);
 
-        addFormSelector(F("Tile start-matrix"), F("tlstart"), 4, optionsTop, optionValuesTop,
-                        get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
+        selTop.addFormSelector(F("Tile start-matrix"), F("tlstart"), 
+          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
 
-        addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 2, optionsRowCol, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
+        selRowCol.addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
 
-        addFormSelector(F("Tile flow direction"), F("tlprozig"), 2, optionsProZig, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
+        selProZig.addFormSelector(F("Tile flow direction"), F("tlprozig"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
       }
 
       addFormSubHeader(F("Display"));
@@ -175,13 +179,10 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P131_CommandTrigger::neomatrix),
           static_cast<int>(P131_CommandTrigger::neo)
         };
-        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
-        addFormSelector(F("Write Command trigger"),
-                        F("cmdtrigger"),
-                        cmdCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P131_CONFIG_FLAG_GET_CMD_TRIGGER);
+        constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
+        const FormSelectorOptions selector(cmdCount, commandTriggers, commandTriggerOptions);
+        selector.addFormSelector(
+          F("Write Command trigger"), F("cmdtrigger"), P131_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -221,9 +222,6 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           addTextBox(getPluginCustomArgName(varNr),
                      parseStringKeepCaseNoTrim(strings[varNr], 1),
                      P131_Nchars,
-                     false,
-                     false,
-                     EMPTY_STRING,
                      F(""));
 
           String   opts    = parseString(strings[varNr], 2);
@@ -271,7 +269,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           if ((P131_CONFIG_TILE_HEIGHT > 1) && (varNr == P131_CONFIG_TILE_HEIGHT - 1)) {
             html_TD();
-            addUnit(concat(F("Remaining: "), static_cast<int>(remain)));
+            addUnit(concat(F("Remaining: "),
+                           static_cast<int>(remain)));
           }
         }
         html_end_table();
@@ -350,7 +349,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       error += SaveCustomTaskSettings(event->TaskIndex, strings, P131_Nlines, 0);
 
-      if (error.length() > 0) {
+      if (!error.isEmpty()) {
         addHtmlError(error);
       }
 
@@ -378,8 +377,9 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                                                                                  P131_CONFIG_FLAG_GET_ROTATION,
                                                                                  P131_CONFIG_FLAG_GET_FONTSCALE,
                                                                                  static_cast<AdaGFXTextPrintMode>(P131_CONFIG_FLAG_GET_MODE),
-                                                                                 P131_CommandTrigger_toString(static_cast<P131_CommandTrigger>(
-                                                                                                                P131_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                                                 P131_CommandTrigger_toString(
+                                                                                   static_cast<P131_CommandTrigger>(
+                                                                                     P131_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                                  P131_CONFIG_FLAG_GET_BRIGHTNESS,
                                                                                  P131_CONFIG_FLAG_GET_MAXBRIGHT,
                                                                                  P131_CONFIG_GET_COLOR_FOREGROUND,

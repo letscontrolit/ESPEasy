@@ -68,14 +68,14 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_043;
-      Device[deviceCount].Type           = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].ValueCount     = 2;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
-      Device[deviceCount].setPin1Direction(gpio_direction::gpio_output);
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_043;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -159,15 +159,20 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         int thisDay = weekDays.indexOf(timeStr.substring(0, 3));
 
         if (thisDay > 0) { thisDay /= 3; }
-        addSelector(concat(F("day"), x), daysCount, days, nullptr, nullptr, thisDay, false, true, F(""));
+        FormSelectorOptions selector(daysCount, days);
+        selector.clearClassName();
+        selector.addSelector(
+          concat(F("day"), x),  
+          thisDay);
         addHtml(',');
         addTextBox(concat(F("clock"), x),
-                   parseString(timeStr, 2), 32
-                   , false, false, EMPTY_STRING, F("")
+                   parseString(timeStr, 2), 32,
+                   false, false, EMPTY_STRING,
+                   F(""),
                    #  if FEATURE_TOOLTIPS
-                   , EMPTY_STRING
+                   EMPTY_STRING,
                    #  endif // if FEATURE_TOOLTIPS
-                   , F("timepatternlist"));
+                   F("timepatternlist"));
         # else // ifndef LIMIT_BUILD_SIZE
         addFormTextBox(concat(F("Day,Time "), x + 1),
                        concat(F("clock"), x),
@@ -177,7 +182,10 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
         if (validGpio(CONFIG_PIN1) || (P043_SIMPLE_VALUE == 1)) {
           addHtml(' ');
           const uint8_t choice = Cache.getTaskDevicePluginConfig(event->TaskIndex, x);
-          addSelector(concat(F("state"), x), optionsCount, options, nullptr, nullptr, choice);
+          const FormSelectorOptions selector(optionsCount, options);
+          selector.addSelector(
+            concat(F("state"), x), 
+            choice);
         }
         else {
           addHtml(strformat(F("Value %d:"), x + 1));

@@ -273,7 +273,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
    Handle certificate files on the file system.
    The content will be stripped from unusable character like quotes, spaces etc.
  \*********************************************************************************************/
-#if FEATURE_MQTT_TLS
+#if FEATURE_TLS
 String SaveCertificate(const String& fname, const String& certificate);
 String LoadCertificate(const String& fname, String& certificate, bool cleanup = true);
 #endif

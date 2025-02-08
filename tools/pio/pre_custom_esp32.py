@@ -57,13 +57,16 @@ else:
     "-DUSES_P131",  # NeoPixelMatrix
 
     "-DUSES_P146",  # Cache Reader
-    "-DUSES_P169",  # AS3935 Lightning Detector 
+    "-DUSES_P123",  # AS3935 Lightning Detector 
 
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
+    "-DUSES_N001",  # E-mail
+
     "-DFEATURE_MQTT_TLS=1",
+    "-DFEATURE_EMAIL_TLS=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",
     "-DFEATURE_I2CMULTIPLEXER=1",
@@ -85,7 +88,7 @@ else:
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
 my_defines = my_flags.get("CPPDEFINES")
-env.Append(BUILD_FLAGS=custom_defines)
+env.Append(CXXFLAGS=custom_defines)
 #defines = {k: v for (k, v) in my_defines}
 
 print("\u001b[32m Custom PIO configuration check \u001b[0m")

@@ -6,16 +6,17 @@ var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
   "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "FactoryReset", "Gateway", "I2Cscanner", "Inc",
-  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish", "PublishR",
+  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "LoopTimerSetAndRun", "LoopTimerSetAndRun_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "Publish", "PublishR",
   "Reboot", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
   "WiFiKey2", "WiFiMode", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode",
   "Event", "AsyncEvent",
-  "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",];
+  "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",
+  "Provision", "Provision,Config", "Provision,Security", "Provision,Notification", "Provision,Provision", "Provision,Rules,", "Provision,CustomCdnUrl", "Provision,Firmware,", ];
 var commonEvents = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
   "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "ThingspeakReply", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
-  "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "WiFi#Disconnected"];
+  "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "WiFi#Disconnected", "ProvisionFirmware",];
 var commonPlugins = [
   //P003
   "ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic",
@@ -31,6 +32,8 @@ var commonPlugins = [
   //P019
   "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF",
   "MonitorRange,PCF", "UnMonitorRange,PCF", "UnMonitor,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
+  //P020/P044
+  "SerialSend", "SerialSendMix", "Ser2NetClientSend",
   //P022
   "pcapwm", "pcafrq", "mode2",
   //P023
@@ -43,6 +46,8 @@ var commonPlugins = [
   "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV", "NeoPixelBright",
   //P048
   "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
+  //P049
+  "MHZCalibrateZero", "MHZReset", "MHZABCEnable", "MHZABCDisable",
   //P052
   "Sensair_SetRelay",
   //P053
@@ -65,6 +70,8 @@ var commonPlugins = [
   "GPS", "GPS,Sleep", "GPS,Wake", "GPS#GotFix", "GPS#LostFix", "GPS#Travelled",
   //P086
   "homieValueSet",
+  //P087
+  "SerialProxy_Write", "SerialProxy_WriteMix", "SerialProxy_Test",
   //P088
   "HeatPumpir",
   //P093
@@ -118,6 +125,10 @@ var commonPlugins = [
   "gp8403", "gp8403,volt,", "gp8403,mvolt,", "gp8403,range,", "gp8403,preset,", "gp8403,init,",
   //P167
   "sen5x", "sen5x,startclean", "sen5x,techlog,",
+  //P169
+  "as3935", "as3935,clearstats", "as3935,calibrate", "as3935,setgain,", "as3935,setnf,", "as3935,setwd,", "as3925,setsrej,",
+  //P175(P053)
+  /*"pmsx003", "pmsx003,wake", "pmsx003,sleep", "pmsx003,reset",*/
 ];
 var pluginDispKind = [
   //P095
@@ -139,7 +150,7 @@ var pluginDispCmd = [
 ];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
-var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sin_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "aTan_d"];
+var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sin_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "aTan_d", "map", "mapc"];
 var commonWarning = ["delay", "Delay", "ResetFlashWriteCounter"];
 var taskSpecifics = [
   //Task settings
@@ -157,7 +168,7 @@ var AnythingElse = [
   "%sysmonth_0%", "%sysyear%", "%sysyear_0%", "%sysyears%", "%sysweekday%", "%sysweekday_s%", "%unixtime%", "%uptime%", "%uptime_ms%",
   "%rssi%", "%ip%", "%unit%", "%unit_0%", "%ssid%", "%bssid%", "%wi_ch%", "%iswifi%", "%vcc%", "%mac%", "%mac_int%", "%isntp%", "%ismqtt%",
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
-  "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%", "%inttemp%",
+  "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%", "%inttemp%", "%islimited_build%", "%isvar_double%",
   //String Functions
   "substring", "indexOf", "indexOf_ci", "equals", "equals_ci", "strtol", "timeToMin", "timeToSec",
   //Ethernet

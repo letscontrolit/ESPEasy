@@ -14,13 +14,21 @@
 # endif // ifndef P096_USE_EXTENDED_SETTINGS
 
 # ifndef P096_USE_WAVESHARE_2IN7
-#  define P096_USE_WAVESHARE_2IN7     1                  // Include the Waveshare 2.7 inch ePaper display
+#  define P096_USE_WAVESHARE_2IN7     1 // Include the Waveshare 2.7 inch ePaper display
 # endif // ifndef P096_USE_WAVESHARE_2IN7
 # ifndef P096_USE_WAVESHARE_1IN54B
-#  define P096_USE_WAVESHARE_1IN54B   1                  // Include the Waveshare 1.54 inch 200x200 ePaper display
+#  ifdef ESP8266
+#   define P096_USE_WAVESHARE_1IN54B   1 // Include the Waveshare 1.54 inch 200x200 ePaper display
+#  else // ifdef ESP8266
+#   define P096_USE_WAVESHARE_1IN54B   1 // Include the Waveshare 1.54 inch 200x200 ePaper display
+#  endif // ifdef ESP8266
 # endif // ifndef P096_USE_WAVESHARE_1IN54B
 # ifndef P096_USE_MH_ET_LIVE_1IN54
-#  define P096_USE_MH_ET_LIVE_1IN54   1                  // Include the MH-ET Live 1.54 inch 200x200 white/black/red ePaper display
+#  ifdef ESP8266
+#   define P096_USE_MH_ET_LIVE_1IN54   0 // Exclude the MH-ET Live 1.54 inch 200x200 white/black/red ePaper display
+#  else // ifdef ESP8266
+#   define P096_USE_MH_ET_LIVE_1IN54   1 // Include the MH-ET Live 1.54 inch 200x200 white/black/red ePaper display
+#  endif // ifdef ESP8266 #  define P096_USE_MH_ET_LIVE_1IN54   0
 # endif // ifndef P096_USE_MH_ET_LIVE_1IN54
 
 # include "../Helpers/AdafruitGFX_helper.h"              // Use Adafruit graphics helper objecr
@@ -33,6 +41,7 @@
 # define P096_CONFIG_ROTATION           PCONFIG(1)       // Rotation
 # define P096_CONFIG_WIDTH              PCONFIG(2)       // Display width
 # define P096_CONFIG_HEIGHT             PCONFIG(3)       // Display height
+# define P096_CONFIG_DEFAULT_FONT       PCONFIG(4)       // Default font
 
 # define P096_CONFIG_COLORS             PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
@@ -130,7 +139,7 @@ public:
                    uint16_t            bgcolor      = ADAGFX_WHITE,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
                    bool                textBackFill = true);
-  P096_data_struct() = delete;
+  P096_data_struct()                                = delete;
   virtual ~P096_data_struct();
 
   bool plugin_init(struct EventStruct *event);

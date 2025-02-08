@@ -144,15 +144,16 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
       {
-        Device[++deviceCount].Number = PLUGIN_ID_046;
-        Device[deviceCount].Type = DEVICE_TYPE_DUMMY;           // Nothing else really fit the bill ...
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].ValueCount = 3;
+        auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_046;
+        dev.Type = DEVICE_TYPE_DUMMY;           // Nothing else really fit the bill ...
+        dev.VType = Sensor_VType::SENSOR_TYPE_DUAL;           // New type, see ESPEasy.ino
+        dev.Ports = 0;
+        dev.PullUpOption = false;
+        dev.InverseLogicOption = false;
+        dev.FormulaOption = true;
+        dev.SendDataOption = true;
+        dev.ValueCount = 3;
         break;
       }
 
@@ -160,8 +161,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice = PCONFIG(0);
         {
-          const uint8_t nrchoices = 9;
-          const __FlashStringHelper * options[nrchoices] = {
+          const __FlashStringHelper * options[] = {
             F("Main + Temp/Hygro"),
             F("Wind"),
             F("Rain"),
@@ -174,7 +174,9 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             F("Unknown 3, uint8_t 19"),
           };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice, true);
+          FormSelectorOptions selector(NR_ELEMENTS(options),  options);
+          selector.reloadonchange = true;
+          selector.addFormSelector(F("Plugin function"), F("p046"), choice);
           addFormNote(F("Changing the function will reload this page."));
         }
 

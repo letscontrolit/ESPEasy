@@ -50,9 +50,9 @@ private:
   int _pin = -1;
   int _adc = -1;
 
-# if HAS_TOUCH_GPIO
+#if defined(SOC_TOUCH_SENSOR_SUPPORTED) && SOC_TOUCH_SENSOR_SUPPORTED
   bool _isTouchPin = false;
-# endif // if HAS_TOUCH_GPIO
+# endif
   bool _useFactoryCalibration = false;
 #if ESP_IDF_VERSION_MAJOR >= 5
   adc_atten_t _attenuation    = ADC_ATTEN_DB_12;

@@ -4,6 +4,32 @@
 
 # include "../Commands/ExecuteCommand.h"
 
+tTouchObjects::tTouchObjects() :
+  flags(0u),
+  SurfaceAreas(0u),
+  TouchTimers(0u),
+#ifdef ESP32
+  top_left({0u, 0u}),
+  width_height({0u, 0u}),
+#endif
+  TouchStates(0u)
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  , groupFlags           (0u)
+  , colorOn              (0u)
+  , colorOff             (0u)
+  , colorCaption         (0u)
+  , colorBorder          (0u)
+  , colorDisabled        (0u)
+  , colorDisabledCaption (0u)
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  {
+    objectName.clear();
+    captionOn.clear();
+    captionOff.clear();
+  }
+
+
+
 /****************************************************************************
  * toString: Display-value for the touch action
  ***************************************************************************/
@@ -139,7 +165,7 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   #  endif // if TOUCH_FEATURE_SWIPE
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-  settingsArray[TOUCH_CALIBRATION_START].clear(); // Free a little memory
+  free_string(settingsArray[TOUCH_CALIBRATION_START]); // Free a little memory
 
   // Buffer some settings, mostly for readability, but also to be able to set from write command
   _flipped     = bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED);
@@ -153,44 +179,47 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
 
     for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; ++i) {
       if (!settingsArray[i].isEmpty()) {
-        TouchObjects.push_back(tTouchObjects());
-        TouchObjects[t].flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
+        tTouchObjects touchObject{};
+        touchObject.flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
+        String objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.objectName     = objectName;
+        touchObject.top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
         # if TOUCH_FEATURE_EXTENDED_TOUCH
-        TouchObjects[t].colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorDisabled        = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABLED, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorDisabledCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABCAPT, TOUCH_SETTINGS_SEPARATOR);
-        TouchObjects[t].groupFlags           = parseStringToInt(settingsArray[i], TOUCH_OBJECT_GROUPFLAGS, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
+        String captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
+        String captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.captionOn            = captionOn;
+        touchObject.captionOff           = captionOff;
+        touchObject.colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorDisabled        = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABLED, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorDisabledCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_DISABCAPT, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.groupFlags           = parseStringToInt(settingsArray[i], TOUCH_OBJECT_GROUPFLAGS, TOUCH_SETTINGS_SEPARATOR);
 
-        const uint8_t g = get8BitFromUL(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_GROUP);
+        const uint8_t g = get8BitFromUL(touchObject.flags, TOUCH_OBJECT_FLAG_GROUP);
 
         if (!validButtonGroup(g)) {
           _buttonGroups.insert(g);
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
-        TouchObjects[t].SurfaceAreas = 0u; // Reset runtime stuff
-        TouchObjects[t].TouchTimers  = 0u;
-        TouchObjects[t].TouchStates  = 0;
+        touchObject.SurfaceAreas = 0u; // Reset runtime stuff
+        touchObject.TouchTimers  = 0u;
+        touchObject.TouchStates  = 0;
 
         # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
         // Check if a slider/gauge with range not including 0 is used, then set starting value closest to 0
-        if (bitRead(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_SLIDER) && !TouchObjects[t].captionOff.isEmpty()) {
+        if (bitRead(touchObject.flags, TOUCH_OBJECT_FLAG_SLIDER) && !touchObject.captionOff.isEmpty()) {
           int16_t _value    = 0;
           int16_t lowRange  = 0;
           int16_t highRange = 100;
 
-          if (parseRangeToInt16(TouchObjects[t].captionOff, lowRange, highRange)) {
+          if (parseRangeToInt16(touchObject.captionOff, lowRange, highRange)) {
             if (lowRange > highRange) {
               if (_value < highRange) {
                 _value = highRange;
@@ -204,14 +233,16 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
                 _value = highRange;
               }
             }
-            TouchObjects[t].TouchStates = _value;
+            touchObject.TouchStates = _value;
           }
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
+        TouchObjects.push_back(std::move(touchObject));
+
         t++;
 
-        settingsArray[i].clear(); // Free a little memory
+        free_string(settingsArray[i]); // Free a little memory
       }
     }
   }
@@ -889,7 +920,8 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
     };
     const int optionValues3[] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("events"), NR_ELEMENTS(optionValues3), options3, optionValues3, choice3);
+    const FormSelectorOptions selector(NR_ELEMENTS(optionValues3), options3, optionValues3);
+    selector.addFormSelector(F("Events"), F("events"), choice3);
 
     addFormCheckBox(F("Draw buttons when started"), F("initobj"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
     # ifndef LIMIT_BUILD_SIZE
@@ -915,17 +947,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
   addFormSubHeader(F("Calibration"));
 
-  {
-    const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
-    const int noYesOptionValues[2]             = { 0, 1 };
-    addFormSelector(F("Calibrate to screen resolution"),
-                    F("usecalib"),
-                    2,
-                    noYesOptions,
-                    noYesOptionValues,
-                    Touch_Settings.calibrationEnabled ? 1 : 0,
-                    true);
-  }
+  addFormSelector_YesNo(F("Calibrate to screen resolution"),
+                        F("usecalib"),
+                        Touch_Settings.calibrationEnabled ? 1 : 0,
+                        true); // reloadonchange
 
   if (Touch_Settings.calibrationEnabled) {
     addRowLabel(F("Calibration"));
@@ -1220,7 +1245,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       addTextBox(getPluginCustomArgName(objectNr + 100),
                  TouchObjects[objectNr].objectName,
                  TOUCH_MaxObjectNameLength,
-                 false, false, EMPTY_STRING, F("wide"));
+                 F("wide"));
       html_TD(); // top-x
       addNumericBox(getPluginCustomArgName(objectNr + 200),
                     TouchObjects[objectNr].top_left.x, 0, 65535
@@ -1237,27 +1262,39 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                     );
       html_TD(); // (on/off) button (type)
       # if TOUCH_FEATURE_EXTENDED_TOUCH
-      addSelector(getPluginCustomArgName(objectNr + 800),
-                  sizeof(buttonTypeValues) / sizeof(int),
-                  buttonTypeOptions,
-                  buttonTypeValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONTYPE), false, true, F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Button")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
-      html_TD(); // button alignment
-      addSelector(getPluginCustomArgName(objectNr + 900),
-                  sizeof(buttonLayoutValues) / sizeof(int),
-                  buttonLayoutOptions,
-                  buttonLayoutValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTONALIGN) << 4, false, true, F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Layout")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
+      {
+        FormSelectorOptions selector(
+          NR_ELEMENTS(buttonTypeValues),
+          buttonTypeOptions,
+          buttonTypeValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip =  F("Button");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 800),
+          get4BitFromUL(
+            TouchObjects[objectNr].flags,
+            TOUCH_OBJECT_FLAG_BUTTONTYPE));
+      }
+      {
+        html_TD(); // button alignment
+        FormSelectorOptions selector(
+          NR_ELEMENTS(buttonLayoutOptions),
+          buttonLayoutOptions,
+          buttonLayoutValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip =  F("Layout");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 900),
+          get4BitFromUL(
+            TouchObjects[objectNr].flags,
+            TOUCH_OBJECT_FLAG_BUTTONALIGN) << 4);
+      }
       # else // if TOUCH_FEATURE_EXTENDED_TOUCH
       addCheckBox(getPluginCustomArgName(objectNr + 600),
                   bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON), false
@@ -1308,20 +1345,23 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  #  endif // if TOUCH_FEATURE_TOOLTIPS
                  , F("adagfx65kcolors")
                  );
-      html_TD(); // button action
-      addSelector(getPluginCustomArgName(objectNr + 2000),
-                  sizeof(touchActionValues) / sizeof(int),
-                  touchActionOptions,
-                  touchActionValues,
-                  nullptr,
-                  get4BitFromUL(TouchObjects[objectNr].groupFlags, TOUCH_OBJECT_GROUP_ACTION),
-                  false,
-                  true,
-                  F("widenumber")
-                  #  if TOUCH_FEATURE_TOOLTIPS
-                  , F("Touch action")
-                  #  endif // if TOUCH_FEATURE_TOOLTIPS
-                  );
+      {
+        html_TD(); // button action
+        FormSelectorOptions selector(
+          NR_ELEMENTS(touchActionOptions),
+          touchActionOptions,
+          touchActionValues);
+        selector.classname = F("widenumber");
+#  if TOUCH_FEATURE_TOOLTIPS
+        selector.tooltip = F("Touch action");
+#  endif // if TOUCH_FEATURE_TOOLTIPS
+
+        selector.addSelector(
+          getPluginCustomArgName(objectNr + 2000),
+          get4BitFromUL(
+            TouchObjects[objectNr].groupFlags,
+            TOUCH_OBJECT_GROUP_ACTION));
+      }
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
       html_TR_TD(); // Start new row

@@ -58,6 +58,10 @@ String move_special(String&& source);
 // Try to reserve on the heap with the most space available
 bool reserve_special(String& str, size_t size);
 
+// Arduino String does not have a function to de-allocate its internal buffer
+// This is a special trick to de-allocate its internal buffer and thus free up memory.
+void free_string(String& str);
+
 /*
 template <typename T>
 bool equals(const String& str, const T &val) {

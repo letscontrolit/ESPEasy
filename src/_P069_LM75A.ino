@@ -13,13 +13,13 @@
 // #######################################################################################################
 
 
-#define PLUGIN_069
-#define PLUGIN_ID_069         69
-#define PLUGIN_NAME_069       "Environment - LM75A"
-#define PLUGIN_VALUENAME1_069 "Temperature"
+# define PLUGIN_069
+# define PLUGIN_ID_069         69
+# define PLUGIN_NAME_069       "Environment - LM75A"
+# define PLUGIN_VALUENAME1_069 "Temperature"
 
 
-#include "src/PluginStructs/P069_data_struct.h"
+# include "src/PluginStructs/P069_data_struct.h"
 
 
 boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
@@ -30,18 +30,15 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_069;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_069;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -61,6 +58,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
       } else {
@@ -117,7 +115,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         }
         else
         {
-          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event,0)));
+          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event, 0)));
         }
       }
       break;

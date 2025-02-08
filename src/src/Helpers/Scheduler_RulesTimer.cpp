@@ -25,7 +25,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
   return true;
 }
 
-bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
+bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount, bool startImmediately) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
 
   const RulesTimerID timerID(timerIndex);
@@ -33,7 +33,7 @@ bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int ti
   const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
 
   systemTimers[timerID.mixed_id] = timer_data;
-  setNewTimerAt(timerID, millis() + msecFromNow);
+  setNewTimerAt(timerID, millis() + (startImmediately ? 10 : msecFromNow));
   return true;
 }
 

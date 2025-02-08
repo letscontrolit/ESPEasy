@@ -103,6 +103,8 @@ const char Internal_commands_l[] PROGMEM =
   "logentry|"
   "looptimerset|"
   "looptimerset_ms|"
+  "looptimersetandrun|"
+  "looptimersetandrun_ms|"
   "longpulse|"
   "longpulse_ms|"
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

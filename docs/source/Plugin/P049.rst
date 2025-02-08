@@ -26,7 +26,12 @@ Used libraries: |P049_usedlibraries|
 Supported hardware
 ------------------
 
-|P049_usedby|
+.. ..|P049_usedby|
+
+MH-Z19B,
+MH-Z19C,
+MH-Z19D,
+MH-Z19E
 
 Sensor
 ^^^^^^
@@ -34,12 +39,16 @@ Sensor
 See: :ref:`SerialHelper_page`
 
 
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P049_commands.repl
+
+Additional infos can be found here: https://emariete.com/en/sensor-co2-mh-z19b/
+
+
+
 **TODO**: Complete this documentation...
-
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
-
-.. .. include:: P049_commands.repl
 
 .. Events
 .. ~~~~~~

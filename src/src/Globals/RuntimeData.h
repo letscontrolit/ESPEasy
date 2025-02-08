@@ -19,7 +19,7 @@
 \*********************************************************************************************/
 extern std::map<uint32_t, ESPEASY_RULES_FLOAT_TYPE> customFloatVar;
 
-ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index);
+ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(uint32_t index, ESPEASY_RULES_FLOAT_TYPE defaultValue = 0.0);
 void setCustomFloatVar(uint32_t index, const ESPEASY_RULES_FLOAT_TYPE& value);
 
 bool getNextCustomFloatVar(uint32_t& index, ESPEASY_RULES_FLOAT_TYPE& value);

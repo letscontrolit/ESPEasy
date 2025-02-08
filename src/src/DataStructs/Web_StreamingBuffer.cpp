@@ -221,6 +221,10 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
   sentBytes    = 0;
   buf.clear();
   buf.reserve(CHUNKED_BUFFER_SIZE);
+  web_server.client().setNoDelay(true);
+#ifdef ESP32
+  web_server.client().setSSE(false);
+#endif
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
@@ -290,6 +294,7 @@ void Web_StreamingBuffer::endStream() {
     lowMemorySkip = false;
   }
   delay(5);
+//  web_server.client().stop();
 }
 
 
@@ -331,7 +336,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   web_server.sendContent(data);
 
   if (data.length() > (CHUNKED_BUFFER_SIZE + 1)) {
-    data = String(); // Clear also allocated memory
+    free_string(data); // Clear also allocated memory
   } else {
     data.clear();
   }
@@ -402,7 +407,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);
-
+#ifdef ESP8266
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
@@ -411,6 +416,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
     #endif
     delay(1);
   }
+#endif
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   delay(0);
 }

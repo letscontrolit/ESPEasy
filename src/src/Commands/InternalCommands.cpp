@@ -173,7 +173,7 @@ bool do_command_case_check(command_case_data         & data,
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status = String();
+  free_string(data.status);
 
   if (!checkSourceFlags(data.event->Source, group)) {
     data.status = return_incorrect_source();
@@ -319,13 +319,15 @@ bool InternalCommands::executeInternalCommand()
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::jsonportstatus:             COMMAND_CASE_A(Command_JSONPortStatus, -1);              // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-    case ESPEasy_cmd_e::let:                        COMMAND_CASE_A(Command_Rules_Let,         2);            // Rules.h
-    case ESPEasy_cmd_e::load:                       COMMAND_CASE_A(Command_Settings_Load,     0);            // Settings.h
-    case ESPEasy_cmd_e::logentry:                   COMMAND_CASE_A(Command_logentry,         -1);            // Diagnostic.h
-    case ESPEasy_cmd_e::looptimerset:               COMMAND_CASE_A(Command_Loop_Timer_Set,    3);            // Timers.h
-    case ESPEasy_cmd_e::looptimerset_ms:            COMMAND_CASE_A(Command_Loop_Timer_Set_ms, 3);            // Timers.h
-    case ESPEasy_cmd_e::longpulse:                  COMMAND_CASE_A(Command_GPIO_LongPulse,    5);            // GPIO.h
-    case ESPEasy_cmd_e::longpulse_ms:               COMMAND_CASE_A(Command_GPIO_LongPulse_Ms, 5);            // GPIO.h
+    case ESPEasy_cmd_e::let:                        COMMAND_CASE_A(Command_Rules_Let,               2);      // Rules.h
+    case ESPEasy_cmd_e::load:                       COMMAND_CASE_A(Command_Settings_Load,           0);      // Settings.h
+    case ESPEasy_cmd_e::logentry:                   COMMAND_CASE_A(Command_logentry,               -1);      // Diagnostic.h
+    case ESPEasy_cmd_e::looptimerset:               COMMAND_CASE_A(Command_Loop_Timer_Set,          3);      // Timers.h
+    case ESPEasy_cmd_e::looptimerset_ms:            COMMAND_CASE_A(Command_Loop_Timer_Set_ms,       3);      // Timers.h
+    case ESPEasy_cmd_e::looptimersetandrun:         COMMAND_CASE_A(Command_Loop_Timer_SetAndRun,    3);      // Timers.h
+    case ESPEasy_cmd_e::looptimersetandrun_ms:      COMMAND_CASE_A(Command_Loop_Timer_SetAndRun_ms, 3);      // Timers.h
+    case ESPEasy_cmd_e::longpulse:                  COMMAND_CASE_A(Command_GPIO_LongPulse,          5);      // GPIO.h
+    case ESPEasy_cmd_e::longpulse_ms:               COMMAND_CASE_A(Command_GPIO_LongPulse_Ms,       5);      // GPIO.h
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::logportstatus:              COMMAND_CASE_A(Command_logPortStatus,     0);            // Diagnostic.h
     case ESPEasy_cmd_e::lowmem:                     COMMAND_CASE_A(Command_Lowmem,            0);            // Diagnostic.h

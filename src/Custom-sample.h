@@ -5,7 +5,7 @@
     To modify the stock configuration without changing the EspEasy.ino file :
     1) rename this file to "Custom.h" (It is ignored by Git)
     2) define your own settings below
-    3) define USE_CUSTOM_H as a build flags. ie : export PLATFORMIO_BUILD_FLAGS="'-DUSE_CUSTOM_H'"
+    3) Build one of the environments with Custom in their name, they will automatically use this file if it exists
  */
 
 
@@ -215,10 +215,10 @@
 
 #define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266
-#  define PLUGIN_STATS_NR_ELEMENTS 16
+// #  define PLUGIN_STATS_NR_ELEMENTS 16
 #endif // ifdef ESP8266
 # ifdef ESP32
-#  define PLUGIN_STATS_NR_ELEMENTS 64
+// #  define PLUGIN_STATS_NR_ELEMENTS 64
 #endif // ifdef ESP32
 #define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
@@ -530,8 +530,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P146   // Cache Reader
 // #define USES_P147   // SGP4x
 //   #define P147_FEATURE_GASINDEXALGORITHM    0 // Enabled by default, can be turned off here
-
 // #define USES_P148   // POWR3xxD/THR3xxD
+
 // #define USES_P150   // TMP117 Temperature
 // #define USES_P151   // Honeywell Pressure
 // #define USES_P152   // ESP32 DAC
@@ -543,13 +543,17 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P162   // Output - MCP42xxx Digipot
 // #define USES_P163   // Environment - RadSens I2C radiation counter
 // #define USES_P164   // Gases - ENS16x TVOC/eCO2
+// #define USES_P165   // Display - NeoPixel (7-segment)
 // #define USES_P166   // Output - GP8403 Dual channel DAC (Digital Analog Converter)
 // #define USES_P167   // Environment - Sensirion SEN5x / Ikea Vindstyrka
 // #define USES_P168   // Light - VEML6030/VEML7700
 // #define USES_P169   // Environment - AS3935 Lightning Detector
+
 // #define USES_P170   // Input - I2C Liquid level sensor
 // #define USES_P172   // BMP3xx SPI.
 // #define USES_P173   // Environment - SHTC3
+// #define USES_P175   // Dust - PMSx003i I2C
+// #define USES_P176   // Communication - Victron VE.Direct
 
 /*
  #######################################################################################################

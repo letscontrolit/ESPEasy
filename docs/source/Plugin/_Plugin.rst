@@ -374,6 +374,7 @@ There are different released versions of ESP Easy:
    ":ref:`P135_page`","|P135_status|","P135"
    ":ref:`P137_page`","|P137_status|","P137"
    ":ref:`P138_page`","|P138_status|","P138"
+   ":ref:`P139_page`","|P139_status|","P139"
    ":ref:`P141_page`","|P141_status|","P141"
    ":ref:`P142_page`","|P142_status|","P142"
    ":ref:`P143_page`","|P143_status|","P143"
@@ -399,6 +400,9 @@ There are different released versions of ESP Easy:
    ":ref:`P170_page`","|P170_status|","P170"
    ":ref:`P172_page`","|P172_status|","P172"
    ":ref:`P173_page`","|P173_status|","P173"
+   ":ref:`P175_page`","|P175_status|","P175"
+   ":ref:`P176_page`","|P176_status|","P176"
+   ":ref:`P178_page`","|P178_status|","P178"
 
 
 .. include:: _plugin_sets_overview.repl
@@ -474,6 +478,8 @@ Extra IO
 --------
 
 Plugins: |Plugin_Extra_IO|
+
+Hardware: |P178_usedby|
 
 Gases
 -----

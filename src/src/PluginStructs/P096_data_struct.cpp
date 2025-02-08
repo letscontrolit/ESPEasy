@@ -381,10 +381,12 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       _sequence_in_progress = false;
       success               = true;
     }
-    else if (arg1.equals(F("inv"))) {
-      if ((event->Par2 >= 0) &&
-          (event->Par2 <= 1)) {
-        eInkScreen->invertDisplay(event->Par2);
+    else if (equals(arg1, F("inv"))) {
+      const int nArg2 = event->Par2;
+
+      if ((nArg2 >= 0) &&
+          (nArg2 <= 1)) {
+        eInkScreen->invertDisplay(nArg2);
         eInkScreen->display();
         success = true;
       }
@@ -392,8 +394,10 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
-      if ((event->Par2 >= 0)) {
-        eInkScreen->setRotation(event->Par2 % 4);
+      const int nArg2 = event->Par2;
+
+      if ((nArg2 >= 0)) {
+        eInkScreen->setRotation(nArg2 % 4);
         eInkScreen->display();
         success = true;
       }

@@ -34,18 +34,16 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_001;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = true;
-      Device[deviceCount].InverseLogicOption = true;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_001;
+      dev.Type               = DEVICE_TYPE_SINGLE;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.PullUpOption       = true;
+      dev.InverseLogicOption = true;
+      dev.ValueCount         = 1;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.TimerOptional      = true;
       break;
     }
 
@@ -87,7 +85,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options[] = { F("Switch"), F("Dimmer") };
         const int optionValues[]             = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
         const uint8_t switchtype             = P001_data_struct::P001_getSwitchType(event);
-        addFormSelector(F("Switch Type"), F("type"), NR_ELEMENTS(optionValues), options, optionValues, switchtype);
+        constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
+        const FormSelectorOptions selector(optionCount, options, optionValues);
+        selector.addFormSelector(F("Switch Type"), F("type"), switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
         {
@@ -100,16 +100,18 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
           F("Normal Switch"),
           F("Push Button Active Low"),
           F("Push Button Active High") };
+/*
         const int buttonOptionValues[] = {
           SWITCH_TYPE_NORMAL_SWITCH,
           SWITCH_TYPE_PUSH_ACTIVE_LOW,
           SWITCH_TYPE_PUSH_ACTIVE_HIGH };
-        addFormSelector(
+*/
+        const FormSelectorOptions selector(
+          NR_ELEMENTS(buttonOptions),
+          buttonOptions); // buttonOptionValues);
+        selector.addFormSelector(
           F("Switch Button Type"),
           F("button"),
-          NR_ELEMENTS(buttonOptionValues),
-          buttonOptions,
-          buttonOptionValues,
           P001_BUTTON_TYPE);
       }
 

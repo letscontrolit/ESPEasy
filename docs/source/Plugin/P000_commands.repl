@@ -357,6 +357,15 @@
 
     N.B. the timernr is shared between ``TimerSet`` and ``LoopTimerSet``"
     "
+    LoopTimerSetAndRun
+    
+    LoopTimerSetAndRun_ms","
+    Set a Loop-Timer using ``LoopTimerSet`` or ``LoopTimerSet_ms`` and immediately run the first iteration.
+
+    If a ``<nr of loops>`` value > 0 is included in the command, that count is decremented by 1 for the first iteration, as expected.
+    
+    Useful for setting a keep-alive timer, and also send the initial keep-alive signal immediately."
+    "
     meminfo","
     :red:`Internal`","
     Will send summary of struct sizes to the serial port.

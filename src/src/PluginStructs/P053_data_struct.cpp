@@ -11,6 +11,9 @@ const __FlashStringHelper* toString(PMSx003_type sensorType) {
     case PMSx003_type::PMS5003_T:    return F("PMS5003T");
     case PMSx003_type::PMS5003_ST:   return F("PMS5003ST");
     # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # ifdef USES_P175
+    case PMSx003_type::PMSA003i:   return F("PMSA003i");
+    # endif // ifdef USES_P175
   }
   return F("Unknown");
 }
@@ -20,18 +23,26 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection) {
     case PMSx003_output_selection::Particles_ug_m3: return F("Particles &micro;g/m3: pm1.0, pm2.5, pm10");
     case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:  return F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)");
     case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
-      return F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)");
+      return F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003"
+               # ifdef USES_P175
+               "/A003i"
+               # endif // ifdef USES_P175
+               ")");
     case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
-      return F("Particles count/0.1L: cnt0.3, cnt0.5, cnt1.0, cnt2.5 (PMS1003/5003(ST)/7003)");
+      return F("Particles count/0.1L: cnt0.3, cnt0.5, cnt1.0, cnt2.5 (PMS1003/5003(ST)/7003"
+               # ifdef USES_P175
+               "/A003i"
+               # endif // ifdef USES_P175
+               ")");
   }
   return F("Unknown");
 }
 
 const __FlashStringHelper* toString(PMSx003_event_datatype selection) {
   switch (selection) {
-    case PMSx003_event_datatype::Event_None:       return F("None");
-    case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
-    case PMSx003_event_datatype::Event_All:  return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
+    case PMSx003_event_datatype::Event_None: return F("None");
+    case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde: return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
+    case PMSx003_event_datatype::Event_All: return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
     case PMSx003_event_datatype::Event_All_count_bins: return F("Particles count/0.1L");
   }
   return F("Unknown");
@@ -47,9 +58,15 @@ P053_data_struct::P053_data_struct(
   PMSx003_type            sensortype,
   uint32_t                delay_read_after_wakeup_ms
   # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
-  , bool                  oversample
-  , bool                  splitCntBins
+  ,
+  bool                    oversample
+  ,
+  bool                    splitCntBins
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef USES_P175
+  ,
+  bool    P053_for_P175
+  # endif // ifdef USES_P175
   )
   : _taskIndex(TaskIndex),
   _rxPin(rxPin),
@@ -62,6 +79,9 @@ P053_data_struct::P053_data_struct(
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
+  # ifdef USES_P175
+  , _P053_for_P175(P053_for_P175)
+  # endif // ifdef USES_P175
 {}
 
 bool P053_data_struct::init() {
@@ -72,20 +92,44 @@ bool P053_data_struct::init() {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (_easySerial != nullptr) {
-    delete _easySerial;
-    _easySerial = nullptr;
-  }
+  # ifdef USES_P175
 
-  _easySerial = new (std::nothrow) ESPeasySerial(_port, _rxPin, _txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
-
-  if (_easySerial != nullptr) {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, concat(F("PMSx003 : "), _easySerial->getLogString()));
+  if (!_P053_for_P175)
+  # endif // ifdef USES_P175
+  {
+    if (_easySerial != nullptr) {
+      delete _easySerial;
+      _easySerial = nullptr;
     }
 
-    _easySerial->begin(9600);
-    _easySerial->flush();
+    _easySerial = new (std::nothrow) ESPeasySerial(_port, _rxPin, _txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
+  }
+
+  if ((_easySerial != nullptr)
+      # ifdef USES_P175
+      || _P053_for_P175
+      # endif // ifdef USES_P175
+      ) {
+    # ifdef USES_P175
+
+    if (_P053_for_P175) {
+      // Initialize I2C sensor
+      _i2c_init = true;
+
+      if (I2C_wakeup(P175_I2C_ADDR) != 0) {
+        addLog(LOG_LEVEL_INFO, F("PMSx003 : I2C sensor not found"));
+        _i2c_init = false;
+      }
+    } else
+    # endif // ifdef USES_P175
+    {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, concat(F("PMSx003 : "), _easySerial->getLogString()));
+      }
+
+      _easySerial->begin(9600);
+      _easySerial->flush();
+    }
 
     wakeSensor();
 
@@ -108,7 +152,11 @@ P053_data_struct::~P053_data_struct() {
 
 bool P053_data_struct::initialized() const
 {
-  return _easySerial != nullptr;
+  return _easySerial != nullptr
+         # ifdef USES_P175
+         || _i2c_init
+         # endif // ifdef USES_P175
+  ;
 }
 
 // Read 2 bytes from serial and make an uint16 of it. Additionally calculate
@@ -156,6 +204,9 @@ uint8_t P053_data_struct::packetSize() const {
     case PMSx003_type::PMS5003_ST:   return PMS5003_ST_SIZE;
     case PMSx003_type::PMS2003_3003: return PMS2003_3003_SIZE;
     # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # ifdef USES_P175
+    case PMSx003_type::PMSA003i:     return PMSA003i_SIZE;
+    # endif // ifdef USES_P175
   }
   return 0u;
 }
@@ -196,6 +247,19 @@ bool P053_data_struct::packetAvailable()
       }
     }
   }
+  # ifdef USES_P175
+
+  if (_i2c_init) {
+    if (I2C_wakeup(P175_I2C_ADDR) == 0) {
+      if (Wire.requestFrom((uint8_t)P175_I2C_ADDR, expectedSize) == expectedSize) {
+        // Read all bytes into packet-buffer
+        for (_packetPos = 0; _packetPos < expectedSize; ++_packetPos) {
+          _packet[_packetPos] = Wire.read(); // Read data bytes
+        }
+      }
+    }
+  }
+  # endif // ifdef USES_P175
   return _packetPos >= expectedSize;
 }
 
@@ -236,6 +300,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength   = 0;
   uint16_t packet_header = 0;
+  uint16_t data[PMS_RECEIVE_BUFFER_SIZE]{}; // uint8_t data_low, data_high;
 
   _packetPos = 0;
 
@@ -258,10 +323,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint8_t frameData = packetSize();
 
   if (frameData > 0u) {
-    frameData /= 2;                               // Each value is 16 bits
-    frameData -= 3;                               // start markers, length, checksum
+    frameData /= 2; // Each value is 16 bits
+    frameData -= 3; // start markers, length, checksum
   }
-  uint16_t data[PMS_RECEIVE_BUFFER_SIZE] = { 0 }; // uint8_t data_low, data_high;
 
   for (uint8_t i = 0; i < frameData && i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
     PacketRead16(data[i], &checksum);
@@ -331,19 +395,15 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   SerialFlush(); // Make sure no data is lost due to full buffer.
 
   if (checksum != checksum2) {
-    addLog(LOG_LEVEL_ERROR, F("PMSx003 : Checksum error"));
+    addLog(LOG_LEVEL_ERROR, strformat(F("PMSx003 : Checksum error (0x%x expected: 0x%x)"), checksum, checksum2));
     return false;
   }
 
   if (_last_wakeup_moment.isSet() && !_last_wakeup_moment.timeReached()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-
-      if (log.reserve(80)) {
-        addLog(LOG_LEVEL_INFO,
-               strformat(F("PMSx003 : Less than %d sec since sensor wakeup => Ignoring sample"),
-                         _delay_read_after_wakeup_ms / 1000ul));
-      }
+      addLog(LOG_LEVEL_INFO,
+             strformat(F("PMSx003 : Less than %d sec since sensor wakeup => Ignoring sample"),
+                       _delay_read_after_wakeup_ms / 1000ul));
     }
     return false;
   }
@@ -483,7 +543,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
 }
 
 bool P053_data_struct::resetSensor() {
-  if (_resetPin >= 0) { // Reset if pin is configured
+  if (validGpio(_resetPin)) { // Reset if pin is configured
     // Toggle 'reset' to assure we start reading header
     addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
     pinMode(_resetPin, OUTPUT);
@@ -502,14 +562,17 @@ bool P053_data_struct::wakeSensor() {
   }
   addLog(LOG_LEVEL_INFO, F("PMSx003: Wake sensor"));
 
-  if (_pwrPin >= 0) {
+  if (validGpio(_pwrPin)) {
     // Make sure the sensor is "on"
     pinMode(_pwrPin, OUTPUT);
     digitalWrite(_pwrPin, HIGH);
     pinMode(_pwrPin, INPUT_PULLUP);
-  } else {
-    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74
-    };
+  } else
+  # ifdef USES_P175
+  if (!_P053_for_P175)
+  # endif // ifdef USES_P175
+  {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74 };
     _easySerial->write(command, 7);
   }
 
@@ -536,7 +599,11 @@ bool P053_data_struct::sleepSensor() {
   if (_pwrPin >= 0) {
     pinMode(_pwrPin, OUTPUT);
     digitalWrite(_pwrPin, LOW);
-  } else {
+  } else
+  # ifdef USES_P175
+  if (!_P053_for_P175)
+  # endif // ifdef USES_P175
+  {
     const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x00, 0x01, 0x73 };
     _easySerial->write(command, 7);
   }
@@ -550,22 +617,38 @@ bool P053_data_struct::sleepSensor() {
 
 void P053_data_struct::setActiveReadingMode() {
   if (initialized()) {
-    const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x01, 0x01, 0x71 };
-    _easySerial->write(command, 7);
+    # ifdef USES_P175
+
+    if (!_P053_for_P175)
+    # endif // ifdef USES_P175
+    {
+      const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x01, 0x01, 0x71 };
+      _easySerial->write(command, 7);
+    }
     _activeReadingModeEnabled = true;
   }
 }
 
 void P053_data_struct::setPassiveReadingMode() {
   if (initialized()) {
-    const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x00, 0x01, 0x70 };
-    _easySerial->write(command, 7);
+    # ifdef USES_P175
+
+    if (!_P053_for_P175)
+    # endif // ifdef USES_P175
+    {
+      const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x00, 0x01, 0x70 };
+      _easySerial->write(command, 7);
+    }
     _activeReadingModeEnabled = false;
   }
 }
 
 void P053_data_struct::requestData() {
-  if (initialized() && !_activeReadingModeEnabled) {
+  if (initialized() && !_activeReadingModeEnabled
+      # ifdef USES_P175
+      && !_P053_for_P175
+      # endif // ifdef USES_P175
+      ) {
     const uint8_t command[7] = { 0x42, 0x4D, 0xE2, 0x00, 0x00, 0x01, 0x71 };
     _easySerial->write(command, 7);
   }

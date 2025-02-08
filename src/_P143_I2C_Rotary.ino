@@ -48,18 +48,13 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_143;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_143;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
       break;
     }
 
@@ -176,13 +171,10 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P143_DeviceType_e::DFRobotEncoder)
           # endif // if P143_FEATURE_INCLUDE_DFROBOT
         };
-        addFormSelector(F("Encoder type"),
-                        F("pdevice"),
-                        sizeof(selectModeValues) / sizeof(int),
-                        selectModeOptions,
-                        selectModeValues,
-                        P143_ENCODER_TYPE,
-                        true);
+        constexpr size_t optionCount = NR_ELEMENTS(selectModeValues);
+        FormSelectorOptions selector(optionCount, selectModeOptions, selectModeValues);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Encoder type"), F("pdevice"), P143_ENCODER_TYPE);
         addFormNote(F("Changing the Encoder type will reload the page and reset Encoder specific settings to default!"));
       }
 
@@ -244,12 +236,9 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
               static_cast<int>(P143_M5StackLed_e::Led1Only),
               static_cast<int>(P143_M5StackLed_e::Led2Only),
             };
-            addFormSelector(F("Color map Leds"),
-                            F("pledsel"),
-                            sizeof(selectLedModeValues) / sizeof(int),
-                            selectLedModeOptions,
-                            selectLedModeValues,
-                            P143_M5STACK_SELECTION);
+            constexpr size_t optionCount = NR_ELEMENTS(selectLedModeValues);
+            const FormSelectorOptions selector(optionCount, selectLedModeOptions, selectLedModeValues);
+            selector.addFormSelector(F("Color map Leds"), F("pledsel"), P143_M5STACK_SELECTION);
           }
           # endif // if P143_FEATURE_INCLUDE_M5STACK
           break;
@@ -289,12 +278,9 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P143_ButtonAction_e::PushButtonInverted),
           static_cast<int>(P143_ButtonAction_e::ToggleSwitch),
         };
-        addFormSelector(F("Button action"),
-                        F("pbutton"),
-                        sizeof(selectButtonValues) / sizeof(int),
-                        selectButtonOptions,
-                        selectButtonValues,
-                        P143_PLUGIN_BUTTON_ACTION);
+        constexpr size_t optionCount = NR_ELEMENTS(selectButtonValues);
+        const FormSelectorOptions selector(optionCount, selectButtonOptions, selectButtonValues);
+        selector.addFormSelector(F("Button action"), F("pbutton"), P143_PLUGIN_BUTTON_ACTION);
 
         # if P143_FEATURE_INCLUDE_DFROBOT
 
@@ -331,12 +317,9 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
             static_cast<int>(P143_CounterMapping_e::ColorMapping),
             static_cast<int>(P143_CounterMapping_e::ColorGradient),
           };
-          addFormSelector(F("Counter color mapping"),
-                          F("pmap"),
-                          sizeof(selectCounterValues) / sizeof(int),
-                          selectCounterOptions,
-                          selectCounterValues,
-                          P143_PLUGIN_COUNTER_MAPPING);
+          constexpr size_t optionCount = NR_ELEMENTS(selectCounterValues);
+          const FormSelectorOptions selector(optionCount, selectCounterOptions, selectCounterValues);
+          selector.addFormSelector(F("Counter color mapping"), F("pmap"), P143_PLUGIN_COUNTER_MAPPING);
         }
         {
           String strings[P143_STRINGS];
@@ -352,7 +335,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
             addHtml('#');
             addHtmlInt(varNr + 1);
             html_TD();
-            addTextBox(getPluginCustomArgName(varNr), strings[varNr], P143_STRING_LEN, false, false, EMPTY_STRING, F("xwide"));
+            addTextBox(getPluginCustomArgName(varNr), strings[varNr], P143_STRING_LEN, F("xwide"));
           }
           html_end_table();
         }

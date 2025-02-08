@@ -113,6 +113,9 @@ br_x509_decoder_push(br_x509_decoder_context *ctx,
 	br_x509_decoder_run(&ctx->cpu);
 }
 
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
+
 
 
 static const unsigned char t0_datablock[] PROGMEM = {
@@ -520,7 +523,7 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 11: {
 				/* -rot */
- T0_NROT();
+ T0_NROT(); 
 				}
 				break;
 			case 12: {
@@ -615,7 +618,7 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 22: {
 				/* co */
- T0_CO();
+ T0_CO(); 
 				}
 				break;
 			case 23: {
@@ -653,12 +656,12 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 26: {
 				/* drop */
- (void)T0_POP();
+ (void)T0_POP(); 
 				}
 				break;
 			case 27: {
 				/* dup */
- T0_PUSH(T0_PEEK(0));
+ T0_PUSH(T0_PEEK(0)); 
 				}
 				break;
 			case 28: {
@@ -704,7 +707,7 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 32: {
 				/* over */
- T0_PUSH(T0_PEEK(1));
+ T0_PUSH(T0_PEEK(1)); 
 				}
 				break;
 			case 33: {
@@ -753,7 +756,7 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 35: {
 				/* rot */
- T0_ROT();
+ T0_ROT(); 
 				}
 				break;
 			case 36: {
@@ -774,7 +777,7 @@ br_x509_decoder_run(void *t0ctx)
 				break;
 			case 38: {
 				/* swap */
- T0_SWAP();
+ T0_SWAP(); 
 				}
 				break;
 			}

@@ -5,6 +5,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2024-12-09 tonhuisman: Fix: Reduced max sensitivity to configure to 101, as the max value that vill be reported by the sensor is 100,
+ *                        so checking up to 100 was an off-by-one error.
+ * 2024-10-09 tonhuisman: Extend sensitivity max. value to 110 (experimental, was 100)
  * 2023-10-29 tonhuisman: Rework processing, allow Interval = 0, as now the events will be generated when a value changes,
  *                        but at most once per 100 msec, to not overload the ESP. Fixed the LD2410 library to work correctly
  *                        with the event-driven scheduler model of ESPEasy, instead of the continuous loop() run of Arduino
@@ -74,18 +77,18 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics
 
-      Device[++deviceCount].Number           = PLUGIN_ID_159;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_159;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount         = 4;
+      dev.OutputDataType     = Output_Data_type_t::Simple;
+      dev.FormulaOption      = true;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.TimerOptional      = true;
+      dev.PluginStats        = true;
+      dev.ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
 
       break;
     }
