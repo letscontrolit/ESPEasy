@@ -210,16 +210,9 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
     toString(AdaGFXTextPrintMode::ClearThenTruncate),
     toString(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
-  /*
-  const int textModeOptions[] = {
-    static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
-    static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
-    static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate),
-    static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingCentered),
-  };
-  */
 
   const FormSelectorOptions selector(NR_ELEMENTS(textModes), textModes);
+
   selector.addFormSelector(F("Text print Mode"), id, selectedIndex);
 }
 
@@ -280,8 +273,8 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
 void AdaGFXFormRotation(const __FlashStringHelper *id,
                         uint8_t                    selectedIndex) {
   const __FlashStringHelper *rotationOptions[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-//  const int rotationOptionValues[]             = { 0, 1, 2, 3 };
-  const FormSelectorOptions selector(NR_ELEMENTS(rotationOptions), rotationOptions);
+  const FormSelectorOptions  selector(NR_ELEMENTS(rotationOptions), rotationOptions);
+
   selector.addFormSelector(F("Rotation"), id, selectedIndex);
 }
 
@@ -404,7 +397,6 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
 void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                            uint8_t                    selectedIndex) {
   String lineSpacings[16];
-//  int    lineSpacingOptions[16];
 
   for (uint8_t i = 0; i < 16; ++i) {
     if (15 == i) {
@@ -416,7 +408,6 @@ void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
     } else {
       lineSpacings[i] = i;
     }
-//    lineSpacingOptions[i] = i;
   }
   const FormSelectorOptions selector(16, lineSpacings);
   selector.addFormSelector(F("Linespacing"), id, selectedIndex);
@@ -2182,7 +2173,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         #  if ADAGFX_ARGUMENT_VALIDATION
         const int16_t curWin = getWindow();
 
-        if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+        if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
         if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -3239,17 +3230,23 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     return false;
   }
 
+  size_t myPos{};
+
   // Parse BMP header. 0x4D42 (ASCII 'BM') is the Windows BMP signature.
   // There are other values possible in a .BMP file but these are super
   // esoteric (e.g. OS/2 struct bitmap array) and NOT supported here!
-  if (readLE16() == 0x4D42) { // BMP signature
-    (void)readLE32();         // Read & ignore file size
-    (void)readLE32();         // Read & ignore creator bytes
-    offset = readLE32();      // Start of image data
+  const uint16_t sig = readLE16();
+  myPos += 2;
+
+  if (sig == 0x4D42) {   // BMP signature
+    (void)readLE32();    // Read & ignore file size
+    (void)readLE32();    // Read & ignore creator bytes
+    offset = readLE32(); // Start of image data
     // Read DIB header
     headerSize = readLE32();
     bmpWidth   = readLE32();
     bmpHeight  = readLE32();
+    myPos     += 24;
 
     // If bmpHeight is negative, image is in top-down order.
     // This is not canon but has been observed in the wild.
@@ -3259,6 +3256,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     }
     planes = readLE16();
     depth  = readLE16(); // Bits per pixel
+    myPos += 4;
 
     // Compression mode is present in later BMP versions (default = none)
     if (headerSize > 12) {
@@ -3269,6 +3267,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       colors = readLE32(); // Number of colors in palette, or 0 for 2^depth
       (void)readLE32();    // Number of colors used (ignore)
       // File position should now be at start of palette (if present)
+      myPos += 24;
     }
 
     if (!colors) {
@@ -3341,6 +3340,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 g = file.read();
                 r = file.read();
                 (void)file.read(); // Ignore 4th byte
+                myPos       += 4;
                 quantized[c] =     // -V522
                                ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
               }
@@ -3369,7 +3369,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               }
 
               constexpr size_t errorcode = (size_t)-1;
-              size_t pos                 = file.position();
+              size_t pos                 = myPos; // file.position(); // position() doesn't seem to work for SD files
 
               if (pos == errorcode) {
                 pos = 0;
@@ -3381,6 +3381,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                   _tft->endWrite();                   // End TFT SPI transaction
                 }
                 file.seek(bmpPos);                    // Seek = SD transaction
+                myPos  = bmpPos;                      // Re-sync
                 srcidx = sizeof sdbuf;                // Force buffer reload
               }
 
@@ -3391,6 +3392,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                     _tft->endWrite();                 // End TFT SPI transact
                   }
                   file.read(sdbuf, sizeof sdbuf);     // Load from SD
+                  myPos += sizeof sdbuf;              // Let's assume we read a full buffer...
 
                   if (transact && canTransact) {
                     _display->startWrite();           // Start TFT SPI transact
@@ -3489,7 +3491,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       addLog(LOG_LEVEL_ERROR, F("showBmp: Only uncompressed and 24 or 1 bit color-depth supported."));
     }
   } else { // end signature
-    addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
+    addLog(LOG_LEVEL_ERROR, strformat(F("showBmp: File signature error. (0x%04X)"), sig));
   }
 
   file.close();
