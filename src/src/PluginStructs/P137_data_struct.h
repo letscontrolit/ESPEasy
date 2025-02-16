@@ -78,11 +78,12 @@ enum class P137_GPIOBootState_e: uint8_t { // Will be applied by subtracting 1 !
 };
 
 enum class P137_PredefinedDevices_e : uint8_t {
-  Unselected     = 0u,
-  M5Stack_StickC = 1u,
-  M5Stack_Core2  = 2u,
-  LilyGO_TBeam   = 3u,
-  UserDefined    = 99u // Keep as last
+  Unselected         = 0u,
+  M5Stack_StickC     = 1u,
+  M5Stack_Core2      = 2u,
+  LilyGO_TBeam       = 3u,
+  M5Stack_StickCPlus = 4u,
+  UserDefined        = 99u // Keep as last
 };
 
 int16_t                    P137_settingToValue(uint16_t data,

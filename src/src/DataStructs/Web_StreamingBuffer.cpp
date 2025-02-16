@@ -336,7 +336,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   web_server.sendContent(data);
 
   if (data.length() > (CHUNKED_BUFFER_SIZE + 1)) {
-    data = String(); // Clear also allocated memory
+    free_string(data); // Clear also allocated memory
   } else {
     data.clear();
   }

@@ -23,7 +23,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   bool handledCmd = false;
   bool sendOK     = false;
-  printWebString = String();
+  free_string(printWebString);
   printToWeb     = false;
   printToWebJSON = false;
 

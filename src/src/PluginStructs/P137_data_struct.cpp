@@ -70,7 +70,15 @@ void P137_CheckPredefinedParameters(struct EventStruct *event) {
         P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
         P137_REG_DCDC3_LDO3     = (P137_valueToSetting(3300, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(3300, P137_CONST_MAX_LDO);
         P137_REG_LDOIO          =  P137_valueToSetting(3300, P137_CONST_MAX_LDOIO);
-        P137_CONFIG_DISABLEBITS = 0b1111111000;   // NC pins disabled
+        P137_CONFIG_DISABLEBITS = 0b1111111000;          // NC pins disabled
+        break;
+      }
+      case P137_PredefinedDevices_e::M5Stack_StickCPlus: // M5Stack StickC Plus
+      {
+        P137_REG_DCDC2_LDO2     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC2) << 16) | P137_valueToSetting(2800, P137_CONST_MAX_LDO);
+        P137_REG_DCDC3_LDO3     = (P137_valueToSetting(-1, P137_CONST_MAX_DCDC) << 16) | P137_valueToSetting(3000, P137_CONST_MAX_LDO);
+        P137_REG_LDOIO          =  P137_valueToSetting(2800, P137_CONST_MAX_LDOIO);
+        P137_CONFIG_DISABLEBITS = 0b1111110000;   // NC pins disabled
         break;
       }
       case P137_PredefinedDevices_e::UserDefined: // User defined
@@ -111,7 +119,7 @@ const __FlashStringHelper* toString(const P137_valueOptions_e value,
     case P137_valueOptions_e::DCDC2: return displayString ? F("DCDC2 Voltage") : F("dcdc2voltage");
     case P137_valueOptions_e::DCDC3: return displayString ? F("DCDC3 Voltage") : F("dcdc3voltage");
   }
-  return F("*Undefined*");
+  return F("Undefined");
 }
 
 // **************************************************************************/
@@ -125,7 +133,7 @@ const __FlashStringHelper* toString(const P137_GPIOBootState_e value) {
     case P137_GPIOBootState_e::Input: return F("Input");
     case P137_GPIOBootState_e::PWM: return F("PWM");
   }
-  return F("*Undefined*");
+  return F("Undefined");
 }
 
 // **************************************************************************/
@@ -135,11 +143,12 @@ const __FlashStringHelper* toString(const P137_PredefinedDevices_e device) {
   switch (device) {
     case P137_PredefinedDevices_e::Unselected: return F("Select an option to set default values");
     case P137_PredefinedDevices_e::M5Stack_StickC: return F("M5Stack StickC");
-    case P137_PredefinedDevices_e::M5Stack_Core2: return F("M5Stack Core2 v1.0 (Default)");
-    case P137_PredefinedDevices_e::LilyGO_TBeam: return F("LilyGO T-Beam v1.1");
+    case P137_PredefinedDevices_e::M5Stack_Core2: return F("M5Stack Core2 (Default)");
+    case P137_PredefinedDevices_e::LilyGO_TBeam: return F("LilyGO T-Beam");
+    case P137_PredefinedDevices_e::M5Stack_StickCPlus: return F("M5Stack StickC Plus");
     case P137_PredefinedDevices_e::UserDefined: return F("User defined");
   }
-  return F("*Undefined*");
+  return F("Undefined");
 }
 
 // **************************************************************************/
@@ -259,7 +268,10 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
 
   if (isInitialized() && equals(cmd, F("axp"))) { // Command trigger
     cmd = parseString(string, 2);                 // sub command
-    const int subcommand_i          = GetCommandCode(cmd.c_str(), P137_subcommands);
+    const int subcommand_i = GetCommandCode(cmd.c_str(), P137_subcommands);
+
+    if (subcommand_i < 0) { return success; } // fail fast
+
     const P137_subcommands_e subcmd = static_cast<P137_subcommands_e>(subcommand_i);
 
     const String var3   = parseString(string, 3);
@@ -268,7 +280,8 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
     const bool   state3 = !empty3 && (event->Par2 == 0 || event->Par2 == 1);
     success = true;
 
-    if ((event->Par2 >= 0) && (event->Par2 <= P137_CONST_100_PERCENT) && !empty3 && empty4) {
+    if ((event->Par2 >= 0) && (event->Par2 <= P137_CONST_100_PERCENT) && !empty3 && empty4 &&
+        (subcmd >= P137_subcommands_e::ldo2perc) && (subcmd <= P137_subcommands_e::dcdc3perc)) {
       // percentage 0..100, 0 turns off
 
       switch (subcmd) {
@@ -322,7 +335,9 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
           success = false;
           break;
       }
-    } else if ((event->Par2 >= 0) && (event->Par3 <= P137_CONST_MAX_LDO) && (event->Par2 < event->Par3) && !empty3 && !empty4) {
+    } else
+    if ((event->Par2 >= 0) && (event->Par3 <= P137_CONST_MAX_LDO) && (event->Par2 < event->Par3) && !empty3 && !empty4 &&
+        (subcmd >= P137_subcommands_e::ldo2map) && (subcmd <= P137_subcommands_e::dcdc3map)) {
       // map range <low>,<high>
 
       switch (subcmd) {
