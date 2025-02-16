@@ -135,22 +135,41 @@ bool fileExists(const __FlashStringHelper *fname)
   return fileExists(String(fname));
 }
 
+bool fileExists(const __FlashStringHelper *fname, FileDestination_e& destination)
+{
+  return fileExists(String(fname), destination);
+}
+
 bool fileExists(const String& fname) {
+  FileDestination_e dummy;
+  return fileExists(fname, dummy);
+}
+
+bool fileExists(const String& fname, FileDestination_e& destination) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
 
   const String patched_fname = patch_fname(fname);
   auto search                = Cache.fileExistsMap.find(patched_fname);
+  destination                = FileDestination_e::ANY;
 
   if (search != Cache.fileExistsMap.end()) {
-    return search->second;
+    destination = static_cast<FileDestination_e>(search->second - 1);
+    return search->second != 0;
   }
   bool res = ESPEASY_FS.exists(patched_fname);
+  if (res) {
+    destination = FileDestination_e::FLASH;
+  }
+
   #if FEATURE_SD
 
   if (!res) {
     res = SD.exists(patched_fname);
+    if (res) {
+      destination = FileDestination_e::SD;
+    }
   }
   #endif // if FEATURE_SD
 
@@ -164,7 +183,7 @@ bool fileExists(const String& fname) {
     Cache.fileExistsMap.emplace(
       std::make_pair(
         patched_fname,
-        res));
+        res ? (static_cast<uint8_t>(destination) + 1) : 0));
   }
 
   if (Cache.fileCacheClearMoment == 0) {
@@ -186,7 +205,8 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
     return f;
   }
 
-  bool exists = fileExists(fname);
+  FileDestination_e where = FileDestination_e::ANY;
+  const bool exists = fileExists(fname, where);
 
   if (!exists) {
     if (equals(mode, 'r')) {
@@ -195,12 +215,12 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
     clearFileCaches();
   }
 
-  if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+  if (where != FileDestination_e::SD && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH))) {
     f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
   }
   #if FEATURE_SD
 
-  if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
+  if ((!f || where == FileDestination_e::SD) && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
     f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
   #endif // if FEATURE_SD
