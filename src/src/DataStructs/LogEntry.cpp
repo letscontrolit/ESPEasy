@@ -19,13 +19,12 @@ bool LogEntry_t::add(const uint8_t loglevel, const String& line)
   }
 
   {
-    #ifdef USE_SECOND_HEAP
-
-    // Need to make a substring or a copy, which is a new allocation, on the 2nd heap
-    HeapSelectIram ephemeral;
-    #endif // ifdef USE_SECOND_HEAP
-
     if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      #ifdef USE_SECOND_HEAP
+
+      // Need to make a substring or a copy, which is a new allocation, on the 2nd heap
+      HeapSelectIram ephemeral;
+      #endif // ifdef USE_SECOND_HEAP
       move_special(_message, line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
     } else {
       reserve_special(_message, line.length());

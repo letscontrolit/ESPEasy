@@ -92,6 +92,9 @@
 
 extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
 
+// Try to allocate in PSRAM or 2nd heap if possible
+#define special_initPluginTaskData(I, T)  void * ptr = special_calloc(1, sizeof(T)); if (ptr) { initPluginTaskData(I, new (ptr) T()); }
+
 String PCONFIG_LABEL(int n);
 
 // ==============================================

@@ -324,8 +324,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("MPR121,GP8403,GT911");
       break;
     case 0x5E:
-    case 0x5F:
       result += F("GP8403");
+      break;
+    case 0x5F:
+      result += F("GP8403,CardKB");
       break;
     case 0x60:
       result += F("Adafruit Motorshield v2,SI1145");

@@ -176,14 +176,14 @@ void* special_calloc(size_t num, size_t size) {
     res = heap_caps_calloc(num, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
   }
 #else // ifdef ESP32
-  {
 # ifdef USE_SECOND_HEAP
+  if (size > 64 || FreeMem() < 5000) {
 
-    // Try allocating on ESP8266 2nd heap
+    // Try allocating on ESP8266 2nd heap, only when sufficiently large data is needed
     HeapSelectIram ephemeral;
-# endif // ifdef USE_SECOND_HEAP
     res = calloc(num, size);
   }
+# endif // ifdef USE_SECOND_HEAP
 #endif  // ifdef ESP32
 
   if (res == nullptr) {
@@ -194,7 +194,13 @@ void* special_calloc(size_t num, size_t size) {
 #endif // ifdef USE_SECOND_HEAP
     res = calloc(num, size);
   }
-
+#if defined(ESP8266) && defined(USE_SECOND_HEAP)
+  if (res == nullptr) {
+    // Not successful, try allocating on (ESP8266) 2nd heap
+    HeapSelectIram ephemeral;
+    res = calloc(num, size);
+  }
+#endif  
   return res;
 }
 
@@ -206,7 +212,7 @@ bool String_reserve_special(String& str, size_t size) {
     return true;
   }
   #ifdef USE_SECOND_HEAP
-  if (size >= 32) {
+  if (size >= 48 || FreeMem() < 5000) {
     // Only try to store larger strings here as those tend to be kept for a longer period.
     HeapSelectIram ephemeral;
     // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
@@ -227,7 +233,11 @@ bool String_reserve_special(String& str, size_t size) {
 class PSRAM_String : public String {
   public:
   PSRAM_String(size_t size) : String() {
-    init();
+    sso.isSSO = 0;      // setSSO(false);
+    ptr.buff = nullptr; // setBuffer(nullptr);
+    ptr.cap = 0;        // setCapacity(0);
+    ptr.len = 0;        // setLen(0);
+
     if (size != 0 && size > capacity() && UsePSRAM()) {
       size_t newSize = (size + 16) & (~0xf);
       void *ptr = special_calloc(1, newSize);
@@ -243,6 +253,9 @@ class PSRAM_String : public String {
 
 
 bool String_reserve_special(String& str, size_t size) {
+  if (size == 0) {
+    return true;
+  }
   if (!UsePSRAM()) {
     return str.reserve(size);
   }

@@ -682,7 +682,12 @@ bool SSDP_begin() {
     _server = nullptr;
   }
 
-  _server = new (std::nothrow) UdpContext;
+  constexpr unsigned size = sizeof(UdpContext);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    _server = new (ptr) UdpContext;
+  }
 
   if (_server == nullptr) {
     return false;
@@ -767,7 +772,16 @@ void SSDP_send(uint8_t method) {
               (uint16_t)((chipId >>  8) & 0xff),
               (uint16_t)chipId        & 0xff);
 
-    char *buffer = new (std::nothrow) char[1460]();
+    char *buffer = nullptr;
+    # ifdef USE_SECOND_HEAP
+    {
+      HeapSelectIram ephemeral;
+      buffer = new (std::nothrow) char[1460]();
+    }
+    # endif // ifdef USE_SECOND_HEAP
+    if (buffer == nullptr) {
+      buffer = new (std::nothrow) char[1460]();
+    }
 
     if (buffer == nullptr) { return; }
     int len = snprintf(buffer, 1460,

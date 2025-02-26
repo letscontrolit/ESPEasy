@@ -34,7 +34,6 @@
 
 # include "../Globals/NPlugins.h"
 
-
 void handle_notifications() {
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_notifications"));
@@ -67,43 +66,51 @@ void handle_notifications() {
     } else {
       MakeNotificationSettings(NotificationSettings);
 
-      if (Settings.Notification[notificationindex] != notification.value)
-      {
-        Settings.Notification[notificationindex] = notification.value;
-      }
-      else
-      {
-        if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
+      if (!AllocatedNotificationSettings()) {
+        addHtmlError(F("Out of memory!"));
+      } else {
+
+        if (Settings.Notification[notificationindex] != notification.value)
         {
-          nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
+          Settings.Notification[notificationindex] = notification.value;
+        }
+        else
+        {
+          if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
+          {
+            nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
-          if (validNProtocolIndex(NotificationProtocolIndex)) {
-            String dummyString;
-            NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+            if (validNProtocolIndex(NotificationProtocolIndex)) {
+              String dummyString;
+              NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
+            }
+
+            // Reload & overwrite
+            LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(NotificationSettings.get()),
+                                     sizeof(NotificationSettingsStruct));
+            NotificationSettings->validate();
+            NotificationSettings->Port = getFormItemInt(F("port"), 0);
+
+            NotificationSettings->Timeout_ms                = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
+            NotificationSettings->Pin1                      = getFormItemInt(F("pin1"), -1);
+            NotificationSettings->Pin2                      = getFormItemInt(F("pin2"), -1);
+            Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
+            strncpy_webserver_arg(NotificationSettings->Domain,   F("domain"));
+            strncpy_webserver_arg(NotificationSettings->Server,   F("server"));
+            strncpy_webserver_arg(NotificationSettings->Sender,   F("sender"));
+            strncpy_webserver_arg(NotificationSettings->Receiver, F("receiver"));
+            strncpy_webserver_arg(NotificationSettings->Subject,  F("subject"));
+            strncpy_webserver_arg(NotificationSettings->User,     F("username"));
+            strncpy_webserver_arg(NotificationSettings->Body,     F("body"));
+
+            copyFormPassword(F("password"), NotificationSettings->Pass, sizeof(NotificationSettings->Pass));
           }
-
-          // Reload & overwrite
-          LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
-          NotificationSettings.validate();
-          NotificationSettings.Port = getFormItemInt(F("port"), 0);
-
-          NotificationSettings.Timeout_ms                 = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
-          NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
-          NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
-          Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
-          strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
-          strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
-          strncpy_webserver_arg(NotificationSettings.Sender,   F("sender"));
-          strncpy_webserver_arg(NotificationSettings.Receiver, F("receiver"));
-          strncpy_webserver_arg(NotificationSettings.Subject,  F("subject"));
-          strncpy_webserver_arg(NotificationSettings.User,     F("username"));
-          strncpy_webserver_arg(NotificationSettings.Body,     F("body"));
-
-          copyFormPassword(F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass));
         }
       }
-      addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings),
-                                            sizeof(NotificationSettingsStruct)));
+      addHtmlError(SaveNotificationSettings(
+        notificationindex, 
+        reinterpret_cast<const uint8_t *>(NotificationSettings.get()),
+        sizeof(NotificationSettingsStruct)));
     }
 
     // Save the settings.
@@ -138,51 +145,55 @@ void handle_notifications() {
 
     MakeNotificationSettings(NotificationSettings);
 
-    for (uint8_t x = 0; x < NOTIFICATION_MAX; x++)
-    {
-      LoadNotificationSettings(x, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
-      NotificationSettings.validate();
-      html_TR_TD();
-      html_add_button_prefix();
-      addHtml(F("notifications?index="));
-      addHtmlInt(x + 1);
-      addHtml(F("'>Edit</a>"));
-      html_TD();
-      addHtmlInt(x + 1);
-      html_TD();
-
-      if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
+    if (!AllocatedNotificationSettings()) {
+      addHtmlError(F("Out of memory!"));
+    } else {
+      for (uint8_t x = 0; x < NOTIFICATION_MAX; x++)
       {
-        addEnabled(Settings.NotificationEnabled[x]);
-
+        LoadNotificationSettings(x, reinterpret_cast<uint8_t *>(NotificationSettings.get()), sizeof(NotificationSettingsStruct));
+        NotificationSettings->validate();
+        html_TR_TD();
+        html_add_button_prefix();
+        addHtml(F("notifications?index="));
+        addHtmlInt(x + 1);
+        addHtml(F("'>Edit</a>"));
         html_TD();
-        uint8_t NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
-        String  NotificationName          = F("(plugin not found?)");
+        addHtmlInt(x + 1);
+        html_TD();
 
-        if (validNProtocolIndex(NotificationProtocolIndex))
+        if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
         {
-          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
-        }
-        addHtml(NotificationName);
-        html_TD();
-        addHtml(NotificationSettings.Server);
-        html_TD();
+          addEnabled(Settings.NotificationEnabled[x]);
 
-        if (NotificationSettings.Port) {
-          addHtmlInt(NotificationSettings.Port);
-        } else {
-          // MFD: we display the GPIO
-          addGpioHtml(NotificationSettings.Pin1);
+          html_TD();
+          uint8_t NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
+          String  NotificationName          = F("(plugin not found?)");
 
-          if (NotificationSettings.Pin2 >= 0)
+          if (validNProtocolIndex(NotificationProtocolIndex))
           {
-            html_BR();
-            addGpioHtml(NotificationSettings.Pin2);
+            NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
+          }
+          addHtml(NotificationName);
+          html_TD();
+          addHtml(NotificationSettings->Server);
+          html_TD();
+
+          if (NotificationSettings->Port) {
+            addHtmlInt(NotificationSettings->Port);
+          } else {
+            // MFD: we display the GPIO
+            addGpioHtml(NotificationSettings->Pin1);
+
+            if (NotificationSettings->Pin2 >= 0)
+            {
+              html_BR();
+              addGpioHtml(NotificationSettings->Pin2);
+            }
           }
         }
-      }
-      else {
-        html_TD(3);
+        else {
+          html_TD(3);
+        }
       }
     }
     html_end_table();
@@ -213,88 +224,93 @@ void handle_notifications() {
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
       MakeNotificationSettings(NotificationSettings);
-      LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
-      NotificationSettings.validate();
 
-      nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
+      if (!AllocatedNotificationSettings()) {
+        addHtmlError(F("Out of memory!"));
+      } else {
+        LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(NotificationSettings.get()), sizeof(NotificationSettingsStruct));
+        NotificationSettings->validate();
 
-      if (validNProtocolIndex(NotificationProtocolIndex))
-      {
-        if (Notification[NotificationProtocolIndex].usesMessaging)
+        nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
+
+        if (validNProtocolIndex(NotificationProtocolIndex))
         {
-          if (NotificationSettings.Port == 0) {
-# if FEATURE_EMAIL_TLS
-            NotificationSettings.Port = 465;
-# else // if FEATURE_EMAIL_TLS
-            NotificationSettings.Port = 25;
-# endif // if FEATURE_EMAIL_TLS
-          }
-
-          addFormSubHeader(F("SMTP Server Settings"));
-          addFormTextBox(F("Domain"), F("domain"), NotificationSettings.Domain, sizeof(NotificationSettings.Domain) - 1);
-          addFormTextBox(F("Server"), F("server"), NotificationSettings.Server, sizeof(NotificationSettings.Server) - 1);
-          addFormNumericBox(
-            F("Port"), F("port"),
-            NotificationSettings.Port,
-            1,
-            65535);
-# if FEATURE_EMAIL_TLS
-          addFormNote(F("default port SSL: 465"));
-# else // if FEATURE_EMAIL_TLS
-          addFormNote(F("default port: 25, SSL/TLS servers NOT supported!"));
-# endif // if FEATURE_EMAIL_TLS
-
-          if ((NotificationSettings.Timeout_ms < NPLUGIN_001_MIN_TM) ||
-              (NotificationSettings.Timeout_ms > NPLUGIN_001_MAX_TM))
+          if (Notification[NotificationProtocolIndex].usesMessaging)
           {
-            NotificationSettings.Timeout_ms = NPLUGIN_001_DEF_TM;
+            if (NotificationSettings->Port == 0) {
+# if FEATURE_EMAIL_TLS
+              NotificationSettings->Port = 465;
+# else // if FEATURE_EMAIL_TLS
+              NotificationSettings->Port = 25;
+# endif // if FEATURE_EMAIL_TLS
+            }
+
+            addFormSubHeader(F("SMTP Server Settings"));
+            addFormTextBox(F("Domain"), F("domain"), NotificationSettings->Domain, sizeof(NotificationSettings->Domain) - 1);
+            addFormTextBox(F("Server"), F("server"), NotificationSettings->Server, sizeof(NotificationSettings->Server) - 1);
+            addFormNumericBox(
+              F("Port"), F("port"),
+              NotificationSettings->Port,
+              1,
+              65535);
+# if FEATURE_EMAIL_TLS
+            addFormNote(F("default port SSL: 465"));
+# else // if FEATURE_EMAIL_TLS
+            addFormNote(F("default port: 25, SSL/TLS servers NOT supported!"));
+# endif // if FEATURE_EMAIL_TLS
+
+            if ((NotificationSettings->Timeout_ms < NPLUGIN_001_MIN_TM) ||
+                (NotificationSettings->Timeout_ms > NPLUGIN_001_MAX_TM))
+            {
+              NotificationSettings->Timeout_ms = NPLUGIN_001_DEF_TM;
+            }
+
+            addFormNumericBox(
+              F("Timeout"), F("timeout"),
+              NotificationSettings->Timeout_ms,
+              NPLUGIN_001_MIN_TM,
+              NPLUGIN_001_MAX_TM
+# if FEATURE_TOOLTIPS
+              , F("Maximum Server Response Time")
+# endif // if FEATURE_TOOLTIPS
+              );
+
+            addUnit(F("ms"));
+
+            ZERO_TERMINATE(NotificationSettings->Pass);
+            addFormSubHeader(F("Credentials"));
+
+            addFormTextBox(F("Username"), F("username"), NotificationSettings->User, sizeof(NotificationSettings->User) - 1);
+            addFormPasswordBox(F("Password"), F("password"), NotificationSettings->Pass, sizeof(NotificationSettings->Pass) - 1);
+
+            addFormSubHeader(F("Email Attributes"));
+
+            addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings->Sender,   sizeof(NotificationSettings->Sender) - 1);
+            addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings->Receiver, sizeof(NotificationSettings->Receiver) - 1);
+            addFormTextBox(F("Subject"),  F("subject"),  NotificationSettings->Subject,  sizeof(NotificationSettings->Subject) - 1);
+
+            addRowLabel(F("Body"));
+            addHtml(F("<textarea name='body' rows='20' size=512 wrap='off'>"));
+            addHtml(NotificationSettings->Body);
+            addHtml(F("</textarea>"));
           }
 
-          addFormNumericBox(
-            F("Timeout"), F("timeout"),
-            NotificationSettings.Timeout_ms,
-            NPLUGIN_001_MIN_TM,
-            NPLUGIN_001_MAX_TM
-# if FEATURE_TOOLTIPS
-            , F("Maximum Server Response Time")
-# endif // if FEATURE_TOOLTIPS
-            );
+          if (Notification[NotificationProtocolIndex].usesGPIO > 0)
+          {
+            addRowLabel(F("1st GPIO"));
+            addPinSelect(PinSelectPurpose::Generic, F("pin1"), NotificationSettings->Pin1);
+          }
 
-          addUnit(F("ms"));
+          addRowLabel(F("Enabled"));
+          addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
 
-          ZERO_TERMINATE(NotificationSettings.Pass);
-          addFormSubHeader(F("Credentials"));
+          TempEvent.NotificationIndex = notificationindex;
+          String webformLoadString;
+          NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
-          addFormTextBox(F("Username"), F("username"), NotificationSettings.User, sizeof(NotificationSettings.User) - 1);
-          addFormPasswordBox(F("Password"), F("password"), NotificationSettings.Pass, sizeof(NotificationSettings.Pass) - 1);
-
-          addFormSubHeader(F("Email Attributes"));
-
-          addFormTextBox(F("Sender"),   F("sender"),   NotificationSettings.Sender,   sizeof(NotificationSettings.Sender) - 1);
-          addFormTextBox(F("Receiver"), F("receiver"), NotificationSettings.Receiver, sizeof(NotificationSettings.Receiver) - 1);
-          addFormTextBox(F("Subject"),  F("subject"),  NotificationSettings.Subject,  sizeof(NotificationSettings.Subject) - 1);
-
-          addRowLabel(F("Body"));
-          addHtml(F("<textarea name='body' rows='20' size=512 wrap='off'>"));
-          addHtml(NotificationSettings.Body);
-          addHtml(F("</textarea>"));
-        }
-
-        if (Notification[NotificationProtocolIndex].usesGPIO > 0)
-        {
-          addRowLabel(F("1st GPIO"));
-          addPinSelect(PinSelectPurpose::Generic, F("pin1"), NotificationSettings.Pin1);
-        }
-
-        addRowLabel(F("Enabled"));
-        addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
-
-        TempEvent.NotificationIndex = notificationindex;
-        String webformLoadString;
-        NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
-
-        if (webformLoadString.length() > 0) {
-          addHtmlError(F("Bug in NPlugin::Function::NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+          if (webformLoadString.length() > 0) {
+            addHtmlError(F("Bug in NPlugin::Function::NPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
+          }
         }
       }
     }

@@ -40,11 +40,7 @@ void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t ta
     }
 
     if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
-      // Try to allocate in PSRAM if possible
+      // Try to allocate in PSRAM or 2nd heap if possible
       constexpr unsigned size = sizeof(PluginStats);
       void *ptr               = special_calloc(1, size);
 

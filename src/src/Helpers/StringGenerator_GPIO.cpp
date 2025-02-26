@@ -39,14 +39,14 @@ String formatGpioName(const __FlashStringHelper * label, gpio_direction directio
     reserveLength += 11;
   }
   String result;
+  if (reserve_special(result, reserveLength)) {
+    result += F("GPIO ");
+    result += formatGpioDirection(direction);
+    result += label;
 
-  result.reserve(reserveLength);
-  result += F("GPIO ");
-  result += formatGpioDirection(direction);
-  result += label;
-
-  if (optional) {
-    result += F("(optional)");
+    if (optional) {
+      result += F("(optional)");
+    }
   }
   return result;
 }

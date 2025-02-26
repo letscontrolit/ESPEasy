@@ -19,6 +19,7 @@ bool C011_sendBinary = false;
 
 struct C011_ConfigStruct
 {
+
   void zero_last() {
     HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
     HttpUri[C011_HTTP_URI_MAX_LEN - 1]       = 0;
@@ -30,16 +31,22 @@ struct C011_ConfigStruct
   char HttpUri[C011_HTTP_URI_MAX_LEN]       = { 0 };
   char HttpHeader[C011_HTTP_HEADER_MAX_LEN] = { 0 };
   char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
+
 };
 
 
 // Forward declarations
-bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody);
+bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex,
+                            String          & HttpMethod,
+                            String          & HttpUri,
+                            String          & HttpHeader,
+                            String          & HttpBody);
 boolean Create_schedule_HTTP_C011(struct EventStruct *event);
-void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted);
-void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary);
-
-
+void    DeleteNotNeededValues(String& s,
+                              uint8_t numberOfValuesWanted);
+void    ReplaceTokenByValue(String            & s,
+                            struct EventStruct *event,
+                            bool                sendBinary);
 
 bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -68,7 +75,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       {
-        MakeControllerSettings(ControllerSettings); //-V522
+        MakeControllerSettings(ControllerSettings); // -V522
 
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
@@ -99,8 +106,8 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
         addTableSeparator(F("HTTP Config"), 2, 3);
         {
-          uint8_t   choice    = 0;
-          const __FlashStringHelper * methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          uint8_t   choice                     = 0;
+          const __FlashStringHelper *methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
           constexpr int nrOptions = NR_ELEMENTS(methods);
 
@@ -127,7 +134,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       }
       {
         // Place in scope to delete ControllerSettings as soon as it is no longer needed
-        MakeControllerSettings(ControllerSettings); //-V522
+        MakeControllerSettings(ControllerSettings); // -V522
 
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
@@ -142,30 +149,37 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C011_ConfigStruct> customConfig(new (std::nothrow) C011_ConfigStruct);
+      constexpr unsigned size = sizeof(C011_ConfigStruct);
+      void *ptr               = special_calloc(1, size);
 
-      if (customConfig) {
-        uint8_t   choice    = 0;
-        String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+      if (ptr != nullptr) {
+        std::shared_ptr<C011_ConfigStruct> customConfig(new (ptr) C011_ConfigStruct);
 
-        for (uint8_t i = 0; i < 5; i++)
-        {
-          if (methods[i].equals(customConfig->HttpMethod)) {
-            choice = i;
+        if (customConfig) {
+          uint8_t choice    = 0;
+          String  methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+
+          for (uint8_t i = 0; i < 5; i++)
+          {
+            if (methods[i].equals(customConfig->HttpMethod)) {
+              choice = i;
+            }
           }
+
+          int httpmethod    = getFormItemInt(F("P011httpmethod"), choice);
+          String httpuri    = webArg(F("P011httpuri"));
+          String httpheader = webArg(F("P011httpheader"));
+          String httpbody   = webArg(F("P011httpbody"));
+
+          strlcpy(customConfig->HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig->HttpMethod));
+          strlcpy(customConfig->HttpUri,    httpuri.c_str(),             sizeof(customConfig->HttpUri));
+          strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
+          strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
+          customConfig->zero_last();
+          SaveCustomControllerSettings(event->ControllerIndex,
+                                       reinterpret_cast<const uint8_t *>(customConfig.get()),
+                                       sizeof(C011_ConfigStruct));
         }
-
-        int httpmethod    = getFormItemInt(F("P011httpmethod"), choice);
-        String httpuri    = webArg(F("P011httpuri"));
-        String httpheader = webArg(F("P011httpheader"));
-        String httpbody   = webArg(F("P011httpbody"));
-
-        strlcpy(customConfig->HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig->HttpMethod));
-        strlcpy(customConfig->HttpUri,    httpuri.c_str(),             sizeof(customConfig->HttpUri));
-        strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
-        strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
-        customConfig->zero_last();
-        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
       }
       break;
     }
@@ -202,29 +216,36 @@ bool do_process_c011_delay_queue(cpluginID_t cpluginID, const Queue_element_base
   const C011_queue_element& element = static_cast<const C011_queue_element&>(element_base);
 // *INDENT-ON*
 
-  if (!NetworkConnected()) { return false; }
+if (!NetworkConnected()) { return false; }
 
-  int httpCode = -1;
+int httpCode = -1;
 
-  send_via_http(
-    cpluginID,
-    ControllerSettings,
-    element._controller_idx,
-    element.uri,
-    element.HttpMethod,
-    element.header,
-    element.postStr,
-    httpCode);
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  element.uri,
+  element.HttpMethod,
+  element.header,
+  element.postStr,
+  httpCode);
 
-  // HTTP codes:
-  // 1xx Informational response
-  // 2xx Success
-  return httpCode >= 100 && httpCode < 300;
+// HTTP codes:
+// 1xx Informational response
+// 2xx Success
+return httpCode >= 100 && httpCode < 300;
 }
 
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
   // Just copy the needed strings and destruct the C011_ConfigStruct as soon as possible
-  std::shared_ptr<C011_ConfigStruct> customConfig(new (std::nothrow) C011_ConfigStruct);
+  constexpr unsigned size = sizeof(C011_ConfigStruct);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr == nullptr) {
+    return false;
+  }
+
+  std::shared_ptr<C011_ConfigStruct>customConfig(new (ptr) C011_ConfigStruct);
 
   if (!customConfig) {
     return false;
@@ -232,9 +253,9 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   LoadCustomControllerSettings(ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
   move_special(HttpMethod, String(customConfig->HttpMethod));
-  move_special(HttpUri   , String(customConfig->HttpUri));
+  move_special(HttpUri,    String(customConfig->HttpUri));
   move_special(HttpHeader, String(customConfig->HttpHeader));
-  move_special(HttpBody  , String(customConfig->HttpBody));
+  move_special(HttpBody,   String(customConfig->HttpBody));
   return true;
 }
 
@@ -247,10 +268,19 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-  //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
+
+  // LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
+
+  constexpr unsigned size = sizeof(C011_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr == nullptr) {
+    return false;
+  }
+
 
   // Add a new element to the queue with the minimal payload
-  std::unique_ptr<C011_queue_element> element(new (std::nothrow) C011_queue_element(event));
+  std::unique_ptr<C011_queue_element>element(new (ptr) C011_queue_element(event));
   bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {
@@ -264,11 +294,11 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLogMove(LOG_LEVEL_ERROR, strformat(
-          F("C011   : %s %s %s %s"),
-          element.HttpMethod.c_str(),
-          element.uri.c_str(),
-          element.header.c_str(),
-          element.postStr.c_str()));
+                     F("C011   : %s %s %s %s"),
+                     element.HttpMethod.c_str(),
+                     element.uri.c_str(),
+                     element.header.c_str(),
+                     element.postStr.c_str()));
       }
       C011_DelayHandler->sendQueue.pop_back();
       return false;
@@ -305,7 +335,7 @@ void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
     {
       // yes, so just remove the tokens
       s.replace(startToken, EMPTY_STRING);
-      s.replace(endToken,  EMPTY_STRING);
+      s.replace(endToken,   EMPTY_STRING);
     }
     else
     {
@@ -344,31 +374,34 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
   //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname%
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
   parseControllerVariables(s, event, !sendBinary);
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 #endif // ifdef USES_C011

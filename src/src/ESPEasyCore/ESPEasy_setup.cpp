@@ -302,8 +302,7 @@ void ESPEasy_setup()
   readBootCause();
 
   {
-    String log = F("INIT : ");
-    log += getLastBootCauseString();
+    String log;
 
     if (readFromRTC())
     {
@@ -311,9 +310,8 @@ void ESPEasy_setup()
       RTC.bootCounter++;
       lastMixedSchedulerId_beforereboot.mixed_id = RTC.lastMixedSchedulerId;
       readUserVarFromRTC();
-
-      log += F(" #");
-      log += RTC.bootCounter;
+      log = concat(F("INIT : "), getLastBootCauseString()) + 
+            concat(F(" #"), RTC.bootCounter);
 
       #ifndef BUILD_NO_DEBUG
       log += F(" Last Action before Reboot: ");
@@ -335,8 +333,7 @@ void ESPEasy_setup()
       log = F("INIT : Cold Boot");
     }
 
-    log += F(" - Restart Reason: ");
-    log += getResetReasonString();
+    log += concat(F(" - Restart Reason: "), getResetReasonString());
 
     RTC.deepSleepState = 0;
     saveToRTC();
@@ -542,14 +539,15 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(80);
-    log += concat(F("INFO : Plugins: "), getDeviceCount() + 1);
-    log += ' ';
-    log += getPluginDescriptionString();
-    log += F(" (");
-    log += getSystemLibraryString();
-    log += ')';
-    addLogMove(LOG_LEVEL_INFO, log);
+    if (reserve_special(log, 80)) {
+      log += concat(F("INFO : Plugins: "), getDeviceCount() + 1);
+      log += ' ';
+      log += getPluginDescriptionString();
+      log += F(" (");
+      log += getSystemLibraryString();
+      log += ')';
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 
   /*

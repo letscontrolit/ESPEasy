@@ -406,7 +406,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P041   // NeoPixel (Word Clock)
 // #define USES_P042   // NeoPixel (Candle)
 // #define USES_P043   // ClkOutput
-// #define USES_P044   // P1 Wifi Gateway
+// #define USES_P044   // P1 Wifi Gateway (Merged with P020, when P044 is enabled, then P020 is also enabled)
 // #define USES_P045   // MPU6050
 // #define USES_P046   // Ventus W266
 // #define USES_P047   // Soil moisture sensor
@@ -517,7 +517,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
 // #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
+// #define USES_P139   // AXP2101
 
+// #define USES_P140   // CardKB
+// #define UN_USES_P140   // **DISABLE** I2C CardKB for ESP32 (Enabled by default for ESP32)
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P142   // Position - AS5600
 // #define USES_P143   // I2C Rotary encoders
@@ -554,6 +557,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P173   // Environment - SHTC3
 // #define USES_P175   // Dust - PMSx003i I2C
 // #define USES_P176   // Communication - Victron VE.Direct
+// #define USES_P178   // LU9685 Servo controller
 
 /*
  #######################################################################################################

@@ -64,7 +64,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
 
-      if (log.reserve(128)) {
+      if (reserve_special(log, 128)) {
         log += F("Too many arguments: cmd=");
         log += cmd;
 

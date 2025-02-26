@@ -1,0 +1,24 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``CardKB,exec,<0|1>``
+    ","
+    | Enable (``1``) or disable (``0``) the **Execute input as command** setting. Settings are not saved!
+    "
+    "
+    | ``CardKB,input,<0|1>``
+    ","
+    | Enable (``1``) or disable (``0``) the **Accept input only** setting. Settings are not saved!
+    "
+    "
+    | ``CardKB,events,<0|1>``
+    ","
+    | Enable (``1``) or disable (``0``) the **Send events on keypress** setting. Settings are not saved!
+    "
+    "
+    | ``CardKB,clear``
+    ","
+    | Will clear the current content of the buffer.
+    "
