@@ -127,7 +127,14 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       {
         // Keep this object in a small scope so we can destruct it as soon as possible again.
-        std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
+
+        constexpr unsigned size = sizeof(C018_ConfigStruct);
+        void *ptr               = special_calloc(1, size);
+      
+        if (ptr == nullptr) {
+          break;
+        }
+        std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
 
         if (!customConfig) {
           break;
@@ -140,7 +147,13 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     }
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
+      constexpr unsigned size = sizeof(C018_ConfigStruct);
+      void *ptr               = special_calloc(1, size);
+    
+      if (ptr == nullptr) {
+        break;
+      }
+      std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
 
       if (customConfig) {
         customConfig->webform_save();
@@ -186,7 +199,14 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (C018_data != nullptr) {
         {
-          std::unique_ptr<C018_queue_element> element(new (std::nothrow) C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          constexpr unsigned size = sizeof(C018_queue_element);
+          void *ptr               = special_calloc(1, size);
+        
+          if (ptr == nullptr) {
+            break;
+          }
+    
+          std::unique_ptr<C018_queue_element> element(new (ptr) C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
           success = C018_DelayHandler->addToQueue(std::move(element));
           Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                            C018_DelayHandler->getNextScheduleTime());
@@ -274,11 +294,19 @@ bool C018_init(struct EventStruct *event) {
     C018_data = nullptr;
   }
 
+  {
+    constexpr unsigned size = sizeof(C018_data_struct);
+    void *ptr               = special_calloc(1, size);
 
-  C018_data = new (std::nothrow) C018_data_struct;
+    if (ptr == nullptr) {
+      return false;
+    }
 
-  if (C018_data == nullptr) {
-    return false;
+    C018_data = new (ptr) C018_data_struct;
+
+    if (C018_data == nullptr) {
+      return false;
+    }
   }
   {
     // Allocate ControllerSettings object in a scope, so we can destruct it as soon as possible.
@@ -296,7 +324,13 @@ bool C018_init(struct EventStruct *event) {
     Port               = ControllerSettings->Port;
   }
 
-  std::shared_ptr<C018_ConfigStruct> customConfig(new (std::nothrow) C018_ConfigStruct);
+  constexpr unsigned size = sizeof(C018_ConfigStruct);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr == nullptr) {
+    return false;
+  }
+  std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
 
   if (!customConfig) {
     return false;

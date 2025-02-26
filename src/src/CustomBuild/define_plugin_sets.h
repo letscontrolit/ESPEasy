@@ -55,7 +55,9 @@ To create/register a plugin, you have to :
         #define WEBSERVER_LOG
     #endif
     #ifndef WEBSERVER_GITHUB_COPY
-        #define WEBSERVER_GITHUB_COPY
+        #ifndef USE_SECOND_HEAP
+          #define WEBSERVER_GITHUB_COPY
+        #endif
     #endif
     #ifndef WEBSERVER_ROOT
         #define WEBSERVER_ROOT
@@ -2440,7 +2442,7 @@ To create/register a plugin, you have to :
     #define USES_P139   // AXP2101
   #endif
   #ifndef USES_P140
-//    #define USES_P140   //
+    #define USES_P140   // CardKB
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
@@ -2574,6 +2576,12 @@ To create/register a plugin, you have to :
 
 #endif
 
+#if !defined(USES_P140) && defined(ESP32) && !defined(UN_USES_P140) // Enabled for all ESP32, so we need a way to un-use
+  #define USES_P140
+#endif
+#if defined(UN_USES_P140) && defined(USES_P140)
+  #undef USES_P140
+#endif
 
 /******************************************************************************\
  * Libraries dependencies *****************************************************
@@ -3604,10 +3612,15 @@ To create/register a plugin, you have to :
   
   
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
+  #ifdef ESP32
+    // Allow to set alternative CDN URL as the default one may not be accessible from all countries
+    #define FEATURE_ALTERNATIVE_CDN_URL 1
+  #else
   #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)
     #define FEATURE_ALTERNATIVE_CDN_URL 0 // No need to configure custom CDN url when all content is included in build
   #else
     #define FEATURE_ALTERNATIVE_CDN_URL 1
+  #endif
   #endif
 #endif // if !defined(CUSTOM_BUILD_CDN_URL)
 #if defined(FEATURE_ALTERNATIVE_CDN_URL) && FEATURE_ALTERNATIVE_CDN_URL && defined(PLUGIN_BUILD_MINIMAL_OTA)

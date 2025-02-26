@@ -29,7 +29,7 @@ String concat(const char& str, const String &val);
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
   # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
+  HeapSelectDram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
 
   String res(str);
@@ -40,7 +40,7 @@ String concat(const __FlashStringHelper * str, const T &val) {
 template <typename T>
 String concat(const String& str, const T &val) {
   # ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
+  HeapSelectDram ephemeral;
   # endif // ifdef USE_SECOND_HEAP
 
   String res(str);

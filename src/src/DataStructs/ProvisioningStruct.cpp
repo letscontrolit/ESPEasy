@@ -6,7 +6,7 @@
 # include "../Helpers/Hardware.h"
 
 ProvisioningStruct::ProvisioningStruct() {
-  memset(this, 0, sizeof(ProvisioningStruct));
+  _allBits = 0u;
 }
 
 void ProvisioningStruct::validate() {

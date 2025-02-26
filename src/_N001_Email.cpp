@@ -56,9 +56,9 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
     //     if (command == F("email"))
     //     {
     //       MakeNotificationSettings(NotificationSettings);
-    //       LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-    //       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender,
-    // NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
+    //       LoadNotificationSettings(event->NotificationIndex, (uint8_t *)NotificationSettings.get(), sizeof(NotificationSettingsStruct));
+    //       NPlugin_001_send(NotificationSettings->Domain, NotificationSettings->Receiver, NotificationSettings->Sender,
+    // NotificationSettings->Subject, NotificationSettings->Body, NotificationSettings->Server, NotificationSettings->Port);
     //       success = true;
     //     }
     //     break;
@@ -67,11 +67,14 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
     case NPlugin::Function::NPLUGIN_NOTIFY:
     {
       MakeNotificationSettings(NotificationSettings);
-      LoadNotificationSettings(event->NotificationIndex, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct));
-      NotificationSettings.validate();
+      if (!AllocatedNotificationSettings()) {
+        break;
+      }
+      LoadNotificationSettings(event->NotificationIndex, (uint8_t *)NotificationSettings.get(), sizeof(NotificationSettingsStruct));
+      NotificationSettings->validate();
 
-      String subject = NotificationSettings.Subject;
-      String body    = NotificationSettings.Body;
+      String subject = NotificationSettings->Subject;
+      String body    = NotificationSettings->Body;
 
       if (!event->String1.isEmpty()) {
         body = event->String1;
@@ -80,7 +83,7 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
       if (!event->String2.isEmpty()) {
         subject = event->String2;
       }
-      NPlugin_001_send(NotificationSettings, subject, body);
+      NPlugin_001_send(*NotificationSettings, subject, body);
       success = true;
       break;
     }

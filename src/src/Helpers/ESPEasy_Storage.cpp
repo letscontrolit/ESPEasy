@@ -1059,7 +1059,11 @@ String LoadStringArray(SettingsType::Enum settingsType,
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            move_special(strings[stringCount], std::move(tmpString));
+            if (!tmpString.isEmpty()) {
+              move_special(strings[stringCount], std::move(tmpString));
+            } else {
+              free_string(strings[stringCount]);
+            }
 
             // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
             // We're appending per byte, so better prefer speed for short lived objects

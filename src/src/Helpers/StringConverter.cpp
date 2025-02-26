@@ -76,23 +76,24 @@ bool equals(const String& str, const char& c) {
 }
 
 void move_special(String& dest, String&& source) {
-  #ifdef USE_SECOND_HEAP
   // Only try to store larger strings here as those tend to be kept for a longer period.
-  if ((source.length() >= 32) && mmu_is_dram(&(source[0]))) {
+  if ((source.length() >= 64) 
+#ifdef USE_SECOND_HEAP
+      && mmu_is_dram(&(source[0]))
+#endif
+  ) {
     // The string was not allocated on the 2nd heap, so copy instead of move
-    HeapSelectIram ephemeral;
-    if (dest.reserve(source.length())) {
-      dest = source;
-      free_string(source);
+    if (!reserve_special(dest, source.length())) {
+      // Could not allocate on 2nd heap or PSRAM, so just move existing string
+      dest = std::move(source);
       return;
     }
-    // Could not allocate on 2nd heap, so just move existing string
   }
-  #endif // ifdef USE_SECOND_HEAP
-  dest = std::move(source);
-  #ifdef ESP32
-  reserve_special(dest, dest.length());
-  #endif
+
+  // Try to avoid keeping reserved memory on empty strings
+  // So just copy the data, not move
+  dest = source;
+  free_string(source);  
 }
 
 String move_special(String&& source) {
@@ -110,8 +111,14 @@ void free_string(String& str) {
   // This is a call specifically tailored to what is done in:
   //  void String::move(String &rhs)
 
-  str.clear(); // Prevent any unneeded copying  
-  String tmp(std::move(str));
+#if defined(ESP32) || defined(CORE_POST_3_0_0)
+  // Use current implementation of String::copy as this
+  // invalidates and thus deallocates current buffer
+  str = (const char*)nullptr;
+  str = String(); // No idea why this is needed, without it, some ESP32's may bootloop
+#else
+  str = String();
+#endif
 }
 
 /********************************************************************************************\
@@ -731,11 +738,7 @@ String stripWrappingChar(const String& text, char wrappingChar) {
   const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
-    return text.substring(1, length - 1);
+    return move_special(text.substring(1, length - 1));
   }
   return text;
 }

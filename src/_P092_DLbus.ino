@@ -411,6 +411,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
+          // FIXME TD-er: This is a really odd and overly complex way to handle this.
+
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);
 

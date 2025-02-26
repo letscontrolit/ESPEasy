@@ -77,8 +77,13 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C007_queue_element> element(new (std::nothrow) C007_queue_element(event));
-      success = C007_DelayHandler->addToQueue(std::move(element));
+      constexpr unsigned size = sizeof(C007_queue_element);
+      void *ptr               = special_calloc(1, size);
+
+      if (ptr != nullptr) {
+        std::unique_ptr<C007_queue_element> element(new (ptr) C007_queue_element(event));
+        success = C007_DelayHandler->addToQueue(std::move(element));
+      }
 
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
       break;
@@ -101,35 +106,36 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c007_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C007_queue_element& element = static_cast<const C007_queue_element&>(element_base);
-// *INDENT-ON*
-  if (ControllerSettings.Publish[0] == '\0') {
-    strcpy_P(ControllerSettings.Publish, PSTR(C007_DEFAULT_URL));
-  }
-  String url = strformat(F("%s?node=%d&json="), ControllerSettings.Publish, Settings.Unit);
 
-  for (uint8_t i = 0; i < element.valueCount; ++i) {
-    url += strformat(F("%cfield%d:%s"), (i == 0) ? '{' : ',', element.idx + i, element.txt[i].c_str());
-  }
-  url += strformat(F("}&apikey=%s"), getControllerPass(element._controller_idx, ControllerSettings).c_str()); // "0UDNN17RW6XAS2E5" // api key
+// *INDENT-ON*
+if (ControllerSettings.Publish[0] == '\0') {
+  strcpy_P(ControllerSettings.Publish, PSTR(C007_DEFAULT_URL));
+}
+String url = strformat(F("%s?node=%d&json="), ControllerSettings.Publish, Settings.Unit);
+
+for (uint8_t i = 0; i < element.valueCount; ++i) {
+  url += strformat(F("%cfield%d:%s"), (i == 0) ? '{' : ',', element.idx + i, element.txt[i].c_str());
+}
+url += strformat(F("}&apikey=%s"), getControllerPass(element._controller_idx, ControllerSettings).c_str()); // "0UDNN17RW6XAS2E5" // api key
 
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLog(LOG_LEVEL_DEBUG_MORE, url);
-  }
+if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+  addLog(LOG_LEVEL_DEBUG_MORE, url);
+}
   # endif // ifndef BUILD_NO_DEBUG
 
-  int httpCode = -1;
-  send_via_http(
-    cpluginID,
-    ControllerSettings,
-    element._controller_idx,
-    url,
-    F("GET"),
-    EMPTY_STRING,
-    EMPTY_STRING,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  url,
+  F("GET"),
+  EMPTY_STRING,
+  EMPTY_STRING,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C007
