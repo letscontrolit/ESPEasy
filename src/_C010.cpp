@@ -57,6 +57,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       if (C010_DelayHandler == nullptr) {
         break;
       }
+
       if (C010_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
@@ -67,47 +68,53 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
+      // LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
-      std::unique_ptr<C010_queue_element> element(new (std::nothrow) C010_queue_element(event, valueCount));
+      constexpr unsigned size = sizeof(C010_queue_element);
+      void *ptr               = special_calloc(1, size);
 
-
-      {
-        String pubname;
+      if (ptr != nullptr) {
+        std::unique_ptr<C010_queue_element> element(new (ptr) C010_queue_element(event, valueCount));
         {
-          MakeControllerSettings(ControllerSettings); //-V522
+          String pubname;
+          {
+            MakeControllerSettings(ControllerSettings); // -V522
 
-          if (!AllocatedControllerSettings()) {
-            break;
-          }
-          LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
-          pubname = ControllerSettings->Publish;
-        }
-        const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
-
-        for (uint8_t x = 0; x < valueCount; x++)
-        {
-          bool   isvalid;
-          const String formattedValue = formatUserVar(event, x, isvalid);
-
-          if (isvalid) {
-            String txt;
-            txt = pubname;
-            if (contains_valname) {
-              parseSingleControllerVariable(txt, event, x, false);
+            if (!AllocatedControllerSettings()) {
+              break;
             }
-            parseControllerVariables(txt, event, false);
-            txt.replace(F("%value%"), formattedValue);
-            move_special(element->txt[x], std::move(txt));
-#ifndef BUILD_NO_DEBUG
-            if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
-              addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
-#endif
+            LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
+            pubname = ControllerSettings->Publish;
+          }
+          const bool contains_valname = pubname.indexOf(F("%valname%")) != -1;
+
+          for (uint8_t x = 0; x < valueCount; x++)
+          {
+            bool isvalid;
+            const String formattedValue = formatUserVar(event, x, isvalid);
+
+            if (isvalid) {
+              String txt;
+              txt = pubname;
+
+              if (contains_valname) {
+                parseSingleControllerVariable(txt, event, x, false);
+              }
+              parseControllerVariables(txt, event, false);
+              txt.replace(F("%value%"), formattedValue);
+              move_special(element->txt[x], std::move(txt));
+# ifndef BUILD_NO_DEBUG
+
+              if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
+              }
+# endif // ifndef BUILD_NO_DEBUG
+            }
           }
         }
-      }
 
-      success = C010_DelayHandler->addToQueue(std::move(element));
+        success = C010_DelayHandler->addToQueue(std::move(element));
+      }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C010_DELAY_QUEUE, C010_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -133,33 +140,34 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c010_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C010_queue_element& element = static_cast<const C010_queue_element&>(element_base);
+
 // *INDENT-ON*
-  while (element.txt[element.valuesSent].isEmpty()) {
-    // A non valid value, which we are not going to send.
-    // Increase sent counter until a valid value is found.
-    if (element.checkDone(true)) {
-      return true;
-    }
+while (element.txt[element.valuesSent].isEmpty()) {
+  // A non valid value, which we are not going to send.
+  // Increase sent counter until a valid value is found.
+  if (element.checkDone(true)) {
+    return true;
   }
-  WiFiUDP C010_portUDP;
+}
+WiFiUDP C010_portUDP;
 
-  if (!beginWiFiUDP_randomPort(C010_portUDP)) { return false; }
+if (!beginWiFiUDP_randomPort(C010_portUDP)) { return false; }
 
-  if (!try_connect_host(cpluginID, C010_portUDP, ControllerSettings)) {
-    return false;
-  }
+if (!try_connect_host(cpluginID, C010_portUDP, ControllerSettings)) {
+  return false;
+}
 
-  C010_portUDP.write(
-    reinterpret_cast<const uint8_t *>(element.txt[element.valuesSent].c_str()),
-    element.txt[element.valuesSent].length());
-  bool reply = C010_portUDP.endPacket();
+C010_portUDP.write(
+  reinterpret_cast<const uint8_t *>(element.txt[element.valuesSent].c_str()),
+  element.txt[element.valuesSent].length());
+bool reply = C010_portUDP.endPacket();
 
-  C010_portUDP.stop();
+C010_portUDP.stop();
 
-  if (ControllerSettings.MustCheckReply) {
-    return element.checkDone(reply);
-  }
-  return element.checkDone(true);
+if (ControllerSettings.MustCheckReply) {
+  return element.checkDone(reply);
+}
+return element.checkDone(true);
 }
 
 #endif // ifdef USES_C010

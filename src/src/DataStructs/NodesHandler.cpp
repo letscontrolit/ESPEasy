@@ -141,7 +141,7 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
     if (traceRoute.getDistance() != 255) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        if (log.reserve(80)) {
+        if (reserve_special(log, 80)) {
           log  = F(ESPEASY_NOW_NAME);
           log += F(": Node: ");
           log += String(node.unit);

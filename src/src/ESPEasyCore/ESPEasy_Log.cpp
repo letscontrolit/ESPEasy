@@ -351,14 +351,14 @@ void addToLogMove(uint8_t logLevel, String&& string)
   #endif
 
   if (string.isEmpty()) return;
-  addToSerialLog(logLevel, string);
-  addToSysLog(logLevel, string);
-  addToSDLog(logLevel, string);
+  String tmp;
+  move_special(tmp, std::move(string));
+  addToSerialLog(logLevel, tmp);
+  addToSysLog(logLevel, tmp);
+  addToSDLog(logLevel, tmp);
 
   // May clear the string, so call as last one.
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(logLevel, std::move(string));
+    Logging.add(logLevel, std::move(tmp));
   }
-  // Make sure the string may no longer keep up memory
-  free_string(string);
 }

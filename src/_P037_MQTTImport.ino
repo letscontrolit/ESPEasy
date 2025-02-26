@@ -200,7 +200,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       {
-        P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+        P037_data_struct *P037_data = nullptr;
+        constexpr size_t size = sizeof(P037_data_struct);
+        void * ptr = special_calloc(1, size);
+        if (ptr) {
+          P037_data = new (ptr) P037_data_struct(event->TaskIndex);
+        }
 
         if (nullptr == P037_data) {
           return success;
@@ -229,7 +234,11 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
+      P037_data_struct *P037_data = nullptr;
+      void * ptr = special_calloc(1, sizeof(P037_data_struct));
+      if (ptr) {
+        P037_data = new (ptr) P037_data_struct(event->TaskIndex);
+      }
 
       if (nullptr == P037_data) {
         return success;
@@ -271,7 +280,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
+      void * ptr = special_calloc(1, sizeof(P037_data_struct));
+      if (ptr) {
+        initPluginTaskData(event->TaskIndex, new (ptr) P037_data_struct(event->TaskIndex));
+      }
 
       P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
 

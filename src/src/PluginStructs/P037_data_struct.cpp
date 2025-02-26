@@ -30,7 +30,11 @@ P037_data_struct::~P037_data_struct() {
  * Load the settings from file
  */
 bool P037_data_struct::loadSettings() {
+
   if (_taskIndex < TASKS_MAX) {
+    # ifdef USE_SECOND_HEAP
+//    HeapSelectIram ephemeral;
+    #endif
     size_t offset = 0;
     LoadCustomTaskSettings(_taskIndex, mqttTopics,
                            VARS_PER_TASK, 41, offset);
@@ -973,11 +977,12 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr == root) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
-    root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+    // Try to allocate in PSRAM or 2nd heap if possible
+    constexpr unsigned size = sizeof(DynamicJsonDocument);
+    void *ptr               = special_calloc(1, size);
+    if (ptr) {    
+      root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+    }
   }
 
   if (nullptr != root) {

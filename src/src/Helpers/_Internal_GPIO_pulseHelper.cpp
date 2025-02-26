@@ -461,7 +461,7 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
     // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
     String log;
 
-    if (log.reserve(120)) {
+    if (reserve_special(log, 120)) {
       log = strformat(F("Pulse:OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (%d) [%d] {%d} ["),
                       config.gpio,
                       config.debounceTime,

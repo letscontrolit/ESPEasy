@@ -838,12 +838,22 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   }
   topic_str = topic;
   payload_str = payload;
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(
-      controller_idx, taskIndex, 
-      std::move(topic_str),
-      std::move(payload_str), retained,
-      callbackTask)));
+
+  bool success = false;
+
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success =
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex, 
+            std::move(topic_str),
+            std::move(payload_str), retained,
+            callbackTask)));
+  }
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -863,12 +873,21 @@ bool MQTTpublish(controllerIndex_t controller_idx,
     return false;
   }
 
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex,
-                                                                                                           std::move(topic),
-                                                                                                           std::move(payload), retained,
-                                                                                                           callbackTask)));
+  bool success = false;
 
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success = 
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex,
+            std::move(topic),
+            std::move(payload), retained,
+            callbackTask)));
+  }
   scheduleNextMQTTdelayQueue();
   return success;
 }

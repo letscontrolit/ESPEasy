@@ -165,8 +165,8 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   // We have sent a lot of data at once.
   // try to flush it to the connected client to free up some RAM
   // from pending transfers
-  TXBuffer.flush();
-  delay(10);
+//  TXBuffer.flush();
+//  delay(10);
 }
 
 bool captivePortal() {
@@ -1092,12 +1092,10 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
-    String text;
-    text.reserve(32);
-    text += formatHumanReadable(struct_size, 1024);
-    text += '/';
-    text += formatHumanReadable(max_size, 1024);
-    text += F(" per item");
+    String text = strformat(
+      F("%s/%s per item"),
+      formatHumanReadable(struct_size, 1024).c_str(),
+      formatHumanReadable(max_size, 1024).c_str());
     createSvgTextElement(text, textXoffset, textYoffset);
   } else {
     createSvgTextElement(F("Variable size"), textXoffset, textYoffset);

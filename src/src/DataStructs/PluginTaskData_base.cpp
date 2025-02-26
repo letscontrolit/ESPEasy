@@ -60,7 +60,12 @@ void PluginTaskData_base::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t 
 {
   if (taskVarIndex < VARS_PER_TASK) {
     if (_plugin_stats_array == nullptr) {
-      _plugin_stats_array = new (std::nothrow) PluginStats_array();
+      constexpr unsigned size = sizeof(PluginStats_array);
+      void *ptr               = special_calloc(1, size);
+
+      if (ptr != nullptr) {
+        _plugin_stats_array = new (ptr) PluginStats_array();
+      }
     }
 
     if (_plugin_stats_array != nullptr) {

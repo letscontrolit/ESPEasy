@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   documentation:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,7 +45,7 @@ jobs:
           name: Documentation
           path: ESPEasy_docs.zip
   generate-matrix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -60,7 +60,7 @@ jobs:
 
   build:
     needs: generate-matrix
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -116,7 +116,7 @@ jobs:
   # Package all ESP82xx and ESP32 into a single ESPEasy-all-Binaries-<date>_PR#<pr_nr>_<runnr>.zip
   combine_package:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
