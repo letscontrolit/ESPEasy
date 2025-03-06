@@ -19,9 +19,10 @@
 # include <OLED_SSD1306_SH1106_images.h>
 
 void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
-  #ifdef USE_SECOND_HEAP
+  # ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
+  # endif // ifdef USE_SECOND_HEAP
+
   if (LoadVersion == 0) {
     // read data of version 0 (up to 22.11.2019)
     String DisplayLinesV0[P36_Nlines];                                           // used to load the CustomTaskSettings for V0
@@ -58,6 +59,7 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
     // Try to allocate in PSRAM or 2nd heap if possible
     constexpr unsigned size = sizeof(tDisplayLines_storage_full);
     void *ptr               = special_calloc(1, size);
+
     if (ptr) {
       tmp = new (ptr) tDisplayLines_storage_full;
     }
@@ -194,7 +196,12 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
                             uint8_t          Contrast,
                             uint16_t         DisplayTimer,
                             ePageScrollSpeed ScrollSpeed,
-                            uint8_t          NrLines) {
+                            uint8_t          NrLines
+                            # if             P036_FLAG_HIDE_LOGO
+                            ,
+                            bool             HideLogo
+                            # endif // if P036_FLAG_HIDE_LOGO
+                            ) {
   reset();
 
   lastWiFiState       = P36_WIFI_STATE_UNSET;
@@ -235,7 +242,7 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
     constexpr unsigned size = sizeof(P036_LineContent);
     void *ptr               = special_calloc(1, size);
 
-    if (ptr) {    
+    if (ptr) {
       LineContent = new (ptr) P036_LineContent();
     }
   }
@@ -261,8 +268,14 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
     setContrast(Contrast);
 
     // Display the device name, logo, time and wifi
-    display_logo();
-    update_display();
+    # if             P036_FLAG_HIDE_LOGO
+
+    if (!HideLogo)
+    # endif // if P036_FLAG_HIDE_LOGO
+    {
+      display_logo();
+      update_display();
+    }
 
     // Initialize frame counter
     frameCounter                    = 0;

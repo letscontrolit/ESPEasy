@@ -14,10 +14,11 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @tonhuisman: 2025-03-03
+// ADD: Setting for not showing the startup logo. Formatted source using Uncrustify with recent settings
 // @uwekaditz: 2024-08-06
 // ADD: Using template notations with escaped character (\%, \[ and \]) within oledframedcmd,<line>,<text> to reinterpreted <text> each time
-// before the line is displayed,
-//      not only once while issuing the command and creating the new line content
+//      before the line is displayed, not only once while issuing the command and creating the new line content
 // @tonhuisman: 2024-07-14
 // ADD: Selectable Header Time format, HH:MM:SS (default), HH:MM, HH:MM:SS AM/PM, HH:MM AM/PM, not enabled in LIMIT_BUILD_SIZE builds
 // @tonhuisman: 2023-09-16
@@ -349,7 +350,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         };
         constexpr int optionCnt = NR_ELEMENTS(optionValues);
         const FormSelectorOptions selector(optionCnt, options, optionValues);
-        selector.addFormSelector(F("Scroll"), F("scroll"),  P036_SCROLL);
+        selector.addFormSelector(F("Scroll"), F("scroll"), P036_SCROLL);
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -361,8 +362,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         { static_cast<int>(eP036pinmode::ePPM_Input),
           static_cast<int>(eP036pinmode::ePPM_InputPullUp) };
         const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
-        selector.addFormSelector(F("Pin mode"), F("pinmode"), 
-                        bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
+        selector.addFormSelector(F("Pin mode"), F("pinmode"),
+                                 bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
       }
 
       addFormCheckBox(F("Inversed Logic"),                          F("pin3invers"), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE));
@@ -379,6 +380,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
 # endif // ifndef P036_LIMIT_BUILD_SIZE
 
+# if P036_ENABLE_HIDE_LOGO
+      addFormCheckBox(F("Hide startup logo"), F("HideLogo"), bitRead(P036_FLAGS_0, P036_FLAG_HIDE_LOGO)); // Bit 31
+# endif // if P036_ENABLE_HIDE_LOGO
 # if P036_SEND_EVENTS
       {
         uint8_t choice = 0;
@@ -446,10 +450,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         };
         constexpr int nrOptions9 = NR_ELEMENTS(options9);
         const FormSelectorOptions selector(nrOptions9, options9, optionValues9);
+
         // HeaderContent
         selector.addFormSelector(
-          F("Header"), F("header"), 
-          get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));    
+          F("Header"), F("header"),
+          get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));
+
         // HeaderContentAlternative
         selector.addFormSelector(
           F("Header (alternate)"), F("headerAlternate"),
@@ -468,9 +474,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("HH:MM:SS (am/pm)"),
           F("HH:MM (am/pm)"),
         };
-        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        const FormSelectorOptions  selector(NR_ELEMENTS(options), options);
         selector.addFormSelector(F("Header Time format"), F("timeFmt"),
-                        get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT));
+                                 get4BitFromUL(P036_FLAGS_1, P036_FLAG_TIME_FORMAT));
       }
       # endif // if P036_ENABLE_TIME_FORMAT
 
@@ -492,9 +498,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eAlignment::eCenter),
           static_cast<int>(eAlignment::eRight)
         };
-        const FormSelectorOptions selector( NR_ELEMENTS(optionValuesAlignment), optionsAlignment, optionValuesAlignment);
+        const FormSelectorOptions selector(NR_ELEMENTS(optionValuesAlignment), optionsAlignment, optionValuesAlignment);
         selector.addFormSelector(F("Align content (global)"), F("LeftAlign"),
-                        get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED));
+                                 get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED));
       }
 # endif // if P036_ENABLE_LEFT_ALIGN
 
@@ -552,24 +558,24 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             addTextBox(getPluginCustomArgName(varNr),
                        P036_lines.DisplayLinesV1[varNr].Content,
                        P36_NcharsV1 - 1,
-                       F("xwide")    // class name
+                       F("xwide") // class name
                        );
             {
-              html_TD();               // font
+              html_TD();          // font
 
               FormSelectorOptions selector(
                 5,
                 optionsFont,
                 optionValuesFont);
               selector.clearClassName();
-    
+
               const uint8_t FontChoice = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
               selector.addSelector(
                 getPluginCustomArgName(varNr + 100),
                 FontChoice); // selectedIndex,
             }
             {
-              html_TD();              // alignment
+              html_TD();     // alignment
               FormSelectorOptions selector(
                 4,
                 optionsAlignment,
@@ -632,6 +638,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # if P036_ENABLE_HIDE_FOOTER
       bitWrite(lSettings, P036_FLAG_HIDE_FOOTER,        isFormItemChecked(F("HideFooter")));                      // Hide footer
 # endif // if P036_ENABLE_HIDE_FOOTER
+# if P036_ENABLE_HIDE_LOGO
+      bitWrite(lSettings, P036_FLAG_HIDE_LOGO,          isFormItemChecked(F("HideLogo")));                        // Hide startup logo
+# endif // if P036_ENABLE_HIDE_LOGO
 
       bitWrite(lSettings, P036_FLAG_INPUT_PULLUP,       getFormItemInt(F("pinmode")));                            // Input PullUp
       # if P036_SEND_EVENTS
@@ -753,6 +762,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                             P036_TIMER,
                             static_cast<ePageScrollSpeed>(P036_SCROLL),              // Scroll speed
                             P036_NLINES
+                            # if             P036_FLAG_HIDE_LOGO
+                            ,
+                            bitRead(P036_FLAGS_0, P036_FLAG_HIDE_LOGO)
+                            # endif // if P036_FLAG_HIDE_LOGO
                             ))) {
         clearPluginTaskData(event->TaskIndex);
         P036_data = nullptr;

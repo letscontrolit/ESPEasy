@@ -89,7 +89,7 @@ jobs:
           pip3 install --upgrade pip
           pip install wheel
           pip install -r requirements.txt
-          platformio update
+          pio pkg update -e ${{ matrix.env }}
       - name: Get current date
         id: date
         run: |
