@@ -58,7 +58,7 @@ jobs:
         run: |
           sudo apt install binutils build-essential libffi-dev libgit2-dev
           pip install -r requirements.txt
-          platformio update
+          pio pkg update -e ${{ matrix.env }}
       - name: Build and archive
         id: build-and-archive
         env:
