@@ -53,11 +53,10 @@ String getReplacementString(const String& format, const String& s) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ReplacementString SunTime: ");
-    log += R;
-    log += F(" offset: ");
-    log += ESPEasy_time::getSecOffset(R);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(
+      F("ReplacementString SunTime: %s offset: %d"), 
+      R.c_str(), 
+      ESPEasy_time::getSecOffset(R)));
   }
 #endif // ifndef BUILD_NO_DEBUG
   return R;
