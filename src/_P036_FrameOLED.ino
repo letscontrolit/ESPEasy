@@ -750,12 +750,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_CheckHeap(F("_INIT: Before P036_data->init()"));
 # endif // P036_CHECK_HEAP
 
+      #if FEATURE_I2C_MULTIPLE
+      const uint8_t i2cBus = Settings.getI2CInterface(event->TaskIndex);
+      #else
+      const uint8_t i2cBus = 0;
+      #endif // if FEATURE_I2C_MULTIPLE
       if (!(P036_data->init(event->TaskIndex,
                             get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION), // Bit23-20 Version CustomTaskSettings
                             P036_CONTROLLER,                                         // Type
                             P036_ADR,                                                // I2C address
-                            Settings.Pin_i2c_sda,
-                            Settings.Pin_i2c_scl,
+                            Settings.getI2CSdaPin(i2cBus),
+                            Settings.getI2CSclPin(i2cBus),
                             static_cast<p036_resolution>(P036_RESOLUTION),           // OLED index
                             (P036_ROTATE == 2),                                      // 1 = Normal, 2 = Rotated
                             P036_CONTRAST,

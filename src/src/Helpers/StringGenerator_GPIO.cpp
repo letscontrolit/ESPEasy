@@ -165,7 +165,7 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   return result;
 }
 
-const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
+const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose, bool ignorePSRAMpins)
 {
 #ifdef PIN_USB_D_MIN
   if (gpio == PIN_USB_D_MIN) { return F("USB_D-"); }
@@ -179,7 +179,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   }
 
 #ifdef ESP32
-  if (isPSRAMInterfacePin(gpio)) {
+  if (!ignorePSRAMpins && isPSRAMInterfacePin(gpio)) { // PSRAM pins can be shared with SPI
     return F("PSRAM");
   }
 #endif
@@ -226,9 +226,17 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   #if FEATURE_ETHERNET
   bool includeEthernet = true;
   #endif // if FEATURE_ETHERNET
+  bool includeStatusLed = true;
+  bool includeResetPin = true;
 
   switch (purpose) {
     case PinSelectPurpose::I2C:
+#if FEATURE_I2C_MULTIPLE
+    case PinSelectPurpose::I2C_2:
+#if FEATURE_I2C_INTERFACE_3
+    case PinSelectPurpose::I2C_3:
+#endif
+#endif
       includeI2C = false;
       break;
     case PinSelectPurpose::SPI:
@@ -255,14 +263,56 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
       includeSDCard = false;
       break;
     #endif
+    case PinSelectPurpose::Status_led:
+      includeStatusLed = false;
+      break;
+    case PinSelectPurpose::Reset_pin:
+      includeResetPin = false;
+      break;
   }
 
   if (includeI2C && Settings.isI2C_pin(gpio)) {
-    return (Settings.Pin_i2c_sda == gpio) ?  F("I2C SDA") : F("I2C SCL");
+    for (uint8_t i2cBus = 0; i2cBus < getI2CBusCount(); ++i2cBus)
+    {
+      if (Settings.getI2CSdaPin(i2cBus) == gpio) {
+        #if FEATURE_I2C_MULTIPLE
+        switch (i2cBus) {
+          case 0:  return F("I2C SDA (bus 1)");
+          case 1:  return F("I2C SDA (bus 2)");
+          #if FEATURE_I2C_INTERFACE_3
+          case 2:  return F("I2C SDA (bus 3)");
+          #endif
+        }
+        #else
+        return F("I2C SDA");
+        #endif
+      }
+      if (Settings.getI2CSclPin(i2cBus) == gpio) {
+        #if FEATURE_I2C_MULTIPLE
+        switch (i2cBus) {
+          case 0:  return F("I2C SCL (bus 1)");
+          case 1:  return F("I2C SCL (bus 2)");
+          #if FEATURE_I2C_INTERFACE_3
+          case 2:  return F("I2C SCL (bus 3)");
+          #endif
+        }
+        #else
+        return F("I2C SCL");
+        #endif
+      }
+    }
   }
 
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
+  }
+
+  if (includeStatusLed && (Settings.Pin_status_led == gpio) && (-1 != gpio)) {
+    return F("Wifi Status LED");
+  }
+
+  if (includeResetPin && (Settings.Pin_Reset == gpio) && (-1 != gpio)) {
+    return F("Reset Pin");
   }
 
   if (includeSerial) {
@@ -323,9 +373,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   return F("");
 }
 
-String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose)
+String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose, bool ignorePSRAMpins)
 {
-  String conflict = getConflictingUse(gpio, purpose);
+  const String conflict = getConflictingUse(gpio, purpose, ignorePSRAMpins);
 
   if (conflict.isEmpty()) { return conflict; }
   String res = F(" [");

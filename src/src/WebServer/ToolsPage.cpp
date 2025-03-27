@@ -47,7 +47,7 @@ void handle_tools() {
 
   html_TR_TD();
   addSubmitButton();
-  addHelpButton(F("ESPEasy_Command_Reference"));
+  // addHelpButton(F("ESPEasy_Command_Reference")); // Old documentation is just that: Old and out-dated.
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
@@ -154,7 +154,7 @@ void handle_tools() {
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
       addWideButton(F("update"), F("Update Firmware"), EMPTY_STRING, otaEnabled);
-      addHelpButton(F("EasyOTA"));
+      addHelpButton(F("RTDTools/Tools.html#id1"));
       html_TD();
       addHtml(F("Load a new firmware "));
 

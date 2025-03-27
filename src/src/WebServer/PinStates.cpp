@@ -70,7 +70,7 @@ void handle_pinstates() {
 
   html_table_class_multirow();
   html_TR();
-  html_table_header(F("Plugin"), F("Official_plugin_list"), 0);
+  html_table_header(F("Plugin"), F("RTDPlugin/_Plugin.html#list-of-official-plugins"), 0);
   html_table_header(F("GPIO"));
   html_table_header(F("Mode"));
   html_table_header(F("Value/State"));

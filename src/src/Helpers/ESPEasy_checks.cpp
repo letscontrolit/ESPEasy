@@ -109,9 +109,9 @@ void run_compiletime_checks() {
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
 #if FEATURE_SUPPORT_OVER_255_PLUGINS
-  check_size<DeviceStruct,                          11u>(); // Is not stored
+  check_size<DeviceStruct,                          13u>(); // Is not stored
 #else
-  check_size<DeviceStruct,                          10u>(); // Is not stored
+  check_size<DeviceStruct,                          12u>(); // Is not stored
 #endif
   #if FEATURE_MQTT_TLS
   check_size<ProtocolStruct,                        6u>();
@@ -186,7 +186,7 @@ void run_compiletime_checks() {
   static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber_lsb), "NOTIFICATION_MAX has changed?");
 
   // All settings related to N_TASKS
-  static_assert((200 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
+  static_assert((228 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
   static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), "");
 
   // Used to compute true offset.

@@ -18,6 +18,12 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
+#if FEATURE_I2C_MULTIPLE
+#include "../Globals/Settings.h"
+#include "../Helpers/Hardware_device_info.h"
+#include "../Helpers/I2C_access.h"
+#endif // if FEATURE_I2C_MULTIPLE
+
 #if FEATURE_GPIO_USE_ESP8266_WAVEFORM
 # include <core_esp8266_waveform.h>
 #endif 
@@ -1216,6 +1222,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_MCP;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_MCP_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("MCP");
@@ -1229,6 +1240,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_PCF;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_PCF_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("PCF");

@@ -73,7 +73,8 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
 
 #if FEATURE_PLUGIN_PRIORITY
-bool       isPluginI2CPowerManager_from_TaskIndex(taskIndex_t taskIndex);
+bool       isPluginI2CPowerManager_from_TaskIndex(taskIndex_t taskIndex,
+                                                  uint8_t     i2cBus);
 #endif // if FEATURE_PLUGIN_PRIORITY
 
 /********************************************************************************************\

@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-03-15 tonhuisman: Removed unneeded I2C Enabled check.
  * 2024-01-29 tonhuisman: Fix bug that changed Initial output values are not applied until a reset/power cycle.
  *                        Disable development-log at Settings Save
  * 2024-01-28 tonhuisman: Add option to restore output values on warm boot (default enabled, using unused 4th value for state)
@@ -214,16 +215,12 @@ boolean Plugin_166(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.isI2CEnabled()) {
-        initPluginTaskData(event->TaskIndex,
-                           new (std::nothrow) P166_data_struct(P166_I2C_ADDRESS,
-                                                               static_cast<DFRobot_GP8403::eOutPutRange_t>(P166_MAX_VOLTAGE)));
-        P166_data_struct *P166_data = static_cast<P166_data_struct *>(getPluginTaskData(event->TaskIndex));
+      initPluginTaskData(event->TaskIndex,
+                         new (std::nothrow) P166_data_struct(P166_I2C_ADDRESS,
+                                                             static_cast<DFRobot_GP8403::eOutPutRange_t>(P166_MAX_VOLTAGE)));
+      P166_data_struct *P166_data = static_cast<P166_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        success = (nullptr != P166_data) && P166_data->init(event);
-      } else {
-        addLog(LOG_LEVEL_ERROR, F("GP8403: I2C not enabled, init cancelled."));
-      }
+      success = (nullptr != P166_data) && P166_data->init(event);
 
       break;
     }

@@ -18,9 +18,11 @@
 
 # include <vector>
 
-# if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
+// # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || (defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP32))
+# ifdef ESP32
 #  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font for double-height time/date
-# endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
+// # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || (defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP32))
+# endif // ifdef ESP32
 # define P104_USE_FULL_DOUBLEHEIGHT_FONT     // Enables the use of a full (lower ascii only) set double height font
 # define P104_USE_VERTICAL_FONT              // Enables the use of a vertical font
 # define P104_USE_EXT_ASCII_FONT             // Enables the use of an extended ascii font
@@ -339,8 +341,10 @@ struct P104_zone_struct {
   # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
 
   // Used to loop over member values
-  bool getIntValue(uint8_t offset, int32_t& value) const;
-  bool setIntValue(uint8_t offset, int32_t value);
+  bool getIntValue(uint8_t  offset,
+                   int32_t& value) const;
+  bool setIntValue(uint8_t offset,
+                   int32_t value);
 };
 
 # ifdef P104_USE_BAR_GRAPH

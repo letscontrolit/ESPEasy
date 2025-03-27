@@ -31,7 +31,6 @@
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
 
-
 # include "../../_Plugin_Helper.h"
 
 # include <ESPeasySerial.h>
@@ -274,17 +273,33 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;
     bitWrite(flags, I2C_FLAGS_SLOW_SPEED, isFormItemChecked(F("taskdeviceflags0")));
+#if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
+    uint8_t i2cBus = 0;
+#endif
+
+#if FEATURE_I2C_MULTIPLE
+    if ((getI2CBusCount() > 1) && (Settings.isI2CEnabled(1) 
+                                    #if FEATURE_I2C_INTERFACE_3
+                                    || Settings.isI2CEnabled(2)
+                                    #endif
+                                   )
+      && !Device[DeviceIndex].I2CNoBusSelection
+      ) {
+      i2cBus = getFormItemInt(F("pi2cbus"));
+      set3BitToUL(flags, I2C_FLAGS_BUS_NUMBER, i2cBus);
+    }
+#endif // if FEATURE_I2C_MULTIPLE
 
 # if FEATURE_I2CMULTIPLEXER
 
-    if (isI2CMultiplexerEnabled()) {
+    if (isI2CMultiplexerEnabled(i2cBus)) {
       int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
       bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, multipleMuxPortsOption == 1);
 
       if (multipleMuxPortsOption == 1) {
         uint8_t selectedPorts = 0;
 
-        for (int x = 0; x < I2CMultiplexerMaxChannels(); ++x) {
+        for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); ++x) {
           bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
         }
         Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
@@ -819,19 +834,30 @@ void format_I2C_port_description(taskIndex_t x)
   }
   # endif // if FEATURE_I2C_GET_ADDRESS
   # if FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(x);
+  if ((i2cBus > 0) || Settings.isI2CEnabled(1) || Settings.isI2CEnabled(2)) {
+    html_BR();
+    addHtml(F("I2C Bus"));
+    addHtml(' ');
+    addHtmlInt(i2cBus + 1);
+  }
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
 
-  if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {
+  if (isI2CMultiplexerEnabled(i2cBus) && I2CMultiplexerPortSelectedForTask(x)) {
     String mux;
 
     if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) { // Multi-channel
       mux = F("<BR>Multiplexer channel(s)");
       uint8_t b = 0;                                                  // For adding lineBreaks
 
-      for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
+      for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(i2cBus); ++c) {
         if (bitRead(Settings.I2C_Multiplexer_Channel[x], c)) {
           mux += b == 0 ? F("<BR>") : F(", ");
           b++;
-          mux += String(c);
+          mux += c;
         }
       }
     } else { // Single channel
@@ -858,10 +884,15 @@ void format_SPI_port_description(int8_t spi_gpios[3])
 
 void format_I2C_pin_description(taskIndex_t x)
 {
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(x);
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
   if (checkI2CConfigValid_toHtml(x)) {
-    Label_Gpio_toHtml(F("SDA"), formatGpioLabel(Settings.Pin_i2c_sda, false));
+    Label_Gpio_toHtml(F("SDA"), formatGpioLabel(Settings.getI2CSdaPin(i2cBus), false));
     html_BR();
-    Label_Gpio_toHtml(F("SCL"), formatGpioLabel(Settings.Pin_i2c_scl, false));
+    Label_Gpio_toHtml(F("SCL"), formatGpioLabel(Settings.getI2CSclPin(i2cBus), false));
   }
 }
 
@@ -926,7 +957,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
+    const uint8_t pid = Settings.getPluginID_for_task(taskIndex).value;
+    if (pid <= 101) { // Up to P101 seem to be listed in the old Wiki, so lets keep pointing there too
+      addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
+    }
     addRTDPluginButton(Settings.getPluginID_for_task(taskIndex));
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
@@ -1002,11 +1036,11 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     if (addPinConfig || (device.Type == DEVICE_TYPE_I2C)) {
       if (device.isSerial()) {
-          # ifdef PLUGIN_USES_SERIAL
+        # ifdef PLUGIN_USES_SERIAL
         devicePage_show_serial_config(taskIndex);
-          # else // ifdef PLUGIN_USES_SERIAL
+        # else // ifdef PLUGIN_USES_SERIAL
         addHtml(F("PLUGIN_USES_SERIAL not defined"));
-          # endif // ifdef PLUGIN_USES_SERIAL
+        # endif // ifdef PLUGIN_USES_SERIAL
 
         devicePage_show_pin_config(taskIndex, DeviceIndex);
         addPinConfig = false;
@@ -1209,8 +1243,15 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
   addFormSubHeader(F("I2C options"));
 
-  if (!Settings.isI2CEnabled()) {
-    addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
+  if (!Settings.isI2CEnabled(0)
+     #if FEATURE_I2C_MULTIPLE
+     && (getI2CBusCount() > 1 && !Settings.isI2CEnabled(1))
+     #if FEATURE_I2C_INTERFACE_3
+     && (getI2CBusCount() > 2 && !Settings.isI2CEnabled(2))
+     #endif // if FEATURE_I2C_INTERFACE_3
+     #endif // if FEATURE_I2C_MULTIPLE
+     ) {
+    addFormNote(F("I2C Bus is not configured yet (Hardware page)."));
   }
 
   String dummy;
@@ -1221,11 +1262,23 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (Device[DeviceIndex].I2CMax100kHz) {
     addFormNote(F("This device is specified for max. 100 kHz operation!"));
   }
+#if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
+  uint8_t i2cBus = 0;
+#endif
 
+  #if FEATURE_I2C_MULTIPLE
+  if (!Device[DeviceIndex].I2CNoBusSelection) { // If the device doesn't disallow bus selection
+    i2cBus = Settings.getI2CInterface(taskIndex);
+    I2CInterfaceSelector(F("I2C Bus"),
+                        F("pi2cbus"),
+                        i2cBus,
+                        true);
+  }
+  #endif // if FEATURE_I2C_MULTIPLE
   # if FEATURE_I2CMULTIPLEXER
 
   // Show selector for an I2C multiplexer port if a multiplexer is configured
-  if (isI2CMultiplexerEnabled()) {
+  if (isI2CMultiplexerEnabled(i2cBus)) {
     bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
       const __FlashStringHelper *i2c_mux_channels[] = {
@@ -1258,7 +1311,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       html_table_header(F("Channel"), 100);
       html_table_header(F("Enable"),  80);
 
-      for (int x = 0; x < I2CMultiplexerMaxChannels(); x++) {
+      for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); x++) {
         if (x % 2 == 0) { html_TR(); } // Start a new row for every 2 channels
         html_TD();
         addHtml(concat(F("Channel "), x));
@@ -1268,7 +1321,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       html_end_table();
     } else {
       int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
-      const uint32_t mux_max   = I2CMultiplexerMaxChannels();
+      const uint32_t mux_max   = I2CMultiplexerMaxChannels(i2cBus);
       String i2c_mux_portoptions[mux_max + 1];
       int    i2c_mux_portchoices[mux_max + 1];
       i2c_mux_portoptions[0] = F("(Not connected via multiplexer)");

@@ -71,7 +71,7 @@ public:
   String onChangeCall;
 
   // Allow to add "(default)" to some option.
-  int default_index = -1;
+  int default_index = INT_MAX;
 
 protected:
 
