@@ -494,6 +494,44 @@ bool BuildFixes()
     #endif // if FEATURE_MQTT
   }
 
+  if (Settings.Build <= 21156) { // 2025-03-31
+    // PR #5235 Add 2nd and 3rd I2C Bus
+    if ((Settings.Pin_i2c2_sda == 0) &&
+        (Settings.Pin_i2c2_scl == 0)) {
+      Settings.Pin_i2c2_sda = DEFAULT_PIN_I2C2_SDA;
+      Settings.Pin_i2c2_scl = DEFAULT_PIN_I2C2_SCL;
+    }
+    if ((Settings.Pin_i2c3_sda == 0) &&
+        (Settings.Pin_i2c3_scl == 0)) {
+      Settings.Pin_i2c3_sda = DEFAULT_PIN_I2C3_SDA;
+      Settings.Pin_i2c3_scl = DEFAULT_PIN_I2C3_SCL;
+    }
+    if ((Settings.I2C2_clockSpeed == 0) &&
+        (Settings.I2C2_clockSpeed_Slow == 0)) {
+      Settings.I2C2_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C2_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C3_clockSpeed == 0) &&
+        (Settings.I2C3_clockSpeed_Slow == 0)) {
+      Settings.I2C3_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C3_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C2_Multiplexer_Type == 0) &&
+        (Settings.I2C2_Multiplexer_Addr == 0) &&
+        (Settings.I2C2_Multiplexer_ResetPin == 0)) {
+      Settings.I2C2_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C2_Multiplexer_Addr = -1;
+      Settings.I2C2_Multiplexer_ResetPin = -1;
+    }
+    if ((Settings.I2C3_Multiplexer_Type == 0) &&
+        (Settings.I2C3_Multiplexer_Addr == 0) &&
+        (Settings.I2C3_Multiplexer_ResetPin == 0)) {
+      Settings.I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C3_Multiplexer_Addr = -1;
+      Settings.I2C3_Multiplexer_ResetPin = -1;
+    }
+  }
+
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines

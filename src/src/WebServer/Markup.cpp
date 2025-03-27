@@ -116,6 +116,8 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       #if FEATURE_SD
       bool includeSDCard = true;
       #endif // if FEATURE_SD
+      // bool includeStatusLed = true; // Added as place-holders, see below
+      // bool includeResetPin = true;
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
@@ -152,9 +154,16 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           }
           break;
 
-        case PinSelectPurpose::Generic_bidir:
         case PinSelectPurpose::I2C:
+#if FEATURE_I2C_MULTIPLE
+        case PinSelectPurpose::I2C_2:
+#if FEATURE_I2C_INTERFACE_3
+        case PinSelectPurpose::I2C_3:
+#endif
+#endif
           includeI2C = false;
+          // fallthrough
+        case PinSelectPurpose::Generic_bidir:
 
           if (!output || !input) {
             // SDA is obviously bidirectional.
@@ -185,6 +194,21 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           }
           break;
         #endif
+        
+        case PinSelectPurpose::Status_led:
+          // includeStatusLed = false; // Placeholder, see below
+          if (!output) {
+            return;
+          }
+          break;
+
+        case PinSelectPurpose::Reset_pin:
+          // includeResetPin = false; // Placeholder, see below
+          if (!input) {
+            return;
+          }  
+          break;
+  
       }
 
       if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -199,6 +223,15 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
+      // Not blocking these GPIO pins, as they may already be in dual-purpose use, just a place-holder
+      // if (includeStatusLed && (Settings.Pin_status_led == gpio)) {
+      //   disabled = true;
+      // }
+      
+      // if (includeResetPin && (Settings.Pin_Reset == gpio)) {
+      //   disabled = true;
+      // }
+  
   #if FEATURE_ETHERNET
 
       if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
@@ -841,9 +874,16 @@ void addPinSelect(PinSelectPurpose purpose, const String& id,  int choice)
     if (UsableGPIO || (i == 0)) {
       addPinSelector_Item(
         purpose,
+        #ifdef ESP32
         concat(
-          createGPIO_label(gpio, pinnr, input, output, warning),
-          getConflictingUse_wrapped(gpio, purpose)),
+        #endif // ifdef ESP32
+          concat(
+            createGPIO_label(gpio, pinnr, input, output, warning),
+            getConflictingUse_wrapped(gpio, purpose)),
+        #ifdef ESP32
+            isPSRAMInterfacePin(gpio) ? getConflictingUse_wrapped(gpio, purpose, true) : F("")
+        ),
+        #endif // ifdef ESP32
         gpio,
         choice == gpio);
 

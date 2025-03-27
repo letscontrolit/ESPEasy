@@ -242,8 +242,13 @@ bool P017_handle_timer_in(struct EventStruct *event)
         # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
-      if (Settings.isI2CEnabled()
-          && ((DIRECT_pinRead(Settings.Pin_i2c_sda) == 0) || (DIRECT_pinRead(Settings.Pin_i2c_scl) == 0)))
+      #if FEATURE_I2C_MULTIPLE
+      const uint8_t i2cBus = Settings.getI2CInterface(event->TaskIndex);
+      #else
+      const uint8_t i2cBus = 0;
+      #endif // if FEATURE_I2C_MULTIPLE
+      if (Settings.isI2CEnabled(i2cBus)
+          && ((DIRECT_pinRead(Settings.getI2CSdaPin(i2cBus)) == 0) || (DIRECT_pinRead(Settings.getI2CSclPin(i2cBus)) == 0)))
       {
         addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
         Plugin_017_Init(CONFIG_PIN3);

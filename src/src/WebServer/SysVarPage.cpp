@@ -46,7 +46,7 @@ void handle_sysvars() {
   html_TR();
   html_table_header(F("System Variables"));
   html_table_header(F("Normal"));
-  html_table_header(F("URL encoded"), F("ESPEasy_System_Variables"), 0);
+  html_table_header(F("URL encoded"), F("RTDReference/SystemVariable.html"), 0);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 

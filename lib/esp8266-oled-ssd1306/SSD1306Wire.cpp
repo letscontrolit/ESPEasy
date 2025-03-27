@@ -8,7 +8,7 @@
     }
 
     bool SSD1306Wire::connect()  {
-      Wire.begin(this->_sda, this->_scl);
+      // Wire.begin(this->_sda, this->_scl); // ESPEasy already has Wire initialized properly
       return true;
     }
 

@@ -4,7 +4,12 @@
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
+
+#if FEATURE_I2C_MULTIPLE
+# include "../WebServer/Markup_Forms.h"
+#endif // if FEATURE_I2C_MULTIPLE
 
 enum class I2C_clear_bus_state {
   Start,
@@ -292,7 +297,6 @@ uint16_t I2C_read16(uint8_t i2caddr, bool *is_ok) {
   return value;
 }
 
-
 // **************************************************************************/
 // Reads an 8 bit value from a register over I2C
 // **************************************************************************/
@@ -420,3 +424,67 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
 #endif // if FEATURE_I2C_DEVICE_CHECK
 
 #undef END_TRANSMISSION_FLAG
+
+#if FEATURE_I2C_MULTIPLE
+void I2CInterfaceSelector(String  label,
+                          String  id,
+                          uint8_t choice,
+                          bool    reloadWhenNeeded) {
+  const uint8_t i2cMaxBusCount = (getI2CBusCount() > 1
+                                  ? ((Settings.isI2CEnabled(1) ? 1 : 0)
+                                    # if FEATURE_I2C_INTERFACE_3
+                                     + (Settings.isI2CEnabled(2) ? 1 : 0)
+                                    # endif // if FEATURE_I2C_INTERFACE_3
+                                     )
+                                  : 0) + (Settings.isI2CEnabled(0) ? 1 : 0);
+
+  if (i2cMaxBusCount > 1) {
+    static uint8_t i2cBusCount = 0;
+    static String  i2cBusList[3];
+    static int     i2cBusNumbers[3];
+
+    if (i2cBusList[0].isEmpty() || (i2cBusCount != i2cMaxBusCount)) {
+      i2cBusCount                = 0;
+      i2cBusList[i2cBusCount]    = '1';
+      i2cBusNumbers[i2cBusCount] = 0;
+      ++i2cBusCount;
+
+      if ((getI2CBusCount() > 1) && Settings.isI2CEnabled(1)) {
+        i2cBusList[i2cBusCount]    = '2';
+        i2cBusNumbers[i2cBusCount] = 1;
+        ++i2cBusCount;
+      }
+      # if FEATURE_I2C_INTERFACE_3
+
+      if ((getI2CBusCount() > 2) && Settings.isI2CEnabled(2)) {
+        i2cBusList[i2cBusCount]    = '3';
+        i2cBusNumbers[i2cBusCount] = 2;
+        ++i2cBusCount;
+      }
+      # endif // if FEATURE_I2C_INTERFACE_3
+    }
+    FormSelectorOptions selector(i2cBusCount,
+                                 i2cBusList, i2cBusNumbers);
+    selector.default_index = 0;
+    bool reloadOnChange = false;
+
+    # if FEATURE_I2CMULTIPLEXER
+
+    if (reloadWhenNeeded) {
+      // Only use reloadOnChange if current I2C Bus has multiplexer availability different than the other I2C Bus(s)
+      bool hasMultiplexer = false;
+
+      for (uint8_t i2cBus = 0; i2cBus < getI2CBusCount(); ++i2cBus) {
+        if (i2cBus != choice) {
+          hasMultiplexer |= (Settings.isI2CEnabled(i2cBus) && isI2CMultiplexerEnabled(i2cBus));
+        }
+      }
+      reloadOnChange = (hasMultiplexer != isI2CMultiplexerEnabled(choice));
+    }
+    # endif // if FEATURE_I2CMULTIPLEXER
+    selector.reloadonchange = reloadOnChange;
+    selector.addFormSelector(label, id, choice);
+  }
+}
+
+#endif // if FEATURE_I2C_MULTIPLE

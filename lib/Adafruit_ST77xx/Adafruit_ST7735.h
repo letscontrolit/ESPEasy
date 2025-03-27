@@ -31,6 +31,7 @@
 #define INITR_HALLOWING 0x05
 #define INITR_GREENTAB160x80 0x06
 #define INITR_BLACKTAB135x240 0x07
+#define INITR_BLACKTAB172x320 0x08
 
 // Some register settings
 #define ST7735_MADCTL_BGR 0x08

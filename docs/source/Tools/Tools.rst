@@ -273,6 +273,15 @@ This allows ESPEasy to know the correct date and time after been powered off for
 
 N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
 
+Added: 2025-02-02
+
+When multiple I2C Buses are configured (ESP32 only), we need to configure on which I2C Bus the RTC chip is connected:
+
+.. image:: images/Tools_RTC_I2CSelector.png
+
+NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
+
 Procedure to configure a real time clock (RTC) chip:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -397,17 +406,20 @@ like subnet mask / gateway / DNS, it may still be useful.
 This allows a somewhat static IP in your network (N.B. use it with an 'octet' outside the range of the DHCP IPs) while still having set to DHCP.
 So if you take the node to another network which does use 192.168.52.x then you will know it will be on 192.168.52.10 (when setting this value to "10")
 
-I2C ClockStretchLimit
-^^^^^^^^^^^^^^^^^^^^^
-
-- `I2C-bus.org - Clock Stretching <https://www.i2c-bus.org/clock-stretching/>`_
-- `ESPeasy wiki - Basics: The I2C Bus <https://www.letscontrolit.com/wiki/index.php/Basics:_The_I%C2%B2C_Bus>`_
-
 WD I2C Address
 ^^^^^^^^^^^^^^
 
 The Watchdog timer can be accessed via I2C.
 What can be read/set/changed must still be documented.
+
+Added: 2025-02-02
+
+When multiple I2C Buses are configured (ESP32 only), we need to configure on which I2C Bus the Watchdog chip is connected:
+
+.. image:: images/Tools_WD_I2CSelector.png
+
+NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
 
 JSON bool output without quotes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -936,7 +948,7 @@ Interfaces
 I2C Scan
 ========
 
-To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional busses provided via an I2C multiplexer, for available devices.
+To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional buses/channels provided via an I2C multiplexer, for available devices.
 
 The scan is performed if the I2C ``SDA`` and ``SCL`` GPIO pins are configured on the Hardware page, and will use the configured ``Slow device Clock Speed`` setting (default: 100 kHz) during the scan, as that should be supported by any I2C device available.
 
@@ -950,9 +962,19 @@ Example scan using an I2C multiplexer, showing multiple devices across multiple 
 
 .. image:: images/Tools_I2Cscan_multiplexer.png
 
+Added: 2025-02-02
+
+When having multiple I2C Buses configured, for each configured interface an I2C Scan is performed, including the multiplexer if that's configured.
+
+An example: (No actual multiplexer connected...)
+
+.. image:: images/Tools_I2Cscan_multipleBuses.png
+
+|
 
 .. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
+|
 
 Settings
 ********
@@ -987,6 +1009,51 @@ Firmware update
 ===============
 
 Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, downloaded from the Releases page, an Actions run, or self-built, and install that. When using the same flash configuration (``4M1M``, ``4M316k``, ``8M1M``, etc.) and file system type (SPIFFS v.s. LittleFS) all settings will be preserved. When uncertain, the configuration should be saved first, using either the Save (or Backup files if available) button above.
+
+Migrate from SPIFFS to LittleFS (ESP32)
+=======================================
+
+Since IDF 5.x framework (ESP32 chips only), the SPIFFS file-system is no longer supported. As ESPEasy is using a specially crafted framework-release that still includes SPIFFS support, we still have support for SPIFFS, but this requires quite some effort. To reduce that effort, and because SPIFFS won't be made available after IDF 5.1.x for ESPEasy, it is strongly advised to migrate to a LittleFS build.
+
+NB: A build can not have support for both SPIFFS *and* LittleFS. (Technical limitation.)
+
+Using the 4 steps below, a safe (and easy) migration path is available:
+
+1) Upgrade to the latest release
+--------------------------------
+
+For the best experience, and to ensure a stable running system, a very recent release of ESPEasy should be used. This can be downloaded from the `Github Releases page <https://github.com/letscontrolit/ESPEasy/releases>`_
+
+Releases that no longer include SPIFFS support will be clearly marked.
+
+In the previous paragraph is shown how to select the correct binary for upgrading. After a successful upgrade, the ESP will be rebooted, and should be left running for *at least* 5 minutes to ensure that the WiFi configuration is stored in the NVS (non-volatile storage) partiton of the flash (this is a background process, activated ~5 minutes after a successful connection to WiFI), so this can be used to reconnect to WiFi after upgrading to a LittleFS build.
+
+2) Backup the current configuration and file-system content
+-----------------------------------------------------------
+
+As all ESP32 builds include support for creating a .tar archive backup, this feature should now be used to create an up-to-date system backup, by using the :cyan:`Backup files` button (as opposed to the :cyan:`Save` button that only stores the configuration files), and storing the archive on a persistent storage medium (local disk, USB stick, network storage, etc.).
+
+NB: Depending on the browser used, it may be needed to confirm that the created archive should *really* be stored, so don't forget to confirm that!
+
+3) Upgrade to the matching LittleFS release
+-------------------------------------------
+
+After the backup is created, the matching release with LittleFS support cna be downloaded from the `Github Releases page <https://github.com/letscontrolit/ESPEasy/releases>`_ (If your build is not (yet) included, then please request it via a support issue.)
+
+As long as the flash partitioning is the same (``4M316k``, ``8M1M`` etc.) the upgrade can be done via OTA. If the partitioning is different, either the `ESPEasy Web Flash tool <https://td-er.nl/ESPEasy/>`_ or the Espressif Flash Download tool should be used to install the update (flash partitioning can not be changed via an OTA update).
+
+Once the new binary is installed, and the ESP rebooted, the unit should automatically connect to WiFi, as it has the last used credentials stored in the NVS partition. Might that fail, the initial setup via the Setup portal should be started.
+
+4) Restore the backup
+---------------------
+
+Now that the unit is available via WiFi again, the backup we created in step **2)** can be restored so alle previously configured devices, controllers, rules, settings, etc. are available again.
+
+From the Tools page, select the :cyan:`Load` button, and browse to the location of the backup .tar file to select it. After the restore is finished, the unit **must** be rebooted immediately (a :cyan:`Reboot` button is available), so the freshly restored settings won't be overwritten by any settings kept in memory.
+
+When these steps are completed, the migration from SPIFFS to LittleFS is **successfully completed!**
+
+|
 
 File system
 ***********

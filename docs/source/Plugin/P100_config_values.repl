@@ -1,0 +1,10 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#CounterTotal]``
+    ","
+    Returns the current total count accumulated for the selected **A** or **B** counter since power-on of the sensor.
+    "
+

@@ -465,6 +465,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
           (event->Par2 > 0) &&
           (event->Par2 <= 100)) {
         P095_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
+        _backlightPercentage          = event->Par2; // Also set to current
         displayOnOff(true);
       } else {
         success = false;
