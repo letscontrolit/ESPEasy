@@ -335,18 +335,20 @@ void P104_data_struct::configureZones() {
       # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       zoneOffset += it->size;
 
+      P->setCharSpacing(currentZone, P104_NORMAL_CHAR_SPACING); // Set default font spacing
+
       switch (it->font) {
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         case P104_DOUBLE_HEIGHT_FONT_ID: {
           P->setFont(currentZone, numeric7SegDouble);
-          P->setCharSpacing(currentZone, P->getCharSpacing(currentZone) * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
         case P104_FULL_DOUBLEHEIGHT_FONT_ID: {
           P->setFont(currentZone, BigFont);
-          P->setCharSpacing(currentZone, P->getCharSpacing(currentZone) * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT

@@ -150,7 +150,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         {
           // Value in case of Error
           const __FlashStringHelper *resultsOptions[] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
-          constexpr int resultsOptionValues[] { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
+          constexpr int resultsOptionValues[] { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE,
+                                                P004_ERROR_IGNORE };
 
           const FormSelectorOptions selector(
             NR_ELEMENTS(resultsOptionValues),
@@ -164,12 +165,27 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
             static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P004_data) {
-            for (uint8_t i = 0; i < valueCount; ++i) {
-              if (i == 0) {
-                addFormSubHeader(F("Statistics"));
-              } else {
-                addFormSeparator(2);
+            addFormSubHeader(F("Statistics"));
+
+            addRowLabel(F("Data pin Rise Time"));
+            const int riseTime = P004_data->measure_rise_time();
+            if (riseTime == 0) {
+              addHtml(F("< 1"));
+            } else {
+              if (riseTime >= 15) {
+                addHtml('>');
               }
+              addHtmlInt(riseTime);
+            }
+            addUnit(F("usec"));
+            if (riseTime > 6) {
+              addHtml(F("&nbsp;"));
+              addEnabled(false);
+              addHtml(F("&nbsp;Too Slow! Reduce pull-up resistance"));
+            }
+
+            for (uint8_t i = 0; i < valueCount; ++i) {
+              addFormSeparator(2);
               Dallas_show_sensor_stats_webform_load(P004_data->get_sensor_data(i));
             }
           }

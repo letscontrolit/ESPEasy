@@ -526,9 +526,12 @@ void parse_string_commands(String& line) {
               // substring arduino style (first char included, last char excluded)
               // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
 
-              if (arg1valid
-                  && arg2valid) {
-                replacement = arg3.substring(startpos, endpos);
+              if (arg1valid) {
+                if (arg2valid){
+                  replacement = arg3.substring(startpos, endpos);
+                } else {
+                  replacement = arg3.substring(startpos);
+                }
               }
               break;
             case string_commands_e::indexof:
@@ -685,12 +688,13 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 
   if (line.indexOf(F("%event")) != -1) {
+    const int equalsPos = event.indexOf('=');
+
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
                                               // literal event string if
                                               // starting with '!'
     } else {
-      const int equalsPos = event.indexOf('=');
 
       String argString;
 
@@ -757,18 +761,18 @@ void substitute_eventvalue(String& line, const String& event) {
         }
         eventvalue_pos = line.indexOf(F("%eventvalue"));
       }
+    }
 
-      if ((line.indexOf(F("%eventname%")) != -1) ||
-          (line.indexOf(F("%eventpar%")) != -1)) {
-        const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
+    if ((line.indexOf(F("%eventname%")) != -1) ||
+        (line.indexOf(F("%eventpar%")) != -1)) {
+      const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
 
-        // Replace %eventname% with the literal event
-        line.replace(F("%eventname%"), eventName);
+      // Replace %eventname% with the literal event
+      line.replace(F("%eventname%"), eventName);
 
-        // Part of %eventname% after the # char
-        const int hash_pos = eventName.indexOf('#');
-        line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
-      }
+      // Part of %eventname% after the # char
+      const int hash_pos = eventName.indexOf('#');
+      line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
     }
   }
 }

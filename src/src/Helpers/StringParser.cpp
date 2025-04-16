@@ -104,10 +104,10 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       {
         // Address an internal variable either as float or as int
         // For example: Let,10,[VAR#9]
-        uint32_t varNum;
+        // For example: Let,10,[INT#bla]
 
-        if (validUIntFromString(valueName, varNum)) {
-          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(varNum);
+        if (!valueName.isEmpty()) {
+          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(valueName);
           unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
           bool trimTrailingZeros    = true;
 

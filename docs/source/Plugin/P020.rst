@@ -45,6 +45,18 @@ Device Settings
 
 * **TCP Port**: The port for an external network client to read the data from, range 1..65535. The used port number must be unique within the device.
 
+* **Protocol**: Select the protocol(s) to listen for on the selected port. Available options:
+
+.. image:: P020_ProtocolOptions.png
+
+* *TCP (Default)*: The original plugin only listened for TCP connections, so that's the default setting.
+
+* *UDP*: Listen for incoming data using the UDP protocol.
+
+* *TCP & UDP*: Listen using TCP for an active connection, and also listen using UDP for incoming data.
+
+As UDP uses a stateless connection, and is only used for *receiving* data, this is not recognized as an external device listening. Data received via UDP is sent to the serial port verbatim, so a serial port must be configured. TCP and UDP can use a matching connection on the same port number, at the same time.
+
 * **Baud Rate / Serial config**: See *Serial helper configuration*, above.
 
 * **Event Processing**: Select the type of data that is expected, to enable correct preprocessing. Available options:
@@ -70,6 +82,9 @@ Device Settings
 .. spacer
 
 * **P1 #data event with message**: When enabled, the *P1 WiFi Gateway* Event Processing option will include the received message. **WARNING** This may easily cause memory overflow exceptions, especially when running on ESP8266 or other low-memory situations!
+
+* **Event data hex format**: When enabled, the data received will be emitted in hex format (starts with ``0x`` and all bytes hex encoded), instead of the regular text format. This enables for received binary data to be passed to an external receiver without losing special bytes like ``0x00`` etc.
+
 
 When selecting the **Event processing** options *Generic* or *RFLink*, after submitting the page will show extra options for the events generated:
 
@@ -137,6 +152,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |changed| 2025-03-30: Add Protocol (for receiving data via UDP) and Event data hex format options.
 
   |changed| 2022-12-13: Merge of P020 and P044 to reduce code size and combine features, as P044 was initially started as a spin-off from P020, but not evolved with the P020 features.
 
