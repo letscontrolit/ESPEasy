@@ -149,9 +149,15 @@
     "
     Dec","
     :red:`Internal`","
-    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Decrement the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Dec,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Examples:
+
+    ``Dec,1,4``
+
+    ``Dec,angle,0.005``
     
     See also ``Let`` and ``Inc``."
     "
@@ -275,9 +281,15 @@
     "
     Inc","
     :red:`Internal`","
-    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Increment the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Inc,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Example:
+
+    ``Inc,1,0.002``
+
+    ``Inc,border,2``
     
     See also ``Let`` and ``Dec``."
     "
@@ -293,9 +305,15 @@
     "
     Let","
     :red:`Internal`","
-    Set the value of variable n (1..INT_MAX).
+    Set the value of variable n (1..INT_MAX), or use a variable name.
 
-    ``Let,<n>,<value>``
+    ``Let,<n|varname>,<value>``
+
+    Examples:
+
+    ``Let,1,10.5``
+
+    ``Let,border,3``
     
     See also ``Inc`` and ``Dec``."
     "
@@ -683,6 +701,15 @@
     Send command to other network device using UDP (non-ESP Easy units)
 
     ``SendToUDP,<IP address>,<Portnumber>,<command>``"
+    "
+    SendToUDPMix","
+    :green:`Rules`","
+    Send command to other network device using UDP (non-ESP Easy units) and allow for binary data to be sent.
+
+    ``SendToUDPMix,<IP address>,<Portnumber>,'<content to send>'``
+    
+    ``<content to send>``: Text and/or hex byte(s) (having 0x prefix) that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the remote device. The content has to be quoted if it contains commas or spaces. When using multiple parts, parts that have spaces or commas must *also* be quoted, and use a different quote character!
+    "
     "
     Settings","
     :red:`Internal`","

@@ -11,6 +11,14 @@
   #  define PLUGIN_020_DEBUG            false // when true: extra logging in serial out !?!?!
 # endif // ifndef PLUGIN_020_DEBUG
 
+# ifndef P020_USE_PROTOCOL
+#  ifdef ESP32
+#   define P020_USE_PROTOCOL   1
+#  else // ifdef ESP32
+#   define P020_USE_PROTOCOL   0
+#  endif // ifdef ESP32
+# endif // ifndef P020_USE_PROTOCOL
+
 # define P020_SET_SERVER_PORT           ExtraTaskSettings.TaskDevicePluginConfigLong[0]
 # define P020_SET_BAUDRATE              ExtraTaskSettings.TaskDevicePluginConfigLong[1]
 
@@ -37,6 +45,8 @@
 # define P020_FLAG_P044_MODE_SAVED      8
 # define P020_FLAG_EVENT_SERIAL_ID      9
 # define P020_FLAG_APPEND_TASK_ID       10
+# define P020_FLAG_EVENT_AS_HEX         11
+# define P020_FLAG_PROTOCOL             12 // Uses 2 bits!
 # define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
 # define P020_HANDLE_MULTI_LINE         bitRead(P020_FLAGS, P020_FLAG_MULTI_LINE)
 # define P020_GET_LED_ENABLED           bitRead(P020_FLAGS, P020_FLAG_LED_ENABLED)
@@ -45,6 +55,8 @@
 # define P020_GET_P044_MODE_SAVED       bitRead(P020_FLAGS, P020_FLAG_P044_MODE_SAVED)
 # define P020_GET_EVENT_SERIAL_ID       bitRead(P020_FLAGS, P020_FLAG_EVENT_SERIAL_ID)
 # define P020_GET_APPEND_TASK_ID        bitRead(P020_FLAGS, P020_FLAG_APPEND_TASK_ID)
+# define P020_GET_EVENT_AS_HEX          bitRead(P020_FLAGS, P020_FLAG_EVENT_AS_HEX)
+# define P020_GET_PROTOCOL              get2BitFromUL(P020_FLAGS, P020_FLAG_PROTOCOL)
 
 # define P020_DEFAULT_SERVER_PORT           1234
 # define P020_DEFAULT_BAUDRATE              115200
@@ -68,6 +80,14 @@ enum class P020_Events : uint8_t {
   RFLink        = 2u,
   P1WiFiGateway = 3u,
 };
+
+# if P020_USE_PROTOCOL
+enum class P020_Protocol_e : uint8_t {
+  TCP     = 0u,
+  UDP     = 1u,
+  TCP_UDP = 2u,
+};
+# endif // if P020_USE_PROTOCOL
 
 struct P020_Task : public PluginTaskData_base {
   enum class ParserState : uint8_t {
@@ -133,9 +153,15 @@ struct P020_Task : public PluginTaskData_base {
   static bool validP1char(char ch);
   bool        handleP1Char(char ch);
 
-  WiFiServer    *ser2netServer = nullptr;
-  uint16_t       gatewayPort   = 0;
-  WiFiClient     ser2netClient;
+  WiFiServer *ser2netServer = nullptr;
+  uint16_t    gatewayPort   = 0;
+  WiFiClient  ser2netClient;
+  # if P020_USE_PROTOCOL
+  WiFiUDP        *ser2netUdp = nullptr;
+  P020_Protocol_e _protocol  = P020_Protocol_e::TCP;
+  uint16_t        _udpport;
+  bool            _udpInit = false;
+  # endif // if P020_USE_PROTOCOL
   bool           clientConnected = false;
   String         serial_buffer;
   String         net_buffer;
@@ -152,11 +178,13 @@ struct P020_Task : public PluginTaskData_base {
   bool          _CRCcheck          = false;
   bool          _P1EventData       = false;
   size_t        _maxDataGramSize   = P020_DATAGRAM_MAX_SIZE;
+  size_t        _rxBufferSize      = 0;
   ParserState   _state             = ParserState::WAITING;
   char          _space             = 0;
   char          _newline           = 0;
   bool          _serialId          = false;
   bool          _appendTaskId      = false;
+  bool          _eventAsHex        = false;
 
   ESPEasySerialPort _port;
 };

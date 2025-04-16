@@ -259,6 +259,9 @@
 // - extend in P104_data_struct::configureZones the switch/case statement to conditionaly support the new font
 // - update documentation
 
+const uint8_t P104_NORMAL_CHAR_SPACING = 1; // Default font-size character spacing
+const uint8_t P104_DOUBLE_CHAR_SPACING = 2; // Character spacing for double-height fonts
+
 // This is the default font id
 # define P104_DEFAULT_FONT_ID     0
 

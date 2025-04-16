@@ -177,6 +177,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   sendtohttp,
 #endif // FEATURE_SEND_TO_HTTP
   sendtoudp,
+  sendtoudpmix,
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   serialfloat,
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

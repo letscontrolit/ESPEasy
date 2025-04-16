@@ -121,6 +121,11 @@ public:
 
   void   setDebugOutput(bool);
 
+  // Set buffer size, should be called before calling begin()
+  size_t setRxBufferSize(size_t new_size);
+  size_t setTxBufferSize(size_t new_size);
+
+
   bool   isTxEnabled(void);
   bool   isRxEnabled(void);
 

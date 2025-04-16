@@ -45,7 +45,7 @@ public:
 
   inline size_t write(const char *s)
   {
-    return write((uint8_t *)s, strlen(s));
+    return (s) ? write((uint8_t *)s, strlen(s)) : 0;
   }
 
   inline size_t write(unsigned long n)
@@ -74,6 +74,8 @@ public:
 
   virtual void   setDebugOutput(bool) = 0;
 
+
+  // Set buffer size, should be called before calling begin()
   virtual size_t setRxBufferSize(size_t new_size) = 0;
   virtual size_t setTxBufferSize(size_t new_size) = 0;
   virtual bool   setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) = 0;

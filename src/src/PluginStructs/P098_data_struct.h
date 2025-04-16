@@ -139,7 +139,7 @@ private:
   volatile P098_limit_switch_state limitA;
   volatile P098_limit_switch_state limitB;
   ESPEASY_VOLATILE(int)            position = 0;
-  volatile uint64_t                enc_lastChanged_us = 0;
+  ESPEASY_VOLATILE(uint64_t)       enc_lastChanged_us = 0;
   uint64_t                         lastVirtualSpeedApplied_us = 0;
   int                              pos_dest = 0;
   int                              pos_overshoot = 0;
