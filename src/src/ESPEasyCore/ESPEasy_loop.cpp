@@ -30,17 +30,17 @@ void updateLoopStats() {
   ++loopCounter_full;
 
   if (lastLoopStart == 0) {
-    lastLoopStart = getMicros64();
+    lastLoopStart = micros();
     return;
   }
-  const int64_t usecSince = usecPassedSince(lastLoopStart);
+  const int32_t usecSince = usecPassedSince_fast(lastLoopStart);
 
   #if FEATURE_TIMING_STATS
   ADD_TIMER_STAT(LOOP_STATS, usecSince);
   #endif // if FEATURE_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
-  lastLoopStart             = getMicros64();
+  lastLoopStart             = micros();
 
   if ((usecSince <= 0) || (usecSince > 10000000)) {
     return; // No loop should take > 10 sec.

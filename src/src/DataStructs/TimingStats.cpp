@@ -13,45 +13,41 @@ std::map<TimingStatsElements, TimingStats> miscStats;
 unsigned long timingstats_last_reset(0);
 
 
-TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
-
-void TimingStats::add(int64_t time) {
-  _timeTotal += static_cast<float>(time);
+void TimingStats::add(int32_t duration_usec) {
+  // Max duration in usec is roughly 35 minutes.
+  // For timing stats more than enough
+  if (duration_usec < 0) return;
+  _timeTotal += static_cast<uint64_t>(duration_usec);
   ++_count;
 
-  if (time > static_cast<int64_t>(_maxVal)) { _maxVal = time; }
+  if (static_cast<uint32_t>(duration_usec) > _maxVal) { _maxVal = duration_usec; }
 
-  if (time < static_cast<int64_t>(_minVal)) { _minVal = time; }
+  if (static_cast<uint32_t>(duration_usec) < _minVal) { _minVal = duration_usec; }
 }
 
 void TimingStats::reset() {
-  _timeTotal = 0.0f;
-  _count     = 0;
-  _maxVal    = 0;
-  _minVal    = 4294967295;
+  _timeTotal = 0u;
+  _count     = 0u;
+  _maxVal    = 0u;
+  _minVal    = 4294967295u;
 }
 
 bool TimingStats::isEmpty() const {
-  return _count == 0;
+  return _count == 0u;
 }
 
 float TimingStats::getAvg() const {
   if (_count == 0) { return 0.0f; }
-  return _timeTotal / static_cast<float>(_count);
+  return static_cast<float>(_timeTotal) / static_cast<float>(_count);
 }
 
-uint32_t TimingStats::getMinMax(uint64_t& minVal, uint64_t& maxVal) const {
-  if (_count == 0) {
-    minVal = 0;
-    maxVal = 0;
-    return 0;
-  }
+uint32_t TimingStats::getMinMax(uint32_t& minVal, uint32_t& maxVal) const {
   minVal = _minVal;
   maxVal = _maxVal;
   return _count;
 }
 
-bool TimingStats::thresholdExceeded(const uint64_t& threshold) const {
+bool TimingStats::thresholdExceeded(const uint32_t& threshold) const {
   if (_count == 0) {
     return false;
   }
@@ -321,22 +317,22 @@ String getMiscStatsName(TimingStatsElements stat) {
   return getMiscStatsName_F(static_cast<TimingStatsElements>(stat));
 }
 
-void stopTimerTask(deviceIndex_t T, int F, uint64_t statisticsTimerStart)
+void stopTimerTask(deviceIndex_t T, int F, uint32_t statisticsTimerStart)
 {
-  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogFunction(F)) { pluginStats[static_cast<int>(T.value) * 256 + (F)].add(usecPassedSince_fast(statisticsTimerStart)); }
 }
 
-void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint64_t statisticsTimerStart)
+void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint32_t statisticsTimerStart)
 {
-  if (mustLogCFunction(F)) { controllerStats[static_cast<int>(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart)); }
+  if (mustLogCFunction(F)) { controllerStats[static_cast<int>(T) * 256 + static_cast<int>(F)].add(usecPassedSince_fast(statisticsTimerStart)); }
 }
 
-void stopTimer(TimingStatsElements L, uint64_t statisticsTimerStart)
+void stopTimer(TimingStatsElements L, uint32_t statisticsTimerStart)
 {
-  if (Settings.EnableTimingStats()) { miscStats[L].add(usecPassedSince(statisticsTimerStart)); }
+  if (Settings.EnableTimingStats()) { miscStats[L].add(usecPassedSince_fast(statisticsTimerStart)); }
 }
 
-void addMiscTimerStat(TimingStatsElements L, int64_t T)
+void addMiscTimerStat(TimingStatsElements L, int32_t T)
 {
   if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 }

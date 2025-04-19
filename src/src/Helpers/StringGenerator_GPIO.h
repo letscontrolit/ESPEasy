@@ -23,6 +23,12 @@ enum class PinSelectPurpose : uint8_t {
   Generic_output,
   Generic_bidir,
   I2C,
+  #if FEATURE_I2C_MULTIPLE
+  I2C_2,
+  #if FEATURE_I2C_INTERFACE_3
+  I2C_3,
+  #endif
+  #endif
   SPI,
   SPI_MISO,
   Ethernet,
@@ -32,8 +38,11 @@ enum class PinSelectPurpose : uint8_t {
   #if FEATURE_SD
   SD_Card,
   #endif
-
+  Status_led,
+  Reset_pin,
 };
+
+
 
 
 /*********************************************************************************************\
@@ -82,9 +91,9 @@ String createGPIO_label(int  gpio,
                         bool output,
                         bool warning);
 
-const __FlashStringHelper * getConflictingUse(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic);
+const __FlashStringHelper * getConflictingUse(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
 
-String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic);
+String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
 
 
 #endif

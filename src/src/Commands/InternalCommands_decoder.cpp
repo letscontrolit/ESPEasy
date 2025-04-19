@@ -213,6 +213,7 @@ const char Internal_commands_s[] PROGMEM =
   "sendtohttp|"
 #endif // FEATURE_SEND_TO_HTTP
   "sendtoudp|"
+  "sendtoudpmix|"
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   "serialfloat|"
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

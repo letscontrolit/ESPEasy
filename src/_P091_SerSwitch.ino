@@ -232,8 +232,8 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       if (PCONFIG(0) == SER_SWITCH_YEWE)
       {
         Plugin_091_numrelay = PCONFIG(1);
-        ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
         ESPEASY_SERIAL_0.setRxBufferSize(BUFFER_SIZE); // Arduino core for ESP8266 WiFi chip 2.4.0
+        ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
         delay(1);
         getmcustate();                                 // request status on startup
         log += strformat(F(" Yewe %d btn"), Plugin_091_numrelay);

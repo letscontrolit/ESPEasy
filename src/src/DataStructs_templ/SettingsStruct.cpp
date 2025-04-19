@@ -17,6 +17,9 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringParser.h"
 
+#if FEATURE_I2C_MULTIPLE
+#include "../Helpers/Hardware_device_info.h"
+#endif
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 #include <driver/gpio.h>
@@ -575,6 +578,12 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   Pin_status_led_Inversed  = DEFAULT_PIN_STATUS_LED_INVERSED;
   Pin_sd_cs                = -1;
 #ifdef ESP32
+  #if FEATURE_I2C_MULTIPLE
+  Pin_i2c2_sda             = DEFAULT_PIN_I2C2_SDA;
+  Pin_i2c2_scl             = DEFAULT_PIN_I2C2_SCL;
+  Pin_i2c3_sda             = DEFAULT_PIN_I2C3_SDA;
+  Pin_i2c3_scl             = DEFAULT_PIN_I2C3_SCL;
+  #endif
   // Ethernet related settings are never used on ESP8266
   ETH_Phy_Addr             = DEFAULT_ETH_PHY_ADDR;
   ETH_Pin_mdc_cs           = DEFAULT_ETH_PIN_MDC;
@@ -963,16 +972,170 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) { return false; }
-  return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
+  #if !FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = 0;
+  #else // if !FEATURE_I2C_MULTIPLE
+  for (uint8_t i2cBus = 0; i2cBus < getI2CBusCount(); ++i2cBus)
+  #endif // if !FEATURE_I2C_MULTIPLE
+  {
+    if ((getI2CSdaPin(i2cBus) == pin) || (getI2CSclPin(i2cBus) == pin)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
-  return (Pin_i2c_sda != -1) &&
-         (Pin_i2c_scl != -1) &&
-         (I2C_clockSpeed > 0) &&
-         (I2C_clockSpeed_Slow > 0);
+bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled(uint8_t i2cBus) const {
+  return (getI2CSdaPin(i2cBus) != -1) &&
+        (getI2CSclPin(i2cBus) != -1) &&
+        (getI2CClockSpeed(i2cBus) > 0) &&
+        (getI2CClockSpeedSlow(i2cBus) > 0);
 }
+
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterface(taskIndex_t TaskIndex) const {
+  return get3BitFromUL(I2C_Flags[TaskIndex], I2C_FLAGS_BUS_NUMBER);
+}
+
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getI2CSdaPin(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return Pin_i2c_sda;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return Pin_i2c2_sda;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return Pin_i2c3_sda;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return -1;
+}
+
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getI2CSclPin(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return Pin_i2c_scl;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return Pin_i2c2_scl;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return Pin_i2c3_scl;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return -1;
+}
+
+template<unsigned int N_TASKS>
+uint32_t SettingsStruct_tmpl<N_TASKS>::getI2CClockSpeed(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return I2C_clockSpeed;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return I2C2_clockSpeed;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return I2C3_clockSpeed;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return 0u;
+}
+
+template<unsigned int N_TASKS>
+uint32_t SettingsStruct_tmpl<N_TASKS>::getI2CClockSpeedSlow(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return I2C_clockSpeed_Slow;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return I2C2_clockSpeed_Slow;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return I2C3_clockSpeed_Slow;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return 0u;
+}
+
+template<unsigned int N_TASKS>
+uint32_t SettingsStruct_tmpl<N_TASKS>::getI2CClockStretch(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return WireClockStretchLimit;
+  }
+  return 0u;
+}
+
+#if FEATURE_I2C_MULTIPLE
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceRTC() const {
+  return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_CLOCK);
+}
+
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceWDT() const {
+  return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_WDT);
+}
+
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfacePCFMCP() const {
+  return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP);
+}
+#endif // if FEATURE_I2C_MULTIPLE
+
+#if FEATURE_I2CMULTIPLEXER
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerType(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return I2C_Multiplexer_Type;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return I2C2_Multiplexer_Type;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return I2C3_Multiplexer_Type;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return -1;
+}
+
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerAddr(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return I2C_Multiplexer_Addr;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return I2C2_Multiplexer_Addr;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return I2C3_Multiplexer_Addr;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return -1;
+}
+
+template<unsigned int N_TASKS>
+int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerResetPin(uint8_t i2cBus) const {
+  if (0 == i2cBus) {
+    return I2C_Multiplexer_ResetPin;
+  #if FEATURE_I2C_MULTIPLE
+  } else if (1 == i2cBus) {
+    return I2C2_Multiplexer_ResetPin;
+  #if FEATURE_I2C_INTERFACE_3
+  } else {
+    return I2C3_Multiplexer_ResetPin;
+  #endif // if FEATURE_I2C_INTERFACE_3
+  #endif // if FEATURE_I2C_MULTIPLE
+  }
+  return -1;
+}
+#endif // if FEATURE_I2CMULTIPLEXER
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {

@@ -11,6 +11,7 @@
 
 # include "../Globals/RuntimeData.h"
 
+# include "../Helpers/Numerical.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/SystemVariables.h"
 
@@ -46,7 +47,7 @@ void handle_sysvars() {
   html_TR();
   html_table_header(F("System Variables"));
   html_table_header(F("Normal"));
-  html_table_header(F("URL encoded"), F("ESPEasy_System_Variables"), 0);
+  html_table_header(F("URL encoded"), F("RTDReference/SystemVariable.html"), 0);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 
@@ -56,8 +57,10 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
+    uint32_t tmpVar{};
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
-      addSysVar_html(strformat(F("%%v%u%%"), it->first), false);
+      const bool isv_ = !validUIntFromString(it->first, tmpVar);
+      addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
   }
 

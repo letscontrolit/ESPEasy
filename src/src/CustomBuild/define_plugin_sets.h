@@ -1697,6 +1697,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P173) && defined(ESP32)
     #define USES_P173   // Environment - SHTC3
   #endif
+  #if !defined(USES_P177) && defined(ESP32)
+    #define USES_P177   // Environment - I2C XDB401 pressure
+  #endif
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
@@ -2042,6 +2045,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P175) && defined(ESP32)
     #define USES_P175   // Dust - PMSx003i I2C
+  #endif
+  #if !defined(USES_P177) && defined(ESP32)
+    #define USES_P177   // Environment - I2C XDB401 pressure
   #endif
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
@@ -2525,6 +2531,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P175
     #define USES_P175   // Dust - PMSx003i I2C
+  #endif
+  #ifndef USES_P177
+    #define USES_P177   // Environment - I2C XDB401 pressure
   #endif
   #ifndef USES_P178
     #define USES_P178   // Extra IO - LU9685 Servo controller
@@ -3665,6 +3674,23 @@ To create/register a plugin, you have to :
 #define FEATURE_ALTERNATIVE_CDN_URL 1
 */
 
+#ifndef FEATURE_I2C_MULTIPLE
+  #ifdef ESP8266
+    #define FEATURE_I2C_MULTIPLE  0 // NOT SUPPORTED
+  #endif 
+  #ifdef ESP32
+    #define FEATURE_I2C_MULTIPLE  1
+  #endif 
+#endif
+#if FEATURE_I2C_MULTIPLE
+  #ifndef FEATURE_I2C_INTERFACE_3
+    #define FEATURE_I2C_INTERFACE_3 0 // Not enabled by default
+  #endif
+#endif
+#if defined(ESP8266) && FEATURE_I2C_MULTIPLE
+  #undef FEATURE_I2C_MULTIPLE
+  #define FEATURE_I2C_MULTIPLE    0 // NOT SUPPORTED
+#endif
 
   #ifndef FEATURE_THINGSPEAK_EVENT
     #ifdef LIMIT_BUILD_SIZE

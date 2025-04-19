@@ -9,6 +9,7 @@
 
 /**
  * Changelog:
+ * 2025-03-15 tonhuisman: Removed unneeded I2C Enabled check.
  * 2025-01-18 tonhuisman: Enable writing values to chip.
  * 2024-02-25 tonhuisman: Add I2C-enabled check on plugin startup, implement FsP macro
  * 2024-02-21 tonhuisman: Add support for ChipID and ChargingDetail data supplied by AXP2101
@@ -257,23 +258,19 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.isI2CEnabled()) {
-        P139_data_struct *P139_init = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P139_data_struct *P139_init = static_cast<P139_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P139_init) {
-          #  ifndef BUILD_NO_DEBUG
-          addLogMove(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
-          #  endif // ifndef BUILD_NO_DEBUG
-          // has been initialized so nothing to do here
-          success = true; // Still was successful (to keep plugin enabled!)
-        } else {
-          #  ifndef BUILD_NO_DEBUG
-          addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
-          #  endif // ifndef BUILD_NO_DEBUG
-          success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P139_data_struct(event));
-        }
+      if (nullptr != P139_init) {
+        #  ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
+        #  endif // ifndef BUILD_NO_DEBUG
+        // has been initialized so nothing to do here
+        success = true; // Still was successful (to keep plugin enabled!)
       } else {
-        addLog(LOG_LEVEL_ERROR, F("AXP2101: I2C not enabled, initialization failed!"));
+        #  ifndef BUILD_NO_DEBUG
+        addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
+        #  endif // ifndef BUILD_NO_DEBUG
+        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P139_data_struct(event));
       }
 
       break;

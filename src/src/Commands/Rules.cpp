@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
+#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
@@ -71,16 +72,17 @@ const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, cons
 
 const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const char *Line)
 {
+  String varName;
   String TmpStr1;
+  GetArgv(Line, varName, 2);
 
-  if (GetArgv(Line, TmpStr1, 3)) {
-    if (event->Par1 >= 0) {
-      ESPEASY_RULES_FLOAT_TYPE result{};
+  if (!varName.isEmpty() &&
+      ExtraTaskSettings.checkInvalidCharInNames(varName.c_str()) && GetArgv(Line, TmpStr1, 3)) {
+    ESPEASY_RULES_FLOAT_TYPE result{};
 
-      if (!isError(Calculate(TmpStr1, result))) {
-        setCustomFloatVar(event->Par1, result);
-        return return_command_success_flashstr();
-      }
+    if (!isError(Calculate(TmpStr1, result))) {
+      setCustomFloatVar(varName, result);
+      return return_command_success_flashstr();
     }
   }
   return return_command_failed_flashstr();
@@ -88,14 +90,16 @@ const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const c
 
 const __FlashStringHelper * Command_Rules_IncDec(struct EventStruct *event, const char *Line, const ESPEASY_RULES_FLOAT_TYPE factor)
 {
+  String varName;
   String TmpStr1;
   ESPEASY_RULES_FLOAT_TYPE result = 1;
+  GetArgv(Line, varName, 2);
 
-  if (GetArgv(Line, TmpStr1, 3) && isError(Calculate(TmpStr1, result))) {
-    return return_command_failed_flashstr();
-  }
-  if (event->Par1 >= 0) {
-    setCustomFloatVar(event->Par1, getCustomFloatVar(event->Par1) + (result * factor));
+  if (!varName.isEmpty()) {
+    if (GetArgv(Line, TmpStr1, 3) && isError(Calculate(TmpStr1, result))) {
+      return return_command_failed_flashstr();
+    }
+    setCustomFloatVar(varName, getCustomFloatVar(varName) + (result * factor));
     return return_command_success_flashstr();
   }
   return return_command_failed_flashstr();

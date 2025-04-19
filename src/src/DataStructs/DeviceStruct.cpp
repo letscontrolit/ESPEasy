@@ -1,21 +1,57 @@
 #include "../DataStructs/DeviceStruct.h"
 
-
+//constexpr size_t size = sizeof(DeviceStruct);
 
 DeviceStruct::DeviceStruct() :
+  _all(0u),
+// PullUpOption       (false),
+// InverseLogicOption (false),
+// FormulaOption      (false),
+// Custom             (false),
+// SendDataOption     (false),
+// GlobalSyncOption   (false),
+// TimerOption        (false),
+// TimerOptional      (false),
+// DecimalsOnly       (false),
+// DuplicateDetection (false),
+// ExitTaskBeforeSave (true),
+// ErrorStateValues   (false),
+// PluginStats        (false),
+// PluginLogsPeaks    (false),
+// PowerManager       (false),
+// TaskLogsOwnPeaks   (false),
+// I2CNoDeviceCheck   (false),
+// I2CMax100kHz       (false),
+// HasFormatUserVar   (false),
+// I2CNoBusSelection  (false),
+
   Number(0), Type(0), VType(Sensor_VType::SENSOR_TYPE_NONE), Ports(0), ValueCount(0),
   OutputDataType(Output_Data_type_t::Default),
   Pin1Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
   Pin2Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), 
-  Pin3Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
-  PullUpOption(false), InverseLogicOption(false), FormulaOption(false),
-  Custom(false), SendDataOption(false), GlobalSyncOption(false),
-  TimerOption(false), TimerOptional(false), DecimalsOnly(false),
-  DuplicateDetection(false), ExitTaskBeforeSave(true), ErrorStateValues(false), 
-  PluginStats(false), PluginLogsPeaks(false), PowerManager(false),
-  TaskLogsOwnPeaks(false), I2CNoDeviceCheck(false),
-  I2CMax100kHz(false), HasFormatUserVar(false) 
-{}
+  Pin3Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX))
+{
+  // Only initialize union members in the constructor body
+  // TODO: Rename this so it can be default initialized to 'false'
+  ExitTaskBeforeSave = true;
+}
+
+void DeviceStruct::clear() {
+  _all = 0;
+
+  ExitTaskBeforeSave = true;
+
+  Number= 0;
+  Type = 0;
+  VType = Sensor_VType::SENSOR_TYPE_NONE;
+  Ports = 0;
+  ValueCount = 0;
+  OutputDataType = Output_Data_type_t::Default;
+  Pin1Direction = static_cast<uint8_t>(gpio_direction::gpio_direction_MAX);
+  Pin2Direction = static_cast<uint8_t>(gpio_direction::gpio_direction_MAX);
+  Pin3Direction = static_cast<uint8_t>(gpio_direction::gpio_direction_MAX);
+
+}
 
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {

@@ -35,3 +35,10 @@
         ``'0xXXxx XX,xx-XX:xx'``: A sequence of hexadecimal values (range: 0x00..0xFF), that *can* be separated by a space, comma, dash, colon, semicolon or period, or are just entered adjecent. Only the first 2 characters should be ``0x`` or ``0X``, the rest is interpreted as hex bytes, and appended to the string to send. Quotes are only required if space or comma separators are used.
         Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
         "
+        "
+        ``serialsend_test,'<content to place in serial buffer>'``
+
+        ``<content to place in serial buffer>``: Text that will be put into the serial buffer (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ","
+        This command is intended for testing as if data was received via serial. After placing the data in the buffer, the regular handling of that data is initiated.
+        "

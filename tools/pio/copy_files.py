@@ -150,3 +150,5 @@ def bin_elf_copy(source, target, env):
     print("\u001b[33m Timestamp:\u001b[0m", datetime.datetime.now())
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [bin_elf_copy])
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin.gz", [bin_elf_copy])
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.factory.bin", [bin_elf_copy])

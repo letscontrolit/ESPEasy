@@ -26,6 +26,21 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces, bool trimTrailingZeros)
 {
+#ifdef ESP32
+  if (isnanf(value)) {
+    return F("NaN");
+  }
+  if (isinff(value)) {
+    return F("Inf");
+  }
+#else
+  if (isnan(value)) {
+    return F("NaN");
+  }
+  if (isinf(value)) {
+    return F("Inf");
+  }
+#endif
   const double value_d(value);
   return doubleToString(value_d, decimalPlaces, trimTrailingZeros);
 }
@@ -102,6 +117,12 @@ String toStringNoZero(int64_t value) {
 }
 
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
+  if (isnan(value)) {
+    return F("NaN");
+  }
+  if (isinf(value)) {
+    return F("Inf");
+  }
   String res;
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
@@ -129,7 +150,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
     char *buf = (char *)malloc(expectedChars);
 
     if (nullptr == buf) {
-      return F("nan");
+      return F("NaN");
     }
     move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 

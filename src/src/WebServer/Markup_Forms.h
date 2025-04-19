@@ -279,6 +279,7 @@ void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * labe
 
 void addFormPinSelectI2C(const String& label,
                          const String& id,
+                         uint8_t       i2cBus,
                          int           choice);
 
 void addFormSelectorI2C(const String& id,
@@ -324,6 +325,12 @@ bool update_whenset_FormItemInt(const __FlashStringHelper * key,
 
 bool update_whenset_FormItemInt(const String& key,
                                 int         & value);
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                int8_t      & value);
+
+bool update_whenset_FormItemInt(const String& key,
+                                int8_t      & value);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 uint8_t     & value);

@@ -1,5 +1,9 @@
 .. _Rules:
 
+.. |br| raw:: html
+
+    <br>
+
 #####
 Rules
 #####
@@ -12,8 +16,9 @@ Rules can be used to create very simple flows to control devices on your ESP.
 
 .. note::
    To assist writing rules, one may prefer to use an editor like Notepad++ which supports user defined languages to colorize the text.
-   See the ``Misc/Notepad++`` folder for a Notepad++ language definition which can be used to colorize rules.
-   Another option is the `ESPeasy Code Editor <https://raw.githack.com/chromoxdor/EasyColorCode/main/colorcode.html>`_ , an online editor with rules highlighting and hinting.
+   See the ``Misc/Notepad++`` folder for a Notepad++ language definition which can be used to colorize rules. |br|
+   Another option is the `ESPeasy Code Editor <https://raw.githack.com/chromoxdor/EasyColorCode/main/colorcode.html>`_ , an online editor with rules highlighting and hinting. |br|
+   Additionally, in many builds, EasyColorCode has been integrated, making the syntax highlighting and auto-completion available, directly in the Rules editor of the ESPEasy UI.
 
 Enable Rules
 ------------
@@ -493,7 +498,7 @@ the '=' sign).
 For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
 Thus it will be the same when using ``%eventvalue1%``.
 
-There is one exception; When the event starts with an ``!``,  ``%eventvalue%`` does refer to the literal event, or the part of the event after the ``#`` character.
+There is one exception; When the event starts with an ``!``,  ``%eventvalue%`` does refer to the literal event, an with ``%eventname%`` and ``%eventpar%`` the part left and right of the ``#`` character can be used (processing ``%eventname%`` and ``%eventpar%`` was added 2025-03-30).
 This was introduced for the Serial Server plugin (P020) which sends events like ``!Serial#`` followed by the received string.
 
 
@@ -713,29 +718,42 @@ A really great feature to use is the internal variables. You set them like this:
 
  Let,<n>,<value>
 
-Where n must be a positive integer (type ``uint32_t``) and the value a floating point value. To use the values in strings you can
-either use the ``%v7%`` syntax or ``[var#7]``. BUT for formulas you need to use the square
-brackets in order for it to compute, i.e. ``[var#12]``.
+ Let,1,15
 
-.. note: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
+ Let,border,3
+
+ Let,angle,0.436
+
+Where n can be a positive integer (type ``uint32_t``), or a name (identifier), and the value a floating point value. To use the values in strings you can
+either use the ``%v7%`` syntax or ``[var#7]``, or when using named variables: ``%v_border%`` or ``[var#border]``.
+
+Added: 2025-03-31: Support for named variables.
+
+.. note:: The number for ``n`` used to be limited to 1 ... 16, but this limit has been removed in builds made after 2021-01-09.
+
+.. note:: Variables used to be limited to numbers, but named variables can now also be used in builds made after 2025-03-31.
+
+When using named variables, these names should consist of only alphanumeric characters and underscores, a name using spaces, punctuation characters, braces, etc., will be rejected.
 
 If you need to make sure the stored value is an integer value, use the ``[int#n]`` syntax. (i.e. ``[int#12]``)
-The index ``n`` is shared among ``[var#n]`` and ``[int#n]``.
+The index ``n``, or named variable, is shared among ``[var#n]`` and ``[int#n]``, as well as when using the ``%vN%`` or ``%v_N%`` syntax, that will return the same value as when using the ``[var#N]`` notation.
 
-The short hand notation (e.g. ``%v7%``) will be processed first.
+When using a named variable with the short-hand notation, an underscore must be used after the ``%v`` lead-in, so ``%v_border%``, ``%v1%`` and ``%v_1%`` are valid, but ``%vborder%`` is **invalid**.
+
+The short-hand notation (e.g. ``%v7%``) will be processed first.
 Meaning this can be used to switch sets of variables by nesting like this: ``[int#%v7%]``.
 
-On the "System Variables" page of the web interface all set values can be inspected including their values.
+On the "System Variables" page of the web interface all set values can be inspected including their values. Named variables will be listed in lowercase, and the variable names are not case-sensitive, just like task- and value-names.
 If none is set, "No variables set" will be shown.
 
-If a specific system variable was never set (using the ``Let`` command), its value will be considered to be ``0.0``.
+If a specific system variable was never set (using the ``Let``, ``Inc`` or ``Dec`` commands), its value will be considered to be ``0.0``.
 
 .. note:: Internal variables are lost after a reboot. If you need to keep values that will survive a reboot or crash (without losing power), please use a dummy task for this.
 
 
 Added: 2023-12-01
 
-Short hand notation can be nested like this: ``[int#%v%v7%%]`` or use simple calculations like this: ``[int#%v=7+%v100%%]``
+Short-hand notation can be nested like this: ``[int#%v%v7%%]`` or use simple calculations like this: ``[int#%v=7+%v100%%]``
 This allows to simply switch a number of variable offsets in rules by only changing 1 variable.
 
 
@@ -764,9 +782,10 @@ These settings will be returned independent of the task being enabled or disable
 Special task names
 ------------------
 
-You must not use the task names ``Plugin``, ``var`` ``int`` as these have special meaning.
+You must not use the task names ``Plugin``, ``var`` or ``int`` as these have special meaning.
 
 ``Plugin`` can be used in a so called ``PLUGIN_REQUEST``, for example: 
+
 ``[Plugin#GPIO#Pinstate#N]`` to get the pin state of a GPIO pin.
 
 ``[Plugin#MCP#Pinstate#N]`` to get the pin state of a MCP pin.
@@ -775,7 +794,7 @@ You must not use the task names ``Plugin``, ``var`` ``int`` as these have specia
 
 Since 2022-12-27: (Enabled for all builds with flash size > 1MB)
 
-- For GPIO, MCP or PCF pins set to PWM or SERVO output, the last set duty-cycle is returned instead of the current pin state (that was of no use).
+- For GPIO, MCP or PCF pins set to PWM or SERVO output, the last set duty-cycle is returned instead of the current pin state (as the state was of no use).
 
 - For any plugin that registers the used pin(s), the last set pin state can be retrieved, either regular pin state or PWM state, by using this syntax: ``[Plugin#<pluginId>#Pinstate#N]``. Some plugins that use pin registration are 59 (:ref:`p059_page`), 22 (:ref:`p022_page`), 11 (:ref:`p011_page`) and 63 (:ref:`p063_page`)
 
@@ -788,16 +807,19 @@ For expanders you can use also the following:
 
 ``Var`` and ``int`` are used for internal variables. 
 The variables set with the ``Let`` command will be available in rules
-as ``var#N`` or ``int#N`` where ``N`` is 1..16.
-For example: ``Let,10,[var#9]``
+as ``var#N`` or ``int#N`` where ``N`` is alphanumeric.
+For example: ``Let,10,[var#9]`` or ``Let,bottom,[var#top]-25``
+
+Variables also can be retrieved by using the short-hand notation ``%vN%`` for numeric variable names, or ``%v_varname%`` for alphanumeric and numeric variable names. The short-hand variables are processed before the ``[var#N]`` etc. variable references, to enable dynamic/indirect handling of variables, like lookup tables. These can be addressed like: ``[var#%v_index%]``.
 
 N.B. ``int`` and ``var`` use the same variable, only ``int`` does round them to 0 decimals.
+
 N.B.2  ``int`` is added in build 20190916.
 
 ``Clock``, ``Rules`` and ``System`` etc. are not recommended either since they are used in
 event names.
 
-Please observe that task names are case insensitive meaning that VAR, var, and Var etc.
+Please observe that task names are case insensitive, meaning that VAR, var, and Var etc.
 are all treated the same.
 
 
@@ -823,7 +845,7 @@ In order to allow the comma or space in a parameter, you can wrap the parameter 
 
 * Single quote (')
 * Double quote (")
-* Back quote  (added to builds after 2019/11/10)
+* Back quote (\`) (added to builds after 2019/11/10)
 
 There are multiple quotes available for this, to be able to use "the other quote" in your parameter.
 For example in JSON, you need the double quote for string like values or keys.
@@ -911,6 +933,8 @@ To apply a justification, a transformation must also be used. If no transformati
 * ``u``: Uppercase entire value.
 * ``l``: Lowercase entire value.
 
+NB. The numeric arguments for formatting and justification can also be provided via a short-hand variable, like ``[bme#temperature#d%v_dig%.1]`` where the number of digits is set in variable ``dig`` via ``let,dig,3``.
+
 
 String Formatting and Interpreting
 ----------------------------------
@@ -930,6 +954,10 @@ It is possible to process sub strings, for example when working with ``%eventval
 Usage: ``{substring:<startpos>:<endpos>:<string>}``
 
 The position arguments are the same as in Arduino ``String::substring`` , meaning the endpos is 1 position further than the last character you need.
+
+Added: 2025-03-31
+
+If ``<endpos>`` is not provided or invalid (the colon has to stay included!), the remainder of ``<string>`` beginning at ``<startpos>`` is returned (like Arduino behavior).
 
 For example:
 
@@ -958,7 +986,7 @@ The output in the log will then be:
  1512415 : Info  : .
 
 
-For example (bit useless example, just for illustrative purposes):
+For example (bit useless though, just for illustrative purposes):
 
 .. code-block:: none
 
@@ -1165,6 +1193,27 @@ For example:
  320612: ACT : LogEntry,'Values 1111011 7b'
  320618: Values 1111011 7b
  320631: ACT : LogEntry,'Values 1001111011 027b'
+ 320635: Values 1001111011 027b
+
+.. code-block:: none
+
+ // The same example, but using alphanumeric variable names (and slightly different LogEntry formatting):
+ on myevent do
+   let,first,%eventvalue1%
+   let,bit9on,{bitset:9:%eventvalue1%}
+   LogEntry,'Values 0b{tobin:[int#first]} 0x{tohex:[int#first]}'
+   LogEntry,'Values 0b{tobin:[int#bit9on]} 0x{tohex:[int#bit9on]:4}'
+ endon
+
+.. code-block:: none
+
+ 320528: HTTP: Event,eventname=123
+ 320586: EVENT: eventname=123
+ 320594: ACT : let,first,123
+ 320603: ACT : let,bit9on,635
+ 320612: ACT : LogEntry,'Values 0b1111011 0x7b'
+ 320618: Values 1111011 7b
+ 320631: ACT : LogEntry,'Values 0b1001111011 0x027b'
  320635: Values 1001111011 027b
 
 ord
@@ -1518,7 +1567,7 @@ System variables
 There is a large number of system variables.
 These do not refer to task values, but to typical system variables like system uptime, current time and date, etc.
 
-These can all be seen on the ``<ip-address>/sysvars`` page.
+These can all be seen on the ``<ip-address>/sysvars`` page. (Tools/System Variables)
 
 N.B. These values cannot be formatted like the task value references.
 
@@ -1710,7 +1759,7 @@ PIR and LDR
 .. note::
 
   In other words: If the PIR switch is set (to either 1 or 0) and if
-  the light value < 500, then set GPIO port 16 of the ESP.
+  the light value < 500, then set GPIO pin 16 of the ESP.
 
 .. code-block:: none
 
@@ -2137,7 +2186,7 @@ Report IP every 30 seconds using MQTT
 -------------------------------------
 
 This rule also work as a ping or heart beat of the unit. If it has not
-published a IP number for 30+ seconds the unit is experiencing problems.
+published an IP number for 30+ seconds the unit is probably experiencing problems.
 
 .. code-block:: none
 
@@ -2496,6 +2545,45 @@ This rule can be used to calculate the moving average for, f.e., a temperature s
 
 This assumes that a Controller has been configured, and the Dummy task is configured to send out its values via the controller.
 
+Added: 2025-03-18
+
+The above example, adapted for using named variables (and %v1% .. %v200% for storing the values)
+
+.. code-block:: none
+
+  on MovingAverage do
+    // %v_max% = max elements
+    // %v_last% = last element
+    // %v_cnt% = nr Elements
+    // %v_sum% = sum
+    // %v_avg% = average
+    // %v_strt% = start-index for 'array'
+
+    if %v_max%=0 // Not yet set?
+      let,strt,1  // Start-index, can be changed if [var#1] .. [var#200] already in use
+      let,max,%v_strt%-1+200 // Set max number of elements (200).
+    endif
+
+    if %v_cnt% < %v_max%
+      inc,last  // Update index of "last element"
+      inc,cnt   // Update nr Elements
+    else
+      if %v_last% = %v_max% // “The last will be first, and the first last” (Matthew 20:16)
+        let,last,%v_strt%   // Index of "last element" should be modulo max elements
+      else // new sequential write cycle
+        inc,last
+      endif
+      dec,sum,[var#%v_last%]  // Subtract oldest element from the sum
+    endif
+    let,%v_last%,%eventvalue1%     // Store the new value in the array
+    inc,sum,[var#%v_last%] // Add new value to the sum
+    
+    let,avg,%v_sum%/%v_cnt% // Average
+    // Optionally, it can be stored in a Dummy Device plugin instead
+    TaskValueSet,Dummy,Average,%v_avg% // Average
+  endon
+
+
 Register daily working time
 ---------------------------
 
@@ -2505,6 +2593,8 @@ Required device tasks:
 
 * Sensor (temperature in the example)
 * Dummy device (named ``Dummy`` in this example, minimal 2 values, ``LoggingON`` and ``LoggingOFF``), Interval can be set to 0
+
+Changed: 2025-03-21 Use named variables, instead of numbered variables.
 
 .. code-block:: none
 
@@ -2525,29 +2615,27 @@ Required device tasks:
 
   On HeaterON Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
     If [Dummy#LoggingON] = 1
-      Let,1,%syssec_d% // Store current nr of seconds of today in var#1
+      Let,secs,%syssec_d% // Store current nr of seconds of today in var#secs
       PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater ON'
       TaskValueSet,Dummy,LoggingON,0
-      TaskValueSet,Dummy,LoggingOFF,1
-      TaskRun,Dummy
+      TaskValueSetAndRun,Dummy,LoggingOFF,1
     Endif
   Endon
 
   On HeaterOFF Do // Optional 1st argument is the temperature, defaults to the value of DS1#Temperature if not provided
     If [Dummy#LoggingOFF] = 1
-      Let,2,[int#2]+%syssec_d%-[int#1] // Add run time to var#2
+      Inc,total,%syssec_d%-[int#secs] // Add run time to var#total
       PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Temp = %eventvalue1|[DS1#Temperature]% -> Heater OFF'
       TaskValueSet,Dummy,LoggingON,1
-      TaskValueSet,Dummy,LoggingOFF,0
-      TaskRun,Dummy
+      TaskValueSetAndRun,Dummy,LoggingOFF,0
     Endif
   Endon
 
   On Clock#Time=All,00:00 Do // At midnight
-    // Send value of [int#2] to wherever you need it
-    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [int#2] Seconds'
-    Let,1,0 // Reset start time
-    Let,2,0 // Reset total counter 
+    // Send value of [int#total] to wherever you need it
+    PostToHTTP,192.168.1.20,8080,/receiver.php,'','%lcltime% !!! Total RunningTime = [int#total] Seconds'
+    Let,secs,0 // Reset start time
+    Let,total,0 // Reset total counter 
   Endon
 
 

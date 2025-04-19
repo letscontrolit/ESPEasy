@@ -315,7 +315,26 @@ public:
   bool isI2C_pin(int8_t pin) const;
 
   // Return true if I2C settings are correct
-  bool isI2CEnabled() const;
+  bool isI2CEnabled(uint8_t i2cBus) const;
+
+  uint8_t getI2CInterface(taskIndex_t TaskIndex) const;
+  int8_t getI2CSdaPin(uint8_t i2cBus) const;
+  int8_t getI2CSclPin(uint8_t i2cBus) const;
+  uint32_t getI2CClockSpeed(uint8_t i2cBus) const;
+  uint32_t getI2CClockSpeedSlow(uint8_t i2cBus) const;
+  uint32_t getI2CClockStretch(uint8_t i2cBus) const;
+  
+  #if FEATURE_I2C_MULTIPLE
+  uint8_t getI2CInterfaceRTC() const;
+  uint8_t getI2CInterfaceWDT() const;
+  uint8_t getI2CInterfacePCFMCP() const;
+  #endif // if FEATURE_I2C_MULTIPLE
+
+  #if FEATURE_I2CMULTIPLEXER
+  int8_t getI2CMultiplexerType(uint8_t i2cBus) const;
+  int8_t getI2CMultiplexerAddr(uint8_t i2cBus) const;
+  int8_t getI2CMultiplexerResetPin(uint8_t i2cBus) const;
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
   bool isEthernetPin(int8_t pin) const;
@@ -400,7 +419,22 @@ public:
   uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
-  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be reused
+  int8_t        Pin_i2c2_sda = DEFAULT_PIN_I2C2_SDA; // From here, storage borrowed from OLD_TaskDeviceID array
+  int8_t        Pin_i2c2_scl = DEFAULT_PIN_I2C2_SCL;
+  int8_t        Pin_i2c3_sda = DEFAULT_PIN_I2C3_SDA;
+  int8_t        Pin_i2c3_scl = DEFAULT_PIN_I2C3_SCL;
+  uint32_t      I2C2_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+  uint32_t      I2C2_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+  uint32_t      I2C3_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+  uint32_t      I2C3_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+  uint16_t      I2C_peripheral_bus = 0;
+  int8_t        I2C2_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+  int8_t        I2C2_Multiplexer_Addr = -1;
+  int8_t        I2C2_Multiplexer_ResetPin = -1;
+  int8_t        I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+  int8_t        I2C3_Multiplexer_Addr = -1;
+  int8_t        I2C3_Multiplexer_ResetPin = -1;
+  unsigned int  OLD_TaskDeviceID[N_TASKS - 7] = {0};  //UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

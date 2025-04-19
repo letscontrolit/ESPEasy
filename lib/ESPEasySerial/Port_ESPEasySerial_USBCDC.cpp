@@ -163,7 +163,8 @@ int Port_ESPEasySerial_USBCDC_t::available(void)
 int Port_ESPEasySerial_USBCDC_t::availableForWrite(void)
 {
   if (_serial != nullptr) {
-    return _serial->availableForWrite();
+    const int res = _serial->availableForWrite();
+    return res > 64 ? 64 : res;
   }
   return 0;
 }

@@ -53,11 +53,10 @@ String getReplacementString(const String& format, const String& s) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("ReplacementString SunTime: ");
-    log += R;
-    log += F(" offset: ");
-    log += ESPEasy_time::getSecOffset(R);
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, strformat(
+      F("ReplacementString SunTime: %s offset: %d"), 
+      R.c_str(), 
+      ESPEasy_time::getSecOffset(R)));
   }
 #endif // ifndef BUILD_NO_DEBUG
   return R;
@@ -280,39 +279,45 @@ bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
     if (!isalpha(s.charAt(v_index + 2))) {
       // Check for:
       // - Calculations indicated with leading '='
-      // - nested indirections like %v%v1%%
+      // - nested indirections like %v%v1%% or %v%v_bla%% or %v_%v_2%%
+      const bool isv_ = s.charAt(v_index + 2) == '_';
       if ((s.charAt(v_index + 2) == '=') ||
-          (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v')) {
+          (s.charAt(v_index + 2) == '%' && s.charAt(v_index + 3) == 'v') ||
+          (isv_ && (s.charAt(v_index + 3) == '%' && s.charAt(v_index + 4) == 'v'))) {
         // FIXME TD-er: This may lead to stack overflow if we do an awful lot of nested user variables
-        if (parse_pct_v_num_pct(s, useURLencode, v_index + 2)) {
+        if (parse_pct_v_num_pct(s, useURLencode, v_index + 2 + (isv_ ? 1 : 0))) {
           somethingReplaced = true;
         }
       }
 
-      uint32_t i{};
       // variable index may contain a calculation
       // Calculations are enforced by a leading '='
       // like: %v=1+%v2%%
+      String value;
       const int pos_closing_pct = s.indexOf('%', v_index + 1);
-      const String arg = s.substring(v_index + 2, pos_closing_pct);
-      i = CalculateParam(arg, -1);
-      //addLog(LOG_LEVEL_INFO, strformat(F("calc parse: %s => %u"), arg.c_str(), i));
-      if (i >= 0) {
-        // Need to replace the entire arg and not just the 'i'
-        const String key = strformat(F("%%v%s%%"), arg.c_str());
+      const String arg = s.substring(v_index + 2 + (isv_ ? 1 : 0), pos_closing_pct);
+      const int32_t i = CalculateParam(arg, -1);
+      // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
 
-        if (s.indexOf(key) != -1) {
-          const bool trimTrailingZeros = true;
-          const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(i);
-          const unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
+      // Need to replace the entire arg
+      const String key = strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), arg.c_str());
+      // addLog(LOG_LEVEL_INFO, strformat(F("parsed, key: %s"), key.c_str()));
+
+      if (s.indexOf(key) != -1) {
+        const bool trimTrailingZeros = true;
+        const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(arg);
+        const unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
+        if (i != -1) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
+          value = String(i);
+        } else {
           #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          const String value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
+          value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
           #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          const String value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
+          value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
           #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          if (repl(key, value, s, useURLencode)) {
-            somethingReplaced = true;
-          }
+        }
+        if (repl(key, value, s, useURLencode)) {
+          somethingReplaced = true;
         }
       }
     }

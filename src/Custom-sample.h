@@ -120,6 +120,10 @@
 #ifdef ESP32
 #define DEFAULT_PIN_I2C_SCL                     -1                // Undefined
 #endif
+#define DEFAULT_PIN_I2C2_SDA                    -1                // Undefined
+#define DEFAULT_PIN_I2C3_SDA                    -1                // Undefined
+#define DEFAULT_PIN_I2C2_SCL                    -1                // Undefined
+#define DEFAULT_PIN_I2C3_SCL                    -1                // Undefined
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 #define FEATURE_I2C_DEVICE_SCAN                 1
 

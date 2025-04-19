@@ -470,10 +470,13 @@ void addFormPinSelect(const String& label, const String & id, int choice)
 }
 */
 
-void addFormPinSelectI2C(const String& label, const String& id, int choice)
+void addFormPinSelectI2C(const String& label, const String& id, uint8_t i2cBus, int choice)
 {
   addRowLabel_tr_id(label, id);
-  addPinSelect(PinSelectPurpose::I2C, id, choice);
+  const PinSelectPurpose purpose = static_cast<PinSelectPurpose>(
+  static_cast<uint8_t>(PinSelectPurpose::I2C) + i2cBus);
+
+  addPinSelect(purpose, id, choice);
 }
 
 void addFormSelectorI2C(const String& id,
@@ -594,6 +597,11 @@ void addFormPinStateSelect(int gpio, int choice)
       id,
       choice);
     addUnit(getConflictingUse(gpio));
+    #ifdef ESP32
+    if (isPSRAMInterfacePin(gpio)) {
+      addUnit(getConflictingUse(gpio, PinSelectPurpose::Generic, true));
+    }
+    #endif // ifdef ESP32
   }
 }
 
@@ -628,6 +636,23 @@ bool update_whenset_FormItemInt(const __FlashStringHelper * key,
 }
 
 bool update_whenset_FormItemInt(const String& key, int& value) {
+  int tmpVal;
+
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal;
+    return true;
+  }
+  return false;
+}
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                int8_t& value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
+
+bool update_whenset_FormItemInt(const String& key, int8_t& value) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {

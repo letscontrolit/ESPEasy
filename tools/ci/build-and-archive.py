@@ -3,7 +3,6 @@ import enum
 import subprocess
 import shutil
 
-
 class CannotArchive(Exception):
     pass
 
