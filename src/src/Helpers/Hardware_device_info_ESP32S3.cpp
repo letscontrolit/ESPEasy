@@ -50,12 +50,21 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
 //  return (gpio) >= 26 && (gpio) <= 32;
   switch (gpio) {
     case 26: // SPICS1   Only when PSRAM is present???
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
     case SPI_IOMUX_PIN_NUM_HD:
     case SPI_IOMUX_PIN_NUM_CS:
     case SPI_IOMUX_PIN_NUM_MOSI:
     case SPI_IOMUX_PIN_NUM_CLK:
     case SPI_IOMUX_PIN_NUM_MISO:
     case SPI_IOMUX_PIN_NUM_WP:
+#else
+    case SPI2_IOMUX_PIN_NUM_HD:
+    case SPI2_IOMUX_PIN_NUM_CS:
+    case SPI2_IOMUX_PIN_NUM_MOSI:
+    case SPI2_IOMUX_PIN_NUM_CLK:
+    case SPI2_IOMUX_PIN_NUM_MISO:
+    case SPI2_IOMUX_PIN_NUM_WP:
+#endif
       return true;
   }
   return false;

@@ -49,7 +49,14 @@ int32_t presence_end{};
 void DALLAS_IRAM_ATTR Dallas_pinModeInput(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx)
 {
   if (gpio_pin_rx == gpio_pin_tx) {
-    DIRECT_PINMODE_INPUT_ISR(gpio_pin_rx); // let pin float, pull up will raise level
+    // let pin float, pull up will raise level
+# ifdef ESP8266
+
+    // We're running out of IRAM on ESP8266
+    DIRECT_PINMODE_INPUT(gpio_pin_rx);
+# else // ifdef ESP8266
+    DIRECT_PINMODE_INPUT_ISR(gpio_pin_rx);
+# endif // ifdef ESP8266
   } else {
     DIRECT_pinWrite_ISR(gpio_pin_tx, 1);
   }
@@ -60,7 +67,13 @@ void DALLAS_IRAM_ATTR Dallas_pinWrite(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx
   DIRECT_pinWrite_ISR(gpio_pin_tx, pinstate);
 
   if (gpio_pin_rx == gpio_pin_tx) {
+# ifdef ESP8266
+
+    // We're running out of IRAM on ESP8266
+    DIRECT_PINMODE_OUTPUT(gpio_pin_rx);
+# else // ifdef ESP8266
     DIRECT_PINMODE_OUTPUT_ISR(gpio_pin_rx);
+# endif // ifdef ESP8266
   }
 }
 
@@ -71,12 +84,13 @@ int32_t DALLAS_IRAM_ATTR Dallas_measureWaitForPinState(uint32_t gpio_pin_rx, uin
   do {
     passed = usecPassedSince_fast(start_usec);
   } while (passed < timeout_usec &&
-         (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)); // Using '!' to do a quick cast to bool
+           (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)); // Using '!' to do a quick cast to bool
 
-  if (passed > timeout_usec || 
-      !DIRECT_pinRead_ISR(gpio_pin_rx) == newState) {
+  if ((passed > timeout_usec) ||
+      (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)) {
     return -1;
   }
+
   // N.B. we allow the situation where passed == timeout_usec
   // and pin might have reached the state we're waiting for.
   // This way we don't need to average for time before reading pin state and after.
@@ -238,7 +252,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
     bool hasFixedResolution = false;
     Dallas_getResolution(tmpAddress, gpio_pin_rx, gpio_pin_tx, hasFixedResolution);
-    fixed_res.push_back(hasFixedResolution);    
+    fixed_res.push_back(hasFixedResolution);
   }
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
@@ -260,15 +274,17 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
       uint8_t tmpAddress[8]{};
       Dallas_uint64_to_addr(scan_res[index], tmpAddress);
 
+      String option;
+# ifndef LIMIT_BUILD_SIZE
       bool parasitePowered = false;
       Dallas_is_parasite(tmpAddress, gpio_pin_rx, gpio_pin_tx, parasitePowered);
-  
-      String option;
+
       if (parasitePowered) {
         option += F("[P] ");
       }
+# endif // ifndef LIMIT_BUILD_SIZE
       option += Dallas_format_address(tmpAddress, fixed_res[index]);
-      auto   it     = addr_task_map.find(scan_res[index]);
+      auto it = addr_task_map.find(scan_res[index]);
 
       if (it != addr_task_map.end()) {
         option += it->second;
@@ -281,6 +297,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   }
 }
 
+# ifndef LIMIT_BUILD_SIZE
 void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
 {
   if (sensor_data.addr == 0) {
@@ -305,24 +322,26 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
     addHtml(F("&nbsp;Unsupported!"));
   }
 
-  addRowLabel(F("Samples Read Success"));
+  addRowLabel(F("Read Success"));
   addHtmlInt(sensor_data.read_success);
 
-  addRowLabel(F("Samples Sensor No Reply"));
+  addRowLabel(F("Sensor No Reply"));
   addHtmlInt(sensor_data.start_read_failed);
 
-  addRowLabel(F("Samples Sensor Power Lost"));
+  addRowLabel(F("Sensor Power Lost"));
   addHtmlInt(sensor_data.sensor_power_on_reset);
 
-  addRowLabel(F("Samples Read CRC error"));
+  addRowLabel(F("Read CRC error"));
   addHtmlInt(sensor_data.read_CRC);
 
-  addRowLabel(F("Samples Read Retry"));
+  addRowLabel(F("Read Retry"));
   addHtmlInt(sensor_data.read_retry);
 
-  addRowLabel(F("Samples Read Failed"));
+  addRowLabel(F("Read Failed"));
   addHtmlInt(sensor_data.read_failed);
 }
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables)
 {
@@ -411,6 +430,7 @@ uint8_t Dallas_scan(uint8_t getDeviceROM, uint8_t *ROM, int8_t gpio_pin_rx, int8
 }
 
 // read power supply
+# ifndef LIMIT_BUILD_SIZE
 bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, bool& isParasitePowered)
 {
   if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
@@ -420,6 +440,8 @@ bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pi
   isParasitePowered = !Dallas_read_bit(gpio_pin_rx, gpio_pin_tx);
   return isParasitePowered;
 }
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 /*
    void Dallas_startConversion(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
@@ -471,6 +493,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
       log += F(",ERR");
     }
 
+  #  ifndef LIMIT_BUILD_SIZE
     bool isParasitePowered = false;
 
     //    Dallas_is_parasite(ROM, gpio_pin_rx, gpio_pin_tx, isParasitePowered);
@@ -478,6 +501,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
     if (isParasitePowered) {
       log += F(",P");
     }
+  #  endif // ifndef LIMIT_BUILD_SIZE
     log += ',';
     log += ll2String(usec_release, DEC);
     log += ',';
@@ -1122,9 +1146,10 @@ uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
 
   Dallas_pinLow;
   start = micros();
-  //delayMicroseconds(1);
+
+  // delayMicroseconds(1);
   // Make sure there is at least 5 usec 'low' level.
-  // Minimum state by Infineon, however other brands, like Analog, 
+  // Minimum state by Infineon, however other brands, like Analog,
   // claim lower minimum.
   while (usecPassedSince_fast(start) < 4) {}
 
@@ -1267,29 +1292,27 @@ uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
   return crc;
 }
 
-Dallas_SensorData::Dallas_SensorData() :
-  addr(0), value(0.0f),
-  start_read_failed(0), start_read_retry(0), read_success(0),
-  read_retry(0), read_failed(0), reinit_count(0), actual_res(0),
-  measurementActive(false), valueRead(false),
-  parasitePowered(false), lastReadError(false)
-{}
-
 void Dallas_SensorData::clear() {
-  addr              = 0u;
-  value             = 0.0f;
-  start_read_failed = 0u;
-  start_read_retry  = 0u;
-  read_success      = 0u;
-  read_retry        = 0u;
-  read_failed       = 0u;
-  actual_res        = 0u;
+  addr                  = 0u;
+  value                 = 0.0f;
+  start_read_failed     = 0u;
+  start_read_retry      = 0u;
+  read_success          = 0u;
+  sensor_power_on_reset = 0u;
+  read_CRC              = 0u;
+  read_retry            = 0u;
+  read_failed           = 0u;
+  reinit_count          = 0u;
+  actual_res            = 0u;
 
 
   measurementActive = false;
   valueRead         = false;
-  parasitePowered   = false;
   lastReadError     = false;
+  fixed_resolution  = false;
+# ifndef LIMIT_BUILD_SIZE
+  parasitePowered = false;
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 void Dallas_SensorData::set_measurement_inactive() {
@@ -1313,10 +1336,12 @@ bool Dallas_SensorData::initiate_read(int8_t gpio_rx, int8_t gpio_tx, int8_t res
 
   if (!Dallas_address_ROM(tmpaddr, gpio_rx, gpio_tx)) {
     ++start_read_retry;
+  # ifndef LIMIT_BUILD_SIZE
 
     if (!parasitePowered) {
       //      Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx, parasitePowered);
     }
+# endif // ifndef LIMIT_BUILD_SIZE
 
     if (!Dallas_address_ROM(tmpaddr, gpio_rx, gpio_tx)) {
       ++start_read_failed;
@@ -1334,9 +1359,11 @@ bool Dallas_SensorData::collect_value(int8_t gpio_rx, int8_t gpio_tx) {
     Dallas_uint64_to_addr(addr, tmpaddr);
 
     uint8_t nrRetries = 2;
+
     while (nrRetries) {
       --nrRetries;
       Dallas_read_result res = Dallas_readTemp(tmpaddr, &value, gpio_rx, gpio_tx);
+
       switch (res) {
         case Dallas_read_result::OK:
           ++read_success;
@@ -1356,13 +1383,14 @@ bool Dallas_SensorData::collect_value(int8_t gpio_rx, int8_t gpio_tx) {
           // No need to retry, sensor not found
           nrRetries = 0;
           ++start_read_failed;
-          break;  
-
+          break;
       }
-      
+# ifndef LIMIT_BUILD_SIZE
+
       if (!parasitePowered) {
         Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx, parasitePowered);
       }
+# endif // ifndef LIMIT_BUILD_SIZE
     }
   }
   valueRead     = false;
@@ -1387,10 +1415,12 @@ bool Dallas_SensorData::check_sensor(int8_t gpio_rx, int8_t gpio_tx, int8_t res)
   fixed_resolution = false; // reset
 
   Dallas_uint64_to_addr(addr, tmpaddr);
+# ifndef LIMIT_BUILD_SIZE
 
   if (!parasitePowered) {
     Dallas_is_parasite(tmpaddr, gpio_rx, gpio_tx, parasitePowered);
   }
+# endif // ifndef LIMIT_BUILD_SIZE
 
   actual_res = Dallas_getResolution(tmpaddr, gpio_rx, gpio_tx, fixed_resolution);
 

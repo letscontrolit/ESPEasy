@@ -233,7 +233,20 @@ bool ImprovWiFi::tryConnectToWifi(const char *ssid, const char *password)
 
 void ImprovWiFi::getAvailableWifiNetworks()
 {
+  #ifdef ESP32
+  const uint32_t start = millis();
+  int networkNum = WiFi.scanNetworks();
+  if (networkNum < 0) {
+    int32_t timePassed{};
+    do {
+      timePassed = (int32_t) (millis() - start);
+      networkNum = WiFi.scanComplete();
+    }
+    while (networkNum < 0 && timePassed < 60000);
+  }
+  #else
   const int networkNum = WiFi.scanNetworks();
+  #endif
 
   for (int id = 0; id < networkNum; ++id)
   {

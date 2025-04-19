@@ -76,7 +76,7 @@ P005_data_struct::P005_data_struct(struct EventStruct *event) {
 \*********************************************************************************************/
 bool P005_data_struct::waitState(uint32_t state)
 {
-  const uint64_t timeout = getMicros64() + 100;
+  const uint32_t start = micros();
 
 # ifdef DEBUG_LOGIC_ANALYZER_PIN
 
@@ -86,7 +86,7 @@ bool P005_data_struct::waitState(uint32_t state)
 
   while (DIRECT_pinRead(DHT_pin) != state)
   {
-    if (usecTimeOutReached(timeout)) { return false; }
+    if (usecPassedSince_fast(start) >= 100) { return false; }
   }
 
 # ifdef DEBUG_LOGIC_ANALYZER_PIN
@@ -166,8 +166,8 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
 
   if (receive_start) {
     // We know we're now at a "low" state.
-    uint64_t last_micros = getMicros64();
-    uint64_t prev_edge   = last_micros;
+    uint32_t last_micros = micros();
+    uint32_t prev_edge   = last_micros;
 
     for (dht_byte = 0; dht_byte < 5 && !readingAborted; ++dht_byte)
     {
@@ -187,16 +187,16 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           // Keep track of last microsecond the state had not yet changed.
           // This way we are less dependent on any jitter caused by
           // the delay call or rise times of the voltage on the pin.
-          last_micros = getMicros64();
+          last_micros = micros();
 
-          if (timeDiff64(prev_edge, last_micros) > 100) {
+          if (timeDiff(prev_edge, last_micros) > 100) {
             readingAborted = true;
           }
         }
 
         if (!readingAborted) {
           // We know it is less than 100 usec, so it does fit in the uint8_t timings array.
-          timings[t] = usecPassedSince(prev_edge);
+          timings[t] = usecPassedSince_fast(prev_edge);
           prev_edge  = last_micros;
         } else {
           timings[t] = 255;
