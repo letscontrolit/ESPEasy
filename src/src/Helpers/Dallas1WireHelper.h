@@ -46,12 +46,12 @@ struct Dallas_SensorData {
   uint32_t reinit_count{};
   uint8_t  actual_res{};
 
-  bool measurementActive = false;
-  bool valueRead         = false;
-  bool lastReadError     = false;
-  bool fixed_resolution  = false;
+  bool measurementActive{};
+  bool valueRead{};
+  bool lastReadError{};
+  bool fixed_resolution{};
 #ifndef LIMIT_BUILD_SIZE
-  bool parasitePowered   = false;
+  bool parasitePowered{};
 #endif
 };
 
