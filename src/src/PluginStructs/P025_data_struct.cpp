@@ -233,7 +233,7 @@ bool P025_data_struct::startMeasurement(uint8_t i2cAddress, uint16_t configRegis
 
 long P025_data_struct::waitReady025(uint8_t i2cAddress)
 {
-  const uint64_t start   = getMicros64();
+  const uint32_t start   = micros();
   unsigned long  timeout = millis();
 
   bool is_ok = false;
@@ -257,7 +257,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
     const bool ready = reg.operatingStatus == 1;
 
     if (ready && is_ok) {
-      const long res = usecPassedSince(start);
+      const long res = usecPassedSince_fast(start);
       const long sps = (res > 0) ? 1000000 / res : 0;
 # ifndef BUILD_NO_DEBUG
 

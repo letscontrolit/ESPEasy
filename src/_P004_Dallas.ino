@@ -158,6 +158,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
             resultsOptions, resultsOptionValues);
           selector.addFormSelector(F("Error State Value"), F("err"), P004_ERROR_STATE_OUTPUT);
         }
+#ifndef LIMIT_BUILD_SIZE
         addFormNote(F("External pull up resistor is needed, see docs!"));
 
         {
@@ -166,7 +167,6 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
           if (nullptr != P004_data) {
             addFormSubHeader(F("Statistics"));
-
             addRowLabel(F("Data pin Rise Time"));
             const int riseTime = P004_data->measure_rise_time();
             if (riseTime == 0) {
@@ -183,13 +183,13 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
               addEnabled(false);
               addHtml(F("&nbsp;Too Slow! Reduce pull-up resistance"));
             }
-
             for (uint8_t i = 0; i < valueCount; ++i) {
               addFormSeparator(2);
               Dallas_show_sensor_stats_webform_load(P004_data->get_sensor_data(i));
             }
           }
         }
+#endif
       }
       success = true;
       break;
