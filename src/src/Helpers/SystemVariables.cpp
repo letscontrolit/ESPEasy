@@ -296,26 +296,27 @@ bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
       String value;
       const int pos_closing_pct = s.indexOf('%', v_index + 1);
       const String arg = s.substring(v_index + 2 + (isv_ ? 1 : 0), pos_closing_pct);
+      String valArg(arg);
       const int32_t i = CalculateParam(arg, -1);
       // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
+      if (i != -1) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
+        valArg = String(i);
+      }
 
       // Need to replace the entire arg
       const String key = strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), arg.c_str());
-      // addLog(LOG_LEVEL_INFO, strformat(F("parsed, key: %s"), key.c_str()));
+      // addLog(LOG_LEVEL_INFO, strformat(F("parsed, key: %s (valArg: %s)"), key.c_str(), valArg.c_str()));
 
       if (s.indexOf(key) != -1) {
         const bool trimTrailingZeros = true;
-        const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(arg);
+        const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(valArg);
         const unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
-        if (i != -1) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
-          value = String(i);
-        } else {
-          #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
-          #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-          value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
-          #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        }
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        value = doubleToString(floatvalue, nr_decimals, trimTrailingZeros);
+        #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        value = floatToString(floatvalue, nr_decimals, trimTrailingZeros);
+        #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
         if (repl(key, value, s, useURLencode)) {
           somethingReplaced = true;
         }
