@@ -541,6 +541,9 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       break;
     case ControllerSettingsStruct::CONTROLLER_KEEP_ALIVE_TIME:
       ControllerSettings.KeepAliveTime = getFormItemInt(internalName, ControllerSettings.KeepAliveTime);
+      if (0 == ControllerSettings.KeepAliveTime) {
+        ControllerSettings.KeepAliveTime = CONTROLLER_KEEP_ALIVE_TIME_DFLT;
+      }
       break;
 #endif // if FEATURE_MQTT
     case ControllerSettingsStruct::CONTROLLER_USE_EXTENDED_CREDENTIALS:
