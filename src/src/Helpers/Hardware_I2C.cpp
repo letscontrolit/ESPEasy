@@ -148,6 +148,14 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq, uint32_t clockStretch)
     // No need to change the clock speed.
     return;
   }
+  if (sda == -1 || scl == -1) {
+    Wire.end();
+    last_sda = sda;
+    last_scl = scl;
+    return;
+  }
+
+
   #ifdef ESP32
 
   if (((sda != last_sda) || (scl != last_scl)) && (last_sda != -1) && (last_scl != -1)) {

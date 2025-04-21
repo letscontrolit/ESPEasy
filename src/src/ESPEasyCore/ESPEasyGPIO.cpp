@@ -10,6 +10,8 @@
 #include "../Helpers/PortStatus.h"
 
 
+#include <GPIO_Direct_Access.h>
+
 
 //********************************************************************************
 // Internal GPIO write
@@ -23,8 +25,11 @@ void GPIO_Internal_Write(int pin, uint8_t value)
       if (it->second.mode == PIN_MODE_PWM) {
         set_Gpio_PWM(pin, value);
       } else {
-        pinMode(pin, OUTPUT);
-        digitalWrite(pin, value);
+        //gpio_reset_pin(static_cast<gpio_num_t>(pin));
+        //pinMode(pin, OUTPUT);
+        //digitalWrite(pin, value);        
+        DIRECT_PINMODE_OUTPUT(pin);
+        DIRECT_pinWrite(pin, value);        
       }
     }
   }
@@ -36,7 +41,7 @@ void GPIO_Internal_Write(int pin, uint8_t value)
 bool GPIO_Internal_Read(int pin)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin))
-    return digitalRead(pin)==HIGH;
+    return DIRECT_pinRead(pin) != 0u;
   return false;
 }
 
@@ -81,7 +86,7 @@ bool GPIO_Read_Switch_State(int pin, uint8_t pinMode) {
 
   // Do not read from the pin while mode is set to PWM or servo.
   // See https://github.com/letscontrolit/ESPEasy/issues/2117#issuecomment-443516794
-  return digitalRead(pin) == HIGH;
+  return DIRECT_pinRead(pin) != 0u;
 }
 
 #ifdef USES_P009

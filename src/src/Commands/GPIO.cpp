@@ -652,10 +652,19 @@ void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t new
   }
   #endif
 
-
+  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+#ifdef ESP32
+    if (getPluginFromKey(key).value == PLUGIN_GPIO_INT) {
+      gpio_reset_pin((gpio_num_t)getPortFromKey(key));
+    }
+#endif
+  }
   // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode = newMode;
-  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+    it = globalMapPortStatus.find(key);
+  }
 
   if (it != globalMapPortStatus.end()) {
     // Should always be true, as it would be created if it didn't exist.
