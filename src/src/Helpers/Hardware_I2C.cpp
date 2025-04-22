@@ -149,7 +149,9 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq, uint32_t clockStretch)
     return;
   }
   if (sda == -1 || scl == -1) {
+#ifdef ESP32
     Wire.end();
+#endif
     last_sda = sda;
     last_scl = scl;
     return;
