@@ -440,31 +440,27 @@ void I2CInterfaceSelector(String  label,
 
   if (i2cMaxBusCount > 1) {
     static uint8_t i2cBusCount = 0;
-    static String  i2cBusList[3];
     static int     i2cBusNumbers[3];
 
-    if (i2cBusList[0].isEmpty() || (i2cBusCount != i2cMaxBusCount)) {
+    if (i2cBusCount != i2cMaxBusCount) {
       i2cBusCount                = 0;
-      i2cBusList[i2cBusCount]    = '1';
       i2cBusNumbers[i2cBusCount] = 0;
       ++i2cBusCount;
 
       if ((getI2CBusCount() > 1) && Settings.isI2CEnabled(1)) {
-        i2cBusList[i2cBusCount]    = '2';
         i2cBusNumbers[i2cBusCount] = 1;
         ++i2cBusCount;
       }
       # if FEATURE_I2C_INTERFACE_3
 
       if ((getI2CBusCount() > 2) && Settings.isI2CEnabled(2)) {
-        i2cBusList[i2cBusCount]    = '3';
         i2cBusNumbers[i2cBusCount] = 2;
         ++i2cBusCount;
       }
       # endif // if FEATURE_I2C_INTERFACE_3
     }
     FormSelectorOptions selector(i2cBusCount,
-                                 i2cBusList, i2cBusNumbers);
+                                 i2cBusNumbers);
     selector.default_index = 0;
     bool reloadOnChange = false;
 

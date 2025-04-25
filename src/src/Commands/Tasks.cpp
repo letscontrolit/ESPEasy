@@ -266,11 +266,9 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
   if (success)
   {
-    START_TIMER;
     struct EventStruct TempEvent(taskIndex);
     TempEvent.Source = event->Source;
     SensorSendTask(&TempEvent);
-    STOP_TIMER(SENSOR_SEND_TASK);
 
     return return_command_success_flashstr();
   }
@@ -315,11 +313,9 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
     validUIntFromString(par3, unixTime);
   }
 
-  START_TIMER;
   struct EventStruct TempEvent(taskIndex);
   TempEvent.Source = event->Source;
   SensorSendTask(&TempEvent, unixTime);
-  STOP_TIMER(SENSOR_SEND_TASK);
 
   return return_command_success_flashstr();
 }

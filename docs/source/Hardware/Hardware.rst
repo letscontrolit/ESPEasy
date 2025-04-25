@@ -52,7 +52,7 @@ ESPEasy has a separate setting for Slow I2C devices, and per I2C device this slo
 - `I2C-bus.org - Clock Stretching <https://www.i2c-bus.org/clock-stretching/>`_
 - `ESPeasy wiki - Basics: The I2C Bus <https://www.letscontrolit.com/wiki/index.php/Basics:_The_I%C2%B2C_Bus>`_
 
-This setting is only available for the first I2C Bus, as not many devices (should) need this set, and the devices that do need this should then be connected to I2C Bus 1.
+This setting is only available for the first I2C Bus, as not many devices (should) need this set, and the devices that do need this should then be connected to I2C Bus 0.
 
 .. image:: Hardware_I2CBus.png
 

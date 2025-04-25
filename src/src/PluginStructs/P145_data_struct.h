@@ -10,6 +10,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P145
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 #include "../Helpers/OversamplingHelper.h"
 
@@ -122,5 +123,6 @@ struct P145_data_struct : public PluginTaskData_base
     void  resetOversampling();
 };
 
-#endif  // PLUGINSTRUCTS_P145_DATA_STRUCT_H
-#endif  // USES_P145
+#endif
+#endif
+#endif

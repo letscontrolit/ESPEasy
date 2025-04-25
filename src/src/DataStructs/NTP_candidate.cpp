@@ -26,7 +26,12 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
     computeExpectedWander(timeSource, node.lastUpdated); // node.lastUpdated is already set to "time passed since" when sent
 
 
-  if (timePassedSince(_received_moment) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) { clear(); }
+  if (timePassedSince(_received_moment) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC
+      && timeSource < timeSource_t::ESP_now_peer) 
+  {
+    // Every now and then refresh the collected time source, but only on reliable sources
+    clear(); 
+  }
 
   if ((_time_wander < 0) || (time_wander_other < static_cast<unsigned long>(_time_wander))) {
     _time_wander     = time_wander_other;

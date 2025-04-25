@@ -101,6 +101,7 @@ String formatGpioName_RX_HW(bool optional) {
 
 #ifdef ESP32
 
+#if SOC_ADC_SUPPORTED
 String formatGpioName_ADC(int gpio_pin) {
   int adc, ch, t;
 
@@ -121,7 +122,9 @@ String formatGpioName_ADC(int gpio_pin) {
   }
   return EMPTY_STRING;
 }
+#endif
 
+#if SOC_DAC_SUPPORTED
 String formatGpioName_DAC(int gpio_pin) {
   int dac;
 
@@ -130,6 +133,7 @@ String formatGpioName_DAC(int gpio_pin) {
   }
   return EMPTY_STRING;
 }
+#endif
 
 
 #endif // ifdef ESP32
@@ -277,10 +281,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose,
       if (Settings.getI2CSdaPin(i2cBus) == gpio) {
         #if FEATURE_I2C_MULTIPLE
         switch (i2cBus) {
-          case 0:  return F("I2C SDA (bus 1)");
-          case 1:  return F("I2C SDA (bus 2)");
+          case 0:  return F("I2C SDA (bus 0)");
+          case 1:  return F("I2C SDA (bus 1)");
           #if FEATURE_I2C_INTERFACE_3
-          case 2:  return F("I2C SDA (bus 3)");
+          case 2:  return F("I2C SDA (bus 2)");
           #endif
         }
         #else
@@ -290,10 +294,10 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose,
       if (Settings.getI2CSclPin(i2cBus) == gpio) {
         #if FEATURE_I2C_MULTIPLE
         switch (i2cBus) {
-          case 0:  return F("I2C SCL (bus 1)");
-          case 1:  return F("I2C SCL (bus 2)");
+          case 0:  return F("I2C SCL (bus 0)");
+          case 1:  return F("I2C SCL (bus 1)");
           #if FEATURE_I2C_INTERFACE_3
-          case 2:  return F("I2C SCL (bus 3)");
+          case 2:  return F("I2C SCL (bus 2)");
           #endif
         }
         #else

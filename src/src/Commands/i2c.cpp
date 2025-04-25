@@ -17,7 +17,7 @@ void i2c_scanI2Cbus(bool dbg, int8_t channel, uint8_t i2cBus) {
   #if FEATURE_I2CMULTIPLEXER
 
   if (-1 == channel) {
-    serialPrintln(concat(F("Standard I2C bus "), i2cBus + 1));
+    serialPrintln(concat(F("Standard I2C bus "), i2cBus));
   } else {
     serialPrintln(concat(F("Multiplexer channel "), channel));
   }

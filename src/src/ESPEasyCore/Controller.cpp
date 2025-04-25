@@ -1006,7 +1006,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(event->TaskIndex)) { return; }
+  if (!validTaskIndex(event->TaskIndex)) { 
+    return; 
+  }
 
   // FIXME TD-er: Should a 'disabled' task be rescheduled?
   // If not, then it should be rescheduled after the check to see if it is enabled.
@@ -1018,6 +1020,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
+    START_TIMER;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -1032,5 +1035,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
+    STOP_TIMER(SENSOR_SEND_TASK);
   }
 }

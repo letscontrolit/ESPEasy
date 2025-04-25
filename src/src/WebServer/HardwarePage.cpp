@@ -216,7 +216,7 @@ void handle_hardware() {
     #if !FEATURE_I2C_MULTIPLE
     addFormSubHeader(F("I2C Bus"));
     #else // if !FEATURE_I2C_MULTIPLE
-    addFormSubHeader(strformat(F("I2C Bus %u"), i2cBus + 1));
+    addFormSubHeader(strformat(F("I2C Bus %u"), i2cBus));
     #endif // if !FEATURE_I2C_MULTIPLE
     #if FEATURE_PLUGIN_PRIORITY
     if (isI2CPriorityTaskActive(i2cBus)) {
@@ -247,7 +247,7 @@ void handle_hardware() {
     #if !FEATURE_I2C_MULTIPLE
     addFormSubHeader(F("I2C Multiplexer"));
     #else // if !FEATURE_I2C_MULTIPLE
-    addFormSubHeader(strformat(F("I2C Multiplexer %u"), i2cBus + 1));
+    addFormSubHeader(strformat(F("I2C Multiplexer %u"), i2cBus));
     #endif // if FEATURE_I2C_MULTIPLE
     // Select the type of multiplexer to use
     {
@@ -492,7 +492,7 @@ bool isI2CPriorityTaskActive(uint8_t i2cBus) {
 void I2CShowSdaSclReadonly(int8_t i2c_sda, int8_t i2c_scl, uint8_t i2cBus) {
   int  pinnr = -1;
   bool input, output, warning = false;
-  addFormNote(strformat(F("I2C (%d) GPIO pins can't be changed when an I2C Priority task is configured."), i2cBus + 1));
+  addFormNote(strformat(F("I2C (%d) GPIO pins can't be changed when an I2C Priority task is configured."), i2cBus));
   addRowLabel(formatGpioName_bidirectional(F("SDA")));
   getGpioInfo(i2c_sda, pinnr, input, output, warning);
   addHtml(createGPIO_label(i2c_sda, pinnr, true, true, false));

@@ -35,7 +35,7 @@ void initI2C() {
       #if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, F("INIT : I2C Bus"));
       #else // if !FEATURE_I2C_MULTIPLE
-      addLog(LOG_LEVEL_INFO, concat(F("INIT : I2C Bus "), i2cBus + 1));
+      addLog(LOG_LEVEL_INFO, concat(F("INIT : I2C Bus "), i2cBus));
       #endif // if !FEATURE_I2C_MULTIPLE
       I2CSelectHighClockSpeed(i2cBus); // Set normal clock speed, on I2C Bus 1 (index 0)
     }

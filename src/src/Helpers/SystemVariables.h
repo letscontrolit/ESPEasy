@@ -84,6 +84,7 @@ public:
     SYSMIN_0,
     SYSMONTH,
     SYSMONTH_S,
+    SYSMONTH_0,
     SYSNAME,
     SYSSEC,
     SYSSEC_0,
@@ -105,7 +106,6 @@ public:
     SYSYEAR,
     SYSYEARS,
     SYSYEAR_0,
-    SYS_MONTH_0,
     UNIT_sysvar,
 #if FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_0_sysvar,
@@ -132,7 +132,7 @@ public:
 
   static String                     toString(SystemVariables::Enum enumval);
 
-  static SystemVariables::Enum      startIndex_beginWith(char beginchar);
+  static SystemVariables::Enum      startIndex_beginWith(const char* beginchar);
   static const __FlashStringHelper* toFlashString(SystemVariables::Enum enumval);
 
   static String                     getSystemVariable(SystemVariables::Enum enumval);
