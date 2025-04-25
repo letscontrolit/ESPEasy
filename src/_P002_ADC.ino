@@ -1,6 +1,6 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P002
-
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 # include "src/Helpers/Hardware.h"
 # include "src/PluginStructs/P002_data_struct.h"
@@ -174,4 +174,5 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+#endif
 #endif // USES_P002

@@ -49,7 +49,7 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-33 ... 37: SPI 8 ­line mode (OPI) pins for flash or PSRAM, like ESP32-S3R8 / ESP32-S3R8V.
 //  return (gpio) >= 26 && (gpio) <= 32;
   switch (gpio) {
-    case 26: // SPICS1   Only when PSRAM is present???
+    case 26: return FoundPSRAM(); // SPICS1   Only when PSRAM is present
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
     case SPI_IOMUX_PIN_NUM_HD:
     case SPI_IOMUX_PIN_NUM_CS:
@@ -57,15 +57,23 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
     case SPI_IOMUX_PIN_NUM_CLK:
     case SPI_IOMUX_PIN_NUM_MISO:
     case SPI_IOMUX_PIN_NUM_WP:
-#else
-    case SPI2_IOMUX_PIN_NUM_HD:
-    case SPI2_IOMUX_PIN_NUM_CS:
-    case SPI2_IOMUX_PIN_NUM_MOSI:
-    case SPI2_IOMUX_PIN_NUM_CLK:
-    case SPI2_IOMUX_PIN_NUM_MISO:
-    case SPI2_IOMUX_PIN_NUM_WP:
-#endif
       return true;
+#else
+    case MSPI_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS0:
+    case MSPI_IOMUX_PIN_NUM_CLK:
+    case MSPI_IOMUX_PIN_NUM_MOSI:
+    case MSPI_IOMUX_PIN_NUM_MISO:
+      return true;
+
+    case MSPI_IOMUX_PIN_NUM_D4:
+    case MSPI_IOMUX_PIN_NUM_D5:
+    case MSPI_IOMUX_PIN_NUM_D6:
+    case MSPI_IOMUX_PIN_NUM_D7:
+      // Boards with 8M PSRAM also use OPI flash
+      return getEmbeddedFlashSize() >= 8;      
+#endif
   }
   return false;
 }

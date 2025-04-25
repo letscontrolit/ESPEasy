@@ -80,8 +80,13 @@ String formatGpioName_RX_HW(bool optional);
 
 #ifdef ESP32
 
+#if SOC_ADC_SUPPORTED
 String formatGpioName_ADC(int gpio_pin);
+#endif
+
+#if SOC_DAC_SUPPORTED
 String formatGpioName_DAC(int gpio_pin);
+#endif
 
 #endif // ifdef ESP32
 

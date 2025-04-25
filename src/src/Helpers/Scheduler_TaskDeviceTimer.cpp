@@ -85,9 +85,6 @@ void ESPEasy_Scheduler::process_task_device_timer(SchedulerTimerID timerID, unsi
   const taskIndex_t task_index = tmp->getTaskIndex();
 
   if (!validTaskIndex(task_index)) { return; }
-  START_TIMER;
   struct EventStruct TempEvent(task_index);
-
   SensorSendTask(&TempEvent, 0, lasttimer);
-  STOP_TIMER(SENSOR_SEND_TASK);
 }

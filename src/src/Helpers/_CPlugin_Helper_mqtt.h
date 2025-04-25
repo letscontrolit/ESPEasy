@@ -11,7 +11,7 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
 void MQTT_execute_command(String& command,
                           bool    tryRemoteConfig = false);
 bool MQTT_protocol_send(EventStruct *event,
-                        String       pubname,
+                        String pubname,
                         bool         retainFlag);
 
 #endif // if FEATURE_MQTT

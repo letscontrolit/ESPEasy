@@ -41,12 +41,12 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
     case SPI_IOMUX_PIN_NUM_WP:
     case SPI_IOMUX_PIN_NUM_HD:
 #else
-    case SPI2_IOMUX_PIN_NUM_CS:
-    case SPI2_IOMUX_PIN_NUM_CLK:
-    case SPI2_IOMUX_PIN_NUM_MOSI:
-    case SPI2_IOMUX_PIN_NUM_MISO:
-    case SPI2_IOMUX_PIN_NUM_WP:
-    case SPI2_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS0:
+    case MSPI_IOMUX_PIN_NUM_CLK:
+    case MSPI_IOMUX_PIN_NUM_MOSI:
+    case MSPI_IOMUX_PIN_NUM_MISO:
 #endif
       return true;
   }

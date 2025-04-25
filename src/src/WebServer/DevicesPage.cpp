@@ -682,9 +682,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               #  endif // if FEATURE_ADC_VCC
               # endif // ifdef ESP8266
               # ifdef ESP32
+              #if SOC_ADC_SUPPORTED
               showpin1 = true;
               addHtml(formatGpioName_ADC(Settings.TaskDevicePin1[x]));
               html_BR();
+              #endif
               # endif // ifdef ESP32
 
               break;
@@ -840,7 +842,7 @@ void format_I2C_port_description(taskIndex_t x)
     html_BR();
     addHtml(F("I2C Bus"));
     addHtml(' ');
-    addHtmlInt(i2cBus + 1);
+    addHtmlInt(i2cBus);
   }
   #else
   const uint8_t i2cBus = 0;
@@ -994,16 +996,23 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     }
     # endif // if FEATURE_PLUGIN_PRIORITY
 
-    const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
     # if FEATURE_ESPEASY_P2P
-
-    if (device.SendDataOption)
-    {
+    const controllerIndex_t p2p_controllerIndex = findFirstEnabledControllerWithId(13);
+    const uint8_t remoteUnit = 
+      (p2p_controllerIndex != INVALID_CONTROLLER_INDEX)
+      ? Settings.TaskDeviceDataFeed[taskIndex]
+      : 0;
+    #else
+    const uint8_t remoteUnit = 0;
+    #endif
+    # if FEATURE_ESPEASY_P2P
+    if (device.SendDataOption && p2p_controllerIndex != INVALID_CONTROLLER_INDEX)
+    {      
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
       addFormNumericBox(F("Remote Unit"), F("remoteFeed"), remoteUnit, 0, 255);
 
-      if (remoteUnit != 255) {
+      if (remoteUnit != 0 && remoteUnit != 255) {
         const NodeStruct*node = Nodes.getNode(remoteUnit);
 
         if (node != nullptr) {

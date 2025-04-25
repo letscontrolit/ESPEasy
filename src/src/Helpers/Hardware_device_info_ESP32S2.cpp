@@ -39,12 +39,13 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
     case SPI_IOMUX_PIN_NUM_MISO:
     case SPI_IOMUX_PIN_NUM_WP:
 #else
-    case SPI2_IOMUX_PIN_NUM_HD:
-    case SPI2_IOMUX_PIN_NUM_CS:
-    case SPI2_IOMUX_PIN_NUM_MOSI:
-    case SPI2_IOMUX_PIN_NUM_CLK:
-    case SPI2_IOMUX_PIN_NUM_MISO:
-    case SPI2_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS1: return FoundPSRAM(); // SPICS1   Only when PSRAM is present
+    case MSPI_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS0:
+    case MSPI_IOMUX_PIN_NUM_CLK:
+    case MSPI_IOMUX_PIN_NUM_MISO:
+    case MSPI_IOMUX_PIN_NUM_MOSI:
 #endif
       return true;
   }

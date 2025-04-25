@@ -545,10 +545,7 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
-  String result;
-  result += 'C';
-  result += formatIntLeadingZeroes(cpluginID, 3);
-  return result;
+  return strformat(F("C%03d"), cpluginID);
 }
 
 String get_formatted_Plugin_number(pluginID_t pluginID)
