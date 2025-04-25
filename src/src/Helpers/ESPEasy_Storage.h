@@ -65,6 +65,8 @@ void fileSystemCheck();
 
 bool FS_format();
 
+bool Erase_WiFi_Calibration();
+
 #ifdef ESP32
 
 int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);

@@ -229,7 +229,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSYEAR_0:
     case SYSYEAR:           intvalue = node_time.year(); break;
     case SYSYEARS:          return timeReplacement_leadZero(node_time.year() % 100);
-    case SYS_MONTH_0:       return timeReplacement_leadZero(node_time.month());
+    case SYSMONTH_0:       return timeReplacement_leadZero(node_time.month());
     case S_CR:              return F("\\r");
     case S_LF:              return F("\\n");
     case UNIXDAY:           intvalue = node_time.getUnixTime() / 86400; break;
@@ -413,7 +413,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
       return Enum::UNKNOWN;
     }
 
-    nextTested = SystemVariables::startIndex_beginWith(str[percent_pos + 1]);
+    nextTested = SystemVariables::startIndex_beginWith(str.c_str() + percent_pos + 1);
   } while (Enum::UNKNOWN == nextTested);
 
   if (last_percent_pos < percent_pos) {
@@ -441,7 +441,7 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
       return Enum::UNKNOWN;
     }
     last_percent_pos = percent_pos;
-    return SystemVariables::startIndex_beginWith(str[percent_pos + 1]);
+    return SystemVariables::startIndex_beginWith(str.c_str() + percent_pos + 1);
   }
 
   const __FlashStringHelper *fstr_sysvar = SystemVariables::toFlashString(nextTested);
@@ -480,9 +480,47 @@ String SystemVariables::toString(Enum enumval)
   return wrap_String(SystemVariables::toFlashString(enumval), '%');
 }
 
-SystemVariables::Enum SystemVariables::startIndex_beginWith(char beginchar)
+SystemVariables::Enum SystemVariables::startIndex_beginWith(const char* beginchar)
 {
-  switch (tolower(beginchar))
+  if (beginchar == nullptr || *beginchar == '\0')
+  {
+    return Enum::UNKNOWN;
+  }
+
+  const char ch = tolower(*beginchar);
+#ifndef LIMIT_BUILD_SIZE
+  // Speedup search for some variables starting with "%sys"
+  // Not needed if build size really matters
+  if (ch == 's') {
+    // Lots of system variables start with "%sys"
+    const char sys_str[] = {'s', 'y', 's'};
+    bool found = true;
+    const char* cur = beginchar;
+    for (size_t i = 0; found && i < NR_ELEMENTS(sys_str); ++i, ++cur) {
+      if (tolower(*cur) != sys_str[i]) {
+        found = false;
+      }
+    }
+    if (found) {
+      const char next_ch = tolower(*cur);
+      if (next_ch != '\0') {
+        switch (next_ch) {
+          case 'b': return Enum::SYSBUILD_DATE;
+          case 'd': return Enum::SYSDAY;
+          case 'h': return Enum::SYSHEAP;
+          case 'l': return Enum::SYSLOAD;
+          case 'm': return Enum::SYSMIN;
+          case 'n': return Enum::SYSNAME;
+          case 's': return Enum::SYSSEC;
+          case 't': return Enum::SYSTIME;
+          case 'w': return Enum::SYSWEEKDAY;
+          case 'y': return Enum::SYSYEAR;
+        }
+      }
+    }
+  }
+#endif
+  switch (ch)
   {
     case 'b': return Enum::BOARD_NAME;
     case 'c': return Enum::CLIENTIP;
@@ -590,6 +628,7 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSMIN_0:           return F("sysmin_0");
     case Enum::SYSMONTH:           return F("sysmonth");
     case Enum::SYSMONTH_S:         return F("sysmonth_s");
+    case Enum::SYSMONTH_0:         return F("sysmonth_0");
     case Enum::SYSNAME:            return F("sysname");
     case Enum::SYSSEC:             return F("syssec");
     case Enum::SYSSEC_0:           return F("syssec_0");
@@ -611,7 +650,6 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSYEAR:            return F("sysyear");
     case Enum::SYSYEARS:           return F("sysyears");
     case Enum::SYSYEAR_0:          return F("sysyear_0");
-    case Enum::SYS_MONTH_0:        return F("sysmonth_0");
     case Enum::UNIT_sysvar:        return F("unit");
 #if FEATURE_ZEROFILLED_UNITNUMBER
     case Enum::UNIT_0_sysvar:      return F("unit_0");

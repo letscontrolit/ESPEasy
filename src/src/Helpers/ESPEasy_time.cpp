@@ -128,6 +128,7 @@ bool ESPEasy_time::setExternalTimeSource_withTimeWander(
     }
   }
 
+  // FIXME TD-er: Why allowing (new_timeSource == timeSource_t::No_time_source) ???
   if ((new_timeSource == timeSource_t::No_time_source) ||
       (new_timeSource == timeSource_t::Manual_set) ||
       (new_time > get_build_unixtime())) {

@@ -2,6 +2,7 @@
 #include "../WebServer/Markup.h"
 
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/Markup_Forms.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
@@ -14,6 +15,10 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../../ESPEasy_common.h"
+
+#ifdef ESP32
+# include "soc/soc_caps.h"
+#endif
 
 
 #if FEATURE_TOOLTIPS
@@ -895,6 +900,7 @@ void addPinSelect(PinSelectPurpose purpose, const String& id,  int choice)
 }
 
 #ifdef ESP32
+#if SOC_ADC_SUPPORTED
 void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice)
 {
   addSelector_Head(id);
@@ -902,6 +908,7 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
   // At i == 0 && gpio == -1, add the "Hall Effect" option first
   int i    = 0;
   int gpio = -1;
+  bool hasADC2 = false;
 
   if (
 #if HAS_HALL_EFFECT_SENSOR
@@ -919,6 +926,7 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
     int  pinnr = -1;
     bool input, output, warning;
 
+#if SOC_TOUCH_SENSOR_SUPPORTED
     if (purpose == AdcPinSelectPurpose::TouchOnly) {
       // For touch only list, sort based on touch number
       // Default sort is on GPIO number.
@@ -926,6 +934,9 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
     } else {
       ++gpio;
     }
+#else
+    ++gpio;
+#endif
 
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
       int adc, ch, t;
@@ -936,6 +947,9 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
           gpio_label = formatGpioName_ADC(gpio);
 
           if (adc != 0) {
+            if (adc == 2) {
+              hasADC2 = true;
+            }
             gpio_label += F(" / ");
             gpio_label += createGPIO_label(gpio, pinnr, input, output, warning);
             gpio_label += getConflictingUse_wrapped(gpio);
@@ -951,8 +965,13 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
     ++i;
   }
   addSelector_Foot();
+  if (hasADC2) {
+    addFormNote(F("Do not use ADC2 pins with WiFi active"));
+  }
 }
+#endif
 
+#if SOC_DAC_SUPPORTED
 void addDAC_PinSelect(const String& id,  int choice)
 {
   addSelector_Head(id);
@@ -992,5 +1011,6 @@ void addDAC_PinSelect(const String& id,  int choice)
   }
   addSelector_Foot();
 }
+#endif
 
 #endif // ifdef ESP32

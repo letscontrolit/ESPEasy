@@ -60,9 +60,8 @@
 
 #ifdef ESP32
 # include <esp_partition.h>
-#endif // ifdef ESP32
+# include <esp_phy_init.h>
 
-#ifdef ESP32
 String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
@@ -602,18 +601,43 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-   #ifdef USE_LITTLEFS
-     # ifdef ESP32
+  Erase_WiFi_Calibration();
+
+#ifdef USE_LITTLEFS
+# ifdef ESP32
   const bool res = ESPEASY_FS.begin(true);
   ESPEASY_FS.end();
   return res;
-     # else // ifdef ESP32
+# else // ifdef ESP32
   return ESPEASY_FS.format();
-     # endif // ifdef ESP32
-   #else // ifdef USE_LITTLEFS
+# endif // ifdef ESP32
+#else // ifdef USE_LITTLEFS
   return ESPEASY_FS.format();
 
-   #endif // ifdef USE_LITTLEFS
+#endif // ifdef USE_LITTLEFS
+}
+
+bool Erase_WiFi_Calibration() {
+  #ifdef ESP8266
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  if (!ESP.eraseConfig())
+    return false;
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  #endif
+
+  #ifdef ESP32
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  delay(100);
+  esp_phy_erase_cal_data_in_nvs();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  delay(100);
+  esp_phy_load_cal_and_init();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
+  delay(100);  
+  #endif
+  return true;
 }
 
 #ifdef ESP32

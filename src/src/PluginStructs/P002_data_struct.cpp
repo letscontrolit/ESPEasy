@@ -1,6 +1,7 @@
 #include "../PluginStructs/P002_data_struct.h"
 
 #ifdef USES_P002
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 # include "../Globals/RulesCalculate.h"
 
@@ -137,8 +138,6 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   #  else // if HAS_HALL_EFFECT_SENSOR
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch,            F("taskdevicepin1"), CONFIG_PIN1);
   #  endif // if HAS_HALL_EFFECT_SENSOR
-
-  addFormNote(F("Do not use ADC2 pins with WiFi active"));
 
   {
     const __FlashStringHelper *outputOptions[] = {
@@ -1290,4 +1289,5 @@ bool P002_data_struct::plugin_set_config(struct EventStruct *event,
   return success;
 }
 
+#endif
 #endif // ifdef USES_P002

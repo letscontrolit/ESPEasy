@@ -504,7 +504,7 @@ void handle_i2cscanner() {
   {
     html_table_class_multirow();
     #if FEATURE_I2C_MULTIPLE
-    html_table_header(strformat(F("I2C Bus %d"), i2cBus + 1));
+    html_table_header(strformat(F("I2C Bus %d"), i2cBus));
     html_TR();
     #endif // if FEATURE_I2C_MULTIPLE
     #if FEATURE_I2CMULTIPLEXER
@@ -556,7 +556,7 @@ void handle_i2cscanner() {
       nDevices = 0; // Reset for next interface
     } else {
       html_TR_TD();
-      addHtml(strformat(F("I2C pins not configured for bus %d"), i2cBus + 1));
+      addHtml(strformat(F("I2C pins not configured for bus %d"), i2cBus));
     }
     html_end_table();
     I2CSelectHighClockSpeed(0);   // By default the bus is in standard speed

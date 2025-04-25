@@ -138,6 +138,10 @@ void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 #else
 #include <soc/gpio_struct.h>
 #include <driver/rtc_io.h>
+#include <esp_idf_version.h>
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+#include <driver/gpio.h>
+#endif
 #endif
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
