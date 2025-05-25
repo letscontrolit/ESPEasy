@@ -77,7 +77,9 @@ void ESPEasy_loop()
   bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
 
   if (firstLoopConnectionsEstablished) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
+    #endif
     firstLoop               = false;
     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
 

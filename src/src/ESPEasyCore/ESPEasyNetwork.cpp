@@ -69,7 +69,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
   }
   statusLED(true);
   active_network_medium = new_medium;
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_INFO, concat(F("Set Network mode: "), toString(active_network_medium)));
+  #endif
 }
 
 

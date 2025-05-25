@@ -107,18 +107,24 @@ void handle_root() {
   // disconnect here could result into a crash/reboot...
   if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
   {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+    #endif
     cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
   {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    #endif
     cmd_within_mainloop = CMD_REBOOT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
   {
     if (loggedIn) {
+      #ifndef BUILD_MINIMAL_OTA
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      #endif
       cmd_within_mainloop = CMD_REBOOT;
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));

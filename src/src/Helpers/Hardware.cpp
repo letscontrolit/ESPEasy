@@ -526,6 +526,20 @@ long HwRandom(long howsmall, long howbig) {
     return HwRandom(diff) + howsmall;
 }
 
+ESPEASY_RULES_FLOAT_TYPE HwRandom_f(
+  ESPEASY_RULES_FLOAT_TYPE howsmall,
+  ESPEASY_RULES_FLOAT_TYPE howbig)
+{
+  if (approximatelyEqual(howsmall, howbig)) {
+    return howsmall;
+  }
+  return mapADCtoFloat(
+    HwRandom(),
+    0, std::numeric_limits<uint32_t>::max(),
+    howsmall, howbig);
+}
+
+
 #ifdef ESP8266
 void readBootCause() {
   lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;

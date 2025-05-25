@@ -362,6 +362,9 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Secs to dhms: ``%c_s2dhms%(100000)``
      - Secs to dhms: ``1d03:46:40``
      - Seconds to days/hours/minutes/seconds notation
+   * - Random(L,H): ``%c_random%(0, 1)``
+     - Random(L,H): ``0.123``
+     - Generate random number in the given range L ... H (Added: 2025/04/29)
    * - To HEX: ``%c_2hex%(100000)``
      - To HEX: ``186A0``
      - Convert integer value to HEX notation.  (Added: 2020/10/07)
