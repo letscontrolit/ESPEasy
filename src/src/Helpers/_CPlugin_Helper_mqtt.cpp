@@ -57,8 +57,9 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
         uint8_t valueNr;
 
         if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex)) {
+#if defined(USES_P033) || defined(USES_P086)
           const int pluginID = Device[deviceIndex].Number;
-
+#endif
           # ifdef USES_P033
 
           if ((pluginID == 33) || // Plugin 33 Dummy Device,

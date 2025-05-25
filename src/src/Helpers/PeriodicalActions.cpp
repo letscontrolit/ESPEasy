@@ -121,7 +121,9 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
+    #endif
   }
 
   if (Settings.ConnectionFailuresThreshold)

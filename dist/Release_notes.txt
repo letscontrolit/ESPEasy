@@ -1,4 +1,454 @@
 -------------------------------------------------
+Changes in release mega-20250430 (since mega-20241222)
+-------------------------------------------------
+
+Release date: wo 30 apr 2025 21:42:35 CEST
+
+Daniel Siegmanski (20):
+      Added a missing comma so that the plugin can also be built with activated PLUGIN_076_DEBUG.
+      Added the ability to read reactive power, apparent power and energy.
+      Fixed typo in reset command.
+      Changed the PCONIFG values from 1,2,3,4 to 8,9,10,11
+      Set default querys in PLUGIN_INIT if not already set.
+      Change the PCONFIG values from 8, 9, 10, 11 to 0, 1, 2, 3
+      Changed init value from P076_QUERY1_CONFIG_POS
+      Changed single = to a double ==
+      Set default quersy only if no one is set.
+      Update the values only if valid.
+      Check if the pointer is valid.
+      Replaced spaces through underlines.
+      The old meassurement values (voltage, current, active power & power factor) are now defaults again. For compatibility with old setups.
+      Added changelog
+      Uncrustify
+      Added different strings for output selector and value description.
+      Resored the old value names for backward compatibility.
+      Added an option to set the measured values to 0 if they are not valid. This is necessary if the sensor is behind a relay.
+      Added defines for the indices of the differend readed values.
+      Fixed typo.
+
+Nikolay (1):
+      chore: fix wrong url
+
+TD-er (153):
+      [Flash] Fix availability of flash pins on ESP32C3
+      [GPIO info] Split ESP8266/ESP32 implementation
+      [GPIO info] Split platform specific implementation to separate cpp files
+      [CPU info] Split getChipModel over separate .cpp files per platform
+      [GPIO] Add "Boot Strapping" as conflict reason for bootstrap pins
+      [GPIO] Simplify isSerialConsolePin()
+      [Hardware] Simplify checks for DAC and Touch support
+      [Touch] Simplify device specific touch capabilities
+      [Build] Fix compile error in ESP32-C2 builds
+      [DeviceInfo] Prepare for new ESP32-C5/C61/H2/P4
+      [Docs] Add info on new ESP32-C5/C61/P4
+      [Hardware] Add initial GPIO definitions for ESP32-P4
+      [ESP32P4] ESP32-P4 does not use GPIO pins to access flash/PSRAM
+      [Build] Fix building ESP-IDF5.3 builds (pioarduino-build.py)
+      [LU9685] Add P178_LU9685  (#5216)
+      [LU9685] Forgot to enable a pin when setting angle
+      [LU9685] Split command into subcommand structure
+      [LU9685] Fix typo in parsing subcommand
+      [LU9685] Add subcommands enable, disable, setrange
+      [LU9685] Add documentation + fix crash
+      [BUG] GPIO 10 and 11 not available (#5220)
+      [GPIO] update hardware defines for flash connected GPIO pins
+      [BME3xx] Lower SPI frequency to 100 kHz
+      [P076] Fix initialization + merge issues + cleanup
+      [HLW8012] Fix stability of reading + proper pwr/cur/VA/pf measurement
+      [HLW8012] Cleanup + simplify code
+      [HLW8012] Further cleanup + stabilize reading
+      [HLW8012] Fix 'oscillating' measurements at some intervals
+      [HLW8012] Cleanup library.properties + fix crash on low power usage
+      [HLW8012] Uncrustify .ino file
+      [HLW8012] Limit Apparent power to power factor of 25%
+      [HWL8012] Fix stability issues on ESP8266 with high current load
+      [Build] Fix pre_custom_xxx.py files to work with pioarduino
+      [Build] Change generate-compiletime-defines.py to not match .cpp.o
+      [Build] Revert platform build to before shorten path commit
+      [Build] Also revert the platform link for solo1 builds
+      [Build] Add build ignore middleware filter for .cpp.o files
+      [JSON] Fix valid JSON for pluginstats
+      [Build] Do not use build middleware for compiletime defines
+      [Build] Fix missing lib_ignore defines in .ini files
+      [Build] Fix merge conflict
+      [P139] Add capturing ADC inputs
+      [P139] Add charger settings
+      [P139] Split AXP2101_settings to separate file
+      [P139] Add charger settings to webform load/save
+      [P139] Move webform_load and _save to P139_data_struct class
+      [P139] Add functions to apply settings to AXP2101
+      [P139] Apply setttings to device
+      [P139] Fix build ESP8266
+      [P139] Fix setting defaults for charger settings
+      [Cleanup] Add FormSelector class to simplify P139 charge options
+      [Cleanup] Convert other charging related settings to use FormSelector
+      [P139] Fix ESP8266 build + show device state
+      [P139] Clarify charging state
+      [Cleanup] Simplify addSelector calls
+      [Cleanup] Change addFormSelector calls to use new class
+      [Cleanup] Show reload icon next to selection box triggering page reload
+      [Cleanup] Move more code to use new FormSelectorOptions class
+      [Cleanup] Convert more code to use new FormSelectorOptions class
+      [Cleanup] Move more plugin code to use FormSelectorOptions class
+      [P139] Remove PMIC plugins from IRext builds
+      [Cleanup] Fix build issue on ESP8266
+      [Cleanup] Use new addSelector function of FormSelectorOptions class
+      [Cleanup] Remove no longer used markup functions
+      [Cleanup] Add "reloadOnChange" icon for all occasions change will reload
+      [Cleanup] Move duplicate 'tooltip' code to separate function
+      [Cleanup] Add tooltip about ReloadOnChange icon
+      [Cleanup] Reduce build size when using empty class name on FormSelector
+      [Cleanup] Reduce bin size using FormSelectOptions class
+      [Build] Reduce bin size by reducing nr. arguments in addTextBox
+      [Build] Fix build errors on ESP8266
+      [PSRAM] Use PSRAM for logs, events and controller queues
+      [Memory] Fix freeing of allocated strings
+      [Memory] Add small optimization in free_string() to prevent copying
+      [P123] Fix crashes when using P123, Touch Handler
+      [Memory] Tweak some memory allocations
+      [Crash] Fix failed init on special String to store in PSRAM
+      Fix loading I2C Tourchscreens webpage
+      [TouchHandler] Fix ESP8266 build
+      [DeviceStruct] Properly initialize DeviceStruct class
+      [I2C] Fix build failure on ESP8266
+      [I2C] Show conflicting I2C bus when using multiple I2C busses
+      [I2C] Fix saving 2nd I2C bus GPIOs
+      [I2C] Rename "I2C Interface" to "I2C Bus"
+      [NeoPixel] Fix issue running addressable LEDs on ESP32S3 with OPI PSRAM
+      [ESP32-S3] Fix max. 63 addressable LEDs on ESP32-S3 with OPI PSRAM
+      [Build] Delete ESP8266 concatenated temp file
+      [ESP8266] Fix crash on processing log with weblog enabled.
+      [Cleanup] Simplify generating sysinfo page
+      [ESP8266] Fix crash on ESP8266 SDK 2.7.4
+      [ESP8266] Balance more what should be allocated on 2nd heap
+      [Memory] Make memory allocation on ESP8266 2nd heap more stable
+      [Memory] Move C001 and C002 queue elements to 2nd heap (ESP8266)
+      [Memory] Move other controller queue elements to 2nd heap (ESP8266)
+      [Memory] Improve memory usage on Strings and task data
+      Fix missing include in NodeStruct.cpp
+      [Memory] Fix crashes on ESP32-S2 with 8M PSRAM
+      [Build] Fix build errors
+      [ESP32S3] Disable custom SDK settings on ESP32S3 with OPI PSRAM
+      [CDN] Enable custom CDN for all ESP32-builds
+      [Build] Change copy_tree import due to Python 3.13
+      [Rules] Fix broken math parsing
+      [Cleanup] Optimize parsing system variables
+      [WiFi] Fix loading credentials after WiFi scan
+      [Console] Reduce CPU load on ESP32-S3 sending logs to serial
+      [ESP-IDF5.4] Prepare for ESP-IDF5.4 with Arduino 3.2.0
+      [Serial] Add setXxBufferSize functions
+      [ESP-IDF] Update to latest ESP-IDF5.4
+      [1wire] Pull up data pin  after reading a bit to support parasitic power
+      [1wire] Make sure to also set the GPIO to output
+      [1wire] Simplify code & set data pin high when not used
+      [1-wire] Make timing more strict according to datasheet + strong pull-up
+      [1-wire] Make 'high' time depending on RC-time of bus
+      [1-wire] Fix reading single sensor powered via parasitic power
+      [Bug] Fix printing NaN/Inf values
+      [1-wire] Fix reading single sensor using parasitic power
+      [1-wire] Compensate for measured RC rise time
+      [Build] Fix build issue on ESP8266
+      [1-wire] Fix set GPIO to output via direct GPIO access
+      [1-wire] Cleanup timing critical code
+      [1-wire] Reduce jitter on reading short 'low'
+      [1-wire] Make timing measurement more strict
+      [1-wire] Add more read failure stats, like CRC, power loss, etc
+      [Build] Fix build issues on ESP32
+      [timing stats] Simplify and speedup collecting timing stats
+      [ESP-IDF5.3] Update to latest Arduino/ESP-IDF5.3 version
+      [1-wire] Fix ESP8266 builds not fitting in IRAM
+      [Build] Reduce build size excluding 1-wire stats for LIMIT_BUILD_SIZE
+      [Console] Revert limiting write chunks to 64 bytes for non-USB serial
+      [ESP-IDF5.4] Update to latest IDF5.4 code
+      [WiFi] Fix setup WiFi scan from web flasher
+      [I2C] Fix issues with GPIO 21 & 22 when no I2C is configured
+      [Build] Fix ESP8266 build which does not have Wire.end()
+      [PinStates] Add ESP32 Periman peripheral bus assignment table
+      [Build] Set requirements.txt platformio to 6.1.18
+      [PinStates] Add table (ESP-IDF5.5 only) for showing actual GPIO config
+      [ADC/DAC] Only include ADC/DAC/Touch on devices supporting those
+      [GPIO] Fix checking for correct flash pins IDF5.4/5.5
+      [Act LED] Fix disabling WiFi act. LED when changing pin config
+      [ESPEasy p2p] Only show remote feed when p2p controller enabled
+      [PinStates] Clean up new GPIO states table (IDF5.5 only)
+      [Build] Reduce bin  size on ESP8266 disabling some speedup optimizations
+      [WiFi RF cal] Always erase WiFi RF calibration on format file system
+      [ESPEasy p2p] Prevent node syncing from p2p node with poor time source
+      [Minimal OTA] Reduce bin size for minimal OTA build
+      [RF Calibration] Automatically re-calibrate when changing ESP-IDF ver.
+      [ESP-IDF] Update to latest ESP-IDF5.4
+      [RF Calibration] Do not erase rf calibration when formatting file system
+      [WiFi RF cal] Disable automatic clear of RF calibration
+      [ESP-IDF 5.4] Update to latest ESP-IDF5.4
+      [SysVar] Add %c_random%(L,H) system variable
+      [SysVar] Do not include new %c_random% in LIMIT_BUILD_SIZE builds
+      [Build] Add normal_ESP32s3_4M316k_LittleFS_CDC_ETH
+
+Ton Huisman (228):
+      [MQTT] Controller improvements
+      [P086] Format source using uncrustify
+      [MQTT] Add support for P086 events to all MQTT Controllers
+      [MQTT] Only handle plugin if plugin included
+      [C014] Use getHostname() for %sysname%, some code optimization
+      [P139] Add support for AXP2101 Powermanagement
+      [P139] Exclude AXP2101 from ESP8266 builds
+      Cherry pick: [IPv6] Reduce events to keep webserver alive [Memory] Flush buffer after sending web page to reduce memory used (code by @TD-er)
+      [P139] Add AXP2101 to I2C Scanner
+      [P139] Add chargeled and batcharge options, Code cleanup
+      [P139] Add generate events option, chargestate and battery detect, fix issues
+      [P139] Add chipid and chargingdetail support
+      [String] Add `FsP` macro to convert Flash string to String.c_str() pointer
+      [P139] Add I2C-enabled check, implement FsP macro
+      [C014] Process %sysname% via parseSystemVariables(), logging improvements
+      [Controllers] Minor improvements and corrections
+      [C004] Some string optimization
+      [C004] Add documentation and examples
+      [C007] Emoncms: add configurable url (Controller Publish)
+      [Coo4] Fix merge conflict issue
+      [MQTT] Restore improvement lost at merge conflict
+      fix merge conflicts
+      [P096] Add default font setting
+      [Functions] Add 'map' function
+      [Functions] Fix quoting in rules documentation
+      [Functions] Rewording argument names in documentation
+      [ColorCode] Add map function
+      [Functions] Use colon as the argument separator instead of a comma
+      [Functions] Switch to using existing fruntion mapADCtoFloat() to enable using float values
+      [Docs] Updates for 2025, minor improvements and  corrections
+      [P144] Docs update as plugin is also available in Climate build
+      [Build] Add plugins in check for enabling ESPEasySerial library
+      [Commands] Add commands LoopTimerSetAndRun (_ms)
+      [Commands] Update documentation for LoopTimerSetAndRun (_ms)
+      [Commands] Fix a bug and a few typos
+      [Hardware] Add `double` implementation for `mapADCtoFloat()`
+      [Math] Fix double estimation of epsilon in compare functions
+      [Math] Fix float estimation of epsilon in compare functions
+      [Hardware] De-duplicate implementation for `mapADCtoFloat()`
+      [Math] Fix compilation for concatenated sources
+      [Commands] Add new commands to Easy ColorCode
+      [Build] Update Custom-sample.h
+      [SysVars] Add variable `islimited_build`
+      [ColorCode] Add variable `%islimited_build%`
+      [Docs] Updates for the Tools page documentation
+      [ColorCode] Add Provision (sub)commands and events
+      [SysVars] Add variable `isvar_double`
+      [ColorCode] Add variable `%isvar_double%`
+      [ColorCode] Add commands for [P169] and [P175]
+      [ColorCode] Combined updates for 2025-01
+      [ColorCode] Revert and move updates to separate PR
+      [ColorCode] Revert and move updates to separate PR
+      [ColorCode] Revert and move updates to separate PR
+      [ColorCode] Revert and move updates to separate PR (LF fix)
+      [ColorCode] Revert and move updates to separate PR
+      [P076] Add preset for Shelly Plus PLUG-S (ESP32)
+      [ColorCode] Revert and move updates to separate PR (LF fix)
+      [ColorCode] P175 shares commands with P053: Remove duplicates
+      [CustomDashboard] Serve .esp pages streaming to avoid HTTP/0.9 response
+      [Docs] Fix some typos in Serial Server rules example
+      [Math] Guard logging statements with level check
+      [Build] Use default nr of elements for stats in Custom builds, unless manually set
+      Revert prematurely committed code fragment
+      [Math] Rename argument to have less confusing name
+      Revert [Math] Rename argument to have less confusing name
+      [Math] Rename argument to have less confusing name
+      [Math] Move `mapADCtoFloat()` from Hardware to ESPEasy_math helper
+      [MQTT] Add setting for Keep Alive Time
+      [Custom] Fix code comments for PlatformIO Custom builds
+      [Bugfix] Parsing of negative numbers got confused by (multiple) arguments
+      [Bugfix] Improve parsing of negative numbers, RPN stack processing revisited, debug logging commented out
+      [Build] Small code size reductions to optimize ESP8266 builds
+      [Build] Reduce code size to allow for some bugfixes in limited builds
+      [Build] Fix typo
+      [Bugfix] RTTTL feature was not enabled for ESP32 Collection builds
+      [Build] More code reductions in .ino files [P054] .. [P091]
+      [Build] More code reductions in .ino files [P092] .. [P110]
+      [Build] More code reductions in .ino files: Cleanup PLUGIN_DEVICE_ADD
+      [Build] Small code reductions in .ino files [P111] .. [P122]
+      [Bugfix] AdaGFX helper [<tft>#length."<text>"] and #textheight didn't support period separator
+      [Build] Small code reductions in .ino files [P123] .. [P176]
+      [Info] Show sketch size and remaining space
+      [RTTTL] Fix typo
+      [Build] Enable RTTTL feature for Solo1, C2 and C6 builds
+      [Build] Revert unneeded COLLECTION_RTTTL feature for Solo1, C2 and C6 builds
+      [LIB] AnyRtttl cherry-picked latest updates, disable unused function that causes a compiler warning
+      [PWM] Use defined constant instead of bare value
+      [RTTTL] Adjust to work with ESP32 IDF 5.x
+      [RTTTL] Fix a typo, explicitly connect GPIO to Tone channel
+      [RTTTL] Fix playing the sound properly by not messing up the frequency setting
+      [P097] Fix compiler warning
+      [P097] Fix some typos
+      [P139] Apply some code optimizations
+      [P139] Fix silly typos
+      [P137] Add predefined settings for M5StickC Plus
+      [P137] String deduplication improvement
+      [Libs] AXP2101 corrections
+      [P139] Enable writing to AXP2101 chip
+      [P137] Update documentation
+      [P139] Add documentation
+      [Docs] Priority task updated layout
+      [P139] Documentation updates, updated TTGO T-Pcie configuration defaults
+      [P139] Fix configuration constructor typo
+      [P137] Bugfix: commands axp,ldo2,x .. axp,dcdc3,x weren't working as intended
+      [Console] Support Backspace to correct typos
+      [P139] Uncrustify formatting
+      [P139] Fix saving settings & predefined, also when task is not enabled
+      [P139] Updated TTGO T-Pcie configuration defaults
+      [I2C] Add support for multiple I2C interfaces
+      [I2C] Re-order I2C variables for better alignment, add (Custom) defaults
+      [I2C] Add conversion to adjust defaults if all zeroes
+      [I2C] Add more getters to SettingsStruct to simplify code
+      [I2C] Fix compilation for ESP8266
+      [N001] Use a non-TLS client for SMTP on port 25
+      [MQTT] Don't subscribe to empty topics
+      [N001] Allso apply to port 2525
+      [N001] And clean up object after use
+      [N001] Documentation update about port 25 and 2525 (ESP32 with TLS)
+      [P139] Update predefined settings for LilyGO T-Beam S3
+      [N001] Add pointer null-checks, close client also when connection fails
+      [N001] Only delect object if created via new
+      [I2C] Code improvements and UI issues fixed
+      [I2C] Code improvements and UI issues fixed
+      [I2C] Make I2C Interface selector reload page when needed (multiplexer enabled)
+      [I2C] I2C Scan layout improvements
+      [I2C] Update documentation
+      [Build] Add Powermanagement plugins to ESP32 Climate builds
+      [P140] Add CardKB I2C Keyboard
+      [P140] Switch to VType DUAL from STRING so events are sent as intended
+      [P140] Update description
+      [P140] Change category, add options and commands, show current buffer, add to I2C scanner
+      [P140] Add documentation
+      [Dist] Upgrade Espressif Flash Download Tool 3.9.8
+      [Libs] Avoid using Wire.begin()
+      [Device] Initialization and alignment improvements on struct
+      [I2C] GPIO (de)coupling improvements
+      [I2C] Clean up unneeded logging
+      [FormSelector] Use INT_MAX as default to avoid -1 -none- value being shown as default
+      [I2C] Update screenshot without (default)
+      [GPIO Selector] Show Wifi Status LED and Reset Pin when configured
+      [I2C] Switch to correct bus for PCF/MCP GPIO monitoring
+      [I2C] Docs: Use I2C Bus instead of I2C Interface
+      [SD-card] Bugfix: Reading a bmp file from SD-Card didn't work as expected
+      [SD-card] Remove unneeded logging
+      [SD-card] Code corrections
+      [Build] Use build-runners on Ubuntu-latest
+      [Build] Add some missing plugins to Custom-sample.h
+      [P116] Add support for ST7735 172x320px display
+      [P177] Add plugin Environment - XDB401 I2C Pressure
+      [GPIO] pinSelectors and hardware page show overlapping PSRAM and other conflicting uses
+      [P177] Corrections in data initialization, handling and calculation, add settings to generate events or use raw data
+      [P177] Corrections in calculation, add setting to ignore negative values
+      [P177] Revert modified temperature calculation
+      [P177] Improved calculations, without bit-manipulation
+      [P116] Enable alternative configurations for ST7789 135x240px displays, ESP32 DISPLAY and MAX builds
+      [P177] Fix typos in calculations, avoid a division
+      [P177] Swapped Temperature and Pressure values, re-order task settings page
+      [Build] Reduce number of ESP32 builds by removing non-Ethernet builds
+      [P095] Bugfix: backlight subcommand not working as intended
+      [Build] Add ESP32-C3 MAX 16M8M configuration
+      [Docs] Update README.md
+      [Pinstates] Change infobutton link to RTD Plugin list
+      [P177] Ignore status bit for data-ready, add some extra development logging
+      [UI] Change more infobutton links to RTD links
+      [P116] Small UI improvements
+      [P116] Update documentation, refresh some screenshots
+      [P177] Disable development logging
+      [P177] Change Sensor_VType to SENSOR_TYPE_TEMP_BARO (Domoticz)
+      [P036] Add setting to hide the startup logo
+      [Build] Upgrade setuptools package to avoid build issues
+      [Build] Only pio pkg update for current environment
+      [Build] Upgrade to platform_packages build 3427
+      [Build] Upgrade to Solo1 platform_packages build 3428
+      [Build] Temporary disable most envs for testing
+      [Build] Add logging to see current dir data
+      [Build] Temporary revert to pio 6.1.16
+      [Build] Make extra_scripts explicit
+      [Build] Swap script-append order
+      [Build] execute copy_files.py explicitly post: build
+      [Build] Remove logging to see current dir data
+      [Build] execute copy_files.py explicitly pre: build to not mis installing the handler
+      [Build] Restore envs, minor env config improvements for Solo1 builds
+      [P100] Retrieve CountTotal value
+      [Docs] Add SPIFFS to LittleFS migration guide
+      [P177] Add documentation
+      [Build] Script copy_files.py tweaked to start in the correct order
+      [Build] Temporarily disable most builds for testing
+      [Build][CI] Explicity call bin_elf_copy in CI script
+      [Build] Process copy_files in post_esp32 script
+      [Build] Process post scripts in different order
+      [Build] Re-enable builds after testing
+      [Build] Re-enable builds after testing
+      [Commands] I2CScanner command show bus that's being scanned
+      [Review] Improvements and typos fixed
+      [Boards] Fix typo in ESP32-S3 16M definition
+      [P177] Add missing class access specifier
+      [P100] Add documentation
+      [P100] Add option to show CountTotal value, enable Plugin Stats
+      [P100] Update documentation
+      [Build] Add ESP32 Climate LittleFS build
+      [I2C] Move Clock Stretch setting to Hardware page, move I2C enabled check global
+      [Rules] Add optional use of named variables
+      [Rules] Reject invalid variable names
+      [Rules] Update documentation
+      [Rules] Update documentation, add some examples using named variables
+      [Rules] Update documentation
+      [AdaGFX Helper] Docs for adding a custom font
+      [AdaGFX Helper] Docs extended and some typos fixed.
+      [Rules] Change example to use named variables
+      [I2C] De-duplicate code
+      [AdaGFX Helper] Docs extended based on review
+      [P104] Bugfix: Apply fontspacing correctly on double-height fonts
+      [P104] Enable double-height numeric font for ESP32 builds, minor code improvements
+      [P104] Zone order setting was missing the reload-on-change flag
+      [P020] Improve data handling send unaltered via network client generate hex event data apply RX buffer size
+      [P020] Add support for UDP -> Serial receiver
+      [P020] Fix compiler warning
+      [Commands] Add command SendToUDPMix
+      [P020] Update documentation
+      [Rules] Allow eventname and eventpar processing for explicit string events (!serial)
+      [Rules] Enable substring function to return the remainder of a string (with docs update)
+      [P020] Start UDP-listener once the network is available
+      [Rules] Small documentation update for events starting with !
+      [P104] Fix increasing character spacing when changing double-height fonts
+      [Bugfix] Rules fix handling for nested shorthand vars
+      [Bugfix] Build: Adjust processing order for gzip-firmware script
+      [Bugfix] MQTT Controller: Keep Alive Time reset to/use default (60 sec) when 0
+      [I2C] Renumber buses starting from 0 instead of 1
+
+chromoxdor (31):
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Update _P097_Esp32Touch.ino
+      Udated code + added documentation
+      Update P097.rst
+      Update P097.rst
+      [P164] add aqi to taskvalues
+      Updates
+      update: changelog
+      [P038] Fix HSV values in documentation
+      Update _P097_Esp32Touch.ino
+      adding mapc to constrain values
+      Update Rules.rst
+      using constrain instead of std::clamp
+      Update Rules.rst
+      Update Rules_calculate.cpp
+      add cheatcode, fix one typo
+      Update UDP.cpp
+      Update StringParser.cpp
+      Update StringParser.cpp
+
+
+-------------------------------------------------
 Changes in release mega-20241222 (since mega-20240822)
 -------------------------------------------------
 

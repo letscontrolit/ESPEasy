@@ -33,6 +33,7 @@ void stream_comma_newline() {
 // ********************************************************************************
 // Web Interface get CSV value from task
 // ********************************************************************************
+#ifdef WEBSERVER_CSVVAL
 void handle_csvval()
 {
   TXBuffer.startJsonStream();
@@ -103,6 +104,7 @@ void handle_csvval()
   }
   TXBuffer.endStream();
 }
+#endif
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)

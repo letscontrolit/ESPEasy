@@ -144,7 +144,9 @@ void taskClear(taskIndex_t taskIndex, bool save)
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
+    #endif
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }

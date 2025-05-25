@@ -444,6 +444,12 @@ void ESPEasy_setup()
 
 
   if (initWiFi) {
+#ifdef ESP32
+    // FIXME TD-er: Disabled for now, as this may not return and thus block the ESP forever.
+    // See: https://github.com/espressif/esp-idf/issues/15862
+    //check_and_update_WiFi_Calibration();
+#endif
+
     WiFi_AP_Candidates.clearCache();
     WiFi_AP_Candidates.load_knownCredentials();
     setSTA(true);
@@ -468,7 +474,9 @@ void ESPEasy_setup()
     WiFi_AP_Candidates.load_knownCredentials();
 
     if (!WiFi_AP_Candidates.hasCandidates()) {
+      #ifndef BUILD_MINIMAL_OTA
       addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
+      #endif
       WifiScan(false);
     }
 

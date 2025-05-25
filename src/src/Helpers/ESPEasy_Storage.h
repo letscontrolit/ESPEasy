@@ -65,6 +65,11 @@ void fileSystemCheck();
 
 bool FS_format();
 
+#ifdef ESP32
+uint32_t getWiFi_CalibrationVersion();
+
+bool check_and_update_WiFi_Calibration();
+#endif
 bool Erase_WiFi_Calibration();
 
 #ifdef ESP32

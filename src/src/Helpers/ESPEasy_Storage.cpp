@@ -39,6 +39,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_NVS_Helper.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
@@ -601,8 +602,6 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-  Erase_WiFi_Calibration();
-
 #ifdef USE_LITTLEFS
 # ifdef ESP32
   const bool res = ESPEASY_FS.begin(true);
@@ -617,25 +616,89 @@ bool FS_format() {
 #endif // ifdef USE_LITTLEFS
 }
 
+#ifdef ESP32
+// Max. 15 char keys for RF calibration marked keys
+# define ESPEASY_RF_CAL_NVS_NAMESPACE  "ESPEasyRFcal"
+# define RF_CAL_NVS_PREF_KEY       "RfCalIDFver"
+uint32_t getWiFi_CalibrationVersion()
+{
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    uint32_t res{};
+    if (preferences.getPreference(F(RF_CAL_NVS_PREF_KEY), res)) {
+      return res;
+    }
+  }
+  return 0;
+}
+
+bool setWiFi_CalibrationVersion() {
+  // Store used IDF version in NVS
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    preferences.setPreference(F(RF_CAL_NVS_PREF_KEY), idfVersion);
+    return true;
+  }
+  return false;
+}
+
+String formatIdfVersion(uint32_t idfVer) {
+  return strformat(
+    F("%u.%u.%u"),
+    (idfVer >> 16) & 0xFF,
+    (idfVer >> 8) & 0xFF,
+    (idfVer) & 0xFF);
+}
+
+bool check_and_update_WiFi_Calibration() {
+  const uint32_t RFcal_idfVersion = getWiFi_CalibrationVersion();
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+
+  if (RFcal_idfVersion == idfVersion) {
+    // No need to wipe RF calibration
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration done with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+    return false;
+  }
+  if (RFcal_idfVersion) {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration with ESP-IDF %s, re-calibrating with ESP-IDF %s"),
+      formatIdfVersion(RFcal_idfVersion).c_str(),
+      formatIdfVersion(idfVersion).c_str()));
+  } else {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration unknown, (re-)calibrating with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+  }
+  return Erase_WiFi_Calibration();
+}
+#endif
+
 bool Erase_WiFi_Calibration() {
   #ifdef ESP8266
   WifiDisconnect();
   setWifiMode(WIFI_OFF);
   if (!ESP.eraseConfig())
     return false;
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  #endif
   #endif
 
   #ifdef ESP32
   WifiDisconnect();
   setWifiMode(WIFI_OFF);
-  delay(100);
+  // Make sure power is stable, so wait a bit longer
+  delay(1000);
   esp_phy_erase_cal_data_in_nvs();
   addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
-  delay(100);
+  delay(200);
   esp_phy_load_cal_and_init();
   addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
-  delay(100);  
+  delay(200);  
+  setWiFi_CalibrationVersion();
   #endif
   return true;
 }
