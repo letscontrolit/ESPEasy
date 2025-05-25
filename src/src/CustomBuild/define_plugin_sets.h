@@ -42,6 +42,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_I2C_SCANNER
         #define WEBSERVER_I2C_SCANNER
     #endif
+    #ifndef WEBSERVER_CSVVAL
+      #define WEBSERVER_CSVVAL
+    #endif
     #ifndef WEBSERVER_FAVICON
         #define WEBSERVER_FAVICON
     #endif
@@ -511,7 +514,7 @@ To create/register a plugin, you have to :
         #define USES_P001   // switch
     #endif
     #ifndef USES_P026
-      #define USES_P026   // SysInfo
+//      #define USES_P026   // SysInfo
     #endif
     #ifndef USES_P033
       #define USES_P033   // Dummy
@@ -552,6 +555,12 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_I2C_SCANNER
             #undef WEBSERVER_I2C_SCANNER
+        #endif
+        #ifdef WEBSERVER_CSVVAL
+            #undef WEBSERVER_CSVVAL
+        #endif
+        #ifdef WEBSERVER_METRICS
+          #undef WEBSERVER_METRICS
         #endif
         #ifdef WEBSERVER_FAVICON
             #undef WEBSERVER_FAVICON

@@ -415,11 +415,13 @@ unsigned long ESPEasy_time::now_() {
   calcSunRiseAndSet(timeSynced);
 
   if (timeSynced) {
+    #ifndef BUILD_MINIMAL_OTA
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
                F("Local time: %s"),
                getDateTimeString('-', ':', ' ').c_str()));
     }
+    #endif
     {
       // Notify plugins the time has been set.
       String dummy;

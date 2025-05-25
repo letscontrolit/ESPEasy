@@ -1507,6 +1507,14 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
+
+  #ifndef LIMIT_BUILD_SIZE
+  #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  SMART_CONV(F("%c_random%"), doubleToString(HwRandom_f(data.arg1, data.arg2), 3, true))
+  #else
+  SMART_CONV(F("%c_random%"), floatToString(HwRandom_f(data.arg1, data.arg2), 3, true))
+  #endif
+  #endif
   #undef SMART_CONV
 }
 
@@ -1563,7 +1571,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
 
     if  (!parenthesis && (((c == ' ') && (d == ' ')) || 
                           ((c == separator) && (d == ' ')))) {
-      // Consider multiple consequitive spaces as one.
+      // Consider multiple consecutive spaces as one.
     }
     else if  (!parenthesis && ((d == ' ') && (e == separator))) {
       // Skip the space.      

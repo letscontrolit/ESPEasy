@@ -285,7 +285,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (validGpio(P075_data->rxPin)) {
+      if (!validGpio(P075_data->rxPin)) {
         addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing RxD Pin, aborted serial receive"));
         break;
       }
