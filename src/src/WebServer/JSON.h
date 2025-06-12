@@ -17,6 +17,14 @@ void handle_csvval();
 // ********************************************************************************
 void handle_json();
 
+void handle_json_stream_task_value_data(uint16_t       valueNumber,
+                                        const String & valueName,
+                                        uint8_t        nrDecimals,
+                                        const String & value,
+                                        const String & presentation,
+                                        const String & uom,
+                                        bool           appendComma);
+
 // ********************************************************************************
 // JSON formatted timing statistics
 // ********************************************************************************

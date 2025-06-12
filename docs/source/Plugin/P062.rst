@@ -116,10 +116,7 @@ To have better control per touch key, for each key a separate Touch and Release 
 
 * **Clear calibrationdata** This checkbox can be checked to clear the calibration data from the sensor, so it can restart the calibration process. This will be applied when the Submit button is used *or* the page is reloaded by changing the **Enable Calibration** option!. The initial setting is always unchecked, and is not stored.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec (off). If a value > 0 is used, then every <Interval> seconds an event with the last value is generated.
 

@@ -12,6 +12,11 @@ const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const
 const __FlashStringHelper * Command_PriorityTask_Disable(struct EventStruct *event, const char *Line);
 #endif
 const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char* Line);
+#if FEATURE_STRING_VARIABLES
+const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line);
+const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line);
+const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate = nullptr);
+#endif // if FEATURE_STRING_VARIABLES
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, const char* Line);

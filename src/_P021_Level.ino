@@ -234,13 +234,14 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
+
         /*
-        const int optionValues[]             =
-        { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-        */
+           const int optionValues[]             =
+           { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
+         */
         constexpr size_t optionCount = NR_ELEMENTS(options);
-        const FormSelectorOptions selector(optionCount, options/*, optionValues*/);
-        selector.addFormSelector(F("Control mode"), F(P021_GUID_OPMODE),  P021_OPMODE);
+        const FormSelectorOptions selector(optionCount, options /*, optionValues*/);
+        selector.addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), P021_OPMODE);
 
         // Add timer values depending on build size
         //  - minimum build size: units are always in seconds; drop the units on the form
@@ -803,10 +804,11 @@ void P021_evaluate(struct EventStruct *event)
       break;
   }
 
+  relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
+
   // Actuate the output pin taking output invert flag into account
   if (validGpio(P021_GPIO_RELAY))
   {
-    relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
     digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
   }
 

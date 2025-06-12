@@ -224,6 +224,9 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
     case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
     case SYSTZOFFSET:       return node_time.getTimeZoneOffsetString();
+    #ifndef LIMIT_BUILD_SIZE
+    case SYSTZOFFSET_S:     intvalue = static_cast<int>(static_cast<int64_t>(node_time.getLocalUnixTime()) - static_cast<int64_t>(node_time.getUnixTime())); break;
+    #endif // ifndef LIMIT_BUILD_SIZE
     case SYSWEEKDAY:        intvalue = node_time.weekday(); break;
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
@@ -235,6 +238,9 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case UNIXDAY:           intvalue = node_time.getUnixTime() / 86400; break;
     case UNIXDAY_SEC:       intvalue = node_time.getUnixTime() % 86400; break;
     case UNIXTIME:          return String(node_time.getUnixTime());
+    #ifndef LIMIT_BUILD_SIZE
+    case UNIXTIME_LCL:      return String(node_time.getLocalUnixTime());
+    #endif // ifndef LIMIT_BUILD_SIZE
     case UPTIME:            intvalue = getUptimeMinutes(); break;
     case UPTIME_MS:         return ull2String(getMicros64() / 1000);
     #if FEATURE_ADC_VCC
@@ -645,6 +651,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::SYSTM_HM_AM_SP:     return F("systm_hm_am_sp");
     case Enum::SYSTM_HM_SP:        return F("systm_hm_sp");
     case Enum::SYSTZOFFSET:        return F("systzoffset");
+    #ifndef LIMIT_BUILD_SIZE
+    case Enum::SYSTZOFFSET_S:      return F("systzoffset_s");
+    #endif // ifndef LIMIT_BUILD_SIZE
     case Enum::SYSWEEKDAY:         return F("sysweekday");
     case Enum::SYSWEEKDAY_S:       return F("sysweekday_s");
     case Enum::SYSYEAR:            return F("sysyear");
@@ -657,6 +666,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::UNIXDAY:            return F("unixday");
     case Enum::UNIXDAY_SEC:        return F("unixday_sec");
     case Enum::UNIXTIME:           return F("unixtime");
+    #ifndef LIMIT_BUILD_SIZE
+    case Enum::UNIXTIME_LCL:       return F("unixtime_lcl");
+    #endif // ifndef LIMIT_BUILD_SIZE
     case Enum::UPTIME:             return F("uptime");
     case Enum::UPTIME_MS:          return F("uptime_ms");
     case Enum::VCC:                return F("vcc");

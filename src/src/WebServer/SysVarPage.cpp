@@ -13,6 +13,9 @@
 
 # include "../Helpers/Numerical.h"
 # include "../Helpers/StringConverter.h"
+# if FEATURE_STRING_VARIABLES
+#  include "../Helpers/StringParser.h"
+# endif // if
 # include "../Helpers/SystemVariables.h"
 
 
@@ -58,11 +61,27 @@ void handle_sysvars() {
     html_TD();
   } else {
     uint32_t tmpVar{};
+
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
       const bool isv_ = !validUIntFromString(it->first, tmpVar);
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
   }
+
+  # if FEATURE_STRING_VARIABLES
+  addTableSeparator(F("String Variables"), 3, 3);
+
+  if (customStringVar.empty()) {
+    html_TR_TD();
+    addHtml(F("No string variables set"));
+    html_TD();
+    html_TD();
+  } else {
+    for (auto it = customStringVar.begin(); it != customStringVar.end(); ++it) {
+      addSysVar_html(strformat(F("[str#%s]"), it->first.c_str()), false);
+    }
+  }
+  # endif // if FEATURE_STRING_VARIABLES
 
   addTableSeparator(F("Constants"), 3, 3);
   {
@@ -88,9 +107,9 @@ void handle_sysvars() {
       SystemVariables::DNS,
       SystemVariables::DNS_1,
       SystemVariables::DNS_2,
-#if FEATURE_USE_IPV6
+# if FEATURE_USE_IPV6
       SystemVariables::IP6_LOCAL,
-#endif
+# endif // if FEATURE_USE_IPV6
       SystemVariables::RSSI,
       SystemVariables::SSID,
       SystemVariables::BSSID,
@@ -183,6 +202,9 @@ void handle_sysvars() {
       SystemVariables::UPTIME,
       SystemVariables::UPTIME_MS,
       SystemVariables::UNIXTIME,
+      # ifndef LIMIT_BUILD_SIZE
+      SystemVariables::UNIXTIME_LCL,
+      # endif // ifndef LIMIT_BUILD_SIZE
       SystemVariables::UNIXDAY,
       SystemVariables::UNIXDAY_SEC,
     };
@@ -219,6 +241,9 @@ void handle_sysvars() {
       SystemVariables::SYSWEEKDAY,
       SystemVariables::SYSWEEKDAY_S,
       SystemVariables::SYSTZOFFSET,
+      # ifndef LIMIT_BUILD_SIZE
+      SystemVariables::SYSTZOFFSET_S,
+      # endif // ifndef LIMIT_BUILD_SIZE
     };
     addSysVar_enum_html(vars, NR_ELEMENTS(vars));
   }
@@ -357,7 +382,7 @@ void handle_sysvars() {
   }
 # endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   {
-    addTableSeparator(F("Standard Conversions"), 3, 2);
+    addTableSeparator(F("Standard Conversions"), 3, 3);
 
     const __FlashStringHelper *StdConversions[] = {
       F("Wind Dir.:    %c_w_dir%(123.4)"),
@@ -367,24 +392,31 @@ void handle_sysvars() {
       F("Altitude(air,sea): %c_alt_pres_sea%(850,1000)"),
       F("PressureElevation(air,alt): %c_sea_pres_alt%(850,1350.03)"),
 
-      // addFormSeparator(3,
+      F(""), // addFormSeparator(3,
       F("cm to imperial: %c_cm2imp%(190)"),
       F("mm to imperial: %c_mm2imp%(1900)"),
 
-      // addFormSeparator(3,
+      F(""), // addFormSeparator(3,
       F("Mins to days: %c_m2day%(1900)"),
       F("Mins to dh:   %c_m2dh%(1900)"),
       F("Mins to dhm:  %c_m2dhm%(1900)"),
       F("Mins to hcm:  %c_m2hcm%(482)"),
       F("Secs to dhms: %c_s2dhms%(100000)"),
+# if FEATURE_STRING_VARIABLES
+      F("Timestamp to date/time: %c_ts2date%(%unixtime_lcl%)"),
+      F("Timestamp to date/time am/pm: %c_ts2date%(%unixtime_lcl%,1)"),
+      F("Timestamp to weekday: %c_ts2wday%(%unixtime_lcl%)"),
+# endif // if FEATURE_STRING_VARIABLES
 
+
+      F(""), // addFormSeparator(3,
+# ifndef LIMIT_BUILD_SIZE
       F("Random: %c_random%(0, 100)"),
+# endif // ifndef LIMIT_BUILD_SIZE
+      F("To HEX: %c_2hex%(100000) or: %c_2hex%(100000,6)"),
 
-      // addFormSeparator(3,
-      F("To HEX: %c_2hex%(100000)"),
-
-      #if FEATURE_ESPEASY_P2P
-      // addFormSeparator(3,
+# if FEATURE_ESPEASY_P2P
+      F(""), // addFormSeparator(3,
       F("Unit to IP: %c_u2ip%(%unit%, 2)"),
       F("Unit to Name: %c_uname%(%unit%)"),
       F("Unit to Age: %c_uage%(%unit%)"),
@@ -393,21 +425,58 @@ void handle_sysvars() {
       F("Unit to Load: %c_uload%(%unit%)"),
       F("Unit to ESP-type: %c_utype%(%unit%)"),
       F("Unit to ESP-type-string: %c_utypestr%(%unit%)"),
-      #endif // if FEATURE_ESPEASY_P2P
+# endif // if FEATURE_ESPEASY_P2P
+# if FEATURE_STRING_VARIABLES
+      F(""), // addFormSeparator(3,
+      F("Check if numeric value (test:'123'): %c_isnum%(test)"),
+      F("Format (testf:'Out $6.2f M$g'): %c_strf%(testf,123.45,2)"),
+# endif // if FEATURE_STRING_VARIABLES
     };
 
-    for (unsigned int i = 0; i < NR_ELEMENTS(StdConversions); ++i) {
-      if ((i == 6) ||
-          (i == 8) ||
-          (i == 13)
-          #if FEATURE_ESPEASY_P2P
-          || (i == 14)
-          #endif // if FEATURE_ESPEASY_P2P
-          ) {
-        addFormSeparator(3);
-      }
-      addSysVar_html(StdConversions[i]);
+# if FEATURE_STRING_VARIABLES
+    const bool has_test  = hasCustomStringVar(F("test"));
+    const bool has_testf = hasCustomStringVar(F("testf"));
+
+    // Save current values
+    String test, testf;
+
+    if (has_test) {
+      test = getCustomStringVar(F("test"));
     }
+
+    if (has_testf) {
+      testf = getCustomStringVar(F("testf"));
+    }
+
+    setCustomStringVar(F("test"),  F("123"));
+    setCustomStringVar(F("testf"), F("Out $6.2f M$g"));
+# endif // if FEATURE_STRING_VARIABLES
+    constexpr uint16_t nrStdConv = NR_ELEMENTS(StdConversions);
+
+    for (uint16_t i = 0; i < nrStdConv; ++i) {
+      const String s(StdConversions[i]);
+
+      if (s.isEmpty()) { addFormSeparator(3); }
+      else { addSysVar_html(s); }
+    }
+# if FEATURE_STRING_VARIABLES
+
+    // Restore values
+    if (has_test) {
+      setCustomStringVar(F("test"), test);
+    }
+    else {
+      clearCustomStringVar(F("test"));
+    }
+
+    if (has_testf) {
+      setCustomStringVar(F("testf"), testf);
+    }
+    else {
+      clearCustomStringVar(F("testf"));
+    }
+
+# endif // if FEATURE_STRING_VARIABLES
   }
   html_end_table();
   html_end_form();
@@ -453,6 +522,9 @@ void addSysVar_html(String input, bool isSpecialChar) {
 
       parseSystemVariables(input, URLencoded);
       parseStandardConversions(input, URLencoded);
+      # if FEATURE_STRING_VARIABLES
+      input = parseTemplate_padded(input, 0, URLencoded);
+      # endif // if FEATURE_STRING_VARIABLES
 
       html_TD();
       addHtml(input);

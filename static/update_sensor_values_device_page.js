@@ -1,4 +1,7 @@
 loopDeLoop(1000, 0);
+function elId(e) {
+  return document.getElementById(e);
+}
 
 function loopDeLoop(timeForNext, activeRequests) {
     var maximumRequests = 1;
@@ -13,7 +16,7 @@ function loopDeLoop(timeForNext, activeRequests) {
     if (timeForNext == null) {
         timeForNext = 1000;
     }
-    var i = setInterval(function() {
+    i = setInterval(function() {
         if (check > 0) {
             clearInterval(i);
             return;
@@ -30,6 +33,7 @@ function loopDeLoop(timeForNext, activeRequests) {
                 }
                 response.json().then(function(data) {
                     timeForNext = data.TTL;
+                    var showUoM = data.ShowUoM === undefined || (data.ShowUoM && data.ShowUoM !== 'false');
                     for (c = 0; c < data.Sensors.length; c++) {
                         if (data.Sensors[c].hasOwnProperty('TaskValues')) {
                             for (k = 0; k < data.Sensors[c].TaskValues.length; k++) {
@@ -39,19 +43,27 @@ function loopDeLoop(timeForNext, activeRequests) {
                                     valueEntry = err.name;
                                 } finally {
                                     if (valueEntry !== 'TypeError') {
-                                        tempValue = data.Sensors[c].TaskValues[k].Value;
-                                        decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals;
+                                        var tempValue = data.Sensors[c].TaskValues[k].Value;
+                                        var decimalsValue = data.Sensors[c].TaskValues[k].NrDecimals;
                                         if (decimalsValue < 255) {
                                           tempValue = parseFloat(tempValue).toFixed(decimalsValue);
                                         }
+                                        var tempUoM = data.Sensors[c].TaskValues[k].UoM;
+                                        var tempPres = data.Sensors[c].TaskValues[k].Presentation;
+                                        if (tempPres) {
+                                          tempValue = tempPres;
+                                        } else
+                                        if (tempUoM && showUoM) {
+                                          tempValue += ' ' + tempUoM;
+                                        }
                                         var valueID = 'value_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);
                                         var valueNameID = 'valuename_' + (data.Sensors[c].TaskNumber - 1) + '_' + (data.Sensors[c].TaskValues[k].ValueNumber - 1);
-                                        var valueElement = document.getElementById(valueID);
-                                        var valueNameElement = document.getElementById(valueNameID);
-                                        if (valueElement !== null) {
+                                        var valueElement = elId(valueID);
+                                        var valueNameElement = elId(valueNameID);
+                                        if (valueElement) {
                                             valueElement.innerHTML = tempValue;
                                         }
-                                        if (valueNameElement !== null) {
+                                        if (valueNameElement) {
                                             valueNameElement.innerHTML = data.Sensors[c].TaskValues[k].Name + ':';
                                         }
                                     }
@@ -59,7 +71,6 @@ function loopDeLoop(timeForNext, activeRequests) {
                             }
                         }
                     }
-                    timeForNext = data.TTL;
                     clearInterval(i);
                     loopDeLoop(timeForNext, 0);
                     return;

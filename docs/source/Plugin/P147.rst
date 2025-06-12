@@ -83,10 +83,7 @@ After selecting a Temperature task/value and Humidity task/value it could look l
 
 * **Show raw data only**: In normal use, the measured raw data is provided to the Sensirion VOCGasIndexAlgorithm, and also NOxGasIndexAlgorithm for SGP41, to get an index for the measured values in the range 1..500. If you want to use the raw value(s) from the sensor to apply another, or no, algorithm on it, this checkbox can be enabled. The indexed values won't be available when enabled.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

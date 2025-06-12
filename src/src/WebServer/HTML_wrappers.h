@@ -139,8 +139,10 @@ void addHtmlInt(uint32_t int_val);
 void addHtmlInt(int64_t int_val);
 void addHtmlInt(uint64_t int_val);
 void addHtmlFloat(const float& value, unsigned int nrDecimals = 2u);
+void addHtmlFloat_NaN_toNull(const float& value, unsigned int nrDecimals = 2u);
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 void addHtmlFloat(const double& value, unsigned int nrDecimals = 2u);
+void addHtmlFloat_NaN_toNull(const double& value, unsigned int nrDecimals = 2u);
 #endif
 
 void addEncodedHtml(const __FlashStringHelper * html);

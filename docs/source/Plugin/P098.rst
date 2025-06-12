@@ -98,10 +98,7 @@ Limit Switches
 
 * **Limit B Debounce**: The limit-switch debounce time, range 0 to 1000 msec.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval**: Interval is optional, and will be set to 0 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

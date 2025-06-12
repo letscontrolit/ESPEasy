@@ -88,6 +88,24 @@ const __FlashStringHelper * Command_Rules_Let(struct EventStruct *event, const c
   return return_command_failed_flashstr();
 }
 
+#if FEATURE_STRING_VARIABLES
+const __FlashStringHelper * Command_Rules_LetStr(struct EventStruct *event, const char *Line)
+{
+  String varName;
+  String TmpStr1;
+  GetArgv(Line, varName, 2);
+
+  if (!varName.isEmpty() &&
+      ExtraTaskSettings.checkInvalidCharInNames(varName.c_str()) && GetArgv(Line, TmpStr1, 3)) {
+    String result = parseTemplate(TmpStr1);
+
+    setCustomStringVar(varName, result);
+    return return_command_success_flashstr();
+  }
+  return return_command_failed_flashstr();
+}
+#endif // if FEATURE_STRING_VARIABLES
+
 const __FlashStringHelper * Command_Rules_IncDec(struct EventStruct *event, const char *Line, const ESPEASY_RULES_FLOAT_TYPE factor)
 {
   String varName;

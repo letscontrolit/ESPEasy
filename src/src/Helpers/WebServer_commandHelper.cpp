@@ -52,6 +52,9 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
         case ESPEasy_cmd_e::taskvaluesetandrun:
         case ESPEasy_cmd_e::taskvaluetoggle:
         case ESPEasy_cmd_e::let:
+        #if FEATURE_STRING_VARIABLES
+        case ESPEasy_cmd_e::letstr:
+        #endif // if FEATURE_STRING_VARIABLES
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         case ESPEasy_cmd_e::logportstatus:
 #endif

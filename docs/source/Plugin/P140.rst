@@ -61,10 +61,7 @@ If the plugin is enabled, the **Current buffer content** is shown in this sectio
 
 .. image:: P140_BufferContentExample.png
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** Is not available for this plugin, events will only be generated when the **Send event on keypress** setting is enabled, or **Accept input only** is enabled and ``Enter`` is pressed.
 

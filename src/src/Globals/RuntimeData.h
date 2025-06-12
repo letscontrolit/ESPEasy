@@ -20,12 +20,23 @@
 * if %v_two%=20 do ...
 \*********************************************************************************************/
 extern std::map<String, ESPEASY_RULES_FLOAT_TYPE> customFloatVar;
+#if FEATURE_STRING_VARIABLES
+extern std::map<String, String> customStringVar;
+#endif // if FEATURE_STRING_VARIABLES
 
 ESPEASY_RULES_FLOAT_TYPE getCustomFloatVar(String index, ESPEASY_RULES_FLOAT_TYPE defaultValue = 0.0);
 void setCustomFloatVar(String index, const ESPEASY_RULES_FLOAT_TYPE& value);
 
 bool getNextCustomFloatVar(String& index, ESPEASY_RULES_FLOAT_TYPE& value);
 
+#if FEATURE_STRING_VARIABLES
+String getCustomStringVar(String index, String defaultValue = EMPTY_STRING);
+void setCustomStringVar(String index, const String& value);
+void clearCustomStringVar(String index);
+bool hasCustomStringVar(String index);
+
+bool getNextCustomStringVar(String& index, String& value);
+#endif // if FEATURE_STRING_VARIABLES
 
 /*********************************************************************************************\
 * Task Value data.

@@ -1,0 +1,23 @@
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+This group of settings are standard available configuration items.
+
+* **Single event with all values**: When this setting is enabled, all available values will be sent in a single event ``<TaskName>#All``, with all values in order as arguments to the event.
+
+* **Show derived values**: When checked, the Devices overview page, and the ``/json`` endpoint (used for updating the Devices overview page) will include any Derived values as defined. See the ``TaskValueSetDerived`` and ``TaskValueSetPresentation`` commands.
+
+* **Event & Log derived values**: When checked, the Derived values will be generated as Events, to be handled in Rules, and sent to logging devices like the Syslog server and/or SD-card logging.
+
+* **Send derived values**: When checked, the Derived values will be sent to any enabled Controllers that support extra values like MQTT and HTTP/string value controllers.
+
+(The derived values options are only available if String variables feature is included in the build.)
+
+|
+
+* **Send to Controller**: Select the Controller(s) to send the Values to, either on a ``TaskRun`` command applied to the task, or on an **Interval** time action.
+
+Send to Controller is only visible when one or more Controllers are configured.
+
+|
