@@ -172,10 +172,7 @@ NB: Colors will not be exact when a lower value is selected for **Initial bright
 
 * **Led(s) off on exit**: When checked, all controlled leds on the encoders will be turned off, either by setting the color to black, or setting the encoder position to 0 (DFRobot).
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

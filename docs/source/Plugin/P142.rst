@@ -140,10 +140,7 @@ Output Configuration
 
 * *Has magnet*: The state of an available magnet (0 = no magnet, 1 = magnet detected).
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval for this plugin is set to 0 sec. as events will be generated when a measurement is available. When an Interval is set, the data will be collected and optionally sent to any configured controllers using the interval.
 

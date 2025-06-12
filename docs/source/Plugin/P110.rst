@@ -68,8 +68,8 @@ Device Settings
 * **Trigger delta** To avoid triggering many events with only a small difference in distance the 'Trigger delta' option is available. This can be set to only trigger an event when the new distance is at least the delta less or more than the previous measurement.
 
 NB: This setting is ignored if 'Send event when value unchanged' is checked!
-n
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+
+.. include:: DataAcquisition.repl
 
 ``Interval`` can now be set to 0, causing events to only be generated when changed, with ``Trigger delta`` calculated in.
 

@@ -133,6 +133,23 @@ bool compareIntValues(char       compare,
   return false;
 }
 
+#if FEATURE_STRING_VARIABLES
+bool compareStringValues(char       compare,
+                         String& Value1,
+                         String& Value2)
+{
+  switch (compare) {
+    case '>' + '=': return Value1 >= Value2;
+    case '<' + '=': return Value1 <= Value2;
+    case '<' + '>': return !Value1.equals(Value2);
+    case '>':       return Value1 > Value2;
+    case '<':       return Value1 < Value2;
+    case '=':       return Value1.equals(Value2);
+  }
+  return false;
+}
+#endif // if FEATURE_STRING_VARIABLES
+
 bool compareDoubleValues(char          compare,
                          const ESPEASY_RULES_FLOAT_TYPE& Value1,
                          const ESPEASY_RULES_FLOAT_TYPE& Value2,

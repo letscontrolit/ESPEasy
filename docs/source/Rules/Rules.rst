@@ -256,6 +256,26 @@ As of mega-201803.. we have the possibility to use AND/OR:
 Up to two AND/OR can be used per if statement, that means that you can test
 three float values and if the statement is true/false corresponding action will take place.
 
+String comparisons
+------------------
+
+Added: 2025-05-25
+
+Support for string variables also supports the use of string comparisons with the ``if`` statement. String comparisons are **case-sensitive**, so if non-case-sensitive comparisons are needed, using ``[str#<var>#V#l]`` will output the content in lower-case (without changing the stored content).
+
+.. code-block:: none
+
+  on zigbee2mqtt/eria_dimswitch_1#action do
+    LetStr,onoff,[zigbee2mqtt/eria_dimswitch_1#action]
+    if [str#onoff#V#l]=on
+      gpio,12,1 // on
+    else
+      gpio,12,0 // off
+    endif
+  endon
+
+(Example adapted from :ref:`P037_page`)
+
 Trigger
 -------
 
@@ -756,6 +776,20 @@ Added: 2023-12-01
 Short-hand notation can be nested like this: ``[int#%v%v7%%]`` or use simple calculations like this: ``[int#%v=7+%v100%%]``
 This allows to simply switch a number of variable offsets in rules by only changing 1 variable.
 
+String variables
+----------------
+
+Added: 2025-05-25: Support for String variables. (ESP32 builds only, because of memory restictions on ESP8266 platform)
+
+To store string/text data in internal variables, a new command ``LetStr,<varname>,<value>`` has been introduced. These variables are stored independent from the numeric values that are stored with the ``Let`` command.
+
+For using the content of a string variable, ``[str#<var>]`` should be used. This form also supports formatting and justification options, described below.
+
+If the value contains spaces or commas, the ``<value>`` must be wrapped in quotes to store all data. String concatenation can be achieved by assigning the value to the same variable, like ``LetStr,test,"[str#test] extra text containing spaces appended to variable 'test'"``. The space before ``extra`` is *also* included in the new content.
+
+A string variable that was not set to any value is assumed to hold the pseudo-value of an empty string.
+
+For determining the length of the current content of a string variable, ``[length#<varname>]`` can be used. Formatting and justification can be applied if desired.
 
 
 
@@ -1004,6 +1038,47 @@ For example (bit useless though, just for illustrative purposes):
  221350 : Info  : ACT  : logentry,87
  221351 : Info  : Command: logentry
  221353 : Info  : 87
+
+Translate the current day to a localized (German) 3 character abbreviation: (using named variables)
+
+.. code-block:: none
+
+  Let,idx,(%sysweekday%-1)*3 // 3 characters per value
+  Let,idx3,%v_idx%+3         // 3 characters to display
+  [DSPLeft].7dtext,{substring:%v_idx%:%v_idx3%:SONMONDIEMITDONFRESAM}~%syshour_0%.%sysmin_0%
+
+Or using 2-character Dutch abbreviations:
+
+.. code-block:: none
+
+  Let,idx,(%sysweekday%-1)*2 // 2 characters per value
+  Let,idx2,%v_idx%+2         // 2 characters to display
+  [DSPLeft].7dtext,{substring:%v_idx%:%v_idx2%:"ZOMADIWODOVRZA"}~%syshour_0%.%sysmin_0%
+
+Translate the current month to a Polish 3 character abbreviation, format DD MMM YY :
+
+.. code-block:: none
+
+  Let,idx,(%sysmonth%-1)*3 // 3 characters per value
+  Let,idx3,%v_idx%+3       // 3 characters to display
+  [DSPLeft].7dtext,%sysday_0%~{substring:%v_idx%:%v_idx3%:STYLUTMARKWIMAJCZELIPSIEWRZPAZLISGRU}~%sysyears%
+
+NB: Using all uppercase here as that shows most readable on a 7-segment display, for other purposes, CamelCase/lowercase can of course be used.
+
+Lookup
+^^^^^^
+
+(Added: 2025/05/29, only available when String Variables feature is included in the build)
+
+With ``lookup`` you can look up a substring value, based on an index and a length, from a longer string, somewhat similar to ``substring``.
+
+Usage: ``{lookup:<index>:<length>:<string_with_lookup_values>}``
+
+``<index>``: The positive 0-based index value. If the index indicates a value out of range, the entire calculation is returned unaltered.
+
+``<length>``: The length of the value to retrieve. This implies that all values to lookup are required to have the same length. Shorter lookup values should be padded with spaces or another character to that length.
+
+``<string_with_lookup_values>``: The combined string with all lookup values padded to have the same length, f.e. ``"Off.Fan HeatCool"``, where all lookup values are of length 4. The index to retrieve the word ``Off.`` is 0, ``Fan`` (including a space) is index 1, etc. This string should be wrapped in quotes if it contains space or colon ``:`` character(s).
 
 IndexOf and IndexOf_ci
 ^^^^^^^^^^^^^^^^^^^^^^

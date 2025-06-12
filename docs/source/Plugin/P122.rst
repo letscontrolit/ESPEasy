@@ -59,6 +59,7 @@ Configuration
 
 **Resolution**: Select one of the supported resolution settings of the device. See datasheet.
 
+.. include:: DataAcquisition.repl
 
 Change log
 ----------

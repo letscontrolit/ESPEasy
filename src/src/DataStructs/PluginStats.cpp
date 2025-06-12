@@ -601,12 +601,7 @@ void PluginStats::plot_ChartJS_dataset() const
       addHtml(',');
     }
 
-    if (!isnan(get(i))) {
-      addHtmlFloat(get(i), _nrDecimals);
-    }
-    else {
-      addHtml(F("null"));
-    }
+    addHtmlFloat_NaN_toNull((*_samples)[i], _nrDecimals);
   }
   add_ChartJS_dataset_footer();
 }

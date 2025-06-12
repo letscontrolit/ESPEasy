@@ -105,6 +105,8 @@ Sensor
 
 See: :ref:`SerialHelper_page`
 
+.. include:: DataAcquisition.repl
+
 Commands available
 ^^^^^^^^^^^^^^^^^^
 

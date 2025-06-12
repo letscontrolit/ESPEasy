@@ -23,6 +23,12 @@ String toString(const float& value,
                 unsigned int decimalPlaces = 2,
                 bool         trimTrailingZeros = false);
 
+bool toValidString(String& str,
+                  const float& value,
+                  unsigned int decimalPlaces = 2,
+                  bool         trimTrailingZeros = false);
+  
+
 String ull2String(uint64_t value,
                   uint8_t  base = 10);
 
@@ -37,6 +43,11 @@ String doubleToString(const double& value,
                       unsigned int  decimalPlaces     = 2,
                       bool          trimTrailingZeros = false);
 
+bool  doubleToValidString(String& str,
+                        const double& value,
+                        unsigned int  decimalPlaces     = 2,
+                        bool          trimTrailingZeros = false);
+  
 String floatToString(const float& value,
                       unsigned int  decimalPlaces     = 2,
                       bool          trimTrailingZeros = false);

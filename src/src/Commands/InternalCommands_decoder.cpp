@@ -99,6 +99,9 @@ const char Internal_commands_fghij[] PROGMEM =
 #define Int_cmd_l_offset ESPEasy_cmd_e::let
 const char Internal_commands_l[] PROGMEM =
   "let|"
+  #if FEATURE_STRING_VARIABLES
+  "letstr|"
+  #endif
   "load|"
   "logentry|"
   "looptimerset|"
@@ -240,6 +243,10 @@ const char Internal_commands_t[] PROGMEM =
   "taskrun|"
   "taskrunat|"
   "taskvalueset|"
+  #if FEATURE_STRING_VARIABLES
+  "taskvaluesetderived|"
+  "taskvaluesetpresentation|"
+  #endif // if FEATURE_STRING_VARIABLES
   "taskvaluetoggle|"
   "taskvaluesetandrun|"
   "timerpause|"

@@ -148,10 +148,7 @@ To calibrate your measurements to a defined range, f.e. ``kg`` or ``g``, this pr
 .. note:: 
   Disclaimer: As the load versus output signal for a load cell isn't guaranteed to be linear, calibration using the minimum and maximum expected load for calibration will result in a best effort output.
 
-Data Acquisition
-----------------
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
 

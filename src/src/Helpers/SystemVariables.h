@@ -101,6 +101,9 @@ public:
     SYSTM_HM_AM_SP,
     SYSTM_HM_SP,
     SYSTZOFFSET,
+    #ifndef LIMIT_BUILD_SIZE
+    SYSTZOFFSET_S,
+    #endif // ifndef LIMIT_BUILD_SIZE
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
@@ -113,6 +116,9 @@ public:
     UNIXDAY,
     UNIXDAY_SEC,
     UNIXTIME,
+    #ifndef LIMIT_BUILD_SIZE
+    UNIXTIME_LCL,
+    #endif // ifndef LIMIT_BUILD_SIZE
     UPTIME,
     UPTIME_MS,
     VCC,

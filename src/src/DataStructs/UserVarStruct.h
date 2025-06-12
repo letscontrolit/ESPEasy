@@ -166,9 +166,11 @@ private:
 
   String getPreprocessedFormula(taskIndex_t    taskIndex,
                                 taskVarIndex_t varNr) const;
+public:
   String getPreviousValue(taskIndex_t    taskIndex,
                           taskVarIndex_t varNr,
                           Sensor_VType   sensorType) const;
+private:
 #ifndef LIMIT_BUILD_SIZE
   mutable std::map<uint16_t, String>_preprocessedFormula;
 #endif // ifndef LIMIT_BUILD_SIZE

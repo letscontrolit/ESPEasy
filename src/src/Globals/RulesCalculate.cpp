@@ -45,8 +45,8 @@ int CalculateParam(const String& TmpStr, int errorValue) {
   return returnValue;
 }
 
-CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
-                              ESPEASY_RULES_FLOAT_TYPE      & result)
+CalculateReturnCode Calculate_preProcessed(const String            & preprocessd_input,
+                                           ESPEASY_RULES_FLOAT_TYPE& result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
@@ -57,14 +57,22 @@ CalculateReturnCode Calculate_preProcessed(const String& preprocessd_input,
   return returnCode;
 }
 
-
 CalculateReturnCode Calculate(const String& input,
-                              ESPEASY_RULES_FLOAT_TYPE      & result)
+                              ESPEASY_RULES_FLOAT_TYPE& result
+                              #if           FEATURE_STRING_VARIABLES
+                              , const bool  logStringErrors
+                              #endif // if FEATURE_STRING_VARIABLES
+                              )
 {
   CalculateReturnCode returnCode = Calculate_preProcessed(
     RulesCalculate_t::preProces(input),
     result);
-#ifndef LIMIT_BUILD_SIZE
+
+  #ifndef LIMIT_BUILD_SIZE
+  # if FEATURE_STRING_VARIABLES
+  bool skipError = false;
+  # endif // if FEATURE_STRING_VARIABLES
+
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Calculate: ");
@@ -81,32 +89,43 @@ CalculateReturnCode Calculate(const String& input,
           break;
         case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
           log += F("Unknown token");
+          # if FEATURE_STRING_VARIABLES
+          skipError = !logStringErrors;
+          # endif // if FEATURE_STRING_VARIABLES
           break;
         case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
           log += strformat(F("Exceeded token length (%d)"), TOKEN_LENGTH);
+          # if FEATURE_STRING_VARIABLES
+          skipError = !logStringErrors;
+          # endif // if FEATURE_STRING_VARIABLES
           break;
         case CalculateReturnCode::OK:
           // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
           break;
       }
 
-      #ifndef BUILD_NO_DEBUG
-      log += F(" input: ");
-      log += input;
-      log += F(" = ");
+      # if FEATURE_STRING_VARIABLES
 
-      const bool trimTrailingZeros = true;
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-      log += doubleToString(result, 6, trimTrailingZeros);
-#else
-      log += floatToString(result, 6, trimTrailingZeros);
-#endif
-      #endif // ifndef BUILD_NO_DEBUG
+      if (!skipError)
+      # endif // if FEATURE_STRING_VARIABLES
+      {
+        # ifndef BUILD_NO_DEBUG
+        log += F(" input: ");
+        log += input;
+        log += F(" = ");
 
-      addLogMove(LOG_LEVEL_ERROR, log);
+        const bool trimTrailingZeros = true;
+        #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        log += doubleToString(result, 6, trimTrailingZeros);
+        #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        log += floatToString(result, 6, trimTrailingZeros);
+        #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        # endif // ifndef BUILD_NO_DEBUG
+
+        addLogMove(LOG_LEVEL_ERROR, log);
+      }
     }
   }
-#endif
+  #endif // ifndef LIMIT_BUILD_SIZE
   return returnCode;
 }
-

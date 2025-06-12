@@ -64,7 +64,7 @@ const __FlashStringHelper* Command_i2c_Scanner(struct EventStruct *event, const 
       }
       #endif // if FEATURE_I2CMULTIPLEXER
     } else {
-      serialPrintln(F("I2C  : Not enabled."));
+      serialPrintln(strformat(F("I2C %d: Not enabled."), i2cBus));
     }
   }
   I2CSelectHighClockSpeed(0); // By default the bus is in standard speed

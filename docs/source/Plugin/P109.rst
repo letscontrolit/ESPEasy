@@ -96,10 +96,7 @@ Device Settings
 
 * **Delay on setpoint change**: Configure the delay in seconds before the relay state will be changed after the setpoint is changed. Range: 1..10 seconds. This is to avoid flipping the heating on/off rapidly when changing the setpoint value.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

@@ -238,6 +238,70 @@ const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, con
   return taskValueSet(event, Line, taskIndex, success);
 }
 
+#if FEATURE_STRING_VARIABLES
+const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE));
+}
+
+const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE));
+}
+
+const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate)
+{
+  String taskName;
+  taskIndex_t tmpTaskIndex = INVALID_TASK_INDEX;
+  if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
+    tmpTaskIndex = findTaskIndexByName(taskName, true);
+    if (tmpTaskIndex != INVALID_TASK_INDEX) {
+      event->Par1 = tmpTaskIndex + 1;
+    }
+  }
+  String valueName;
+  const bool hasValueName = GetArgv(Line, valueName, 3);
+  if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && event->Par1 - 1 != INVALID_TASK_INDEX && hasValueName)
+  {
+    uint8_t tmpVarNr = findDeviceValueIndexByName(valueName, event->Par1 - 1);
+    if (tmpVarNr != VARS_PER_TASK) {
+      event->Par2 = tmpVarNr + 1;
+    }
+  }
+
+  if (event->Par1 > 0 && validTaskIndex(event->Par1 - 1)) {
+    taskName = getTaskDeviceName(event->Par1 - 1); // Taskname must be valid
+  }
+
+  if (!hasValueName || (event->Par1 > 0 && validTaskIndex(event->Par1 - 1) && event->Par2 > 0 && validTaskVarIndex(event->Par2 - 1))) {
+    valueName = getTaskValueName(static_cast<taskIndex_t>(event->Par1 - 1), event->Par2 - 1); // Convert numeric var index into name
+  }
+  // addLog(LOG_LEVEL_INFO, strformat(F("TaskValueSetStorage: task: %s (%d), value: %s (%d), Line: %s"), taskName.c_str(), event->Par1, valueName.c_str(), event->Par2, Line)); // FIXME
+
+  String argument;
+  if (!taskName.isEmpty() && !valueName.isEmpty() && GetArgv(Line, argument, 4)) {
+    taskName.toLowerCase();
+    String orgValueName(valueName);
+    valueName.toLowerCase();
+    String key = strformat(storageTemplate, taskName.c_str(), valueName.c_str());
+    const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+    setCustomStringVar(key, argument);
+    if (getCustomStringVar(key2).isEmpty() || argument.isEmpty()) {
+      setCustomStringVar(key2, argument.isEmpty() ? EMPTY_STRING : orgValueName);
+    }
+    if (uomTemplate != nullptr) { // We have a Unit of Measure template
+      if (GetArgv(Line, argument, 5)) { // check for extra argument holding UoM
+        key = strformat(uomTemplate, taskName.c_str(), valueName.c_str());
+        setCustomStringVar(key, argument);
+      }
+    }
+    // addLog(LOG_LEVEL_INFO, strformat(F("TaskValueSetStorage: key: %s, argument: %s"), key.c_str(), argument.c_str())); // FIXME
+    return return_command_success_flashstr();
+  }
+  return return_command_failed_flashstr(); // taskValueSet(event, Line, taskIndex, success);
+}
+#endif
+
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;

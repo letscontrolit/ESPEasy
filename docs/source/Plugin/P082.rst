@@ -238,8 +238,7 @@ Some packets of a controller like the LoRaWAN (TTN) controller, may get lost dur
 This way the received samples can still be grouped together and if the travelled path is predictable these samples can even be tracked back to the most likely position where they may have been taken.
 
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
 The GPS receiver yields more measurement values than the max. 4 that can be used in a task.
 When the GPS receiver is linked to the LoRaWAN (TTN) controller, all relevant received data will be transmitted.

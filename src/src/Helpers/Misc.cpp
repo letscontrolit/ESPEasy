@@ -146,7 +146,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   if (save) {
     #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
-    #endif
+    #endif // ifndef BUILD_MINIMAL_OTA
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
@@ -314,13 +314,14 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
     if (validDeviceIndex(DeviceIndex)) {
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
+      String taskName          = getTaskDeviceName(TaskIndex);
 
       const String logline_prefix =
         strformat(F("%s %s,%d,%s")
                   , node_time.getDateString('-').c_str()
                   , node_time.getTimeString(':').c_str()
                   , Settings.Unit
-                  , getTaskDeviceName(TaskIndex).c_str()
+                  , taskName.c_str()
                   );
 
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -331,6 +332,40 @@ void SendValueLogger(taskIndex_t TaskIndex)
                             , formatUserVarNoCheck(TaskIndex, varNr).c_str()
                             );
       }
+      # if FEATURE_STRING_VARIABLES
+
+      if (Settings.EventAndLogDerivedTaskValues(TaskIndex)) {
+        taskName.toLowerCase();
+        String search        = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+        const String postfix = search.substring(search.indexOf('X') + 1);
+        search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+
+        auto it = customStringVar.begin();
+
+        while (it != customStringVar.end()) {
+          if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+            String valueName    = it->first.substring(search.length(), it->first.indexOf('-'));
+            const String key2   = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+            const String vname2 = getCustomStringVar(key2);
+
+            if (!vname2.isEmpty()) {
+              valueName = vname2;
+            }
+
+            if (!it->second.isEmpty()) {
+              String value(it->second);
+              value   = parseTemplateAndCalculate(value);
+              logger += strformat(F("%s,%s,%s\r\n")
+                                  , logline_prefix.c_str()
+                                  , valueName.c_str()
+                                  , value.c_str()
+                                  );
+            }
+          }
+          ++it;
+        }
+      }
+      # endif // if FEATURE_STRING_VARIABLES
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
       # endif // ifndef BUILD_NO_DEBUG
