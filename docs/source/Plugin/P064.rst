@@ -88,6 +88,8 @@ Event generation
 
 * **Separate Gesture events**: When enabled will generate a ``<TaskName>#Swipe=<gesture>`` event (see below), independent from **Interval**. This allows gestures to be handled independently from measuring the proximity and ambient light, or R/G/B colors. The ``Gesture`` value will be updated for every gesture detected, but the Values events will only trigger on Interval, if this checkbox is enabled.
 
+.. include:: DataAcquisition.repl
+
 Values
 ^^^^^^
 

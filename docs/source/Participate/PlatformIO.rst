@@ -260,6 +260,7 @@ If only an USB device was detected but no `/dev/ttyUSBxx` was assigned, then a m
 * ``sudo modprobe ch341`` - For CH340/CH341 USB to serial chips (rectangular form chip)
 * ``sudo modprobe cp210x`` - For FTDI CP210x USB to serial chips (small square form factor)
 * ``sudo modprobe ftdi_sio`` - For FTDI USB to serial chips with multiple serial ports like the FTDI4232H which has 4 serial ports.
+* ``sudo modprobe vhci-hcd`` - For the virtual serial port passed from the Windows side to WSL2 (since WSL2 started using Linux 6.x core)
 
 After calling these 'modprobe' commands, the result can be verified using ``lsmod`` and re-checking ``dmesg`` to see which ``/dev/ttyUSBxx`` ports were assigned.
 

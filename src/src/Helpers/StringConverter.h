@@ -184,6 +184,14 @@ String formatUserVar(struct EventStruct *event,
                      uint8_t                rel_index,
                      bool              & isvalid);
 
+#if FEATURE_STRING_VARIABLES
+String formatUserVarForPresentation(struct EventStruct *event,
+                                    taskVarIndex_t      varNr,
+                                    bool              & hasPresentation,
+                                    const String      & value,
+                                    const deviceIndex_t DeviceIndex,
+                                    String              valueName = EMPTY_STRING);
+#endif // if FEATURE_STRING_VARIABLES
 
 String get_formatted_Controller_number(cpluginID_t cpluginID);
 
@@ -422,6 +430,22 @@ bool getConvertArgument2(const __FlashStringHelper * marker,
                          int         & startIndex,
                          int         & endIndex);
 
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStrFormat(const __FlashStringHelper *marker,
+                                 const String             & s,
+                                 String                   & argStr,
+                                 float                    & arg1,
+                                 float                    & arg2,
+                                 int                      & startIndex,
+                                 int                      & endIndex);
+#endif // if FEATURE_STRING_VARIABLES
+
+bool getConvertArgumentStr(const __FlashStringHelper *marker,
+                           const String             & s,
+                           String                   & argument,
+                           int                      & startIndex,
+                           int                      & endIndex);
+
 bool getConvertArgumentString(const __FlashStringHelper * marker,
                               const String& s,
                               String      & argumentString,
@@ -439,6 +463,10 @@ bool getConvertArgumentString(const String& marker,
 void parseStandardConversions(String& s,
                               bool useURLencode);
 
+#if FEATURE_STRING_VARIABLES
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm);
+String get_weekday_from_timestamp(time_t unix_timestamp);
+#endif // if FEATURE_STRING_VARIABLES
 
 bool HasArgv(const char  *string,
              unsigned int argc);

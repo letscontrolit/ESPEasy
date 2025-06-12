@@ -87,6 +87,7 @@ Thus for this purpose the ``Pressure Max`` should be set to ``1000``.
   :alt: Device configuration
 
 
+.. include:: DataAcquisition.repl
 
 
 Change log

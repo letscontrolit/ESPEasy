@@ -4,7 +4,7 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/HTML_wrappers.h"
-
+# include "../WebServer/JSON.h"
 
 void add_ChartJS_array(int          valueCount,
                        const String array[])
@@ -25,7 +25,7 @@ void add_ChartJS_array(int          valueCount,
     if (i != 0) {
       addHtml(',', '\n');
     }
-    addHtmlFloat(array[i], nrDecimals);
+    addHtmlFloat_NaN_toNull(array[i], nrDecimals);
   }
 }
 
@@ -174,10 +174,11 @@ void add_ChartJS_chart_labels(
 
 void add_ChartJS_scatter_data_point(float x, float y, int nrDecimals)
 {
-  addHtml(strformat(
-            F("{\"x\":%s,\"y\":%s},"),
-            toString(x, nrDecimals).c_str(),
-            toString(y, nrDecimals).c_str()));
+  addHtml(F("{\"x\":"));
+  addHtmlFloat_NaN_toNull(x, nrDecimals);
+  addHtml(F(",\"y\":"));
+  addHtmlFloat_NaN_toNull(y, nrDecimals);
+  addHtml('}', ',');
 }
 
 void add_ChartJS_dataset(
@@ -197,16 +198,20 @@ void add_ChartJS_dataset_header(const ChartJS_dataset_config& config)
   addHtml('{');
 
   if (!config.label.isEmpty()) {
-    addHtml(strformat(F("\"label\":\"%s\","), config.label.c_str()));
+    stream_to_json_object_value(F("label"), config.label);
+    addHtml(',');
   }
 
   if (!config.color.isEmpty()) {
-    addHtml(strformat(F("\"backgroundColor\":\"%s\","), config.color.c_str()));
-    addHtml(strformat(F("\"borderColor\":\"%s\","), config.color.c_str()));
+    stream_to_json_object_value(F("backgroundColor"), config.color);
+    addHtml(',');
+    stream_to_json_object_value(F("borderColor"), config.color);
+    addHtml(',');
   }
 
   if (!config.axisID.isEmpty()) {
-    addHtml(strformat(F("\"yAxisID\":\"%s\","), config.axisID.c_str()));
+    stream_to_json_object_value(F("yAxisID"), config.axisID);
+    addHtml(',');
   }
 
   if (config.hidden || config.displayConfig.showHidden()) {

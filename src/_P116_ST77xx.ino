@@ -8,6 +8,8 @@
 
 
 // History:
+// 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
+// 2025-02-20 tonhuisman: Add support for ST7735 display with 172x320 resolution
 // 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
 // 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
 //                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
@@ -149,6 +151,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           # if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7735s_135x240),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_172x320),
+          ST77xx_type_toString(ST77xx_type_e::ST77xxs_170x320),
           # endif // if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
@@ -169,6 +172,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           # if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7735s_135x240),
           static_cast<int>(ST77xx_type_e::ST7735s_172x320),
+          static_cast<int>(ST77xx_type_e::ST77xxs_170x320),
           # endif // if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),

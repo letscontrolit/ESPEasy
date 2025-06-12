@@ -57,6 +57,8 @@ Device Settings
 
 **Send Event on Alert** : Send an event, to be used in rules, when the alert is set.  This can be cleared with ``max1704xclearalert``
 
+.. include:: DataAcquisition.repl
+
 Values
 ^^^^^^
 

@@ -68,10 +68,7 @@ Device Settings
 
 * *Input (switch)*: Act like an input switch, the pin is read every 20 msec, and if the state changes, the new state is reported as an event, with the new value. The **Interval** is ignored when this Port Type is selected.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

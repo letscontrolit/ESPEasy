@@ -116,8 +116,7 @@ For example:
 
 
 
-Data Acquisition
-----------------
+.. include:: DataAcquisition.repl
 
 In ESPEasy, a task can be triggered to yield some new sample data.
 For other plugins, this means the sensor is read and when successful there is some new data to process.

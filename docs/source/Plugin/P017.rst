@@ -51,6 +51,8 @@ Depending on the type of ESPEasy build installed on the unit, the I2C settings m
 
 **Event on Tag removal** (Disabled by default) When enabled sends the removed Tag value as an event and to all enabled controllers.
 
+.. include:: DataAcquisition.repl
+
 Supported hardware
 ------------------
 

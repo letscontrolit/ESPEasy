@@ -541,6 +541,49 @@ String formatUserVar(struct EventStruct *event, uint8_t rel_index, bool& isvalid
   return doFormatUserVar(event, rel_index, true, isvalid);
 }
 
+#if FEATURE_STRING_VARIABLES
+String formatUserVarForPresentation(struct EventStruct *event,
+                                    taskVarIndex_t      varNr,
+                                    bool              & hasPresentation,
+                                    const String      & value,
+                                    const deviceIndex_t DeviceIndex,
+                                    String              valueName) {
+  const taskIndex_t taskIndex = event->TaskIndex;
+  String formula = Cache.getTaskDeviceFormula(taskIndex, varNr);
+  hasPresentation = Cache.hasFormula(taskIndex, varNr)
+                            && formula.startsWith(F(TASK_VALUE_PRESENTATION_PREFIX_STRING));
+  if (hasPresentation) {
+    formula.remove(0, 1);
+    formula.replace(F("%value%"), value);
+    if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+      event->sensorType = Device[DeviceIndex].VType;
+      String dummy;
+      PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy);
+      const String prev_str = UserVar.getPreviousValue(taskIndex, varNr, event->sensorType);
+      formula.replace(F("%pvalue%"), prev_str.isEmpty() ? value : prev_str);
+    }
+    formula = parseTemplate(formula);
+    return formula;
+  } else {
+    String taskName = getTaskDeviceName(taskIndex);
+    taskName.toLowerCase();
+    if (valueName.isEmpty() && validTaskVarIndex(varNr)) {
+      valueName = getTaskValueName(taskIndex, varNr);
+    }
+    valueName.toLowerCase();
+    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
+    if (!presentation.isEmpty()) {
+      stripEscapeCharacters(presentation);
+      presentation.replace(F("%value%"), value);
+      presentation = parseTemplate(presentation);
+    }
+    hasPresentation = !presentation.isEmpty();
+    return presentation;
+  }
+  return EMPTY_STRING;
+}
+#endif // if FEATURE_STRING_VARIABLES
+
 String get_formatted_Controller_number(cpluginID_t cpluginID) {
   if (!validCPluginID(cpluginID)) {
     return F("C---");
@@ -682,10 +725,12 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Empty string
     return F("\"\"");
   }
-  if (value.length() > 2) {
+  const size_t val_length = value.length();
+
+  if (val_length > 2) {
     // Check for JSON objects or arrays
     const char firstchar = value[0];
-    const char lastchar = value[value.length() - 1];
+    const char lastchar = value[val_length - 1];
     if ((firstchar == '[' && lastchar == ']') ||
         (firstchar == '{' && lastchar == '}')) 
     {
@@ -698,26 +743,34 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
 
     // First we check for not allowed special characters.
-    const size_t val_length = value.length();
+
+    // Most frequently found in a string
+    const bool backslash_or_doubleQuote_found = 
+      value.indexOf('\\') != -1 ||
+      value.indexOf('"') != -1;
+    
     for (size_t i = 0; i < val_length; ++i) {
       const char c = value[i];
       // Special characters not allowed in JSON:
-      if (c == '\n'|| //  \n  New line
-          c == '\r'|| //  \r  Carriage return
-          c == '\t'|| //  \t  Tab
-          c == '\\'|| //  \\  Backslash character
+      if (backslash_or_doubleQuote_found ||
+          (c >= '\b' && c <= '\r')
+/*
           c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\t'|| //  \t  Tab
+          c == '\n'|| //  \n  New line
           c == '\f'|| //  \f  Form feed (ascii code 0C)
-          c == '"') { //  \"  Double quote
+          c == '\r'|| //  \r  Carriage return
+*/
+          ) {
         // Must replace characters, so make a deepcopy
         String tmpValue(value);
-        tmpValue.replace('\n', '^');
-        tmpValue.replace('\r', '^');
-        tmpValue.replace('\t', ' ');
-        tmpValue.replace('\\', '^');
-        tmpValue.replace('\b', '^');
-        tmpValue.replace('\f', '^');
-        tmpValue.replace('"',  '\'');
+        tmpValue.replace('\b', '^');  //  \b  Backspace (ascii code 08)
+        tmpValue.replace('\t', ' ');  //  \t  Tab
+        tmpValue.replace('\n', '^');  //  \n  New line
+        tmpValue.replace('\f', '^');  //  \f  Form feed (ascii code 0C)
+        tmpValue.replace('\r', '^');  //  \r  Carriage return
+        tmpValue.replace('\\', '^');  //  Backslash
+        tmpValue.replace('"',  '\''); //  Double quote
         return wrap_String(tmpValue, '"');
       }
     }
@@ -1393,7 +1446,9 @@ bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, fl
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
     const int pos_comma = argumentString.indexOf(',');
 
-    if (pos_comma == -1) { return false; }
+    if (pos_comma == -1) { 
+      return validFloatFromString(argumentString, arg1); // Accept single argument, with second argument 0
+    }
 
     if (validFloatFromString(argumentString.substring(0, pos_comma), arg1)) {
       return validFloatFromString(argumentString.substring(pos_comma + 1), arg2);
@@ -1401,6 +1456,53 @@ bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, fl
   }
   return false;
 }
+
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStr(const __FlashStringHelper * marker, const String& s, String& argument, int& startIndex, int& endIndex) {
+  return getConvertArgumentString(marker, s, argument, startIndex, endIndex);
+}
+
+#define _MAX_STRFORMAT_ARGUMENTS 2 // Max. 2 numeric arguments for now to avoid strformat() from crashing when reading the 3rd argument that's not there
+bool getConvertArgumentStrFormat(const __FlashStringHelper * marker, const String& s, String& argStr, float& arg1, float& arg2, int& startIndex, int& endIndex) {
+  String argumentString;
+
+  if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
+    const int pos_comma = argumentString.indexOf(',');
+    
+    if (pos_comma == -1) { return false; } // At least 2 arguments required
+    
+    argStr = getCustomStringVar(argumentString.substring(0, pos_comma)); // Get String variable content
+
+    if (argStr.isEmpty()) { // Not found or invalid variable name: probably provided a formatstring (not quoted, no commas!)
+      argStr = argumentString.substring(0, pos_comma);
+    }
+
+    int pos_dollar = argStr.indexOf('$');
+    int dollarCount{};
+    while (pos_dollar != -1) {
+      ++dollarCount;
+      ++pos_dollar;
+      pos_dollar = argStr.indexOf('$', pos_dollar);
+    }
+
+    // We support, 0, 1 or 2, $ formatting characters to avoid crashes and confusion with shorthand variables
+    if (dollarCount > _MAX_STRFORMAT_ARGUMENTS) { return false; }
+
+    argStr.replace('$', '%'); // Change to regular strformat() format specifiers
+
+    const int pos_comma2 = argumentString.indexOf(',', pos_comma + 1);
+
+    if (pos_comma2 == -1) {
+      return validFloatFromString(argumentString.substring(pos_comma + 1), arg1);
+    }
+
+    return validFloatFromString(argumentString.substring(pos_comma + 1, pos_comma2), arg1)
+           && validFloatFromString(argumentString.substring(pos_comma2 + 1), arg2);
+  }
+  return false;
+}
+#undef _MAX_STRFORMAT_ARGUMENTS
+#endif // if FEATURE_STRING_VARIABLES
 
 bool getConvertArgumentString(const __FlashStringHelper * marker, const String& s, String& argumentString, int& startIndex, int& endIndex) {
   return getConvertArgumentString(String(marker), s, argumentString, startIndex, endIndex);
@@ -1444,6 +1546,7 @@ struct ConvertArgumentData {
   ConvertArgumentData() = delete;
 
   String& str;
+  String str1;
   float arg1, arg2;
   int   startIndex;
   int   endIndex;
@@ -1461,6 +1564,16 @@ bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData&
 bool getConvertArgument2(const __FlashStringHelper * marker, ConvertArgumentData& data) {
   return getConvertArgument2(marker, data.str, data.arg1, data.arg2, data.startIndex, data.endIndex);
 }
+
+bool getConvertArgumentStr(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgumentStr(marker, data.str, data.str1, data.startIndex, data.endIndex);
+}
+
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStrFormat(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgumentStrFormat(marker, data.str, data.str1, data.arg1, data.arg2, data.startIndex, data.endIndex);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
@@ -1486,7 +1599,6 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_uname%"),  getNameForUnit(data.arg1))
   SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
@@ -1496,17 +1608,24 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
   SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
   #endif // if FEATURE_ESPEASY_P2P
+  #if FEATURE_STRING_VARIABLES
+  SMART_CONV(F("%c_ts2wday%"),  get_weekday_from_timestamp(static_cast<uint32_t>(data.arg1)))
+  #endif // if FEATURE_STRING_VARIABLES
   #undef SMART_CONV
 
   // Conversions with 2 parameters
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1, data.arg2))
   #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
   #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
+  #if FEATURE_STRING_VARIABLES
+  SMART_CONV(F("%c_ts2date%"),      get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2)))
+  #endif // if FEATURE_STRING_VARIABLES
 
   #ifndef LIMIT_BUILD_SIZE
   #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -1516,7 +1635,36 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #endif
   #endif
   #undef SMART_CONV
+  
+  #if FEATURE_STRING_VARIABLES
+  double tmp{};
+  #define SMART_CONV(T, FUN) \
+  while (getConvertArgumentStr((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_isnum%"),  String(validDoubleFromString(getCustomStringVar(data.str1), tmp) ? 1 : 0))
+  #undef SMART_CONV
+  // 1 string and 1 or 2 numeric arguments
+  #define SMART_CONV(T, FUN) \
+  while (getConvertArgumentStrFormat((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_strf%"),   strformat(data.str1, data.arg1, data.arg2))
+  #undef SMART_CONV
+  #endif // if FEATURE_STRING_VARIABLES
 }
+
+#if FEATURE_STRING_VARIABLES
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm) {
+  struct tm ts;
+  ts = *localtime(&unix_timestamp);
+
+  return formatDateTimeString(ts, '-', ':', ' ', am_pm);
+}
+
+String get_weekday_from_timestamp(time_t unix_timestamp) {
+  struct tm ts;
+  ts = *localtime(&unix_timestamp);
+
+  return String(ts.tm_wday);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 /********************************************************************************************\
    Find positional parameter in a char string

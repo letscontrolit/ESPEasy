@@ -100,10 +100,8 @@ Sensor
 
 .. warning:: ESP8266 GPIO 16 (D0) is not compatible with pulse counters.
 
-Data acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
-* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
 
 

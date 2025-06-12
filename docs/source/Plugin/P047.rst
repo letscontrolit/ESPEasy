@@ -106,10 +106,7 @@ When using the I2C scanner, the changed address will show up, but it probably wi
 
 .. note:: The newly set address is permanently stored in the sensor, and can be changed again at a later time if desired.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec. but each read is taking at least 2 seconds, so selecting a value below 3 seonds might cause intermittent read failures or invalid values.
 

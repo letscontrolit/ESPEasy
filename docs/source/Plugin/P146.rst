@@ -85,10 +85,7 @@ Available options:
 
 Included in the Github repository is an example Python script to decode the binary format. This can be found in the ``misc/CacheController`` folder.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

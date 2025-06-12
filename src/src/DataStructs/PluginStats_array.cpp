@@ -368,8 +368,8 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
     if (_plugin_stats_timestamps != nullptr) {
       struct tm ts;
       uint32_t  unix_time_frac{};
-      const uint32_t uinxtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
-      const uint32_t local_timestamp = time_zone.toLocal(uinxtime_sec);
+      const uint32_t unixtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
+      const uint32_t local_timestamp = time_zone.toLocal(unixtime_sec);
       breakTime(local_timestamp, ts);
       addHtml('"');
       addHtml(formatDateTimeString(ts));
