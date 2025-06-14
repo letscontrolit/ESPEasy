@@ -467,6 +467,15 @@ void handle_json()
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
+          #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          String uom;
+          const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(TaskIndex, x);
+          if (uomIndex != 0) {
+            uom = toUnitOfMeasureName(uomIndex);
+          }
+          #else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          const String uom;
+          #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
           handle_json_stream_task_value_data(x + 1,
                                              Cache.getTaskDeviceValueName(TaskIndex, x),
                                              nrDecimals,
@@ -476,7 +485,7 @@ void handle_json()
                                              #else // if FEATURE_STRING_VARIABLES
                                              EMPTY_STRING,
                                              #endif // if FEATURE_STRING_VARIABLES
-                                             EMPTY_STRING, // TODO: pass UoM
+                                             uom,
                                              x < (valueCount - 1));
         }
         #if FEATURE_STRING_VARIABLES
@@ -540,6 +549,9 @@ void handle_json()
 
       if (showSpecificTask) {
         stream_next_json_object_value(F("TTL"), ttl_json * 1000);
+        #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+        stream_next_json_object_value(F("ShowUoM"), jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage()));
+        #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       }
 
       if (showDataAcquisition) {
@@ -619,6 +631,9 @@ void handle_json()
 
   if (!showSpecificTask) {
     addHtml(F("],\n"));
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    stream_next_json_object_value(F("ShowUoM"), jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage()));
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     stream_last_json_object_value(F("TTL"), lowest_ttl_json * 1000);
   }
 
