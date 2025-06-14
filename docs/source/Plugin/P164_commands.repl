@@ -1,0 +1,13 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``config,task,<taskname>,sleep``
+    ","
+    Puts the sensor to sleep until a ``TaskEnable,<taskname>`` or wakeup of the ESP.
+    
+    Power consumption then is reduced to a 10uA. 
+    According to the documentation, it takes the sensor about 3 minutes to get a reasonable reading after waking up.
+    "
+   

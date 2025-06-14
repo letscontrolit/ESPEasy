@@ -51,6 +51,9 @@ struct ExtraTaskSettings_cache_t {
   PluginStats_Config_t pluginStatsConfig[VARS_PER_TASK] = {};
   #endif // if FEATURE_PLUGIN_STATS
   uint8_t hasFormula = 0; // Bitmap which task value has formula and whether a formula needs previous value
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  uint8_t unitOfMeasure[VARS_PER_TASK] = { 0 }; // Value for unit of measure per taskValue
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -108,6 +111,10 @@ struct Caches {
 
   #endif // if FEATURE_PLUGIN_STATS
 
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  uint8_t getTaskVarUnitOfMeasure(taskIndex_t    taskIndex,
+                                  taskVarIndex_t taskVarIndex);
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();

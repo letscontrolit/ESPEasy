@@ -290,7 +290,47 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             }
           }
 
-          // TODO: Insert TaskValue attribute support from PR #5328 here
+          #if FEATURE_TASKVALUE_ATTRIBUTES
+          if (!isHandled && valueName.indexOf('.') > -1) { // TaskValue specific attributes
+            const String valName = parseString(valueName, 1, '.');
+            const String command = parseString(valueName, 2, '.');
+            String value;
+
+            if (!command.isEmpty()) {
+              const uint8_t valueCount = getValueCountForTask(taskIndex);
+
+              for (taskVarIndex_t i = 0; i < valueCount; i++) {
+                if (valName.equalsIgnoreCase(Cache.getTaskDeviceValueName(taskIndex, i))) {
+                  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                  if (equals(command, F("uom"))) { // Fetch UnitOfMeasure
+                    value = toUnitOfMeasureName(Cache.getTaskVarUnitOfMeasure(taskIndex, i));
+                    isHandled = true; // Empty is a valid result
+                    break;
+                  } else
+                  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                  if (equals(command, F("decimals"))) { // Fetch decimals
+                    value = Cache.getTaskDeviceValueDecimals(taskIndex, i);
+                    break;
+                  } else
+                  if (equals(command, F("hasformula"))) { // Fetch formula status
+                    value = Cache.hasFormula(taskIndex, i);
+                    break;
+                  #if FEATURE_PLUGIN_STATS
+                  } else
+                  if (equals(command, F("statsenabled"))) { // Fetch Stats enabled
+                    value = Cache.enabledPluginStats(taskIndex, i);
+                    break;
+                  #endif // if FEATURE_PLUGIN_STATS
+                  }
+                }
+              }
+              if (!value.isEmpty() || isHandled) {
+                transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
+                // isHandled = true;
+              }
+            }
+          }
+          #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
           if (!isHandled && valueName.indexOf('.') > -1) {
             String value;

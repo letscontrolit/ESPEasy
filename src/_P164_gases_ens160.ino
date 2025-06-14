@@ -140,6 +140,17 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       success = P164_data_struct::webformSave(event);
       break;
     }
+    case PLUGIN_SET_CONFIG:
+    {
+      P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
+      const String cmd = parseString(string, 1);
+
+      // command: config,task,<taskname>,sleep
+      if (equals(cmd, F("sleep"))) {
+        P164_data->setMode(0x00);
+      }
+      break;
+    }
 
     case PLUGIN_TEN_PER_SECOND:
     {

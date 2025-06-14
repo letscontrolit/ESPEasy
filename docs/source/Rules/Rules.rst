@@ -458,6 +458,26 @@ Similarly, when enabling the **Single event with all values:** option, there are
 
 N.B. these references to task values only yield a value when the task is enabled and its value is valid.
 
+TaskValue Attributes
+--------------------
+
+Added: 2025/06/12
+
+When included in the build, a few attributes per TaskValue can be retrieved. The syntax uses the familiar dot-notation, as shown above: ``[<taskname>#<valuename>.<attribute>]``.
+
+The available attributes are:
+
+* ``decimals``: The number of decimals set.
+
+* ``hasFormula``: If a formula is set, will result in a ``1``, or a ``0`` when the Formula field is empty.
+
+* ``statsEnabled``: If the Stats checkbox is checked returns ``1`` and ``0`` when not checked. Only available if the Plugin Statistics feature is available in the build.
+
+* ``uom``: The Unit of Measure that's configured. Only available when Unit of Measure feature is included in the build.
+
+These values are available independent of the Enabled state of the task.
+
+|
 
 Event name (%eventname% or %eventpar%)
 --------------------------------------

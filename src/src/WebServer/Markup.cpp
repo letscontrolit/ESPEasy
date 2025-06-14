@@ -340,6 +340,71 @@ void addUnit(char unit)
   addHtml(']');
 }
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+const char unit_of_measure_list[] PROGMEM = // *** DO NOT CHANGE ORDER, SAVED IN TASK SETTINGS! ***
+ "|" // 0 = Empty/none
+ "°C|°F|K|" // 1..3
+ "%|" // 4
+ "Pa|hPa|bar|mbar|inHg|psi|" // 5..10
+ "W|kW|" // 11..12
+ "V|" // 13
+ "Wh|kWh|" // 14..15
+ "A|VA|" // 16..17
+ "mm|cm|m|km|" // 18..21
+ "L|mL|m³|ft³|" // 22..25
+ "m³/h|ft³/h|" // 26..27
+ "lx|" // 28
+ "UV index|" // 29
+ "µg/m³|mg/m³|p/m³|ppm|ppb|" // 30..34
+ "°|" // 35
+ "€|$|¢|" // 36..38
+ "μs|ms|s|min|h|d|w|m|y|" // 39..47
+ "in|ft|yd|mi|" // 48..51
+ "Hz|GHz|" // 52..53
+ "gal|fl. oz|" // 54..55
+ "m²|" // 56
+ "g|kg|mg|µg|" // 57..60
+ "oz|lb|" // 61..62
+ "µS/cm|" // 63
+ "W/m²|" // 64
+ "mm/h|" // 65
+ "mm/s|in/s|m/s|in/h|km/h|mph|" // 66..71
+ "db|dBm|" // 72..73
+ "bit|kbit|Mbit|Gbit|B|kB|MB|GB|TB|PB|EB|ZB|YB|KiB|MiB|GiB|TiB|PiB|EiB|ZiB|YiB|" // 74..94
+ "bit/s|kbit/s|Mbit/s|Gbit/s|B/s|kB/s|MB/s|GB/s|KiB/s|MiB/s|GiB/s|" // 95..105
+ ; // *** DO NOT CHANGE ORDER, SAVED IN TASK SETTINGS! ***
+
+String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
+                           const String & defUoM) {
+  char tmp[10]{};
+
+  String result(GetTextIndexed(tmp, sizeof(tmp), unitOfMeasureIndex, unit_of_measure_list));
+
+  return result.isEmpty() ? defUoM : result;
+}
+
+
+void addUnitOfMeasureSelector(const String& id,
+                              const uint8_t unitOfMeasure) {
+  std::vector<String> analogDeviceClasses;
+  int unitOfMeasureIndex   = 0;
+  String devClassName = toUnitOfMeasureName(unitOfMeasureIndex);
+
+  while (!devClassName.isEmpty() || (unitOfMeasureIndex == 0)) {
+    analogDeviceClasses.push_back(devClassName);
+    ++unitOfMeasureIndex;
+    devClassName = toUnitOfMeasureName(unitOfMeasureIndex);
+  }
+  const FormSelectorOptions deviceClass(
+    unitOfMeasureIndex,
+    &analogDeviceClasses[0]);
+
+  deviceClass.addSelector(
+    id,
+    unitOfMeasure);
+}
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
 void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelper *id)
 {
   addRowLabel_tr_id(label, String(id));

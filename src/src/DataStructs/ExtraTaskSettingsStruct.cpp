@@ -262,6 +262,19 @@ void ExtraTaskSettingsStruct::isDefaultTaskVarName(taskVarIndex_t taskVarIndex, 
   }
 }
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+uint8_t ExtraTaskSettingsStruct::getTaskVarUnitOfMeasure(taskVarIndex_t taskVarIndex) const {
+  if (!validTaskVarIndex(taskVarIndex)) { return 0u; }
+  return get8BitFromUL(VariousBits[taskVarIndex], 8);
+}
+
+void ExtraTaskSettingsStruct::setTaskVarUnitOfMeasure(taskVarIndex_t taskVarIndex,
+                                                      uint8_t        unitOfMeasure) {
+  if (validTaskVarIndex(taskVarIndex)) {
+    set8BitToUL(VariousBits[taskVarIndex], 8, unitOfMeasure);
+  }
+}
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,
