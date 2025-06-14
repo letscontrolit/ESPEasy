@@ -176,6 +176,9 @@ void handle_advanced() {
 #if FEATURE_TARSTREAM_SUPPORT
     Settings.DisableSaveConfigAsTar(isFormItemChecked(LabelType::DISABLE_SAVE_CONFIG_AS_TAR));
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    Settings.ShowUnitOfMeasureOnDevicesPage(isFormItemChecked(LabelType::SHOW_UOM_ON_DEVICES_PAGE));
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     addHtmlError(SaveSettings());
 
@@ -347,6 +350,10 @@ void handle_advanced() {
   #if FEATURE_I2C_DEVICE_CHECK
   addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
   #endif // if FEATURE_I2C_DEVICE_CHECK
+
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addFormCheckBox(LabelType::SHOW_UOM_ON_DEVICES_PAGE, Settings.ShowUnitOfMeasureOnDevicesPage());
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());

@@ -103,6 +103,11 @@ In selected builds, per Value is a **Stats** checkbox available, that when check
 Currently the extra features offered by the sensor are not configurable in this plugin.
 These may be added later.
 
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P164_commands.repl
+
 Change log
 ----------
 

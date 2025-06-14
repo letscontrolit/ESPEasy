@@ -3716,6 +3716,24 @@ To create/register a plugin, you have to :
   #define FEATURE_I2C_MULTIPLE    0 // NOT SUPPORTED
 #endif
 
+#ifndef FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  #ifdef ESP32
+    #define FEATURE_TASKVALUE_UNIT_OF_MEASURE   1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_TASKVALUE_UNIT_OF_MEASURE   0 // Disabled by default on ESP8266
+  #endif
+#endif
+
+#ifndef FEATURE_TASKVALUE_ATTRIBUTES
+  #ifdef ESP32
+    #define FEATURE_TASKVALUE_ATTRIBUTES  1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_TASKVALUE_ATTRIBUTES  0 // Disabled by default on ESP8266
+  #endif
+#endif // if FEATURE_TASKVALUE_ATTRIBUTES
+
   #ifndef FEATURE_THINGSPEAK_EVENT
     #ifdef LIMIT_BUILD_SIZE
       #define FEATURE_THINGSPEAK_EVENT 0

@@ -142,6 +142,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #if FEATURE_TARSTREAM_SUPPORT
     case LabelType::DISABLE_SAVE_CONFIG_AS_TAR:  return F("Disable Save Config as .tar");
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    case LabelType::SHOW_UOM_ON_DEVICES_PAGE: return F("Show Unit of Measure");
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -435,6 +438,9 @@ String getValue(LabelType::Enum label) {
 #if FEATURE_TARSTREAM_SUPPORT
     case LabelType::DISABLE_SAVE_CONFIG_AS_TAR: return jsonBool(Settings.DisableSaveConfigAsTar());
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    case LabelType::SHOW_UOM_ON_DEVICES_PAGE:   return jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage());
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;

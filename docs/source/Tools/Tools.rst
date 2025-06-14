@@ -473,6 +473,15 @@ Default: checked
 
 NB: This option is excluded from the build if this setting is not available.
 
+Show Unit of Measure
+^^^^^^^^^^^^^^^^^^^^
+
+Added: 2025-06-12
+
+If the Unit of Measure, configurable per Task Value, should not be displayed on the Devices page, this setting can be unchecked. The UoM field will still be present in the JSON output at ``/json`` output for the taskvalues where it is set, and the ``ShowUoM`` boolean value at the root of the JSON structure will reflect the state of this checkbox.
+
+NB: This option is excluded from the build if this feature is not enabled.
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

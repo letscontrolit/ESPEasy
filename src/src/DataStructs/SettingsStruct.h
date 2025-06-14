@@ -212,6 +212,11 @@ class SettingsStruct_tmpl
   void DisableSaveConfigAsTar(bool value) { VariousBits_2.DisableSaveConfigAsTar = value; }
   #endif // if FEATURE_TARSTREAM_SUPPORT
 
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  bool ShowUnitOfMeasureOnDevicesPage() const { return !VariousBits_2.ShowUnitOfMeasureOnDevicesPage; }
+  void ShowUnitOfMeasureOnDevicesPage(bool value) { VariousBits_2.ShowUnitOfMeasureOnDevicesPage = !value; }
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -578,7 +583,7 @@ public:
     uint32_t EnableIPv6                       : 1; // Bit 04  // inverted
     uint32_t DisableSaveConfigAsTar           : 1; // Bit 05
     uint32_t PassiveWiFiScan                  : 1; // Bit 06  // inverted
-    uint32_t unused_07                        : 1; // Bit 07
+    uint32_t ShowUnitOfMeasureOnDevicesPage   : 1; // Bit 07  // inverted
     uint32_t unused_08                        : 1; // Bit 08
     uint32_t unused_09                        : 1; // Bit 09
     uint32_t unused_10                        : 1; // Bit 10
