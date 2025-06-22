@@ -1627,12 +1627,10 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_ts2date%"),      get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2)))
   #endif // if FEATURE_STRING_VARIABLES
 
-  #ifndef LIMIT_BUILD_SIZE
   #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   SMART_CONV(F("%c_random%"), doubleToString(HwRandom_f(data.arg1, data.arg2), 3, true))
   #else
   SMART_CONV(F("%c_random%"), floatToString(HwRandom_f(data.arg1, data.arg2), 3, true))
-  #endif
   #endif
   #undef SMART_CONV
   
