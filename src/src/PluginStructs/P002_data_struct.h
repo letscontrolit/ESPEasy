@@ -245,6 +245,8 @@ public:
 
 private:
 
+  int analog_read() const;
+
   OversamplingHelper<int32_t>OverSampling;
 
   int   _calib_adc1 = 0;

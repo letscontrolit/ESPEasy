@@ -54,6 +54,7 @@ Welcome to ESP Easy's documentation!
    Controller/C*
    Notify/N*
    Plugin/P*
+   Rules/HTTPResponseParser.rst
 
 
 Indices and tables

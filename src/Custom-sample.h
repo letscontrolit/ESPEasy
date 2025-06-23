@@ -25,7 +25,9 @@
 #define FEATURE_RULES_EASY_COLOR_CODE   1  // Use code highlighting, autocompletion and command suggestions in Rules
 #define FEATURE_ESPEASY_P2P             1  // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA             1  // enables the Arduino OTA capabilities
-#define FEATURE_THINGSPEAK_EVENT        1  // generate an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+#define FEATURE_THINGSPEAK_EVENT        0  // Generates an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+#define FEATURE_OPENMETEO_EVENT         0  // Generates an event with the response of a open-meteo request (https://open-meteo.com/en/docs)
+#define FEATURE_JSON_EVENT              0  // Generates an event with the values of a JSON repsonse of an HTTP call. Keys are stored in json.keys one key per line (e.g.: Body.Data.DAY_ENERGY.Values.1)
 // #define FEATURE_SD                   1  // Enable SD card support
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
 
