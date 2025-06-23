@@ -3737,13 +3737,37 @@ To create/register a plugin, you have to :
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
-  #ifndef FEATURE_THINGSPEAK_EVENT
-    #ifdef LIMIT_BUILD_SIZE
-      #define FEATURE_THINGSPEAK_EVENT 0
-    #else
-      #define FEATURE_THINGSPEAK_EVENT 1
-    #endif
+//-------------------HTTPResponseParser Section----------------
+#ifndef FEATURE_THINGSPEAK_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_THINGSPEAK_EVENT 1
+  #else
+    #define FEATURE_THINGSPEAK_EVENT 0
   #endif
+#endif
+
+#ifndef FEATURE_OPENMETEO_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_OPENMETEO_EVENT 1
+  #else
+    #define FEATURE_OPENMETEO_EVENT 0
+  #endif
+#endif
+
+#ifndef FEATURE_JSON_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_JSON_EVENT 1
+  #else
+    #define FEATURE_JSON_EVENT 0
+  #endif
+#endif
+
+#if FEATURE_THINGSPEAK_EVENT || FEATURE_OPENMETEO_EVENT || FEATURE_JSON_EVENT
+  #define RESPONSE_PARSER_SUPPORT 1
+#else
+  #define RESPONSE_PARSER_SUPPORT 0
+#endif
+//-------------------End of HTTPResponseParser Section----------
 
   #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
     #ifdef USES_P152
