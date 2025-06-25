@@ -397,7 +397,7 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
   }
 }
 
-// ------------------------------------------------------------------------------------------- Json Event Helper
+// ------------------------------------------------------------------------------------------- JSONevent Helper
 String parseUriPath(const String& path) {
   int jsonIndex = path.indexOf(F("#json"));
   parseJson = -1;
