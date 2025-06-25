@@ -86,3 +86,5 @@ dependencies.lock
 .dummy/
 
 .cache/
+
+src/src/CustomBuild/CompiletimeDefines_generated.h
