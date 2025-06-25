@@ -18,12 +18,6 @@
 
 
 /**
- * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
- */
-void readAndProcessJsonKeys(DynamicJsonDocument*root,
-                            int                 numJson);
-
-/**
  * @brief Processes the response of an HTTP request, extracts the JSON, and processes it using keys from `json.keys`.
  */
 void eventFromResponse(const String& host,
@@ -32,6 +26,13 @@ void eventFromResponse(const String& host,
                        HTTPClient  & http);
 
 # if FEATURE_JSON_EVENT
+
+/**
+ * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
+ */
+void readAndProcessJsonKeys(DynamicJsonDocument*root,
+                            int                 numJson);
+
 /**
  * @brief Parses the URI, detects the JSON flag (#json), extracts the associated number if present and returns the cleaned path.
  */
