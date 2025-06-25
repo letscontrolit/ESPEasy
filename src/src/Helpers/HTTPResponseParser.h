@@ -16,6 +16,7 @@
 # define MAX_KEYS 20 // Maximum number of keys allowed in json.keys
 # define RESPONSE_MAX_LENGTH 5000
 
+
 /**
  * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
  */
@@ -29,5 +30,13 @@ void eventFromResponse(const String& host,
                        const int   & httpCode,
                        const String& uri,
                        HTTPClient  & http);
+
+# if FEATURE_JSON_EVENT
+/**
+ * @brief Parses the URI, detects the JSON flag (#json), extracts the associated number if present and returns the cleaned path.
+ */
+String parseUriPath(const String& path);
+# endif // if FEATURE_JSON_EVENT
+
 #endif // RESPONSE_PARSER_SUPPORT
 #endif // HELPERS_HTTPRESPONSEPARSER_H

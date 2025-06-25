@@ -17,6 +17,10 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringParser.h"
 
+#if RESPONSE_PARSER_SUPPORT
+# include "../Helpers/HTTPResponseParser.h"
+#endif // if RESPONSE_PARSER_SUPPORT
+
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const __FlashStringHelper *logIdentifier,
@@ -100,6 +104,12 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
     # endif // ifndef BUILD_NO_DEBUG
 
     int httpCode = -1;
+
+# if FEATURE_JSON_EVENT
+    // remove the hash property (#json) from the uri like browsers do
+    path = parseUriPath(path);
+# endif // if FEATURE_JSON_EVENT
+
     send_via_http(
       logIdentifier,
       timeout,
