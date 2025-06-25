@@ -33,10 +33,18 @@ def create_display_text(description, version, families):
         esp32_split.append('C2')
     if 'ESP32-C3' in families:
         esp32_split.append('C3')
-    if 'ESP32-C6' in families:
+    if 'ESP32-C5' in families:
+        esp32_split.append('C5')
+    if 'ESP32-C61' in families:
+        esp32_split.append('C61')
+    elif 'ESP32-C6' in families:
         esp32_split.append('C6')
-    if 'ESP32-H2' in families:
+    if 'ESP32-H21' in families:
+        esp32_split.append('H21')
+    elif 'ESP32-H2' in families:
         esp32_split.append('H2')
+    if 'ESP32-P4' in families:
+        esp32_split.append('P4')
 
     if len(esp32_split) > 0:
         fam_split.append('ESP32-' + '/'.join(esp32_split))
@@ -74,10 +82,18 @@ def parse_filename(file, version, variant, file_suffix):
                 chipFamily = 'ESP32-C2'
             elif 'ESP32c3' in variant:
                 chipFamily = 'ESP32-C3'
+            elif 'ESP32c5' in variant:
+                chipFamily = 'ESP32-C5'
+            elif 'ESP32c61' in variant:
+                chipFamily = 'ESP32-C61'
             elif 'ESP32c6' in variant:
                 chipFamily = 'ESP32-C6'
+            elif 'ESP32h21' in variant:
+                chipFamily = 'ESP32-H21'
             elif 'ESP32h2' in variant:
                 chipFamily = 'ESP32-H2'
+            elif 'ESP32p4' in variant:
+                chipFamily = 'ESP32-P4'
             else:
                 chipFamily = 'ESP32'
 
