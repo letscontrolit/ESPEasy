@@ -18,7 +18,7 @@
 
 
 /**
- * @brief Processes the response of an HTTP request, extracts the JSON, and processes it using keys from `json.keys`.
+ * @brief Processes the response of an HTTP request and triggers the corresponding events.
  */
 void eventFromResponse(const String& host,
                        const int   & httpCode,
