@@ -105,12 +105,6 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
 
     int httpCode = -1;
 
-# if FEATURE_JSON_EVENT
-
-    // remove the hash property (#json) from the uri like browsers do
-    path = parseUriPath(path);
-# endif // if FEATURE_JSON_EVENT
-
     send_via_http(
       logIdentifier,
       timeout,

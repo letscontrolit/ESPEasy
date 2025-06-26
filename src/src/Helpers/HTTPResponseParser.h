@@ -23,7 +23,8 @@
 void eventFromResponse(const String& host,
                        const int   & httpCode,
                        const String& uri,
-                       HTTPClient  & http);
+                       HTTPClient  & http,
+                       const int   & parseJson);
 
 # if FEATURE_JSON_EVENT
 
@@ -34,9 +35,17 @@ void readAndProcessJsonKeys(DynamicJsonDocument*root,
                             int                 numJson);
 
 /**
- * @brief Parses the URI, detects the JSON flag (#json), extracts the associated number if present and returns the cleaned path.
+ * @brief Result of parsing a URI for JSON flag.
  */
-String parseUriPath(const String& path);
+struct UriParseResult {
+  String cleanedPath;
+  int parseJson;
+};
+
+/**
+ * @brief Parses the URI, detects the JSON flag (#json), extracts the associated number if present, and returns both the cleaned path and the parseJson value.
+ */
+UriParseResult parseUriPath(const String& path);
 # endif // if FEATURE_JSON_EVENT
 
 #endif // RESPONSE_PARSER_SUPPORT

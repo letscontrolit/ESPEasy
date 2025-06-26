@@ -16,9 +16,8 @@
 
 # endif // if FEATURE_JSON_EVENT
 
-int parseJson = -1; // indicates whether the URI lacks a JSON flag (-1), or if present, specifies the group number (>= 0)
 
-void eventFromResponse(const String& host, const int& httpCode, const String& uri, HTTPClient& http) {
+void eventFromResponse(const String& host, const int& httpCode, const String& uri, HTTPClient& http, const int& parseJson) {
   if ((httpCode == 200)) {
     if (parseJson == -1) {
       // -------------------------------------------------------------------------------------------Thingspeak
@@ -398,27 +397,28 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
 }
 
 // ------------------------------------------------------------------------------------------- JSONevent Helper
-String parseUriPath(const String& path) {
+UriParseResult parseUriPath(const String& path) {
+  UriParseResult result;
+  result.cleanedPath = path;  // default
+  result.parseJson = -1;
+
   int jsonIndex = path.indexOf(F("#json"));
-  parseJson = -1;
 
   if (jsonIndex != -1) {
     String numberStr = path.substring(jsonIndex + 5);
 
-    if (numberStr.length() == 0) { // nothing after #json
-      parseJson = 0;
+    if (numberStr.length() == 0) {
+      result.parseJson = 0;
     } else if ((numberStr.toInt() > 0) && numberStr.equals(String(numberStr.toInt()))) {
-      // numberStr is a valid positive integer (no junk after number)
-      parseJson = numberStr.toInt();
+      result.parseJson = numberStr.toInt();
     }
 
-    if (parseJson > -1) {
-      return path.substring(0, jsonIndex);
+    if (result.parseJson > -1) {
+      result.cleanedPath = path.substring(0, jsonIndex);
     }
-  }
+  } 
 
-  // no valid "#json" tag found, return original path
-  return path;
+  return result;
 }
 
 # endif // if FEATURE_JSON_EVENT
