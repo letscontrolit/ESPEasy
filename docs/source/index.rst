@@ -36,6 +36,7 @@ Welcome to ESP Easy's documentation!
    Participate/Documentation.rst
    Participate/ProjectStructure.rst
    Reference/Flashing.rst
+   Reference/Migrate_SPIFFS_to_LittleFS.rst
    Reference/Safety.rst
    Reference/Command.rst
    Reference/Events.rst
