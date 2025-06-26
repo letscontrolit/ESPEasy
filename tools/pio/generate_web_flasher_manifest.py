@@ -400,6 +400,14 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    See <a href="../" >../</a> for last official build.\n',
             '    <br>\n',
             '    <a href="all.zip" >all.zip</a> containing all bin files in a single zip file.\n',
+
+            '    <br>\n',
+            '    <br>\n',
+            '    <h2>Migrate ESP32 installs from SPIFFS to LittleFS</h2>\n',
+            '    From 2025/06/26 onward, there will be no longer SPIFFS builds for ESP32-xx.\n',
+            '    <br>\n',
+            '    See <a href="https://espeasy.readthedocs.io/en/latest/Reference/Migrate_SPIFFS_to_LittleFS.html" >Migrate from SPIFFS to LittleFS (ESP32)</a> in the documentation on how to migrate older (ESP32) SPIFFS installs to LittleFS\n',
+
             '    <script>\n',
             '      const selectEl = document.querySelector(".pick-variant select");\n',
             '      const installEl = document.querySelector("esp-web-install-button");\n',
