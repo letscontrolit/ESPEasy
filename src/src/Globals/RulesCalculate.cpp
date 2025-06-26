@@ -10,8 +10,8 @@ RulesCalculate_t RulesCalculate{};
 /*******************************************************************************************
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
-int CalculateParam(const String& TmpStr, int errorValue) {
-  int32_t returnValue = errorValue;
+int64_t CalculateParam(const String& TmpStr, int64_t errorValue) {
+  int64_t returnValue = errorValue;
 
   if (TmpStr.length() == 0) {
     return returnValue;
@@ -20,7 +20,7 @@ int CalculateParam(const String& TmpStr, int errorValue) {
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    if (!validIntFromString(TmpStr, returnValue)) {
+    if (!validInt64FromString(TmpStr, returnValue)) {
       return errorValue;
     }
   } else {
@@ -37,10 +37,13 @@ int CalculateParam(const String& TmpStr, int errorValue) {
                    strformat(F("CALCULATE PARAM: %s = %.6g"), TmpStr.c_str(), roundf(param)));
       }
 #endif // ifndef BUILD_NO_DEBUG
-    } else {
-      return errorValue;
+      // return integer only as it's valid only for variable indices and device/task id
+      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return round(param);
+      #else
+      return roundf(param);
+      #endif
     }
-    returnValue = roundf(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
