@@ -36,7 +36,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
     {
       auto& dev = Device[++deviceCount];
       dev.Number         = PLUGIN_ID_111;
-      dev.Type           = DEVICE_TYPE_SPI2;
+      dev.Type           = DEVICE_TYPE_SPI3;
       dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
       dev.ValueCount     = 1;
       dev.SendDataOption = true;
@@ -59,8 +59,22 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
     {
       event->String1 = formatGpioName_output(F("CS PIN"));            // P111_CS_PIN
       event->String2 = formatGpioName_output_optional(F("RST PIN ")); // P111_RST_PIN
+      event->String3 = formatGpioName_input_optional(F("IRQ PIN "));  // P111_IRQ_PIN
       break;
     }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = event->String1;
+      string += concat(F("CS: "), formatGpioLabel(CONFIG_PIN1, false));
+      string += event->String1;
+      string += concat(F("RST: "), formatGpioLabel(CONFIG_PIN2, false));
+      string += event->String1;
+      string += concat(F("IRQ: "), formatGpioLabel(CONFIG_PIN3, false));
+      success = true;
+      break;
+    }
+
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -70,8 +84,17 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Options"));
+      P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (nullptr != P111_data) {
+        uint8_t v{};
+        const String version = P111_data->PCD_getVersion(v);
+        if (v != 0 && v != 0xFF) {
+          addRowLabel(F("Reader Version"));
+          addHtml(version);
+        }
+      }
 
+      addFormSubHeader(F("Options"));
       {
         const __FlashStringHelper *removaltype[] = {
           F("None"),
@@ -116,7 +139,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN, P111_IRQ_PIN));
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P111_data) {
@@ -163,7 +186,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P111_data) {
-        success = P111_data->plugin_fifty_per_second();
+        success = P111_data->plugin_fifty_per_second(event);
       }
       break;
     }
