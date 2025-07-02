@@ -45,7 +45,7 @@ bool rulesProcessingFile(const String& fileName,
  \*********************************************************************************************/
 
 bool get_next_inner_bracket(const String& line,
-                            int         & startIndex,
+                            unsigned int& startIndex,
                             int         & closingIndex,
                             char          closingBracket);
 

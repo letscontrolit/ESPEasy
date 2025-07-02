@@ -220,6 +220,12 @@
 #define DEFAULT_PIN_I2C_SDA              -1                // Undefined
 #endif
 #endif
+#ifndef DEFAULT_PIN_I2C2_SDA
+#define DEFAULT_PIN_I2C2_SDA             -1                // Undefined
+#endif
+#ifndef DEFAULT_PIN_I2C3_SDA
+#define DEFAULT_PIN_I2C3_SDA             -1                // Undefined
+#endif
 #ifndef DEFAULT_PIN_I2C_SCL
 #ifdef ESP8266
 #define DEFAULT_PIN_I2C_SCL              5
@@ -227,6 +233,12 @@
 #ifdef ESP32
 #define DEFAULT_PIN_I2C_SCL              -1                // Undefined
 #endif
+#endif
+#ifndef DEFAULT_PIN_I2C2_SCL
+#define DEFAULT_PIN_I2C2_SCL             -1                // Undefined
+#endif
+#ifndef DEFAULT_PIN_I2C3_SCL
+#define DEFAULT_PIN_I2C3_SCL             -1                // Undefined
 #endif
 #ifndef DEFAULT_I2C_CLOCK_SPEED
 #define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
@@ -455,6 +467,16 @@
 #ifndef GITHUB_RELEASES_LINK_SUFFIX
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
+
+
+#if FEATURE_STRING_VARIABLES
+# define TASK_VALUE_DERIVED_PREFIX_TEMPLATE       "_%s_%s-derived" // Includes a not-allowed varname character (-) to prevent undesired manipulation via LetStr
+# define TASK_VALUE_UOM_PREFIX_TEMPLATE           "_%s_%s-uom"
+# define TASK_VALUE_NAME_PREFIX_TEMPLATE          "_%s_%s-name"
+# define TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE  "_%s_%s-presentation"
+# define TASK_VALUE_PRESENTATION_PREFIX_STRING    "$" // Keep these string and char prefixes the same!
+# define TASK_VALUE_PRESENTATION_PREFIX_CHAR      '$'
+#endif // if FEATURE_STRING_VARIABLES
 
 
 // --- We define the default features to be enabled here

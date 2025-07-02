@@ -10,6 +10,9 @@
 # include "../Helpers/Memory.h"
 
 # include "../WebServer/Chart_JS.h"
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../WebServer/Markup.h"
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 PluginStats_array::~PluginStats_array()
 {
@@ -40,11 +43,7 @@ void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t ta
     }
 
     if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
-      // Try to allocate in PSRAM if possible
+      // Try to allocate in PSRAM or 2nd heap if possible
       constexpr unsigned size = sizeof(PluginStats);
       void *ptr               = special_calloc(1, size);
 
@@ -57,7 +56,17 @@ void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t ta
 
 
       if (_plugin_stats[taskVarIndex] != nullptr) {
+        # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+        const uint8_t uomIndex = ExtraTaskSettings.getTaskVarUnitOfMeasure(taskVarIndex);
+        String label(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
+
+        if (uomIndex != 0) {
+          label = strformat(F("%s (%s)"), ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex], toUnitOfMeasureName(uomIndex).c_str());
+        }
+        _plugin_stats[taskVarIndex]->setLabel(label);
+        # else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
+        # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         # if FEATURE_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
@@ -372,8 +381,8 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
     if (_plugin_stats_timestamps != nullptr) {
       struct tm ts;
       uint32_t  unix_time_frac{};
-      const uint32_t uinxtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
-      const uint32_t local_timestamp = time_zone.toLocal(uinxtime_sec);
+      const uint32_t unixtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
+      const uint32_t local_timestamp = time_zone.toLocal(unixtime_sec);
       breakTime(local_timestamp, ts);
       addHtml('"');
       addHtml(formatDateTimeString(ts));

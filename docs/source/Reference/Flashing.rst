@@ -28,6 +28,10 @@ The included tools are all for Windows.
 
 For Linux or Mac users, the recommended tool for ESP82xx/ESP32 is `esptool.py <https://github.com/espressif/esptool>`_
 
+Platform independent software in your browser (works also on Linux):
+
+* `ESPWebTool <https://esp.huhn.me/>`_ just use Chrome or Edge browser to flash usb connected ESP82xx/ESP32 board. For Firefox you need to install extra `addon <https://addons.mozilla.org/en/firefox/addon/webserial-for-firefox/>`_.
+
 Flashing Parameters
 ===================
 
@@ -95,6 +99,7 @@ ESP82xx
 
 ESPEasy builds based on esp8266/Arduino library version 2.7.x and later can handle compressed ``.bin.gz`` files.
 When in doubt, just use the ``.bin`` files.
+If first time flash use ``.bin`` file at address 0.
 
 ESP32
 =====

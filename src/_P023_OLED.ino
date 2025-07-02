@@ -183,7 +183,10 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
+      void * ptr = special_calloc(1, sizeof(P023_data_struct));
+      if (ptr) {
+        initPluginTaskData(event->TaskIndex, new (ptr) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
+      }
       P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {

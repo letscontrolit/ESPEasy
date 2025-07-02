@@ -191,17 +191,19 @@ It is also possible to refer to other task values and system variables. (added: 
 
 .. note:: The syntax in the formula field is nearly the same as in the rules. Only the ``%value%`` and ``%pvalue%`` cannot be used in rules.
 
+For builds that have String Variables enabled (ESP32 only), there's a secondary use of the Formula field. Where a formula is used to re-calculate the data into a different value to be presented and sent to Controllers and in the regular events, this field can also be used to change the presentation on the Devices page (only) of the value.
 
-Stats
-^^^^^
+This Presentation format is enabled by placing a ``$`` sign as the first character in the field. The rest of the formula field is then handled like a formula, or rules, but the resulting output will *only* be used instead of the normal display on the Devices page. The presentation output can also be used in Rules and on Displays by using the Formatting option ``$``, like this: ``[bme#temperature#$]``, and is included in the JSON output per taskvalue from the ``/json`` endpoint as ``Presentation``, when it is set.
 
-(Added: 2022/07/11)
+Examples:
 
-This checkbox allows to collect some historic data of this task value.
-On ESP32 it will collect upto 64 samples. On ESP8266 this is limited to 16 samples due to memory.
+Show the temperature both in Celcius and Fahrenheit:
 
-When checked, the last N samples of each checked task value will be shown in a chart in the "Statistics" section.
+.. code-block:: none
 
+  $%value% {D}C %c_c2f%(%value%) {D}F
+
+This presentation feature is a limited version (in length) of what's available via the ``TaskValueSetPresentation`` command, that doesn't need adding commands to Rules that are set during startup.
 
 
 Decimals
@@ -212,6 +214,48 @@ For example, when referring to a task value on a display via ``[bme#temperature]
 
 See :ref:`Rules: Formatting referred values <Formatting values>` on how this can be customized.
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
+
+
+Stats
+^^^^^
+
+(Added: 2022/07/11)
+
+This checkbox allows to collect some historic data of this task value.
+On ESP32 it will collect upto 255 samples. On ESP8266 this is limited to 16 samples due to memory.
+
+When checked, the last N samples of each checked task value will be shown in a chart in the "Statistics" section.
+
+
+Hide
+^^^^
+
+When Hide is checked, the value will be hidden from the graph by default, but can be enabled by clicking the colored tag above the graph.
+
+Axis
+^^^^
+
+Per Value you can select on what axis (Left or Right, 1..4) the value should be shown. This helps keeping the graph charts usable when the value units are in different ranges/magnitudes.
+
+
+Unit of Measure
+^^^^^^^^^^^^^^^
+
+(Added: 2025/06/12)
+
+On selected builds (ESP32 only, can be enabled in ESP8266 Custom builds) per value a Unit of Measure can be selected.
+
+If set the UoM will be space-appended to the value when displayed on the Devices page, used in the labels for the Stats display, and later used in the MQTT AutoDiscovery messages so the receiving server can use that for presentation. When set it is also included in the JSON output as ``UoM`` per taskvalue, available at the ``/json`` endpoint of the ESP, to be used by external systems like EasyFetch.
+
+A list of 100+ Unit of Measure values is available (derived of what's supported by Home Assistant):
+
+``°C, °F, K, %, Pa, hPa, bar, mbar, inHg, psi, W, kW, V, Wh, kWh, A, VA, mm, cm, m, km,`` ``L, mL, m³, ft³, m³/h, ft³/h, lx, UV index, µg/m³, mg/m³, p/m³, ppm, ppb,``
+``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, db, dBm,``
+``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s``
+
+Displaying the Unit of Measure can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
+
+|
 
 .. _Plugin List:
 
@@ -375,6 +419,7 @@ There are different released versions of ESP Easy:
    ":ref:`P137_page`","|P137_status|","P137"
    ":ref:`P138_page`","|P138_status|","P138"
    ":ref:`P139_page`","|P139_status|","P139"
+   ":ref:`P140_page`","|P140_status|","P140"
    ":ref:`P141_page`","|P141_status|","P141"
    ":ref:`P142_page`","|P142_status|","P142"
    ":ref:`P143_page`","|P143_status|","P143"
@@ -402,6 +447,7 @@ There are different released versions of ESP Easy:
    ":ref:`P173_page`","|P173_status|","P173"
    ":ref:`P175_page`","|P175_status|","P175"
    ":ref:`P176_page`","|P176_status|","P176"
+   ":ref:`P177_page`","|P177_status|","P177"
    ":ref:`P178_page`","|P178_status|","P178"
 
 

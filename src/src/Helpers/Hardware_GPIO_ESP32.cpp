@@ -188,6 +188,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   return true;
 }
 
+#if SOC_TOUCH_SENSOR_SUPPORTED
 int touchPinToGpio(int touch_pin)
 {
   // ESP32 classic
@@ -207,7 +208,9 @@ int touchPinToGpio(int touch_pin)
   }
   return -1;
 }
+#endif
 
+#if SOC_DAC_SUPPORTED
 // Get DAC related info for a given GPIO pin
 // @param gpio_pin   GPIO pin number
 // @param dac        Number of DAC unit
@@ -221,5 +224,6 @@ bool getDAC_gpio_info(int gpio_pin, int& dac)
   }
   return true;
 }
+#endif
 
 #endif // ifdef ESP32_CLASSIC

@@ -112,12 +112,136 @@
 #    include "../Static/Fonts/LCD14cond24pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_24PT_LCD14COND
 #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
-# endif  // if ADAGFX_FONTS_INCLUDED
+# endif  // if ADAGFX_FONTS_INCLUDED (this should be the closing #endif)
+
+/* Marker: C) Keep the last #endif, above, and insert an #ifdef/#ifdef/#include/#endif/#endif to conditinally include the specific font .h
+   file  *DON'T REMOVE* */
 
 # if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 #  include <SD.h>
 # endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
+/**
+   ------------------------------------------
+   Adding a custom font to the list of fonts.
+   ------------------------------------------
+   (Advanced development topic)
+
+   As we can't have all fonts combined in all builds for .bin-size reasons, each extra font has to be guarded by compile-time defines.
+   This does make the readability of the source quite poor, but flexible in what is eventually included.
+   For historic reasons, there are 2 types of compile-time defines, some that are either just defined, or not,
+   and some that should be defined as 0 for Off/Disabled, and non-0 (usually 1, sometimes 'true') for On/Enabled. This of course adds to the
+   confusion.
+
+   A few sources for finding truetype (ttf) fonts:
+   https://www.fonts.google.com
+   https://www.1001freefonts.com
+   https://www.fontsquirrel.com
+   Most usable for displaying text and numeric data in a structured way is to use a monospaced font, where all characters use the same
+   width. When only displaying numeric data, some proportionally spaced fonts have monospaced digits (same width), but certainly not all
+   fonts do!
+   When sharing your font in the ESPEasy repository, please select a font that's free to use, as we don't have funding for commercial fonts
+   or copyrighted fonts available! Please share the link to the font that was used, so the legal stuff can be validated.
+   If you want to use a non-free or licensed font, then please don't share it in the ESPEasy repository, to avoid legal issues.
+
+   For this explanation I'll use a 90pt font named 7segment90pt7b.
+   The desired font can be generated from https://rop.nl/truetype2gfx/ where you can upload a .ttf font file, select the size, 'preview' the
+   font (mind you, the site shows the .ttf font, not the generated bitmap font!), and generate a .h file using the Get GFX Font File button.
+   The generated .h file should be copied to the src/src/Static/Fonts folder of the repository.
+
+   The steps are numbered a) to g)
+
+   a)
+   We start by adding the defines to AdafruitGFX_helper.h
+
+   To add a 90pt font, find 'Marker: A)' to insert #define ADAGFX_FONTS_EXTRA_90PT_INCLUDED (above the marker) to guard this group of fonts.
+
+   b)
+   At 'Marker: B)' add #define ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B (above the marker) to have a way to include or exclude this new font.
+   The last part of the name should best match the name of the font
+
+   c)
+   Now we continue in AdafruitGFX_helper.cpp
+
+   Just above 'Marker: C)' is the last #endif of a large #ifdef/#ifdef/#include/#endif/#endif list.
+   Just before that last #endif, a new check should be added, like this: (example names used, the name for the include-file should be
+   adjusted too):
+
+ #  ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+ #   ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+ #    include "../Static/Fonts/7segment90pt7b.h"
+ #   endif // ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+ #  endif // ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+
+   This filename has to be copied exactly as it is on disk, as the builds are created mostly on Linux, that uses a case-sensitive file
+   system.
+
+   d)
+   Next, the include-file generated before needs a few adjustments to make it work with the ESPEasy code:
+   In that font .h file we'll insert, before the first line, a single-include check:
+
+ #ifndef FONTS_7SEGMENT90PT7B_H
+ #define FONTS_7SEGMENT90PT7B_H
+
+   and at the end of that file:
+
+ #endif // ifndef FONTS_7SEGMENT90PT7B_H
+
+   The name of the #define should match the filename, any periods, slashes and dashes replaced by underscores, and all uppercase, by
+   convention.
+
+   e)
+   Now we'll reteurn to AdafruitGFX_helper.cpp, to extend the list of font-names:
+   That font-names list ends just above 'Marker E)', with an empty set of quotes and a semicolon: "";
+   Just before that line, include this conditional code:
+
+ #  ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+ #   ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+   "sevenseg90b|"
+ #   endif // ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+ #  endif // ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+
+   assigning the name sevenseg90b to the font. This name should match the fontname and probably the point size,
+   but _must_ be all lowercase characters! (required!).
+   The name-separator character | must also be added so the name can be recognized as a unique name in the list.
+
+   f)
+   Next we have to add the font data to the font-list array.
+   At the end of that array, above 'Marker F)', we'll have to add the address of the GFXFont from the new font .h file (select your
+      font.h file, of course) and parameters for the font:
+
+ # ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+ #  ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+   { &_7segment90pt7b,               96,              120, 122,  false, 101u },
+ #  endif // ifdef ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B
+ # endif  // ifdef ADAGFX_FONTS_EXTRA_90PT_INCLUDED
+
+   The name of the GFXFont definition can be found near the end of the font.h file, and should be autocompleted by VSCode Intellisense.
+
+   The numbers are:
+   - width (usually a few pixels wider than the font-size)
+   - height (usually the font-size multiplied by ~1.4)
+   - offset (line-height offset, some fonts need 0, for most fonts it should be the font-height + a few pixels for the line-spacing)
+   and a boolean that's true for proportional spacing and false for monospaced fonts.
+   These numbers are an approximation, and have to be tried on a real display, by trial and error.
+   The last number, 101u in the example, is the font-id. That has to be unique (check the rest of the list), used 101 as the first
+   user-custom font.
+   The exisiting font-ids should NOT be changed, as they are stored in plugin settings as the default font to use, and would invalidate
+   existing configurations if modified!
+
+   g)
+   Next step is to compile a build with this code enabled. Don't compile for ESP8266, as then all extra fonts are disabled (not going to fit
+   in the binary).
+   An ESP32 MAX build is a good candidate to compile, as that includes all plugins, and most fonts, though these added custom fonts have to
+   be manually enabled.
+   Also, a Custom build can be built, where you define in a Custom.h file, copied from Custom-sample.h, and enable one or more of USES_P095,
+   USES_P096, USES_P116, USES_P131, USES_P141 and USES_P165 to have the AdafruitGFX_helper auto-enabled. (P165 doesn't have much space for
+   large fonts though)
+   In the Custom.h file, you can also enable the #define for the font-group (ADAGFX_FONTS_EXTRA_90PT_INCLUDED) and optionally the font
+   (ADAGFX_FONTS_EXTRA_90PT_SEVENSEG_B), so in the AdafruitGFX_helper.h file they can be disabled by default, and only enabled in the Custom
+   build when desired.
+
+ */
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
@@ -210,16 +334,12 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
     toString(AdaGFXTextPrintMode::ClearThenTruncate),
     toString(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
-  /*
-  const int textModeOptions[] = {
-    static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
-    static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
-    static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate),
-    static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingCentered),
-  };
-  */
 
-  const FormSelectorOptions selector(NR_ELEMENTS(textModes), textModes);
+  constexpr int count = NR_ELEMENTS(textModes);
+  FormSelectorOptions selector(count, textModes);
+
+  selector.default_index = 1;
+
   selector.addFormSelector(F("Text print Mode"), id, selectedIndex);
 }
 
@@ -280,8 +400,8 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
 void AdaGFXFormRotation(const __FlashStringHelper *id,
                         uint8_t                    selectedIndex) {
   const __FlashStringHelper *rotationOptions[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-//  const int rotationOptionValues[]             = { 0, 1, 2, 3 };
-  const FormSelectorOptions selector(NR_ELEMENTS(rotationOptions), rotationOptions);
+  const FormSelectorOptions  selector(NR_ELEMENTS(rotationOptions), rotationOptions);
+
   selector.addFormSelector(F("Rotation"), id, selectedIndex);
 }
 
@@ -404,7 +524,6 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
 void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
                            uint8_t                    selectedIndex) {
   String lineSpacings[16];
-//  int    lineSpacingOptions[16];
 
   for (uint8_t i = 0; i < 16; ++i) {
     if (15 == i) {
@@ -416,7 +535,6 @@ void AdaGFXFormLineSpacing(const __FlashStringHelper *id,
     } else {
       lineSpacings[i] = i;
     }
-//    lineSpacingOptions[i] = i;
   }
   const FormSelectorOptions selector(16, lineSpacings);
   selector.addFormSelector(F("Linespacing"), id, selectedIndex);
@@ -972,6 +1090,8 @@ const char adagfx_fonts[] PROGMEM =
   #  endif // ifdef ADAGFX_FONTS_EXTRA_24PT_INCLUDED
   "";
 
+/* Marker E) Add the new fontname with #ifdef checks _above_ the line with only: "";  *DON'T REMOVE* */
+
 struct tFontArgs {
   constexpr tFontArgs(const GFXfont *f,
                       uint8_t        width,
@@ -1101,6 +1221,8 @@ constexpr tFontArgs fontargs[] =
 };
 /* *INDENT-ON* */
 # endif // if ADAGFX_FONTS_INCLUDED
+
+/* Marker F) Add the font data address and parameters to the above array, just above the closing curly brace  *DON'T REMOVE* */
 
 String AdaGFXgetFontName(uint8_t fontId, bool includeFontId) {
   # if ADAGFX_FONTS_INCLUDED
@@ -3239,17 +3361,23 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     return false;
   }
 
+  size_t myPos{};
+
   // Parse BMP header. 0x4D42 (ASCII 'BM') is the Windows BMP signature.
   // There are other values possible in a .BMP file but these are super
   // esoteric (e.g. OS/2 struct bitmap array) and NOT supported here!
-  if (readLE16() == 0x4D42) { // BMP signature
-    (void)readLE32();         // Read & ignore file size
-    (void)readLE32();         // Read & ignore creator bytes
-    offset = readLE32();      // Start of image data
+  const uint16_t sig = readLE16();
+  myPos += 2;
+
+  if (sig == 0x4D42) {   // BMP signature
+    (void)readLE32();    // Read & ignore file size
+    (void)readLE32();    // Read & ignore creator bytes
+    offset = readLE32(); // Start of image data
     // Read DIB header
     headerSize = readLE32();
     bmpWidth   = readLE32();
     bmpHeight  = readLE32();
+    myPos     += 24;
 
     // If bmpHeight is negative, image is in top-down order.
     // This is not canon but has been observed in the wild.
@@ -3259,6 +3387,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
     }
     planes = readLE16();
     depth  = readLE16(); // Bits per pixel
+    myPos += 4;
 
     // Compression mode is present in later BMP versions (default = none)
     if (headerSize > 12) {
@@ -3269,6 +3398,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       colors = readLE32(); // Number of colors in palette, or 0 for 2^depth
       (void)readLE32();    // Number of colors used (ignore)
       // File position should now be at start of palette (if present)
+      myPos += 24;
     }
 
     if (!colors) {
@@ -3341,6 +3471,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 g = file.read();
                 r = file.read();
                 (void)file.read(); // Ignore 4th byte
+                myPos       += 4;
                 quantized[c] =     // -V522
                                ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
               }
@@ -3369,7 +3500,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
               }
 
               constexpr size_t errorcode = (size_t)-1;
-              size_t pos                 = file.position();
+              size_t pos                 = myPos; // file.position(); // position() doesn't seem to work for SD files
 
               if (pos == errorcode) {
                 pos = 0;
@@ -3381,6 +3512,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                   _tft->endWrite();                   // End TFT SPI transaction
                 }
                 file.seek(bmpPos);                    // Seek = SD transaction
+                myPos  = bmpPos;                      // Re-sync
                 srcidx = sizeof sdbuf;                // Force buffer reload
               }
 
@@ -3391,6 +3523,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                     _tft->endWrite();                 // End TFT SPI transact
                   }
                   file.read(sdbuf, sizeof sdbuf);     // Load from SD
+                  myPos += sizeof sdbuf;              // Let's assume we read a full buffer...
 
                   if (transact && canTransact) {
                     _display->startWrite();           // Start TFT SPI transact
@@ -3489,7 +3622,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
       addLog(LOG_LEVEL_ERROR, F("showBmp: Only uncompressed and 24 or 1 bit color-depth supported."));
     }
   } else { // end signature
-    addLog(LOG_LEVEL_ERROR, F("showBmp: File signature error."));
+    addLog(LOG_LEVEL_ERROR, strformat(F("showBmp: File signature error. (0x%04X)"), sig));
   }
 
   file.close();

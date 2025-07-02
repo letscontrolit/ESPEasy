@@ -4,22 +4,23 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P098
 
+# include <GPIO_Direct_Access.h>
+
+
 # define P098_LIMIT_SWITCH_TRIGGERPOS_MARGIN 10
 
 struct P098_GPIO_config {
-  byte high() const {
+  uint8_t high() const {
     return inverted ? 0 : 1;
   }
 
-  byte low() const {
+  uint8_t low() const {
     return inverted ? 1 : 0;
   }
 
   // Don't call this from ISR functions.
   bool readState() const {
-    const bool state = digitalRead(gpio) != 0;
-
-    return inverted ? !state : state;
+    return (DIRECT_pinRead_ISR(gpio) != 0) ^ inverted;
   }
 
   uint64_t timer_us = 100000;
@@ -139,7 +140,7 @@ private:
   volatile P098_limit_switch_state limitA;
   volatile P098_limit_switch_state limitB;
   ESPEASY_VOLATILE(int)            position = 0;
-  volatile uint64_t                enc_lastChanged_us = 0;
+  ESPEASY_VOLATILE(uint64_t)       enc_lastChanged_us = 0;
   uint64_t                         lastVirtualSpeedApplied_us = 0;
   int                              pos_dest = 0;
   int                              pos_overshoot = 0;

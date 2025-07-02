@@ -179,7 +179,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
+    #endif
     return false;
   }
   LoadControllerSettings(controller_idx, *ControllerSettings);
@@ -255,7 +257,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       mqtt.setTimeout(timeout); // in msec as it should be!
   #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
-      MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+      MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
       MQTTclient.setSocketTimeout(timeout);
       break;
     }
@@ -360,7 +362,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_tls->setBufferSizes(1024, 1024);
     #  endif // ifdef ESP8266
     MQTTclient.setClient(*mqtt_tls);
-    MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+    MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
     MQTTclient.setSocketTimeout(timeout);
 
 
@@ -394,7 +396,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   MQTTclient.setClient(mqtt);
-  MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+  MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
   MQTTclient.setSocketTimeout(timeout);
 # endif // if FEATURE_MQTT_TLS
 
@@ -838,12 +840,22 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   }
   topic_str = topic;
   payload_str = payload;
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(
-      controller_idx, taskIndex, 
-      std::move(topic_str),
-      std::move(payload_str), retained,
-      callbackTask)));
+
+  bool success = false;
+
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success =
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex, 
+            std::move(topic_str),
+            std::move(payload_str), retained,
+            callbackTask)));
+  }
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -863,12 +875,21 @@ bool MQTTpublish(controllerIndex_t controller_idx,
     return false;
   }
 
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex,
-                                                                                                           std::move(topic),
-                                                                                                           std::move(payload), retained,
-                                                                                                           callbackTask)));
+  bool success = false;
 
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success = 
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex,
+            std::move(topic),
+            std::move(payload), retained,
+            callbackTask)));
+  }
   scheduleNextMQTTdelayQueue();
   return success;
 }
@@ -987,7 +1008,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(event->TaskIndex)) { return; }
+  if (!validTaskIndex(event->TaskIndex)) { 
+    return; 
+  }
 
   // FIXME TD-er: Should a 'disabled' task be rescheduled?
   // If not, then it should be rescheduled after the check to see if it is enabled.
@@ -999,6 +1022,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
+    START_TIMER;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -1013,5 +1037,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
+    STOP_TIMER(SENSOR_SEND_TASK);
   }
 }

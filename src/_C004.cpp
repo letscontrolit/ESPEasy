@@ -48,7 +48,8 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
     {
       success = true;
 
-      switch (event->idx) {
+      switch (event->idx)
+      {
         case ControllerSettingsStruct::CONTROLLER_USER:
           string = F("ThingHTTP Name");
           break;
@@ -72,9 +73,14 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C004_queue_element> element(new (std::nothrow) C004_queue_element(event));
+      constexpr unsigned size = sizeof(C004_queue_element);
+      void *ptr               = special_calloc(1, size);
 
-      success = C004_DelayHandler->addToQueue(std::move(element));
+      if (ptr != nullptr) {
+        std::unique_ptr<C004_queue_element> element(new (ptr) C004_queue_element(event));
+
+        success = C004_DelayHandler->addToQueue(std::move(element));
+      }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
 
       break;

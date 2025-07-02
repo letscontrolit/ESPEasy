@@ -101,6 +101,8 @@ enum class ST77xx_type_e : uint8_t {
   # endif // if P116_EXTRA_ST7789
   # if P116_EXTRA_ST7735
   ST7735s_135x240 = 12u,
+  ST7735s_172x320 = 13u,
+  ST77xxs_170x320 = 14u,
   # endif // if P116_EXTRA_ST7735
 };
 

@@ -83,10 +83,7 @@ Device Settings
 
 * **Event with iButton address**: With this option enabled, and the **Device Address** selection left to ``- None -``, instead of responding to a single iButton, an event is generated for any iButton that is recognized by the receiver. And once removed, the same event is generated without the iButton address. This can be processed in rules. See below in the **Events** chapter for a more detailed description.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. as it is optional. It is the frequency used to send the value to any Controllers configured for this device.
 

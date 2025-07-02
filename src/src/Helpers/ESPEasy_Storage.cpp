@@ -39,6 +39,7 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_NVS_Helper.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
@@ -60,9 +61,8 @@
 
 #ifdef ESP32
 # include <esp_partition.h>
-#endif // ifdef ESP32
+# include <esp_phy_init.h>
 
-#ifdef ESP32
 String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
@@ -135,22 +135,41 @@ bool fileExists(const __FlashStringHelper *fname)
   return fileExists(String(fname));
 }
 
+bool fileExists(const __FlashStringHelper *fname, FileDestination_e& destination)
+{
+  return fileExists(String(fname), destination);
+}
+
 bool fileExists(const String& fname) {
+  FileDestination_e dummy;
+  return fileExists(fname, dummy);
+}
+
+bool fileExists(const String& fname, FileDestination_e& destination) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif // ifdef USE_SECOND_HEAP
 
   const String patched_fname = patch_fname(fname);
   auto search                = Cache.fileExistsMap.find(patched_fname);
+  destination                = FileDestination_e::ANY;
 
   if (search != Cache.fileExistsMap.end()) {
-    return search->second;
+    destination = static_cast<FileDestination_e>(search->second - 1);
+    return search->second != 0;
   }
   bool res = ESPEASY_FS.exists(patched_fname);
+  if (res) {
+    destination = FileDestination_e::FLASH;
+  }
+
   #if FEATURE_SD
 
   if (!res) {
     res = SD.exists(patched_fname);
+    if (res) {
+      destination = FileDestination_e::SD;
+    }
   }
   #endif // if FEATURE_SD
 
@@ -164,7 +183,7 @@ bool fileExists(const String& fname) {
     Cache.fileExistsMap.emplace(
       std::make_pair(
         patched_fname,
-        res));
+        res ? (static_cast<uint8_t>(destination) + 1) : 0));
   }
 
   if (Cache.fileCacheClearMoment == 0) {
@@ -186,7 +205,8 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
     return f;
   }
 
-  bool exists = fileExists(fname);
+  FileDestination_e where = FileDestination_e::ANY;
+  const bool exists = fileExists(fname, where);
 
   if (!exists) {
     if (equals(mode, 'r')) {
@@ -195,12 +215,12 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
     clearFileCaches();
   }
 
-  if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+  if (where != FileDestination_e::SD && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH))) {
     f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
   }
   #if FEATURE_SD
 
-  if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
+  if ((!f || where == FileDestination_e::SD) && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
     f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
   #endif // if FEATURE_SD
@@ -474,6 +494,44 @@ bool BuildFixes()
     #endif // if FEATURE_MQTT
   }
 
+  if (Settings.Build <= 21156) { // 2025-03-31
+    // PR #5235 Add 2nd and 3rd I2C Bus
+    if ((Settings.Pin_i2c2_sda == 0) &&
+        (Settings.Pin_i2c2_scl == 0)) {
+      Settings.Pin_i2c2_sda = DEFAULT_PIN_I2C2_SDA;
+      Settings.Pin_i2c2_scl = DEFAULT_PIN_I2C2_SCL;
+    }
+    if ((Settings.Pin_i2c3_sda == 0) &&
+        (Settings.Pin_i2c3_scl == 0)) {
+      Settings.Pin_i2c3_sda = DEFAULT_PIN_I2C3_SDA;
+      Settings.Pin_i2c3_scl = DEFAULT_PIN_I2C3_SCL;
+    }
+    if ((Settings.I2C2_clockSpeed == 0) &&
+        (Settings.I2C2_clockSpeed_Slow == 0)) {
+      Settings.I2C2_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C2_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C3_clockSpeed == 0) &&
+        (Settings.I2C3_clockSpeed_Slow == 0)) {
+      Settings.I2C3_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C3_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C2_Multiplexer_Type == 0) &&
+        (Settings.I2C2_Multiplexer_Addr == 0) &&
+        (Settings.I2C2_Multiplexer_ResetPin == 0)) {
+      Settings.I2C2_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C2_Multiplexer_Addr = -1;
+      Settings.I2C2_Multiplexer_ResetPin = -1;
+    }
+    if ((Settings.I2C3_Multiplexer_Type == 0) &&
+        (Settings.I2C3_Multiplexer_Addr == 0) &&
+        (Settings.I2C3_Multiplexer_ResetPin == 0)) {
+      Settings.I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C3_Multiplexer_Addr = -1;
+      Settings.I2C3_Multiplexer_ResetPin = -1;
+    }
+  }
+
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines
@@ -544,18 +602,105 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-   #ifdef USE_LITTLEFS
-     # ifdef ESP32
+#ifdef USE_LITTLEFS
+# ifdef ESP32
   const bool res = ESPEASY_FS.begin(true);
   ESPEASY_FS.end();
   return res;
-     # else // ifdef ESP32
+# else // ifdef ESP32
   return ESPEASY_FS.format();
-     # endif // ifdef ESP32
-   #else // ifdef USE_LITTLEFS
+# endif // ifdef ESP32
+#else // ifdef USE_LITTLEFS
   return ESPEASY_FS.format();
 
-   #endif // ifdef USE_LITTLEFS
+#endif // ifdef USE_LITTLEFS
+}
+
+#ifdef ESP32
+// Max. 15 char keys for RF calibration marked keys
+# define ESPEASY_RF_CAL_NVS_NAMESPACE  "ESPEasyRFcal"
+# define RF_CAL_NVS_PREF_KEY       "RfCalIDFver"
+uint32_t getWiFi_CalibrationVersion()
+{
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    uint32_t res{};
+    if (preferences.getPreference(F(RF_CAL_NVS_PREF_KEY), res)) {
+      return res;
+    }
+  }
+  return 0;
+}
+
+bool setWiFi_CalibrationVersion() {
+  // Store used IDF version in NVS
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    preferences.setPreference(F(RF_CAL_NVS_PREF_KEY), idfVersion);
+    return true;
+  }
+  return false;
+}
+
+String formatIdfVersion(uint32_t idfVer) {
+  return strformat(
+    F("%u.%u.%u"),
+    (idfVer >> 16) & 0xFF,
+    (idfVer >> 8) & 0xFF,
+    (idfVer) & 0xFF);
+}
+
+bool check_and_update_WiFi_Calibration() {
+  const uint32_t RFcal_idfVersion = getWiFi_CalibrationVersion();
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+
+  if (RFcal_idfVersion == idfVersion) {
+    // No need to wipe RF calibration
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration done with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+    return false;
+  }
+  if (RFcal_idfVersion) {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration with ESP-IDF %s, re-calibrating with ESP-IDF %s"),
+      formatIdfVersion(RFcal_idfVersion).c_str(),
+      formatIdfVersion(idfVersion).c_str()));
+  } else {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration unknown, (re-)calibrating with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+  }
+  return Erase_WiFi_Calibration();
+}
+#endif
+
+bool Erase_WiFi_Calibration() {
+  #ifdef ESP8266
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  if (!ESP.eraseConfig())
+    return false;
+  #ifndef BUILD_MINIMAL_OTA
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  #endif
+  #endif
+
+  #ifdef ESP32
+  WifiDisconnect();
+  setWifiMode(WIFI_OFF);
+  // Make sure power is stable, so wait a bit longer
+  delay(1000);
+  esp_phy_erase_cal_data_in_nvs();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  delay(200);
+  esp_phy_load_cal_and_init();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
+  delay(200);  
+  setWiFi_CalibrationVersion();
+  #endif
+  return true;
 }
 
 #ifdef ESP32
@@ -1039,7 +1184,11 @@ String LoadStringArray(SettingsType::Enum settingsType,
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            move_special(strings[stringCount], std::move(tmpString));
+            if (!tmpString.isEmpty()) {
+              move_special(strings[stringCount], std::move(tmpString));
+            } else {
+              free_string(strings[stringCount]);
+            }
 
             // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
             // We're appending per byte, so better prefer speed for short lived objects

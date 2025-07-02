@@ -13,6 +13,8 @@ const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
     case ST77xx_type_e::ST7735s_80x160_M5: return F("ST7735 80 x 160px (Color inverted)");
     # if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7735s_135x240: return F("ST7735 135 x 240px");
+    case ST77xx_type_e::ST7735s_172x320: return F("ST7735 172 x 320px");
+    case ST77xx_type_e::ST77xxs_170x320: return F("ST77xx 170 x 320px");
     # endif // if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
@@ -72,6 +74,16 @@ void ST77xx_type_toResolution(const ST77xx_type_e& device,
       x = 135;
       y = 240;
       break;
+    # if P116_EXTRA_ST7735
+    case ST77xx_type_e::ST7735s_172x320:
+      x = 172;
+      y = 320;
+      break;
+    case ST77xx_type_e::ST77xxs_170x320:
+      x = 170;
+      y = 320;
+      break;
+    # endif // if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7796s_320x480:
       x = 320;
       y = 480;
@@ -173,6 +185,20 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
 
         if (initRoptions == 0xFF) {
           initRoptions = INITR_BLACKTAB135x240; // 135x240px
+        }
+
+        // fall through
+      case ST77xx_type_e::ST7735s_172x320:
+
+        if (initRoptions == 0xFF) {
+          initRoptions = INITR_BLACKTAB172x320; // 172x320px
+        }
+
+        // fall through
+      case ST77xx_type_e::ST77xxs_170x320:
+
+        if (initRoptions == 0xFF) {
+          initRoptions = INITR_BLACKTAB170x320; // 170x320px
         }
 
         // fall through

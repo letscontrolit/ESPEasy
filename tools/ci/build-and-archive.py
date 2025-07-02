@@ -1,8 +1,7 @@
 import os
 import enum
 import subprocess
-from distutils.dir_util import copy_tree
-
+import shutil
 
 class CannotArchive(Exception):
     pass
@@ -28,7 +27,7 @@ def cmd(*, env, pio_can_fail):
     # be made into a flashable .bin
 
     for _dir in dirs:
-      copy_tree(_dir, os.path.basename(_dir))
+      shutil.copytree(_dir, os.path.basename(_dir))
 
 
 

@@ -34,20 +34,27 @@ This feature can be useful in a development/laboratory environment, for when the
 
 
 -------------
-I2C Interface
+I2C Bus
 -------------
 
 When using devices that use the I2C bus (Inter-integrated circuit, also known as IIC, and mostly compatible with SM Bus) (`Wikipedia: I2C <https://en.wikipedia.org/wiki/I%C2%B2C>`_) some pins have to be configured, and initialized during boot, for the SDA and SCL connections. This can be any unused pair of pins on the ESP board.
 
-The pins can be configured here, and will have default values initially (ESP8266: SDA: GPIO-4 (D2), SCL: GPIO-5 (D3), ESP32: SDA: GPIO-22, SCL: GPIO-23). When I2C is not used, these can be set to `- None -`, so the pins are available for other purposes.
+The pins can be configured here, and will have default values initially (ESP8266: SDA: GPIO-4 (D2), SCL: GPIO-5 (D3), ESP32: No defaults). When I2C is not used, these can be set to `- None -`, so the pins are available for other purposes.
 
-When having an I2C Priority task configured, the I2C GPIO pins can no longer be changed, as that could disable the hardware, thus blocking the device. The configured GPIO pins will be display-only.
+When having an I2C Priority task configured, the I2C GPIO pins (for that bus, when multiple buses are available) can no longer be changed, as that could disable the hardware, thus blocking the device. The configured GPIO pins will be display-only.
 
-The default bus clock speed can also be set here. If only devices supporting 100 kHz are connected (Old/Slow devices), then the value can be set to 100 kHz, by default 400 kHz is configured, that is supported by newer devices, though there are many devices supporting higher frequencies. ESP8266 is able to achieve ca. 400 kHz, while ESP32 allows much higher speeds.
+The default bus clock speed can also be set here. If only devices supporting 100 kHz are connected (Old/Slow devices), then the value can be set to 100 kHz, by default 400 kHz is configured, that is supported by newer devices, though there are many devices supporting higher frequencies. ESP8266 is able to achieve ca. 400 kHz, while ESP32 allows higher speeds.
 
-ESPEasy has a separate setting for Slow I2C devices, and per I2C device this slow clock speed can be selected in the Device edit page. This value is by default set to 100 kHz, but can be set lower or higher if desired.
+ESPEasy has a separate setting for Slow I2C devices, and per I2C device this slow clock speed can be selected in the Device configuration page. This value is by default set to 100 kHz, but can be set lower or higher if desired.
 
-.. image:: Hardware_I2CInterface.png
+*I2C ClockStretchLimit*
+
+- `I2C-bus.org - Clock Stretching <https://www.i2c-bus.org/clock-stretching/>`_
+- `ESPeasy wiki - Basics: The I2C Bus <https://www.letscontrolit.com/wiki/index.php/Basics:_The_I%C2%B2C_Bus>`_
+
+This setting is only available for the first I2C Bus, as not many devices (should) need this set, and the devices that do need this should then be connected to I2C Bus 0.
+
+.. image:: Hardware_I2CBus.png
 
 *Device specific Force Slow I2C speed selection:*
 
@@ -56,6 +63,36 @@ ESPEasy has a separate setting for Slow I2C devices, and per I2C device this slo
 Added: 2023-11-23
 
 A device flag has been added for specific devices to have **Force Slow I2C speed** set by default. After adding the device this option will be checked, but can still be unchecked to use (try) Fast I2C speed (400 kHz).
+
+Added: 2025-02-02
+
+Multiple I2C Buses can be configured on ESP32 builds. This aids in connecting all on-board sensors and devices when multiple GPIO pin-pairs are used for I2C devices. By default, 2 I2C Buses are made available, but via compile-time options, a 3rd I2C Bus can be enabled, if required.
+
+.. image:: Hardware_I2CBus2.png
+
+The available options are the same as for the first I2C Bus.
+
+If a second (or third) I2C Bus are not needed, then leave the GPIO settings on ``- None -``, and the interface won't be initialized, and not shown in the configuration options.
+
+NB: The I2C Buses should of course not be configured for the same GPIO pins as any other I2C Bus.
+
+NB2: Some boards require that in the Serial Console Settings (Tools/Advanced), the ``Fall-back to Serial 0`` option is disabled, to free the GPIO pins for I2C use.
+
+When multiple I2C Buses are configured (so, ``SDA`` and ``SCL`` GPIO-pins configured), each task configured with an I2C device will show a selection for the I2C Bus to use. As expected, the first I2C Bus is selected by default, and another interface can be selected as required.
+
+*Device specific I2C Bus selection:*
+
+.. image:: Device_I2CBusSelection.png
+
+NB: If a multiplexer is configured for 1 of the I2C Buses (but *not* for all interfaces), the I2C Bus selector will save & reload the page to show/hide the multiplexer options, below.
+
+.. image:: Device_I2CBusSelectionReload.png
+
+This screenshot shows the reload icon, to indicate that changing the selection will reload the page.
+
+.. image:: Device_I2CBusSelection3.png
+
+And an example for when 3 I2C Buses are available (compile-time option!) and configured.
 
 ---------------
 I2C Multiplexer
@@ -106,10 +143,18 @@ All these chips/boards can be found at Adafruit, Aliexpress, Banggood, EBay, etc
 .. image:: Hardware_I2CMultiplexer_Address.png
 
 
+Added: 2025-02-02
+
+With the introduction of multiple I2C Buses, it is also plausible to configure an I2C Multiplexer on the second (or third, when included in the build) I2C Bus.
+
+.. image:: Hardware_I2CMultiplexer2.png
+
+This allows the same configuration options as shown above for the first I2C Bus, as all I2C Buses are completely independent from each other.
+
 Device configuration
 ^^^^^^^^^^^^^^^^^^^^
 
-If an I2C multiplexer is configured, every Device edit page for I2C devices will show extra options to select the channel the device is connected on.
+If an I2C multiplexer is configured for the selected I2C Bus, the Device edit page for I2C devices will show extra options to select the multiplexer channel the device is connected on.
 
 There is the default option of Single channel, or, when a TCA9548a, TCA9546a or TCA9543a is configured, Multiple channels.
 
@@ -134,6 +179,23 @@ NB: Only acceptable channels (0-7/0-3/0-1) will be available in the dropdown lis
 Above configuration results in channels 0, 4, 5, 6 and 7 being connected to the ESP board I2C bus when this sensor is active via I2C.
 
 NB: Only acceptable channel checkboxes (0-7/0-3/0-1) will be shown, depending on the Multiplexer type configured.
+
+
+--------------------
+PCF & MCP Direct I/O
+--------------------
+
+Added: 2025-02-02
+
+For interacting with the PCF8574 or MCP23017 GPIO Extenders no Device Task is required, so no I2C Bus configuration is available.
+
+When multiple I2C Buses are configured (ESP32 only), we need some configuration to overcome that situation, to avoid having to connect these I/O extenders on the first I2C Bus.
+
+.. image:: Hardware_PCFMCP_I2CSelector.png
+
+When using multiple PCF and/or MCP GPIO extenders, they must all be connected to this I2C Bus, and any Device Tasks should also use the same I2C Bus.
+
+NB: If only 1 I2C Bus is configured, this section isn't shown.
 
 
 -------------

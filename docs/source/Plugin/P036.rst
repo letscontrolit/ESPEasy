@@ -99,6 +99,8 @@ For the ``Ticker`` there are some restrictions:
 
 * **Disable all scrolling while WiFi is disconnected**: When checked switching between the pages is always "instant" and long lines are not scrolling as long as no Wifi connection is established. The Wifi connection attempts use a lot of resources and the scrolling may be disturbed by that.
 
+* **Hide startup logo**: When checked, the ESPEasy logo, normally shown for a few moments as the plugin is starting, will *not* appear, but the regular data will just be displayed.
+
 .. image:: P036_GenerateEventsOptions.png
 
 * **Generate Events**: Depending on the build used (NORMAL and CUSTOM), an option to generate events can be set, that will generate an event if the display is turned on or off, the contrast setting is changed, a new frame is shown, the number of lines per frame is changed or a line is updated using the ``oledframedcmd,<line>,<text>`` command.

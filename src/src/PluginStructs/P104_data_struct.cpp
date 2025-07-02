@@ -268,7 +268,7 @@ void P104_data_struct::loadSettings() {
         # endif // ifdef P104_DEBUG
       }
 
-      free_string(buffer);     // Free some memory
+      free_string(buffer);   // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer
@@ -335,18 +335,20 @@ void P104_data_struct::configureZones() {
       # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
       zoneOffset += it->size;
 
+      P->setCharSpacing(currentZone, P104_NORMAL_CHAR_SPACING); // Set default font spacing
+
       switch (it->font) {
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         case P104_DOUBLE_HEIGHT_FONT_ID: {
           P->setFont(currentZone, numeric7SegDouble);
-          P->setCharSpacing(currentZone, P->getCharSpacing() * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
         case P104_FULL_DOUBLEHEIGHT_FONT_ID: {
           P->setFont(currentZone, BigFont);
-          P->setCharSpacing(currentZone, P->getCharSpacing() * 2); // double spacing as well
+          P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
@@ -463,17 +465,10 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
     reverseStr(sZoneBuffers[zone]);
   }
 
-  String log;
-
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      logAllText &&
-      log.reserve(28 + text.length() + sZoneBuffers[zone].length())) {
-    log  = strformat(F("dotmatrix: ZoneText: %d, '"), zone + 1); // UI-number
-    log += text;
-    log += F("' -> '");
-    log += sZoneBuffers[zone];
-    log += '\'';
-    addLogMove(LOG_LEVEL_INFO, log);
+      logAllText) {
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("dotmatrix: ZoneText: %d, '%s' -> '%s'"), zone + 1, text.c_str(), sZoneBuffers[zone].c_str()));
   }
 
   P->displayZoneText(zone,
@@ -1015,10 +1010,10 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
 
       int32_t zoneIndex{};
       const String string4 = parseStringKeepCaseNoTrim(string, 4);
-    # ifdef P104_USE_COMMANDS
+      # ifdef P104_USE_COMMANDS
       int32_t value4{};
       validIntFromString(string4, value4);
-    # endif // ifdef P104_USE_COMMANDS
+      # endif // ifdef P104_USE_COMMANDS
 
       // Global subcommands
 
@@ -1060,7 +1055,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 break;
               }
 
-          # ifdef P104_USE_COMMANDS
+              # ifdef P104_USE_COMMANDS
 
               case p104_subcommands_e::size:
                 // subcommand: size,<zone>,<size> (1..)
@@ -1074,7 +1069,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 }
                 break;
               }
-          # endif // ifdef P104_USE_COMMANDS
+              # endif // ifdef P104_USE_COMMANDS
 
               case p104_subcommands_e::txt:                                  // subcommand: [set]txt,<zone>,<text> (only
               case p104_subcommands_e::settxt:                               // allowed for zones with Text content)
@@ -1093,7 +1088,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 break;
               }
 
-          # ifdef P104_USE_COMMANDS
+              # ifdef P104_USE_COMMANDS
 
               case p104_subcommands_e::content:
                 // subcommand: content,<zone>,<contenttype> (0..<P104_CONTENT_count>-1)
@@ -1213,7 +1208,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 break;
               }
 
-          #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+              #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
               case p104_subcommands_e::layout:
                 // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
@@ -1227,7 +1222,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 }
                 break;
               }
-          #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+              #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
               case p104_subcommands_e::specialeffect:
                 // subcommand: specialeffect,<zone>,<effect> (0..3)
@@ -1284,9 +1279,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 }
                 break;
               }
-          # endif // ifdef P104_USE_COMMANDS
+              # endif // ifdef P104_USE_COMMANDS
 
-          # ifdef P104_USE_BAR_GRAPH
+              # ifdef P104_USE_BAR_GRAPH
 
               case p104_subcommands_e::bar:                                  // subcommand: [set]bar,<zone>,<graph-string> (only allowed for
               // zones
@@ -1305,9 +1300,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 }
                 break;
               }
-          # endif // ifdef P104_USE_BAR_GRAPH
+              # endif // ifdef P104_USE_BAR_GRAPH
 
-          # ifdef P104_USE_DOT_SET
+              # ifdef P104_USE_DOT_SET
 
               case p104_subcommands_e::dot:
                 // subcommand: dot,<zone>,<r>,<c>[,0][,<r>,<c>[,0]...] to draw
@@ -1316,7 +1311,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 success = true;
                 break;
               }
-          # endif // ifdef P104_USE_DOT_SET
+              # endif // ifdef P104_USE_DOT_SET
             }
 
             // FIXME TD-er: success is always false here. Maybe this must be done outside the for-loop?
@@ -1360,7 +1355,7 @@ int8_t P104_data_struct::getTime(char *psz,
                                  bool  colon,
                                  bool  time12h,
                                  bool  timeAmpm) {
-  uint16_t h, M, s;
+  uint16_t h;
   String   ampm;
 
   # ifdef P104_USE_DATETIME_OPTIONS
@@ -1377,12 +1372,12 @@ int8_t P104_data_struct::getTime(char *psz,
   {
     h = node_time.hour();
   }
-  M = node_time.minute();
+  const uint16_t M = node_time.minute();
 
   if (!seconds) {
     sprintf_P(psz, PSTR("%02d%c%02d%s"), h, (colon ? ':' : ' '), M, ampm.c_str());
   } else {
-    s = node_time.second();
+    const uint16_t s = node_time.second();
     sprintf_P(psz, PSTR("%02d%c%02d %02d%s"), h, (colon ? ':' : ' '), M, s, ampm.c_str());
   }
   return M;
@@ -1450,7 +1445,7 @@ uint8_t P104_data_struct::getDateTime(char           *psz,
                                       # endif // ifdef P104_USE_DATETIME_OPTIONS
                                       ) {
   String   ampm;
-  uint16_t d, M, y;
+  uint16_t d, y;
   uint8_t  h, m;
   const uint16_t year = node_time.year() - (fourDgt ? 0 : 2000);
 
@@ -1475,7 +1470,7 @@ uint8_t P104_data_struct::getDateTime(char           *psz,
   {
     h = node_time.hour();
   }
-  M = node_time.minute();
+  const uint16_t M = node_time.minute();
 
   # ifdef P104_USE_DATETIME_OPTIONS
 
@@ -1533,17 +1528,18 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
   bool success   = false;
 
   # ifdef P104_USE_DATETIME_OPTIONS
-  bool useFlasher = !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH);
-  bool time12h    = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_12H);
-  bool timeAmpm   = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_AMPM);
-  bool year4dgt   = bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT);
+  const bool useFlasher = !bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FLASH);
+  const bool time12h    = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_12H);
+  const bool timeAmpm   = bitRead(P104_CONFIG_DATETIME,  P104_CONFIG_DATETIME_AMPM);
+  const bool year4dgt   = bitRead(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_YEAR4DGT);
   # else // ifdef P104_USE_DATETIME_OPTIONS
-  bool useFlasher = true;
-  bool time12h    = false;
-  bool timeAmpm   = false;
-  bool year4dgt   = false;
+  constexpr bool useFlasher = true;
+  constexpr bool time12h    = false;
+  constexpr bool timeAmpm   = false;
+  constexpr bool year4dgt   = false;
   # endif // ifdef P104_USE_DATETIME_OPTIONS
-  bool newFlasher = !flasher && useFlasher;
+  const bool newFlasher     = !flasher && useFlasher;
+  const bool currentFlasher = flasher;
 
   for (auto it = zones.begin(); it != zones.end(); ++it) {
     redisplay = false;
@@ -1553,8 +1549,8 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
         case P104_CONTENT_TIME:           // time
         case P104_CONTENT_TIME_SEC:       // time sec
         {
-          bool   useSeconds = (it->content == P104_CONTENT_TIME_SEC);
-          int8_t m          = getTime(szTimeL, useSeconds, flasher || !useFlasher, time12h, timeAmpm);
+          const bool   useSeconds = (it->content == P104_CONTENT_TIME_SEC);
+          const int8_t m          = getTime(szTimeL, useSeconds, currentFlasher || !useFlasher, time12h, timeAmpm);
           flasher          = newFlasher;
           redisplay        = useFlasher || useSeconds || (it->_lastChecked != m);
           it->_lastChecked = m;
@@ -1579,16 +1575,16 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
         }
         case P104_CONTENT_DATE_TIME: // date-time/9
         {
-          int8_t m = getDateTime(szTimeL,
-                                 flasher || !useFlasher,
-                                 time12h,
-                                 timeAmpm,
-                                 year4dgt
-                                 # ifdef P104_USE_DATETIME_OPTIONS
-                                 , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
-                                 , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
-                                 # endif // ifdef P104_USE_DATETIME_OPTIONS
-                                 );
+          const int8_t m = getDateTime(szTimeL,
+                                       currentFlasher || !useFlasher,
+                                       time12h,
+                                       timeAmpm,
+                                       year4dgt
+                                       # ifdef P104_USE_DATETIME_OPTIONS
+                                       , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_FORMAT)
+                                       , get4BitFromUL(P104_CONFIG_DATETIME, P104_CONFIG_DATETIME_SEP_CHAR)
+                                       # endif // ifdef P104_USE_DATETIME_OPTIONS
+                                       );
           flasher          = newFlasher;
           redisplay        = useFlasher || (it->_lastChecked != m);
           it->_lastChecked = m;
@@ -1966,9 +1962,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
 
     const String zonetip = F("Select between 1 and " STRINGIFY(P104_MAX_ZONES) " zones, changing"
-      #  ifdef P104_USE_ZONE_ORDERING
+                             #  ifdef P104_USE_ZONE_ORDERING
                              " Zones or Zone order"
-      #  endif // ifdef P104_USE_ZONE_ORDERING
+                             #  endif // ifdef P104_USE_ZONE_ORDERING
                              " will save and reload the page.");
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
 
@@ -1992,7 +1988,8 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     #  endif // ifdef P104_USE_TOOLTIPS
     selector_zoneordering.addFormSelector(F("Zone order"), F("zoneorder"),
                                           bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0);
-    # endif                  // ifdef P104_USE_ZONE_ORDERING
+    selector_zoneordering.reloadonchange = true;
+    # endif // ifdef P104_USE_ZONE_ORDERING
     # ifdef P104_ADD_SETTINGS_NOTES
     addFormNote(zonetip);
     # endif // ifdef P104_ADD_SETTINGS_NOTES

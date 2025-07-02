@@ -73,7 +73,7 @@ bool P178_data_struct::setRange(uint8_t startPin, uint32_t startVarIndex, int nr
     }
 
     for (uint8_t pin = startPin; pin < endPin; ++pin) {
-      const int angle = getCustomFloatVar(startVarIndex, -1);
+      const int angle = getCustomFloatVar(String(startVarIndex), -1);
       setAngle_internal(pin, angle);
       ++startVarIndex;
     }

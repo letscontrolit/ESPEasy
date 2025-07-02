@@ -26,9 +26,39 @@ unsigned long str2int(const char *string)
 \*********************************************************************************************/
 String toString(const float& value, unsigned int decimalPlaces, bool trimTrailingZeros)
 {
-  const double value_d(value);
-  return doubleToString(value_d, decimalPlaces, trimTrailingZeros);
+  String res;
+  toValidString(res, value, decimalPlaces, trimTrailingZeros);
+  return res;
 }
+
+bool toValidString(String& str,
+  const float& value,
+  unsigned int decimalPlaces,
+  bool         trimTrailingZeros)
+{
+  #ifdef ESP32
+  if (isnanf(value)) {
+    str = F("NaN");
+    return false;  
+  }
+  if (isinff(value)) {
+    str = F("Inf");
+    return false;
+  }
+#else
+  if (isnan(value)) {
+    str = F("NaN");
+    return false;
+  }
+  if (isinf(value)) {
+    str = F("Inf");
+    return false;
+  }
+#endif
+  const double value_d(value);
+  return doubleToValidString(str, value_d, decimalPlaces, trimTrailingZeros);
+}
+
 
 String ull2String(uint64_t value, uint8_t base) {
   String res;
@@ -103,6 +133,24 @@ String toStringNoZero(int64_t value) {
 
 String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros_b) {
   String res;
+  doubleToValidString(res, value, decimalPlaces, trimTrailingZeros_b);
+  return res;
+}
+
+
+bool  doubleToValidString(String& str,
+  const double& value,
+  unsigned int  decimalPlaces     ,
+  bool          trimTrailingZeros_b)
+{
+  if (isnan(value)) {
+    str = F("NaN");
+    return false;
+  }
+  if (isinf(value)) {
+    str = F("Inf");
+    return false;
+  }
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
   // We use some trick here to prevent rounding errors 
@@ -129,9 +177,10 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
     char *buf = (char *)malloc(expectedChars);
 
     if (nullptr == buf) {
-      return F("nan");
+      str = F("NaN");
+      return false;
     }
-    move_special(res, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
+    move_special(str, String(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf)));
 
     free(buf);
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -161,7 +210,7 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
     // Those cannot be used in the string format, so use it as a preformatted string
     const String tmp_str_before_dot = ull2String(int_value / factor);
     if (decimalPlaces == 0) {
-      res = tmp_str_before_dot;
+      str = tmp_str_before_dot;
     } else {
       String tmp_str_after_dot;
       tmp_str_after_dot.reserve(decimalPlaces);
@@ -171,23 +220,23 @@ String doubleToString(const double& value, unsigned int decimalPlaces, bool trim
         tmp_str_after_dot = concat('0', tmp_str_after_dot);
       }
 
-      res = strformat(
+      str = strformat(
         F("%s.%s"), 
         tmp_str_before_dot.c_str(), 
         tmp_str_after_dot.c_str());
     }
     if (value < 0) {
-      res = concat('-', res);
+      str = concat('-', str);
     }
   }
   #endif
 
-  res.trim();
+  str.trim();
 
   if (trimTrailingZeros_b) {
-    return trimTrailingZeros(res);
+    str = trimTrailingZeros(str);
   }
-  return res;
+  return true;
 }
 
 String floatToString(const float& value,

@@ -85,6 +85,8 @@ struct P004_data_struct : public PluginTaskData_base {
 
   Dallas_SensorData get_sensor_data(uint8_t index) const;
 
+  int measure_rise_time() const;
+
 private:
 
   // Do not set the _timer to 0, since it may cause issues

@@ -104,10 +104,7 @@ If a value is selected that's invalid, like when the optical center is too close
 
 .. note:: To not overly complicate/expand the used javascript code, ROI selection works from left-top to right-bottom, and not in other directions.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. Setting this to 1 or 2 seconds, usually offers a reasonable response time.
 

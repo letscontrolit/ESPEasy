@@ -36,8 +36,12 @@ struct NotificationSettingsStruct
 };
 
 typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
-#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new (std::nothrow)  NotificationSettingsStruct());\
-                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
+
+#define MakeNotificationSettings(T) void * calloc_ptr = special_calloc(1,sizeof(NotificationSettingsStruct)); NotificationSettingsStruct_ptr_type T(new (calloc_ptr)  NotificationSettingsStruct());
+
+// Check to see if MakeNotificationSettings was successful
+#define AllocatedNotificationSettings() (NotificationSettings.get() != nullptr)
+
 
 // Need to make sure every byte between the members is also zero
 // Otherwise the checksum will fail and settings will be saved too often.

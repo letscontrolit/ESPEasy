@@ -120,6 +120,8 @@
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 // # define ADAGFX_FONTS_EXTRA_24PT_INCLUDED // 2 extra 24pt fonts, should probably only be enabled in a private custom build, adds ~11.1 kB
 
+/* Marker: A) Add font-size group define  *DON'T REMOVE* */
+
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_5PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_5PT_TOMTHUMB
 
@@ -170,6 +172,8 @@
 // To enable/disable 24pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_24PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_24PT_LCD14COND
 # define ADAGFX_FONTS_EXTRA_24PT_SEVENSEG_B
+
+/* Marker: B) (Add new font defines above this marker, for readability, grouped per font-size)  *DON'T REMOVE* */
 
 # ifdef LIMIT_BUILD_SIZE
 #  if ADAGFX_FONTS_INCLUDED

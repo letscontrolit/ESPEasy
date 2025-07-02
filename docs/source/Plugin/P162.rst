@@ -66,10 +66,7 @@ These settings are available for both W0 and W1.  NB: The W1 settings can't be a
 
 * **Send values on change**: When checked, and Interval set to 0, events will only be generated, and sent to any configured Controllers, when a Value is changed. On startup, the initial values will be sent out, but that's the default behavior for ESPEasy.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will not be set. The values will be optionally sent to any configured controllers using the interval, when set.
 

@@ -7,6 +7,7 @@
 #include "../PluginStructs/P145_data_struct.h"
 
 #ifdef USES_P145
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 // Enable testing 
 //#define P145_TEST
@@ -853,4 +854,6 @@ void P145_data_struct::heaterControl(void)
   }
 #endif  // P145_DEBUG
 }
+
+#endif
 #endif // USES_P145

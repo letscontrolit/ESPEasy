@@ -1,10 +1,10 @@
 function setGithubClipboard() {
     var clipboard = 'ESP Easy | Information |\n -----|-----|\n';
-    max_loop = 100;
+    const max_loop = 100;
     for (var i = 1; i < max_loop; i++) {
         var cur_id = 'copyText_' + i;
         var test = document.getElementById(cur_id);
-        if (test == null) {
+        if (!test) {
             i = max_loop + 1;
         } else {
             var separatorSymbol = '|';

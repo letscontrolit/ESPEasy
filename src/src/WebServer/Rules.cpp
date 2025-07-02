@@ -90,7 +90,7 @@ void handle_rules() {
     selector.addSelector(
       F("set"),
       choice);
-    addHelpButton(F("Tutorial_Rules"));
+    // addHelpButton(F("Tutorial_Rules")); // Old documentation is just that: Old and out-dated.
     addRTDHelpButton(F("Rules/Rules.html"));
   }
 

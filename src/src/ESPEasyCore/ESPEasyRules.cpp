@@ -239,7 +239,7 @@ bool rulesProcessingFile(const String& fileName,
 /********************************************************************************************\
    Parse string commands
  \*********************************************************************************************/
-bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
+bool get_next_inner_bracket(const String& line, unsigned int& startIndex, int& closingIndex, char closingBracket)
 {
   if (line.length() <= 1) {
     // Not possible to have opening and closing bracket on a line this short.
@@ -263,7 +263,7 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
     return false; 
   }
 
-  for (int i = (closingIndex - 1); i > startIndex; --i) {
+  for (int i = (closingIndex - 1); (i >= static_cast<int>(startIndex)) && (i >= 0); --i) {
     if (line[i] == openingBracket) {
       startIndex = i;
       return true;
@@ -441,7 +441,11 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   return true;
 }
 
-const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode";
+const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode"
+  #if FEATURE_STRING_VARIABLES
+  "|lookup"
+  #endif // if FEATURE_STRING_VARIABLES
+  ;
 enum class string_commands_e {
   substring,
   indexof,
@@ -454,12 +458,15 @@ enum class string_commands_e {
   tobin,
   tohex,
   ord,
-  urlencode
+  urlencode,
+  #if FEATURE_STRING_VARIABLES
+  lookup,
+  #endif // if FEATURE_STRING_VARIABLES
 };
 
 
 void parse_string_commands(String& line) {
-  int startIndex = 0;
+  unsigned int startIndex = 0;
   int closingIndex;
 
   bool mustReplaceMaskedChars = false;
@@ -526,11 +533,21 @@ void parse_string_commands(String& line) {
               // substring arduino style (first char included, last char excluded)
               // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
 
-              if (arg1valid
-                  && arg2valid) {
-                replacement = arg3.substring(startpos, endpos);
+              if (arg1valid) {
+                if (arg2valid){
+                  replacement = arg3.substring(startpos, endpos);
+                } else {
+                  replacement = arg3.substring(startpos);
+                }
               }
               break;
+            #if FEATURE_STRING_VARIABLES
+            case string_commands_e::lookup:
+              if (arg1valid && arg2valid && startpos > -1 && endpos > -1) {
+                replacement = arg3.substring(startpos * endpos, (startpos + 1) * endpos);
+              }
+              break;
+            #endif // if FEATURE_STRING_VARIABLES
             case string_commands_e::indexof:
             case string_commands_e::indexof_ci:
               // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
@@ -685,12 +702,13 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 
   if (line.indexOf(F("%event")) != -1) {
+    const int equalsPos = event.indexOf('=');
+
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
                                               // literal event string if
                                               // starting with '!'
     } else {
-      const int equalsPos = event.indexOf('=');
 
       String argString;
 
@@ -757,18 +775,18 @@ void substitute_eventvalue(String& line, const String& event) {
         }
         eventvalue_pos = line.indexOf(F("%eventvalue"));
       }
+    }
 
-      if ((line.indexOf(F("%eventname%")) != -1) ||
-          (line.indexOf(F("%eventpar%")) != -1)) {
-        const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
+    if ((line.indexOf(F("%eventname%")) != -1) ||
+        (line.indexOf(F("%eventpar%")) != -1)) {
+      const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
 
-        // Replace %eventname% with the literal event
-        line.replace(F("%eventname%"), eventName);
+      // Replace %eventname% with the literal event
+      line.replace(F("%eventname%"), eventName);
 
-        // Part of %eventname% after the # char
-        const int hash_pos = eventName.indexOf('#');
-        line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
-      }
+      // Part of %eventname% after the # char
+      const int hash_pos = eventName.indexOf('#');
+      line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
     }
   }
 }
@@ -1274,12 +1292,26 @@ bool conditionMatch(const String& check) {
     }
     balanceParentheses(tmpCheck1);
     balanceParentheses(tmpCheck2);
-    if (isError(Calculate(tmpCheck1, Value1)) ||
-        isError(Calculate(tmpCheck2, Value2)))
+    if (isError(Calculate(tmpCheck1, Value1
+                          #if FEATURE_STRING_VARIABLES
+                          , false // suppress logging specific errors when parsing strings
+                          #endif // if FEATURE_STRING_VARIABLES
+                         )) ||
+        isError(Calculate(tmpCheck2, Value2
+                          #if FEATURE_STRING_VARIABLES
+                          , false // suppress logging specific errors when parsing strings
+                          #endif // if FEATURE_STRING_VARIABLES
+                         )))
     {
+      #if FEATURE_STRING_VARIABLES
+      result = compareStringValues(compare, tmpCheck1, tmpCheck2);
+      #else // if FEATURE_STRING_VARIABLES
       return false;
+      #endif // if FEATURE_STRING_VARIABLES
     }
-    result = compareDoubleValues(compare, Value1, Value2);
+    else {
+      result = compareDoubleValues(compare, Value1, Value2);
+    }
   }
 
   #ifndef BUILD_NO_DEBUG
@@ -1333,6 +1365,7 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+  String taskName = getTaskDeviceName(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
@@ -1350,7 +1383,7 @@ void createRuleEvents(struct EventStruct *event) {
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
     }
-    eventString += getTaskDeviceName(event->TaskIndex);
+    eventString += taskName;
     eventString += '#';
     eventString += Cache.getTaskDeviceValueName(event->TaskIndex, 0);
     eventString += '=';
@@ -1368,16 +1401,67 @@ void createRuleEvents(struct EventStruct *event) {
     String eventvalues;
     reserve_special(eventvalues, 32); // Enough for most use cases, prevent lots of memory allocations.
 
-    for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
+    uint8_t varNr = 0;
+    for (; varNr < valueCount; ++varNr) {
       if (varNr != 0) {
         eventvalues += ',';
       }
       eventvalues += formatUserVarNoCheck(event, varNr);
     }
+    #if FEATURE_STRING_VARIABLES
+    if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
+      taskName.toLowerCase();
+      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+      const String postfix = search.substring(search.indexOf('X') + 1);
+      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+
+      auto it = customStringVar.begin();
+      while (it != customStringVar.end()) {
+        if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+          if (!it->second.isEmpty()) {
+            String value(it->second);
+            value = parseTemplateAndCalculate(value);
+            if (varNr != 0) {
+              eventvalues += ',';
+            }
+            eventvalues += value;
+            ++varNr;
+          }
+        }
+        ++it;
+      }
+    }
+    #endif // if FEATURE_STRING_VARIABLES
     eventQueue.add(event->TaskIndex, F("All"), eventvalues);
   } else {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
+    #if FEATURE_STRING_VARIABLES
+    if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
+      taskName.toLowerCase();
+      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+      const String postfix = search.substring(search.indexOf('X') + 1);
+      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+
+      auto it = customStringVar.begin();
+      while (it != customStringVar.end()) {
+        if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+          String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+          const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+          const String vname2 = getCustomStringVar(key2);
+          if (!vname2.isEmpty()) {
+            valueName = vname2;
+          }
+          if (!it->second.isEmpty()) {
+            String value(it->second);
+            value = parseTemplateAndCalculate(value);
+            eventQueue.add(event->TaskIndex, valueName, value);
+          }
+        }
+        ++it;
+      }
+    }
+    #endif // if FEATURE_STRING_VARIABLES
   }
 }

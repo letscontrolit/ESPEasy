@@ -26,6 +26,17 @@ from os.path import join
 sys.path.append(join(platform.get_package_dir("tool-esptoolpy")))
 import esptool
 
+def esptool_call(cmd):
+    try:
+        esptool.main(cmd)
+    except SystemExit as e:
+        # Fetch sys.exit() without leaving the script
+        if e.code == 0:
+            return True
+        else:
+            print(f"❌ esptool failed with exit code: {e.code}")
+            return False
+
 def esp32_create_combined_bin(source, target, env):
     print("Generating combined binary for serial flashing")
 
@@ -44,14 +55,14 @@ def esp32_create_combined_bin(source, target, env):
     cmd = [
         "--chip",
         chip,
-        "merge_bin",
+        "merge-bin",
         "-o",
         new_file_name,
-        "--flash_mode",
+        "--flash-mode",
         flash_mode,
-        "--flash_freq",
+        "--flash-freq",
         flash_freq,
-        "--flash_size",
+        "--flash-size",
         flash_size,
     ]
 
@@ -66,7 +77,7 @@ def esp32_create_combined_bin(source, target, env):
 
     print('Using esptool.py arguments: %s' % ' '.join(cmd))
 
-    esptool.main(cmd)
+    esptool_call(cmd)
 
 
 env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", esp32_create_combined_bin)

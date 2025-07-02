@@ -8,6 +8,34 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
+
+#ifdef ESP32_CLASSIC
+#define ESP32XX "esp32"
+#elif defined(ESP32C2)
+#define ESP32XX "esp32c2"
+#elif defined(ESP32C3)
+#define ESP32XX "esp32c3"
+#elif defined(ESP32C5)
+#define ESP32XX "esp32c5"
+#elif defined(ESP32C6)
+#define ESP32XX "esp32c6"
+#elif defined(ESP32C61)
+#define ESP32XX "esp32c61"
+#elif defined(ESP32H2)
+#define ESP32XX "esp32h2"
+#elif defined(ESP32H21)
+#define ESP32XX "esp32h21"
+#elif defined(ESP32H4)
+#define ESP32XX "esp32h4"
+#elif defined(ESP32S2)
+#define ESP32XX "esp32s2"
+#elif defined(ESP32S3)
+#define ESP32XX "esp32s3"
+#elif defined(ESP32P4)
+#define ESP32XX "esp32p4"
+#endif
+
+
 #if FEATURE_TOOLTIPS
 void addTooltip(const String& tooltip);
 #endif
@@ -74,6 +102,13 @@ void addSelector_Foot(bool reloadonchange = false);
 void addUnit(const __FlashStringHelper *unit);
 void addUnit(const String& unit);
 void addUnit(char unit);
+
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
+                           const String & defUoM = EMPTY_STRING);
+void   addUnitOfMeasureSelector(const String& id,
+                                const uint8_t unitOfMeasure);
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void addRowLabel_tr_id(const __FlashStringHelper *label,
                        const __FlashStringHelper *id);
@@ -272,6 +307,7 @@ void addPinSelect(PinSelectPurpose purpose,
 
 
 #ifdef ESP32
+#if SOC_ADC_SUPPORTED
 enum class AdcPinSelectPurpose {
   TouchOnly,
   ADC_Touch,
@@ -280,12 +316,16 @@ enum class AdcPinSelectPurpose {
 #endif
   ADC_Touch_Optional
 };
+
 void addADC_PinSelect(AdcPinSelectPurpose purpose,
                       const String      & id,
                       int                 choice);
+#endif
+#if SOC_DAC_SUPPORTED
 void addDAC_PinSelect(const String& id,  
                       int           choice);
-#endif // ifdef ESP32
+#endif
 
+#endif // ifdef ESP32
 
 #endif // ifndef WEBSERVER_WEBSERVER_MARKUP_H

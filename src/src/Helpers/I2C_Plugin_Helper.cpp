@@ -9,14 +9,19 @@
  **********************************************************************/
 bool checkI2CConfigValid_toHtml(taskIndex_t taskIndex,
                                 bool        outputToHtml) {
-  if ((Settings.Pin_i2c_sda == -1) || (Settings.Pin_i2c_scl == -1)) {
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
+  if ((Settings.getI2CSdaPin(i2cBus) == -1) || (Settings.getI2CSclPin(i2cBus) == -1)) {
     if (outputToHtml) { addHtml(F("Incomplete I2C configuration.")); }
     return false;
   }
   #if FEATURE_I2CMULTIPLEXER
 
-  if ((Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) &&
-      (Settings.I2C_Multiplexer_Addr == -1)) { // Multiplexer selected, but no port configured
+  if ((Settings.getI2CMultiplexerType(i2cBus) != I2C_MULTIPLEXER_NONE) &&
+      (Settings.getI2CMultiplexerAddr(i2cBus) == -1)) { // Multiplexer selected, but no port configured
     if (outputToHtml) { addHtml(F("Incomplete I2C Multiplexer configuration.")); }
     return false;
   }

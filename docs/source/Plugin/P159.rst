@@ -145,10 +145,7 @@ If the **Modify sensor settings** checkbox is checked when submitting the page, 
 
 Might the configuration not be set correctly, and changing them again doesn't seem to work, then resetting the sensor, by issuing the ``ld2410,factoryreset`` command while the task is enabled and the sensor connected, the factory defaults will be restored. (See the list of supported commands, below.)
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. as this is optional for this device. The data will be collected and optionally sent to any configured controllers using this interval. For sending the values to the enabled controller(s), the command ``TaskRun,<taskName|taskNr>`` can be used.
 

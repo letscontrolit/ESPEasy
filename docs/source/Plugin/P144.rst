@@ -73,10 +73,12 @@ Sensor
 
 See :ref:`SerialHelper_page` for the available options.
 
+.. include:: DataAcquisition.repl
+
 Commands
 --------
 
-This plugin does not support additinal commands.
+This plugin does not support additional commands.
 
 Change log
 ----------

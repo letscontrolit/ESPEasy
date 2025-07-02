@@ -149,9 +149,15 @@
     "
     Dec","
     :red:`Internal`","
-    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Decrement the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Dec,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Examples:
+
+    ``Dec,1,4``
+
+    ``Dec,angle,0.005``
     
     See also ``Let`` and ``Inc``."
     "
@@ -275,9 +281,15 @@
     "
     Inc","
     :red:`Internal`","
-    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Increment the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Inc,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Example:
+
+    ``Inc,1,0.002``
+
+    ``Inc,border,2``
     
     See also ``Let`` and ``Dec``."
     "
@@ -293,9 +305,15 @@
     "
     Let","
     :red:`Internal`","
-    Set the value of variable n (1..INT_MAX).
+    Set the value of variable n (1..INT_MAX), or use a variable name.
 
-    ``Let,<n>,<value>``
+    ``Let,<n|varname>,<value>``
+
+    Examples:
+
+    ``Let,1,10.5``
+
+    ``Let,border,3``
     
     See also ``Inc`` and ``Dec``."
     "
@@ -684,6 +702,15 @@
 
     ``SendToUDP,<IP address>,<Portnumber>,<command>``"
     "
+    SendToUDPMix","
+    :green:`Rules`","
+    Send command to other network device using UDP (non-ESP Easy units) and allow for binary data to be sent.
+
+    ``SendToUDPMix,<IP address>,<Portnumber>,'<content to send>'``
+    
+    ``<content to send>``: Text and/or hex byte(s) (having 0x prefix) that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the remote device. The content has to be quoted if it contains commas or spaces. When using multiple parts, parts that have spaces or commas must *also* be quoted, and use a different quote character!
+    "
+    "
     Settings","
     :red:`Internal`","
     Show settings on serial terminal
@@ -765,6 +792,102 @@
     Set values on a **Dummy Task** (device) and run/execute the task/device, to manually force an update/read of the task.
 
     ``TaskValueSetAndRun,<task nr/task name>,<value nr/value name>,<value/formula>``"
+    "
+    TaskValueSetDerived","
+    :green:`Rules`","
+    Define a Derived value for a task. A Derived value is an extra value, available for the device, that can return a calculated result, based on any variable available in the system.
+
+    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    
+    ``<task nr/task name>``: Either a task number or a task name, for the task to add the derived value to.
+
+    ``<value name>``: A name for the derived value, numbers can not be used, only by name.
+
+    ``<formula>``: The formula to calculate and return as the value for the derived value. The content of the formula should be escaped, else the rules processor will fill the current values, instead of during retrieval of the derived value. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
+
+    ``<UnitOfMeasure>``: An optional Unit of Measure to be appended after the value. Must be quoted if it contains spaces or commas. (Added:2025/06/08)
+
+    **Examples:**
+
+    In ``On System#Boot Do`` you can add the definition for a derived value, here we have a BME task, where we want to add a DewPoint value and a value for degrees Fahrenheit. All symbols used for addressing conversions, functions and variables, like ``%``, ``{``, ``}``, ``[`` and ``]`` are escaped by using a ``\``.
+
+    ``TaskValueSetDerived,BME,DewPoint,'\%c_dew_th\%(\[BME#temperature\],\[BME#humidity\])'``
+
+    ``TaskValueSetDerived,BME,Fahrenheit,'\%c_c2f\%(\[BME#temperature\])'``
+    
+    In other places, like rules, and in Display tasks, you can now use ``[BME#DewPoint]`` and ``[BME#Fahrenheit]`` to retrieve the freshly calculated result of the formulas. NB: If the value doesn't get updated, most likely the formula wasn't escaped properly, and the *calculate result* stored in memory, instead of the formula.
+
+    Derived values can be shown on the Devices overview page, and included in the ``/json`` output, by enabling the **Show derived values** checkbox in the device configuration.
+    "
+    "
+    TaskValueSetPresentation","
+    :green:`Rules`","
+    Define a presentation formula for a task. The presentation result will be used when displaying the devices values on the Devices overview page, and as the ``Value`` in the ``/json`` output, as that's used for refreshing the Devices page.
+
+    ``TaskValueSetPresentation,<task nr/task name>,<value name>,<formula>`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    
+    ``<task nr/task name>``: Either a task number or a task name, for the task to add the presentation formula to.
+
+    ``<value name>``: The name for the value to apply the presentation on, numbers can not be used, only by name. Existing plugin value names and Derived value names can be used.
+
+    ``<formula>``: The formula to calculate and return as the display for the addressed value. Use the ``%value%`` placeholder to insert the current Value, this can be used multiple times if needed. The content of the formula should probably be escaped, as the rules processor might fill the current values, instead of during retrieval of the presentation value, though this can be used to expand f.e. string variables only once. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
+
+    .. note:: NB: The Presentation set using this command doesn't alter the values retrieved by using the ``[<TaskName>#<ValueName>]`` variable reference in rules!
+
+    **Examples:**
+
+    ``TaskValueSetPresentation,bme,Temperature,'%value% {D}C'``
+
+    ``TaskValueSetPresentation,bme,Humidity,'%value%% RH'``
+
+    ``TaskValueSetPresentation,bme,Pressure,'%value% mBar'``
+
+    ``TaskValueSetPresentation,bme,DewPoint,'%value% {D}C'``
+
+    ``TaskValueSetPresentation,bme,Fahrenheit,'%value% {D}F'``
+
+    Here we define a presentation formula for all values, including the Derived values, of the BME task.
+
+    If the **Show derived values** checkbox is enabled, it could look like this for a BME280 task:
+
+    .. image:: TaskValueSetPresentation_BME280.png
+
+    **Change presentation from numeric to text:**
+
+    For another device, there is a numeric presentation of a climate system that should be presented in readable text:
+
+    In ``On System#Boot Do`` this line is added, setting a string with the mapping from numeric to text:
+
+    ``LetStr,FHC,'Undefined     Fan  &#128168;Heat &#128293;Cool &#129482;' // 14 characters per item``
+
+    And also:
+
+    ``TaskValueSetPresentation,dummy,Run_cycle,'\{lookup:%value%:14:`\[str#FHC\]`\} (%value%)'``
+
+    This uses the ``LookUp`` string function to convert the numeric value to a string, including an unicode smiley, representing the corresponding state. The presentation formula also shows the numeric value for the more technical inclined user.
+
+    .. image:: TaskValueSetPresentation_LookUp.png
+
+    Derived values for Cool, Fan and Heat have also been added as illustration.
+
+    This example also shows that the Derived values (all below Run_cycle) are presented in alphabetic order, not case-sensitive.
+
+    **Present extra values for Sysinfo plugin**:
+
+    In ``On System#Boot Do`` we add:
+
+    ``TaskValueSetDerived,sysinfo,InternalTemp,\[sysinfo#internaltemp\]``
+
+    ``TaskValueSetPresentation,sysinfo,InternalTemp,'%value% {D}C \%c_c2f\%(%value%) {D}F'``
+
+    This adds the Derived value for InternalTemp, that maps to the existing Get Config value ``[SysInfo#InternalTemp]``, but as that value has higher priority than the Derived value, it's not overwritten by the formula for the Derived value, but it still causes this value to be presented on the Devices page (adding a ``TaskValueSetPresentation`` doesn't, as that must also be applied to existing Task values).
+
+    The formula for ``TaskDeviceSetPresentation`` shows both the Celcius and Fahrenheit temperatures, applying the available conversion for that.
+
+    .. image:: TaskValueSetPresentation_Sysinfo.png
+
+    A simplified version of ``TaskValueSetPresentation`` is available, directly in the Formula field of a plugin (if that's available): Place a ``$`` as the first character in the Formula field, and the rest of the field will be used as a Presentation formula. The available space there is quite limited, that's why this ``TaskValueSetPresentation`` command was added. The direct value in the Formula field *overrides* the formula set via this command, though.
+    "
     "
     TimerPause","
     :green:`Rules`","

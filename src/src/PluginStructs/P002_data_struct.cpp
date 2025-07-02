@@ -1,6 +1,7 @@
 #include "../PluginStructs/P002_data_struct.h"
 
 #ifdef USES_P002
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 # include "../Globals/RulesCalculate.h"
 
@@ -30,13 +31,10 @@ void P002_data_struct::init(struct EventStruct *event)
   _pin_analogRead        = CONFIG_PIN1;
   _useFactoryCalibration = useFactoryCalibration(event);
   _attenuation           = getAttenuation(event);
-  int channel{};
-  const int adc = getADC_num_for_gpio(_pin_analogRead, channel);
 
-  if ((adc == 1) || (adc == 2)) {
-    analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
-  }
-
+  // Initialize attenuation and perform read
+  // This way there is less chance of a big difference between 1st read and any next reads
+  analog_read();
   # endif // ifdef ESP32
 
   if (P002_CALIBRATION_ENABLED) {
@@ -137,8 +135,6 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   #  else // if HAS_HALL_EFFECT_SENSOR
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch,            F("taskdevicepin1"), CONFIG_PIN1);
   #  endif // if HAS_HALL_EFFECT_SENSOR
-
-  addFormNote(F("Do not use ADC2 pins with WiFi active"));
 
   {
     const __FlashStringHelper *outputOptions[] = {
@@ -840,7 +836,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
 void P002_data_struct::takeSample()
 {
   if (_sampleMode == P002_USE_CURENT_SAMPLE) { return; }
-  int raw = espeasy_analogRead(_pin_analogRead);
+  const int raw = analog_read();
 
 # if FEATURE_PLUGIN_STATS
   PluginStats *stats = getPluginStats(0);
@@ -893,7 +889,7 @@ bool P002_data_struct::getValue(float& float_value,
     return false;
   }
 
-  raw_value = espeasy_analogRead(_pin_analogRead);
+  raw_value = analog_read();
 # if FEATURE_PLUGIN_STATS
 
   PluginStats *stats = getPluginStats(0);
@@ -1115,6 +1111,10 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
   # endif // ifdef ESP8266
   # ifdef ESP32
   const int pin = CONFIG_PIN1;
+
+  auto att = getAttenuation(event);
+
+  analogSetPinAttenuation(pin, static_cast<adc_attenuation_t>(att));
   # endif // ifdef ESP32
 
   raw_value = espeasy_analogRead(pin);
@@ -1122,7 +1122,7 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
   # ifdef ESP32
 
   if (useFactoryCalibration(event)) {
-    return applyADCFactoryCalibration(raw_value, getAttenuation(event));
+    return applyADCFactoryCalibration(raw_value, att);
   }
   # endif // ifdef ESP32
 
@@ -1290,4 +1290,18 @@ bool P002_data_struct::plugin_set_config(struct EventStruct *event,
   return success;
 }
 
+int P002_data_struct::analog_read() const {
+#ifdef ESP32
+  int channel{};
+  const int adc = getADC_num_for_gpio(_pin_analogRead, channel);
+
+  if ((adc == 1) || (adc == 2)) {
+    analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
+  }
+#endif
+
+  return espeasy_analogRead(_pin_analogRead);
+}
+
+#endif
 #endif // ifdef USES_P002

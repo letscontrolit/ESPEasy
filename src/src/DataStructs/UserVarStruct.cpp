@@ -431,7 +431,11 @@ bool UserVarStruct::applyFormula(taskIndex_t    taskIndex,
   String formula = getPreprocessedFormula(taskIndex, varNr);
   bool   res     = true;
 
-  if (!formula.isEmpty())
+  if (!formula.isEmpty()
+      #if FEATURE_STRING_VARIABLES
+      && formula[1] != TASK_VALUE_PRESENTATION_PREFIX_CHAR
+      #endif // FEATURE_STRING_VARIABLES
+     ) // Ignore display-formula
   {
     START_TIMER;
 
@@ -471,7 +475,11 @@ bool UserVarStruct::applyFormulaAndSet(taskIndex_t                     taskIndex
                                        const ESPEASY_RULES_FLOAT_TYPE& value,
                                        Sensor_VType                    sensorType)
 {
-  if (!Cache.hasFormula(taskIndex, varNr)) {
+  if (!Cache.hasFormula(taskIndex, varNr)
+      #if FEATURE_STRING_VARIABLES
+      || Cache.getTaskDeviceFormula(taskIndex, varNr)[1] == TASK_VALUE_PRESENTATION_PREFIX_CHAR
+      #endif // if FEATURE_STRING_VARIABLES
+     ) {
     _rawData[taskIndex].set(varNr, value, sensorType);
     return true;
   }

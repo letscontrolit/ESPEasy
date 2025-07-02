@@ -165,8 +165,8 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   // We have sent a lot of data at once.
   // try to flush it to the connected client to free up some RAM
   // from pending transfers
-  TXBuffer.flush();
-  delay(10);
+//  TXBuffer.flush();
+//  delay(10);
 }
 
 bool captivePortal() {
@@ -260,7 +260,9 @@ void WebServerInit()
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/json"),            handle_json);     // Also part of WEBSERVER_NEW_UI
+  #ifdef WEBSERVER_CSVVAL
   web_server.on(F("/csv"),             handle_csvval);
+  #endif
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #if FEATURE_NOTIFIER
@@ -385,11 +387,15 @@ void setWebserverRunning(bool state) {
   if (state) {
     WebServerInit();
     web_server.begin(Settings.WebserverPort);
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
+    #endif
   } else {
     web_server.client().stop();
     web_server.stop();
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
+    #endif
   }
   webserverRunning = state;
   CheckRunningServices(); // Uses webserverRunning state.
@@ -1092,12 +1098,10 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
-    String text;
-    text.reserve(32);
-    text += formatHumanReadable(struct_size, 1024);
-    text += '/';
-    text += formatHumanReadable(max_size, 1024);
-    text += F(" per item");
+    String text = strformat(
+      F("%s/%s per item"),
+      formatHumanReadable(struct_size, 1024).c_str(),
+      formatHumanReadable(max_size, 1024).c_str());
     createSvgTextElement(text, textXoffset, textYoffset);
   } else {
     createSvgTextElement(F("Variable size"), textXoffset, textYoffset);

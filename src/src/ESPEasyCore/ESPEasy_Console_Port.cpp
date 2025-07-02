@@ -121,8 +121,8 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
   if (_serial != nullptr) {
     const int snip = _serial->availableForWrite();
-
-    if  (snip > 0) {
+    
+    if (snip > 0) {
       return _serialWriteBuffer.write(*_serial, snip) != 0;
     }
   }

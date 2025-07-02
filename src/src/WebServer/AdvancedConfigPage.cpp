@@ -20,6 +20,10 @@
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_I2C_MULTIPLE
+#include "../Helpers/I2C_access.h"
+#endif
+
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
@@ -82,12 +86,17 @@ void handle_advanced() {
     Settings.ExtTimeSource(
       static_cast<ExtTimeSource_e>(getFormItemInt(F("exttimesource")))
     );
+    #if FEATURE_I2C_MULTIPLE
+    if (getI2CBusCount() > 1) {
+      set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_CLOCK, getFormItemInt(F("pi2cbusrtc")));
+      set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_WDT,   getFormItemInt(F("pi2cbuswdt")));
+    }
+    #endif // if FEATURE_I2C_MULTIPLE
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #if FEATURE_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
     #endif // if FEATURE_SSDP
-    Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
@@ -167,6 +176,9 @@ void handle_advanced() {
 #if FEATURE_TARSTREAM_SUPPORT
     Settings.DisableSaveConfigAsTar(isFormItemChecked(LabelType::DISABLE_SAVE_CONFIG_AS_TAR));
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    Settings.ShowUnitOfMeasureOnDevicesPage(isFormItemChecked(LabelType::SHOW_UOM_ON_DEVICES_PAGE));
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     addHtmlError(SaveSettings());
 
@@ -215,6 +227,15 @@ void handle_advanced() {
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #if FEATURE_I2C_MULTIPLE
+  {
+    const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
+    I2CInterfaceSelector(F("Ext. Time Source I2C Bus"),
+                        F("pi2cbusrtc"),
+                        i2cBus,
+                        false);
+  }
+  #endif // if FEATURE_I2C_MULTIPLE
   #endif
 
   addFormSubHeader(F("DST Settings"));
@@ -293,14 +314,20 @@ void handle_advanced() {
 
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   addHtml(F(" (decimal)"));
+  #if FEATURE_I2C_MULTIPLE
+  {
+    const uint8_t i2cBus = Settings.getI2CInterfaceWDT();
+    I2CInterfaceSelector(F("WD I2C Bus"),
+                        F("pi2cbuswdt"),
+                        i2cBus,
+                        false);
+  }
+  #endif // if FEATURE_I2C_MULTIPLE
 
-  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit); // TODO define limits
-  #ifdef ESP8266
-  addUnit(F("usec"));
-  #endif
-  #ifdef ESP32
-  addUnit(F("1/80 usec"));
-  #endif
+  // TODO: Remove this code
+  addRowLabel(F("I2C ClockStretchLimit"));
+  addUnit(F("Moved to Hardware page"));
+
   #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if FEATURE_ARDUINO_OTA
@@ -323,6 +350,10 @@ void handle_advanced() {
   #if FEATURE_I2C_DEVICE_CHECK
   addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
   #endif // if FEATURE_I2C_DEVICE_CHECK
+
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addFormCheckBox(LabelType::SHOW_UOM_ON_DEVICES_PAGE, Settings.ShowUnitOfMeasureOnDevicesPage());
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());

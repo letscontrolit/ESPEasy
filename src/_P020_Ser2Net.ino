@@ -8,6 +8,17 @@
 
 /************
  * Changelog:
+ * 2025-03-26 tonhuisman: Add optional receiving (relaying) of UDP data to Serial. Uses the same port as configured for the (default) TCP
+ *                        connection. Available on ESP32 only.
+ *                        Can be enabled for ESP8266 in a Custom build by adding #define P020_USE_PROTOCOL 1
+ *                        Added logging for pass-through data size from TCP or UDP to Serial.
+ * 2025-03-23 tonhuisman: Add 'Event data hex format' setting to convert received data as hex so it can be sent via SerialSendMix.
+ *                        Data received via TCP is now sent to serial via the 'write' method instead of 'print' so any binary content is
+ *                        passed through unaltered.
+ *                        Add command 'serialsend_test,<content>' for filling the serial buffer with the content, and processing as if
+ *                        serial data was received.
+ *                        Use RX Buffer size to allocate receive buffer instead of fixed size 256 (2048 for P1 processing), also used as
+ *                        limit for receiving via TCP.
  * 2023-08-26 tonhuisman: P044 mode: Set RX time-out default to 50 msec for better receive pace of P1 data
  * 2023-08-17 tonhuisman: P1 data: Allow some extra reading timeout between the data and the checksum, as some meters need more time to
  *                        calculate the CRC. Add CR/LF before sending P1 data.
@@ -181,6 +192,21 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       addUnit(F("0..65535"));
       # endif // ifndef LIMIT_BUILD_SIZE
 
+      # if P020_USE_PROTOCOL
+      const __FlashStringHelper*tcpudpOptions[] = {
+        F("TCP"),
+        F("UDP"),
+        F("TCP & UDP"),
+      };
+      constexpr int tcpudpCount = NR_ELEMENTS(tcpudpOptions);
+      FormSelectorOptions tcpudpSelector(tcpudpCount, tcpudpOptions);
+      tcpudpSelector.default_index = 0;
+      tcpudpSelector.addFormSelector(
+        F("Protocol"),
+        F("pproto"),
+        P020_GET_PROTOCOL);
+      # endif // if P020_USE_PROTOCOL
+
       addFormNumericBox(F("Baud Rate"), F("pbaud"), P020_GET_BAUDRATE, 0);
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
@@ -192,25 +218,19 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
             F("RFLink"),
             F("P1 WiFi Gateway")
           };
-/*
-          const int optionValues[] = {
-            static_cast<int>(P020_Events::None),
-            static_cast<int>(P020_Events::Generic),
-            static_cast<int>(P020_Events::RFLink),
-            static_cast<int>(P020_Events::P1WiFiGateway),
-          };
-*/
+
           constexpr int optionCount = NR_ELEMENTS(options);
           const FormSelectorOptions selector(optionCount, options /*, optionValues*/);
           selector.addFormSelector(
-            F("Event processing"), 
-            F("pevents"), 
+            F("Event processing"),
+            F("pevents"),
             P020_SERIAL_PROCESSING);
         }
         addFormCheckBox(F("P1 #data event with message"), F("pp1event"), P020_GET_P1_EVENT_DATA);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, passes the entire message in the event. <B>Warning:</B> can cause memory overflow issues!"));
         # endif // ifndef LIMIT_BUILD_SIZE
+        addFormCheckBox(F("Event data hex format"), F("phexdata"), P020_GET_EVENT_AS_HEX);
 
         if (P020_Events::Generic == static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
           addFormCheckBox(F("Use Serial Port as eventname"), F("pevtname"), P020_GET_EVENT_SERIAL_ID);
@@ -289,6 +309,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P020_FLAG_LED_ENABLED,   isFormItemChecked(F("pled")));
       bitWrite(lSettings, P020_FLAG_LED_INVERTED,  isFormItemChecked(F("pledinv")));
       bitWrite(lSettings, P020_FLAG_P1_EVENT_DATA, isFormItemChecked(F("pp1event")));
+      bitWrite(lSettings, P020_FLAG_EVENT_AS_HEX,  isFormItemChecked(F("phexdata")));
 
       if (P020_Events::Generic == static_cast<P020_Events>(P020_SERIAL_PROCESSING)) {
         bitWrite(lSettings, P020_FLAG_EVENT_SERIAL_ID, isFormItemChecked(F("pevtname")));
@@ -303,6 +324,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       } else {
         bitWrite(lSettings, P020_FLAG_MULTI_LINE, isFormItemChecked(F("pmultiline")));
       }
+      # if P020_USE_PROTOCOL
+      set2BitToUL(lSettings, P020_FLAG_PROTOCOL, getFormItemInt(F("pproto")));
+      # endif // if P020_USE_PROTOCOL
 
       P020_FLAGS = lSettings;
 
@@ -360,14 +384,22 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       # ifndef LIMIT_BUILD_SIZE
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: TaskIndex=%d port=%d rxPin=%d txPin=%d BAUDRATE=%d SERVER_PORT=%d SERIAL_PROCESSING=%d"),
+        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: TaskIndex=%d port=%d rxPin=%d txPin=%d BAUDRATE=%d SERVER_PORT=%d SERIAL_PROCESSING=%d"
+                                           #  if P020_USE_PROTOCOL
+                                           " Protocol=%d"
+                                           #  endif // if P020_USE_PROTOCOL
+                                           ),
                                          event->TaskIndex + 1,
                                          CONFIG_PORT,
                                          rxPin,
                                          txPin,
                                          P020_GET_BAUDRATE,
                                          P020_GET_SERVER_PORT,
-                                         P020_SERIAL_PROCESSING));
+                                         P020_SERIAL_PROCESSING
+                                         #  if P020_USE_PROTOCOL
+                                         , P020_GET_PROTOCOL
+                                         #  endif // if P020_USE_PROTOCOL
+                                         ));
       }
       # endif // ifndef LIMIT_BUILD_SIZE
 
@@ -447,10 +479,22 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != task) {
-        bool hasClient = task->hasClientConnected();
+        const bool hasClient = task->hasClientConnected();
+        # if P020_USE_PROTOCOL
+        const P020_Protocol_e prot = static_cast<P020_Protocol_e>(P020_GET_PROTOCOL);
+        const bool useUdp          = P020_Protocol_e::UDP == prot || P020_Protocol_e::TCP_UDP == prot;
+        # endif // if P020_USE_PROTOCOL
 
-        if (P020_IGNORE_CLIENT_CONNECTED || hasClient) {
-          if (hasClient) {
+        if (P020_IGNORE_CLIENT_CONNECTED || hasClient
+            # if P020_USE_PROTOCOL
+            || useUdp
+            # endif // if P020_USE_PROTOCOL
+            ) {
+          if (hasClient
+              # if P020_USE_PROTOCOL
+              || useUdp
+              # endif // if P020_USE_PROTOCOL
+              ) {
             task->handleClientIn(event);
           }
           task->handleSerialIn(event); // in case of second serial connected, PLUGIN_SERIAL_IN is not called anymore
@@ -495,6 +539,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         } else if ((equals(command, F("ser2netclientsend"))) && (task->hasClientConnected())) {
           task->ser2netClient.print(string.substring(18));
           task->ser2netClient.PR_9453_FLUSH_TO_CLEAR();
+          success = true;
+        } else if (equals(command, F("serialsend_test"))) {
+          task->serial_buffer = parseStringToEndKeepCaseNoTrim(string, 2);
+          task->handleSerialIn(event);
           success = true;
         }
         break;

@@ -14,14 +14,12 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
 
 #define WIFI_MODE_MAX (WiFiMode_t)4
 
-#ifdef ESP32
-#include <esp_phy_init.h>
-#endif
 
 
 String Command_Wifi_SSID(struct EventStruct *event, const char *Line)
@@ -145,24 +143,7 @@ const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const
 // in the wifi settings of the core library
 const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const char *Line)
 {
-  #ifdef ESP8266
-  WifiDisconnect();
-  setWifiMode(WIFI_OFF);
-  if (!ESP.eraseConfig())
-    return return_command_failed_flashstr();
-  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
-  #endif
-
-  #ifdef ESP32
-  WifiDisconnect();
-  setWifiMode(WIFI_OFF);
-  delay(100);
-  esp_phy_erase_cal_data_in_nvs();
-  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
-  delay(100);
-  esp_phy_load_cal_and_init();
-  addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
-  delay(100);  
-  #endif
-  return return_command_success_flashstr();
+  return Erase_WiFi_Calibration() 
+    ? return_command_success_flashstr()
+    : return_command_failed_flashstr();
 }

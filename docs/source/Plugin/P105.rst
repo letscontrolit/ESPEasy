@@ -82,10 +82,7 @@ When selecting the **AHT1x** Sensor model, an extra option is made available:
 * **Temperature offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set in steps of 0.1 degree. This also applies a compensation to the **Humidity** reading.
 
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

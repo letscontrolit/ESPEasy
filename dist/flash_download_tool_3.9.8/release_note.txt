@@ -1,0 +1,32 @@
+3.9.8：
+* add UI to support flash & efuse read
+* support ESP32-C5 / ESP32-C61
+
+3.9.7：
+* support ESP32-P4
+* update UI display icon
+* Fix bug: icon stuck after long-term use
+
+3.9.6：
+* support ESP32/ESP32H2/ESP32C6/ESP32C2/ESP32S2 secure boot version2 and flash encryption
+* config DUT number in multiconfig file ,up to 20pcs
+* update secure config file, see docs in detail
+
+3.9.5：
+* support esp32-h2
+* support erase button disable
+* fix some bugs
+
+3.9.4：
+* support esp32-c6
+* support esp32-c3/esp32-s3 flash encrytion
+* add xmc flash fix
+* support dut count in factory mode
+
+3.9.3:
+* support esp32-c2
+* update finish UI show
+
+3.9.2:
+* fix configure file error
+* update autostart process

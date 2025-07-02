@@ -64,7 +64,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
 
-      if (log.reserve(128)) {
+      if (reserve_special(log, 128)) {
         log += F("Too many arguments: cmd=");
         log += cmd;
 
@@ -320,6 +320,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::jsonportstatus:             COMMAND_CASE_A(Command_JSONPortStatus, -1);              // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::let:                        COMMAND_CASE_A(Command_Rules_Let,               2);      // Rules.h
+    #if FEATURE_STRING_VARIABLES
+    case ESPEasy_cmd_e::letstr:                     COMMAND_CASE_A(Command_Rules_LetStr,            2);      // Rules.h
+    #endif // if FEATURE_STRING_VARIABLES
     case ESPEasy_cmd_e::load:                       COMMAND_CASE_A(Command_Settings_Load,           0);      // Settings.h
     case ESPEasy_cmd_e::logentry:                   COMMAND_CASE_A(Command_logentry,               -1);      // Diagnostic.h
     case ESPEasy_cmd_e::looptimerset:               COMMAND_CASE_A(Command_Loop_Timer_Set,          3);      // Timers.h
@@ -420,6 +423,7 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::sendtohttp:                 COMMAND_CASE_A(Command_HTTP_SendToHTTP, 3);      // HTTP.h
 #endif // FEATURE_SEND_TO_HTTP
     case ESPEasy_cmd_e::sendtoudp:                  COMMAND_CASE_A(Command_UDP_SendToUPD,   3);      // UDP.h
+    case ESPEasy_cmd_e::sendtoudpmix:               COMMAND_CASE_A(Command_UDP_SendToUPDMix, 3);     // UDP.h
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::serialfloat:                COMMAND_CASE_R(Command_SerialFloat,    0);       // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -443,6 +447,10 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::taskrun:                    COMMAND_CASE_A(Command_Task_Run,            1);  // Tasks.h
     case ESPEasy_cmd_e::taskrunat:                  COMMAND_CASE_A(Command_Task_Run,            2);  // Tasks.h
     case ESPEasy_cmd_e::taskvalueset:               COMMAND_CASE_A(Command_Task_ValueSet,       3);  // Tasks.h
+    #if FEATURE_STRING_VARIABLES
+    case ESPEasy_cmd_e::taskvaluesetderived:        COMMAND_CASE_A(Command_Task_ValueSetDerived,      4); // Tasks.h
+    case ESPEasy_cmd_e::taskvaluesetpresentation:   COMMAND_CASE_A(Command_Task_ValueSetPresentation, 3); // Tasks.h
+    #endif // if FEATURE_STRING_VARIABLES
     case ESPEasy_cmd_e::taskvaluetoggle:            COMMAND_CASE_A(Command_Task_ValueToggle,    2);  // Tasks.h
     case ESPEasy_cmd_e::taskvaluesetandrun:         COMMAND_CASE_A(Command_Task_ValueSetAndRun, 3);  // Tasks.h
     case ESPEasy_cmd_e::timerpause:                 COMMAND_CASE_A(Command_Timer_Pause,  1);         // Timers.h

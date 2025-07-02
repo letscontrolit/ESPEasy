@@ -33,6 +33,7 @@ void stream_comma_newline() {
 // ********************************************************************************
 // Web Interface get CSV value from task
 // ********************************************************************************
+#ifdef WEBSERVER_CSVVAL
 void handle_csvval()
 {
   TXBuffer.startJsonStream();
@@ -103,6 +104,7 @@ void handle_csvval()
   }
   TXBuffer.endStream();
 }
+#endif
 
 // ********************************************************************************
 // Web Interface JSON page (no password!)
@@ -451,23 +453,82 @@ void handle_json()
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
-          addHtml('{');
-          uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
-          const String value = formatUserVarNoCheck(&TempEvent, x);
-
+          uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
+          String  value      = formatUserVarNoCheck(&TempEvent, x);
+          #if FEATURE_STRING_VARIABLES
+          bool hasPresentation;
+          const String presentation = formatUserVarForPresentation(&TempEvent, x, hasPresentation, value, DeviceIndex);
+          #endif // if FEATURE_STRING_VARIABLES
+          
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
-          stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        Cache.getTaskDeviceValueName(TaskIndex, x));
-          stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
-          stream_last_json_object_value(F("Value"), value);
+          #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          String uom;
+          const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(TaskIndex, x);
+          if (uomIndex != 0) {
+            uom = toUnitOfMeasureName(uomIndex);
+          }
+          #else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          const String uom;
+          #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          handle_json_stream_task_value_data(x + 1,
+                                             Cache.getTaskDeviceValueName(TaskIndex, x),
+                                             nrDecimals,
+                                             value,
+                                             #if FEATURE_STRING_VARIABLES
+                                             presentation,
+                                             #else // if FEATURE_STRING_VARIABLES
+                                             EMPTY_STRING,
+                                             #endif // if FEATURE_STRING_VARIABLES
+                                             uom,
+                                             x < (valueCount - 1));
+        }
+        #if FEATURE_STRING_VARIABLES
+        if (Settings.ShowDerivedTaskValues(TaskIndex)) {
+          int varNr = VARS_PER_TASK;
+          String taskName = getTaskDeviceName(TaskIndex);
+          taskName.toLowerCase();
+          String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+          const String postfix = search.substring(search.indexOf('X') + 1);
+          search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
 
-          if (x < (valueCount - 1)) {
-            stream_comma_newline();
+          auto it = customStringVar.begin();
+          while (it != customStringVar.end()) {
+            if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+              String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+              const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+              const String vname2 = getCustomStringVar(key2);
+              const String keyUoM = strformat(F(TASK_VALUE_UOM_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+              const String uom    = getCustomStringVar(keyUoM); // FIXME add check for UoM setting
+              if (!vname2.isEmpty()) {
+                valueName = vname2;
+              }
+              if (!it->second.isEmpty()) {
+                String value(it->second);
+                stripEscapeCharacters(value);
+                value = parseTemplate(value);
+                ESPEASY_RULES_FLOAT_TYPE floatvalue{};
+                uint8_t nrDecimals = 255; // FIXME Use the minimal number of decimals needed
+                bool hasPresentation;
+                const String presentation = formatUserVarForPresentation(&TempEvent, INVALID_TASKVAR_INDEX, hasPresentation, value, DeviceIndex, valueName);
+
+                stream_comma_newline(); // Push out a comma and newline
+                handle_json_stream_task_value_data(varNr + 1,
+                                                  valueName,
+                                                  nrDecimals,
+                                                  value,
+                                                  presentation,
+                                                  uom,
+                                                  false); // No comma here
+                ++varNr;
+              }
+            }
+            ++it;
           }
         }
+        #endif // if FEATURE_STRING_VARIABLES
         addHtml(F("],\n"));
       }
 
@@ -485,6 +546,9 @@ void handle_json()
 
       if (showSpecificTask) {
         stream_next_json_object_value(F("TTL"), ttl_json * 1000);
+        #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+        stream_next_json_object_value(F("ShowUoM"), jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage()));
+        #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       }
 
       if (showDataAcquisition) {
@@ -516,12 +580,19 @@ void handle_json()
         }
 
         #if FEATURE_I2CMULTIPLEXER
-        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
+        uint8_t i2cBus = 0;
+        #if FEATURE_I2C_MULTIPLE
+        i2cBus = Settings.getI2CInterface(TaskIndex);
+        #endif
+        if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled(i2cBus)) {
+          #if FEATURE_I2C_MULTIPLE
+          stream_next_json_object_value(F("I2C_Interface"), static_cast<int>(i2cBus + 1));
+          #endif
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
             addHtml(F("\"I2CBus\" : ["));
             uint8_t b = 0;
-            for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
+            for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(i2cBus); ++c) {
               if (bitRead(channel, c)) {
                 if (b > 0) { stream_comma_newline(); }
                 b++;
@@ -535,8 +606,7 @@ void handle_json()
             if (channel == -1){
               stream_next_json_object_value(F("I2Cbus"),       F("Standard I2C bus"));
             } else {
-              String i2cChannel = F("Multiplexer channel ");
-              i2cChannel += String(channel);
+              String i2cChannel = concat(F("Multiplexer channel "), channel);
               stream_next_json_object_value(F("I2Cbus"),       i2cChannel);
             }
           }
@@ -558,6 +628,9 @@ void handle_json()
 
   if (!showSpecificTask) {
     addHtml(F("],\n"));
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    stream_next_json_object_value(F("ShowUoM"), jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage()));
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     stream_last_json_object_value(F("TTL"), lowest_ttl_json * 1000);
   }
 
@@ -565,6 +638,31 @@ void handle_json()
   STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
+void handle_json_stream_task_value_data(uint16_t       valueNumber,
+                                        const String & valueName,
+                                        uint8_t        nrDecimals,
+                                        const String & value,
+                                        const String & presentation,
+                                        const String & uom,
+                                        bool           appendComma) {
+  addHtml('{');
+  stream_next_json_object_value(F("ValueNumber"), valueNumber);
+  stream_next_json_object_value(F("Name"),        valueName);
+  stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
+  #if FEATURE_STRING_VARIABLES
+  if (!presentation.isEmpty()) {
+    stream_next_json_object_value(F("Presentation"), presentation);
+  }
+  #endif // if FEATURE_STRING_VARIABLES
+  if (!uom.isEmpty()) {
+    stream_next_json_object_value(F("UoM"), uom);
+  }
+  stream_last_json_object_value(F("Value"),       value);
+
+  if (appendComma) {
+    stream_comma_newline();
+  }
+}
 // ********************************************************************************
 // JSON formatted timing statistics
 // ********************************************************************************
@@ -688,10 +786,9 @@ void stream_to_json_object_value(const __FlashStringHelper *  object, const Stri
 }
 
 void stream_to_json_object_value(const String& object, const String& value) {
-  addHtml(strformat(
-    F("\"%s\":%s"),
-    object.c_str(),
-    to_json_value(value).c_str()));
+  addHtml(wrap_String(object, '"', '"'));
+  addHtml(':');
+  addHtml(to_json_value(value));
 }
 
 void stream_to_json_object_value(const __FlashStringHelper *  object, int value) {
@@ -699,10 +796,9 @@ void stream_to_json_object_value(const __FlashStringHelper *  object, int value)
 }
 
 void stream_to_json_object_value(const String& object, int value) {
-  addHtml(strformat(
-    F("\"%s\":%d"),
-    object.c_str(),
-    value));
+  addHtml(wrap_String(object, '"', '"'));
+  addHtml(':');
+  addHtmlInt(value);
 }
 
 String jsonBool(bool value) {

@@ -1,6 +1,6 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P002
-
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 # include "src/Helpers/Hardware.h"
 # include "src/PluginStructs/P002_data_struct.h"
@@ -57,7 +57,14 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         P002_data->webformLoad(event);
         success = true;
       } else {
-        P002_data = new (std::nothrow) P002_data_struct();
+        constexpr unsigned size = sizeof(P002_data_struct);
+        void *ptr               = special_calloc(1, size);
+  
+        if (ptr == nullptr) {
+          break;
+        }
+
+        P002_data = new (ptr) P002_data_struct();
 
         if (nullptr != P002_data) {
           P002_data->init(event);
@@ -92,7 +99,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
+      special_initPluginTaskData(event->TaskIndex, P002_data_struct);
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -167,4 +174,5 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+#endif
 #endif // USES_P002

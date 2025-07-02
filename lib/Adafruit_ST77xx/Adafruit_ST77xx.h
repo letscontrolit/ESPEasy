@@ -34,9 +34,12 @@
 #define ST7735_TFTWIDTH_128 128  // for 1.44 and mini
 #define ST7735_TFTWIDTH_80 80    // for mini
 #define ST7735_TFTWIDTH_135 135
+#define ST7735_TFTWIDTH_172 172
+#define ST7735_TFTWIDTH_170 170
 #define ST7735_TFTHEIGHT_128 128 // for 1.44" display
 #define ST7735_TFTHEIGHT_160 160 // for 1.8" and mini display
 #define ST7735_TFTHEIGHT_240 240
+#define ST7735_TFTHEIGHT_320 320
 
 #define ST_CMD_DELAY 0x80 // special signifier for command lists
 
