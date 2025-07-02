@@ -9,6 +9,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2025-01-03 tonhuisman: Small code size improvements, source formatted using Uncrustify
  */
 
@@ -16,6 +17,13 @@
 # define PLUGIN_ID_018          18
 # define PLUGIN_NAME_018        "Dust - Sharp GP2Y10"
 # define PLUGIN_VALUENAME1_018  "Dust"
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_018_QueryVType(uint8_t value_nr) {
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 boolean Plugin_018_init = false;
 
@@ -57,6 +65,14 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
       event->String1 = formatGpioName_output(F("LED"));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_018_QueryVType, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_INIT:
     {

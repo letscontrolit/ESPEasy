@@ -43,6 +43,8 @@ void MQTTDisconnect();
 \*********************************************************************************************/
 bool MQTTConnect(controllerIndex_t controller_idx);
 
+void MQTTparseSystemVariablesAndSubscribe(String subscribeTo);
+
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings);
 
 /*********************************************************************************************\

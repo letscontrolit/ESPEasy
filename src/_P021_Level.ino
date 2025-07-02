@@ -9,6 +9,7 @@
 // Extended by timer based state control to support pumps with additional requirements (floor heating ciculation pump)
 
 // Changelog:
+// 2025-05-21, tonhuisman: Add support for MQTT Discovery and MQTT Device Class user-configuration
 // 2024-12-14, tonhuisman: Move most defines to .h file to avoid compiler warnings, as Arduino doesn't support #ifdef in .ino files
 //                         Format source using Uncrustify
 //                         Remove unneeded includes
@@ -164,6 +165,18 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+
+      success = getDiscoveryVType(event, bitRead(P021_FLAGS, P021_INV_OUTPUT)
+                                          ? Plugin_QueryVType_BinarySensorInv
+                                          : Plugin_QueryVType_BinarySensor, 255, event->Par5);
+      #  if FEATURE_MQTT_DEVICECLASS
+      string = MQTT_binary_deviceClassName(P021_MQTT_DEVICECLASS); // User selected device_cLass/dev_cls value
+      #  endif // if FEATURE_MQTT_DEVICECLASS
+      break;
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_WEBFORM_LOAD:
     {
       # if FEATURE_P021_EXTRAS >= 1
@@ -305,6 +318,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       }
       # endif // FEATURE_P021_EXTRAS >= 1
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                              F("devcls"),
+                                              P021_MQTT_DEVICECLASS);
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
       success = true;
       break;
     }
@@ -378,7 +398,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       # endif // if FEATURE_P021_EXTRAS >= 1
 
       P021_FLAGS = flags; // Don't forget to write back the new flags
-      success    = true;
+
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P021_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      success = true;
       break;
     }
 

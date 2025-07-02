@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-17 tonhuisman: Enable sending Derived values when available and enabled
  * 2023-08-18 tonhuisman: Clean up source for pull request
  * 2023-03-15 tonhuisman: Handle setting payload to (Dummy) Devices via topic SysName/TaskName/ValueName/set
  * 2023-03 Changelog started
@@ -46,6 +47,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       #if FEATURE_MQTT_TLS
       proto.usesTLS      = true;
       #endif
+      # if FEATURE_STRING_VARIABLES
+      proto.allowSendDerived = true;
+      # endif // if FEATURE_STRING_VARIABLES
       break;
     }
 

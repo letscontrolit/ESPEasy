@@ -89,6 +89,10 @@
 # include "../Helpers/Modbus_RTU.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_052_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
+
 
 struct P052_data_struct : public PluginTaskData_base {
   P052_data_struct() = default;
@@ -107,7 +111,6 @@ struct P052_data_struct : public PluginTaskData_base {
 
   static const __FlashStringHelper* Plugin_052_valuename(uint8_t value_nr,
                                                          bool    displayString);
-
   void                              setABCperiod(int hours);
 
   uint32_t                          getSensorID();
@@ -120,8 +123,9 @@ struct P052_data_struct : public PluginTaskData_base {
   bool readHoldingRegister(short addr,
                            int & value);
 
-  bool plugin_write(struct EventStruct *event, const String& string);
-  
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
+
   ModbusRTU_struct modbus;
 };
 

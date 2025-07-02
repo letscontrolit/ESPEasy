@@ -75,8 +75,14 @@ struct ExtraTaskSettingsStruct
   #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   uint8_t       getTaskVarUnitOfMeasure(taskVarIndex_t taskVarIndex) const;
   void          setTaskVarUnitOfMeasure(taskVarIndex_t taskVarIndex,
-                                        uint8_t        unitOfMeasure);
+  uint8_t        unitOfMeasure);
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                                      
+  #if FEATURE_CUSTOM_TASKVAR_VTYPE
+  uint8_t       getTaskVarCustomVType(taskVarIndex_t taskVarIndex) const;
+  void          setTaskVarCustomVType(taskVarIndex_t taskVarIndex,
+                                      uint8_t        customVType);
+  #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,

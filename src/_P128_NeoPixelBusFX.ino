@@ -6,35 +6,38 @@
 // #################################### Plugin 128: NeoPixelBusFX ########################################
 // #######################################################################################################
 
-// Changelog:
-// 2023-08-09, tonhuisman Update NeoPixelBus library to latest (2.7.6).
-//                        Keep reverted code for ESP8266 AND ESP32, so using deprecated NeoPixelBrightnessBus class,
-//                        with deprecation message disabled (unfortunately we'll have to keep dat updated manually)
-// 2023-07-20, tonhuisman Revert change to NeoWs2812xMethod, as this doesn't properly work on ESP8266 (yet)
-// 2023-05-13, tonhuisman Add P128_USES_BGR / BGR definitions and support (compile-time)
-//                        Use more global NeoWs2812xMethod, as the library uses best matching hardware features per CPU type
-// 2023-05-12, tonhuisman Update for latest NeoPixelBusFx changes (NeoPixelBusLg class, (S/G)etLuminance method)
-// 2022-07-20, tonhuisman Make FakeTV compile-time optional, disabled by default on ESP8266, enabled by default on ESP32
-//                        P128_ENABLE_FAKETV can be set to 0/1 in Custom.h
-// 2022-07-02, tonhuisman Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))
-// 2022-06-12, tonhuisman Optimizations, revert Makuna/NeopixelBus library to 2.6.9 for incompatibilties like [[maybe_unused]] arguments
-// 2022-01-30, tonhuisman Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
-// 2022-01-09, tonhuisman Add conditional defines P128_USES_<colormode> (options: GRB/GRBW/RGB/RGBW/BRG/BRG) for selecting the
-//                        desired pixel type, optionally, from Custom.h
-// 2022-01-08, tonhuisman Small UI fixes while writing documentation.
-// 2022-01-06, tonhuisman Move from Development to Testing
-// 2022-01-05, tonhuisman Code optimizations and review feedback
-// 2022-01-04, tonhuisman Code optimizations, reduce calls to parseString and rgbStr2Num, string handling
-//                        Ensure no instance is still running when PLUGIN_INIT is called, as it will cause RMT issues
-// 2022-01-03, tonhuisman Code optimizations, struct variable initialization
-// 2022-01-02, tonhuisman Move all code to Plugin_data_struct, with minor modifications (initialization, *char[] size)
-// 2022-01-02, tonhuisman Fixed ESP32 related issues (conditional compilation, wrong stripe type)
-//                        Add configuration for ESP32 GPIO pin
-// 2022-01-01, tonhuisman On request migrated from https://github.com/djcysmic/NeopixelBusFX to ESPEasy (that is an
-//                        extension from plugin _P124_NeoPixelBusFX.ino on the ESPEasyPluginPlayground)
-//                        - Adjusted to work combined with FastLED library (random8() issues)
-//                        - Moved firetv.h data to P128_data_struct.h
-//                        - Use PCONFIG(0) macro where applicable
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Neopixel)
+ *                        Updated changelog
+ * 2023-08-09 tonhuisman: Update NeoPixelBus library to latest (2.7.6).
+ *                        Keep reverted code for ESP8266 AND ESP32, so using deprecated NeoPixelBrightnessBus class,
+ *                        with deprecation message disabled (unfortunately we'll have to keep dat updated manually)
+ * 2023-07-20 tonhuisman: Revert change to NeoWs2812xMethod, as this doesn't properly work on ESP8266 (yet)
+ * 2023-05-13 tonhuisman: Add P128_USES_BGR / BGR definitions and support (compile-time)
+ *                        Use more global NeoWs2812xMethod, as the library uses best matching hardware features per CPU type
+ * 2023-05-12 tonhuisman: Update for latest NeoPixelBusFx changes (NeoPixelBusLg class, (S/G)etLuminance method)
+ * 2022-07-20 tonhuisman: Make FakeTV compile-time optional, disabled by default on ESP8266, enabled by default on ESP32
+ *                        P128_ENABLE_FAKETV can be set to 0/1 in Custom.h
+ * 2022-07-02 tonhuisman: Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))
+ * 2022-06-12 tonhuisman: Optimizations, revert Makuna/NeopixelBus library to 2.6.9 for incompatibilties like [[maybe_unused]] arguments
+ * 2022-01-30 tonhuisman: Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
+ * 2022-01-09 tonhuisman: Add conditional defines P128_USES_<colormode> (options: GRB/GRBW/RGB/RGBW/BRG/BRG) for selecting the
+ *                        desired pixel type, optionally, from Custom.h
+ * 2022-01-08 tonhuisman: Small UI fixes while writing documentation.
+ * 2022-01-06 tonhuisman: Move from Development to Testing
+ * 2022-01-05 tonhuisman: Code optimizations and review feedback
+ * 2022-01-04 tonhuisman: Code optimizations, reduce calls to parseString and rgbStr2Num, string handling
+ *                        Ensure no instance is still running when PLUGIN_INIT is called, as it will cause RMT issues
+ * 2022-01-03 tonhuisman: Code optimizations, struct variable initialization
+ * 2022-01-02 tonhuisman: Move all code to Plugin_data_struct, with minor modifications (initialization, *char[] size)
+ * 2022-01-02 tonhuisman: Fixed ESP32 related issues (conditional compilation, wrong stripe type)
+ *                        Add configuration for ESP32 GPIO pin
+ * 2022-01-01 tonhuisman: On request migrated from https://github.com/djcysmic/NeopixelBusFX to ESPEasy (that is an
+ *                        extension from plugin _P124_NeoPixelBusFX.ino on the ESPEasyPluginPlayground)
+ *                        - Adjusted to work combined with FastLED library (random8() issues)
+ *                        - Moved firetv.h data to P128_data_struct.h
+ *                        - Use PCONFIG(0) macro where applicable
+ */
 
 /*
    List of commands:
@@ -179,6 +182,15 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_128));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

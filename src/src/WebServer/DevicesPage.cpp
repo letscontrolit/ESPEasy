@@ -17,6 +17,9 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Device.h"
 # include "../Globals/ExtraTaskSettings.h"
+# if FEATURE_MQTT_DISCOVER
+#  include "../Globals/MQTT.h"
+# endif // if FEATURE_MQTT_DISCOVER
 # include "../Globals/Nodes.h"
 # include "../Globals/Plugins.h"
 
@@ -266,6 +269,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   const DeviceStruct& device = Device[DeviceIndex];
 
+  # if FEATURE_MQTT_DISCOVER
+  controllerIndex_t discoverController = INVALID_CONTROLLER_INDEX;
+  # endif // if FEATURE_MQTT_DISCOVER
+
   unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
@@ -385,13 +392,21 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   #if FEATURE_STRING_VARIABLES
   Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
   Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
-  Settings.SendDerivedTaskValues(taskIndex, isFormItemChecked(F("TSND")));
   #endif // if FEATURE_STRING_VARIABLES
-
+  
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(getPluginCustomArgName(F("TDID"), controllerNr));
     Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr));
+    # if FEATURE_MQTT_DISCOVER
+    
+    if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr))) {
+      discoverController = controllerNr;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+    #if FEATURE_STRING_VARIABLES
+    Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
+    #endif // if FEATURE_STRING_VARIABLES
   }
 
   if (device.PullUpOption) {
@@ -438,6 +453,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     ExtraTaskSettings.setTaskVarUnitOfMeasure(varNr, getFormItemInt(getPluginCustomArgName(F("TUOM"), varNr)));
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
+    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    ExtraTaskSettings.setTaskVarCustomVType(varNr, getFormItemInt(getPluginCustomArgName(F("TDTV"), varNr)));
+    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
@@ -464,6 +482,20 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     if (!device.ExitTaskBeforeSave) {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
+    # if FEATURE_MQTT_DISCOVER
+
+    if (validControllerIndex(discoverController) && validControllerIndex(mqttDiscoveryController)) {
+      mqttDiscoverOnlyTask = taskIndex;
+      mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Resend AutoDiscovery for Task %d on Controller %d in %.1f sec."),
+                                         taskIndex + 1,
+                                         mqttDiscoveryController + 1,
+                                         mqttDiscoveryTimeout / 10.0f));
+      }
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
   }
 
   // Store all PCONFIG values on the web page
@@ -829,18 +861,16 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           if (Settings.ShowDerivedTaskValues(x)) {
             String taskName = getTaskDeviceName(x);
             taskName.toLowerCase();
-            String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-            const String postfix = search.substring(search.indexOf('X') + 1);
-            search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+            String postfix;
+            const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
             auto it = customStringVar.begin();
             while (it != customStringVar.end()) {
               if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
                 String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-                const String vname2 = getCustomStringVar(key2);
-                const String keyUoM = strformat(F(TASK_VALUE_UOM_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-                const String uom    = getCustomStringVar(keyUoM);
+                String uom;
+                String vType;
+                const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
                 if (!vname2.isEmpty()) {
                   valueName = vname2;
                 }
@@ -863,6 +893,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
                     value);
                   ++varNr;
                 }
+              }
+              else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+                break;
               }
               ++it;
             }
@@ -1081,7 +1114,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     #endif
     # if FEATURE_ESPEASY_P2P
     if (device.SendDataOption && p2p_controllerIndex != INVALID_CONTROLLER_INDEX)
-    {      
+    {
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
       addFormNumericBox(F("Remote Unit"), F("remoteFeed"), remoteUnit, 0, 255);
@@ -1525,7 +1558,6 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
     #if FEATURE_STRING_VARIABLES
     addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
     addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
-    addFormCheckBox(F("Send derived values"),            F("TSND"), Settings.SendDerivedTaskValues(taskIndex), true); // FIXME enable when SendDerivedTaskValues feature is implemented
     #endif // if FEATURE_STRING_VARIABLES
 
     bool separatorAdded = false;
@@ -1552,16 +1584,60 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
           Settings.TaskDeviceSendData[controllerNr][taskIndex]);
 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
+        const bool showControllerIDX  = validProtocolIndex(ProtocolIndex) &&
+                                        getProtocolStruct(ProtocolIndex).usesID &&
+                                        (Settings.Protocol[controllerNr] != 0);
+        # if FEATURE_MQTT_DISCOVER
+        const bool showMqttGroup = (validProtocolIndex(ProtocolIndex) &&
+                                    getProtocolStruct(ProtocolIndex).mqttAutoDiscover &&
+                                    Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+        # endif // if FEATURE_MQTT_DISCOVER
+        # if FEATURE_STRING_VARIABLES
+        const bool allowSendDerived = (validProtocolIndex(ProtocolIndex) &&
+                                       getProtocolStruct(ProtocolIndex).allowSendDerived);
+        # endif // if FEATURE_STRING_VARIABLES
 
-        if (validProtocolIndex(ProtocolIndex) &&
-            getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[controllerNr] != 0)) {
+        if (showControllerIDX
+            # if FEATURE_MQTT_DISCOVER
+            || showMqttGroup
+            # endif // if FEATURE_MQTT_DISCOVER
+            ) {
           html_TD();
-          addHtml(F("IDX:"));
+          addHtml(
+            # if FEATURE_MQTT_DISCOVER
+            showMqttGroup && !showControllerIDX ? F("Group:") :
+            # endif // if FEATURE_MQTT_DISCOVER
+            F("IDX:"));
           html_TD();
           addNumericBox(
             getPluginCustomArgName(F("TDID"), controllerNr), // ="taskdeviceid"
             Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
         }
+        # if FEATURE_STRING_VARIABLES
+        if (allowSendDerived) {
+          html_TD();
+          addHtml(F("Send derived:"));
+          html_TD();
+          addCheckBox(getPluginCustomArgName(F("TSND"), controllerNr), Settings.SendDerivedTaskValues(taskIndex, controllerNr), false
+                      #  if FEATURE_TOOLTIPS
+                      , F("Send derived values")
+                      #  endif // if FEATURE_TOOLTIPS
+                     );
+        }
+        # endif // if FEATURE_STRING_VARIABLES
+
+        # if FEATURE_MQTT_DISCOVER
+
+        if (showMqttGroup &&
+            (mqttDiscoveryController == controllerNr)) {
+          html_TD();
+          addHtml(F("Resend MQTT Discovery:"));
+          html_TD();
+          addCheckBox(
+            getPluginCustomArgName(F("TDDSC"), controllerNr), // ="taskdevicediscover"
+            false);
+        }
+        # endif // if FEATURE_MQTT_DISCOVER
         html_end_table();
       }
     }
@@ -1633,13 +1709,37 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 # endif // if FEATURE_PLUGIN_STATS
 
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-    html_table_header(F("Unit of Measure"), 50);
+    html_table_header(F("Unit of Measure"), 300);
     ++colCount;
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    if (device.CustomVTypeVar) {
+      html_table_header(F("Value Type"),  100);
+      ++colCount;
+    }
+    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
 
     // placeholder header
     html_table_header(F(""));
     ++colCount;
+
+    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    std::vector<uint8_t> singleOptions;
+    EventStruct TempEvent(taskIndex);
+    
+    if (device.CustomVTypeVar) {
+      // Build a list of all single-value available value VTypes from PR #5199
+      constexpr uint8_t    maxVType = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_NOT_SET);
+      singleOptions.push_back(0); // Empty/None value
+      for (uint8_t i = 0; i < maxVType; ++i) {
+        if (getValueCountFromSensorType(static_cast<Sensor_VType>(i), false) == 1) {
+          singleOptions.push_back(i);
+        }
+      }
+    }
+    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -1711,6 +1811,17 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_TD();
       addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr));
       #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+      #if FEATURE_CUSTOM_TASKVAR_VTYPE
+      if (device.CustomVTypeVar) {
+        html_TD();
+        sensorTypeHelper_Selector(
+          getPluginCustomArgName(F("TDTV"), varNr),
+          singleOptions.size(),
+          &singleOptions[0],
+          static_cast<Sensor_VType>(Cache.getTaskVarCustomVType(taskIndex, varNr)));
+      }
+      #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
     }
     addFormSeparator(colCount);
   }

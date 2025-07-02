@@ -4,8 +4,6 @@
 
 # include "../ESPEasyCore/ESPEasyGPIO.h"
 
-# include <GPIO_Direct_Access.h>
-
 # include "../Commands/GPIO.h" // FIXME TD-er: Only needed till we can call GPIO commands from the ESPEasy core.
 
 
@@ -443,7 +441,7 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   {
     // Don't call gpio_config.readState() here
     const bool pinState        = 
-      (DIRECT_pinRead_ISR(gpio_config.gpio) == 0) ^ gpio_config.inverted;
+      (DIRECT_pinRead_ISR(gpio_config.gpio) != 0) ^ gpio_config.inverted;
     const uint64_t currentTime = getMicros64();
 
 

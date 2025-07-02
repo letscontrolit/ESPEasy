@@ -5,6 +5,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for LD24xx)
  * 2024-12-09 tonhuisman: Fix: Reduced max sensitivity to configure to 101, as the max value that vill be reported by the sensor is 100,
  *                        so checking up to 100 was an off-by-one error.
  * 2024-10-09 tonhuisman: Extend sensitivity max. value to 110 (experimental, was 100)
@@ -89,6 +91,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOptional      = true;
       dev.PluginStats        = true;
       dev.ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
+      dev.CustomVTypeVar     = true;
 
       break;
     }
@@ -134,6 +137,22 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {

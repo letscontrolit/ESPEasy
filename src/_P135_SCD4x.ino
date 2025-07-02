@@ -5,7 +5,8 @@
 // ########################## Plugin 135: Gases - SCD4x CO2, Humidity, Temperature #######################
 // #######################################################################################################
 
-/**
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-08-16 tonhuisman: Disable 'factoryreset' command by default, to protect the innocent. There is a higher than 99.999% chance you
  *                        want something else than a reset to factory defaults and 400 ppm! If you do, then create a Custom build with
  *                        the matching feature-flag enabled.
@@ -71,6 +72,16 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

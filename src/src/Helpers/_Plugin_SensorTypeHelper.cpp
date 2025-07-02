@@ -61,9 +61,30 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, int pconfigI
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
+void sensorTypeHelper_Selector(const String& id, int optionCount, const uint8_t options[], Sensor_VType choice) {
+  addSelector_Head(id);
+
+  for (uint8_t x = 0; x < optionCount; x++)
+  {
+    const Sensor_VType optionVType = static_cast<Sensor_VType>(options[x]);
+    String name = getSensorTypeLabel(optionVType);
+    addSelector_Item(name,
+                     options[x],
+                     choice == optionVType);
+  }
+  addSelector_Foot();
+}
+
 void sensorTypeHelper_webformLoad(struct EventStruct *event, int pconfigIndex, int optionCount, const uint8_t options[])
 {
-  addFormSubHeader(F("Output Configuration"));
+  sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, options, true, 0);
+}
+
+void sensorTypeHelper_webformLoad(struct EventStruct *event, int pconfigIndex, int optionCount, const uint8_t options[], bool showSubHeader, int valueIndex)
+{
+  if (showSubHeader) {
+    addFormSubHeader(F("Output Configuration"));
+  }
 
   if (pconfigIndex < 0 || pconfigIndex >= PLUGIN_CONFIGVAR_MAX) {
     return;
@@ -71,15 +92,17 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, int pconfigIndex, i
   Sensor_VType choice             = static_cast<Sensor_VType>(PCONFIG(pconfigIndex));
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
-  if (!validDeviceIndex(DeviceIndex)) {
-    // FIXME TD-er: Should we even continue here?
-    choice                = Sensor_VType::SENSOR_TYPE_NONE;
-    PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
-  } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
-    // Invalid value
-    if (checkDeviceVTypeForTask(event) >= 0) {
-      choice                = event->sensorType;
+  if (showSubHeader) {
+    if (!validDeviceIndex(DeviceIndex)) {
+      // FIXME TD-er: Should we even continue here?
+      choice                = Sensor_VType::SENSOR_TYPE_NONE;
       PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
+    } else if (getValueCountFromSensorType(choice) != getValueCountForTask(event->TaskIndex)) {
+      // Invalid value
+      if (checkDeviceVTypeForTask(event) >= 0) {
+        choice                = event->sensorType;
+        PCONFIG(pconfigIndex) = static_cast<uint8_t>(choice);
+      }
     }
   }
 
@@ -93,18 +116,15 @@ void sensorTypeHelper_webformLoad(struct EventStruct *event, int pconfigIndex, i
     }
     outputTypeLabel = F("Number Output Values");
   }
-  addRowLabel(outputTypeLabel);
-  addSelector_Head(sensorTypeHelper_webformID(pconfigIndex));
-
-  for (uint8_t x = 0; x < optionCount; x++)
-  {
-    String name = getSensorTypeLabel(static_cast<Sensor_VType>(options[x]));
-    addSelector_Item(name,
-                     options[x],
-                     choice == static_cast<Sensor_VType>(options[x]));
+  if (showSubHeader) {
+    addRowLabel(outputTypeLabel);
+  } else if (valueIndex >= 0) {
+    addRowLabel(strformat(F("Value %d type"), valueIndex));
   }
-  addSelector_Foot();
-  {
+
+  sensorTypeHelper_Selector(sensorTypeHelper_webformID(pconfigIndex), optionCount, options, choice);
+
+  if (showSubHeader) {
     String note;
     note  = F("Changing '");
     note += outputTypeLabel;

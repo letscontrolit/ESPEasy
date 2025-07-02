@@ -57,6 +57,50 @@ String parseTemplateAndCalculate(String& tmpString) {
   }
   return str;
 }
+
+uint8_t getDerivedValueCountForTask(taskIndex_t taskIndex) {
+  uint8_t derivedVars = 0;
+  String postfix;
+  const String search = getDerivedValueSearchAndPostfix(getTaskDeviceName(taskIndex), postfix);
+
+  auto it = customStringVar.begin();
+
+  while (it != customStringVar.end()) {
+    if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+      ++derivedVars;
+    }
+    else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+      break;
+    }
+    ++it;
+  }
+  return derivedVars;
+}
+
+String getDerivedValueSearchAndPostfix(String taskName, String& postfix) {
+  taskName.toLowerCase();
+  const String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+  postfix = search.substring(search.indexOf('X') + 1);
+  return search.substring(0, search.indexOf('X')); // Cut off left of valuename
+}
+
+String getDerivedValueNameUomAndVType(String taskName, String valueName, String& uom, String& vType) {
+  taskName.toLowerCase();
+  valueName.toLowerCase();
+  vType = getCustomStringVar(strformat(F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
+  uom   = getCustomStringVar(strformat(F(TASK_VALUE_UOM_PREFIX_TEMPLATE),
+                                       taskName.c_str(), valueName.c_str()));
+  return  getCustomStringVar(strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
+}
+
+String getDerivedValueName(String taskName, String valueName) {
+  taskName.toLowerCase();
+  valueName.toLowerCase();
+  return  getCustomStringVar(strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
+}
 #endif // if FEATURE_STRING_VARIABLES
 
 String parseTemplate(String& tmpString)
@@ -971,9 +1015,8 @@ void parseCommandString(struct EventStruct *event, const String& string)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseCommandString"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  event->Par1 = parseCommandArgumentInt(string, 1);
-  event->Par2 = parseCommandArgumentInt(string, 2);
-  event->Par3 = parseCommandArgumentInt(string, 3);
-  event->Par4 = parseCommandArgumentInt(string, 4);
-  event->Par5 = parseCommandArgumentInt(string, 5);
+
+  for (uint8_t i = 0; i < 5; ++i) {
+    event->ParN[i] = parseCommandArgumentInt(string, i + 1);
+  }
 }

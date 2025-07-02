@@ -28,6 +28,9 @@ enum class P138_valueOptions_e : uint8_t {
 
 const __FlashStringHelper* toString(const P138_valueOptions_e value,
                                     bool                      displayString = true);
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_138_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
 
 struct P138_data_struct : public PluginTaskData_base {
 public:

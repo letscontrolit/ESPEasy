@@ -61,7 +61,7 @@ struct P108_data_struct : public PluginTaskData_base {
             uint8_t           modbusAddress);
 
   bool isInitialized() const {
-      return modbus.isInitialized();
+    return modbus.isInitialized();
   }
 
   ModbusRTU_struct modbus;
@@ -78,6 +78,10 @@ float                      p108_readValue(uint8_t             query,
 
 void                       p108_showValueLoadPage(uint8_t             query,
                                                   struct EventStruct *event);
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_108_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
+
 
 #endif // ifdef USES_P108
 #endif // ifndef PLUGINSTRUCTS_P108_DATA_STRUCT_H

@@ -1369,11 +1369,39 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 
 void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode) {
+                                   struct EventStruct* event,
+                                   uint8_t             taskValueIndex,
+                                   bool                useURLencode) {
   SMART_REPL(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex));
 }
+
+#if FEATURE_MQTT_DISCOVER
+void parseDeviceClassVariable(String                   & s,
+                              const __FlashStringHelper* devclass,
+                              bool                       useURLencode) {
+  SMART_REPL(F("%devclass%"), devclass);
+}
+
+void parseUniqueIdVariable(String      & s,
+                           const String& uniqueId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%unique_id%"), uniqueId);
+}
+
+void parseElementIdVariable(String     & s,
+                           const String& elementId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%element_id%"), elementId);
+}
+#endif
+
+#if FEATURE_STRING_VARIABLES
+void parseValNameVariable(String      & s,
+                          const String& valname,
+                          bool          useURLencode) {
+  SMART_REPL(F("%valname%"), valname);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 void parseSystemVariables(String& s, bool useURLencode)
 {
@@ -1401,8 +1429,47 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
+  const bool val_found = s.indexOf(F("%val")) != -1;
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+
+  #if FEATURE_STRING_VARIABLES
+  std::map<uint8_t, String> strVarNames;
+  std::map<uint8_t, String> strVarValues;
+
+  if (Settings.SendDerivedTaskValues(event->TaskIndex, event->ControllerIndex)) {
+    String taskName = getTaskDeviceName(event->TaskIndex);
+    taskName.toLowerCase();
+    String postfix;
+    const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+
+    auto it = customStringVar.begin();
+    uint8_t varNr = VARS_PER_TASK; // %val5% and %vname5% and incrementing the number
+    while (it != customStringVar.end()) {
+      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+        const String vname2 = getDerivedValueName(taskName, valueName);
+        if (!vname2.isEmpty()) {
+          valueName = vname2;
+        }
+        if (!it->second.isEmpty()) {
+          String value(it->second);
+          value = parseTemplateAndCalculate(value);
+          strVarNames.insert(std::pair<uint8_t, String>(varNr, valueName));
+          strVarValues.insert(std::pair<uint8_t, String>(varNr, value));
+          ++varNr; // increment after to keep the values & code below consistent
+        }
+      }
+      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+        break;
+      }
+      ++it;
+    }
+
+  }
+  #endif // if FEATURE_STRING_VARIABLES
+
   if (validTaskIndex(event->TaskIndex)) {
-    if (s.indexOf(F("%val")) != -1) {
+    if (val_found) {
       const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
       for (uint8_t i = 0; i < valueCount; ++i) {
         String valstr = F("%val");
@@ -1410,12 +1477,21 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
         valstr += '%';
         SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
+
+      #if FEATURE_STRING_VARIABLES
+      auto it = strVarValues.begin();
+      while (it != strVarValues.end()) {
+        String valstr = F("%val");
+        valstr += (it->first + 1);
+        valstr += '%';
+        SMART_REPL(valstr, it->second);
+        ++it;
+      }
+      #endif // if FEATURE_STRING_VARIABLES
     }
   }
 
   SMART_REPL(F("%tskname%"), getTaskDeviceName(event->TaskIndex));
-
-  const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
     const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
@@ -1426,6 +1502,17 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
       SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
+    #if FEATURE_STRING_VARIABLES
+    auto it = strVarNames.begin();
+    while (it != strVarNames.end()) {
+      String vname = F("%vname");
+      vname += (it->first + 1);
+      vname += '%';
+
+      SMART_REPL(vname, it->second);
+      ++it;
+    }
+    #endif // if FEATURE_STRING_VARIABLES
   }
 }
 

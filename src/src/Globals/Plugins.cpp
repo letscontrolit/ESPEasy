@@ -1006,6 +1006,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     #ifdef USES_ESPEASY_NOW
     case PLUGIN_FILTEROUT_CONTROLLER_DATA:
     #endif // ifdef USES_ESPEASY_NOW
+    #if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    #endif // if FEATURE_MQTT_DISCOVER
 
       // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
       // case PLUGIN_MQTT_CONNECTION_STATE:
@@ -1023,6 +1026,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             (Function == PLUGIN_INIT_VALUE_RANGES) ||
             (Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS) ||
             (Function == PLUGIN_WEBFORM_PRE_SERIAL_PARAMS)
+            #if FEATURE_MQTT_DISCOVER
+            || (Function == PLUGIN_GET_DISCOVERY_VTYPES)
+            #endif // if FEATURE_MQTT_DISCOVER
             ) {
           LoadTaskSettings(event->TaskIndex);
         }

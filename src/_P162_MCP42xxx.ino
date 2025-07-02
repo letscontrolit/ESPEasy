@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-04-16 tonhuisman: Add Send values on change option, so Interval can be set to 0, and the data will be sent when changed
  * 2024-04-10 tonhuisman: Initial version. Support for Digipot MCP42xxx (dual channel) and MCP41xxx (single channel).
  *                        No support for daisy-chaining (MCP42xxx can do that, but not implemented)
@@ -54,6 +55,16 @@ boolean Plugin_162(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_162));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:                                   // define 'GPIO 1st' name in webserver
     {

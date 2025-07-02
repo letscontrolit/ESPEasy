@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-09-15 tonhuisman: Fix ROI selection for tablet/mobile devices (touch-only) as click&drag doesn't work there.
  *                        Fix some bugs, and optimize the js code a bit. Move static minified js to WebStaticData.h
  * 2024-09-13 tonhuisman: ROI settings can be selected by dragging the Optical Center Index matrix and the O.C. can be selected
@@ -66,6 +67,17 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_113));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DIRECTION_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
