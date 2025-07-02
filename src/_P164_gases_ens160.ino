@@ -13,6 +13,10 @@
 // 2023 By flashmark
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-23 tonhuisman: Add support for AQI MQTT AutoDiscovery
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (partially)
+ */
 # include "src/PluginStructs/P164_data_struct.h"
 
 # define PLUGIN_164
@@ -59,6 +63,17 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TVOC_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_AQI_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

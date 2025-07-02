@@ -17,6 +17,15 @@ void   stripEscapeCharacters(String& str);
 
 #if FEATURE_STRING_VARIABLES
 String parseTemplateAndCalculate(String& tmpString);
+uint8_t getDerivedValueCountForTask(taskIndex_t taskIndex);
+String getDerivedValueSearchAndPostfix(String  taskName,
+                                       String& postfix);
+String getDerivedValueNameUomAndVType(String  taskName,
+                                      String  valueName,
+                                      String& uom,
+                                      String& vType);
+String getDerivedValueName(String taskName,
+                           String valueName);
 #endif // if FEATURE_STRING_VARIABLES
 
 String parseTemplate(String& tmpString);

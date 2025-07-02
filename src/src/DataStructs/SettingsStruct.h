@@ -7,6 +7,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ChecksumType.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/NPluginID.h"
@@ -226,8 +227,8 @@ class SettingsStruct_tmpl
   void ShowDerivedTaskValues(taskIndex_t taskIndex, bool value);
   bool EventAndLogDerivedTaskValues(taskIndex_t taskIndex) const;
   void EventAndLogDerivedTaskValues(taskIndex_t taskIndex, bool value);
-  bool SendDerivedTaskValues(taskIndex_t taskIndex) const;
-  void SendDerivedTaskValues(taskIndex_t taskIndex, bool value);
+  bool SendDerivedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex) const;
+  void SendDerivedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value);
   #endif // if FEATURE_STRING_VARIABLES
 
   bool DoNotStartAP() const  { return VariousBits_1.DoNotStartAP; }

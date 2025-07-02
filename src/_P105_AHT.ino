@@ -113,7 +113,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P105_AHT_TYPE = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
+      P105_AHT_TYPE           = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
       P105_TEMPERATURE_OFFSET = 0;
       break;
     }
@@ -178,11 +178,11 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         P105_I2C_ADRESS = 0x38; // AHT20/AHT21 only support a single I2C address.
       } else {
         P105_I2C_ADRESS = getFormItemInt(F("i2c_addr"));
-        P105_ALT_INIT = isFormItemChecked(F("altinit")) ? 1 : 0;
+        P105_ALT_INIT   = isFormItemChecked(F("altinit")) ? 1 : 0;
       }
 
       P105_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
-      success    = true;
+      success                 = true;
       break;
     }
 

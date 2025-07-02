@@ -26,6 +26,132 @@ Description
 The ``Home Assistant (openHAB) MQTT`` controller is one of the most standard "MQTT" controllers.
 It has a very basic way of interacting with a MQTT broker and thus is not limited to "Home Assistant" or "OpenHAB".
 
+Configuration
+-------------
+
+.. image:: C005_ControllerConfiguration.png
+
+Controller settings
+^^^^^^^^^^^^^^^^^^^
+
+* **Protocol**: The selected Controller Protocol.
+
+* **Locate Controller**: Select ``Use IP address`` or ``Use Hostname``. When set to ``Use Hostname``, an url for the server can be selected, like ``homeassistant.local``.
+
+* **Controller IP** / **Controller Hostname**: This should be set to either an IP address or a hostname, depending on the **Locate Controller** setting.
+
+* **Controller Port**: The default port number ``1883``, or ``8883`` when using a TLS connection, should be used.
+
+* **Use TLS**: Select wether a plain MQTT or TLS MQTT connection should be used. Currently the TLS certificate is **not** verified when setting up the connection!
+
+Controller Queue
+^^^^^^^^^^^^^^^^
+
+* **Minimum Send Interval**: The minimum time to wait before the next set of data can be sent to the controller. When using an MQTT server in the local network this can use the default 100 msec., but when using an external MQTT server, probably a higher value should be used, depending on what the server allows.
+
+* **Max Queue Depth**: Determines the number of elements that can be stored in the queue before new samples are dismissed. When the receiving server is available, the data elements will be sent, emptying the queue, and making room for new samples again.
+
+* **Max Retries**: Setting is not used for this controller.
+
+* **Full Queue Action**: The controller always uses the ``Ignore New`` strategy when the queue is filled.
+
+* **Allow Expire**: Not applicable for this controller.
+
+* **De-duplicate**: When enabled, avoids sending duplicate data, comparing to what's currently in the send-queue.
+
+* **Check Reply**: The controller always uses the ``Ignore Acknowledgement`` setting.
+
+* **Client Timeout**: The timeout to allow before the connection is failing. When using an external internet service, a somewhat longer than the default timeout should be used. 1000 msec. should work in most cases, but on very high latency connections, this value can be increased.
+
+Credentials
+^^^^^^^^^^^
+
+* **Use Extended Credentials**: When checked, longer credentials, f.e. a very long API-key, can be used, but this is stored in a different settings location (this feature was added later, and this checkbox is here for backward compatibility.)
+
+* **Controller User**: The user name of code to be used at the MQTT Server.
+
+* **Controller Password**: The password, or an API-key, can be entered to authenticate at the MQTT Server.
+
+MQTT
+^^^^
+
+A group of MQTT specific settings:
+
+* **Controller Client ID**: This setting is used for the MQTT Client connection.
+
+* **Unique Client ID on Reconnect**: When checked will generate a unique client ID when connecting to the MQTT server, to avoid waiting for the previous client-id connection to expire.
+
+* **Current Client ID**: Shows the calculated Client ID at load-time of the page.
+
+* **Publish Retain Flag**: When publishing data accompanied by the Retain flag, the server will store the last sent data, and publish that when reconnecting.
+
+* **Controller Subscribe**: The topic(s) to subscribe to, so the MQTT Server can send data and optionally commands to this client-instance.
+
+* **Controller Publish**: The topic to publish data to. This field supports variables so each value sent to the server can have a separate topic for its data.
+
+Supported variables:
+
+* ``%sysname%``: The name of the ESPEasy unit, as configured on the **Config** page.
+* ``%tskname%``: The Taskname of the task the data is sent for.
+* ``%valname%``: The Valuename for the value that's currently sent. MQTT Topics are (usually) only sending a single value per topic.
+* ``%valX%``: The value content for Value X (range 1..4, and when using Derived values also 5..n for the number of Derived values). Not usually needed for MQTT topics.
+* ``%vnameX%``: The value name for Value X (range 1..4, and when using Derived values also 5..n for the number of Derived values). Not usually needed for MQTT topics.
+
+|
+
+* **Controller LWT Topic**: When using the LWT (Last Will and Testament) feature of MQTT, this topic can be configured to listen for LWT messages.
+
+* **LWT Connect Message**: The server has an LWT message content for Connect and Disconnect set, and when using LWT, these should be entered here.
+
+* **LWT Disconnect Message**:
+
+* **Send LWT to broker**: When checked, and LWT is configured, ESPEasy will also sent LWT Connect and Disconnect message when appropriate.
+
+* **Will Retain**: Configuration to inform the server we will (or won't) retain the last message per topic received.
+
+* **Clean Session**: When checked, the client-session will be cleaned when disconnecting from the server.
+
+* **Keep Alive Time**: The time after which the MQTT broker will disconnect the client if no new data is sent. Range 0..65535 seconds, default 60. Should usually not be set below 15 seconds, to avoid frequent disconnects and reconnects (causing the AutoDiscovery, see below, to be re-sent...).
+
+(AutoDiscovery related settings added 2025/06/28)
+
+* **Enable Auto Discovery**: When checked, the controller will send discovery data for all connected and enabled tasks to the MQTT server on first startup, and when receiving an ``online`` message in the Discovery Trigger Topic, when configured.
+
+* **Discovery Trigger topic**: The discovery can be started by multiple triggers:
+
+1) ESPEasy MQTT Controller start
+2) Home assistant MQTT Broker startup, sending an ``online`` message (see below) in the topic ``homeassistant/status``
+3) An explicit AutoDiscovery message for a single task by enabling the **Resend MQTT Discovery** checkbox and saving the task settings.
+
+When Auto Discovery is triggered, it will be started after a random, non-blocking, delay between 1 and 30 seconds to spread the load on the MQTT Broker f.e. after a restart of Home assistant, requesting for a discovery, or after a power failure and many ESPEasy devices starting at nearly the same time.
+
+* **Auto Discovery topic**: The topic that should be used for sending the Discovery data. For Home assistant, this should be set to ``homeassistant/%devclass%/%unique_id%``, the available variables are the same as for the **Controller Publish** settinng, and extended with these:
+
+Extra variables:
+
+* ``%devclass%``: The device class for the current value. This could only be needed in the **Auto Discovery Topic**, and should usually not be used in the regular MQTT topics.
+* ``%unique_id%``: The (generated) Unique ID for the current value. This is only needed in the **Auto Discovery Topic**, and should usually not be used in the regular MQTT topics.
+* ``%element_id%``: The (generated) Element ID for the current value. This is only needed in the **Auto Discovery Topic**, and should usually not be used in the regular MQTT topics.
+
+|
+
+* **Config suffix|online message (/config|online)**: When sending the Discovery data, the topic has to end with ``/config``, by default, but this setting can be changed in he Home assistant configuration. If this is changed, it should be set here (including the ``/`` prefix). The default value is ``/config``, and it can not be an empty value.
+
+  Similarly, the ``online`` message, sent by Home assistant on startup, can be changed. The value can be configured in this field, separated from the ``/config`` setting by a pipe symbol ``|``. If only the ``online`` message is to be changed and uses the default ``/config`` setting, the pipe symbol still has to be inserted too!
+
+* **Retain Discovery**: By default the Discovery data is sent without Retain flag set, but when enabling this option, it will be sent with Retain set.
+
+Connection status
+^^^^^^^^^^^^^^^^^
+
+* **MQTT Client Connected**: Shows the current connection status of the (single) MQTT Client.
+
+* **Last error**: Shows the last error code received from the broker. Should
+
+* **Enabled**: When checked, the Controller is available for use.
+
+NB: Only a single MQTT Server can be active at the same time, for reasons of limited available resources and limited (web)connections possible.
+
 Command Handling
 ----------------
 

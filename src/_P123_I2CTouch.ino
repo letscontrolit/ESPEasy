@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
  * 2024-06-10 tonhuisman: Add support for CHSC5816, as found in https://github.com/lewisxhe/SensorLib by Lewis He (added to bb_captouch)
  * 2024-06-02 tonhuisman: Renamed to I2C Touchscreens
  *                        Refactor to use modified bb_captouch library https://github.com/bitbank2/bb_captouch to add support for
@@ -96,6 +97,15 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

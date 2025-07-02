@@ -9,6 +9,7 @@
 // Wifi Candle for ESPEasy by Dominik Schmidt (10.2016)
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for NeoPixel)
  * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
  * 2023-01-21 tonhuisman: Move to PluginStruct_base to enable multi-instance use of this plugin
  * 2023-01-21 tonhuisman: Further refactor and improve code, including GH feedback
@@ -116,6 +117,15 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_042));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

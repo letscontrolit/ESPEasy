@@ -16,6 +16,8 @@
 * Used P106 BME680 as starting point
    /******************************************************************************/
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported (yet?) for Magnetometer)
  * 2022-11-06 tonhuisman: Fix compilation issue with older ESP8266 toolchain, reduce some strings, uncrustify sources,
  *                        minor code improvements.
  *                        Adafruit_HMC5883_Unified: Fix waiting indefinitely for a connected sensor.
@@ -48,6 +50,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       success            = true;
       break;
     }
@@ -68,6 +71,22 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {

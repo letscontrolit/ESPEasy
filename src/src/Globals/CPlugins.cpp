@@ -5,6 +5,9 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#if FEATURE_MQTT_DISCOVER
+# include "../Globals/MQTT.h"
+#endif // if FEATURE_MQTT_DISCOVER
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_init.h"
 
@@ -108,7 +111,6 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
             Function,
             event,
             str);
-
         }
         #ifdef ESP32
 
@@ -116,6 +118,15 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
           Cache.clearControllerSettings(controllerindex);
         }
         #endif // ifdef ESP32
+        #if FEATURE_MQTT_DISCOVER
+
+        if (Function == CPlugin::Function::CPLUGIN_EXIT) {
+          if (mqttDiscoveryController == controllerindex) {
+            mqttDiscoveryController = INVALID_CONTROLLER_INDEX; // Reset
+            mqttDiscoverOnlyTask    = INVALID_TASK_INDEX;
+          }
+        }
+        #endif // if FEATURE_MQTT_DISCOVER
       }
       return success;
     }
@@ -168,12 +179,11 @@ bool validProtocolIndex(protocolIndex_t index)
 }
 
 /*
-bool validControllerIndex(controllerIndex_t index)
-{
-  return index < CONTROLLER_MAX;
-}
-*/
-
+   bool validControllerIndex(controllerIndex_t index)
+   {
+   return index < CONTROLLER_MAX;
+   }
+ */
 bool validCPluginID(cpluginID_t cpluginID)
 {
   return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_PROTOCOL_INDEX;

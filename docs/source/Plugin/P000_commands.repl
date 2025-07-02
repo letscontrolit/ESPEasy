@@ -797,7 +797,7 @@
     :green:`Rules`","
     Define a Derived value for a task. A Derived value is an extra value, available for the device, that can return a calculated result, based on any variable available in the system.
 
-    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>][,<VType>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
     
     ``<task nr/task name>``: Either a task number or a task name, for the task to add the derived value to.
 
@@ -806,6 +806,8 @@
     ``<formula>``: The formula to calculate and return as the value for the derived value. The content of the formula should be escaped, else the rules processor will fill the current values, instead of during retrieval of the derived value. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
 
     ``<UnitOfMeasure>``: An optional Unit of Measure to be appended after the value. Must be quoted if it contains spaces or commas. (Added:2025/06/08)
+
+    ``<VType>``: The ValueType to be used for MQTT AutoDiscovery. The same values as available in the Value Type combobox on the Device configuration page can be used (not case-sensitive, 'official' value will be used) (Added: 2025/06/19)
 
     **Examples:**
 

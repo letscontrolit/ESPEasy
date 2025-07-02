@@ -13,6 +13,8 @@
 // tolerate less good signals. After a pulse and debounce time it verifies the signal 3 times.
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Pulse Counters)
  * 2024-08-12 tonhuisman: Improved handling of 'Ignore multiple Delta = 0' by peeking the Delta value.
  * 2024-08-10 tonhuisman: Changed option to 'Ignore multiple Delta = 0', and allow Interval = 0, combined with Delta = 0, to send a pulse
  *                        immediately to the Controllers and generate events.
@@ -65,6 +67,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOptional    = true;
       dev.PluginStats      = true;
       dev.TaskLogsOwnPeaks = true;
+      dev.CustomVTypeVar   = true;
       break;
     }
 
@@ -144,6 +147,22 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Debounce Time"), F("debounce")
@@ -163,7 +182,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           F("Time/Delta"),
           # endif // if P003_USE_EXTRA_COUNTERTYPES
         };
-        const FormSelectorOptions selector(
+        const FormSelectorOptions  selector(
           NR_ELEMENTS(options),
           options);
         selector.addFormSelector(F("Counter Type"), F("countertype"), choice);

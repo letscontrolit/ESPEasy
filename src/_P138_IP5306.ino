@@ -5,8 +5,9 @@
 // #################################### Plugin 138: IP5306 Powermanagement ###############################
 // #######################################################################################################
 
-/**
- * Changelog:
+/** Changelog:
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for IP5306)
  * 2022-12-06 tonhuisman: Reorder Device configuration because of added PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR state
  *                        Enable PluginStats option
  * 2022-12-05 tonhuisman: Remove [Testing] tag
@@ -94,6 +95,14 @@ boolean Plugin_138(uint8_t function, struct EventStruct *event, String& string)
       success           = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_138_QueryVType, P138_CONFIG_BASE, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

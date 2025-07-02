@@ -5,13 +5,17 @@
 // #################################### Plugin 035: Output IR ############################################
 // #######################################################################################################
 //
-// Changelog:
-// 2023-07-25, tonhuisman:  Code optimization and deduplication, remove some commented code
-// 2023-07-22, tonhuisman:  Minor code improvements, show IRSENDAC command only in config page if included in build
-// 2023-07-21, tonhuisman:  Add 'Inverted output' option, as supported by the IRsend class.
-// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names
-// 2022-01-11, tonhuisman:  Move all code and globals to PluginStructs/P035_data_struct to enable multi-instance use
-// No previous changelog recorded.
+
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Pulse Counters)
+ *                        Update changelog
+ * 2023-07-25 tonhuisman: Code optimization and deduplication, remove some commented code
+ * 2023-07-22 tonhuisman: Minor code improvements, show IRSENDAC command only in config page if included in build
+ * 2023-07-21 tonhuisman: Add 'Inverted output' option, as supported by the IRsend class.
+ * 2022-08-08 tonhuisman: Fix listProtocols()/listACProtocols() to ignore 1-character type names
+ * 2022-01-11 tonhuisman: Move all code and globals to PluginStructs/P035_data_struct to enable multi-instance use
+ * No previous changelog recorded.
+ */
 
 // Usage: Connect an IR led to ESP8266 GPIO14 (D5) preferably. (various schematics can be found online)
 // On the device tab add a new device and select "Communication - IR Transmit"
@@ -72,6 +76,15 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
       string = F(PLUGIN_NAME_035);
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

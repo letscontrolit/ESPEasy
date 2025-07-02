@@ -27,12 +27,16 @@
 # define INA3221_CONVERSION_BUS_BIT   6
 # define INA3221_CONVERSION_SHUNT_BIT 3
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_132_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
+
 struct P132_data_struct : public PluginTaskData_base {
 public:
 
   P132_data_struct(struct EventStruct *event);
 
-  P132_data_struct() = delete;
+  P132_data_struct()          = delete;
   virtual ~P132_data_struct() = default;
 
   float getShuntVoltage_mV(byte reg);
@@ -41,6 +45,7 @@ public:
   void  setCalibration_INA3221(struct EventStruct *event);
 
 private:
+
   int16_t getBusVoltage_raw(byte reg);
   int16_t getShuntVoltage_raw(byte reg);
 

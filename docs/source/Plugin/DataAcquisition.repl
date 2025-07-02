@@ -10,8 +10,6 @@ This group of settings are standard available configuration items.
 
 * **Event & Log derived values**: When checked, the Derived values will be generated as Events, to be handled in Rules, and sent to logging devices like the Syslog server and/or SD-card logging.
 
-* **Send derived values**: When checked, the Derived values will be sent to any enabled Controllers that support extra values like MQTT and HTTP/string value controllers.
-
 (The derived values options are only available if String variables feature is included in the build.)
 
 |
@@ -19,5 +17,25 @@ This group of settings are standard available configuration items.
 * **Send to Controller**: Select the Controller(s) to send the Values to, either on a ``TaskRun`` command applied to the task, or on an **Interval** time action.
 
 Send to Controller is only visible when one or more Controllers are configured.
+
+Depending on the controller capabilities, some configuration settings may be shown:
+
+.. image:: Task_config_page_Controllers_section.png
+
+All configured Controllers are shown here, including their enabled or disabled state (only a single MQTT Controller can be enabled at one time).
+
+For each controller the user can select wether the data should be sent on each Interval (or explicit TaskRun).
+
+For the Domoticz controllers the value index (IDX) has to be configured.
+
+For some controllers, like Home Assistant/openHAB, there are extra options available.
+
+* **Group**: represents the group id to combine all values from multiple tasks into a single grouped-device during MQTT AutoDiscovery.
+
+* **Send derived**: checkbox determines if any configured Derived values should also be sent to the controller (and included in the AutoDiscovery if that's available and enabled).
+
+* **Resend MQTT Discovery**: checkbox, when checked, will start a resend of the MQTT Discovery process for this task when Submit is clicked, so any chenged settings can be updated in the MQTT server. This setting is only available if the controller is enabled, the Auto Discovery feature is available and enabled for the controller. This setting is not stored.
+
+Other controllers, like FHEM HTTP, do not support additional settings besides the checkbox to enable sending the data.
 
 |

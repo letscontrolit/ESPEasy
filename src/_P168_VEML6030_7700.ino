@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-06-21 tonhuisman: Fix support for VEML6030, using by default the alternate I2C address, by modifying the VEML7700 library
  * 2024-05-18 tonhuisman: Implement AutoLux feature, and Get Config Value for automatically determined gain and integration
  * 2024-05-16 tonhuisman: Start plugin for VEML6030/VEML7700 I2C Light sensor, using a slightly adjusted Adafruit library:
@@ -57,6 +58,14 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Lux, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

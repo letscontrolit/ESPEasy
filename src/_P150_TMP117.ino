@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-04-15 tonhuisman: Correctly apply configuration bits (clear first), add optional low-level logging, improve configuration page
  * 2023-04-13 tonhuisman: Switch to check the sensor once a second, and read when data is available, return last value every interval
  *                        Make one-shot mode work as intended, one-shot is started from last read, so based on the interval
@@ -76,6 +77,14 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

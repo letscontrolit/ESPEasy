@@ -34,6 +34,26 @@ const __FlashStringHelper * P052_data_struct::Plugin_052_valuename(uint8_t value
   return F("");
 }
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_052_QueryVType(uint8_t value_nr) {
+  constexpr int valueVTypes[] = {
+    0,                                                     // empty
+    static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY),  // co2
+    static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY), // temperature
+    static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY),  // humidity
+    static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY), // temperature adjustment
+    0,                                                     // abc_per
+    0,                                                     // err
+  };
+
+  if (value_nr < NR_ELEMENTS(valueVTypes)) {
+    return valueVTypes[value_nr];
+  }
+  return 0;
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 void P052_data_struct::setABCperiod(int hours)
 {
   // Enable: write 1 ... 65534 to HR14 and bit1 set to 0 at HR19

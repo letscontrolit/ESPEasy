@@ -72,7 +72,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
         const FormSelectorOptions selector(16, portNames, portValues);
-        selector.addFormSelector(F("Port"), F("pport"),  port);
+        selector.addFormSelector(F("Port"), F("pport"), port);
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }
@@ -108,6 +108,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         P009_LP_MIN_INT,
         P009_SAFE_BTN);
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                              F("devcls"),
+                                              P009_MQTT_DEVICECLASS);
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
       success = true;
       break;
     }
@@ -129,9 +136,24 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         P009_LP_MIN_INT,
         P009_SAFE_BTN);
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P009_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
       success = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+
+      success = getDiscoveryVType(event, Settings.TaskDevicePin1Inversed[event->TaskIndex]
+                                          ? Plugin_QueryVType_BinarySensorInv
+                                          : Plugin_QueryVType_BinarySensor, 255, event->Par5);
+      #  if FEATURE_MQTT_DEVICECLASS
+      string = MQTT_binary_deviceClassName(P009_MQTT_DEVICECLASS); // User selected device_cLass/dev_cls value
+      #  endif // if FEATURE_MQTT_DEVICECLASS
+      break;
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_INIT:
     {

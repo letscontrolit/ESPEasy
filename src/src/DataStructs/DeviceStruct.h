@@ -114,7 +114,7 @@ struct DeviceStruct
       uint32_t HasFormatUserVar   : 1;       // Optimization to only call this when PLUGIN_FORMAT_USERVAR is implemented
       uint32_t I2CNoBusSelection  : 1;       // Dis-allow I2C Bus selection in device configuration
 
-      uint32_t Dummy21            : 1;       // Dummy added to force alignment, can be re-used
+      uint32_t CustomVTypeVar     : 1;       // User-selectable VType per value
       uint32_t Dummy22            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy23            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy24            : 1;       // Dummy added to force alignment, can be re-used

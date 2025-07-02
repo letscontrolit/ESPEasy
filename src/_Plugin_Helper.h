@@ -47,6 +47,10 @@
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
+#if FEATURE_MQTT_DISCOVER
+#include "src/Helpers/_CPlugin_Helper_mqtt.h"
+#endif // if FEATURE_MQTT_DISCOVER
+
 #if FEATURE_PLUGIN_STATS
 #include "src/PluginStructs/_StatsOnly_data_struct.h"
 #endif

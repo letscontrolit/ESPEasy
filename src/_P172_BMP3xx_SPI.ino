@@ -5,7 +5,9 @@
 // ################################## Plugin-172: Environment - BMP3xx SPI   #############################
 // #######################################################################################################
 
-/**
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ *                        Use all relevant code from P154 (I2C variant of the same sensor)
  * 2024-06-30 tonhuisman: Start SPI plugin, based on P154, re-using most code (dependency checked in define_plugin_sets.h)
  */
 
@@ -43,13 +45,6 @@ boolean Plugin_172(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEVALUENAMES:
-    {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_172));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_172));
-      break;
-    }
-
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       event->String1 = formatGpioName_output(F("CS"));
@@ -66,34 +61,8 @@ boolean Plugin_172(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_READ:
-    {
-      P154_data_struct *P154_P172_data =
-        static_cast<P154_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P154_P172_data) {
-        break;
-      }
-
-      float temp, pressure{};
-
-      success = P154_P172_data->read(temp, pressure);
-      UserVar.setFloat(event->TaskIndex, 0, temp);
-      UserVar.setFloat(event->TaskIndex, 1, pressure);
-      break;
-    }
-
-    case PLUGIN_WEBFORM_LOAD:
-    {
-      success = P154_data_struct::webformLoad(event, false);
-      break;
-    }
-
-    case PLUGIN_WEBFORM_SAVE:
-    {
-      success = P154_data_struct::webformSave(event);
-      break;
-    }
+    default: // Hand over further handling to P154
+      success = Plugin_154(function, event, string);
   }
   return success;
 }

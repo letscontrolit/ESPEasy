@@ -81,10 +81,10 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         it->second.previousTask = event->TaskIndex;
       }
 
+      const uint8_t switchtype = P001_data_struct::P001_getSwitchType(event);
       {
         const __FlashStringHelper *options[] = { F("Switch"), F("Dimmer") };
         const int optionValues[]             = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const uint8_t switchtype             = P001_data_struct::P001_getSwitchType(event);
         constexpr size_t optionCount         = NR_ELEMENTS(optionValues);
         const FormSelectorOptions selector(optionCount, options, optionValues);
         selector.addFormSelector(F("Switch Type"), F("type"), switchtype);
@@ -100,12 +100,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
           F("Normal Switch"),
           F("Push Button Active Low"),
           F("Push Button Active High") };
-/*
-        const int buttonOptionValues[] = {
-          SWITCH_TYPE_NORMAL_SWITCH,
-          SWITCH_TYPE_PUSH_ACTIVE_LOW,
-          SWITCH_TYPE_PUSH_ACTIVE_HIGH };
-*/
+
+        /*
+           const int buttonOptionValues[] = {
+           SWITCH_TYPE_NORMAL_SWITCH,
+           SWITCH_TYPE_PUSH_ACTIVE_LOW,
+           SWITCH_TYPE_PUSH_ACTIVE_HIGH };
+         */
         const FormSelectorOptions selector(
           NR_ELEMENTS(buttonOptions),
           buttonOptions); // buttonOptionValues);
@@ -123,6 +124,15 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         P001_LONGPRESS,
         P001_LP_MIN_INT,
         P001_SAFE_BTN);
+
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      if (switchtype != PLUGIN_001_TYPE_DIMMER) {
+        addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                                F("devcls"),
+                                                P001_MQTT_DEVICECLASS);
+      }
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
       success = true;
       break;
@@ -150,9 +160,28 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         P001_LP_MIN_INT,
         P001_SAFE_BTN);
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P001_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
       success = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+
+      if (P001_SWITCH_OR_DIMMER == PLUGIN_001_TYPE_DIMMER) {
+        success = getDiscoveryVType(event, Plugin_QueryVType_Analog, 255, event->Par5);
+      } else {
+        success = getDiscoveryVType(event, Settings.TaskDevicePin1Inversed[event->TaskIndex]
+                                            ? Plugin_QueryVType_BinarySensorInv
+                                            : Plugin_QueryVType_BinarySensor, 255, event->Par5);
+        #  if FEATURE_MQTT_DEVICECLASS
+        string = MQTT_binary_deviceClassName(P001_MQTT_DEVICECLASS); // User selected device_cLass/dev_cls value
+        #  endif // if FEATURE_MQTT_DEVICECLASS
+      }
+      break;
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_INIT:
     {

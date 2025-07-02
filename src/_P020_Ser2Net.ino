@@ -19,6 +19,7 @@
  *                        serial data was received.
  *                        Use RX Buffer size to allocate receive buffer instead of fixed size 256 (2048 for P1 processing), also used as
  *                        limit for receiving via TCP.
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Ser2Net or P1 gateway)
  * 2023-08-26 tonhuisman: P044 mode: Set RX time-out default to 50 msec for better receive pace of P1 data
  * 2023-08-17 tonhuisman: P1 data: Allow some extra reading timeout between the data and the checksum, as some meters need more time to
  *                        calculate the CRC. Add CR/LF before sending P1 data.
@@ -110,12 +111,21 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       dev.VType = Sensor_VType::SENSOR_TYPE_STRING;
       break;
     }
+
     case PLUGIN_GET_DEVICENAME:
     {
       string = P020_Emulate_P044 ? F(PLUGIN_NAME_020_044) : F(PLUGIN_NAME_020);
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

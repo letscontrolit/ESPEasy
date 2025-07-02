@@ -113,6 +113,26 @@ const __FlashStringHelper* P167_getQueryValueString(uint8_t query) {
   return F("");
 }
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_167_QueryVType(uint8_t value_nr) {
+  Sensor_VType result = Sensor_VType::SENSOR_TYPE_NONE;
+
+  switch (value_nr) {
+    case 0: // fall through
+    case 8: result = Sensor_VType::SENSOR_TYPE_TEMP_ONLY; break;
+    case 1: result = Sensor_VType::SENSOR_TYPE_HUM_ONLY; break;
+    case 2: result = Sensor_VType::SENSOR_TYPE_TVOC_ONLY; break;
+    case 3: result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME
+    case 4: result = Sensor_VType::SENSOR_TYPE_DUSTPM1_0_ONLY; break;
+    case 5: result = Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY; break;
+    case 6: result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME
+    case 7: result = Sensor_VType::SENSOR_TYPE_DUSTPM10_ONLY; break;
+  }
+  return static_cast<int>(result);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  PUBLIC

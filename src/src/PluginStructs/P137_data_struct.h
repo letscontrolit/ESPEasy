@@ -96,6 +96,9 @@ const __FlashStringHelper* toString(const P137_valueOptions_e value,
                                     bool                      displayString = true);
 const __FlashStringHelper* toString(const P137_GPIOBootState_e value);
 const __FlashStringHelper* toString(const P137_PredefinedDevices_e device);
+#  if FEATURE_MQTT_DISCOVER
+int                        Plugin_137_QueryVType(uint8_t value_nr);
+#  endif // if FEATURE_MQTT_DISCOVER
 
 struct P137_data_struct : public PluginTaskData_base {
 public:

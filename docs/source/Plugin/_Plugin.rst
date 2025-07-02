@@ -247,13 +247,33 @@ On selected builds (ESP32 only, can be enabled in ESP8266 Custom builds) per val
 
 If set the UoM will be space-appended to the value when displayed on the Devices page, used in the labels for the Stats display, and later used in the MQTT AutoDiscovery messages so the receiving server can use that for presentation. When set it is also included in the JSON output as ``UoM`` per taskvalue, available at the ``/json`` endpoint of the ESP, to be used by external systems like EasyFetch.
 
-A list of 100+ Unit of Measure values is available (derived of what's supported by Home Assistant):
+A list of 150+ Unit of Measure values is available (derived of what's supported by Home Assistant):
 
 ``°C, °F, K, %, Pa, hPa, bar, mbar, inHg, psi, W, kW, V, Wh, kWh, A, VA, mm, cm, m, km,`` ``L, mL, m³, ft³, m³/h, ft³/h, lx, UV index, µg/m³, mg/m³, p/m³, ppm, ppb,``
 ``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, db, dBm,``
-``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s``
+``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s,``
+``ft/s, kn, mW, MW, GW, TW, BTU/(h·ft²), pH, cbar, mmHg, kPa, mA, µA, mV, µV, kV, cm², km², mm²,`` ``in², ft², yd², mi², ac, ha, kHz, MHz, mWh, MWh, GWh, TWh, cal, kcal, Mcal,``
+``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s``
 
-Displaying the Unit of Measure can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
+Displaying the Unit of Measure in the Devices overview page can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
+
+The **Unit of Measure** selector is, because of the vast number of options, divided into categories, here's a partial preview (the 'empty' value is selected):
+
+.. image:: Task_config_page_UoM_selector_part.png
+
+
+Value Type
+^^^^^^^^^^
+
+(Added: 2025/06/21)
+
+On selected builds and for some plugins only, the Value Type selection is available. This selection is available when either the type of value per Value field is selectable by the user, or can have too many options to determine explicitly.
+
+The options included here are all possible value types supported by ESPEasy that represent a *single* value, excluding options like Temp/Hum, Temp/Baro/Hum etc., and are used during the MQTT AutoDiscovery process. ``None`` indicates no value type is selected.
+
+Available options: ``Single, Switch, Dimmer, UInt32 (1x), String, Int32 (1x), UInt64 (1x), Int64 (1x),`` ``Double (1x), Analog, Temp, Hum, Lux, Distance, Direction, Dust PM2.5,``
+``Dust PM1.0, Dust PM10, Moisture, (e)CO2, GPS, UV, UV Index, IR, Weight, Voltage,`` ``Current, Power Usage, Power Factor, Apparent Power Usage, TVOC, Baro,``
+``Red, Green, Blue, Color temperature, Reactive Power, AQI, NOx, Switch (inv.), Wind speed``
 
 |
 
