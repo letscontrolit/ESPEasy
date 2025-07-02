@@ -93,6 +93,23 @@ void handle_controllers() {
           }
         }
         addHtmlError(SaveControllerSettings(controllerindex, *ControllerSettings));
+        # if FEATURE_MQTT_DISCOVER
+
+        // AutoDiscovery enabled?
+        if (ControllerSettings->mqtt_autoDiscovery()
+            && Settings.ControllerEnabled[controllerindex]
+
+            // && (ControllerSettings->MqttAutoDiscoveryTrigger[0] != 0)
+            && (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0)
+            ) {
+          // Generate random time-offset in 0.1 sec, range 1..30 seconds
+          mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start AutoDiscovery on Save. Starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+          }
+        }
+        # endif // if FEATURE_MQTT_DISCOVER
       }
     }
 
@@ -320,7 +337,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   }
   addSelector_Foot(true);
 
-  addHelpButton(F("EasyProtocols"));
+  // addHelpButton(F("EasyProtocols")); // Documentation on Wiki is outdated
 
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
   const ProtocolStruct& proto         = getProtocolStruct(ProtocolIndex);
@@ -364,14 +381,14 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
           }
           # endif // if FEATURE_MQTT_TLS
-      # ifdef USES_ESPEASY_NOW
+          # ifdef USES_ESPEASY_NOW
 
           if (proto.usesMQTT) {
             // FIXME TD-er: Currently only enabled for MQTT protocols, later for more
             addControllerParameterForm(*ControllerSettings, controllerindex,
                                        ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
           }
-      # endif // ifdef USES_ESPEASY_NOW
+          # endif // ifdef USES_ESPEASY_NOW
 
           if (proto.usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);
@@ -459,6 +476,16 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_KEEP_ALIVE_TIME);
+            #  if FEATURE_MQTT_DISCOVER
+
+            if (proto.mqttAutoDiscover) {
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_OPTION);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TRIGGER);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TOPIC);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_CONFIG);
+              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINED_DISCOVERY_OPTION);
+            }
+            #  endif // if FEATURE_MQTT_DISCOVER
           }
           # endif // if FEATURE_MQTT
         }
@@ -505,12 +532,13 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               LoadControllerSettings(controllerindex, *ControllerSettings);
 
               // FIXME TD-er: Implement retrieval of certificate
-/*
 
-              addFormSubHeader(F("Peer Certificate"));
+              /*
 
-              {
-                addFormTextArea(
+                 addFormSubHeader(F("Peer Certificate"));
+
+                 {
+                 addFormTextArea(
                   F("Certificate Info"),
                   F("certinfo"),
                   mqtt_tls->getPeerCertificateInfo(),
@@ -518,30 +546,30 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                   -1,
                   -1,
                   true);
-              }
-              {
-                String fingerprint;
+                 }
+                 {
+                 String fingerprint;
 
-                if (GetTLSfingerprint(fingerprint)) {
+                 if (GetTLSfingerprint(fingerprint)) {
                   addFormTextBox(F("Certificate Fingerprint"),
-                                 F("fingerprint"),
-                                 fingerprint,
-                                 64,
-                                 true); // ReadOnly
+                                  F("fingerprint"),
+                                  fingerprint,
+                                  64,
+                                  true); // ReadOnly
                   addControllerParameterForm(*ControllerSettings, controllerindex,
-                                             ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
-                }
-              }
-              addFormSubHeader(F("Peer Certificate Chain"));
-              {
-                // FIXME TD-er: Must wrap this in divs to be able to fold it by default.
-                const mbedtls_x509_crt *chain;
+                                              ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
+                 }
+                 }
+                 addFormSubHeader(F("Peer Certificate Chain"));
+                 {
+                 // FIXME TD-er: Must wrap this in divs to be able to fold it by default.
+                 const mbedtls_x509_crt *chain;
 
-                chain = mqtt_tls->getPeerCertificate();
+                 chain = mqtt_tls->getPeerCertificate();
 
-                int error { 0 };
+                 int error { 0 };
 
-                while (chain != nullptr && error == 0) {
+                 while (chain != nullptr && error == 0) {
                   //                    const bool mustShow = !chain->ca_istrue || chain->next == nullptr;
                   //                    if (mustShow) {
                   String pem, subject;
@@ -583,14 +611,14 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                   if (chain->ca_istrue && (chain->next == nullptr)) {
                     // Add checkbox to store CA cert
                     addControllerParameterForm(*ControllerSettings, controllerindex,
-                                               ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
+                                                ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
                   }
 
                   //                    }
                   chain = chain->next;
-                }
-              }
-*/
+                 }
+                 }
+               */
             }
           }
             #   endif // ifdef ESP32

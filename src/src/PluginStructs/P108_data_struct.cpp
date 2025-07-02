@@ -16,7 +16,6 @@ bool P108_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   return modbus.init(port, serial_rx, serial_tx, baudrate, modbusAddress, dere_pin);
 }
 
-
 const __FlashStringHelper* Plugin_108_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P108_QUERY_V: return displayString ? F("Voltage (V)") : F("V");
@@ -31,6 +30,30 @@ const __FlashStringHelper* Plugin_108_valuename(uint8_t value_nr, bool displaySt
   }
   return F("");
 }
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_108_QueryVType(uint8_t value_nr) {
+  const Sensor_VType vtypes[] = {
+    Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY,
+    Sensor_VType::SENSOR_TYPE_CURRENT_ONLY,
+    Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
+    Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY,
+    Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY,
+    Sensor_VType::SENSOR_TYPE_NONE, // FIXME To implement Frequency and Energy options
+    Sensor_VType::SENSOR_TYPE_NONE,
+    Sensor_VType::SENSOR_TYPE_NONE,
+    Sensor_VType::SENSOR_TYPE_NONE,
+  };
+  constexpr uint8_t  valueCount = NR_ELEMENTS(vtypes);
+  Sensor_VType result           = Sensor_VType::SENSOR_TYPE_NONE;
+
+  if (value_nr < valueCount) {
+    result = vtypes[value_nr];
+  }
+  return static_cast<int>(result);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 int p108_storageValueToBaudrate(uint8_t baudrate_setting) {
   switch (baudrate_setting) {

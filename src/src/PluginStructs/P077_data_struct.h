@@ -3,7 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P077
-#include "../Helpers/OversamplingHelper.h"
+# include "../Helpers/OversamplingHelper.h"
 
 # define CSE_NOT_CALIBRATED          0xAA
 # define CSE_PULSES_NOT_INITIALIZED  -1
@@ -47,7 +47,9 @@ enum class P077_query : uint8_t {
 
 const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr,
                                                 bool       displayString);
-
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_077_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
 P077_query                 Plugin_077_from_valuename(const String& valuename);
 
 struct P077_data_struct : public PluginTaskData_base {
@@ -99,9 +101,11 @@ public:
   uint32_t last_cf_pulses_moment{};
 
 private:
-  OversamplingHelper<float> _cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
+
+  OversamplingHelper<float>_cache[static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS)]{};
 
 public:
+
   // stats
   long     t_max       = 0;
   long     t_all       = 0;

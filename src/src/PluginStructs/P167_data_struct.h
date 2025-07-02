@@ -108,6 +108,9 @@ const __FlashStringHelper* toString(P167_model model);
 const __FlashStringHelper* P167_getQueryString(uint8_t query);
 const __FlashStringHelper* P167_getQueryValueString(uint8_t query);
 
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_167_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // ESPeasy standard PluginTaskData structure for this plugin

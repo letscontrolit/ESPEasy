@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-02-25 tonhuisman: Make Interval optional, and also disable the added feature P013_FEATURE_INTERVALEVENT, as setting Interval
  *                        to 0 is effectively the same. (Small code reduction)
  *                        Changed second value label for Combined mode to State
@@ -100,6 +101,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       break;
     }
     # endif // if P013_FEATURE_COMBINED_MODE
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

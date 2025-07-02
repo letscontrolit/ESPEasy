@@ -559,19 +559,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #  endif // ifdef ESP32
   # endif  // if FEATURE_MQTT_TLS
 
-  String subscribeTo = ControllerSettings->Subscribe;
+  MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->Subscribe));
 
-  parseSystemVariables(subscribeTo, false);
-  subscribeTo.trim();
+  # if FEATURE_MQTT_DISCOVER
 
-  if (!subscribeTo.isEmpty()) {
-    MQTTclient.subscribe(subscribeTo.c_str());
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO))
-    {
-      addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
-    }
+  if (ControllerSettings->mqtt_autoDiscovery()) {
+    MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->MqttAutoDiscoveryTrigger));
   }
+  # endif // if FEATURE_MQTT_DISCOVER
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -590,6 +585,20 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
 
   return true;
+}
+
+void MQTTparseSystemVariablesAndSubscribe(String subscribeTo) {
+  if (subscribeTo.isEmpty()) { return; }
+  parseSystemVariables(subscribeTo, false);
+  subscribeTo.trim();
+
+  if (!subscribeTo.isEmpty()) {
+    MQTTclient.subscribe(subscribeTo.c_str());
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
+    }
+  }
 }
 
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {

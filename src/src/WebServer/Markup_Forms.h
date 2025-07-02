@@ -358,5 +358,12 @@ void  copyFormPassword(const __FlashStringHelper * id,
                        char         *pPassword,
                        int           maxlength);
 
+# if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+void addFormSelector_binarySensorDeviceClass(const __FlashStringHelper*label, 
+                                             const __FlashStringHelper*id, 
+                                             int selectedIndex,
+                                             bool addLabelAsFormSubHeader = true);
+# endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
 
 #endif // ifndef WEBSERVER_WEBSERVER_MARKUP_FORMS_H

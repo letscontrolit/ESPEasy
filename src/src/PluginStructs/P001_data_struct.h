@@ -50,6 +50,9 @@
 # define P001_LP_MIN_INT       PCONFIG_FLOAT(2)
 # define P001_SAFE_BTN         PCONFIG_FLOAT(3)
 
+# if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+#  define P001_MQTT_DEVICECLASS   PCONFIG(6)
+# endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
 struct P001_data_struct : public PluginTaskData_base {
   static uint8_t P001_getSwitchType(struct EventStruct *event);

@@ -10,6 +10,9 @@
 // Based on VEML6070 plugin from Sonoff-Tasmota (https://github.com/arendst/Sonoff-Tasmota)
 // Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # define PLUGIN_084
 # define PLUGIN_ID_084         84
@@ -68,6 +71,16 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_084));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

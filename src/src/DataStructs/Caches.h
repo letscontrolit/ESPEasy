@@ -54,6 +54,9 @@ struct ExtraTaskSettings_cache_t {
   #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   uint8_t unitOfMeasure[VARS_PER_TASK] = { 0 }; // Value for unit of measure per taskValue
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  #if FEATURE_CUSTOM_TASKVAR_VTYPE
+  uint8_t customVType[VARS_PER_TASK] = { 0 }; // single-value VType per taskValue
+  #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -113,9 +116,14 @@ struct Caches {
 
   #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   uint8_t getTaskVarUnitOfMeasure(taskIndex_t    taskIndex,
-                                  taskVarIndex_t taskVarIndex);
+  taskVarIndex_t taskVarIndex);
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-
+    
+  #if FEATURE_CUSTOM_TASKVAR_VTYPE
+  uint8_t getTaskVarCustomVType(taskIndex_t    taskIndex,
+                                taskVarIndex_t taskVarIndex);
+  #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+  
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();
 

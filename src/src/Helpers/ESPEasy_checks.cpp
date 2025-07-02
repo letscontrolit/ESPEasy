@@ -62,6 +62,12 @@ template <typename ToCheck, std::size_t ExpectedSize, std::size_t RealSize = siz
 void check_size() {
   static_assert(ExpectedSize == RealSize, "");
 }
+//   check_max_size<foo, 1024>();
+// ********************************************************************************
+template <typename ToCheck, std::size_t MaxSize, std::size_t RealSize = sizeof(ToCheck)>
+void check_max_size() {
+  static_assert(MaxSize >= RealSize, "structure size exceeds storeable size!");
+}
 
 
 
@@ -76,6 +82,7 @@ void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
+  check_max_size<SecurityStruct,                    DAT_SECURITYSETTINGS_SIZE>();
   #ifdef ESP32
   constexpr unsigned int SettingsStructSize = (340 + 84 * TASKS_MAX);
   #endif
@@ -86,11 +93,15 @@ void run_compiletime_checks() {
   check_size<ProvisioningStruct,                    256u>();
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
-  check_size<ControllerSettingsStruct,              820u>();
+  check_max_size<SettingsStruct,                    DAT_BASIC_SETTINGS_SIZE>();
+  check_size<ControllerSettingsStruct,              1012u>();
+  check_max_size<ControllerSettingsStruct,          DAT_CONTROLLER_SIZE>();
   #if FEATURE_NOTIFIER
   check_size<NotificationSettingsStruct,            1000u>();
+  check_max_size<NotificationSettingsStruct,        DAT_NOTIFICATION_SIZE>();
   #endif // if FEATURE_NOTIFIER
   check_size<ExtraTaskSettingsStruct,               536u>();
+  check_max_size<ExtraTaskSettingsStruct,           DAT_TASKS_SIZE>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
   check_size<EventStruct,                           124u>(); // Is not stored
@@ -109,11 +120,7 @@ void run_compiletime_checks() {
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          12u>(); // Is not stored
-  #if FEATURE_MQTT_TLS
-  check_size<ProtocolStruct,                        6u>();
-  #else
-  check_size<ProtocolStruct,                        4u>();
-  #endif
+  check_size<ProtocolStruct,                        8u>();
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER

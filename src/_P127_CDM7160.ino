@@ -5,14 +5,19 @@
 // by: V0JT4
 // Resolves: https://github.com/letscontrolit/ESPEasy/issues/986
 //
-// Changelog:
-// 2022-06-24, tonhuisman Remove delay from init call, optimize some code
-// 2022-01-13, tonhuisman Ignore measured values > 15000: unit is still initializing
-//                        Change status from Development to Testing
-// 2021-12-31, tonhuisman Migrate plugin from ESPEasyPluginPlayground to ESPEasy repository
-// - Restructured: Use ESPEasy 'modern' code
-// - Restructured: Split into PluginDataStruct
-// - Select Plugin ID 127
+
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ *                        Updated changelog
+ * 2022-06-24 tonhuisman: Remove delay from init call, optimize some code
+ * 2022-01-13 tonhuisman: Ignore measured values > 15000: unit is still initializing
+ *                        Change status from Development to Testing
+ * 2021-12-31 tonhuisman: Migrate plugin from ESPEasyPluginPlayground to ESPEasy repository
+ *                        - Restructured: Use ESPEasy 'modern' code
+ *                        - Restructured: Split into PluginDataStruct
+ *                        - Select Plugin ID 127
+ */
+
 
 #include "_Plugin_Helper.h"
 #ifdef USES_P127
@@ -59,6 +64,14 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_127));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_CO2, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

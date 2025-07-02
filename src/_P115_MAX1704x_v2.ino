@@ -12,6 +12,11 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P115
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for MAX1704)
+ */
 
 # include "src/PluginStructs/P115_data_struct.h"
 
@@ -47,6 +52,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption    = true;
       dev.DecimalsOnly   = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -64,6 +70,22 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_115));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -180,9 +202,9 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  String eventvalues = strformat(F("%s,%s"),
-                                                 formatUserVarNoCheck(event, 0).c_str(),  // Voltage
-                                                 formatUserVarNoCheck(event, 1).c_str()); // State Of Charge
+                  const String eventvalues = strformat(F("%s,%s"),
+                                                       formatUserVarNoCheck(event, 0).c_str(),  // Voltage
+                                                       formatUserVarNoCheck(event, 1).c_str()); // State Of Charge
                   eventQueue.add(event->TaskIndex, F("AlertTriggered"), eventvalues);
                 }
               }

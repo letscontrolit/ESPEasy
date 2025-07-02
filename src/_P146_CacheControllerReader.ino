@@ -21,9 +21,12 @@
 // - Filter data to only upload data related to sufficient change in value
 // - Allow to upload the original timestamp along with the sample
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Cache reader)
+ */
 
 # define PLUGIN_146
-# define PLUGIN_ID_146          146
+# define PLUGIN_ID_146         146
 # define PLUGIN_NAME_146       "Generic - Cache Reader"
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
@@ -63,6 +66,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_146));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

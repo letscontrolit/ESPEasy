@@ -8,6 +8,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-16 tonhuisman: Implement support for MQTT AutoDiscovery
+ *                        Add support for PLUGIN_GET_DEVICEVALUECOUNT that was missing.
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for CSE7766)
  * 2023-02-12 tonhuisman: Separate PLUGIN_SERIAL_IN and PLUGIN_TEN_PER_SECOND (changed from PLUGIN_FIFTY_PER_SECOND) handling
  *                        Fixed some minor code-issues
  * 2023-02-11 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[Voltage],[Current],[Power]
@@ -82,6 +85,21 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P077_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_077_QueryVType, P077_QUERY1_CONFIG_POS, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

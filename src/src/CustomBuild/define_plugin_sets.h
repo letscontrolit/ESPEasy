@@ -2292,6 +2292,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_MQTT_TLS
     #define FEATURE_MQTT_TLS 1
   #endif
+  #ifndef FEATURE_MQTT_DISCOVER
+    #define FEATURE_MQTT_DISCOVER 1
+  #endif
   #ifndef FEATURE_EMAIL_TLS
     #define FEATURE_EMAIL_TLS 1
   #endif
@@ -3108,6 +3111,33 @@ To create/register a plugin, you have to :
   #endif
 #endif
   
+
+#if !defined(FEATURE_MQTT_DISCOVER) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DISCOVER 0
+  #else
+    #define FEATURE_MQTT_DISCOVER 1
+  #endif
+#endif
+#if !defined(FEATURE_MQTT_DEVICECLASS) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DEVICECLASS 0
+  #else
+    #define FEATURE_MQTT_DEVICECLASS 1
+  #endif
+#endif
+#if !FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+  #undef FEATURE_MQTT_DEVICECLASS
+  #define FEATURE_MQTT_DEVICECLASS 0
+#endif
+
+#ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 0
+  #else
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 1
+  #endif
+#endif // ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
 
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))

@@ -12,6 +12,11 @@
    This plugin reads available values of an Eastron SDM120C SDM120/SDM120CT/220/230/630/72D & also DDM18SD.
  */
 
+/** Changelog:
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partial)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Eastron)
+ */
+
 # define PLUGIN_078
 # define PLUGIN_ID_078         78
 # define PLUGIN_NAME_078       "Energy (AC) - Eastron SDMxxx Modbus"
@@ -62,10 +67,11 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P078_NR_OUTPUT_VALUES) {
-          const SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
-          const uint8_t   choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+          const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
           ExtraTaskSettings.setTaskDeviceValueName(i, SDM_getValueNameForModel(model, choice));
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);
@@ -79,6 +85,20 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       serialHelper_modbus_getGpioNames(event);
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->ParN[i] = static_cast<int>(Plugin_078_QueryVType(model, choice));
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {

@@ -9,13 +9,14 @@
 // this plugin is based on the Frogmore42 library
 // written based code from https://github.com/Frogmore42/Sonoff-Tasmota/tree/development/lib/FrogmoreScd30
 
-// Changelog:
-//
-// 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
-// 2022-02-26 tonhuisman: Implement commands for get/set measurement interval, and a setting too. Bugfix.
-// 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
-// 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
-// 2021-09 tonhuisman: Moved from ESPEasyPluginPlayground to main repository
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
+ * 2022-02-26 tonhuisman: Implement commands for get/set measurement interval, and a setting too. Bugfix.
+ * 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
+ * 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
+ * 2021-09 tonhuisman: Moved from ESPEasyPluginPlayground to main repository
+ */
 
 // Commands:
 //   SCDGETABC                 - shows automatic calibration period in days, 0 = disable
@@ -72,6 +73,18 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_117));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      event->Par4 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

@@ -8,6 +8,7 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-05-11 tonhuisman: Add Get Config Value support for sensor statistics: Read success, Read retry, Read failed,
  *                        Read init failed, Resolution and Address (formatted)
  *                        [<taskname>#sensorstats,<sensorindex>,success|retry|failed|initfailed|resolution|address]
@@ -91,6 +92,14 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       success           = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

@@ -1366,6 +1366,10 @@ void createRuleEvents(struct EventStruct *event) {
 
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
   String taskName = getTaskDeviceName(event->TaskIndex);
+  #if FEATURE_STRING_VARIABLES
+  String postfix;
+  const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+  #endif // if FEATURE_STRING_VARIABLES
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
@@ -1410,10 +1414,6 @@ void createRuleEvents(struct EventStruct *event) {
     }
     #if FEATURE_STRING_VARIABLES
     if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
-      taskName.toLowerCase();
-      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-      const String postfix = search.substring(search.indexOf('X') + 1);
-      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
 
       auto it = customStringVar.begin();
       while (it != customStringVar.end()) {
@@ -1428,6 +1428,9 @@ void createRuleEvents(struct EventStruct *event) {
             ++varNr;
           }
         }
+        else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+          break;
+        }
         ++it;
       }
     }
@@ -1440,16 +1443,12 @@ void createRuleEvents(struct EventStruct *event) {
     #if FEATURE_STRING_VARIABLES
     if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
       taskName.toLowerCase();
-      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-      const String postfix = search.substring(search.indexOf('X') + 1);
-      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
 
       auto it = customStringVar.begin();
       while (it != customStringVar.end()) {
         if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
           String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-          const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-          const String vname2 = getCustomStringVar(key2);
+          const String vname2 = getDerivedValueName(taskName, valueName);
           if (!vname2.isEmpty()) {
             valueName = vname2;
           }
@@ -1458,6 +1457,9 @@ void createRuleEvents(struct EventStruct *event) {
             value = parseTemplateAndCalculate(value);
             eventQueue.add(event->TaskIndex, valueName, value);
           }
+        }
+        else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+          break;
         }
         ++it;
       }
