@@ -1,0 +1,136 @@
+3.1.0
+   * Fix setServer(domain, ...) by copy domain string to own buffer (prevent potential dangling string pointer) #10
+   * Connect to broker only if port != 0 (e.g. in case of incorrect PubSubClient initialization) #10
+   * Refactored different buffer length types to size_t #11
+   * Added a bunch of warnings and -Werror to tests Makefile #11
+   * Reformatted tests code using Google sytle (see .clang-format) #11
+   * Fix keepalive handling, thanks to @uschnindler providing this to thingsboard #14
+   * Use initializer lists instead of assigning global members in constructor #15
+   * Fix DEBUG_PSC_PRINTF outputs #18
+   * Added ERROR_PSC_PRINTF and ERROR_PSC_PRINTF_P outputs #25
+   * Introduce MQTTRETAINED flag instead of hard coding #21
+   * Added documentation on readByte() and readPacket() functions #23
+   * Refactored buildHeader() (change return type, use MQTT_MAX_HEADER_SIZE, locals) #22, #34, #37
+   * Refactored readPacket() (changed return type to size_t, used MQTT_MAX_HEADER_SIZE, locals) #23
+   * Refactored readByte() #23
+   * Refactored beginPublish() and endPublish() #28
+   * Refactored publish() #31
+   * Refactored publish_P() #30
+   * Refactored connect() #40
+   * Refactored connected() (mostly rewritten and simplified, added setting pingOutstanding, don't need flush()) #44
+   * Refactored subscribe() and unsubscribe() #44
+   * Refactored internal socketTimeout and keepAlive to millis to improve performance #33, #38, #39
+   * Fix potential memory corruption in MQTTPUBLISH callback preparation #25
+   * Fix potential error in readByte() (missing failure test on _client->read()) #32
+   * Switch from constructor init-lists to class member initialization, see C++ core guideline C.45 #42
+
+3.0.2
+   * Added github workflow to execute tests
+   * Added github workflow to compile examples using arduino-cli
+   * Examples: Use a better source of random #9
+   * Deactivate use of std::function on demand #7
+
+3.0.1
+   * Reformatted code using Google sytle (see .clang-format)
+   * Added .editorconfig
+   * Added github workflow to check code sytle on push and pull request
+   * Fix-tests: missing def for strlen_P & Python libs
+
+3.0
+   * Maintenance taken over by Holger Mueller
+   * Adds in-source documentation to PubSubClient header.
+   * Add flag for enabling debugging of library
+   * Always use PubSubClient() constructor
+   * Use bool instead of boolean
+   * Add yield() calls in connect() and write() to avoid wdt resets if either blocks for too long
+   * Fix bug in publish_P which will always treat the payload length as 0 when used with PROGMEM
+   * Fix increase `bytesToWrite` to uint16_t to prevent overflow
+   * Remove compiler warning `expectedLength` should be unsigned
+   * Extend usage of std::function on all the platforms where it's available
+   * Fix for keep alive zero
+
+2.8
+   * Add setBufferSize() to override MQTT_MAX_PACKET_SIZE
+   * Add setKeepAlive() to override MQTT_KEEPALIVE
+   * Add setSocketTimeout() to overide MQTT_SOCKET_TIMEOUT
+   * Added check to prevent subscribe/unsubscribe to empty topics
+   * Declare wifi mode prior to connect in ESP example
+   * Use `strnlen` to avoid overruns
+   * Support pre-connected Client objects
+
+2.7
+   * Fix remaining-length handling to prevent buffer overrun
+   * Add large-payload API - beginPublish/write/publish/endPublish
+   * Add yield call to improve reliability on ESP
+   * Add Clean Session flag to connect options
+   * Add ESP32 support for functional callback signature
+   * Various other fixes
+
+2.4
+   * Add MQTT_SOCKET_TIMEOUT to prevent it blocking indefinitely
+     whilst waiting for inbound data
+   * Fixed return code when publishing >256 bytes
+
+2.3
+   * Add publish(topic,payload,retained) function
+
+2.2
+   * Change code layout to match Arduino Library reqs
+
+2.1
+   * Add MAX_TRANSFER_SIZE def to chunk messages if needed
+   * Reject topic/payloads that exceed MQTT_MAX_PACKET_SIZE
+
+2.0
+   * Add (and default to) MQTT 3.1.1 support
+   * Fix PROGMEM handling for Intel Galileo/ESP8266
+   * Add overloaded constructors for convenience
+   * Add chainable setters for server/callback/client/stream
+   * Add state function to return connack return code
+
+1.9
+   * Do not split MQTT packets over multiple calls to _client->write()
+   * API change: All constructors now require an instance of Client
+      to be passed in.
+   * Fixed example to match 1.8 api changes - dpslwk
+   * Added username/password support - WilHall
+   * Added publish_P - publishes messages from PROGMEM - jobytaffey
+
+1.8
+    * KeepAlive interval is configurable in PubSubClient.h
+    * Maximum packet size is configurable in PubSubClient.h
+    * API change: Return boolean rather than int from various functions
+    * API change: Length parameter in message callback changed
+       from int to unsigned int
+    * Various internal tidy-ups around types
+
+1.7
+    * Improved keepalive handling
+    * Updated to the Arduino-1.0 API
+
+1.6
+    * Added the ability to publish a retained message
+
+1.5
+    * Added default constructor
+    * Fixed compile error when used with arduino-0021 or later
+
+1.4
+    * Fixed connection lost handling
+
+1.3
+    * Fixed packet reading bug in PubSubClient.readPacket
+
+1.2
+    * Fixed compile error when used with arduino-0016 or later
+
+1.1
+    * Reduced size of library
+    * Added support for Will messages
+    * Clarified licensing - see LICENSE.txt
+
+1.0
+    * Only Quality of Service (QOS) 0 messaging is supported
+    * The maximum message size, including header, is 128 bytes
+    * The keepalive interval is set to 30 seconds
+    * No support for Will messages
