@@ -1,0 +1,31 @@
+name: build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Check clang-format conformity
+      run: bash .github/clang-lint.sh
+
+    - name: Build tests
+      # Build / Execute tests defined in tests folder
+      working-directory: ${{ github.workspace }}/tests
+      run: make
+
+    - name: Execute tests
+      # Build / Execute tests defined in tests folder
+      working-directory: ${{ github.workspace }}/tests
+      #run: make test
+      run: bin/connect_spec && bin/publish_spec && bin/receive_spec && bin/subscribe_spec
+
+    - name: Build on Arduino CLI
+      run: bash .github/build-arduino.sh
