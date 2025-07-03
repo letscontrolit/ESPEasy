@@ -27,7 +27,7 @@ P146_data_struct::~P146_data_struct()
 
 uint32_t writeToMqtt(const String& str, bool send) {
   if (send) {
-    MQTTclient.write(str);
+    MQTTclient.write((const uint8_t*)str.c_str(), str.length());
   }
   return str.length();
 }
