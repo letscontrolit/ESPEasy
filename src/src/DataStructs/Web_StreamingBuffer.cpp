@@ -293,9 +293,10 @@ void Web_StreamingBuffer::endStream() {
       addLog(LOG_LEVEL_ERROR, concat("Webpage skipped: low memory: ", finalRam));
     lowMemorySkip = false;
   }
+
   delay(5);
-  #ifdef ESP8266
   web_server.client().stop();
+  #ifdef ESP8266
   tcpCleanup();
   #endif
 }

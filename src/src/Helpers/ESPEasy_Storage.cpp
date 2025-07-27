@@ -1588,6 +1588,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
    Load Controller settings to file system
  \*********************************************************************************************/
 String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
+  if (!validControllerIndex(ControllerIndex)) return EMPTY_STRING;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadControllerSettings"));
   #endif // ifndef BUILD_NO_RAM_TRACKER

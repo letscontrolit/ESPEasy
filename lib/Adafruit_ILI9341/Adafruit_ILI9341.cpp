@@ -238,6 +238,83 @@ static const uint8_t PROGMEM initcmd_9342[] = { // ILI9342
 
 // clang-format on
 
+#ifdef ESP32
+// clang-format off
+static const uint8_t PROGMEM initcmd_9342_2[] = { // ILI9342_2 (CYD/Adafruit)
+  0xEF,             3,                0x03,                0x80,                0x02,
+  0xCF,             3,                0x00,                0xC1,                0x30,
+  0xED,             4,                0x64,                0x03,                0x12,               0x81,
+  0xE8,             3,                0x85,                0x00,                0x78,
+  0xCB,             5,                0x39,                0x2C,                0x00,               0x34,               0x02,
+  0xF7,             1,                0x20,
+  0xEA,             2,                0x00,                0x00,
+  ILI9341_PWCTR1,   1,                0x23,                                           // Power control VRH[5:0]
+  ILI9341_PWCTR2,   1,                0x10,                                           // Power control SAP[2:0];BT[3:0]
+  ILI9341_VMCTR1,   2,                0x2B,                0x2B,                      // VCM control
+  ILI9341_VMCTR2,   1,                0xC0,                                           // VCM control2
+  ILI9341_MADCTL,   1,                (MADCTL_MX | MADCTL_BGR),                       // Memory Access Control
+  ILI9341_VSCRSADD, 1,                0x00,                                           // Vertical scroll zero
+  ILI9341_PIXFMT,   1,                0x55,
+  ILI9341_FRMCTR1,  2,                0x00,                0x1B,
+  ILI9341_DFUNCTR,  3,                0x08,                0x82,                0x27, // Display Function Control
+  0xF2,             1,                0x00,                                           // 3Gamma Function Disable
+  ILI9341_GAMMASET, 1,                0x01,                                           // Gamma curve selected
+  ILI9341_GMCTRP1,  15,               0x0F,                0x31,                0x2B,               0x0C,               0x0E,
+  0x08,
+  0x4E,             0xF1,             0x37,                0x07,                0x10,               0x03,               0x0E,
+  0x09,             0x00, //
+                          // Set
+                          // Gamma
+  ILI9341_GMCTRN1,  15,               0x00,                0x0E,                0x14,               0x03,               0x11,
+  0x07,
+  0x31,             0xC1,             0x48,                0x08,                0x0F,               0x0C,               0x31,
+  0x36,             0x0F, // Set Gamma
+  ILI9341_SLPOUT,   0x80, // Exit Sleep
+  ILI9341_DISPON,   0x80, // Display on
+  0x00                    // End of list
+};
+
+// clang-format on
+// clang-format off
+static const uint8_t PROGMEM initcmd_9342_3[] = { // ILI9342_3 (CYD/Bodmer)
+  0xEF,             3,                0x03,                0x80,                0x02,
+  0xCF,             3,                0x00,                0xC1,                0x30,
+  0xED,             4,                0x64,                0x03,                0x12,               0x81,
+  0xE8,             3,                0x85,                0x00,                0x78,
+  0xCB,             5,                0x39,                0x2C,                0x00,               0x34,               0x02,
+  0xF7,             1,                0x20,
+  0xEA,             2,                0x00,                0x00,
+  ILI9341_PWCTR1,   1,                0x10,                                           // Power control VRH[5:0]
+  ILI9341_PWCTR2,   1,                0x00,                                           // Power control SAP[2:0];BT[3:0]
+  ILI9341_VMCTR1,   2,                0x30,                0x30,                      // VCM control
+  ILI9341_VMCTR2,   1,                0xB7,                                           // VCM control2
+  ILI9341_MADCTL,   1,                (MADCTL_BGR),                                   // Memory Access Control
+  // ILI9341_VSCRSADD, 1,                0x00,                                           // Vertical scroll zero
+  ILI9341_PIXFMT,   1,                0x55,
+  ILI9341_FRMCTR1,  2,                0x00,                0x1A,
+  ILI9341_DFUNCTR,  3,                0x08,                0x82,                0x27, // Display Function Control
+  0xF2,             1,                0x00,                                           // 3Gamma Function Disable
+  ILI9341_GAMMASET, 1,                0x01,                                           // Gamma curve selected
+  ILI9341_GMCTRP1,  15,               0x0F,                0x2A,                0x28,               0x08,               0x0E,
+  0x08,
+  0x54,             0xA9,             0x43,                0x0A,                0x0F,               0x00,               0x00,
+  0x00,             0x00, //
+                          // Set
+                          // Gamma
+  ILI9341_GMCTRN1,  15,               0x00,                0x15,                0x17,               0x07,               0x11,
+  0x06,
+  0x2B,             0x56,             0x3C,                0x05,                0x10,               0x0F,               0x3F,
+  0x3F,             0x0F, // Set Gamma
+  ILI9341_PASET,    4,                0x00,                0x00,                0x01,               0x3F,
+  ILI9341_CASET,    4,                0x00,                0x00,                0x00,               0xEF,
+  ILI9341_SLPOUT,   0x80, // Exit Sleep
+  ILI9341_DISPON,   0x80, // Display on
+  0x00                    // End of list
+};
+
+// clang-format on
+#endif // ifdef ESP32
+
 // clang-format off
 static const uint8_t PROGMEM initcmd_9481[] = { // ILI9481
   ILI9341_SLPOUT, 0x80,                         // Exit Sleep
@@ -478,6 +555,14 @@ void Adafruit_ILI9341::begin(uint32_t freq) {
     case ILI_TYPE_9342:        // ILI9342 M5STACK
       addr = initcmd_9342;
       break;
+    #ifdef ESP32
+    case ILI_TYPE_9342_2:      // ILI9342 CYD/Adafruit
+      addr = initcmd_9342_2;
+      break;
+    case ILI_TYPE_9342_3:      // ILI9342 CYD/Bodmer
+      addr = initcmd_9342_3;
+      break;
+    #endif // ifdef ESP32
     case ILI_TYPE_9481:        // ILI9481
       addr = initcmd_9481;
       break;
@@ -540,6 +625,9 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9342:        // ILI9342 M5STACK
           m = (MADCTL_MY | MADCTL_MV | MADCTL_BGR);
           break;
+        case ILI_TYPE_9342_2:      // ILI9342 CYD/Adafruit
+          m = (MADCTL_BGR);
+          break;
         case ILI_TYPE_9481:        // ILI9481
         case ILI_TYPE_9481_CPT29:  // ILI9481 CPT29
         case ILI_TYPE_9481_PVI35:  // ILI9481 PVI35
@@ -551,6 +639,7 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
           m = (MADCTL_SS | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
+        case ILI_TYPE_9342_3:      // ILI9342 CYD/Bodmer
           // m = (MADCTL_MX | MADCTL_BGR);
           // break;
         default:
@@ -577,6 +666,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         //  m = (MADCTL_MV | MADCTL_BGR);
         //  break;
         case ILI_TYPE_9341:        // ILI9341
+        case ILI_TYPE_9342_2:      // ILI9342 CYD/Adafruit
+        case ILI_TYPE_9342_3:      // ILI9342 CYD/Bodmer
           // m = (MADCTL_MV | MADCTL_BGR);
           // break;
         default:
@@ -603,6 +694,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
           m = (MADCTL_GS | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
+        case ILI_TYPE_9342_2:      // ILI9342 CYD/Adafruit
+        case ILI_TYPE_9342_3:      // ILI9342 CYD/Bodmer
           // m = (MADCTL_MY | MADCTL_BGR);
           // break;
         default:
@@ -629,6 +722,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
           m = (MADCTL_SS | MADCTL_GS | MADCTL_MV | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
+        case ILI_TYPE_9342_2:      // ILI9342 CYD/Adafruit
+        case ILI_TYPE_9342_3:      // ILI9342 CYD/Bodmer
           // m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_BGR);
           // break;
         default:

@@ -88,7 +88,7 @@ Device Settings
 Values
 ^^^^^^
 
-The plugin provides measurements ``Voltage``, ``Current``, and ``Power``. These names can be adjusted ifi desirec.
+The plugin provides measurements ``Voltage``, ``Current``, and ``Power``. These names can be adjusted if desired.
 
 Per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 

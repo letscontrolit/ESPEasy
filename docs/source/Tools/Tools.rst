@@ -852,6 +852,7 @@ System metrics exposed are:
 * Wifi Strength
 * Wifi connection time
 * Wifi reconnection count (since boot)
+* CPU temperature (when available in the build) (Added: 2025/07/22)
 
 In Addition, device values are exposed.  
 
@@ -1010,6 +1011,13 @@ Backup files
 ============
 
 The :cyan:`Backup files` button is only available if .tar file support is included in the build, and offers to download a .tar archive containing all files on the flash file system. These can be stored as a backup and restored in case of some configuration or system failure, or used to create 1 or multiple clones of the unit for multi-deployment. Uploading can also be started from an automation system or script, POST-ing the .tar archive from an external source.
+
+Backup w/o credentials
+======================
+
+The :cyan:`Backup w/o credentials` button acts like the :cyan:`Backup files` button, with the exception that the ``security.dat`` file is excluded from the backup, so you can share a complete system configuration, without sharing any usernames, passwords and similar secrets that should often not be shared.
+
+The backup filename includes ``no_creds`` to show this fact.
 
 Firmware
 ********
