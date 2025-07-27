@@ -129,6 +129,7 @@ void handle_tools() {
                                );
   #if FEATURE_TARSTREAM_SUPPORT
   addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  addWideButtonPlusDescription(F("backupnup"), F("Backup w/o credentials"), F("Save all files as a .tar archive but exclude usernames & passwords"));
   #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI

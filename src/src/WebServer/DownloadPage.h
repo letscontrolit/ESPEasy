@@ -11,7 +11,9 @@
 void handle_download();
 # if FEATURE_TARSTREAM_SUPPORT
 void handle_full_backup();
-void handle_config_download(bool fullBackup);
+void handle_full_backup_no_usr_pwd();
+void handle_config_download(bool fullBackup,
+                            bool noCreds);
 # endif // if FEATURE_TARSTREAM_SUPPORT
 
 #endif // ifdef WEBSERVER_DOWNLOAD

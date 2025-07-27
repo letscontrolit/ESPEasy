@@ -137,7 +137,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
     {
       controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
 
-      if (validControllerIndex(ControllerID)) {
+      if (validControllerIndex(ControllerID) && event) {
         # if FEATURE_MQTT_DISCOVER
         MakeControllerSettings(ControllerSettings); // -V522
 
@@ -152,7 +152,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         if (ControllerSettings->mqtt_autoDiscovery()
             && (ControllerSettings->MqttAutoDiscoveryTrigger[0] != '\0')
             && event->String1.equals(ControllerSettings->MqttAutoDiscoveryTrigger)
-            && event->String2.equals(online.isEmpty() ? F("online") : online)
+            && event->String2.equals(online.isEmpty() ? String(F("online")) : online)
             ) {
           // We have received the Discovery request topic
           // Generate random time-offset in 0.1 sec, range 1..30 seconds

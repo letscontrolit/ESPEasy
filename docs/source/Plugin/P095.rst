@@ -97,17 +97,21 @@ Device Settings
 
 * **TFT Display model**: Select the hardware model that is connected. Currently there are only preset resolutions available.
 
-* **Invert display**: Default value for Invert display, some displays have foreground and background colors swapped (f.e. M5Stack Core2 using ILI9342C and some ILI9486/ILI9488 models), this option is applied at plugin initialization.
-
 Available options:
 
 .. image:: P095_TFTDisplayModelOptions.png
    :alt: TFT Display model options
 
+The available options here depend on the build used, as some are only available on ESP32 because they won't fit in an ESP8266 build.
+
+Some of the display controllers need the **Invert display** setting checked to show the correct colors.
+
 .. warning:: 
    The **ILI9481** display controller does have issues when rotating, by using the ``<trigger>,rot,<n>`` command, to change the display orientation after some content is already displayed on the screen (content may move, rotate and/or mirror unexpectedly). It is advised to clear the screen after changing the rotation setting.
 
 .. note:: ILI9486 displays tested so far (sourced from Aliexpress) either are *compatible* with ILI9488 or **are** ILI9488 displays, that's why they share the same entry in the list. If you find an ILI9486 display that doesn't work with this setting, please raise an issue in ESPEasy Github Issues list, so this can be adjusted.
+
+* **Invert display**: When checked will Invert display colors, as some displays have foreground and background colors swapped (f.e. M5Stack Core2 using ILI9342C, some ILI9342 CYD (Cheap Yellow Display) boards, and some ILI9486/ILI9488 models), this option is applied at plugin initialization.
 
 Layout
 ^^^^^^^^

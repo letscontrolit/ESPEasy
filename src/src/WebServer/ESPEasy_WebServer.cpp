@@ -219,6 +219,7 @@ void WebServerInit()
   web_server.on(F("/advanced"),            handle_advanced);
   # if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
   web_server.on(F("/backup"),              handle_full_backup);
+  web_server.on(F("/backupnup"),           handle_full_backup_no_usr_pwd);
   # endif // if defined(WEBSERVER_DOWNLOAD) && FEATURE_TARSTREAM_SUPPORT
   #endif // ifdef WEBSERVER_ADVANCED
   #ifdef WEBSERVER_CONFIG

@@ -103,7 +103,7 @@ static const char DATA_GITHUB_CLIPBOARD_JS[] PROGMEM = {
   "{var o='copyText_'+n,t=document.getElementById(o);if(t){var a='|';n%2==0&&(a+='\\n'),e+=t.innerHTML.replace(/<[Bb][Rr]\\s*\\/?>/gim,'\\n')+a}else n=101}"
   "e=(e=e.replace(/<\\/[Dd][Ii][Vv]\\s*\\/?>/gim,'\\n')).replace(/<[^>]*>/gim,'');"
   "var i=document.createElement('textarea');i.style='position: absolute;left: -1000px; top: -1000px',i.innerHTML=e,document.body.appendChild(i),i.select(),document.execCommand('copy'),"
-  "document.body.removeChild(i),alert('Copied: ''+e+'' to clipboard!')}"
+  "document.body.removeChild(i),alert('Copied: '+e+' to clipboard!');}"
 };
 #endif
 
@@ -356,7 +356,7 @@ static const char jsClipboardCopyPart3[] PROGMEM = {
   "ti.select();"
   "document.execCommand('copy');"
   "document.body.removeChild(ti);"
-  "alert('Copied: \"' + cb + '\" to clipboard!') }"
+  "alert('Copied: \"' + cb + '\" to clipboard!'); }"
   "</script>"
 };
 
