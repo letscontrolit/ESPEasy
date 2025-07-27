@@ -2628,6 +2628,52 @@ The above example, adapted for using named variables (and %v1% .. %v200% for sto
   endon
 
 
+2nd-order Butterworth low-pass filter
+-------------------------------------
+
+Suggested by thalesmaoa in `this GH Comment <https://github.com/letscontrolit/ESPEasy/issues/2304#issuecomment-2991103427>`_
+
+This is a simple but effective 2nd-order Butterworth low-pass filter (`Wiki page <https://en.wikipedia.org/wiki/Butterworth_filter>`_), more accurate than a moving average.
+
+It runs entirely in ESPEasy Rules, using internal variables (``Let``).
+
+Two cutoff frequencies are available:
+
+``fc = 0.2 Hz when v8 = 0``
+
+``fc = 0.1 Hz when v8 = 1``
+
+All parameters were calculated assuming a 1-second sampling interval (i.e., one event per second).
+
+If you can trigger events at a faster rate, new filter coefficients must be calculated.
+
+.. code-block:: none
+
+  On input1#ai1 Do
+    Let,8,1       // Set filter mode: 1 = 0.1 Hz, 0 = 0.2 Hz
+    Event,filt=%eventvalue1%
+  EndOn
+
+  On filt Do
+    // Shift input history
+    Let,4,[VAR#3]       // x2 ← x1
+    Let,3,[VAR#2]       // x1 ← x0
+    Let,2,%eventvalue1% // x0 ← new input
+
+    // Shift output history
+    Let,7,[VAR#6]       // y2 ← y1
+    Let,6,[VAR#5]       // y1 ← y0
+
+    // Compute filtered value, made available in %v5% / [var#5]
+    If %v8%=1
+      Let,5,0.067455*%v2%+0.134911*%v3%+0.067455*%v4%+1.14298*%v6%-0.412802*%v7%
+    Else
+      Let,5,0.2066*%v2%+0.4132*%v3%+0.2066*%v4%+0.3695*%v6%-0.1958*%v7%
+    EndIf
+  EndOn
+
+
+
 Register daily working time
 ---------------------------
 
