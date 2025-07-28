@@ -33,6 +33,10 @@ void handle_sysinfo_Network();
 void handle_sysinfo_WiFiSettings();
 #endif
 
+#ifdef USES_ESPEASY_NOW
+void handle_sysinfo_ESPEasyNow();
+#endif
+
 void handle_sysinfo_Firmware();
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL

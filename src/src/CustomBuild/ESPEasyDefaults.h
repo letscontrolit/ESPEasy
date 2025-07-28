@@ -84,6 +84,11 @@
 #define DEFAULT_ADMIN_PASS     ""
 #endif
 
+
+#ifndef DEFAULT_APPEND_UNIT_TO_HOSTNAME
+#define DEFAULT_APPEND_UNIT_TO_HOSTNAME  false
+#endif
+
 #ifndef DEFAULT_WIFI_CONNECTION_TIMEOUT
 #define DEFAULT_WIFI_CONNECTION_TIMEOUT  20000  // minimum timeout in ms for WiFi to be connected.
 #endif
@@ -119,6 +124,10 @@
 #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
 #endif
 
+#ifndef DEFAULT_USE_ESPEASYNOW
+#define DEFAULT_USE_ESPEASYNOW           false
+#endif
+
 #ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
 #define DEFAULT_AP_DONT_FORCE_SETUP      false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
 #endif
@@ -143,7 +152,10 @@
 #define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
 #endif
 #ifndef DEFAULT_CONTROLLER_TIMEOUT
-#define DEFAULT_CONTROLLER_TIMEOUT 100
+#define DEFAULT_CONTROLLER_TIMEOUT 100            // Default timeout in msec
+#endif
+#ifndef DEFAULT_CONTROLLER_FALLBACK_MESH
+#define DEFAULT_CONTROLLER_FALLBACK_MESH   false  // Let the (MQTT) controller use the mesh as a fallback route when there's no network connection
 #endif
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !

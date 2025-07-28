@@ -16,6 +16,7 @@
 #include "../Helpers/LongTermTimer.h"
 
 #define WIFI_RECONNECT_WAIT                 30000 // in milliSeconds
+#define WIFI_AP_OFF_TIMER_EXTENSION         60000 // in milliSeconds
 #define WIFI_AP_OFF_TIMER_DURATION         300000 // in milliSeconds
 #if FEATURE_CUSTOM_PROVISIONING
 #define WIFI_CONNECTION_CONSIDERED_STABLE   60000 // in milliSeconds

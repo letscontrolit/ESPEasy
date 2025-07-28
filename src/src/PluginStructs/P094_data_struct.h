@@ -131,7 +131,6 @@ public:
   bool     parsePacket(const String& received,
                        mBusPacket_t& packet);
 
-
 # if P094_DEBUG_OPTIONS
 
   // Get (and increment) debug counter

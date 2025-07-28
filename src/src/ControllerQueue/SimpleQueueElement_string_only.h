@@ -2,8 +2,9 @@
 #define CONTROLLERQUEUE_SIMPLE_QUEUE_ELEMENT_STRING_ONLY_H
 
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../ControllerQueue/Queue_element_base.h"
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -27,11 +28,11 @@ public:
 
   bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const MessageRouteInfo_t* getMessageRouteInfo() const {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  MessageRouteInfo_t* getMessageRouteInfo() {
     return nullptr;
   }
 

@@ -2,18 +2,26 @@
 
 #include "../../ESPEasy-Globals.h"
 
+#include "../DataStructs/NodesHandler.h"
+
 #if FEATURE_ETHERNET
 #include "../ESPEasyCore/ESPEasyEth_ProcessEvent.h"
 #endif
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#include "../Globals/ESPEasy_now_state.h"
+#endif
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
@@ -38,6 +46,7 @@
 // #include "../Helpers/Scheduler.h"
 
 #include "../WebServer/ESPEasy_WebServer.h"
+
 
 
 // ********************************************************************************
@@ -182,6 +191,10 @@ void handle_unprocessedNetworkEvents()
 
     if (!WiFiEventData.processedConnectAPmode) { processConnectAPmode(); }
 
+#ifdef USES_ESPEASY_NOW
+    if (!WiFiEventData.processedProbeRequestAPmode) { processProbeRequestAPmode(); }
+#endif
+
     if (WiFiEventData.timerAPoff.isSet()) { processDisableAPmode(); }
 
     if (!WiFiEventData.processedScanDone) { processScanDone(); }
@@ -245,26 +258,25 @@ void processDisconnect() {
     }
   }
 
-
   if (WiFiEventData.processedDisconnect || 
       WiFiEventData.processingDisconnect.isSet()) { return; }
-  WiFiEventData.processingDisconnect.setNow();
-  WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.wifiConnectAttemptNeeded = true;
-  delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
     eventQueue.add(F("WiFi#Disconnected"));
   }
 
-
+  #ifdef ESP8266
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  #else
   // FIXME TD-er: With AutoReconnect enabled, WiFi must be reset or else we completely loose track of the actual WiFi state
   bool mustRestartWiFi = Settings.WiFiRestart_connection_lost() || WiFi.getAutoReconnect();
+  #endif
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
-    if (!WiFi_AP_Candidates.getBestCandidate().usable())
+    if (!WiFi_AP_Candidates.getBestCandidate().usable()) {
 //      addLog(LOG_LEVEL_INFO, F("WIFI : !getBestCandidate().usable()  => mustRestartWiFi = true"));
 
       mustRestartWiFi = true;
+    }
   }
   
   if (WiFi.status() == WL_IDLE_STATUS) {
@@ -291,8 +303,8 @@ void processDisconnect() {
   }
 //  delay(500);
   logConnectionStatus();
-  WiFiEventData.processedDisconnect = true;
   WiFiEventData.processingDisconnect.clear();
+  WiFiEventData.wifiConnectAttemptNeeded = true;
 }
 
 void processConnect() {
@@ -486,10 +498,52 @@ void processDisconnectAPmode() {
     log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
+    if (nrStationsConnected == 0) {
+      log += F(" AP turn off timer: ");
+      log += WIFI_AP_OFF_TIMER_EXTENSION/1000;
+      log += 's';
+    }
     addLogMove(LOG_LEVEL_INFO, log);
   }
 #endif  
 }
+
+#ifdef USES_ESPEASY_NOW
+void processProbeRequestAPmode() {
+  if (WiFiEventData.processedProbeRequestAPmode) { return; }
+
+  const MAC_address mac(APModeProbeRequestReceived_list.front().mac);
+  const int rssi = APModeProbeRequestReceived_list.front().rssi;
+
+  Nodes.setRSSI(mac, rssi);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String    log                 = F("AP Mode: Probe Request: ");
+    log += mac.toString();
+    log += F(" (");
+    log += rssi;
+    log += F(" dBm)");
+    addLog(LOG_LEVEL_INFO, log);
+  }
+
+
+//  static MAC_address last_probed_mac;
+//  if (last_probed_mac != mac) {
+//    last_probed_mac = mac;
+
+    // FIXME TD-er: Must create an answer for ESPEasy-NOW node discovery
+    #ifdef USES_ESPEASY_NOW
+    if (Settings.UseESPEasyNow()) {
+      ESPEasy_now_handler.sendDiscoveryAnnounce(
+        mac, Nodes.getESPEasyNOW_channel());
+    }
+    #endif
+//  }
+
+  APModeProbeRequestReceived_list.pop_front();
+  WiFiEventData.processedProbeRequestAPmode = APModeProbeRequestReceived_list.size() == 0;
+}
+#endif
 
 // Client connects to AP on this node
 void processConnectAPmode() {
@@ -603,6 +657,36 @@ void processScanDone() {
   } else if (!WiFiEventData.wifiConnectInProgress && !NetworkConnected()) {
     WiFiEventData.timerAPstart.setNow();
   }
+  
+  #ifdef USES_ESPEASY_NOW
+  if (Settings.UseESPEasyNow()) {
+    ESPEasy_now_handler.addPeerFromWiFiScan();
+    if (!NetworkConnected()) {
+      if (WiFi_AP_Candidates.addedKnownCandidate()) {
+        WiFi_AP_Candidates.force_reload();
+        if (!WiFiEventData.wifiConnectInProgress) {
+  //        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
+          addLog(LOG_LEVEL_INFO, F("WiFi : Added known candidate, try to connect (mesh)"));
+
+          WifiDisconnect();
+          setAP(false);
+          ESPEasy_now_handler.end();
+
+          // Disable ESPEasy_now for 20 seconds to give opportunity to connect to WiFi.
+          WiFiEventData.wifiConnectAttemptNeeded = true;
+          temp_disable_EspEasy_now_timer = millis() + 20000;
+//          setSTA(false);
+          setNetworkMedium(Settings.NetworkMedium);
+          NetworkConnectRelaxed();
+//        }
+        }
+      } else {
+        temp_disable_EspEasy_now_timer = 0;
+        setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
+      }
+    }
+  }
+  #endif
 
 }
 

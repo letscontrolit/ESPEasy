@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/Scheduler.h"
 
@@ -34,6 +35,15 @@ void scheduleNextMQTTdelayQueue();
 void schedule_all_MQTTimport_tasks();
 
 void processMQTTdelayQueue();
+
+bool processMQTT_message(controllerIndex_t controllerIndex,
+                        const String    & topic,
+                        const String    & payload,
+                        bool retained
+#ifdef USES_ESPEASY_NOW
+                        , const MessageRouteInfo_t* messageRouteInfo
+#endif
+                        );
 
 void updateMQTTclient_connected();
 

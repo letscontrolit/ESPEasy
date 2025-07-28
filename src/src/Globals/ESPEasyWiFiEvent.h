@@ -1,15 +1,18 @@
 #ifndef GLOBALS_ESPEASYWIFIEVENT_H
 #define GLOBALS_ESPEASYWIFIEVENT_H
 
-
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/MAC_address.h"
+#if FEATURE_ETHERNET
+#include "../DataStructs/EthernetEventData.h"
+#endif
 #include "../DataStructs/WiFiEventData.h"
 
 
 #include <IPAddress.h>
 #include <stdint.h>
-
+#include <list>
 
 #ifdef ESP32
 # include <esp_event.h>
@@ -30,8 +33,21 @@ extern WiFiEventHandler stationModeDHCPTimeoutHandler;
 extern WiFiEventHandler stationModeAuthModeChangeHandler;
 extern WiFiEventHandler APModeStationConnectedHandler;
 extern WiFiEventHandler APModeStationDisconnectedHandler;
+#ifdef USES_ESPEASY_NOW
+extern WiFiEventHandler APModeProbeRequestReceivedHandler;
+extern std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestReceived_list;
+#endif
 #endif // ifdef ESP8266
 
+#ifdef ESP32
+#ifdef USES_ESPEASY_NOW
+# if ESP_IDF_VERSION_MAJOR>=5
+extern std::list<wifi_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#else
+extern std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#endif
+#endif
+#endif
 
 extern WiFiEventData_t WiFiEventData;
 

@@ -258,7 +258,8 @@ const __FlashStringHelper * SettingsType::getSettingsFileName(SettingsType::Sett
 size_t SettingsType::getInitFileSize(SettingsType::SettingsFileEnum file_type) {
   switch (file_type) {
     case SettingsFileEnum::FILE_CONFIG_type:        return CONFIG_FILE_SIZE;
-    case SettingsFileEnum::FILE_NOTIFICATION_type:  return 4096;
+    case SettingsFileEnum::FILE_NOTIFICATION_type:
+      // fall through
     case SettingsFileEnum::FILE_SECURITY_type:      return 4096;
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }

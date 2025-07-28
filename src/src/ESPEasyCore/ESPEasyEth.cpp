@@ -3,6 +3,7 @@
 #if FEATURE_ETHERNET
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -337,12 +338,14 @@ void ethResetGPIOpins() {
 bool ETHConnected() {
   if (EthEventData.EthServicesInitialized()) {
     if (EthLinkUp()) {
+//      stop_eth_dhcps();
       return true;
     }
     // Apparently we missed an event
     EthEventData.processedDisconnect = false;
   } else if (EthEventData.ethInitSuccess) {
     if (EthLinkUp()) {
+//      stop_eth_dhcps();
       EthEventData.setEthConnected();
       if (NetworkLocalIP() != IPAddress(0, 0, 0, 0) && 
           !EthEventData.EthGotIP()) {

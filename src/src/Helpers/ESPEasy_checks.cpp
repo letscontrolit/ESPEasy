@@ -81,7 +81,7 @@ void check_max_size() {
 void run_compiletime_checks() {
   #ifndef LIMIT_BUILD_SIZE
   check_size<CRCStruct,                             204u>();
-  check_size<SecurityStruct,                        593u>();
+  check_size<SecurityStruct,                        653u>();
   check_max_size<SecurityStruct,                    DAT_SECURITYSETTINGS_SIZE>();
   #ifdef ESP32
   constexpr unsigned int SettingsStructSize = (340 + 84 * TASKS_MAX);
@@ -108,7 +108,6 @@ void run_compiletime_checks() {
   #else
   check_size<EventStruct,                           104u>(); // Is not stored
   #endif
-
 
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.

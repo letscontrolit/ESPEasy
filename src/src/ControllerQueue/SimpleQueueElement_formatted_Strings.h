@@ -6,7 +6,7 @@
 #include "../ControllerQueue/Queue_element_base.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
-#include "../DataStructs/UnitMessageCount.h"
+#include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/Plugins.h"
 
@@ -43,11 +43,11 @@ public:
 
   bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const MessageRouteInfo_t * getMessageRouteInfo() const {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  MessageRouteInfo_t* getMessageRouteInfo() {
     return nullptr;
   }
 

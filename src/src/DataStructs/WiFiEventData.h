@@ -1,6 +1,10 @@
 #ifndef DATASTRUCTS_WIFIEVENTDATA_H
 #define DATASTRUCTS_WIFIEVENTDATA_H
 
+#include "../../ESPEasy_common.h"
+
+#include "../../ESPEasy-Globals.h"
+
 #include "../DataStructs/MAC_address.h"
 #include "../DataTypes/WiFiDisconnectReason.h"
 #include "../Helpers/LongTermTimer.h"
@@ -36,7 +40,7 @@
 struct WiFiEventData_t {
   bool WiFiConnectAllowed() const;
 
-  bool unprocessedWifiEvents() const;
+  bool unprocessedWifiEvents();
 
   void clearAll();
   void markWiFiTurnOn();
@@ -87,6 +91,7 @@ struct WiFiEventData_t {
                                uint32_t minimum_timeout) const;
 
 
+
   // WiFi related data
   bool          wifiSetup        = false;
   bool          wifiSetupConnect = false;
@@ -117,6 +122,7 @@ struct WiFiEventData_t {
   LongTermTimer::Duration lastConnectedDuration_us = 0ll;
   LongTermTimer           timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
   LongTermTimer           timerAPstart; // Timer to start AP mode, started when no valid network is detected.
+  LongTermTimer           lastAPmodeStationConnectMoment;
   bool                    intent_to_reboot = false;
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
@@ -145,6 +151,9 @@ struct WiFiEventData_t {
   bool processedConnectAPmode    = true;
   bool processedDisconnectAPmode = true;
   bool processedScanDone         = true;
+  #ifdef USES_ESPEASY_NOW
+  bool processedProbeRequestAPmode = true;
+  #endif
   bool wifiConnectAttemptNeeded  = true;
   bool wifiConnectInProgress     = false;
   bool warnedNoValidWiFiSettings = false;

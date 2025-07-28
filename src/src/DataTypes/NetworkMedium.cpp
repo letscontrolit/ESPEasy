@@ -1,6 +1,8 @@
 
 #include "../DataTypes/NetworkMedium.h"
 
+#include "../../ESPEasy_common.h"
+
 bool isValid(NetworkMedium_t medium) {
   switch (medium) {
     case NetworkMedium_t::WIFI:
@@ -11,7 +13,7 @@ bool isValid(NetworkMedium_t medium) {
       return true;
 
     case NetworkMedium_t::NotSet:
-      return false;
+      break;
 
       // Do not use default: as this allows the compiler to detect any missing cases.
   }

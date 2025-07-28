@@ -6,7 +6,6 @@
 #ifdef WEBSERVER_CONTROLLERS
 
 #include "../DataStructs/ControllerSettingsStruct.h"
-
 #include "../Globals/CPlugins.h"
 
 // ********************************************************************************

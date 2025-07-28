@@ -95,6 +95,7 @@ void ESPEasy_Scheduler::handle_schedule() {
   STOP_TIMER(HANDLE_SCHEDULER_TASK);
 }
 
+
 String ESPEasy_Scheduler::getQueueStats() {
   return msecTimerHandler.getQueueStats();
 }

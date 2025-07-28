@@ -6,8 +6,8 @@
 #if FEATURE_MQTT
 
 # include "../ControllerQueue/Queue_element_base.h"
-# include "../DataStructs/UnitMessageCount.h"
 # include "../Globals/CPlugins.h"
+#include "../DataStructs/MessageRouteInfo.h"
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers
@@ -39,20 +39,20 @@ public:
 
   bool                      isDuplicate(const Queue_element_base& other) const;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
-    return &UnitMessageCount;
+  const MessageRouteInfo_t* getMessageRouteInfo() const {
+    return &MessageRouteInfo;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
-    return &UnitMessageCount;
+  MessageRouteInfo_t* getMessageRouteInfo() {
+    return &MessageRouteInfo;
   }
 
   void removeEmptyTopics();
 
   String _topic{};
   String _payload{};
-  UnitMessageCount_t UnitMessageCount{};
   bool _retained = false; 
+  MessageRouteInfo_t MessageRouteInfo{};
 };
 
 #endif // if FEATURE_MQTT

@@ -16,6 +16,8 @@ typedef std::vector<IPAddress> IP6Addresses_t;
 
 void setNetworkMedium(NetworkMedium_t medium);
 
+bool isESPEasy_now_only();
+
 void NetworkConnectRelaxed();
 bool NetworkConnected();
 IPAddress NetworkLocalIP();
@@ -50,7 +52,7 @@ void CheckRunningServices();
 bool EthFullDuplex();
 bool EthLinkUp();
 uint8_t EthLinkSpeed();
-#endif // if FEATURE_ETHERNET
-
+void stop_eth_dhcps();
+#endif
 
 #endif
