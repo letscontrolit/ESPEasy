@@ -326,24 +326,28 @@ String NetworkGetHostNameFromSettings(bool force_add_unitnr)
 }
 
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
-  String hostname(NetworkGetHostNameFromSettings(force_add_unitnr));
   // Create hostname with - instead of spaces
+  return makeRFCCompliantName(NetworkGetHostNameFromSettings(force_add_unitnr));
+}
 
-  // See RFC952.
+String makeRFCCompliantName(const String& name, const char replaceChar, const char allowedChar, const size_t maxlength) {
+  String hostname(name);
+  // See RFC952. (when using the default arguments: '-', '-', 24)
   // Allowed chars:
   // * letters (a-z, A-Z)
   // * numerals (0-9)
   // * Hyphen (-)
-  replaceUnicodeByChar(hostname, '-');
+  // * Max length 24
+  replaceUnicodeByChar(hostname, replaceChar);
   for (size_t i = 0; i < hostname.length(); ++i) {
     const char c = hostname[i];
-    if (!isAlphaNumeric(c)) {
-      hostname[i] = '-';
+    if (!isAlphaNumeric(c) && (c != allowedChar)) {
+      hostname[i] = replaceChar;
     }
   }
 
   // May not start or end with a hyphen
-  const String dash('-');
+  const String dash(replaceChar);
   while (hostname.startsWith(dash)) {
     hostname = hostname.substring(1);
   }
@@ -360,11 +364,11 @@ String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
     }
   }
   if (onlyNumerals) {
-    hostname = concat(F("ESPEasy-"), hostname);
+    hostname = strformat(F("ESPEasy%c%s"), replaceChar, hostname.c_str());
   }
 
-  if (hostname.length() > 24) {
-    hostname = hostname.substring(0, 24);
+  if ((maxlength > 0) && (hostname.length() > maxlength)) {
+    hostname = hostname.substring(0, maxlength);
   }
 
   return hostname;

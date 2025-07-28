@@ -130,6 +130,18 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
     {
       event->String1 = F("%sysname%/#");
       event->String2 = F("%sysname%/%tskname%/%valname%");
+      # if FEATURE_MQTT_DISCOVER
+
+      if (event->Data != nullptr) {
+        ControllerSettingsStruct*controllerSettings = (ControllerSettingsStruct *)(event->Data);
+        safe_strncpy(controllerSettings->MqttAutoDiscoveryTrigger,
+                     FsP(F("homeassistant/status")),
+                     sizeof(controllerSettings->MqttAutoDiscoveryTrigger));
+        safe_strncpy(controllerSettings->MqttAutoDiscoveryTopic,
+                     FsP(F("homeassistant/%devclass%/%unique_id%")),
+                     sizeof(controllerSettings->MqttAutoDiscoveryTopic));
+      }
+      # endif // if FEATURE_MQTT_DISCOVER
       break;
     }
 
