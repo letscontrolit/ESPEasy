@@ -137,8 +137,8 @@ ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin                   | ESP8266 
 ESPEasy_mega-20230822_normal_ESP32_4M316k_ETH.bin                     | ESP32 with 4MB flash                            | Stable                           |
 ESPEasy_mega-20230822_collection_A_ESP32_4M316k_ETH.bin               | ESP32 with 4MB flash                            | Stable + Collection base + set A |
 ESPEasy_mega-20230822_collection_B_ESP32_4M316k_ETH.bin               | ESP32 with 4MB flash                            | Stable + Collection base + set B |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_CDC_ETH.bin           | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_CDC_ETH.bin | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_ETH.bin           | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_ETH.bin | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
 ESPEasy_mega-20230822_max_ESP32_16M1M_ETH.bin                         | ESP32 with 16MB flash, SPIFFS, Ethernet         | All available plugins            |
 ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS_ETH.bin                | ESP32 with 16MB flash, LittleFS, Ethernet       | All available plugins            |
 

@@ -761,11 +761,17 @@ void addFormSelector_binarySensorDeviceClass(const __FlashStringHelper*label,
   std::vector<String> binaryDeviceClasses;
   int devClassIndex   = 0;
   String devClassName = MQTT_binary_deviceClassName(devClassIndex);
+  if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
+    devClassName += F("²");
+  }
 
   while (!devClassName.isEmpty() || (0 == devClassIndex)) {
     binaryDeviceClasses.push_back(devClassName);
     ++devClassIndex;
     devClassName = MQTT_binary_deviceClassName(devClassIndex);
+    if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
+      devClassName += F("²");
+    }
   }
   const FormSelectorOptions deviceClass(
     devClassIndex,

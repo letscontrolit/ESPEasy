@@ -184,7 +184,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       // Instead we just send the last known state stored in Uservar
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO,
-               strformat(F("MCP   : Port=%d State=%d"), CONFIG_PORT, UserVar[event->BaseVarIndex]));
+               strformat(F("MCP  : Port=%d State=%d"), CONFIG_PORT, UserVar[event->BaseVarIndex]));
       }
       success = true;
       break;

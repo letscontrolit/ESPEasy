@@ -382,6 +382,11 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Unix Timestamp to weekday: ``%c_ts2wday%(%unixtime_lcl%)``
      - Unix Timestamp to weekday: ``2``
      - Return the numeric weekday (dow) index, 0..6 (sun..sat), so it can be used with f.e. ``{lookup:%c_ts2wday%(%unixtime_lcl%):3:sunmontuewedthufrisat}`` to show a 3 character day name, that can easily be translated into your desired languag, and the length adjusted as desired.
+   * - Unix Timestamp to ISO date/time: ``%c_ts2date%(1748813303)``
+     - Unix Timestamp to ISO date/time: ``2025-06-01T21:28:32Z``
+     - Unix Timestamp to ISO 8601 yyyy-mm-ddThh:mm:ss[Z|+hh:mm] in 24 hour notation optionally including the system time-zone offset (Default ``%unixtime%`` is UTC)
+
+       Can optionally include the system configured Time-zone offset, as that's not available from a timestamp. Timestamp values should then be based on ``%unixtime_lcl%``.
    * - Random(L,H): ``%c_random%(0, 1)``
      - Random(L,H): ``0.123``
      - Generate random number in the given range L ... H (Added: 2025/04/29)

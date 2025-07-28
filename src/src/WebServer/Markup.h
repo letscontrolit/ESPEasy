@@ -99,6 +99,9 @@ void addSelector_Item(const String& option,
 
 void addSelector_Foot(bool reloadonchange = false);
 
+void addSelector_OptGroup(const String& label);
+void addSelector_OptGroupFoot();
+
 void addUnit(const __FlashStringHelper *unit);
 void addUnit(const String& unit);
 void addUnit(char unit);
@@ -106,6 +109,7 @@ void addUnit(char unit);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
                            const String & defUoM = EMPTY_STRING);
+int    getUnitOfMeasureIndex(const String& uomName);
 void   addUnitOfMeasureSelector(const String& id,
                                 const uint8_t unitOfMeasure);
 #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE

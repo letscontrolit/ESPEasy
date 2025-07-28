@@ -30,11 +30,11 @@ For the Domoticz controllers the value index (IDX) has to be configured.
 
 For some controllers, like Home Assistant/openHAB, there are extra options available.
 
-* **Group**: represents the group id to combine all values from multiple tasks into a single grouped-device during MQTT AutoDiscovery.
+* **Group**: This represents the group id to combine all values from multiple tasks into a single grouped-device during MQTT AutoDiscovery. Groups, by design, can span multiple ESPEasy devices, if desired, as long as the Task/Valuename combinations are unique. If a group should only combine Tasks from a single ESPEasy unit, the group id should be unique across multiple ESPEasy units. The group description, default *Group <n>*, can be adjusted in Home Assistant.
 
-* **Send derived**: checkbox determines if any configured Derived values should also be sent to the controller (and included in the AutoDiscovery if that's available and enabled).
+* **Send derived**: This checkbox determines if any configured Derived values should also be sent to the controller (and included in the AutoDiscovery if that's available and enabled).
 
-* **Resend MQTT Discovery**: checkbox, when checked, will start a resend of the MQTT Discovery process for this task when Submit is clicked, so any chenged settings can be updated in the MQTT server. This setting is only available if the controller is enabled, the Auto Discovery feature is available and enabled for the controller. This setting is not stored.
+* **Resend MQTT Discovery**: When checked, will start a resend of the MQTT Discovery process for this task after a random delay, when Submit is clicked, so any chenged settings can be updated in the MQTT server. This setting is only available if the controller is enabled, the Auto Discovery feature is available and enabled for the controller. This setting is not stored.
 
 Other controllers, like FHEM HTTP, do not support additional settings besides the checkbox to enable sending the data.
 

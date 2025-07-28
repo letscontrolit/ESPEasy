@@ -179,7 +179,7 @@ var AnythingElse = [
   "%ethwifimode%", "%ethconnected%", "%ethduplex%", "%ethspeed%", "%ethstate%", "%ethspeedstate%",
   //Standard Conversions
   "%c_w_dir%", "%c_c2f%", "%c_ms2Bft%", "%c_dew_th%", "%c_alt_pres_sea%", "%c_sea_pres_alt%", "%c_cm2imp%", "%c_isnum%", "%c_mm2imp%",
-  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_ts2date%", "%c_ts2wday%", "%c_random%", "%c_2hex%", "%c_u2ip%", "%c_uname%", "%c_uage%", "%c_ubuild%", "%c_ubuildstr%",
+  "%c_m2day%", "%c_m2dh%", "%c_m2dhm%", "%c_s2dhms%", "%c_ts2date%", "%c_ts2isodate%", "%c_ts2wday%", "%c_random%", "%c_2hex%", "%c_u2ip%", "%c_uname%", "%c_uage%", "%c_ubuild%", "%c_ubuildstr%",
   "%c_uload%", "%c_utype%", "%c_utypestr%", "%c_strf%",
   //Variables
   "var", "int", "str", "length"

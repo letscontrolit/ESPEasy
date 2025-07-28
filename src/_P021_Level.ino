@@ -168,9 +168,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
 
-      success = getDiscoveryVType(event, bitRead(P021_FLAGS, P021_INV_OUTPUT)
-                                          ? Plugin_QueryVType_BinarySensorInv
-                                          : Plugin_QueryVType_BinarySensor, 255, event->Par5);
+      success     = true;
+      event->Par1 = static_cast<int>(bitRead(P021_FLAGS, P021_INV_OUTPUT)
+                    ? Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED
+                    : Sensor_VType::SENSOR_TYPE_SWITCH);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_STRING);
       #  if FEATURE_MQTT_DEVICECLASS
       string = MQTT_binary_deviceClassName(P021_MQTT_DEVICECLASS); // User selected device_cLass/dev_cls value
       #  endif // if FEATURE_MQTT_DEVICECLASS

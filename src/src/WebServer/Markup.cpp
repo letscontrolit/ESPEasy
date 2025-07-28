@@ -465,6 +465,9 @@ String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
   return result.isEmpty() ? defUoM : result;
 }
 
+int getUnitOfMeasureIndex(const String& uomName) {
+  return GetCommandCode(uomName.c_str(), unit_of_measure_list);
+}
 
 void addUnitOfMeasureSelector(const String& id,
                               const uint8_t unitOfMeasure) {

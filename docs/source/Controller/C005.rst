@@ -113,11 +113,16 @@ Supported variables:
 
 * **Keep Alive Time**: The time after which the MQTT broker will disconnect the client if no new data is sent. Range 0..65535 seconds, default 60. Should usually not be set below 15 seconds, to avoid frequent disconnects and reconnects (causing the AutoDiscovery, see below, to be re-sent...).
 
+MQTT - Auto Discovery
+^^^^^^^^^^^^^^^^^^^^^
+
 (AutoDiscovery related settings added 2025/06/28)
 
 * **Enable Auto Discovery**: When checked, the controller will send discovery data for all connected and enabled tasks to the MQTT server on first startup, and when receiving an ``online`` message in the Discovery Trigger Topic, when configured.
 
-* **Discovery Trigger topic**: The discovery can be started by multiple triggers:
+* **Discovery Trigger topic**: Default for Home assistant: ``homeassistant/status``
+
+The discovery can be started by multiple triggers:
 
 1) ESPEasy MQTT Controller start
 2) Home assistant MQTT Broker startup, sending an ``online`` message (see below) in the topic ``homeassistant/status``
@@ -125,7 +130,7 @@ Supported variables:
 
 When Auto Discovery is triggered, it will be started after a random, non-blocking, delay between 1 and 30 seconds to spread the load on the MQTT Broker f.e. after a restart of Home assistant, requesting for a discovery, or after a power failure and many ESPEasy devices starting at nearly the same time.
 
-* **Auto Discovery topic**: The topic that should be used for sending the Discovery data. For Home assistant, this should be set to ``homeassistant/%devclass%/%unique_id%``, the available variables are the same as for the **Controller Publish** settinng, and extended with these:
+* **Auto Discovery topic**: The topic that should be used for sending the Discovery data. For Home assistant, this is pre-filled with ``homeassistant/%devclass%/%unique_id%`` when initially adding the controller. The available variables are the same as for the **Controller Publish** setting, and extended with these:
 
 Extra variables:
 
@@ -135,11 +140,11 @@ Extra variables:
 
 |
 
-* **Config suffix|online message (/config|online)**: When sending the Discovery data, the topic has to end with ``/config``, by default, but this setting can be changed in he Home assistant configuration. If this is changed, it should be set here (including the ``/`` prefix). The default value is ``/config``, and it can not be an empty value.
+* **Config suffix|online message (/config|online)**: Default: Empty, for using the default values. When sending the Discovery data, the topic has to end with ``/config``, by default, but this setting can be changed in the Home assistant configuration. If this is changed, it should be added here (including the ``/`` prefix).
 
-  Similarly, the ``online`` message, sent by Home assistant on startup, can be changed. The value can be configured in this field, separated from the ``/config`` setting by a pipe symbol ``|``. If only the ``online`` message is to be changed and uses the default ``/config`` setting, the pipe symbol still has to be inserted too!
+  Similarly, the ``online`` message, sent by Home assistant on startup to trigger the discovery process, can be changed. The value can be configured in this field, separated from the ``/config`` setting by a pipe symbol ``|``. If only the ``online`` message is to be changed and uses the default ``/config`` suffix, the pipe symbol still has to be inserted too!
 
-* **Retain Discovery**: By default the Discovery data is sent without Retain flag set, but when enabling this option, it will be sent with Retain set.
+* **Retain Discovery**: By default the Discovery data is sent *without* Retain flag set, but when enabling this option, it will be sent with Retain set.
 
 Connection status
 ^^^^^^^^^^^^^^^^^

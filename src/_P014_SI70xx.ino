@@ -80,8 +80,9 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
-      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
-      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
       success     = true;
       break;
     }

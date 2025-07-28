@@ -1,4 +1,5 @@
 #include "../DataTypes/SensorVType.h"
+#include "../Helpers/StringConverter.h"
 
 
 /*********************************************************************************************\
@@ -89,6 +90,13 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType, bool log)
     case Sensor_VType::SENSOR_TYPE_NOX_ONLY:
     case Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED:
     case Sensor_VType::SENSOR_TYPE_WIND_SPEED:
+    case Sensor_VType::SENSOR_TYPE_DURATION:
+    case Sensor_VType::SENSOR_TYPE_DATE:
+    case Sensor_VType::SENSOR_TYPE_TIMESTAMP:
+    case Sensor_VType::SENSOR_TYPE_DATA_RATE:
+    case Sensor_VType::SENSOR_TYPE_DATA_SIZE:
+    case Sensor_VType::SENSOR_TYPE_SOUND_PRESSURE:
+    case Sensor_VType::SENSOR_TYPE_SIGNAL_STRENGTH:
       return 1;
   }
   #ifndef BUILD_NO_DEBUG
@@ -168,6 +176,13 @@ const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_NOX_ONLY:         return F("NOx");
     case Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED:  return F("Switch (inv.)");
     case Sensor_VType::SENSOR_TYPE_WIND_SPEED:       return F("Wind speed");
+    case Sensor_VType::SENSOR_TYPE_DURATION:         return F("Duration");
+    case Sensor_VType::SENSOR_TYPE_DATE:             return F("Date");
+    case Sensor_VType::SENSOR_TYPE_TIMESTAMP:        return F("Timestamp");
+    case Sensor_VType::SENSOR_TYPE_DATA_RATE:        return F("Data rate");
+    case Sensor_VType::SENSOR_TYPE_DATA_SIZE:        return F("Data size");
+    case Sensor_VType::SENSOR_TYPE_SOUND_PRESSURE:   return F("Sound pressure");
+    case Sensor_VType::SENSOR_TYPE_SIGNAL_STRENGTH:  return F("Signal strength");
     #else // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
     case Sensor_VType::SENSOR_TYPE_ANALOG_ONLY:
     case Sensor_VType::SENSOR_TYPE_TEMP_ONLY:
@@ -201,11 +216,107 @@ const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
     case Sensor_VType::SENSOR_TYPE_NOX_ONLY:
     case Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED:
     case Sensor_VType::SENSOR_TYPE_WIND_SPEED:
+    case Sensor_VType::SENSOR_TYPE_DURATION:
+    case Sensor_VType::SENSOR_TYPE_DATE:
+    case Sensor_VType::SENSOR_TYPE_TIMESTAMP:
+    case Sensor_VType::SENSOR_TYPE_DATA_RATE:
+    case Sensor_VType::SENSOR_TYPE_DATA_SIZE:
+    case Sensor_VType::SENSOR_TYPE_SOUND_PRESSURE:
+    case Sensor_VType::SENSOR_TYPE_SIGNAL_STRENGTH:
       break;
     #endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
   }
   return F("");
 }
+
+#if FEATURE_CUSTOM_TASKVAR_VTYPE
+bool isMQTTDiscoverySensorType(Sensor_VType sensorType)
+{
+  switch (sensorType)
+  {
+    case Sensor_VType::SENSOR_TYPE_NONE:
+    case Sensor_VType::SENSOR_TYPE_SINGLE:        // single value sensor, used for Dallas, BH1750, etc
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_INT32_SINGLE:  // 1x int32_t
+    case Sensor_VType::SENSOR_TYPE_UINT64_SINGLE: // 1x uint64_t
+    case Sensor_VType::SENSOR_TYPE_INT64_SINGLE:  // 1x int64_t
+    case Sensor_VType::SENSOR_TYPE_DOUBLE_SINGLE: // 1x ESPEASY_RULES_FLOAT_TYPE
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_ULONG:  // single unsigned LONG value, stored in two floats (rfid tags)
+    case Sensor_VType::SENSOR_TYPE_STRING: // String type data stored in the event->String2
+    case Sensor_VType::SENSOR_TYPE_DUAL:        // 2x float
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_UINT32_DUAL: // 2x uint32_t
+    case Sensor_VType::SENSOR_TYPE_INT32_DUAL:  // 2x int32_t
+    case Sensor_VType::SENSOR_TYPE_UINT64_DUAL: // 2x uint64_t
+    case Sensor_VType::SENSOR_TYPE_INT64_DUAL:  // 2x int64_t
+    case Sensor_VType::SENSOR_TYPE_DOUBLE_DUAL: // 2x ESPEASY_RULES_FLOAT_TYPE
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_TRIPLE:          // 3x float
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_UINT32_TRIPLE:   // 3x uint32_t
+    case Sensor_VType::SENSOR_TYPE_INT32_TRIPLE:    // 3x int32_t
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_QUAD:        // 4x float
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_UINT32_QUAD: // 4x uint32_t
+    case Sensor_VType::SENSOR_TYPE_INT32_QUAD:  // 4x int32_t
+#endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    case Sensor_VType::SENSOR_TYPE_NOT_SET:
+    case Sensor_VType::SENSOR_TYPE_ANALOG_ONLY: // TODO Implement discovery
+    case Sensor_VType::SENSOR_TYPE_DIMMER:      // TODO Implement discovery
+    case Sensor_VType::SENSOR_TYPE_GPS_ONLY:    // TODO Implement discovery
+      break;
+
+    // All value types that are used in MQTT AutoDiscovery
+    case Sensor_VType::SENSOR_TYPE_SWITCH:
+    case Sensor_VType::SENSOR_TYPE_TEMP_HUM:
+    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
+    case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:
+    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO: // Values 1 and 3 will contain data.
+    case Sensor_VType::SENSOR_TYPE_WIND:
+    case Sensor_VType::SENSOR_TYPE_TEMP_ONLY:
+    case Sensor_VType::SENSOR_TYPE_HUM_ONLY:
+    case Sensor_VType::SENSOR_TYPE_LUX_ONLY:
+    case Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY:
+    case Sensor_VType::SENSOR_TYPE_DIRECTION_ONLY:
+    case Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY:
+    case Sensor_VType::SENSOR_TYPE_DUSTPM1_0_ONLY:
+    case Sensor_VType::SENSOR_TYPE_DUSTPM10_ONLY:
+    case Sensor_VType::SENSOR_TYPE_MOISTURE_ONLY:
+    case Sensor_VType::SENSOR_TYPE_CO2_ONLY:
+    case Sensor_VType::SENSOR_TYPE_UV_ONLY:
+    case Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY:
+    case Sensor_VType::SENSOR_TYPE_IR_ONLY:
+    case Sensor_VType::SENSOR_TYPE_WEIGHT_ONLY:
+    case Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY:
+    case Sensor_VType::SENSOR_TYPE_CURRENT_ONLY:
+    case Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY:
+    case Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY:
+    case Sensor_VType::SENSOR_TYPE_APPRNT_POWER_USG_ONLY:
+    case Sensor_VType::SENSOR_TYPE_TVOC_ONLY:
+    case Sensor_VType::SENSOR_TYPE_BARO_ONLY:
+    case Sensor_VType::SENSOR_TYPE_COLOR_RED_ONLY:
+    case Sensor_VType::SENSOR_TYPE_COLOR_GREEN_ONLY:
+    case Sensor_VType::SENSOR_TYPE_COLOR_BLUE_ONLY:
+    case Sensor_VType::SENSOR_TYPE_COLOR_TEMP_ONLY:
+    case Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY:
+    case Sensor_VType::SENSOR_TYPE_AQI_ONLY:
+    case Sensor_VType::SENSOR_TYPE_NOX_ONLY:
+    case Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED:
+    case Sensor_VType::SENSOR_TYPE_WIND_SPEED:
+    case Sensor_VType::SENSOR_TYPE_DURATION:
+    case Sensor_VType::SENSOR_TYPE_DATE:
+    case Sensor_VType::SENSOR_TYPE_TIMESTAMP:
+    case Sensor_VType::SENSOR_TYPE_DATA_RATE:
+    case Sensor_VType::SENSOR_TYPE_DATA_SIZE:
+    case Sensor_VType::SENSOR_TYPE_SOUND_PRESSURE:
+    case Sensor_VType::SENSOR_TYPE_SIGNAL_STRENGTH:
+      return true;
+  }
+  return false;
+}
+#endif // FEATURE_CUSTOM_TASKVAR_VTYPE
 
 bool isSimpleOutputDataType(Sensor_VType sensorType)
 {
@@ -291,3 +402,73 @@ bool is32bitOutputDataType(Sensor_VType sensorType)
 #endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
   return true;
 }
+
+# if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+const char mqtt_valueType_ha_deviceclass_names[] PROGMEM = // !! Offset, starting from Sensor_VType::SENSOR_TYPE_ANALOG_ONLY !!
+  "|temperature|humidity|illuminance|distance|wind_direction|" // ANALOG_ONLY .. DIRECTION_ONLY
+  "pm25|pm1|pm10|mdi:cup-water|carbon_dioxide||" // DUSTPM2_5_ONLY .. GPS_ONLY
+  "irradiance|irradiance|irradiance|mdi:scale|" // UV_ONLY .. WEIGHT_ONLY
+  "voltage|current|power|power_factor|power|" // VOLTAGE_ONLY .. APPRNT_POWER_USG_ONLY
+  "volatile_organic_compounds|pressure|mdi:palette|mdi:palette|mdi:palette|" // TVOC_ONLY .. COLOR_BLUE_ONLY
+  "mdi:temperature-kelvin|power|aqi|nitrogen_dioxide|" // COLOR_TEMP_ONLY .. NOX_ONLY
+  "|wind_speed|duration|date|" // SWITCH_INVERTED .. DATE
+  "timestamp|data_rate|data_size|sound_pressure|signal_strength|datetime|" // TIMESTAMP .. DATETIME
+  ;
+
+/**
+ * getValueType2HADeviceClass: Convert the ValueType to a HA Device Class
+ */
+String getValueType2HADeviceClass(Sensor_VType sensorType) {
+  char tmp[27]{};                                                   // length: volatile_organic_compounds + \0
+  int devClassIndex = static_cast<int>(sensorType);
+  if (sensorType >= Sensor_VType::SENSOR_TYPE_ANALOG_ONLY) {
+    devClassIndex -= static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY); // Subtract offset
+  // } else if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+  //   return F("");
+  } else if (sensorType == Sensor_VType::SENSOR_TYPE_WIND) {
+    return F("wind_speed");
+  // } else if (sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) {
+  //   return EMPTY_STRING;
+  } else {
+    return EMPTY_STRING;
+  }
+
+  String result(GetTextIndexed(tmp, sizeof(tmp), devClassIndex, mqtt_valueType_ha_deviceclass_names));
+
+  return result;
+}
+
+const char mqtt_valueType_default_ha_uom_names[] PROGMEM = // !! Offset, starting from Sensor_VType::SENSOR_TYPE_ANALOG_ONLY !!
+  "|°C|%|lx|cm|°|" // ANALOG_ONLY .. DIRECTION_ONLY
+  "µg/m³|µg/m³|µg/m³|%|ppm||" // DUSTPM2_5_ONLY .. GPS_ONLY
+  "W/m²|UV Index|W/m²|kg|" // UV_ONLY .. WEIGHT_ONLY
+  "V|A|kWh|Cos φ|VA|" // VOLTAGE_ONLY .. APPRNT_POWER_USG_ONLY
+  "ppd|hPa|lx|lx|lx|" // TVOC_ONLY .. COLOR_BLUE_ONLY
+  "K|var||µg/m³|" // COLOR_TEMP_ONLY .. NOX_ONLY
+  "|m/s|min||" // SWITCH_INVERTED .. DATE
+  "|bit/s|B|dB|dBm||" // TIMESTAMP .. DATETIME
+  ;
+
+/**
+ * getValueType2DefaultHAUoM: Convert the Value Type to a default UoM for HA AutoDiscovery
+ */
+String getValueType2DefaultHAUoM(Sensor_VType sensorType) {
+  char tmp[9]{};                                                   // length: UV Index + \0
+  int devClassIndex = static_cast<int>(sensorType);
+  if (sensorType >= Sensor_VType::SENSOR_TYPE_ANALOG_ONLY) {
+    devClassIndex -= static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY); // Subtract offset
+  // } else if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {
+  //   return EMPTY_STRING;
+  } else if (sensorType == Sensor_VType::SENSOR_TYPE_WIND) {
+    return F("m/s");
+  // } else if (sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) {
+  //   return F("");
+  } else {
+    return EMPTY_STRING;
+  }
+
+  String result(GetTextIndexed(tmp, sizeof(tmp), devClassIndex, mqtt_valueType_default_ha_uom_names));
+
+  return result;
+}
+# endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER

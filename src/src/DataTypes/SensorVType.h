@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+# define Sensor_VType_CAN_SET 0x0100 // 8 bits of Sensor_VType and the 9th bit to enable /set
+
 enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_NONE            =    0,
   SENSOR_TYPE_SINGLE          =    1,
@@ -66,6 +68,13 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_NOX_ONLY        = 129,
   SENSOR_TYPE_SWITCH_INVERTED = 130,
   SENSOR_TYPE_WIND_SPEED      = 131,
+  SENSOR_TYPE_DURATION        = 132,
+  SENSOR_TYPE_DATE            = 133,
+  SENSOR_TYPE_TIMESTAMP       = 134,
+  SENSOR_TYPE_DATA_RATE       = 135,
+  SENSOR_TYPE_DATA_SIZE       = 136,
+  SENSOR_TYPE_SOUND_PRESSURE  = 137,
+  SENSOR_TYPE_SIGNAL_STRENGTH = 138,
 
   SENSOR_TYPE_NOT_SET = 255
 };
@@ -108,7 +117,14 @@ bool isIntegerOutputDataType(Sensor_VType sensorType);
 
 bool is32bitOutputDataType(Sensor_VType sensorType);
 
+# if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+String getValueType2HADeviceClass(Sensor_VType sensorType);
+String getValueType2DefaultHAUoM(Sensor_VType sensorType);
+# endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
 
+#if FEATURE_CUSTOM_TASKVAR_VTYPE
+bool isMQTTDiscoverySensorType(Sensor_VType sensorType);
+#endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
 
 #endif
