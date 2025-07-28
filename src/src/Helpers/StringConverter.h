@@ -484,7 +484,7 @@ void parseStandardConversions(String& s,
                               bool useURLencode);
 
 #if FEATURE_STRING_VARIABLES
-String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm);
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm, bool iso_format);
 String get_weekday_from_timestamp(time_t unix_timestamp);
 #endif // if FEATURE_STRING_VARIABLES
 

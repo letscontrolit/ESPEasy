@@ -479,6 +479,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             #  if FEATURE_MQTT_DISCOVER
 
             if (proto.mqttAutoDiscover) {
+              addTableSeparator(F("MQTT - Auto Discovery"), 2, 3);
+
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_OPTION);
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TRIGGER);
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TOPIC);

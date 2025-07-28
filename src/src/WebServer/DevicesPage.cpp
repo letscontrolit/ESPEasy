@@ -400,7 +400,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr));
     # if FEATURE_MQTT_DISCOVER
     
-    if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr))) {
+    if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr)) &&
+        Settings.TaskDeviceSendData[controllerNr][taskIndex]) {
       discoverController = controllerNr;
     }
     # endif // if FEATURE_MQTT_DISCOVER
@@ -1589,8 +1590,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                                         (Settings.Protocol[controllerNr] != 0);
         # if FEATURE_MQTT_DISCOVER
         const bool showMqttGroup = (validProtocolIndex(ProtocolIndex) &&
-                                    getProtocolStruct(ProtocolIndex).mqttAutoDiscover &&
-                                    Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+                                    getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
         # endif // if FEATURE_MQTT_DISCOVER
         # if FEATURE_STRING_VARIABLES
         const bool allowSendDerived = (validProtocolIndex(ProtocolIndex) &&
@@ -1815,7 +1815,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       #if FEATURE_CUSTOM_TASKVAR_VTYPE
       if (device.CustomVTypeVar) {
         html_TD();
-        sensorTypeHelper_Selector(
+        sensorTypeCategoriesHelper_Selector(
           getPluginCustomArgName(F("TDTV"), varNr),
           singleOptions.size(),
           &singleOptions[0],

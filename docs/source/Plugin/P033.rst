@@ -71,6 +71,21 @@ For example "Temp / Hum / Baro" are obviously intended to mimic the well known B
 
 Basic data types like "Single", "Dual", "Triple", "Quad" are intended to set resp. 1 ... 4 ``float`` values.
 
+This selector is using a categorized display when the build includes this enhanced selector (ESP32 only):
+
+.. image:: P033_OutputDataTypeOptions.png
+
+Available options, grouped per category:
+
+**Basic**: ``Single, Dual, Tripple, Quad``
+
+**Environment**: ``Temp¹, Hum¹, Baro¹, Wind¹``
+
+**Other**: ``Switch¹, Dimmer, String, UInt32 (1x), UInt32 (2x), UInt32 (3x), UInt32 (4x),`` ``Int32 (1x), Int32 (2x), Int32 (3x), Int32 (4x), UInt64 (1x), UInt64 (2x),`` ``Int64 (1x), Int64 (2x), Double (1x), Double (2x)``
+
+Value Types marked with ``¹`` are supported for use in MQTT AutoDiscovery.
+
+
 Extended Output Data Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
