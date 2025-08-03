@@ -334,12 +334,21 @@ void handle_sysinfo_basicInfo() {
       getCPUload(),
       getLoopCountPerSec()));
   }
+
+  static const LabelType::Enum labels[] PROGMEM =
+  {
 #if FEATURE_INTERNAL_TEMPERATURE
-  addRowLabelValue(LabelType::INTERNAL_TEMPERATURE);
+    LabelType::INTERNAL_TEMPERATURE,
 #endif
 
-  addRowLabelValue(LabelType::CPU_ECO_MODE);
+    LabelType::CPU_ECO_MODE,
 
+    LabelType::RESET_REASON,
+    LabelType::LAST_TASK_BEFORE_REBOOT,
+    LabelType::SW_WD_COUNT,
+    LabelType::MAX_LABEL
+  };
+  addRowLabelValues(labels);
 
   addRowLabel(F("Boot"));
   {
@@ -347,9 +356,6 @@ void handle_sysinfo_basicInfo() {
     addHtml(strformat(
       F(" (%d)"), static_cast<uint32_t>(RTC.bootCounter)));
   }
-  addRowLabelValue(LabelType::RESET_REASON);
-  addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
-  addRowLabelValue(LabelType::SW_WD_COUNT);
 }
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL
@@ -408,9 +414,14 @@ void handle_sysinfo_memory() {
 
   addRowLabelValue(LabelType::PSRAM_SIZE);
   if (UsePSRAM()) {
-    addRowLabelValue(LabelType::PSRAM_FREE);
-    addRowLabelValue(LabelType::PSRAM_MIN_FREE);
-    addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
+    static const LabelType::Enum labels[] PROGMEM =
+    {
+      LabelType::PSRAM_FREE,
+      LabelType::PSRAM_MIN_FREE,
+      LabelType::PSRAM_MAX_FREE_BLOCK,
+      LabelType::MAX_LABEL
+    };
+    addRowLabelValues(labels);
   } 
 # endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 }
@@ -665,22 +676,30 @@ void handle_sysinfo_ESP_Board() {
     chipID, 
     formatToHex(chipID, 6).c_str()));
 
-  addRowLabelValue(LabelType::ESP_CHIP_FREQ);
+  static const LabelType::Enum labels[] PROGMEM =
+  {
+  LabelType::ESP_CHIP_FREQ,
 #   ifdef ESP32
-  addRowLabelValue(LabelType::ESP_CHIP_XTAL_FREQ);
-  addRowLabelValue(LabelType::ESP_CHIP_APB_FREQ);
+  LabelType::ESP_CHIP_XTAL_FREQ,
+  LabelType::ESP_CHIP_APB_FREQ,
 #   endif // ifdef ESP32
 
-  addRowLabelValue(LabelType::ESP_CHIP_MODEL);
+    LabelType::ESP_CHIP_MODEL,
 #   if defined(ESP32)
+    LabelType::ESP_CHIP_REVISION,
+#   endif // if defined(ESP32)
+    LabelType::ESP_CHIP_CORES,
+    LabelType::BOARD_NAME,
+    LabelType::MAX_LABEL
+  };
 
+  addRowLabelValues(labels);
+
+
+#if defined(ESP32)
   addRowLabel(F("ESP Chip Features"));
   addHtml(getChipFeaturesString());
-  
-  addRowLabelValue(LabelType::ESP_CHIP_REVISION);
-#   endif // if defined(ESP32)
-  addRowLabelValue(LabelType::ESP_CHIP_CORES);
-  addRowLabelValue(LabelType::BOARD_NAME);
+#endif
 }
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL

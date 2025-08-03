@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-08-17 tonhuisman: Show correct I2C address when non-default address is used (by setting a Port nr. 0..15)
  * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2023-11-23 tonhuisman: Add Changelog
@@ -55,6 +56,14 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = event->Par1 == (0x5a + CONFIG_PORT);
@@ -81,7 +90,8 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         (0x06)
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-      addFormSelector(F("Option"), F("option"), optionCount, options, optionValues, PCONFIG(0));
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Option"), F("option"),  PCONFIG(0));
 
       success = true;
       break;

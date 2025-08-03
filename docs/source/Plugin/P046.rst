@@ -148,10 +148,8 @@ Sensor
 .. warning:: You must not have more than 1 main plugin function active! It will not work
    properly if you have more.
 
-Data acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
-* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
 
 Indicators (recommended settings)

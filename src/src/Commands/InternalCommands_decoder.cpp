@@ -99,6 +99,9 @@ const char Internal_commands_fghij[] PROGMEM =
 #define Int_cmd_l_offset ESPEasy_cmd_e::let
 const char Internal_commands_l[] PROGMEM =
   "let|"
+  #if FEATURE_STRING_VARIABLES
+  "letstr|"
+  #endif
   "load|"
   "logentry|"
   "looptimerset|"
@@ -217,6 +220,7 @@ const char Internal_commands_s[] PROGMEM =
   "sendtohttp|"
 #endif // FEATURE_SEND_TO_HTTP
   "sendtoudp|"
+  "sendtoudpmix|"
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   "serialfloat|"
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -243,6 +247,10 @@ const char Internal_commands_t[] PROGMEM =
   "taskrun|"
   "taskrunat|"
   "taskvalueset|"
+  #if FEATURE_STRING_VARIABLES
+  "taskvaluesetderived|"
+  "taskvaluesetpresentation|"
+  #endif // if FEATURE_STRING_VARIABLES
   "taskvaluetoggle|"
   "taskvaluesetandrun|"
   "timerpause|"

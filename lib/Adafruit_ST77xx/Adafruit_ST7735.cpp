@@ -190,6 +190,22 @@ static const uint8_t PROGMEM
     ST77XX_RASET,   4,              //  2: Row addr set, 4 args, no delay:
       0x00, 0x00,                   //     XSTART = 0
       240 >> 8, 240 & 0xFF },       //     XEND = 240
+  Rcmd2black172x320[] = {            // 7735R init, part 2 (mini 172x320)
+    2,                              //  2 commands in list:
+    ST77XX_CASET,   4,              //  1: Column addr set, 4 args, no delay:
+      0x00, 0x00,                   //     XSTART = 0
+      0x00, 172,                    //     XEND = 172
+    ST77XX_RASET,   4,              //  2: Row addr set, 4 args, no delay:
+      0x00, 0x00,                   //     XSTART = 0
+      320 >> 8, 320 & 0xFF },       //     XEND = 320
+  Rcmd2black170x320[] = {            // 7735R init, part 2 (mini 170x320)
+    2,                              //  2 commands in list:
+    ST77XX_CASET,   4,              //  1: Column addr set, 4 args, no delay:
+      0x00, 0x00,                   //     XSTART = 0
+      0x00, 170,                    //     XEND = 170
+    ST77XX_RASET,   4,              //  2: Row addr set, 4 args, no delay:
+      0x00, 0x00,                   //     XSTART = 0
+      320 >> 8, 320 & 0xFF },       //     XEND = 320
   #endif // if ST7735_EXTRA_INIT
 
   Rcmd3[] = {                       // 7735R init, part 3 (red or green tab)
@@ -262,6 +278,20 @@ void Adafruit_ST7735::initR(uint8_t options) {
     const uint8_t data = 0x00;
     sendCommand(ST77XX_INVON, &data, 0);
     sendCommand(ST77XX_INVON, &data, 0); // Write twice...
+  } else if (options == INITR_BLACKTAB172x320) {
+    _height = ST7735_TFTHEIGHT_320;
+    _width = ST7735_TFTWIDTH_172;
+    displayInit(Rcmd2black172x320);
+    const uint8_t data = 0x00;
+    sendCommand(ST77XX_INVON, &data, 0);
+    sendCommand(ST77XX_INVON, &data, 0); // Write twice...
+  } else if (options == INITR_BLACKTAB170x320) {
+    _height = ST7735_TFTHEIGHT_320;
+    _width = ST7735_TFTWIDTH_170;
+    displayInit(Rcmd2black170x320);
+    const uint8_t data = 0x00;
+    sendCommand(ST77XX_INVON, &data, 0);
+    sendCommand(ST77XX_INVON, &data, 0); // Write twice...
   #endif // if ST7735_EXTRA_INIT
   } else {
     // colstart, rowstart left at default '0' values
@@ -309,7 +339,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     if ((tabcolor == INITR_BLACKTAB) || (tabcolor == INITR_MINI160x80)) {
       madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
     #if ST7735_EXTRA_INIT
-    } else if (tabcolor == INITR_BLACKTAB135x240) {
+    } else if ((tabcolor == INITR_BLACKTAB135x240) || (tabcolor == INITR_BLACKTAB172x320) || (tabcolor == INITR_BLACKTAB170x320)) {
       madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
     #endif // if ST7735_EXTRA_INIT
     } else {
@@ -328,6 +358,16 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
       _width = ST7735_TFTWIDTH_135;
       _colstart = 53;
       _rowstart = 40;
+    } else if (tabcolor == INITR_BLACKTAB172x320) {
+      _height = ST7735_TFTHEIGHT_320;
+      _width = ST7735_TFTWIDTH_172;
+      _colstart = 34;
+      _rowstart = 1;
+    } else if (tabcolor == INITR_BLACKTAB170x320) {
+      _height = ST7735_TFTHEIGHT_320;
+      _width = ST7735_TFTWIDTH_170;
+      _colstart = 35;
+      _rowstart = 0;
     #endif // if ST7735_EXTRA_INIT
     } else {
       _height = ST7735_TFTHEIGHT_160;
@@ -340,7 +380,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     if ((tabcolor == INITR_BLACKTAB) || (tabcolor == INITR_MINI160x80)) {
       madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
     #if ST7735_EXTRA_INIT
-    } else if (tabcolor == INITR_BLACKTAB135x240) {
+    } else if ((tabcolor == INITR_BLACKTAB135x240) || (tabcolor == INITR_BLACKTAB172x320) || (tabcolor == INITR_BLACKTAB170x320)) {
       madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
     #endif // if ST7735_EXTRA_INIT
     } else {
@@ -359,6 +399,16 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
       _height = ST7735_TFTWIDTH_135;
       _colstart = 52;
       _rowstart = 40;
+    } else if (tabcolor == INITR_BLACKTAB172x320) {
+      _width = ST7735_TFTHEIGHT_320;
+      _height = ST7735_TFTWIDTH_172;
+      _colstart = 34;
+      _rowstart = 1;
+    } else if (tabcolor == INITR_BLACKTAB170x320) {
+      _width = ST7735_TFTHEIGHT_320;
+      _height = ST7735_TFTWIDTH_170;
+      _colstart = 35;
+      _rowstart = 0;
     #endif // if ST7735_EXTRA_INIT
     } else {
       _width = ST7735_TFTHEIGHT_160;
@@ -371,7 +421,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     if ((tabcolor == INITR_BLACKTAB) || (tabcolor == INITR_MINI160x80)) {
       madctl = ST77XX_MADCTL_RGB;
     #if ST7735_EXTRA_INIT
-    } else if (tabcolor == INITR_BLACKTAB135x240) {
+    } else if ((tabcolor == INITR_BLACKTAB135x240) || (tabcolor == INITR_BLACKTAB172x320) || (tabcolor == INITR_BLACKTAB170x320)) {
       madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
     #endif // if ST7735_EXTRA_INIT
     } else {
@@ -390,6 +440,16 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
       _width = ST7735_TFTWIDTH_135;
       _colstart = 52;
       _rowstart = 40;
+    } else if (tabcolor == INITR_BLACKTAB172x320) {
+      _height = ST7735_TFTHEIGHT_320;
+      _width = ST7735_TFTWIDTH_172;
+      _colstart = 34;
+      _rowstart = 1;
+    } else if (tabcolor == INITR_BLACKTAB170x320) {
+      _height = ST7735_TFTHEIGHT_320;
+      _width = ST7735_TFTWIDTH_170;
+      _colstart = 35;
+      _rowstart = 0;
     #endif // if ST7735_EXTRA_INIT
     } else {
       _height = ST7735_TFTHEIGHT_160;
@@ -402,7 +462,7 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
     if ((tabcolor == INITR_BLACKTAB) || (tabcolor == INITR_MINI160x80)) {
       madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
     #if ST7735_EXTRA_INIT
-    } else if (tabcolor == INITR_BLACKTAB135x240) {
+    } else if ((tabcolor == INITR_BLACKTAB135x240) || (tabcolor == INITR_BLACKTAB172x320) || (tabcolor == INITR_BLACKTAB170x320)) {
       madctl = ST77XX_MADCTL_RGB;
     #endif // if ST7735_EXTRA_INIT
     } else {
@@ -421,6 +481,16 @@ void Adafruit_ST7735::setRotation(uint8_t m) {
       _height = ST7735_TFTWIDTH_135;
       _colstart = 53;
       _rowstart = 40;
+    } else if (tabcolor == INITR_BLACKTAB172x320) {
+      _width = ST7735_TFTHEIGHT_320;
+      _height = ST7735_TFTWIDTH_172;
+      _colstart = 34;
+      _rowstart = 1;
+    } else if (tabcolor == INITR_BLACKTAB170x320) {
+      _width = ST7735_TFTHEIGHT_320;
+      _height = ST7735_TFTWIDTH_170;
+      _colstart = 35;
+      _rowstart = 0;
     #endif // if ST7735_EXTRA_INIT
     } else {
       _width = ST7735_TFTHEIGHT_160;

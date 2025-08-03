@@ -42,6 +42,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_I2C_SCANNER
         #define WEBSERVER_I2C_SCANNER
     #endif
+    #ifndef WEBSERVER_CSVVAL
+      #define WEBSERVER_CSVVAL
+    #endif
     #ifndef WEBSERVER_FAVICON
         #define WEBSERVER_FAVICON
     #endif
@@ -55,7 +58,9 @@ To create/register a plugin, you have to :
         #define WEBSERVER_LOG
     #endif
     #ifndef WEBSERVER_GITHUB_COPY
-        #define WEBSERVER_GITHUB_COPY
+        #ifndef USE_SECOND_HEAP
+          #define WEBSERVER_GITHUB_COPY
+        #endif
     #endif
     #ifndef WEBSERVER_ROOT
         #define WEBSERVER_ROOT
@@ -509,7 +514,7 @@ To create/register a plugin, you have to :
         #define USES_P001   // switch
     #endif
     #ifndef USES_P026
-      #define USES_P026   // SysInfo
+//      #define USES_P026   // SysInfo
     #endif
     #ifndef USES_P033
       #define USES_P033   // Dummy
@@ -550,6 +555,12 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_I2C_SCANNER
             #undef WEBSERVER_I2C_SCANNER
+        #endif
+        #ifdef WEBSERVER_CSVVAL
+            #undef WEBSERVER_CSVVAL
+        #endif
+        #ifdef WEBSERVER_METRICS
+          #undef WEBSERVER_METRICS
         #endif
         #ifdef WEBSERVER_FAVICON
             #undef WEBSERVER_FAVICON
@@ -1539,13 +1550,21 @@ To create/register a plugin, you have to :
     #if !defined(USES_P095) && defined(ESP32) && !defined(PLUGIN_BUILD_IR_EXTENDED)
       #define USES_P095   // TFT ILI9xxx
     #endif
-    #if !defined(USES_P137) && defined(ESP32)
-      #define USES_P137   // AXP192
+    #if !defined(PLUGIN_BUILD_NORMAL_IRext)
+      // IRext builds do need quite a lot of build space
+      // Also it is quite unlikely those are running from a battery powered unit
+      // which are the boards that need these power management ICs ("PMIC")
+      #if !defined(USES_P137) && defined(ESP32)
+        #define USES_P137   // AXP192
+      #endif
+      #if !defined(USES_P138) && defined(ESP32)
+        #define USES_P138   // IP5306
+      #endif
+      #if !defined(USES_P139) && defined(ESP32)
+        #define USES_P139   // AXP2101
+      #endif
     #endif
-  #if !defined(USES_P138) && defined(ESP32)
-    #define USES_P138   // IP5306
-  #endif
-#endif // ifdef PLUGIN_SET_COLLECTION
+#endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
 
@@ -1691,6 +1710,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P173) && defined(ESP32)
     #define USES_P173   // Environment - SHTC3
   #endif
+  #if !defined(USES_P177) && defined(ESP32)
+    #define USES_P177   // Environment - I2C XDB401 pressure
+  #endif
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
@@ -1750,6 +1772,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
   #endif
    #if !defined(USES_P148) && defined(ESP32)
      #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
@@ -1850,6 +1875,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
@@ -1979,6 +2007,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P135
     #define USES_P135 // SCD4x
   #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
   #ifndef USES_P144
     #define USES_P144   // Dust - PM1006(K) (Vindriktning)
   #endif
@@ -2025,6 +2059,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P175) && defined(ESP32)
     #define USES_P175   // Dust - PMSx003i I2C
   #endif
+  #if !defined(USES_P177) && defined(ESP32)
+    #define USES_P177   // Environment - I2C XDB401 pressure
+  #endif
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
@@ -2070,6 +2107,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
   #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
@@ -2256,6 +2296,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_MQTT_TLS
     #define FEATURE_MQTT_TLS 1
   #endif
+  #ifndef FEATURE_MQTT_DISCOVER
+    #define FEATURE_MQTT_DISCOVER 1
+  #endif
   #ifndef FEATURE_EMAIL_TLS
     #define FEATURE_EMAIL_TLS 1
   #endif
@@ -2418,10 +2461,10 @@ To create/register a plugin, you have to :
     #define USES_P138   // IP5306
   #endif
   #ifndef USES_P139
-//    #define USES_P139   //
+    #define USES_P139   // AXP2101
   #endif
   #ifndef USES_P140
-//    #define USES_P140   //
+    #define USES_P140   // CardKB
   #endif
   #ifndef USES_P141
     #define USES_P141   // PCD8544 Nokia 5110
@@ -2505,6 +2548,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P175
     #define USES_P175   // Dust - PMSx003i I2C
   #endif
+  #ifndef USES_P177
+    #define USES_P177   // Environment - I2C XDB401 pressure
+  #endif
   #ifndef USES_P178
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
@@ -2552,6 +2598,12 @@ To create/register a plugin, you have to :
 
 #endif
 
+#if !defined(USES_P140) && defined(ESP32) && !defined(UN_USES_P140) // Enabled for all ESP32, so we need a way to un-use
+  #define USES_P140
+#endif
+#if defined(UN_USES_P140) && defined(USES_P140)
+  #undef USES_P140
+#endif
 
 /******************************************************************************\
  * Libraries dependencies *****************************************************
@@ -3064,6 +3116,33 @@ To create/register a plugin, you have to :
 #endif
   
 
+#if !defined(FEATURE_MQTT_DISCOVER) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DISCOVER 0
+  #else
+    #define FEATURE_MQTT_DISCOVER 1
+  #endif
+#endif
+#if !defined(FEATURE_MQTT_DEVICECLASS) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DEVICECLASS 0
+  #else
+    #define FEATURE_MQTT_DEVICECLASS 1
+  #endif
+#endif
+#if !FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+  #undef FEATURE_MQTT_DEVICECLASS
+  #define FEATURE_MQTT_DEVICECLASS 0
+#endif
+
+#ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 0
+  #else
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 1
+  #endif
+#endif // ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
+
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
     // Will not fit on ESP8266 along with IR plugins included
@@ -3401,7 +3480,7 @@ To create/register a plugin, you have to :
 #endif // ifndef USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
 
-#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) /*|| defined(USES_Pxxx)*/)
+#if !FEATURE_PLUGIN_PRIORITY && (defined(USES_P137) || defined(USES_P139))
   #undef FEATURE_PLUGIN_PRIORITY
   #define FEATURE_PLUGIN_PRIORITY   1
 #endif
@@ -3489,7 +3568,11 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_TARSTREAM_SUPPORT
-  #define FEATURE_TARSTREAM_SUPPORT   1
+  #ifdef LIMIT_BUILD_SIZE
+    #define FEATURE_TARSTREAM_SUPPORT   0
+  #else
+    #define FEATURE_TARSTREAM_SUPPORT   1
+  #endif
 #endif // FEATURE_TARSTREAM_SUPPORT
 
 // Check for plugins that will use Extended Custom Settings storage when available
@@ -3599,6 +3682,18 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef FEATURE_STRING_VARIABLES
+  #ifdef ESP32
+    #define FEATURE_STRING_VARIABLES  1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_STRING_VARIABLES  0
+  #endif
+#endif // ifndef FEATURE_STRING_VARIABLES
+#if FEATURE_STRING_VARIABLES && defined(ESP8266) // NOT supported on ESP8266 because of limited available memory
+  #undef FEATURE_STRING_VARIABLES
+  #define FEATURE_STRING_VARIABLES  0
+#endif
 
 #if FEATURE_CAN
   #define USES_C022 //CAN
@@ -3607,10 +3702,15 @@ To create/register a plugin, you have to :
 
   
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
+  #ifdef ESP32
+    // Allow to set alternative CDN URL as the default one may not be accessible from all countries
+    #define FEATURE_ALTERNATIVE_CDN_URL 1
+  #else
   #if defined(WEBSERVER_EMBED_CUSTOM_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(EMBED_ESPEASY_DEFAULT_MIN_CSS_USE_GZ)
     #define FEATURE_ALTERNATIVE_CDN_URL 0 // No need to configure custom CDN url when all content is included in build
   #else
     #define FEATURE_ALTERNATIVE_CDN_URL 1
+  #endif
   #endif
 #endif // if !defined(CUSTOM_BUILD_CDN_URL)
 #if defined(FEATURE_ALTERNATIVE_CDN_URL) && FEATURE_ALTERNATIVE_CDN_URL && defined(PLUGIN_BUILD_MINIMAL_OTA)
@@ -3658,14 +3758,73 @@ To create/register a plugin, you have to :
 #define FEATURE_ALTERNATIVE_CDN_URL 1
 */
 
-
-  #ifndef FEATURE_THINGSPEAK_EVENT
-    #ifdef LIMIT_BUILD_SIZE
-      #define FEATURE_THINGSPEAK_EVENT 0
-    #else
-      #define FEATURE_THINGSPEAK_EVENT 1
-    #endif
+#ifndef FEATURE_I2C_MULTIPLE
+  #ifdef ESP8266
+    #define FEATURE_I2C_MULTIPLE  0 // NOT SUPPORTED
+  #endif 
+  #ifdef ESP32
+    #define FEATURE_I2C_MULTIPLE  1
+  #endif 
+#endif
+#if FEATURE_I2C_MULTIPLE
+  #ifndef FEATURE_I2C_INTERFACE_3
+    #define FEATURE_I2C_INTERFACE_3 0 // Not enabled by default
   #endif
+#endif
+#if defined(ESP8266) && FEATURE_I2C_MULTIPLE
+  #undef FEATURE_I2C_MULTIPLE
+  #define FEATURE_I2C_MULTIPLE    0 // NOT SUPPORTED
+#endif
+
+#ifndef FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  #ifdef ESP32
+    #define FEATURE_TASKVALUE_UNIT_OF_MEASURE   1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_TASKVALUE_UNIT_OF_MEASURE   0 // Disabled by default on ESP8266
+  #endif
+#endif
+
+#ifndef FEATURE_TASKVALUE_ATTRIBUTES
+  #ifdef ESP32
+    #define FEATURE_TASKVALUE_ATTRIBUTES  1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_TASKVALUE_ATTRIBUTES  0 // Disabled by default on ESP8266
+  #endif
+#endif // if FEATURE_TASKVALUE_ATTRIBUTES
+
+//-------------------HTTPResponseParser Section----------------
+#ifndef FEATURE_THINGSPEAK_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_THINGSPEAK_EVENT 1
+  #else
+    #define FEATURE_THINGSPEAK_EVENT 0
+  #endif
+#endif
+
+#ifndef FEATURE_OPENMETEO_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_OPENMETEO_EVENT 1
+  #else
+    #define FEATURE_OPENMETEO_EVENT 0
+  #endif
+#endif
+
+#ifndef FEATURE_JSON_EVENT
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_JSON_EVENT 1
+  #else
+    #define FEATURE_JSON_EVENT 0
+  #endif
+#endif
+
+#if FEATURE_THINGSPEAK_EVENT || FEATURE_OPENMETEO_EVENT || FEATURE_JSON_EVENT
+  #define RESPONSE_PARSER_SUPPORT 1
+#else
+  #define RESPONSE_PARSER_SUPPORT 0
+#endif
+//-------------------End of HTTPResponseParser Section----------
 
   #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
     #ifdef USES_P152

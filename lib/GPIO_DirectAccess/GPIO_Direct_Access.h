@@ -108,14 +108,16 @@
 // resolve any problems related to ESP chips.  Please do not contact me and please
 // DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
 // on ESP community forums.
+//
+// See: https://github.com/esp8266/Arduino/blob/587435110f03a3ad53a0cc7144387a353f478521/cores/esp8266/core_esp8266_wiring_digital.cpp#L35
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << (pin))
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
-#define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
-#define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
+#define DIRECT_MODE_INPUT(base, mask)   (GPEC = (mask))             //GPIO_ENABLE_W1TC_ADDRESS
+#define DIRECT_MODE_OUTPUT(base, mask)  (GPES = (mask))             //GPIO_ENABLE_W1TS_ADDRESS
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 
@@ -136,6 +138,10 @@ void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 #else
 #include <soc/gpio_struct.h>
 #include <driver/rtc_io.h>
+#include <esp_idf_version.h>
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+#include <driver/gpio.h>
+#endif
 #endif
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)

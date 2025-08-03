@@ -19,7 +19,9 @@ systemTimerStruct::systemTimerStruct(int recurringCount, unsigned long msecFromN
     // Create a new timer which should be "scheduled" now to clear up any data
     _recurringCount = 0; // Do not reschedule
     _loopCount      = 0; // Do not execute
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"));
+    #endif
   }
 
   if (hasAlternateInterval()) {

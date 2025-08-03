@@ -7,6 +7,10 @@
 // #######################################################################################################
 //
 
+/** Changelog:
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for PZEM00x)
+ */
 
 # include <ESPeasySerial.h>
 # include <PZEM004Tv30.h>
@@ -90,6 +94,14 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_102_QueryVType, P102_QUERY1_CONFIG_POS, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       // Load some defaults
@@ -150,7 +162,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         {
           const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
           constexpr size_t optionCount               = NR_ELEMENTS(options_model);
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
+          const FormSelectorOptions selector(optionCount, options_model);
+          selector.addFormSelector(F("PZEM Mode"), F("PZEM_mode"), P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
@@ -160,8 +173,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
           {
             const __FlashStringHelper *options_confirm[] = { F("NO"), F("YES") };
             constexpr size_t optionCount                 = NR_ELEMENTS(options_confirm);
-            addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), optionCount, options_confirm, nullptr,
-                            P102_PZEM_ADDR_SET);
+            const FormSelectorOptions selector(optionCount, options_confirm);
+            selector.addFormSelector(F("Confirm address programming ?"), F("PZEM_addr_set"), P102_PZEM_ADDR_SET);
           }
           addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
@@ -184,7 +197,8 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
         {
           const __FlashStringHelper *options_model[] = { F("Read_value"), F("Reset_Energy") };
           constexpr size_t optionCount               = NR_ELEMENTS(options_model);
-          addFormSelector(F("PZEM Mode"), F("PZEM_mode"), optionCount, options_model, nullptr, P102_PZEM_mode);
+          const FormSelectorOptions selector(optionCount, options_model);
+          selector.addFormSelector(F("PZEM Mode"), F("PZEM_mode"), P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("PZEM_addr"), P102_PZEM_ADDR, 1, 247);
@@ -381,5 +395,23 @@ const __FlashStringHelper* p102_getQueryString(uint8_t query) {
   }
   return F("");
 }
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_102_QueryVType(uint8_t query) {
+  Sensor_VType result = Sensor_VType::SENSOR_TYPE_NONE;
+
+  switch (query)
+  {
+    case 0: result = Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY; break;
+    case 1: result = Sensor_VType::SENSOR_TYPE_CURRENT_ONLY; break;
+    case 2: result = Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY; break;
+    case 3: result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME
+    case 4: result = Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY; break;
+    case 5: result = Sensor_VType::SENSOR_TYPE_NONE; break;
+  }
+  return static_cast<int>(result);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 #endif // USES_P102

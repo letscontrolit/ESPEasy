@@ -42,7 +42,8 @@ bool safeReadStringUntil(Stream     & input,
   const unsigned long timer           = start + timeout;
   unsigned long backgroundtasks_timer = start + 10;
 
-  str = String();
+  // FIXME TD-er: Should this also de-allocate internal buffer?
+  str.clear();
 
   do {
     // read character

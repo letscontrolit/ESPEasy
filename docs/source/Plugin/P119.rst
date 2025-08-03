@@ -60,10 +60,7 @@ The available options:
 * *10x per second* The default setting, can be used if the movement of the module is slow or medium fast.
 * *50x per second* Can be used if the movement of the module is fast, or a high update interval is needed, then the smoothing of the results can be enhanced by increasing the **Averaging buffer size**.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 0 sec. It is the frequency used to read the sensor values, averaged by the Averaging buffer, and send these to any Controller(s) configured for this device.
 

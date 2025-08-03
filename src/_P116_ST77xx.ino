@@ -8,6 +8,8 @@
 
 
 // History:
+// 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
+// 2025-02-20 tonhuisman: Add support for ST7735 display with 172x320 resolution
 // 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
 // 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
 //                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
@@ -148,6 +150,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160_M5),
           # if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7735s_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_172x320),
+          ST77xx_type_toString(ST77xx_type_e::ST77xxs_170x320),
           # endif // if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
@@ -167,6 +171,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7735s_80x160_M5),
           # if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7735s_135x240),
+          static_cast<int>(ST77xx_type_e::ST7735s_172x320),
+          static_cast<int>(ST77xx_type_e::ST77xxs_170x320),
           # endif // if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
@@ -180,11 +186,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
         constexpr int optCount4 = NR_ELEMENTS(optionValues4);
-        addFormSelector(F("TFT display model"),
+        const FormSelectorOptions selector(optCount4, options4, optionValues4);
+        selector.addFormSelector(F("TFT display model"),
                         F("type"),
-                        optCount4,
-                        options4,
-                        optionValues4,
                         P116_CONFIG_FLAG_GET_TYPE);
       }
 
@@ -218,12 +222,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7796)
         };
         constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
-        addFormSelector(F("Write Command trigger"),
-                        F("commandtrigger"),
-                        cmdCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P116_CONFIG_FLAG_GET_CMD_TRIGGER);
+        FormSelectorOptions selector(cmdCount, commandTriggers, commandTriggerOptions);
+        selector.default_index = 1;
+        selector.addFormSelector(
+          F("Write Command trigger"),
+          F("commandtrigger"),
+          P116_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -255,6 +259,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
           remain -= (strings[varNr].length() + 1);
         }
+        addUnit(concat(F("Remaining: "), remain));
       }
 
       success = true;

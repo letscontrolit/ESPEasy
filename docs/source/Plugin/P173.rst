@@ -47,10 +47,7 @@ Device Settings
 
 * **Read in Low-power mode**: When enabled will use the Low-power version of the command to read the data, for improved battery-life when used in a bettery-powerd setup.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

@@ -63,6 +63,19 @@
 .. |P176_compileinfo| replace:: `.`
 .. |P176_usedlibraries| replace:: `.`
 
+.. |P177_name| replace:: :cyan:`XDB401 I2C Pressure`
+.. |P177_type| replace:: :cyan:`Environment`
+.. |P177_typename| replace:: :cyan:`Environment - XDB401 I2C Pressure`
+.. |P177_porttype| replace:: `.`
+.. |P177_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P177_github| replace:: P177_XDB_pressure.ino
+.. _P177_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P177_XDB_pressure.ino
+.. |P177_usedby| replace:: `.`
+.. |P177_shortinfo| replace:: `XDB401 I2C Pressure and Temperature sensor`
+.. |P177_maintainer| replace:: `tonhuisman`
+.. |P177_compileinfo| replace:: `.`
+.. |P177_usedlibraries| replace:: `.`
+
 .. |P178_name| replace:: :cyan:`LU9685 Servo controller`
 .. |P178_type| replace:: :cyan:`Extra IO`
 .. |P178_typename| replace:: :cyan:`Extra IO - LU9685 Servo controller`

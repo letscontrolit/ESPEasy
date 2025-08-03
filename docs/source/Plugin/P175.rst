@@ -246,6 +246,8 @@ In the example setup, a GPIO pin should be connected to the ``SET`` input of the
 
 Unlike the serial connected PMSx003 sensors, no sleep/wake command can be sent to the sensor, so sleep/wake can only be achieved by using the **SET** pin.
 
+.. include:: DataAcquisition.repl
+
 
 Commands available
 ^^^^^^^^^^^^^^^^^^

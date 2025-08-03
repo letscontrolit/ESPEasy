@@ -8,94 +8,41 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
+
+#ifdef ESP32_CLASSIC
+#define ESP32XX "esp32"
+#elif defined(ESP32C2)
+#define ESP32XX "esp32c2"
+#elif defined(ESP32C3)
+#define ESP32XX "esp32c3"
+#elif defined(ESP32C5)
+#define ESP32XX "esp32c5"
+#elif defined(ESP32C6)
+#define ESP32XX "esp32c6"
+#elif defined(ESP32C61)
+#define ESP32XX "esp32c61"
+#elif defined(ESP32H2)
+#define ESP32XX "esp32h2"
+#elif defined(ESP32H21)
+#define ESP32XX "esp32h21"
+#elif defined(ESP32H4)
+#define ESP32XX "esp32h4"
+#elif defined(ESP32S2)
+#define ESP32XX "esp32s2"
+#elif defined(ESP32S3)
+#define ESP32XX "esp32s3"
+#elif defined(ESP32P4)
+#define ESP32XX "esp32p4"
+#endif
+
+
+#if FEATURE_TOOLTIPS
+void addTooltip(const String& tooltip);
+#endif
+
 // ********************************************************************************
 // Add Selector
 // ********************************************************************************
-void addSelector(const __FlashStringHelper *id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange = false,
-                 bool                       enabled = true);
-
-void addSelector(const String             & id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange = false,
-                 bool                       enabled = true);
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 bool          reloadonchange = false,
-                 bool          enabled = true);
-
-
-void addSelector(const String             & id,
-                 int                        optionCount,
-                 const __FlashStringHelper *options[],
-                 const int                  indices[],
-                 const String               attr[],
-                 int                        selectedIndex,
-                 bool                       reloadonchange,
-                 bool                       enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String             & tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 bool          reloadonchange,
-                 bool          enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String& tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-void addSelector_reloadOnChange(
-                 const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex,
-                 const String& onChangeCall,
-                 bool          enabled,
-                 const __FlashStringHelper * classname
-                 #if FEATURE_TOOLTIPS
-                 ,
-                 const String& tooltip = EMPTY_STRING
-                 #endif // if FEATURE_TOOLTIPS
-                 );
-
-
-void addSelector_options(int                        optionCount,
-                         const __FlashStringHelper *options[],
-                         const int                  indices[],
-                         const String               attr[],
-                         int                        selectedIndex);
-void addSelector_options(int          optionCount,
-                         const String options[],
-                         const int    indices[],
-                         const String attr[],
-                         int          selectedIndex);
 
 void addSelector_Head(const String& id);
 
@@ -150,11 +97,22 @@ void addSelector_Item(const String& option,
                       bool       disabled = false,
                       const String& attr     = EMPTY_STRING);
 
-void addSelector_Foot();
+void addSelector_Foot(bool reloadonchange = false);
+
+void addSelector_OptGroup(const String& label);
+void addSelector_OptGroupFoot();
 
 void addUnit(const __FlashStringHelper *unit);
 void addUnit(const String& unit);
 void addUnit(char unit);
+
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
+                           const String & defUoM = EMPTY_STRING);
+int    getUnitOfMeasureIndex(const String& uomName);
+void   addUnitOfMeasureSelector(const String& id,
+                                const uint8_t unitOfMeasure);
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void addRowLabel_tr_id(const __FlashStringHelper *label,
                        const __FlashStringHelper *id);
@@ -269,6 +227,17 @@ void addNumericBox(const String& id,
 void addTextBox(const __FlashStringHelper * id,
                 const String& value,
                 int           maxlength,
+                const __FlashStringHelper * classname);
+
+void addTextBox(const String& id,
+                const String& value,
+                int           maxlength,
+                const __FlashStringHelper * classname);
+
+
+void addTextBox(const __FlashStringHelper * id,
+                const String& value,
+                int           maxlength,
                 bool          readonly = false,
                 bool          required = false,
                 const String& pattern  = EMPTY_STRING);
@@ -342,6 +311,7 @@ void addPinSelect(PinSelectPurpose purpose,
 
 
 #ifdef ESP32
+#if SOC_ADC_SUPPORTED
 enum class AdcPinSelectPurpose {
   TouchOnly,
   ADC_Touch,
@@ -350,12 +320,16 @@ enum class AdcPinSelectPurpose {
 #endif
   ADC_Touch_Optional
 };
+
 void addADC_PinSelect(AdcPinSelectPurpose purpose,
                       const String      & id,
                       int                 choice);
+#endif
+#if SOC_DAC_SUPPORTED
 void addDAC_PinSelect(const String& id,  
                       int           choice);
-#endif // ifdef ESP32
+#endif
 
+#endif // ifdef ESP32
 
 #endif // ifndef WEBSERVER_WEBSERVER_MARKUP_H

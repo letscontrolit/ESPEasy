@@ -63,7 +63,9 @@ void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiKey);
   ZERO_FILL(WifiSSID2);
   ZERO_FILL(WifiKey2);
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_INFO, F("WiFi : Clear WiFi credentials from settings"));
+  #endif
 }
 
 void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) {

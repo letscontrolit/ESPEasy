@@ -64,7 +64,7 @@ const uint8_t MFRC522_firmware_referenceV2_0[] PROGMEM = {
 };
 // Clone
 // Fudan Semiconductor FM17522 (0x88)
-const uint8_t FM17522_firmware_reference[] PROGMEM = {
+const uint8_t FM17522_firmware_reference88[] PROGMEM = {
 	0x00, 0xD6, 0x78, 0x8C, 0xE2, 0xAA, 0x0C, 0x18,
 	0x2A, 0xB8, 0x7A, 0x7F, 0xD3, 0x6A, 0xCF, 0x0B,
 	0xB1, 0x37, 0x63, 0x4B, 0x69, 0xAE, 0x91, 0xC7,
@@ -73,6 +73,28 @@ const uint8_t FM17522_firmware_reference[] PROGMEM = {
 	0xC1, 0x5B, 0x00, 0x2A, 0xD0, 0x75, 0xDE, 0x9E,
 	0x51, 0x64, 0xAB, 0x3E, 0xE9, 0x15, 0xB5, 0xAB,
 	0x56, 0x9A, 0x98, 0x82, 0x26, 0xEA, 0x2A, 0x62
+};
+// Another "FM17522" ic form Aliexpress
+const uint8_t FM17522_firmware_referenceB2[] PROGMEM = {
+	0x00, 0xeb, 0x44, 0x85, 0xfa, 0x9a, 0x78, 0x01,
+	0x74, 0xe5, 0x1c, 0x7a, 0x0a, 0xa0, 0x71, 0xe1,
+	0xf3, 0xfa, 0x96, 0x6d, 0x28, 0xa1, 0x34, 0x46,
+	0x3a, 0x1c, 0x32, 0x96, 0xb9, 0xe6, 0x44, 0x87,
+	0x0a, 0x45, 0x98, 0xa9, 0x36, 0x60, 0x89, 0x0f,
+	0x06, 0x9b, 0x7b, 0x17, 0xb3, 0x0c, 0x1a, 0x6c,
+	0x1a, 0xae, 0x2c, 0xac, 0x0e, 0x6f, 0x2e, 0x02,
+	0x2b, 0xcb, 0x8a, 0xb2, 0x45, 0xdd, 0x7e, 0x3c
+};
+// Fudan Semiconductor FM17522E (0x89)
+const uint8_t FM17522E_firmware_reference[] PROGMEM = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x80, 0x00, 0x04, 0xcc, 0xc8, 0x00,
+	0x10, 0x04, 0x00, 0xc0, 0x00, 0x90, 0x00, 0x20,
+	0x00, 0x00, 0x23, 0x00, 0x38, 0x06, 0x01, 0x33,
+	0x98, 0xf3, 0x80, 0x06, 0xc0, 0xf9, 0x80, 0x08,
+	0x27, 0x04, 0x23, 0x82, 0x21, 0x12, 0xf9, 0xc7
 };
 
 class MFRC522 {
@@ -173,7 +195,7 @@ public:
 	};
 	
 	// MFRC522 RxGain[2:0] masks, defines the receiver's signal voltage gain factor (on the PCD).
-	// Described in 9.3.3.6 / table 98 of the datasheet at http://www.nxp.com/documents/data_sheet/MFRC522.pdf
+	// Described in 9.3.3.6 / table 98 of the datasheet at https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
 	enum PCD_RxGain : uint8_t {
 		RxGain_18dB				= 0x00 << 4,	// 000b - 18 dB, minimum
 		RxGain_23dB				= 0x01 << 4,	// 001b - 23 dB
@@ -210,7 +232,7 @@ public:
 		PICC_CMD_MF_INCREMENT	= 0xC1,		// Increments the contents of a block and stores the result in the internal data register.
 		PICC_CMD_MF_RESTORE		= 0xC2,		// Reads the contents of a block into the internal data register.
 		PICC_CMD_MF_TRANSFER	= 0xB0,		// Writes the contents of the internal data register to a block.
-		// The commands used for MIFARE Ultralight (from http://www.nxp.com/documents/data_sheet/MF0ICU1.pdf, Section 8.6)
+		// The commands used for MIFARE Ultralight (from https://www.nxp.com/docs/en/data-sheet/MF0ICU1.pdf, Section 8.6)
 		// The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
 		PICC_CMD_UL_WRITE		= 0xA2		// Writes one 4 uint8_t page to the PICC.
 	};
@@ -292,6 +314,7 @@ public:
 	void PCD_Init(uint8_t resetPowerDownPin);
 	void PCD_Init(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
 	void PCD_Reset();
+	void PCD_HardReset();
 	void PCD_AntennaOn();
 	void PCD_AntennaOff();
 	uint8_t PCD_GetAntennaGain();
@@ -344,12 +367,12 @@ public:
 	static const __FlashStringHelper *PICC_GetTypeName(PICC_Type type);
 	
 	// Support functions for debuging
-	void PCD_DumpVersionToSerial();
-	void PICC_DumpToSerial(Uid *uid);
-	void PICC_DumpDetailsToSerial(Uid *uid);
-	void PICC_DumpMifareClassicToSerial(Uid *uid, PICC_Type piccType, MIFARE_Key *key);
-	void PICC_DumpMifareClassicSectorToSerial(Uid *uid, MIFARE_Key *key, uint8_t sector);
-	void PICC_DumpMifareUltralightToSerial();
+	void PCD_DumpVersionToSerial(Print &logPrint);
+	void PICC_DumpToSerial(Uid *uid, Print &logPrint);
+	void PICC_DumpDetailsToSerial(Uid *uid, Print &logPrint);
+	void PICC_DumpMifareClassicToSerial(Uid *uid, PICC_Type piccType, MIFARE_Key *key, Print &logPrint);
+	void PICC_DumpMifareClassicSectorToSerial(Uid *uid, MIFARE_Key *key, uint8_t sector, Print &logPrint);
+	void PICC_DumpMifareUltralightToSerial(Print &logPrint);
 	
 	// Advanced functions for MIFARE
 	void MIFARE_SetAccessBits(uint8_t *accessBitBuffer, uint8_t g0, uint8_t g1, uint8_t g2, uint8_t g3);

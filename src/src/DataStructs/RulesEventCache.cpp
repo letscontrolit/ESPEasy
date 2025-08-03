@@ -41,6 +41,10 @@ bool RulesEventCache::addLine(const String& line, const String& filename, size_t
     # ifdef USE_SECOND_HEAP
     HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
+    #ifdef ESP32
+    reserve_special(event, event.length());
+    reserve_special(action, action.length());
+    #endif
 
     _eventCache.emplace_back(filename, pos, std::move(event), std::move(action));
     return true;

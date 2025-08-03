@@ -135,10 +135,7 @@ Data retrieval
 
 * **Measuring frequency**: The plugin supports 2 measuring frequencies, 10x per second or 50x per second. When using 50x per second, it will stabilize the measurements if the **Averaging buffer size** is also increased, f.e. to 50 or 100. This may increase the load on the ESP unit somewhat.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

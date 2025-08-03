@@ -36,7 +36,7 @@
   # endif // if ESP_IDF_VERSION_MAJOR == 4
 
 
-#if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
+# if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
   #  if ESP_IDF_VERSION_MAJOR < 5
   #   define HAS_HALL_EFFECT_SENSOR  1
   #  else // if ESP_IDF_VERSION_MAJOR < 5
@@ -44,9 +44,9 @@
 // Support for Hall Effect sensor was removed in ESP_IDF 5.x
   #   define HAS_HALL_EFFECT_SENSOR  0
   #  endif // if ESP_IDF_VERSION_MAJOR < 5
-# else 
+# else // if CONFIG_IDF_TARGET_ESP32
   #  define HAS_HALL_EFFECT_SENSOR  0
-# endif
+# endif // if CONFIG_IDF_TARGET_ESP32
 
 # if ESP_IDF_VERSION_MAJOR >= 5
 
@@ -164,10 +164,11 @@ esp32_chip_features getChipFeatures() {
     res.embeddedPSRAM     = chip_info.features & CHIP_FEATURE_EMB_PSRAM;
 
     if (!res.embeddedFlash) {
-        const int32_t flash_cap = getEmbeddedFlashSize();
-        if (flash_cap > 0) {
-          res.embeddedFlash = true;
-        }
+      const int32_t flash_cap = getEmbeddedFlashSize();
+
+      if (flash_cap > 0) {
+        res.embeddedFlash = true;
+      }
     }
 
     loaded = true;
@@ -361,8 +362,8 @@ uint8_t getChipCores() {
 bool isESP8285() {
   return false;
 }
-#endif
 
+#endif // ifdef ESP32
 
 
 String getChipRevision() {
@@ -397,6 +398,7 @@ uint32_t getFreeSketchSpace() {
 
   return res;
 }
+
 
 /********************************************************************************************\
    PSRAM support
@@ -447,13 +449,13 @@ bool CanUsePSRAM() {
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
 
-  if ((CHIP_ESP32 == chip_info.model) && 
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
-  (chip_info.revision < 300)
-#else
-  (chip_info.revision < 3)
-#endif
-  ) {
+  if ((CHIP_ESP32 == chip_info.model) &&
+#  if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+      (chip_info.revision < 300)
+#  else // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+      (chip_info.revision < 3)
+#  endif // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+      ) {
     return false;
   }
 #  if ESP_IDF_VERSION_MAJOR < 4
@@ -472,7 +474,6 @@ bool CanUsePSRAM() {
 # ifdef ESP32
 const __FlashStringHelper* getChipModel()
 {
-  
   // https://www.espressif.com/en/products/socs
   // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L579
 
@@ -515,6 +516,7 @@ const __FlashStringHelper* getChipModel()
    */
 
   esp_chip_info_t chip_info;
+
   esp_chip_info(&chip_info);
 
   uint32_t chip_model          = chip_info.model;
@@ -536,7 +538,8 @@ const __FlashStringHelper* getChipModel()
 
   return getChipModel(chip_model, chip_revision, pkg_version, single_core);
 }
-#endif
+
+# endif // ifdef ESP32
 
 
 #endif  // ESP32

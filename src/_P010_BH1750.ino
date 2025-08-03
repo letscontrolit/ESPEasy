@@ -6,6 +6,9 @@
 // #################################### Plugin-010: LuxRead   ############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # include <AS_BH1750.h>
 
@@ -47,6 +50,14 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Lux, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -85,7 +96,8 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
         RESOLUTION_AUTO_HIGH,
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode);
-      addFormSelector(F("Measurement mode"), F("pmode"), optionCount, optionsMode, optionValuesMode, PCONFIG(1));
+      const FormSelectorOptions selector(optionCount, optionsMode, optionValuesMode);
+      selector.addFormSelector(F("Measurement mode"), F("pmode"), PCONFIG(1));
 
       addFormCheckBox(F("Send sensor to sleep"), F("psleep"), PCONFIG(2));
 

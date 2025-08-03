@@ -19,15 +19,15 @@ bool LogEntry_t::add(const uint8_t loglevel, const String& line)
   }
 
   {
-    #ifdef USE_SECOND_HEAP
-
-    // Need to make a substring or a copy, which is a new allocation, on the 2nd heap
-    HeapSelectIram ephemeral;
-    #endif // ifdef USE_SECOND_HEAP
-
     if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
-      _message = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+      #ifdef USE_SECOND_HEAP
+
+      // Need to make a substring or a copy, which is a new allocation, on the 2nd heap
+      HeapSelectIram ephemeral;
+      #endif // ifdef USE_SECOND_HEAP
+      move_special(_message, line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
     } else {
+      reserve_special(_message, line.length());
       _message = line;
     }
   }
@@ -48,7 +48,7 @@ bool LogEntry_t::add(const uint8_t loglevel, String&& line)
     // Need to make a substring, which is a new allocation, on the 2nd heap
     HeapSelectIram ephemeral;
       #endif // ifdef USE_SECOND_HEAP
-    _message = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    move_special(_message, line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
   } else {
     move_special(_message, std::move(line));
   }
@@ -59,7 +59,7 @@ bool LogEntry_t::add(const uint8_t loglevel, String&& line)
 
 void LogEntry_t::clear()
 {
-  _message   = String();
+  free_string(_message);
   _timestamp = 0;
   _loglevel  = 0;
 }

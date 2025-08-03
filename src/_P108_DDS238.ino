@@ -16,6 +16,10 @@
 //  Written by José Araújo (josemariaaraujo@gmail.com),
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
+/** Changelog:
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for DDS238)
+ */
 
 /*
    DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see https://github.com/reaper7/SDM_Energy_Meter)
@@ -75,6 +79,14 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_108_QueryVType, P108_QUERY1_CONFIG_POS, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
@@ -106,7 +118,8 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 4; ++i) {
         options_baudrate[i] = String(p108_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, 4, options_baudrate, nullptr, P108_BAUDRATE);
+      const FormSelectorOptions selector(4, options_baudrate);
+      selector.addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, P108_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P108_DEV_ID_LABEL, P108_DEV_ID, 1, 247);
       break;

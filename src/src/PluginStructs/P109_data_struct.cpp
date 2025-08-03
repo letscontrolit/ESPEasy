@@ -87,10 +87,15 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   _relayInverted   = P109_GET_RELAY_INVERT;
   _setpointTimeout = P109_CONFIG_SETPOINT_DELAY - P109_SETPOINT_OFFSET;
 
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(event->TaskIndex);
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
   if (P109_CONFIG_DISPLAYTYPE == 1) {
-    _display = new (std::nothrow) SSD1306Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+    _display = new (std::nothrow) SSD1306Wire(P109_CONFIG_I2CADDRESS, Settings.getI2CSdaPin(i2cBus), Settings.getI2CSclPin(i2cBus));
   } else {
-    _display = new (std::nothrow) SH1106Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+    _display = new (std::nothrow) SH1106Wire(P109_CONFIG_I2CADDRESS, Settings.getI2CSdaPin(i2cBus), Settings.getI2CSclPin(i2cBus));
   }
 
   if (nullptr == _display) {

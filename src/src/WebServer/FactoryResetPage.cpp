@@ -131,7 +131,7 @@ void addPreDefinedConfigSelector() {
         model == active_model);
     }
   }
-  addSelector_Foot();
+  addSelector_Foot(true);
 }
 
 #ifdef WEBSERVER_NEW_UI

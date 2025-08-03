@@ -132,14 +132,18 @@ struct p078_register_description {
   uint32_t val{};
 };
 
-int      SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model,
-                                                 int       x);
+int          SDM_getRegisterDescriptionIndexForModel(SDM_MODEL model,
+                                                     int       x);
 
-uint16_t SDM_getRegisterForModel(SDM_MODEL model,
-                                 int       choice);
+uint16_t     SDM_getRegisterForModel(SDM_MODEL model,
+                                     int       choice);
 
-String   SDM_getValueNameForModel(SDM_MODEL model,
-                                  int       choice);
+String       SDM_getValueNameForModel(SDM_MODEL model,
+                                      int       choice);
+# if FEATURE_MQTT_DISCOVER
+Sensor_VType Plugin_078_QueryVType(SDM_MODEL model,
+                            int       choice);
+# endif // if FEATURE_MQTT_DISCOVER
 
 struct SDM_RegisterReadQueueElement {
   SDM_RegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex, uint16_t reg, uint8_t dev_id)

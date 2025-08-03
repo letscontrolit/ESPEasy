@@ -90,6 +90,9 @@ struct LabelType {
 #if FEATURE_TARSTREAM_SUPPORT
     DISABLE_SAVE_CONFIG_AS_TAR,
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    SHOW_UOM_ON_DEVICES_PAGE,
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0

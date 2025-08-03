@@ -4,10 +4,15 @@
 // #######################################################################################################
 // ######################## Plugin 014 SI70xx I2C Temperature Humidity Sensor  ###########################
 // #######################################################################################################
-// 2015-10-12 Charles-Henri Hallard, see my projects and blog at https://hallard.me
-// 2022-07-22 MFD, Adding support for SI7013 with ADC and lots of refactoring
-// 2023-07-11 tonhuisman, Add missing PLUGIN_SET_DEFAULTS handling, to set default Temperature/Humidity output values
-//                        Use internationally usable dates for changelog
+
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ *                        Update changelog
+ * 2023-07-11 tonhuisman, Add missing PLUGIN_SET_DEFAULTS handling, to set default Temperature/Humidity output values
+ *                        Use internationally usable dates for changelog
+ * 2022-07-22 MFD, Adding support for SI7013 with ADC and lots of refactoring
+ * 2015-10-12 Charles-Henri Hallard, see my projects and blog at https://hallard.me
+ */
 
 
 /*
@@ -72,6 +77,17 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       P014_VALUES_COUNT = getValueCountFromSensorType(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
@@ -117,7 +133,8 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
         SI70xx_RESOLUTION_11T_11RH,
       };
       constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-      addFormSelector(F("Resolution"), F("pres"), optionCount, options, optionValues, P014_RESOLUTION);
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Resolution"), F("pres"), P014_RESOLUTION);
 
       addFormNumericBox("ADC Filter Power", F("pfilter"), P014_FILTER_POWER, 0, 4);
 

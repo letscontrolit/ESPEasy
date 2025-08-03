@@ -78,8 +78,7 @@ Device Settings
 
 * **Temperature offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set in steps of 0.1 degree. When using a BME280 sensor, this also applies a compensation to the **Humidity** reading.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
 * **Temperature Error Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when such read errors occur.
 

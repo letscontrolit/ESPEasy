@@ -73,38 +73,40 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
   addFormTextBox(F("App Session Key"),     F("appskey"), AppSessionKey,     C018_APP_SESSION_KEY_LEN - 1);
 
   {
-    const __FlashStringHelper *options[2] = { F("OTAA"),  F("ABP") };
-    const int values[2]                   = { C018_USE_OTAA, C018_USE_ABP };
-    addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
-                           options, values, nullptr, joinmethod,
-                           F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
+    const __FlashStringHelper *options[] = { F("OTAA"),  F("ABP") };
+    //const int values[]                   = { C018_USE_OTAA, C018_USE_ABP };
+    FormSelectorOptions selector(NR_ELEMENTS(options), options);
+    // Script to toggle OTAA/ABP fields visibility when changing selection. 
+    selector.onChangeCall = F("joinChanged(this)"); 
+    selector.addFormSelector(F("Activation Method"), F("joinmethod"), joinmethod);
+                           
   }
   html_add_script(F("document.getElementById('joinmethod').onchange();"), false);
 
   addTableSeparator(F("Connection Configuration"), 2, 3);
   {
-    const __FlashStringHelper *options[4] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
-    int values[4]                         =
+    const __FlashStringHelper *options[] = { F("SINGLE_CHANNEL_EU"), F("TTN_EU"), F("TTN_US"), F("DEFAULT_EU") };
+    int values[]                         =
     {
       RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU,
       RN2xx3_datatypes::Freq_plan::TTN_EU,
       RN2xx3_datatypes::Freq_plan::TTN_US,
       RN2xx3_datatypes::Freq_plan::DEFAULT_EU
     };
-
-    addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, nullptr, frequencyplan, false);
+    const FormSelectorOptions selector( NR_ELEMENTS(options), options, values);
+    selector.addFormSelector(F("Frequency Plan"), F("frequencyplan"), frequencyplan);
     addFormNumericBox(F("RX2 Frequency"), F("rx2freq"), rx2_freq, 0);
     addUnit(F("Hz"));
     addFormNote(F("0 = default, or else override default"));
   }
   {
-    const __FlashStringHelper *options[2] = { F("TTN v2"), F("TTN v3") };
-    int values[2]                         = {
+    const __FlashStringHelper *options[] = { F("TTN v2"), F("TTN v3") };
+    constexpr int values[] {
       RN2xx3_datatypes::TTN_stack_version::TTN_v2,
       RN2xx3_datatypes::TTN_stack_version::TTN_v3
     };
-
-    addFormSelector(F("TTN Stack"), F("ttnstack"), 2, options, values, nullptr, stackVersion, false);
+    const FormSelectorOptions selector(NR_ELEMENTS(options), options, values);
+    selector.addFormSelector(F("TTN Stack"), F("ttnstack"), stackVersion);
   }
 
   addFormNumericBox(F("Spread Factor"), F("sf"), sf, 7, 12);

@@ -30,6 +30,11 @@
     "require_upload_port": true,
     "speed": 460800
   },
+  "espidf": {
+    "custom_sdkconfig": [
+      "CONFIG_FREERTOS_UNICORE=y" 
+    ]
+  },
   "url": "https://en.wikipedia.org/wiki/ESP32",
   "vendor": "Espressif"
 }

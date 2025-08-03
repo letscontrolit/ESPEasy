@@ -238,6 +238,22 @@ void ESPeasySerial::setDebugOutput(bool enable)
   }
 }
 
+size_t ESPeasySerial::setRxBufferSize(size_t new_size)
+{
+  if (isValid()) {
+    return _serialPort->setRxBufferSize(new_size);
+  }
+  return 0;
+}
+
+size_t ESPeasySerial::setTxBufferSize(size_t new_size)
+{
+  if (isValid()) {
+    return _serialPort->setTxBufferSize(new_size);
+  }
+  return 0;
+}
+
 bool ESPeasySerial::isTxEnabled(void)
 {
   return getTxPin() != -1;

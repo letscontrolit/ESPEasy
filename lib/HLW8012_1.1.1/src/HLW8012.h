@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Arduino.h>
 
+#include "HLW8012_sample.h"
+
 // Internal voltage reference value
 #define V_REF               2.43
 
@@ -45,9 +47,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Maximum pulse with in microseconds
 // If longer than this pulse width is reset to 0
 // This value is purely experimental.
-// Higher values allow for a better precission but reduce sampling rate
+// Higher values allow for a better precision but reduce sampling rate
 // and response speed to change
-// Lower values increase sampling rate but reduce precission
+// Lower values increase sampling rate but reduce precision
 // Values below 0.5s are not recommended since current and voltage output
 // will have no time to stabilise
 #define PULSE_TIMEOUT       2000000
@@ -57,9 +59,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ICACHE_RAM_ATTR     
 #endif
 
-#if ESP_IDF_VERSION_MAJOR >= 5
-#include <atomic>
-#endif
 
 // CF1 mode
 typedef enum {
@@ -84,7 +83,6 @@ class HLW8012 {
             unsigned char cf1_pin,
             unsigned char sel_pin,
             unsigned char currentWhen = HIGH,
-            bool use_interrupts = true,
             unsigned long pulse_timeout = PULSE_TIMEOUT);
 
         void setMode(hlw8012_mode_t mode);
@@ -93,6 +91,9 @@ class HLW8012 {
         hlw8012_mode_t toggleMode();
 
         float getCurrent(bool &valid);
+    private:
+        float getCF1Current(bool &valid);
+    public:
         float getVoltage(bool &valid);
         float getActivePower(bool &valid);
         float getApparentPower(bool &valid);
@@ -134,45 +135,18 @@ class HLW8012 {
         float _power_multiplier{};   // Unit: us/W
 
         long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
-        volatile unsigned long _voltage_pulse_width = 0; //Unit: us
-        volatile unsigned long _current_pulse_width = 0; //Unit: us
-        volatile unsigned long _power_pulse_width = 0;   //Unit: us
+        HLW8012_sample _power_sample{}; //Unit: us
+        HLW8012_sample _voltage_sample{}; //Unit: us
+        HLW8012_sample _current_sample{}; //Unit: us
 
         float _current{};
+        float _cf1_current{};
         float _voltage{};
         float _power{};
 
         unsigned char _current_mode = HIGH;
-        volatile unsigned char _mode = 0;
-
-        bool _use_interrupts = true;
-        #if ESP_IDF_VERSION_MAJOR >= 5
-        std::atomic<unsigned long> _cf_pulse_count_total{};
-        #else
-        volatile unsigned long _cf_pulse_count_total = 0;
-        #endif
-
-        // CF = Active power
-        volatile unsigned long _first_cf_interrupt = 0;
-        volatile unsigned long _last_cf_interrupt = 0;
-
-        #if ESP_IDF_VERSION_MAJOR >= 5
-        std::atomic<unsigned long> _cf_pulse_count{};
-        #else
-        volatile unsigned long _cf_pulse_count = 0;
-        #endif
-
-
-        // CF1 toggles between voltage and current measurement
-        volatile unsigned long _first_cf1_interrupt = 0;
-        volatile unsigned long _last_cf1_interrupt = 0;
-
-        #if ESP_IDF_VERSION_MAJOR >= 5
-        std::atomic<unsigned long> _cf1_pulse_count{};
-        #else
-        volatile unsigned long _cf1_pulse_count = 0;
-        #endif
-
+        HLW8012_VOLATILE_UCHAR _mode{};
+        HLW8012_VOLATILE_UINT32 _cf_pulse_count_total{};
 
         void _checkCFSignal();
         void _checkCF1Signal();

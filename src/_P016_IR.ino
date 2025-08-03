@@ -70,6 +70,8 @@
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
 // History
+// @tonhuisman: 2025-01-12 
+// ADD: support for MQTT AutoDiscovery (not supported for IR receive)
 // @uwekaditz: 2024-01-23
 // CHG: Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
 // NEW: Heap and memory can be reported (P016_CHECK_HEAP)
@@ -227,6 +229,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_016));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -427,8 +438,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.CodeDecodeType), false, true, F(""));
+              FormSelectorOptions selector(protocolCount, &decodeTypes[0], &decodeTypeOptions[0]);
+              selector.clearClassName();
+              selector.addSelector(
+                getPluginCustomArgName(rowCnt + 0), 
+                static_cast<int>(line.CodeDecodeType));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
@@ -442,8 +456,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
-                          static_cast<int>(line.AlternativeCodeDecodeType), false, true, F(""));
+              FormSelectorOptions selector(protocolCount, &decodeTypes[0], &decodeTypeOptions[0]);
+              selector.clearClassName();
+
+              selector.addSelector(
+                getPluginCustomArgName(rowCnt + 3), 
+                static_cast<int>(line.AlternativeCodeDecodeType));
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));

@@ -2225,6 +2225,11 @@ void PluginSetup()
 
   for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
+    #ifdef ESP32
+    Device.getDeviceStructForEdit(deviceIndex).clear();
+    #elif defined(ESP8266)
+    Device[deviceIndex].clear();
+    #endif
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
     if (validPluginID(pluginID)) { 

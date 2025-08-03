@@ -52,12 +52,12 @@ void SwitchWebformLoad(
       SWITCH_DC_HIGH,
       SWITCH_DC_BOTH };
 
-    addFormSelector(
+    const FormSelectorOptions selector(NR_ELEMENTS(buttonDCValues),
+      buttonDC,
+      buttonDCValues);
+    selector.addFormSelector(
       F("Doubleclick event"),
       F("sw_dc"),
-      NR_ELEMENTS(buttonDCValues),
-      buttonDC,
-      buttonDCValues,
       doubleClickEvent);
   }
 
@@ -84,12 +84,14 @@ void SwitchWebformLoad(
       SWITCH_LONGPRESS_LOW,
       SWITCH_LONGPRESS_HIGH,
       SWITCH_LONGPRESS_BOTH };
-    addFormSelector(
-      F("Longpress event"),
-      F("sw_lp"),
+
+    const FormSelectorOptions selector(
       NR_ELEMENTS(buttonLPValues),
       buttonLP,
-      buttonLPValues,
+      buttonLPValues);
+    selector.addFormSelector(
+      F("Longpress event"),
+      F("sw_lp"),
       longPressEvent);
   }
 

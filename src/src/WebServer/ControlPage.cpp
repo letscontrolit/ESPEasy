@@ -41,7 +41,7 @@ void handle_control() {
 
   TXBuffer.endStream();
 
-  printWebString = String();
+  free_string(printWebString);
   printToWeb     = false;
   printToWebJSON = false;
 }

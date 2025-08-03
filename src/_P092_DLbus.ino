@@ -22,6 +22,9 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+    @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
+
     @tonhuisman 2022-09-24 Optimizations, suppress some logging for stressed builds
 
     @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed
@@ -99,6 +102,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption    = true;
       dev.DecimalsOnly   = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -113,6 +117,22 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_092));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -138,7 +158,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eP092pinmode::ePPM_Input),
           static_cast<int>(eP092pinmode::ePPM_InputPullUp)
         };
-        addFormSelector(F("Pin mode"), F("ppinmode"), 2, options, optionValues, choice);
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Pin mode"), F("ppinmode"), choice);
       }
       {
         const __FlashStringHelper *Devices[] = {
@@ -151,7 +172,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         const int DevTypes[]         = { 21, 31, 42, 1611, 6132, 6133 };
         constexpr size_t optionCount = NR_ELEMENTS(Devices);
 
-        addFormSelector(F("DL-Bus Type"), F("pdlbtype"), optionCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
+        FormSelectorOptions selector(optionCount, Devices, DevTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("DL-Bus Type"), F("pdlbtype"), PCONFIG(0));
       }
       {
         int P092_ValueType, P092_ValueIdx;
@@ -236,14 +259,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_ValueType = PCONFIG(1) >> 8;
         P092_ValueIdx  = PCONFIG(1) & 0x00FF;
 
-        addFormSelector(plugin_092_DefValueName,
-                        F("pValue"),
-                        optionCount,
-                        Options,
-                        P092_OptionTypes,
-                        nullptr,
-                        P092_ValueType,
-                        true);
+        FormSelectorOptions selector(optionCount, Options, P092_OptionTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(plugin_092_DefValueName, F("pValue"), P092_ValueType);
 
         if (P092_MaxIdx[P092_ValueType] > 1) {
           int CurIdx = P092_ValueIdx;
@@ -412,6 +430,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 # ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
+
+          // FIXME TD-er: This is a really odd and overly complex way to handle this.
 
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);

@@ -8,6 +8,7 @@
 
 # define P111_CS_PIN            PIN(0)
 # define P111_RST_PIN           PIN(1)
+# define P111_IRQ_PIN           PIN(2)
 # define P111_TAG_AUTOREMOVAL   PCONFIG(0)
 # define P111_SENDRESET         PCONFIG(1)
 # define P111_REMOVALVALUE      PCONFIG_LONG(0)
@@ -31,15 +32,20 @@ enum class P111_initPhases : uint8_t {
 
 struct P111_data_struct : public PluginTaskData_base {
   P111_data_struct(int8_t csPin,
-                   int8_t rstPin);
+                   int8_t rstPin,
+                   int8_t irqPin);
   P111_data_struct() = delete;
   virtual ~P111_data_struct();
 
   void init();
   bool plugin_ten_per_second(struct EventStruct *event);
-  bool plugin_fifty_per_second();
+  bool plugin_fifty_per_second(struct EventStruct *event);
+
+  String PCD_getVersion(uint8_t& v);
 
 private:
+
+  bool loop(struct EventStruct *event);
 
   MFRC522 *mfrc522 = nullptr;
 
@@ -53,14 +59,21 @@ private:
   uint8_t readPassiveTargetID(uint8_t *uid,
                               uint8_t *uidLength);
 
+  static void mfrc522_interrupt(P111_data_struct * self);
+
   int32_t timeToWait = 0;
 
   int8_t _csPin;
   int8_t _rstPin;
+  int8_t _irqPin;
 
   uint8_t         errorCount   = 0;
   bool            removedState = true; // On startup, there will usually not be a tag nearby
   P111_initPhases initPhase    = P111_initPhases::Undefined;
+
+  int64_t _last_served_irq_pin_time_micros{};
+
+  ESPEASY_VOLATILE(int64_t) _irq_pin_time_micros = -1;
 };
 
 #endif // ifdef USES_P111

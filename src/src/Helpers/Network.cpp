@@ -13,6 +13,12 @@
 #include "../Helpers/Hardware_PWM.h"
 #include "../Helpers/Misc.h"
 
+
+#ifdef ESP32
+# include <esp32-hal-periman.h>
+#endif // ifdef ESP32
+
+
 /********************************************************************************************\
    Status LED
  \*********************************************************************************************/
@@ -21,15 +27,26 @@ void statusLED(bool traffic)
   static int gnStatusValueCurrent = -1;
   static long int gnLastUpdate    = millis();
 
+  // Reset GPIO when status LED pin has changed to free up LEDC channel
+  #ifdef ESP32
+  static int8_t last_status_led_pin = -1;
+  if (last_status_led_pin != Settings.Pin_status_led) {
+    if (last_status_led_pin != -1) {
+      set_Gpio_PWM(last_status_led_pin, 0);
+    }
+    last_status_led_pin = Settings.Pin_status_led;
+  }
+  #endif
+
   if (!validGpio(Settings.Pin_status_led)) {
     return;
   }
 
+  #ifdef ESP32
   if (gnStatusValueCurrent < 0) {
-#ifndef ESP32
-    pinMode(Settings.Pin_status_led, OUTPUT);
-#endif // ESP32
+    set_Gpio_PWM(Settings.Pin_status_led, 0);
   }
+  #endif
 
   int nStatusValue = gnStatusValueCurrent;
 
@@ -78,5 +95,9 @@ void statusLED(bool traffic)
     }
 
     set_Gpio_PWM(Settings.Pin_status_led, pwm, 1000);
+#ifdef ESP32
+    // Need to have this string as C-string, not F-string
+    perimanSetPinBusExtraType(Settings.Pin_status_led, "WiFi Status LED");
+#endif
   }
 }

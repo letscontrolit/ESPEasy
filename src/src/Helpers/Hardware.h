@@ -98,6 +98,11 @@ long     HwRandom(long howsmall,
                   long howbig);
 
 
+ESPEASY_RULES_FLOAT_TYPE HwRandom_f(
+  ESPEASY_RULES_FLOAT_TYPE howsmall,
+  ESPEASY_RULES_FLOAT_TYPE howbig);
+  
+  
 /********************************************************************************************\
    Boot information
  \*********************************************************************************************/

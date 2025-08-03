@@ -10,7 +10,11 @@
 // Based on the library TinyGPS++
 // http://arduiniana.org/libraries/tinygpsplus/
 //
-//
+
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for GPS)
+ */
 
 # include <ESPeasySerial.h>
 # include <TinyGPS++.h>
@@ -45,6 +49,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -98,6 +103,22 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       event->String3 = formatGpioName_input_optional(F("PPS"));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -191,7 +212,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_PowerMode::Eco)
         };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Power Mode"), F("pwrmode"), optionCount, options, indices, P082_POWER_MODE);
+        const FormSelectorOptions selector(optionCount, options, indices);
+        selector.addFormSelector(F("Power Mode"), F("pwrmode"), P082_POWER_MODE);
       }
 
       {
@@ -220,7 +242,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_DynamicModel::Bike)
         };
         constexpr size_t optionCount = NR_ELEMENTS(indices);
-        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), optionCount, options, indices, P082_DYNAMIC_MODEL);
+        const FormSelectorOptions selector(optionCount, options, indices);
+        selector.addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), P082_DYNAMIC_MODEL);
       }
 # endif // P082_USE_U_BLOX_SPECIFIC
 
@@ -312,11 +335,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       const int16_t serial_tx      = CONFIG_PIN2;
       const int16_t pps_pin        = CONFIG_PIN3;
 
-      # ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
-
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P082_data_struct());
+      special_initPluginTaskData(event->TaskIndex, P082_data_struct);
       P082_data_struct *P082_data =
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 

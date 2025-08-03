@@ -12,6 +12,7 @@
 //
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-05-09 tonhuisman: Add support for BeFlE v3.x (low power) Moisture sensor
  *                        Code improvements
  *                        ** Fix bug in setting a new I2C address for BeFlE sensors (needs a left-shift by 1)
@@ -87,6 +88,20 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_MOISTURE_ONLY);
+
+      if (3 == event->Par5) {
+        event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       P047_I2C_ADDR = P047_CATNIP_DEFAULT_ADDR;
@@ -151,7 +166,10 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
           # endif // if P047_FEATURE_ADAFRUIT
         };
         constexpr size_t P047_MODEL_OPTIONS = NR_ELEMENTS(SensorModelIds);
-        addFormSelector(F("Sensor model"), F("model"), P047_MODEL_OPTIONS, SensorModels, SensorModelIds, P047_MODEL, true);
+        FormSelectorOptions selector( P047_MODEL_OPTIONS, SensorModels, SensorModelIds);
+        selector.default_index = static_cast<int>(P047_MODEL_CATNIP);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("model"), P047_MODEL);
         addFormNote(F("Changing the Sensor model will reload the page."));
       }
 

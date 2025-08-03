@@ -1,3 +1,6 @@
+function elId(e) {
+  return document.getElementById(e);
+}
 function getBrowser() {
     var ua = navigator.userAgent,
         tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -33,13 +36,14 @@ if (browser.name = 'IE' && browser.version < 12) {
 } else {
     textToDisplay = 'Fetching log entries...';
 }
-document.getElementById('copyText_1').innerHTML = textToDisplay;
+elId('copyText_1').innerHTML = textToDisplay;
 loopDeLoop(1000, 0);
 var logLevel = new Array('Unused', 'Error', 'Info', 'Debug', 'Debug More', 'Undefined', 'Undefined', 'Undefined', 'Undefined', 'Debug Dev');
 
 function loopDeLoop(timeForNext, activeRequests) {
     var maximumRequests = 1;
-    var url = '/logjson';
+    const url = '/logjson';
+    const ct1 = 'copyText_1';
     if (isNaN(activeRequests)) {
         activeRequests = maximumRequests;
     }
@@ -88,27 +92,27 @@ function loopDeLoop(timeForNext, activeRequests) {
                     }
                     timeForNext = data.Log.TTL;
                     if (logEntriesChunk !== '') {
-                        if (document.getElementById('copyText_1').innerHTML == 'Fetching log entries...') {
-                            document.getElementById('copyText_1').innerHTML = '';
+                        if (elId(ct1).innerHTML == 'Fetching log entries...') {
+                            elId(ct1).innerHTML = '';
                         }
-                        document.getElementById('copyText_1').innerHTML += logEntriesChunk;
+                        elId(ct1).innerHTML += logEntriesChunk;
                     }
                     logEntriesChunk = '';
-                    autoscroll_on = document.getElementById('autoscroll').checked;
+                    autoscroll_on = elId('autoscroll').checked;
                     if (autoscroll_on == true && currentIDtoScrollTo !== '') {
-                        document.getElementById(currentIDtoScrollTo).scrollIntoView({
+                        elId(currentIDtoScrollTo).scrollIntoView({
                             behavior: scrolling_type
                         });
                     }
-                    document.getElementById('current_loglevel').innerHTML = 'Logging: ' + logLevel[data.Log.SettingsWebLogLevel] + ' (' + data.Log.SettingsWebLogLevel + ')';
+                    elId('current_loglevel').innerHTML = 'Logging: ' + logLevel[data.Log.SettingsWebLogLevel] + ' (' + data.Log.SettingsWebLogLevel + ')';
                     clearInterval(i);
                     loopDeLoop(timeForNext, 0);
                     return;
                 })
             }).catch(function(err) {
-                document.getElementById('copyText_1').innerHTML += '<div>>> ' + err.message + ' <<</div>';
-                autoscroll_on = document.getElementById('autoscroll').checked;
-                document.getElementById('copyText_1').scrollTop = document.getElementById('copyText_1').scrollHeight;
+                elId(ct1).innerHTML += '<div>>> ' + err.message + ' <<</div>';
+                autoscroll_on = elId('autoscroll').checked;
+                elId(ct1).scrollTop = elId(ct1).scrollHeight;
                 timeForNext = 5000;
                 clearInterval(i);
                 loopDeLoop(timeForNext, 0);

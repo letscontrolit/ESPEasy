@@ -33,12 +33,21 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-24 ... 30: Connected to internal flash (might be available when using external flash???)
 
   switch (gpio) {
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
     case SPI_IOMUX_PIN_NUM_CS:
     case SPI_IOMUX_PIN_NUM_CLK:
     case SPI_IOMUX_PIN_NUM_MOSI:
     case SPI_IOMUX_PIN_NUM_MISO:
     case SPI_IOMUX_PIN_NUM_WP:
     case SPI_IOMUX_PIN_NUM_HD:
+#else
+    case MSPI_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS0:
+    case MSPI_IOMUX_PIN_NUM_CLK:
+    case MSPI_IOMUX_PIN_NUM_MOSI:
+    case MSPI_IOMUX_PIN_NUM_MISO:
+#endif
       return true;
   }
   return false;

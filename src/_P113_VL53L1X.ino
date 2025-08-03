@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-09-15 tonhuisman: Fix ROI selection for tablet/mobile devices (touch-only) as click&drag doesn't work there.
  *                        Fix some bugs, and optimize the js code a bit. Move static minified js to WebStaticData.h
  * 2024-09-13 tonhuisman: ROI settings can be selected by dragging the Optical Center Index matrix and the O.C. can be selected
@@ -67,6 +68,17 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DIRECTION_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -102,16 +114,18 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode2[] = {
-          F("100ms (Normal)"),
-          F("20ms (Fastest)"),
-          F("33ms (Fast)"),
-          F("50ms"),
-          F("200ms (Accurate)"),
-          F("500ms"),
+          F("100 (Normal)"),
+          F("20 (Fastest)"),
+          F("33 (Fast)"),
+          F("50"),
+          F("200 (Accurate)"),
+          F("500"),
         };
         const int optionValuesMode2[] = { 100, 20, 33, 50, 200, 500 };
         constexpr size_t optionCount  = NR_ELEMENTS(optionValuesMode2);
-        addFormSelector(F("Timing"), F("timing"), optionCount, optionsMode2, optionValuesMode2, P113_TIMING);
+        const FormSelectorOptions selector(optionCount, optionsMode2, optionValuesMode2);
+        selector.addFormSelector(F("Timing"), F("timing"), P113_TIMING);
+        addUnit(F("ms"));
       }
 
       {
@@ -121,7 +135,8 @@ boolean Plugin_113(uint8_t function, struct EventStruct *event, String& string)
         };
         const int optionValuesMode3[2] = { 0, 1 };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode3);
-        addFormSelector(F("Range"), F("range"), optionCount, optionsMode3, optionValuesMode3, P113_RANGE);
+        const FormSelectorOptions selector(optionCount, optionsMode3, optionValuesMode3);
+        selector.addFormSelector(F("Range"), F("range"), P113_RANGE);
       }
       addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), P113_SEND_ALWAYS == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));

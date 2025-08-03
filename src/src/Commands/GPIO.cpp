@@ -18,6 +18,12 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
 
+#if FEATURE_I2C_MULTIPLE
+#include "../Globals/Settings.h"
+#include "../Helpers/Hardware_device_info.h"
+#include "../Helpers/I2C_access.h"
+#endif // if FEATURE_I2C_MULTIPLE
+
 #if FEATURE_GPIO_USE_ESP8266_WAVEFORM
 # include <core_esp8266_waveform.h>
 #endif 
@@ -94,12 +100,13 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
     globalMapPortStatus[key].state = state;
 
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
-
+    #ifndef BUILD_MINIMAL_OTA
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
         strformat(F(" port #%d: added to monitor list."), port))); 
     }
+    #endif
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
@@ -141,11 +148,13 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
+    #ifndef BUILD_MINIMAL_OTA
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
         strformat(F(" port #%d: removed from monitor list."), port)));
     }
+    #endif
 
     return true;
   } else {
@@ -408,7 +417,9 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
     return return_command_success_flashstr();
   }
   #else // if FEATURE_RTTTL
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_ERROR, F("RTTTL: command not included in build"));
+  #endif
   #endif // if FEATURE_RTTTL
   return return_command_failed_flashstr();
 }
@@ -646,10 +657,19 @@ void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t new
   }
   #endif
 
-
+  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+#ifdef ESP32
+    if (getPluginFromKey(key).value == PLUGIN_GPIO_INT) {
+      gpio_reset_pin((gpio_num_t)getPortFromKey(key));
+    }
+#endif
+  }
   // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode = newMode;
-  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+    it = globalMapPortStatus.find(key);
+  }
 
   if (it != globalMapPortStatus.end()) {
     // Should always be true, as it would be created if it didn't exist.
@@ -1216,6 +1236,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_MCP;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_MCP_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("MCP");
@@ -1229,6 +1254,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_PCF;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_PCF_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("PCF");

@@ -1,0 +1,79 @@
+.. csv-table::
+    :escape: ^
+    :widths: 20, 30
+
+    "
+    Most value options can be appended with ``.status`` (or ``.state`` for ``BatCharge`` and any of the ports)
+    ","
+    | ``.status``: A text representation of the value will be returned, where applicable.
+    | ``.state``: A numeric representation of the value will be returned (usually the same as if the plain value name was used.)
+
+    | Example: ``[<taskname>#ChargingDetail.status]`` will return ``constant charge (CC)`` for ``ChargingDetail`` = 2.
+    "
+    "
+    ``[<taskname>#<port>]``
+    ","
+    | Ports of the AXP2101: ``DCDC1`` .. ``DCDC4``, ``ALDO1`` .. ``ALDO4``, ``BLDO1``, ``BLDO2``, ``DLDO1``, ``DLDO2`` or ``CPULDOS``.
+    "
+    "
+    ``[<taskname>#ChargeLed]``
+    ","
+    | The state of the Charge LED, 0 = ``Off``, 1 = ``Flash 1Hz``, 2 = ``Flash 4Hz``, 3 = ``Steady On``.
+    "
+    "
+    ``[<taskname>#BatCharge]``
+    ","
+    | The charge state percentage of the battery.
+    "
+    "
+    ``[<taskname>#ChargingState]``
+    ","
+    | The state of charging, -1 = ``Discharging``, 0 = ``Standby``, 1 = ``Charging``.
+    "
+    "
+    ``[<taskname>#BatPresent]``
+    ","
+    | Is a battery present (1) or disconnected (0). (no ``.status`` value available)
+    "
+    "
+    ``[<taskname>#ChipID]``
+    ","
+    | The ID set in the chip, 71 = ``AXP2101`` or any numeric value found, returning an empty value for the ``.status`` command-suffix.
+    "
+    "
+    ``[<taskname>#ChargingDet]``
+    ","
+    | The detailed state of charging.
+
+    * 0: ``tri-charge``
+    * 1: ``pre-charge``
+    * 2: ``constant charge (CC)``
+    * 3: ``constant voltage (CV)``
+    * 4: ``charge done``
+    * 5: ``not charging``
+    "
+    "
+    ``[<taskname>#BatVoltage]``
+    ","
+    | The current voltage of the battery.
+    "
+    "
+    ``[<taskname>#BatTemp]``
+    ","
+    | The temperature of the battery, (if a battery-temperature sensor is installed).
+    "
+    "
+    ``[<taskname>#VBus]``
+    ","
+    | The bus-voltage.
+    "
+    "
+    ``[<taskname>#VSys]``
+    ","
+    | The charge state percentage of the battery.
+    "
+    "
+    ``[<taskname>#ChipTemp]``
+    ","
+    | The internal temperature of the chip.
+    "

@@ -20,6 +20,10 @@
 #include "../Helpers/Hardware_defines.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_I2C_MULTIPLE
+#include "../Helpers/I2C_access.h"
+#endif
+
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
@@ -82,12 +86,17 @@ void handle_advanced() {
     Settings.ExtTimeSource(
       static_cast<ExtTimeSource_e>(getFormItemInt(F("exttimesource")))
     );
+    #if FEATURE_I2C_MULTIPLE
+    if (getI2CBusCount() > 1) {
+      set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_CLOCK, getFormItemInt(F("pi2cbusrtc")));
+      set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_WDT,   getFormItemInt(F("pi2cbuswdt")));
+    }
+    #endif // if FEATURE_I2C_MULTIPLE
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #if FEATURE_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
     #endif // if FEATURE_SSDP
-    Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
@@ -167,6 +176,9 @@ void handle_advanced() {
 #if FEATURE_TARSTREAM_SUPPORT
     Settings.DisableSaveConfigAsTar(isFormItemChecked(LabelType::DISABLE_SAVE_CONFIG_AS_TAR));
 #endif // if FEATURE_TARSTREAM_SUPPORT
+    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    Settings.ShowUnitOfMeasureOnDevicesPage(isFormItemChecked(LabelType::SHOW_UOM_ON_DEVICES_PAGE));
+    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     addHtmlError(SaveSettings());
 
@@ -215,6 +227,15 @@ void handle_advanced() {
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #if FEATURE_I2C_MULTIPLE
+  {
+    const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
+    I2CInterfaceSelector(F("Ext. Time Source I2C Bus"),
+                        F("pi2cbusrtc"),
+                        i2cBus,
+                        false);
+  }
+  #endif // if FEATURE_I2C_MULTIPLE
   #endif
 
   addFormSubHeader(F("DST Settings"));
@@ -293,14 +314,20 @@ void handle_advanced() {
 
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   addHtml(F(" (decimal)"));
+  #if FEATURE_I2C_MULTIPLE
+  {
+    const uint8_t i2cBus = Settings.getI2CInterfaceWDT();
+    I2CInterfaceSelector(F("WD I2C Bus"),
+                        F("pi2cbuswdt"),
+                        i2cBus,
+                        false);
+  }
+  #endif // if FEATURE_I2C_MULTIPLE
 
-  addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit); // TODO define limits
-  #ifdef ESP8266
-  addUnit(F("usec"));
-  #endif
-  #ifdef ESP32
-  addUnit(F("1/80 usec"));
-  #endif
+  // TODO: Remove this code
+  addRowLabel(F("I2C ClockStretchLimit"));
+  addUnit(F("Moved to Hardware page"));
+
   #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if FEATURE_ARDUINO_OTA
@@ -324,6 +351,10 @@ void handle_advanced() {
   addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
   #endif // if FEATURE_I2C_DEVICE_CHECK
 
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addFormCheckBox(LabelType::SHOW_UOM_ON_DEVICES_PAGE, Settings.ShowUnitOfMeasureOnDevicesPage());
+  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
   # endif // ifndef NO_HTTP_UPDATER
@@ -333,14 +364,16 @@ void handle_advanced() {
     F("Light"),
     F("Dark"),
   };
-  const int cssModeOptions[] = { 0, 1, 2};
-  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeOptions);
-    addFormSelector(getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-                    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-                    nrCssModeOptions,
-                    cssModeNames,
-                    cssModeOptions,
-                    Settings.getCssMode());
+  //const int cssModeOptions[] = { 0, 1, 2};
+  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeNames);
+  const FormSelectorOptions selector(
+    nrCssModeOptions,
+    cssModeNames/*,
+    cssModeOptions*/);
+  selector.addFormSelector(
+    getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+    Settings.getCssMode());
   #endif // FEATURE_AUTO_DARK_MODE
 
   #if FEATURE_RULES_EASY_COLOR_CODE
@@ -418,18 +451,21 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     addRowLabel(concat(
       isStart ? F("Start")  : F("End"),
       F(" (week, dow, month)")));
-    addSelector(
+
+    const FormSelectorOptions selector(NR_ELEMENTS(weekValues), week, weekValues);
+    selector.addSelector(
       isStart ? F("dststartweek")  : F("dstendweek"), 
-      NR_ELEMENTS(weekValues), week, weekValues, nullptr, rule.week);
+      rule.week);
   }
   html_BR();
   {
     const __FlashStringHelper *  dow[] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     constexpr int dowValues[]  = { 1, 2, 3, 4, 5, 6, 7 };
 
-    addSelector(
+    const FormSelectorOptions selector(NR_ELEMENTS(dowValues), dow, dowValues);
+    selector.addSelector(
       isStart ? F("dststartdow")   : F("dstenddow"),
-      NR_ELEMENTS(dowValues), dow, dowValues, nullptr, rule.dow);
+      rule.dow);
   }
   html_BR();
   {
@@ -437,8 +473,10 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
                              "Dec") };
     constexpr int monthValues[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
-    addSelector(isStart ? F("dststartmonth") : F("dstendmonth"),
-                NR_ELEMENTS(monthValues), month, monthValues, nullptr, rule.month);
+    const FormSelectorOptions selector(NR_ELEMENTS(monthValues), month, monthValues);
+    selector.addSelector(
+      isStart ? F("dststartmonth") : F("dstendmonth"),
+      rule.month);
   }
 
   addFormNumericBox(
@@ -461,7 +499,8 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
     static_cast<int>(ExtTimeSource_e::PCF8563)
     };
 
-  addSelector(id, NR_ELEMENTS(optionValues), options, optionValues, nullptr, static_cast<int>(choice));
+  const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
+  selector.addSelector(id, static_cast<int>(choice));
 }
 
 
@@ -480,19 +519,21 @@ void addFormLogLevelSelect(LabelType::Enum label, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(getInternalLabel(label), LOG_LEVEL_NRELEMENTS + 1, options, optionValues, nullptr, choice);
+  const FormSelectorOptions selector(LOG_LEVEL_NRELEMENTS + 1, options, optionValues);
+  selector.addSelector(getInternalLabel(label), choice);
 
 }
 
 void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[12] =
+  const __FlashStringHelper * options[] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
-  const int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  const int optionValues[] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(id, 12, options, optionValues, nullptr, choice);
+  const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+  selector.addSelector(id, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED

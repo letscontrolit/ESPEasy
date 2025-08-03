@@ -572,7 +572,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
               }
             }
           }
-          // else
+          else
           {
             *TokenPos = sc;
             ++TokenPos;

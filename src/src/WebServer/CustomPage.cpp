@@ -98,7 +98,7 @@ bool handle_custom(const String& path) {
         addSelector_Item(name, it->first, choice == it->first);
       }
     }
-    addSelector_Foot();
+    addSelector_Foot(true);
 
     // create <> navigation buttons
     uint8_t prev = Settings.Unit;

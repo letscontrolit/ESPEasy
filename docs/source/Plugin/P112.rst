@@ -26,6 +26,8 @@ Supported hardware
 
 |P112_usedby|
 
+.. include:: DataAcquisition.repl
+
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 

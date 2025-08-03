@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-02-25 tonhuisman: Make Interval optional, and also disable the added feature P013_FEATURE_INTERVALEVENT, as setting Interval
  *                        to 0 is effectively the same. (Small code reduction)
  *                        Changed second value label for Combined mode to State
@@ -101,6 +102,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
     }
     # endif // if P013_FEATURE_COMBINED_MODE
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE;
@@ -131,7 +142,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           # endif // if P013_FEATURE_COMBINED_MODE
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesOpMode);
-        addFormSelector(F("Mode"), F("pmode"), optionCount, optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
+        const FormSelectorOptions selector(optionCount, optionsOpMode, optionValuesOpMode);
+        selector.addFormSelector(F("Mode"), F("pmode"), P013_OPERATINGMODE);
       }
 
       if ((P013_OPERATINGMODE == OPMODE_STATE)
@@ -155,7 +167,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Imperial"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesUnit);
-        addFormSelector(F("Unit"), F("pUnit"), optionCount, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
+        const FormSelectorOptions selector(optionCount, optionsUnit, optionValuesUnit);
+        selector.addFormSelector(F("Unit"), F("pUnit"), P013_MEASURINGUNIT);
       }
 
       {
@@ -165,7 +178,8 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Median"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesFilter);
-        addFormSelector(F("Filter"), F("fltr"), optionCount, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
+        const FormSelectorOptions selector(optionCount, optionsFilter, optionValuesFilter);
+        selector.addFormSelector(F("Filter"), F("fltr"),  P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,

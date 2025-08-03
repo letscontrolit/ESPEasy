@@ -128,6 +128,7 @@ bool ESPEasy_time::setExternalTimeSource_withTimeWander(
     }
   }
 
+  // FIXME TD-er: Why allowing (new_timeSource == timeSource_t::No_time_source) ???
   if ((new_timeSource == timeSource_t::No_time_source) ||
       (new_timeSource == timeSource_t::Manual_set) ||
       (new_time > get_build_unixtime())) {
@@ -414,11 +415,13 @@ unsigned long ESPEasy_time::now_() {
   calcSunRiseAndSet(timeSynced);
 
   if (timeSynced) {
+    #ifndef BUILD_MINIMAL_OTA
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
                F("Local time: %s"),
                getDateTimeString('-', ':', ' ').c_str()));
     }
+    #endif
     {
       // Notify plugins the time has been set.
       String dummy;
@@ -919,13 +922,18 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
 bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
 {
   unixtime = 0;
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
 
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
     case ExtTimeSource_e::DS1307:
     {
-      I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
+      I2CSelect_Max100kHz_ClockSpeed(i2cBus); // Only supports upto 100 kHz
       RTC_DS1307 rtc;
 
       if (!rtc.begin()) {
@@ -942,6 +950,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
     }
     case ExtTimeSource_e::DS3231:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_DS3231 rtc;
 
       if (!rtc.begin()) {
@@ -959,6 +968,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
 
     case ExtTimeSource_e::PCF8523:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_PCF8523 rtc;
 
       if (!rtc.begin()) {
@@ -975,6 +985,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
     }
     case ExtTimeSource_e::PCF8563:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_PCF8563 rtc;
 
       if (!rtc.begin()) {
@@ -1012,13 +1023,18 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     return true;
   }
   bool timeAdjusted = false;
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
+  #else
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
 
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
     case ExtTimeSource_e::DS1307:
     {
-      I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
+      I2CSelect_Max100kHz_ClockSpeed(i2cBus); // Only supports upto 100 kHz
       RTC_DS1307 rtc;
 
       if (rtc.begin()) {
@@ -1029,6 +1045,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     }
     case ExtTimeSource_e::DS3231:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_DS3231 rtc;
 
       if (rtc.begin()) {
@@ -1040,6 +1057,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
 
     case ExtTimeSource_e::PCF8523:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_PCF8523 rtc;
 
       if (rtc.begin()) {
@@ -1051,6 +1069,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     }
     case ExtTimeSource_e::PCF8563:
     {
+      I2CSelectHighClockSpeed(i2cBus);
       RTC_PCF8563 rtc;
 
       if (rtc.begin()) {

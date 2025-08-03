@@ -98,5 +98,8 @@
 // And from seconds to the millis domain used for the actual control
 // Note that these simple conversion may lose precision due to rough rounding
 
+# if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+#  define P021_MQTT_DEVICECLASS   PCONFIG(5)
+# endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
 #endif // ifndef PLUGINSTRUCTS_P021_DATA_STRUCT_H

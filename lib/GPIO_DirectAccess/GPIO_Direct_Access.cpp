@@ -46,6 +46,8 @@ void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin)
     pinMode(pin, OUTPUT);
     return;
   }
+  GPF(pin) = GPFFS(GPFFS_GPIO(pin));//Set mode to GPIO
+  GPC(pin) = (GPC(pin) & (0xF << GPCI)); //SOURCE(GPIO) | DRIVER(NORMAL) | INT_TYPE(UNCHANGED) | WAKEUP_ENABLE(DISABLED)
   # endif // ifdef ARDUINO_ARCH_ESP8266
 
   DIRECT_MODE_OUTPUT(reg, PIN_TO_BITMASK(pin));
@@ -100,6 +102,9 @@ void  IRAM_ATTR DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin)
     pinMode(pin, OUTPUT);
     return;
   }
+  GPF(pin) = GPFFS(GPFFS_GPIO(pin));//Set mode to GPIO
+  GPC(pin) = (GPC(pin) & (0xF << GPCI)); //SOURCE(GPIO) | DRIVER(NORMAL) | INT_TYPE(UNCHANGED) | WAKEUP_ENABLE(DISABLED)
+  
   # endif // ifdef ARDUINO_ARCH_ESP8266
 
   DIRECT_MODE_OUTPUT(reg, PIN_TO_BITMASK(pin));

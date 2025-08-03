@@ -18,6 +18,10 @@
 // added fix for issue
 // https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
+
 # define PLUGIN_074
 # define PLUGIN_ID_074         74
 # define PLUGIN_NAME_074       "Light/Lux - TSL2591"
@@ -55,6 +59,16 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_074));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      getDiscoveryVType(event, Plugin_QueryVType_Lux, 255, 3);
+      event->Par4 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -94,11 +108,11 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       // integration time (dim light)
       //        }
       {
-        const __FlashStringHelper *optionsMode[6] = { F("100"), F("200"), F("300"),
+        const __FlashStringHelper *optionsMode[] = { F("100"), F("200"), F("300"),
                                                       F("400"), F("500"), F("600") };
         constexpr size_t optionCount = NR_ELEMENTS(optionsMode);
-        addFormSelector(F("Integration Time"), F("itime"), optionCount, optionsMode,
-                        nullptr, PCONFIG(1));
+        const FormSelectorOptions selector( optionCount, optionsMode);
+        selector.addFormSelector(F("Integration Time"), F("itime"), PCONFIG(1));
         addUnit(F("ms"));
       }
 
@@ -107,11 +121,11 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       //        TSL2591_GAIN_HIGH                 = 0x20,    // medium gain (428x)
       //        TSL2591_GAIN_MAX                  = 0x30,    // max gain (9876x)
       {
-        const __FlashStringHelper *optionsGain[4] = { F("low gain (1x)"),      F("medium gain (25x)"),
+        const __FlashStringHelper *optionsGain[] = { F("low gain (1x)"),      F("medium gain (25x)"),
                                                       F("medium gain (428x)"), F("max gain (9876x)") };
         constexpr size_t optionCount = NR_ELEMENTS(optionsGain);
-        addFormSelector(F("Value Mapping"), F("gain"), optionCount, optionsGain, nullptr,
-                        PCONFIG(2));
+        const FormSelectorOptions selector( optionCount, optionsGain);
+        selector.addFormSelector(F("Value Mapping"), F("gain"), PCONFIG(2));
       }
 
       success = true;

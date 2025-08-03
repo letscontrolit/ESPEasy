@@ -13,6 +13,8 @@
 //
 
 /** Changelog
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for RGB Color sensor)
  * 2025-01-03 tonhuisman: Small code cleanup and reformatting
  * 2021-01-20 tonhuisman: Renamed Calibration to Transformation, fix some textual issues
  * 2021-01-20 tonhuisman: Added optional events for not selected RGB outputs, compile-time optional
@@ -56,6 +58,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -73,6 +76,22 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_050));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -114,12 +133,12 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode[] = {
-          F("2.4 ms"),
-          F("24 ms"),
-          F("50 ms"),
-          F("101 ms"),
-          F("154 ms"),
-          F("700 ms"),
+          F("2.4"),
+          F("24"),
+          F("50"),
+          F("101"),
+          F("154"),
+          F("700"),
         };
         const int optionValuesMode[] = {
           TCS34725_INTEGRATIONTIME_2_4MS,
@@ -129,7 +148,9 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           TCS34725_INTEGRATIONTIME_154MS,
           TCS34725_INTEGRATIONTIME_700MS,
         };
-        addFormSelector(F("Integration Time"), F("inttime"), 6, optionsMode, optionValuesMode, PCONFIG(0));
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsMode), optionsMode, optionValuesMode);
+        selector.addFormSelector(F("Integration Time"), F("inttime"),  PCONFIG(0));
+        addUnit(F("ms"));
       }
 
       {
@@ -145,7 +166,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           TCS34725_GAIN_16X,
           TCS34725_GAIN_60X,
         };
-        addFormSelector(F("Gain"), F("gain"), 4, optionsMode2, optionValuesMode2, PCONFIG(1));
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsMode2), optionsMode2, optionValuesMode2);
+        selector.addFormSelector(F("Gain"), F("gain"), PCONFIG(1));
       }
 
       addFormSubHeader(F("Output settings"));
@@ -163,7 +185,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         // const int optionValuesRGB[P050_RGB_OPTIONS] = { 0, 1, 2, 3, 4, 5 };
         constexpr size_t valueCount = NR_ELEMENTS(optionsRGB);
-        addFormSelector(F("Output RGB Values"), F("outputrgb"), valueCount, optionsRGB, nullptr, PCONFIG(2));
+        const FormSelectorOptions selector(valueCount, optionsRGB);
+        selector.addFormSelector(F("Output RGB Values"), F("outputrgb"), PCONFIG(2));
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("For 'normalized' or 'transformed' options, the Red/Green/Blue Decimals should best be increased."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -190,7 +213,8 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
         // const int optionValuesOutput[P050_VALUE4_OPTIONS] = { 0, 1, 2, 3 };
         constexpr size_t valueCount = NR_ELEMENTS(optionsOutput);
-        addFormSelector(F("Output at Values #4"), F("output4"), valueCount, optionsOutput, nullptr, PCONFIG(3));
+        const FormSelectorOptions selector(valueCount, optionsOutput);
+        selector.addFormSelector(F("Output at Values #4"), F("output4"), PCONFIG(3));
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Optionally adjust Values #4 name accordingly."));
         # endif // ifndef LIMIT_BUILD_SIZE

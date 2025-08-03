@@ -64,10 +64,7 @@ Device Settings
 
 * **P Ref**: The calibration value for the Power measurement. When set to 0, a default value of ``12530`` will be used, see Calibration, below.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-Single event with all values, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. as this is optional for this plugin.
 

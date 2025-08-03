@@ -5,6 +5,10 @@
 // #################################### Plugin-107: SI1145 - UV index / IR / visible  ####################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
+
 # include "src/PluginStructs/P107_data_struct.h"
 
 # define PLUGIN_107
@@ -47,6 +51,17 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_107));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_IR_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

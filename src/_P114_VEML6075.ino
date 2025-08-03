@@ -8,6 +8,9 @@
 // ###################################### stefan@clumsy.ch      ##########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # define PLUGIN_114
 # define PLUGIN_ID_114          114
@@ -53,6 +56,17 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -80,11 +94,11 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode2[] = {
-          F("50 ms"),
-          F("100 ms"),
-          F("200 ms"),
-          F("400 ms"),
-          F("800 ms"),
+          F("50"),
+          F("100"),
+          F("200"),
+          F("400"),
+          F("800"),
         };
         const int optionValuesMode2[] = {
           P114_IT_50,
@@ -94,7 +108,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           P114_IT_800,
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
-        addFormSelector(F("Integration Time"), F("it"), optionCount, optionsMode2, optionValuesMode2, PCONFIG(1));
+        const FormSelectorOptions selector(optionCount, optionsMode2, optionValuesMode2);
+        selector.addFormSelector(F("Integration Time"), F("it"), PCONFIG(1));
+        addUnit(F("ms"));
       }
 
       {
@@ -103,7 +119,8 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           F("High Dynamic") }
         ;
         constexpr size_t optionCount = NR_ELEMENTS(optionsMode3);
-        addFormSelector(F("Dynamic Setting"), F("hd"), optionCount, optionsMode3, nullptr, PCONFIG(2));
+        const FormSelectorOptions selector(optionCount, optionsMode3);
+        selector.addFormSelector(F("Dynamic Setting"), F("hd"), PCONFIG(2));
       }
 
       success = true;

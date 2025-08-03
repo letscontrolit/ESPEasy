@@ -55,9 +55,9 @@ ADXL345::ADXL345(int CS) {
 }
 
 void ADXL345::powerOn() {
-  if (I2C) {
-    Wire.begin(); // If in I2C Mode Only
-  }
+  // if (I2C) {
+  //   Wire.begin(); // If in I2C Mode Only ESPEasy has already taken care of this
+  // }
 
   // ADXL345 TURN ON
   writeTo(ADXL345_POWER_CTL, 0);  // Wakeup

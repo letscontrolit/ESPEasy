@@ -10,6 +10,9 @@
 // Based on VEML6070 plugin from Sonoff-Tasmota (https://github.com/arendst/Sonoff-Tasmota)
 // Datasheet: https://www.vishay.com/docs/84277/veml6070.pdf
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # define PLUGIN_084
 # define PLUGIN_ID_084         84
@@ -69,6 +72,16 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = (event->Par1 == 0x38);
@@ -88,7 +101,8 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     {
       const __FlashStringHelper *optionsMode[] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
       constexpr size_t optionCount             = NR_ELEMENTS(optionsMode);
-      addFormSelector(F("Refresh Time Determination"), F("itime"), optionCount, optionsMode, nullptr, PCONFIG(0));
+      const FormSelectorOptions selector(optionCount, optionsMode);
+      selector.addFormSelector(F("Refresh Time Determination"), F("itime"), PCONFIG(0));
 
       success = true;
       break;

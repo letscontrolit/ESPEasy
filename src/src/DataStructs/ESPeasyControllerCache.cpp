@@ -2,6 +2,8 @@
 
 #if FEATURE_RTC_CACHE_STORAGE
 
+#include "../Helpers/Memory.h"
+
 ControllerCache_struct::~ControllerCache_struct() {
   if (_RTC_cache_handler != nullptr) {
     delete _RTC_cache_handler;
@@ -33,11 +35,12 @@ bool ControllerCache_struct::flush() {
 
 void ControllerCache_struct::init() {
   if (_RTC_cache_handler == nullptr) {
-    # ifdef USE_SECOND_HEAP
-//    HeapSelectIram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
+    constexpr unsigned size = sizeof(RTC_cache_handler_struct);
+    void *ptr               = special_calloc(1, size);
 
-    _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
+    if (ptr != nullptr) {
+      _RTC_cache_handler = new (ptr) RTC_cache_handler_struct;
+    }
     if (_RTC_cache_handler != nullptr) {
       _RTC_cache_handler->init();
     }

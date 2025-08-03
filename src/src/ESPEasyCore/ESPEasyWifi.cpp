@@ -326,7 +326,9 @@ bool WiFiConnected() {
         // Timer reached, so enable AP mode.
         if (!WifiIsAP(WiFi.getMode())) {
           if (!WiFiEventData.wifiConnectAttemptNeeded) {
+            #ifndef BUILD_MINIMAL_OTA
             addLog(LOG_LEVEL_INFO, F("WiFi : WiFiConnected(), start AP"));
+            #endif
             WifiScan(false);
             setSTA(false); // Force reset WiFi + reduce power consumption
             setAP(true);
@@ -670,7 +672,9 @@ void resetWiFi() {
   WifiDisconnect();
 
   // Send this log only after WifiDisconnect() or else sending to syslog may cause issues
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_INFO, F("Reset WiFi."));
+  #endif
 
   //  setWifiMode(WIFI_OFF);
 
@@ -1146,6 +1150,7 @@ void WifiScan(bool async, uint8_t channel) {
 #ifdef ESP32
     const bool passive = Settings.PassiveWiFiScan();
     const uint32_t max_ms_per_chan = 120;
+    WiFi.setScanTimeout(14 * max_ms_per_chan * 2);
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
 #endif
     if (!async) {
@@ -1382,13 +1387,17 @@ void setWifiMode(WiFiMode_t new_mode) {
 
   int retry = 2;
   while (!WiFi.mode(new_mode) && retry > 0) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("WIFI : Cannot set mode!!!!!"));
+    #endif
     delay(100);
     --retry;
   }
   retry = 2;
   while (WiFi.getMode() != new_mode && retry > 0) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("WIFI : mode not yet set"));
+    #endif
     delay(100);
     --retry;
   }
@@ -1519,10 +1528,14 @@ void setConnectionSpeed() {
     if (candidate.phy_known() && (candidate.bits.phy_11g != candidate.bits.phy_11n)) {
       if ((WIFI_PHY_MODE_11G == phyMode) && !candidate.bits.phy_11g) {
         phyMode = WIFI_PHY_MODE_11N;
+        #ifndef BUILD_MINIMAL_OTA
         addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11n only"));
+        #endif
       } else if ((WIFI_PHY_MODE_11N == phyMode) && !candidate.bits.phy_11n) {
         phyMode = WIFI_PHY_MODE_11G;
+        #ifndef BUILD_MINIMAL_OTA
         addLog(LOG_LEVEL_INFO, F("WIFI : AP is set to 802.11g only"));
+        #endif
       }      
     } else {
       bool useAlternate = WiFiEventData.connectionFailures > 10;

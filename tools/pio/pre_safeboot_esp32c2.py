@@ -47,7 +47,7 @@ else:
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
 my_defines = my_flags.get("CPPDEFINES")
-env.Append(BUILD_FLAGS=custom_defines)
+env.Append(CXXFLAGS=custom_defines)
 #defines = {k: v for (k, v) in my_defines}
 
 print("\u001b[32m Custom PIO configuration check \u001b[0m")

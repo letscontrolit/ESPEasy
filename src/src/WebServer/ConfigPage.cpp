@@ -52,7 +52,9 @@ void handle_config() {
     Settings.Unit = getFormItemInt(F("unit"), Settings.Unit);
 
     if (strcmp(Settings.Name, name.c_str()) != 0) {
+      #ifndef BUILD_MINIMAL_OTA
       addLog(LOG_LEVEL_INFO, F("Unit Name changed."));
+      #endif
 
       if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #if FEATURE_MQTT

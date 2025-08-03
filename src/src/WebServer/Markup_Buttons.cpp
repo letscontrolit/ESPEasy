@@ -3,6 +3,8 @@
 #include "../WebServer/common.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include "../Static/WebStaticData.h"
 
 
@@ -153,15 +155,7 @@ void addSubmitButton(const String& value, const String& name, const String& clas
 {
   addHtml(F("<input "));
   {
-    String fullClasses;
-    fullClasses.reserve(12 + classes.length());
-    fullClasses = F("button link");
-
-    if (classes.length() > 0) {
-      fullClasses += ' ';
-      fullClasses += classes;
-    }
-    addHtmlAttribute(F("class"), fullClasses);
+    addHtmlAttribute(F("class"), concat(F("button link "), classes));
   }
   addHtmlAttribute(F("type"),  F("submit"));
   addHtmlAttribute(F("value"), value);

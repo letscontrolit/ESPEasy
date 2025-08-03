@@ -157,6 +157,38 @@ float P026_get_value(uint8_t type)
   return res;
 }
 
+# if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+Sensor_VType P026_get_valueVType(uint8_t type) {
+  switch (type)
+  {
+    case P026_VALUETYPE_uptime:   return Sensor_VType::SENSOR_TYPE_DURATION;
+    case P026_VALUETYPE_freeheap: return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
+    case P026_VALUETYPE_rssi:     return Sensor_VType::SENSOR_TYPE_SIGNAL_STRENGTH;
+    case P026_VALUETYPE_vcc:      return Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY;
+    case P026_VALUETYPE_load:     return Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY;
+    case P026_VALUETYPE_ip1:
+    case P026_VALUETYPE_ip2:
+    case P026_VALUETYPE_ip3:
+    case P026_VALUETYPE_ip4:       return Sensor_VType::SENSOR_TYPE_NONE;
+    case P026_VALUETYPE_web:       return Sensor_VType::SENSOR_TYPE_DURATION;
+    case P026_VALUETYPE_freestack: return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
+    case P026_VALUETYPE_txpwr:     return Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY;
+#  ifdef USE_SECOND_HEAP
+    case P026_VALUETYPE_free2ndheap:  return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
+#  endif // ifdef USE_SECOND_HEAP
+#  if FEATURE_INTERNAL_TEMPERATURE
+    case P026_VALUETYPE_internaltemp: return Sensor_VType::SENSOR_TYPE_TEMP_ONLY;
+#  endif // if FEATURE_INTERNAL_TEMPERATURE
+#  if defined(ESP32) && defined(BOARD_HAS_PSRAM)
+    case P026_VALUETYPE_freepsram:    return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
+#  endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
+  }
+
+  return Sensor_VType::SENSOR_TYPE_NONE;
+}
+
+# endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
 bool P026_data_struct::GetDeviceValueNames(struct EventStruct *event)
 {
   const int valueCount = P026_NR_OUTPUT_VALUES;
@@ -200,6 +232,23 @@ bool P026_data_struct::WebformSave(struct EventStruct *event)
     const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
     const uint8_t choice       = PCONFIG(pconfigIndex);
     sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
+    # if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE && FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+    if (choice != PCONFIG(pconfigIndex)) {
+      const Sensor_VType vtype = P026_get_valueVType(PCONFIG(pconfigIndex));
+      ExtraTaskSettings.setTaskVarCustomVType(i, static_cast<uint8_t>(vtype));
+      const String uom = getValueType2DefaultHAUoM(vtype);
+      ExtraTaskSettings.setTaskVarUnitOfMeasure(i, 0);
+
+      if (!uom.isEmpty()) {
+        const int uomIdx = getUnitOfMeasureIndex(uom);
+
+        if (uomIdx > 0) {
+          ExtraTaskSettings.setTaskVarUnitOfMeasure(i, uomIdx);
+        }
+      }
+    }
+    # endif // if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE && FEATURE_TASKVALUE_UNIT_OF_MEASURE
   }
   return true;
 }
@@ -209,7 +258,7 @@ bool P026_data_struct::Plugin_Read(struct EventStruct *event)
   const int valueCount = P026_NR_OUTPUT_VALUES;
 
   for (int i = 0; i < valueCount; ++i) {
-    UserVar.setFloat(event->TaskIndex, i,  P026_get_value(PCONFIG(i)));
+    UserVar.setFloat(event->TaskIndex, i, P026_get_value(PCONFIG(i)));
   }
       # ifndef LIMIT_BUILD_SIZE
 

@@ -92,10 +92,7 @@ Sensor
 
 * **Limit max**: The highest value that the counter will go to. As with the min limit if the counter is above this limit it will descend to the max level but never climb over it once reached below it.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 0 sec for this plugin, as this setting is optional. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

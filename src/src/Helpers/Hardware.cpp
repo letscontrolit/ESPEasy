@@ -24,6 +24,8 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../_Plugin_Helper.h"
+
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
@@ -532,6 +534,20 @@ long HwRandom(long howsmall, long howbig) {
     return HwRandom(diff) + howsmall;
 }
 
+ESPEASY_RULES_FLOAT_TYPE HwRandom_f(
+  ESPEASY_RULES_FLOAT_TYPE howsmall,
+  ESPEASY_RULES_FLOAT_TYPE howbig)
+{
+  if (approximatelyEqual(howsmall, howbig)) {
+    return howsmall;
+  }
+  return mapADCtoFloat(
+    HwRandom(),
+    0, std::numeric_limits<uint32_t>::max(),
+    howsmall, howbig);
+}
+
+
 #ifdef ESP8266
 void readBootCause() {
   lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;
@@ -963,6 +979,37 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
     // NOTE: do not enable task by default. allow user to enter sensible valus first and let him enable it when ready.
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
+
+    #if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE && FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    // Fill in standard Unit of measurement and Value Type, if possible
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+    std::vector<DiscoveryItem> discoveryItems;
+    MQTT_DiscoveryGetDeviceVType(taskIndex, discoveryItems, getValueCountForTask(taskIndex), dummy);
+
+    for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+      // Match varNr with the DiscoveryItems to find the Sensor_VType for the value
+      for (uint8_t j = 0; j < discoveryItems.size(); ++j) {
+        for (uint8_t k = 0; k < discoveryItems[j].valueCount; ++k) { // Can have multiple values for 1 VType
+          if (varNr == discoveryItems[j].varIndex + k) {
+            const String uom = getValueType2DefaultHAUoM(discoveryItems[j].VType);
+
+            if (!uom.isEmpty()) {
+              const int uomIdx = getUnitOfMeasureIndex(uom);
+
+              if (uomIdx > 0) {
+                ExtraTaskSettings.setTaskVarUnitOfMeasure(varNr, uomIdx);
+              }
+            }
+
+            if (Device[DeviceIndex].CustomVTypeVar) {
+              ExtraTaskSettings.setTaskVarCustomVType(varNr, static_cast<uint8_t>(discoveryItems[j].VType));
+            }
+          }
+        }
+      }
+    }
+
+    #endif // if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE && FEATURE_TASKVALUE_UNIT_OF_MEASURE
   } else {
     // New task is empty task, thus save config now.
     taskClear(taskIndex, true);                                 // clear settings, and save

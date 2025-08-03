@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for SEN5x)
  * 2024-05-05 tonhuisman: Add subcommand sen5x,techlog,<1|0> to enable/disable Technical logging option. 0 = Off, any other value is on
  * 2024-04-20 tonhuisman: Replace dewpoint calculation by standard calculation, fix issue with status bits, reduce strings
  *                        Remove unneeded code and variables, move most defines to P167_data_struct.h
@@ -76,6 +78,15 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
       success           = true;
       break;
     }
+
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_167_QueryVType, P167_QUERY1_CONFIG_POS, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
 
     case PLUGIN_GET_DEVICEVALUENAMES:
@@ -176,9 +187,9 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
         P167_MODEL_SEN55,
       };
       constexpr uint8_t optCount = NR_ELEMENTS(options_model_value);
-
-      addFormSelector(F("Model Type"), P167_MODEL_LABEL, optCount,
-                      options_model, options_model_value, P167_MODEL, true);
+      FormSelectorOptions selector(optCount, options_model, options_model_value);
+      selector.reloadonchange = true;
+      selector.addFormSelector(F("Model Type"), P167_MODEL_LABEL,  P167_MODEL);
       addFormNote(F("Changing the Model Type will reload the page."));
 
       if (P167_MODEL == P167_MODEL_VINDSTYRKA) {

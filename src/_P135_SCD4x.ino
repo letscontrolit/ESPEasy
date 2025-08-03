@@ -5,7 +5,8 @@
 // ########################## Plugin 135: Gases - SCD4x CO2, Humidity, Temperature #######################
 // #######################################################################################################
 
-/**
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-08-16 tonhuisman: Disable 'factoryreset' command by default, to protect the innocent. There is a higher than 99.999% chance you
  *                        want something else than a reset to factory defaults and 400 ppm! If you do, then create a Custom build with
  *                        the matching feature-flag enabled.
@@ -72,6 +73,16 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = event->Par1 == 0x62;
@@ -105,7 +116,9 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41),
         };
         constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
-        addFormSelector(F("Sensor model"), F("ptype"), optionCount, sensorTypes, sensorTypeOptions, P135_SENSOR_TYPE, true);
+        FormSelectorOptions selector(optionCount, sensorTypes, sensorTypeOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ptype"), P135_SENSOR_TYPE);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Page will reload on change."));
         # endif // ifndef LIMIT_BUILD_SIZE

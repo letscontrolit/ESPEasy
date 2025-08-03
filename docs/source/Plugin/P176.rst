@@ -65,10 +65,7 @@ Logging
 
 * **Quiet logging (reduces logging)**: During normal operation there is some minimal logging available, informing about successfully received packets. This logging is suppressed when Quiet logging is enabled.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. In this situation, no data is sent automatically, and no events are generated. The data will still be collected and can be retrieved for use on a display, or further processing from other rules. When an Interval is set the data can be optionally sent to any configured controllers and either a single ``#All`` event or an event per value will be generated. As an alternative, the ``TaskRun`` command can be used to publish the data at any moment.
 

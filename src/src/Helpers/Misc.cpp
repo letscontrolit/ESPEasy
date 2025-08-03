@@ -144,7 +144,9 @@ void taskClear(taskIndex_t taskIndex, bool save)
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
+    #endif // ifndef BUILD_MINIMAL_OTA
     SaveTaskSettings(taskIndex);
     SaveSettings();
   }
@@ -312,13 +314,14 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
     if (validDeviceIndex(DeviceIndex)) {
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
+      String taskName          = getTaskDeviceName(TaskIndex);
 
       const String logline_prefix =
         strformat(F("%s %s,%d,%s")
                   , node_time.getDateString('-').c_str()
                   , node_time.getTimeString(':').c_str()
                   , Settings.Unit
-                  , getTaskDeviceName(TaskIndex).c_str()
+                  , taskName.c_str()
                   );
 
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -329,6 +332,41 @@ void SendValueLogger(taskIndex_t TaskIndex)
                             , formatUserVarNoCheck(TaskIndex, varNr).c_str()
                             );
       }
+      # if FEATURE_STRING_VARIABLES
+
+      if (Settings.EventAndLogDerivedTaskValues(TaskIndex)) {
+        taskName.toLowerCase();
+        String postfix;
+        const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+
+        auto it = customStringVar.begin();
+
+        while (it != customStringVar.end()) {
+          if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+            String valueName    = it->first.substring(search.length(), it->first.indexOf('-'));
+            const String vname2 = getDerivedValueName(taskName, valueName);
+
+            if (!vname2.isEmpty()) {
+              valueName = vname2;
+            }
+
+            if (!it->second.isEmpty()) {
+              String value(it->second);
+              value   = parseTemplateAndCalculate(value);
+              logger += strformat(F("%s,%s,%s\r\n")
+                                  , logline_prefix.c_str()
+                                  , valueName.c_str()
+                                  , value.c_str()
+                                  );
+            }
+          }
+          else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+            break;
+          }
+          ++it;
+        }
+      }
+      # endif // if FEATURE_STRING_VARIABLES
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, logger);
       # endif // ifndef BUILD_NO_DEBUG
@@ -528,7 +566,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
-    if (log.reserve(128)) {
+    if (reserve_special(log, 128)) {
       log  = F("After ");
       log += function;
 

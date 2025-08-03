@@ -31,12 +31,22 @@ bool isFlashInterfacePin_ESPEasy(int gpio) {
   // GPIO-27 ... 32: SPI 8 ­line mode (OPI) pins for flash or PSRAM (e.g. ESP32-S2FH2 and ESP32-S2FH4)
 //  return (gpio) >= 22 && (gpio) <= 25;
   switch (gpio) {
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
     case SPI_IOMUX_PIN_NUM_HD:
     case SPI_IOMUX_PIN_NUM_CS:
     case SPI_IOMUX_PIN_NUM_MOSI:
     case SPI_IOMUX_PIN_NUM_CLK:
     case SPI_IOMUX_PIN_NUM_MISO:
     case SPI_IOMUX_PIN_NUM_WP:
+#else
+    case MSPI_IOMUX_PIN_NUM_CS1: return FoundPSRAM(); // SPICS1   Only when PSRAM is present
+    case MSPI_IOMUX_PIN_NUM_HD:
+    case MSPI_IOMUX_PIN_NUM_WP:
+    case MSPI_IOMUX_PIN_NUM_CS0:
+    case MSPI_IOMUX_PIN_NUM_CLK:
+    case MSPI_IOMUX_PIN_NUM_MISO:
+    case MSPI_IOMUX_PIN_NUM_MOSI:
+#endif
       return true;
   }
   return false;

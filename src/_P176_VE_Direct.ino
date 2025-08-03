@@ -6,8 +6,11 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-07-13 tonhuisman: Set defaults for Custom Value Type per task value
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for VE.Direct)
  * 2024-11-24 tonhuisman: Add setting "Events only on updated data" to not generate events/Controller output if no new packets have been
- *received
+ *                        received
  *                        This check is independent from the Updated GetConfig value.
  * 2024-11-10 tonhuisman: Renamed GetConfig ischanged to updated.
  * 2024-11-08 tonhuisman: Add successcount, errorcount and ischanged values for GetConfig. IsChanged will reset the state on each call, so
@@ -54,6 +57,7 @@ boolean Plugin_176(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
 
       break;
     }
@@ -75,6 +79,22 @@ boolean Plugin_176(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
     case PLUGIN_SET_DEFAULTS:
     {
       CONFIG_PORT = static_cast<int>(ESPEasySerialPort::serial1); // Serial1 port
@@ -92,6 +112,11 @@ boolean Plugin_176(uint8_t function, struct EventStruct *event, String& string)
       # endif // if P176_FAIL_CHECKSUM
       P176_SET_LED_PIN(-1);
       P176_SET_QUIET_LOG(true);
+      # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+      ExtraTaskSettings.setTaskVarCustomVType(0, static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY));
+      ExtraTaskSettings.setTaskVarCustomVType(1, static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_CURRENT_ONLY));
+      ExtraTaskSettings.setTaskVarCustomVType(2, static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY));
+      # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
     }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:

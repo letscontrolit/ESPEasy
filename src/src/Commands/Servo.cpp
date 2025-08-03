@@ -89,7 +89,9 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
     return return_command_success_flashstr();
   }
   #else // if FEATURE_SERVO
+  #ifndef BUILD_MINIMAL_OTA
   addLog(LOG_LEVEL_ERROR, F("SERVO : command not included in build"));
+  #endif
   #endif // FEATURE_SERVO
   return return_command_failed_flashstr();
 }

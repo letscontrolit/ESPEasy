@@ -72,10 +72,7 @@ Device Settings
 
 .. note:: To be able to use the Count-average value, the **Stats** checkbox for the Count value must be enabled. Only the available values will be used for the average, as data from any previous run is not persisted after plugin restart.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

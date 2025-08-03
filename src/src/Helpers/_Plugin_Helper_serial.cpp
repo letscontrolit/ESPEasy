@@ -153,15 +153,18 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if ((channel != SC16IS752_CHANNEL_A) && (channel != SC16IS752_CHANNEL_B)) {
       channel = SC16IS752_CHANNEL_A;
     }
-    const __FlashStringHelper *chOptions[SC16IS752_CHANNELS] = {
+    const __FlashStringHelper *chOptions[] = {
       F("A"),
       F("B"),
     };
-    const int chValues[SC16IS752_CHANNELS] = {
+    /*
+    const int chValues[] = {
       SC16IS752_CHANNEL_A,
       SC16IS752_CHANNEL_B,
     };
-    addFormSelector(F("Channel"), F("i2cuart_ch"), SC16IS752_CHANNELS, chOptions, chValues, channel);
+    */
+    const FormSelectorOptions selector(NR_ELEMENTS(chOptions), chOptions);
+    selector.addFormSelector(F("Channel"), F("i2cuart_ch"), channel);
   }
 }
 
@@ -301,10 +304,13 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #endif
     options[i] = option;
   }
-  addFormSelector_script(F("Serial Port"), F("serPort"), NR_ESPEASY_SERIAL_TYPES,
-                         options, ids, nullptr,
-                         static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)),
-                         F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
+  FormSelectorOptions selector(NR_ESPEASY_SERIAL_TYPES, options, ids);
+
+  // Script to toggle GPIO visibility when changing selection.
+  selector.onChangeCall = F("serialPortChanged(this)"); 
+  selector.addFormSelector(
+    F("Serial Port"), F("serPort"),
+    static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)));
 #if USES_I2C_SC16IS752
   serialHelper_addI2CuartSelectors(rxPinDef, txPinDef);
 #endif // ifndef DISABLE_SC16IS752_Serial

@@ -44,7 +44,7 @@ void handle_timingstats() {
   }
 
 
-  const long timeSinceLastReset = stream_timing_statistics(true);
+  const int32_t timeSinceLastReset = stream_timing_statistics(true);
   html_end_table();
 
   html_table_class_normal();
@@ -68,7 +68,7 @@ void handle_timingstats() {
 // ********************************************************************************
 // HTML table formatted timing statistics
 // ********************************************************************************
-void format_using_threshhold(unsigned long value) {
+void format_using_threshhold(uint32_t value) {
   float value_msec = value / 1000.0f;
 
   if (value > TIMING_STATS_THRESHOLD) {
@@ -78,9 +78,9 @@ void format_using_threshhold(unsigned long value) {
   }
 }
 
-void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  uint64_t minVal, maxVal;
-  const uint64_t c = stats.getMinMax(minVal, maxVal);
+void stream_html_timing_stats(const TimingStats& stats, int32_t timeSinceLastReset) {
+  uint32_t minVal, maxVal;
+  const uint32_t c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtmlInt(c);
@@ -112,8 +112,8 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   format_using_threshhold(maxVal);
 }
 
-long stream_timing_statistics(bool clearStats) {
-  const long timeSinceLastReset = timePassedSince(timingstats_last_reset);
+int32_t stream_timing_statistics(bool clearStats) {
+  const int32_t timeSinceLastReset = timePassedSince(timingstats_last_reset);
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {

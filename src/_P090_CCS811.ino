@@ -19,6 +19,10 @@
    The library has provisions for the other modes.
  */
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
+
 # define PLUGIN_090
 # define PLUGIN_ID_090         90
 # define PLUGIN_NAME_090       "Gases - CCS811 TVOC/eCO2"
@@ -102,6 +106,16 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TVOC_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -111,7 +125,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         const __FlashStringHelper *options[] = { F("0x5A (ADDR pin is LOW)"), F("0x5B (ADDR pin is HIGH)") };
         constexpr size_t optionCount         = NR_ELEMENTS(options);
-        addFormSelector(F("I2C Address"), F("i2c_addr"), optionCount, options, i2cAddressValues, P090_I2C_ADDR);
+        const FormSelectorOptions selector(optionCount, options, i2cAddressValues);
+        selector.addFormSelector(F("I2C Address"), F("i2c_addr"), P090_I2C_ADDR);
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -135,7 +150,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *frequencyOptions[] = { F("1 second"), F("10 seconds"), F("60 seconds") };
         const int frequencyValues[]                   = { 1, 2, 3 };
         constexpr size_t optionCount                  = NR_ELEMENTS(frequencyValues);
-        addFormSelector(F("Take reading every"), F("temp_freq"), optionCount, frequencyOptions, frequencyValues, frequencyChoice);
+        const FormSelectorOptions selector(optionCount, frequencyOptions, frequencyValues);
+        selector.addFormSelector(F("Take reading every"), F("temp_freq"), frequencyChoice);
       }
 
       addFormSeparator(2);

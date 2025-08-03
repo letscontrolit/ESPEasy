@@ -327,6 +327,8 @@ References:
 
 .. .. |P053_usedby|
 
+.. include:: DataAcquisition.repl
+
 Commands available
 ^^^^^^^^^^^^^^^^^^
 

@@ -131,6 +131,7 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   return true;
 }
 
+#if SOC_TOUCH_SENSOR_SUPPORTED
 int touchPinToGpio(int touch_pin)
 {
   switch (touch_pin) {
@@ -154,6 +155,7 @@ int touchPinToGpio(int touch_pin)
 
   return -1;
 }
+#endif
 
 // Get DAC related info for a given GPIO pin
 // @param gpio_pin   GPIO pin number

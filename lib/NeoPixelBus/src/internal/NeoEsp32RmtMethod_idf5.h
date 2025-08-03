@@ -455,7 +455,10 @@ public:
         config.gpio_num = static_cast<gpio_num_t>(_pin);
         config.mem_block_symbols = NEOESP32_RMT_MEM_BLOCK_SYMBOLS;          // memory block size, 64 * 4 = 256 Bytes
         config.resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
-        config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
+        config.trans_queue_depth = 2;           // set the number of transactions that can pend in the background
+        config.intr_priority = 0;
+        config.flags.io_loop_back = 0;
+        config.flags.io_od_mode = 0;
         config.flags.invert_out = false;        // do not invert output signal
         config.flags.with_dma = NEOESP32_RMT_FLAGS_WITH_DMA; 
 
@@ -464,6 +467,8 @@ public:
         encoder_config.resolution = RMT_LED_STRIP_RESOLUTION_HZ;
 
         _tx_config.loop_count = 0; //no loop
+        _tx_config.flags.eot_level = 0; // Low level for end-of-transaction
+        _tx_config.flags.queue_nonblocking = 1; // May block
 
         ret += rmt_new_led_strip_encoder(&encoder_config, &_led_encoder, T_SPEED::RmtBit0, T_SPEED::RmtBit1);
 
@@ -476,10 +481,10 @@ public:
     {
         // AddLog(2,"..");
         // wait for not actively sending data
-        // this will time out at 10 seconds, an arbitrarily long period of time
+        // this will time out at 100 ms, an arbitrarily long period of time
         // and do nothing if this happens
 
-        if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_tx_wait_all_done(_channel.RmtChannelNumber, 10000 / portTICK_PERIOD_MS)))
+        if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_tx_wait_all_done(_channel.RmtChannelNumber, 100 / portTICK_PERIOD_MS)))
         {
             // AddLog(2,"__ %u", _sizeData);
             // now start the RMT transmit with the editing buffer before we swap
@@ -530,10 +535,15 @@ private:
     void construct()
     {
         // AddLog(2,"RMT:construct");
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+//        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataEditing = static_cast<uint8_t*>(
+            heap_caps_malloc(_sizeData, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA)
+        );
         // data cleared later in Begin()
 
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataSending = static_cast<uint8_t*>(
+            heap_caps_malloc(_sizeData, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA)
+            );
         // no need to initialize it, it gets overwritten on every send
     }
 };

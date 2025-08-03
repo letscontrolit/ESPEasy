@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+# define Sensor_VType_CAN_SET 0x0100 // 8 bits of Sensor_VType and the 9th bit to enable /set
+
 enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_NONE            =    0,
   SENSOR_TYPE_SINGLE          =    1,
@@ -34,6 +36,46 @@ enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_DOUBLE_DUAL     =   71,
 #endif
 
+  SENSOR_TYPE_ANALOG_ONLY     =  100,
+  SENSOR_TYPE_TEMP_ONLY       =  101,
+  SENSOR_TYPE_HUM_ONLY        =  102,
+  SENSOR_TYPE_LUX_ONLY        =  103,
+  SENSOR_TYPE_DISTANCE_ONLY   =  104,
+  SENSOR_TYPE_DIRECTION_ONLY  =  105,
+  SENSOR_TYPE_DUSTPM2_5_ONLY  =  106,
+  SENSOR_TYPE_DUSTPM1_0_ONLY  =  107,
+  SENSOR_TYPE_DUSTPM10_ONLY   =  108,
+  SENSOR_TYPE_MOISTURE_ONLY   =  109,
+  SENSOR_TYPE_CO2_ONLY        =  110,
+  SENSOR_TYPE_GPS_ONLY        =  111,
+  SENSOR_TYPE_UV_ONLY         =  112,
+  SENSOR_TYPE_UV_INDEX_ONLY   =  113,
+  SENSOR_TYPE_IR_ONLY         =  114,
+  SENSOR_TYPE_WEIGHT_ONLY     =  115,
+  SENSOR_TYPE_VOLTAGE_ONLY    =  116,
+  SENSOR_TYPE_CURRENT_ONLY    =  117,
+  SENSOR_TYPE_POWER_USG_ONLY  =  118,
+  SENSOR_TYPE_POWER_FACT_ONLY =  119,
+  SENSOR_TYPE_APPRNT_POWER_USG_ONLY = 120,
+  SENSOR_TYPE_TVOC_ONLY       =  121,
+  SENSOR_TYPE_BARO_ONLY       =  122,
+  SENSOR_TYPE_COLOR_RED_ONLY  =  123,
+  SENSOR_TYPE_COLOR_GREEN_ONLY = 124,
+  SENSOR_TYPE_COLOR_BLUE_ONLY =  125,
+  SENSOR_TYPE_COLOR_TEMP_ONLY =  126,
+  SENSOR_TYPE_REACTIVE_POWER_ONLY = 127,
+  SENSOR_TYPE_AQI_ONLY        = 128,
+  SENSOR_TYPE_NOX_ONLY        = 129,
+  SENSOR_TYPE_SWITCH_INVERTED = 130,
+  SENSOR_TYPE_WIND_SPEED      = 131,
+  SENSOR_TYPE_DURATION        = 132,
+  SENSOR_TYPE_DATE            = 133,
+  SENSOR_TYPE_TIMESTAMP       = 134,
+  SENSOR_TYPE_DATA_RATE       = 135,
+  SENSOR_TYPE_DATA_SIZE       = 136,
+  SENSOR_TYPE_SOUND_PRESSURE  = 137,
+  SENSOR_TYPE_SIGNAL_STRENGTH = 138,
+
   SENSOR_TYPE_NOT_SET = 255
 };
 
@@ -50,6 +92,7 @@ enum class Output_Data_type_t : uint8_t {
    To get the actual output values for a task, use getValueCountForTask
 \*********************************************************************************************/
 uint8_t getValueCountFromSensorType(Sensor_VType sensorType);
+uint8_t getValueCountFromSensorType(Sensor_VType sensorType, bool log);
 
 const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
@@ -74,7 +117,14 @@ bool isIntegerOutputDataType(Sensor_VType sensorType);
 
 bool is32bitOutputDataType(Sensor_VType sensorType);
 
+# if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+String getValueType2HADeviceClass(Sensor_VType sensorType);
+String getValueType2DefaultHAUoM(Sensor_VType sensorType);
+# endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
 
+#if FEATURE_CUSTOM_TASKVAR_VTYPE
+bool isMQTTDiscoverySensorType(Sensor_VType sensorType);
+#endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
 
 #endif

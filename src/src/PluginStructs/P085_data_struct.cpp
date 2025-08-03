@@ -30,6 +30,26 @@ const __FlashStringHelper* Plugin_085_valuename(uint8_t value_nr, bool displaySt
   return F("");
 }
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_085_QueryVType(uint8_t value_nr) {
+  Sensor_VType result = Sensor_VType::SENSOR_TYPE_NONE;
+
+  switch (value_nr) {
+    case P085_QUERY_V:      result = Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY; break;
+    case P085_QUERY_A:      result = Sensor_VType::SENSOR_TYPE_CURRENT_ONLY; break;
+    case P085_QUERY_W:      result = Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY; break;
+    case P085_QUERY_Wh_imp:                                                 // return Sensor_VType::SENSOR_TYPE_NONE; // FIXME
+    case P085_QUERY_Wh_exp:                                                 // return Sensor_VType::SENSOR_TYPE_NONE; // FIXME
+    case P085_QUERY_Wh_tot:                                                 // return Sensor_VType::SENSOR_TYPE_NONE; // FIXME
+    case P085_QUERY_Wh_net:                                                 // return Sensor_VType::SENSOR_TYPE_NONE; // FIXME
+    case P085_QUERY_h_tot:                                                  // return Sensor_VType::SENSOR_TYPE_NONE; // FIXME
+    case P085_QUERY_h_load: result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME
+  }
+  return static_cast<int>(result);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 int p085_storageValueToBaudrate(uint8_t baudrate_setting) {
   switch (baudrate_setting) {
     case 0:

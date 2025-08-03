@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-05-08 tonhuisman: Use ESPEasy core I2C functions where possible
  *                        Add support for use of the Analog output pin and 'analogout,<value>' command
@@ -26,6 +27,13 @@
 # define P007_INPUT_MODE         PCONFIG_LONG(0)
 # define P007_OUTPUT_MODE        PCONFIG_LONG(1)
 # define P007_OUTPUT_ENABLED     (0b01000000)
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_007_QueryVType(uint8_t value_nr) {
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 
 boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
@@ -79,6 +87,14 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_007_QueryVType, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P007_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
@@ -105,7 +121,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += x;
         }
         addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("pport"), 4, portNames, portValues, port);
+        const FormSelectorOptions selector(4, portNames, portValues);
+        selector.addFormSelector(F("Port"), F("pport"), port);
         addFormNote(F(
                       "Selected Port value will be stored in first 'Values' field and consecutively for 'Number Output Values' &gt; Single."));
       } else {
@@ -142,7 +159,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         0b00110000,
       };
       constexpr size_t optionCount = NR_ELEMENTS(inputModeValues);
-      addFormSelector(F("Input mode"), F("input_mode"), optionCount, inputModeOptions, inputModeValues, P007_INPUT_MODE);
+      const FormSelectorOptions selector(optionCount, inputModeOptions, inputModeValues);
+      selector.addFormSelector(F("Input mode"), F("input_mode"), P007_INPUT_MODE);
 
       addFormCheckBox(F("Enable Analog output (AOUT)"), F("output_mode"), P007_OUTPUT_MODE == P007_OUTPUT_ENABLED);
 

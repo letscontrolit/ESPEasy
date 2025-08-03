@@ -112,10 +112,7 @@ When changing the number of relays, the page will be submitted and the settings 
 * **Loop Channel/Get on read**: When enabled, will update the Channel and Get values with the selected channel and its current state (0=off, 1=on). The channel will be incremented each interval (read action).
 
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

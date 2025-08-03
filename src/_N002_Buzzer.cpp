@@ -46,7 +46,7 @@ bool NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& 
     //     if (command == F("buzzer"))
     //     {
     //       MakeNotificationSettings(NotificationSettings);
-    //       LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+    //       LoadNotificationSettings(event->NotificationIndex, (uint8_t *)NotificationSettings.get(), sizeof(NotificationSettingsStruct));
     //       success = true;
     //     }
     //     break;
@@ -55,10 +55,14 @@ bool NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& 
     case NPlugin::Function::NPLUGIN_NOTIFY:
       {
         MakeNotificationSettings(NotificationSettings);
-        LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
-        NotificationSettings.validate();
+        if (!AllocatedNotificationSettings()) {
+          break;
+        }
+ 
+        LoadNotificationSettings(event->NotificationIndex, (uint8_t *)NotificationSettings.get(), sizeof(NotificationSettingsStruct));
+        NotificationSettings->validate();
         //this reserves IRAM and uninitialized RAM
-        tone_espEasy(NotificationSettings.Pin1, 440, 500);
+        tone_espEasy(NotificationSettings->Pin1, 440, 500);
         success = true;
       }
 

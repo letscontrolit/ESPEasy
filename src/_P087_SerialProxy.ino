@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Serial Proxy)
  * 2024-02-27 tonhuisman: Always process the regular expression like 'Global Match' to enable retrieving the available values
  * 2024-02-26 tonhuisman: Apply log-string and other code optimizations
  * 2024-02-25 tonhuisman: Add command serialproxy_test,<testdata> to test as if serial data was received
@@ -103,6 +104,15 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event, false, true); // TX optional
@@ -348,13 +358,14 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         optionValues[i] = matchType;
       }
       P087_Match_Type choice = P087_data->getMatchType();
-      addFormSelector(F("Match Type"),
-                      getPluginCustomArgName(P087_MATCH_TYPE_POS),
-                      P087_Match_Type_NR_ELEMENTS,
-                      options,
-                      optionValues,
-                      choice,
-                      false);
+      const FormSelectorOptions selector(
+        P087_Match_Type_NR_ELEMENTS,
+        options,
+        optionValues);
+      selector.addFormSelector(
+        F("Match Type"),
+        getPluginCustomArgName(P087_MATCH_TYPE_POS),
+        choice);
       addFormNote(F("Capture filter can only be used on Global Match"));
     }
 
@@ -386,13 +397,15 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           const int optionValues[] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, F(""));
+          FormSelectorOptions selector(2, options, optionValues);
+          selector.clearClassName();
+          selector.addSelector(id, static_cast<int>(comparator));
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, EMPTY_STRING, F(""));
+          addTextBox(id, filter, 32, F(""));
           break;
         }
       }

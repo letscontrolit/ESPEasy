@@ -339,6 +339,7 @@ ESPEASY_RULES_FLOAT_TYPE mapADCtoFloat(ESPEASY_RULES_FLOAT_TYPE float_value,
                                        ESPEASY_RULES_FLOAT_TYPE out1,
                                        ESPEASY_RULES_FLOAT_TYPE out2)
 {
+  // FIXME TD-er: When ADC1/2 are equal, shouldn't we just output either out1, out2 or some average of those?
   if (!approximatelyEqual(adc1, adc2))
   {
     const ESPEASY_RULES_FLOAT_TYPE normalized = (float_value - adc1) / (adc2 - adc1);

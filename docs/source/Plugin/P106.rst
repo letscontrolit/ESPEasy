@@ -58,10 +58,7 @@ Device Settings
 
 * **Present `Gas` in Ohm (not kOhm)**: Normally the Gas resistance value, received from the MOX Gas sensor, is divided to be presented as kOhm, but with this setting checked, the native Ohm value is shown.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

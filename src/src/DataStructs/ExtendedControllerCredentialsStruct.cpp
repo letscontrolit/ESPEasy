@@ -1,6 +1,7 @@
 #include "../DataStructs/ExtendedControllerCredentialsStruct.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
 #define EXT_CONTR_CRED_USER_OFFSET 0
 #define EXT_CONTR_CRED_PASS_OFFSET 1
@@ -24,7 +25,7 @@ bool ExtendedControllerCredentialsStruct::validateChecksum() const
 
 void ExtendedControllerCredentialsStruct::clear() {
   for (size_t i = 0; i < CONTROLLER_MAX * 2; ++i) {
-    _strings[i] = String();
+    free_string(_strings[i]);
   }
 }
 

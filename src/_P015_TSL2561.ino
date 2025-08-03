@@ -10,6 +10,9 @@
 // this plugin is based on the sparkfun library
 // written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (partially)
+ */
 
 # include "src/PluginStructs/P015_data_struct.h"
 
@@ -63,6 +66,17 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_IR_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -97,12 +111,14 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *options[] = {
-          F("13.7 ms"),
-          F("101 ms"),
-          F("402 ms"),
+          F("13.7"),
+          F("101"),
+          F("402"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(options);
-        addFormSelector(F("Integration time"), F("pintegration"), optionCount, options, nullptr, P015_INTEGRATION);
+        const FormSelectorOptions selector(optionCount, options);
+        selector.addFormSelector(F("Integration time"), F("pintegration"),  P015_INTEGRATION);
+        addUnit(F("ms"));
       }
 
       addFormCheckBox(F("Send sensor to sleep:"), F("psleep"),
@@ -115,14 +131,17 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
           F("Auto Gain"),
           F("Extended Auto Gain"),
         };
+        /*
         const int optionValues[] = {
           P015_NO_GAIN,
           P015_16X_GAIN,
           P015_AUTO_GAIN,
           P015_EXT_AUTO_GAIN,
         };
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Gain"), F("pgain"), optionCount, options, optionValues, P015_GAIN);
+        */
+        constexpr size_t optionCount = NR_ELEMENTS(options);
+        const FormSelectorOptions selector(optionCount, options/*, optionValues*/);
+        selector.addFormSelector(F("Gain"), F("pgain"),  P015_GAIN);
       }
 
       success = true;

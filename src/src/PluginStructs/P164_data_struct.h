@@ -54,6 +54,7 @@ public:
   bool begin();
   bool read(float& tvoc, float& eco2, float& aqi);
   bool read(float& tvoc, float& eco2, float& aqi, float temp, float hum);
+  bool setMode(uint8_t mode);                          // Set operation mode of sensor
   static bool webformLoad(struct EventStruct *event);
   static bool webformSave(struct EventStruct *event);
   bool tenPerSecond(struct EventStruct *event);
@@ -63,7 +64,6 @@ private:
 	bool        start(uint8_t slaveaddr);                       // Init I2C communication, resets ENS160 and checks its PART_ID. Returns false on I2C problems or wrong PART_ID.
 	bool        available()     { return this->_available; }    // Report availability of sensor
 	uint8_t     revENS16x()     { return this->_revENS16x; }    // Report version of sensor (0: ENS160, 1: ENS161)
-	bool        setMode(uint8_t mode);                          // Set operation mode of sensor
 	bool        initCustomMode(uint16_t stepNum);               // Initialize definition of custom mode with <n> steps
 	bool        addCustomStep(uint16_t time, bool measureHP0, bool measureHP1, bool measureHP2, bool measureHP3, uint16_t tempHP0, uint16_t tempHP1, uint16_t tempHP2, uint16_t tempHP3);
                                                               // Add a step to custom measurement profile with definition of duration, enabled data acquisition and temperature for each hotplate

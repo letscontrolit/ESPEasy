@@ -92,9 +92,7 @@ If either of the Hex/bin options is selected, but no ``Values display (Off=Hex/O
 
 * **Restore Values on warm boot**: By default, the register states are restored from RTC memory, so the outputs are in their previous state after a warm boot of the ESP. When turned off, all outputs will be turned off (low) on the next update.
 
-
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval**: By default, Interval will be set to 0 sec. as this is optional for this plugin. Every Interval setting, the current output states will be read from the runtime object (*not* from the shift registers!) and stored in the Values fields, so they can be restored on a warm boot of the ESP.
 

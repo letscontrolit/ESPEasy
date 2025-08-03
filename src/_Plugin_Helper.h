@@ -47,6 +47,10 @@
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
+#if FEATURE_MQTT_DISCOVER
+#include "src/Helpers/_CPlugin_Helper_mqtt.h"
+#endif // if FEATURE_MQTT_DISCOVER
+
 #if FEATURE_PLUGIN_STATS
 #include "src/PluginStructs/_StatsOnly_data_struct.h"
 #endif
@@ -91,6 +95,9 @@
 #endif // ifndef CONFIG_PORT
 
 extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
+
+// Try to allocate in PSRAM or 2nd heap if possible
+#define special_initPluginTaskData(I, T)  void * ptr = special_calloc(1, sizeof(T)); if (ptr) { initPluginTaskData(I, new (ptr) T()); }
 
 String PCONFIG_LABEL(int n);
 

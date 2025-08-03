@@ -125,8 +125,9 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("7-Seg. Clock"));
 
       {
-        const __FlashStringHelper *options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
-        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, nullptr, PCONFIG(1));
+        const __FlashStringHelper *options[] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Clock Type"), F("clocktype"), PCONFIG(1));
       }
 
       addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("csh10"), PCONFIG(2), 0,  7);

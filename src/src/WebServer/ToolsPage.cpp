@@ -47,7 +47,7 @@ void handle_tools() {
 
   html_TR_TD();
   addSubmitButton();
-  addHelpButton(F("ESPEasy_Command_Reference"));
+  // addHelpButton(F("ESPEasy_Command_Reference")); // Old documentation is just that: Old and out-dated.
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
@@ -56,7 +56,7 @@ void handle_tools() {
     addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
     addHtml(printWebString);
     addHtml(F("</textarea>"));
-    printWebString = String();
+    free_string(printWebString);
   }
 
 
@@ -129,6 +129,7 @@ void handle_tools() {
                                );
   #if FEATURE_TARSTREAM_SUPPORT
   addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  addWideButtonPlusDescription(F("backupnup"), F("Backup w/o credentials"), F("Save all files as a .tar archive but exclude usernames & passwords"));
   #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI
@@ -154,7 +155,7 @@ void handle_tools() {
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
       addWideButton(F("update"), F("Update Firmware"), EMPTY_STRING, otaEnabled);
-      addHelpButton(F("EasyOTA"));
+      addHelpButton(F("RTDTools/Tools.html#id1"));
       html_TD();
       addHtml(F("Load a new firmware "));
 
@@ -198,7 +199,7 @@ void handle_tools() {
   html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-  printWebString = String();
+  free_string(printWebString);
   printToWeb     = false;
 }
 

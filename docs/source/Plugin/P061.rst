@@ -137,10 +137,7 @@ Available options:
 .. image:: P061_ChipModeOptions.png
   :alt: Chip mode options
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec.
 

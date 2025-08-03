@@ -79,7 +79,7 @@ From the *Notifications* page, press *Edit* on an available *Nr* option. Next, C
 * SMTP Server Settings
 
   * **Domain :** Mail provider domain.
-  * **Server :** Mail server address (DNS or IP number). Must support non-secure SMTP.
+  * **Server :** Mail server address (DNS or IP number).
   * **Port :** Server port number. (see note below)
   * **Timeout :** Maximum allowed time for server reply. Increase value if server timeouts occur.
 
@@ -114,6 +114,8 @@ ESP8266 simply doesn't have enough free memory available to setup a SSL connecti
 
 Only SSL port 465 is supported, as for using port 587 (typically named "TLS") extra steps are required to make a connection.
 This may be added later.
+
+ESP32: (With TLS enabled in the build) To use the basic SMTP protocol (not SMTPS), configure port ``25`` or ``2525``. For other port numbers, a secure SMTP connection will be attempted.
 |
 
 Email Server Requirements with SSL

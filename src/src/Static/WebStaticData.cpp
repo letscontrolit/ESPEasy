@@ -13,17 +13,16 @@ String generate_external_URL(const String& fname, bool isEmbedded) {
     // Generate some URL indicating static files which will need to be served with some cache-control header
     return concat(F("static_"), Cache.fileCacheClearMoment) + '_' + fname;
   }
+
   #if FEATURE_ALTERNATIVE_CDN_URL
   String cdn = get_CDN_url_custom();
   if (!cdn.isEmpty()) {
     cdn = parseTemplate(cdn);  // Replace system variables.
     return concat(cdn, fname); // cdn.endsWith('/') check done at save
-  } else {
+  } 
   #endif // if FEATURE_ALTERNATIVE_CDN_URL
-    return concat(get_CDN_url_prefix(), fname);
-  #if FEATURE_ALTERNATIVE_CDN_URL
-  }
-  #endif // if FEATURE_ALTERNATIVE_CDN_URL
+
+  return concat(get_CDN_url_prefix(), fname);
 }
 
 void serve_CDN_CSS(const __FlashStringHelper * fname, const __FlashStringHelper * fname_alt, bool isEmbedded) {
@@ -126,12 +125,30 @@ void serve_CSS(CSSfiles_e cssfile) {
 
 void serve_favicon() {
   #ifdef WEBSERVER_FAVICON_CDN
+  addHtml(F("<link rel='icon' type='image/x-icon' href='"));
+  addHtml(generate_external_URL(F("favicon.ico"), true));
+  addHtml(F("'/>"));
+
+  /*
   addHtml(F("<link"));
   addHtmlAttribute(F("rel"), F("icon"));
   addHtmlAttribute(F("type"), F("image/x-icon"));
   addHtmlAttribute(F("href"), generate_external_URL(F("favicon.ico"), true));
   addHtml('/', '>');
+*/
   #endif
+  #ifndef LIMIT_BUILD_SIZE
+  addHtml(F("<link"));
+  addHtmlAttribute(F("rel"), F("icon"));
+  addHtmlAttribute(F("type"), F("image/svg+xml"));
+  addHtmlAttribute(F("href"), F("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='113.392' height='113.392' viewBox='0 0 30.002 30.002'%3E%3Cpath fill='%23f9f9f9' d='M0 24.728V5.272A5.272 5.272 0 0 1 5.272 0h19.456c2.91 0 5.274 2.36 5.274 5.272v19.456a5.276 5.276 0 0 1-5.274 5.274H5.272A5.274 5.274 0 0 1 0 24.728zM30.002 0'/%3E%3Cpath fill='%2307d' stroke='%2307d' stroke-linecap='round' stroke-width='2.636' d='m3.75 11.25 7.5-7.5M3.75 18.75l15-15M3.75 26.25l22.5-22.5M11.25 26.25l15-15'/%3E%3Cpath fill='%2307d' d='M27.374 24.377a2.999 2.999 0 1 0-5.999 0 2.999 2.999 0 0 0 3.002 2.997 2.997 2.997 0 0 0 2.997-2.997zm-2.997 0'/%3E%3C/svg%3E"));
+  addHtml('/', '>');
+
+/*
+  <link rel="icon" type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='113.392' height='113.392' viewBox='0 0 30.002 30.002'%3E%3Cpath fill='%23f9f9f9' d='M0 24.728V5.272A5.272 5.272 0 0 1 5.272 0h19.456c2.91 0 5.274 2.36 5.274 5.272v19.456a5.276 5.276 0 0 1-5.274 5.274H5.272A5.274 5.274 0 0 1 0 24.728zM30.002 0'/%3E%3Cpath fill='%2307d' stroke='%2307d' stroke-linecap='round' stroke-width='2.636' d='m3.75 11.25 7.5-7.5M3.75 18.75l15-15M3.75 26.25l22.5-22.5M11.25 26.25l15-15'/%3E%3Cpath fill='%2307d' d='M27.374 24.377a2.999 2.999 0 1 0-5.999 0 2.999 2.999 0 0 0 3.002 2.997 2.997 2.997 0 0 0 2.997-2.997zm-2.997 0'/%3E%3C/svg%3E" />
+*/
+#endif
 }
 
 void serve_JS(JSfiles_e JSfile) {

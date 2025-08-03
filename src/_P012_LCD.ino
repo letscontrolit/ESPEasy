@@ -97,7 +97,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         };
         const int optionValues2[2]   = { 1, 2 };
         constexpr size_t optionCount = NR_ELEMENTS(optionValues2);
-        addFormSelector(F("Display Size"), F("psize"), optionCount, options2, optionValues2, P012_SIZE);
+        const FormSelectorOptions selector(optionCount, options2, optionValues2);
+        selector.addFormSelector(F("Display Size"), F("psize"), P012_SIZE);
       }
 
       {
@@ -125,7 +126,8 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
         };
         const int optionValues3[]    = { 0, 1, 2 };
         constexpr size_t optionCount = NR_ELEMENTS(optionValues3);
-        addFormSelector(F("LCD command Mode"), F("pmode"), optionCount, options3, optionValues3, P012_MODE);
+        const FormSelectorOptions selector(optionCount, options3, optionValues3);
+        selector.addFormSelector(F("LCD command Mode"), F("pmode"), P012_MODE);
       }
 
       success = true;

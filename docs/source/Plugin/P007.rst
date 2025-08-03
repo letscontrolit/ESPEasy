@@ -118,10 +118,7 @@ The chip documentation describes it like this:
 
 2) The internal oscillator will be enabled continuesly, causing higher power usage, but also improved measurements when reading an analog input as it avoids the startup time of the oscillator that can cause inaccurate readings.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

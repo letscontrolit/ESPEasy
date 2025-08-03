@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-23 tonhuisman: Implement support for MQTT AutoDiscovery
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for SGP4x)
  * 2023-05-07 tonhuisman: Make Temperature and Humidity compensation selection independent, so if either setting is configured
  *                        it will still be applied, with the other value using the default. Minor UI improvement.
  * 2023-05-02 tonhuisman: Fix Low-power measurement, introducing a new State for reading the second measurement only
@@ -85,6 +87,16 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TVOC_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NOX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = event->Par1 == P147_I2C_ADDRESS;
@@ -119,7 +131,9 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP41),
         };
         constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
-        addFormSelector(F("Sensor model"), F("ptype"), optionCount, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
+        FormSelectorOptions selector(optionCount, sensorTypes, sensorTypeOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ptype"), P147_SENSOR_TYPE);
         # ifndef BUILD_NO_DEBUG
         addFormNote(F("Page will reload on change."));
         # endif // ifndef BUILD_NO_DEBUG

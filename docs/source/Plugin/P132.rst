@@ -96,10 +96,7 @@ To calculate the minimally required **Interval** setting for the task, this form
 
   | Example: (Default case) 3 * 1 * 0.00144 + 3 * 1 * 0.00144 = 0.008 seconds => 1 minimum Interval.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

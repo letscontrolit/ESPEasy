@@ -129,8 +129,8 @@ class TarStream : public Stream {
 public:
 
   TarStream();
-  TarStream(const String fileName);
-  TarStream(const String      fileName,
+  TarStream(const String& fileName);
+  TarStream(const String& fileName,
             FileDestination_e destination);
   virtual ~TarStream();
 

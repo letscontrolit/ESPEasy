@@ -1,5 +1,7 @@
 #include "../WebServer/AccessControl.h"
 
+#include "../DataTypes/FormSelectorOptions.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -142,7 +144,8 @@ void clearAccessBlock()
 // ********************************************************************************
 void addIPaccessControlSelect(const String& name, int choice)
 {
-  const __FlashStringHelper *  options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
+  const __FlashStringHelper *  options[] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
 
-  addSelector(name, 3, options, nullptr, nullptr, choice);
+  const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+  selector.addSelector(name, choice);
 }

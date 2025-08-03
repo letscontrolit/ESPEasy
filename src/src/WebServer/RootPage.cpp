@@ -107,18 +107,24 @@ void handle_root() {
   // disconnect here could result into a crash/reboot...
   if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
   {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+    #endif
     cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
   {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    #endif
     cmd_within_mainloop = CMD_REBOOT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
   {
     if (loggedIn) {
+      #ifndef BUILD_MINIMAL_OTA
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      #endif
       cmd_within_mainloop = CMD_REBOOT;
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
@@ -274,7 +280,7 @@ void handle_root() {
         addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
         addHtml(printWebString);
         addHtml(F("</textarea>"));
-        printWebString = String();
+        free_string(printWebString);
       }
     }
     html_end_table();
@@ -460,7 +466,7 @@ void handle_root() {
   # endif // if FEATURE_ESPEASY_P2P
     html_end_form();
 
-    printWebString = String();
+    free_string(printWebString);
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

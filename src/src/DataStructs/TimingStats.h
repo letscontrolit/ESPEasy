@@ -142,22 +142,22 @@ enum class TimingStatsElements {
 class TimingStats {
 public:
 
-  TimingStats();
+  TimingStats() = default;
 
-  void     add(int64_t time);
+  void     add(int32_t duration_usec);
   void     reset();
   bool     isEmpty() const;
   float    getAvg() const;
-  uint32_t getMinMax(uint64_t& minVal,
-                     uint64_t& maxVal) const;
-  bool     thresholdExceeded(const uint64_t& threshold) const;
+  uint32_t getMinMax(uint32_t& minVal,
+                     uint32_t& maxVal) const;
+  bool     thresholdExceeded(const uint32_t& threshold) const;
 
 private:
 
-  float _timeTotal;
-  uint32_t _count;
-  uint64_t _maxVal;
-  uint64_t _minVal;
+  uint64_t _timeTotal{};
+  uint32_t _count{};
+  uint32_t _maxVal{};
+  uint32_t _minVal = 4294967295;
 };
 
 
@@ -169,25 +169,25 @@ String                     getMiscStatsName(TimingStatsElements stat);
 
 void                       stopTimerTask(deviceIndex_t T,
                                          int           F,
-                                         uint64_t      statisticsTimerStart);
+                                         uint32_t      statisticsTimerStart);
 void                       stopTimerController(protocolIndex_t   T,
                                                CPlugin::Function F,
-                                               uint64_t          statisticsTimerStart);
+                                               uint32_t          statisticsTimerStart);
 void                       stopTimer(TimingStatsElements L,
-                                     uint64_t            statisticsTimerStart);
+                                     uint32_t            statisticsTimerStart);
 void                       addMiscTimerStat(TimingStatsElements L,
-                                            int64_t             T);
+                                            int32_t             T);
 
 extern std::map<int, TimingStats> pluginStats;
 extern std::map<int, TimingStats> controllerStats;
 extern std::map<TimingStatsElements, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
-# define START_TIMER const uint64_t statisticsTimerStart(getMicros64());
+# define START_TIMER const uint32_t statisticsTimerStart(micros());
 # define STOP_TIMER_TASK(T, F) stopTimerTask(T, F, statisticsTimerStart);
 # define STOP_TIMER_CONTROLLER(T, F) stopTimerController(T, F, statisticsTimerStart);
 
-// #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+// #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince_fast(statisticsTimerStart));
 # define STOP_TIMER(L) stopTimer(TimingStatsElements::L, statisticsTimerStart);
 # define STOP_TIMER_VAR(L) stopTimer(L, statisticsTimerStart);
 

@@ -6,17 +6,20 @@
 
 
 struct P025_VARIOUS_BITS_t {
-  struct {
-    uint16_t cal           : 1;
-    uint16_t outputVolt    : 1;
-    uint16_t sampleRateSet : 1;
-    uint16_t sampleRate    : 3;
-    uint16_t unused        : 10;
+  union {
+    struct {
+      uint16_t cal           : 1;
+      uint16_t outputVolt    : 1;
+      uint16_t sampleRateSet : 1;
+      uint16_t sampleRate    : 3;
+      uint16_t unused        : 10;
+    };
+    uint16_t _regValue{};
   };
 
   P025_VARIOUS_BITS_t(int16_t value);
 
-  int16_t pconfigvalue() const;
+  int16_t pconfigvalue() const { return _regValue; }
 
   uint16_t getSampleRate() const {
     if (sampleRateSet) { return sampleRate; }
@@ -42,7 +45,7 @@ struct P025_VARIOUS_BITS_t {
 
 # define P025_I2C_ADDR        PCONFIG(0)
 # define P025_GAIN            PCONFIG(1)
-# define P025_MUX(x)          PCONFIG(P025_PCONFIG_INDEX(x))
+# define P025_MUX(x) PCONFIG(P025_PCONFIG_INDEX(x))
 # define P025_VARIOUS_BITS    PCONFIG(3)
 
 # define P025_CAL_ADC1    PCONFIG_LONG(0)

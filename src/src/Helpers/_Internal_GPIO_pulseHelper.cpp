@@ -47,7 +47,8 @@ void Internal_GPIO_pulseHelper::addGPIOtriggerMode(const __FlashStringHelper *la
   for (int i = 0; i < NR_TRIGGER_MODES; ++i) {
     options[i] = Internal_GPIO_pulseHelper::toString(static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(optionValues[i]));
   }
-  addFormSelector(label, id, NR_TRIGGER_MODES, options, optionValues, static_cast<int>(currentSelection));
+  const FormSelectorOptions selector( NR_TRIGGER_MODES, options, optionValues);
+  selector.addFormSelector(label, id, static_cast<int>(currentSelection));
 }
 
 Internal_GPIO_pulseHelper::Internal_GPIO_pulseHelper(Internal_GPIO_pulseHelper::pulseCounterConfig configuration)
@@ -460,7 +461,7 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
     // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
     String log;
 
-    if (log.reserve(120)) {
+    if (reserve_special(log, 120)) {
       log = strformat(F("Pulse:OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (%d) [%d] {%d} ["),
                       config.gpio,
                       config.debounceTime,

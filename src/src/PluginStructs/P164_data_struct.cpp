@@ -421,6 +421,9 @@ bool P164_data_struct::evaluateState()
 
       switch (this->_opmode) {
         case ENS160_OPMODE_DEEP_SLEEP:
+          this->writeMode(ENS160_OPMODE_DEEP_SLEEP); // Put device into DEEPSLEEP mode
+          newState = P164_STATE_DEEPSLEEP;
+          break;
         case P164_STATE_IDLE:
         case ENS160_OPMODE_RESET:
           this->writeMode(ENS160_OPMODE_IDLE); // Move through Idle state

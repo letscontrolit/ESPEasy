@@ -75,10 +75,7 @@ Device Settings
 * **Detected Sensor Type**: Shows either ``BMP38x`` or ``BMP390`` or a number if no sensor or an unknown sensor ID is detected.
 * **Altitude**: Optionally set the offset (in meters) of the sensor to convert pressure measurements to sea level pressure.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval. If the Interval is set lower or equal than the required 10 * Heater time, the plugin will not start!
 

@@ -4,6 +4,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Helpers/StringConverter.h"
 
 
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
@@ -108,7 +109,7 @@ bool Modbus::handle() {
   unsigned int RXavailable = 0;
 
   #ifndef BUILD_NO_DEBUG
-  LogString = String();
+  free_string(LogString);
   #endif
   int64_t rxValue = 0;
 

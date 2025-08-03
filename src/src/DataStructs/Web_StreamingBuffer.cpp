@@ -293,8 +293,12 @@ void Web_StreamingBuffer::endStream() {
       addLog(LOG_LEVEL_ERROR, concat("Webpage skipped: low memory: ", finalRam));
     lowMemorySkip = false;
   }
+
   delay(5);
-//  web_server.client().stop();
+  web_server.client().stop();
+  #ifdef ESP8266
+  tcpCleanup();
+  #endif
 }
 
 
@@ -333,10 +337,17 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
+  #if defined(ESP8266) && defined(USE_SECOND_HEAP)
+  {
+    HeapSelectIram ephemeral;
+    web_server.sendContent(data);
+  }
+  #else
   web_server.sendContent(data);
+  #endif
 
   if (data.length() > (CHUNKED_BUFFER_SIZE + 1)) {
-    data = String(); // Clear also allocated memory
+    free_string(data); // Clear also allocated memory
   } else {
     data.clear();
   }

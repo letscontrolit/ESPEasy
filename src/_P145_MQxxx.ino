@@ -14,6 +14,10 @@
 // #################################### Change log        ###############################################
 
 /** Changelog:
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ *                        Uncrustify source formatting
+ *                        TODO: Move discovery VType (and future UoM) to P145_SENSORDEF type
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for MQ-xx)
  * 2025-01-06 tonhuisman: Formatted source uing Uncrustify and small cleanups
  * 2023-01-06 Reworked after review
  * 2022-07-11 Refactored, first attempt for calibration
@@ -74,6 +78,7 @@
 
 #include "_Plugin_Helper.h"
 #ifdef USES_P145
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 # include "src/PluginStructs/P145_data_struct.h"                    // MQ-xxx sensor specific data
 
 # define PLUGIN_145
@@ -152,6 +157,15 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = Plugin_145_QueryVType(P145_PCONFIG_SENSORT);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     // Add custom GPIO description on device overview page
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
@@ -191,10 +205,11 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
       {
         options[i] = concat(concat(P145_data_struct::getTypeName(i), F(" - ")), P145_data_struct::getGasName(i));
       }
-      addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), x, options, nullptr, P145_PCONFIG_SENSORT);
+      const FormSelectorOptions selector(x, options);
+      selector.addFormSelector(F("Sensor type"), F(P145_GUID_TYPE), P145_PCONFIG_SENSORT);
 
 # ifdef ESP32
-
+#if SOC_ADC_SUPPORTED
       // Analog input selection
       addRowLabel(formatGpioName_input(F("Analog Pin ")));
 #  if HAS_HALL_EFFECT_SENSOR
@@ -202,6 +217,7 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 #  else // if HAS_HALL_EFFECT_SENSOR
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch,            F(P145_GUID_AINPIN), P145_CONFIG_PIN_AIN);
 #  endif // if HAS_HALL_EFFECT_SENSOR
+#endif
 # endif // ifdef ESP32
       addFormPinSelect(PinSelectPurpose::Generic_output,
                        formatGpioName_output_optional(F("Heater Pin ")),
@@ -379,4 +395,5 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
   return success;
 } // function Plugin_145()
 
+#endif
 #endif  // USES_P145

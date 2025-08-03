@@ -9,7 +9,11 @@
    Check if string is valid float
  \*********************************************************************************************/
 bool isValidFloat(float f) {
+#ifdef ESP32
+  return !isnanf(f) && !isinff(f);
+#else
   return !isnan(f) && !isinf(f);
+#endif
 }
 
 bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f) {

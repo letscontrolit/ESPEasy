@@ -24,21 +24,57 @@ Used libraries: |P097_usedlibraries|
 Description
 -----------
 
-Touch pin support for ESP32.
+Touch pin support for ESP32 based devices. (EPS32Classic, ESP32S2, ESP32S3)
 
-The ESP32 does have support for 10 touch pads.
+The ESP32Classic does have support for 10 touch pads and ESP32S2 and ESP32S3 have support for 14 touch pads.
+
+.. note:: For ESP32S2 and ESP32S3, the touchpad support from ``T10`` to ``T14`` has been disabled due to stability issues.
+
 Such a touch pad can be as simple as a wire or a PCB pad connected to 
 one of the GPIO pins labelled with ``T0`` ... ``T9``.
 
+
 A touch pad pin can be considered as an analog input pin.
-When not touched, the reported value is "High", for example 100.
+If the pin is not touched, it will report a relatively high value on an ESP32Classic (e.g. 100) and a relatively low value on an ESP32S2 or ESP32S3 (e.g. 15000) compared to the value when the pin is touched.
+This value is displayed in the settings of the touch plugin ("current pressure") and is reported as the first taskvalue (default name is "touch") whenever the pin is touched or released.
 
+
+Task settings
+~~~~~~~~~~~~~
+
+* **Device**: Name of plugin
+* **Name**: Name of the task
+* **Enable**: Should the task be enabled or not
+
+Device Settings
+^^^^^^^^^^^^^^^
+* **Analog Pin**: Choose the pin to be used
+* **Toggle State**: When the pin is touched, the value of the second taskvalue (default: "state") toggles between 0 and 1.
+* **Send Long Press Event**: A long press event is sent when the pin is pressed for longer than the time specified in the Long Press Time setting. The second taskvalue becomes 10
+* **Long Press Time:**: The time that you need to press the button before the long press event is triggered.
+* **Wake Up from Sleep**: The device will wake up from sleep when the pin is touched.
+
+Touch Settings
+^^^^^^^^^^^^^^
+* **Send Touch Event:**: An event is sent when the pin is touched 
+* **Send Release Event**: An event is sent when the pin is released
+* **Send Duration Event**: After release, the duration of the touch is sent as an event
+* **Touch Threshold**: see Threshold section...
+* **Current Pressure**: The current pressure is the same as the first taskvalue.
+
+Threshold:
+~~~~~~~~~~
+**ESP32Classic**:
 When touched, the capacity of the pin increases, which in return lowers the number of charge/discharge cycles.
-A typical value for a touched pin is lower than 20.
+A typical value for a touched pin is lower than 20, compared to its initial (untouched) value.
+A touch event occurs when the touch value is less than the "base value" minus the threshold value.
 
-The user has to set a threshold value for when to consider a pin being touched.
+**ESP32S2** and **ESP32S3**:
+When touched, the pin value increases.
+A typical value for a touched pin is higher than 1500, compared to its initial (untouched) value.
+A touch event occures when the touch value is greater then the "base value" plus the threshold value.
+
 The best value has to be determined by trial and error and may differ per use case.
-
 
 Events
 ~~~~~~
@@ -53,4 +89,8 @@ Change log
 .. versionchanged:: 2.0
   ...
 
+  |improved| 2024-12-11 Added all settings, a distinction between ESP32 models and the event for <taskvar2>.
+
   |added| 2020-04-25
+
+  

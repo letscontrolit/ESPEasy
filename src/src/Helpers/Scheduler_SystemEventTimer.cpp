@@ -92,13 +92,13 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
   const char       *c_topic,
   const uint8_t    *b_payload,
   unsigned int      length) {
-  if (validProtocolIndex(ProtocolIndex)) {
+  if (validProtocolIndex(ProtocolIndex) && c_topic && b_payload) {
     EventStruct  event;
     const size_t topic_length = strlen_P(c_topic);
 
     // This is being called from a callback function, so do not try to allocate this on the 2nd heap, but rather on the default heap.
-    if (!(event.String1.reserve(topic_length) &&
-          event.String2.reserve(length))) {
+    if (!(reserve_special(event.String1, topic_length) &&
+          reserve_special(event.String2, length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
       return;
     }
@@ -117,6 +117,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
       // Make sure emplace_back is not called when on 2nd heap
       HeapSelectDram ephemeral;
       # endif // ifdef USE_SECOND_HEAP
+      
       ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
     }
   }

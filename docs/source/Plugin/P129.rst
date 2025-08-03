@@ -106,7 +106,7 @@ When all 16 chips are configured, the configuration looks like this:
 .. image:: P129_EventConfiguration.png
   :alt: Event configuration
 
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. as this is optional. Every Interval setting, the current output states will be read from the runtime object (*not* from the shift registers!) and stored in the Values fields, so they can be restored on a warm boot of  the ESP.
 

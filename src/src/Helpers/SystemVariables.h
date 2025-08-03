@@ -84,6 +84,7 @@ public:
     SYSMIN_0,
     SYSMONTH,
     SYSMONTH_S,
+    SYSMONTH_0,
     SYSNAME,
     SYSSEC,
     SYSSEC_0,
@@ -100,12 +101,14 @@ public:
     SYSTM_HM_AM_SP,
     SYSTM_HM_SP,
     SYSTZOFFSET,
+    #ifndef LIMIT_BUILD_SIZE
+    SYSTZOFFSET_S,
+    #endif // ifndef LIMIT_BUILD_SIZE
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
     SYSYEARS,
     SYSYEAR_0,
-    SYS_MONTH_0,
     UNIT_sysvar,
 #if FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_0_sysvar,
@@ -113,6 +116,9 @@ public:
     UNIXDAY,
     UNIXDAY_SEC,
     UNIXTIME,
+    #ifndef LIMIT_BUILD_SIZE
+    UNIXTIME_LCL,
+    #endif // ifndef LIMIT_BUILD_SIZE
     UPTIME,
     UPTIME_MS,
     VCC,
@@ -132,7 +138,7 @@ public:
 
   static String                     toString(SystemVariables::Enum enumval);
 
-  static SystemVariables::Enum      startIndex_beginWith(char beginchar);
+  static SystemVariables::Enum      startIndex_beginWith(const char* beginchar);
   static const __FlashStringHelper* toFlashString(SystemVariables::Enum enumval);
 
   static String                     getSystemVariable(SystemVariables::Enum enumval);

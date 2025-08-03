@@ -16,6 +16,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-18 tonhuisman: Add support for Unit of Measure attribute, when available in the build, sent in AutoDiscovery
+ *                        Enable sending Derived values when available
  * 2024-03-02 tonhuisman: Fix using parseSystemVariables() for processing %sysname%. Might still break the same configurations,
  *                        logging improvements
  * 2023-10-30 tonhuisman: Fix using getHostname() instead of getName() for %sysname%. This might break some configurations!
@@ -178,9 +180,12 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = false;
-      #if FEATURE_MQTT_TLS
-      proto.usesTLS      = true;
-      #endif
+      # if FEATURE_MQTT_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_MQTT_TLS
+      # if FEATURE_STRING_VARIABLES
+      proto.allowSendDerived = true;
+      # endif // if FEATURE_STRING_VARIABLES
       break;
     }
 
@@ -427,7 +432,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                  errorCounter);
 
                         // $datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
-                        unitName = EMPTY_STRING;
+                        unitName.clear();
 
                         switch (Settings.TaskDevicePluginConfig[x][varNr]) {
                           case 0:
@@ -528,35 +533,87 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                         nodeCount++;
 
-                        /* TODO Fix units?
-                           // because values in ESPEasy are unitless lets assume some units by the value name (still case sensitive)
+                        # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-                           if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr)
-                           {
-                           unitName = F("°C");
-                           } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != nullptr)
-                           {
-                           unitName = F("%");
-                           } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != nullptr)
-                           {
-                           unitName = F("Pa");
-                           }                        // ToDo: .... and more
+                        // Use configured Unit of Measure setting per Value (using Homeassistant supported 100+ values)
+                        unitName = toUnitOfMeasureName(ExtraTaskSettings.getTaskVarUnitOfMeasure(varNr));
 
-                           if (!unitName.isEmpty()) // found a unit match
-                           {
-                           // $unit	Device → Controller	A string containing the unit of this property. You
-                           are not limited to the recommended values, although they are the only well known ones
-                           that will have to be recognized by any Homie consumer.Recommended: Yes No
-                            ("")
-                           CPlugin_014_sendMQTTnode(nodename, deviceName,
-                                                   ExtraTaskSettings.TaskDeviceValueNames[varNr], F("/$unit"), unitName,
+                        if (!unitName.isEmpty()) // found a unit match
+                        {
+                          // $unit	Device → Controller	A string containing the unit of this property. You
+                          // are not limited to the recommended values, although they are the only well known ones
+                          // that will have to be recognized by any Homie consumer.
+                          CPlugin_014_sendMQTTnode(nodename,
+                                                   deviceName,
+                                                   ExtraTaskSettings.TaskDeviceValueNames[varNr],
+                                                   F("/$unit"),
+                                                   unitName,
                                                    errorCounter);
-                           }
-                           unitName = F("");
-                         */
+                        }
+                        unitName.clear();
+                        # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
                       }
                     }
-                  }      // end loop throug values
+                  } // end loop throug regular values
+
+                  // Discovery for Derived values, if sending is enabled
+                  # if FEATURE_STRING_VARIABLES
+
+                  if (Settings.SendDerivedTaskValues(x, event->ControllerIndex)) {
+                    String taskNameLC(deviceName);
+                    taskNameLC.toLowerCase();
+                    String postfix;
+                    const String search = getDerivedValueSearchAndPostfix(deviceName, postfix);
+
+                    auto it       = customStringVar.begin();
+                    uint8_t varNr = VARS_PER_TASK;
+
+                    while (it != customStringVar.end()) {
+                      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+                        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+                        String uom;
+                        String vType;
+                        const String vname2 = getDerivedValueNameUomAndVType(deviceName, valueName, uom, vType);
+
+                        if (!vname2.isEmpty()) {
+                          valueName = vname2;
+                        }
+                        C014_addToList(valuesList, valueName);
+
+                        // $name	Device → Controller	Friendly name of the property.	Any String	Yes	No ("")
+                        CPlugin_014_sendMQTTnode(nodename,
+                                                 deviceName,
+                                                 valueName,
+                                                 F("/$name"),
+                                                 valueName,
+                                                 errorCounter);
+
+                        // $datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
+                        CPlugin_014_sendMQTTnode(nodename,
+                                                 deviceName,
+                                                 valueName,
+                                                 F("/$datatype"),
+                                                 F("float"),
+                                                 errorCounter);
+
+                        if (!uom.isEmpty()) {
+                          CPlugin_014_sendMQTTnode(nodename,
+                                                   deviceName,
+                                                   valueName,
+                                                   F("/$unit"),
+                                                   uom,
+                                                   errorCounter);
+                        }
+
+                        ++varNr;
+                      }
+                      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+                        break;
+                      }
+                      ++it;
+                    }
+                  }
+                  # endif // if FEATURE_STRING_VARIABLES
                 } else { // Device has custom Values
                   # ifndef BUILD_NO_DEBUG
 

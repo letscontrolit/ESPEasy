@@ -18,14 +18,21 @@
 // ********************************************************************************
 void handle_download() {
 # if FEATURE_TARSTREAM_SUPPORT
-  handle_config_download(false);
+  handle_config_download(false, false);
 }
 
 void handle_full_backup() {
-  handle_config_download(true);
+  handle_config_download(true, false);
 }
 
-void handle_config_download(bool fullBackup) {
+void handle_full_backup_no_usr_pwd() {
+  handle_config_download(true, true);
+}
+
+void handle_config_download(bool fullBackup,
+                            bool noCreds) {
+# else // if FEATURE_TARSTREAM_SUPPORT
+  const bool noCreds = false;
 # endif // if FEATURE_TARSTREAM_SUPPORT
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_download"));
@@ -54,6 +61,10 @@ void handle_config_download(bool fullBackup) {
   {
     str += F("config_");
   }
+
+  if (noCreds) {
+    str += F("no_creds_");
+  }
   str += strformat(F("%s_U%d_Build%s_"),
                    Settings.getName().c_str(),
                    Settings.Unit,
@@ -72,16 +83,19 @@ void handle_config_download(bool fullBackup) {
     : nullptr;
 
   if (fullBackup && (nullptr != tarStream)) {
+    const String security_dat = getFileName(FileType::SECURITY_DAT);
     #  if defined(ESP8266)
 
     fs::Dir dir = ESPEASY_FS.openDir("");
 
     while (dir.next()) {
-      fs::File f = dir.openFile("r");
+      fs::File file = dir.openFile("r");
 
-      if (f) {
-        tarStream->addFile(f.name(), f.size());
-        f.close();
+      if (file) {
+        if (!noCreds || (noCreds && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length())))) {
+          tarStream->addFile(file.name(), file.size());
+        }
+        file.close();
       }
     }
     #  endif // if defined(ESP8266)
@@ -91,7 +105,9 @@ void handle_config_download(bool fullBackup) {
 
     while (file) {
       if (!file.isDirectory()) {
-        tarStream->addFile(file.name(), file.size());
+        if (!noCreds || (noCreds && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length())))) {
+          tarStream->addFile(file.name(), file.size());
+        }
       }
       file = root.openNextFile();
     }
@@ -111,7 +127,10 @@ void handle_config_download(bool fullBackup) {
       // other config files
       tarStream->addFileIfExists(getFileName(FileType::NOTIFICATION_DAT));
       tarStream->addFileIfExists(getFileName(FileType::PROVISIONING_DAT));
-      tarStream->addFileIfExists(getFileName(FileType::SECURITY_DAT));
+
+      if (!noCreds) {
+        tarStream->addFileIfExists(getFileName(FileType::SECURITY_DAT));
+      }
 
       // rules<n>.txt files
       for (unsigned int rf = 0; rf < RULESETS_MAX; ++rf) {

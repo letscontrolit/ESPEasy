@@ -66,10 +66,7 @@ Output Configuration
 
 * **Number Output Values**: Select Single (default), Dual, Triple or Quad. The Triple and Quad options aren't actually used in this plugin.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

@@ -104,6 +104,7 @@ Sensor
 
 See: :ref:`SerialHelper_page`
 
+.. include:: DataAcquisition.repl
 
 .. Events
 .. ~~~~~~

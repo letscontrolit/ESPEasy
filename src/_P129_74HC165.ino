@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Shift registers)
  * 2023-01-04 tonhuisman: Use DIRECT_pin GPIO functions for faster GPIO handling (mostly on ESP32), string optimization
  * 2022-08-05 tonhuisman: Fix issue with reading 8th bit of each byte (found during HW testing)
  *                        Reduce number of Values to match the selected number of chips/4. Small UI improvements.
@@ -83,6 +85,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       dev.HasFormatUserVar = true;
       dev.setPin2Direction(gpio_direction::gpio_output);
       dev.setPin3Direction(gpio_direction::gpio_output);
+      dev.CustomVTypeVar = true;
 
       break;
     }
@@ -101,6 +104,22 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_129));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -155,20 +174,17 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Device configuration"));
 
       {
-        String chipCount[P129_MAX_CHIP_COUNT];
-        int    chipOption[P129_MAX_CHIP_COUNT];
+        // String chipCount[P129_MAX_CHIP_COUNT];
+        int chipOption[P129_MAX_CHIP_COUNT];
 
         for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) {
-          chipCount[i]  = i + 1;
+          // chipCount[i]  = i + 1;
           chipOption[i] = i + 1;
         }
-        addFormSelector(F("Number of chips (Q7 &rarr; DS)"),
-                        F("chipcnt"),
-                        P129_MAX_CHIP_COUNT,
-                        chipCount,
-                        chipOption,
-                        P129_CONFIG_CHIP_COUNT,
-                        true);
+        FormSelectorOptions selector(P129_MAX_CHIP_COUNT, /*chipCount,*/ chipOption);
+        selector.reloadonchange = true;
+        selector.addFormSelector(
+          F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
@@ -180,12 +196,9 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         F("50/sec (20 msec)") };
       const int frequencyValues[]  = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
       constexpr size_t optionCount = NR_ELEMENTS(frequencyValues);
-      addFormSelector(F("Sample frequency"),
-                      F("frequency"),
-                      optionCount,
-                      frequencyOptions,
-                      frequencyValues,
-                      P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
+      const FormSelectorOptions selector(optionCount, frequencyOptions, frequencyValues);
+      selector.addFormSelector(
+        F("Sample frequency"), F("frequency"), P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
 
       addFormSubHeader(F("Display and output"));
 
@@ -199,8 +212,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         F("Hex/bin only") };
       const int outputValues[]     = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
       constexpr size_t outputCount = NR_ELEMENTS(outputValues);
-      addFormSelector(F("Output selection"), F("outputsel"), outputCount, outputOptions, outputValues,
-                      P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const FormSelectorOptions selector_output(outputCount, outputOptions, outputValues);
+      selector_output.addFormSelector(F("Output selection"), F("outputsel"), P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
       addFormCheckBox(F("Separate events per pin"), F("separate_events"), P129_CONFIG_FLAGS_GET_SEPARATE_EVENTS == 1);
 

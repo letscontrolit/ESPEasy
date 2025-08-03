@@ -74,10 +74,7 @@ When this setting is changed, the page is saved and reloaded to show/hide the ex
 
 .. warning:: Automatic Self Calibration is a useful process to ensure long term stability of the sensor, and assumes the sensor is exposed to fresh air of 400 ppm at least once per 7 days.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
 

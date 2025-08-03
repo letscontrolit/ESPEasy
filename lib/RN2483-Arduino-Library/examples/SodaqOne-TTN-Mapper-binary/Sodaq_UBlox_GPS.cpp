@@ -82,7 +82,7 @@ void Sodaq_UBlox_GPS::resetValues()
 void Sodaq_UBlox_GPS::init(int8_t enable_pin)
 {
     _enablePin = enable_pin;
-    Wire.begin();
+    // Wire.begin(); ESPEasy has already taken care of this
     digitalWrite(_enablePin, GPS_ENABLE_OFF);
     pinMode(_enablePin, OUTPUT);
 }

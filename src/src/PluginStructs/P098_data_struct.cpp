@@ -440,7 +440,8 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   ISR_noInterrupts();
   {
     // Don't call gpio_config.readState() here
-    const bool pinState        = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
+    const bool pinState        = 
+      (DIRECT_pinRead_ISR(gpio_config.gpio) != 0) ^ gpio_config.inverted;
     const uint64_t currentTime = getMicros64();
 
 

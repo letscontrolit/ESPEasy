@@ -32,10 +32,10 @@ TarFileInfo_struct::TarFileInfo_struct(const String fname,
  */
 TarStream::TarStream() {}
 
-TarStream::TarStream(const String fileName)
+TarStream::TarStream(const String& fileName)
   : _fileName(fileName) {}
 
-TarStream::TarStream(const String fileName, FileDestination_e destination)
+TarStream::TarStream(const String& fileName, FileDestination_e destination)
   : _fileName(fileName), _destination(destination) {}
 
 TarStream::~TarStream() {

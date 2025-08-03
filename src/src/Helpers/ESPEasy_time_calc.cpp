@@ -142,10 +142,24 @@ void breakTime(unsigned long timeInput, struct tm& tm) {
 
   int year           = 1970;
   unsigned long days = 0;
+  #ifndef LIMIT_BUILD_SIZE
+  if (time > 20089) {
+    // Skip checking 55 years for being leap year.
+    year = 2025;
+    days = 20089;
+  }
+  #endif
 
   while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
     year++;
   }
+/*
+  addLog(LOG_LEVEL_INFO, strformat(
+    F("breakTime: time: %u year: %d, days: %u"),
+    time,
+    year,
+    days));
+*/
   tm.tm_year = year - 1900; // tm_year starts at 1900
 
   days -= isLeapYear(year) ? 366 : 365;

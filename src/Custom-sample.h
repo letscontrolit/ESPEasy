@@ -25,7 +25,9 @@
 #define FEATURE_RULES_EASY_COLOR_CODE   1  // Use code highlighting, autocompletion and command suggestions in Rules
 #define FEATURE_ESPEASY_P2P             1  // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA             1  // enables the Arduino OTA capabilities
-#define FEATURE_THINGSPEAK_EVENT        1  // generate an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+#define FEATURE_THINGSPEAK_EVENT        0  // Generates an event when requesting last value of a field in thingspeak via SendToHTTP(e.g. sendToHTTP,api.thingspeak.com,80,/channels/1667332/fields/5/last)
+#define FEATURE_OPENMETEO_EVENT         0  // Generates an event with the response of a open-meteo request (https://open-meteo.com/en/docs)
+#define FEATURE_JSON_EVENT              0  // Generates an event with the values of a JSON repsonse of an HTTP call. Keys are stored in json.keys one key per line (e.g.: Body.Data.DAY_ENERGY.Values.1)
 // #define FEATURE_SD                   1  // Enable SD card support
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
 
@@ -120,6 +122,10 @@
 #ifdef ESP32
 #define DEFAULT_PIN_I2C_SCL                     -1                // Undefined
 #endif
+#define DEFAULT_PIN_I2C2_SDA                    -1                // Undefined
+#define DEFAULT_PIN_I2C3_SDA                    -1                // Undefined
+#define DEFAULT_PIN_I2C2_SCL                    -1                // Undefined
+#define DEFAULT_PIN_I2C3_SCL                    -1                // Undefined
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
 #define FEATURE_I2C_DEVICE_SCAN                 1
 
@@ -244,6 +250,7 @@
 // #define FEATURE_ANYRTTTL_LIB 1 // Use AnyRttl library for RTTTL handling
 // #define FEATURE_ANYRTTTL_ASYNC 1 // When AnyRttl enabled, use Async (nonblocking) mode instead of the default Blocking mode
 // #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
+// #define FEATURE_STRING_VARIABLES 1 // Enable String variable support (enabled on ESP32, NOT supported on ESP8266 for memory restrictions!)
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
@@ -406,7 +413,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P041   // NeoPixel (Word Clock)
 // #define USES_P042   // NeoPixel (Candle)
 // #define USES_P043   // ClkOutput
-// #define USES_P044   // P1 Wifi Gateway
+// #define USES_P044   // P1 Wifi Gateway (Merged with P020, when P044 is enabled, then P020 is also enabled)
 // #define USES_P045   // MPU6050
 // #define USES_P046   // Ventus W266
 // #define USES_P047   // Soil moisture sensor
@@ -439,6 +446,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1000/HDC1008/HDC1010/HDC1050/HDC1080
 // #define USES_P073   // 7-segment display
+// #define P073_USE_74HC595 1  // Enable 74HC595 displays
+// #define P073_USE_74HC595_OVERRIDE 1  // Allow 74HC595 displays feature for ESP8266 builds
 // #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
 // #define USES_P076   // HLW8012/BL0937 (Shelly Plug S, Sonoff POW R1, Huafan SS, KMC 70011, Aplic WDP303075, SK03 Outdoor, BlitzWolf SHP, Teckin, Teckin US, Gosund SP1 v23)
@@ -517,7 +526,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 //   #define P135_FEATURE_RESET_COMMANDS  1 // Enable/Disable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
 // #define USES_P137   // AXP192
 // #define USES_P138   // IP5306
+// #define USES_P139   // AXP2101
 
+// #define USES_P140   // CardKB
+// #define UN_USES_P140   // **DISABLE** I2C CardKB for ESP32 (Enabled by default for ESP32)
 // #define USES_P141   // PCD8544 Nokia 5110 LCD
 // #define USES_P142   // Position - AS5600
 // #define USES_P143   // I2C Rotary encoders
@@ -554,6 +566,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P173   // Environment - SHTC3
 // #define USES_P175   // Dust - PMSx003i I2C
 // #define USES_P176   // Communication - Victron VE.Direct
+// #define USES_P178   // LU9685 Servo controller
 
 /*
  #######################################################################################################

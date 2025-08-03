@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for PME)
  * 2024-04-14 tonhuisman: Add support for Get Config Values, to obtain a port state/value without instantiating a task for each pin.
  *                        Only a single, enabled, task is required to handle the Get Config Values.
  *                        Variables: [<TaskName>#D<port>] and [<TaskName>#A,<port>]
@@ -64,6 +65,15 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = (event->Par1 == PLUGIN_011_I2C_ADDRESS);
@@ -84,7 +94,8 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       const __FlashStringHelper *options[] = { F("Digital"), F("Analog"), F("Input (switch)") };
       const int optionValues[]             = { P011_TYPE_DIGITAL, P011_TYPE_ANALOG, P011_TYPE_SWITCH };
       constexpr size_t optionCount         = NR_ELEMENTS(options);
-      addFormSelector(F("Port Type"), F("p011"), optionCount, options, optionValues, P011_PORT_TYPE);
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Port Type"), F("p011"), P011_PORT_TYPE);
 
       success = true;
       break;

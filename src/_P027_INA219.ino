@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-07-16 tonhuisman: Set INA219 in Powerdown mode when not actually measuring, to reduce quiescent current
  * 2022-04-02 tonhuisman: Add all technically possible I2C addresses (16), instead of only the 4 most common
  *                        As requested in the forum: https://www.letscontrolit.com/forum/viewtopic.php?t=9079
@@ -85,6 +86,17 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CURRENT_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -132,11 +144,13 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A"), F("26V, 8A") };
-        addFormSelector(F("Measure range"), F("range"), 4, optionsMode, nullptr, PCONFIG(0));
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsMode), optionsMode);
+        selector.addFormSelector(F("Measure range"), F("range"), PCONFIG(0));
       }
       {
         const __FlashStringHelper *options[] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("measuretype"), 4, options, nullptr, PCONFIG(2));
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Measurement Type"), F("measuretype"),  PCONFIG(2));
       }
       # if P027_FEATURE_POWERDOWN
       addFormCheckBox(F("Use Powerdown mode"), F("pwrdwn"), PCONFIG(3) == 1);

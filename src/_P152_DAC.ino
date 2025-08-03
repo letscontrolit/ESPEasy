@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-04-10 tonhuisman: Minor corrections
  * 2023-04-09 tonhuisman: Adopt to latest mega branch changes as the plugin is last changed some years ago
  * 2023-04-09 tonhuisman: Migrate plugin from ESPEasyPluginPlayground to mega branch
@@ -53,6 +54,15 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_152));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_WEBFORM_LOAD:
     {

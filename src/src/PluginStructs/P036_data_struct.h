@@ -92,10 +92,13 @@
 #   define P036_ENABLE_TIME_FORMAT 1 // Enable Header Time format selection
 #  endif // ifdef LIMIT_BUILD_SIZE
 # endif // ifndef P036_ENABLE_TIME_FORMAT
+# ifndef P036_ENABLE_HIDE_LOGO
+#  define P036_ENABLE_HIDE_LOGO 1 // Enable the Hide startup logo option
+# endif // ifndef P036_ENABLE_HIDE_LOGO
 
-# define P36_Nlines 12   // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0 32 // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1 64 // max chars per line from 22.11.2019 (V1)
+# define P36_Nlines 12            // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0 32          // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1 64          // max chars per line from 22.11.2019 (V1)
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight 64
@@ -143,6 +146,7 @@
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
+# define P036_FLAG_HIDE_LOGO           31 // Bit 31 Hide startup logo
 
 // P036_FLAGS_1
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
@@ -398,7 +402,12 @@ struct P036_data_struct : public PluginTaskData_base {
                                    uint8_t          Contrast,
                                    uint16_t         DisplayTimer,
                                    ePageScrollSpeed ScrollSpeed,
-                                   uint8_t          NrLines);
+                                   uint8_t          NrLines
+                                   # if             P036_FLAG_HIDE_LOGO
+                                   ,
+                                   bool             HideLogo
+                                   # endif // if P036_FLAG_HIDE_LOGO
+                                   );
 
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
@@ -558,7 +567,7 @@ private:
                                  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
   void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
                                    uint8_t              Counter);
-  void     CleanEscapeCharacters(String&    str,
+  void     CleanEscapeCharacters(String   & str,
                                  const bool ForHeaderOnly);
 
   # if P036_FEATURE_DISPLAY_PREVIEW

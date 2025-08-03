@@ -11,18 +11,21 @@
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
   if (!deduplicate || !isDuplicate(event)) {
-    #ifdef USE_SECOND_HEAP
+#if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
     reserve_special(tmp, event.length());
     tmp = event;
 
+#ifdef USE_SECOND_HEAP
     // Do not add to the list while on 2nd heap
     HeapSelectDram ephemeral;
+#endif
+
 
     _eventQueue.emplace_back(std::move(tmp));
-    #else
+#else
     _eventQueue.push_back(event);
-    #endif // ifdef USE_SECOND_HEAP
+#endif
   }
 }
 
@@ -38,12 +41,14 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
   if (!event.length()) { return; }
 
   if (!deduplicate || !isDuplicate(event)) {
-    #ifdef USE_SECOND_HEAP
+    #if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
     move_special(tmp, std::move(event));
 
+    #ifdef USE_SECOND_HEAP
     // Do not add to the list while on 2nd heap
     HeapSelectDram ephemeral;
+    #endif
     _eventQueue.emplace_back(std::move(tmp));
     #else
     _eventQueue.emplace_back(std::move(event));

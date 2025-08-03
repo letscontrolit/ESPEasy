@@ -130,10 +130,7 @@ Output
 
 * **Log low-level values (INFO)**: When checked, the values during the actual read (max. 1 per second) will be output to the serial log, on INFO level. This can be used for debugging purposes. May not be available in all builds to save space in the bin file.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval. If the Interval is set lower than the **Continuous conversion cycle time**, the interval will return the previously measured value until an actual measurement has been retrieved from the sensor.
 

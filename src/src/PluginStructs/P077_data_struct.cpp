@@ -26,6 +26,29 @@ const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr, bool displa
   return F("");
 }
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_077_QueryVType(uint8_t value_nr) {
+  const Sensor_VType vtypes[] = {
+    Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY,
+    Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
+    Sensor_VType::SENSOR_TYPE_CURRENT_ONLY,
+    Sensor_VType::SENSOR_TYPE_NONE,
+    Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
+    Sensor_VType::SENSOR_TYPE_APPRNT_POWER_USG_ONLY,
+    Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY,
+    Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY,
+  };
+  constexpr uint8_t  valueCount = NR_ELEMENTS(vtypes);
+  Sensor_VType result           = Sensor_VType::SENSOR_TYPE_NONE;
+
+  if (value_nr < valueCount) {
+    result = vtypes[value_nr];
+  }
+  return static_cast<int>(result);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 P077_query Plugin_077_from_valuename(const String& valuename)
 {
   for (uint8_t query = 0; query < static_cast<uint8_t>(P077_query::P077_QUERY_NR_OUTPUT_OPTIONS); ++query) {
@@ -321,7 +344,7 @@ bool P077_data_struct::plugin_read(struct EventStruct *event) {
       float value{};
 
       if (_cache[index].peek(value)) {
-        UserVar.setFloat(event->TaskIndex, i,  value);
+        UserVar.setFloat(event->TaskIndex, i, value);
       }
     }
   }
@@ -359,7 +382,7 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
     setOutputValue(event, P077_query::P077_QUERY_KWH,    cf_pulses);
     setOutputValue(event, P077_query::P077_QUERY_PULSES, cf_pulses);
     Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
-    success   = true;
+    success = true;
   } else if (equals(cmd, F("csecalibrate"))) { // Set 1 or more calibration values, 0 will skip that value
     success = true;
     float CalibVolt  = 0.0f;
@@ -441,7 +464,7 @@ void P077_data_struct::setOutputValue(struct EventStruct *event, P077_query outp
         // Set preliminary averaged value as task value.
         // This way we can see intermediate updates.
         _cache[index].peek(value);
-        UserVar.setFloat(event->TaskIndex, i,  value);
+        UserVar.setFloat(event->TaskIndex, i, value);
       }
     }
   }

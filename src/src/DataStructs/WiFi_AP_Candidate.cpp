@@ -32,18 +32,24 @@ country({
 #endif
   last_seen(0), rssi(0), channel(0), index(0), enc_type(0)
 {
-  memset(&bits, 0, sizeof(bits));
+  _allBits = 0u;
 }
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
+: ssid(other.ssid),
+  last_seen(other.last_seen), 
+  bssid(other.bssid),
+  rssi(other.rssi), 
+  channel(other.channel), 
+  index(other.index), 
+  enc_type(other.enc_type)
 {
-  // All members other than ssid can be mem-copied
-  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
-
-  // Make sure ssid isn't some kind of valid String with heap allocated memory
-  memset(&ssid, 0, sizeof(ssid));
-  // Now copy the ssid String
-  ssid = other.ssid;
+  _allBits = other._allBits;
+  #ifdef ESP32
+  # if ESP_IDF_VERSION_MAJOR >= 5
+  memcpy(&this->country, &other.country, sizeof(wifi_country_t));
+  #endif
+  #endif
 }
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
@@ -59,7 +65,7 @@ country({
 #endif
   last_seen(0), rssi(0), channel(0), index(index_c), enc_type(0)
 {
-  memset(&bits, 0, sizeof(bits));
+  _allBits = 0u;
 
   const size_t ssid_length = ssid_c.length();
 
@@ -76,7 +82,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {
   // Need to make sure the phy isn't known as we can't get this information from the AP
   // See: https://github.com/letscontrolit/ESPEasy/issues/4996
   // Not sure why this makes any difference as the flags should already have been set to 0.
-  memset(&bits, 0, sizeof(bits));
+  _allBits = 0u;
 
   ssid     = WiFi.SSID(networkItem);
   rssi     = WiFi.RSSI(networkItem);
@@ -129,8 +135,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
   phy_11b(ap.phy_11b), phy_11g(ap.phy_11g), phy_11n(ap.phy_11n),
   wps(ap.wps)
 {
-  memset(&bits, 0, sizeof(bits));
-
+  _allBits = 0u;
   last_seen = millis();
 
   switch (ap.authmode) {
@@ -180,13 +185,20 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 
 WiFi_AP_Candidate& WiFi_AP_Candidate::operator=(const WiFi_AP_Candidate& other)
 {
-  // All members other than ssid can be mem-copied
-  memcpy(this, &other, sizeof(WiFi_AP_Candidate));
-
-  // Make sure ssid isn't some kind of valid String with heap allocated memory
-  memset(&ssid, 0, sizeof(ssid));
-  // Now copy the ssid String
   ssid = other.ssid;
+  last_seen = other.last_seen;
+  bssid = other.bssid;
+  rssi = other.rssi;
+  channel = other.channel;
+  index = other.index;
+  enc_type = other.enc_type;
+  _allBits = other._allBits;
+  #ifdef ESP32
+  # if ESP_IDF_VERSION_MAJOR >= 5
+  memcpy(&this->country, &other.country, sizeof(wifi_country_t));
+  #endif
+  #endif
+
   return *this;
 }
 

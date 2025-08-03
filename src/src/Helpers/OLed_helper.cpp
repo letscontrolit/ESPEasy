@@ -6,15 +6,16 @@
 void OLedFormController(const __FlashStringHelper *id,
                         const int                 *values,
                         uint8_t                    selectedIndex) {
-  const __FlashStringHelper *controllerOptions[2] = {
+  const __FlashStringHelper *controllerOptions[] = {
     F("SSD1306 (128x64 dot controller)"),
     F("SH1106 (132x64 dot controller)")
   };
-  const int controllerValues[2] = {
-    1,
-    2 };
-
-  addFormSelector(F("Controller"), id, 2, controllerOptions, values == nullptr ? controllerValues : values, selectedIndex);
+  const int controllerValues[] = { 1, 2 };
+  const FormSelectorOptions selector(
+    NR_ELEMENTS(controllerOptions),
+    controllerOptions, 
+    values == nullptr ? controllerValues : values);
+  selector.addFormSelector(F("Controller"), id, selectedIndex);
 }
 
 /**************************************************************************
@@ -28,8 +29,10 @@ void OLedFormRotation(const __FlashStringHelper *id,
   const int rotationValues[] = {
     1,
     2 };
-
-  addFormSelector(F("Rotation"), id, 2, rotationOptions, rotationValues, selectedIndex);
+  const FormSelectorOptions selector(
+    NR_ELEMENTS(rotationOptions),
+    rotationOptions, rotationValues);
+  selector.addFormSelector(F("Rotation"), id, selectedIndex);
 }
 
 /**************************************************************************
@@ -45,8 +48,14 @@ void OLedFormContrast(const __FlashStringHelper *id,
     OLED_CONTRAST_LOW,
     OLED_CONTRAST_MED,
     OLED_CONTRAST_HIGH };
+  const FormSelectorOptions selector(
+    NR_ELEMENTS(contrastOptions),
+    contrastOptions, contrastValues);
 
-  addFormSelector(F("Contrast"), id, 3, contrastOptions, contrastValues, selectedIndex == 0 ? OLED_CONTRAST_HIGH : selectedIndex);
+  selector.addFormSelector(
+    F("Contrast"), 
+    id, 
+    selectedIndex == 0 ? OLED_CONTRAST_HIGH : selectedIndex);
 }
 
 /**************************************************************************
@@ -56,12 +65,16 @@ void OLedFormSizes(const __FlashStringHelper *id,
                    const int                 *values,
                    uint8_t                    selectedIndex,
                    bool                       reloadOnChange) {
-  const __FlashStringHelper *options3[3] = {
+  const __FlashStringHelper *options3[] = {
     F("128x64"),
     F("128x32"),
     F("64x48") };
-
-  addFormSelector(F("Display Size"), id, 3, options3, values, selectedIndex, reloadOnChange);
+  FormSelectorOptions selector(NR_ELEMENTS(options3), options3, values);
+  selector.reloadonchange = reloadOnChange;
+  selector.addFormSelector(
+    F("Display Size"), 
+    id,
+    selectedIndex);
 }
 
 /**************************************************************************

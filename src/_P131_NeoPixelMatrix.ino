@@ -92,7 +92,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *stripOptions[] = { F("GRB"), F("GRBW") }; // Selection copied from P038
-        addFormSelector(F("Strip Type"), F("striptype"), 2, stripOptions, optionValuesZeroOne, P131_CONFIG_FLAGS_GET_STRIP_TYPE);
+        const FormSelectorOptions selector(2, stripOptions, optionValuesZeroOne);
+        selector.addFormSelector(F("Strip Type"), F("striptype"),  P131_CONFIG_FLAGS_GET_STRIP_TYPE);
       }
 
       {
@@ -118,14 +119,18 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Matrix height"), F("mxheight"),
                           P131_CONFIG_MATRIX_HEIGHT, 1, 100);
 
-        addFormSelector(F("Matrix start-pixel"), F("mxstart"), 4, optionsTop, optionValuesTop,
-                        get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
+        const FormSelectorOptions selTop(4, optionsTop, optionValuesTop);
+        const FormSelectorOptions selRowCol(2, optionsRowCol, optionValuesZeroOne);
+        const FormSelectorOptions selProZig(2, optionsProZig, optionValuesZeroOne);
 
-        addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 2, optionsRowCol, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
+        selTop.addFormSelector(F("Matrix start-pixel"), F("mxstart"), 
+          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
 
-        addFormSelector(F("Matrix flow direction"), F("mxprozig"), 2, optionsProZig, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
+        selRowCol.addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
+
+        selProZig.addFormSelector(F("Matrix flow direction"), F("mxprozig"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
 
         addFormSubHeader(F("Multiple matrices: Tiles"));
 
@@ -134,14 +139,14 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Tile matrix height"), F("tlheight"),
                           P131_CONFIG_TILE_HEIGHT, 1, P131_Nlines);
 
-        addFormSelector(F("Tile start-matrix"), F("tlstart"), 4, optionsTop, optionValuesTop,
-                        get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
+        selTop.addFormSelector(F("Tile start-matrix"), F("tlstart"), 
+          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
 
-        addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 2, optionsRowCol, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
+        selRowCol.addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
 
-        addFormSelector(F("Tile flow direction"), F("tlprozig"), 2, optionsProZig, optionValuesZeroOne,
-                        bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
+        selProZig.addFormSelector(F("Tile flow direction"), F("tlprozig"), 
+          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
       }
 
       addFormSubHeader(F("Display"));
@@ -174,13 +179,10 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P131_CommandTrigger::neomatrix),
           static_cast<int>(P131_CommandTrigger::neo)
         };
-        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
-        addFormSelector(F("Write Command trigger"),
-                        F("cmdtrigger"),
-                        cmdCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P131_CONFIG_FLAG_GET_CMD_TRIGGER);
+        constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
+        const FormSelectorOptions selector(cmdCount, commandTriggers, commandTriggerOptions);
+        selector.addFormSelector(
+          F("Write Command trigger"), F("cmdtrigger"), P131_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -220,9 +222,6 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           addTextBox(getPluginCustomArgName(varNr),
                      parseStringKeepCaseNoTrim(strings[varNr], 1),
                      P131_Nchars,
-                     false,
-                     false,
-                     EMPTY_STRING,
                      F(""));
 
           String   opts    = parseString(strings[varNr], 2);

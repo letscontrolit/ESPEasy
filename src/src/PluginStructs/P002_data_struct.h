@@ -6,6 +6,7 @@
 #include "../Helpers/OversamplingHelper.h"
 
 #ifdef USES_P002
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
 # include <vector>
 
@@ -244,6 +245,8 @@ public:
 
 private:
 
+  int analog_read() const;
+
   OversamplingHelper<int32_t>OverSampling;
 
   int   _calib_adc1 = 0;
@@ -280,6 +283,6 @@ private:
 # endif // ifdef ESP32
 };
 
-
+#endif
 #endif // ifdef USES_P002
 #endif // ifndef PLUGINSTRUCTS_P002_DATA_STRUCT_H

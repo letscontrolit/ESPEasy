@@ -41,6 +41,9 @@
 # define P019_LP_MIN_INT    PCONFIG_FLOAT(2)
 # define P019_SAFE_BTN      PCONFIG_FLOAT(3)
 
+# if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+#  define P019_MQTT_DEVICECLASS   PCONFIG(6)
+# endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
 struct P019_data_struct : public PluginTaskData_base {
   static uint8_t getI2C_address(struct EventStruct *event);

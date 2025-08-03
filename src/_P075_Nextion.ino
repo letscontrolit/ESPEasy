@@ -15,6 +15,7 @@
 //
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Nextion)
  * 2022-09-27 tonhuisman: Use Changelog formatted updates
  *                        Extend nr. of lines available for text/commands to 20, minor code improvements
  * Updated: Oct-03-2018, ThomasB.
@@ -75,6 +76,15 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
       break;
@@ -97,7 +107,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       };
 
       constexpr size_t optionCount = NR_ELEMENTS(options);
-      addFormSelector(F("Baud Rate"), F("baud"), optionCount, options, nullptr, P075_BaudRate);
+      const FormSelectorOptions selector(optionCount, options);
+      selector.addFormSelector(F("Baud Rate"), F("baud"), P075_BaudRate);
       addUnit(F("baud"));
       break;
     }
@@ -284,7 +295,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (validGpio(P075_data->rxPin)) {
+      if (!validGpio(P075_data->rxPin)) {
         addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing RxD Pin, aborted serial receive"));
         break;
       }

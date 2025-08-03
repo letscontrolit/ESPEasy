@@ -45,9 +45,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
       output = false;
     } else {
       // See: https://www.letscontrolit.com/forum/viewtopic.php?p=71880#p71874
-      if ((gpio == 12) || (gpio == 13)) {
-        // SPIHD/GPIO12
-        // SPIWP/GPIO13
+      if ((gpio == 12) || (gpio == 13)) { 
+        // SPIHD/GPIO12 
+        // SPIWP/GPIO13 
         if ((ESP.getFlashChipMode() != FM_DOUT) &&
             (ESP.getFlashChipMode() != FM_DIO)) {
           input  = false;
@@ -144,12 +144,15 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   return false;
 }
 
+#if SOC_TOUCH_SENSOR_SUPPORTED
 int touchPinToGpio(int touch_pin)
 {
   // No touch pin support
   return -1;
 }
+#endif
 
+#if SOC_DAC_SUPPORTED
 // Get DAC related info for a given GPIO pin
 // @param gpio_pin   GPIO pin number
 // @param dac        Number of DAC unit
@@ -158,5 +161,6 @@ bool getDAC_gpio_info(int gpio_pin, int& dac)
   // ESP32-C3, ESP32-S3, ESP32-C2, ESP32-C6 and ESP32-H2 don't have a DAC onboard
   return false;
 }
+#endif
 
 #endif // ifdef ESP32C3

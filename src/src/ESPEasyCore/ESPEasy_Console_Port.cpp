@@ -121,8 +121,8 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
   if (_serial != nullptr) {
     const int snip = _serial->availableForWrite();
-
-    if  (snip > 0) {
+    
+    if (snip > 0) {
       return _serialWriteBuffer.write(*_serial, snip) != 0;
     }
   }
@@ -138,6 +138,10 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
     }
   }
 
+  if ((SerialInByte == '\b') && (SerialInByteCounter > 0)) // Correct a typo using BackSpace
+  {
+    --SerialInByteCounter;
+  } else
   if ((SerialInByte == '\r') || (SerialInByte == '\n'))
   {
     // Ignore empty command

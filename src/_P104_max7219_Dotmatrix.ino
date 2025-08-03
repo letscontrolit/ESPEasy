@@ -73,6 +73,7 @@
 //                                the coordinate set.
 //
 // History:
+// 2025-04-03 tonhuisman: Set character spacing correctly when changing fonts
 // 2023-10-15 tonhuisman: Code improvements, now using NR_ELEMENTS macro instead of multiple #ifdefs and increments
 //                        Re-enable use of settings-version V3 after some more testing
 // 2023-10-08 tonhuisman: Disable use of settings-version V3 for backward compatibility

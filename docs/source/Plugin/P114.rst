@@ -75,7 +75,7 @@ Usually a higher integration time results in a more accurate measurement.
 
 
 
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec. but for measuring UV values, that don't change very quickly, reasonable values should be between 10 and 300 sec.
 

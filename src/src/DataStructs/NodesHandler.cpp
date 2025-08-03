@@ -67,6 +67,7 @@ bool NodesHandler::addNode(const NodeStruct& node)
       ++it;
     }
   }
+  bool ntp_candidate_updated = false;
   {
     _nodes_mutex.lock();
     {
@@ -78,7 +79,7 @@ bool NodesHandler::addNode(const NodeStruct& node)
     }
     // Make sure to set first as NTP candidate, as it was set to time since
     // last time sync by the sender node before sending.
-    _ntp_candidate.set(node);
+    ntp_candidate_updated = _ntp_candidate.set(node);
     // Now set lastUpdated so we can keep track of its age.
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
@@ -104,7 +105,22 @@ bool NodesHandler::addNode(const NodeStruct& node)
     const timeSource_t timeSource = _ntp_candidate.getUnixTime(unixTime, wander, unit);
 
     if (timeSource != timeSource_t::No_time_source) {
-      node_time.setExternalTimeSource_withTimeWander(unixTime, timeSource, wander, unit);
+      bool shouldUpdate = false;
+
+      if (!node_time.systemTimePresent()) {
+        if (timeSource < timeSource_t::ESP_now_peer || getUptimeMinutes() > 0) {
+          // After 1 minute we should have had at least 2 loops of p2p nodes announcing their time source.
+          // Though no need to wait longer if we already got a good source
+          shouldUpdate = true;
+        }
+      } else if (ntp_candidate_updated) {
+        // Got a better time source
+        shouldUpdate = true;
+      }
+
+      if (shouldUpdate) {
+        node_time.setExternalTimeSource_withTimeWander(unixTime, timeSource, wander, unit);
+      }
     }
   }
 
@@ -141,7 +157,7 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
     if (traceRoute.getDistance() != 255) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        if (log.reserve(80)) {
+        if (reserve_special(log, 80)) {
           log  = F(ESPEASY_NOW_NAME);
           log += F(": Node: ");
           log += String(node.unit);

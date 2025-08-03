@@ -127,13 +127,14 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x76, 0x77 };
+      const uint8_t i2cAddressValues[]  = { 0x76, 0x77 };
+      constexpr uint8_t i2cAddressCount = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P028_I2C_ADDRESS);
+        addFormSelectorI2C(F("i2c_addr"), i2cAddressCount, i2cAddressValues, P028_I2C_ADDRESS);
         addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
-        success = intArrayContains(2, i2cAddressValues, event->Par1);
+        success = intArrayContains(i2cAddressCount, i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -190,7 +191,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P028_data_struct::BMx_DetectMode::BME280),
           static_cast<int>(P028_data_struct::BMx_DetectMode::BMP280),
         };
-        addFormSelector(F("Output values mode"), F("det"), 2, detectOptionList, detectOptions, P028_DETECTION_MODE);
+        const FormSelectorOptions selector(NR_ELEMENTS(detectOptionList), detectOptionList, detectOptions);
+        selector.addFormSelector(F("Output values mode"), F("det"),  P028_DETECTION_MODE);
 
         success = true;
       }
@@ -253,11 +255,11 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef LIMIT_BUILD_SIZE
       };
       constexpr int P028_ERROR_STATE_COUNT = NR_ELEMENTS(resultsOptions);
-      addFormSelector(F("Temperature Error Value"),
-                      F("err"),
-                      P028_ERROR_STATE_COUNT,
-                      resultsOptions,
-                      resultsOptionValues,
+      const FormSelectorOptions selector(        
+        P028_ERROR_STATE_COUNT,
+        resultsOptions,
+        resultsOptionValues);
+      selector.addFormSelector(F("Temperature Error Value"), F("err"),
                       P028_ERROR_STATE_OUTPUT);
 
       break;

@@ -216,7 +216,7 @@
   #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
   # endif 
   # ifndef CONFIG_FILE_SIZE
-  #  define CONFIG_FILE_SIZE               131072
+  #  define CONFIG_FILE_SIZE               (DAT_OFFSET_TASKS + ((DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE) * TASKS_MAX))
   # endif // ifndef CONFIG_FILE_SIZE
 #endif    // if defined(ESP32)
 

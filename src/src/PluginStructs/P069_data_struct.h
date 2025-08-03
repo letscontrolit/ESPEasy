@@ -10,7 +10,7 @@ public:
 
   P069_data_struct(uint8_t addr);
 
-  P069_data_struct() = delete;
+  P069_data_struct()          = delete;
   virtual ~P069_data_struct() = default;
 
   float getTemperatureInDegrees() const;

@@ -9,6 +9,7 @@
 // Extended by timer based state control to support pumps with additional requirements (floor heating ciculation pump)
 
 // Changelog:
+// 2025-05-21, tonhuisman: Add support for MQTT Discovery and MQTT Device Class user-configuration
 // 2024-12-14, tonhuisman: Move most defines to .h file to avoid compiler warnings, as Arduino doesn't support #ifdef in .ino files
 //                         Format source using Uncrustify
 //                         Remove unneeded includes
@@ -164,6 +165,20 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+
+      success     = true;
+      event->Par1 = static_cast<int>(bitRead(P021_FLAGS, P021_INV_OUTPUT)
+                    ? Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED
+                    : Sensor_VType::SENSOR_TYPE_SWITCH);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_STRING);
+      #  if FEATURE_MQTT_DEVICECLASS
+      string = MQTT_binary_deviceClassName(P021_MQTT_DEVICECLASS); // User selected device_cLass/dev_cls value
+      #  endif // if FEATURE_MQTT_DEVICECLASS
+      break;
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_WEBFORM_LOAD:
     {
       # if FEATURE_P021_EXTRAS >= 1
@@ -234,10 +249,14 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
-        const int optionValues[]             =
-        { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), optionCount, options, optionValues, P021_OPMODE);
+
+        /*
+           const int optionValues[]             =
+           { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
+         */
+        constexpr size_t optionCount = NR_ELEMENTS(options);
+        const FormSelectorOptions selector(optionCount, options /*, optionValues*/);
+        selector.addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), P021_OPMODE);
 
         // Add timer values depending on build size
         //  - minimum build size: units are always in seconds; drop the units on the form
@@ -300,6 +319,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         addFormCheckBox(F("State as output value"), F(P021_GUID_STATE_OUTP),     bitRead(flags, P021_STATE_OUTP));
       }
       # endif // FEATURE_P021_EXTRAS >= 1
+
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                              F("devcls"),
+                                              P021_MQTT_DEVICECLASS);
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
       success = true;
       break;
@@ -374,7 +400,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       # endif // if FEATURE_P021_EXTRAS >= 1
 
       P021_FLAGS = flags; // Don't forget to write back the new flags
-      success    = true;
+
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P021_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      success = true;
       break;
     }
 
@@ -800,10 +831,11 @@ void P021_evaluate(struct EventStruct *event)
       break;
   }
 
+  relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
+
   // Actuate the output pin taking output invert flag into account
   if (validGpio(P021_GPIO_RELAY))
   {
-    relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
     digitalWrite(P021_GPIO_RELAY, relay_output ? HIGH : LOW);
   }
 

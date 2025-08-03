@@ -50,6 +50,11 @@
    ------------------------------------------------------------------------------------------
  */
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Serial Switch)
+ */
+
 #ifdef USES_P091
 
 
@@ -96,6 +101,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
       break;
     }
     case PLUGIN_GET_DEVICENAME:
@@ -114,6 +120,22 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
     case PLUGIN_WEBFORM_LOAD:
     {
       {
@@ -125,7 +147,8 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         };
         const int optionValues[]     = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
         constexpr size_t optionCount = NR_ELEMENTS(optionValues);
-        addFormSelector(F("Switch Type"), F("type"), optionCount, options, optionValues, PCONFIG(0));
+        const FormSelectorOptions selector(optionCount, options, optionValues);
+        selector.addFormSelector(F("Switch Type"), F("type"), PCONFIG(0));
       }
 
       if (PCONFIG(0) == SER_SWITCH_YEWE)
@@ -138,7 +161,8 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         };
         const int buttonoptionValues[] = { 1, 2, 3, 4 };
         constexpr size_t optionCount   = NR_ELEMENTS(buttonoptionValues);
-        addFormSelector(F("Number of relays"), F("button"), optionCount, buttonOptions, buttonoptionValues, PCONFIG(1));
+        const FormSelectorOptions selector(optionCount, buttonOptions, buttonoptionValues);
+        selector.addFormSelector(F("Number of relays"), F("button"), PCONFIG(1));
       }
 
       if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
@@ -149,21 +173,17 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           F("Simultaneous mode"),
         };
         constexpr size_t optionCount = NR_ELEMENTS(modeoptions);
-        addFormSelector(F("Relay working mode"), F("mode"), optionCount, modeoptions, nullptr, PCONFIG(1));
+        const FormSelectorOptions selector(optionCount, modeoptions);
+        selector.addFormSelector(F("Relay working mode"), F("mode"), PCONFIG(1));
       }
 
       if (PCONFIG(0) == SER_SWITCH_LCTECH)
       {
         {
-          const __FlashStringHelper *buttonOptions[] = {
-            F("1"),
-            F("2"),
-            F("3"),
-            F("4"),
-          };
           const int buttonoptionValues[] = { 1, 2, 3, 4 };
           constexpr size_t optionCount   = NR_ELEMENTS(buttonoptionValues);
-          addFormSelector(F("Number of relays"), F("button"), optionCount, buttonOptions, buttonoptionValues, PCONFIG(1));
+          const FormSelectorOptions selector(optionCount, buttonoptionValues);
+          selector.addFormSelector(F("Number of relays"), F("button"), PCONFIG(1));
         }
 
         {
@@ -178,7 +198,9 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             F("57600"),
           };
           constexpr size_t optionCount = NR_ELEMENTS(speedOptions);
-          addFormSelector(F("Serial speed"), F("speed"), optionCount, speedOptions, nullptr, PCONFIG(2));
+          const FormSelectorOptions selector(optionCount, speedOptions);
+          selector.addFormSelector(F("Serial speed"), F("speed"), PCONFIG(2));
+          addUnit(F("baud"));
         }
 
         addFormCheckBox(F("Use command doubling"), F("dbl"), PCONFIG(3));
@@ -232,8 +254,8 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       if (PCONFIG(0) == SER_SWITCH_YEWE)
       {
         Plugin_091_numrelay = PCONFIG(1);
-        ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
         ESPEASY_SERIAL_0.setRxBufferSize(BUFFER_SIZE); // Arduino core for ESP8266 WiFi chip 2.4.0
+        ESPEASY_SERIAL_0.begin(9600, SERIAL_8N1);
         delay(1);
         getmcustate();                                 // request status on startup
         log += strformat(F(" Yewe %d btn"), Plugin_091_numrelay);

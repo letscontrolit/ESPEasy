@@ -109,18 +109,16 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       // To prevent stack overflow issues, each selection has its own scope.
       {
         String m2Options[PCA9685_MODE2_VALUES];
-        int    m2Values[PCA9685_MODE2_VALUES];
+        //int    m2Values[PCA9685_MODE2_VALUES];
 
         for (int i = 0; i < PCA9685_MODE2_VALUES; ++i)
         {
-          m2Values[i]  = i;
+          //m2Values[i]  = i;
           m2Options[i] = formatToHex_decimal(i);
-
-          if (i == 0x10) {
-            m2Options[i] += F(" - (default)");
-          }
         }
-        addFormSelector(F("MODE2"), F("pmode2"), PCA9685_MODE2_VALUES, m2Options, m2Values, mode2);
+        FormSelectorOptions selector(PCA9685_MODE2_VALUES, m2Options/*, m2Values*/);
+        selector.default_index = 0x10;
+        selector.addFormSelector(F("MODE2"), F("pmode2"), mode2);
       }
       addFormNumericBox(
         strformat(F("Frequency (%d-%d)"), PCA9685_MIN_FREQUENCY, PCA9685_MAX_FREQUENCY),

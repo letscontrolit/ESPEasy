@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-04-27 tonhuisman: Read sensor asynchronously to enable (the new default) trigger on changed value
  * 2024-04-26 tonhuisman: Migrate 'Send event when value unchanged' and 'Trigger delta' settings from P113 (at last...)
  *                        Add Direction value, -1 = closer, 0 = unchanged, 1 = further away
@@ -66,6 +67,16 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DIRECTION_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
@@ -100,7 +111,8 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
           F("Accurate") };
         const int optionValuesMode2[] = { 80, 20, 320 };
         constexpr size_t optionCount  = NR_ELEMENTS(optionValuesMode2);
-        addFormSelector(F("Timing"), F("ptiming"), optionCount, optionsMode2, optionValuesMode2, P110_TIMING);
+        const FormSelectorOptions selector(optionCount, optionsMode2, optionValuesMode2);
+        selector.addFormSelector(F("Timing"), F("ptiming"), P110_TIMING);
       }
 
       {
@@ -108,7 +120,8 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
           F("Normal"),
           F("Long") };
         constexpr size_t optionCount = NR_ELEMENTS(optionsMode3);
-        addFormSelector(F("Range"), F("prange"), optionCount, optionsMode3, nullptr, P110_RANGE);
+        const FormSelectorOptions selector(optionCount, optionsMode3);
+        selector.addFormSelector(F("Range"), F("prange"), P110_RANGE);
       }
       addFormCheckBox(F("Send event when value unchanged"), F("notchanged"), P110_SEND_ALWAYS == 1);
       addFormNote(F("When checked, 'Trigger delta' setting is ignored!"));

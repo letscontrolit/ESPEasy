@@ -17,6 +17,7 @@
 // Datasheet: https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/hx711_english.pdf
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-02-23 tonhuisman: Ignore first PLUGIN_READ after startup, as no samples have been read yet so no measurement data is available
  * 2023-01-01 tonhuisman: Minor string reductions
  * 2022-12-30 tonhuisman: Fix no longer generating events, use DIRECT_pinRead() and DIRECT_pinWrite() to ensure proper working on ESP32,
@@ -68,6 +69,14 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Weight, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       event->String1 = formatGpioName_output(F("SCK"));
@@ -86,7 +95,8 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *optionsModeChanA[] = { F("Off"), F("Gain 64"), F("Gain 128") };
-        addFormSelector(F("Mode"), F("modeChA"), 3, optionsModeChanA, nullptr, P067_GET_CHANNEL_A_MODE);
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsModeChanA), optionsModeChanA);
+        selector.addFormSelector(F("Mode"), F("modeChA"), P067_GET_CHANNEL_A_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &valFloat);
@@ -101,7 +111,8 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *optionsModeChanB[] = { F("Off"), F("Gain 32") };
-        addFormSelector(F("Mode"), F("modeChB"), 2, optionsModeChanB, nullptr, P067_GET_CHANNEL_B_MODE);
+        const FormSelectorOptions selector(NR_ELEMENTS(optionsModeChanB), optionsModeChanB);
+        selector.addFormSelector(F("Mode"), F("modeChB"), P067_GET_CHANNEL_B_MODE);
       }
 
       P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &valFloat);

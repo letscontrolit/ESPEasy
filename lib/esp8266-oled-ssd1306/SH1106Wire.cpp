@@ -8,7 +8,7 @@
       _scl(scl) {}
 
     bool SH1106Wire::connect() {
-      Wire.begin(this->_sda, this->_scl);
+      // Wire.begin(this->_sda, this->_scl); // ESPEasy already has Wire initialized properly
       return true;
     }
 

@@ -43,6 +43,8 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+   2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported ThermOLED)
    2022-12-08 tonhuisman: Add Relay invert state option, reorder config option Contrast
                           Add setpoint delay option, switch relay after delay seconds
    2022-10-11 tonhuisman: Fix initialization issue for relay state when switching tasks
@@ -93,6 +95,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       dev.ValueCount     = 4;
       dev.SendDataOption = true;
       dev.TimerOption    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -110,6 +113,22 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_109));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -181,7 +200,8 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
         const int optionValues4[]             = { 2, 5, 10 };
         constexpr size_t optionCount          = NR_ELEMENTS(optionValues4);
-        addFormSelector(F("Hysteresis"), F("hyst"), optionCount, options4, optionValues4, static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
+        const FormSelectorOptions selector(optionCount, options4, optionValues4);
+        selector.addFormSelector(F("Hysteresis"), F("hyst"), static_cast<int>(P109_CONFIG_HYSTERESIS * 10.0f));
       }
 
       {

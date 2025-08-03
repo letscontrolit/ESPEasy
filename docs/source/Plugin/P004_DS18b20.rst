@@ -220,10 +220,8 @@ The Statistics can help determining why a setup of sensors may not perform as we
 
 
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
-* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
 
 Values

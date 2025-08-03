@@ -179,7 +179,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
+    #endif
     return false;
   }
   LoadControllerSettings(controller_idx, *ControllerSettings);
@@ -255,7 +257,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       mqtt.setTimeout(timeout); // in msec as it should be!
   #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
-      MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+      MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
       MQTTclient.setSocketTimeout(timeout);
       break;
     }
@@ -360,7 +362,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_tls->setBufferSizes(1024, 1024);
     #  endif // ifdef ESP8266
     MQTTclient.setClient(*mqtt_tls);
-    MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+    MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
     MQTTclient.setSocketTimeout(timeout);
 
 
@@ -394,7 +396,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   MQTTclient.setClient(mqtt);
-  MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime);
+  MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
   MQTTclient.setSocketTimeout(timeout);
 # endif // if FEATURE_MQTT_TLS
 
@@ -557,15 +559,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #  endif // ifdef ESP32
   # endif  // if FEATURE_MQTT_TLS
 
-  String subscribeTo = ControllerSettings->Subscribe;
+  MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->Subscribe));
 
-  parseSystemVariables(subscribeTo, false);
-  MQTTclient.subscribe(subscribeTo.c_str());
+  # if FEATURE_MQTT_DISCOVER
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
-  {
-    addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
+  if (ControllerSettings->mqtt_autoDiscovery()) {
+    MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->MqttAutoDiscoveryTrigger));
   }
+  # endif // if FEATURE_MQTT_DISCOVER
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -584,6 +585,20 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
 
   return true;
+}
+
+void MQTTparseSystemVariablesAndSubscribe(String subscribeTo) {
+  if (subscribeTo.isEmpty()) { return; }
+  parseSystemVariables(subscribeTo, false);
+  subscribeTo.trim();
+
+  if (!subscribeTo.isEmpty()) {
+    MQTTclient.subscribe(subscribeTo.c_str());
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, concat(F("Subscribed to: "),  subscribeTo));
+    }
+  }
 }
 
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
@@ -826,10 +841,30 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   if (MQTT_queueFull(controller_idx)) {
     return false;
   }
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex, topic,
-                                                                                                           payload, retained,
-                                                                                                           callbackTask)));
+  String topic_str;
+  String payload_str;
+  if (!reserve_special(topic_str, strlen_P(topic)) ||
+      !reserve_special(payload_str, strlen_P(payload))) {
+    return false;
+  }
+  topic_str = topic;
+  payload_str = payload;
+
+  bool success = false;
+
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success =
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex, 
+            std::move(topic_str),
+            std::move(payload_str), retained,
+            callbackTask)));
+  }
 
   scheduleNextMQTTdelayQueue();
   return success;
@@ -849,12 +884,21 @@ bool MQTTpublish(controllerIndex_t controller_idx,
     return false;
   }
 
-  const bool success =
-    MQTTDelayHandler->addToQueue(std::unique_ptr<MQTT_queue_element>(new (std::nothrow) MQTT_queue_element(controller_idx, taskIndex,
-                                                                                                           std::move(topic),
-                                                                                                           std::move(payload), retained,
-                                                                                                           callbackTask)));
+  bool success = false;
 
+  constexpr unsigned size = sizeof(MQTT_queue_element);
+  void *ptr               = special_calloc(1, size);
+
+  if (ptr != nullptr) {
+    success = 
+      MQTTDelayHandler->addToQueue(
+        std::unique_ptr<MQTT_queue_element>(
+          new (ptr) MQTT_queue_element(
+            controller_idx, taskIndex,
+            std::move(topic),
+            std::move(payload), retained,
+            callbackTask)));
+  }
   scheduleNextMQTTdelayQueue();
   return success;
 }
@@ -973,7 +1017,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime)
 
 void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
 {
-  if (!validTaskIndex(event->TaskIndex)) { return; }
+  if (!validTaskIndex(event->TaskIndex)) { 
+    return; 
+  }
 
   // FIXME TD-er: Should a 'disabled' task be rescheduled?
   // If not, then it should be rescheduled after the check to see if it is enabled.
@@ -985,6 +1031,7 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {
+    START_TIMER;
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -999,5 +1046,6 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
     if (PluginCall(PLUGIN_READ, &TempEvent, dummy)) {
       sendData(&TempEvent);
     }
+    STOP_TIMER(SENSOR_SEND_TASK);
   }
 }

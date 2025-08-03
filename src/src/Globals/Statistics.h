@@ -35,7 +35,7 @@ extern SchedulerTimerID lastMixedSchedulerId_beforereboot;
 extern unsigned long loopCounter;
 extern unsigned long loopCounterLast;
 extern unsigned long loopCounterMax;
-extern uint64_t lastLoopStart;
+extern uint32_t lastLoopStart;
 extern unsigned long shortestLoop;
 extern unsigned long longestLoop;
 extern unsigned long loopCounter_full;

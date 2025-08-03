@@ -121,7 +121,9 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
+    #ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
+    #endif
   }
 
   if (Settings.ConnectionFailuresThreshold)
@@ -172,6 +174,9 @@ void runOncePerSecond()
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
   {
+    #if FEATURE_I2C_MULTIPLE
+    I2CSelectHighClockSpeed(Settings.getI2CInterfaceWDT()); // Select bus
+    #endif // if FEATURE_I2C_MULTIPLE
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
 

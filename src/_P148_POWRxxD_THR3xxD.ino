@@ -121,8 +121,8 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P148_data_struct::Tm1621Device::THR3xxD)
         };
         constexpr size_t nrElements = NR_ELEMENTS(optionValues);
-
-        addFormSelector(F("Device Template"), F("devtmpl"), nrElements, options, optionValues, P148_DEVICE_SELECTOR);
+        const FormSelectorOptions selector(nrElements, options, optionValues);
+        selector.addFormSelector(F("Device Template"), F("devtmpl"), P148_DEVICE_SELECTOR);
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));
       }
 

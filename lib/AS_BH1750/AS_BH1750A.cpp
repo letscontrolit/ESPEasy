@@ -74,7 +74,7 @@ bool AS_BH1750A::begin(sensors_resolution_t mode, bool autoPowerDown) {
   _virtualMode = mode;
   _autoPowerDown = autoPowerDown;
   
-  Wire.begin();
+//  Wire.begin();
 
   defineMTReg(BH1750_MTREG_DEFAULT); // eigentlich normalerweise unnötig, da standard
 

@@ -15,6 +15,19 @@ bool hasEscapedCharacter(String& str, const char EscapeChar);
 // So far \\% \\[ \\] \\{ \\} \\( and \\) are used (all with single backslash!)
 void   stripEscapeCharacters(String& str);
 
+#if FEATURE_STRING_VARIABLES
+String parseTemplateAndCalculate(String& tmpString);
+uint8_t getDerivedValueCountForTask(taskIndex_t taskIndex);
+String getDerivedValueSearchAndPostfix(String  taskName,
+                                       String& postfix);
+String getDerivedValueNameUomAndVType(String  taskName,
+                                      String  valueName,
+                                      String& uom,
+                                      String& vType);
+String getDerivedValueName(String taskName,
+                           String valueName);
+#endif // if FEATURE_STRING_VARIABLES
+
 String parseTemplate(String& tmpString);
 
 String parseTemplate(String& tmpString,
@@ -36,10 +49,16 @@ String parseTemplate_padded(String& tmpString,
 // valueFormat="transformation#justification"
 void transformValue(
   String      & newString,
-  uint8_t          lineSize,
+  uint8_t       lineSize,
   String        value,
   String      & valueFormat,
-  const String& tmpString);
+  const String& tmpString
+  #if FEATURE_STRING_VARIABLES
+  , taskIndex_t taskIndex  = INVALID_TASK_INDEX
+  , uint8_t     valueIndex = INVALID_TASKVAR_INDEX
+  , String      valueName  = EMPTY_STRING
+  #endif // if FEATURE_STRING_VARIABLES
+);
 
 
 

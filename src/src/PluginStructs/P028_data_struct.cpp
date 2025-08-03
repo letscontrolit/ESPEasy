@@ -105,7 +105,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log.reserve(120); // Prevent re-allocation
+    reserve_special(log, 120); // Prevent re-allocation
     log  = getDeviceName(sensorID);
     log += ':';
   }

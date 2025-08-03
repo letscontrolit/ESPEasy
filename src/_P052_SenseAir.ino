@@ -8,7 +8,10 @@
 // #######################################################################################################
 
 /** Changelog:
- * 25025-01-03 tonhuisman: Small code size reduction
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2025-01-03 tonhuisman: Small code size reduction
+ * 2024-12-05 tonhuisman: Add support for MQTT AutoDiscovery for supported values
+ * 2024-12 tonhuisman: Start changelog
  */
 
 /*
@@ -69,6 +72,14 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_052_QueryVType, P052_NR_OUTPUT_VALUES, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
@@ -223,8 +234,9 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
               if (P052_data->readHoldingRegister(P052_HR11_MEASUREMENT_MODE, value)) {
                 // Disable selector for now, since single measurement not yet supported.
 
-                const __FlashStringHelper *options[2] = { F("Continuous"), F("Single Measurement") };
-                addFormSelector(F("Measurement Mode"), F("mode"), 2, options, nullptr, value);
+                const __FlashStringHelper *options[] = { F("Continuous"), F("Single Measurement") };
+                const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+                selector.addFormSelector(F("Measurement Mode"), F("mode"), value);
               }
            */
 
@@ -246,10 +258,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
          // ABC functionality disabled for now, due to a bug in the firmware.
          // See https://github.com/letscontrolit/ESPEasy/issues/759
          uint8_t choiceABCperiod = PCONFIG(4);
-         const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
+         const __FlashStringHelper * optionsABCperiod[] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
-         addFormSelector(F("ABC period"), F("ABC_period"), 9, optionsABCperiod,
-         nullptr, choiceABCperiod);
+         const FormSelectorOptions selector(NR_ELEMENTS(optionsABCperiod), optionsABCperiod);
+         selector.addFormSelector(F("ABC period"), F("ABC_period"), choiceABCperiod);
        */
 
 

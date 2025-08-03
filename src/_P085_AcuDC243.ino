@@ -16,6 +16,11 @@
     Use 1kOhm in serie on datapins!
  */
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for AcuDC)
+ */
+
 # define PLUGIN_085
 # define PLUGIN_ID_085         85
 # define PLUGIN_NAME_085       "Energy - AccuEnergy AcuDC24x"
@@ -66,6 +71,14 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_085_QueryVType, P085_QUERY1_CONFIG_POS, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
@@ -97,7 +110,8 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 6; ++i) {
         options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P085_BAUDRATE);
+      const FormSelectorOptions selector(6, options_baudrate);
+      selector.addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, P085_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
       break;
