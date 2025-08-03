@@ -27,15 +27,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
       - name: Build documentation
         run: |
           cd docs
           sudo apt install imagemagick zip
-          pip install -r requirements.txt
+          pip install uv
+          uv pip install --system -r requirements.txt
           python ./builds_overview.py
           make html
           cd ..
@@ -55,7 +52,8 @@ jobs:
           python-version: '3.x'
       - id: set-matrix
         run: |
-          pip install platformio
+          pip install uv
+          uv pip install --system platformio
           python tools/ci/generate-matrix.py
 
   build:
@@ -68,27 +66,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v4
-        if: ${{ contains(matrix.env, 'esp32') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v4
-        if: ${{ contains(matrix.env, 'esp8266') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
       - name: Dependencies
         run: |
           sudo apt-get update
           sudo apt install binutils build-essential libffi-dev libgit2-dev
-          pip3 install --upgrade pip
-          pip install wheel
-          pip install -r requirements.txt
+          pip install uv
+          uv pip install --system -r requirements.txt
           pio pkg update -e ${{ matrix.env }}
       - name: Get current date
         id: date
@@ -122,10 +105,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
       - name: Get current date
         id: date
         run: |

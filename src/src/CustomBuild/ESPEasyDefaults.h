@@ -299,7 +299,7 @@
 #endif
 
 #ifndef DEFAULT_USE_RULES
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true   // (true|false) Enable Rules?
 #endif
 #ifndef DEFAULT_RULES_OLDENGINE
 #define DEFAULT_RULES_OLDENGINE                true

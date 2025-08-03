@@ -137,7 +137,7 @@
 #define DEFAULT_PIN_RESET_BUTTON                (-1)
 
 
-#define DEFAULT_USE_RULES                       false             // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true              // (true|false) Enable Rules?
 #define DEFAULT_RULES_OLDENGINE                 true
 
 #define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
