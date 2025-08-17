@@ -343,7 +343,19 @@ public:
   uint8_t getI2CInterfaceRTC() const;
   uint8_t getI2CInterfaceWDT() const;
   uint8_t getI2CInterfacePCFMCP() const;
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t getI2CInterfaceEEPROM() const;
+  #endif // if FEATURE_EEPROM_EXTERNAL
   #endif // if FEATURE_I2C_MULTIPLE
+
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t  EEPROMExternalI2CAddress() const;
+  void     EEPROMExternalI2CAddress(uint8_t address);
+  uint16_t EEPROMExternalI2CMultiplexerFlags() const;
+  void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
+  uint8_t  EEPROMExternalSize() const;
+  void     EEPROMExternalSize(uint8_t size);
+  #endif
 
   #if FEATURE_I2CMULTIPLEXER
   int8_t getI2CMultiplexerType(uint8_t i2cBus) const;
@@ -414,7 +426,7 @@ public:
   uint8_t       WebLogLevel = 0;
   uint8_t       SDLogLevel = 0;
   unsigned long BaudRate = 115200;
-  unsigned long MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
+  unsigned long EEPROMExternalFlags = 0;
   uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS = false;
   boolean       DST = false;

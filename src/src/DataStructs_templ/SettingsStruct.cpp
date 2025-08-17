@@ -658,7 +658,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     # endif // ifdef ESP32
   }
   BaudRate                         = DEFAULT_SERIAL_BAUD;
-  MessageDelay_unused              = 0;
+  EEPROMExternalFlags              = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
   WDI2CAddress                     = 0;
@@ -1132,7 +1132,41 @@ template<unsigned int N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfacePCFMCP() const {
   return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP);
 }
+
+#if FEATURE_EEPROM_EXTERNAL
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceEEPROM() const {
+  return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM);
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 #endif // if FEATURE_I2C_MULTIPLE
+
+#if FEATURE_EEPROM_EXTERNAL
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress() const {
+  return get8BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS);
+}
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress(uint8_t address) {
+  set8BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS, address);
+}
+template<unsigned int N_TASKS>
+uint16_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags() const {
+  return get16BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX);
+}
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags) {
+  set16BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX, muxFlags);
+}
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalSize() const {
+  return static_cast<uint8_t>(get3BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE));
+}
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalSize(uint8_t size) {
+  set3BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, static_cast<EEPROMExternal_Type_e>(size));
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 #if FEATURE_I2CMULTIPLEXER
 template<unsigned int N_TASKS>

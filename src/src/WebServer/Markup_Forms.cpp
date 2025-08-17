@@ -504,6 +504,9 @@ void addFormSelectorI2C(const String& id,
   {
     String option = formatToHex_decimal(addresses[x]);
 
+    if (0 == addresses[x]) {
+      option = F("Disabled");
+    } else
     if (((x == 0) && (defaultAddress == 0)) || (defaultAddress == addresses[x])) {
       option += F(" (default)");
     }

@@ -298,22 +298,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 #endif // if FEATURE_I2C_MULTIPLE
 
 # if FEATURE_I2CMULTIPLEXER
-
-    if (isI2CMultiplexerEnabled(i2cBus)) {
-      int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
-      bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, multipleMuxPortsOption == 1);
-
-      if (multipleMuxPortsOption == 1) {
-        uint8_t selectedPorts = 0;
-
-        for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); ++x) {
-          bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
-        }
-        Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
-      } else {
-        Settings.I2C_Multiplexer_Channel[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
-      }
-    }
+    bool muxPortsOption{};
+    int selectedPorts{};
+    GetI2CMultiplexerFromPage(i2cBus, muxPortsOption, selectedPorts);
+    bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, muxPortsOption);
+    Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
 
 # endif // if FEATURE_I2CMULTIPLEXER
 
@@ -1393,10 +1382,16 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
   #endif // if FEATURE_I2C_MULTIPLE
   # if FEATURE_I2CMULTIPLEXER
+  ShowI2CMultiplexerUI(i2cBus,
+                       bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL),
+                       Settings.I2C_Multiplexer_Channel[taskIndex]);
+  # endif // if FEATURE_I2CMULTIPLEXER
+}
 
+# if FEATURE_I2CMULTIPLEXER
+void ShowI2CMultiplexerUI(uint8_t i2cBus, bool muxPortsOption, int taskDeviceI2CMuxPort) {
   // Show selector for an I2C multiplexer port if a multiplexer is configured
   if (isI2CMultiplexerEnabled(i2cBus)) {
-    bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
       const __FlashStringHelper *i2c_mux_channels[] = {
         F("Single channel"),
@@ -1404,8 +1399,8 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       constexpr int i2c_mux_channelOptions[] = { 0, 1 };
       int i2c_mux_channelCount               = 1;
 
-      if (Settings.I2C_Multiplexer_Type == I2C_MULTIPLEXER_PCA9540) {
-        multipleMuxPorts = false; // force off
+      if (Settings.getI2CMultiplexerType(i2cBus) == I2C_MULTIPLEXER_PCA9540) {
+        muxPortsOption = false; // force off
       } else {
         i2c_mux_channelCount++;
       }
@@ -1417,10 +1412,10 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       selector.addFormSelector(
         F("Multiplexer channels"),
         F("taskdeviceflags1"),
-        multipleMuxPorts ? 1 : 0);
+        muxPortsOption ? 1 : 0);
     }
 
-    if (multipleMuxPorts) {
+    if (muxPortsOption) {
       addRowLabel(F("Select connections"), EMPTY_STRING);
       html_table(EMPTY_STRING, false); // Sub-table
       html_table_header(F("Channel"), 100);
@@ -1433,11 +1428,10 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
         html_TD();
         addHtml(concat(F("Channel "), x));
         html_TD();
-        addCheckBox(concat(F("taskdeviceflag1ch"), x), bitRead(Settings.I2C_Multiplexer_Channel[taskIndex], x), false);
+        addCheckBox(concat(F("taskdeviceflag1ch"), x), bitRead(taskDeviceI2CMuxPort, x), false);
       }
       html_end_table();
     } else {
-      int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
       const uint32_t mux_max   = I2CMultiplexerMaxChannels(i2cBus);
       String i2c_mux_portoptions[mux_max + 1];
       int    i2c_mux_portchoices[mux_max + 1];
@@ -1461,8 +1455,24 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
         taskDeviceI2CMuxPort);
     }
   }
-  # endif // if FEATURE_I2CMULTIPLEXER
 }
+
+void GetI2CMultiplexerFromPage(uint8_t i2cBus, bool &muxPortsOption, int &selectedPorts) {
+  if (isI2CMultiplexerEnabled(i2cBus)) {
+    muxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0) == 1;
+
+    if (muxPortsOption) {
+      selectedPorts = 0;
+
+      for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); ++x) {
+        bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
+      }
+    } else {
+      selectedPorts = getFormItemInt(F("taskdevicei2cmuxport"), -1);
+    }
+  }
+}
+# endif // if FEATURE_I2CMULTIPLEXER
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

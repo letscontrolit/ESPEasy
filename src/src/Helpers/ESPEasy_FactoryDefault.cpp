@@ -294,7 +294,7 @@ void ResetFactory(bool formatFS)
   //  Settings.UseRules                         = DEFAULT_USE_RULES;
   Settings.ControllerEnabled[0]             = DEFAULT_CONTROLLER_ENABLED;
   Settings.MQTTRetainFlag_unused            = DEFAULT_MQTT_RETAIN;
-  Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
+  // Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
   // allow to set default latitude and longitude

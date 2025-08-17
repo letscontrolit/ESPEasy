@@ -3769,6 +3769,19 @@ To create/register a plugin, you have to :
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
+#ifndef FEATURE_EEPROM_EXTERNAL
+  #ifdef ESP32
+    #define FEATURE_EEPROM_EXTERNAL  1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_EEPROM_EXTERNAL  0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_EEPROM_EXTERNAL  1 // Enabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_EEPROM_EXTERNAL
+
 //-------------------HTTPResponseParser Section----------------
 #ifndef FEATURE_THINGSPEAK_EVENT
   #if defined(PLUGIN_BUILD_MAX_ESP32)

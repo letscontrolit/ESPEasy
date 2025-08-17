@@ -315,19 +315,23 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x4D:
       result += F("PCF8591,MCP3221,LM75A,INA219");
       break;
+    case 0x50:
+    case 0x52:
+      result += F("AT24Cxx");
+      break;
     case 0x51:
-      result += F("PCF8563");
+      result += F("PCF8563,AT24Cxx");
       break;
     case 0x53:
-      result += F("ADXL345,LTR390");
+      result += F("ADXL345,LTR390,AT24Cxx");
       break;
     case 0x55:
-      result += F("DFRobot Rotary enc,BeFlE Moisture");
+      result += F("DFRobot Rotary enc,BeFlE Moisture,AT24Cxx");
       break;
     case 0x54:
     case 0x56:
     case 0x57:
-      result += F("DFRobot Rotary enc");
+      result += F("DFRobot Rotary enc,AT24Cxx");
       break;
     case 0x58:
       result += F("SGP30,GP8403");
