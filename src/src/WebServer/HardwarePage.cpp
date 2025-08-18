@@ -26,6 +26,7 @@
 #endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_EEPROM_EXTERNAL
+#include "../Helpers/EEPROMExternal.h"
 #include "../WebServer/DevicesPage.h" // For using ShowI2CMultiplexerUI() and GetI2CMultiplexerFromPage()
 #endif // if FEATURE_EEPROM_EXTERNAL
 
@@ -126,7 +127,7 @@ void handle_hardware() {
     #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
 
     #if FEATURE_EEPROM_EXTERNAL
-    Settings.EEPROMExternalSize(getFormItemInt(F("eepromtype"), static_cast<int>(EEPROMExternal_Type_e::AT24C256)));
+    Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"), static_cast<int>(EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
 
     # if FEATURE_I2CMULTIPLEXER
@@ -319,20 +320,34 @@ void handle_hardware() {
   {
     addFormSubHeader(F("External I2C EEPROM"));
     const __FlashStringHelper*eepromOptions[] = {
-      F("AT24C128"),
-      F("AT24C256"),
-      F("AT24C512"),
-      F("AT24C1024"),
+      getEEPROMName(EEPROMExternal_Type_e::AT24C256),
+      getEEPROMName(EEPROMExternal_Type_e::AT24C512),
+      #if EEPROM_SUPPORT_AT24C1024
+      getEEPROMName(EEPROMExternal_Type_e::AT24C1024),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(EEPROMExternal_Type_e::AT24C2048),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(EEPROMExternal_Type_e::AT24C32),
+      getEEPROMName(EEPROMExternal_Type_e::AT24C64),
+      getEEPROMName(EEPROMExternal_Type_e::AT24C128),
     };
     const int eepromTypes[] = {
-      static_cast<int>(EEPROMExternal_Type_e::AT24C128),
       static_cast<int>(EEPROMExternal_Type_e::AT24C256),
       static_cast<int>(EEPROMExternal_Type_e::AT24C512),
+      #if EEPROM_SUPPORT_AT24C1024
       static_cast<int>(EEPROMExternal_Type_e::AT24C1024),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(EEPROMExternal_Type_e::AT24C2048),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(EEPROMExternal_Type_e::AT24C32),
+      static_cast<int>(EEPROMExternal_Type_e::AT24C64),
+      static_cast<int>(EEPROMExternal_Type_e::AT24C128),
     };
     constexpr uint8_t eepromSizeCount = NR_ELEMENTS(eepromTypes);
     FormSelectorOptions eepromSizeSelector(eepromSizeCount, eepromOptions, eepromTypes);
-    eepromSizeSelector.addFormSelector(F("EEPROM Model/size"), F("eepromtype"), Settings.EEPROMExternalSize());
+    eepromSizeSelector.addFormSelector(F("EEPROM Model/size"), F("eepromtype"), Settings.EEPROMExternalType());
 
     const uint8_t i2cAddressValues[] = { 0, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57 };
     constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);

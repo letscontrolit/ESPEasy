@@ -7,6 +7,9 @@
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 #include <Wire.h>
 
@@ -81,6 +84,55 @@ void initI2C() {
       }
     }
   }
+
+  #if FEATURE_EEPROM_EXTERNAL
+  const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
+
+  if ((nullptr != EEPROMExternal) && (eepromAddress == 0)) { // Cleanup when turning off EEPROM
+    delete EEPROMExternal;
+    EEPROMExternal = nullptr;
+  }
+
+  if ((nullptr == EEPROMExternal) && (eepromAddress > 0)) {
+    const EEPROMExternal_Type_e eepromType = static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
+    if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+      // We have an I2C device at this address, let's assume it's an EEPROM...
+      uint8_t        pageSize   = 0;
+      const uint32_t eepromSize = getEEPROMSize(eepromType, pageSize);
+      EEPROMExternal = new (std::nothrow) AT24CX(eepromAddress, pageSize, eepromSize);
+
+      if (nullptr != EEPROMExternal) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: %s initialized at address 0x%02x"),
+                                            FsP(getEEPROMName(eepromType)),
+                                            eepromAddress));
+        }
+      } else {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          addLog(LOG_LEVEL_ERROR, strformat(F("EEPROM: Initialization of %s failed"),
+                                            FsP(getEEPROMName(eepromType))));
+        }
+      }
+    } else {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        addLog(LOG_LEVEL_ERROR, strformat(F("EEPROM: No %s found at address 0x%02x"),
+                                          FsP(getEEPROMName(eepromType)),
+                                          eepromAddress));
+      }
+    }
+
+    #if FEATURE_I2CMULTIPLEXER
+    I2CMultiplexerOff(
+      #if FEATURE_I2C_MULTIPLE
+      Settings.getI2CInterfaceEEPROM()
+      #else //if FEATURE_I2C_MULTIPLE
+      0
+      #endif // if FEATURE_I2C_MULTIPLE
+    ); // Restore the Multiplexer channel
+    #endif // if FEATURE_I2CMULTIPLEXER
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   I2CSelectHighClockSpeed(0); // Select first interface by default
 }
 
@@ -245,6 +297,26 @@ uint8_t I2CMultiplexerShiftBit(uint8_t i2cBus, uint8_t i) {
       break;
   }
   return toWrite;
+}
+
+void I2CMultiplexerSelectByBusAndMux(uint8_t i2cBus, bool singleMulti, int muxPort) {
+  uint8_t toWrite{};
+
+  if ((singleMulti && (muxPort > 0))||
+      (!singleMulti && (muxPort > -1))) {
+    if (!singleMulti) {
+      uint8_t i = muxPort;
+
+      if (i < 8) {
+        toWrite = I2CMultiplexerShiftBit(i2cBus, i);
+      }
+    } else {
+      toWrite = muxPort; // Bitpattern is already correctly stored
+    }
+  }
+
+  SetI2CMultiplexer(i2cBus, toWrite);
+
 }
 
 // As initially constructed by krikk in PR#254, quite adapted

@@ -17,6 +17,7 @@ bool readFromRTC();
    Save values to RTC memory
  \*********************************************************************************************/
 bool saveUserVarToRTC();
+bool saveUserVarToRTC(bool initial);
 
 /********************************************************************************************\
    Read RTC struct from RTC memory

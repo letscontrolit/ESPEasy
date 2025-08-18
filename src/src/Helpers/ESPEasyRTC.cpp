@@ -12,6 +12,12 @@
 #include "../Helpers/CRC_functions.h"
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../Helpers/EEPROMExternal.h"
+#include "../Helpers/Hardware_I2C.h"
+#include "../Helpers/StringConverter.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 #ifdef ESP8266
 #include <user_interface.h>
 #endif
@@ -81,6 +87,11 @@
 //   - RTCStruct to keep information on reboot reason, last used WiFi, etc.
 //   - UserVar   to keep task values persistent just like on ESP8266
 
+/**
+ * With EEPROMExternal (AT24cxxx) enabled and configured:
+ * - UserVar will be stored in external EEPROM
+ * -
+ */
 
 
 
@@ -134,7 +145,7 @@ void initRTC()
   saveToRTC();
 
   UserVar.clear();
-  saveUserVarToRTC();
+  saveUserVarToRTC(true);
 }
 
 /********************************************************************************************\
@@ -158,8 +169,59 @@ bool readFromRTC()
 /********************************************************************************************\
    Save values to RTC memory
  \*********************************************************************************************/
-bool saveUserVarToRTC()
+bool saveUserVarToRTC() {
+  return saveUserVarToRTC(false);
+}
+
+bool saveUserVarToRTC(bool initial)
 {
+  #if FEATURE_EEPROM_EXTERNAL
+  // Check if we have an external EEPROM available on the configured I2C bus & channel, and save all task values there
+  const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
+  if (!initial && (nullptr != EEPROMExternal) && (eepromAddress > 0)) { // EEPROM Configured?
+
+    if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+      uint32_t eepromWritten{};
+      uint32_t checksum = EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
+
+      if (UserVar.compute_CRC32() != checksum) { // Only save if data changed
+        for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
+          const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
+          if (taskValues != nullptr) {
+            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+              const size_t index = (task * VARS_PER_TASK) + varNr;
+              EEPROMExternal->writeLong(EEPROM_USERVAR_START_OFFSET + (index * sizeof(uint32_t)),
+                                        taskValues->getUint32(varNr));
+              eepromWritten += sizeof(uint32_t);
+            }
+          }
+        }
+        EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET,
+                                  UserVar.compute_CRC32());
+        eepromWritten += sizeof(uint32_t);
+      }
+
+      #ifndef BUILD_NO_DEBUG
+      // if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // FIXME
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        const EEPROMExternal_Type_e eepromType = static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
+        addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: UserVar: %u bytes written to %s"), eepromWritten, FsP(getEEPROMName(eepromType))));
+      }
+      #endif // ifndef BUILD_NO_DEBUG
+
+    }
+    #if FEATURE_I2CMULTIPLEXER
+    I2CMultiplexerOff(
+      #if FEATURE_I2C_MULTIPLE
+      Settings.getI2CInterfaceEEPROM()
+      #else //if FEATURE_I2C_MULTIPLE
+      0
+      #endif // if FEATURE_I2C_MULTIPLE
+    ); // Restore the Multiplexer channel
+    #endif // if FEATURE_I2CMULTIPLEXER
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)
@@ -168,7 +230,6 @@ bool saveUserVarToRTC()
     if (taskValues != nullptr) {
       for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
         const size_t index = (task * VARS_PER_TASK) + varNr;
-        constexpr bool raw = true;
         UserVar_RTC[index] = taskValues->getUint32(varNr);
       }
     }
@@ -193,6 +254,23 @@ bool saveUserVarToRTC()
  \*********************************************************************************************/
 bool readUserVarFromRTC()
 {
+  // const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
+  // if ((nullptr != EEPROMExternal) && (eepromAddress > 0)) { // EEPROM Configured?
+
+  //   if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+  //   // TODO Check checksum and if correct, restore UserVar values
+  //   }
+  //   #if FEATURE_I2CMULTIPLEXER
+  //   I2CMultiplexerOff(
+  //     #if FEATURE_I2C_MULTIPLE
+  //     Settings.getI2CInterfaceEEPROM()
+  //     #else //if FEATURE_I2C_MULTIPLE
+  //     0
+  //     #endif // if FEATURE_I2C_MULTIPLE
+  //   ); // Restore the Multiplexer channel
+  //   #endif // if FEATURE_I2CMULTIPLEXER
+  // }
+
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)

@@ -353,8 +353,8 @@ public:
   void     EEPROMExternalI2CAddress(uint8_t address);
   uint16_t EEPROMExternalI2CMultiplexerFlags() const;
   void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
-  uint8_t  EEPROMExternalSize() const;
-  void     EEPROMExternalSize(uint8_t size);
+  uint8_t  EEPROMExternalType() const;
+  void     EEPROMExternalType(uint8_t type);
   #endif
 
   #if FEATURE_I2CMULTIPLEXER

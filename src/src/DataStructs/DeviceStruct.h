@@ -58,13 +58,6 @@
 #define EEPROM_MUX_FLAGS_PORT           0 // bit-offset within multiplexerflags for the portnr/bits (8 bits)
 #define EEPROM_MUX_FLAGS_MULTI          8 // bit-offset within multiplexerflags for bits or port (1 bit)
 
-enum EEPROMExternal_Type_e : uint8_t {
-  AT24C64   = 0, // 
-  AT24C128  = 1, // 
-  AT24C256  = 2, // 
-  AT24C512  = 3, // 
-  AT24C1024 = 4, // 
-};
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 /*********************************************************************************************\
