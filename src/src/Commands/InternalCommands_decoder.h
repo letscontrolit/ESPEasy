@@ -241,6 +241,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   wdconfig,
   wdread,
 #endif // ifndef LIMIT_BUILD_SIZE
+#if FEATURE_EEPROM_EXTERNAL
+  writeee,
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 
   NotMatched  // Keep as last one

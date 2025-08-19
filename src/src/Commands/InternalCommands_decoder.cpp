@@ -286,6 +286,9 @@ const char Internal_commands_w[] PROGMEM =
   "wdconfig|"
   "wdread|"
 #endif // ifndef LIMIT_BUILD_SIZE
+#if FEATURE_EEPROM_EXTERNAL
+  "writeee|"
+#endif // if FEATURE_EEPROM_EXTERNAL
 ;
 
 const char* getInternalCommand_Haystack_Offset(const char firstLetter, int& offset)

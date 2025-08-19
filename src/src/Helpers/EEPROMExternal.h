@@ -22,6 +22,14 @@ extern AT24CX *EEPROMExternal;
 // Choose an arbitrary but fixed offset
 # define EEPROM_CUSTOM_START_OFFSET       (2048)
 
+# if FEATURE_STRING_VARIABLES
+
+// NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
+#  define EEPROM_CUSTOM_DIVISOR           (2) // Split in slots- and strings- halves
+# else // if FEATURE_STRING_VARIABLES
+#  define EEPROM_CUSTOM_DIVISOR           (1) // Use all for slots
+# endif // if FEATURE_STRING_VARIABLES
+
 // Enable/disable some models
 # define EEPROM_SUPPORT_AT24C1024 1
 # define EEPROM_SUPPORT_AT24C2048 0
@@ -47,4 +55,10 @@ uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type);
 uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type,
                                          uint8_t             & pageSize);
 const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type);
+
+uint32_t                   getEEPROMAddressForSlot(uint32_t slot);
+uint32_t                   getEEPROMMaxSlots();
+bool                       writeEEPROMSlot(uint32_t slot,
+                                           float    data);
+float                      readEEPROMSlot(uint32_t slot);
 #endif // if FEATURE_EEPROM_EXTERNAL

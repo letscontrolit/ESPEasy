@@ -7,6 +7,8 @@
 
 AT24CX *EEPROMExternal = nullptr;
 
+constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
+
 /**
  * Switch to I2C Bus and multiplexer channel of External EEPROM
  */
@@ -36,6 +38,9 @@ uint8_t selectEEPROMI2CBusAndMultiplexer() {
   return 0;
 }
 
+/**
+ * EEPROM size in bytes
+ */
 uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
@@ -60,6 +65,9 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
   return 0;
 }
 
+/**
+ * EEPROM pagesize in bytes
+ */
 uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
                        uint8_t             & pageSize) {
   pageSize = 0;
@@ -87,17 +95,20 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
   return getEEPROMSize(type);
 }
 
+/**
+ * EEPROM/FRAM name
+ */
 const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
   # ifndef BUILD_NO_DEBUG
 
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
-      return F("AT24C256/MB85RC256");
+      return F("AT24C256 / MB85RC256");
     case EEPROMExternal_Type_e::AT24C512:
-      return F("AT24C512/MB85RC512");
+      return F("AT24C512 / MB85RC512");
     #  if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
-      return F("AT24C1024/MB85RC1M");
+      return F("AT24C1024 / MB85RC1M");
     #  endif // if EEPROM_SUPPORT_AT24C1024
     #  if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
@@ -106,14 +117,79 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
     case EEPROMExternal_Type_e::AT24C32:
       return F("AT24C32");
     case EEPROMExternal_Type_e::AT24C64:
-      return F("AT24C64/MB85RC64");
+      return F("AT24C64 / MB85RC64");
     case EEPROMExternal_Type_e::AT24C128:
-      return F("AT24C128/MB85RC128");
+      return F("AT24C128 / MB85RC128");
   }
   return F("");
   # else // ifndef BUILD_NO_DEBUG
   return F("EEPROM/FRAM");
   # endif // ifndef BUILD_NO_DEBUG
+}
+
+/**
+ * EEPROM address for slot or 0 when error
+ */
+uint32_t getEEPROMAddressForSlot(uint32_t slot) {
+  if ((nullptr != EEPROMExternal) && (Settings.EEPROMExternalI2CAddress() > 0)) {
+    const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
+
+    if ((eepromSize > 0) && (slot < getEEPROMMaxSlots())) {
+      const uint32_t slotAddr = EEPROM_CUSTOM_START_OFFSET + (slot * sizeof_uint32_t);
+
+      if (slotAddr < eepromSize) {
+        return slotAddr;
+      }
+    }
+  }
+  return 0;
+}
+
+/**
+ * EEPROM available number of slots
+ * NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
+ */
+uint32_t getEEPROMMaxSlots() {
+  if ((nullptr != EEPROMExternal) && (Settings.EEPROMExternalI2CAddress() > 0)) {
+    const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
+
+    if (eepromSize > 0) {
+      const uint32_t slotMax = ((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_uint32_t;
+
+      return slotMax;
+    }
+  }
+  return 0;
+}
+
+/**
+ * EEPROM write value to slot if the slot is valid
+ */
+bool writeEEPROMSlot(uint32_t slot,
+                     float    data) {
+  const uint32_t addr = getEEPROMAddressForSlot(slot);
+
+  if (addr > 0) {
+    const float oldData = EEPROMExternal->readLong(addr);
+
+    if (!essentiallyEqual(oldData, data)) {
+      EEPROMExternal->writeFloat(addr, data);
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * EEPROM read value from slot or 0 when invalid
+ */
+float readEEPROMSlot(uint32_t slot) {
+  const uint32_t addr = getEEPROMAddressForSlot(slot);
+
+  if (addr > 0) {
+    return EEPROMExternal->readFloat(addr);
+  }
+  return 0;
 }
 
 #endif // if FEATURE_EEPROM_EXTERNAL

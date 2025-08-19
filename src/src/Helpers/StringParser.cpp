@@ -21,7 +21,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-
+#if FEATURE_EEPROM_EXTERNAL
+#include "../Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 /********************************************************************************************\
    Parse string template
@@ -164,10 +166,16 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       const bool devNameEqStr    = equals(deviceName, F("str"));
       const bool devNameEqLength = equals(deviceName, F("length"));
       #endif // if FEATURE_STRING_VARIABLES
+      #if FEATURE_EEPROM_EXTERNAL
+      const bool devNameEqReadEE = equals(deviceName, F("readee"));
+      #endif // if FEATURE_EEPROM_EXTERNAL
       if (devNameEqInt || equals(deviceName, F("var"))
          #if FEATURE_STRING_VARIABLES
          || devNameEqStr || devNameEqLength
          #endif // if FEATURE_STRING_VARIABLES
+         #if FEATURE_EEPROM_EXTERNAL
+         || devNameEqReadEE
+         #endif // if FEATURE_EEPROM_EXTERNAL
          )
       {
         // Address an internal variable either as float or as int
@@ -195,6 +203,25 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               tmpString);
          } else
          #endif
+         #if FEATURE_EEPROM_EXTERNAL
+         if (devNameEqReadEE) {
+           uint32_t slot{};
+           String value;
+           if (validUIntFromString(valueName, slot)) {
+             value = toString(readEEPROMSlot(slot));
+           } else if (valueName.equalsIgnoreCase(F("max"))) {
+             value = getEEPROMMaxSlots();
+           }
+           if (!value.isEmpty()) {
+             transformValue(
+                 newString, 
+                 minimal_lineSize, 
+                 std::move(value), 
+                 format, 
+                 tmpString);
+           }
+         } else
+         #endif // if FEATURE_EEPROM_EXTERNAL
          {
           const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(valueName);
           unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);
