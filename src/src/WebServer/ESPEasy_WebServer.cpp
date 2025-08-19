@@ -12,6 +12,7 @@
 #include "../WebServer/CustomPage.h"
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
+#include "../WebServer/EepromVarPage.h"
 #include "../WebServer/FactoryResetPage.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -299,6 +300,9 @@ void WebServerInit()
 #ifdef WEBSERVER_SYSVARS
   web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
+#if FEATURE_EEPROM_EXTERNAL
+  web_server.on(F("/eepromvars"),  handle_eepromvars);
+#endif // if FEATURE_EEPROM_EXTERNAL
 #ifdef WEBSERVER_TIMINGSTATS
   web_server.on(F("/timingstats"), handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS

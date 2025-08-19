@@ -94,6 +94,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
+  #if FEATURE_EEPROM_EXTERNAL
+  addWideButtonPlusDescription(F("eepromvars"), F("External EEPROM values"), F("Show all values stored in the external EEPROM"));
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   addFormSubHeader(F("Wifi"));
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
