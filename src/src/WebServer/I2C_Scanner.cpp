@@ -317,21 +317,21 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x50:
     case 0x52:
-      result += F("AT24Cxx");
+      result += F("AT24Cxx,MB85RCxx");
       break;
     case 0x51:
-      result += F("PCF8563,AT24Cxx");
+      result += F("PCF8563,AT24Cxx,MB85RCxx");
       break;
     case 0x53:
-      result += F("ADXL345,LTR390,AT24Cxx");
+      result += F("ADXL345,LTR390,AT24Cxx,MB85RCxx");
       break;
     case 0x55:
-      result += F("DFRobot Rotary enc,BeFlE Moisture,AT24Cxx");
+      result += F("DFRobot Rotary enc,BeFlE Moisture,AT24Cxx,MB85RCxx");
       break;
     case 0x54:
     case 0x56:
     case 0x57:
-      result += F("DFRobot Rotary enc,AT24Cxx");
+      result += F("DFRobot Rotary enc,AT24Cxx,MB85RCxx");
       break;
     case 0x58:
       result += F("SGP30,GP8403");
@@ -403,6 +403,9 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x78:
       result += F("LiquidLevel");
+      break;
+    case 0x7C:
+      result += F("MB85RCxx");
       break;
     case 0x7f:
       result += F("Arduino PME,XDB401");

@@ -88,27 +88,32 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
 }
 
 const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
+  # ifndef BUILD_NO_DEBUG
+
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
-      return F("AT24C256");
+      return F("AT24C256/MB85RC256");
     case EEPROMExternal_Type_e::AT24C512:
-      return F("AT24C512");
-    # if EEPROM_SUPPORT_AT24C1024
+      return F("AT24C512/MB85RC512");
+    #  if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
-      return F("AT24C1024");
-    # endif // if EEPROM_SUPPORT_AT24C1024
-    # if EEPROM_SUPPORT_AT24C2048
+      return F("AT24C1024/MB85RC1M");
+    #  endif // if EEPROM_SUPPORT_AT24C1024
+    #  if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
       return F("AT24C2048");
-    # endif // if EEPROM_SUPPORT_AT24C2048
+    #  endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C32:
       return F("AT24C32");
     case EEPROMExternal_Type_e::AT24C64:
-      return F("AT24C64");
+      return F("AT24C64/MB85RC64");
     case EEPROMExternal_Type_e::AT24C128:
-      return F("AT24C128");
+      return F("AT24C128/MB85RC128");
   }
   return F("");
+  # else // ifndef BUILD_NO_DEBUG
+  return F("EEPROM/FRAM");
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 #endif // if FEATURE_EEPROM_EXTERNAL

@@ -99,6 +99,7 @@
 //#define RTC_STRUCT_DEBUG
 
 
+constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
 
 #ifdef ESP32
 constexpr size_t UserVar_nrelements = VARS_PER_TASK * TASKS_MAX;
@@ -181,8 +182,10 @@ bool saveUserVarToRTC(bool initial)
   if (!initial && (nullptr != EEPROMExternal) && (eepromAddress > 0)) { // EEPROM Configured?
 
     if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+      #ifndef BUILD_NO_DEBUG
       uint32_t eepromWritten{};
-      uint32_t checksum = EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
+      #endif // ifndef BUILD_NO_DEBUG
+      const uint32_t checksum = EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
 
       if (UserVar.compute_CRC32() != checksum) { // Only save if data changed
         for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
@@ -190,15 +193,22 @@ bool saveUserVarToRTC(bool initial)
           if (taskValues != nullptr) {
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
               const size_t index = (task * VARS_PER_TASK) + varNr;
-              EEPROMExternal->writeLong(EEPROM_USERVAR_START_OFFSET + (index * sizeof(uint32_t)),
-                                        taskValues->getUint32(varNr));
-              eepromWritten += sizeof(uint32_t);
+              const uint32_t newData = taskValues->getUint32(varNr); // Only update EEPROM is data differs
+              if (newData != EEPROMExternal->readLong(EEPROM_USERVAR_START_OFFSET + (index * sizeof_uint32_t))) {
+                EEPROMExternal->writeLong(EEPROM_USERVAR_START_OFFSET + (index * sizeof_uint32_t),
+                                          newData);
+                #ifndef BUILD_NO_DEBUG
+                eepromWritten += sizeof_uint32_t;
+                #endif // ifndef BUILD_NO_DEBUG
+              }
             }
           }
         }
         EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET,
                                   UserVar.compute_CRC32());
-        eepromWritten += sizeof(uint32_t);
+        #ifndef BUILD_NO_DEBUG
+        eepromWritten += sizeof_uint32_t;
+        #endif // ifndef BUILD_NO_DEBUG
       }
 
       #ifndef BUILD_NO_DEBUG
