@@ -218,6 +218,13 @@ class SettingsStruct_tmpl
   void ShowUnitOfMeasureOnDevicesPage(bool value) { VariousBits_2.ShowUnitOfMeasureOnDevicesPage = !value; }
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
+  #if FEATURE_EEPROM_EXTERNAL
+  bool RestoreUserVarsFromEEPROMOnColdBoot() const { return VariousBits_2.RestoreUserVarsFromEEPROMOnColdBoot; }
+  void RestoreUserVarsFromEEPROMOnColdBoot(bool value) { VariousBits_2.RestoreUserVarsFromEEPROMOnColdBoot = value; }
+  bool RestoreUserVarsFromEEPROMOnWarmBoot() const { return VariousBits_2.RestoreUserVarsFromEEPROMOnWarmBoot; }
+  void RestoreUserVarsFromEEPROMOnWarmBoot(bool value) { VariousBits_2.RestoreUserVarsFromEEPROMOnWarmBoot = value; }
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -597,8 +604,8 @@ public:
     uint32_t DisableSaveConfigAsTar           : 1; // Bit 05
     uint32_t PassiveWiFiScan                  : 1; // Bit 06  // inverted
     uint32_t ShowUnitOfMeasureOnDevicesPage   : 1; // Bit 07  // inverted
-    uint32_t unused_08                        : 1; // Bit 08
-    uint32_t unused_09                        : 1; // Bit 09
+    uint32_t RestoreUserVarsFromEEPROMOnColdBoot : 1; // Bit 08
+    uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 09
     uint32_t unused_10                        : 1; // Bit 10
     uint32_t unused_11                        : 1; // Bit 11
     uint32_t unused_12                        : 1; // Bit 12

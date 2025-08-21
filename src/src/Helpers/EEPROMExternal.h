@@ -1,6 +1,8 @@
 #pragma once
 #include "../../ESPEasy_common.h"
 
+#include "../DataTypes/TaskIndex.h"
+
 #if FEATURE_EEPROM_EXTERNAL
 
 # include <AT24CX.h>
@@ -49,6 +51,8 @@ enum class EEPROMExternal_Type_e : uint8_t {
   AT24C128 = 6,  // 16 kB
 };
 
+uint8_t                    checkEEPROMEnabled();
+
 uint8_t                    selectEEPROMI2CBusAndMultiplexer();
 
 uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type);
@@ -57,6 +61,8 @@ uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type,
 const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type);
 
 uint32_t                   getEEPROMAddressForSlot(uint32_t slot);
+uint32_t                   getEEPROMAddressForTaskValue(taskIndex_t    task,
+                                                        taskVarIndex_t varNr);
 uint32_t                   getEEPROMMaxSlots();
 bool                       writeEEPROMSlot(uint32_t slot,
                                            float    data);

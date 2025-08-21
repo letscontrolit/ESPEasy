@@ -34,6 +34,9 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 #ifdef USE_RTOS_MULTITASKING
 # include "../Helpers/Networking.h"
@@ -397,6 +400,15 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("hardwareInit()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  #if FEATURE_EEPROM_EXTERNAL
+  if ((checkEEPROMEnabled() > 0) && 
+      ((lastBootCause <= BOOT_CAUSE_COLD_BOOT) && Settings.RestoreUserVarsFromEEPROMOnColdBoot() ||
+       (lastBootCause <= BOOT_CAUSE_SOFT_RESTART) && Settings.RestoreUserVarsFromEEPROMOnWarmBoot())
+     ) {
+    readUserVarFromRTC(); // Once more to fetch UserVar data from now available EEPROM/FRAM
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
   node_time.restoreFromRTC();
 

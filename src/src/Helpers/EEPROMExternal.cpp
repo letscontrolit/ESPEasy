@@ -10,6 +10,19 @@ AT24CX *EEPROMExternal = nullptr;
 constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
 
 /**
+ * Check if the EEPROM is properly initialized and enabled.
+ * Returns the I2C address if all is OK
+ */
+uint8_t checkEEPROMEnabled() {
+  const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
+
+  if ((nullptr != EEPROMExternal) && (eepromAddress > 0)) { // EEPROM Configured?
+    return eepromAddress;
+  }
+  return 0;
+}
+
+/**
  * Switch to I2C Bus and multiplexer channel of External EEPROM
  */
 uint8_t selectEEPROMI2CBusAndMultiplexer() {
@@ -128,10 +141,10 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
 }
 
 /**
- * EEPROM address for slot or 0 when error
+ * EEPROM address for slot or 0xFFFF when error
  */
 uint32_t getEEPROMAddressForSlot(uint32_t slot) {
-  if ((nullptr != EEPROMExternal) && (Settings.EEPROMExternalI2CAddress() > 0)) {
+  if (checkEEPROMEnabled() > 0) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if ((eepromSize > 0) && (slot < getEEPROMMaxSlots())) {
@@ -142,7 +155,25 @@ uint32_t getEEPROMAddressForSlot(uint32_t slot) {
       }
     }
   }
-  return 0;
+  return std::numeric_limits<uint32_t>::max();
+}
+
+/**
+ * EEPROM address for task and varnr or 0xFFFF when error
+ */
+uint32_t getEEPROMAddressForTaskValue(taskIndex_t task, taskVarIndex_t varNr) {
+  if (checkEEPROMEnabled() > 0) {
+    const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
+
+    if ((eepromSize > 0) && validTaskIndex(task) && validTaskVarIndex(varNr)) {
+      const uint32_t slotAddr = EEPROM_USERVAR_START_OFFSET + (((task * VARS_PER_TASK) + varNr) * sizeof_uint32_t);
+
+      if (slotAddr < eepromSize) {
+        return slotAddr;
+      }
+    }
+  }
+  return std::numeric_limits<uint32_t>::max();
 }
 
 /**
@@ -150,7 +181,7 @@ uint32_t getEEPROMAddressForSlot(uint32_t slot) {
  * NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
  */
 uint32_t getEEPROMMaxSlots() {
-  if ((nullptr != EEPROMExternal) && (Settings.EEPROMExternalI2CAddress() > 0)) {
+  if (checkEEPROMEnabled() > 0) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if (eepromSize > 0) {
@@ -169,7 +200,7 @@ bool writeEEPROMSlot(uint32_t slot,
                      float    data) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
-  if (addr > 0) {
+  if (addr != std::numeric_limits<uint32_t>::max()) {
     const float oldData = EEPROMExternal->readLong(addr);
 
     if (!essentiallyEqual(oldData, data)) {
@@ -186,10 +217,10 @@ bool writeEEPROMSlot(uint32_t slot,
 float readEEPROMSlot(uint32_t slot) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
-  if (addr > 0) {
+  if (addr != std::numeric_limits<uint32_t>::max()) {
     return EEPROMExternal->readFloat(addr);
   }
-  return 0;
+  return 0.0f;
 }
 
 #endif // if FEATURE_EEPROM_EXTERNAL

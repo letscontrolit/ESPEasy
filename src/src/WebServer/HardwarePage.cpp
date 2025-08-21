@@ -129,6 +129,8 @@ void handle_hardware() {
     #if FEATURE_EEPROM_EXTERNAL
     Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"), static_cast<int>(EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
+    Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(F("lduvcbee")));
+    Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(F("lduvwbee")));
 
     # if FEATURE_I2CMULTIPLEXER
 
@@ -375,6 +377,12 @@ void handle_hardware() {
                          bitRead(eepromMux, EEPROM_MUX_FLAGS_MULTI),
                          get8BitFromUL(eepromMux, EEPROM_MUX_FLAGS_PORT)); // Re-used from DevicesPage
     #endif // if FEATURE_I2CMULTIPLEXER
+
+    const bool eepromChecked = checkEEPROMEnabled() > 0;
+    addRowLabel(F("EEPROM Enabled"));
+    addEnabled(eepromChecked);
+    addFormCheckBox(F("Cold boot: Restore Task Values from EEPROM"), F("lduvcbee"), Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
+    addFormCheckBox(F("Warm boot: Restore Task Values from EEPROM"), F("lduvwbee"), Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
   }
   #endif // if FEATURE_EEPROM_EXTERNAL
 
