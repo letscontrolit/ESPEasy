@@ -1,9 +1,10 @@
 #pragma once
 #include "../../ESPEasy_common.h"
 
-#include "../DataTypes/TaskIndex.h"
-
 #if FEATURE_EEPROM_EXTERNAL
+
+#include "../DataTypes/TaskIndex.h"
+#include "../DataStructs/RTCCacheStruct.h"
 
 # include <AT24CX.h>
 
@@ -25,8 +26,15 @@ extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 // Write the UserVar-checksum from this offset, right after the UserVar values
 # define EEPROM_USERVAR_CHECKSUM_OFFSET   (EEPROM_USERVAR_START_OFFSET + (TASKS_MAX * VARS_PER_TASK * sizeof(uint32_t)))
 
-// Offset for storing GPIO states, directly following the UserVar storage and checksum
-# define EEPROM_GPIO_MCPPCF_START_OFFSET  (EEPROM_USERVAR_CHECKSUM_OFFSET + sizeof(uint32_t))
+// Even when not enabled, we still reserve the space
+# define EEPROM_RTC_CACHE_START_OFFSET    (EEPROM_USERVAR_CHECKSUM_OFFSET + sizeof(uint32_t))
+# define EEPROM_RTC_CACHE_WRITEPOS_OFFSET (EEPROM_RTC_CACHE_START_OFFSET + RTC_CACHE_DATA_SIZE)
+# define EEPROM_RTC_CACHE_META_OFFSET     (EEPROM_RTC_CACHE_WRITEPOS_OFFSET + sizeof(uint16_t))
+# define EEPROM_RTC_CACHE_META_CRC_OFFSET (EEPROM_RTC_CACHE_META_OFFSET + sizeof(RTC_cache_struct))
+# define EEPROM_RTC_CACHE_CHECKSUM_OFFSET (EEPROM_RTC_CACHE_META_CRC_OFFSET + sizeof(uint32_t))
+
+// Offset for storing GPIO states, directly following the RTC Cache storage and checksum
+# define EEPROM_GPIO_MCPPCF_START_OFFSET  (EEPROM_RTC_CACHE_CHECKSUM_OFFSET + sizeof(uint32_t))
 
 // Choose an arbitrary but fixed offset
 # define EEPROM_CUSTOM_START_OFFSET       (2048)

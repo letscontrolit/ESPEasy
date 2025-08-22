@@ -11,6 +11,10 @@
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#if FEATURE_EEPROM_EXTERNAL
+# include "../Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 #ifdef ESP8266
 # include <user_interface.h>
 #endif // ifdef ESP8266
@@ -26,6 +30,60 @@ RTC_NOINIT_ATTR RTC_cache_struct RTC_cache;
 RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
 #endif // ifdef ESP32
 
+/**********************************************************************************************
+ * EEPROM Helper function for RTC Cache
+ **********************************************************************************************/
+#if FEATURE_EEPROM_EXTERNAL
+void EEPROMSaveWritePos() {
+  const uint8_t eepromAddress = checkEEPROMEnabled();
+  if (eepromAddress > 0) {
+    // Save new position
+    if (EEPROMExternal->readInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET) != RTC_cache.writePos) {
+      EEPROMExternal->writeInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET, RTC_cache.writePos);
+    }
+  }
+}
+
+void EEPROMSaveMetaDataChecksum() {
+  const uint8_t eepromAddress = checkEEPROMEnabled();
+  if (eepromAddress > 0) {
+    // Save metadata checksum
+    if (EEPROMExternal->readLong(EEPROM_RTC_CACHE_META_CRC_OFFSET) != RTC_cache.checksumMetadata) {
+      EEPROMExternal->writeLong(EEPROM_RTC_CACHE_META_CRC_OFFSET, RTC_cache.checksumMetadata);
+    }
+  }
+}
+
+void EEPROMSaveCacheChecksum() {
+  const uint8_t eepromAddress = checkEEPROMEnabled();
+  if (eepromAddress > 0) {
+    // Save cache checksum
+    if (EEPROMExternal->readLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET) != RTC_cache.checksumData) {
+      EEPROMExternal->writeLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET, RTC_cache.checksumData);
+    }
+  }
+}
+
+void EEPROMSaveRTCcache() {
+  const uint8_t eepromAddress = checkEEPROMEnabled();
+  if (eepromAddress > 0) {
+    size_t count{};
+    for (uint16_t idx = 0; idx < sizeof(RTC_cache); ++idx) {
+      const uint32_t metaAddr = EEPROM_RTC_CACHE_META_OFFSET + idx;
+      const uint8_t  oldData  = EEPROMExternal->read(metaAddr);
+      const uint8_t  newData  = reinterpret_cast<const uint8_t *>(&RTC_cache)[idx];
+      if (oldData != newData) {
+        EEPROMExternal->write(metaAddr, newData);
+        ++count;
+      }
+    }
+    // Save metadata checksum
+    EEPROMSaveMetaDataChecksum();
+    // Save cache checksum
+    EEPROMSaveCacheChecksum();
+  }
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 /********************************************************************************************\
    RTC located cache
@@ -233,6 +291,24 @@ bool RTC_cache_handler_struct::write(const uint8_t *data, unsigned int size) {
     RTC_cache_data[RTC_cache.writePos] = data[i];
     ++RTC_cache.writePos;
   }
+
+  #if FEATURE_EEPROM_EXTERNAL
+  const uint8_t eepromAddress = checkEEPROMEnabled();
+  if (eepromAddress > 0) {
+    size_t count{};
+    for (unsigned int idx = 0; idx < size; ++idx) {
+      const uint32_t cacheAddr = EEPROM_RTC_CACHE_START_OFFSET + idx;
+      const uint8_t  oldData   = EEPROMExternal->read(cacheAddr);
+      const uint8_t  newData   = data[idx];
+      if (oldData != newData) {
+        EEPROMExternal->write(cacheAddr, newData);
+        ++count;
+      }
+    }
+    // Save new position
+    EEPROMSaveWritePos();
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
   // Now store the updated part of the buffer to the RTC memory.
   // Pad some extra bytes around it to allow sample sizes not multiple of 4 bytes.
@@ -490,6 +566,11 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
 {
   RTC_cache.checksumData     = getDataChecksum();
   RTC_cache.checksumMetadata = calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
+
+  #if FEATURE_EEPROM_EXTERNAL
+  EEPROMSaveRTCcache();
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   #ifdef ESP32
   return true;
   #endif // ifdef ESP32
@@ -558,6 +639,11 @@ void RTC_cache_handler_struct::clearRTCcacheData() {
     RTC_cache_data[i] = 0;
   }
   RTC_cache.writePos = 0;
+
+  #if FEATURE_EEPROM_EXTERNAL
+  // Save new position
+  EEPROMSaveWritePos();
+  #endif // if FEATURE_EEPROM_EXTERNAL
 }
 
 // Return true if any cache file found
