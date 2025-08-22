@@ -8,7 +8,7 @@
 #include "../Helpers/StringConverter.h"
 
 #if FEATURE_EEPROM_EXTERNAL
-#include "../Helpers/EEPROMExternal.h"
+# include "../Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 #include <Wire.h>
@@ -36,12 +36,12 @@ void initI2C() {
   {
     if (Settings.isI2CEnabled(i2cBus)) {
       #ifndef BUILD_MINIMAL_OTA
-      #if !FEATURE_I2C_MULTIPLE
+      # if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, F("INIT : I2C Bus"));
-      #else // if !FEATURE_I2C_MULTIPLE
+      # else // if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, concat(F("INIT : I2C Bus "), i2cBus));
-      #endif // if !FEATURE_I2C_MULTIPLE
-      #endif
+      # endif // if !FEATURE_I2C_MULTIPLE
+      #endif // ifndef BUILD_MINIMAL_OTA
       I2CSelectHighClockSpeed(i2cBus); // Set normal clock speed, on I2C Bus 1 (index 0)
     }
   }
@@ -88,24 +88,26 @@ void initI2C() {
   #if FEATURE_EEPROM_EXTERNAL
   const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
 
-  if ((nullptr != EEPROMExternal) && (eepromAddress == 0)) { // Cleanup when turning off EEPROM
+  if ((nullptr != EEPROMExternal) || (eepromAddress == 0)) { // Cleanup when turning off EEPROM
     delete EEPROMExternal;
-    EEPROMExternal = nullptr;
+    EEPROMExternal             = nullptr;
+    EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::Undefined;
   }
 
   if ((nullptr == EEPROMExternal) && (eepromAddress > 0)) {
     const EEPROMExternal_Type_e eepromType = static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
+
     if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
       // We have an I2C device at this address, let's assume it's an EEPROM...
-      uint8_t        pageSize   = 0;
+      uint8_t pageSize          = 0;
       const uint32_t eepromSize = getEEPROMSize(eepromType, pageSize);
       EEPROMExternal = new (std::nothrow) AT24CX(eepromAddress, pageSize, eepromSize);
 
       if (nullptr != EEPROMExternal) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: %s initialized at address 0x%02x"),
-                                            FsP(getEEPROMName(eepromType)),
-                                            eepromAddress));
+                                           FsP(getEEPROMName(eepromType)),
+                                           eepromAddress));
         }
 
         checkEEPROMExternalWriteProtected();
@@ -127,15 +129,15 @@ void initI2C() {
       }
     }
 
-    #if FEATURE_I2CMULTIPLEXER
+    # if FEATURE_I2CMULTIPLEXER
     I2CMultiplexerOff(
-      #if FEATURE_I2C_MULTIPLE
+      #  if FEATURE_I2C_MULTIPLE
       Settings.getI2CInterfaceEEPROM()
-      #else //if FEATURE_I2C_MULTIPLE
+      #  else // if FEATURE_I2C_MULTIPLE
       0
-      #endif // if FEATURE_I2C_MULTIPLE
-    ); // Restore the Multiplexer channel
-    #endif // if FEATURE_I2CMULTIPLEXER
+      #  endif // if FEATURE_I2C_MULTIPLE
+      ); // Restore the Multiplexer channel
+    # endif // if FEATURE_I2CMULTIPLEXER
   }
   #endif // if FEATURE_EEPROM_EXTERNAL
 
@@ -208,10 +210,11 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq, uint32_t clockStretch)
     // No need to change the clock speed.
     return;
   }
-  if (sda == -1 || scl == -1) {
+
+  if ((sda == -1) || (scl == -1)) {
 #ifdef ESP32
     Wire.end();
-#endif
+#endif // ifdef ESP32
     last_sda = sda;
     last_scl = scl;
     return;
@@ -308,7 +311,7 @@ uint8_t I2CMultiplexerShiftBit(uint8_t i2cBus, uint8_t i) {
 void I2CMultiplexerSelectByBusAndMux(uint8_t i2cBus, bool singleMulti, int muxPort) {
   uint8_t toWrite{};
 
-  if ((singleMulti && (muxPort > 0))||
+  if ((singleMulti && (muxPort > 0)) ||
       (!singleMulti && (muxPort > -1))) {
     if (!singleMulti) {
       uint8_t i = muxPort;
@@ -322,7 +325,6 @@ void I2CMultiplexerSelectByBusAndMux(uint8_t i2cBus, bool singleMulti, int muxPo
   }
 
   SetI2CMultiplexer(i2cBus, toWrite);
-
 }
 
 // As initially constructed by krikk in PR#254, quite adapted
