@@ -28,6 +28,14 @@ const __FlashStringHelper* Command_writeEE(struct EventStruct *event, const char
     }
     addLog(LOG_LEVEL_INFO, F("EEPROM: All slot-values erased."));
     return return_command_success_flashstr();
+  } else if (equals(parseString(Line, 2), F("check")) && equals(parseString(Line, 3), F("wp")))  {
+    addLog(LOG_LEVEL_INFO, F("EEPROM: Check write-protect."));
+    checkEEPROMExternalWriteProtected(true);
+    
+    if (isEEPROMExternalWriteProtected()) {
+      addLog(LOG_LEVEL_INFO, concat(F("EEPROM: Write-protected! Status: "), static_cast<uint8_t>(checkEEPROMExternalWriteProtected())));
+    }
+    return return_command_success_flashstr();
   }
   return return_command_failed_flashstr();
 }
