@@ -107,6 +107,12 @@ void initI2C() {
                                             FsP(getEEPROMName(eepromType)),
                                             eepromAddress));
         }
+
+        checkEEPROMExternalWriteProtected();
+
+        if (isEEPROMExternalWriteProtected()) {
+          addLog(LOG_LEVEL_INFO, concat(F("EEPROM: Write-protected! Status: "), static_cast<uint8_t>(checkEEPROMExternalWriteProtected())));
+        }
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           addLog(LOG_LEVEL_ERROR, strformat(F("EEPROM: Initialization of %s failed"),

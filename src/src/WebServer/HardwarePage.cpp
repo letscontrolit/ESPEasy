@@ -381,6 +381,9 @@ void handle_hardware() {
     const bool eepromChecked = checkEEPROMEnabled() > 0;
     addRowLabel(F("EEPROM Enabled"));
     addEnabled(eepromChecked);
+    if (isEEPROMExternalWriteProtected()) {
+      addHtml(F(" Write-protected!"));
+    }
     addFormCheckBox(F("Cold boot: Restore Task Values from EEPROM"), F("lduvcbee"), Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
     addFormCheckBox(F("Warm boot: Restore Task Values from EEPROM"), F("lduvwbee"), Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
   }

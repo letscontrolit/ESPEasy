@@ -7,26 +7,32 @@
 
 # include <AT24CX.h>
 
+enum class EEPROMExternal_WriteProtect_e : uint8_t {
+  Undefined = 0,
+  ReadWrite = 1,
+  ReadOnly  = 2,
+};
+
 extern AT24CX *EEPROMExternal;
+extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 
 // Start writing the base RTC struct from this offset (not currently saving this to EEPROM) // TODO
 # define EEPROM_BASERTC_START_OFFSET      (0)
 
 // Start writing the UserVar values from this offset, should be > sizeof(RTCStruct) that is 32 currently
-# define EEPROM_USERVAR_START_OFFSET      (100)
+# define EEPROM_USERVAR_START_OFFSET      (EEPROM_BASERTC_START_OFFSET + 128)
 
 // Write the UserVar-checksum from this offset, right after the UserVar values
 # define EEPROM_USERVAR_CHECKSUM_OFFSET   (EEPROM_USERVAR_START_OFFSET + (TASKS_MAX * VARS_PER_TASK * sizeof(uint32_t)))
 
-// Offset for storing GPIO states // TODO
-# define EEPROM_GPIO_MCPPCF_START_OFFSET  (1024)
+// Offset for storing GPIO states, directly following the UserVar storage and checksum
+# define EEPROM_GPIO_MCPPCF_START_OFFSET  (EEPROM_USERVAR_CHECKSUM_OFFSET + sizeof(uint32_t))
 
 // Choose an arbitrary but fixed offset
 # define EEPROM_CUSTOM_START_OFFSET       (2048)
 
-# if FEATURE_STRING_VARIABLES
-
 // NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
+# if FEATURE_STRING_VARIABLES
 #  define EEPROM_CUSTOM_DIVISOR           (2) // Split in slots- and strings- halves
 # else // if FEATURE_STRING_VARIABLES
 #  define EEPROM_CUSTOM_DIVISOR           (1) // Use all for slots
@@ -51,20 +57,22 @@ enum class EEPROMExternal_Type_e : uint8_t {
   AT24C128 = 6,  // 16 kB
 };
 
-uint8_t                    checkEEPROMEnabled();
+uint8_t                       checkEEPROMEnabled();
+EEPROMExternal_WriteProtect_e checkEEPROMExternalWriteProtected(bool forced = false);
+bool                          isEEPROMExternalWriteProtected();
 
-uint8_t                    selectEEPROMI2CBusAndMultiplexer();
+uint8_t                       selectEEPROMI2CBusAndMultiplexer();
 
-uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type);
-uint32_t                   getEEPROMSize(EEPROMExternal_Type_e type,
-                                         uint8_t             & pageSize);
-const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type);
+uint32_t                      getEEPROMSize(EEPROMExternal_Type_e type);
+uint32_t                      getEEPROMSize(EEPROMExternal_Type_e type,
+                                            uint8_t             & pageSize);
+const __FlashStringHelper*    getEEPROMName(EEPROMExternal_Type_e type);
 
-uint32_t                   getEEPROMAddressForSlot(uint32_t slot);
-uint32_t                   getEEPROMAddressForTaskValue(taskIndex_t    task,
-                                                        taskVarIndex_t varNr);
-uint32_t                   getEEPROMMaxSlots();
-bool                       writeEEPROMSlot(uint32_t slot,
-                                           float    data);
-float                      readEEPROMSlot(uint32_t slot);
+uint32_t                      getEEPROMAddressForSlot(uint32_t slot);
+uint32_t                      getEEPROMAddressForTaskValue(taskIndex_t    task,
+                                                           taskVarIndex_t varNr);
+uint32_t                      getEEPROMMaxSlots();
+bool                          writeEEPROMSlot(uint32_t slot,
+                                              float    data);
+float                         readEEPROMSlot(uint32_t slot);
 #endif // if FEATURE_EEPROM_EXTERNAL

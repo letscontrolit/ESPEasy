@@ -2,10 +2,12 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/I2C_access.h"
 #include "../../ESPEasy_common.h"
+#include "../Helpers/StringConverter.h"
 
 #if FEATURE_EEPROM_EXTERNAL
 
-AT24CX *EEPROMExternal = nullptr;
+AT24CX *EEPROMExternal                                   = nullptr;
+EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::Undefined;
 
 constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
 
@@ -20,6 +22,53 @@ uint8_t checkEEPROMEnabled() {
     return eepromAddress;
   }
   return 0;
+}
+
+/**
+ * Check if the EEPROM is write-protected
+ * when forced = false only detect if current state is Undefined
+ * - read a random byte in the first half of the address space (some chips ony WP the first half of the space!)
+ * - write 0xAA and read back -> if unequal: read-only
+ * - write 0x55 and read back -> if unequal: read-only
+ * - Still OK:
+ *   - restore original byte
+ *   - Set status read-write
+ */
+EEPROMExternal_WriteProtect_e checkEEPROMExternalWriteProtected(bool forced) {
+  if ((nullptr != EEPROMExternal) && ((EEPROMExternal_WriteProtect_e::Undefined == EEPROMExternalWriteProtect) || forced)) {
+    const uint32_t addr     = random(0, getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType())) / 2);
+    const uint8_t  original = EEPROMExternal->read(addr);
+    # ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, strformat(F("EEPROM: Writeable check, addr: 0x%04x data: 0x%02X"), addr, original));
+    }
+    # endif // ifndef BUILD_NO_DEBUG
+    EEPROMExternal->write(addr, 0xAA);
+    uint8_t newdata = EEPROMExternal->read(addr);
+
+    if (0xAA != newdata) { // write failed
+      EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::ReadOnly;
+    } else {
+      EEPROMExternal->write(addr, 0x55);
+      newdata = EEPROMExternal->read(addr);
+
+      if (0x55 != newdata) { // write failed
+        EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::ReadOnly;
+      } else {
+        EEPROMExternal->write(addr, original);
+        EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::ReadWrite;
+      }
+    }
+  }
+  return EEPROMExternalWriteProtect;
+}
+
+/**
+ * Is the EEPROM WriteProtected?
+ */
+bool isEEPROMExternalWriteProtected() {
+  return EEPROMExternal_WriteProtect_e::ReadWrite != checkEEPROMExternalWriteProtected();
 }
 
 /**
@@ -200,7 +249,7 @@ bool writeEEPROMSlot(uint32_t slot,
                      float    data) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
-  if (addr != std::numeric_limits<uint32_t>::max()) {
+  if ((addr != std::numeric_limits<uint32_t>::max()) && !isEEPROMExternalWriteProtected()) {
     const float oldData = EEPROMExternal->readLong(addr);
 
     if (!essentiallyEqual(oldData, data)) {

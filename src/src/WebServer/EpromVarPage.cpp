@@ -34,14 +34,16 @@ void handle_eepromvars() {
     html_table_class_normal();
     html_TR();
     html_table_header(F("External EEPROM"),                                                             300);
-    html_table_header(getEEPROMName(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType())), 400);
-    html_table_header(F(""),                                                                            400);
+    html_table_header(getEEPROMName(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType())), 500);
+    html_table_header(isEEPROMExternalWriteProtected() ? F("Write-protected!") : F(""),                 400);
     html_table_header(F(""));
 
     if (showTasks) {
       html_TR();
+
+      // sub-table header
       html_table_header(F("Task"),    300);
-      html_table_header(F("Value"),   400);
+      html_table_header(F("Value"),   500);
       html_table_header(F("Content"), 400);
       html_table_header(F(""));
 
@@ -75,8 +77,11 @@ void handle_eepromvars() {
       }
     }
     html_TR();
+
+    // sub-table header
     html_table_header(F("Slot"),                         300);
-    html_table_header(F("Value (only non-zero values)"), 400);
+    html_table_header(F("Value (only non-zero values)"), 500);
+    html_table_header(F(""));
     html_table_header(F(""));
 
     const uint32_t maxSlots = getEEPROMMaxSlots();
@@ -93,11 +98,12 @@ void handle_eepromvars() {
         addHtmlInt(slot);
         html_TD();
         addHtml(toString(value));
-        html_TD();
+        html_TD(2);
       }
     }
 
     // TODO: List String values in EEPROM
+    // TODO: List C016 Cache entries in EEPROM
 
     addTableSeparator(F("Summary"), 3, 2);
 
@@ -109,7 +115,7 @@ void handle_eepromvars() {
     } else {
       addHtmlInt(count);
     }
-    html_TD();
+    addHtml(F("<TD colspan=\"2\">"));
     addHtml(F("Slots available: "));
     addHtmlInt(maxSlots - count);
 

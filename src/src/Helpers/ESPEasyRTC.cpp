@@ -179,7 +179,7 @@ bool saveUserVarToRTC(bool initial)
   #if FEATURE_EEPROM_EXTERNAL
   // Check if we have an external EEPROM available on the configured I2C bus & channel, and save all task values there
   const uint8_t eepromAddress = checkEEPROMEnabled();
-  if (!initial && (eepromAddress > 0)) { // EEPROM Configured?
+  if (!initial && (eepromAddress > 0) && !isEEPROMExternalWriteProtected()) { // EEPROM Configured and writable?
 
     if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
       #ifndef BUILD_NO_DEBUG
@@ -197,7 +197,7 @@ bool saveUserVarToRTC(bool initial)
           if (taskValues != nullptr) {
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
               const size_t index = (task * VARS_PER_TASK) + varNr;
-              const uint32_t newData = taskValues->getUint32(varNr); // Only update EEPROM is data differs
+              const uint32_t newData = taskValues->getUint32(varNr); // Only update EEPROM if data differs
               const uint32_t addr = getEEPROMAddressForTaskValue(task, varNr);
               if (newData != EEPROMExternal->readLong(addr)) {
                 EEPROMExternal->writeLong(addr, newData);
