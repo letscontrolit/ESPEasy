@@ -146,6 +146,11 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::SHOW_UOM_ON_DEVICES_PAGE: return F("Show Unit of Measure");
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
+    #if FEATURE_EEPROM_EXTERNAL
+    case LabelType::EEPROM_RESTORE_ON_COLDBOOT: return F("Cold boot: Restore Task Values from EEPROM");
+    case LabelType::EEPROM_RESTORE_ON_WARMBOOT: return F("Warm boot: Restore Task Values from EEPROM");
+    #endif // if FEATURE_EEPROM_EXTERNAL
+
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
     case LabelType::DEEP_SLEEP_ALTERNATIVE_CALL: return F("Deep Sleep Alternative");
@@ -441,6 +446,11 @@ String getValue(LabelType::Enum label) {
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     case LabelType::SHOW_UOM_ON_DEVICES_PAGE:   return jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage());
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+    #if FEATURE_EEPROM_EXTERNAL
+    case LabelType::EEPROM_RESTORE_ON_COLDBOOT: return jsonBool(Settings.RestoreUserVarsFromEEPROMOnColdBoot());
+    case LabelType::EEPROM_RESTORE_ON_WARMBOOT: return jsonBool(Settings.RestoreUserVarsFromEEPROMOnWarmBoot());
+    #endif // if FEATURE_EEPROM_EXTERNAL
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;

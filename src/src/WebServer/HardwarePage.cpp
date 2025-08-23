@@ -129,8 +129,8 @@ void handle_hardware() {
     #if FEATURE_EEPROM_EXTERNAL
     Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"), static_cast<int>(EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
-    Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(F("lduvcbee")));
-    Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(F("lduvwbee")));
+    Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_COLDBOOT));
+    Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_WARMBOOT));
 
     # if FEATURE_I2CMULTIPLEXER
 
@@ -384,8 +384,8 @@ void handle_hardware() {
     if (isEEPROMExternalWriteProtected()) {
       addHtml(F(" Write-protected!"));
     }
-    addFormCheckBox(F("Cold boot: Restore Task Values from EEPROM"), F("lduvcbee"), Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
-    addFormCheckBox(F("Warm boot: Restore Task Values from EEPROM"), F("lduvwbee"), Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
+    addFormCheckBox(LabelType::EEPROM_RESTORE_ON_COLDBOOT, Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
+    addFormCheckBox(LabelType::EEPROM_RESTORE_ON_WARMBOOT, Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
   }
   #endif // if FEATURE_EEPROM_EXTERNAL
 

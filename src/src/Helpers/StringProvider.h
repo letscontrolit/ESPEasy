@@ -94,6 +94,11 @@ struct LabelType {
     SHOW_UOM_ON_DEVICES_PAGE,
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
+    #if FEATURE_EEPROM_EXTERNAL
+    EEPROM_RESTORE_ON_COLDBOOT,
+    EEPROM_RESTORE_ON_WARMBOOT,
+    #endif // if FEATURE_EEPROM_EXTERNAL
+
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart
