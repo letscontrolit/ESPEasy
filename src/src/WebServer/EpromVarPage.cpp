@@ -67,7 +67,7 @@ void handle_eepromvars() {
           const float    value = EEPROMExternal->readFloat(addr);
           const uint32_t data  = EEPROMExternal->readLong(addr);
 
-          if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max())) {
+          if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max()) || !ExtraTaskSettings.getTaskVarStoreInEEPROM(var)) {
             addHtml('-');
           } else {
             addHtml(strformat(F("%s (0x%04x)"), floatToString(value, ExtraTaskSettings.TaskDeviceValueDecimals[var]), data));

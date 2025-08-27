@@ -57,6 +57,9 @@ struct ExtraTaskSettings_cache_t {
   #if FEATURE_CUSTOM_TASKVAR_VTYPE
   uint8_t customVType[VARS_PER_TASK] = { 0 }; // single-value VType per taskValue
   #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+  #if FEATURE_EEPROM_EXTERNAL
+  bool storeInEEPROM[VARS_PER_TASK]{};
+  #endif // if FEATURE_EEPROM_EXTERNAL
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -123,7 +126,12 @@ struct Caches {
   uint8_t getTaskVarCustomVType(taskIndex_t    taskIndex,
                                 taskVarIndex_t taskVarIndex);
   #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
-  
+
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t getTaskVarStoreInEEPROM(taskIndex_t    taskIndex,
+                                  taskVarIndex_t taskVarIndex);
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();
 

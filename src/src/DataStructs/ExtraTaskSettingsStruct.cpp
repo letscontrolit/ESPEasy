@@ -290,6 +290,19 @@ void ExtraTaskSettingsStruct::setTaskVarCustomVType(taskVarIndex_t taskVarIndex,
 }
 #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+#if FEATURE_EEPROM_EXTERNAL
+bool ExtraTaskSettingsStruct::getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const { // Inverted
+  if (!validTaskVarIndex(taskVarIndex)) { return false; }
+  return !bitRead(VariousBits[taskVarIndex], 24);
+}
+
+void ExtraTaskSettingsStruct::setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
+                                                      bool           store) { // Inverted
+  if (validTaskVarIndex(taskVarIndex)) {
+    bitWrite(VariousBits[taskVarIndex], 24, !store);
+  }
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,

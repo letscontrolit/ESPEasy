@@ -13,9 +13,13 @@
 #include "../../ESPEasy_common.h"
 
 #if FEATURE_EEPROM_EXTERNAL
+#include "../Globals/Cache.h"
 #include "../Helpers/EEPROMExternal.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
+
+uint8_t readDataForUserVars(size_t index); // Forward declaration
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 #ifdef ESP8266
@@ -195,11 +199,13 @@ bool saveUserVarToRTC(bool initial)
         for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
           const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
           if (taskValues != nullptr) {
+            LoadTaskSettings(task);
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
-              const size_t index = (task * VARS_PER_TASK) + varNr;
-              const uint32_t newData = taskValues->getUint32(varNr); // Only update EEPROM if data differs
+              const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
+                                       ? taskValues->getUint32(varNr)
+                                       : std::numeric_limits<uint32_t>::max(); // NaN when read as float
               const uint32_t addr = getEEPROMAddressForTaskValue(task, varNr);
-              if (newData != EEPROMExternal->readLong(addr)) {
+              if (newData != EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
                 EEPROMExternal->writeLong(addr, newData);
                 #ifndef BUILD_NO_DEBUG
                 eepromWritten += sizeof_uint32_t;
@@ -208,8 +214,10 @@ bool saveUserVarToRTC(bool initial)
             }
           }
         }
+        // Calculate checksum for all stored values, not equal to the UserVar checksum!
+        const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
         EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET,
-                                  UserVar.compute_CRC32());
+                                  calcsum);
         #ifndef BUILD_NO_DEBUG
         eepromWritten += sizeof_uint32_t;
         startmicros = micros() - startmicros;
@@ -295,14 +303,21 @@ bool readUserVarFromRTC()
       if (calcsum == checksum) {
         addLog(LOG_LEVEL_INFO, F("INIT : Restoring Task Values from EEPROM."));
         result = true;
+        taskIndex_t lastTask = TASKS_MAX;
         for (size_t i = 0; i < (TASKS_MAX * VARS_PER_TASK) && result; ++i) {
           const taskIndex_t taskIndex = i / VARS_PER_TASK;
           const uint8_t varNr = i % VARS_PER_TASK;
+          if (taskIndex != lastTask) {
+            LoadTaskSettings(taskIndex);
+            lastTask = taskIndex;
+          }
           // Store in raw form, so we don't apply formula as we don't really know what type is required.
           const uint32_t addr = getEEPROMAddressForTaskValue(taskIndex, varNr);
           if (addr != std::numeric_limits<uint32_t>::max()) {
-            TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(taskIndex);
-            taskValues->setUint32(varNr, EEPROMExternal->readLong(addr));
+            if (Cache.getTaskVarStoreInEEPROM(taskIndex, varNr)) { // Restore only when enabled
+              TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(taskIndex);
+              taskValues->setUint32(varNr, EEPROMExternal->readLong(addr));
+            }
           } else {
             result = false;
           }

@@ -84,6 +84,12 @@ struct ExtraTaskSettingsStruct
                                       uint8_t        customVType);
   #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+  #if FEATURE_EEPROM_EXTERNAL
+  bool          getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const;
+  void          setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
+                                        bool           store);
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,
                                             uint8_t                    defaultDecimals,
@@ -102,6 +108,12 @@ struct ExtraTaskSettingsStruct
   float       TaskDeviceMaxValue[VARS_PER_TASK];
   float       TaskDeviceErrorValue[VARS_PER_TASK];
   uint32_t    VariousBits[VARS_PER_TASK];
+  /** Mapping of VariousBits:
+   * - 0..7   : PluginStats config (8 bits)
+   * - 8..15  : UnitOfMeasure index (8 bits)
+   * - 16..23 : CustomValueType index (8 bits)
+   * - 24     : Store value in EEPROM (1 bit, inverted)
+   */
 };
 
 

@@ -324,6 +324,21 @@ uint8_t Caches::getTaskVarCustomVType(taskIndex_t    TaskIndex,
 
 #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+#if FEATURE_EEPROM_EXTERNAL
+uint8_t Caches::getTaskVarStoreInEEPROM(taskIndex_t    TaskIndex,
+                                        taskVarIndex_t taskVarIndex) {
+  if (validTaskIndex(TaskIndex) && (validTaskVarIndex(taskVarIndex))) {
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.storeInEEPROM[taskVarIndex];
+    }
+  }
+  return false;
+}
+
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 void Caches::updateExtraTaskSettingsCache()
 {
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
@@ -374,6 +389,9 @@ void Caches::updateExtraTaskSettingsCache()
       #if FEATURE_CUSTOM_TASKVAR_VTYPE
       tmp.customVType[i] = ExtraTaskSettings.getTaskVarCustomVType(i);
       #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      #if FEATURE_EEPROM_EXTERNAL
+      tmp.storeInEEPROM[i] = ExtraTaskSettings.getTaskVarStoreInEEPROM(i);
+      #endif // if FEATURE_EEPROM_EXTERNAL
     }
     #ifdef ESP32
     tmp.TaskDevicePluginConfigLong_index_used = 0;
