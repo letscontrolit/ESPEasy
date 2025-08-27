@@ -226,7 +226,7 @@ uint32_t getEEPROMAddressForTaskValue(taskIndex_t task, taskVarIndex_t varNr) {
 }
 
 /**
- * EEPROM available number of slots
+ * EEPROM available number of slots, max 1024
  * NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
  */
 uint32_t getEEPROMMaxSlots() {
@@ -234,7 +234,7 @@ uint32_t getEEPROMMaxSlots() {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if (eepromSize > 0) {
-      const uint32_t slotMax = ((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_uint32_t;
+      const uint32_t slotMax = min((unsigned long)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_uint32_t), 1024ul);
 
       return slotMax;
     }

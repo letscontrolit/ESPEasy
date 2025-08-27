@@ -41,9 +41,9 @@ extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 
 // NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
 # if FEATURE_STRING_VARIABLES
-#  define EEPROM_CUSTOM_DIVISOR           (2) // Split in slots- and strings- halves
+#  define EEPROM_CUSTOM_DIVISOR           (2u) // Split in slots- and strings- halves
 # else // if FEATURE_STRING_VARIABLES
-#  define EEPROM_CUSTOM_DIVISOR           (1) // Use all for slots
+#  define EEPROM_CUSTOM_DIVISOR           (1u) // Use all for slots
 # endif // if FEATURE_STRING_VARIABLES
 
 // Enable/disable some models

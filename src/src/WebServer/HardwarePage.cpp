@@ -381,8 +381,12 @@ void handle_hardware() {
     const bool eepromChecked = checkEEPROMEnabled() > 0;
     addRowLabel(F("EEPROM Enabled"));
     addEnabled(eepromChecked);
-    if (isEEPROMExternalWriteProtected()) {
+    if (eepromChecked && isEEPROMExternalWriteProtected()) {
       addHtml(F(" Write-protected!"));
+    } 
+    if (eepromChecked && !isEEPROMExternalWriteProtected()) {
+      addRowLabel(F("'WriteEE' slots available"));
+      addHtmlInt(getEEPROMMaxSlots());
     }
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_COLDBOOT, Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_WARMBOOT, Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
