@@ -106,22 +106,29 @@ uint8_t selectEEPROMI2CBusAndMultiplexer() {
 uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
+    case EEPROMExternal_Type_e::MB85RC256:
       return 32768;
     case EEPROMExternal_Type_e::AT24C512:
+    case EEPROMExternal_Type_e::MB85RC512:
       return 65536;
     # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
+    case EEPROMExternal_Type_e::MB85RC1M:
       return 131072;
     # endif // if EEPROM_SUPPORT_AT24C1024
     # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
+    case EEPROMExternal_Type_e::MB85RC2M:
       return 262144;
     # endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C32:
+    case EEPROMExternal_Type_e::MB85RC32:
       return 4096;
     case EEPROMExternal_Type_e::AT24C64:
+    case EEPROMExternal_Type_e::MB85RC64:
       return 8192;
     case EEPROMExternal_Type_e::AT24C128:
+    case EEPROMExternal_Type_e::MB85RC128:
       return 16384;
   }
   return 0;
@@ -136,22 +143,29 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
 
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
+    case EEPROMExternal_Type_e::MB85RC256:
       pageSize = 64;
     case EEPROMExternal_Type_e::AT24C512:
+    case EEPROMExternal_Type_e::MB85RC512:
       pageSize = 128;
     # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
+    case EEPROMExternal_Type_e::MB85RC1M:
       pageSize = 128;
     # endif // if EEPROM_SUPPORT_AT24C1024
     # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
+    case EEPROMExternal_Type_e::MB85RC2M:
       pageSize = 128;
     # endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C32:
+    case EEPROMExternal_Type_e::MB85RC32:
       pageSize = 32;
     case EEPROMExternal_Type_e::AT24C64:
+    case EEPROMExternal_Type_e::MB85RC64:
       pageSize = 32;
     case EEPROMExternal_Type_e::AT24C128:
+    case EEPROMExternal_Type_e::MB85RC128:
       pageSize = 64;
   }
   return getEEPROMSize(type);
@@ -165,12 +179,12 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
 
   switch (type) {
     case EEPROMExternal_Type_e::AT24C256:
-      return F("AT24C256 / MB85RC256");
+      return F("AT24C256");
     case EEPROMExternal_Type_e::AT24C512:
-      return F("AT24C512 / MB85RC512");
+      return F("AT24C512");
     #  if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
-      return F("AT24C1024 / MB85RC1M");
+      return F("AT24C1024");
     #  endif // if EEPROM_SUPPORT_AT24C1024
     #  if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
@@ -179,9 +193,27 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
     case EEPROMExternal_Type_e::AT24C32:
       return F("AT24C32");
     case EEPROMExternal_Type_e::AT24C64:
-      return F("AT24C64 / MB85RC64");
+      return F("AT24C64");
     case EEPROMExternal_Type_e::AT24C128:
-      return F("AT24C128 / MB85RC128");
+      return F("AT24C128");
+    case EEPROMExternal_Type_e::MB85RC256:
+      return F("MB85RC256");
+    case EEPROMExternal_Type_e::MB85RC512:
+      return F("MB85RC512");
+    #  if EEPROM_SUPPORT_AT24C1024
+    case EEPROMExternal_Type_e::MB85RC1M:
+      return F("MB85RC1M");
+    #  endif // if EEPROM_SUPPORT_AT24C1024
+    #  if EEPROM_SUPPORT_AT24C2048
+    case EEPROMExternal_Type_e::MB85RC2M:
+      return F("MB85RC2M");
+    #  endif // if EEPROM_SUPPORT_AT24C2048
+    case EEPROMExternal_Type_e::MB85RC32:
+      return F("MB85RC32");
+    case EEPROMExternal_Type_e::MB85RC64:
+      return F("MB85RC64");
+    case EEPROMExternal_Type_e::MB85RC128:
+      return F("MB85RC128");
   }
   return F("");
   # else // ifndef BUILD_NO_DEBUG

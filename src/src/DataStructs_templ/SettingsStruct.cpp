@@ -1160,11 +1160,11 @@ void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags(uint16_t mu
 }
 template<unsigned int N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType() const {
-  return static_cast<uint8_t>(get3BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE));
+  return static_cast<uint8_t>(get4BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE));
 }
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType(uint8_t type) {
-  set3BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, type);
+  set4BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, type);
 }
 #endif // if FEATURE_EEPROM_EXTERNAL
 

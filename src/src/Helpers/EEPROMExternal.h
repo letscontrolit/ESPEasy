@@ -3,8 +3,8 @@
 
 #if FEATURE_EEPROM_EXTERNAL
 
-#include "../DataTypes/TaskIndex.h"
-#include "../DataStructs/RTCCacheStruct.h"
+# include "../DataTypes/TaskIndex.h"
+# include "../DataStructs/RTCCacheStruct.h"
 
 # include <AT24CX.h>
 
@@ -50,7 +50,7 @@ extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 # define EEPROM_SUPPORT_AT24C1024 1
 # define EEPROM_SUPPORT_AT24C2048 0
 
-// Supported AT24Cxxx devices
+// Supported AT24Cxxx and MB85RCxxx devices
 enum class EEPROMExternal_Type_e : uint8_t {
   AT24C256 = 0,  // Default, 32 kB
   AT24C512 = 1,  // 64 kB
@@ -63,6 +63,17 @@ enum class EEPROMExternal_Type_e : uint8_t {
   AT24C32  = 4,  // 4 kB, not endorsed, but widely available types:
   AT24C64  = 5,  // 8 kB
   AT24C128 = 6,  // 16 kB
+  MB85RC256 = 7,  // 32 kB
+  MB85RC512 = 8,  // 64 kB
+  # if EEPROM_SUPPORT_AT24C1024
+  MB85RC1M = 9, // 128 kB
+  # endif // if EEPROM_SUPPORT_AT24C1024
+  # if EEPROM_SUPPORT_AT24C2048
+  MB85RC2M = 10, // 256 kB (not supported yet)
+  # endif // if EEPROM_SUPPORT_AT24C2048
+  MB85RC32  = 11,  // 4 kB, not endorsed, but widely available types:
+  MB85RC64  = 12,  // 8 kB
+  MB85RC128 = 13,  // 16 kB
 };
 
 uint8_t                       checkEEPROMEnabled();

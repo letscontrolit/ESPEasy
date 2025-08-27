@@ -52,7 +52,7 @@
 
 #if FEATURE_EEPROM_EXTERNAL
 #define EEPROM_EXTERNAL_FLAGS_ADDRESS   0 // bit-offset for the I2C Address (8 bits)
-#define EEPROM_EXTERNAL_FLAGS_SIZE      8 // bit-offset for the size-id of the EEPROM (3 bits)
+#define EEPROM_EXTERNAL_FLAGS_SIZE      8 // bit-offset for the size-id of the EEPROM (4 bits)
 #define EEPROM_EXTERNAL_FLAGS_MUX      16 // bit-offset for the multiplexer flags of the EEPROM (16 bits)
 
 #define EEPROM_MUX_FLAGS_PORT           0 // bit-offset within multiplexerflags for the portnr/bits (8 bits)

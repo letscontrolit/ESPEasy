@@ -333,6 +333,17 @@ void handle_hardware() {
       getEEPROMName(EEPROMExternal_Type_e::AT24C32),
       getEEPROMName(EEPROMExternal_Type_e::AT24C64),
       getEEPROMName(EEPROMExternal_Type_e::AT24C128),
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC256),
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC512),
+      #if EEPROM_SUPPORT_AT24C1024
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC1M),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC2M),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC32),
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC64),
+      getEEPROMName(EEPROMExternal_Type_e::MB85RC128),
     };
     const int eepromTypes[] = {
       static_cast<int>(EEPROMExternal_Type_e::AT24C256),
@@ -346,6 +357,17 @@ void handle_hardware() {
       static_cast<int>(EEPROMExternal_Type_e::AT24C32),
       static_cast<int>(EEPROMExternal_Type_e::AT24C64),
       static_cast<int>(EEPROMExternal_Type_e::AT24C128),
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC256),
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC512),
+      #if EEPROM_SUPPORT_AT24C1024
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC1M),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC2M),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC32),
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC64),
+      static_cast<int>(EEPROMExternal_Type_e::MB85RC128),
     };
     constexpr uint8_t eepromSizeCount = NR_ELEMENTS(eepromTypes);
     FormSelectorOptions eepromSizeSelector(eepromSizeCount, eepromOptions, eepromTypes);
