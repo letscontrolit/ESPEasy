@@ -211,6 +211,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
              value = toString(readEEPROMSlot(slot));
            } else if (valueName.equalsIgnoreCase(F("max"))) {
              value = getEEPROMMaxSlots();
+           } else if (valueName.equalsIgnoreCase(F("wp"))) {
+             value = isEEPROMExternalWriteProtected() ? 1 : 0;
            }
            if (!value.isEmpty()) {
              transformValue(
