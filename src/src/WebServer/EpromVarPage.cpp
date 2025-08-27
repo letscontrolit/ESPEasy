@@ -24,7 +24,8 @@
 void handle_eepromvars() {
   if (!isLoggedIn()) { return; }
 
-  const bool showTasks = getFormItemInt(F("tasks"), 0) != 0;
+  const bool showTasks = getFormItemInt(F("tasks"), 1) == 1;
+  const bool allTasks  = getFormItemInt(F("enabled"), 0) != 0;
 
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -42,38 +43,46 @@ void handle_eepromvars() {
       html_TR();
 
       // sub-table header
-      html_table_header(F("Task"),    300);
-      html_table_header(F("Value"),   500);
-      html_table_header(F("Content"), 400);
+      html_table_header(allTasks ? F("Task") : F("Task (Enabled)"), 300);
+      html_table_header(F("Value"),                                 500);
+      html_table_header(F("Content"),                               400);
       html_table_header(F(""));
 
       for (taskIndex_t tsk = 0; tsk < TASKS_MAX; ++tsk) {
-        LoadTaskSettings(tsk);
-        html_TR_TD();
-        addHtmlInt(tsk + 1);
-        addHtml(' ');
-        addHtml(getTaskDeviceName(tsk));
+        const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(tsk);
 
-        for (taskVarIndex_t var = 0; var < VARS_PER_TASK; ++var) {
-          if (var != 0) {
-            html_TR_TD();
-          }
-          html_TD();
-          addHtmlInt(var + 1);
+        if ((Settings.TaskDeviceEnabled[tsk] && validDeviceIndex(DeviceIndex)) || allTasks) {
+          LoadTaskSettings(tsk);
+          html_TR_TD();
+          addHtmlInt(tsk + 1);
           addHtml(' ');
-          addHtml(getTaskValueName(tsk, var));
-          html_TD();
-          const uint32_t addr  = getEEPROMAddressForTaskValue(tsk, var);
-          const float    value = EEPROMExternal->readFloat(addr);
-          const uint32_t data  = EEPROMExternal->readLong(addr);
+          addHtml(getTaskDeviceName(tsk));
 
-          if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max()) || !ExtraTaskSettings.getTaskVarStoreInEEPROM(var)) {
-            addHtml('-');
-          } else {
-            addHtml(strformat(F("%s (0x%04x)"), floatToString(value, ExtraTaskSettings.TaskDeviceValueDecimals[var]), data));
+          for (taskVarIndex_t var = 0; var < VARS_PER_TASK; ++var) {
+            if (var != 0) {
+              html_TR_TD();
+            }
+            html_TD();
+            addHtmlInt(var + 1);
+            addHtml(' ');
+            addHtml(getTaskValueName(tsk, var));
+            html_TD();
+            const uint32_t addr  = getEEPROMAddressForTaskValue(tsk, var);
+            const float    value = EEPROMExternal->readFloat(addr);
+            const uint32_t data  = EEPROMExternal->readLong(addr);
+
+            if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max()) || !ExtraTaskSettings.getTaskVarStoreInEEPROM(var)) {
+              addHtml('-');
+            } else {
+              addHtml(floatToString(value, ExtraTaskSettings.TaskDeviceValueDecimals[var]));
+
+              if (!essentiallyZero(value)) { // Only show hex values for non-zero values to reduce eye-strain
+                addHtml(strformat(F(" (0x%04x)"), data));
+              }
+            }
           }
+          delay(0);
         }
-        delay(0);
       }
     }
     html_TR();
