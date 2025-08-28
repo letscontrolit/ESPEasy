@@ -1,0 +1,28 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``modbus,write,<address>,<value>``
+
+        ","
+        Write a value into the specified holding register.
+        "
+        "
+        ``modbus,read,<value>``
+
+        ","
+        Read the value from the specified holding register.
+        "
+        "
+        ``modbus,scan``
+
+        ","
+        Scans the modbus address range for responding units. It will do a read function for holding register 1. Note this will take some time. Ouput is in the logging.
+        "
+              "
+        ``modbus,dump,<start>,<end>``
+
+        ","
+        Dumps the holding registers in the given address range.
+        "

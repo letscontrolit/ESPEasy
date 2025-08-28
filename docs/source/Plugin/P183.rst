@@ -11,6 +11,8 @@ Plugin details
 
 Type: |P183_type|
 
+Port Type: |P183_porttype|
+
 Name: |P183_name|
 
 Status: |P183_status|
@@ -53,6 +55,8 @@ Configuration
 Sensor
 ^^^^^^
 
+.. image:: P183_sensor_config.png
+
 The available Serial protocol settings here depend on the build used.
 
 * **Serial Port**: The serial port to use for Modbus communication.
@@ -72,10 +76,13 @@ The available Serial protocol settings here depend on the build used.
 Output Configuration
 ^^^^^^^^^^^^^^^^^^^^
 
+.. image:: P183_output_config.png
+
 * **Number of registers to read**: The number of holding registers the plugin will read (1..4).
 
 * **Holding register for valueX**: The Modbus holding register address to read for valueX (X=1..4).
 
+The holding register address is a 16-bit value (0..65535). This is the register address as specified with the Modbus device and is used directly in the Modbus read holding registers (function code 03). The plugin will read the number of values specified, starting with value1
 
 Commands available
 ^^^^^^^^^^^^^^^^^^

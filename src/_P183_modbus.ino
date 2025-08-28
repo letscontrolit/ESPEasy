@@ -28,19 +28,22 @@
 # define PLUGIN_VALUENAME4_183 "Value4"
 
 // Plugin configuration parameters
-// PCONFIG(0) is the Modbus device ID, 
+// PCONFIG(0) is the Modbus device ID.
 // PCONFIG(1) is the serial baud rate.
 // PCONFIG(2) is used for flags, where bit 0 indicates collision detection
-// PCONFIG(3) is the Modbus register address for value 1
-// PCONFIG(4) is the Modbus register address for value 2
-// PCONFIG(5) is the Modbus register address for value 3
-// PCONFIG(6) is the Modbus register address for value 4
+// PCONFIG(3) is the number of active output values (1-4)
+// PCONFIG(4) is the Modbus register address for value 1
+// PCONFIG(5) is the Modbus register address for value 2
+// PCONFIG(6) is the Modbus register address for value 3
+// PCONFIG(7) is the Modbus register address for value 4
 // Use P183_ADDRESS(x) to access the PCONFIG value for value x 
 # define P183_DEV_ID           PCONFIG(0)
 # define P183_DEV_ID_LABEL     PCONFIG_LABEL(0)
 # define P183_BAUDRATE         PCONFIG(1)
 # define P183_BAUDRATE_LABEL   PCONFIG_LABEL(1)
-# define P183_ADDRESS(x)       PCONFIG(3 + x)
+# define P183_NR_OUTPUTS       PCONFIG(3)
+# define P183_NR_OUTPUTS_LABEL PCONFIG_LABEL(3)
+# define P183_ADDRESS(x)       PCONFIG(4 + x)
 # define P183_ADDRESS_LABEL(x) concat(F("addr"), x) 
 
 # define P183_GET_FLAG_COLL_DETECT bitRead(PCONFIG(2), 0)
@@ -141,7 +144,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         addUnit(F("baud"));
       }
 
-      addFormNumericBox(F("Modbus Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
+      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
 
       # ifdef ESP32
       addFormCheckBox(F("Enable Collision Detection"), F(P183_FLAG_COLL_DETECT_LABEL), P183_GET_FLAG_COLL_DETECT);
@@ -153,9 +156,15 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
+
+      if ((P183_NR_OUTPUTS < 1) || (P183_NR_OUTPUTS > P183_NR_OUTPUT_VALUES)) {
+        P183_NR_OUTPUTS = P183_NR_OUTPUT_VALUES; // Default to max outputs
+      }
+      addFormNumericBox(F("Number of values to read"), P183_NR_OUTPUTS_LABEL, P183_NR_OUTPUTS);
+
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
       {
-        addFormNumericBox(concat(F("Value "), outputIndex + 1), P183_ADDRESS_LABEL(outputIndex), P183_ADDRESS(outputIndex));
+        addFormNumericBox(concat(F("Holding Register for value"), outputIndex + 1), P183_ADDRESS_LABEL(outputIndex), P183_ADDRESS(outputIndex));
       }
       break;
     }
@@ -175,6 +184,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_SET_FLAG_COLL_DETECT(isFormItemChecked(F(P183_FLAG_COLL_DETECT_LABEL)));
       # endif // ifdef ESP32
       
+      P183_NR_OUTPUTS = getFormItemInt(P183_NR_OUTPUTS_LABEL);
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
       {
         P183_ADDRESS(outputIndex) = getFormItemInt( P183_ADDRESS_LABEL(outputIndex));
@@ -239,22 +249,10 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND:
-    {
-
-      break;
-    }
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-
-      break;
-    }
-    
     case PLUGIN_READ:
     {
       uint16_t value = 0;
-      for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
+      for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
       {
         P183_modbus_readRegister(P183_DEV_ID, P183_ADDRESS(outputIndex), &value);
         UserVar.setFloat(event->TaskIndex, outputIndex, value);
@@ -279,12 +277,6 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             log += F(" to address ");
             log += address;
             addLogMove(LOG_LEVEL_INFO, log);
-            success = true;
-          } 
-          else if (equals(subcmd, F("scan"))) {
-            // Scan for Modbus devices
-            addLogMove(LOG_LEVEL_INFO, F("Modbus: Scanning for Modbus modules"));
-            P183_scan_modbus();
             success = true;
           } 
           else if (equals(subcmd, F("read"))) {
@@ -312,6 +304,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             P183_scan_module(P183_DEV_ID, start_address, end_address);
             success = true;
           }
+          else if (equals(subcmd, F("scan"))) {
+            // Scan for Modbus devices
+            addLogMove(LOG_LEVEL_INFO, F("Modbus: Scanning for Modbus modules"));
+            P183_scan_modbus();
+            success = true;
+          } 
           else {
             addLogMove(LOG_LEVEL_ERROR, F("Modbus: Unknown command"));
           }
