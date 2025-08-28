@@ -12,7 +12,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #if FEATURE_EEPROM_EXTERNAL
-# include "../Helpers/EEPROMExternal.h"
+# include "../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 #ifdef ESP8266
@@ -35,45 +35,45 @@ RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
  **********************************************************************************************/
 #if FEATURE_EEPROM_EXTERNAL
 void EEPROMSaveWritePos() {
-  const uint8_t eepromAddress = checkEEPROMEnabled();
+  const uint8_t eepromAddress = ESPEasy::eeprom::checkEEPROMEnabled();
   if (eepromAddress > 0) {
     // Save new position
-    if (EEPROMExternal->readInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET) != RTC_cache.writePos) {
-      EEPROMExternal->writeInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET, RTC_cache.writePos);
+    if (ESPEasy::eeprom::EEPROMExternal->readInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET) != RTC_cache.writePos) {
+      ESPEasy::eeprom::EEPROMExternal->writeInt(EEPROM_RTC_CACHE_WRITEPOS_OFFSET, RTC_cache.writePos);
     }
   }
 }
 
 void EEPROMSaveMetaDataChecksum() {
-  const uint8_t eepromAddress = checkEEPROMEnabled();
+  const uint8_t eepromAddress = ESPEasy::eeprom::checkEEPROMEnabled();
   if (eepromAddress > 0) {
     // Save metadata checksum
-    if (EEPROMExternal->readLong(EEPROM_RTC_CACHE_META_CRC_OFFSET) != RTC_cache.checksumMetadata) {
-      EEPROMExternal->writeLong(EEPROM_RTC_CACHE_META_CRC_OFFSET, RTC_cache.checksumMetadata);
+    if (ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_RTC_CACHE_META_CRC_OFFSET) != RTC_cache.checksumMetadata) {
+      ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_RTC_CACHE_META_CRC_OFFSET, RTC_cache.checksumMetadata);
     }
   }
 }
 
 void EEPROMSaveCacheChecksum() {
-  const uint8_t eepromAddress = checkEEPROMEnabled();
+  const uint8_t eepromAddress = ESPEasy::eeprom::checkEEPROMEnabled();
   if (eepromAddress > 0) {
     // Save cache checksum
-    if (EEPROMExternal->readLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET) != RTC_cache.checksumData) {
-      EEPROMExternal->writeLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET, RTC_cache.checksumData);
+    if (ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET) != RTC_cache.checksumData) {
+      ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_RTC_CACHE_CHECKSUM_OFFSET, RTC_cache.checksumData);
     }
   }
 }
 
 void EEPROMSaveRTCcache() {
-  const uint8_t eepromAddress = checkEEPROMEnabled();
+  const uint8_t eepromAddress = ESPEasy::eeprom::checkEEPROMEnabled();
   if (eepromAddress > 0) {
     size_t count{};
     for (uint16_t idx = 0; idx < sizeof(RTC_cache); ++idx) {
       const uint32_t metaAddr = EEPROM_RTC_CACHE_META_OFFSET + idx;
-      const uint8_t  oldData  = EEPROMExternal->read(metaAddr);
+      const uint8_t  oldData  = ESPEasy::eeprom::EEPROMExternal->read(metaAddr);
       const uint8_t  newData  = reinterpret_cast<const uint8_t *>(&RTC_cache)[idx];
       if (oldData != newData) {
-        EEPROMExternal->write(metaAddr, newData);
+        ESPEasy::eeprom::EEPROMExternal->write(metaAddr, newData);
         ++count;
       }
     }
@@ -293,15 +293,15 @@ bool RTC_cache_handler_struct::write(const uint8_t *data, unsigned int size) {
   }
 
   #if FEATURE_EEPROM_EXTERNAL
-  const uint8_t eepromAddress = checkEEPROMEnabled();
+  const uint8_t eepromAddress = ESPEasy::eeprom::checkEEPROMEnabled();
   if (eepromAddress > 0) {
     size_t count{};
     for (unsigned int idx = 0; idx < size; ++idx) {
       const uint32_t cacheAddr = EEPROM_RTC_CACHE_START_OFFSET + idx;
-      const uint8_t  oldData   = EEPROMExternal->read(cacheAddr);
+      const uint8_t  oldData   = ESPEasy::eeprom::EEPROMExternal->read(cacheAddr);
       const uint8_t  newData   = data[idx];
       if (oldData != newData) {
-        EEPROMExternal->write(cacheAddr, newData);
+        ESPEasy::eeprom::EEPROMExternal->write(cacheAddr, newData);
         ++count;
       }
     }

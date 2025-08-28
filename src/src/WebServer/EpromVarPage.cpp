@@ -10,7 +10,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/ExtraTaskSettings.h"
 
-#include "../Helpers/EEPROMExternal.h"
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../Helpers/StringConverter.h"
@@ -30,13 +30,16 @@ void handle_eepromvars() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  if (checkEEPROMEnabled() > 0) {
+  if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
     // the table header
     html_table_class_normal();
     html_TR();
-    html_table_header(F("External EEPROM"),                                                             300);
-    html_table_header(getEEPROMName(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType())), 500);
-    html_table_header(isEEPROMExternalWriteProtected() ? F("Write-protected!") : F(""),                 400);
+    html_table_header(F("External EEPROM"),
+                      300);
+    html_table_header(ESPEasy::eeprom::getEEPROMName(static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType())),
+                      500);
+    html_table_header(ESPEasy::eeprom::isEEPROMExternalWriteProtected() ? F("Write-protected!") : F(""),
+                      400);
     html_table_header(F(""));
 
     if (showTasks) {
@@ -67,9 +70,9 @@ void handle_eepromvars() {
             addHtml(' ');
             addHtml(getTaskValueName(tsk, var));
             html_TD();
-            const uint32_t addr  = getEEPROMAddressForTaskValue(tsk, var);
-            const float    value = EEPROMExternal->readFloat(addr);
-            const uint32_t data  = EEPROMExternal->readLong(addr);
+            const uint32_t addr  = ESPEasy::eeprom::getEEPROMAddressForTaskValue(tsk, var);
+            const float    value = ESPEasy::eeprom::EEPROMExternal->readFloat(addr);
+            const uint32_t data  = ESPEasy::eeprom::EEPROMExternal->readLong(addr);
 
             if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max()) || !ExtraTaskSettings.getTaskVarStoreInEEPROM(var)) {
               addHtml('-');
@@ -93,11 +96,11 @@ void handle_eepromvars() {
     html_table_header(F(""));
     html_table_header(F(""));
 
-    const uint32_t maxSlots = getEEPROMMaxSlots();
+    const uint32_t maxSlots = ESPEasy::eeprom::getEEPROMMaxSlots();
     uint32_t count{};
 
     for (uint32_t slot = 0; slot < maxSlots; ++slot) {
-      const float value = readEEPROMSlot(slot);
+      const float value = ESPEasy::eeprom::readEEPROMSlot(slot);
 
       if (slot % 50 == 0) { delay(0); }
 

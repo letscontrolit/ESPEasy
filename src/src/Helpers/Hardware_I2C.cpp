@@ -8,7 +8,7 @@
 #include "../Helpers/StringConverter.h"
 
 #if FEATURE_EEPROM_EXTERNAL
-# include "../Helpers/EEPROMExternal.h"
+# include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 #include <Wire.h>
@@ -86,59 +86,7 @@ void initI2C() {
   }
 
   #if FEATURE_EEPROM_EXTERNAL
-  const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
-
-  if ((nullptr != EEPROMExternal) || (eepromAddress == 0)) { // Cleanup when turning off EEPROM
-    delete EEPROMExternal;
-    EEPROMExternal             = nullptr;
-    EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::Undefined;
-  }
-
-  if ((nullptr == EEPROMExternal) && (eepromAddress > 0)) {
-    const EEPROMExternal_Type_e eepromType = static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
-
-    if (0 != selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
-      // We have an I2C device at this address, let's assume it's an EEPROM...
-      uint8_t pageSize          = 0;
-      const uint32_t eepromSize = getEEPROMSize(eepromType, pageSize);
-      EEPROMExternal = new (std::nothrow) AT24CX(eepromAddress, pageSize, eepromSize);
-
-      if (nullptr != EEPROMExternal) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: %s initialized at address 0x%02x"),
-                                           FsP(getEEPROMName(eepromType)),
-                                           eepromAddress));
-        }
-
-        checkEEPROMExternalWriteProtected();
-
-        if (isEEPROMExternalWriteProtected()) {
-          addLog(LOG_LEVEL_INFO, concat(F("EEPROM: Write-protected! Status: "), static_cast<uint8_t>(checkEEPROMExternalWriteProtected())));
-        }
-      } else {
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          addLog(LOG_LEVEL_ERROR, strformat(F("EEPROM: Initialization of %s failed"),
-                                            FsP(getEEPROMName(eepromType))));
-        }
-      }
-    } else {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, strformat(F("EEPROM: No %s found at address 0x%02x"),
-                                          FsP(getEEPROMName(eepromType)),
-                                          eepromAddress));
-      }
-    }
-
-    # if FEATURE_I2CMULTIPLEXER
-    I2CMultiplexerOff(
-      #  if FEATURE_I2C_MULTIPLE
-      Settings.getI2CInterfaceEEPROM()
-      #  else // if FEATURE_I2C_MULTIPLE
-      0
-      #  endif // if FEATURE_I2C_MULTIPLE
-      ); // Restore the Multiplexer channel
-    # endif // if FEATURE_I2CMULTIPLEXER
-  }
+  ESPEasy::eeprom::initializeEEPROMExternal();
   #endif // if FEATURE_EEPROM_EXTERNAL
 
   I2CSelectHighClockSpeed(0); // Select first interface by default

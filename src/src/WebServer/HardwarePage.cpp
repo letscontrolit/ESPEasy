@@ -26,7 +26,7 @@
 #endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_EEPROM_EXTERNAL
-#include "../Helpers/EEPROMExternal.h"
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #include "../WebServer/DevicesPage.h" // For using ShowI2CMultiplexerUI() and GetI2CMultiplexerFromPage()
 #endif // if FEATURE_EEPROM_EXTERNAL
 
@@ -127,7 +127,8 @@ void handle_hardware() {
     #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
 
     #if FEATURE_EEPROM_EXTERNAL
-    Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"), static_cast<int>(EEPROMExternal_Type_e::AT24C256)));
+    Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"),
+                                static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
     Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_COLDBOOT));
     Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_WARMBOOT));
@@ -322,52 +323,52 @@ void handle_hardware() {
   {
     addFormSubHeader(F("External I2C EEPROM"));
     const __FlashStringHelper*eepromOptions[] = {
-      getEEPROMName(EEPROMExternal_Type_e::AT24C256),
-      getEEPROMName(EEPROMExternal_Type_e::AT24C512),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C512),
       #if EEPROM_SUPPORT_AT24C1024
-      getEEPROMName(EEPROMExternal_Type_e::AT24C1024),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C1024),
       #endif // if EEPROM_SUPPORT_AT24C1024
       #if EEPROM_SUPPORT_AT24C2048
-      getEEPROMName(EEPROMExternal_Type_e::AT24C2048),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C2048),
       #endif // if EEPROM_SUPPORT_AT24C2048
-      getEEPROMName(EEPROMExternal_Type_e::AT24C32),
-      getEEPROMName(EEPROMExternal_Type_e::AT24C64),
-      getEEPROMName(EEPROMExternal_Type_e::AT24C128),
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC256),
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC512),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C32),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C64),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C128),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC256),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC512),
       #if EEPROM_SUPPORT_AT24C1024
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC1M),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC1M),
       #endif // if EEPROM_SUPPORT_AT24C1024
       #if EEPROM_SUPPORT_AT24C2048
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC2M),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC2M),
       #endif // if EEPROM_SUPPORT_AT24C2048
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC32),
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC64),
-      getEEPROMName(EEPROMExternal_Type_e::MB85RC128),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC32),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC64),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC128),
     };
     const int eepromTypes[] = {
-      static_cast<int>(EEPROMExternal_Type_e::AT24C256),
-      static_cast<int>(EEPROMExternal_Type_e::AT24C512),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C512),
       #if EEPROM_SUPPORT_AT24C1024
-      static_cast<int>(EEPROMExternal_Type_e::AT24C1024),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C1024),
       #endif // if EEPROM_SUPPORT_AT24C1024
       #if EEPROM_SUPPORT_AT24C2048
-      static_cast<int>(EEPROMExternal_Type_e::AT24C2048),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C2048),
       #endif // if EEPROM_SUPPORT_AT24C2048
-      static_cast<int>(EEPROMExternal_Type_e::AT24C32),
-      static_cast<int>(EEPROMExternal_Type_e::AT24C64),
-      static_cast<int>(EEPROMExternal_Type_e::AT24C128),
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC256),
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC512),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C32),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C64),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C128),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC256),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC512),
       #if EEPROM_SUPPORT_AT24C1024
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC1M),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC1M),
       #endif // if EEPROM_SUPPORT_AT24C1024
       #if EEPROM_SUPPORT_AT24C2048
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC2M),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC2M),
       #endif // if EEPROM_SUPPORT_AT24C2048
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC32),
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC64),
-      static_cast<int>(EEPROMExternal_Type_e::MB85RC128),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC32),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC64),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC128),
     };
     constexpr uint8_t eepromSizeCount = NR_ELEMENTS(eepromTypes);
     FormSelectorOptions eepromSizeSelector(eepromSizeCount, eepromOptions, eepromTypes);
@@ -400,15 +401,15 @@ void handle_hardware() {
                          get8BitFromUL(eepromMux, EEPROM_MUX_FLAGS_PORT)); // Re-used from DevicesPage
     #endif // if FEATURE_I2CMULTIPLEXER
 
-    const bool eepromChecked = checkEEPROMEnabled() > 0;
+    const bool eepromChecked = ESPEasy::eeprom::checkEEPROMEnabled() > 0;
     addRowLabel(F("EEPROM Enabled"));
     addEnabled(eepromChecked);
-    if (eepromChecked && isEEPROMExternalWriteProtected()) {
+    if (eepromChecked && ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
       addHtml(F(" Write-protected!"));
     } 
-    if (eepromChecked && !isEEPROMExternalWriteProtected()) {
+    if (eepromChecked && !ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
       addRowLabel(F("'WriteEE' slots available"));
-      addHtmlInt(getEEPROMMaxSlots());
+      addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
     }
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_COLDBOOT, Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_WARMBOOT, Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);

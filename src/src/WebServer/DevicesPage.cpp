@@ -30,7 +30,7 @@
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
 #if FEATURE_EEPROM_EXTERNAL
-# include "../Helpers/EEPROMExternal.h"
+# include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/I2C_Plugin_Helper.h"
@@ -430,7 +430,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     ExtraTaskSettings.enablePluginFilter(varNr, isFormItemChecked(getPluginCustomArgName(F("TDFIL"), varNr)));
 # endif // if FEATURE_PLUGIN_FILTER
     #if FEATURE_EEPROM_EXTERNAL
-    if (checkEEPROMEnabled() > 0) {
+    if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
       ExtraTaskSettings.setTaskVarStoreInEEPROM(varNr, isFormItemChecked(getPluginCustomArgName(F("TDEE"), varNr)));
     }
     #endif // if FEATURE_EEPROM_EXTERNAL
@@ -1715,7 +1715,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     }
 
     #if FEATURE_EEPROM_EXTERNAL
-    if (checkEEPROMEnabled() > 0) {
+    if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
       html_table_header(F("Eeprom"), 30);
       ++colCount;
     }
@@ -1793,7 +1793,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       }
 
       #if FEATURE_EEPROM_EXTERNAL
-      if (checkEEPROMEnabled() > 0) {
+      if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
         html_TD();
         addCheckBox(
           getPluginCustomArgName(F("TDEE"), varNr),

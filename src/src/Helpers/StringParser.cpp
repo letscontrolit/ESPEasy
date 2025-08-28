@@ -22,7 +22,7 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 #if FEATURE_EEPROM_EXTERNAL
-#include "../Helpers/EEPROMExternal.h"
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 /********************************************************************************************\
@@ -208,11 +208,11 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
            uint32_t slot{};
            String value;
            if (validUIntFromString(valueName, slot)) {
-             value = toString(readEEPROMSlot(slot));
+             value = toString(ESPEasy::eeprom::readEEPROMSlot(slot));
            } else if (valueName.equalsIgnoreCase(F("max"))) {
-             value = getEEPROMMaxSlots();
+             value = ESPEasy::eeprom::getEEPROMMaxSlots();
            } else if (valueName.equalsIgnoreCase(F("wp"))) {
-             value = isEEPROMExternalWriteProtected() ? 1 : 0;
+             value = ESPEasy::eeprom::isEEPROMExternalWriteProtected() ? 1 : 0;
            }
            if (!value.isEmpty()) {
              transformValue(
