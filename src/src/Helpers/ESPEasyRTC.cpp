@@ -193,7 +193,7 @@ bool saveUserVarToRTC(bool initial)
       // Update system parameters if not correct
       ESPEasy::eeprom::updateEEPROMExternalParameters();
 
-      const uint32_t checksum = ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
+      const uint32_t checksum = ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_REAL_CHECKSUM);
 
       if (UserVar.compute_CRC32() != checksum) { // Only save if data changed
         #ifndef BUILD_NO_DEBUG
@@ -218,19 +218,27 @@ bool saveUserVarToRTC(bool initial)
           }
         }
         // Calculate checksum for all stored values, not equal to the UserVar checksum!
-        const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
-        ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
+        ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_REAL_CHECKSUM, checksum);
         #ifndef BUILD_NO_DEBUG
         eepromWritten += sizeof_uint32_t;
+        #endif // ifndef BUILD_NO_DEBUG
+        const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
+        if (calcsum != ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET)) {
+          ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
+          #ifndef BUILD_NO_DEBUG
+          eepromWritten += sizeof_uint32_t;
+          #endif // ifndef BUILD_NO_DEBUG
+        }
+        #ifndef BUILD_NO_DEBUG
         startmicros = micros() - startmicros;
         #endif // ifndef BUILD_NO_DEBUG
       }
 
       #ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) { // FIXME LOG_LEVEL_DEBUG
         const ESPEasy::eeprom::EEPROMExternal_Type_e eepromType =
               static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
-        addLog(LOG_LEVEL_DEBUG, strformat(F("EEPROM: UserVar: %u bytes (%.2f ms) written to %s"),
+        addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: UserVar: %u bytes (%.2f ms) written to %s"),
                                           eepromWritten, startmicros / 1000.0f, FsP(ESPEasy::eeprom::getEEPROMName(eepromType))));
       }
       #endif // ifndef BUILD_NO_DEBUG
@@ -301,7 +309,7 @@ bool readUserVarFromRTC()
       const uint32_t checksum = ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
       const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
       #ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) { // FIXME LOG_LEVEL_DEBUG
         addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: readUserVarFromRTC calculated: %u, expected: %u equal: %c, params: %c"),
                                          calcsum, checksum, calcsum == checksum ? 'Y' : 'n', eepromParamsOK ? 'Y' : 'n'));
       }
