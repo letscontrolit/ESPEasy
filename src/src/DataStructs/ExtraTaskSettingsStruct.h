@@ -112,7 +112,7 @@ struct ExtraTaskSettingsStruct
    * - 0..7   : PluginStats config (8 bits)
    * - 8..15  : UnitOfMeasure index (8 bits)
    * - 16..23 : CustomValueType index (8 bits)
-   * - 24     : Store value in EEPROM (1 bit, inverted)
+   * - 24     : Store value in EEPROM (1 bit)
    */
 };
 
