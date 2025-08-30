@@ -193,48 +193,38 @@ bool saveUserVarToRTC(bool initial)
       // Update system parameters if not correct
       ESPEasy::eeprom::updateEEPROMExternalParameters();
 
-      const uint32_t checksum = ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_REAL_CHECKSUM);
-
-      if (UserVar.compute_CRC32() != checksum) { // Only save if data changed
-        #ifndef BUILD_NO_DEBUG
-        startmicros = micros();
-        #endif // ifndef BUILD_NO_DEBUG
-        for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
-          const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
-          if (taskValues != nullptr) {
-            LoadTaskSettings(task);
-            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
-              const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
-                                       ? taskValues->getUint32(varNr)
-                                       : std::numeric_limits<uint32_t>::max(); // NaN when read as float
-              const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
-              if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
-                ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
-                #ifndef BUILD_NO_DEBUG
-                eepromWritten += sizeof_uint32_t;
-                #endif // ifndef BUILD_NO_DEBUG
-              }
+      #ifndef BUILD_NO_DEBUG
+      startmicros = micros();
+      #endif // ifndef BUILD_NO_DEBUG
+      for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
+        const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
+        if (taskValues != nullptr) {
+          LoadTaskSettings(task);
+          for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+            const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
+                                      ? taskValues->getUint32(varNr)
+                                      : std::numeric_limits<uint32_t>::max(); // NaN when read as float
+            const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
+            if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
+              ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
+              #ifndef BUILD_NO_DEBUG
+              eepromWritten += sizeof_uint32_t;
+              #endif // ifndef BUILD_NO_DEBUG
             }
           }
         }
-        // Calculate checksum for all stored values, not equal to the UserVar checksum!
-        ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_REAL_CHECKSUM, checksum);
+      }
+      // Calculate checksum for all stored values, not equal to the UserVar checksum!
+      const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
+      if (calcsum != ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET)) {
+        ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
         #ifndef BUILD_NO_DEBUG
         eepromWritten += sizeof_uint32_t;
         #endif // ifndef BUILD_NO_DEBUG
-        const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
-        if (calcsum != ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET)) {
-          ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
-          #ifndef BUILD_NO_DEBUG
-          eepromWritten += sizeof_uint32_t;
-          #endif // ifndef BUILD_NO_DEBUG
-        }
-        #ifndef BUILD_NO_DEBUG
-        startmicros = micros() - startmicros;
-        #endif // ifndef BUILD_NO_DEBUG
       }
-
       #ifndef BUILD_NO_DEBUG
+      startmicros = micros() - startmicros;
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) { // FIXME LOG_LEVEL_DEBUG
         const ESPEasy::eeprom::EEPROMExternal_Type_e eepromType =
               static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
