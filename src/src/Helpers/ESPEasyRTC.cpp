@@ -191,25 +191,28 @@ bool saveUserVarToRTC(bool initial)
       uint32_t startmicros{};
       #endif // ifndef BUILD_NO_DEBUG
       // Update system parameters if not correct
+      const bool paramsOk = ESPEasy::eeprom::validateEEPROMExternalParameters();
       ESPEasy::eeprom::updateEEPROMExternalParameters();
 
       #ifndef BUILD_NO_DEBUG
       startmicros = micros();
       #endif // ifndef BUILD_NO_DEBUG
       for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
-        const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
-        if (taskValues != nullptr) {
-          LoadTaskSettings(task);
-          for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
-            const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
-                                      ? taskValues->getUint32(varNr)
-                                      : std::numeric_limits<uint32_t>::max(); // NaN when read as float
-            const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
-            if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
-              ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
-              #ifndef BUILD_NO_DEBUG
-              eepromWritten += sizeof_uint32_t;
-              #endif // ifndef BUILD_NO_DEBUG
+        if (Settings.TaskDeviceEnabled[task] || !paramsOk) { // Only check enabled tasks or when re-writing the params
+          const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
+          if (taskValues != nullptr) {
+            LoadTaskSettings(task);
+            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+              const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
+                                        ? taskValues->getUint32(varNr)
+                                        : std::numeric_limits<uint32_t>::max(); // NaN when read as float
+              const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
+              if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
+                ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
+                #ifndef BUILD_NO_DEBUG
+                eepromWritten += sizeof_uint32_t;
+                #endif // ifndef BUILD_NO_DEBUG
+              }
             }
           }
         }
