@@ -403,8 +403,8 @@ void ESPEasy_setup()
 
   #if FEATURE_EEPROM_EXTERNAL
   if ((ESPEasy::eeprom::checkEEPROMEnabled() > 0) && 
-      ((lastBootCause <= BOOT_CAUSE_COLD_BOOT) && Settings.RestoreUserVarsFromEEPROMOnColdBoot() ||
-       (lastBootCause <= BOOT_CAUSE_SOFT_RESTART) && Settings.RestoreUserVarsFromEEPROMOnWarmBoot())
+      (((lastBootCause <= BOOT_CAUSE_COLD_BOOT) && Settings.RestoreUserVarsFromEEPROMOnColdBoot()) ||
+       ((lastBootCause <= BOOT_CAUSE_SOFT_RESTART) && Settings.RestoreUserVarsFromEEPROMOnWarmBoot()))
      ) {
     readUserVarFromRTC(); // Once more to fetch UserVar data from now available EEPROM/FRAM
   }
