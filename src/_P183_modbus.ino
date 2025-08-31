@@ -50,14 +50,21 @@
 # define P183_SET_FLAG_COLL_DETECT(x) bitWrite(PCONFIG(2), 0, x)
 # define P183_FLAG_COLL_DETECT_LABEL "colldet"
 
-# define P183_QUERY1_CONFIG_POS  3
-
 # define P183_DEPIN           CONFIG_PIN3
 
 # define P183_DEV_ID_DFLT     1
 # define P183_BAUDRATE_DFLT   3 // 9600 baud
 
+# define P183_MAX_BAUDRATE_SEL  8
+
 # include <ESPeasySerial.h>
+
+// Modbus properties
+# define P183_MAX_MODBUS_NODES 247
+# define P183_MODBUS_TIMEOUT   1000 // milliseconds
+# define P183_MODBUS_BROADCAST_ID 0 // Modbus broadcast address
+# define P183_MODBUS_FUNC_READ_HOLDING_REGISTERS 0x03
+# define P183_MODBUS_FUNC_WRITE_SINGLE_REGISTER  0x06
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
@@ -127,15 +134,15 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      if ((P183_DEV_ID == 0) || (P183_DEV_ID > 247) || (P183_BAUDRATE >= 6)) {
+      if ((P183_DEV_ID <= 0) || (P183_DEV_ID > P183_MAX_MODBUS_NODES) || (P183_BAUDRATE >= 6)) {
         // Load some defaults
         P183_DEV_ID   = P183_DEV_ID_DFLT;
         P183_BAUDRATE = P183_BAUDRATE_DFLT;
       }
       {
-        String options_baudrate[6];
+        String options_baudrate[P183_MAX_BAUDRATE_SEL];
 
-        for (int i = 0; i < 6; ++i) {
+        for (int i = 0; i < P183_MAX_BAUDRATE_SEL; ++i) {
           options_baudrate[i] = P183_storageValueToBaudrate(i);
         }
         constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
@@ -242,10 +249,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       P183_init = false;
-
       delete P183_ESPEasySerial;
       P183_ESPEasySerial = nullptr;
-
+      success            = true;
       break;
     }
 
@@ -257,6 +263,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         P183_modbus_readRegister(P183_DEV_ID, P183_ADDRESS(outputIndex), &value);
         UserVar.setFloat(event->TaskIndex, outputIndex, value);
       }
+      success = true;
       break;
     }
     case PLUGIN_WRITE:
@@ -322,22 +329,44 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+// Convert stored baudrate setting (enumeration value) to actual baudrate value
+// Returns the actual baudrate value. 
 int P183_storageValueToBaudrate(uint8_t baudrate_setting) {
   int baudrate = 9600;
 
-  if (baudrate_setting < 6) {
-    baudrate = 1200 << baudrate_setting;
+  switch (baudrate_setting)
+  {
+  case 0:
+    baudrate = 1200;   break;
+  case 1:
+    baudrate = 2400;   break;
+  case 2:
+    baudrate = 4800;   break;
+  case 3:
+    baudrate = 9600;   break;
+  case 4:
+    baudrate = 19200;  break;
+  case 5:
+    baudrate = 38400;  break;
+  case 6:
+    baudrate = 57600;  break;
+  case 7:
+    baudrate = 115200; break;
+  default:
+    baudrate = 9600;   break;  // Default value for fallback
   }
   return baudrate;
 }
 
+// Read a single Modbus register from a device with given node ID
+// On success, the read value is stored in *value and 0 is returned.
 int P183_modbus_readRegister(uint8_t node_id, uint16_t reg, uint16_t *value)
 {
   uint8_t buffer[8];    // Buffer for Modbus request
   uint8_t response[8];  // Buffer for Modbus response
 
   buffer[0] = node_id;
-  buffer[1] = 0x03; // Function code for reading holding registers
+  buffer[1] = P183_MODBUS_FUNC_READ_HOLDING_REGISTERS;
   buffer[2] = highByte(reg); // High byte of register address
   buffer[3] = lowByte(reg); // Low byte of register address
   buffer[4] = 0x00; // Number of registers to read (2 bytes)
@@ -360,13 +389,15 @@ int P183_modbus_readRegister(uint8_t node_id, uint16_t reg, uint16_t *value)
   }
 }
 
+// Write a single Modbus register to a device with given node ID
+// On success, 0 is returned.
 int P183_modbus_writeRegister(uint8_t node_id, uint16_t reg, uint16_t value)
 {
   uint8_t buffer[8];
   uint8_t response[8];
 
   buffer[0] = node_id;
-  buffer[1] = 0x06;            // Function code for reading holding registers
+  buffer[1] = P183_MODBUS_FUNC_WRITE_SINGLE_REGISTER;
   buffer[2] = highByte(reg);   // High byte of register address
   buffer[3] = lowByte(reg);    // Low byte of register address
   buffer[4] = highByte(value); // High byte of value to write
@@ -408,7 +439,7 @@ int P183_modbus_exchange_message(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t
   P183_dump_buffer((uint8_t*)tx_buffer, tx_size); // Debug: Dump the transmit buffer content
   P183_ESPEasySerial->write((uint8_t*)tx_buffer, tx_size);
   unsigned long startTime = millis();
-  while (P183_ESPEasySerial->available() < rx_size && (millis() - startTime) < 1000) {
+  while (P183_ESPEasySerial->available() < rx_size && (millis() - startTime) < P183_MODBUS_TIMEOUT) {
     delay(10); // Wait for response
   }
   if (P183_ESPEasySerial->available() >= rx_size) {
