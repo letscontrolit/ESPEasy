@@ -43,6 +43,9 @@
 #include "../../ESPEasy_fdwdecl.h"
 #endif
 
+#if FEATURE_EEPROM_EXTERNAL && FEATURE_EEPROM_BACKGROUND
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL && FEATURE_EEPROM_BACKGROUND
 
 
 #define PLUGIN_ID_MQTT_IMPORT         37
@@ -169,6 +172,10 @@ void runOncePerSecond()
   String dummy;
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
 //  unsigned long elapsed = micros() - start;
+
+  #if FEATURE_EEPROM_EXTERNAL && FEATURE_EEPROM_BACKGROUND
+  ESPEasy::eeprom::EEPROMExternalLoop();
+  #endif // if FEATURE_EEPROM_EXTERNAL && FEATURE_EEPROM_BACKGROUND
 
 
   // I2C Watchdog feed

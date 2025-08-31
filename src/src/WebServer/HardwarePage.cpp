@@ -132,6 +132,7 @@ void handle_hardware() {
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
     Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_COLDBOOT));
     Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_WARMBOOT));
+    Settings.EEPROMSaveDelaySeconds(getFormItemInt(LabelType::EEPROM_SAVE_DELAY));
 
     # if FEATURE_I2CMULTIPLEXER
 
@@ -413,6 +414,7 @@ void handle_hardware() {
     }
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_COLDBOOT, Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
     addFormCheckBox(LabelType::EEPROM_RESTORE_ON_WARMBOOT, Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
+    addFormNumericBox(LabelType::EEPROM_SAVE_DELAY, Settings.EEPROMSaveDelaySeconds(), 0, 250);
   }
   #endif // if FEATURE_EEPROM_EXTERNAL
 

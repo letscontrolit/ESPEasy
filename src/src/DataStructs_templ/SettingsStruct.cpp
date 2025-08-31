@@ -1166,6 +1166,14 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType(uint8_t type) {
   set4BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, type);
 }
+template<unsigned int N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMSaveDelaySeconds() const {
+  return get8BitFromUL(EEPROMSaveOptions, EEPROM_SAVEOPTIONS_DELAY);
+}
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMSaveDelaySeconds(uint8_t seconds) {
+  set8BitToUL(EEPROMSaveOptions, EEPROM_SAVEOPTIONS_DELAY, seconds);
+}
 #endif // if FEATURE_EEPROM_EXTERNAL
 
 #if FEATURE_I2CMULTIPLEXER

@@ -441,6 +441,162 @@ float readEEPROMSlot(uint32_t slot) {
   }
   return 0.0f;
 }
+
+# if FEATURE_EEPROM_BACKGROUND
+
+// A map of tasks to be executed
+std::map<EEPROMExternalTaskType_e, EEPROMExternalTaskData> EEPROMTaskMap;
+uint16_t EEPROMSaveDelaySeconds{};
+
+/**
+ * Convert TaskType to text
+ */
+const __FlashStringHelper* TaskDataTypeToString(EEPROMExternalTaskType_e type) {
+  switch (type) {
+    case EEPROMExternalTaskType_e::None: return F("");
+    case EEPROMExternalTaskType_e::UserVars: return F("UserVars");
+    case EEPROMExternalTaskType_e::ValueSlots: return F("ValueSlots");
+    case EEPROMExternalTaskType_e::C016Caches: return F("C016 Cache elements");
+    case EEPROMExternalTaskType_e::PinStates: return F("Pinstates");
+  }
+  return F("");
+}
+
+/**
+ * Perform the actual task, bij calling the provided function
+ */
+void EEPROM_execute_task(void *parameter) {
+  EEPROMExternalTaskData*_task_data = static_cast<EEPROMExternalTaskData *>(parameter);
+
+  if ((_task_data->status == EEPROMExternalTaskState_e::Starting) && (nullptr != _task_data->function)) {
+    _task_data->status = EEPROMExternalTaskState_e::Processing;
+
+    selectEEPROMI2CBusAndMultiplexer();
+
+    _task_data->timer.setNow();
+
+    // Blocking operation
+    _task_data->data = _task_data->function();
+
+    // Results are in
+    _task_data->duration = _task_data->timer.millisPassedSince();
+
+    #  if FEATURE_I2CMULTIPLEXER
+    I2CMultiplexerOff(
+      #   if FEATURE_I2C_MULTIPLE
+      Settings.getI2CInterfaceEEPROM()
+      #   else // if FEATURE_I2C_MULTIPLE
+      0
+      #   endif // if FEATURE_I2C_MULTIPLE
+      ); // Restore the Multiplexer channel
+    #  endif // if FEATURE_I2CMULTIPLEXER
+
+    _task_data->status = EEPROMExternalTaskState_e::Ready;
+  }
+
+  _task_data->function = nullptr; // Don't run again accidently
+  #  if FEATURE_EEPROM_RTOS_TASK
+  _task_data->taskHandle = NULL;
+  vTaskDelete(_task_data->taskHandle);
+  #  endif // if FEATURE_EEPROM_RTOS_TASK
+}
+
+/**
+ * Insert a task into the taskmap, 1 per task type, ignore new task when same type is already scheduled to run, or currently running
+ */
+bool EEPROMAddTask(EEPROMExternalTaskType_e type,
+                   EEPROMExternalTaskData   taskData) {
+  auto task = EEPROMTaskMap.find(type);
+
+  // Is a task is already in progress, skip until the next AddTask
+  if ((task == EEPROMTaskMap.end()) || (EEPROMExternalTaskState_e::Available == task->second.status)) {
+    EEPROMTaskMap[type] = taskData;    // Insert task
+    task                = EEPROMTaskMap.find(type);
+
+    if (task != EEPROMTaskMap.end()) { // Upserted successfully
+      task->second.status = EEPROMExternalTaskState_e::Starting;
+
+      #  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG,
+               strformat(F("EEPROM: AddTask upserted for %s, status %u (tasks: %u)"
+                           #   if FEATURE_EEPROM_RTOS_TASK
+                           " (RTOS)"
+                           #   endif // if FEATURE_EEPROM_RTOS_TASK
+                           ),
+                         FsP(TaskDataTypeToString(task->second.type)), static_cast<uint8_t>(task->second.status), EEPROMTaskMap.size()));
+      }
+      #  endif // ifndef BUILD_NO_DEBUG
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("EEPROM: Task not inserted"));
+    }
+
+    #  if FEATURE_EEPROM_RTOS_TASK
+    EEPROMExternalLoop(); // Kick off if it's a RTOS task
+    #  endif // if FEATURE_EEPROM_RTOS_TASK
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Check the task map for tasks to run and start that, also report about finished tasks, and clean those for re-use
+ */
+bool EEPROMExternalLoop() {
+  if (0 != EEPROMSaveDelaySeconds) {
+    EEPROMSaveDelaySeconds--;
+    return false;
+  }
+  EEPROMSaveDelaySeconds = Settings.EEPROMSaveDelaySeconds();
+
+  for (auto task = EEPROMTaskMap.begin(); task != EEPROMTaskMap.end(); ++task) {
+    if ((EEPROMExternalTaskState_e::Ready == task->second.status) ||
+        (EEPROMExternalTaskState_e::Error == task->second.status)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: Write %s %s %d in %u msec."
+                                           #  if FEATURE_EEPROM_RTOS_TASK
+                                           " (RTOS)"
+                                           #  endif // if FEATURE_EEPROM_RTOS_TASK
+                                           ),
+                                         FsP(TaskDataTypeToString(task->second.type)),
+                                         FsP(EEPROMExternalTaskState_e::Ready == task->second.status ? F("success") : F("failed")),
+                                         task->second.data,
+                                         task->second.duration));
+      }
+      task->second.status = EEPROMExternalTaskState_e::Available;
+    }
+
+    if (EEPROMExternalTaskState_e::Starting == task->second.status) {
+      if (nullptr != task->second.function) {
+        #  ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, strformat(F("EEPROM: Loop starting task: %s"), FsP(TaskDataTypeToString(task->second.type))));
+        }
+        #  endif // ifndef BUILD_NO_DEBUG
+        #  if FEATURE_EEPROM_RTOS_TASK
+        xTaskCreatePinnedToCore(
+          EEPROM_execute_task,      // Function that should be called
+          "EEPROM.write()",         // Name of the task (for debugging)
+          4000,                     // Stack size (bytes)
+          &task->second,            // Parameter to pass
+          1,                        // Task priority
+          &task->second.taskHandle, // Task handle
+          xPortGetCoreID()          // Core you want to run the task on (0 or 1)
+          );
+        #  else // if FEATURE_EEPROM_RTOS_TASK
+        EEPROM_execute_task(&task->second);
+        #  endif // if FEATURE_EEPROM_RTOS_TASK
+      } else {
+        task->second.status = EEPROMExternalTaskState_e::Available; // Recycle
+      }
+    }
+  }
+  return false;
+}
+
+# endif // if FEATURE_EEPROM_BACKGROUND
 } // namespace eeprom
 } // namespace ESPEasy
 #endif // if FEATURE_EEPROM_EXTERNAL

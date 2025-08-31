@@ -362,6 +362,8 @@ public:
   void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
   uint8_t  EEPROMExternalType() const;
   void     EEPROMExternalType(uint8_t type);
+  uint8_t  EEPROMSaveDelaySeconds() const;
+  void     EEPROMSaveDelaySeconds(uint8_t seconds);
   #endif
 
   #if FEATURE_I2CMULTIPLEXER
@@ -468,7 +470,8 @@ public:
   int8_t        I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t        I2C3_Multiplexer_Addr = -1;
   int8_t        I2C3_Multiplexer_ResetPin = -1;
-  unsigned int  OLD_TaskDeviceID[N_TASKS - 7] = {0};  //UNUSED: this can be reused
+  uint32_t      EEPROMSaveOptions = 0;
+  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  //UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

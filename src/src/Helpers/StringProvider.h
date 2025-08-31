@@ -97,6 +97,7 @@ struct LabelType {
     #if FEATURE_EEPROM_EXTERNAL
     EEPROM_RESTORE_ON_COLDBOOT,
     EEPROM_RESTORE_ON_WARMBOOT,
+    EEPROM_SAVE_DELAY,
     #endif // if FEATURE_EEPROM_EXTERNAL
 
     BOOT_TYPE,               // Cold boot

@@ -149,6 +149,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     #if FEATURE_EEPROM_EXTERNAL
     case LabelType::EEPROM_RESTORE_ON_COLDBOOT: return F("Cold boot: Restore Task Values from EEPROM");
     case LabelType::EEPROM_RESTORE_ON_WARMBOOT: return F("Warm boot: Restore Task Values from EEPROM");
+    case LabelType::EEPROM_SAVE_DELAY:          return F("Save interval (seconds)");
     #endif // if FEATURE_EEPROM_EXTERNAL
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
@@ -450,6 +451,7 @@ String getValue(LabelType::Enum label) {
     #if FEATURE_EEPROM_EXTERNAL
     case LabelType::EEPROM_RESTORE_ON_COLDBOOT: return jsonBool(Settings.RestoreUserVarsFromEEPROMOnColdBoot());
     case LabelType::EEPROM_RESTORE_ON_WARMBOOT: return jsonBool(Settings.RestoreUserVarsFromEEPROMOnWarmBoot());
+    case LabelType::EEPROM_SAVE_DELAY:          return toString(Settings.EEPROMSaveDelaySeconds());
     #endif // if FEATURE_EEPROM_EXTERNAL
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();

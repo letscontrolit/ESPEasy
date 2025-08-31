@@ -171,6 +171,47 @@ bool readFromRTC()
   return RTC.ID1 == 0xAA && RTC.ID2 == 0x55;
 }
 
+#if FEATURE_EEPROM_EXTERNAL
+uint32_t saveUserVarToEEPROM() {
+  uint32_t eepromWritten{};
+  // Update system parameters if not correct
+  const bool paramsOk = ESPEasy::eeprom::validateEEPROMExternalParameters();
+
+  if (!paramsOk) {
+    ESPEasy::eeprom::updateEEPROMExternalParameters();
+  }
+
+  for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
+    if (Settings.TaskDeviceEnabled[task] || !paramsOk) { // Only check enabled tasks or when re-writing the params
+      const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
+      if (taskValues != nullptr) {
+        LoadTaskSettings(task);
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+          const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
+                                    ? taskValues->getUint32(varNr)
+                                    : std::numeric_limits<uint32_t>::max(); // NaN when read as float
+          const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
+          if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
+            ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
+            eepromWritten += sizeof_uint32_t;
+          }
+        }
+      }
+    }
+  }
+
+  if (eepromWritten) { // Did we change anything? Only then do the slow operation of CRC calculation by reading all bytes
+    // Calculate checksum for all stored values, not equal to the UserVar checksum!
+    const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
+    if (calcsum != ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET)) {
+      ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
+      eepromWritten += sizeof_uint32_t;
+    }
+  }
+  return eepromWritten;
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 /********************************************************************************************\
    Save values to RTC memory
  \*********************************************************************************************/
@@ -186,45 +227,17 @@ bool saveUserVarToRTC(bool initial)
   if (!initial && (eepromAddress > 0) && !ESPEasy::eeprom::isEEPROMExternalWriteProtected()) { // EEPROM Configured and writable?
 
     if (0 != ESPEasy::eeprom::selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+      #if FEATURE_EEPROM_BACKGROUND
+      ESPEasy::eeprom::EEPROMExternalTaskData taskdata;
+      taskdata.type = ESPEasy::eeprom::EEPROMExternalTaskType_e::UserVars;
+      taskdata.function = saveUserVarToEEPROM;
+      ESPEasy::eeprom::EEPROMAddTask(ESPEasy::eeprom::EEPROMExternalTaskType_e::UserVars, taskdata);
+      #else // if FEATURE_EEPROM_BACKGROUND
       #ifndef BUILD_NO_DEBUG
-      uint32_t eepromWritten{};
-      uint32_t startmicros{};
-      #endif // ifndef BUILD_NO_DEBUG
-      // Update system parameters if not correct
-      const bool paramsOk = ESPEasy::eeprom::validateEEPROMExternalParameters();
-      ESPEasy::eeprom::updateEEPROMExternalParameters();
-
-      #ifndef BUILD_NO_DEBUG
-      startmicros = micros();
-      #endif // ifndef BUILD_NO_DEBUG
-      for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
-        if (Settings.TaskDeviceEnabled[task] || !paramsOk) { // Only check enabled tasks or when re-writing the params
-          const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
-          if (taskValues != nullptr) {
-            LoadTaskSettings(task);
-            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
-              const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
-                                        ? taskValues->getUint32(varNr)
-                                        : std::numeric_limits<uint32_t>::max(); // NaN when read as float
-              const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
-              if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
-                ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
-                #ifndef BUILD_NO_DEBUG
-                eepromWritten += sizeof_uint32_t;
-                #endif // ifndef BUILD_NO_DEBUG
-              }
-            }
-          }
-        }
-      }
-      // Calculate checksum for all stored values, not equal to the UserVar checksum!
-      const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
-      if (calcsum != ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET)) {
-        ESPEasy::eeprom::EEPROMExternal->writeLong(EEPROM_USERVAR_CHECKSUM_OFFSET, calcsum);
-        #ifndef BUILD_NO_DEBUG
-        eepromWritten += sizeof_uint32_t;
-        #endif // ifndef BUILD_NO_DEBUG
-      }
+      uint32_t startmicros = micros();
+      const uint32_t eepromWritten =
+      #endif
+      saveUserVarToEEPROM();
       #ifndef BUILD_NO_DEBUG
       startmicros = micros() - startmicros;
 
@@ -235,7 +248,7 @@ bool saveUserVarToRTC(bool initial)
                                           eepromWritten, startmicros / 1000.0f, FsP(ESPEasy::eeprom::getEEPROMName(eepromType))));
       }
       #endif // ifndef BUILD_NO_DEBUG
-
+      #endif // if FEATURE_EEPROM_BACKGROUND
     }
     #if FEATURE_I2CMULTIPLEXER
     I2CMultiplexerOff(

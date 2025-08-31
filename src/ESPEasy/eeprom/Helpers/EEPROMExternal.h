@@ -7,6 +7,8 @@
 # include "../../../src/DataStructs/PortStatusStruct.h"
 # include "../../../src/DataStructs/RTCCacheStruct.h"
 # include "../../../src/DataStructs/RTCStruct.h"
+# include "../../../src/Helpers/LongTermTimer.h"
+# include <map>
 
 # include <AT24CX.h>
 
@@ -122,6 +124,48 @@ uint32_t                      getEEPROMMaxSlots();
 bool                          writeEEPROMSlot(uint32_t slot,
                                               float    data);
 float                         readEEPROMSlot(uint32_t slot);
+
+# if FEATURE_EEPROM_BACKGROUND
+enum class EEPROMExternalTaskState_e : uint8_t {
+  Available  = 0,
+  Starting   = 1,
+  Processing = 2,
+  Ready      = 3,
+  Error      = 4,
+};
+
+enum class EEPROMExternalTaskType_e : uint8_t {
+  None       = 0,
+  UserVars   = 1,
+  ValueSlots = 2,
+  C016Caches = 3,
+  PinStates  = 4,
+};
+
+struct EEPROMExternalTaskData {
+  EEPROMExternalTaskState_e status = EEPROMExternalTaskState_e::Available;
+  EEPROMExternalTaskType_e  type   = EEPROMExternalTaskType_e::None;
+  uint32_t                  (*function)() = nullptr;
+  LongTermTimer             timer;
+  uint32_t                  duration{};
+  int32_t                   data{};
+
+  #  if FEATURE_EEPROM_RTOS_TASK
+
+  // This is C-code, so not set to nullptr, but to NULL
+  TaskHandle_t taskHandle = NULL;
+  #  endif // if FEATURE_EEPROM_RTOS_TASK
+};
+
+const __FlashStringHelper* TaskDataTypeToString(EEPROMExternalTaskType_e type);
+bool                       EEPROMAddTask(EEPROMExternalTaskType_e type,
+                                         EEPROMExternalTaskData   taskData);
+bool                       EEPROMExternalLoop();
+
+extern std::map<EEPROMExternalTaskType_e, EEPROMExternalTaskData> EEPROMTaskMap;
+extern uint16_t EEPROMSaveDelaySeconds;
+
+# endif // if FEATURE_EEPROM_BACKGROUND
 } // namespace eeprom
 } // namespace ESPEasy
 #endif // if FEATURE_EEPROM_EXTERNAL
