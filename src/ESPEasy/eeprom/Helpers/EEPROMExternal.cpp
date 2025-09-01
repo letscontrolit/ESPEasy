@@ -10,6 +10,8 @@ namespace ESPEasy {
 namespace eeprom {
 AT24CX *EEPROMExternal                                   = nullptr;
 EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::Undefined;
+bool EEPROMParamsOkState{};
+LongTermTimer EEPROMParamsOkTimer;
 
 constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
 
@@ -82,11 +84,18 @@ void initializeEEPROMExternal() {
  * - RTC Cache address
  * - Pinstate address
  */
-bool validateEEPROMExternalParameters() {
+bool validateEEPROMExternalParameters(bool force) {
+  if (!force && (EEPROMParamsOkTimer.millisPassedSince() < EEPROM_PARAMSOK_STATE_TIMEOUT)) { // When called within timeout return cached
+                                                                                             // result
+    return EEPROMParamsOkState;
+  }
   const uint16_t eepromVersionParam     = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
   const uint16_t eepromTasksMaxParam    = EEPROMExternal->readInt(EEPROM_PARAMS_TASKS_MAX);
   const uint16_t eepromVarsPerTaskParam = EEPROMExternal->readInt(EEPROM_PARAMS_VARS_PER_TASK);
   const uint32_t eepromPinstateParam    = EEPROMExternal->readLong(EEPROM_PARAMS_PINSTATE_ADDRESS);
+
+  EEPROMParamsOkTimer.setNow();
+  EEPROMParamsOkState = false;
 
   # if FEATURE_RTC_CACHE_STORAGE
   const uint32_t eepromRtcCacheParam = EEPROMExternal->readLong(EEPROM_PARAMS_RTC_CACHE_ADDRESS);
@@ -100,10 +109,10 @@ bool validateEEPROMExternalParameters() {
       # endif // if FEATURE_RTC_CACHE_STORAGE
       (EEPROM_GPIO_PINSTATE_START_OFFSET == eepromPinstateParam) &&
       (EEPROM_GPIO_PINSTATE_END_OFFSET <= EEPROM_CUSTOM_START_OFFSET)) {
-    return true;
+    EEPROMParamsOkState = true;
   }
 
-  return false;
+  return EEPROMParamsOkState;
 }
 
 /**
@@ -118,10 +127,10 @@ void updateEEPROMExternalParameters() {
   const uint16_t eepromVersionParam     = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
   const uint16_t eepromTasksMaxParam    = EEPROMExternal->readInt(EEPROM_PARAMS_TASKS_MAX);
   const uint16_t eepromVarsPerTaskParam = EEPROMExternal->readInt(EEPROM_PARAMS_VARS_PER_TASK);
-  const uint32_t eepromPinstateParam    = EEPROMExternal->readInt(EEPROM_PARAMS_PINSTATE_ADDRESS);
+  const uint32_t eepromPinstateParam    = EEPROMExternal->readLong(EEPROM_PARAMS_PINSTATE_ADDRESS);
 
   # if FEATURE_RTC_CACHE_STORAGE
-  const uint32_t eepromRtcCacheParam = EEPROMExternal->readInt(EEPROM_PARAMS_RTC_CACHE_ADDRESS);
+  const uint32_t eepromRtcCacheParam = EEPROMExternal->readLong(EEPROM_PARAMS_RTC_CACHE_ADDRESS);
   # endif // if FEATURE_RTC_CACHE_STORAGE
 
   if (EEPROM_PARAMS_CURRENT_VERSION != eepromVersionParam) {

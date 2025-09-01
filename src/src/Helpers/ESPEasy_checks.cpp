@@ -47,6 +47,9 @@
 #include "../DataStructs/NotificationSettingsStruct.h"
 #endif // if FEATURE_NOTIFIER
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 // ********************************************************************************
 // Check struct sizes at compile time
@@ -197,8 +200,12 @@ void run_compiletime_checks() {
   // to determine nr of bits in a struct.
   static_assert(GPIO_DIRECTION_NR_BITS== NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), "Correct GPIO_DIRECTION_NR_BITS");
 
+  #if FEATURE_EEPROM_EXTERNAL
+  static_assert(EEPROM_CUSTOM_START_OFFSET > EEPROM_GPIO_PINSTATE_END_OFFSET, "EEPROM GPIO Pinstates overlap with Slots values!");
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
-  #endif
+
+  #endif // ifndef LIMIT_BUILD_SIZE
 }
 
 #ifndef LIMIT_BUILD_SIZE

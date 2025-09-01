@@ -22,9 +22,11 @@ enum class EEPROMExternal_WriteProtect_e : uint8_t {
 
 extern AT24CX *EEPROMExternal;
 extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
+extern bool EEPROMParamsOkState;
+extern LongTermTimer EEPROMParamsOkTimer;
 
 # define EEPROM_PARAMS_CURRENT_VERSION    (1)  // Let's start with version 1
-# define EEPROM_PINSTATE_ELEMENT_COUNT    (64) // Number of PinState elements (16 bytes each) to store in EEPROM
+# define EEPROM_PINSTATE_ELEMENT_COUNT    (48) // Number of PinState elements (16 bytes each) to store in EEPROM
 
 // Start writing the base RTC struct from this offset (not currently saving this to EEPROM) // TODO
 # define EEPROM_BASERTC_START_OFFSET      (0)
@@ -75,6 +77,8 @@ extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 # define EEPROM_SUPPORT_AT24C1024 1
 # define EEPROM_SUPPORT_AT24C2048 0
 
+# define EEPROM_PARAMSOK_STATE_TIMEOUT    (180000) // 3 minutes
+
 // Supported AT24Cxxx and MB85RCxxx devices
 enum class EEPROMExternal_Type_e : uint8_t {
   AT24C256 = 0,   // Default, 32 kB
@@ -103,7 +107,7 @@ enum class EEPROMExternal_Type_e : uint8_t {
 
 void                          initializeEEPROMExternal();
 
-bool                          validateEEPROMExternalParameters();
+bool                          validateEEPROMExternalParameters(bool force = false);
 void                          updateEEPROMExternalParameters();
 
 uint8_t                       checkEEPROMEnabled();

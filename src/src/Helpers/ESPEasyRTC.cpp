@@ -185,15 +185,17 @@ uint32_t saveUserVarToEEPROM() {
     if (Settings.TaskDeviceEnabled[task] || !paramsOk) { // Only check enabled tasks or when re-writing the params
       const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
       if (taskValues != nullptr) {
-        LoadTaskSettings(task);
         for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
-          const uint32_t newData = Cache.getTaskVarStoreInEEPROM(task, varNr)
-                                    ? taskValues->getUint32(varNr)
-                                    : std::numeric_limits<uint32_t>::max(); // NaN when read as float
-          const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
-          if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
-            ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
-            eepromWritten += sizeof_uint32_t;
+          const bool storeValue = Cache.getTaskVarStoreInEEPROM(task, varNr);
+          if (!paramsOk || storeValue) {
+            const uint32_t newData = storeValue
+                                      ? taskValues->getUint32(varNr)
+                                      : std::numeric_limits<uint32_t>::max(); // NaN when read as float
+            const uint32_t addr = ESPEasy::eeprom::getEEPROMAddressForTaskValue(task, varNr);
+            if (newData != ESPEasy::eeprom::EEPROMExternal->readLong(addr)) { // Only update EEPROM if data differs
+              ESPEasy::eeprom::EEPROMExternal->writeLong(addr, newData);
+              eepromWritten += sizeof_uint32_t;
+            }
           }
         }
       }
@@ -310,7 +312,7 @@ bool readUserVarFromRTC()
 
     if (0 != ESPEasy::eeprom::selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
       // Check system parameters with last stored values
-      bool eepromParamsOK = ESPEasy::eeprom::validateEEPROMExternalParameters();
+      const bool eepromParamsOK = ESPEasy::eeprom::validateEEPROMExternalParameters(true);
       // Check checksum and if correct, restore UserVar values
       const uint32_t checksum = ESPEasy::eeprom::EEPROMExternal->readLong(EEPROM_USERVAR_CHECKSUM_OFFSET);
       const uint32_t calcsum = calc_CRC32(readDataForUserVars, TASKS_MAX * VARS_PER_TASK * sizeof_uint32_t);
