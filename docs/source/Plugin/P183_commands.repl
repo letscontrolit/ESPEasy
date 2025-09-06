@@ -6,13 +6,13 @@
         ``modbus,write,<address>,<value>``
 
         ","
-        Write a value into the specified holding register.
+        Write value ``<value>`` into the holding register ``<address>``.
         "
         "
-        ``modbus,read,<value>``
+        ``modbus,read,<address>``
 
         ","
-        Read the value from the specified holding register.
+        Read the value from the holding register ``<address>``. Note that the value is read from the Modbus device but it will not be returned as part of the command. The value is printed in the logging.
         "
         "
         ``modbus,scan``
@@ -24,5 +24,5 @@
         ``modbus,dump,<start>,<end>``
 
         ","
-        Dumps the holding registers in the given address range.
+        Dumps the holding registers in the  address range ``<start>`` until ``<end>``.
         "

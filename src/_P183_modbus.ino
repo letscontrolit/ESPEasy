@@ -108,6 +108,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_183));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_183));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_183));
+      break;
     }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
@@ -225,7 +226,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_ESPEasySerial->begin(baudrate);
 
       #ifdef P183_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("P183: Init serial: RX pin ");
         log += CONFIG_PIN1;
         log += F(", TX pin ");
@@ -238,7 +239,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         log += P183_GET_FLAG_COLL_DETECT ? F("enabled") : F("disabled");
         log += F(", RS485mode enabled: ");
         log += rs485Mode ? F("yes") : F("no");
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       #endif // ifdef P183_DEBUG
 
@@ -279,11 +280,13 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             int address = parseString(string, 3).toInt();
             uint16_t value = parseString(string, 4).toInt();
             P183_modbus_writeRegister(P183_DEV_ID, address, value);
-            String log = F("Modbus: write value ");
-            log += value;
-            log += F(" to address ");
-            log += address;
-            addLogMove(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("Modbus: write value ");
+              log += value;
+              log += F(" to address ");
+              log += address;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
             success = true;
           } 
           else if (equals(subcmd, F("read"))) {
@@ -291,11 +294,13 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             int address = parseString(string, 3).toInt();
             uint16_t value = 0;
             P183_modbus_readRegister(P183_DEV_ID, address, &value);
-            String log = F("Modbus: read value ");
-            log += value;
-            log += F(" from address ");
-            log += address;
-            addLogMove(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("Modbus: read value ");
+              log += value;
+              log += F(" from address ");
+              log += address;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
             success = true;
           }
           else if (equals(subcmd, F("dump"))) {
@@ -324,7 +329,17 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-
+    case PLUGIN_GET_CONFIG_VALUE: {
+      const String cmd = parseString(string, 1);
+      if (equals(cmd, F("register"))) {
+        int address = parseString(string, 2).toInt();
+        uint16_t value = 0; 
+        P183_modbus_readRegister(P183_DEV_ID, address, &value);
+        string = String(value);
+        success = true;
+      }
+      break;
+    }
   }
   return success;
 }
@@ -474,7 +489,7 @@ uint16_t P183_calculateCRC(const uint8_t *array, uint8_t len)  {
 // This function takes a pointer to a buffer and its length, and logs the content in hexadecimal format.
 void P183_dump_buffer(const uint8_t *buffer, size_t length) {
 #ifdef P183_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Modbus: Dumping buffer: ");
     for (size_t i = 0; i < length; ++i) {
       log += String(buffer[i], HEX);

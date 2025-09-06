@@ -1,0 +1,10 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#register,<reg>]``
+    ","
+    | Returns the value of holding register ``<reg>`` of the device. The value is directly read from the Modbus device. The holding register number ``<reg>`` can be any valid register in the device.
+    "
+
