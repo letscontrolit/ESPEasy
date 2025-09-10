@@ -390,10 +390,7 @@ void PluginInit(bool priorityOnly = false);
 #endif
 
 #ifdef USES_P089
-  #ifdef ESP8266
-  // FIXME TD-er: Support Ping plugin for ESP32
   ADDPLUGIN_H(089)
-  #endif
 #endif
 
 #ifdef USES_P090

@@ -247,13 +247,13 @@ On selected builds (ESP32 only, can be enabled in ESP8266 Custom builds) per val
 
 If set the UoM will be space-appended to the value when displayed on the Devices page, used in the labels for the Stats display, and later used in the MQTT AutoDiscovery messages so the receiving server can use that for presentation. When set it is also included in the JSON output as ``UoM`` per taskvalue, available at the ``/json`` endpoint of the ESP, to be used by external systems like EasyFetch.
 
-A list of 150+ Unit of Measure values is available (derived of what's supported by Home Assistant):
+A list of 165+ Unit of Measure values is available (derived of what's supported/expected by Home Assistant):
 
 ``°C, °F, K, %, Pa, hPa, bar, mbar, inHg, psi, W, kW, V, Wh, kWh, A, VA, mm, cm, m, km,`` ``L, mL, m³, ft³, m³/h, ft³/h, lx, UV index, µg/m³, mg/m³, p/m³, ppm, ppb,``
 ``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, db, dBm,``
 ``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s,``
 ``ft/s, kn, mW, MW, GW, TW, BTU/(h·ft²), pH, cbar, mmHg, kPa, mA, µA, mV, µV, kV, cm², km², mm²,`` ``in², ft², yd², mi², ac, ha, kHz, MHz, mWh, MWh, GWh, TWh, cal, kcal, Mcal,``
-``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s``
+``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s, g/m³, kWh/100km, Wh/km, mi/kWh, km/kWh, in/d, mm/d``
 
 Displaying the Unit of Measure in the Devices overview page can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
 
@@ -275,19 +275,19 @@ Available options, grouped per category:
 
 **Basic**: ``Single``
 
-**Environment**: ``Temp¹, Hum¹, Baro¹, Wind speed¹``
+**Environment**: ``Temp¹, Hum¹, Baro¹, Wind speed¹, Absolute humidity¹, Atmospheric pressure¹, Precipitation¹,`` ``Precipitation intensity¹``
 
-**Dust/Gases**: ``Dust PM2.5¹, Dust PM1.0¹, Dust PM10¹, (e)CO2¹, TVOC¹, AQI¹, NOx¹``
+**Dust/Gases**: ``Dust PM2.5¹, Dust PM1.0¹, Dust PM10¹, (e)CO2¹, CO¹, TVOC¹, VOC parts¹, AQI¹, NOx¹,`` ``Gas¹, N2O¹, Ozone¹, SO2¹``
 
-**Energy**: ``Voltage¹, Current¹, Power Usage¹, Power Factor¹, Apparent Power Usage¹, Reactive Power¹``
+**Energy**: ``Voltage¹, Current¹, Power Usage¹, Power Factor¹, Apparent Power Usage¹,`` ``Reactive Power¹, Reactive Energy¹, Energy¹, Energy storage¹, Energy distance¹``
 
 **Time**: ``Duration¹, Date¹, Timestamp¹``
 
-**Size**: ``Analog, Distance¹, Direction¹, Moisture¹, GPS, Weight¹, Data rate¹, Data size¹, Sound pressure¹, Signal strength¹``
+**Size**: ``Analog, Distance¹, Direction¹, Moisture¹, GPS, Weight¹, Data rate¹, Data size¹, Sound pressure¹, Signal strength¹,`` ``Volume¹, Volume flow rate¹, Volume storage¹, Water¹``
 
 **Light**: ``Lux¹, UV¹, UV Index¹, IR¹, Red¹, Green¹, Blue¹, Color temperature¹``
 
-**Other**: ``Switch¹, Switch (inv.)¹, Dimmer, String, UInt32 (1x), Int32 (1x), UInt64 (1x), Int64 (1x), Double (1x)``
+**Other**: ``Switch¹, Switch (inv.)¹, Dimmer, String, UInt32 (1x), Int32 (1x), UInt64 (1x), Int64 (1x), Double (1x), Frequency¹``
 
 Value Types marked with ``¹`` are supported for use in MQTT AutoDiscovery.
 
@@ -298,6 +298,16 @@ NB: ``Date`` and ``Timestamp`` Value Types can only be sent using Derived Values
 Here's a partial preview (the 'None' value is selected):
 
 .. image:: Task_config_page_ValueType_selector_part.png
+
+MQTT State Class
+^^^^^^^^^^^^^^^^
+
+For some Value Types a State Class can be provided in the MQTT Discovery configuration. By default this setting is empty, but for (mostly Energy related) this can be configured for:
+
+* *Measurement*
+* *Measurement-angle*
+* *Total*
+* *Total-increasing*
 
 |
 

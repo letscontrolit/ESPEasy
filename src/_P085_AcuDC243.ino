@@ -43,6 +43,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       dev.TimerOption        = true;
       dev.ExitTaskBeforeSave = false;
       dev.PluginStats        = true;
+      dev.MqttStateClass     = true;
       dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }
@@ -74,7 +75,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
-      success = getDiscoveryVType(event, Plugin_085_QueryVType, P085_QUERY1_CONFIG_POS, event->Par5);;
+      success = getDiscoveryVType(event, Plugin_085_QueryVType, P085_QUERY1_CONFIG_POS, event->Par5);
       break;
     }
     # endif // if FEATURE_MQTT_DISCOVER

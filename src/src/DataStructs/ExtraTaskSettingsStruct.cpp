@@ -290,19 +290,33 @@ void ExtraTaskSettingsStruct::setTaskVarCustomVType(taskVarIndex_t taskVarIndex,
 }
 #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+#if FEATURE_MQTT_STATE_CLASS
+uint8_t ExtraTaskSettingsStruct::getTaskVarStateClass(taskVarIndex_t taskVarIndex) const {
+  if (!validTaskVarIndex(taskVarIndex)) { return 0u; }
+  return get3BitFromUL(VariousBits[taskVarIndex], 24); // 3 Bits 24, 25, 26
+}
+
+void ExtraTaskSettingsStruct::setTaskVarStateClass(taskVarIndex_t taskVarIndex,
+                                                   uint8_t        stateClass) {
+  if (validTaskVarIndex(taskVarIndex)) {
+    set3BitToUL(VariousBits[taskVarIndex], 24, stateClass); // 3 Bits 24, 25, 26
+  }
+}
+#endif // if FEATURE_MQTT_STATE_CLASS
 #if FEATURE_EEPROM_EXTERNAL
 bool ExtraTaskSettingsStruct::getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const {
   if (!validTaskVarIndex(taskVarIndex)) { return false; }
-  return bitRead(VariousBits[taskVarIndex], 24);
+  return bitRead(VariousBits[taskVarIndex], 27);
 }
 
 void ExtraTaskSettingsStruct::setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
                                                       bool           store) {
   if (validTaskVarIndex(taskVarIndex)) {
-    bitWrite(VariousBits[taskVarIndex], 24, store);
+    bitWrite(VariousBits[taskVarIndex], 27, store);
   }
 }
 #endif // if FEATURE_EEPROM_EXTERNAL
+
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,

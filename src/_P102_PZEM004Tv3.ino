@@ -71,6 +71,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
       dev.OutputDataType = Output_Data_type_t::Simple;
       dev.SendDataOption = true;
       dev.TimerOption    = true;
+      dev.MqttStateClass = true;
       break;
     }
 
@@ -405,9 +406,9 @@ int Plugin_102_QueryVType(uint8_t query) {
     case 0: result = Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY; break;
     case 1: result = Sensor_VType::SENSOR_TYPE_CURRENT_ONLY; break;
     case 2: result = Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY; break;
-    case 3: result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME
+    case 3: result = Sensor_VType::SENSOR_TYPE_ENERGY; break;
     case 4: result = Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY; break;
-    case 5: result = Sensor_VType::SENSOR_TYPE_NONE; break;
+    case 5: result = Sensor_VType::SENSOR_TYPE_FREQUENCY; break;
   }
   return static_cast<int>(result);
 }

@@ -191,9 +191,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      // String pubname = CPlugin_005_pubname;
+      const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
 
-      success = MQTT_protocol_send(event, CPlugin_005_pubname, CPlugin_005_mqtt_retainFlag);
+      success = MQTT_protocol_send(event, CPlugin_005_pubname, CPlugin_005_mqtt_retainFlag || taskRetained);
 
       break;
     }

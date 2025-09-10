@@ -400,6 +400,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     #if FEATURE_STRING_VARIABLES
     Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
     #endif // if FEATURE_STRING_VARIABLES
+    #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+    Settings.SendRetainedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSRT"), controllerNr)));
+    #endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
   }
 
   if (device.PullUpOption) {
@@ -455,6 +458,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     #if FEATURE_CUSTOM_TASKVAR_VTYPE
     ExtraTaskSettings.setTaskVarCustomVType(varNr, getFormItemInt(getPluginCustomArgName(F("TDTV"), varNr)));
     #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+    #if FEATURE_MQTT_STATE_CLASS
+    ExtraTaskSettings.setTaskVarStateClass(varNr, getFormItemInt(getPluginCustomArgName(F("TDSC"), varNr)));
+    #endif // if FEATURE_MQTT_STATE_CLASS
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
@@ -1632,6 +1639,18 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
             getPluginCustomArgName(F("TDID"), controllerNr), // ="taskdeviceid"
             Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
         }
+        #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+        if (showMqttGroup) {
+          html_TD();
+          addHtml(F("Retained:"));
+          html_TD();
+          addCheckBox(getPluginCustomArgName(F("TSRT"), controllerNr), Settings.SendRetainedTaskValues(taskIndex, controllerNr), false
+                      #  if FEATURE_TOOLTIPS
+                      , F("Send values with Retain flag")
+                      #  endif // if FEATURE_TOOLTIPS
+                      );
+        }
+        #endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
         # if FEATURE_STRING_VARIABLES
         if (allowSendDerived) {
           html_TD();
@@ -1745,6 +1764,13 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
     #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+    #if FEATURE_MQTT_STATE_CLASS
+    if (device.MqttStateClass) {
+      html_table_header(F("MQTT State Class"), 350);
+      ++colCount;
+    }
+    #endif // if FEATURE_MQTT_STATE_CLASS
 
 
     // placeholder header
@@ -1861,6 +1887,25 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
           static_cast<Sensor_VType>(Cache.getTaskVarCustomVType(taskIndex, varNr)));
       }
       #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      #if FEATURE_MQTT_STATE_CLASS
+      if (device.MqttStateClass) {
+        html_TD();
+        const __FlashStringHelper *stateClasses[] = {
+          MQTT_sensor_StateClass(0),
+          MQTT_sensor_StateClass(1),
+          MQTT_sensor_StateClass(4),
+          MQTT_sensor_StateClass(2),
+          MQTT_sensor_StateClass(3),
+        };
+
+        constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
+        const FormSelectorOptions selectorSC(stateCount, stateClasses);
+        selectorSC.addSelector(
+          getPluginCustomArgName(F("TDSC"), varNr),
+          Cache.getTaskVarStateClass(taskIndex, varNr));
+      }
+      #endif // if FEATURE_MQTT_STATE_CLASS
     }
     addFormSeparator(colCount);
   }

@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2025-08-20 tonhuisman: Generate events with numeric values using the configured decimals setting.
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for MQTT Import)
  *                        Update changelog
@@ -643,10 +644,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %.3f"),
+                  addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %s"),
                                                    getTaskDeviceName(event->TaskIndex).c_str(),
                                                    checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
-                                                   doublePayload));
+                                                   toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
                 }
                 # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
@@ -687,7 +688,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent += '=';
 
                   if (numericPayload) {
-                    RuleEvent += doublePayload;
+                    RuleEvent += toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]);
                   } else {
                     RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
                   }

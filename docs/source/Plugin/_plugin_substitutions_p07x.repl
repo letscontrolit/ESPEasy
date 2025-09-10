@@ -110,7 +110,7 @@
 .. |P078_status| replace:: :yellow:`ENERGY`
 .. |P078_github| replace:: P078_Eastron.ino
 .. _P078_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P078_Eastron.ino
-.. |P078_usedby| replace:: `Modbus variants of Eastron SDM120M, SDM120CT, SDM220M, SDM230M, SDM72M, SDM72CTM, SDM630, SDM630MCT, SDM630-EV, SDM54-M, SDM320Y, DDM18SD, SMART X-96, MCS-U22, TAiYEDQ TAC2100 `
+.. |P078_usedby| replace:: `Modbus variants of Eastron SDM120M, SDM120CT, SDM220M, SDM230M, SDM72M, SDM72CTM, SDM630, SDM630MCT, SDM630-EV, SDM54-M, SDM320Y, DDM18SD, SMART X-96, MCS-U22, TAiYEDQ TAC2100`
 .. |P078_shortinfo| replace:: `.`
 .. |P078_maintainer| replace:: TD-er
 .. |P078_compileinfo| replace:: `.`

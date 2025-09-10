@@ -119,11 +119,11 @@
 .. |P089_type| replace:: :cyan:`Communication`
 .. |P089_typename| replace:: :cyan:`Communication - Ping`
 .. |P089_porttype| replace:: `.`
-.. |P089_status| replace:: :yellow:`COLLECTION`
+.. |P089_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE` :yellow:`ENERGY` :yellow:`NEOPIXEL`
 .. |P089_github| replace:: P089_Ping.ino
 .. _P089_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P089_Ping.ino
 .. |P089_usedby| replace:: `.`
 .. |P089_shortinfo| replace:: `.`
-.. |P089_maintainer| replace:: `TD-er`
+.. |P089_maintainer| replace:: `TD-er tonhuisman`
 .. |P089_compileinfo| replace:: `.`
-.. |P089_usedlibraries| replace:: `.`
+.. |P089_usedlibraries| replace:: `ESPping (ESP32)`

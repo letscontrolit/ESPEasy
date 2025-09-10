@@ -58,6 +58,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption      = true;
       dev.PluginStats      = true;
       dev.TaskLogsOwnPeaks = true;
+      dev.MqttStateClass   = true;
       break;
     }
 
@@ -194,12 +195,12 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("SDM630"),
           F("SDM72_V2"),
           F("SDM320C"),
-          F("TAC2100")
+          F("TAC2100"),
         };
         constexpr size_t nrOptions = NR_ELEMENTS(options_model);
-        const FormSelectorOptions selector(nrOptions, options_model);
+        FormSelectorOptions selector(nrOptions, options_model);
+        selector.reloadonchange = true;
         selector.addFormSelector(F("Model Type"), P078_MODEL_LABEL, P078_MODEL);
-        addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
       success = true;
       break;

@@ -33,7 +33,7 @@ int Plugin_077_QueryVType(uint8_t value_nr) {
     Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
     Sensor_VType::SENSOR_TYPE_CURRENT_ONLY,
     Sensor_VType::SENSOR_TYPE_NONE,
-    Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
+    Sensor_VType::SENSOR_TYPE_ENERGY,
     Sensor_VType::SENSOR_TYPE_APPRNT_POWER_USG_ONLY,
     Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY,
     Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY,

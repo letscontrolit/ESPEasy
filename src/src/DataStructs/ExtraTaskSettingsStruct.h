@@ -84,6 +84,11 @@ struct ExtraTaskSettingsStruct
                                       uint8_t        customVType);
   #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+  #if FEATURE_MQTT_STATE_CLASS
+  uint8_t       getTaskVarStateClass(taskVarIndex_t taskVarIndex) const;
+  void          setTaskVarStateClass(taskVarIndex_t taskVarIndex,
+                                     uint8_t        stateClass);
+  #endif // if FEATURE_MQTT_STATE_CLASS
   #if FEATURE_EEPROM_EXTERNAL
   bool          getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const;
   void          setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
