@@ -11,13 +11,13 @@
 
    This plugin reads the particle concentration from SDS011 Sensor
    DevicePin1 - RX on ESP, TX on SDS
+   DevicePin2 - TX on ESP, RX on SDS, optional, for setting the sleep time
  */
 
 /** Changelog:
+ * 2025-08-05 tonhuisman: Introduce multi-instance use
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  */
-
-// #ifdef ESP8266  // Needed for precompile issues.
 
 # define PLUGIN_056
 # define PLUGIN_ID_056         56
@@ -25,12 +25,7 @@
 # define PLUGIN_VALUENAME1_056 "PM2.5" // Dust <2.5µm in µg/m³   SDS198:<100µm in µg/m³
 # define PLUGIN_VALUENAME2_056 "PM10"  // Dust <10µm in µg/m³
 
-# include <jkSDS011.h>
-
-# include "ESPEasy-Globals.h"
-
-
-CjkSDS011 *Plugin_056_SDS = nullptr;
+# include "src/PluginStructs/P056_data_struct.h"
 
 
 boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
@@ -50,6 +45,9 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+
+      // Keep alive for setting the sleep time on save, only when changed
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 
@@ -109,7 +107,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 
         if (PCONFIG(0) != newsleeptime) {
           PCONFIG(0) = newsleeptime;
-          Plugin_056_setWorkingPeriod(newsleeptime);
+          Plugin_056_setWorkingPeriod(event, newsleeptime);
         }
       }
       success = true;
@@ -118,45 +116,34 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Plugin_056_SDS) {
-        delete Plugin_056_SDS;
-      }
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P056_data_struct(event));
+      P056_data_struct *P056_data =
+        static_cast<P056_data_struct *>(getPluginTaskData(event->TaskIndex));
+      success = (nullptr != P056_data && P056_data->isInitialized());
 
-      const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-      Plugin_056_SDS = new (std::nothrow) CjkSDS011(port, CONFIG_PIN1, CONFIG_PIN2);
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("SDS  : Init OK  ESP GPIO-pin RX:%d TX:%d"), CONFIG_PIN1, CONFIG_PIN2));
-      }
-
-      success = true;
       break;
     }
 
     case PLUGIN_EXIT:
     {
-      // //FIXME: if this plugin is used more than once at the same time, things go horribly wrong :)
-      // FIXME TD-er: Must implement plugin_data_struct for this
-      //
-      // if (Plugin_056_SDS)
-      //   delete Plugin_056_SDS;
-      // addLog(LOG_LEVEL_INFO, F("SDS  : Exit"));
-      shouldReboot = true;
       break;
     }
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      if (!Plugin_056_SDS) {
+      P056_data_struct *P056_data =
+        static_cast<P056_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr == P056_data) || !P056_data->isInitialized()) {
         break;
       }
 
-      Plugin_056_SDS->Process();
+      P056_data->Process();
 
-      if (Plugin_056_SDS->available())
+      if (P056_data->available())
       {
-        const float pm2_5 = Plugin_056_SDS->GetPM2_5();
-        const float pm10  = Plugin_056_SDS->GetPM10_();
+        const float pm2_5 = P056_data->GetPM2_5();
+        const float pm10  = P056_data->GetPM10_();
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -179,13 +166,17 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      if (!Plugin_056_SDS) {
+      P056_data_struct *P056_data =
+        static_cast<P056_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr == P056_data) || !P056_data->isInitialized()) {
         break;
       }
 
-      float pm25, pm10;
+      float pm25{};
+      float pm10{};
 
-      if (Plugin_056_SDS->ReadAverage(pm25, pm10)) {
+      if (P056_data->ReadAverage(pm25, pm10)) {
         UserVar.setFloat(event->TaskIndex, 0, pm25);
         UserVar.setFloat(event->TaskIndex, 1, pm10);
         success = true;
@@ -220,11 +211,14 @@ String Plugin_056_WorkingPeriodToString(int workingPeriod) {
   return log;
 }
 
-void Plugin_056_setWorkingPeriod(int minutes) {
-  if (!Plugin_056_SDS) {
+void Plugin_056_setWorkingPeriod(EventStruct *event, int minutes) {
+  P056_data_struct *P056_data =
+    static_cast<P056_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if ((nullptr == P056_data) || !P056_data->isInitialized()) {
     return;
   }
-  Plugin_056_SDS->SetWorkingPeriod(minutes);
+  P056_data->SetWorkingPeriod(minutes);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, concat(F("SDS  : Working Period set to: "), Plugin_056_WorkingPeriodToString(minutes)));

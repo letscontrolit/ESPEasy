@@ -324,6 +324,21 @@ uint8_t Caches::getTaskVarCustomVType(taskIndex_t    TaskIndex,
 
 #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+#if FEATURE_MQTT_STATE_CLASS
+uint8_t Caches::getTaskVarStateClass(taskIndex_t    TaskIndex,
+                                     taskVarIndex_t taskVarIndex) {
+  if (validTaskIndex(TaskIndex) && (validTaskVarIndex(taskVarIndex))) {
+    auto it = getExtraTaskSettings(TaskIndex);
+
+    if (it != extraTaskSettings_cache.end()) {
+      return it->second.mqttStateClass[taskVarIndex];
+    }
+  }
+  return 0;
+}
+
+#endif // if FEATURE_MQTT_STATE_CLASS
+
 void Caches::updateExtraTaskSettingsCache()
 {
   const taskIndex_t TaskIndex = ExtraTaskSettings.TaskIndex;
@@ -374,6 +389,9 @@ void Caches::updateExtraTaskSettingsCache()
       #if FEATURE_CUSTOM_TASKVAR_VTYPE
       tmp.customVType[i] = ExtraTaskSettings.getTaskVarCustomVType(i);
       #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      #if FEATURE_MQTT_STATE_CLASS
+      tmp.mqttStateClass[i] = ExtraTaskSettings.getTaskVarStateClass(i);
+      #endif // if FEATURE_MQTT_STATE_CLASS
     }
     #ifdef ESP32
     tmp.TaskDevicePluginConfigLong_index_used = 0;

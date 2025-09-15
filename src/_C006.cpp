@@ -11,6 +11,7 @@
  * 2023-03-15 tonhuisman: Handle setting payload to (Dummy) Devices via topic SysName/TaskName/ValueName/set
  * 2023-03 Changelog started
  */
+
 // # include "src/Commands/InternalCommands.h"
 # include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
@@ -44,9 +45,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = false;
-      #if FEATURE_MQTT_TLS
-      proto.usesTLS      = true;
-      #endif
+      # if FEATURE_MQTT_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_MQTT_TLS
       # if FEATURE_STRING_VARIABLES
       proto.allowSendDerived = true;
       # endif // if FEATURE_STRING_VARIABLES
@@ -130,7 +131,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      success = MQTT_protocol_send(event, CPlugin_006_pubname, CPlugin_006_mqtt_retainFlag);
+      const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
+
+      success = MQTT_protocol_send(event, CPlugin_006_pubname, CPlugin_006_mqtt_retainFlag || taskRetained);
 
       break;
     }

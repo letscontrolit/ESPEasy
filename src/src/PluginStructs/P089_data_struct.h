@@ -2,7 +2,9 @@
 #define PLUGINSTRUCTS_P089_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#if defined(USES_P089) && defined(ESP8266)
+#ifdef USES_P089
+
+# include "src/ESPEasyCore/ESPEasyNetwork.h"
 
 
 # define PLUGIN_ID_089             89
@@ -12,16 +14,45 @@
 
 # define ICMP_PAYLOAD_LEN          32
 
+# ifdef ESP32
+
+#  include "../PluginStructs/P089_ping_service_struct.h"
+
+#  define P089_PING_COUNT          PCONFIG(0)
+#  define P089_VALUE_COUNT         PCONFIG(1)
+
+#  define P089_MAX_PING_COUNT      25
+
+struct P089_data_struct : public PluginTaskData_base {
+public:
+
+  P089_data_struct();
+
+  virtual ~P089_data_struct();
+
+  bool isInitialized() const {
+    return true;
+  }
+
+  bool send_ping(struct EventStruct *event);
+  bool loop();
+
+private:
+
+  P089_ping_request _ping_request;
+};
+# endif // ifdef ESP32
+
+# ifdef ESP8266
+
 extern "C"
 {
-# include <lwip/raw.h>
-# include <lwip/icmp.h>        // needed for icmp packet definitions
-# include <lwip/inet_chksum.h> // needed for inet_chksum()
-# include <lwip/sys.h>         // needed for sys_now()
-# include <lwip/netif.h>
+#  include <lwip/raw.h>
+#  include <lwip/icmp.h>        // needed for icmp packet definitions
+#  include <lwip/inet_chksum.h> // needed for inet_chksum()
+#  include <lwip/sys.h>         // needed for sys_now()
+#  include <lwip/netif.h>
 }
-
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
 
 
 struct P089_icmp_pcb {
@@ -39,6 +70,10 @@ public:
 
   bool send_ping(struct EventStruct *event);
 
+  bool isInitialized() const {
+    return nullptr != P089_data;
+  }
+
   struct P089_icmp_pcb *P089_data = nullptr;
   ip_addr_t destIPAddress;
   uint32_t idseq;
@@ -50,6 +85,6 @@ uint8_t PingReceiver(void            *origin,
                      struct pbuf     *packetBuffer,
                      const ip_addr_t *addr);
 
-
-#endif // if defined(USES_P089) && defined(ESP8266)
+# endif // ifdef ESP8266
+#endif // ifdef USES_P089
 #endif // ifndef PLUGINSTRUCTS_P089_DATA_STRUCT_H

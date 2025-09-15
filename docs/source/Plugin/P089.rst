@@ -40,6 +40,16 @@ Device Settings
 
 * **Hostname**: The hostname or IP-address for the device or host to monitor.
 
+**ESP32 only:**
+
+* **Ping count**: The number of pings that should be tried before reporting a failure. (Only available on ESP32 builds)
+
+* **Available Values**: The default is to only have a **Fails** value available, but for ESP32 there is also the Average ping-time in msec. available.
+
+.. image:: P089_AvailableValuesOptions.png
+
+When changing this setting, the page will save and reload to adjust for the change in **Values**, below.
+
 .. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. Every Interval setting, the host will be pinged and the state will be updated in Fails. If the ping responds as intended, then Fails is reset to 0.
@@ -47,7 +57,9 @@ Device Settings
 Values
 ^^^^^^
 
-The failure count value is available in ``Fails``. No other options are available for Values.
+The failure count value is available in ``Fails``. On ESP32 there is an option to also show the average ping-time in msec. via ``Avg_ms``.
+
+On ESP32, per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
 
 
@@ -63,6 +75,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2025-08-26 Enable support for ESP32
 
   |changed| 2023-03-14 Extended command handling to not require the taskname argument.
 

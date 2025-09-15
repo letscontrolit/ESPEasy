@@ -51,6 +51,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+      dev.MqttStateClass = true;
       dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }

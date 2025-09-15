@@ -1,5 +1,5 @@
 #include "_Plugin_Helper.h"
-#if defined(USES_P089) && defined(ESP8266)
+#ifdef USES_P089
 
 # include "src/PluginStructs/P089_data_struct.h"
 
@@ -19,6 +19,12 @@
    Maintainer: Denys Fedoryshchenko, denys AT nuclearcat.com
  */
 /** Changelog:
+ * 2025-08-15 tonhuisman: Move actual ping action to a service, instantiated by the first task instance, and deleted by the last stopped
+ *                        task instance. Service is looped in 10 per second function.
+ *                        Enable PluginStats for ESP32, so the trend of average ping-time can be displayed.
+ * 2025-08-15 tonhuisman: Reduce max. ping count from 100 to 25
+ * 2025-08-14 tonhuisman: Add code to plugin to use dvarrel/ESPping library that works for ESP32.
+ *                        ESP32 handles the ping in an independent RTOS task, to make it non-blocking.
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Ping)
  * 2023-03-19 tonhuisman: Show hostname in GPIO column of Devices page
  * 2023-03-14 tonhuisman: Change command handling to not require the taskname as the second argument if no 3rd argument is given.
@@ -30,6 +36,7 @@
 # define PLUGIN_089
 # define PLUGIN_NAME_089           "Communication - Ping"
 # define PLUGIN_VALUENAME1_089     "Fails"
+# define PLUGIN_VALUENAME2_089     "Avg_ms"
 
 
 boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
@@ -48,6 +55,9 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       dev.DecimalsOnly   = true;
       dev.SendDataOption = true;
       dev.TimerOption    = true;
+      # ifdef ESP32
+      dev.PluginStats = true;
+      # endif // ifdef ESP32
       break;
     }
 
@@ -60,14 +70,34 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_089));
+      # ifdef ESP32
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_089));
+      # endif // ifdef ESP32
       break;
     }
+
+    # ifdef ESP32
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      int vCount = P089_VALUE_COUNT;
+
+      if (0 == vCount) {
+        vCount = 1;
+      }
+      event->Par1 = vCount;
+      success     = true;
+      break;
+    }
+    # endif // ifdef ESP32
 
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
-      success     = true;
+      #  ifdef ESP32
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DURATION);
+      #  endif // ifdef ESP32
+      success = true;
       break;
     }
     # endif // if FEATURE_MQTT_DISCOVER
@@ -92,12 +122,35 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
       char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
       LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&hostname, PLUGIN_089_HOSTNAME_SIZE);
       addFormTextBox(F("Hostname"), F("host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
+
+      # ifdef ESP32
+
+      if (P089_PING_COUNT < 1) {
+        P089_PING_COUNT = 5;
+      }
+      addFormNumericBox(F("Ping count"), F("pcount"), P089_PING_COUNT, 1, P089_MAX_PING_COUNT);
+
+      const __FlashStringHelper*countOptions[] = {
+        F("Fails"),
+        F("Fails, Avg_ms"),
+      };
+      const int countValues[] = { 1, 2 };
+      FormSelectorOptions selector(2, countOptions, countValues);
+      selector.reloadonchange = true;
+      selector.addFormSelector(F("Available Values"), F("pvals"), P089_VALUE_COUNT);
+      # endif // ifdef ESP32
+
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      # ifdef ESP32
+      P089_PING_COUNT  = getFormItemInt(F("pcount"), 5);
+      P089_VALUE_COUNT = getFormItemInt(F("pvals"), 1);
+      # endif // ifdef ESP32
+
       char hostname[PLUGIN_089_HOSTNAME_SIZE]{};
 
       // Reset "Fails" if settings updated
@@ -112,15 +165,30 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
     {
       success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P089_data_struct());
       UserVar.setFloat(event->TaskIndex, 0, 0);
+      # ifdef ESP32
+      UserVar.setFloat(event->TaskIndex, 1, 0);
+      # endif // ifdef ESP32
       break;
     }
 
+    # ifdef ESP32
+    case PLUGIN_TEN_PER_SECOND:
+    {
+      P089_data_struct *P089_taskdata =
+        static_cast<P089_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P089_taskdata) && P089_taskdata->isInitialized()) {
+        success = P089_taskdata->loop();
+      }
+      break;
+    }
+    # endif // ifdef ESP32
     case PLUGIN_READ:
     {
       P089_data_struct *P089_taskdata =
         static_cast<P089_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P089_taskdata) {
+      if ((nullptr == P089_taskdata) || !P089_taskdata->isInitialized()) {
         break;
       }
 
@@ -165,4 +233,4 @@ boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // if defined(USES_P089) && defined(ESP8266)
+#endif // ifdef USES_P089

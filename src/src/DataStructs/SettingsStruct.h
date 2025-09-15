@@ -264,6 +264,11 @@ class SettingsStruct_tmpl
   bool isPriorityTask(taskIndex_t taskIndex) const;
   #endif // if FEATURE_PLUGIN_PRIORITY
 
+  #if FEATURE_MQTT
+  bool SendRetainedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex) const;
+  void SendRetainedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value);
+  #endif // if FEATURE_MQTT
+
   void validate();
 
   bool networkSettingsEmpty() const;

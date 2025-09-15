@@ -396,6 +396,8 @@ const char unit_of_measure_list[] PROGMEM = // *** DO NOT CHANGE ORDER, SAVED IN
  "mg/dL|mmol/L|" // 150..151
  "μSv|μSv/h|" // 152..153
  "m³/s|ft³/min|L/h|L/min|L/s|gal/min|mL/s|" // 154..160
+ "g/m³|kWh/100km|Wh/km|mi/kWh|km/kWh|" // 161..165
+ "in/d|mm/d" // 166 .. 167
  ; // *** DO NOT CHANGE ORDER, SAVED IN TASK SETTINGS! ***
 
 
@@ -435,12 +437,13 @@ const uint16_t unit_of_measure_map[] PROGMEM = {
   1054, 26, 27, 153, 154, 155, 156, 157, 158, 159, 160, // Volume flow rate
   1032, 39, 40, 41, 42, 43, 44, 45, 46, 47, // Duration
   1034, 14, 15, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, // Energy(-storage)
+  1033, 162, 163, 164, 165, // Energy distance
   1050, 66, 67, 68, 69, 70, 71, 65, 106, 107, // Speed
   1056, 35, // (Wind) direction
   1038, 28, // Illuminance
   1039, 64, 112, // Irradiance
   1046, 152, 153, // Radiation
-  1057, 29, 63, // Various units
+  1057, 29, 63, 161, 166, 167, // Various units
   1035, 52, 53, 131, 132, // Frequency
   1043, 113, // Potential hydrogen
   1026, 56, 122, 123, 124, 125, 126, 127, 128, 129, 130, // Area
