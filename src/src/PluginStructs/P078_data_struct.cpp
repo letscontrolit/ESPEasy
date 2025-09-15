@@ -118,7 +118,7 @@ constexpr p078_register_description register_description_list[] = {
 { SDM_NET_KVARH                                 /* 0x018E */              ,  SDM_UOM::kVArh       ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    1     ,    0    ,    0    },
 { SDM_IMPORT_POWER                              /* 0x0500 */              ,  SDM_UOM::W           ,   0   ,  1  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    ,    0    },
 { SDM_EXPORT_POWER                              /* 0x0502 */              ,  SDM_UOM::W           ,   0   ,  2  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    1    ,    1     ,    0    ,    0    },
-    
+
 { DDM_PHASE_1_VOLTAGE                           /* 0x0000 */              ,  SDM_UOM::V           ,   1   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    1    ,    0    },
 { DDM_PHASE_1_CURRENT                           /* 0x0008 */              ,  SDM_UOM::A           ,   1   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    1    ,    0    },
 { DDM_PHASE_1_POWER                             /* 0x0012 */              ,  SDM_UOM::W           ,   1   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    1    ,    0    },
@@ -132,7 +132,7 @@ constexpr p078_register_description register_description_list[] = {
 { TAC2100_APPARENT_POWER_DEMAND                 /* 0x0090 */              ,  SDM_UOM::VA          ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    0    ,    1    },
 { TAC2100_MAX_REACTIVE_POWER_DEMAND             /* 0x00A4 */              ,  SDM_UOM::VAr         ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    0    ,    1    },
 { TAC2100_MAX_APPARENT_POWER_DEMAND             /* 0x00A6 */              ,  SDM_UOM::VA          ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    0    ,    1    },
-{ TAC2100_NATURE_OF_LOAD                        /* 0x004E */              ,  SDM_UOM::nat_load    ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    0    ,    1    }
+{ TAC2100_NATURE_OF_LOAD                        /* 0x004E */              ,  SDM_UOM::nat_load    ,   0   ,  0  ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0    ,    0     ,    0    ,    1    },
 };
 // *INDENT-ON*
 
@@ -152,8 +152,8 @@ const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom, bool display) {
     F("Apparent Power"),  F("VA"),
     F("Reactive Power"),  F("VAr"),
     F("Apparent Energy"), F("kVAh"),
-    F("Reactive Energy"), F("kVArh"),    
-    F("Nature of Load"), F("nat_load"),
+    F("Reactive Energy"), F("kVArh"),
+    F("Nature of Load"),  F("nat_load"),
   };
   constexpr size_t nrStrings = NR_ELEMENTS(strings);
   size_t index               = 2 * static_cast<size_t>(uom);
@@ -225,15 +225,16 @@ Sensor_VType Plugin_078_QueryVType(SDM_MODEL model, int choice) {
       Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY,
       Sensor_VType::SENSOR_TYPE_CURRENT_ONLY,
       Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Active energy
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Ah
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Frequency
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Phase angle
+      Sensor_VType::SENSOR_TYPE_ENERGY,    // Active energy
+      Sensor_VType::SENSOR_TYPE_NONE,      // FIXME Ah
+      Sensor_VType::SENSOR_TYPE_FREQUENCY, // Frequency
+      Sensor_VType::SENSOR_TYPE_NONE,      // FIXME Phase angle
       Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY,
       Sensor_VType::SENSOR_TYPE_APPRNT_POWER_USG_ONLY,
       Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY,
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Apparent energy
-      Sensor_VType::SENSOR_TYPE_NONE, // FIXME Reactive energy
+      Sensor_VType::SENSOR_TYPE_NONE,            // FIXME Apparent energy
+      Sensor_VType::SENSOR_TYPE_REACTIVE_ENERGY, // Reactive energy
+      Sensor_VType::SENSOR_TYPE_NONE,            // FIXME Nature of load
     };
     constexpr uint8_t  valueCount = NR_ELEMENTS(vtypes);
 
@@ -327,6 +328,8 @@ String p078_register_description::getDescription(SDM_MODEL model) const
     case SDM_MAXIMUM_PHASE_2_CURRENT_DEMAND:
     case SDM_MAXIMUM_PHASE_3_CURRENT_DEMAND:
     case SDM_MAXIMUM_REACTIVE_POWER_DEMAND:
+    case TAC2100_MAX_REACTIVE_POWER_DEMAND:
+    case TAC2100_MAX_APPARENT_POWER_DEMAND:
 
       res = F("Maximum ");
       break;
@@ -426,6 +429,10 @@ String p078_register_description::getDescription(SDM_MODEL model) const
     case SDM_MAXIMUM_PHASE_1_CURRENT_DEMAND:
     case SDM_MAXIMUM_PHASE_2_CURRENT_DEMAND:
     case SDM_MAXIMUM_PHASE_3_CURRENT_DEMAND:
+    case TAC2100_REACTIVE_POWER_DEMAND:
+    case TAC2100_APPARENT_POWER_DEMAND:
+    case TAC2100_MAX_REACTIVE_POWER_DEMAND:
+    case TAC2100_MAX_APPARENT_POWER_DEMAND:
 
       res += F(" demand");
       break;
@@ -442,6 +449,9 @@ String p078_register_description::getDescription(SDM_MODEL model) const
 
   res += concat(F(" ("), SDM_UOMtoString(uom, false));
   res += concat(F(")"), getPhaseDescription(model, ' '));
+
+  res += concat(F(" ["), formatToHex(reg, 4)); // Append register for clarity
+  res += ']';
   return res;
 }
 
@@ -551,5 +561,3 @@ void SDM_resume_loopRegisterReadQueue()
 }
 
 #endif // ifdef USES_P078
-
-

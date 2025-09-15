@@ -230,6 +230,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String& string)
       dev.PluginStats    = true;
       dev.setPin1Direction(gpio_direction::gpio_output);
       dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.MqttStateClass = true;
 
       //      dev.TaskLogsOwnPeaks = true;
       break;
@@ -953,7 +954,7 @@ int Plugin_076_QueryVType(uint8_t value_nr) {
     case P076_INDEX_PF:
       result = Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY; break;
     case P076_INDEX_ENER:
-      result = Sensor_VType::SENSOR_TYPE_NONE; break; // FIXME Add support for Energy + Unit of Measure
+      result = Sensor_VType::SENSOR_TYPE_ENERGY; break;
   }
   return static_cast<int>(result);
 }

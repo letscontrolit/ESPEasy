@@ -290,6 +290,20 @@ void ExtraTaskSettingsStruct::setTaskVarCustomVType(taskVarIndex_t taskVarIndex,
 }
 #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+#if FEATURE_MQTT_STATE_CLASS
+uint8_t ExtraTaskSettingsStruct::getTaskVarStateClass(taskVarIndex_t taskVarIndex) const {
+  if (!validTaskVarIndex(taskVarIndex)) { return 0u; }
+  return get3BitFromUL(VariousBits[taskVarIndex], 24); // 3 Bits 24, 25, 26
+}
+
+void ExtraTaskSettingsStruct::setTaskVarStateClass(taskVarIndex_t taskVarIndex,
+                                                   uint8_t        stateClass) {
+  if (validTaskVarIndex(taskVarIndex)) {
+    set3BitToUL(VariousBits[taskVarIndex], 24, stateClass); // 3 Bits 24, 25, 26
+  }
+}
+#endif // if FEATURE_MQTT_STATE_CLASS
+
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,

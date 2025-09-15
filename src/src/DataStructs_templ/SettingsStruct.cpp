@@ -479,6 +479,23 @@ bool SettingsStruct_tmpl<N_TASKS>::isPriorityTask(taskIndex_t taskIndex) const {
 }
 #endif // if FEATURE_PLUGIN_PRIORITY
 
+#if FEATURE_MQTT
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::SendRetainedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex) const {
+  if (validTaskIndex(taskIndex) && validControllerIndex(controllerIndex)) {
+    return bitRead(VariousTaskBits[taskIndex], 2 + controllerIndex); // ATTENTION: uses bits 2..5!!!
+  }
+  return false;
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::SendRetainedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value) {
+  if (validTaskIndex(taskIndex) && validControllerIndex(controllerIndex)) {
+    bitWrite(VariousTaskBits[taskIndex], 2 + controllerIndex, value); // ATTENTION: uses bits 2..5!!!
+  }
+}
+#endif // if FEATURE_MQTT
+
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);

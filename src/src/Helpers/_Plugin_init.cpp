@@ -371,11 +371,7 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P088
 
 #ifdef USES_P089
-  # ifdef ESP8266
-
-  // FIXME TD-er: Support Ping plugin for ESP32
   89,
-  # endif // ifdef ESP8266
 #endif // ifdef USES_P089
 
 #ifdef USES_P090
@@ -1404,11 +1400,7 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P088
 
 #ifdef USES_P089
-  # ifdef ESP8266
-
-  // FIXME TD-er: Support Ping plugin for ESP32
   &Plugin_089,
-  # endif // ifdef ESP8266
 #endif // ifdef USES_P089
 
 #ifdef USES_P090

@@ -85,6 +85,8 @@ A group of MQTT specific settings:
 
 * **Publish Retain Flag**: When publishing data accompanied by the Retain flag, the server will store the last sent data, and publish that when reconnecting.
 
+This will override the **Retained** setting per Task that can be set for a MQTT Controller.
+
 * **Controller Subscribe**: The topic(s) to subscribe to, so the MQTT Server can send data and optionally commands to this client-instance.
 
 * **Controller Publish**: The topic to publish data to. This field supports variables so each value sent to the server can have a separate topic for its data.

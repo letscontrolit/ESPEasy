@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /**
+ * 2025-08-21 tonhuisman: Remove Lux Read-Method options without 'no wait' as that causes massive delays, disturbing other ESPEasy
+ *                        operations
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-06-21 tonhuisman: Fix support for VEML6030, using by default the alternate I2C address, by modifying the VEML7700 library
  * 2024-05-18 tonhuisman: Implement AutoLux feature, and Get Config Value for automatically determined gain and integration
@@ -95,7 +97,7 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P168_READLUX_MODE = VEML_LUX_AUTO;
+      P168_READLUX_MODE = VEML_LUX_CORRECTED_NOWAIT;
       P168_PSM_MODE     = static_cast<int>(P168_power_save_mode_e::Disabled);
 
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0; // White
@@ -108,24 +110,34 @@ boolean Plugin_168(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
+        uint8_t _readMethod = P168_READLUX_MODE;
+
+        if (static_cast<uint8_t>(VEML_LUX_NORMAL) == _readMethod) {
+          _readMethod = static_cast<uint8_t>(VEML_LUX_NORMAL_NOWAIT);
+        } else if ((static_cast<uint8_t>(VEML_LUX_CORRECTED) == _readMethod) || (static_cast<uint8_t>(VEML_LUX_AUTO) == _readMethod)) {
+          _readMethod = static_cast<uint8_t>(VEML_LUX_CORRECTED_NOWAIT);
+        }
+        P168_READLUX_MODE = _readMethod;
+
         const __FlashStringHelper *readMethod[] = {
-          F("Normal"),
-          F("Corrected"),
-          F("Auto"),
+          // F("Normal"),
+          // F("Corrected"),
+          // F("Auto"),
           F("Normal (no wait)"),
           F("Corrected (no wait)"),
         };
         const int readMethodOptions[] = {
-          VEML_LUX_NORMAL,
-          VEML_LUX_CORRECTED,
-          VEML_LUX_AUTO,
+          // VEML_LUX_NORMAL,
+          // VEML_LUX_CORRECTED,
+          // VEML_LUX_AUTO,
           VEML_LUX_NORMAL_NOWAIT,
           VEML_LUX_CORRECTED_NOWAIT,
         };
         constexpr size_t optionCount = NR_ELEMENTS(readMethodOptions);
         const FormSelectorOptions selector(optionCount, readMethod, readMethodOptions);
         selector.addFormSelector(F("Lux Read-method"), F("rmth"), P168_READLUX_MODE);
-        addFormNote(F("For 'Auto' Read-method, the Gain factor and Integration time settings are ignored."));
+
+        // addFormNote(F("For 'Auto' Read-method, the Gain factor and Integration time settings are ignored."));
       }
       {
         const __FlashStringHelper *alsGain[] = {

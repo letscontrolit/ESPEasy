@@ -214,8 +214,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
+        const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
+
         // Publish using move operator, thus pubname and json are empty after this call
-        success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
+        success = MQTTpublish(event->ControllerIndex,
+                              event->TaskIndex,
+                              std::move(pubname),
+                              std::move(json),
+                              CPlugin_002_mqtt_retainFlag || taskRetained);
       } // if idx !=0
       else
       {
