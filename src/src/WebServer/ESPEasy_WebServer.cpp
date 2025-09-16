@@ -378,6 +378,8 @@ void WebServerInit()
   }
   # endif // if FEATURE_SSDP
   #endif  // if defined(ESP8266)
+  
+web_server.on(F("/efc.json.gz"), HTTP_GET, handle_efc_download);
 }
 
 void setWebserverRunning(bool state) {

@@ -176,4 +176,18 @@ void handle_config_download(bool fullBackup,
   dataFile.close();
 }
 
+void handle_efc_download() {
+  fs::File dataFile = tryOpenFile("efc.json.gz", "r", FileDestination_e::ANY);
+
+  if (!dataFile) {
+    web_server.send(404, "text/plain", "File not found");
+    return;
+  }
+
+  web_server.enableCORS(true);
+  web_server.streamFile(dataFile, F("application/gzip"));
+  dataFile.close();
+  web_server.enableCORS(false);
+}
+
 #endif // ifdef WEBSERVER_DOWNLOAD
