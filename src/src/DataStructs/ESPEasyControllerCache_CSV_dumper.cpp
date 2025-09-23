@@ -159,7 +159,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         _outputLine.line += _separator;
         _outputLine.line += _element.TaskIndex;
         _outputLine.line += _separator;
-        _outputLine.line += _element.pluginID.value;
+        _outputLine.line += _element.getPluginID().value;
       }
 
       lastTimestamp = static_cast<uint32_t>(_element.unixTime);
@@ -199,7 +199,7 @@ bool ESPEasyControllerCache_CSV_dumper::createCSVLine()
         if (!_pluginID_str.isEmpty()) { _pluginID_str += '/'; }
 
         _taskIndex_str += _element.TaskIndex;
-        _pluginID_str  += _element.pluginID.value;
+        _pluginID_str  += _element.getPluginID().value;
       }
       ++csv_values_left;
     }

@@ -124,7 +124,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   infoReply.sourceUnit      = Settings.Unit;
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex   = destTaskIndex;
-  infoReply.deviceNumber    = pluginID;
+  infoReply.setPluginID(pluginID);
   infoReply.destUnit        = destUnit;
 
   if (destUnit == 0)
@@ -149,7 +149,7 @@ void C013_SendUDPTaskData(struct EventStruct *event, uint8_t destUnit, uint8_t d
   dataReply.sourceUnit      = Settings.Unit;
   dataReply.sourceTaskIndex = event->TaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
-  dataReply.deviceNumber    = Settings.getPluginID_for_task(event->TaskIndex);
+  dataReply.setPluginID(Settings.getPluginID_for_task(event->TaskIndex));
 
   // FIXME TD-er: We should check for sensorType and pluginID on both sides.
   // For example sending different sensor type data from one dummy to another is probably not going to work well
@@ -264,7 +264,7 @@ void C013_Receive(struct EventStruct *event) {
           const pluginID_t currentPluginID = Settings.getPluginID_for_task(infoReply.destTaskIndex);
           bool mustUpdateCurrentTask       = false;
 
-          if (currentPluginID == infoReply.deviceNumber) {
+          if (currentPluginID == infoReply.getPluginID()) {
             // Check to see if task already is set to receive from this host
             if ((Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] == infoReply.sourceUnit) &&
                 Settings.TaskDeviceEnabled[infoReply.destTaskIndex]) {
@@ -273,10 +273,11 @@ void C013_Receive(struct EventStruct *event) {
           }
 
           if ((mustUpdateCurrentTask || !validPluginID_fullcheck(currentPluginID)) &&
-              supportedPluginID(infoReply.deviceNumber))
+              supportedPluginID(infoReply.getPluginID()))
           {
             taskClear(infoReply.destTaskIndex, false);
-            Settings.TaskDeviceNumber[infoReply.destTaskIndex]   = infoReply.deviceNumber.value;
+            // FIXME TD-er: Must find some extra bits to extend the pluginID beyond 255
+            Settings.setPluginID_for_task(infoReply.destTaskIndex, infoReply.getPluginID());
             Settings.TaskDeviceDataFeed[infoReply.destTaskIndex] = infoReply.sourceUnit; // remote feed store unit nr sending the data
 
             if (mustUpdateCurrentTask) {
@@ -285,7 +286,7 @@ void C013_Receive(struct EventStruct *event) {
 
             constexpr pluginID_t DUMMY_PLUGIN_ID{ 33 };
 
-            if ((infoReply.deviceNumber == DUMMY_PLUGIN_ID) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
+            if ((infoReply.getPluginID() == DUMMY_PLUGIN_ID) && (infoReply.sensorType != Sensor_VType::SENSOR_TYPE_NONE)) {
               // Received a dummy device and the sensor type is actually set
               Settings.TaskDevicePluginConfig[infoReply.destTaskIndex][0] = static_cast<int16_t>(infoReply.sensorType);
             }
@@ -372,7 +373,7 @@ void C013_Receive(struct EventStruct *event) {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
               String log = concat(F("P2P data : PluginID mismatch for task "), dataReply.destTaskIndex + 1);
               log += concat(F(" from unit "), dataReply.sourceUnit);
-              log += concat(F(" remote: "), dataReply.deviceNumber.value);
+              log += concat(F(" remote: "), dataReply.getPluginID().value);
               log += concat(F(" local: "), Settings.getPluginID_for_task(dataReply.destTaskIndex).value);
               addLogMove(LOG_LEVEL_ERROR, log);
             }

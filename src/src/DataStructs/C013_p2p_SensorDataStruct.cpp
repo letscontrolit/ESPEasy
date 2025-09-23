@@ -75,8 +75,8 @@ bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
   }
 
   if (size <= 24) {
-    deviceNumber = INVALID_PLUGIN_ID;
-    sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
+    setPluginID(INVALID_PLUGIN_ID);
+    sensorType = Sensor_VType::SENSOR_TYPE_NONE;
 
     if (sourceNode != nullptr) {
       sourceNodeBuild = sourceNode->build;
@@ -97,6 +97,8 @@ bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
 
 bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 {
+  const pluginID_t deviceNumber = getPluginID();
+
   if ((deviceNumber.value == 255) || !validPluginID(deviceNumber) || !validPluginID(pluginID)) {
     // Was never set, so probably received data from older node.
     return true;
@@ -106,11 +108,46 @@ bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const
 
 bool C013_SensorDataStruct::matchesSensorType(Sensor_VType sensor_type) const
 {
-  if ((deviceNumber.value == 255) || (sensorType == Sensor_VType::SENSOR_TYPE_NONE)) {
+  if ((getPluginID().value == 255) || (sensorType == Sensor_VType::SENSOR_TYPE_NONE)) {
     // Was never set, so probably received data from older node.
     return true;
   }
   return sensorType == sensor_type;
+}
+
+pluginID_t C013_SensorDataStruct::getPluginID() const
+{
+# if FEATURE_SUPPORT_OVER_255_PLUGINS
+
+  // Support for pluginID > 255 added in build 20240708 (build ID 20890)
+  if ((deviceNumber_lsb == 0) &&
+      (deviceNumber_msb != 0) &&
+      (sourceNodeBuild >= 20890)) {
+    return pluginID_t::toPluginID(deviceNumber_msb);
+  }
+# endif // if FEATURE_SUPPORT_OVER_255_PLUGINS
+  return pluginID_t::toPluginID(deviceNumber_lsb);
+}
+
+void C013_SensorDataStruct::setPluginID(pluginID_t pluginID)
+{
+  deviceNumber_lsb = 0u;
+  deviceNumber_msb = 0u;
+
+  if (validPluginID(pluginID)) {
+# if FEATURE_SUPPORT_OVER_255_PLUGINS
+
+    if (pluginID.value <= 255) {
+      // Compatible with older builds
+      deviceNumber_lsb = (pluginID.value & 0xFF);
+    } else {
+      // Store in new 16bit member and set deviceNumber_lsb to invalid for older builds
+      deviceNumber_msb = pluginID.value;
+    }
+# else // if FEATURE_SUPPORT_OVER_255_PLUGINS
+    deviceNumber_lsb = pluginID.value;
+# endif // if FEATURE_SUPPORT_OVER_255_PLUGINS
+  }
 }
 
 #endif // ifdef USES_C013

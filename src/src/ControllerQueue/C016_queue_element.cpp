@@ -89,12 +89,12 @@ C016_binary_element C016_queue_element::getBinary() const {
   element.unixTime   = unixTime;
   element.TaskIndex  = _taskIndex;
   element.sensorType = sensorType;
-  element.valueCount = valueCount;
+  element.setValueCount(valueCount);
   element.values     = values;
 
   // It makes no sense to keep the controller index when storing it.
   // re-purpose it to store the pluginID
-  element.pluginID = getPluginID_from_TaskIndex(_taskIndex);
+  element.setPluginID(getPluginID_from_TaskIndex(_taskIndex));
 
   return element;
 }

@@ -129,7 +129,7 @@ struct DeviceStruct
     };
   };
 
-  uint8_t            Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
+  PLUGINID_BASE_TYPE Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t            Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
   uint8_t            Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)

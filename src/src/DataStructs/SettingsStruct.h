@@ -370,6 +370,7 @@ public:
   void setWiFi_TX_power(float dBm);
 
   pluginID_t getPluginID_for_task(taskIndex_t taskIndex) const;
+  void setPluginID_for_task(taskIndex_t taskIndex, pluginID_t pluginID);
 
   void forceSave() { memset(md5, 0, 16); }
 
@@ -437,8 +438,8 @@ public:
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
   uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
-  // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  // PluginID least significant byte, to remain compatible with older builds
+  uint8_t       TaskDeviceNumber_lsb[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   int8_t        Pin_i2c2_sda = DEFAULT_PIN_I2C2_SDA; // From here, storage borrowed from OLD_TaskDeviceID array
   int8_t        Pin_i2c2_scl = DEFAULT_PIN_I2C2_SCL;
   int8_t        Pin_i2c3_sda = DEFAULT_PIN_I2C3_SDA;

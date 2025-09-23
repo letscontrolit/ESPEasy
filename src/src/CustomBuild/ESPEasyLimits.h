@@ -74,21 +74,13 @@
 // ***********************************************************************
 // * The next limits affect memory usage
 // ***********************************************************************
-#ifndef DEVICES_MAX
-  // TODO TD-er: This should be set automatically by counting the number of included plugins.
-  # ifdef ESP32
-    # define DEVICES_MAX                      175
-  #else
-    #if defined(PLUGIN_BUILD_COLLECTION) || defined(PLUGIN_BUILD_DEV)
-      #  define DEVICES_MAX                      95
-    # else 
-      #  define DEVICES_MAX                      60
-    # endif
-  #endif
-#endif
 
 #ifndef DEVICE_INDEX_MAX
+#if FEATURE_SUPPORT_OVER_255_PLUGINS
+  #define DEVICE_INDEX_MAX                   4095 // Limit determined by C016_binary_element
+#else
   #define DEVICE_INDEX_MAX                   255
+#endif
 #endif
 #ifndef PLUGIN_MAX
   #define PLUGIN_MAX                         255

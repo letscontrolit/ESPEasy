@@ -50,6 +50,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       dev.TimerOption    = true;
       dev.PluginStats    = true;
       dev.CustomVTypeVar = true;
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+      // Allow to use double type for improved accuracy
+      dev.HasFormatUserVar = true;
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       break;
     }
 
@@ -68,7 +73,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           switch (choice) {
             case P082_query::P082_QUERY_LONG:
             case P082_query::P082_QUERY_LAT:
-              ExtraTaskSettings.TaskDeviceValueDecimals[i] = 6;
+              ExtraTaskSettings.TaskDeviceValueDecimals[i] = P082_MAX_NR_DECIMALS;
               break;
             default:
               ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
@@ -133,6 +138,37 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    case PLUGIN_FORMAT_USERVAR:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        if (event->idx < P082_NR_OUTPUT_VALUES) {
+          const uint8_t pconfigIndex = event->idx + P082_QUERY1_CONFIG_POS;
+          const P082_query query     = static_cast<P082_query>(PCONFIG(pconfigIndex));
+
+          if ((query == P082_query::P082_QUERY_LONG) ||
+              (query == P082_query::P082_QUERY_LAT))
+          {
+            const uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, event->idx);
+
+            if (nrDecimals > 5) {
+              const ESPEASY_RULES_FLOAT_TYPE value = P082_data->_cache[static_cast<uint8_t>(query)];
+
+              if (!isnan(value)) {
+                string  = doubleToString(value, nrDecimals);
+                success = true;
+              }
+            }
+          }
+        }
+      }
+      break;
+    }
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
     case PLUGIN_GET_CONFIG_VALUE:
     {
       P082_data_struct *P082_data =
@@ -142,19 +178,22 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         const P082_query query = Plugin_082_from_valuename(string);
 
         if (query != P082_query::P082_NR_OUTPUT_OPTIONS) {
-          const float value = P082_data->_cache[static_cast<uint8_t>(query)];
-          int nrDecimals    = 2;
+          const ESPEASY_RULES_FLOAT_TYPE value = P082_data->_cache[static_cast<uint8_t>(query)];
+          int nrDecimals                       = 2;
 
           if ((query == P082_query::P082_QUERY_LONG) || (query == P082_query::P082_QUERY_LAT)) {
-            nrDecimals = 6;
+            nrDecimals = P082_MAX_NR_DECIMALS;
           } else if ((query == P082_query::P082_QUERY_SATVIS) ||
                      (query == P082_query::P082_QUERY_SATUSE) ||
                      (query == P082_query::P082_QUERY_FIXQ) ||
                      (query == P082_query::P082_QUERY_CHKSUM_FAIL)) {
             nrDecimals = 0;
           }
-
-          string  = toString(value, nrDecimals);
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          string = doubleToString(value, nrDecimals);
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          string = toString(value, nrDecimals);
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           success = true;
         }
       }
@@ -417,8 +456,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
         if (curFixStatus) {
           if (P082_data->gps->location.isUpdated()) {
-            const float lng = P082_data->gps->location.lng();
-            const float lat = P082_data->gps->location.lat();
+            const ESPEASY_RULES_FLOAT_TYPE lng = P082_data->gps->location.lng();
+            const ESPEASY_RULES_FLOAT_TYPE lat = P082_data->gps->location.lat();
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_LONG),     lng);
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_LAT),      lat);
 
@@ -584,7 +623,7 @@ bool P082_referencePointSet(struct EventStruct *event) {
            && (P082_LAT_REF < 0.1f) && (P082_LAT_REF > -0.1f));
 }
 
-void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float value) {
+void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, ESPEASY_RULES_FLOAT_TYPE value) {
   P082_data_struct *P082_data =
     static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -755,6 +794,7 @@ void P082_html_show_stats(struct EventStruct *event) {
                     P082_data->gps->passedChecksum(),
                     P082_data->gps->failedChecksum(),
                     P082_data->gps->invalidData()));
+
 # ifndef BUILD_NO_DEBUG
 
   /*
