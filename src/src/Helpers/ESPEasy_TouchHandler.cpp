@@ -2,33 +2,35 @@
 
 #ifdef PLUGIN_USES_TOUCHHANDLER
 
+# ifdef USES_P099
+#  include "../PluginStructs/P099_data_struct.h"
+# endif // ifdef USES_P099
+
 # include "../Commands/ExecuteCommand.h"
 
 tTouchObjects::tTouchObjects() :
   flags(0u),
   SurfaceAreas(0u),
   TouchTimers(0u),
-#ifdef ESP32
-  top_left({0u, 0u}),
-  width_height({0u, 0u}),
-#endif
+  # ifdef ESP32
+  top_left({ 0u, 0u }),
+  width_height({ 0u, 0u }),
+  # endif // ifdef ESP32
   TouchStates(0u)
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  , groupFlags           (0u)
-  , colorOn              (0u)
-  , colorOff             (0u)
-  , colorCaption         (0u)
-  , colorBorder          (0u)
-  , colorDisabled        (0u)
-  , colorDisabledCaption (0u)
+  , groupFlags(0u)
+  , colorOn(0u)
+  , colorOff(0u)
+  , colorCaption(0u)
+  , colorBorder(0u)
+  , colorDisabled(0u)
+  , colorDisabledCaption(0u)
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  {
-    objectName.clear();
-    captionOn.clear();
-    captionOff.clear();
-  }
-
-
+{
+  objectName.clear();
+  captionOn.clear();
+  captionOff.clear();
+}
 
 /****************************************************************************
  * toString: Display-value for the touch action
@@ -91,7 +93,97 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   # ifdef TOUCH_DEBUG
   addLog(LOG_LEVEL_INFO, F("TOUCH DEBUG loadTouchObjects"));
   # endif // TOUCH_DEBUG
-  LoadCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
+  # if defined(USES_P099) && P099_ENABLE_OLD_CONFIG
+  bool loadStandardConfig = true;
+
+  // Check if old format P099 data is stored, and convert if needed
+  const pluginID_t taskPlugin = getPluginID_from_TaskIndex(event->TaskIndex);
+
+  if (pluginID_t(99) == taskPlugin) {
+    if (P099_CONFIG_VERSION == 1) {
+      addLog(LOG_LEVEL_INFO, F("TOUCH: Converting P099 settings from previous format"));
+
+      // TODO Load, convert settings and set loadStandardConfig = false
+      loadStandardConfig = false;
+      P099_data_struct::tP099_StoredSettings_struct StoredSettings;
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
+
+      String config;
+      config.reserve(40);
+      uint32_t lSettings{};
+
+      set3BitToUL(lSettings, TOUCH_FLAGS_SEND_XY, get3BitFromUL(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
+      bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED));
+
+      config += bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION); // First value should not be empty
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION) ? 1 : 0);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.top_left.x);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.top_left.y);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.bottom_right.x);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.bottom_right.y);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(P099_CONFIG_DEBOUNCE_MS);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += ull2String(lSettings);
+
+      // 'Store' in new format
+      settingsArray[TOUCH_CALIBRATION_START] = config;
+      uint8_t obj = TOUCH_OBJECT_INDEX_START;
+
+      for (uint8_t s = 0; s < P099_CONFIG_OBJECTCOUNT; ++s) {
+        config.clear();
+        config += StoredSettings.TouchObjects[s].objectname; // Name
+        config.trim();                                       // Remove leading/trailing whitespace from name
+
+        if (!config.isEmpty()) {                             // Empty name => skip entry
+          const bool numStart = isdigit(config[0]);          // Numeric start?
+          bool enabled        = true;
+
+          if (!ExtraTaskSettings.checkInvalidCharInNames(config.c_str()) ||
+              numStart) { // Check for invalid characters in objectname
+            enabled = false;
+          }
+
+          if (config[0] == '_') { // Disabled-marker for P099: prefixed with _
+            enabled = false;
+          }
+          config += TOUCH_SETTINGS_SEPARATOR;
+
+          // Convert flags
+          uint32_t flags{};
+          bitWrite(flags, TOUCH_OBJECT_FLAG_ENABLED, enabled);                               // Enabled
+          bitWrite(flags, TOUCH_OBJECT_FLAG_INVERTED,
+                   bitRead(StoredSettings.TouchObjects[s].flags, P099_FLAGS_INVERT_BUTTON)); // Inverted
+          bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON,
+                   bitRead(StoredSettings.TouchObjects[s].flags, P099_FLAGS_ON_OFF_BUTTON)); // On/Off button
+
+          config += ull2String(flags);                                                       // Flags
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].top_left.x);               // Top x
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].top_left.y);               // Top y
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].bottom_right.x);           // Bottom x
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].bottom_right.y);           // Bottom y
+          // Store in new format
+          settingsArray[obj] = config;
+          ++obj;
+        }
+      }
+    }
+  }
+
+  if (loadStandardConfig) // false when settings are loaded from old P099 config
+  # endif // if defined(USES_P099) && P099_ENABLE_OLD_CONFIG
+  {
+    LoadCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
+  }
 
   lastObjectIndex = TOUCH_OBJECT_INDEX_START - 1; // START must be > 0!!!
 
@@ -180,19 +272,19 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
     for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; ++i) {
       if (!settingsArray[i].isEmpty()) {
         tTouchObjects touchObject{};
-        touchObject.flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
-        String objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.flags = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
+        String objectName = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
         touchObject.objectName     = objectName;
         touchObject.top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
         touchObject.top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
         touchObject.width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
         touchObject.width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
         # if TOUCH_FEATURE_EXTENDED_TOUCH
-        touchObject.colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
-        touchObject.colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
-        touchObject.colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
-        String captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
-        String captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOn      = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOff     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
+        String captionOn  = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
+        String captionOff = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
         touchObject.captionOn            = captionOn;
         touchObject.captionOff           = captionOff;
         touchObject.colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
