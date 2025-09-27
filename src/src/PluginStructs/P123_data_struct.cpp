@@ -214,12 +214,9 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
  */
 bool P123_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
-  bool   success = false;
-  String command;
-  String subcommand;
-
-  command    = parseString(string, 1);
-  subcommand = parseString(string, 2);
+  bool success            = false;
+  const String command    = parseString(string, 1);
+  const String subcommand = parseString(string, 2);
 
   if (isInitialized() && equals(command, F("touch"))) {
     # ifdef PLUGIN_123_DEBUG
