@@ -140,7 +140,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       uint16_t rotation_   = P099_CONFIG_ROTATION;
       uint16_t colorDepth_ = P099_COLOR_DEPTH;
 
-      if (P099_GET_CONFIG_DISPLAY != P099_CONFIG_DISPLAY_PREV) { // Changed since last saved?
+      if (P099_GET_CONFIG_DISPLAY != static_cast<uint8_t>(P099_CONFIG_DISPLAY_PREV)) { // Changed since last saved?
         getPluginDisplayParametersFromTaskIndex(P099_GET_CONFIG_DISPLAY, width_, height_, rotation_, colorDepth_);
       }
       P099_COLOR_DEPTH = colorDepth_;
