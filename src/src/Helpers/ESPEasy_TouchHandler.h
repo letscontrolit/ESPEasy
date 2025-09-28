@@ -77,6 +77,10 @@
  * swipedir,directionId         : Get the name for the swipe direction provided in numeric form
  */
 
+# ifdef USES_P099
+#  include "../PluginStructs/P099_data_struct_defs.h"
+# endif // ifdef USES_P099
+
 # define TOUCH_DEBUG                    // Additional debugging information
 
 # define TOUCH_FEATURE_TOOLTIPS       1 // Enable/disable tooltips in UI
