@@ -28,9 +28,10 @@ bool P123_data_struct::plugin_i2c_has_address(const int Par1) {
 }
 
 uint8_t P123_data_struct::plugin_i2c_address(P123_TouchType_e touchType) {
-  const int tType = static_cast<int>(touchType);
+  const int tType       = static_cast<int>(touchType);
+  constexpr int i2csize = NR_ELEMENTS(P123_i2cAddressValues);
 
-  if ((tType >= 0) && (tType < NR_ELEMENTS(P123_i2cAddressValues))) {
+  if ((tType >= 0) && (tType < i2csize)) {
     return P123_i2cAddressValues[tType];
   }
   return 0u;
