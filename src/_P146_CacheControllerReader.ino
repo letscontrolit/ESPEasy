@@ -225,13 +225,16 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Delete Cache Files After Send"), F("deletebin"), P146_GET_ERASE_BINFILES);
+
+      addFormSubHeader(F("Read Rate"));
+      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
+      addUnit(F("ms"));
+
       addFormSubHeader(F("MQTT Output Options"));
       addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
       addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
 
       //      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
-      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
-      addUnit(F("ms"));
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
                         P146_MQTT_MESSAGE_LENGTH,

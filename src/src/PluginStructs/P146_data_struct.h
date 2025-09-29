@@ -41,11 +41,11 @@
 # define P146_GET_ERASE_BINFILES    bitRead(PCONFIG(0), 6)
 # define P146_SET_ERASE_BINFILES(X) bitWrite(PCONFIG(0), 6, X)
 
-# define P146_GET_SEND_VIA_ORIG_TASK     bitRead(PCONFIG(7), 1)
-# define P146_SET_SEND_VIA_ORIG_TASK(X)  bitWrite(PCONFIG(7), 1, X)
+# define P146_GET_SEND_VIA_ORIG_TASK     bitRead(PCONFIG(0), 7)
+# define P146_SET_SEND_VIA_ORIG_TASK(X)  bitWrite(PCONFIG(0), 7, X)
 
-# define P146_GET_SEND_VIA_EVENT         bitRead(PCONFIG(8), 1)
-# define P146_SET_SEND_VIA_EVENT(X)      bitWrite(PCONFIG(8), 1, X)
+# define P146_GET_SEND_VIA_EVENT         bitRead(PCONFIG(0), 8)
+# define P146_SET_SEND_VIA_EVENT(X)      bitWrite(PCONFIG(0), 8, X)
 
 
 # define P146_SEPARATOR_CHARACTER   PCONFIG(1)
