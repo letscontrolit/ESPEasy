@@ -93,7 +93,7 @@ bool ModbusLINK_struct::isInitialized() const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Modbus_RequestQueueElement * ModbusLINK_struct::newTransaction(struct ModbusDEVICE_struct *device)
 {
-  Modbus_RequestQueueElement *req = new Modbus_RequestQueueElement(0, ModbusQueueState::NOT_QUEUED);
+  Modbus_RequestQueueElement *req = new (std::nothrow) Modbus_RequestQueueElement();
 
   if (req != nullptr) {
     req->_id      = ++(_queueID);                 // Assign a unique ID to the transaction
@@ -190,16 +190,17 @@ void ModbusLINK_struct::processCommand()
         log += it->_id;
 
         // Send the request
-        if (_easySerial->available() > 0) {
+        int available = _easySerial->available();
+        if (available > 0) {
           // Clear any pending input
-          for (int i = _easySerial->available(); i > 0; --i) {
+          for (int i = available; i > 0; --i) {
             _easySerial->read();
           }
         }
 
         _easySerial->write(it->_sendframe, it->_sendframe_length);
         it->_state    = ModbusQueueState::MESSAGE_SENT; // Mark as sent, waiting for response
-        it->_deadline = millis() + it->_timeout;        // Record the dealine value for the response
+        it->_startTime = millis();        // Record the time the transaction
         log          += F(" state QUEUED, ID = ");
         log          += it->_id;
         busy          = true;                           // Only process one request at a time
@@ -220,7 +221,7 @@ void ModbusLINK_struct::processCommand()
             it->_device->linkCallback(&(*it));              // Notify the device that a response was received
           }
         }
-        else if (millis() > it->_deadline) {
+        else if (timePassedSince(it->_startTime) > it->_timeout) {
           // Timeout expired
           it->_state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
           log       += F(" Timeout ");

@@ -5,7 +5,8 @@
 // #######################################################################################################
 // ############## Plugin 183: Modbus RTU generic sensor interface                          ###############
 // #######################################################################################################
-
+// TODO: Refactor for a better Modbus implementation using the modbus_device for all functions.
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /*
    Plugin written by: Flashmark
 
@@ -219,7 +220,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         delete P183_ModbusDevice;
         P183_ModbusDevice = nullptr;
       }
-      P183_ModbusDevice = new ModbusDEVICE_struct();
+      P183_ModbusDevice = new (std::nothrow) ModbusDEVICE_struct();
       addLogMove(LOG_LEVEL_INFO, "P183 INIT AFTER NEW");
 
       if (P183_ModbusDevice == nullptr) {
@@ -274,6 +275,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      // TODO: This is a very ugly way to reserve static memory for the return values of the Modbus read function.
+      // This does not work if multiple instances of this plugin are used.
       static uint16_t registerValues[4] = {0, 0, 0, 0};
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
       {

@@ -39,11 +39,9 @@ public:
 
   bool     isInitialized() const;
 
-
   void     setModbusTimeout(uint16_t timeout);
 
   uint16_t getModbusTimeout() const;
-
 
   void     processCommand();
 
@@ -62,10 +60,10 @@ public:
 
 private:
 
-  uint8_t                     _modbus_address = MODBUS_BROADCAST_ADDRESS;
-  ModbusLINK_struct          *_modbus_link    = nullptr; // Pointer to the Modbus link object
-  uint8_t                     _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
-  uint16_t                    _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
+  uint8_t            _modbus_address = MODBUS_BROADCAST_ADDRESS;
+  ModbusLINK_struct *_modbus_link    = nullptr; // Pointer to the Modbus link object
+  uint8_t            _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
+  uint16_t           _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
 
   static uint16_t CalculateCRC(uint8_t *buf,
                                int      len);

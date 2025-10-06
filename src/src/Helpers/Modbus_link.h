@@ -15,28 +15,29 @@
 // Forward declaration of ModbusDEVICE_struct to avoid circular dependency issues
 struct ModbusDEVICE_struct;
 
+// States for the Modbus queue elements
 typedef enum class ModbusQueueState {
-  NOT_QUEUED        = 0,
-  QUEUED            = 1,
-  MESSAGE_SENT      = 2,
-  RESPONSE_RECEIVED = 3,
-  ERROR_OCCURRED    = 4,
-  READY_FOR_DESTROY = 5
+  NOT_QUEUED        = 0, // Initial state, element is created but not yet queued
+  QUEUED            = 1, // Element is queued and waiting to be processed
+  MESSAGE_SENT      = 2, // Request message has been sent, waiting for response
+  RESPONSE_RECEIVED = 3, // Response has been received and is being processed
+  ERROR_OCCURRED    = 4, // An error occurred during processing (e.g., timeout, invalid response)
+  READY_FOR_DESTROY = 5  // Element is marked for deletion and can be freed
 } ModbusQueueState_t;
 
+// Types of Modbus transactions supported by the Modbuss_device
+// This enumeration is used by the Modbus device to indicate which transaction is associated with the queue element.
+// See Modbus specification for details on function codes.
 enum class ModbusMessageType {
-  NONE                   = 0,
-  READ_HOLDING_REGISTERS = 1,
-  WRITE_SINGLE_REGISTER  = 2
+  NONE                   = 0, // Undefined/unknown transaction type
+  READ_HOLDING_REGISTERS = 1, // Read holding registers (function code 0x03)
+  WRITE_SINGLE_REGISTER  = 2  // Write single register (function code 0x06)
 };
 
 // Modbus request queue element structure
 // This structure represents a single Modbus request and its associated response.
 struct Modbus_RequestQueueElement {
-  Modbus_RequestQueueElement(uint16_t id, ModbusQueueState state)
-    : _id(id),
-    _state(state)
-  {}
+  Modbus_RequestQueueElement() = default;
 
   ModbusMessageType           _messageType = ModbusMessageType::NONE;                  // Type of Modbus message
   void                       *_userData    = nullptr;                                  // Pointer to user data
@@ -48,7 +49,7 @@ struct Modbus_RequestQueueElement {
                                                                                        // expected
   enum ModbusQueueState _state                         = ModbusQueueState::NOT_QUEUED; // State of the request exchange
   uint16_t              _timeout                       = 0;                            // Specified timeout value for the request
-  unsigned long         _deadline                      = 0;                            // Timeout deadline for the request
+  unsigned long         _startTime                     = 0;                            // Time the request was issued
   uint8_t               _sendframe[MODBUS_XMIT_BUFFER] = { 0 };                        // Reqest frame to send
   uint8_t               _rcvframe[MODBUS_RCV_BUFFER]   = { 0 };                        // Response frame received
 };
@@ -97,14 +98,14 @@ private:
   static void dumpQueueElement(Modbus_RequestQueueElement *el);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
-  int8_t              _dere_pin         = -1;      // Pin to control DE/RE of RS485 transceiver
   Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process
   uint16_t            _queueID          = 0;       // ID for the last request queued
-  uint32_t            _reads_pass       = 0;
-  uint32_t            _reads_crc_failed = 0;
-  uint32_t            _reads_nodata     = 0;       // This will be reset as soon as a valid packet has been received.
-  uint16_t            _modbus_timeout   = 180;
-  uint8_t             _last_error       = 0;
+  uint16_t            _modbus_timeout   = 180;     // Default Modbus timeout in milliseconds
+  uint32_t            _reads_pass       = 0;       // TODO: statistics
+  uint32_t            _reads_crc_failed = 0;       // TODO: statistics
+  uint32_t            _reads_nodata     = 0;       // TODO: statistics
+
+  uint8_t _last_error = 0;
 };
 
 
