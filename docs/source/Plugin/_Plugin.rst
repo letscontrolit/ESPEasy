@@ -503,6 +503,7 @@ There are different released versions of ESP Easy:
    ":ref:`P176_page`","|P176_status|","P176"
    ":ref:`P177_page`","|P177_status|","P177"
    ":ref:`P178_page`","|P178_status|","P178"
+   ":ref:`P180_page`","|P180_status|","P180"
    ":ref:`P183_page`","|P183_status|","P183"
 
 .. include:: _plugin_sets_overview.repl

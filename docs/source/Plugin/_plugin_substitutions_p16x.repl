@@ -41,7 +41,7 @@
 .. |P165_type| replace:: :cyan:`Display`
 .. |P165_typename| replace:: :cyan:`Display - NeoPixel (7-Segment)`
 .. |P165_porttype| replace:: `.`
-.. |P165_status| replace:: :yellow:`DISPLAY` :yellow:`NEOPIXEL`
+.. |P165_status| replace:: :yellow:`NEOPIXEL`
 .. |P165_github| replace:: P165_7SegNeopixel.ino
 .. _P165_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P165_7SegNeopixel.ino
 .. |P165_usedby| replace:: `.`

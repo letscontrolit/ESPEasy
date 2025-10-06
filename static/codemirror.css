@@ -3,7 +3,7 @@
   --cmc1: black;
   --cmbg2: #eee;
   --cmc2: #999;
-	--cmbd: 1px solid black;
+  --cmbd: 1px solid black;
   --cmbg3: #d7d4f0;
   --cmbg4: #e8f2ff;
   --cmc3: #708;
@@ -31,11 +31,11 @@
 }
 
 [data-theme="dark"] {
-	--cmbg1: black;
-	--cmc1: #e8d1a7;
+  --cmbg1: black;
+  --cmc1: #e8d1a7;
   --cmbg2: #212121;
   --cmc2: #e8d2a7;
-	--cmbd: 1px solid #FFCC00;
+  --cmbd: 1px solid #FFCC00;
   --cmbg3: #80cbc433;
   --cmbg4: #00000080;
   --cmc3: #ea6962;
@@ -63,7 +63,7 @@
 }
 
 @media (prefers-color-scheme:dark) {
-	[data-theme="auto"] {
+  [data-theme="auto"] {
     --cmbg1: black;
     --cmc1: #e8d1a7;
     --cmbg2: #212121;
@@ -93,7 +93,7 @@
     --cmbg8: #5f5f5f;
     --cmbg9: #5f5f5f;
     --cmc19: #eee;
-	}
+  }
 }
 
 /* BASICS */
@@ -637,7 +637,13 @@ div.CodeMirror-dragcursors {
 }
 
 .cm-searching {
-  background-color: rgba(162, 162, 162, 0.396);
+  background-color: yellow;
+  color: black !important;
+}
+
+.search-next-highlight {
+  background-color: orange !important;
+  color: black !important;
 }
 
 /* Used to force a border model for a node */
@@ -719,16 +725,16 @@ li.CodeMirror-hint-active {
 
 .CodeMirror-dialog {
   position: fixed;
-  height: 42px;
+  /* height: 42px; */
   left: 0;
   width: 100vw;
   background: inherit;
   z-index: 15;
-  padding: .1em .8em;
-  overflow: hidden;
+  padding: .4em .8em;
+  /* overflow: hidden;
   color: inherit;
   display: flex;
-  align-items: center;
+  align-items: center; */
 }
 
 .CodeMirror-dialog input::selection {

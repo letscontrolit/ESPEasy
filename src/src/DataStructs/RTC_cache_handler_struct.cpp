@@ -76,7 +76,7 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
   if (_peekfilenr == RTC_cache.writeFileNr) {
     if (fw) {
       constexpr size_t errorcode = (size_t)-1;
-      size_t pos = fp.position();
+      size_t pos = fw.position();
       if (pos == errorcode) {
         pos = 0;
       }
@@ -258,8 +258,8 @@ bool RTC_cache_handler_struct::write(const uint8_t *data, unsigned int size) {
 
 // Mark all content as being processed and empty buffer.
 bool RTC_cache_handler_struct::flush() {
-  if (prepareFileForWrite()) {
-    if (RTC_cache.writePos > 0) {
+  if (RTC_cache.writePos > 0) {
+    if (prepareFileForWrite()) {
       #ifdef RTC_STRUCT_DEBUG
       size_t filesize = fw.size();
       #endif // ifdef RTC_STRUCT_DEBUG
@@ -375,6 +375,9 @@ void RTC_cache_handler_struct::closeOpenFiles()
   if (fp) {
     fp.close();
   }
+  if (fw) {
+    fw.close();
+  }
 }
 
 bool RTC_cache_handler_struct::deleteAllCacheBlocks()
@@ -384,6 +387,7 @@ bool RTC_cache_handler_struct::deleteAllCacheBlocks()
     if (RTC_cache.readFileNr < RTC_cache.writeFileNr) {
       bool fileDeleted = false;
       int  count       = 0;
+      closeOpenFiles();
 
       for (int fileNr = RTC_cache.readFileNr; count < 25 && fileNr < RTC_cache.writeFileNr; ++fileNr)
       {

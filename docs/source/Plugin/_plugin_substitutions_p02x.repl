@@ -41,7 +41,7 @@
 .. |P023_type| replace:: :cyan:`Display`
 .. |P023_typename| replace:: :cyan:`Display - OLED SSD1306`
 .. |P023_porttype| replace:: `.`
-.. |P023_status| replace:: :green:`NORMAL` :yellow:`DISPLAY` :yellow:`CLIMATE`
+.. |P023_status| replace:: :green:`NORMAL` :yellow:`CLIMATE` :yellow:`DISPLAY A`
 .. |P023_github| replace:: P023_OLED.ino
 .. _P023_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P023_OLED.ino
 .. |P023_usedby| replace:: `.`

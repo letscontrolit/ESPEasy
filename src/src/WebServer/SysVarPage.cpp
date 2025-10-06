@@ -60,10 +60,12 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
-    uint32_t tmpVar{};
-
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
-      const bool isv_ = !validUIntFromString(it->first, tmpVar);
+      NumericalType detectedType;
+      bool isv_ = true;
+      if (getNumerical(it->first, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
+        isv_ = detectedType != NumericalType::Integer;
+      }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
   }

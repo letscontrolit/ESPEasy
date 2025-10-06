@@ -45,12 +45,13 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number         = PLUGIN_ID_146;
-      dev.Type           = DEVICE_TYPE_DUMMY;
-      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
-      dev.ValueCount     = 2;
-      dev.SendDataOption = true;
-      dev.OutputDataType = Output_Data_type_t::Default;
+      dev.Number            = PLUGIN_ID_146;
+      dev.Type              = DEVICE_TYPE_DUMMY;
+      dev.VType             = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.ValueCount        = 2;
+      dev.SendDataOption    = true;
+      dev.OutputDataType    = Output_Data_type_t::Default;
+      dev.HideDerivedValues = true;
       break;
     }
 
@@ -110,9 +111,25 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
+
+      int peekFileNr{};
+      int peekReadPos = ControllerCache.getPeekFilePos(peekFileNr);
+
+      if (peekReadPos >= 0) {
+        P146_SET_TASKVALUE_FILENR(peekFileNr);
+        P146_SET_TASKVALUE_FILEPOS(peekReadPos);
+      }
+
+
       success = initPluginTaskData(
         event->TaskIndex,
         new (std::nothrow) P146_data_struct(event));
+      break;
+    }
+
+    case PLUGIN_EXIT:
+    {
+      P146_data_struct::flush();
       break;
     }
 
@@ -132,10 +149,20 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               P146_data->prepareCSVInBulk(event->TaskIndex, P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator);
             }
           }
-        } else {
+        } else if (P146_GET_SEND_VIA_ORIG_TASK || P146_GET_SEND_VIA_EVENT) {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
 
-          if (P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+          bool processed = false;
+
+          if (P146_GET_SEND_VIA_ORIG_TASK && P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+            processed = true;
+          }
+
+          if (P146_GET_SEND_VIA_EVENT && P146_data_struct::sendViaEvent_AllCache(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+            processed = true;
+          }
+
+          if (processed) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
 
@@ -198,12 +225,16 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Delete Cache Files After Send"), F("deletebin"), P146_GET_ERASE_BINFILES);
+
+      addFormSubHeader(F("Read Rate"));
+      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
+      addUnit(F("ms"));
+
       addFormSubHeader(F("MQTT Output Options"));
       addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
       addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
 
       //      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
-      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
                         P146_MQTT_MESSAGE_LENGTH,
@@ -216,7 +247,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Publish Topic"),  getPluginCustomArgName(P146_PublishTopicIndex),  strings[P146_PublishTopicIndex],  P146_Nchars);
 
 
-      //      addFormSubHeader(F("Non MQTT Output Options"));
+      addFormSubHeader(F("Non MQTT Output Options"));
+      addFormCheckBox(F("Send via Original Task"), F("origTask"),  P146_GET_SEND_VIA_ORIG_TASK);
+      addFormCheckBox(F("Send as Event"),          F("sendEvent"), P146_GET_SEND_VIA_EVENT);
+
       //      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
 
       addTableSeparator(F("Export to CSV"), 2, 3);
@@ -245,11 +279,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       html_add_button_prefix();
       addHtml(F("dumpcache?separator="));
 
-      switch (static_cast<char>(P146_SEPARATOR_CHARACTER)) {
-        case '\t': addHtml(F("Tab")); break;
-        case ',':  addHtml(F("Comma")); break;
+      switch (static_cast<char>(P146_SEPARATOR_CHARACTER))
+      {
+        case '\t': addHtml(F("Tab"));
+          break;
+        case ',':  addHtml(F("Comma"));
+          break;
         case ';':
-        default:   addHtml(F("Semicolon")); break;
+        default:   addHtml(F("Semicolon"));
+          break;
       }
 
       if (P146_GET_JOIN_TIMESTAMP) {
@@ -281,6 +319,9 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_SET_ONLY_SET_TASKS(isFormItemChecked(F("onlysettasks")));
       P146_SEPARATOR_CHARACTER = getFormItemInt(F("separator"));
 
+      P146_SET_SEND_VIA_ORIG_TASK(isFormItemChecked(F("origTask")));
+      P146_SET_SEND_VIA_EVENT(isFormItemChecked(F("sendEvent")));
+
       String strings[P146_Nlines];
 
       for (uint8_t varNr = 0; varNr < P146_Nlines; varNr++) {
@@ -305,7 +346,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("cachereader"))) {
         if (equals(subcommand, F("setreadpos"))) {
-          P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
+          if (P146_data_struct::setPeekFilePos(event->Par2, event->Par3)) {
+            int peekFileNr{};
+            int peekReadPos = ControllerCache.getPeekFilePos(peekFileNr);
+
+            if (peekReadPos >= 0) {
+              P146_SET_TASKVALUE_FILENR(peekFileNr);
+              P146_SET_TASKVALUE_FILEPOS(peekReadPos);
+            }
+          }
           success = true;
         } else if (equals(subcommand, F("sendtaskinfo"))) {
           P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));

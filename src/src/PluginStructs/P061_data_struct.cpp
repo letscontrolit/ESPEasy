@@ -242,25 +242,17 @@ uint8_t P061_data_struct::PCF8574_KeyPadDirectScan(uint8_t addr) {
 // PCF8575 Matrix /////////////////////////////////////////////////////////////
 
 void P061_data_struct::PCF8575_setReg(uint8_t addr, uint16_t data) {
-  // FIXME TD-er: Add I2C_access function I2C_write16_LE
-  Wire.beginTransmission(addr);
-  Wire.write(lowByte(data));
-  Wire.write(highByte(data));
-  Wire.endTransmission();
+  I2C_write16_LE(addr, data);
 }
 
 uint16_t P061_data_struct::PCF8575_getReg(uint8_t addr) {
-  // FIXME TD-er: Add I2C_access function I2C_read16_LE
-  uint16_t data;
+  bool is_ok{};
 
-  Wire.beginTransmission(addr);
-  Wire.endTransmission();
-  Wire.requestFrom(addr, (uint8_t)2u);
+  I2C_wakeup(addr);
+  const uint16_t data = I2C_read16(addr, &is_ok);
 
-  if (Wire.available()) {
-    data  = Wire.read();        // Low byte
-    data |= (Wire.read() << 8); // High byte
-    return data;
+  if (is_ok) {
+    return (data << 8) | (data >> 8);
   }
   return 0xFFFF;
 }

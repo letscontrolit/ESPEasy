@@ -80,7 +80,7 @@
 .. |P116_type| replace:: :cyan:`Display`
 .. |P116_typename| replace:: :cyan:`Display - ST77xx TFT`
 .. |P116_porttype| replace:: `.`
-.. |P116_status| replace:: :yellow:`DISPLAY`
+.. |P116_status| replace:: :yellow:`DISPLAY B`
 .. |P116_github| replace:: _P116_ST77xx.ino
 .. _P116_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P116_ST77xx.ino
 .. |P116_usedby| replace:: `.`

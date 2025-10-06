@@ -116,7 +116,7 @@ struct DeviceStruct
 
       uint32_t CustomVTypeVar     : 1;       // User-selectable VType per value
       uint32_t MqttStateClass     : 1;       // MQTT StateClass setting in DevicesPage
-      uint32_t Dummy23            : 1;       // Dummy added to force alignment, can be re-used
+      uint32_t HideDerivedValues  : 1;       // Hide the options for derived values
       uint32_t Dummy24            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy25            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy26            : 1;       // Dummy added to force alignment, can be re-used

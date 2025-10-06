@@ -250,6 +250,7 @@
 // #define FEATURE_ANYRTTTL_LIB 1 // Use AnyRttl library for RTTTL handling
 // #define FEATURE_ANYRTTTL_ASYNC 1 // When AnyRttl enabled, use Async (nonblocking) mode instead of the default Blocking mode
 // #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
+// #define FEATURE_BUSCMD_STRING   1  // Enable support for String data-format in Helpers/BusCmd_Handler, default disabled for LIMIT_BUILD_SIZE only
 // #define FEATURE_STRING_VARIABLES 1 // Enable String variable support (enabled on ESP32, NOT supported on ESP8266 for memory restrictions!)
 
 #if FEATURE_CUSTOM_PROVISIONING
@@ -566,7 +567,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P173   // Environment - SHTC3
 // #define USES_P175   // Dust - PMSx003i I2C
 // #define USES_P176   // Communication - Victron VE.Direct
+// #define USES_P177   // XDB401 I2C Pressure
 // #define USES_P178   // LU9685 Servo controller
+
+// #define USES_P180   // I2C Generic
 
 /*
  #######################################################################################################

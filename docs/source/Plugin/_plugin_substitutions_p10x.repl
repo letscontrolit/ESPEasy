@@ -55,7 +55,7 @@
 .. |P104_type| replace:: :cyan:`Display`
 .. |P104_typename| replace:: :cyan:`Display - MAX7219 dot matrix`
 .. |P104_porttype| replace:: `SPI`
-.. |P104_status| replace:: :yellow:`DISPLAY`
+.. |P104_status| replace:: :yellow:`DISPLAY A`
 .. |P104_github| replace:: P104_max7219_Dotmatrix.ino
 .. _P104_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P104_max7210_Dotmatrix.ino 
 .. |P104_usedby| replace:: `.`

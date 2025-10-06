@@ -98,24 +98,27 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
-    String dummy;
+    if (enabled != Settings.TaskDeviceEnabled[event->TaskIndex])
+    {
+      String dummy;
 
-    if (!enabled) {
-      PluginCall(PLUGIN_EXIT, event, dummy);
-    }
+      if (!enabled) {
+        PluginCall(PLUGIN_EXIT, event, dummy);
+      }
 
-    // Toggle enable/disable state via command
-    // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
-    // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
-    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
+      // Toggle enable/disable state via command
+      // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
+      // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+      Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
-    if (enabled) {
-      // Schedule the plugin to be read.
-      // Do this before actual init, to allow the plugin to schedule a specific first read.
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      if (enabled) {
+        // Schedule the plugin to be read.
+        // Do this before actual init, to allow the plugin to schedule a specific first read.
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      if (!PluginCall(PLUGIN_INIT, event, dummy)) {
-        return false;
+        if (!PluginCall(PLUGIN_INIT, event, dummy)) {
+          return false;
+        }
       }
     }
     return true;

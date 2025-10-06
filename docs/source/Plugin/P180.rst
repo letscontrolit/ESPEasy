@@ -1,0 +1,420 @@
+.. include:: ../Plugin/_plugin_substitutions_p18x.repl
+.. _P180_page:
+
+|P180_typename|
+==================================================
+
+|P180_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P180_type|
+
+Name: |P180_name|
+
+Status: |P180_status|
+
+GitHub: |P180_github|_
+
+Maintainer: |P180_maintainer|
+
+Used libraries: |P180_usedlibraries|
+
+Description
+-----------
+
+This plugin offers generic access to I2C devices, by providing a set of commands for reading and writing to an I2C address, manipulating an Enable and Reset GPIO pin, inserting a delay, conditionally stop executing the commands, calculating with the data read from the device, and assigning (intermediate) results to Values 1..4.
+
+This enables the implementation of yet unsupported I2C devices or use I2C devices in builds where the available plugin isn't included.
+
+.. warning:: This plugin is in the 'pro' category of plugins (i.o.w. not really *Easy* to use), and requires in-depth studying of the datasheet for the device, extracting the required commands and calculation(s) for implementing correct usage. (Some examples available below)
+
+Configuration
+-------------
+
+.. image:: P180_DeviceConfiguration.png
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+I2C options
+^^^^^^^^^^^
+
+* **I2C Address (Hex)**: Because of the flexible nature of the plugin, setting the I2C address requires typing the hexadecimal I2C address of the device. This should be in the range 0x01 .. 0x7F.
+
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This plugin can also be used with an I2C Multiplexer, or use a separate I2C Bus when configured, to allow for multiple sensors on a single ESP. For details see the :ref:`Hardware_page`.
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+* **'Enable' GPIO**: Some devices have an Enable pin, that allows the device to be disabled, f.e. to conserve power, or extend the usable lifespan of the device. This can be set by an I2C command (see below).
+
+* **'Reset' GPIO**: Some devices require to be reset, either after power-on, during use, or when not operating properly. This can be controlled by an I2C command (see below).
+
+Output Configuration
+^^^^^^^^^^^^^^^^^^^^
+
+* **Output Data Type**: This setting determines the number of available Values, and is also used by f.e. the Domoticz controllers for sending data in the correct format. F.e. when configuring a Temperature & Humidity sensor, it makes sense to choose Temp / Hum here.
+
+* **I2C Init Commands**: A sequence of commands, documented in detail below, that will be used to manipulate the sensor when the plugin is enabled. This can f.e. be used to initialize the sensor, set the **'Enable' GPIO** in the Enabled state, or pulse the **'Reset' GPIO** to reset the device.
+
+* **I2C Exit Commands**: A sequence of commands that will be sent to the device when the plugin is disabled. This can f.e. be used to set the **'Enable' GPIO** in Disabled state, or set the device in a power-down state.
+
+* **Parsing & executing log (INFO)**: When enabled, the command sequences will be logged during parsing and execution at *INFO* level, that's often very helpful when configuring & testing a new I2C device. Should best be disabled for production use to avoid excessive logging output.
+
+Value x I2C Commands
+^^^^^^^^^^^^^^^^^^^^
+
+For each Value1 .. Value4 output, depending on the **Output Data Type** setting, a group of settings is available:
+
+* **Value x type**: Here you can select a specific output type for each Value. This shows a selection of the **Output Data Type** selector, but only the single-value types. This will also be used for sending to Domoticz controllers and for MQTT Auto-Discovery.
+
+* **Cache-Name x (optional)**: When set to a unique name (for this task), the parsed & pre-processed command sequence will be stored in a memory-cache, to *significantly* improve the speed of the plugin in runtime. When not set, the command sequence will be parsed every time the task is run (**Interval** setting or ``taskRun`` command). To be able to use event processing for 1ps, 10ps of 50ps, setting a Cache-Name is required!
+
+* **I2C Commands x**: The sequence of commands to execute for this value. Nothing will be done if this is empty. The corresponding Value output can be set from another I2C Commands sequence. The currently used vs. the available space is shown next to the field. I2C Commands are explained below.
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+
+* **Interval** Interval is optional, and will be set to 0 sec. by default. The data will be collected and optionally sent to any configured controllers using this interval.
+
+Values
+^^^^^^
+
+The plugin provides 1 .. 4 Values. The names can be set as desired. A formula can be set to recalculate, f.e. when a temperature has to be presented in ° Fahrenheit instead of ° Celcius: ``%c_c2f%(%value%)``. The number of decimals can be set as desired.
+
+In selected builds, per Value **Stats** options are available, that when enabled, will gather the measured data and present most recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
+
+Plugin Commands available
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: P180_commands.repl
+
+Get Config Values
+^^^^^^^^^^^^^^^^^
+
+.. include:: P180_config_values.repl
+
+|
+
+I2C Commands
+------------
+
+I2C Commands (sequences) are available for reading and writing the device on the selected I2C Bus, using the configured I2C address. If the address is not set, the plugin won't start.
+
+The general I2C Command format is: ``<command>[.<dataformat>[.<length>]][.<arguments>....];...[|(1ps|10ps|50ps)|<command_sequences>]``
+
+* The command separator is a semicolon ``;``
+
+* The argument separator is a period ``.``
+
+* The event separator is a pipe-symbol ``|``
+
+For ``dataformat`` there are a limited set of options available:
+
+* ``u8``: uint8_t (1 byte)
+* ``u16``: uint16_t (2 bytes)
+* ``u24``: uint24_t (3 bytes)
+* ``u32``: uint32_t (4 bytes)
+* ``u16le``: uint16_t (2 bytes, little endian)
+* ``u24le``: uint24_t (3 bytes, little endian)
+* ``u32le``: uint32_t (4 bytes, little endian)
+* ``8``: int8_t (1 byte, signed)
+* ``16``: int16_t (2 bytes, signed)
+* ``24``: int24_t (3 bytes, signed)
+* ``32``: int32_t (4 bytes, signed)
+* ``16le``: int16_t (2 bytes, signed, little endian)
+* ``24le``: int24_t (3 bytes, signed, little endian)
+* ``32le``: int32_t (4 bytes, signed, little endian)
+* ``b[.<length>]``: <length> uint8_t (bytes), <length> is needed for reading only
+* ``w[.<length>]``: <length> uint16_t (words), <length> is needed for reading only
+* ``str[.<length>]``: <length> String, <length> is needed for reading only (not avaiable on ESP8266 builds by default for code-size reasons)
+
+The commands available can either be used with the full command, or the 1 character shortcut to save some space in the limited available storage:
+
+* ``get.<format>[.<len>]``: ``(g)``: Read the number of bytes matching the format from the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
+* ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data determines the length of the data to send.
+* ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
+* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format.
+* ``eval``: ``(e)``: Evaluate the previous command, and set as selected data for ``calc`` or ``if`` commands.
+* ``value.<valueIndex>``: ``(v)``: (1..4 or a value name) Store the last calculated result, or last read value, in the specified Value field.
+* ``calc.<calculation>``: ``(c)``: Calculate a result, like Rules, extra available vars: ``%value%``, ``%pvalue%``, ``%h%``, ``%b0%..%b<n>%``, ``%bx0%..%bx<n>%``, ``%w0%..%w<n>%``, ``%wx0%..%wx<n>%``
+* ``if.<calculation>[.<skip>]``: ``(i)``: Similar to ``calc`` command, when the calculation-result is 0 execution is cancelled, or ``<skip>`` commands are skipped (forward only) to act somewhat similar to an ``else`` clause.
+* ``delay.<msec>``: ``(d)``: (range: 0..500, 0..10 for 1/sec, 10/sec, 50/sec events) Some devices, f.e. after starting a measurement, require some time to process data. This can be handled by a delay. If the delay is <= 10 msec, it will be handled immediately, longer delays are processed asynchronous to avoid blocking the ESP for too long.
+* ``enable.<state>``: ``(a)``: (0 or 1) Set the configured **'Enable' GPIO** pin to the provided state. If the pin is not configured, this command is ignored, and processing continues.
+* ``reset.<state>.<msec>``: ``(z)``: (state = 0 or 1, msec = range: 0..500) Pulse the configured **'Reset' GPIO** pin for the provided time (msec) to the state requested, to reset the device. If the pin is not configured, this command is ignored, and processing continues.
+* ``let.<variable>.<calculation>``: ``(l)``: Assign the result of a calculation to a global Rules variable. Can use the same plugin variables as available for ``calc`` and ``if``. The resulting variable can also be used from rules, or later in a ``calc``, ``if``, ``let`` or ``letstr`` I2C command.
+* ``letstr.<variable>.<calculation>``: ``(m)``: Assign the result of a calculation to a global Rules *String* variable. Can use the same plugin variables as available for ``calc`` and ``if``. The resulting variable can also be used from rules, or later in a ``calc``, ``if``, ``let`` or ``letstr`` I2C command. Only available if String variables are available in the build.
+
+During processing, the data has to be made available to some of the following steps to be able to calculate the outcome. The variables to insert the data are listed here:
+
+* ``%pvalue%``: The value currently in the Value field for this command sequence (when run during an Interval or from Rules when a TaskValue index is specified), can be read as 'previous-value'.
+
+The next variables are only available after an ``eval`` I2C Command is executed:
+
+* ``%value%``: The value retrieved in decimal presentation, or the read String for format ``str``. So if a ``read`` or ``get`` command was used. Not applicable for ``b.<length>`` and ``w.<length>`` dataformats, ``%h%``, ``%b..%`` or ``%w..%`` variables should be used.
+* ``%h%``: The result of a ``read`` or ``get`` formatted as hex bytes with a single '0x' prefix, using the minimal number of digits needed. For ``b.<length>`` or ``w.<length>`` dataformat all bytes/words are concatenated. If 7 bytes are retrieved using ``get.b.7`` command, ``%h`` will be replaced by ``0x00010203040506``, or 3 words using ``get.w.3`` with ``0x000000010002``, showing the retrieved data of course.
+* ``%b<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a decimal presentation of the data.
+* ``%bx<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a 2 digit hexadecimal presentation, without '0x' prefix, of the data.
+* ``%w<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a decimal presentation of the data.
+* ``%wx<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a 4 digit hexadecimal presentation, without '0x' prefix, of the data.
+
+Processing commands for 1/sec, 10/sec and 50/sec plugin events
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is sometimes needed to check the state or value of a device more often than the regular **Interval** setting. For this use-case there is support for the repeating 1/sec, 10/sec and 50/sec events. These events have a short window of time where a few commands can be processed for fetching data or checking the state of the sensor.
+
+To optimize storage space for commands, these events are also stored in the regular I2C Commands settings per value. The prefix for these events are ``1ps``, ``10ps`` and ``50ps``, and they are separated from the regular commands by a pipe-symbol ``|``. So a hypothetical configuration that supports a normal read, 1/sec, 10/sec and 50/sec sequence of commands could look like this:
+
+``<read_commands>|1ps|<once_a_second_commands>|10ps|<ten_per_second_commands>|50ps|<fifty_per_second_commands>``
+
+A few warnings though:
+
+* Using 50/sec event I2C commands may slow down the ESP or increase the load, as for processing the commands there are only 20 msec available, and as processing in the plugin is far less efficient than normal C++ code, this should be as short/small as possible, or moved to 10/sec processing (where 100 msec is available) when possible.
+
+* Delay commands during these events should be avoided, and will be reduced to max 10 msec duration.
+
+* The result from a 1/sec, 10/sec and 50/sec event command sequence is **not** assigned to the corresponding Value by default, but it can be assigned using the ``value.<n>`` I2C command.
+
+* If no commands are used for the ``<read_commands>`` sequence, then it is strongly advised to insert a ``nop`` I2C command there, to avoid the event commands being re-parsed for every processing loop.
+
+* Logging is disabled during handling of the 1/sec, 10/sec and 50/sec events, to avoid unnecessary delays.
+
+|
+
+Example I2C command sequences
+-----------------------------
+
+AHT2x Temperature / Humidity sensor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* This device is supported in :ref:`P105_page`, and was used for testing the plugin during development, as it has a few interesting requirements:
+
+  * All data (temperature and humidity) is read in a single command from the device.
+  * A delay is needed after the start-read command before we can retrieve valid data.
+  * The resulting data is split in a somewhat unusual way across the resulting byte buffer.
+
+The I2C commands to read the values are extracted from the data sheet, available from the manufacturer via the `product information page <https://asairsensors.com/product/aht20-integrated-temperature-and-humidity-sensor/>`_ (Scroll down to find the 'Product specifications' link to a pdf file).
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x38``
+
+* **Output Data Type**: ``Temp / Hum``
+
+Once this setting is saved:
+
+* **Interval**: can be set to 60 seconds to retrieve a measurement every minute.
+
+* **Values**: the names can be changed to Temp or Temperature and Hum or Humidity, and the number of decimals adjusted as desired (usually 1 or 2 decimals is fine for both measurements). Stats can be enabled, best would be to set the Axis to **L1** for Temperature, and **R1** for Humidity, as the scales for these values don't match in range.
+
+Then:
+
+The I2C Command sequence for retrieving the measurements: (NB: no ready-check is included here, though the data sheet suggests it to be used)
+
+``write.u16.0xAC.0x3300;delay.80;get.b.7;eval;calc.'0x{substring:4:9:%h%}/10485.76';value.2;calc.'0x{substring:9:14:%h%}/5242.88-50';value.1``
+
+Command sequence explanation:
+
+* ``write.u16.0xAC.0x3300``: Write uint16 (word) value 0x3300 to register 0xAC to start a read sequence
+* ``delay.80``: Wait for at least 80 msec (async/non-blocking when > 10 msec) before the values are available
+* ``get.b.7``: Read 7 bytes from the sensor
+* ``eval``: Use the previous command result for evaluation
+* ``calc.'0x{substring:4:9:%h%}/10485.76'``: Calculate the humidity value from the data provided. `%h%` is the sequence of bytes read (fmt: `b.7`), prefixed with '0x', and only 5 nibbles are used for the humidity value. This is divided by 10485.75 (2^20 / 100) to get the humidity percentage. Quotes are used because of the decimal point used in this calculation, that's also the argument separator here.
+* ``value.2``: Assign the last result to Value2 field (Hum)
+* ``calc.'0x{substring:9:14:%h%}/5242.88-50'``: Calculate the temperature value from the data provided. Again 5 nibbles are used, to be divided by 2^20 / 200 and 50 subtracted.
+* ``value.1``: Assign the last result to Value1 field (Temp)
+
+|
+
+M5Stack AIN4-20mA Unit / Module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As documented here: `M5Stack AIN4-20mA Unit <https://docs.m5stack.com/en/unit/AIN4-20mA%20Unit>`_ and here: `M5Stack AIN4-20mA Module 13.2 <https://docs.m5stack.com/en/module/AIN4-20mA%20Module%2013.2>`_
+
+This device can measure DC current in the 4..20 mA range, and has a rather straightforward protocol for reading, as shown in the Protocol overview near the end of that link. The unit has a single input, and the module is equiped with 4 inputs.
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x55``
+
+* **Output Data Type**: ``Single`` (Unit)
+* **Output Data Type**: ``Quad`` (Module)
+
+Once this setting is saved:
+
+* **Values**: the name(s) can be changed to a more useful name, and the number of decimals adjusted as desired. Stats can also be enabled, where each value *can* have its own Axis.
+
+Then:
+
+The I2C Command sequence for retrieving the measurement from the first input:
+
+``read.u16le.0x20;eval;calc.%value%/100``
+
+Command sequence explanation:
+
+* ``read.u16le.0x20``: Read an uint16 little endian (word) value from register 0x20
+* ``eval``: Use the previous command result for evaluation
+* ``calc.%value%/100``: Divide the retrieved value by 100 to obtain the mA value
+
+The last calculated result will be stored in the Value field for this I2C command sequence (assumed it was entered in the plugin, not in Rules or a separate Command on the Tools page).
+
+When using the M5Stack AIN4-20mA Module, with 4 input ports, the register address has to be increased with 2 for the next port, so 0x20 for port 0, 0x22 for port 1, 0x24 for port 2 and 0x26 for port 3. And similarly for reading the raw ADC value.
+
+This device supports adjusting the calibration to the current current that is flowing through the input. The procedure is as follows:
+
+* Supply a constant current of known value through the input, f.e. 12 mA.
+* Calculate the configuration value by multiplying the input current by 100 => **1200**
+* Use the Tools/Command field to send this command to the unit: ``genI2C,cmd,write.u16le.0x30.1200``
+
+  * I2C Command explanation:
+  * ``write.u16le.0x30.1200``: Write a word value (16 bit, Little Endian), to register 0x30, using value **1200**.
+* Similar to reading another than input 0, 2 should be added to the register for writing the calibration, so 0x30 for port 0, 0x32 for port 1, 0x34 for port 2 and 0x36 for port 3.
+
+|
+
+Bosch BMP58x Temp/Baro
+^^^^^^^^^^^^^^^^^^^^^^
+
+Based on this datasheet: `Bosch Sensortec BMP580 <https://www.lcsc.com/datasheet/lcsc_datasheet_2410121909_Bosch-Sensortec-BMP580_C22391138.pdf>`_ (Via third party)
+
+This device measures the barometric pressure and temperature, with high accuracy (+/- 0.5%) and high speed.
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x46`` (SDO = 0) or ``0x47`` (SDO = 1, default)
+
+* **Output Data Type**: ``Temp / Baro``
+
+Once this setting is saved:
+
+* **Interval**: can be set to 60 seconds to retrieve a measurement every minute.
+
+* **Values**: the names can be changed to Temp or Temperature and Baro or Pressure, and the number of decimals adjusted as desired (usually 1 or 2 decimals is fine for temperature, and 0 for pressure). Stats can be enabled, best would be to set the Axis to L1 for Temperature, and R1 for Pressure, as the scales don't match the same range.
+
+Then:
+
+The **I2C Init Commands** sequence for initializing the sensor:
+
+``write.u8.0x37.0x70;delay.3;write.u16le.0x36.0xF140``
+
+This configures these parameters:
+
+* Enable Pressure measurement
+* No over-sampling (osr)
+* 1 Hz output data rate (odr)
+* Normal operating mode, by first going to Standby operating mode, then to Normal operating mode, as documented
+
+If over-sampling or IIR filtering is desired, then information about setting the configuration registers can be obtained from the datasheet, linked above.
+
+The **I2C Exit Commands** sequence for de-initializing the sensor before plugin exit:
+
+``write.u8.0x37.0x70``
+
+This configures these parameters:
+
+* Standby operating mode.
+
+The I2C Command sequence for reading the Temperature:
+
+``read.u24le.0x1D;eval;calc.%value%/65536``
+
+Command sequence explanation:
+
+* ``read.u24le.0x1D``: Read an uint24 little endian value (3 bytes) value from register 0x1D
+* ``eval``: Use the previous command result for evaluation
+* ``calc.%value%/65536``: Divide the read value by 65536 as the right-most 16 bits are the fraction part
+
+The I2C Command sequence for reading the Barometric pressure:
+
+``read.u24le.0x20;eval;calc.%value%/6400``
+
+Command sequence explanation:
+
+* ``read.u24le.0x20``: Read an uint24 little endian value (3 bytes) value from register 0x20
+* ``eval``: Use the previous command result for evaluation
+* ``calc.%value%/6400``: Divide the read value by 6400 as the right-most 6 bits are the fraction part, and we are used to hPa, so a factor 100 is applied too
+
+|
+
+Tiny Code Reader (QR-code reader)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Implementation of the `Tiny Code Reader <https://github.com/moonshine-ai/tiny_code_reader_docs>`_ by `Useful Sensors <https://usefulsensors.com/>`_ QR Code reader, that'll scan and decode the content of a QR code, presented to the camera on the (small) board, and provide it for use in Rules etc.
+
+.. note:: This example uses the **String Variables** feature, that is not available for ESP8266 builds.
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x0C``
+
+* **Output Data Type**: ``Single``
+
+* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``qrsize``, so the I2C Command sequence is cached for much improved execution-performance. And the additional de-duplication uses the ``1ps`` event-interval, and the sequence must be cached for that event to work.
+
+* **I2C Commands 1**:
+
+The I2C Command sequence for reading the QR code:
+
+``get.u16le;eval;if.%value%;value.1;get.str.=%value%+2;eval;letstr.qrtxt.`{substring:1::'%value%'}``
+
+Command sequence explanation:
+
+* ``get.u16le``: Read the 2 byte length of the last recognized QR code
+* ``eval``: Load last value to be used.
+* ``if.%value%``: Check if the value > 0. Exit when 0.
+* ``value.1``: Store value in first **Values** field.
+* ``get.str.=%value%+2``: Read a string from the code-reader, for indicated length, and including the 2 byte lengthe prefix.
+* ``eval``: Load the value to be used.
+* ``letstr.qrtxt.`{substring:1::'%value%'}``: Save the received string into a String variable named ``qrtxt``, skipping the first character, that holds the length. De actual size prefix is 2 bytes, but ``\0`` characters are ignored when reading a string, and the max. length that the reader will return is 255 characters, so the first byte is always 0 and thus skipped.
+
+Additionally, for de-duplicating of reading and handling a QR code, this code can be appended to **I2C Commands 1** to reset the Size value after 10 seconds, and Rules code to handle the received text.
+
+``;let.180180.10|1ps|if.%v180180%;let.180180.%v180180%-1;if.!%v180180%;calc.0;value.1``
+
+Command sequence explanation:
+
+* ``let.180180.10``: Set the auto-clear timer in global (Rules) variable ``%v180180%`` to 10 sec. (variable number chosen 'randomly')
+* ``|1ps|``: Define the 1/sec event handler
+* ``if.%v180180%``: Check if the counter is still set, exit if 0
+* ``let.180180.%v180180%-1``: Count down the auto-clear timer
+* ``if.!%v180180%``: Check if the counter is > 0, then exit
+* ``calc.0``: Set the value to 0
+* ``value.1``: Load the 0-value into the first **Values** field, resetting the Size
+
+This device needs a Rule to handle the result, as we can't store string values in **Values** fields:
+
+.. code:: none
+
+  On QR#Size Do
+    If %eventvalue1%=0 // Length 0 and timer finished then reset last received QR code
+      If '[str#qrlast]'<>'' And %v180180%=0
+        LetStr,qrlast,''
+      Endif
+    Else
+      If '[str#qrtxt]'<>'[str#qrlast]' // Is the received QR code different from the last? (using quotes as strings can contain spaces or commas)
+        LetStr,qrlast,'[str#qrtxt]' // Store for de-duplication
+        LogEntry,'QR scanned: [str#qrtxt]' // Do something with the received code (can use all kinds of commands to publish the text)
+      Endif
+    Endif
+  Endon
+
+* **Interval**: can be set to 1 second to quickly handle a received QR code.
+
+* **Values**: the name can be changed to Size or Length, and the number of decimals set to 0.
+
+|
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  2025-04-19 Initial release version.
+

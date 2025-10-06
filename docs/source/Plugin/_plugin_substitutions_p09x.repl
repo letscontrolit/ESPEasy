@@ -63,7 +63,7 @@
 .. |P095_type| replace:: :cyan:`Display`
 .. |P095_typename| replace:: :cyan:`Display - TFT ILI934x/ILI948x`
 .. |P095_porttype| replace:: `.`
-.. |P095_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION` :yellow:`(ESP32)`
+.. |P095_status| replace:: :yellow:`COLLECTION` :yellow:`\(ESP32\)` :yellow:`DISPLAY B`
 .. |P095_github| replace:: _P095_ILI9341.ino
 .. _P095_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P095_ILI9341.ino
 .. |P095_usedby| replace:: `.`
@@ -102,7 +102,7 @@
 .. |P099_type| replace:: :cyan:`Touch`
 .. |P099_typename| replace:: :cyan:`Touch - XPT2046 touchscreen on TFT display`
 .. |P099_porttype| replace:: `SPI`
-.. |P099_status| replace:: :yellow:`DISPLAY`
+.. |P099_status| replace:: :yellow:`DISPLAY B`
 .. |P099_github| replace:: _P099_XPT2046Touch.ino
 .. _P099_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P099_XPT2046Touch.ino
 .. |P099_usedby| replace:: `.`

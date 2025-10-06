@@ -390,8 +390,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
   Settings.CombineTaskValues_SingleEvent(taskIndex, isFormItemChecked(F("TVSE")));
   #if FEATURE_STRING_VARIABLES
-  Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
-  Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
+  if (!device.HideDerivedValues) {
+    Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
+    Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
+  }
   #endif // if FEATURE_STRING_VARIABLES
   
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
@@ -406,6 +408,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }
     # endif // if FEATURE_MQTT_DISCOVER
     #if FEATURE_STRING_VARIABLES
+    if (!device.HideDerivedValues) 
     Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
     #endif // if FEATURE_STRING_VARIABLES
     #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
@@ -825,6 +828,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
+        const DeviceStruct& device = Device[DeviceIndex];
         String customValuesString;
         const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
 
@@ -846,7 +850,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               const String value = formatUserVarNoCheck(&TempEvent, varNr);
               #if FEATURE_STRING_VARIABLES
               bool hasPresentation = false;
-              const String presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
+              String presentation;
+              if (!device.HideDerivedValues)
+                presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
               #endif // if FEATURE_STRING_VARIABLES
               pluginWebformShowValue(
                 x,
@@ -865,47 +871,49 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           }
 
           #if FEATURE_STRING_VARIABLES
-          int varNr = VARS_PER_TASK;
-          if (Settings.ShowDerivedTaskValues(x)) {
-            String taskName = getTaskDeviceName(x);
-            taskName.toLowerCase();
-            String postfix;
-            const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+          if (!device.HideDerivedValues) {
+            int varNr = VARS_PER_TASK;
+            if (Settings.ShowDerivedTaskValues(x)) {
+              String taskName = getTaskDeviceName(x);
+              taskName.toLowerCase();
+              String postfix;
+              const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
-            auto it = customStringVar.begin();
-            while (it != customStringVar.end()) {
-              if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-                String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                String uom;
-                String vType;
-                const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
-                if (!vname2.isEmpty()) {
-                  valueName = vname2;
-                }
-                if (!it->second.isEmpty()) {
-                  String value(it->second);
-                  value = parseTemplateAndCalculate(value);
-                  String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
-                  if (!uom.isEmpty()) {
-                    value = strformat(F("%s %s"), value.c_str(), uom.c_str());
+              auto it = customStringVar.begin();
+              while (it != customStringVar.end()) {
+                if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+                  String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+                  String uom;
+                  String vType;
+                  const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
+                  if (!vname2.isEmpty()) {
+                    valueName = vname2;
                   }
-                  if (!presentation.isEmpty()) {
-                    stripEscapeCharacters(presentation);
-                    presentation.replace(F("%value%"), value);
-                    value = parseTemplate(presentation);
+                  if (!it->second.isEmpty()) {
+                    String value(it->second);
+                    value = parseTemplateAndCalculate(value);
+                    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
+                    if (!uom.isEmpty()) {
+                      value = strformat(F("%s %s"), value.c_str(), uom.c_str());
+                    }
+                    if (!presentation.isEmpty()) {
+                      stripEscapeCharacters(presentation);
+                      presentation.replace(F("%value%"), value);
+                      value = parseTemplate(presentation);
+                    }
+                    pluginWebformShowValue(
+                      x,
+                      varNr,
+                      valueName,
+                      value);
+                    ++varNr;
                   }
-                  pluginWebformShowValue(
-                    x,
-                    varNr,
-                    valueName,
-                    value);
-                  ++varNr;
                 }
+                else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+                  break;
+                }
+                ++it;
               }
-              else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-                break;
-              }
-              ++it;
             }
           }
           #endif // if FEATURE_STRING_VARIABLES
@@ -1564,8 +1572,10 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                   getTaskDeviceName(taskIndex).c_str()));
 
     #if FEATURE_STRING_VARIABLES
-    addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
-    addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
+    if (!device.HideDerivedValues) {
+      addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
+      addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
+    }
     #endif // if FEATURE_STRING_VARIABLES
 
     bool separatorAdded = false;
@@ -1600,7 +1610,8 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                                     getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
         # endif // if FEATURE_MQTT_DISCOVER
         # if FEATURE_STRING_VARIABLES
-        const bool allowSendDerived = (validProtocolIndex(ProtocolIndex) &&
+        const bool allowSendDerived = !device.HideDerivedValues &&
+                                      (validProtocolIndex(ProtocolIndex) &&
                                        getProtocolStruct(ProtocolIndex).allowSendDerived);
         # endif // if FEATURE_STRING_VARIABLES
 

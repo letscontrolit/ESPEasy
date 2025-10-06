@@ -303,11 +303,13 @@ bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
       const int pos_closing_pct = s.indexOf('%', v_index + 1);
       const String arg = s.substring(v_index + 2 + (isv_ ? 1 : 0), pos_closing_pct);
       String valArg(arg);
-      constexpr int64_t errorvalue = -1;
-      const int64_t i = CalculateParam(arg, errorvalue);
-      // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
-      if (i != errorvalue) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
-        valArg = ll2String(i);
+      if (!isv_) {
+        constexpr int64_t errorvalue = -1;
+        const int64_t i = CalculateParam(arg, errorvalue);
+        // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
+        if (i != errorvalue) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
+          valArg = ll2String(i);
+        }
       }
 
       // Need to replace the entire arg

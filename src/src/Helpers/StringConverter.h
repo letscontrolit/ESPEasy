@@ -122,6 +122,7 @@ void appendHexChar(uint8_t data, String& string);
 // Binary data to HEX
 // Returned string length will be twice the size of the data array.
 String formatToHex_array(const uint8_t* data, size_t size);
+String formatToHex_wordarray(const uint16_t* data, size_t size);
 
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix,

@@ -12,6 +12,7 @@
 # When adding or removing a build set, this script may need adjustments!
 
 # Changelog:
+# 2025-10-05 tonhuisman: Adjustments for Display A and Display B split
 # 2024-05-04 tonhuisman: Working and documented
 # 2024-04-28 tonhuisman: Initial script
 
@@ -30,8 +31,9 @@ appendBuilds = {'MAX'}
 
 # What build set to add plugins also
 appendAlso = {
-  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'DISPLAY', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
-  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G'}
+  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'DISPLAY A', 'DISPLAY B', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
+  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G'},
+  'DISPLAY': {'DISPLAY A', 'DISPLAY B'}
   }
 
 # Ignore these, not real build sets
@@ -40,7 +42,8 @@ excludeBuilds = {'DEVELOPMENT', 'RETIRED'}
 # Plugins not included
 excludePlugins = {
   'CLIMATE': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
-  'DISPLAY': {'P070'},
+  'DISPLAY A': {'P038', 'P041', 'P042', 'P070'},
+  'DISPLAY B': {'P038', 'P041', 'P042', 'P057', 'P070', 'P075', 'P104'},
   'MAX': {'P089'},
   # 'NEOPIXEL': {''},
   'NORMAL': {'P016', 'P035'},
@@ -57,7 +60,8 @@ buildColors = {
   'COLLECTION F': 'yellow',
   'COLLECTION G': 'yellow',
   'CLIMATE': 'yellow',
-  'DISPLAY': 'yellow',
+  'DISPLAY A': 'yellow',
+  'DISPLAY B': 'yellow',
   'ENERGY': 'yellow',
   'IR': 'yellow',
   'IRext': 'yellow',

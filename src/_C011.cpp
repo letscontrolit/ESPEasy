@@ -305,7 +305,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     }
 
     ReplaceTokenByValue(element.uri,    event, false);
-    ReplaceTokenByValue(element.header, event, false);
+    ReplaceTokenByValue(element.header, event, true); // Header shouldn't be URL-encoded https://github.com/letscontrolit/ESPEasy/issues/4819
 
     if (element.postStr.length() > 0)
     {

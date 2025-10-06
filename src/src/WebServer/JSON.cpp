@@ -507,7 +507,6 @@ void handle_json()
                 String value(it->second);
                 stripEscapeCharacters(value);
                 value = parseTemplate(value);
-                ESPEASY_RULES_FLOAT_TYPE floatvalue{};
                 uint8_t nrDecimals = 255; // FIXME Use the minimal number of decimals needed
                 bool hasPresentation;
                 const String presentation = formatUserVarForPresentation(&TempEvent, INVALID_TASKVAR_INDEX, hasPresentation, value, DeviceIndex, valueName);
