@@ -71,7 +71,7 @@
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
 ModbusDEVICE_struct * P183_ModbusDevice = nullptr;
-ModbusQueueState_t P183_ModbusStatus =   ModbusQueueState_t::EMPTY;
+ModbusQueueState_t P183_ModbusStatus =   {};
 boolean P183_init                    = false;
 
 void P183_scan_modbus();
@@ -211,6 +211,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       P183_init = true;
+      addLogMove(LOG_LEVEL_INFO, "P183 INIT");
 
       // (re)create the serial port object
       // If the serial port object already exists, delete it first.
@@ -219,6 +220,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         P183_ModbusDevice = nullptr;
       }
       P183_ModbusDevice = new ModbusDEVICE_struct();
+      addLogMove(LOG_LEVEL_INFO, "P183 INIT AFTER NEW");
 
       if (P183_ModbusDevice == nullptr) {
         P183_init = false;
@@ -234,8 +236,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
                                    P183_GET_FLAG_COLL_DETECT)) {
         break;
       }
+      addLogMove(LOG_LEVEL_INFO, "P183 INIT AFTER INIT");
       P183_ModbusDevice->setModbusTimeout(P183_MODBUS_TIMEOUT);
-
+      addLogMove(LOG_LEVEL_DEBUG, "AFTER TIMEOUT");
       # ifdef P183_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -260,20 +263,23 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       P183_init = false;
-      delete P183_ModbusDevice;
-      P183_ModbusDevice = nullptr;
-      success           = true;
+
+      if (P183_ModbusDevice != nullptr) {
+        delete P183_ModbusDevice;
+        P183_ModbusDevice = nullptr;
+      }
+      success = true;
       break;
     }
 
     case PLUGIN_READ:
     {
-      uint16_t value = 0;
-
+      static uint16_t registerValues[4] = {0, 0, 0, 0};
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
       {
-        P183_modbus_readRegister(P183_ADDRESS(outputIndex), &value);
-        UserVar.setFloat(event->TaskIndex, outputIndex, value);
+        // TODO: Abuse PCONFIG_LONG static storage for now.
+        P183_modbus_readRegister(P183_ADDRESS(outputIndex), &(registerValues[outputIndex]));
+        UserVar.setFloat(event->TaskIndex, outputIndex, registerValues[outputIndex]);
       }
       success = true;
       break;
@@ -353,6 +359,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         P183_modbus_readRegister(address, &value);
         string  = String(value);
         success = true;
+      }
+      break;
+    }
+    case PLUGIN_TEN_PER_SECOND: {
+      if (P183_init && (P183_ModbusDevice != nullptr)) {
+        P183_ModbusDevice->processCommand();
       }
       break;
     }
@@ -459,7 +471,7 @@ void P183_scan_modbus()
   uint16_t value = 0;
 
   for (uint8_t id = 0; id <= 247; id++) {
-    //TODO: how to scan the Modbus devices in teh new structure
+    // TODO: how to scan the Modbus devices in teh new structure
     int result = P183_modbus_readRegister(1, &value);
     log += F("** Address ");
     log += String(id);

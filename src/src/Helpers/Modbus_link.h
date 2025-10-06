@@ -9,26 +9,48 @@
 # include <ESPeasySerial.h>
 # include "MODBUS_RTU.h"
 
+# define MODBUS_XMIT_BUFFER  12
+# define MODBUS_RCV_BUFFER   256
+
 // Forward declaration of ModbusDEVICE_struct to avoid circular dependency issues
 struct ModbusDEVICE_struct;
+
+typedef enum class ModbusQueueState {
+  NOT_QUEUED        = 0,
+  QUEUED            = 1,
+  MESSAGE_SENT      = 2,
+  RESPONSE_RECEIVED = 3,
+  ERROR_OCCURRED    = 4,
+  READY_FOR_DESTROY = 5
+} ModbusQueueState_t;
+
+enum class ModbusMessageType {
+  NONE                   = 0,
+  READ_HOLDING_REGISTERS = 1,
+  WRITE_SINGLE_REGISTER  = 2
+};
 
 // Modbus request queue element structure
 // This structure represents a single Modbus request and its associated response.
 struct Modbus_RequestQueueElement {
-  Modbus_RequestQueueElement(uint16_t id, uint8_t state)
+  Modbus_RequestQueueElement(uint16_t id, ModbusQueueState state)
     : _id(id),
     _state(state)
   {}
 
-  uint16_t                    _id               = 0;       // ID of the request
-  struct ModbusDEVICE_struct *_device           = nullptr; // Pointer to the Modbus device requesting the action
-  uint8_t                    *_sendframe        = { 0 };   // Reqest frame to send
-  uint8_t                    *_rcvframe         = { 0 };   // Response frame received
-  uint16_t                    _sendframe_length = 0;       // Length of the request frame
-  uint16_t                    _rcvframe_length  = 0;       // Expected length of the response frame expected
-  uint8_t                     _state            = 0;       // State of the request exchange
-  uint16_t                    _timeout          = 0;       // Specified timeout value for the request
-  unsigned long               _deadline         = 0;       // Timeout deadline for the request
+  ModbusMessageType           _messageType = ModbusMessageType::NONE;                  // Type of Modbus message
+  void                       *_userData    = nullptr;                                  // Pointer to user data
+  uint16_t                    _id          = 0;                                        // ID of the request
+  struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the
+                                                                                       // action
+  uint16_t _sendframe_length = 0;                                                      // Length of the request frame
+  uint16_t _rcvframe_length  = 0;                                                      // Expected length of the response frame
+                                                                                       // expected
+  enum ModbusQueueState _state                         = ModbusQueueState::NOT_QUEUED; // State of the request exchange
+  uint16_t              _timeout                       = 0;                            // Specified timeout value for the request
+  unsigned long         _deadline                      = 0;                            // Timeout deadline for the request
+  uint8_t               _sendframe[MODBUS_XMIT_BUFFER] = { 0 };                        // Reqest frame to send
+  uint8_t               _rcvframe[MODBUS_RCV_BUFFER]   = { 0 };                        // Response frame received
 };
 
 // Queue of Modbus request elements
@@ -59,24 +81,20 @@ struct ModbusLINK_struct  {
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool     isInitialized() const;
+  bool                        isInitialized() const;
 
-  uint16_t queueRequest(
-    struct ModbusDEVICE_struct *device,
-    uint8_t                    *sendframe,
-    uint16_t                    sendframe_length,
-    uint16_t                    rcvframe_length,
-    uint16_t                    timeout);
+  Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
+  bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
+  void                        freeTransactions(struct ModbusDEVICE_struct *device);
+  uint16_t                    queueRequest(Modbus_RequestQueueElement *transaction);
+  bool                        getResponse(uint16_t                     id,
+                                          Modbus_RequestQueueElement **transaction);
 
-  bool getResponse(uint16_t id,
-                   uint8_t *rcvframe,
-                   uint16_t rcvframe_length);
-
-  bool    removeRequest(uint16_t id);
-
-  uint8_t processCommand();
+  void                        processCommand();
 
 private:
+
+  static void dumpQueueElement(Modbus_RequestQueueElement *el);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
   int8_t              _dere_pin         = -1;      // Pin to control DE/RE of RS485 transceiver

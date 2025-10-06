@@ -25,7 +25,7 @@ struct ModbusMGR_struct  {
                const int16_t           serial_rx,
                const int16_t           serial_tx,
                int16_t                 baudrate,
-               ModbusLINK_struct      **link,
+               ModbusLINK_struct     **link,
                uint8_t                *deviceID);
 
   bool connect(const ESPEasySerialPort port,
@@ -34,14 +34,34 @@ struct ModbusMGR_struct  {
                int16_t                 baudrate,
                int8_t                  dere_pin,
                bool                    collision_detect,
-               ModbusLINK_struct      **link,
+               ModbusLINK_struct     **link,
                uint8_t                *deviceID);
 
   bool disconnect(uint8_t deviceID);
 
 private:
 
-  ModbusLINK_struct *_modbus_link = nullptr; // Pointer to the Modbus link object
+  struct ModbusLinkInfo_struct {
+    ESPEasySerialPort         port             = ESPEasySerialPort::not_set;
+    int16_t                   serial_rx        = -1;
+    int16_t                   serial_tx        = -1;
+    int16_t                   baudrate         = 9600;
+    int8_t                    dere_pin         = -1;      // Pin used for RS485 DE/RE control, -1 if not used
+    bool                      rs485_mode       = false;   // True if RS485 mode is enabled
+    bool                      collision_detect = false;   // True if collision detection is enabled
+    struct ModbusLINK_struct *link             = nullptr; // Pointer to the Modbus link object
+  };
+
+  struct ModbusDeviceInfo_struct {
+    uint8_t                       deviceID = 0;          // Unique ID assigned by the Modbus manager
+    struct ModbusDEVICE_struct   *device   = nullptr;    // Pointer to the Modbus device object
+    struct ModbusLinkInfo_struct *link     = nullptr;    // Pointer to the Modbus link info
+  };
+
+   ModbusLinkInfo_struct   *_modbus_links[5]    = {nullptr};     // Pointer to the Modbus link object
+   ModbusDeviceInfo_struct *_modbus_devices[16] = {nullptr};     // Array of connected Modbus devices
+
+  ModbusLINK_struct *_modbus_link = nullptr;             // Legacy, to be cleaned up
 };
 
 static struct ModbusMGR_struct ModbusMGR_singleton = {}; // Singleton instance of the Modbus Manager
