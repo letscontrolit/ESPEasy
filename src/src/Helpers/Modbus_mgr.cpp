@@ -1,7 +1,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS_FAC
 
 # include <ESPeasySerial.h>
 # include "Modbus_mgr.h"

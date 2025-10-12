@@ -3,11 +3,10 @@
 
 #include "../../ESPEasy_common.h"
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS_FAC
 
 # include "../../_Plugin_Helper.h"
 # include <ESPeasySerial.h>
-# include "MODBUS_RTU.h"
 
 # define MODBUS_XMIT_BUFFER  12
 # define MODBUS_RCV_BUFFER   256
@@ -28,18 +27,18 @@ typedef enum class ModbusQueueState {
 // Types of Modbus transactions supported by the Modbuss_device
 // This enumeration is used by the Modbus device to indicate which transaction is associated with the queue element.
 // See Modbus specification for details on function codes.
-enum class ModbusMessageType {
+typedef enum class ModbusTransactionType {
   NONE                   = 0, // Undefined/unknown transaction type
   READ_HOLDING_REGISTERS = 1, // Read holding registers (function code 0x03)
   WRITE_SINGLE_REGISTER  = 2  // Write single register (function code 0x06)
-};
+} ModbusTransactionType_t;
 
 // Modbus request queue element structure
 // This structure represents a single Modbus request and its associated response.
 struct Modbus_RequestQueueElement {
   Modbus_RequestQueueElement() = default;
 
-  ModbusMessageType           _messageType = ModbusMessageType::NONE;                  // Type of Modbus message
+  ModbusTransactionType       _messageType = ModbusTransactionType::NONE;              // Type of Modbus message
   void                       *_userData    = nullptr;                                  // Pointer to user data
   uint16_t                    _id          = 0;                                        // ID of the request
   struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the
@@ -55,7 +54,7 @@ struct Modbus_RequestQueueElement {
 };
 
 // Queue of Modbus request elements
-typedef std::list<Modbus_RequestQueueElement> Modbus_RequestQueue;
+typedef std::list<Modbus_RequestQueueElement*> Modbus_RequestQueue;
 
 
 // ModbusLINK structure representing a MODBUS LINK

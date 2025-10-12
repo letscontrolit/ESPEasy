@@ -3,10 +3,22 @@
 
 #include "../../ESPEasy_common.h"
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS_FAC
 
 # include <ESPeasySerial.h>
 # include "Modbus_link.h"
+
+# ifndef MODBUS_BROADCAST_ADDRESS
+#  define MODBUS_BROADCAST_ADDRESS 0xFE // Address used for boardcast messages
+# endif // ifndef MODBUS_BROADCAST_ADDRESS
+
+// States for the Modbus queue elements
+typedef enum class ModbusResultState {
+  BUSY    = 0, // Transaction is not completed
+  SUCCESS = 1, // Transaction successfully completed
+  ERROR   = 2, // Transaction completed with an error
+} ModbusResultState_t;
+
 
 // ModbusDEVICE structure representing a MODBUS Device
 // This is a single device that may share it's Modbus link with multiple other devices.
@@ -50,13 +62,13 @@ public:
   // Start reading a Modubus holding register. The result will be available later.
   // The function returns true if the request was queued.
   // The state variable will signal the processing state of the request.
-  bool readHoldingRegister(uint16_t            address,
-                           uint16_t           *valueptr,
-                           ModbusQueueState_t *stateptr);
+  bool readHoldingRegister(uint16_t             address,
+                           uint16_t            *valueptr,
+                           ModbusResultState_t *stateptr);
 
-  bool writeSingleRegister(uint16_t            address,
-                           uint16_t            value,
-                           ModbusQueueState_t *stateptr);
+  bool writeSingleRegister(uint16_t             address,
+                           uint16_t             value,
+                           ModbusResultState_t *stateptr);
 
 private:
 
@@ -71,5 +83,5 @@ private:
                               size_t         length);
 };
 
-#endif // FEAURE_MODBUS
+#endif // FEAURE_MODBUS_FAC
 #endif // HELPERS_MODBUS_LINK_H

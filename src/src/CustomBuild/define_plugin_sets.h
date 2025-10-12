@@ -2836,7 +2836,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108) || defined(USES_P183)
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
   #ifdef FEATURE_MODBUS
     #undef FEATURE_MODBUS
@@ -2844,6 +2844,21 @@ To create/register a plugin, you have to :
   #define FEATURE_MODBUS  1
 #endif
 
+#if defined(USES_P183)
+  // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
+  #ifdef FEATURE_MODBUS_FAC
+    #undef FEATURE_MODBUS_FAC
+  #endif
+  #define FEATURE_MODBUS_FAC  1
+#endif
+
+#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108) || defined(USES_P183)
+  // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
+  #ifdef FEATURE_MODBUS
+    #undef FEATURE_MODBUS
+  #endif
+  #define FEATURE_MODBUS  1
+#endif
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
   #ifndef FEATURE_DOMOTICZ
     #define FEATURE_DOMOTICZ  1
@@ -3460,6 +3475,10 @@ To create/register a plugin, you have to :
 
 #ifndef FEATURE_MODBUS
 #define FEATURE_MODBUS                        0
+#endif
+
+#ifndef FEATURE_MODBUS_FAC
+#define FEATURE_MODBUS_FAC                    0
 #endif
 
 #ifndef FEATURE_MQTT
