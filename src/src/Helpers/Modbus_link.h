@@ -39,7 +39,8 @@ struct Modbus_RequestQueueElement {
   Modbus_RequestQueueElement() = default;
 
   ModbusTransactionType       _messageType = ModbusTransactionType::NONE;              // Type of Modbus message
-  void                       *_userData    = nullptr;                                  // Pointer to user data
+  void                       *_userData    = nullptr;                                  // Pointer to user (device) data
+  void                       *_userState   = nullptr;                                  // Pointer to user (device) defined state
   uint16_t                    _id          = 0;                                        // ID of the request
   struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the
                                                                                        // action
@@ -54,7 +55,7 @@ struct Modbus_RequestQueueElement {
 };
 
 // Queue of Modbus request elements
-typedef std::list<Modbus_RequestQueueElement*> Modbus_RequestQueue;
+typedef std::list<Modbus_RequestQueueElement *> Modbus_RequestQueue;
 
 
 // ModbusLINK structure representing a MODBUS LINK
@@ -86,15 +87,13 @@ struct ModbusLINK_struct  {
   Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
   bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
   void                        freeTransactions(struct ModbusDEVICE_struct *device);
-  uint16_t                    queueRequest(Modbus_RequestQueueElement *transaction);
-  bool                        getResponse(uint16_t                     id,
-                                          Modbus_RequestQueueElement **transaction);
-
+  uint16_t                    queueTransaction(Modbus_RequestQueueElement *transaction);
   void                        processCommand();
 
 private:
 
   static void dumpQueueElement(Modbus_RequestQueueElement *el);
+  static void dumpState(ModbusQueueState_t state);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
   Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process

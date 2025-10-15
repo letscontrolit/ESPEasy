@@ -33,8 +33,8 @@ struct P183_data_struct : public PluginTaskData_base {
                        uint8_t end_reg);
   void     scan_modbus();
   uint16_t readRegisterWait(uint16_t address);
-  void     writeResgister(uint16_t address,
-                          uint16_t value);
+  void     writeRegister(uint16_t address,
+                         uint16_t value);
 
 private:
 
@@ -42,6 +42,7 @@ private:
   struct ModbusDEVICE_struct *_modbusDevice      = nullptr;
   uint16_t                    _registerValues[4] = {}; // Modus register values retrieved for output values
   ModbusResultState_t         _queueStates[4]    = {}; // State of read hloding register transactions
+  ModbusResultState_t         _lastActionState   = ModbusResultState::BUSY;
 };
 
 #endif // ifdef USES_P183

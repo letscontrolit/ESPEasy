@@ -78,12 +78,6 @@
 # define P183_MODBUS_FUNC_READ_HOLDING_REGISTERS 0x03
 # define P183_MODBUS_FUNC_WRITE_SINGLE_REGISTER  0x06
 
-// These pointers may be used among multiple instances of the same plugin,
-// as long as the same serial settings are used.
-ModbusDEVICE_struct * P183_ModbusDevice = nullptr;
-ModbusResultState_t P183_ModbusStatus =   {};
-boolean P183_init                     = false;
-
 boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -208,8 +202,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         P183_ADDRESS(outputIndex) = getFormItemInt(P183_ADDRESS_LABEL(outputIndex));
       }
 
-      P183_init = false; // Force device setup next time
-      success   = true;
+      success = true;
       break;
     }
 
@@ -231,8 +224,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
       }
 
-      P183_init = true;
-      success   = true;
+      success = true;
       break;
     }
 
@@ -256,72 +248,72 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WRITE:
     {
-      P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
+        P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
+        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Write invalid data struct"));
         return false;
       }
 
-      if (P183_ModbusDevice != nullptr) {
-        const String cmd = parseString(string, 1);
+      const String cmd = parseString(string, 1);
 
-        if (equals(cmd, F("modbus"))) {
-          const String subcmd = parseString(string, 2);
+      if (equals(cmd, F("modbus"))) {
+        const String subcmd = parseString(string, 2);
 
-          if (equals(subcmd, F("write"))) {
-            // Write a value to a Modbus register
-            int address    = parseString(string, 3).toInt();
-            uint16_t value = parseString(string, 4).toInt();
-            P183_data->writeResgister(address, value);
+        if (equals(subcmd, F("write"))) {
+          // Write a value to a Modbus register
+          int address    = parseString(string, 3).toInt();
+          uint16_t value = parseString(string, 4).toInt();
+          P183_data->writeRegister(address, value);
 
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("Modbus: write value ");
-              log += value;
-              log += F(" to address ");
-              log += address;
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-            success = true;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Modbus: write value ");
+            log += value;
+            log += F(" to address ");
+            log += address;
+            addLogMove(LOG_LEVEL_INFO, log);
           }
-          else if (equals(subcmd, F("read"))) {
-            // Read a value from a Modbus register
-            int address    = parseString(string, 3).toInt();
-            uint16_t value = 0;
-            value = P183_data->readRegisterWait(address);
+          success = true;
+        }
+        else if (equals(subcmd, F("read"))) {
+          // Read a value from a Modbus register
+          int address    = parseString(string, 3).toInt();
+          uint16_t value = 0;
+          value = P183_data->readRegisterWait(address);
 
-            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("Modbus: read value ");
-              log += value;
-              log += F(" from address ");
-              log += address;
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-            success = true;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Modbus: read value ");
+            log += value;
+            log += F(" from address ");
+            log += address;
+            addLogMove(LOG_LEVEL_INFO, log);
           }
-          else if (equals(subcmd, F("dump"))) {
-            int start_address = parseString(string, 3).toInt();
-            int end_address   = parseString(string, 4).toInt();
+          success = true;
+        }
+        else if (equals(subcmd, F("dump"))) {
+          int start_address = parseString(string, 3).toInt();
+          int end_address   = parseString(string, 4).toInt();
 
-            if (end_address < start_address) {
-              end_address = start_address;
-            }
+          if (end_address < start_address) {
+            end_address = start_address;
+          }
 
-            if (end_address - start_address > 100) {
-              end_address = start_address + 100; // Limit to 100 addresses
-            }
-            P183_data->scan_device(P183_DEV_ID, start_address, end_address);
-            success = true;
+          if (end_address - start_address > 100) {
+            end_address = start_address + 100; // Limit to 100 addresses
           }
-          else if (equals(subcmd, F("scan"))) {
-            // Scan for Modbus devices
-            P183_data->scan_modbus();
-            success = true;
-          }
-          else {
-            addLogMove(LOG_LEVEL_ERROR, F("Modbus: Unknown command"));
-          }
+          P183_data->scan_device(P183_DEV_ID, start_address, end_address);
+          success = true;
+        }
+        else if (equals(subcmd, F("scan"))) {
+          // Scan for Modbus devices
+          P183_data->scan_modbus();
+          success = true;
+        }
+        else {
+          addLogMove(LOG_LEVEL_ERROR, F("Modbus: Unknown command"));
         }
       }
+
       break;
     }
     case PLUGIN_GET_CONFIG_VALUE: {

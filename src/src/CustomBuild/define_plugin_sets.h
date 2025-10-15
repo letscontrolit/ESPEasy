@@ -2845,20 +2845,13 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_P183)
-  // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
+  //P183 uses the Modbus facilities
   #ifdef FEATURE_MODBUS_FAC
     #undef FEATURE_MODBUS_FAC
   #endif
   #define FEATURE_MODBUS_FAC  1
 #endif
 
-#if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108) || defined(USES_P183)
-  // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-  #ifdef FEATURE_MODBUS
-    #undef FEATURE_MODBUS
-  #endif
-  #define FEATURE_MODBUS  1
-#endif
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
   #ifndef FEATURE_DOMOTICZ
     #define FEATURE_DOMOTICZ  1
