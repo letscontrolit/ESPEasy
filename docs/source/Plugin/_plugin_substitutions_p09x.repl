@@ -38,7 +38,7 @@
 .. |P093_name| replace:: :cyan:`Mitsubishi Heat Pump`
 .. |P093_type| replace:: :cyan:`Energy (Heat)`
 .. |P093_typename| replace:: :cyan:`Energy (Heat) - Mitsubishi Heat Pump`
-.. |P093_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION D`
+.. |P093_status| replace:: :yellow:`COLLECTION D` :yellow:`ENERGY`
 .. |P093_github| replace:: P093_MitsubishiHP.ino
 .. _P093_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P093_MitsubishiHP.ino
 .. |P093_usedby| replace:: `.`

@@ -24,18 +24,18 @@
 .. |P101_compileinfo| replace:: `.`
 .. |P101_usedlibraries| replace::  https://github.com/a7md0/WakeOnLan
 
-.. |P102_name| replace:: :cyan:`PZEM-004Tv30-Multiple`
-.. |P102_type| replace:: :cyan:`Energy (AC)`
-.. |P102_typename| replace:: :cyan:`Energy (AC) - PZEM-004Tv30-Multiple`
+.. |P102_name| replace:: :cyan:`PZEM-004Tv30 / PZEM-017v1`
+.. |P102_type| replace:: :cyan:`Energy`
+.. |P102_typename| replace:: :cyan:`Energy - PZEM-004T (AC) / PZEM-017 (DC)`
 .. |P102_porttype| replace:: `.`
 .. |P102_status| replace:: :yellow:`ENERGY`
 .. |P102_github| replace:: P102_PZEM004Tv3.ino
 .. _P102_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P102_PZEM004Tv3.ino
 .. |P102_usedby| replace:: `.`
 .. |P102_shortinfo| replace:: `.`
-.. |P102_maintainer| replace:: TD-er
+.. |P102_maintainer| replace:: TD-er tonhuisman
 .. |P102_compileinfo| replace:: `.`
-.. |P102_usedlibraries| replace::  https://github.com/olehs/PZEM004T
+.. |P102_usedlibraries| replace::  https://github.com/olehs/PZEM004T https://github.com/mandulaj/PZEM-004T-v30
 
 .. |P103_name| replace:: :cyan:`Atlas Scientific EZO pH ORP EC DO HUM`
 .. |P103_type| replace:: :cyan:`Environment`
@@ -122,7 +122,7 @@
 .. |P108_type| replace:: :cyan:`Energy (AC)`
 .. |P108_typename| replace:: :cyan:`Energy (AC) - DDS238-x`
 .. |P108_porttype| replace:: `.`
-.. |P108_status| replace:: :yellow:`ENERGY` :yellow:`COLLECTION B`
+.. |P108_status| replace:: :yellow:`COLLECTION B` :yellow:`ENERGY`
 .. |P108_github| replace:: P108_DDS238.ino
 .. _P108_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P108_DDS238.ino
 .. |P108_usedby| replace:: `.`

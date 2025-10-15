@@ -2,8 +2,8 @@
 
 .. _N001_page:
 
-Notifications Email (SMTP)
-===========================
+|N001_typename|
+===============================
 
 |N001_shortinfo|
 

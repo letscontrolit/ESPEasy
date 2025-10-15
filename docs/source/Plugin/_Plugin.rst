@@ -324,7 +324,7 @@ There are different released versions of ESP Easy:
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` (split into sets A..B) :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32 8MB Flash units (available for ESP32 Classic, ESP32-S3 and ESP32-C6).
 

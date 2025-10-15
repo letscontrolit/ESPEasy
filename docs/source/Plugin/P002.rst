@@ -437,9 +437,11 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
-  |improved| 2022-07-11  Added ESP32 Factory calibration, multipoint processing, binning and charts.
   |improved| 2022-07-27  Improved resolution when using ESP32 Factory Calibration.
+
+  |improved| 2022-07-11  Added ESP32 Factory calibration, multipoint processing, binning and charts.
+
+  |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
 
 .. versionadded:: 1.0
   ...
