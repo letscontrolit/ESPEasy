@@ -17,12 +17,38 @@
   #  include <WiFiClientSecureLightBearSSL.h>
 # endif // if FEATURE_MQTT_TLS
 
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+enum MQTT_connect_status_e : uint8_t {
+  Disconnected = 0,
+  Connecting   = 1,
+  Connected    = 2,
+  Failure      = 3,
+  Ready        = 4,
+};
+
+struct MQTT_connect_request {
+  MQTT_connect_status_e status          = MQTT_connect_status_e::Disconnected;
+  controllerIndex_t     ControllerIndex = INVALID_CONTROLLER_INDEX;
+  uint32_t              startTime{};
+  uint32_t              loopTime{};
+  uint32_t              endTime{};
+  uint32_t              timeout{};
+  bool                  result{};
+  bool                  logged{};
+
+  // This is C-code, so not set to nullptr, but to NULL
+  TaskHandle_t taskHandle = NULL;
+};
+extern MQTT_connect_request MQTT_task_data;
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+
 // MQTT client
 extern WiFiClient mqtt;
 # if FEATURE_MQTT_TLS
 extern String  mqtt_tls_last_errorstr;
 extern int32_t mqtt_tls_last_error;
 extern BearSSL::WiFiClientSecure_light*mqtt_tls;
+extern int32_t mqtt_tls_last_cipher_suite;
 
 // extern BearSSL::X509List mqtt_X509List;
 

@@ -145,6 +145,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     case LabelType::SHOW_UOM_ON_DEVICES_PAGE: return F("Show Unit of Measure");
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    #if FEATURE_MQTT_CONNECT_BACKGROUND
+    case LabelType::MQTT_CONNECT_IN_BACKGROUND: return F("MQTT Connect in background");
+    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -441,6 +444,9 @@ String getValue(LabelType::Enum label) {
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     case LabelType::SHOW_UOM_ON_DEVICES_PAGE:   return jsonBool(Settings.ShowUnitOfMeasureOnDevicesPage());
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    #if FEATURE_MQTT_CONNECT_BACKGROUND
+    case LabelType::MQTT_CONNECT_IN_BACKGROUND: return jsonBool(Settings.MQTTConnectInBackground());
+    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;

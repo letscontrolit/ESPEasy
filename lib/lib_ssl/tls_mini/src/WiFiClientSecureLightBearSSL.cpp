@@ -54,7 +54,9 @@
   #include "c_types.h"
 #endif
 
-#include <core_version.h>
+#if __has_include("core_version.h")         // ESP32 Stage has no core_version.h file. Disable include via PlatformIO Option
+#include <core_version.h>                   // Arduino_Esp8266 version information (ARDUINO_ESP8266_RELEASE and ARDUINO_ESP8266_RELEASE_2_7_1)
+#endif  // ESP32_STAGE
 #undef DEBUG_TLS
 
 #ifdef DEBUG_TLS
@@ -75,6 +77,9 @@ void _Log_heap_size(const char *msg) {
 #define LOG_HEAP_SIZE(a)
 #endif
 
+// get UTC time from Tasmota
+//extern uint32_t UtcTime(void);
+//extern uint32_t CfgTime(void);
 
 #ifdef ESP8266    // Stack thunk is not needed with ESP32
 // Stack thunked versions of calls
@@ -191,12 +196,13 @@ void WiFiClientSecure_light::_clear() {
   _eng = nullptr;
   _iobuf_in = nullptr;
   _iobuf_out = nullptr;
-  setBufferSizes(1024, 1024); // reasonable minimum
+  setBufferSizes(2048, 2048); // reasonable minimum
   _handshake_done = false;
   _last_error = 0;
   _recvapp_buf = nullptr;
   _recvapp_len = 0;
-  _insecure = false;  // set to true when calling setPubKeyFingerprint()
+  _insecure = true;  // set to true when calling setPubKeyFingerprint()
+  _rsa_only = false;   // for now we disable ECDSA by default
   _fingerprint_any = true; // by default accept all fingerprints
   _fingerprint1 = nullptr;
   _fingerprint2 = nullptr;
@@ -298,16 +304,6 @@ void WiFiClientSecure_light::flush(void) {
 
 #ifdef ESP32
 
-int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port)
-{
-  return connect(ip, port, _timeout);
-}
-
-int WiFiClientSecure_light::connect(const char* name, uint16_t port) 
-{
-  return connect(name, port, _timeout);
-}
-
 
 int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port, int32_t timeout) {
   DEBUG_BSSL("connect(%s,%d)", ip.toString().c_str(), port);
@@ -316,7 +312,9 @@ int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port, int32_t timeout
     setLastError(ERR_TCP_CONNECT);
     return 0;
   }
-  return _connectSSL(_domain.isEmpty() ? nullptr : _domain.c_str());
+  bool success = _connectSSL(_domain.isEmpty() ? nullptr : _domain.c_str());
+  if (!success) { stop(); }
+  return success;
 }
 #else // ESP32
 int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port) {
@@ -326,7 +324,9 @@ int WiFiClientSecure_light::connect(IPAddress ip, uint16_t port) {
     setLastError(ERR_TCP_CONNECT);
     return 0;
   }
-  return _connectSSL(_domain.isEmpty() ? nullptr : _domain.c_str());
+  bool success = _connectSSL(_domain.isEmpty() ? nullptr : _domain.c_str());
+  if (!success) { stop(); }
+  return success;
 }
 #endif
 
@@ -335,7 +335,7 @@ int WiFiClientSecure_light::connect(const char* name, uint16_t port, int32_t tim
   DEBUG_BSSL("connect(%s,%d)\n", name, port);
   IPAddress remote_addr;
   clearLastError();
-  if (WiFi.hostByName(name, remote_addr) != 1) {
+  if (!WiFi.hostByName(name, remote_addr)) {
     DEBUG_BSSL("connect: Name loopup failure\n");
     setLastError(ERR_CANT_RESOLVE_IP);
     return 0;
@@ -354,7 +354,7 @@ int WiFiClientSecure_light::connect(const char* name, uint16_t port) {
   DEBUG_BSSL("connect(%s,%d)\n", name, port);
   IPAddress remote_addr;
   clearLastError();
-  if (WiFi.hostByName(name, remote_addr, 1000) != 1) {
+  if (!WiFi.hostByName(name, remote_addr)) {
     DEBUG_BSSL("connect: Name loopup failure\n");
     setLastError(ERR_CANT_RESOLVE_IP);
     return 0;
@@ -587,6 +587,7 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
     
     if (((int32_t)(millis() - (t + this->_loopTimeout)) >= 0)){
       DEBUG_BSSL("_run_until: Timeout\n");
+      setLastError(ERR_TLS_TIMEOUT);
       return -1;
     }
 
@@ -606,72 +607,66 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
     }
 #endif
 
-		/*
-		  If there is some record data to send, do it. This takes
-		  precedence over everything else.
-		 */
-		if (state & BR_SSL_SENDREC) {
-			unsigned char *buf;
-			size_t len;
-			int wlen;
+    /*
+       If there is some record data to send, do it. This takes
+       precedence over everything else.
+    */
+    if (state & BR_SSL_SENDREC) {
+      unsigned char *buf;
+      size_t len;
+      int wlen;
 
-			buf = br_ssl_engine_sendrec_buf(_eng, &len);
-			wlen = WiFiClient::write(buf, len);
-			if (wlen < 0) {
-				/*
-				  If we received a close_notify and we
-				  still send something, then we have our
-				  own response close_notify to send, and
-				  the peer is allowed by RFC 5246 not to
-				  wait for it.
-				 */
-				if (!_eng->shutdown_recv) {
-//					br_ssl_engine_fail(_eng, BR_ERR_IO);
-				}
-				return -1;
-			}
-			if (wlen > 0) {
-				br_ssl_engine_sendrec_ack(_eng, wlen);
-			}
+      buf = br_ssl_engine_sendrec_buf(_eng, &len);
+      wlen = WiFiClient::write(buf, len);
+      if (wlen <= 0) {
+        /*
+           If we received a close_notify and we
+           still send something, then we have our
+           own response close_notify to send, and
+           the peer is allowed by RFC 5246 not to
+           wait for it.
+        */
+        return -1;
+      }
+      if (wlen > 0) {
+        br_ssl_engine_sendrec_ack(_eng, wlen);
+      }
       no_work = 0;
-			continue;
-		}
+      continue;
+    }
 
-		/*
-		  If we reached our target, then we are finished.
-		 */
-		if (state & target) {
-			return 0;
-		}
-
-		/*
-		  If some application data must be read, and we did not
-		  exit, then this means that we are trying to write data,
-		  and that's not possible until the application data is
-		  read. This may happen if using a shared in/out buffer,
-		  and the underlying protocol is not strictly half-duplex.
-		  This is unrecoverable here, so we report an error.
-		 */
-		if (state & BR_SSL_RECVAPP) {
-			DEBUG_BSSL("_run_until: Fatal protocol state\n"); 
-			return -1;
-		}
-
-		/*
-		  If we reached that point, then either we are trying
-		  to read data and there is some, or the engine is stuck
-		  until a new record is obtained.
-		 */
-		if (state & BR_SSL_RECVREC) {
-      if (WiFiClient::available()) { 
+    /*
+       If we reached our target, then we are finished.
+    */
+    if (state & target) {
+      return 0;
+    }
+    /*
+       If some application data must be read, and we did not
+       exit, then this means that we are trying to write data,
+       and that's not possible until the application data is
+       read. This may happen if using a shared in/out buffer,
+       and the underlying protocol is not strictly half-duplex.
+       This is unrecoverable here, so we report an error.
+    */
+    if (state & BR_SSL_RECVAPP) {
+      DEBUG_BSSL("_run_until: Fatal protocol state\n");
+      return -1;
+    }
+    /*
+       If we reached that point, then either we are trying
+       to read data and there is some, or the engine is stuck
+       until a new record is obtained.
+    */
+    if (state & BR_SSL_RECVREC) {
+      if (WiFiClient::available()) {
         unsigned char *buf;
         size_t len;
         int rlen;
 
         buf = br_ssl_engine_recvrec_buf(_eng, &len);
-        rlen = WiFiClient::read(buf, len); 
+        rlen = WiFiClient::read(buf, len);
         if (rlen < 0) {
-//          br_ssl_engine_fail(_eng, BR_ERR_IO);
           return -1;
         }
         if (rlen > 0) {
@@ -680,16 +675,15 @@ int WiFiClientSecure_light::_run_until(unsigned target, bool blocking) {
         no_work = 0;
         continue;
       }
-		}
-
-		/*
-		  We can reach that point if the target RECVAPP, and
-		  the state contains SENDAPP only. This may happen with
-		  a shared in/out buffer. In that case, we must flush
-		  the buffered data to "make room" for a new incoming
-		  record.
-		 */
-		br_ssl_engine_flush(_eng, 0);
+    }
+    /*
+       We can reach that point if the target RECVAPP, and
+       the state contains SENDAPP only. This may happen with
+       a shared in/out buffer. In that case, we must flush
+       the buffered data to "make room" for a new incoming
+       record.
+    */
+    br_ssl_engine_flush(_eng, 0);
 
     no_work++; // We didn't actually advance here
   }
@@ -792,59 +786,69 @@ extern "C" {
     xc->done_cert = true; // first cert already processed
   }
 
-// **** Start patch Castellucci
-/*
-  static void pubkeyfingerprint_pubkey_fingerprint(br_sha1_context *shactx, br_rsa_public_key rsakey) {
-    br_sha1_init(shactx);
-    br_sha1_update(shactx, "ssh-rsa", 7);           // tag
-    br_sha1_update(shactx, rsakey.e, rsakey.elen);  // exponent
-    br_sha1_update(shactx, rsakey.n, rsakey.nlen);  // modulus
-  }
-*/
-  // If `compat` id false, adds a u32be length prefixed value to the sha1 state.
-  // If `compat` is true, the length will be omitted for compatibility with
-  // data from older versions of Tasmota.
-  static void sha1_update_len(br_sha1_context *shactx, const void *msg, uint32_t len, bool compat) {
+  // Add a data element with a u32be length prefix to the sha1 state.
+  static void sha1_update_len(br_sha1_context *shactx, const void *msg, uint32_t len) {
     uint8_t buf[] = {0, 0, 0, 0};
 
-    if (!compat) {
-      buf[0] = (len >> 24) & 0xff;
-      buf[1] = (len >> 16) & 0xff;
-      buf[2] = (len >>  8) & 0xff;
-      buf[3] = (len >>  0) & 0xff;
-      br_sha1_update(shactx, buf, 4); // length
-    }
+    buf[0] = (len >> 24) & 0xff;
+    buf[1] = (len >> 16) & 0xff;
+    buf[2] = (len >>  8) & 0xff;
+    buf[3] = (len >>  0) & 0xff;
+    br_sha1_update(shactx, buf, 4); // length
+
     br_sha1_update(shactx, msg, len); // message
   }
 
-  // Update the received fingerprint based on the certificate's public key.
-  // If `compat` is true, an insecure version of the fingerprint will be
-  // calcualted for compatibility with older versions of Tasmota. Normally,
-  // `compat` should be false.
-  static void pubkeyfingerprint_pubkey_fingerprint(br_x509_pubkeyfingerprint_context *xc, bool compat) {
-    br_rsa_public_key rsakey = xc->ctx.pkey.key.rsa;
+  // Calculate the received fingerprint based on the certificate's public key.
+  // The public exponent and modulus are length prefixed to avoid security
+  // vulnerabilities related to ambiguous serialization. Without this, an
+  // attacker can generate alternative public keys which result in the same
+  // fingerprint, but are trivial to crack. This works because RSA keys can be
+  // created with more than two primes, and most numbers, even large ones, can
+  // be easily factored.
+  static void pubkeyfingerprint_pubkey_fingerprint(br_x509_pubkeyfingerprint_context *xc) {
+    if (xc->ctx.pkey.key_type == BR_KEYTYPE_RSA) {
+      br_rsa_public_key rsakey = xc->ctx.pkey.key.rsa;
 
-    br_sha1_context shactx;
+      br_sha1_context shactx;
 
-    br_sha1_init(&shactx);
+      br_sha1_init(&shactx);
 
-    sha1_update_len(&shactx, "ssh-rsa", 7, compat);          // tag
-    sha1_update_len(&shactx, rsakey.e, rsakey.elen, compat); // exponent
-    sha1_update_len(&shactx, rsakey.n, rsakey.nlen, compat); // modulus
+      // The tag string doesn't really matter, but it should differ depending on
+      // key type. For RSA it's a fixed string.
+      sha1_update_len(&shactx, "ssh-rsa", 7);          // tag
+      sha1_update_len(&shactx, rsakey.e, rsakey.elen); // exponent
+      sha1_update_len(&shactx, rsakey.n, rsakey.nlen); // modulus
 
-    br_sha1_out(&shactx, xc->pubkey_recv_fingerprint); // copy to fingerprint
+      br_sha1_out(&shactx, xc->pubkey_recv_fingerprint); // copy to fingerprint
+    }
+  #ifndef ESP8266
+    else if (xc->ctx.pkey.key_type == BR_KEYTYPE_EC) {
+      br_ec_public_key eckey = xc->ctx.pkey.key.ec;
+
+      br_sha1_context shactx;
+
+      br_sha1_init(&shactx);
+
+      // The tag string doesn't really matter, but it should differ depending on
+      // key type. For ECDSA it's a fixed string.
+      sha1_update_len(&shactx, "ecdsa", 5); // tag
+      int32_t curve = htonl(eckey.curve);
+      sha1_update_len(&shactx, &curve, 4);   // curve id as int32be
+      sha1_update_len(&shactx, eckey.q, eckey.qlen);       // public point
+    }
+  #endif
+    else {
+      // We don't support anything else, so just set the fingerprint to all zeros.
+      memset(xc->pubkey_recv_fingerprint, 0, 20);
+    }
   }
-// **** End patch Castellucci
 
   // Callback when complete chain has been parsed.
   // Return 0 on validation success, !0 on validation error
   static unsigned pubkeyfingerprint_end_chain(const br_x509_class **ctx) {
     br_x509_pubkeyfingerprint_context *xc = (br_x509_pubkeyfingerprint_context *)ctx;
-    // set fingerprint status byte to zero
-    // FIXME: find a better way to pass this information
-    xc->pubkey_recv_fingerprint[20] = 0;
-    // Try matching using the the new fingerprint algorithm
-    pubkeyfingerprint_pubkey_fingerprint(xc, false);
+    pubkeyfingerprint_pubkey_fingerprint(xc);
     if (!xc->fingerprint_all) {
       if (0 == memcmp_P(xc->pubkey_recv_fingerprint, xc->fingerprint1, 20)) {
         return 0;
@@ -857,7 +861,6 @@ extern "C" {
       // Default (no validation at all) or no errors in prior checks = success.
       return 0;
     }
-// **** End patch Castellucci
   }
 
   // Return the public key from the validator (set by x509_minimal)
@@ -894,20 +897,39 @@ extern "C" {
     ctx->fingerprint_all = fingerprint_all;
   }
 
+#ifdef ESP8266
   // We limit to a single cipher to reduce footprint
   // we reference it, don't put in PROGMEM
   static const uint16_t suites[] = {
     BR_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   };
+#else
+  // add more flexibility on ESP32
+  static const uint16_t suites[] = {
+    BR_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+    BR_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+  };
+  static const uint16_t suites_RSA_ONLY[] = {
+    BR_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+  };
+#endif
 
   // Default initializion for our SSL clients
-  static void br_ssl_client_base_init(br_ssl_client_context *cc) {
+  static void br_ssl_client_base_init(br_ssl_client_context *cc, bool _rsa_only) {
     br_ssl_client_zero(cc);
     // forbid SSL renegotiation, as we free the Private Key after handshake
     br_ssl_engine_add_flags(&cc->eng, BR_OPT_NO_RENEGOTIATION);
 
     br_ssl_engine_set_versions(&cc->eng, BR_TLS12, BR_TLS12);
+#ifdef ESP8266
     br_ssl_engine_set_suites(&cc->eng, suites, (sizeof suites) / (sizeof suites[0]));
+#else
+    if (_rsa_only) {
+      br_ssl_engine_set_suites(&cc->eng, suites_RSA_ONLY, (sizeof suites_RSA_ONLY) / (sizeof suites_RSA_ONLY[0]));
+    } else {
+      br_ssl_engine_set_suites(&cc->eng, suites, (sizeof suites) / (sizeof suites[0]));
+    }
+#endif
     br_ssl_client_set_default_rsapub(cc);
     br_ssl_engine_set_default_rsavrfy(&cc->eng);
 
@@ -921,7 +943,10 @@ extern "C" {
     br_ssl_engine_set_ghash(&cc->eng, &br_ghash_ctmul32);
 
     // we support only P256 EC curve for AWS IoT, no EC curve for Letsencrypt unless forced
-    br_ssl_engine_set_ec(&cc->eng, &br_ec_p256_m15); // TODO
+    br_ssl_engine_set_ec(&cc->eng, &br_ec_p256_m15); 
+#ifdef ESP32
+    br_ssl_engine_set_ecdsa(&cc->eng, &br_ecdsa_i15_vrfy_asn1);
+#endif
   }
 }
 
@@ -934,8 +959,6 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
   br_x509_pubkeyfingerprint_context *x509_insecure = nullptr;
 
   LOG_HEAP_SIZE("_connectSSL.start");
-
-  bool OOM_error_occured = true;
 
   do {    // used to exit on Out of Memory error and keep all cleanup code at the same place
     // ============================================================
@@ -954,7 +977,7 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
     _ctx_present = true;
     _eng = &_sc->eng; // Allocation/deallocation taken care of by the _sc shared_ptr
 
-    br_ssl_client_base_init(_sc.get());
+    br_ssl_client_base_init(_sc.get(), _rsa_only);
     if (_alpn_names && _alpn_num > 0) {
       br_ssl_engine_set_protocol_names(_eng, _alpn_names, _alpn_num);
     }
@@ -976,6 +999,9 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
       br_x509_minimal_init(x509_minimal, &br_sha256_vtable, _ta_P, _ta_size);
       br_x509_minimal_set_rsa(x509_minimal, br_ssl_engine_get_rsavrfy(_eng));
       br_x509_minimal_set_hash(x509_minimal, br_sha256_ID, &br_sha256_vtable);
+#ifdef ESP32
+      br_x509_minimal_set_ecdsa(x509_minimal, &br_ec_all_m15, &br_ecdsa_i15_vrfy_asn1);
+#endif // ESP32
       br_ssl_engine_set_x509(_eng, &x509_minimal->vtable);
       uint32_t now = UtcTime();
       uint32_t cfg_time = CfgTime();
@@ -989,23 +1015,20 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
     br_ssl_engine_set_buffers_bidi(_eng, _iobuf_in.get(), _iobuf_in_size, _iobuf_out.get(), _iobuf_out_size);
 
     // ============================================================
-    // allocate Private key if needed, only if USE_MQTT_AWS_IOT
+    // allocate Private key if needed, only if USE_MQTT_CLIENT_CERT
     LOG_HEAP_SIZE("_connectSSL before PrivKey allocation");
-  #ifdef USE_MQTT_AWS_IOT
+  #if defined(USE_MQTT_CLIENT_CERT)
     // ============================================================
-    // Set the EC Private Key, only USE_MQTT_AWS_IOT
+    // Set the EC Private Key, only USE_MQTT_CLIENT_CERT
     // limited to P256 curve
     br_ssl_client_set_single_ec(_sc.get(), _chain_P, 1,
                                 _sk_ec_P, _allowed_usages,
                                 _cert_issuer_key_type, &br_ec_p256_m15, br_ecdsa_sign_asn1_get_default());
-  #endif // USE_MQTT_AWS_IOT
+  #endif // USE_MQTT_CLIENT_CERT
 
     // ============================================================
     // Start TLS connection, ALL
-    if (!br_ssl_client_reset(_sc.get(), hostName, 0)) {
-      OOM_error_occured = false;
-      break;
-    }
+    if (!br_ssl_client_reset(_sc.get(), hostName, 0)) break;
 
     auto ret = _wait_for_handshake();
   #ifdef DEBUG_ESP_SSL
@@ -1031,10 +1054,8 @@ bool WiFiClientSecure_light::_connectSSL(const char* hostName) {
 
   // ============================================================
   // if we arrived here, this means we had an OOM error, cleaning up
-  if (OOM_error_occured) {
-    setLastError(ERR_OOM);
-    DEBUG_BSSL("_connectSSL: Out of memory\n");
-  }
+  setLastError(ERR_OOM);
+  DEBUG_BSSL("_connectSSL: Out of memory\n");
 #ifdef ESP8266
   stack_thunk_light_del_ref();
 #endif

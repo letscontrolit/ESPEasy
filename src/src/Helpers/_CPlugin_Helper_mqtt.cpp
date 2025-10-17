@@ -1092,11 +1092,11 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
                                            controllerIndex_t         ControllerIndex,
                                            ControllerSettingsStruct& ControllerSettings,
                                            const __FlashStringHelper*componentClass,
-                                           String                    deviceClass,
-                                           String                    unitOfMeasure,
+                                           const String            & deviceClass,
+                                           const String            & unitOfMeasure,
                                            struct EventStruct       *event,
-                                           const String              deviceElement,
-                                           const String              stateClass,
+                                           const String            & deviceElement,
+                                           const String            & stateClass,
                                            bool                      success,
                                            bool                      hasSet,
                                            bool                      hasIcon,
@@ -1104,52 +1104,70 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
                                            const String            & elementId,
                                            bool                      sendTrigger) {
   if (!valueName.isEmpty()) {
-    const String withSet   = hasSet ? F(",\"cmd_t\":\"~/set\"") : EMPTY_STRING;
-    const String schema    = hasSet ? EMPTY_STRING : "\"schema\":\"basic\",";
-    const String devOrIcon = hasIcon ? F("ic") : F("dev_cla");
-    const String withUoM   = unitOfMeasure.isEmpty() ? EMPTY_STRING :
-                             strformat(F(",\"unit_of_meas\":\"%s\""), unitOfMeasure.c_str());
-    const String stateJson = stateClass.isEmpty() ? EMPTY_STRING :
-                             strformat(F(",\"stat_cla\":\"%s\""),     stateClass.c_str());
-    const String taskName  = makeHomeAssistantCompliantName(getTaskDeviceName(taskIndex));
-    const String valName   = makeHomeAssistantCompliantName(valueName);
-    const bool   retainDsc = ControllerSettings.mqtt_retainDiscovery();
-    const String discoveryTopic(ControllerSettings.MqttAutoDiscoveryTopic);
-    const String publishTopic(ControllerSettings.Publish);
-    const String discoveryConfig(parseStringKeepCase(ControllerSettings.MqttAutoDiscoveryConfig, 1, '|'));
+    //    const String discoveryTopic(ControllerSettings.MqttAutoDiscoveryTopic);
+    //    const String publishTopic(ControllerSettings.Publish);
+
+    const String taskName = makeHomeAssistantCompliantName(getTaskDeviceName(taskIndex));
+    const String valName  = makeHomeAssistantCompliantName(valueName);
 
     const String uniqueId = elementName.isEmpty() ? MQTT_TaskValueUniqueName(taskName, valName)
                                                   : strformat(F("%s_%s"), elementId.c_str(), valName.c_str());
-    const String publish = MQTT_DiscoveryBuildValueTopic(publishTopic,
-                                                         event,
-                                                         taskValue,
-                                                         componentClass,
-                                                         uniqueId,
-                                                         elementId,
-                                                         valName);
-    const String discoveryUrl = MQTT_DiscoveryBuildValueTopic(discoveryTopic,
-                                                              event,
-                                                              taskValue,
-                                                              componentClass,
-                                                              uniqueId,
-                                                              elementId,
-                                                              valName);
-    const String discoveryMessage = strformat(F("{\"~\":\"%s\",\"name\":\"%s %s\",\"uniq_id\":\"%s\",%s"
-                                                "\"%s\":\"%s\"%s%s%s,\"stat_t\":\"~\""
-                                                "%s}"), // deviceElement last
-                                              publish.c_str(), taskName.c_str(), valName.c_str(), uniqueId.c_str(), schema.c_str(),
-                                              devOrIcon.c_str(), deviceClass.c_str(), withUoM.c_str(), stateJson.c_str(), withSet.c_str(),
-                                              deviceElement.c_str());
-    const String triggerMessage = strformat(F("{\"atype\":\"trigger\",\"t\":\"%s\","
-                                              "\"p\":\"device_automation\","
-                                              "\"type\":\"button_short_press\"," // FIXME ?
-                                              "\"stype\":\"switch_1\""           // FIXME ?
-                                              "%s}"),                            // deviceElement is used to pass in the TriggerState
-                                            publish.c_str(), deviceElement.c_str());
+    String message;
+    {
+      const String publish = MQTT_DiscoveryBuildValueTopic(ControllerSettings.Publish,
+                                                           event,
+                                                           taskValue,
+                                                           componentClass,
+                                                           uniqueId,
+                                                           elementId,
+                                                           valName);
+
+      if (sendTrigger) {
+        // triggerMessage
+        message = strformat(F("{\"atype\":\"trigger\",\"t\":\"%s\","
+                              "\"p\":\"device_automation\","
+                              "\"type\":\"button_short_press\"," // FIXME ?
+                              "\"stype\":\"switch_1\""           // FIXME ?
+                              "%s}"),                            // deviceElement is used to pass in the TriggerState
+                            publish.c_str(), deviceElement.c_str());
+      } else {
+        // discoveryMessage
+        const String withSet   = hasSet ? F(",\"cmd_t\":\"~/set\"") : EMPTY_STRING;
+        const String schema    = hasSet ? EMPTY_STRING : "\"schema\":\"basic\",";
+        const String devOrIcon = hasIcon ? F("ic") : F("dev_cla");
+        const String withUoM   = unitOfMeasure.isEmpty() ? EMPTY_STRING :
+                                 strformat(F(",\"unit_of_meas\":\"%s\""), unitOfMeasure.c_str());
+        const String stateJson = stateClass.isEmpty() ? EMPTY_STRING :
+                                 strformat(F(",\"stat_cla\":\"%s\""),     stateClass.c_str());
+
+        message = strformat(F("{\"~\":\"%s\",\"name\":\"%s %s\",\"uniq_id\":\"%s\",%s"
+                              "\"%s\":\"%s\"%s%s%s,\"stat_t\":\"~\""
+                              "%s}"), // deviceElement last
+                            publish.c_str(), taskName.c_str(), valName.c_str(), uniqueId.c_str(), schema.c_str(),
+                            devOrIcon.c_str(), deviceClass.c_str(), withUoM.c_str(), stateJson.c_str(), withSet.c_str(),
+                            deviceElement.c_str());
+      }
+    }
+
+    const bool retainDsc = ControllerSettings.mqtt_retainDiscovery();
+    String     topic;
+    {
+      const String discoveryUrl = MQTT_DiscoveryBuildValueTopic(ControllerSettings.MqttAutoDiscoveryTopic,
+                                                                event,
+                                                                taskValue,
+                                                                componentClass,
+                                                                uniqueId,
+                                                                elementId,
+                                                                valName);
+      const String discoveryConfig(parseStringKeepCase(ControllerSettings.MqttAutoDiscoveryConfig, 1, '|'));
+      topic = discoveryConfig.isEmpty()
+        ? concat(discoveryUrl, F("/config"))
+        : concat(discoveryUrl, discoveryConfig);
+    }
 
     return MQTT_DiscoveryPublish(ControllerIndex,
-                                 discoveryConfig.isEmpty() ? concat(discoveryUrl, F("/config")) : concat(discoveryUrl, discoveryConfig),
-                                 sendTrigger ? triggerMessage : discoveryMessage,
+                                 topic,
+                                 message,
                                  taskIndex,
                                  taskValue,
                                  retainDsc);
