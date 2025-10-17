@@ -12,7 +12,7 @@
 # include "Modbus_device.h"
 # include "Modbus_link.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -160,11 +160,8 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("---> Modbus queue request: request ID = ");
-    log += transaction->_id;
-    log += F(", State = ");
-    log += uint(transaction->_state);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("Modbus_link: Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
   }
   # endif // MODBUS_DEBUG
   transaction->_state = ModbusQueueState::QUEUED; // Initial state
@@ -266,14 +263,9 @@ void ModbusLINK_struct::processCommand()
 void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
   # ifdef MODBUS_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("[ ID=");
-
-    log += el->_id;
-    log += F(", Device=");
-    log += String((uint32_t)(el->_device), HEX);
-    log += F(", State=");
-    log += (uint)el->_state;
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = strformat(F("[ID=%u, Device=%p, State="), el->_id, el->_device);
+    log += formatState(el->_state);
     log += F(", TX=");
 
     for (int i = 0; i < el->_sendframe_length; i++) {
@@ -295,33 +287,38 @@ void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
 void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
   # ifdef MODBUS_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("--->Modbus State= ");
-
-    switch  (state) {
-      case ModbusQueueState::NOT_QUEUED:
-        log += F("NOT_QUEUED");
-        break;
-      case ModbusQueueState::QUEUED:
-        log += F("QUEUED");
-        break;
-      case ModbusQueueState::MESSAGE_SENT:
-        log += F("MESSAGE_SENT");
-        break;
-      case ModbusQueueState::RESPONSE_RECEIVED:
-        log += F("RESPONSE_RECEIVED");
-        break;
-      case ModbusQueueState::ERROR_OCCURRED:
-        log += F("ERROR_OCCURRED");
-        break;
-      case ModbusQueueState::READY_FOR_DESTROY:
-        log += F("READY_FOR_DESTROY");
-        break;
-    }
-
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("---> Modbus State= ");
+    log += formatState(state);
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // MODBUS_DEBUG
+}
+
+String ModbusLINK_struct::formatState(ModbusQueueState_t state) {
+  String log;
+
+  switch  (state) {
+    case ModbusQueueState::NOT_QUEUED:
+      log += F("NOT_QUEUED");
+      break;
+    case ModbusQueueState::QUEUED:
+      log += F("QUEUED");
+      break;
+    case ModbusQueueState::MESSAGE_SENT:
+      log += F("MESSAGE_SENT");
+      break;
+    case ModbusQueueState::RESPONSE_RECEIVED:
+      log += F("RESPONSE_RECEIVED");
+      break;
+    case ModbusQueueState::ERROR_OCCURRED:
+      log += F("ERROR_OCCURRED");
+      break;
+    case ModbusQueueState::READY_FOR_DESTROY:
+      log += F("READY_FOR_DESTROY");
+      break;
+  }
+  return log;
 }
 
 #endif // if FEATURE_MODBUS

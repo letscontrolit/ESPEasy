@@ -7,7 +7,7 @@
 # include "modbus_link.h"
 # include "modbus_mgr.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -19,18 +19,25 @@ const uint8_t MODBUS_WRITE_MULTIPLE_REGISTERS = 0x10;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ModbusDEVICE_struct::~ModbusDEVICE_struct() {
-  reset();
+  if (_modbus_link != nullptr) {
+    _modbus_link->freeTransactions(this); // Make sure all queued transactions for this device are freed to prevent callbacks to a
+                                          // destructed object
+  }
+  ModbusMGR_singleton.disconnect(_deviceID);
+  _modbus_link    = nullptr;
+  _deviceID       = 0;
+  _modbus_address = MODBUS_BROADCAST_ADDRESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::reset() {
   if (_modbus_link != nullptr) {
-    _modbus_link->freeTransactions(this);
-    ModbusMGR_singleton.disconnect(_deviceID);
-    _modbus_link = nullptr;
+    _modbus_link->freeTransactions(this); // Make sure all queued transactions for this device are freed to prevent callbacks to a
+                                          // destructed object
   }
-  _deviceID = 0;
-
+  ModbusMGR_singleton.disconnect(_deviceID);
+  _modbus_link    = nullptr;
+  _deviceID       = 0;
   _modbus_address = MODBUS_BROADCAST_ADDRESS;
 }
 
@@ -59,13 +66,8 @@ bool ModbusDEVICE_struct::init(uint8_t                 slaveAddress,
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("---> ModbusDevice Init: Slave address = ");
-    log += slaveAddress;
-    log += F(", This = ");
-    log += (size_t)this;
-    log += F(", deviceID  = ");
-    log += _deviceID;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("ModbusDevice Init: Slave address = %u, This = %p, deviceID = %u"), slaveAddress, this, _deviceID));
   }
   # endif // MODBUS_DEBUG
   return success;
@@ -93,7 +95,18 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t             address,
                                               uint16_t            *valuePtr,
-                                              ModbusResultState_t *statePtr)
+                                              ModbusResultState_t *statePtr) {
+  return readModuleHoldingRegister(_modbus_address, address, valuePtr, statePtr);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Start reading a Modubus holding register from another module on teh bus. The result will be available later.
+// The function returns true if the request was queued.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddress,
+                                                    uint16_t             registerAddress,
+                                                    uint16_t            *valuePtr,
+                                                    ModbusResultState_t *statePtr)
 {
   if (_modbus_link == nullptr) {
     return false;
@@ -103,10 +116,10 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t             address,
   request->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
   request->_userData     = valuePtr;
   request->_userState    = statePtr;
-  request->_sendframe[0] = _modbus_address;
+  request->_sendframe[0] = busAddress;
   request->_sendframe[1] = MODBUS_READ_HOLDING_REGISTERS;
-  request->_sendframe[2] = highByte(address);
-  request->_sendframe[3] = lowByte(address);
+  request->_sendframe[2] = highByte(registerAddress);
+  request->_sendframe[3] = lowByte(registerAddress);
   request->_sendframe[4] = 0;
   request->_sendframe[5] = 1;                 // Read 1 register
   uint16_t crc = CalculateCRC(request->_sendframe, 6);
@@ -213,14 +226,18 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
     case ModbusTransactionType::NONE:
     {
       // Error condition, this transaction type should not be queued
+      # ifdef MODBUS_DEBUG
       log += F(" Invalid transaction type");
+      # endif // MODBUS_DEBUG
       break;
     }
 
     default:
     {
       // Error condition, missed a transaction type
+      # ifdef MODBUS_DEBUG
       log += F(" Unknown transaction type");
+      # endif // MODBUS_DEBUG
       break;
     }
   }
@@ -269,8 +286,7 @@ void ModbusDEVICE_struct::dump_buffer(const uint8_t *buffer, size_t length) {
     }
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  # endif // MODBUS_DEBUG
 }
-
-# endif // MODBUS_DEBUG
 
 #endif // if FEATURE_MODBUS

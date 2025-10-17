@@ -4,8 +4,6 @@
 // #######################################################################################################
 // ############## Plugin 183: Modbus RTU generic sensor interface                          ###############
 // #######################################################################################################
-// TODO: Refactor for a better Modbus implementation using the modbus_device for all functions.
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 /*
    Plugin written by: Flashmark
@@ -36,47 +34,10 @@
 # define PLUGIN_VALUENAME3_183 "Value3"
 # define PLUGIN_VALUENAME4_183 "Value4"
 
-// Plugin configuration parameters
-// PCONFIG(0) is the Modbus device ID.
-// PCONFIG(1) is the serial baud rate.
-// PCONFIG(2) is used for flags, where bit 0 indicates collision detection
-// PCONFIG(3) is the number of active output values (1-4)
-// PCONFIG(4) is the Modbus register address for value 1
-// PCONFIG(5) is the Modbus register address for value 2
-// PCONFIG(6) is the Modbus register address for value 3
-// PCONFIG(7) is the Modbus register address for value 4
-// Use P183_ADDRESS(x) to access the PCONFIG value for value x
-# define P183_DEV_ID           PCONFIG(0)
-# define P183_DEV_ID_LABEL     PCONFIG_LABEL(0)
-# define P183_BAUDRATE         PCONFIG(1)
-# define P183_BAUDRATE_LABEL   PCONFIG_LABEL(1)
-# define P183_NR_OUTPUTS       PCONFIG(3)
-# define P183_NR_OUTPUTS_LABEL PCONFIG_LABEL(3)
-# define P183_ADDRESS(x) PCONFIG(4 + x)
-# define P183_ADDRESS_LABEL(x) concat(F("addr"), x)
-
-# define P183_GET_FLAG_COLL_DETECT bitRead(PCONFIG(2), 0)
-# define P183_SET_FLAG_COLL_DETECT(x) bitWrite(PCONFIG(2), 0, x)
-# define P183_FLAG_COLL_DETECT_LABEL "colldet"
-
-# define P183_DEPIN           CONFIG_PIN3
-
-# define P183_DEV_ID_DFLT     1
-# define P183_BAUDRATE_DFLT   3 // 9600 baud
-
-# define P183_MAX_BAUDRATE_SEL  8
-
 # include <ESPeasySerial.h>
 # include "src/PluginStructs/P183_data_struct.h"
 # include "src/Helpers/Modbus_device.h"
 # include "src/Helpers/Modbus_mgr.h"
-
-// Modbus properties
-# define P183_MAX_MODBUS_NODES 247
-
-# define P183_MODBUS_BROADCAST_ID 0 // Modbus broadcast address
-# define P183_MODBUS_FUNC_READ_HOLDING_REGISTERS 0x03
-# define P183_MODBUS_FUNC_WRITE_SINGLE_REGISTER  0x06
 
 boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -232,9 +193,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (P183_data != nullptr) {
-        delete P183_data;
-        P183_data = nullptr;
+      if (nullptr != P183_data) {
+        P183_data->plugin_exit();
       }
       success = true;
       break;
@@ -243,12 +203,17 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P183_data == nullptr) {
+        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Read invalid data struct"));
+        return false;
+      }
       success = P183_data->plugin_read(event); // Delegate to data_struct
       break;
     }
     case PLUGIN_WRITE:
     {
-        P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
         addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Write invalid data struct"));
@@ -262,37 +227,29 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
         if (equals(subcmd, F("write"))) {
           // Write a value to a Modbus register
-          int address    = parseString(string, 3).toInt();
-          uint16_t value = parseString(string, 4).toInt();
+          int address    = event->Par2;
+          uint16_t value = event->Par3;
           P183_data->writeRegister(address, value);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("Modbus: write value ");
-            log += value;
-            log += F(" to address ");
-            log += address;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus: write value %u to address 0x%04x"), value, address));
           }
           success = true;
         }
         else if (equals(subcmd, F("read"))) {
           // Read a value from a Modbus register
-          int address    = parseString(string, 3).toInt();
+          int address    = event->Par2;
           uint16_t value = 0;
           value = P183_data->readRegisterWait(address);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("Modbus: read value ");
-            log += value;
-            log += F(" from address ");
-            log += address;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus: read value %u from address 0x%04x"), value, address));
           }
           success = true;
         }
         else if (equals(subcmd, F("dump"))) {
-          int start_address = parseString(string, 3).toInt();
-          int end_address   = parseString(string, 4).toInt();
+          int start_address = event->Par2;
+          int end_address   = event->Par3;
 
           if (end_address < start_address) {
             end_address = start_address;
@@ -318,7 +275,13 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_GET_CONFIG_VALUE: {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
-      const String cmd            = parseString(string, 1);
+
+      if (P183_data == nullptr) {
+        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Get config invalid data struct"));
+        return false;
+      }
+
+      const String cmd = parseString(string, 1);
 
       if (equals(cmd, F("register"))) {
         int address    = parseString(string, 2).toInt();

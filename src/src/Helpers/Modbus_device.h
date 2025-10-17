@@ -69,6 +69,11 @@ public:
   bool writeSingleRegister(uint16_t             address,
                            uint16_t             value,
                            ModbusResultState_t *stateptr);
+                           
+  bool readModuleHoldingRegister(uint8_t              busAddress,
+                                 uint16_t             registerAddress,
+                                 uint16_t            *valuePtr,
+                                 ModbusResultState_t *statePtr);
 
 private:
 

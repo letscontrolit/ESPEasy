@@ -5,10 +5,6 @@
 // #######################################################################################################
 // ############## Data structure for plugin 183: Modbus RTU generic sensor interface       ###############
 // #######################################################################################################
-
-# define P183_NR_OUTPUTS       PCONFIG(3)
-# define P183_ADDRESS(x) PCONFIG(4 + x)
-
 # ifdef BUILD_NO_DEBUG
 #  undef P183_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -20,7 +16,10 @@ P183_data_struct::P183_data_struct(struct EventStruct *event) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 P183_data_struct::~P183_data_struct() {
-  plugin_exit(); // Destruct dynamic structures contained in this object
+  if (_modbusDevice != nullptr) {
+    delete _modbusDevice;
+    _modbusDevice = nullptr;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,17 +52,14 @@ bool P183_data_struct::plugin_init(uint8_t                 slaveAddress,
   # ifdef P183_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("P183: Init serial: RX pin ");
-    log += CONFIG_PIN1;
-    log += F(", TX pin ");
-    log += CONFIG_PIN2;
-    log += F(", RS485 mode selected on pin ");
-    log += P183_DEPIN;
-    log += F(", baudrate ");
-    log += P183_storageValueToBaudrate(P183_BAUDRATE);
-    log += F(", collision detection ");
-    log += P183_GET_FLAG_COLL_DETECT ? F("enabled") : F("disabled");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("P183: Init address %d, RX pin %d, TX pin %d, RS485 mode selected on pin %d, baudrate %d, collision detection %s"),
+                         slaveAddress,
+                         serial_rx,
+                         serial_tx,
+                         dere_pin,
+                         baudrate,
+                         collision_detect ? F("enabled") : F("disabled")));
   }
   # endif // ifdef P183_DEBUG
 
@@ -74,20 +70,21 @@ bool P183_data_struct::plugin_init(uint8_t                 slaveAddress,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::plugin_exit()
 {
-  if (_modbusDevice == nullptr) {
+  if (_modbusDevice != nullptr) {
     delete _modbusDevice;
+    _modbusDevice = nullptr;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P183_data_struct::plugin_once_a_second(struct EventStruct *event) {
-  // TODO
+  // No actions
   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P183_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if (nullptr != _modbusDevice) {
+  if (_modbusDevice != nullptr) {
     _modbusDevice->processCommand();
   }
 
@@ -113,7 +110,6 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t end_reg)
 {
-  String   log;
   uint16_t value            = 0;
   ModbusResultState_t state = ModbusResultState::BUSY;
 
@@ -132,18 +128,11 @@ void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t e
       _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
     }
 
-    log += F("** Address ");
-    log += String(reg);
-    log += F(" (0x");
-    log += String(reg, HEX);
-
-    if (result == 0) {
-      log += F(") = ");
-      log += String(value);
+    if (state == ModbusResultState::SUCCESS) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), reg, reg, value, value));
     } else {
-      log += F(") invalid");
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) no response"), reg, reg));
     }
-    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -151,7 +140,6 @@ void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t e
 // Scan Modbus addreses from 0x00 to 0xFF for a given node ID
 void P183_data_struct::scan_modbus()
 {
-  String   log;
   uint16_t value            = 0;
   ModbusResultState_t state = ModbusResultState::BUSY;
 
@@ -162,20 +150,13 @@ void P183_data_struct::scan_modbus()
   }
 
   for (uint8_t id = 0; id <= 247; id++) {
-    _modbusDevice->readHoldingRegister(1, &value, &state);
+    _modbusDevice->readModuleHoldingRegister(id, 1, &value, &state);
 
     while (state == ModbusResultState::BUSY) {
       _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
     }
-    log += F("** Address ");
-    log += String(id);
-
-    if (state == ModbusResultState::SUCCESS) {
-      log += F(" OK");
-    } else {
-      log += F(" no response");
-    }
-    addLogMove(LOG_LEVEL_INFO, log);
+    String s = state == ModbusResultState::SUCCESS ? F(" OK") : F(" no response");
+    addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) %s"), id, id, s));
   }
 }
 

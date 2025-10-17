@@ -92,8 +92,9 @@ struct ModbusLINK_struct  {
 
 private:
 
-  static void dumpQueueElement(Modbus_RequestQueueElement *el);
-  static void dumpState(ModbusQueueState_t state);
+  static void   dumpQueueElement(Modbus_RequestQueueElement *el);
+  static void   dumpState(ModbusQueueState_t state);
+  static String formatState(ModbusQueueState_t state);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
   Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process

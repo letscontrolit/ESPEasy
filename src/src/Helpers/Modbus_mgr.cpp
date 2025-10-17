@@ -129,7 +129,6 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
       ModbusLinkInfo_struct *linkInfoPtr = _modbus_devices[i]->link;
 
       // Remove the device entry
-      delete _modbus_devices[i];
       _modbus_devices[i] = nullptr;
 
       // Check if any other devices are using the same link
@@ -146,7 +145,6 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
         // No other devices are using this link, so we can delete it
         for (int k = 0; k < 5; k++) {
           if (_modbus_links[k] == linkInfoPtr) {
-            delete _modbus_links[k]->link;
             delete _modbus_links[k];
             _modbus_links[k] = nullptr;
             break;
