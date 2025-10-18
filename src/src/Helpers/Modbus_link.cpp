@@ -12,7 +12,7 @@
 # include "Modbus_device.h"
 # include "Modbus_link.h"
 
-////# define MODBUS_DEBUG
+//# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -288,7 +288,7 @@ void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("---> Modbus State= ");
+    String log = F("Modbus link: State= ");
     log += formatState(state);
     addLogMove(LOG_LEVEL_INFO, log);
   }

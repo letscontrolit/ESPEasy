@@ -205,7 +205,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Read invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 Modbus: Read invalid data struct"));
         return false;
       }
       success = P183_data->plugin_read(event); // Delegate to data_struct
@@ -216,7 +216,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Write invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183: Modbus: Write invalid data struct"));
         return false;
       }
 
@@ -266,6 +266,11 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           P183_data->scan_modbus();
           success = true;
         }
+        else if (equals(subcmd, F("debug"))) {
+          // Dump Modbus admin info
+          ModbusMGR_singleton.dumpAdminInfo();
+          success = true;
+        }
         else {
           addLogMove(LOG_LEVEL_ERROR, F("Modbus: Unknown command"));
         }
@@ -277,7 +282,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_INFO, F("******* Modbus: Get config invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 Modbus: Get config invalid data struct"));
         return false;
       }
 

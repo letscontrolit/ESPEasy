@@ -7,7 +7,7 @@
 # include "modbus_link.h"
 # include "modbus_mgr.h"
 
-////# define MODBUS_DEBUG
+//# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -127,7 +127,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddr
   request->_sendframe[7]     = highByte(crc); // CRC high byte
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 7;             // Expect 8 bytes in response
-  dump_buffer(request->_sendframe, request->_sendframe_length);
+  ////dump_buffer(request->_sendframe, request->_sendframe_length);
   uint16_t queueID = _modbus_link->queueTransaction(request);
   *statePtr = ModbusResultState::BUSY;
 
@@ -159,7 +159,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
   request->_sendframe[7]     = highByte(crc); // CRC high byte
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 8;             // Expect 8 bytes in response
-  dump_buffer(request->_sendframe, request->_sendframe_length);
+  ////dump_buffer(request->_sendframe, request->_sendframe_length);
   uint16_t queueID = _modbus_link->queueTransaction(request);
   *statePtr = ModbusResultState::BUSY;
 
@@ -188,63 +188,73 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   }
 
   # ifdef MODBUS_DEBUG
-  String log = F("---> Device callback: ");
-  log += req->_id;
-  log += F(", Message = ");
-  log += static_cast<uint8_t>(req->_messageType);
+  String log = strformat(F("Modbus device callback: device= %d, Request= %d, Message= %d"),
+                         _deviceID,
+                         req->_id,
+                         static_cast<uint8_t>(req->_messageType)
+                         );
   # endif // MODBUS_DEBUG
 
-  switch (req->_messageType) {
-    case ModbusTransactionType::READ_HOLDING_REGISTERS:
-    {
-      if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
-        uint16_t crc = CalculateCRC(req->_rcvframe, 5);
+  if (req->_state == ModbusQueueState::ERROR_OCCURRED) {
+    # ifdef MODBUS_DEBUG
+    log += F(" Link error occurred");
+    # endif // MODBUS_DEBUG
+  }
+  else {
+    switch (req->_messageType) {
+      case ModbusTransactionType::READ_HOLDING_REGISTERS:
+      {
+        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
+          uint16_t crc = CalculateCRC(req->_rcvframe, 5);
 
-        if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
-          // Valid response
-          if (req->_userData != nullptr) {
-            *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
-            resultState                                = ModbusResultState::SUCCESS;
+          if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
+            // Valid response
+            if (req->_userData != nullptr) {
+              *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
+              resultState                                = ModbusResultState::SUCCESS;
+            }
           }
         }
+        break;
       }
-      break;
-    }
 
-    case ModbusTransactionType::WRITE_SINGLE_REGISTER:
-    {
-      if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
-        uint16_t crc = CalculateCRC(req->_rcvframe, 5);
+      case ModbusTransactionType::WRITE_SINGLE_REGISTER:
+      {
+        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
+          uint16_t crc = CalculateCRC(req->_rcvframe, 5);
 
-        if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
-          resultState = ModbusResultState::SUCCESS;
+          if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
+            resultState = ModbusResultState::SUCCESS;
+          }
         }
+        break;
       }
-      break;
-    }
 
-    case ModbusTransactionType::NONE:
-    {
-      // Error condition, this transaction type should not be queued
+      case ModbusTransactionType::NONE:
+      {
+        // Error condition, this transaction type should not be queued
       # ifdef MODBUS_DEBUG
-      log += F(" Invalid transaction type");
+        log += F(" Invalid transaction type");
       # endif // MODBUS_DEBUG
-      break;
-    }
+        break;
+      }
 
-    default:
-    {
-      // Error condition, missed a transaction type
+      default:
+      {
+        // Error condition, missed a transaction type
       # ifdef MODBUS_DEBUG
-      log += F(" Unknown transaction type");
+        log += F(" Unknown transaction type");
       # endif // MODBUS_DEBUG
-      break;
+        break;
+      }
     }
   }
 
   *(static_cast<ModbusResultState_t *>(req->_userState)) = resultState;
   _modbus_link->freeTransaction(req);
   # ifdef MODBUS_DEBUG
+  log += F(", Result = ");
+  log += (resultState == ModbusResultState::SUCCESS) ? F("SUCCESS") : F("ERROR");
   addLogMove(LOG_LEVEL_INFO, log);
   # endif // MODBUS_DEBUG
 }
@@ -275,7 +285,7 @@ void ModbusDEVICE_struct::dump_buffer(const uint8_t *buffer, size_t length) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("---> Modbus: Dumping buffer: ");
+    String log = F("Modbus device: Dumping buffer: ");
 
     for (size_t i = 0; i < length; ++i) {
       log += String(buffer[i], HEX);

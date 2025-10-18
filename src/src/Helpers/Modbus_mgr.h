@@ -14,7 +14,7 @@
 // The manager allows multiple Modbus devices to connect to a single Modbus link while supporting multiple links.
 // The modbus manager is not involved in the actual data transport, this is handled by a direct relation between Modbus device and
 // ModbusLINK object.
-struct ModbusMGR_struct  {
+typedef struct ModbusMGR_struct  {
   ModbusMGR_struct() = default;
 
   ~ModbusMGR_struct();
@@ -39,7 +39,12 @@ struct ModbusMGR_struct  {
 
   bool disconnect(uint8_t deviceID);
 
+  void dumpAdminInfo();
+
 private:
+
+  static const int MAX_MODBUS_LINKS   = 5;  // Maximum number of Modbus links supported
+  static const int MAX_MODBUS_DEVICES = 16; // Maximum number of Modbus devices supported
 
   struct ModbusLinkInfo_struct {
     ESPEasySerialPort         port             = ESPEasySerialPort::not_set;
@@ -53,18 +58,16 @@ private:
   };
 
   struct ModbusDeviceInfo_struct {
-    uint8_t                       deviceID = 0;          // Unique ID assigned by the Modbus manager
-    struct ModbusDEVICE_struct   *device   = nullptr;    // Pointer to the Modbus device object
-    struct ModbusLinkInfo_struct *link     = nullptr;    // Pointer to the Modbus link info
+    uint8_t                       deviceID = 0;                               // Unique ID assigned by the Modbus manager
+    struct ModbusDEVICE_struct   *device   = nullptr;                         // Pointer to the Modbus device object
+    struct ModbusLinkInfo_struct *link     = nullptr;                         // Pointer to the Modbus link info
   };
 
-   ModbusLinkInfo_struct   *_modbus_links[5]    = {nullptr};     // Pointer to the Modbus link object
-   ModbusDeviceInfo_struct *_modbus_devices[16] = {nullptr};     // Array of connected Modbus devices
+  ModbusLinkInfo_struct   *_modbus_links[MAX_MODBUS_LINKS]     = { nullptr }; // Pointer to the Modbus link object
+  ModbusDeviceInfo_struct *_modbus_devices[MAX_MODBUS_DEVICES] = { nullptr }; // Array of connected Modbus devices
+} ModbusMGR_struct_t;
 
-  ModbusLINK_struct *_modbus_link = nullptr;             // Legacy, to be cleaned up
-};
-
-static struct ModbusMGR_struct ModbusMGR_singleton = {}; // Singleton instance of the Modbus Manager
+extern ModbusMGR_struct_t ModbusMGR_singleton;                                // Singleton instance of the Modbus Manager
 
 #endif // FEAURE_MODBUS
 #endif // HELPERS_MODBUS_MGR_H
