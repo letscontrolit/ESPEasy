@@ -1,0 +1,56 @@
+@startuml
+actor       System       as system
+participant Plugin as plugin
+participant Plugin_struct as plugin_struct
+participant Modbus_device as modbus_device 
+participant Modbus_mgr    as modbus_mgr  
+participant Modbus_link   as modbus_link
+queue       Queue       as queue
+
+system -> plugin ++ : init
+create plugin_struct
+plugin -> plugin_struct ++ : new()
+create modbus_device
+plugin_struct -> modbus_device ++ : new()
+modbus_device -> modbus_mgr ++ : connect()
+alt link not exists
+    create modbus_link
+modbus_mgr -> modbus_link  : new()
+end
+modbus_mgr -> modbus_link : init()
+modbus_device <-- modbus_mgr -- : link
+plugin_struct <-- modbus_device --
+plugin <-- plugin_struct --
+system <-- plugin --
+
+system -> plugin ++ : read
+plugin -> plugin_struct ++ : read()
+plugin_struct -> modbus_device ++ : readHoldingRegister()
+modbus_device -> modbus_link ++: queueTransaction()
+modbus_link -> queue : add
+modbus_device <-- modbus_link --
+plugin_struct <-- modbus_device --
+plugin_struct -> plugin_struct : retrieve latest value
+plugin <-- plugin_struct --
+system <-- plugin --
+
+system -> plugin ++ : ten_per_second
+plugin -> plugin_struct ++ : ten_per_second()
+plugin_struct -> modbus_device ++ : processCommand()
+modbus_device -> modbus_link ++: processCommand()
+alt no transaction
+  modbus_link -> queue : get next transaction
+  alt transaction available
+    modbus_link -> modbus_link : send request
+  end
+end
+alt response available
+  modbus_link -> modbus_device ++ : linkCallback()
+  modbus_device -> plugin_struct : update latest value
+  modbus_link <-- modbus_device --
+end
+modbus_device <-- modbus_link --
+plugin_struct <-- modbus_device --
+plugin <-- plugin_struct --
+system <-- plugin --
+@enduml
