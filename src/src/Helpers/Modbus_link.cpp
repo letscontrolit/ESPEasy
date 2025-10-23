@@ -80,7 +80,7 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Modbus_link: Init serial: RX pin ");
+    String log = F("Modbus: Link, Init serial, RX pin ");
     log += serial_rx;
     log += F(", TX pin ");
     log += serial_tx;
@@ -135,7 +135,7 @@ bool ModbusLINK_struct::freeTransaction(Modbus_RequestQueueElement *transaction)
     return true;
   }
   else {
-    addLogMove(LOG_LEVEL_ERROR, F("Modbus_link: Attempt to free null transaction"));
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to free null transaction"));
     return false;
   }
 }
@@ -161,7 +161,7 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus_link: Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
+               strformat(F("Modbus: Link, Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
   }
   # endif // MODBUS_DEBUG
   transaction->_state = ModbusQueueState::QUEUED; // Initial state
@@ -177,7 +177,7 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 void ModbusLINK_struct::processCommand()
 {
   if (_easySerial == nullptr) {
-    addLogMove(LOG_LEVEL_INFO, F("Modbus_link: Serial port not initialized"));
+    addLogMove(LOG_LEVEL_INFO, F("Modbus: Link, Serial port not initialized"));
     return;                          // Serial port not initialized
   }
 
@@ -264,7 +264,7 @@ void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = strformat(F("[ID=%u, Device=%p, State="), el->_id, el->_device);
+    String log = strformat(F("Modbus: [ID=%u, Device=%p, State="), el->_id, el->_device);
     log += formatState(el->_state);
     log += F(", TX=");
 
@@ -288,7 +288,7 @@ void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Modbus link: State= ");
+    String log = F("Modbus: Link, State= ");
     log += formatState(state);
     addLogMove(LOG_LEVEL_INFO, log);
   }

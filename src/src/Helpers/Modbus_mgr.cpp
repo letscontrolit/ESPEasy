@@ -51,7 +51,7 @@ bool ModbusMGR_struct::connect(const ESPEasySerialPort port,
   ModbusDeviceInfo_struct *deviceInfoPtr = nullptr;
 
   # ifdef MODBUS_DEBUG
-  String log = F("Modbus_mgr: Connect port=");
+  String log = F("Modbus: Manager, Connect port=");
 
   log += (int)port;
   # endif // ifdef MODBUS_DEBUG
@@ -135,7 +135,7 @@ bool ModbusMGR_struct::connect(const ESPEasySerialPort port,
 bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
   dumpAdminInfo();
   # ifdef MODBUS_DEBUG
-  String log = F("Modbus_mgr: Disconnect device=");
+  String log = F("Modbus: Manager, Disconnect device=");
 
   log += (int)deviceID;
   # endif // ifdef MODBUS_DEBUG
@@ -185,7 +185,7 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::dumpAdminInfo()
 {
-  addLogMove(LOG_LEVEL_INFO, F("Modbus_mgr: Dumping admin info"));
+  addLogMove(LOG_LEVEL_INFO, F("Modbus: Manager, Dumping admin info"));
   #ifdef MODBUS_DEBUG
   // Iterate over the modbus links and dump their info
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {

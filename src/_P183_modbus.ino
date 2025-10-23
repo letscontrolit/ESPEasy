@@ -182,7 +182,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
                                          P183_GET_FLAG_COLL_DETECT);
       }
       else {
-        addLog(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
       }
 
       success = true;
@@ -205,7 +205,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_ERROR, F("P183 Modbus: Read invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus read invalid data struct"));
         return false;
       }
       success = P183_data->plugin_read(event); // Delegate to data_struct
@@ -216,7 +216,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_ERROR, F("P183: Modbus: Write invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus write invalid data struct"));
         return false;
       }
 
@@ -232,7 +232,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           P183_data->writeRegister(address, value);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus: write value %u to address 0x%04x"), value, address));
+            addLogMove(LOG_LEVEL_INFO, strformat(F("P183 : Modbus write value %u to address 0x%04x"), value, address));
           }
           success = true;
         }
@@ -243,7 +243,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           value = P183_data->readRegisterWait(address);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus: read value %u from address 0x%04x"), value, address));
+            addLogMove(LOG_LEVEL_INFO, strformat(F("P183 : Modbus read value %u from address 0x%04x"), value, address));
           }
           success = true;
         }
@@ -272,7 +272,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         }
         else {
-          addLogMove(LOG_LEVEL_ERROR, F("Modbus: Unknown command"));
+          addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Unknown command"));
         }
       }
 
@@ -282,7 +282,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        addLogMove(LOG_LEVEL_ERROR, F("P183 Modbus: Get config invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config invalid data struct"));
         return false;
       }
 
