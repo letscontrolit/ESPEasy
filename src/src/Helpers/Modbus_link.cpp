@@ -265,7 +265,7 @@ void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = strformat(F("Modbus: [ID=%u, Device=%p, State="), el->_id, el->_device);
-    log += formatState(el->_state);
+    log += toString(el->_state);
     log += F(", TX=");
 
     for (int i = 0; i < el->_sendframe_length; i++) {
@@ -289,36 +289,28 @@ void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Modbus: Link, State= ");
-    log += formatState(state);
+    log += toString(state);
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // MODBUS_DEBUG
 }
 
-String ModbusLINK_struct::formatState(ModbusQueueState_t state) {
-  String log;
-
+const __FlashStringHelper* toString(ModbusQueueState_t state) {
   switch  (state) {
     case ModbusQueueState::NOT_QUEUED:
-      log += F("NOT_QUEUED");
-      break;
+      return F("NOT_QUEUED");
     case ModbusQueueState::QUEUED:
-      log += F("QUEUED");
-      break;
+      return F("QUEUED");
     case ModbusQueueState::MESSAGE_SENT:
-      log += F("MESSAGE_SENT");
-      break;
+      return F("MESSAGE_SENT");
     case ModbusQueueState::RESPONSE_RECEIVED:
-      log += F("RESPONSE_RECEIVED");
-      break;
+      return F("RESPONSE_RECEIVED");
     case ModbusQueueState::ERROR_OCCURRED:
-      log += F("ERROR_OCCURRED");
-      break;
+      return F("ERROR_OCCURRED");
     case ModbusQueueState::READY_FOR_DESTROY:
-      log += F("READY_FOR_DESTROY");
-      break;
+      return F("READY_FOR_DESTROY");
   }
-  return log;
+  return F("<error>");
 }
 
 #endif // if FEATURE_MODBUS

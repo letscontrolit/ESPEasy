@@ -6,7 +6,7 @@
 # include <ESPeasySerial.h>
 # include "Modbus_mgr.h"
 
-//# define MODBUS_DEBUG
+// # define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -14,7 +14,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Singleton administration object for Modbus manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ModbusMGR_struct_t ModbusMGR_singleton = {}; 
+ModbusMGR_struct_t ModbusMGR_singleton = {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ModbusMGR_struct::~ModbusMGR_struct()
@@ -25,7 +25,6 @@ ModbusMGR_struct::~ModbusMGR_struct()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::reset()
 {
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,30 +80,31 @@ bool ModbusMGR_struct::connect(const ESPEasySerialPort port,
     }
   }
 
-  if (linkInfoPtr != nullptr) {
-    if (linkInfoPtr->link == nullptr) {
+  if (linkInfoPtr != nullptr) {         // Sanity check for successful link admin creation
+    if (linkInfoPtr->link == nullptr) { // Check if link object already exists
       // No existing link, create a new one
       linkInfoPtr->link = new (std::nothrow) ModbusLINK_struct();
+    }
 
-      if (linkInfoPtr->link != nullptr) {
-        // Initialize the new link
-        if (!linkInfoPtr->link->init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect)) {
-          delete linkInfoPtr->link;
-          linkInfoPtr->link = nullptr;
-          delete linkInfoPtr;
-          linkInfoPtr = nullptr;
-          return false; // Initialization failed
-        }
-        else {
-          // Store the link parameters
-          linkInfoPtr->port             = port;
-          linkInfoPtr->serial_rx        = serial_rx;
-          linkInfoPtr->serial_tx        = serial_tx;
-          linkInfoPtr->baudrate         = baudrate;
-          linkInfoPtr->dere_pin         = dere_pin;
-          linkInfoPtr->rs485_mode       = (dere_pin != -1);
-          linkInfoPtr->collision_detect = collision_detect;
-        }
+    if (linkInfoPtr->link != nullptr) { // Sanity check for successful creation
+      // (re)initialize the new link
+      if (!linkInfoPtr->link->init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect)) {
+        // Initialization failed, clean up
+        delete linkInfoPtr->link;
+        linkInfoPtr->link = nullptr;
+        delete linkInfoPtr;
+        linkInfoPtr = nullptr;
+        return false; // Initialization failed
+      }
+      else {
+        // Store the link parameters
+        linkInfoPtr->port             = port;
+        linkInfoPtr->serial_rx        = serial_rx;
+        linkInfoPtr->serial_tx        = serial_tx;
+        linkInfoPtr->baudrate         = baudrate;
+        linkInfoPtr->dere_pin         = dere_pin;
+        linkInfoPtr->rs485_mode       = (dere_pin != -1);
+        linkInfoPtr->collision_detect = collision_detect;
       }
     }
   }
@@ -117,10 +117,10 @@ bool ModbusMGR_struct::connect(const ESPEasySerialPort port,
       _modbus_devices[i]->link     = linkInfoPtr;
       *deviceID                    = _modbus_devices[i]->deviceID;
       *link                        = linkInfoPtr->link;
-      #ifdef MODBUS_DEBUG
-      log                         += F(" Assigned deviceID= ");
-      log                         += *deviceID;
-      #endif
+      # ifdef MODBUS_DEBUG
+      log += F(" Assigned deviceID= ");
+      log += *deviceID;
+      # endif // ifdef MODBUS_DEBUG
       break;
     }
   }
@@ -137,7 +137,7 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
   # ifdef MODBUS_DEBUG
   String log = F("Modbus: Manager, Disconnect device=");
 
-  log += (int)deviceID;
+  log += deviceID;
   # endif // ifdef MODBUS_DEBUG
 
   for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
@@ -186,7 +186,8 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
 void ModbusMGR_struct::dumpAdminInfo()
 {
   addLogMove(LOG_LEVEL_INFO, F("Modbus: Manager, Dumping admin info"));
-  #ifdef MODBUS_DEBUG
+  # ifdef MODBUS_DEBUG
+
   // Iterate over the modbus links and dump their info
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
     if (_modbus_links[i] != nullptr)  {
@@ -221,7 +222,7 @@ void ModbusMGR_struct::dumpAdminInfo()
       addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus_mgr: Device[%d] <not used>"), i));
     }
   }
-  #endif // MODBUS_DEBUG
+  # endif // ifdef MODBUS_DEBUG
 }
 
-#endif // FEATURE_MODBUS_FAC
+#endif // if FEATURE_MODBUS_FAC

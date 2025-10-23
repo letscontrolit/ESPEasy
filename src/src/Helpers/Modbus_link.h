@@ -24,6 +24,8 @@ typedef enum class ModbusQueueState {
   READY_FOR_DESTROY = 5  // Element is marked for deletion and can be freed
 } ModbusQueueState_t;
 
+const __FlashStringHelper* toString(ModbusQueueState_t state);
+
 // Types of Modbus transactions supported by the Modbuss_device
 // This enumeration is used by the Modbus device to indicate which transaction is associated with the queue element.
 // See Modbus specification for details on function codes.
@@ -94,7 +96,6 @@ private:
 
   static void   dumpQueueElement(Modbus_RequestQueueElement *el);
   static void   dumpState(ModbusQueueState_t state);
-  static String formatState(ModbusQueueState_t state);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
   Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process
