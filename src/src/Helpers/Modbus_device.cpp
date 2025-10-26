@@ -3,9 +3,8 @@
 
 #if FEATURE_MODBUS_FAC
 
-# include "Modbus_device.h"
-# include "modbus_link.h"
-# include "modbus_mgr.h"
+# include "../Helpers/Modbus_device.h"
+# include "../Helpers/Modbus_mgr.h"
 
 //# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG

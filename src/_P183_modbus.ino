@@ -17,17 +17,13 @@
 
 /**
  * Changelog:
- * 2025-08-24 flashmark: Initial version
  * 2025-10-12 flashmark: Restructuring and adding a MODBUS_FAC facility
+ * 2025-08-24 flashmark: Initial version
  */
 
-# define P183_DEBUG // Switch on additional debug logging
-# ifdef BUILD_NO_DEBUG
-#  undef P183_DEBUG // Debugging switched off
-# endif // ifdef BUILD_NO_DEBUG
 # define PLUGIN_183
 # define PLUGIN_ID_183         183
-# define PLUGIN_NAME_183       "[testing] Modbus RTU"
+# define PLUGIN_NAME_183       "Communication - Modbus RTU"
 # define P183_NR_OUTPUT_VALUES 4
 # define PLUGIN_VALUENAME1_183 "Value1"
 # define PLUGIN_VALUENAME2_183 "Value2"

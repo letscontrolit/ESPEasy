@@ -1,4 +1,4 @@
-#include "P183_data_struct.h"
+#include "../PluginStructs/P183_data_struct.h"
 
 #ifdef USES_P183
 

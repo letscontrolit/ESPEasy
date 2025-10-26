@@ -288,9 +288,7 @@ void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Modbus: Link, State= ");
-    log += toString(state);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("Modbus: Link, State= "), toString(state)));
   }
   # endif // MODBUS_DEBUG
 }

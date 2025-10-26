@@ -38,16 +38,16 @@ system -> plugin ++ : ten_per_second
 plugin -> plugin_struct ++ : ten_per_second()
 plugin_struct -> modbus_device ++ : processCommand()
 modbus_device -> modbus_link ++: processCommand()
+alt response available
+  modbus_link -> modbus_device ++ : linkCallback()
+  modbus_device -> plugin_struct : update latest value
+  modbus_link <-- modbus_device --
+end
 alt no transaction
   modbus_link -> queue : get next transaction
   alt transaction available
     modbus_link -> modbus_link : send request
   end
-end
-alt response available
-  modbus_link -> modbus_device ++ : linkCallback()
-  modbus_device -> plugin_struct : update latest value
-  modbus_link <-- modbus_device --
 end
 modbus_device <-- modbus_link --
 plugin_struct <-- modbus_device --
