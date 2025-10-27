@@ -8,6 +8,7 @@
 # include "src/Globals/Plugins.h"
 # include "src/Globals/Statistics.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"
+# include "src/Helpers/ESPEasy_UnitOfMeasure.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "_Plugin_Helper.h"
 

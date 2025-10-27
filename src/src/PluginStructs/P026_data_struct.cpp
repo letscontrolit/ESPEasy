@@ -5,6 +5,7 @@
 # include "../DataStructs/ESPEasy_packed_raw_data.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Helpers/ESPEasy_UnitOfMeasure.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Hardware_temperature_sensor.h"
 # ifdef ESP32

@@ -38,6 +38,9 @@
 
 # include <ESPeasySerial.h>
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void handle_devices() {
   # ifndef BUILD_NO_RAM_TRACKER
@@ -1743,6 +1746,40 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     html_table_header(F("Unit of Measure"), 300);
     ++colCount;
+    EventStruct uomEvent(taskIndex);
+    String uomDummy;
+    bool limitedUom = PluginCall(DeviceIndex, PLUGIN_GET_UOM_GROUPS, &uomEvent, uomDummy);
+    if (!limitedUom) {
+      PluginCall(PLUGIN_GET_DEVICEVTYPE, &uomEvent, uomDummy); // Get Sensor_VType
+      limitedUom = getDefaultUoMforSensorVType(&uomEvent);     // Populate UoM groups for known Sensor_VTypes
+      #if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE
+      if (!limitedUom) {
+        // Fill in standard Unit of measurement and Value Type, if possible
+        std::vector<DiscoveryItem> discoveryItems;
+        MQTT_DiscoveryGetDeviceVType(taskIndex, discoveryItems, getValueCountForTask(taskIndex), uomDummy);
+
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+          // Match varNr with the DiscoveryItems to find the Sensor_VType for the value
+          for (uint8_t j = 0; j < discoveryItems.size(); ++j) {
+            for (uint8_t k = 0; k < discoveryItems[j].valueCount; ++k) { // Can have multiple values for 1 VType
+              if (varNr == discoveryItems[j].varIndex + k) {
+                const String   uom       = getValueType2DefaultHAUoM(discoveryItems[j].VType);
+                const uint16_t uomGroup  = getUoMGroupForUoM(uom);
+                const uint16_t uomGroup2 = getUoMGroupForUoM(Cache.getTaskVarUnitOfMeasure(taskIndex, varNr));
+
+                if (uomGroup > 0) {
+                  uomEvent.Par64N[varNr] = (uint64_t)(1ULL << (uomGroup - 1024)) | (uomGroup2 > 0 ? (uint64_t)(1ULL << (uomGroup2 - 1024)) : 0ULL);
+                  limitedUom             = true;
+                } else {
+                  uomEvent.Par64N[varNr] = UOM_GROUP_ALL;
+                }
+              }
+            }
+          }
+        }
+      }
+      #endif // if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE
+    }
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     #if FEATURE_CUSTOM_TASKVAR_VTYPE
@@ -1766,7 +1803,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     #if FEATURE_CUSTOM_TASKVAR_VTYPE
     std::vector<uint8_t> singleOptions;
-    EventStruct TempEvent(taskIndex);
     
     if (device.CustomVTypeVar) {
       // Build a list of all single-value available value VTypes from PR #5199
@@ -1779,6 +1815,31 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       }
     }
     #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+    # if FEATURE_PLUGIN_STATS
+    const __FlashStringHelper *chartAxis[] = {
+      F("L1"),
+      F("L2"),
+      F("L3"),
+      F("L4"),
+      F("R1"),
+      F("R2"),
+      F("R3"),
+      F("R4")
+    };
+    constexpr size_t chartAxisCount = NR_ELEMENTS(chartAxis);
+    #endif // if FEATURE_PLUGIN_STATS
+
+    #if FEATURE_MQTT_STATE_CLASS
+    const __FlashStringHelper *stateClasses[] = {
+      MQTT_sensor_StateClass(0),
+      MQTT_sensor_StateClass(1),
+      MQTT_sensor_StateClass(4),
+      MQTT_sensor_StateClass(2),
+      MQTT_sensor_StateClass(3),
+    };
+    constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
+    #endif // if FEATURE_MQTT_STATE_CLASS
 
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -1822,24 +1883,13 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
         html_TD();
 
-        const __FlashStringHelper *chartAxis[] = {
-          F("L1"),
-          F("L2"),
-          F("L3"),
-          F("L4"),
-          F("R1"),
-          F("R2"),
-          F("R3"),
-          F("R4")
-        };
-
         int selected = cachedConfig.getAxisIndex();
 
         if (!cachedConfig.isLeft()) {
           selected += 4;
         }
 
-        const FormSelectorOptions selector(NR_ELEMENTS(chartAxis), chartAxis);
+        const FormSelectorOptions selector(chartAxisCount, chartAxis);
         selector.addSelector(
           getPluginCustomArgName(F("TDSA"), varNr),
           selected);
@@ -1848,7 +1898,8 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
       #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       html_TD();
-      addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr));
+      const uint64_t uomGroups = limitedUom ? uomEvent.Par64N[varNr] : UOM_GROUP_ALL;
+      addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr), uomGroups);
       #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
       #if FEATURE_CUSTOM_TASKVAR_VTYPE
@@ -1865,15 +1916,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       #if FEATURE_MQTT_STATE_CLASS
       if (device.MqttStateClass) {
         html_TD();
-        const __FlashStringHelper *stateClasses[] = {
-          MQTT_sensor_StateClass(0),
-          MQTT_sensor_StateClass(1),
-          MQTT_sensor_StateClass(4),
-          MQTT_sensor_StateClass(2),
-          MQTT_sensor_StateClass(3),
-        };
 
-        constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
         const FormSelectorOptions selectorSC(stateCount, stateClasses);
         selectorSC.addSelector(
           getPluginCustomArgName(F("TDSC"), varNr),

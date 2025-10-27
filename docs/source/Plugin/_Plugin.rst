@@ -250,10 +250,10 @@ If set the UoM will be space-appended to the value when displayed on the Devices
 A list of 165+ Unit of Measure values is available (derived of what's supported/expected by Home Assistant):
 
 ``°C, °F, K, %, Pa, hPa, bar, mbar, inHg, psi, W, kW, V, Wh, kWh, A, VA, mm, cm, m, km,`` ``L, mL, m³, ft³, m³/h, ft³/h, lx, UV index, µg/m³, mg/m³, p/m³, ppm, ppb,``
-``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, db, dBm,``
+``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, dB, dBm,``
 ``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s,``
 ``ft/s, kn, mW, MW, GW, TW, BTU/(h·ft²), pH, cbar, mmHg, kPa, mA, µA, mV, µV, kV, cm², km², mm²,`` ``in², ft², yd², mi², ac, ha, kHz, MHz, mWh, MWh, GWh, TWh, cal, kcal, Mcal,``
-``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s, g/m³, kWh/100km, Wh/km, mi/kWh, km/kWh, in/d, mm/d``
+``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s, g/m³, kWh/100km, Wh/km, mi/kWh, km/kWh, in/d, mm/d, Ah``
 
 Displaying the Unit of Measure in the Devices overview page can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
 
@@ -261,6 +261,7 @@ The **Unit of Measure** selector is, because of the vast number of options, divi
 
 .. image:: Task_config_page_UoM_selector_part.png
 
+Depending on the available data, the number of options is limited as much as possible, to reduce page-load time, as filling this many option in multiple comboboxes takes quite some time.
 
 Value Type
 ^^^^^^^^^^

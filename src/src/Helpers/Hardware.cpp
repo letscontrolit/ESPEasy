@@ -15,6 +15,7 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Hardware_GPIO.h"

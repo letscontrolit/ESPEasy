@@ -9,6 +9,7 @@
 #  include "../Helpers/StringGenerator_System.h"
 # endif // if FEATURE_MQTT_DISCOVER
 # include "../Helpers/SystemVariables.h"
+# include "../Helpers/ESPEasy_UnitOfMeasure.h"
 
 # ifdef USES_P001
 #  include "../PluginStructs/P001_data_struct.h"
