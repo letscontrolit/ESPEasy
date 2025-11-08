@@ -1495,6 +1495,7 @@ To create/register a plugin, you have to :
     #define USES_C013   // ESPEasy P2P network
 #endif
 
+#define USES_P184
 
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
