@@ -18,10 +18,12 @@
 
 # include <vector>
 
-// # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || (defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP32))
+// # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || ((defined(PLUGIN_DISPLAY_A_COLLECTION) ||
+// defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP32))
 # ifdef ESP32
 #  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font for double-height time/date
-// # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || (defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP32))
+// # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || ((defined(PLUGIN_DISPLAY_A_COLLECTION) ||
+// defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP32))
 # endif // ifdef ESP32
 # define P104_USE_FULL_DOUBLEHEIGHT_FONT     // Enables the use of a full (lower ascii only) set double height font
 # define P104_USE_VERTICAL_FONT              // Enables the use of a vertical font
@@ -45,7 +47,7 @@
 # endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
 
 // To make it fit in the ESP8266 display build
-# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+# if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -83,7 +85,7 @@
 #   undef P104_DEBUG_DEV
 #  endif // ifdef P104_DEBUG_DEV
 #  define P104_MEDIUM_ANIMATIONS
-# endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
+# endif // if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
 
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations

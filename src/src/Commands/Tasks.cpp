@@ -16,6 +16,7 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"

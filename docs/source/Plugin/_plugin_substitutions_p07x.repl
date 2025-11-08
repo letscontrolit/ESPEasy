@@ -68,7 +68,7 @@
 .. |P075_type| replace:: :cyan:`Display`
 .. |P075_typename| replace:: :cyan:`Display - Nextion`
 .. |P075_porttype| replace:: `.`
-.. |P075_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
+.. |P075_status| replace:: :yellow:`COLLECTION` :yellow:`DISPLAY A`
 .. |P075_github| replace:: P075_Nextion.ino
 .. _P075_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P075_Nextion.ino
 .. |P075_usedby| replace:: `.`

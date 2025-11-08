@@ -8,6 +8,7 @@
 # include "src/Globals/Plugins.h"
 # include "src/Globals/Statistics.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"
+# include "src/Helpers/ESPEasy_UnitOfMeasure.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "_Plugin_Helper.h"
 
@@ -16,6 +17,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-08-23 tonhuisman: Add 10/sec call to poll background connection process while not connected
  * 2025-06-18 tonhuisman: Add support for Unit of Measure attribute, when available in the build, sent in AutoDiscovery
  *                        Enable sending Derived values when available
  * 2024-03-02 tonhuisman: Fix using parseSystemVariables() for processing %sysname%. Might still break the same configurations,
@@ -984,6 +986,14 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
       }
       break;
     }
+
+    # if FEATURE_MQTT_CONNECT_BACKGROUND
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
+    {
+      MQTTConnectInBackground(CONTROLLER_MAX, true); // Report state
+      break;
+    }
+    # endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     default:
       break;

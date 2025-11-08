@@ -760,7 +760,7 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   addHtml(strformat(
-    F("%d daily / %d boot"),
+    F("%d daily / %d cold boot"),
     RTC.flashDayCounter,
     static_cast<int>(RTC.flashCounter)));
 

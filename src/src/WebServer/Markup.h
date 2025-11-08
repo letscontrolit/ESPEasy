@@ -107,11 +107,9 @@ void addUnit(const String& unit);
 void addUnit(char unit);
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
-                           const String & defUoM = EMPTY_STRING);
-int    getUnitOfMeasureIndex(const String& uomName);
-void   addUnitOfMeasureSelector(const String& id,
-                                const uint8_t unitOfMeasure);
+void   addUnitOfMeasureSelector(const String&  id,
+                                const uint8_t  unitOfMeasure,
+                                const uint64_t groupMap);
 #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void addRowLabel_tr_id(const __FlashStringHelper *label,

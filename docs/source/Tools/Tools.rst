@@ -482,6 +482,16 @@ If the Unit of Measure, configurable per Task Value, should not be displayed on 
 
 NB: This option is excluded from the build if this feature is not enabled.
 
+MQTT Connect in background
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2025-08-23
+
+Depending on the internet connection, f.e. when connecting via a low-end mobile network or other slow connection type, starting a connection to a MQTT Broker can take quite some time.
+
+On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
+
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -3,8 +3,8 @@
 
 .. _N002_page:
 
-Notifications Buzzer
-=====================
+|N002_typename|
+========================
 
 |N002_shortinfo|
 

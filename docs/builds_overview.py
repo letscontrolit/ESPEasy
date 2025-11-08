@@ -5,13 +5,15 @@
 #############################################################################################################
 # This script parses all documentation substitution files to determine in what builds a plugin is available
 # Collection A..G, Display, Energy and Neopixel, IR and IRext get Normal plugins injected
-# Collection plugins are also injected into Collection A..G
+# Collection, Notify and Network plugins are also injected into Collection A..G
 # All plugins get injected into MAX build set
 # Some build sets have exceptions for plugins not available
 # The output generation order is determined by how they are ordered in list 'buildColors'
 # When adding or removing a build set, this script may need adjustments!
 
 # Changelog:
+# 2025-10-05 tonhuisman: Adjustments for Display A and Display B split
+# 2025-10-01 tonhuisman: Include Notify and Network plugins, ignore not available files, parse NWxxx also
 # 2024-05-04 tonhuisman: Working and documented
 # 2024-04-28 tonhuisman: Initial script
 
@@ -30,8 +32,9 @@ appendBuilds = {'MAX'}
 
 # What build set to add plugins also
 appendAlso = {
-  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'DISPLAY', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
-  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G'}
+  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'DISPLAY A', 'DISPLAY B', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
+  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G'},
+  'DISPLAY': {'DISPLAY A', 'DISPLAY B'}
   }
 
 # Ignore these, not real build sets
@@ -40,8 +43,9 @@ excludeBuilds = {'DEVELOPMENT', 'RETIRED'}
 # Plugins not included
 excludePlugins = {
   'CLIMATE': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
-  'DISPLAY': {'P070'},
-  'MAX': {'P089'},
+  'DISPLAY A': {'P038', 'P041', 'P042', 'P070'},
+  'DISPLAY B': {'P038', 'P041', 'P042', 'P057', 'P070', 'P075', 'P104'},
+  # 'MAX': {''},
   # 'NEOPIXEL': {''},
   'NORMAL': {'P016', 'P035'},
 }
@@ -57,7 +61,8 @@ buildColors = {
   'COLLECTION F': 'yellow',
   'COLLECTION G': 'yellow',
   'CLIMATE': 'yellow',
-  'DISPLAY': 'yellow',
+  'DISPLAY A': 'yellow',
+  'DISPLAY B': 'yellow',
   'ENERGY': 'yellow',
   'IR': 'yellow',
   'IRext': 'yellow',
@@ -101,6 +106,8 @@ def addToAllBuilds(plugin, pluginName, builds:dict):
 # Parse a single substitution file
 def parseSingleSubstitutionFile(fileName):
   filepath = os.path.relpath(os.path.join(basePath, fileName), '.')
+  if not os.path.isfile(filepath):
+    return
   # print(filepath) # For debugging
   pfile = open(filepath, "r")
   # Start empty
@@ -113,7 +120,7 @@ def parseSingleSubstitutionFile(fileName):
       break
     # Parse into label, plugin ID, description and up to 4 separate builds (current max.),
     # append "(?:[^`]+`([^`]+)`)?" to regex for an extra build, if needed
-    m = re.search(r"[^|]\|([PCN](\d{3}))([^\|]+)\|[^`]+`([^`]+)`(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?", line)
+    m = re.search(r"[^|]\|((?:NW|[PCN])(\d{3}))([^\|]+)\|[^`]+`([^`]+)`(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?", line)
     if m:
       if m.group(3) == "_typename": # the typename substitution should be before _status...
         if plugin != "" and plugin != m.group(1): # Changed plugin ID, store current
@@ -178,6 +185,10 @@ print('Parsing substitutions for build sets...')
 parseSubstitutionFiles('../Plugin/_plugin_substitutions.repl')
 # Parse all Controller substitutions
 parseSingleSubstitutionFile('../Controller/_controller_substitutions.repl')
+# Parse all Notify substitutions
+parseSingleSubstitutionFile('../Notify/_notify_substitutions_n00x.repl')
+# Parse all Network substitutions
+parseSingleSubstitutionFile('../Network/_network_substitutions.repl')
 
 # Generate output
 generateBuildOverview('../Plugin/_plugin_sets_overview.repl')

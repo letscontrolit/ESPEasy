@@ -13,6 +13,7 @@
  */
 
 /** Changelog:
+ * 2025-10-25 tonhuisman: Add custom Unit of Measure group per value to limit selection to useful options
  * 2025-08-02 repa6: Add partial support for TAC2100 meter
  * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partial)
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Eastron)
@@ -102,6 +103,20 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
     # endif // if FEATURE_MQTT_DISCOVER
+
+    # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    case PLUGIN_GET_UOM_GROUPS:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->Par64N[i] = Plugin_078_QueryUOMGroup(model, choice);
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {

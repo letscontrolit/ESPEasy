@@ -11,7 +11,7 @@
 
 # include "../WebServer/Chart_JS.h"
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-#  include "../WebServer/Markup.h"
+#  include "../Helpers/ESPEasy_UnitOfMeasure.h"
 # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 PluginStats_array::~PluginStats_array()

@@ -5,6 +5,7 @@
 # include "../DataStructs/ESPEasy_packed_raw_data.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Helpers/ESPEasy_UnitOfMeasure.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Hardware_temperature_sensor.h"
 # ifdef ESP32
@@ -172,7 +173,7 @@ Sensor_VType P026_get_valueVType(uint8_t type) {
     case P026_VALUETYPE_ip4:       return Sensor_VType::SENSOR_TYPE_NONE;
     case P026_VALUETYPE_web:       return Sensor_VType::SENSOR_TYPE_DURATION;
     case P026_VALUETYPE_freestack: return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
-    case P026_VALUETYPE_txpwr:     return Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY;
+    case P026_VALUETYPE_txpwr:     return Sensor_VType::SENSOR_TYPE_SOUND_PRESSURE;
 #  ifdef USE_SECOND_HEAP
     case P026_VALUETYPE_free2ndheap:  return Sensor_VType::SENSOR_TYPE_DATA_SIZE;
 #  endif // ifdef USE_SECOND_HEAP

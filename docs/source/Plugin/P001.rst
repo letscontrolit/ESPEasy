@@ -25,6 +25,9 @@ Supported hardware
 
 |P001_usedby|
 
+
+.. include:: DeviceClass_binary.repl
+
 Commands available
 ------------------
 

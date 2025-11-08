@@ -154,13 +154,14 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#if defined(PLUGIN_DISPLAY_COLLECTION)
-  // Display builds are getting too large, so for now disable ETH for display buikds
-  #if FEATURE_ETHERNET
-  #undef FEATURE_ETHERNET
-  #endif
+#if defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)
+  // Display builds are getting too large, so for now disable ETH for display builds
+  // Update: By splitting Display into A and B, there is enough space available to enable ETH for now
+  // #if FEATURE_ETHERNET
+  //   #undef FEATURE_ETHERNET
+  // #endif
   #ifndef BUILD_NO_DEBUG
-      #define BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
   #endif
 #endif
 
@@ -1131,8 +1132,11 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_ENERGY_COLLECTION
         #define PLUGIN_ENERGY_COLLECTION
     #endif
-    #ifndef PLUGIN_DISPLAY_COLLECTION
-        #define PLUGIN_DISPLAY_COLLECTION
+    #ifndef PLUGIN_DISPLAY_A_COLLECTION
+        #define PLUGIN_DISPLAY_A_COLLECTION
+    #endif
+    #ifndef PLUGIN_DISPLAY_B_COLLECTION
+        #define PLUGIN_DISPLAY_B_COLLECTION
     #endif
     #ifndef PLUGIN_CLIMATE_COLLECTION
       #define PLUGIN_CLIMATE_COLLECTION
@@ -1805,91 +1809,202 @@ To create/register a plugin, you have to :
 
 #endif // ifdef PLUGIN_ENERGY_COLLECTION
 
-// Collection of all display plugins. (also NeoPixel)
-#ifdef PLUGIN_DISPLAY_COLLECTION
+// Collection of display plugins, set A (non-AdaGFX_Helper).
+#ifdef PLUGIN_DISPLAY_A_COLLECTION
   #ifndef PLUGIN_DESCR
-    #define PLUGIN_DESCR  "Display"
+    #define PLUGIN_DESCR  "Display A"
   #endif
-   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #ifndef PLUGIN_BUILD_MAX_ESP32
-       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
-       #define KEEP_I2C_MULTIPLEXER
-       #ifndef P036_LIMIT_BUILD_SIZE
-         #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
-       #endif
-       #ifndef P037_LIMIT_BUILD_SIZE
-         #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
-       #endif
-       #define NOTIFIER_SET_NONE
-       #ifdef USES_N001
-         #undef USES_N001   // Email
-       #endif
-       #ifdef USES_N002
-         #undef USES_N002   // Buzzer
-       #endif
-     #endif
-   #endif
-   #if defined(ESP8266)
-     #if defined(FEATURE_I2C_DEVICE_CHECK)
-       #undef FEATURE_I2C_DEVICE_CHECK
-     #endif
-     #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    #ifndef PLUGIN_BUILD_MAX_ESP32
+      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+      #define KEEP_I2C_MULTIPLEXER
+      #ifndef P036_LIMIT_BUILD_SIZE
+        #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+      #endif
+      #ifndef P037_LIMIT_BUILD_SIZE
+        #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+      #endif
+      #define NOTIFIER_SET_NONE
+      #ifdef USES_N001
+        #undef USES_N001   // Email
+      #endif
+      #ifdef USES_N002
+        #undef USES_N002   // Buzzer
+      #endif
+    #endif
+  #endif
+  #if defined(ESP8266)
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
     //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
     //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
     //  #endif // FEATURE_TARSTREAM_SUPPORT
-   #endif
-   #if !defined(FEATURE_SD) && !defined(ESP8266)
-     #define FEATURE_SD 1
-   #endif
-   #ifndef USES_P012
-     #define USES_P012   // LCD
-   #endif
-   #ifndef USES_P023
+  #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD 1
+  #endif
+  #ifndef USES_P012
+    #define USES_P012   // LCD
+  #endif
+  #ifndef USES_P023
     #define USES_P023   // OLED
-   #endif
-   #ifndef USES_P036
+  #endif
+  #ifndef USES_P036
     #define USES_P036   // FrameOLED
-   #endif
-   #ifdef USES_P038
+  #endif
+  #ifdef USES_P038
     #undef USES_P038   // DISABLE NeoPixel
-   #endif
-   #ifdef USES_P041
+  #endif
+  #ifdef USES_P041
     #undef USES_P041   // DISABLE NeoClock
-   #endif
-   #ifdef USES_P042
+  #endif
+  #ifdef USES_P042
     #undef USES_P042   // DISABLE Candle
-   #endif
-   #ifndef USES_P057
+  #endif
+  #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
-   #endif
-   #ifdef USES_P070
+  #endif
+  #ifdef USES_P070
     #undef USES_P070   // DISABLE NeoPixel_Clock
-   #endif
-   #ifndef USES_P075
+  #endif
+  #ifndef USES_P075
     #define USES_P075   // Nextion
-   #endif
-   #ifndef USES_P095
-    #define USES_P095  // TFT ILI9341
-   #endif
-   #ifndef USES_P096
-    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
-   #endif
-   #ifndef USES_P099
-    #define USES_P099   // XPT2046 Touchscreen
-   #endif
-   #ifndef USES_P104
+  #endif
+  //  #ifndef USES_P095
+  //   #define USES_P095  // TFT ILI9341
+  //  #endif
+  //  #ifndef USES_P096
+  //   #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  //  #endif
+  //  #ifndef USES_P099
+  //   #define USES_P099   // XPT2046 Touchscreen
+  //  #endif
+  #ifndef USES_P104
     // Plugin adds over 40k to build size
     #define USES_P104   // MAX7219 dot matrix
-   #endif
-   #if !defined(USES_P109) && defined(ESP32)
-     #define USES_P109   // ThermoOLED
-   #endif
-   #ifndef USES_P116
-     #define USES_P116   // ST77xx
-   #endif
-   #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // I2C Touchscreens
-   #endif
+  #endif
+  #if !defined(USES_P109) && defined(ESP32)
+    #define USES_P109   // ThermoOLED
+  #endif
+  //  #ifndef USES_P116
+  //    #define USES_P116   // ST77xx
+  //  #endif
+  //  #if !defined(USES_P123) && defined(ESP32)
+  //    #define USES_P123   // I2C Touchscreens
+  //  #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
+  // #ifndef USES_P141
+  //   #define USES_P141   // PCD8544 Nokia 5110
+  // #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
+  #endif
+  #if !defined(USES_P148) && defined(ESP32)
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  // #if !defined(USES_P165) && defined(ESP32)
+  //   #define USES_P165   // Display - NeoPixel (7-Segment)
+  // #endif
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
+  #endif
+#endif // ifdef PLUGIN_DISPLAY_A_COLLECTION
+
+// Collection of display plugins, set B (AdaGFX_Helper).
+#ifdef PLUGIN_DISPLAY_B_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Display B"
+  #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    #ifndef PLUGIN_BUILD_MAX_ESP32
+      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+      #define KEEP_I2C_MULTIPLEXER
+      #ifndef P036_LIMIT_BUILD_SIZE
+        #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+      #endif
+      #ifndef P037_LIMIT_BUILD_SIZE
+        #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+      #endif
+      #define NOTIFIER_SET_NONE
+      #ifdef USES_N001
+        #undef USES_N001   // Email
+      #endif
+      #ifdef USES_N002
+        #undef USES_N002   // Buzzer
+      #endif
+    #endif
+  #endif
+  #if defined(ESP8266)
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+    //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
+    //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
+    //  #endif // FEATURE_TARSTREAM_SUPPORT
+  #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD 1
+  #endif
+  #ifdef USES_P012
+    #undef USES_P012   // DISABLE LCD
+  #endif
+  #ifdef USES_P023
+    #undef USES_P023   // DISABLE OLED
+  #endif
+  #ifndef USES_P036
+    #define USES_P036   // FrameOLED
+  #endif
+  #ifdef USES_P038
+    #undef USES_P038   // DISABLE NeoPixel
+  #endif
+  #ifdef USES_P041
+    #undef USES_P041   // DISABLE NeoClock
+  #endif
+  #ifdef USES_P042
+    #undef USES_P042   // DISABLE Candle
+  #endif
+  #ifdef USES_P057
+    #undef USES_P057   // DISABLE HT16K33_LED
+  #endif
+  #ifdef USES_P070
+    #undef USES_P070   // DISABLE NeoPixel_Clock
+  #endif
+  #ifdef USES_P075
+    #undef USES_P075   // DISABLE Nextion
+  #endif
+  #ifndef USES_P095
+    #define USES_P095  // TFT ILI9341
+  #endif
+  #ifndef USES_P096
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  #endif
+  #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+  #endif
+  #ifdef USES_P104
+    // Plugin adds over 40k to build size
+    #undef USES_P104   // DISABLE MAX7219 dot matrix
+  #endif
+  #if !defined(USES_P109) && defined(ESP32)
+    #define USES_P109   // ThermoOLED
+  #endif
+  #ifndef USES_P116
+    #define USES_P116   // ST77xx
+  #endif
+  #if !defined(USES_P123) && defined(ESP32)
+    #define USES_P123   // I2C Touchscreens
+  #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
   #endif
@@ -1905,16 +2020,16 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
-  #ifndef USES_P148
+  #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-  #if !defined(USES_P165) && defined(ESP32)
-    #define USES_P165   // Display - NeoPixel (7-Segment)
-  #endif
+  // #if !defined(USES_P165) && defined(ESP32)
+  //   #define USES_P165   // Display - NeoPixel (7-Segment)
+  // #endif
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
-#endif // ifdef PLUGIN_DISPLAY_COLLECTION
+#endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
 
 // Collection of all climate plugins.
 #ifdef PLUGIN_CLIMATE_COLLECTION
@@ -2356,6 +2471,24 @@ To create/register a plugin, you have to :
   #ifndef USES_P046
     #define USES_P046  // VentusW266
   #endif
+  #ifndef USES_P038
+    #define USES_P038   // NeoPixel
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P057
+    #define USES_P057   // HT16K33_LED
+  #endif
+  #ifndef USES_P070
+    #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P075
+    #define USES_P075   // Nextion
+  #endif
   #ifndef USES_P087
     #define USES_P087   // Serial Proxy
   #endif
@@ -2572,12 +2705,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
-  #ifndef USES_P170
-    #define USES_P170   // Input - I2C Liquid level sensor
-  #endif
-
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
   #endif
   #ifndef USES_P173
     #define USES_P173   // Environment - SHTC3
@@ -2747,7 +2880,7 @@ To create/register a plugin, you have to :
 
 
 // Disable Homie plugin for now in the dev build to make it fit.
-#if defined(PLUGIN_DISPLAY_COLLECTION) && defined(USES_C014) && defined(ESP8266)
+#if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(USES_C014) && defined(ESP8266)
   #undef USES_C014
 #endif
 
@@ -3833,6 +3966,19 @@ To create/register a plugin, you have to :
     #define FEATURE_TASKVALUE_ATTRIBUTES  0 // Disabled by default on ESP8266
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
+
+#ifndef FEATURE_MQTT_CONNECT_BACKGROUND
+  #ifdef ESP32
+    #define FEATURE_MQTT_CONNECT_BACKGROUND   1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_MQTT_CONNECT_BACKGROUND   0 // Disabled explicitly on ESP8266
+  #endif
+#endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if defined(ESP8266) && FEATURE_MQTT_CONNECT_BACKGROUND
+  #undef FEATURE_MQTT_CONNECT_BACKGROUND
+  #define FEATURE_MQTT_CONNECT_BACKGROUND     0 // Disable always on ESP8266
+#endif // if defined(ESP8266) && FEATURE_MQTT_CONNECT_BACKGROUND
 
 //-------------------HTTPResponseParser Section----------------
 #ifndef FEATURE_THINGSPEAK_EVENT

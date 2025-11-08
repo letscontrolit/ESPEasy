@@ -56,7 +56,7 @@ jobs:
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
           path: |
@@ -83,7 +83,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Distribution
           path: |
@@ -127,13 +127,13 @@ jobs:
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download all successfully compiled artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: artifacts/bin/
           pattern: Bin-*
           merge-multiple: true
       - name: Download dist and docs zip files
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: distribution/
           name: Distribution

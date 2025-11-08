@@ -146,8 +146,12 @@ String       SDM_getValueNameForModel(SDM_MODEL model,
                                       int       choice);
 # if FEATURE_MQTT_DISCOVER
 Sensor_VType Plugin_078_QueryVType(SDM_MODEL model,
-                            int       choice);
+                                   int       choice);
 # endif // if FEATURE_MQTT_DISCOVER
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+uint64_t Plugin_078_QueryUOMGroup(SDM_MODEL model,
+                                  int       choice);
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 struct SDM_RegisterReadQueueElement {
   SDM_RegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex, uint16_t reg, uint8_t dev_id)

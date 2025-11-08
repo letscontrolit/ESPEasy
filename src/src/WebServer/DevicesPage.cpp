@@ -38,6 +38,9 @@
 
 # include <ESPeasySerial.h>
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void handle_devices() {
   # ifndef BUILD_NO_RAM_TRACKER
@@ -390,8 +393,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
   Settings.CombineTaskValues_SingleEvent(taskIndex, isFormItemChecked(F("TVSE")));
   #if FEATURE_STRING_VARIABLES
-  Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
-  Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
+  if (!device.HideDerivedValues) {
+    Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
+    Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
+  }
   #endif // if FEATURE_STRING_VARIABLES
   
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
@@ -406,6 +411,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }
     # endif // if FEATURE_MQTT_DISCOVER
     #if FEATURE_STRING_VARIABLES
+    if (!device.HideDerivedValues) 
     Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
     #endif // if FEATURE_STRING_VARIABLES
     #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
@@ -825,6 +831,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
+        #if FEATURE_STRING_VARIABLES
+        const DeviceStruct& device = Device[DeviceIndex];
+        #endif // #if FEATURE_STRING_VARIABLES
         String customValuesString;
         const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
 
@@ -846,7 +855,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               const String value = formatUserVarNoCheck(&TempEvent, varNr);
               #if FEATURE_STRING_VARIABLES
               bool hasPresentation = false;
-              const String presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
+              String presentation;
+              if (!device.HideDerivedValues)
+                presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
               #endif // if FEATURE_STRING_VARIABLES
               pluginWebformShowValue(
                 x,
@@ -865,47 +876,49 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           }
 
           #if FEATURE_STRING_VARIABLES
-          int varNr = VARS_PER_TASK;
-          if (Settings.ShowDerivedTaskValues(x)) {
-            String taskName = getTaskDeviceName(x);
-            taskName.toLowerCase();
-            String postfix;
-            const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+          if (!device.HideDerivedValues) {
+            int varNr = VARS_PER_TASK;
+            if (Settings.ShowDerivedTaskValues(x)) {
+              String taskName = getTaskDeviceName(x);
+              taskName.toLowerCase();
+              String postfix;
+              const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
-            auto it = customStringVar.begin();
-            while (it != customStringVar.end()) {
-              if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-                String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                String uom;
-                String vType;
-                const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
-                if (!vname2.isEmpty()) {
-                  valueName = vname2;
-                }
-                if (!it->second.isEmpty()) {
-                  String value(it->second);
-                  value = parseTemplateAndCalculate(value);
-                  String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
-                  if (!uom.isEmpty()) {
-                    value = strformat(F("%s %s"), value.c_str(), uom.c_str());
+              auto it = customStringVar.begin();
+              while (it != customStringVar.end()) {
+                if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+                  String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+                  String uom;
+                  String vType;
+                  const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
+                  if (!vname2.isEmpty()) {
+                    valueName = vname2;
                   }
-                  if (!presentation.isEmpty()) {
-                    stripEscapeCharacters(presentation);
-                    presentation.replace(F("%value%"), value);
-                    value = parseTemplate(presentation);
+                  if (!it->second.isEmpty()) {
+                    String value(it->second);
+                    value = parseTemplateAndCalculate(value);
+                    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
+                    if (!uom.isEmpty()) {
+                      value = strformat(F("%s %s"), value.c_str(), uom.c_str());
+                    }
+                    if (!presentation.isEmpty()) {
+                      stripEscapeCharacters(presentation);
+                      presentation.replace(F("%value%"), value);
+                      value = parseTemplate(presentation);
+                    }
+                    pluginWebformShowValue(
+                      x,
+                      varNr,
+                      valueName,
+                      value);
+                    ++varNr;
                   }
-                  pluginWebformShowValue(
-                    x,
-                    varNr,
-                    valueName,
-                    value);
-                  ++varNr;
                 }
+                else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+                  break;
+                }
+                ++it;
               }
-              else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-                break;
-              }
-              ++it;
             }
           }
           #endif // if FEATURE_STRING_VARIABLES
@@ -1075,7 +1088,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
     const uint8_t pid = Settings.getPluginID_for_task(taskIndex).value;
-    if (pid <= 101) { // Up to P101 seem to be listed in the old Wiki, so lets keep pointing there too
+    if (pid <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
       addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
     }
     addRTDPluginButton(Settings.getPluginID_for_task(taskIndex));
@@ -1564,8 +1577,10 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                   getTaskDeviceName(taskIndex).c_str()));
 
     #if FEATURE_STRING_VARIABLES
-    addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
-    addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
+    if (!device.HideDerivedValues) {
+      addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
+      addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
+    }
     #endif // if FEATURE_STRING_VARIABLES
 
     bool separatorAdded = false;
@@ -1600,7 +1615,8 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                                     getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
         # endif // if FEATURE_MQTT_DISCOVER
         # if FEATURE_STRING_VARIABLES
-        const bool allowSendDerived = (validProtocolIndex(ProtocolIndex) &&
+        const bool allowSendDerived = !device.HideDerivedValues &&
+                                      (validProtocolIndex(ProtocolIndex) &&
                                        getProtocolStruct(ProtocolIndex).allowSendDerived);
         # endif // if FEATURE_STRING_VARIABLES
 
@@ -1730,6 +1746,40 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     html_table_header(F("Unit of Measure"), 300);
     ++colCount;
+    EventStruct uomEvent(taskIndex);
+    String uomDummy;
+    bool limitedUom = PluginCall(DeviceIndex, PLUGIN_GET_UOM_GROUPS, &uomEvent, uomDummy);
+    if (!limitedUom) {
+      PluginCall(PLUGIN_GET_DEVICEVTYPE, &uomEvent, uomDummy); // Get Sensor_VType
+      limitedUom = getDefaultUoMforSensorVType(&uomEvent);     // Populate UoM groups for known Sensor_VTypes
+      #if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE
+      if (!limitedUom) {
+        // Fill in standard Unit of measurement and Value Type, if possible
+        std::vector<DiscoveryItem> discoveryItems;
+        MQTT_DiscoveryGetDeviceVType(taskIndex, discoveryItems, getValueCountForTask(taskIndex), uomDummy);
+
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
+          // Match varNr with the DiscoveryItems to find the Sensor_VType for the value
+          for (uint8_t j = 0; j < discoveryItems.size(); ++j) {
+            for (uint8_t k = 0; k < discoveryItems[j].valueCount; ++k) { // Can have multiple values for 1 VType
+              if (varNr == discoveryItems[j].varIndex + k) {
+                const String   uom       = getValueType2DefaultHAUoM(discoveryItems[j].VType);
+                const uint16_t uomGroup  = getUoMGroupForUoM(uom);
+                const uint16_t uomGroup2 = getUoMGroupForUoM(Cache.getTaskVarUnitOfMeasure(taskIndex, varNr));
+
+                if (uomGroup > 0) {
+                  uomEvent.Par64N[varNr] = (uint64_t)(1ULL << (uomGroup - 1024)) | (uomGroup2 > 0 ? (uint64_t)(1ULL << (uomGroup2 - 1024)) : 0ULL);
+                  limitedUom             = true;
+                } else {
+                  uomEvent.Par64N[varNr] = UOM_GROUP_ALL;
+                }
+              }
+            }
+          }
+        }
+      }
+      #endif // if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE
+    }
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     #if FEATURE_CUSTOM_TASKVAR_VTYPE
@@ -1753,7 +1803,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     #if FEATURE_CUSTOM_TASKVAR_VTYPE
     std::vector<uint8_t> singleOptions;
-    EventStruct TempEvent(taskIndex);
     
     if (device.CustomVTypeVar) {
       // Build a list of all single-value available value VTypes from PR #5199
@@ -1766,6 +1815,31 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       }
     }
     #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+    # if FEATURE_PLUGIN_STATS
+    const __FlashStringHelper *chartAxis[] = {
+      F("L1"),
+      F("L2"),
+      F("L3"),
+      F("L4"),
+      F("R1"),
+      F("R2"),
+      F("R3"),
+      F("R4")
+    };
+    constexpr size_t chartAxisCount = NR_ELEMENTS(chartAxis);
+    #endif // if FEATURE_PLUGIN_STATS
+
+    #if FEATURE_MQTT_STATE_CLASS
+    const __FlashStringHelper *stateClasses[] = {
+      MQTT_sensor_StateClass(0),
+      MQTT_sensor_StateClass(1),
+      MQTT_sensor_StateClass(4),
+      MQTT_sensor_StateClass(2),
+      MQTT_sensor_StateClass(3),
+    };
+    constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
+    #endif // if FEATURE_MQTT_STATE_CLASS
 
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -1809,24 +1883,13 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
         html_TD();
 
-        const __FlashStringHelper *chartAxis[] = {
-          F("L1"),
-          F("L2"),
-          F("L3"),
-          F("L4"),
-          F("R1"),
-          F("R2"),
-          F("R3"),
-          F("R4")
-        };
-
         int selected = cachedConfig.getAxisIndex();
 
         if (!cachedConfig.isLeft()) {
           selected += 4;
         }
 
-        const FormSelectorOptions selector(NR_ELEMENTS(chartAxis), chartAxis);
+        const FormSelectorOptions selector(chartAxisCount, chartAxis);
         selector.addSelector(
           getPluginCustomArgName(F("TDSA"), varNr),
           selected);
@@ -1835,7 +1898,8 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
       #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       html_TD();
-      addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr));
+      const uint64_t uomGroups = limitedUom ? uomEvent.Par64N[varNr] : UOM_GROUP_ALL;
+      addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr), uomGroups);
       #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
       #if FEATURE_CUSTOM_TASKVAR_VTYPE
@@ -1852,15 +1916,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       #if FEATURE_MQTT_STATE_CLASS
       if (device.MqttStateClass) {
         html_TD();
-        const __FlashStringHelper *stateClasses[] = {
-          MQTT_sensor_StateClass(0),
-          MQTT_sensor_StateClass(1),
-          MQTT_sensor_StateClass(4),
-          MQTT_sensor_StateClass(2),
-          MQTT_sensor_StateClass(3),
-        };
 
-        constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
         const FormSelectorOptions selectorSC(stateCount, stateClasses);
         selectorSC.addSelector(
           getPluginCustomArgName(F("TDSC"), varNr),
