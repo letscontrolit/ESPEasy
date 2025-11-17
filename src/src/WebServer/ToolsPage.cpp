@@ -94,6 +94,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
+  #if FEATURE_PLUGIN_LIST
+  addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
+  #endif // if FEATURE_PLUGIN_LIST
+
   addFormSubHeader(F("Wifi"));
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));

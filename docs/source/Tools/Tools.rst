@@ -961,6 +961,18 @@ System Variables
 
 Shows an overview of the available variables set from rules, and available ``%variable%`` variables in several categories.
 
+Included Plugins
+================
+
+Show a list of all plugins available in the build, Plugins, Controllers and Notifications.
+
+For Devices, the plugins are listed both sorted by Description and by Plugin ID, for easier retrieval.
+
+Controller plugins also show columns for MQTT and TLS (when included in the build).
+
+.. image:: images/Tools_PluginList_Controllers.png
+
+
 
 Interfaces
 **********

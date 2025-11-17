@@ -326,7 +326,7 @@ bool ControllerSettingsStruct::mqtt_cleanSession() const
 }
 */
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 String ControllerSettingsStruct::getCertificateFilename() const
 {
   return getCertificateFilename(TLStype());
@@ -368,4 +368,4 @@ String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) cons
   
   return certFile;
 }
-#endif
+#endif // #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS

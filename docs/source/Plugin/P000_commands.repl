@@ -521,6 +521,12 @@
     Added: 2023-01-15
     "
     "
+    PostToHTTPS","
+    :green:`Rules`","
+    Like ``PostToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     ProvisionConfig","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
@@ -622,6 +628,12 @@
     Added: 2023-04-17
     "
     "
+    PutToHTTPS","
+    :green:`Rules`","
+    Like ``PutToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     Reboot","
     :red:`Internal`","
     Reboot the ESP
@@ -695,6 +707,12 @@
     
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
     "
+    "
+    SendToHTTPS","
+    :green:`Rules`","
+    Like ``SendToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
     "
     SendToUDP","
     :green:`Rules`","

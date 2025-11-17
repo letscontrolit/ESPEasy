@@ -376,6 +376,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::password:                   COMMAND_CASE_R(Command_Settings_Password, 1);            // Settings.h
 #if FEATURE_POST_TO_HTTP
     case ESPEasy_cmd_e::posttohttp:                 COMMAND_CASE_A(Command_HTTP_PostToHTTP,  -1);            // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::posttohttps:                COMMAND_CASE_A(Command_HTTP_PostToHTTPS, -1);            // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
     case ESPEasy_cmd_e::provision:                  COMMAND_CASE_A(Command_Provisioning_Dispatcher, -1);     // Provisioning.h
@@ -399,6 +402,9 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::puttohttp:                  COMMAND_CASE_A(Command_HTTP_PutToHTTP,  -1);                  // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::puttohttps:                 COMMAND_CASE_A(Command_HTTP_PutToHTTPS, -1);                  // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::pwm:                        COMMAND_CASE_A(Command_GPIO_PWM,          4);                 // GPIO.h
     case ESPEasy_cmd_e::reboot:                     COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
@@ -421,6 +427,9 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_ESPEASY_P2P
 #if FEATURE_SEND_TO_HTTP
     case ESPEasy_cmd_e::sendtohttp:                 COMMAND_CASE_A(Command_HTTP_SendToHTTP, 3);      // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::sendtohttps:                COMMAND_CASE_A(Command_HTTP_SendToHTTPS, 3);     // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // FEATURE_SEND_TO_HTTP
     case ESPEasy_cmd_e::sendtoudp:                  COMMAND_CASE_A(Command_UDP_SendToUPD,   3);      // UDP.h
     case ESPEasy_cmd_e::sendtoudpmix:               COMMAND_CASE_A(Command_UDP_SendToUPDMix, 3);     // UDP.h

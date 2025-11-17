@@ -374,13 +374,17 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (proto.usesPort) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
-          # if FEATURE_MQTT_TLS
+          # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
-          if (proto.usesMQTT && proto.usesTLS) {
+          if (proto.usesTLS) {
             addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
-            addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
+            if (proto.usesMQTT) {
+              addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
+            } else {
+              addFormNote(F("Default ports: HTTP: 80 / HTTPS: 443"));
+            }
           }
-          # endif // if FEATURE_MQTT_TLS
+          # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
           # ifdef USES_ESPEASY_NOW
 
           if (proto.usesMQTT) {

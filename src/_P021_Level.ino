@@ -8,19 +8,24 @@
 // Original intention to control a level by opening a valve or switching a pump
 // Extended by timer based state control to support pumps with additional requirements (floor heating ciculation pump)
 
-// Changelog:
-// 2025-05-21, tonhuisman: Add support for MQTT Discovery and MQTT Device Class user-configuration
-// 2024-12-14, tonhuisman: Move most defines to .h file to avoid compiler warnings, as Arduino doesn't support #ifdef in .ino files
-//                         Format source using Uncrustify
-//                         Remove unneeded includes
-// 2024-07-07, flashmark:  Reworked to support floor heating pump (added state machine control)
-// 2023-03-13, tonhuisman: Add setting to invert the Output state
-// 2022-08-22, tonhuisman: Add setting to auto-save a changed setting after x minutes, size optimizations, add PCONFIG defines
-// 2021-12-29, tonhuisman: Add setting to enable/disable saving the settings when the Set Level value is changed using the config
-//                         command
-// 2021-12-28, tonhuisman: Avoid saving settings if no change on config command https://github.com/letscontrolit/ESPEasy/issues/3477,
-//                         cleanup source, prevent crashing when hysteresis is 0.0, run Uncrustify source formatter,
-//                         apply float/double math compare functions instead of regular comparisons
+/** Changelog:
+ * 2025-11-03 tonhuisman: Unify changelog format
+ *                        Use enum class instead of regular enum for compile-time validations
+ *                        Replace switch by if where possible/useful for code-size reduction
+ *                        Minor code cleanup
+ * 2025-05-21 tonhuisman: Add support for MQTT Discovery and MQTT Device Class user-configuration
+ * 2024-12-14 tonhuisman: Move most defines to .h file to avoid compiler warnings, as Arduino doesn't support #ifdef in .ino files
+ *                        Format source using Uncrustify
+ *                        Remove unneeded includes
+ * 2024-07-07 flashmark:  Reworked to support floor heating pump (added state machine control)
+ * 2023-03-13 tonhuisman: Add setting to invert the Output state
+ * 2022-08-22 tonhuisman: Add setting to auto-save a changed setting after x minutes, size optimizations, add PCONFIG defines
+ * 2021-12-29 tonhuisman: Add setting to enable/disable saving the settings when the Set Level value is changed using the config
+ *                        command
+ * 2021-12-28 tonhuisman: Avoid saving settings if no change on config command https://github.com/letscontrolit/ESPEasy/issues/3477,
+ *                        cleanup source, prevent crashing when hysteresis is 0.0, run Uncrustify source formatter,
+ *                        apply float/double math compare functions instead of regular comparisons
+ */
 
 // NOTE: Due to lack of flash memory for most ESP8266 builds the extensions are only available on a limited set of builds.
 //       Code size and functionality is controlled by several build flags:
@@ -72,26 +77,6 @@ int seconds2hours(int x) {
 }
 
 # endif // ifndef P021_MIN_BUILD_SIZE
-
-// Operation modes for the control algorithm
-enum P021_opmode
-{
-  P021_OPMODE_CLASSIC, // Original, stateless control
-  P021_OPMODE_OFF,     // Output is fully shut down, no forced curculation
-  P021_OPMODE_STANDBY, // Output is only switched on for forced maintenance runs
-  P021_OPMODE_ON,      // Output is always switched on
-  P021_OPMODE_TEMP,    // Control algorithm based on temperature only
-  P021_OPMODE_REMOTE   // Both temperature and remote command can switch on Output
-};
-
-// Control state for the control algorithm
-enum P021_control_state
-{
-  P021_STATE_IDLE,   // Output is inactive
-  P021_STATE_ACTIVE, // Output is active due to level control (based on input value)
-  P021_STATE_EXTEND, // Output is active due to minimum duration
-  P021_STATE_FORCE   // Output is forced active due to maximum inactive duration is exceeded
-};
 
 // Static storage for global state info. Track per ESPeasy plugin instance
 static bool P021_remote[TASKS_MAX]; // Static storage for remote control.
@@ -149,19 +134,18 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P021_DONT_ALWAYS_SAVE = 1;               // Do not save
-      P021_GPIO_RELAY       = -1;              // GPIO for relay output not assigned
-      P021_CHECK_TASK       = -1;              // No input source assigned
-      P021_CHECK_VALUE      = -1;              // No input source assigned
-      P021_SETPOINT         = 25.0f;           // Switch output active above 25 [deg C]
-      P021_HYSTERESIS       = 5.0f;            // Switch off hysteresis 5 [deg C] below switch on value
-      P021_MIN_TIME         = 30 * 60;         // Once switched on output should be active at least 30 [min]
-      P021_INTERVAL_TIME    = 24 * 60 * 60;    // Output shall run after 24 [hour] stand still
-      P021_FORCE_TIME       = 5 * 30;          // Forced circulation for 5 [min]
-      P021_OPMODE           = P021_OPMODE_OFF; // Don't touch output unless selected by operator
-      P021_FLAGS            = 0;               // Reset all flags
-      // UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
-      // P021_remote[event->TaskIndex] = 0;       // Remote control state is "off"
+      P021_DONT_ALWAYS_SAVE = 1;            // Do not save
+      P021_GPIO_RELAY       = -1;           // GPIO for relay output not assigned
+      P021_CHECK_TASK       = -1;           // No input source assigned
+      P021_CHECK_VALUE      = -1;           // No input source assigned
+      P021_SETPOINT         = 25.0f;        // Switch output active above 25 [deg C]
+      P021_HYSTERESIS       = 5.0f;         // Switch off hysteresis 5 [deg C] below switch on value
+      P021_MIN_TIME         = 30 * 60;      // Once switched on output should be active at least 30 [min]
+      P021_INTERVAL_TIME    = 24 * 60 * 60; // Output shall run after 24 [hour] stand still
+      P021_FORCE_TIME       = 5 * 30;       // Forced circulation for 5 [min]
+      // Don't touch output unless selected by operator
+      P021_OPMODE = static_cast<int>(P021_opmode::P021_OPMODE_OFF);
+      P021_FLAGS  = 0;                      // Reset all flags
       break;
     }
 
@@ -187,19 +171,19 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       # endif // if FEATURE_P021_EXTRAS >= 1
 
       // For debugging purposes the webform provides some internal data
-      # ifdef PLUGIN_021_DEBUG
+      # if (FEATURE_P021_EXTRAS >= 1) && defined(PLUGIN_021_DEBUG)
       {
         const P021_control_state control_state = (P021_control_state)UserVar.getFloat(event->TaskIndex, P021_VALUE_STATE);
 
         // Add some debug information
         const String outpstring = essentiallyZero(UserVar.getFloat(event->TaskIndex, P021_VALUE_OUTPUT)) ? F("off") : F("on");
         addFormNote(strformat(F("State= %s, Output= %s, Remote= %d, Timer= %d sec"),
-                              P021_printControlState(control_state),
+                              FsP(P021_printControlState(static_cast<int>(control_state))),
                               outpstring.c_str(),
                               P021_remote[event->TaskIndex],
                               millis2seconds(timePassedSince(P021_timestamp[event->TaskIndex]))));
       }
-      # endif // ifdef PLUGIN_021_DEBUG
+      # endif // if (FEATURE_P021_EXTRAS >= 1) && defined(PLUGIN_021_DEBUG)
 
       const taskIndex_t check_task = P021_CHECK_TASK; // Optimze reference
       addRowLabel(F("Input Task"));
@@ -250,10 +234,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         // FormSelector with all operation mode options
         const __FlashStringHelper *options[] = { F("Classic"), F("Off"), F("Standby"), F("On"), F("Local"), F("Remote") };
 
-        /*
-           const int optionValues[]             =
-           { P021_OPMODE_CLASSIC, P021_OPMODE_OFF, P021_OPMODE_STANDBY, P021_OPMODE_ON, P021_OPMODE_TEMP, P021_OPMODE_REMOTE };
-         */
         constexpr size_t optionCount = NR_ELEMENTS(options);
         const FormSelectorOptions selector(optionCount, options /*, optionValues*/);
         selector.addFormSelector(F("Control mode"), F(P021_GUID_OPMODE), P021_OPMODE);
@@ -388,12 +368,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // Set extended parameters to backwards compatible values when extension is disabled
       if (!newExtFunct)
       {
-        P021_OPMODE = P021_OPMODE_CLASSIC;           // Switch to classic control algorithm
-        bitWrite(flags, P021_INV_INPUT,      false); // Standard input direction
-        bitWrite(flags, P021_SYM_HYSTERESIS, true);  // Symetrical hysteresis
-        bitWrite(flags, P021_SLOW_EVAL,      false); // 10Hz evaluation
-        bitWrite(flags, P021_STATE_OUTP,     false); // Don't provide state as value
-        // Keep al other extra settings, thay should not affect CLASSIC mode
+        P021_OPMODE = static_cast<int>(P021_opmode::P021_OPMODE_CLASSIC); // Switch to classic control algorithm
+        bitWrite(flags, P021_INV_INPUT,      false);                      // Standard input direction
+        bitWrite(flags, P021_SYM_HYSTERESIS, true);                       // Symetrical hysteresis
+        bitWrite(flags, P021_SLOW_EVAL,      false);                      // 10Hz evaluation
+        bitWrite(flags, P021_STATE_OUTP,     false);                      // Don't provide state as value
+        // Keep al other extra settings, they should not affect CLASSIC mode
       }
 
       bitWrite(flags, P021_EXT_FUNCT, newExtFunct);
@@ -421,7 +401,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       const bool isRemote = equals(command, F("remote"));
 
       if (isRemote) {
-        P021_remote[event->TaskIndex] = !essentiallyZero(result);
+        P021_remote[event->TaskIndex] = !essentiallyZero(result); // FIXME result is always 0.0 here!?
       }
       # endif // ifndef P021_MIN_BUILD_SIZE
 
@@ -490,7 +470,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       // I am not sure we want to reset the state at every init.
       // UserVar seems to be persistent
-      UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_STATE_IDLE);
+      UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE, (float)P021_control_state::P021_STATE_IDLE);
       P021_remote[event->TaskIndex] = false;       // Remote control state is "off"
       # if FEATURE_P021_EXTRAS >= 1
       P021_timestamp[event->TaskIndex] = millis(); // Initialize last switching time
@@ -506,9 +486,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       // this case defines code to be executed when the plugin executes an action (command).
       // Commands can be accessed via rules or via http.
       // As an example, http://192.168.1.12//control?cmd=dothis
-      // implies that there exists the comamnd "dothis"
+      // implies that there exists the command "dothis"
       // Expected commands:
-      // * levelcontrol,remote, [on|off]
+      // * levelcontrol,remote, [1|0] (1=on, 0=off)
 
       # if FEATURE_P021_EXTRAS >= 1
 
@@ -571,14 +551,14 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 # ifdef PLUGIN_021_DEBUG
 const __FlashStringHelper* P021_printControlState(int state)
 {
-  switch (state)
+  switch (static_cast<P021_control_state>(state))
   {
-    case P021_STATE_IDLE:   return F("Idle");
-    case P021_STATE_ACTIVE: return F("Active");
-    case P021_STATE_EXTEND: return F("Extend");
-    case P021_STATE_FORCE:  return F("Force");
-    default:                return F("***ERROR***");
+    case P021_control_state::P021_STATE_IDLE:   return F("Idle");
+    case P021_control_state::P021_STATE_ACTIVE: return F("Active");
+    case P021_control_state::P021_STATE_EXTEND: return F("Extend");
+    case P021_control_state::P021_STATE_FORCE:  return F("Force");
   }
+  return F("");
 }
 
 # endif // ifdef PLUGIN_021_DEBUG
@@ -589,16 +569,16 @@ const __FlashStringHelper* P021_printControlState(int state)
 # ifdef PLUGIN_021_DEBUG
 const __FlashStringHelper* P021_printControlMode(int mode)
 {
-  switch (mode)
+  switch (static_cast<P021_opmode>(mode))
   {
-    case P021_OPMODE_CLASSIC: return F("Classic");
-    case P021_OPMODE_OFF:     return F("Off");
-    case P021_OPMODE_STANDBY: return F("Standby");
-    case P021_OPMODE_ON:      return F("On");
-    case P021_OPMODE_TEMP:    return F("Local");
-    case P021_OPMODE_REMOTE:  return F("Remote");
-    default:                  return F("***ERROR***");
+    case P021_opmode::P021_OPMODE_CLASSIC: return F("Classic");
+    case P021_opmode::P021_OPMODE_OFF:     return F("Off");
+    case P021_opmode::P021_OPMODE_STANDBY: return F("Standby");
+    case P021_opmode::P021_OPMODE_ON:      return F("On");
+    case P021_opmode::P021_OPMODE_TEMP:    return F("Local");
+    case P021_opmode::P021_OPMODE_REMOTE:  return F("Remote");
   }
+  return F("");
 }
 
 # endif // ifdef PLUGIN_021_DEBUG
@@ -666,50 +646,50 @@ void P021_evaluate(struct EventStruct *event)
     value = UserVar.getFloat(TaskIndex, P021_CHECK_VALUE);
   }
 
-  switch ((P021_opmode)(P021_OPMODE))
+  switch (static_cast<P021_opmode>(P021_OPMODE))
   {
     // Classic (original P021) stateless control using hysteresis only
-    case P021_OPMODE_CLASSIC:
+    case P021_opmode::P021_OPMODE_CLASSIC:
 
       if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
       {
-        new_control_state = P021_STATE_ACTIVE;
+        new_control_state = P021_control_state::P021_STATE_ACTIVE;
       }
       else if (P021_check_off(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
       {
-        new_control_state = P021_STATE_IDLE;
+        new_control_state = P021_control_state::P021_STATE_IDLE;
       }
       break;
 
     // Control is switched off completely
-    case P021_OPMODE_OFF:
+    case P021_opmode::P021_OPMODE_OFF:
 
-      if (old_control_state != P021_STATE_IDLE)
+      if (old_control_state != P021_control_state::P021_STATE_IDLE)
       {
         timestamp         = millis();
-        new_control_state = P021_STATE_IDLE;
+        new_control_state = P021_control_state::P021_STATE_IDLE;
       }
       break;
 
     // Control is always on
-    case P021_OPMODE_ON:
+    case P021_opmode::P021_OPMODE_ON:
 
-      if (old_control_state == P021_STATE_IDLE)
+      if (old_control_state == P021_control_state::P021_STATE_IDLE)
       {
         timestamp = millis();
       }
-      new_control_state = P021_STATE_ACTIVE;
+      new_control_state = P021_control_state::P021_STATE_ACTIVE;
       break;
 
     // Control is switched off with maintnenance interval enabled
-    case P021_OPMODE_STANDBY:
+    case P021_opmode::P021_OPMODE_STANDBY:
 
-      if (old_control_state == P021_STATE_IDLE) // Output was idling
+      if (old_control_state == P021_control_state::P021_STATE_IDLE) // Output was idling
       {
         if ((beyond_interval) && (P021_FORCE_TIME > 1))
         {
           timestamp         = millis();
-          new_control_state = P021_STATE_FORCE;
+          new_control_state = P021_control_state::P021_STATE_FORCE;
         }
       }
 
@@ -717,50 +697,50 @@ void P021_evaluate(struct EventStruct *event)
       else if (!beyond_force)
       {
         // Output was active shorter than the forced on time
-        new_control_state = P021_STATE_FORCE; // Keep running in state FORCE
+        new_control_state = P021_control_state::P021_STATE_FORCE; // Keep running in state FORCE
       }
       else
       {
         timestamp         = millis();
-        new_control_state = P021_STATE_IDLE; // Switch off
+        new_control_state = P021_control_state::P021_STATE_IDLE; // Switch off
       }
       break;
 
     // Control based on temperature and optional remote control
-    case P021_OPMODE_TEMP:
+    case P021_opmode::P021_OPMODE_TEMP:
       remote_state = false; // Don't look at requests from remote systems
     // Continue with shared handling, break deliberately not used
     // ----------------------------------------------------------
-    case P021_OPMODE_REMOTE:
+    case P021_opmode::P021_OPMODE_REMOTE:
 
       switch (old_control_state)
       {
         // Output is inactive
-        case P021_STATE_IDLE:
+        case P021_control_state::P021_STATE_IDLE:
 
           if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             // Setpoint comparator or remote request to activate the output
             timestamp         = millis();
-            new_control_state = P021_STATE_ACTIVE;
+            new_control_state = P021_control_state::P021_STATE_ACTIVE;
           }
           else if (beyond_interval)
           {
             // Inactive for a long period, forced maintenance run
             timestamp         = millis();
-            new_control_state = P021_STATE_FORCE;
+            new_control_state = P021_control_state::P021_STATE_FORCE;
           }
           break;
 
         // Output is active due to setpoint comparator request
-        case P021_STATE_ACTIVE:
+        case P021_control_state::P021_STATE_ACTIVE:
 
           if (P021_check_off(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             if ((beyond_min_time) && (!extend_at_end))
             {
               timestamp         = millis();
-              new_control_state = P021_STATE_IDLE;
+              new_control_state = P021_control_state::P021_STATE_IDLE;
             }
             else
             {
@@ -769,67 +749,47 @@ void P021_evaluate(struct EventStruct *event)
               {
                 timestamp = millis();
               }
-              new_control_state = P021_STATE_EXTEND;
+              new_control_state = P021_control_state::P021_STATE_EXTEND;
             }
           }
           break;
 
         // Output is active to extend a started cycle untill minimum time exceeded
-        case P021_STATE_EXTEND:
+        case P021_control_state::P021_STATE_EXTEND:
 
           if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
-            new_control_state = P021_STATE_ACTIVE;
+            new_control_state = P021_control_state::P021_STATE_ACTIVE;
           }
           else if (beyond_min_time)
           {
             timestamp         = millis();
-            new_control_state = P021_STATE_IDLE;
+            new_control_state = P021_control_state::P021_STATE_IDLE;
           }
           break;
 
         // Output was forced active when operation mode switched to temperature control
-        case P021_STATE_FORCE:
+        case P021_control_state::P021_STATE_FORCE:
 
           if (P021_check_on(value, setpoint, hysteresis, invert_input, symetric_hyst, remote_state))
           {
             // Keep timestamp from moment pump was swiched on
-            new_control_state = P021_STATE_ACTIVE;
+            new_control_state = P021_control_state::P021_STATE_ACTIVE;
           }
           else if (beyond_force)
           {
             timestamp         = millis();
-            new_control_state = P021_STATE_IDLE;
+            new_control_state = P021_control_state::P021_STATE_IDLE;
           }
           break;
       }
       break; // switch(opmode) case P021_OPMODE_TEMP, P021_OPMODE_REMOTE
-
-    // Unexpected opmode, force to OPMODE_OFF
-    default:
-      P021_OPMODE = P021_OPMODE_OFF;
-      break;
   } // switch P021_OPMODE
 
   // Calculate output state from the newly calculated control state
-  switch (new_control_state)
-  {
-    case P021_STATE_IDLE:
-      relay_output = false; // Relay output state
-      break;
-    case P021_STATE_ACTIVE:
-      relay_output = true;  // Relay output state
-      break;
-    case P021_STATE_EXTEND:
-      relay_output = true;  // Relay output state
-      break;
-    case P021_STATE_FORCE:
-      relay_output = true;  // Relay output state
-      break;
-    default:                // unexpected state, switch pump off
-      relay_output = false; // Relay output state
-      break;
-  }
+  relay_output = (P021_control_state::P021_STATE_ACTIVE == new_control_state ||
+                  P021_control_state::P021_STATE_EXTEND == new_control_state ||
+                  P021_control_state::P021_STATE_FORCE == new_control_state);
 
   relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
 
@@ -845,10 +805,10 @@ void P021_evaluate(struct EventStruct *event)
   {
     addLogMove(LOG_LEVEL_DEBUG,
                strformat(F("P021: Calculated State= %s; GPIO= %d; timer= %d sec; mode= %s; value= %f; remote= %d"),
-                         P021_printControlState(new_control_state),
+                         FsP(P021_printControlState(static_cast<int>(new_control_state))),
                          relay_output,
                          millis2seconds(timePassedSince(timestamp)),
-                         P021_printControlMode((P021_opmode)P021_OPMODE),
+                         P021_printControlMode(P021_OPMODE),
                          value,
                          remote_state));
   }
@@ -859,7 +819,6 @@ void P021_evaluate(struct EventStruct *event)
   // - The state of the internal state machine
   // - Timestamp for last change of the output signal
   // Note: the actual state of the output is not stored, it can be calculated from the control_state
-  // UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, (float)(((P021_control_state)new_control_state == P021_STATE_IDLE) ? 0 : 1));
   UserVar.setFloat(event->TaskIndex, P021_VALUE_OUTPUT, relay_output ? 1.0f : 0.0f);
   UserVar.setFloat(event->TaskIndex, P021_VALUE_STATE,  (float)new_control_state);
   P021_timestamp[event->TaskIndex] = timestamp;
@@ -900,29 +859,18 @@ void P021_evaluate(struct EventStruct *event)
   // All new goodies to default (backwards compatible with previous versions)
   if (P021_check_on(value, setpoint, hysteresis, false, true, false))
   {
-    new_control_state = P021_STATE_ACTIVE;
+    new_control_state = P021_control_state::P021_STATE_ACTIVE;
   }
   else if (P021_check_off(value, setpoint, hysteresis, false, true, false))
   {
-    new_control_state = P021_STATE_IDLE;
+    new_control_state = P021_control_state::P021_STATE_IDLE;
   }
 
   // Calculate output state from the newly calculated control state
-  switch (new_control_state)
-  {
-    case P021_STATE_IDLE:
-      relay_output = false; // Relay output state
-      break;
-    case P021_STATE_ACTIVE:
-      relay_output = true;  // Relay output state
-      break;
-    default:                // unexpected state, switch pump off
-      relay_output = false; // Relay output state
-      break;
-  }
+  relay_output = P021_control_state::P021_STATE_ACTIVE == new_control_state; // Simplified
 
   // Actuate the output pin taking output invert flag into account
-  relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT); // Invert when selected
+  relay_output ^= bitRead(P021_FLAGS, P021_INV_OUTPUT);                      // Invert when selected
 
   if (validGpio(P021_GPIO_RELAY))
   {
@@ -935,7 +883,7 @@ void P021_evaluate(struct EventStruct *event)
   {
     addLogMove(LOG_LEVEL_DEBUG,
                strformat(F("P021: Calculated State= %s; GPIO= %d; value= %f"),
-                         P021_printControlState(new_control_state),
+                         FsP(P021_printControlState(static_cast<int>(new_control_state))),
                          relay_output,
                          value));
   }

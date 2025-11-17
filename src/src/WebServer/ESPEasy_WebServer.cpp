@@ -24,6 +24,7 @@
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/NotificationPage.h"
+#include "../WebServer/PluginListPage.h"
 #include "../WebServer/PinStates.h"
 #include "../WebServer/RootPage.h"
 #include "../WebServer/Rules.h"
@@ -299,6 +300,9 @@ void WebServerInit()
 #ifdef WEBSERVER_SYSVARS
   web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
+#if FEATURE_PLUGIN_LIST
+  web_server.on(F("/pluginlist"),  handle_pluginlist);
+#endif // if FEATURE_PLUGIN_LIST
 #ifdef WEBSERVER_TIMINGSTATS
   web_server.on(F("/timingstats"), handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
@@ -678,54 +682,34 @@ void json_prop(LabelType::Enum label) {
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice, const String& cssclass)
+void addTaskSelect(const String& name,  taskIndex_t choice, const __FlashStringHelper* cssclass)
 {
   String deviceName;
-
-  addHtml(F("<select "));
-  addHtmlAttribute(F("id"),   F("selectwidth"));
-  addHtmlAttribute(F("name"), name);
-
-  if (!cssclass.isEmpty()) {
-    addHtmlAttribute(F("class"), cssclass);
-  }
-  addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
-  addHtml('>');
+  String deviceNr;
+  String options[TASKS_MAX + 1];
+  String attrs[TASKS_MAX + 1];
 
   for (taskIndex_t x = 0; x <= TASKS_MAX; x++)
   {
+    deviceNr.clear();
     if (validTaskIndex(x)) {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
       deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
+      deviceNr += (x + 1);
     } else {
       deviceName = F("Not Set");
     }
-    {
-      addHtml(F("<option value='"));
-      addHtmlInt(x);
-      addHtml('\'');
-
-      if (choice == x) {
-        addHtml(F(" selected"));
-      }
-    }
 
     if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
-      addDisabled();
+      attrs[x] = F("disabled");
     }
-    {
-      addHtml('>');
-
-      if (validTaskIndex(x)) {
-        addHtmlInt(x + 1);
-      }
-      addHtml(F(" - "));
-      addHtml(deviceName);
-      addHtml(F(" - "));
-      addHtml(getTaskDeviceName(x));
-      addHtml(F("</option>"));
-    }
+    options[x] = strformat(F("%s - %s - %s"), deviceNr.c_str(), deviceName.c_str(), getTaskDeviceName(x).c_str());
   }
+
+  FormSelectorOptions selector(TASKS_MAX + 1, options, nullptr, attrs);
+  selector.reloadonchange = true;
+  selector.classname = cssclass;
+  selector.addSelector(name, choice);
 }
 
 // ********************************************************************************

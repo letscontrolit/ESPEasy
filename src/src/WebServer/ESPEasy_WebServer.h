@@ -110,7 +110,7 @@ void json_prop(LabelType::Enum label);
 // ********************************************************************************
 void addTaskSelect(const String& name,
                    taskIndex_t   choice,
-                   const String& cssclass = "wide");
+                   const __FlashStringHelper* cssclass = F("wide"));
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
