@@ -13,18 +13,20 @@
 # endif // if FEATURE_NOTIFIER
 # ifdef WEBSERVER_NETWORK
 #  include "../ESPEasy/net/DataTypes/NetworkDriverIndex.h"
-# endif
+# endif // ifdef WEBSERVER_NETWORK
+# include "../DataStructs/ProtocolStruct.h"
+# include "../Helpers/_CPlugin_Helper.h"
 
 void handle_pluginlist() {
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_pluginlist"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  # if FEATURE_MQTT_TLS // TODO Add check for FEATURE_HTTP_TLS when https://github.com/letscontrolit/ESPEasy/pull/5402 is merged
+  # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
   const int colspan = 6;
-  # else // if FEATURE_MQTT_TLS
+  # else // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
   const int colspan = 5;
-  # endif // if FEATURE_MQTT_TLS
+  # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -39,9 +41,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    # if FEATURE_MQTT_TLS
+    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""),            50);
-    # endif // if FEATURE_MQTT_TLS
+    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""));
 
     deviceIndex_t x;
@@ -76,9 +78,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F("MQTT"),        50);
-    # if FEATURE_MQTT_TLS
+    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F("TLS"),         50);
-    # endif // if FEATURE_MQTT_TLS
+    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""));
     protocolIndex_t x;
     bool done = false;
@@ -105,14 +107,14 @@ void handle_pluginlist() {
           if (proto.usesMQTT) {
             addEnabled(true);
           }
-          # if FEATURE_MQTT_TLS
+          # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
           html_TD();
 
           if (proto.usesTLS) {
             addEnabled(true);
           }
-          # endif // if FEATURE_MQTT_TLS
+          # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
           html_TD();
         }
       }
@@ -128,9 +130,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""));
 
     for (uint8_t x = 0; x <= notificationCount; x++)
@@ -157,9 +159,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     html_table_header(F(""));
 
     ESPEasy::net::networkDriverIndex_t tmpNetworkDriverIndex{};
@@ -178,7 +180,6 @@ void handle_pluginlist() {
       html_TD();
       ++tmpNetworkDriverIndex;
     }
-
   }
   # endif // ifdef WEBSERVER_NETWORK
 

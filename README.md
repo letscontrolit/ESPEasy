@@ -40,7 +40,8 @@ ESPEasy_mega\_*[releasedate]*\_*[build-type]*\_*[opt-arduino-library]*\_*[hardwa
 *[build-type]* can be any of:
 Build type   | Description                               | included plugins                 |
 -------------|-------------------------------------------|----------------------------------|
-climate      | All plugins related to climate measurement| Stable + Climate                 |
+climate A    | Plugins related to climate measurement A  | Stable + Climate A               |
+climate B    | Plugins related to climate measurement B  | Stable + Climate B               |
 custom       | Custom predefined set/Defined in Custom.h | Specific                         |
 normal       | Standard plugins                          | Stable                           |
 collection_A | Normal + plugin collection A              | Stable + Collection base + set A |
@@ -50,9 +51,11 @@ collection_D | Normal + plugin collection D              | Stable + Collection b
 collection_E | Normal + plugin collection E              | Stable + Collection base + set E |
 collection_F | Normal + plugin collection F              | Stable + Collection base + set F |
 collection_G | Normal + plugin collection G              | Stable + Collection base + set G |
+collection_H | Normal + plugin collection H              | Stable + Collection base + set H |
 max          | All available plugins                     | All available                    |
 energy       | All plugins related to energy measurement | Stable + Energy measurement      |
-display      | All plugins related to displays           | Stable + Displays                |
+display A    | All plugins related to displays A         | Stable + Displays A              |
+display B    | All plugins related to displays B         | Stable + Displays B              |
 neopixel     | All plugins related to neopixel           | Stable + Neopixel                |
 hard         | hardware specific builds                  | Minimal                          |
 minimal      | minimal plugins for specific use-cases    | Switch and Controller            |

@@ -15,7 +15,7 @@
 
 #include "../DataStructs/ChecksumType.h"
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 #include "../DataTypes/TLS_types.h"
 #endif
 

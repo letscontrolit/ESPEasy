@@ -682,7 +682,7 @@ void json_prop(LabelType::Enum label) {
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice, const __FlashStringHelper* cssclass)
+void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
   String deviceNr;
@@ -708,7 +708,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice, const __FlashStringH
 
   FormSelectorOptions selector(TASKS_MAX + 1, options, nullptr, attrs);
   selector.reloadonchange = true;
-  selector.classname = cssclass;
+  selector.classname = F("wide");
   selector.addSelector(name, choice);
 }
 
