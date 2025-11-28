@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-09-11 tonhuisman: Enable Formula field
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Dummy Device)
  */
@@ -14,6 +15,7 @@
 # define PLUGIN_ID_033         33
 # define PLUGIN_NAME_033       "Generic - Dummy Device"
 # define PLUGIN_VALUENAME1_033 "Dummy"
+
 boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -26,7 +28,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       dev.Number         = PLUGIN_ID_033;
       dev.Type           = DEVICE_TYPE_DUMMY;
       dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
-      dev.DecimalsOnly   = true;
+      dev.FormulaOption  = true;
       dev.ValueCount     = 4;
       dev.SendDataOption = true;
       dev.TimerOption    = true;
