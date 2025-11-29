@@ -28,6 +28,35 @@ Touchscreen support for XPT2046.
 
 Some type of TFT screens, particularly the :ref:`P095_page` 65000 color screens, come with a resistive touchscreen using a XPT2046 controller. Usually, a screen pen is included with the purchase.
 
+^^^^^^^^^^^^^^^^^^^
+ESP32 Configuration
+^^^^^^^^^^^^^^^^^^^
+
+(For ESP8266 configuration, see below)
+
+Configuration options
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: P099_DeviceConfiguration_ESP32.png
+
+Actuator
+~~~~~~~~
+
+The only connection, besides the standard SPI signals ``MISO``, ``MOSI`` and ``CLK``, is the ``CS`` pin (usually labeled ``TS_CS`` at the connector) that is configured in the device.
+
+Screen
+~~~~~~
+
+To allow scaling the touch coordinates to screen coordinates, the screen resolution and (touchscreen) rotation need to be configured, as the 0,0 coordinates of the screen and touchscreen should match, for mapping a touch coordinate to a screen coordinate. The screen dimensions, rotation and color depth of the selected display are retrieved, if the display supports that (most displays do).
+
+
+.. include:: Touch_Configuration.repl
+
+
+^^^^^^^^^^^^^^^^^^^^^
+ESP8266 Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
 Configuration options
 ^^^^^^^^^^^^^^^^^^^^^^
 
