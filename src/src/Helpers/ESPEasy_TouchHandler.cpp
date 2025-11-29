@@ -1852,7 +1852,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             addLog(LOG_LEVEL_DEBUG,
                    strformat(F("Touch Swiped, direction: %s, dx: %d, dy: %d"),
-                             String(toString(swipe)).c_str(), delta_x, delta_y));
+                             FsP(toString(swipe)), delta_x, delta_y));
           }
           #  endif // ifdef TOUCH_DEBUG
         }
@@ -1934,9 +1934,12 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
               # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               #  ifdef TOUCH_DEBUG
-              addLogMove(LOG_LEVEL_INFO,
-                         strformat(F("Swiped/touched, object: %s:%s"), _lastObjectName.c_str(),
-                                   String(toString(swipe)).c_str()));
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                addLog(LOG_LEVEL_INFO,
+                       strformat(F("Swiped/touched, object: %s:%s"), _lastObjectName.c_str(),
+                                 FsP(toString(swipe))));
+              }
               #  endif // ifdef TOUCH_DEBUG
 
               if (swipe != Swipe_action_e::None) {
@@ -2010,10 +2013,10 @@ const char touchHandler_commands[] PROGMEM =
   # if TOUCH_FEATURE_EXTENDED_TOUCH
   #  if TOUCH_FEATURE_SWIPE
   "swipe|"
+  #  endif // if TOUCH_FEATURE_SWIPE
   "setgrp|nextgrp|prevgrp|"
   "nextpage|prevpage|"
   "updatebutton|"
-  #  endif // if TOUCH_FEATURE_SWIPE
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 ;
 

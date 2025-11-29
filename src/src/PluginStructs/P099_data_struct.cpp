@@ -55,7 +55,6 @@ bool P099_data_struct::init(struct EventStruct *event,
   _address_ts_cs = cs;
   _z_treshold    = z_treshold;
   _rotation      = rotation;
-  _flipped       = flipped;
   _ts_x_res      = ts_x_res;
   _ts_y_res      = ts_y_res;
 
@@ -64,6 +63,7 @@ bool P099_data_struct::init(struct EventStruct *event,
 
   if (nullptr != touchHandler) {
     touchHandler->init(event);
+    _flipped = touchHandler->_flipped;
 
     if (touchHandler->touchEnabled()) {
       touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);

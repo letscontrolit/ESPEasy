@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P099
 
 // #######################################################################################################
@@ -6,6 +8,7 @@
 
 /**
  * Changelog:
+ * 2025-11-19 tonhuisman: Use Rotation flipped setting from ESPEasy_TouchHandler
  * 2025-09-28 tonhuisman: Keep previous code for ESP8266, to match the limited binary space available
  * 2025-09-27 tonhuisman: Implement ESPEasy_TouchHandler
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
@@ -30,8 +33,8 @@
  * -------------------
  * touch,rot,<0..3>             : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
  * touch,flip,<0|1>             : Set rotation normal(0) or flipped by 180 degrees(1)
- * touch,enable,<objectName>    : Enables a disabled objectname (removes a leading underscore)
- * touch,disable,<objectName>   : Disables an enabled objectname (adds a leading underscore)
+ * touch,enable,<objectName>    : Enables a disabled objectname
+ * touch,disable,<objectName>   : Disables an enabled objectname
  */
 
 #define PLUGIN_099
@@ -41,7 +44,6 @@
 #define PLUGIN_VALUENAME2_099 "Y"
 #define PLUGIN_VALUENAME3_099 "Z"
 
-#include "_Plugin_Helper.h"
 #include "src/PluginStructs/P099_data_struct.h"
 
 
@@ -102,8 +104,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P099_SET_CONFIG_DISPLAY(event->TaskIndex); // Preselect current task to avoid pointing to Task 1 by default
-      P099_CONFIG_CS_PIN    = P099_TS_CS;
+      P099_CONFIG_CS_PIN    = -1;
       P099_CONFIG_THRESHOLD = P099_TS_TRESHOLD;
       P099_CONFIG_ROTATION  = P099_TS_ROTATION;
       P099_CONFIG_X_RES     = P099_TS_X_RES;
@@ -118,13 +119,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                      + (P099_TS_SEND_Z           ? (1 << P099_FLAGS_SEND_Z) : 0)
                                      + (P099_TS_SEND_OBJECTNAME  ? (1 << P099_FLAGS_SEND_OBJECTNAME) : 0)
                                      + (P099_TS_USE_CALIBRATION  ? (1 << P099_FLAGS_USE_CALIBRATION) : 0)
-                                     + (P099_TS_LOG_CALIBRATION  ? (1 << P099_FLAGS_LOG_CALIBRATION) : 0)
-                                     + (P099_TS_ROTATION_FLIPPED ? (1 << P099_FLAGS_ROTATION_FLIPPED) : 0);
+                                     + (P099_TS_LOG_CALIBRATION  ? (1 << P099_FLAGS_LOG_CALIBRATION) : 0);
       P099_CONFIG_FLAGS = lSettings;
+      P099_SET_CONFIG_DISPLAY(TASKS_MAX); // Preselect Not Set value
 
       success = true;
       break;
     }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Screen"));
@@ -161,35 +163,9 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormColorDepth(F("colordepth"), P099_COLOR_DEPTH, (colorDepth_ == 0));
 
-      const bool bRotationFlipped = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED);
-      addFormCheckBox(F("Flip rotation 180&deg;"), F("protation_flipped"), bRotationFlipped);
-      addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
-
-      addFormSubHeader(F("Touch configuration"));
+      addFormSubHeader(F("Touch panel"));
 
       addFormNumericBox(F("Touch minimum pressure"), F("ptreshold"), P099_CONFIG_THRESHOLD, 0, 255);
-
-      uint8_t choice3 = 0;
-      bitWrite(choice3, P099_FLAGS_SEND_XY,         bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
-      bitWrite(choice3, P099_FLAGS_SEND_Z,          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z));
-      bitWrite(choice3, P099_FLAGS_SEND_OBJECTNAME, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME));
-      {
-        const __FlashStringHelper *options3[] =
-        { F("None"),
-          F("X and Y"),
-          F("X, Y and Z"),
-          F("Objectnames only"),
-          F("Objectnames, X and Y"),
-          F("Objectnames, X, Y and Z") };
-        const int optionValues3[]    = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues3);
-        const FormSelectorOptions selector(optionCount, options3, optionValues3);
-        selector.addFormSelector(F("Events"), F("pevents"), choice3);
-      }
-
-      if (!Settings.UseRules) {
-        addFormNote(F("Tools / Advanced / Rules must be enabled for events to be fired."));
-      }
 
       {
         P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -219,12 +195,12 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P099_CONFIG_VERSION = 2; // Storage layout changed to use ESPEasy_TouchHandler
-      P099_SET_CONFIG_DISPLAY(P099_CONFIG_DISPLAY_PREV);
-      P099_CONFIG_THRESHOLD = getFormItemInt(F("ptreshold"));
-      P099_CONFIG_ROTATION  = getFormItemInt(F("protate"));
-      P099_CONFIG_X_RES     = getFormItemInt(F("pwidth"));
-      P099_CONFIG_Y_RES     = getFormItemInt(F("pheight"));
+      P099_CONFIG_VERSION      = 2; // Storage layout changed to use ESPEasy_TouchHandler
+      P099_CONFIG_DISPLAY_PREV = P099_GET_CONFIG_DISPLAY;
+      P099_CONFIG_THRESHOLD    = getFormItemInt(F("ptreshold"));
+      P099_CONFIG_ROTATION     = getFormItemInt(F("protate"));
+      P099_CONFIG_X_RES        = getFormItemInt(F("pwidth"));
+      P099_CONFIG_Y_RES        = getFormItemInt(F("pheight"));
       # if P099_ENABLE_OLD_CONFIG
       P099_CONFIG_OBJECTCOUNT = getFormItemInt(F("pobjectcount"));
 
@@ -232,13 +208,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       # endif // if P099_ENABLE_OLD_CONFIG
 
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P099_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_XY));
-      bitWrite(lSettings, P099_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_Z));
-      bitWrite(lSettings, P099_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("pevents")), P099_FLAGS_SEND_OBJECTNAME));
-      bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION,  getFormItemInt(F("puse_calibration")) == 1);
-      bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION,  isFormItemChecked(F("plog_calibration")));
-      bitWrite(lSettings, P099_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("protation_flipped")));
+
+      bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION, getFormItemInt(F("puse_calibration")) == 1);
+      bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION, isFormItemChecked(F("plog_calibration")));
       P099_CONFIG_FLAGS = lSettings;
+      P099_SET_CONFIG_DISPLAY(getFormItemInt(F("dsptask")));
 
       {
         P099_data_struct *P099_data = nullptr; // static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -270,7 +244,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       success = (nullptr != P099_data) && P099_data->init(event,
                                                           P099_CONFIG_CS_PIN,
                                                           P099_CONFIG_ROTATION,
-                                                          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED),
+                                                          false,
                                                           P099_CONFIG_THRESHOLD,
                                                           P099_CONFIG_X_RES,
                                                           P099_CONFIG_Y_RES);
