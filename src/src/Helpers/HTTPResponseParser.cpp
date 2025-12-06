@@ -202,7 +202,7 @@ void eventFromResponse(const String& host, const int& httpCode, const String& ur
       const String response = http.getString();
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Response: %d"), response));
+        addLog(LOG_LEVEL_INFO, strformat(F("Response: %d"), response.c_str()));
       }
 
       if (response.length() > RESPONSE_MAX_LENGTH) {
