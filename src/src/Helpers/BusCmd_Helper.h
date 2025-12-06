@@ -72,6 +72,7 @@ enum class BusCmd_CommandState_e :uint8_t {
 enum class BusCmd_CommandSource_e : uint8_t {
   PluginIdle = 0u,
   PluginRead,
+  PluginWrite,
   PluginOncePerSecond,
   PluginTenPerSecond,
   PluginFiftyPerSecond,
@@ -188,6 +189,14 @@ struct BusCmd_Helper_struct {
   void setBuffer(uint8_t       index,
                  const String& name,
                  const String& line);
+
+  inline void setCommandSource(BusCmd_CommandSource_e commandSource) {
+    _commandSource = commandSource;
+  }
+
+  inline BusCmd_CommandSource_e getCommandSource() const {
+    return _commandSource;
+  }
 
   // Getters
   BusCmd_CommandState_e getCommandState() const {

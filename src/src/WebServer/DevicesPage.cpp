@@ -1838,9 +1838,9 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     const __FlashStringHelper *stateClasses[] = {
       MQTT_sensor_StateClass(0),
       MQTT_sensor_StateClass(1),
-      MQTT_sensor_StateClass(4),
       MQTT_sensor_StateClass(2),
       MQTT_sensor_StateClass(3),
+      MQTT_sensor_StateClass(4),
     };
     constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
     #endif // if FEATURE_MQTT_STATE_CLASS
