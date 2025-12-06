@@ -201,6 +201,10 @@ void eventFromResponse(const String& host, const int& httpCode, const String& ur
   # if FEATURE_JSON_EVENT
       const String response = http.getString();
 
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("Response: %d"), response));
+      }
+
       if (response.length() > RESPONSE_MAX_LENGTH) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           addLog(LOG_LEVEL_ERROR,
@@ -320,20 +324,57 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
     size_t start = 0, end;
 
     while ((end = key.indexOf('.', start)) != (unsigned int)-1) {
-      const String part = key.substring(start, end);
-      value = value[part];
+      String part = key.substring(start, end);
+      start = end + 1;
+
+      // Look for an array e.g., "result[0]" → object "result", index 0
+      int bracketStart = part.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = part.substring(0, bracketStart);
+        String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName]; // Access the object
+        }
+
+        if (value.is<JsonArray>()) {
+          int index = indexStr.toInt();
+          value = value[index];
+        } else {
+          value = value[indexStr]; // fallback if not actually array
+        }
+      } else {
+        // Normal object access without array
+        value = value[part];
+      }
 
       if (value.isNull()) {
         break; // Key path is invalid
       }
-      start = end + 1;
     }
 
-    // Handle the last part of the key
     if (!value.isNull()) {
-      const String lastPart = key.substring(start);
-      value = value[lastPart];
       successfullyProcessedCount++;
+      String lastPart     = key.substring(start);
+      int    bracketStart = lastPart.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = lastPart.substring(0, bracketStart);
+        String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName];
+        }
+
+        if (value.is<JsonArray>()) {
+          value = value[indexStr.toInt()];
+        } else {
+          value = value[indexStr];
+        }
+      } else {
+        value = value[lastPart];
+      }
     }
 
     // Append the value to the CSV string if it exists
@@ -399,8 +440,8 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
 // ------------------------------------------------------------------------------------------- JSONevent Helper
 UriParseResult parseUriPath(const String& path) {
   UriParseResult result;
-  result.cleanedPath = path;  // default
-  result.parseJson = -1;
+  result.cleanedPath = path; // default
+  result.parseJson   = -1;
 
   int jsonIndex = path.indexOf(F("#json"));
 
@@ -416,7 +457,7 @@ UriParseResult parseUriPath(const String& path) {
     if (result.parseJson > -1) {
       result.cleanedPath = path.substring(0, jsonIndex);
     }
-  } 
+  }
 
   return result;
 }
