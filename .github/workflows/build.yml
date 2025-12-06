@@ -23,24 +23,21 @@ jobs:
   documentation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+          python-version: '3.13'
       - name: Build documentation
         run: |
           cd docs
           sudo apt install imagemagick zip
-          pip install -r requirements.txt
+          pip install uv
+          uv pip install --system -r requirements.txt
           python ./builds_overview.py
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Documentation
           path: ESPEasy_docs.zip
@@ -49,13 +46,14 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: '3.13'
       - id: set-matrix
         run: |
-          pip install platformio
+          pip install uv
+          uv pip install --system platformio
           python tools/ci/generate-matrix.py
 
   build:
@@ -64,31 +62,16 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v4
-        if: ${{ contains(matrix.env, 'esp32') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v4
-        if: ${{ contains(matrix.env, 'esp8266') }}
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
+          python-version: '3.13'
       - name: Dependencies
         run: |
           sudo apt-get update
           sudo apt install binutils build-essential libffi-dev libgit2-dev
-          pip3 install --upgrade pip
-          pip install wheel
-          pip install -r requirements.txt
+          pip install uv
+          uv pip install --system -r requirements.txt
           pio pkg update -e ${{ matrix.env }}
       - name: Get current date
         id: date
@@ -105,7 +88,7 @@ jobs:
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }} # Sort by ESP type
@@ -118,20 +101,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
+          python-version: '3.13'
       - name: Get current date
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts/Binaries/bin/
           pattern: Bin-*
@@ -140,7 +119,7 @@ jobs:
         run: |
           cd artifacts/Binaries/
           ls -R
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
           name: ESPEasy-all-Binaries-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }}

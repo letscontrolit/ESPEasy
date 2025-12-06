@@ -112,6 +112,10 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
     #endif // if FEATURE_ETHERNET
     case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case SystemVariables::LATITUDE:          label = LabelType::LATITUDE; break;
+    case SystemVariables::LONGITUDE:         label = LabelType::LONGITUDE; break;
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
     case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
     case SystemVariables::SUNRISE_S:         label = LabelType::SUNRISE_S; break;
@@ -303,11 +307,13 @@ bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
       const int pos_closing_pct = s.indexOf('%', v_index + 1);
       const String arg = s.substring(v_index + 2 + (isv_ ? 1 : 0), pos_closing_pct);
       String valArg(arg);
-      constexpr int64_t errorvalue = -1;
-      const int64_t i = CalculateParam(arg, errorvalue);
-      // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
-      if (i != errorvalue) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
-        valArg = ll2String(i);
+      if (!isv_) {
+        constexpr int64_t errorvalue = -1;
+        const int64_t i = CalculateParam(arg, errorvalue);
+        // addLog(LOG_LEVEL_INFO, strformat(F("s: '%s', calc parse: %s => %d"), s.c_str(), arg.c_str(), i));
+        if (i != errorvalue) { // We're calculating a numeric index like %v=1+%v2%%, so have to use the result for the value
+          valArg = ll2String(i);
+        }
       }
 
       // Need to replace the entire arg
@@ -606,6 +612,10 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::LCLTIME:            return F("lcltime");
     case Enum::LCLTIME_AM:         return F("lcltime_am");
     case Enum::LF:                 return F("LF");
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case Enum::LATITUDE:           return F("latitude");
+    case Enum::LONGITUDE:          return F("longitude");
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case Enum::SUNRISE_M:          return F("m_sunrise");
     case Enum::SUNSET_M:           return F("m_sunset");
     case Enum::MAC:                return F("mac");

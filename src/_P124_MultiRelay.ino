@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported (yet?) for Relay module)
  * 2021-11-21 tonhuisman: Implement configurable I2C addresses, limited to 0x11..-x18 range (8 units) though
  *                        the boards support any I2C address from 0x00 to 0x7F
  *                        Add Relay state on exit/disabling of the plugin.
@@ -49,6 +51,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
 
       break;
     }
@@ -66,6 +69,22 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_124));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -106,11 +125,11 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       /*
-      const __FlashStringHelper *optionsMode2[] = {
-        F("2"),
-        F("4"),
-        F("8") };
-        */
+         const __FlashStringHelper *optionsMode2[] = {
+         F("2"),
+         F("4"),
+         F("8") };
+       */
       const int optionValuesMode2[] { 2, 4, 8 };
       constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
       FormSelectorOptions selector(optionCount, /*optionsMode2,*/ optionValuesMode2);

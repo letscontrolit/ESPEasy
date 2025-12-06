@@ -16,6 +16,7 @@
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -56,6 +57,50 @@ String parseTemplateAndCalculate(String& tmpString) {
     # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   }
   return str;
+}
+
+uint8_t getDerivedValueCountForTask(taskIndex_t taskIndex) {
+  uint8_t derivedVars = 0;
+  String postfix;
+  const String search = getDerivedValueSearchAndPostfix(getTaskDeviceName(taskIndex), postfix);
+
+  auto it = customStringVar.begin();
+
+  while (it != customStringVar.end()) {
+    if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+      ++derivedVars;
+    }
+    else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+      break;
+    }
+    ++it;
+  }
+  return derivedVars;
+}
+
+String getDerivedValueSearchAndPostfix(String taskName, String& postfix) {
+  taskName.toLowerCase();
+  const String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
+  postfix = search.substring(search.indexOf('X') + 1);
+  return search.substring(0, search.indexOf('X')); // Cut off left of valuename
+}
+
+String getDerivedValueNameUomAndVType(String taskName, String valueName, String& uom, String& vType) {
+  taskName.toLowerCase();
+  valueName.toLowerCase();
+  vType = getCustomStringVar(strformat(F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
+  uom   = getCustomStringVar(strformat(F(TASK_VALUE_UOM_PREFIX_TEMPLATE),
+                                       taskName.c_str(), valueName.c_str()));
+  return  getCustomStringVar(strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
+}
+
+String getDerivedValueName(String taskName, String valueName) {
+  taskName.toLowerCase();
+  valueName.toLowerCase();
+  return  getCustomStringVar(strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), 
+                                       taskName.c_str(), valueName.c_str()));
 }
 #endif // if FEATURE_STRING_VARIABLES
 
@@ -275,7 +320,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             }
           }
           #if FEATURE_STRING_VARIABLES
-          if (!isHandled) {
+          if (!isHandled && Settings.TaskDeviceEnabled[taskIndex]) {
             String value;
             const String valName = parseString(valueName, 1);
             String derived = getCustomStringVar(strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), deviceName.c_str(), valName.c_str()));
@@ -289,6 +334,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               }
             }
           }
+          #endif // if FEATURE_STRING_VARIABLES
 
           #if FEATURE_TASKVALUE_ATTRIBUTES
           if (!isHandled && valueName.indexOf('.') > -1) { // TaskValue specific attributes
@@ -332,6 +378,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
           }
           #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
+          #if FEATURE_STRING_VARIABLES
           if (!isHandled && valueName.indexOf('.') > -1) {
             String value;
             const String fullValueName = parseString(valueName, 1);
@@ -971,9 +1018,8 @@ void parseCommandString(struct EventStruct *event, const String& string)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseCommandString"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  event->Par1 = parseCommandArgumentInt(string, 1);
-  event->Par2 = parseCommandArgumentInt(string, 2);
-  event->Par3 = parseCommandArgumentInt(string, 3);
-  event->Par4 = parseCommandArgumentInt(string, 4);
-  event->Par5 = parseCommandArgumentInt(string, 5);
+
+  for (uint8_t i = 0; i < 5; ++i) {
+    event->ParN[i] = parseCommandArgumentInt(string, i + 1);
+  }
 }

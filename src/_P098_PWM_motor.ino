@@ -2,9 +2,13 @@
 #ifdef USES_P098
 
 // #######################################################################################################
-// ######################## Plugin 098 PWM Motor I2C Barometric Pressure Sensor  ########################
+// ########################################## Plugin 098 PWM Motor  ######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported PWM Motor)
+ *                        Correct plugin banner (line 5)
+ */
 
 # include "src/PluginStructs/P098_data_struct.h"
 
@@ -76,6 +80,15 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_098));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {

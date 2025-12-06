@@ -14,6 +14,7 @@
 #include "../Globals/Plugins_other.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -417,7 +418,7 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   ESPEASY_RULES_FLOAT_TYPE farg1;
   float  farg2, farg3 = 0.0f;
 
-  if (!validDoubleFromString(arg1, farg1)) {
+  if (!cmd_s_lower.startsWith("crc") && !validDoubleFromString(arg1, farg1)) {
     return false;
   }
 
@@ -431,6 +432,27 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
         farg3 = tmp;
       }
       result = constrain(farg1, farg2, farg3);
+    } else {
+      return false;
+    }
+  } else if (cmd_s_lower.startsWith("crc")) {
+    std::vector<uint8_t> argument = parseHexTextData(arg1, 1);
+    const String crctype          = cmd_s_lower.substring(3);
+
+    if (argument.size() > 0) {
+      if (equals(crctype, F("8"))) {
+        result = calc_CRC8(&argument[0], argument.size());
+      // } else if (equals(crctype, F("16"))) { // FIXME crc16 not supported until needed/used/tested
+      //   result = calc_CRC16((const char *)argument.data(), argument.size());
+      } else if (equals(crctype, F("32"))) {
+        result = calc_CRC32(&argument[0], argument.size());
+      } else {
+        return false;
+      }
+
+      if (!arg2.isEmpty() && validDoubleFromString(arg2, farg1)) { // Optional expected crc value
+        result = essentiallyEqual(result, farg1) ? 1.0 : 0.0; // Return 1 if the calculated crc == expected crc
+      }
     } else {
       return false;
     }
@@ -1366,6 +1388,10 @@ void createRuleEvents(struct EventStruct *event) {
 
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
   String taskName = getTaskDeviceName(event->TaskIndex);
+  #if FEATURE_STRING_VARIABLES
+  String postfix;
+  const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+  #endif // if FEATURE_STRING_VARIABLES
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
@@ -1410,10 +1436,6 @@ void createRuleEvents(struct EventStruct *event) {
     }
     #if FEATURE_STRING_VARIABLES
     if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
-      taskName.toLowerCase();
-      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-      const String postfix = search.substring(search.indexOf('X') + 1);
-      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
 
       auto it = customStringVar.begin();
       while (it != customStringVar.end()) {
@@ -1428,6 +1450,9 @@ void createRuleEvents(struct EventStruct *event) {
             ++varNr;
           }
         }
+        else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+          break;
+        }
         ++it;
       }
     }
@@ -1440,16 +1465,12 @@ void createRuleEvents(struct EventStruct *event) {
     #if FEATURE_STRING_VARIABLES
     if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
       taskName.toLowerCase();
-      String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-      const String postfix = search.substring(search.indexOf('X') + 1);
-      search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
 
       auto it = customStringVar.begin();
       while (it != customStringVar.end()) {
         if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
           String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-          const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-          const String vname2 = getCustomStringVar(key2);
+          const String vname2 = getDerivedValueName(taskName, valueName);
           if (!vname2.isEmpty()) {
             valueName = vname2;
           }
@@ -1458,6 +1479,9 @@ void createRuleEvents(struct EventStruct *event) {
             value = parseTemplateAndCalculate(value);
             eventQueue.add(event->TaskIndex, valueName, value);
           }
+        }
+        else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+          break;
         }
         ++it;
       }

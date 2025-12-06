@@ -8,7 +8,10 @@
 // #######################################################################################################
 
 /** Changelog:
- * 25025-01-03 tonhuisman: Small code size reduction
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2025-01-03 tonhuisman: Small code size reduction
+ * 2024-12-05 tonhuisman: Add support for MQTT AutoDiscovery for supported values
+ * 2024-12 tonhuisman: Start changelog
  */
 
 /*
@@ -69,6 +72,14 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_052_QueryVType, P052_NR_OUTPUT_VALUES, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {

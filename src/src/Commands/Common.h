@@ -66,4 +66,12 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
                             int8_t             *value,
                             int                 arg);
 
+String Command_GetORSetFloatMinMax(struct EventStruct *event,
+                                   const __FlashStringHelper * targetDescription,
+                                   const char         *Line,
+                                   float              *value,
+                                   int                 arg,
+                                   float               _min,
+                                   float               _max);
+
 #endif // COMMAND_COMMON_H

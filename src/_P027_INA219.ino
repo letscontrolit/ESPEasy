@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-07-16 tonhuisman: Set INA219 in Powerdown mode when not actually measuring, to reduce quiescent current
  * 2022-04-02 tonhuisman: Add all technically possible I2C addresses (16), instead of only the 4 most common
  *                        As requested in the forum: https://www.letscontrolit.com/forum/viewtopic.php?t=9079
@@ -84,6 +85,17 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       success     = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CURRENT_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

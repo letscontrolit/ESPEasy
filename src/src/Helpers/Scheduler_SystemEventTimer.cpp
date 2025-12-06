@@ -92,7 +92,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
   const char       *c_topic,
   const uint8_t    *b_payload,
   unsigned int      length) {
-  if (validProtocolIndex(ProtocolIndex)) {
+  if (validProtocolIndex(ProtocolIndex) && c_topic && b_payload) {
     EventStruct  event;
     const size_t topic_length = strlen_P(c_topic);
 
@@ -117,6 +117,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
       // Make sure emplace_back is not called when on 2nd heap
       HeapSelectDram ephemeral;
       # endif // ifdef USE_SECOND_HEAP
+      
       ScheduledEventQueue.emplace_back(timerID.mixed_id, std::move(event));
     }
   }

@@ -76,12 +76,18 @@ enum class ESPEasy_cmd_e : uint8_t {
   jsonportstatus,
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 
+  #if FEATURE_LAT_LONG_VAR_CMD
+  latitude,
+  #endif // if FEATURE_LAT_LONG_VAR_CMD
   let,
   #if FEATURE_STRING_VARIABLES
   letstr,
   #endif // if FEATURE_STRING_VARIABLES
   load,
   logentry,
+  #if FEATURE_LAT_LONG_VAR_CMD
+  longitude,
+  #endif // if FEATURE_LAT_LONG_VAR_CMD
   looptimerset,
   looptimerset_ms,
   looptimersetandrun,
@@ -137,6 +143,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #ifdef USES_P019
 #if FEATURE_POST_TO_HTTP
   posttohttp,
+#if FEATURE_HTTP_TLS
+  posttohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // #if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
   provision,
@@ -158,6 +167,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   puttohttp,
+#if FEATURE_HTTP_TLS
+  puttohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // #if FEATURE_PUT_TO_HTTP
   pwm,
 
@@ -178,6 +190,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_ESPEASY_P2P
 #if FEATURE_SEND_TO_HTTP
   sendtohttp,
+#if FEATURE_HTTP_TLS
+  sendtohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // FEATURE_SEND_TO_HTTP
   sendtoudp,
   sendtoudpmix,

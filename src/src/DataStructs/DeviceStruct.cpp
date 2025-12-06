@@ -24,6 +24,7 @@ DeviceStruct::DeviceStruct() :
 // I2CMax100kHz       (false),
 // HasFormatUserVar   (false),
 // I2CNoBusSelection  (false),
+// CustomVTypeVar     (false),
 
   Number(0), Type(0), VType(Sensor_VType::SENSOR_TYPE_NONE), Ports(0), ValueCount(0),
   OutputDataType(Output_Data_type_t::Default),

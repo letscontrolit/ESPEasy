@@ -20,7 +20,7 @@ P169_data_struct::P169_data_struct(struct EventStruct *event) :
   _irqPin(P169_IRQ_PIN)
 {
   // Do not try to construct the sensor if not needed as it will set the pinmode of the pin
-  if (_irqPin >= 0 && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
+  if ((_irqPin >= 0) && (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0)) {
     _sensor = new (std::nothrow) AS3935I2C(P169_I2C_ADDRESS, P169_IRQ_PIN);
   }
 }
@@ -249,6 +249,8 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
 
 # ifdef ESP32
 
+  #  ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
     // Short test checking effect of nr samples during calibration
@@ -284,6 +286,7 @@ bool P169_data_struct::plugin_init(struct EventStruct *event)
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+  #  endif // ifndef BUILD_NO_DEBUG
 # endif // ifdef ESP32
 
 

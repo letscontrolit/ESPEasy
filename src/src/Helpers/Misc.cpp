@@ -7,6 +7,7 @@
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Statistics.h"
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
@@ -81,7 +82,16 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
     Settings.ControllerEnabled[controllerIndex] = enabled;
-    return true;
+    const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerIndex);
+
+    if (validProtocolIndex(ProtocolIndex)) {
+      struct EventStruct TempEvent;
+      TempEvent.ControllerIndex = controllerIndex;
+      String dummy;
+      const CPlugin::Function cfunction =
+        enabled ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+      return CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
+    }
   }
   return false;
 }
@@ -98,24 +108,27 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
-    String dummy;
+    if (enabled != Settings.TaskDeviceEnabled[event->TaskIndex])
+    {
+      String dummy;
 
-    if (!enabled) {
-      PluginCall(PLUGIN_EXIT, event, dummy);
-    }
+      if (!enabled) {
+        PluginCall(PLUGIN_EXIT, event, dummy);
+      }
 
-    // Toggle enable/disable state via command
-    // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
-    // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
-    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
+      // Toggle enable/disable state via command
+      // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
+      // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+      Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
-    if (enabled) {
-      // Schedule the plugin to be read.
-      // Do this before actual init, to allow the plugin to schedule a specific first read.
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      if (enabled) {
+        // Schedule the plugin to be read.
+        // Do this before actual init, to allow the plugin to schedule a specific first read.
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      if (!PluginCall(PLUGIN_INIT, event, dummy)) {
-        return false;
+        if (!PluginCall(PLUGIN_INIT, event, dummy)) {
+          return false;
+        }
       }
     }
     return true;
@@ -336,17 +349,15 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
       if (Settings.EventAndLogDerivedTaskValues(TaskIndex)) {
         taskName.toLowerCase();
-        String search        = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-        const String postfix = search.substring(search.indexOf('X') + 1);
-        search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+        String postfix;
+        const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
         auto it = customStringVar.begin();
 
         while (it != customStringVar.end()) {
           if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
             String valueName    = it->first.substring(search.length(), it->first.indexOf('-'));
-            const String key2   = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-            const String vname2 = getCustomStringVar(key2);
+            const String vname2 = getDerivedValueName(taskName, valueName);
 
             if (!vname2.isEmpty()) {
               valueName = vname2;
@@ -361,6 +372,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
                                   , value.c_str()
                                   );
             }
+          }
+          else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+            break;
           }
           ++it;
         }

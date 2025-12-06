@@ -10,6 +10,9 @@
 // this plugin is based on the sparkfun library
 // written based on version 1.1.0 from https://github.com/sparkfun/SparkFun_TSL2561_Arduino_Library
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (partially)
+ */
 
 # include "src/PluginStructs/P015_data_struct.h"
 
@@ -62,6 +65,17 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_015));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_IR_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

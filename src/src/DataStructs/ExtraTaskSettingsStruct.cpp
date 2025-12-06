@@ -276,6 +276,35 @@ void ExtraTaskSettingsStruct::setTaskVarUnitOfMeasure(taskVarIndex_t taskVarInde
 }
 #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
+#if FEATURE_CUSTOM_TASKVAR_VTYPE
+uint8_t ExtraTaskSettingsStruct::getTaskVarCustomVType(taskVarIndex_t taskVarIndex) const {
+  if (!validTaskVarIndex(taskVarIndex)) { return 0u; }
+  return get8BitFromUL(VariousBits[taskVarIndex], 16);
+}
+
+void ExtraTaskSettingsStruct::setTaskVarCustomVType(taskVarIndex_t taskVarIndex,
+                                                    uint8_t        customVType) {
+  if (validTaskVarIndex(taskVarIndex)) {
+    set8BitToUL(VariousBits[taskVarIndex], 16, customVType);
+  }
+}
+#endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+#if FEATURE_MQTT_STATE_CLASS
+uint8_t ExtraTaskSettingsStruct::getTaskVarStateClass(taskVarIndex_t taskVarIndex) const {
+  if (!validTaskVarIndex(taskVarIndex)) { return 0u; }
+  return get3BitFromUL(VariousBits[taskVarIndex], 24); // 3 Bits 24, 25, 26
+}
+
+void ExtraTaskSettingsStruct::setTaskVarStateClass(taskVarIndex_t taskVarIndex,
+                                                   uint8_t        stateClass) {
+  if (validTaskVarIndex(taskVarIndex)) {
+    set3BitToUL(VariousBits[taskVarIndex], 24, stateClass); // 3 Bits 24, 25, 26
+  }
+}
+#endif // if FEATURE_MQTT_STATE_CLASS
+
+
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(
   const __FlashStringHelper *valuename,
   size_t                     nrValues,

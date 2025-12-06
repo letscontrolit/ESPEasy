@@ -17,6 +17,7 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
@@ -490,18 +491,16 @@ void handle_json()
           int varNr = VARS_PER_TASK;
           String taskName = getTaskDeviceName(TaskIndex);
           taskName.toLowerCase();
-          String search = strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), taskName.c_str(), FsP(F("X")));
-          const String postfix = search.substring(search.indexOf('X') + 1);
-          search = search.substring(0, search.indexOf('X')); // Cut off left of valuename
+          String postfix;
+          const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
           auto it = customStringVar.begin();
           while (it != customStringVar.end()) {
             if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
               String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-              const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-              const String vname2 = getCustomStringVar(key2);
-              const String keyUoM = strformat(F(TASK_VALUE_UOM_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
-              const String uom    = getCustomStringVar(keyUoM); // FIXME add check for UoM setting
+              String uom;
+              String vType;
+              const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
               if (!vname2.isEmpty()) {
                 valueName = vname2;
               }
@@ -509,7 +508,6 @@ void handle_json()
                 String value(it->second);
                 stripEscapeCharacters(value);
                 value = parseTemplate(value);
-                ESPEASY_RULES_FLOAT_TYPE floatvalue{};
                 uint8_t nrDecimals = 255; // FIXME Use the minimal number of decimals needed
                 bool hasPresentation;
                 const String presentation = formatUserVarForPresentation(&TempEvent, INVALID_TASKVAR_INDEX, hasPresentation, value, DeviceIndex, valueName);
@@ -524,6 +522,9 @@ void handle_json()
                                                   false); // No comma here
                 ++varNr;
               }
+            }
+            else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+              break;
             }
             ++it;
           }

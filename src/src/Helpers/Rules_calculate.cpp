@@ -568,7 +568,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
             if (sl > 1) {
               sc = stack[sl - 2];
               if (!(is_operator(sc) || is_unary_operator(sc) || is_quinary_operator(sc))) {
-                sc = '(';
+                sc = '\0';
               }
             }
           }

@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-05-08 tonhuisman: Use ESPEasy core I2C functions where possible
  *                        Add support for use of the Analog output pin and 'analogout,<value>' command
@@ -26,6 +27,13 @@
 # define P007_INPUT_MODE         PCONFIG_LONG(0)
 # define P007_OUTPUT_MODE        PCONFIG_LONG(1)
 # define P007_OUTPUT_ENABLED     (0b01000000)
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_007_QueryVType(uint8_t value_nr) {
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 
 boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
@@ -78,6 +86,14 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       success           = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_007_QueryVType, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

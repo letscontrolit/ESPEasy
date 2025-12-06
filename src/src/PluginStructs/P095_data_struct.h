@@ -22,6 +22,10 @@
 #  define P095_ENABLE_ILI948X   0 // Not enabled for limited buildsizes
 # endif // if defined(LIMIT_BUILD_SIZE) && P095_ENABLE_ILI948X && !defined(PLUGIN_BUILD_CUSTOM)
 
+# if !defined(P095_ENABLE_ILI9342_2) && defined(ESP32)
+#  define P095_ENABLE_ILI9342_2 1
+# endif // if !defined(P095_ENABLE_ILI9342_2) && defined(ESP32)
+
 # if P095_ENABLE_ILI948X
 #  include <ILI9488.h> // Specific behavior: ILI9488 needs 24 bit colors in SPI mode
 # endif // if P095_ENABLE_ILI948X
@@ -97,6 +101,10 @@ enum class ILI9xxx_type_e : uint8_t {
   // ILI9486_320x480 = 10u,
   ILI9488_320x480 = 11u, // Uses a separate library for having a 16 bit data interface
   # endif // if P095_ENABLE_ILI948X
+  # if P095_ENABLE_ILI9342_2
+  ILI9342_CYD_AF_240x320 = 12u,
+  ILI9342_CYD_BD_240x320 = 13u,
+  # endif // if P095_ENABLE_ILI9342_2
 };
 
 enum class P095_CommandTrigger : uint8_t {

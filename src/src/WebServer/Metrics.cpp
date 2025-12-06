@@ -82,6 +82,18 @@ void handle_metrics() {
   addHtml(getValue(LabelType::NUMBER_RECONNECTS));
   addHtml('\n');
 
+  # if FEATURE_INTERNAL_TEMPERATURE
+
+  // CPU Temperature
+  addHtml(prefixHELP);
+  addHtml(F("cpu_temperature Level of CPU temperature in Celcius\n"));
+  addHtml(prefixTYPE);
+  addHtml(F("cpu_temperature gauge\n"));
+  addHtml(F("espeasy_cpu_temperature "));
+  addHtml(getValue(LabelType::INTERNAL_TEMPERATURE));
+  addHtml('\n');
+  # endif // if FEATURE_INTERNAL_TEMPERATURE
+
   // devices
   handle_metrics_devices();
 

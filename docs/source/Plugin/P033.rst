@@ -32,6 +32,16 @@ Dummy tasks can be used like temporary variables to store data.
 One nice benefit is that these task values of Dummy tasks are also kept in RTC memory.
 So these may survive a reboot, as long as the ESP remains powered.
 
+Device Configuration
+--------------------
+
+.. image:: P033_DeviceConfiguration.png
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+
 Storing Values
 --------------
 
@@ -70,6 +80,21 @@ Especially Domoticz controllers require some specific data type to properly hand
 For example "Temp / Hum / Baro" are obviously intended to mimic the well known Bosch BME280 sensor.
 
 Basic data types like "Single", "Dual", "Triple", "Quad" are intended to set resp. 1 ... 4 ``float`` values.
+
+This selector is using a categorized display when the build includes this enhanced selector (ESP32 only):
+
+.. image:: P033_OutputDataTypeOptions.png
+
+Available options, grouped per category:
+
+**Basic**: ``Single, Dual, Triple, Quad``
+
+**Environment**: ``Temp¹, Hum¹, Baro¹, Wind¹``
+
+**Other**: ``Switch¹, Dimmer, String, UInt32 (1x), UInt32 (2x), UInt32 (3x), UInt32 (4x),`` ``Int32 (1x), Int32 (2x), Int32 (3x), Int32 (4x), UInt64 (1x), UInt64 (2x),`` ``Int64 (1x), Int64 (2x), Double (1x), Double (2x)``
+
+Value Types marked with ``¹`` are supported for use in MQTT AutoDiscovery.
+
 
 Extended Output Data Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -132,6 +157,13 @@ And all connected controllers of that task will be handed over the values presen
 
 Especially Domoticz controllers are very specific to the output data type.
 
+Values
+^^^^^^
+
+The plugin provides the ``Dummy`` value, that can be changed to the desired name. A formula can be set to recalculate the displayed, and sent, value. The number of decimals can be set as desired, and defaults to 2.
+
+In selected builds, per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
+
 
 .. Supported hardware
 .. ------------------
@@ -153,6 +185,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved|
+  2025-07-17 Add categorized output configuration (ESP32 only)
 
   |improved|
   2023-04-15 Add more types of task values, like (u)int32, (u)int64 and double.

@@ -5,9 +5,10 @@
 // ############################## Plugin 133 LTR390 I2C UV and Ambient Sensor ############################
 // #######################################################################################################
 
-// Changelog:
-//
-// 2022-03-26 tonhuisman: Initial plugin creation
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2022-03-26 tonhuisman: Initial plugin creation
+ */
 
 # define PLUGIN_133
 # define PLUGIN_ID_133         133
@@ -53,6 +54,18 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_133));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      event->Par4 = static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

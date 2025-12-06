@@ -170,6 +170,14 @@ void ESPEasy_setup()
 
       switch (pkg_version)
       {
+        case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:
+          // Very strange model as the same model exists as:
+          // - Single core @160 MHz
+          // - Dual   core @240 MHz
+          // See: https://www.letscontrolit.com/forum/viewtopic.php?t=10735
+          PSRAM_CLK = GPIO_NUM_NC; //GPIO_NUM_17;
+          PSRAM_CS  = GPIO_NUM_NC; //GPIO_NUM_16;
+          break;
         case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
           PSRAM_CLK = static_cast<gpio_num_t>(CONFIG_D2WD_PSRAM_CLK_IO);
           PSRAM_CS  = static_cast<gpio_num_t>(CONFIG_D2WD_PSRAM_CS_IO);
@@ -358,6 +366,9 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  addLog(LOG_LEVEL_INFO, concat(F("CPU Frequency: "), ESP.getCpuFreqMHz()));
+  
 
 #ifdef ESP32
 #ifndef CORE32SOLO1
@@ -696,3 +707,4 @@ void ESPEasy_setup()
   logMemUsageAfter(F("Scheduler.setIntervalTimerOverride"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 }
+

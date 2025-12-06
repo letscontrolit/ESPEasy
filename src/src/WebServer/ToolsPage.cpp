@@ -94,6 +94,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
+  #if FEATURE_PLUGIN_LIST
+  addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
+  #endif // if FEATURE_PLUGIN_LIST
+
   addFormSubHeader(F("Wifi"));
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
@@ -129,6 +133,7 @@ void handle_tools() {
                                );
   #if FEATURE_TARSTREAM_SUPPORT
   addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  addWideButtonPlusDescription(F("backupnup"), F("Backup w/o credentials"), F("Save all files as a .tar archive but exclude usernames & passwords"));
   #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI

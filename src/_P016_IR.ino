@@ -70,6 +70,8 @@
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
 // History
+// @tonhuisman: 2025-01-12 
+// ADD: support for MQTT AutoDiscovery (not supported for IR receive)
 // @uwekaditz: 2024-01-23
 // CHG: Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
 // NEW: Heap and memory can be reported (P016_CHECK_HEAP)
@@ -227,6 +229,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_016));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

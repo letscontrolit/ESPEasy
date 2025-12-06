@@ -5,19 +5,23 @@
 // ################################ Plugin-111: RC522 SPI RFID reader ####################################
 // #######################################################################################################
 
-// Changelog:
-// 2022-06-24, tonhuisman: Move plugin_ten_per_second handler to pluginstruct so it can properly handle the reset procedure
-// 2022-06-23, tonhuisman: Reformat source (uncrustify), optimize somewhat for size
-//                         Replace delay() call in reset by handling via plugin_fifty_per_second
-// 2021-03-13, tonhuisman: Disabled tag removal detection, as it seems impossible to achieve with the MFRC522.
-//                         Other takers to try and solve this challenge are welcome.
-//                         If this feature is desired, use a PN532 RFID detector, that does support removal detection properly and easily.
-//                         Set TimerOption to false as nothing is processed during PLUGIN_READ stage.
-// 2021-02-10, tonhuisman: Add tag removal detection, can be combined with time-out
-// 2021-02-07, tonhuisman: Rework to adhere to current plugin requirements, make pin settings user-selectable
-//                         Add options for tag removal time-out, as implemented before in P008 (Wiegand RFID) and P017 (PN532 RFID)
-//                         Implement PluginStruct to enable multiple instances
-// 2021-02-07, twinbee77: Adjustments to P129 from PluginPlayground
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for RFID)
+ *                        Update changelog
+ * 2022-06-24 tonhuisman: Move plugin_ten_per_second handler to pluginstruct so it can properly handle the reset procedure
+ * 2022-06-23 tonhuisman: Reformat source (uncrustify), optimize somewhat for size
+ *                        Replace delay() call in reset by handling via plugin_fifty_per_second
+ * 2021-03-13 tonhuisman: Disabled tag removal detection, as it seems impossible to achieve with the MFRC522.
+ *                        Other takers to try and solve this challenge are welcome.
+ *                        If this feature is desired, use a PN532 RFID detector, that does support removal detection properly and easily.
+ *                        Set TimerOption to false as nothing is processed during PLUGIN_READ stage.
+ * 2021-02-10 tonhuisman: Add tag removal detection, can be combined with time-out
+ * 2021-02-07 tonhuisman: Rework to adhere to current plugin requirements, make pin settings user-selectable
+ *                        Add options for tag removal time-out, as implemented before in P008 (Wiegand RFID) and P017 (PN532 RFID)
+ *                        Implement PluginStruct to enable multiple instances
+ * 2021-02-07 twinbee77: Adjustments to P129 from PluginPlayground
+ */
 
 # define PLUGIN_111
 # define PLUGIN_ID_111         111
@@ -40,6 +44,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
       dev.ValueCount     = 1;
       dev.SendDataOption = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -63,6 +68,22 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = event->String1;
@@ -75,7 +96,6 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_SET_DEFAULTS:
     {
       P111_REMOVALTIMEOUT = 500; // Default 500 msec reset delay
@@ -85,10 +105,12 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (nullptr != P111_data) {
         uint8_t v{};
         const String version = P111_data->PCD_getVersion(v);
-        if (v != 0 && v != 0xFF) {
+
+        if ((v != 0) && (v != 0xFF)) {
           addRowLabel(F("Reader Version"));
           addHtml(version);
         }

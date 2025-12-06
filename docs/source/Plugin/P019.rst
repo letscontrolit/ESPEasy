@@ -112,6 +112,8 @@ Advanced event management
 
 * **Use safe button (slower)**: This effectively adds an extra De-bounce delay and sends event value ``4`` when reached.
 
+.. include:: DeviceClass_binary.repl
+
 .. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.

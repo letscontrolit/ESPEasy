@@ -60,11 +60,41 @@ public:
   uint32_t      timestamp_frac = 0u;
   uint8_t      *Data = nullptr;
   int           idx  = 0;
-  int           Par1 = 0;
-  int           Par2 = 0;
-  int           Par3 = 0;
-  int           Par4 = 0;
-  int           Par5 = 0;
+  union {
+    struct {
+      int Par1;
+      int Par2;
+      int Par3;
+      int Par4;
+      int Par5;
+      int Par6;
+      int Par7;
+      int Par8;
+    };
+
+    struct {
+      float Parf_1;
+      float Parf_2;
+      float Parf_3;
+      float Parf_4;
+      float Parf_5;
+      float Parf_6;
+      float Parf_7;
+      float Parf_8;
+    };
+
+    float ParfN[8];
+    struct {
+      int64_t Par64_1;
+      int64_t Par64_2;
+      int64_t Par64_3;
+      int64_t Par64_4;
+    };
+    int64_t Par64N[4];
+
+    int ParN[8] = { 0 };
+
+  };
 
   // The origin of the values in the event. See EventValueSource.h
   EventValueSource::Enum Source            = EventValueSource::Enum::VALUE_SOURCE_NOT_SET;

@@ -109,8 +109,7 @@ void json_prop(LabelType::Enum label);
 // PCONFIG() and not in extra settings
 // ********************************************************************************
 void addTaskSelect(const String& name,
-                   taskIndex_t   choice,
-                   const String& cssclass = "wide");
+                   taskIndex_t   choice);
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex

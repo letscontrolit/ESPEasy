@@ -235,3 +235,35 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
   }
   return return_command_success();
 }
+
+String Command_GetORSetFloatMinMax(struct EventStruct        *event,
+                                   const __FlashStringHelper *targetDescription,
+                                   const char                *Line,
+                                   float                     *value,
+                                   int                        arg,
+                                   float                      _min,
+                                   float                      _max)
+{
+  bool hasArgument = false;
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      hasArgument = true;
+      TmpStr1.toLowerCase();
+
+      float tmp_float{};
+
+      if (validFloatFromString(TmpStr1, tmp_float) &&
+          definitelyGreaterThan(tmp_float, _min) &&
+          definitelyLessThan(tmp_float, _max)) {
+        *value = tmp_float;
+      } else {
+        return return_command_failed();
+      }
+    }
+  }
+
+  return return_result(event, concat(targetDescription, toString(*value)));
+}

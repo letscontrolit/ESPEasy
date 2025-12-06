@@ -60,10 +60,12 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
-    uint32_t tmpVar{};
-
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
-      const bool isv_ = !validUIntFromString(it->first, tmpVar);
+      NumericalType detectedType;
+      bool isv_ = true;
+      if (getNumerical(it->first, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
+        isv_ = detectedType != NumericalType::Integer;
+      }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
   }
@@ -258,7 +260,11 @@ void handle_sysvars() {
       F("%s_sunset%"),
       F("%s_sunrise%"),
       F("%m_sunset%"),
-      F("%m_sunrise%")
+      F("%m_sunrise%"),
+      #if FEATURE_LAT_LONG_VAR_CMD
+      F("%latitude%"),
+      F("%longitude%"),
+      #endif // if FEATURE_LAT_LONG_VAR_CMD
     };
 
     for (unsigned int i = 0; i < NR_ELEMENTS(vars); ++i) {
@@ -406,6 +412,8 @@ void handle_sysvars() {
       F("Timestamp to date/time: %c_ts2date%(%unixtime_lcl%)"),
       F("Timestamp to date/time am/pm: %c_ts2date%(%unixtime_lcl%,1)"),
       F("Timestamp to weekday: %c_ts2wday%(%unixtime_lcl%)"),
+      F("Timestamp to ISO date/time: %c_ts2isodate%(%unixtime_lcl%)"),
+      F("Timestamp to ISO date/time/offset: %c_ts2isodate%(%unixtime_lcl%,1)"),
 # endif // if FEATURE_STRING_VARIABLES
 
 

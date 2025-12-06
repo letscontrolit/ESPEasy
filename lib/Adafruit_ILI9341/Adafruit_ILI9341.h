@@ -128,6 +128,8 @@
 
 #define ILI_TYPE_9341           0  // MUST match with enum class ILI9xxx_type_e in P095_data_struct.h !
 #define ILI_TYPE_9342           1
+#define ILI_TYPE_9342_2         12 // !! ONLY enabled on ESP32 for size reasons !!
+#define ILI_TYPE_9342_3         13 // !! ONLY enabled on ESP32 for size reasons !!
 #define ILI_TYPE_9481           2
 #define ILI_TYPE_9481_CPT29     3
 #define ILI_TYPE_9481_PVI35     4

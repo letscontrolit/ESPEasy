@@ -179,7 +179,7 @@ The number of mappings is currently limited to 25, but only the number of used m
 Option: Generate events for accepted topics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
+* **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``. When the ``<value>`` is numeric, the configured number of decimals is applied to the value.
 
 When this option is disabled it has the backward-compatible behavior of discarding that message as invalid.
 

@@ -18,6 +18,10 @@
 // added fix for issue
 // https://github.com/adafruit/Adafruit_TSL2591_Library/issues/17
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
+
 # define PLUGIN_074
 # define PLUGIN_ID_074         74
 # define PLUGIN_NAME_074       "Light/Lux - TSL2591"
@@ -55,6 +59,16 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_074));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      getDiscoveryVType(event, Plugin_QueryVType_Lux, 255, 3);
+      event->Par4 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:

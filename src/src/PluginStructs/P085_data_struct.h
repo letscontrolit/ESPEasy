@@ -69,6 +69,9 @@ struct P085_data_struct : public PluginTaskData_base {
 
 const __FlashStringHelper* Plugin_085_valuename(uint8_t value_nr,
                                                 bool    displayString);
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_085_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
 
 int                        p085_storageValueToBaudrate(uint8_t baudrate_setting);
 

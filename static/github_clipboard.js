@@ -23,5 +23,5 @@ function setGithubClipboard() {
     tempInput.select();
     document.execCommand('copy');
     document.body.removeChild(tempInput);
-    alert('Copied: "' + clipboard + '" to clipboard!')
+    alert('Copied: "' + clipboard + '" to clipboard!');
 }

@@ -52,6 +52,9 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.usesID       = false;
       proto.defaultPort  = 8383;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 

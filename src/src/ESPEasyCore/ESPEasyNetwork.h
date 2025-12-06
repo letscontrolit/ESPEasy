@@ -40,6 +40,7 @@ MAC_address NetworkMacAddress();
 String NetworkGetHostNameFromSettings(bool force_add_unitnr = false);
 String NetworkGetHostname();
 String NetworkCreateRFCCompliantHostname(bool force_add_unitnr = false);
+String makeRFCCompliantName(const String& name, const char replaceChar = '-', const char allowedChar = '-', const size_t maxlength = 24);
 MAC_address WifiSoftAPmacAddress();
 MAC_address WifiSTAmacAddress();
 

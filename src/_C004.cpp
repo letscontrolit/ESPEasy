@@ -23,6 +23,9 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesPassword = true;
       proto.defaultPort  = 80;
       proto.usesID       = true;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 
