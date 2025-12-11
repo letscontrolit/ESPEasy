@@ -252,6 +252,23 @@
 // #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
 // #define FEATURE_BUSCMD_STRING   1  // Enable support for String data-format in Helpers/BusCmd_Handler, default disabled for LIMIT_BUILD_SIZE only
 // #define FEATURE_STRING_VARIABLES 1 // Enable String variable support (enabled on ESP32, NOT supported on ESP8266 for memory restrictions!)
+// #define FEATURE_COMMAND_OWSCAN 0 // Disable 1-wire scanner support, only feasible when 1-wire support is included in the build (P004, P080, P100), default disabled for MINIMAL_OTA builds
+// #define FEATURE_MQTT_CONNECT_BACKGROUND 1 // Enable connecting to an MQTT broker in an ESP32 RTOS background thread (not possible on ESP8266)
+// #define FEATURE_I2C_MULTIPLE 0 // Disable multiple I2C buses, only available for ESP32, default enabled on ESP32, can be disabled here
+// #define FEATURE_PLUGIN_LIST 1 // Enable the Tools / Plugin list page (default enabled for ESP32)
+// #define FEATURE_LAT_LONG_VAR_CMD 1 // Enable the %latitude% and %longitude% system variables, and Latitude and Longitude commands (default enabled for ESP32)
+
+// #define FEATURE_TASKVALUE_ATTRIBUTES 1 // Enable extra Task Value attributes (default enabled for ESP32)
+// #define FEATURE_TASKVALUE_UNIT_OF_MEASURE 1 // Enable Unit of Measure per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+// #define FEATURE_CUSTOM_TASKVAR_VTYPE 1 // Enable Custom Value Type per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+
+// #define FEATURE_MQTT_DISCOVER 1    // Enable MQTT Auto Discovery (currently only available for Home Assistant C005)
+// #define FEATURE_MQTT_DEVICECLASS 1 // Enable selectable Device Class for Auto Discovery
+// #define FEATURE_MQTT_STATE_CLASS 1 // Enable selectable State Class per Task Valie for Auto Discovery
+
+// #define FEATURE_MQTT_TLS 1 // Enable TLS support for MQTT Controller connections (only available on ESP32)
+// #define FEATURE_EMAIL_TLS 1 // Enable TLS support for Email Notifications (only available on ESP32)
+// #define FEATURE_HTTP_TLS 1 // Enable TLS support for HTTP connections (only available on ESP32)
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h

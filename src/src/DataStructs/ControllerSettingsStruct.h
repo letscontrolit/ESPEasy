@@ -15,7 +15,7 @@
 
 #include "../DataStructs/ChecksumType.h"
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 #include "../DataTypes/TLS_types.h"
 #endif
 
@@ -193,13 +193,13 @@ struct ControllerSettingsStruct
   void         mqtt_retainDiscovery(bool value) { VariousBits1.mqttRetainDiscovery = value; }
   #endif
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
   TLS_types TLStype() const { return static_cast<TLS_types>(VariousBits1.TLStype); }
   void      TLStype(TLS_types tls_type) { VariousBits1.TLStype = static_cast<uint8_t>(tls_type); }
 
   String    getCertificateFilename() const;
   String    getCertificateFilename(TLS_types tls_type) const;
-#endif
+#endif // #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
   
 
   bool         UseDNS;

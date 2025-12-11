@@ -200,7 +200,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
       addFormNumericBox(displayName, internalName, ControllerSettings.Port, 1, 65535);
       break;
     }
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
       const int choice                     = static_cast<int>(ControllerSettings.TLStype());
@@ -265,7 +265,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
        */
       break;
     }
-#endif // if FEATURE_MQTT_TLS
+#endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
       const size_t fieldMaxLength =
@@ -454,7 +454,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_PORT:
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
       const int current        = static_cast<int>(ControllerSettings.TLStype());
@@ -492,7 +492,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       }
       break;
     }
-#endif // if FEATURE_MQTT_TLS
+#endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));
       break;

@@ -52,6 +52,10 @@ Generic fields
 - **Controller Port** - TCP/UDP Port number (0...65536)
 - **Enabled** - Whether or not the controller is active.
 
+When **TLS** is included in the build, some of the Controllers have a setting to enable a TLS option. For HTTP-based controller protocols, this usually expects the port to adjusted from 80 to 443, but of course any custom port can be used. For MQTT controllers, the port is automatically updated from 1883 (No TLS) to 8883 when a TLS-enabled setting is selected.
+
+- **Use TLS** - Select the desired TLS type. The available options depend on what's implemented, and will change when development progresses. The default setting is **No TLS**. 
+
 Send queue parameters
 ---------------------
 

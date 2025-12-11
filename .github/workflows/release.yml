@@ -21,10 +21,10 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: '3.13'
       - id: set-matrix
         run: |
           pip install uv
@@ -37,8 +37,10 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
       - name: Dependencies
         run: |
           sudo apt install binutils build-essential libffi-dev libgit2-dev
@@ -56,7 +58,7 @@ jobs:
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
           path: |
@@ -67,7 +69,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
       - name: Build documentation
         run: |
@@ -83,7 +85,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Distribution
           path: |
@@ -121,19 +123,19 @@ jobs:
     steps:
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: '3.13'
       - name: Get current date
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download all successfully compiled artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: artifacts/bin/
           pattern: Bin-*
           merge-multiple: true
       - name: Download dist and docs zip files
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: distribution/
           name: Distribution

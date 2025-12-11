@@ -68,6 +68,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       dev.PluginStats      = true;
       dev.TaskLogsOwnPeaks = true;
       dev.CustomVTypeVar   = true;
+      dev.MqttStateClass   = true;
       break;
     }
 

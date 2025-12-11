@@ -40,7 +40,8 @@ ESPEasy_mega\_*[releasedate]*\_*[build-type]*\_*[opt-arduino-library]*\_*[hardwa
 *[build-type]* can be any of:
 Build type   | Description                               | included plugins                 |
 -------------|-------------------------------------------|----------------------------------|
-climate      | All plugins related to climate measurement| Stable + Climate                 |
+climate A    | Plugins related to climate measurement A  | Stable + Climate A               |
+climate B    | Plugins related to climate measurement B  | Stable + Climate B               |
 custom       | Custom predefined set/Defined in Custom.h | Specific                         |
 normal       | Standard plugins                          | Stable                           |
 collection_A | Normal + plugin collection A              | Stable + Collection base + set A |
@@ -50,9 +51,11 @@ collection_D | Normal + plugin collection D              | Stable + Collection b
 collection_E | Normal + plugin collection E              | Stable + Collection base + set E |
 collection_F | Normal + plugin collection F              | Stable + Collection base + set F |
 collection_G | Normal + plugin collection G              | Stable + Collection base + set G |
+collection_H | Normal + plugin collection H              | Stable + Collection base + set H |
 max          | All available plugins                     | All available                    |
 energy       | All plugins related to energy measurement | Stable + Energy measurement      |
-display      | All plugins related to displays           | Stable + Displays                |
+display A    | All plugins related to displays A         | Stable + Displays A              |
+display B    | All plugins related to displays B         | Stable + Displays B              |
 neopixel     | All plugins related to neopixel           | Stable + Neopixel                |
 hard         | hardware specific builds                  | Minimal                          |
 minimal      | minimal plugins for specific use-cases    | Switch and Controller            |
@@ -112,6 +115,8 @@ Flash size | Description                 |
 
 N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.3, to support newer ESP32 chips like ESP32-C2 and ESP32-C6, and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer officially available in IDF 5 and later. As a temporary solution, a specially crafted IDF 5.1 build that still includes SPIFFS, is used for the SPIFFS builds. A migration plan will be made available in 2025.
 
+N.B.2 Starting with builds made after 2025/11/04, ESP32 builds will no longer have ``_LittleFS`` in the name as all ESP32 builds use LittleFS. Also the suffix ``_ETH`` has been removed since all builds will have Ethernet support, except for ESP32C2 builds.
+
 *[opt-build-features]* can be any of:
 Build features  | Description                                                                                               |
 ----------------|-----------------------------------------------------------------------------------------------------------|
@@ -129,18 +134,18 @@ noOTA/NO_OTA    | Does not support OTA (Over The Air-updating of the firmware) U
 N.B. Starting ca. 2025/02/27, many ESP32 builds are *only* available with _ETH suffix, indicating that Ethernet support is enabled, to reduce the (rather high) number of builds.
 
 Some example firmware names:
-Firmware name                                                         | Hardware                                        | Included plugins                 |
-----------------------------------------------------------------------|-------------------------------------------------|----------------------------------|
-ESPEasy_mega-20230822_normal_ESP8266_1M.bin                           | ESP8266/ESP8285 with 1MB flash                  | Stable                           |
-ESPEasy_mega-20230822_normal_ESP8266_4M1M.bin                         | ESP8266 with 4MB flash                          | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin                   | ESP8266 with 4MB flash                          | Stable + Collection base + set A |
-ESPEasy_mega-20230822_normal_ESP32_4M316k_ETH.bin                     | ESP32 with 4MB flash                            | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP32_4M316k_ETH.bin               | ESP32 with 4MB flash                            | Stable + Collection base + set A |
-ESPEasy_mega-20230822_collection_B_ESP32_4M316k_ETH.bin               | ESP32 with 4MB flash                            | Stable + Collection base + set B |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_ETH.bin           | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_LittleFS_OPI_PSRAM_ETH.bin | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M1M_ETH.bin                         | ESP32 with 16MB flash, SPIFFS, Ethernet         | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M8M_LittleFS_ETH.bin                | ESP32 with 16MB flash, LittleFS, Ethernet       | All available plugins            |
+Firmware name                                           | Hardware                                        | Included plugins                 |
+--------------------------------------------------------|-------------------------------------------------|----------------------------------|
+ESPEasy_mega-20230822_normal_ESP8266_1M.bin             | ESP8266/ESP8285 with 1MB flash                  | Stable                           |
+ESPEasy_mega-20230822_normal_ESP8266_4M1M.bin           | ESP8266 with 4MB flash                          | Stable                           |
+ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin     | ESP8266 with 4MB flash                          | Stable + Collection base + set A |
+ESPEasy_mega-20230822_normal_ESP32_4M316k_ETH.bin       | ESP32 with 4MB flash                            | Stable                           |
+ESPEasy_mega-20230822_collection_A_ESP32_4M316k_ETH.bin | ESP32 with 4MB flash                            | Stable + Collection base + set A |
+ESPEasy_mega-20230822_collection_B_ESP32_4M316k_ETH.bin | ESP32 with 4MB flash                            | Stable + Collection base + set B |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M.bin              | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32s3_8M1M_OPI_PSRAM.bin    | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32_16M1M_ETH.bin           | ESP32 with 16MB flash, SPIFFS, Ethernet         | All available plugins            |
+ESPEasy_mega-20230822_max_ESP32_16M8M.bin               | ESP32 with 16MB flash, LittleFS, Ethernet       | All available plugins            |
 
 The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, Solo1, 'Classic') are available in separate archives.
 

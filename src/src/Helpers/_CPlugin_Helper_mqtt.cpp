@@ -471,9 +471,9 @@ const __FlashStringHelper* MQTT_sensor_StateClass(uint8_t index,
   switch (index) {
     case 0: return F("");
     case 1: return display ? F("Measurement") : F("measurement");
-    case 2: return display ? F("Total") : F("total");
-    case 3: return display ? F("Total-increasing") : F("total_increasing");
-    case 4: return display ? F("Measurement-angle") : F("measurement_angle");
+    case 2: return display ? F("Measurement-angle") : F("measurement_angle");
+    case 3: return display ? F("Total") : F("total");
+    case 4: return display ? F("Total-increasing") : F("total_increasing");
   }
   return F("");
 }

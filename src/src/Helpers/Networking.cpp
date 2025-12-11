@@ -14,6 +14,7 @@
 #include "../Globals/ESPEasyEthEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"
@@ -1353,6 +1354,17 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
     return EMPTY_STRING;
   }
 
+  #if FEATURE_HTTP_TLS
+  if ((starthost > 3) && (port == 80)) { // 'Upgrade' from port 80 to port 443 for HTTPS url
+    String proto = fullURL.substring(0, starthost - 3);
+    proto.toLowerCase();
+
+    if (equals(proto, F("https"))) {
+      port = 443;
+    }
+  }
+  #endif // if FEATURE_HTTP_TLS
+
   int startfile = fullURL.lastIndexOf('/');
 
   if (startfile >= 0) {
@@ -1677,6 +1689,11 @@ int http_authenticate(const String& logIdentifier,
   return httpCode;
 }
 
+# if FEATURE_HTTP_TLS
+#  include <WiFiClientSecureLightBearSSL.h>
+#  include "../CustomBuild/Certificate_CA.h"
+# endif // if FEATURE_HTTP_TLS
+
 String send_via_http(const String& logIdentifier,
                      uint16_t      timeout,
                      const String& user,
@@ -1688,13 +1705,60 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply) {
+                     bool          must_check_reply
+                     #if FEATURE_HTTP_TLS
+                     , TLS_types   tlsType
+                     #endif // if FEATURE_HTTP_TLS
+                    ) {
   WiFiClient client;
+  #if FEATURE_HTTP_TLS
+  BearSSL::WiFiClientSecure_light *client_secure = nullptr;
+  if (tlsType != TLS_types::NoTLS) {
+    client_secure = new (std::nothrow) BearSSL::WiFiClientSecure_light(2048, 2048);
+    if (nullptr == client_secure) {
+      return F("HTTPS: Could not create TLS client, out of memory");
+    }
+    client_secure->setUtcTime_fcn(getUnixTime);
+    client_secure->setCfgTime_fcn(get_build_unixtime);
+    switch (tlsType) {
+      case TLS_types::NoTLS:
+        break;
+      // TODO: Implement?
+      // case TLS_types::TLS_PSK:
+      // case TLS_types::TLS_CA_CLI_CERT:
+      //   break;
+      case TLS_types::TLS_FINGERPRINT:
+        // TODO: Implement
+        addLog(LOG_LEVEL_ERROR, F("HTTPS: TLS_FINGERPRINT Not implemented yet."));
+        client_secure->setInsecure();
+        break;
+      case TLS_types::TLS_CA_CERT:
+        // TODO: Read from filesystem?
+        client_secure->setTrustAnchor(Tasmota_TA, Tasmota_TA_size);
+        break;
+      case TLS_types::TLS_insecure:
+        client_secure->setInsecure();
+        break;
+    }
+    # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    client_secure->setTimeout((timeout + 500) / 1000); // in seconds!!!!
+    Client *pClient = client_secure;
+    pClient->setTimeout(timeout);
+    # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    client_secure->setTimeout(timeout); // in msec as it should be!
+    # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  }
+  #endif // if FEATURE_HTTP_TLS
   HTTPClient http;
   http.setReuse(false);
 
   httpCode = http_authenticate(
     logIdentifier,
+    #if FEATURE_HTTP_TLS
+    tlsType != TLS_types::NoTLS ? *client_secure :
+    #endif // if FEATURE_HTTP_TLS
     client,
     http,
     timeout,
@@ -1718,11 +1782,19 @@ String send_via_http(const String& logIdentifier,
     }
 #endif
   }
+
   http.end();
   // http.end() does not call client.stop() if it is no longer connected.
   // However the client may still keep its internal state which may prevent 
   // future connections to the same host until there has been a connection to another host inbetween.
-  client.stop(); 
+  client.stop();
+
+  #if FEATURE_HTTP_TLS
+  if (nullptr != client_secure) {
+    client_secure->stop();    
+  }
+  #endif // if FEATURE_HTTP_TLS
+
   return response;
 }
 #endif // FEATURE_HTTP_CLIENT

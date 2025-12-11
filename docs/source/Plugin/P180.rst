@@ -370,7 +370,7 @@ Command sequence explanation:
 * ``value.1``: Store value in first **Values** field.
 * ``get.str.=%value%+2``: Read a string from the code-reader, for indicated length, and including the 2 byte lengthe prefix.
 * ``eval``: Load the value to be used.
-* ``letstr.qrtxt.`{substring:1::'%value%'}``: Save the received string into a String variable named ``qrtxt``, skipping the first character, that holds the length. De actual size prefix is 2 bytes, but ``\0`` characters are ignored when reading a string, and the max. length that the reader will return is 255 characters, so the first byte is always 0 and thus skipped.
+* ``letstr.qrtxt.`{substring:1::'%value%'}```: Save the received string into a String variable named ``qrtxt``, skipping the first character, that holds the length. De actual size prefix is 2 bytes, but ``\0`` characters are ignored when reading a string, and the max. length that the reader will return is 255 characters, so the first byte is always 0 and thus skipped.
 
 Additionally, for de-duplicating of reading and handling a QR code, this code can be appended to **I2C Commands 1** to reset the Size value after 10 seconds, and Rules code to handle the received text.
 
@@ -406,6 +406,69 @@ This device needs a Rule to handle the result, as we can't store string values i
 * **Interval**: can be set to 1 second to quickly handle a received QR code.
 
 * **Values**: the name can be changed to Size or Length, and the number of decimals set to 0.
+
+|
+
+Sensirion SDP-810 Differential pressure sensor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Based on this data sheet `Sensirion Differential Pressure Datasheet SDP8xx <https://sensirion.com/media/documents/90500156/6167E43B/Sensirion_Differential_Pressure_Datasheet_SDP8xx_Digital.pdf>`_
+
+.. note:: The checksum available from the sensor measurements is ignored!
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x25`` (or ``0x26`` when the model number is SDP-8x1)
+
+* **Output Data Type**: ``Temp / Baro``
+
+* **Interval**: can be set to 60 seconds to retrieve a measurement every minute.
+
+* **Values**: the names can be changed to Temp or Temperature and Baro or Pressure, and the number of decimals adjusted as desired (usually 1 or 2 decimals is fine for temperature, and 0 for pressure). Stats can be enabled, best would be to set the Axis to L1 for Temperature, and R1 for Pressure, as the scales don't match the same range.
+
+* **I2C Init Commands** sequence for initializing the sensor:
+
+``put.b.2.0x36.0x03``: Start continuous measurement.
+
+* **I2C Exit Commands** sequence for shutting down the sensor:
+
+``put.b.2.0x3f.0xf9``: Stop continuous measurement.
+
+* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``sdp``, so the I2C Command sequence is cached for much improved execution-performance.
+
+* **I2C Commands 1**:
+
+``get.b.9;eval;let.tmp.0x{substring:8:12:%h%};if.{and:%v_tmp%:0x8000}.1;let.tmp.%v_tmp%-0x10000;calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};if.{and:%v_prs%:0x8000}.1;let.prs.%v_prs%-0x10000;calc.%v_prs%/0x{substring:14:18:%h%};value.2``
+
+Command sequence explanation:
+
+* ``get.b.9``: Read 9 bytes from the sensor.
+* ``eval``: Load the value to be used.
+* ``let.tmp.0x{substring:8:12:%h%}``: Assign the raw temperature to variable ``tmp``.
+* ``if.{and:%v_tmp%:0x8000}.1``: Check if positive, if so, skip next 1 command.
+* ``let.tmp.%v_tmp%-0x10000``: Subtract 65536 to get the correct negative value.
+* ``calc.%v_tmp%/0x{substring:14:18:%h%}``: Divide the raw temperature by the scale factor.
+* ``value.1``: Store the temperature in Value 1.
+* ``let.prs.0x{substring:2:6:%h%}``: Assign the raw pressure to variable ``prs``.
+* ``if.{and:%v_prs%:0x8000}.1``: Check if positive, if so, skip next 1 command.
+* ``let.prs.%v_prs%-0x10000``: Subtract 65536 to get the correct negative value.
+* ``calc.%v_prs%/0x{substring:14:18:%h%}``: Divide the raw pressure by the scale factor.
+* ``value.2``: Store the pressure in Value 2.
+
+Alternative read method
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Instead of having the sensor doing continuous measurements, and returning the average value since the last read, a single measurement can be started, wait a little to complete the measurement, and read the results.
+
+In this case, the **I2C Init Commands** and **I2C Exit Commands** fields must be made empty, and **I2C Commands 1** should be set to:
+
+``put.b.2.0x36.0x24;delay.50;get.b.9;eval;let.tmp.0x{substring:8:12:%h%};if.{and:%v_tmp%:0x8000}.1;let.tmp.%v_tmp%-0x10000;calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};if.{and:%v_prs%:0x8000}.1;let.prs.%v_prs%-0x10000;calc.%v_prs%/0x{substring:14:18:%h%};value.2``
+
+This command sequence is nearly the same as with the Continuous measurement, except there are a few commands added *before* the values are read.
+
+* ``put.b.2.0x36.0x24``: Send the command to start a single measurement.
+* ``delay.50``: Insert an asynchronous delay of 50 msec, as the sensor needs ca. 45 msec to complete a measurement. This delay does **not** block processing, as is described above.
+* The rest of the commands is already explained in the Continuous measurement description, above this paragraph.
 
 |
 

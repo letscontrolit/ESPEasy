@@ -219,7 +219,8 @@ const __FlashStringHelper * BusCmd_Helper_struct::cacheSuffix(BusCmd_CommandSour
   switch (source) {
     case BusCmd_CommandSource_e::PluginIdle:
     case BusCmd_CommandSource_e::PluginGetConfigVar:
-    case BusCmd_CommandSource_e::PluginRead: return F("");
+    case BusCmd_CommandSource_e::PluginRead:
+    case BusCmd_CommandSource_e::PluginWrite: return F("");
     case BusCmd_CommandSource_e::PluginOncePerSecond: return F("_1ps");
     case BusCmd_CommandSource_e::PluginTenPerSecond: return F("_10ps");
     case BusCmd_CommandSource_e::PluginFiftyPerSecond: return F("_50ps");
@@ -256,18 +257,20 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
   const String key = parseString(name, 1);
   String keyPostfix;
+  const bool parseAndLogOK = ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
+                              (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ||
+                              (BusCmd_CommandSource_e::PluginWrite == _commandSource)
+                              );
 
   if (!key.isEmpty() && (_commandCache.count(key) == 1) && !update) {
     commands = _commandCache.find(key)->second;
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                          (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
       addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Retrieve '%s' from cache with %d commands."), name.c_str(), commands.size()));
     }
   }
 
-  if (!line.isEmpty() && ((commands.empty()) || update) && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                            (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
+  if (!line.isEmpty() && ((commands.empty()) || update) && parseAndLogOK) {
     int evt = 1;
 
     while (evt > 0) {
@@ -322,8 +325,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
           #ifndef LIMIT_BUILD_SIZE
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                                (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
             addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Arguments parsed: %d (%s)"), args.size(), cmdAll.c_str()));
           }
           #endif // ifndef LIMIT_BUILD_SIZE
@@ -528,6 +530,10 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
   if ((nullptr == _iBusCmd_Handler) || !_iBusCmd_Handler->init()) {
     return result;
   }
+  const bool parseAndLogOK = ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
+                              (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ||
+                              (BusCmd_CommandSource_e::PluginWrite == _commandSource)
+                              );
 
   if (BusCmd_CommandState_e::Processing == _commandState) {
     _it = _commands.begin();
@@ -928,8 +934,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             if (!newVar.isEmpty()) {
               setCustomStringVar(newVar, newCalc);      // Assign string value to a string variable
 
-              if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                                    (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
+              if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
                 addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Calculation: %s -> LetStr,%s,%s"),
                                                  toCalc.c_str(), newVar.c_str(), newCalc.c_str()));
               }
@@ -938,8 +943,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
           if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
-            if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                                  (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
+            if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
               addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Calculation: %s, result: %s"), toCalc.c_str(), doubleToString(tmp).c_str()));
             }
 
@@ -1058,18 +1062,18 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
       }
     }
 #ifndef LIMIT_BUILD_SIZE
-    if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && ((BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                                          (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource))) {
-      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
+      # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       const String valStr = doubleToString(_value, 2, true);
-      #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       const String valStr = toString(_value, 2, true);
-      #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
       addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Executing command: %s, value[%d]:(%c): %s"),
                                        _it->toString().c_str(), _varIndex, _valueIsSet ? 't' : 'f', valStr.c_str()));
     }
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE
     ++_it; // Next command
 
     while (toSkip > 0 && _it != _commands.end()) {
@@ -1206,7 +1210,9 @@ bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
 
       _commands = parseBusCmdCommands(cacheName, // PluginOnce/Ten/Fifty-PerSecond must come from cache
                                       (BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                      (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ? buf.commandSet : EMPTY_STRING);
+                                      (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ||
+                                      (BusCmd_CommandSource_e::PluginWrite == _commandSource)
+                                       ? buf.commandSet : EMPTY_STRING);
     }
     _varIndex = _loop;
   }
@@ -1226,7 +1232,9 @@ bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
 
       _commands = parseBusCmdCommands(cacheName, // PluginOnce/Ten/Fifty-PerSecond must come from cache
                                       (BusCmd_CommandSource_e::PluginRead == _commandSource) ||
-                                      (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ? buf.commandSet : EMPTY_STRING);
+                                      (BusCmd_CommandSource_e::PluginGetConfigVar == _commandSource) ||
+                                      (BusCmd_CommandSource_e::PluginWrite == _commandSource)
+                                       ? buf.commandSet : EMPTY_STRING);
       _varIndex = _loop;
     }
   }

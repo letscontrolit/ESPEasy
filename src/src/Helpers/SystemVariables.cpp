@@ -112,6 +112,10 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
     #endif // if FEATURE_ETHERNET
     case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case SystemVariables::LATITUDE:          label = LabelType::LATITUDE; break;
+    case SystemVariables::LONGITUDE:         label = LabelType::LONGITUDE; break;
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
     case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
     case SystemVariables::SUNRISE_S:         label = LabelType::SUNRISE_S; break;
@@ -608,6 +612,10 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::LCLTIME:            return F("lcltime");
     case Enum::LCLTIME_AM:         return F("lcltime_am");
     case Enum::LF:                 return F("LF");
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case Enum::LATITUDE:           return F("latitude");
+    case Enum::LONGITUDE:          return F("longitude");
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case Enum::SUNRISE_M:          return F("m_sunrise");
     case Enum::SUNSET_M:           return F("m_sunset");
     case Enum::MAC:                return F("mac");

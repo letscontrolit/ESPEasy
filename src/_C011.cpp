@@ -19,7 +19,6 @@ bool C011_sendBinary = false;
 
 struct C011_ConfigStruct
 {
-
   void zero_last() {
     HttpMethod[C011_HTTP_METHOD_MAX_LEN - 1] = 0;
     HttpUri[C011_HTTP_URI_MAX_LEN - 1]       = 0;
@@ -31,7 +30,6 @@ struct C011_ConfigStruct
   char HttpUri[C011_HTTP_URI_MAX_LEN]       = { 0 };
   char HttpHeader[C011_HTTP_HEADER_MAX_LEN] = { 0 };
   char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
-
 };
 
 
@@ -63,6 +61,9 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 80;
       proto.usesID       = false;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 

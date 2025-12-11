@@ -1592,20 +1592,6 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         if (!separatorAdded) {
           addFormSeparator(2);
         }
-        separatorAdded = true;
-        html_TR_TD();
-        addHtml(F("Send to Controller "));
-        addHtml(getControllerSymbol(controllerNr));
-        addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]) + F(", ") + // Most compact code...
-                                          (Settings.ControllerEnabled[controllerNr] ? F("enabled") : F("disabled"))));
-        html_TD();
-
-        addHtml(F("<table style='padding-left:0;'>"));     // remove left padding 2x to align vertically with other inputs
-        html_TD(F("width:50px;padding-left:0"));
-        addCheckBox(
-          getPluginCustomArgName(F("TDSD"), controllerNr), // ="taskdevicesenddata"
-          Settings.TaskDeviceSendData[controllerNr][taskIndex]);
-
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
         const bool showControllerIDX  = validProtocolIndex(ProtocolIndex) &&
                                         getProtocolStruct(ProtocolIndex).usesID &&
@@ -1614,6 +1600,24 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         const bool showMqttGroup = (validProtocolIndex(ProtocolIndex) &&
                                     getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
         # endif // if FEATURE_MQTT_DISCOVER
+        separatorAdded = true;
+        html_TR_TD();
+        addHtml(F("Send to Controller "));
+        addHtml(getControllerSymbol(controllerNr));
+        addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]) + F(", ") + // Most compact code...
+                                          (Settings.ControllerEnabled[controllerNr] ? F("enabled") : F("disabled"))
+                                          #if FEATURE_MQTT_DISCOVER
+                                          + (showMqttGroup ? F(", Auto Discovery") : F(""))
+                                          #endif // if FEATURE_MQTT_DISCOVER
+                                         ));
+        html_TD();
+
+        addHtml(F("<table style='padding-left:0;'>"));     // remove left padding 2x to align vertically with other inputs
+        html_TD(F("width:50px;padding-left:0"));
+        addCheckBox(
+          getPluginCustomArgName(F("TDSD"), controllerNr), // ="taskdevicesenddata"
+          Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+
         # if FEATURE_STRING_VARIABLES
         const bool allowSendDerived = !device.HideDerivedValues &&
                                       (validProtocolIndex(ProtocolIndex) &&
@@ -1834,9 +1838,9 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     const __FlashStringHelper *stateClasses[] = {
       MQTT_sensor_StateClass(0),
       MQTT_sensor_StateClass(1),
-      MQTT_sensor_StateClass(4),
       MQTT_sensor_StateClass(2),
       MQTT_sensor_StateClass(3),
+      MQTT_sensor_StateClass(4),
     };
     constexpr size_t stateCount = NR_ELEMENTS(stateClasses);
     #endif // if FEATURE_MQTT_STATE_CLASS

@@ -25,7 +25,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const int                  timeout,
                                           const bool                 waitForAck,
                                           const bool                 useHeader,
-                                          const bool                 useBody)
+                                          const bool                 useBody,
+                                          const bool                 useHttps)
 {
   if (NetworkConnected()) {
     String   user, pass, host, file, path, header, postBody;
@@ -60,12 +61,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
         port = port_arg;
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = logIdentifier;
-          log += F(": Invalid port argument: ");
-          log += port_arg;
-          log += F(" will use: ");
-          log += port;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, strformat(F("%s: Invalid port argument: %d will use: %d"),
+                                                FsP(logIdentifier), port_arg, port));
         }
       }
 
@@ -88,16 +85,18 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = logIdentifier;
-      log += F(": Host: ");
-      log += host;
-      log += F(" port: ");
-      log += port;
-      log += F(" path: ");
-      log += path;
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("%s: Host: %s port: %d path: %s"),
+                                            FsP(logIdentifier), host.c_str(), port, path.c_str()));
     }
     # endif // ifndef BUILD_NO_DEBUG
+
+    #if FEATURE_HTTP_TLS
+    TLS_types tlsType = TLS_types::NoTLS;
+    if (useHttps) {
+      tlsType = TLS_types::TLS_insecure;
+      // TODO: ?Parse Line for type of TLS to use?
+    }
+    #endif // if FEATURE_HTTP_TLS
 
     int httpCode = -1;
     send_via_http(
@@ -112,7 +111,11 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       header,
       postBody,
       httpCode,
-      waitForAck);
+      waitForAck
+      #if FEATURE_HTTP_TLS
+      , tlsType
+      #endif // if FEATURE_HTTP_TLS
+     );
 
     if ((httpCode >= 100) && (httpCode < 300)) {
       return return_command_success_flashstr();
@@ -138,8 +141,25 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
   const int timeout = Settings.SendToHttp_ack()
          ? CONTROLLER_CLIENTTIMEOUT_MAX : 1000;
 
-  return httpEmitToHTTP(event, F("SendToHTTP"), F("GET"), Line, timeout, Settings.SendToHttp_ack(), false, false);
+  return httpEmitToHTTP(event, F("SendToHTTP"), F("GET"), Line, timeout, Settings.SendToHttp_ack(), false, false, false);
 }
+
+#if FEATURE_HTTP_TLS
+
+// syntax 1: SendToHttpS,<[<user>:<password>@]<host>,<port>,<path>
+// syntax 2: SendToHttpS,http://<[<user>:<password>@]<host>[:<port>]/<path>
+const __FlashStringHelper* Command_HTTP_SendToHTTPS(struct EventStruct *event, const char *Line)
+{
+  // Some servers don't give an ack.
+  // For these it is adviced to uncheck to wait for an acknowledgement.
+  // However the default timeout of 4000 msec is then way too long
+  // FIXME TD-er: Make sendToHttp timeout a setting.
+  const int timeout = Settings.SendToHttp_ack()
+         ? CONTROLLER_CLIENTTIMEOUT_MAX : 1000;
+
+  return httpEmitToHTTP(event, F("SendToHTTPS"), F("GET"), Line, timeout, Settings.SendToHttp_ack(), false, false, true);
+}
+#endif // if FEATURE_HTTP_TLS
 
 #endif // FEATURE_SEND_TO_HTTP
 
@@ -154,8 +174,23 @@ const __FlashStringHelper* Command_HTTP_PostToHTTP(struct EventStruct *event, co
 
   // FIXME tonhuisman: make PostToHttp_ack a setting, using SendToHttp_ack for now...
 
-  return httpEmitToHTTP(event, F("PostToHTTP"), F("POST"), Line, timeout, Settings.SendToHttp_ack(), true, true);
+  return httpEmitToHTTP(event, F("PostToHTTP"), F("POST"), Line, timeout, Settings.SendToHttp_ack(), true, true, false);
 }
+
+#if FEATURE_HTTP_TLS
+
+// syntax 1: PostToHttpS,<[<user>:<password>@]<host>,<port>,<path>,<header>,<body>
+// syntax 2: PostToHttpS,http://<[<user>:<password>@]<host>[:<port>]/<path>,<header>,<body>
+const __FlashStringHelper* Command_HTTP_PostToHTTPS(struct EventStruct *event, const char *Line)
+{
+  // FIXME tonhuisman: Make postToHttp timeout a setting, now using a somewhat sensible default
+  const int timeout = CONTROLLER_CLIENTTIMEOUT_MAX;
+
+  // FIXME tonhuisman: make PostToHttp_ack a setting, using SendToHttp_ack for now...
+
+  return httpEmitToHTTP(event, F("PostToHTTPS"), F("POST"), Line, timeout, Settings.SendToHttp_ack(), true, true, true);
+}
+#endif // if FEATURE_HTTP_TLS
 
 #endif // if FEATURE_POST_TO_HTTP
 
@@ -170,7 +205,22 @@ const __FlashStringHelper* Command_HTTP_PutToHTTP(struct EventStruct *event, con
 
   // FIXME tonhuisman: make PutToHttp_ack a setting, using SendToHttp_ack for now...
 
-  return httpEmitToHTTP(event, F("PutToHTTP"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true);
+  return httpEmitToHTTP(event, F("PutToHTTP"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true, false);
 }
+
+#if FEATURE_HTTP_TLS
+
+// syntax 1: PutToHttpS,<[<user>:<password>@]<host>,<port>,<path>,<header>,<body>
+// syntax 2: PutToHttpS,http://<[<user>:<password>@]<host>[:<port>]/<path>,<header>,<body>
+const __FlashStringHelper* Command_HTTP_PutToHTTPS(struct EventStruct *event, const char *Line)
+{
+  // FIXME tonhuisman: Make putToHttp timeout a setting, now using a somewhat sensible default
+  const int timeout = CONTROLLER_CLIENTTIMEOUT_MAX;
+
+  // FIXME tonhuisman: make PutToHttp_ack a setting, using SendToHttp_ack for now...
+
+  return httpEmitToHTTP(event, F("PutToHTTPS"), F("PUT"), Line, timeout, Settings.SendToHttp_ack(), true, true, true);
+}
+#endif // if FEATURE_HTTP_TLS
 
 #endif // if FEATURE_PUT_TO_HTTP

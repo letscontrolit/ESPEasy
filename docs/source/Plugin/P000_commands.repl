@@ -303,6 +303,18 @@
     
     Example output: ``IP:192.168.10.86(DHCP)``"
     "
+    Latitude","
+    :red:`Internal`","
+    Set the latitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Latitude[,<degrees>]``
+
+    Range: -90 .. 90 (decimal, negative is southern hemisphere)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Longitude``."
+    "
     Let","
     :red:`Internal`","
     Set the value of variable n (1..INT_MAX), or use a variable name.
@@ -343,6 +355,18 @@
     Display status information about all ports
 
     ``LogPortStatus``"
+    "
+    Longitude","
+    :red:`Internal`","
+    Set the longitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Longitude[,<degrees>]``
+
+    Range: -180 .. 180 (decimal, negative is west of the prime meridian)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Latitude``."
     "
     LoopTimerSet
 
@@ -521,6 +545,12 @@
     Added: 2023-01-15
     "
     "
+    PostToHTTPS","
+    :green:`Rules`","
+    Like ``PostToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     ProvisionConfig","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
@@ -622,6 +652,12 @@
     Added: 2023-04-17
     "
     "
+    PutToHTTPS","
+    :green:`Rules`","
+    Like ``PutToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     Reboot","
     :red:`Internal`","
     Reboot the ESP
@@ -695,6 +731,12 @@
     
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
     "
+    "
+    SendToHTTPS","
+    :green:`Rules`","
+    Like ``SendToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
     "
     SendToUDP","
     :green:`Rules`","

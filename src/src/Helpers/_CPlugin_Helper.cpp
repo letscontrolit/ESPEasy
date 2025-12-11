@@ -256,7 +256,11 @@ String send_via_http(int                             cpluginID,
     header,
     postStr,
     httpCode,
-    ControllerSettings.MustCheckReply);
+    ControllerSettings.MustCheckReply
+    #if FEATURE_HTTP_TLS
+    , ControllerSettings.TLStype()
+    #endif // if FEATURE_HTTP_TLS
+   );
 
   // FIXME TD-er: Shouldn't this be: success = (httpCode >= 100) && (httpCode < 300)
   // or is reachability of the host the important factor here?

@@ -260,7 +260,11 @@ void handle_sysvars() {
       F("%s_sunset%"),
       F("%s_sunrise%"),
       F("%m_sunset%"),
-      F("%m_sunrise%")
+      F("%m_sunrise%"),
+      #if FEATURE_LAT_LONG_VAR_CMD
+      F("%latitude%"),
+      F("%longitude%"),
+      #endif // if FEATURE_LAT_LONG_VAR_CMD
     };
 
     for (unsigned int i = 0; i < NR_ELEMENTS(vars); ++i) {

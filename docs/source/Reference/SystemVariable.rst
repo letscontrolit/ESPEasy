@@ -123,6 +123,14 @@ More uses of these system variables can be seen in the rules section and formula
 
        Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
+   * - ``%latitude%``
+     - 50.12345
+     - Configured Latitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
+   * - ``%longitude%``
+     - 50.12345
+     - Configured Longitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
      - Current date/time (AM/PM) if NTP is enabled (YYYY-MM-DD hh:mm:ss xM).
