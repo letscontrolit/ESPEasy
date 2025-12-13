@@ -315,7 +315,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.2f 2: %.2f"), token[0], first, second));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.4f 2: %.4f"), token[0], first, second));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
@@ -324,7 +324,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.2f"), token[0], first));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.4f"), token[0], first));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
@@ -337,14 +337,14 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_quinary_operator(token[0], first, second, third, fourth, fifth));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.2f 2: %.2f 3: %.2f 4: %.2f 5: %.2f"), token[0], first, second, third, fourth, fifth));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.4f 2: %.4f 3: %.4f 4: %.4f 5: %.4f"), token[0], first, second, third, fourth, fifth));
 
   } else {
     // Fetch next if there is any
     ESPEASY_RULES_FLOAT_TYPE value{};
     if (validDoubleFromString(token, value)) {
 
-    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.2f token: %s"), value, token));
+    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.4f token: %s"), value, token));
     // } else {
     //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unknown token: %s"), token));
     }
@@ -540,15 +540,14 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
           *(TokenPos) = 0; // Mark end of token string
           // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate popping stack sl: %u token: %s sc: %d"), sl, token, sc));
           if (sc == '(') {
-            ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
-            error = push(first); // push back
-            error = push(first); // Push as a result of ()
-            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate pop&push 2x last value: %.2f sl: %u"), first, sl));
+            // const auto first = pop(); // Get last value from stack
+            // push(first); // push back
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate at ( last value: %.4f sl: %u"), first, sl));
           } else {
             error = RPNCalculate(token);
-            // ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
-            // error = push(first); // push back
-            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.2f sl: %u"), first, sl));
+            // const auto first = pop(); // Get last value from stack
+            // push(first); // push back
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.4f sl: %u"), first, sl));
           }
           TokenPos = token;
 
@@ -567,8 +566,14 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
             pe = true;
             if (sl > 1) {
               sc = stack[sl - 2];
-              if (!(is_operator(sc) || is_unary_operator(sc) || is_quinary_operator(sc))) {
-                sc = '\0';
+              if (is_operator(sc)) { // Not a function call
+                // Don't touch
+              } else if (is_unary_operator(sc) || is_quinary_operator(sc)) { // Function call, so process the function too
+                *TokenPos = sc;
+                ++TokenPos;
+                stack[sl - 2] = '\0'; // Don't process again on stack wind-down
+              } else {
+                sc = '\0'; // Reset
               }
             }
           }
@@ -606,6 +611,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     ++strpos;
   }
 
+  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack), sl + 1).c_str()));
   // When there are no more tokens to read:
   // While there are still operator tokens in the stack:
   while (sl > 0)
@@ -617,8 +623,12 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     }
 
     *(TokenPos) = 0; // Mark end of token string
+    // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing up stack sl: %u token: %s sc: %d"), sl, token, sc));
     error       = RPNCalculate(token);
     TokenPos    = token;
+    // const auto first = pop(); // Get last value from stack
+    // push(first); // push back
+    // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing, last value on stack: %.4f sl: %u"), first, sl));
 
     if (isError(error)) { return error; }
     *TokenPos = sc;
@@ -629,6 +639,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
   *(TokenPos) = 0; // Mark end of token string
   error       = RPNCalculate(token);
   TokenPos    = token;
+  // const auto first = pop(); // Get last value from stack
+  // push(first); // push back
+  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final value on stack: %.4f sl: %u"), first, sl));
 
   if (isError(error))
   {
