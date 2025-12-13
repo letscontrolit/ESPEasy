@@ -8,27 +8,33 @@ The main design requirement is to allow multiple plugins to use the same Modbus 
 Modbus connunication consists of a request-reply message exchange over a serial link. After a request is sent the bus is occupied until the reply is received or a timeout occurred. 
 A matching request-reply message pair is called a transaction in MODBUS_FAC. 
 
-The main design constraint for the MODBUS_FAC is to reduce the time waisted in waiting for a response message. For this a transaction queue is used. A device puts a request message on the queue and does not wait fro the reply. 
-Once the matching reply is received the device is notified by a callback function.
+The main design constraint for the MODBUS_FAC is to reduce the time wasted in waiting for a response message. For this a transaction queue is used. 
+The queue is owned by the Modbus_link. A Modbus_device puts a request message on the queue and does not wait for the reply. 
+Once the matching reply is received by the Modbus_link the Modbus_device is notified by a callback function.
 
 The Modbus_device uses transactions to communicate to the associated hardware module. Messages are encoded in Modbus RTU protocol format by the Modbus_device. 
 Once the request message is created it is transferred to the Modbus_link where it is added the the transaction queue.
 When the transaction is done, either a response message is received or a timeout occurred, the Modbus_device callback function is called and the response message is decoded and evaluated.
 
 The Modbus_link uses a queue to handle transactions sequentially. Each transaction has a state to track if it is queued, being processed, or completed. At maximum one transaction is being processed at a time. 
-The modbus_link uses a ESPEasy serial link for the actual transmit and receive of the messages.
+The modbus_link uses an ESPEasy serial link for the actual transmit and receive of the messages.
 
 To match a Modbus_device with a Modbus_link a singleton Modus_mgr is used. This Modbus_mgr owns all Modbus_links and determines to which link a Modbus_device is assigned. 
-In case no matching link is found the Modbus_mgr creates a corresponding Modbus_link. Currently ESPEasy has no means to configure the serial link used by the Modbus_link. Instead the link is configured in the plugin. 
-The plugin passes the configuration to the device. When the Modbus_device requests the Modbus_mgr to connect to a Modbus_link it passes the serial parameters. The Modbus_mgr uses the serial port type to distinguish the links.
-Whenever a new device is connected to a Modbus_link the link will be reprogrammed with the new serial parameters.
+In case no matching link is found the Modbus_mgr creates a corresponding Modbus_link. Currently ESPEasy has no means to configure a Modbus_link object with the serial link properties. Instead the serial link is configured in the plugin. 
+The plugin passes the configuration data to the device. When the Modbus_device requests the Modbus_mgr to connect to a Modbus_link it passes the serial parameters. The Modbus_mgr uses the serial port type to distinguish the links.
+Whenever a new device is connected to a Modbus_link the link will be reprogrammed with the new serial parameters. Note that all devices using the same serial link shall provide the same serial link parameters. 
+In case of different serial configuration parameters there is no guarantee which set will be used for the Modbus_link.
 
-In future a separate configuration screen can be implemented to configure each Modus_link. Once this is available the Modbus_device can mention the link identification without the need to pass all configuration parameters. 
+In future a separate configuration screen should be implemented to configure each Modus_link. Once this is available the Modbus_device can mention the link identification without the need to pass all configuration parameters. 
 
-Drawback of the queue mechanism is the need for the device (and the associated plugin) to wait for the response message without blocking the CPU. For this the device needs to track "state". 
+The current implementataion of the Modbus_mgr uses the serial port (ESPEasySerialPort enum) to identify the Modbus_link. This implies that only one software serial link can be used. 
+It should be possible to extend this by checking the assigned RX and TX pins when a software serial port is selected.
+
+Drawback of the queue mechanism is the need for the Modbus_device (and the associated plugin) to wait for the response message without blocking the CPU. For this the Modbus_device needs to track "state". 
 Either the plugin can queue only a single transaction or it must be able to track for which transaction in the queue a response is received. 
 To keep this state tracking generic the transaction contains a pointer to a userState and userData. The Modbus_device can use these values depending on the transaction type to return state information to the plugin. 
  
 The owning plugin can only return a value once it is received. For repetitive read events the previous received value can be returned. 
 For specific read commands either a polling mechanism must be implemented or the plugin blocks until the response is received. 
-A dedicated trigger event for the plugins can reduce the CPU load by removing the need for regular polling (e.g. tem_per_second) or blocking.
+The most efficient mechanism would be a trigger event that can be sent by the Modbus_device once the data is received. Such trigger event for plugins can reduce the CPU load by removing the need for regular polling (e.g. ten_per_second) or blocking on a transaction.
+For this the plugin event must be extended with the possibility to send "updates" to the plugin. Such an extension shall be generic and not Modbus specific. It is beyond the Modbus facilities development to add such new generic plugin features.

@@ -101,6 +101,17 @@ Get Config Values retrieves values or settings from the sensor or plugin, and ca
 
 .. include:: P183_config_values.repl
 
+Plugin state
+------------
+
+This plugin uses a new Modbus facility that allows multiple Modbus devices to share the same Modbus link.
+The current implementataion of the Modbus facility requires that the plugin specifies the serial link parameters.
+When a Modbus link is shared between multiple plugins, the last plugin that connects to the Modbus link will determine the serial link parameters.
+This may lead to unexpected behavior if multiple plugins are using different serial link parameters on the same serial port. For a deterministic behavior, make sure that all plugins using the same serial port use the same serial link parameters.
+
+In the future the Modbus facility may be extended to configure the Modbus links as separate entities. As a result the plugins would only need to specify which Modbus link to use, instead of the serial link parameters. 
+This change will be backward incompatible with the current implementation. Therefore the plugin status is set to 'Experimental'.
+
 Change log
 ----------
 
