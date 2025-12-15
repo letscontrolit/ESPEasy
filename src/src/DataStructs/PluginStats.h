@@ -35,23 +35,24 @@ public:
 
   // Add a sample to the _sample buffer
   // This does not also track peaks as the peaks could be raw sensor data and the samples processed data.
-  bool push(float value);
+  bool push(ESPEASY_RULES_FLOAT_TYPE value);
 
   // When only updating the timestamp of the last entry, we should look at the last 
-  bool matchesLastTwoEntries(float value) const;
+  bool matchesLastTwoEntries(ESPEASY_RULES_FLOAT_TYPE value) const;
+  bool matchesLastTwoEntries(const String& value_str) const;
 
   // Keep track of peaks.
   // Use this for sensors that need to take several samples before actually output a task value.
   // For example the ADC with oversampling
-  void  trackPeak(float value, int64_t timestamp = 0u);
+  void  trackPeak(ESPEASY_RULES_FLOAT_TYPE value, int64_t timestamp = 0u);
 
   // Get lowest recorded value since reset
-  float getPeakLow() const {
+  ESPEASY_RULES_FLOAT_TYPE getPeakLow() const {
     return hasPeaks() ? _minValue : _errorValue;
   }
 
   // Get highest recorded value since reset
-  float getPeakHigh() const {
+  ESPEASY_RULES_FLOAT_TYPE getPeakHigh() const {
     return hasPeaks() ? _maxValue : _errorValue;
   }
 
@@ -75,40 +76,42 @@ public:
   size_t getNrSamples() const;
 
   // Compute average over all stored values
-  float  getSampleAvg() const;
+  ESPEASY_RULES_FLOAT_TYPE  getSampleAvg() const;
 
   // Compute average over last N stored values
-  float  getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  ESPEASY_RULES_FLOAT_TYPE  getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute the standard deviation over all stored values
-  float  getSampleStdDev() const {
+  ESPEASY_RULES_FLOAT_TYPE  getSampleStdDev() const {
     return getSampleStdDev(getNrSamples());
   }
 
   // Compute average over all stored values, taking timestamp into account.
   // Returns average per second.
-  float getSampleAvg_time(uint64_t& totalDuration_usec) const {
+  ESPEASY_RULES_FLOAT_TYPE getSampleAvg_time(uint64_t& totalDuration_usec) const {
     return getSampleAvg_time(getNrSamples(), totalDuration_usec);
   }
 
   // Compute average over last N stored values, taking timestamp into account.
   // Returns average per second.
-  float getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
+  ESPEASY_RULES_FLOAT_TYPE getSampleAvg_time(PluginStatsBuffer_t::index_t lastNrSamples,
                           uint64_t                   & totalDuration_usec) const;
 
   // Compute the standard deviation  over last N stored values
-  float getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
+  ESPEASY_RULES_FLOAT_TYPE getSampleStdDev(PluginStatsBuffer_t::index_t lastNrSamples) const;
 
   // Compute min/max over last N stored values
-  float getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples,
+  ESPEASY_RULES_FLOAT_TYPE getSampleExtreme(PluginStatsBuffer_t::index_t lastNrSamples,
                          bool                         getMax) const;
 
   // Compute sample stored values
-  float getSample(int lastNrSamples) const;
+  ESPEASY_RULES_FLOAT_TYPE getSample(int lastNrSamples) const;
 
-  float operator[](PluginStatsBuffer_t::index_t index) const;
+  ESPEASY_RULES_FLOAT_TYPE operator[](PluginStatsBuffer_t::index_t index) const;
 
 private:
+
+  ESPEASY_RULES_FLOAT_TYPE get(PluginStatsBuffer_t::index_t index) const;
 
   static bool matchedCommand(const String             & command,
                              const __FlashStringHelper *cmd_match,
@@ -177,15 +180,19 @@ public:
 
 private:
 
+  // TD-er: Keep this comparing against float type
   bool usableValue(float value) const;
 
-  float _minValue;
-  float _maxValue;
+  ESPEASY_RULES_FLOAT_TYPE _minValue;
+  ESPEASY_RULES_FLOAT_TYPE _maxValue;
   int64_t _minValueTimestamp;
   int64_t _maxValueTimestamp;
 
   PluginStatsBuffer_t *_samples = nullptr;
-  float _errorValue;
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  ESPEASY_RULES_FLOAT_TYPE _offset{};
+#endif
+  float _errorValue; // TD-er: Keep this errorvalue as float type
   bool _errorValueIsNaN;
 
   uint8_t _nrDecimals = 3u;
