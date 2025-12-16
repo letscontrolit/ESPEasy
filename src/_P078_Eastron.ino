@@ -3,13 +3,20 @@
 #ifdef USES_P078
 
 // #######################################################################################################
-// ############## Plugin 078: SDM120/SDM120CT/220/230/630/72D/DDM18SD Eastron Energy Meter ###############
+// ############## Plugin 078: SDM120/SDM120CT/220/230/630/72D/DDM18SD/TAC2100 Eastron Energy Meter ###############
 // #######################################################################################################
 
 /*
    Plugin written by: Sergio Faustino sjfaustino__AT__gmail.com
 
-   This plugin reads available values of an Eastron SDM120C SDM120/SDM120CT/220/230/630/72D & also DDM18SD.
+   This plugin reads available values of an Eastron SDM120C SDM120/SDM120CT/220/230/630/72D & also DDM18SD and TAC2100.
+ */
+
+/** Changelog:
+ * 2025-10-25 tonhuisman: Add custom Unit of Measure group per value to limit selection to useful options
+ * 2025-08-02 repa6: Add partial support for TAC2100 meter
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partial)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Eastron)
  */
 
 # define PLUGIN_078
@@ -22,6 +29,7 @@
 # define P078_NR_OUTPUT_OPTIONS_SDM630                    86
 # define P078_NR_OUTPUT_OPTIONS_SDM72D                    9
 # define P078_NR_OUTPUT_OPTIONS_DDM18SD                   7
+# define P078_NR_OUTPUT_OPTIONS_TAC2100                   27
 
 
 # include "src/PluginStructs/P078_data_struct.h"
@@ -51,6 +59,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption      = true;
       dev.PluginStats      = true;
       dev.TaskLogsOwnPeaks = true;
+      dev.MqttStateClass   = true;
       break;
     }
 
@@ -62,10 +71,11 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P078_NR_OUTPUT_VALUES) {
-          const SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
-          const uint8_t   choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+          const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
           ExtraTaskSettings.setTaskDeviceValueName(i, SDM_getValueNameForModel(model, choice));
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);
@@ -79,6 +89,34 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       serialHelper_modbus_getGpioNames(event);
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->ParN[i] = static_cast<int>(Plugin_078_QueryVType(model, choice));
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
+    # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    case PLUGIN_GET_UOM_GROUPS:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->Par64N[i] = Plugin_078_QueryUOMGroup(model, choice);
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
@@ -171,12 +209,13 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("DDM18SD"),
           F("SDM630"),
           F("SDM72_V2"),
-          F("SDM320C")
+          F("SDM320C"),
+          F("TAC2100"),
         };
         constexpr size_t nrOptions = NR_ELEMENTS(options_model);
-        const FormSelectorOptions selector(nrOptions, options_model);
+        FormSelectorOptions selector(nrOptions, options_model);
+        selector.reloadonchange = true;
         selector.addFormSelector(F("Model Type"), P078_MODEL_LABEL, P078_MODEL);
-        addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
       success = true;
       break;

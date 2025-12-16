@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Serial Proxy)
  * 2024-02-27 tonhuisman: Always process the regular expression like 'Global Match' to enable retrieving the available values
  * 2024-02-26 tonhuisman: Apply log-string and other code optimizations
  * 2024-02-25 tonhuisman: Add command serialproxy_test,<testdata> to test as if serial data was received
@@ -103,6 +104,15 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event, false, true); // TX optional

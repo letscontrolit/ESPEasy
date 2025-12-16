@@ -299,7 +299,7 @@
 #endif
 
 #ifndef DEFAULT_USE_RULES
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true   // (true|false) Enable Rules?
 #endif
 #ifndef DEFAULT_RULES_OLDENGINE
 #define DEFAULT_RULES_OLDENGINE                true
@@ -473,6 +473,7 @@
 # define TASK_VALUE_DERIVED_PREFIX_TEMPLATE       "_%s_%s-derived" // Includes a not-allowed varname character (-) to prevent undesired manipulation via LetStr
 # define TASK_VALUE_UOM_PREFIX_TEMPLATE           "_%s_%s-uom"
 # define TASK_VALUE_NAME_PREFIX_TEMPLATE          "_%s_%s-name"
+# define TASK_VALUE_VTYPE_PREFIX_TEMPLATE         "_%s_%s-vtype"
 # define TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE  "_%s_%s-presentation"
 # define TASK_VALUE_PRESENTATION_PREFIX_STRING    "$" // Keep these string and char prefixes the same!
 # define TASK_VALUE_PRESENTATION_PREFIX_CHAR      '$'

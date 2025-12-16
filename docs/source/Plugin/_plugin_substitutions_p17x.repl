@@ -15,7 +15,7 @@
 .. |P172_type| replace:: :cyan:`Environment`
 .. |P172_typename| replace:: :cyan:`Environment - BMP3xx (SPI)`
 .. |P172_porttype| replace:: `.`
-.. |P172_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P172_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE B`
 .. |P172_github| replace:: P172_BMP3xx_SPI.ino
 .. _P172_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P172_BMP3xx_SPI.ino
 .. |P172_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P173_type| replace:: :cyan:`Environment`
 .. |P173_typename| replace:: :cyan:`Environment - SHTC3`
 .. |P173_porttype| replace:: `.`
-.. |P173_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P173_status| replace:: :yellow:`COLLECTION H` :yellow:`CLIMATE B`
 .. |P173_github| replace:: P173_SHTC3.ino
 .. _P173_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P173_SHTC3.ino
 .. |P173_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P175_type| replace:: :cyan:`Dust`
 .. |P175_typename| replace:: :cyan:`Dust - PMSx003i (I2C)`
 .. |P175_porttype| replace:: `I2C`
-.. |P175_status| replace:: :yellow:`CLIMATE`
+.. |P175_status| replace:: :yellow:`CLIMATE B`
 .. |P175_github| replace:: P175_PMSx003i.ino
 .. _P175_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P175_PMSx003i.ino
 .. |P175_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P177_type| replace:: :cyan:`Environment`
 .. |P177_typename| replace:: :cyan:`Environment - XDB401 I2C Pressure`
 .. |P177_porttype| replace:: `.`
-.. |P177_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P177_status| replace:: :yellow:`COLLECTION H` :yellow:`CLIMATE B`
 .. |P177_github| replace:: P177_XDB_pressure.ino
 .. _P177_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P177_XDB_pressure.ino
 .. |P177_usedby| replace:: `.`
@@ -80,7 +80,7 @@
 .. |P178_type| replace:: :cyan:`Extra IO`
 .. |P178_typename| replace:: :cyan:`Extra IO - LU9685 Servo controller`
 .. |P178_porttype| replace:: `.`
-.. |P178_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P178_status| replace:: :yellow:`COLLECTION H` :yellow:`CLIMATE B`
 .. |P178_github| replace:: P178_LU9685.ino
 .. _P178_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P178_LU9685.ino
 .. |P178_usedby| replace:: `LU9685 16/20 channel servo controller`

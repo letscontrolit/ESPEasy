@@ -27,6 +27,8 @@ Description
 Detecting (human) presence can be achieved in several ways, like via IR detection sensors, or a light-beam that's interrupted by someone passing. But these sensors have quite some limitations, like limited sensitivity, no information about the distance, or weather a person is there but not moving.
 
 The limitations of these existing sensors are not applicable when using radar-based presence detection, and since some time, rather affordable radar human-presence detectors are available. These are available with 5 GHz, 10 GHz, 24 GHz and 60 GHz radar frequency transmitter/receiver chips. Because of the accuracy and range, achievable with 24 GHz sensors, these are quite popular, so support has been added to ESPEasy.
+Some notes about "false positive" detections: based on our test and experience some false positive presence detections can happens. For example if the sensor is near to plant, the movement of leaves can be incorrectly translated as presence detection; also electric cables in front of the sensor can provide noise to the sensor. To avoid false positive presence detection try to leave the sensor as free from obstacles as possible.
+
 
 Some examples of these sensors:
 

@@ -60,10 +60,12 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
-    uint32_t tmpVar{};
-
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
-      const bool isv_ = !validUIntFromString(it->first, tmpVar);
+      NumericalType detectedType;
+      bool isv_ = true;
+      if (getNumerical(it->first, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
+        isv_ = detectedType != NumericalType::Integer;
+      }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
   }
@@ -90,7 +92,11 @@ void handle_sysvars() {
       SystemVariables::LF,
       SystemVariables::SPACE,
       SystemVariables::S_CR,
-      SystemVariables::S_LF
+      SystemVariables::S_LF,
+      #ifndef LIMIT_BUILD_SIZE
+      SystemVariables::S_E,
+      SystemVariables::S_PI,
+      #endif // ifndef LIMIT_BUILD_SIZE
     };
     addSysVar_enum_html(vars, NR_ELEMENTS(vars));
   }
@@ -258,7 +264,11 @@ void handle_sysvars() {
       F("%s_sunset%"),
       F("%s_sunrise%"),
       F("%m_sunset%"),
-      F("%m_sunrise%")
+      F("%m_sunrise%"),
+      #if FEATURE_LAT_LONG_VAR_CMD
+      F("%latitude%"),
+      F("%longitude%"),
+      #endif // if FEATURE_LAT_LONG_VAR_CMD
     };
 
     for (unsigned int i = 0; i < NR_ELEMENTS(vars); ++i) {
@@ -396,6 +406,12 @@ void handle_sysvars() {
       F("cm to imperial: %c_cm2imp%(190)"),
       F("mm to imperial: %c_mm2imp%(1900)"),
 
+      #ifndef LIMIT_BUILD_SIZE
+      F(""), // addFormSeparator(3,
+      F("Degrees to radians: %c_d2r%(22)"),
+      F("Radians to degrees: %c_r2d%(0.357)"),
+      #endif // ifndef LIMIT_BUILD_SIZE
+
       F(""), // addFormSeparator(3,
       F("Mins to days: %c_m2day%(1900)"),
       F("Mins to dh:   %c_m2dh%(1900)"),
@@ -406,6 +422,8 @@ void handle_sysvars() {
       F("Timestamp to date/time: %c_ts2date%(%unixtime_lcl%)"),
       F("Timestamp to date/time am/pm: %c_ts2date%(%unixtime_lcl%,1)"),
       F("Timestamp to weekday: %c_ts2wday%(%unixtime_lcl%)"),
+      F("Timestamp to ISO date/time: %c_ts2isodate%(%unixtime_lcl%)"),
+      F("Timestamp to ISO date/time/offset: %c_ts2isodate%(%unixtime_lcl%,1)"),
 # endif // if FEATURE_STRING_VARIABLES
 
 

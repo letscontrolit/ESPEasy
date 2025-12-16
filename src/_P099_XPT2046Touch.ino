@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
  * 2020-11-01 tonhuisman: Solved previous strange rotation settings to be compatible with TFT ILI9341
  * 2020-11-01 tonhuisman: Add option to flip rotation by 180 deg, and command touch,flip,<0|1>
  * 2020-11-01 tonhuisman: Add option for the debounce timeout for On/Off buttons
@@ -79,6 +80,15 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       event->String1 = formatGpioName_output(F("TS CS"));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {

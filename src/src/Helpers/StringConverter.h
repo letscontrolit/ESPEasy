@@ -122,6 +122,7 @@ void appendHexChar(uint8_t data, String& string);
 // Binary data to HEX
 // Returned string length will be twice the size of the data array.
 String formatToHex_array(const uint8_t* data, size_t size);
+String formatToHex_wordarray(const uint16_t* data, size_t size);
 
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix,
@@ -406,9 +407,29 @@ void parseControllerVariables(String            & s,
                               bool             useURLencode);
 
 void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode);
+                                   struct EventStruct* event,
+                                   uint8_t             taskValueIndex,
+                                   bool                useURLencode);
+
+#if FEATURE_MQTT_DISCOVER
+void parseDeviceClassVariable(String                   & s,
+                              const __FlashStringHelper* devclass,
+                              bool                       useURLencode);
+
+void parseUniqueIdVariable(String      & s,
+                           const String& uniqueId,
+                           bool          useURLencode);
+
+void parseElementIdVariable(String     & s,
+                           const String& elementId,
+                           bool          useURLencode);
+#endif
+
+#if FEATURE_STRING_VARIABLES
+void parseValNameVariable(String      & s,
+                          const String& valname,
+                          bool          useURLencode);
+#endif // if FEATURE_STRING_VARIABLES
 
 void parseSystemVariables(String& s,
                           bool useURLencode);
@@ -464,7 +485,7 @@ void parseStandardConversions(String& s,
                               bool useURLencode);
 
 #if FEATURE_STRING_VARIABLES
-String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm);
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm, bool iso_format);
 String get_weekday_from_timestamp(time_t unix_timestamp);
 #endif // if FEATURE_STRING_VARIABLES
 

@@ -64,7 +64,7 @@ uint32_t ESPEasyControllerCache_CSV_dumper::writeToTarget(const String& str, boo
     if (_target == Target::CSV_file) {
       addHtml(str);
     } else {
-      MQTTclient.write(str);
+      MQTTclient.write((const uint8_t*)str.c_str(), str.length());
     }
   }
   return str.length();

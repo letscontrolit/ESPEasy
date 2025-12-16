@@ -16,6 +16,10 @@
 #endif // ifdef ESP32
 #endif
 
+#if FEATURE_HTTP_TLS
+#include "../DataTypes/TLS_types.h"
+#endif // if FEATURE_HTTP_TLS
+
 
 /*********************************************************************************************\
    Syslog client
@@ -248,7 +252,11 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply);
+                     bool          must_check_reply
+                     #if FEATURE_HTTP_TLS
+                     , TLS_types   tlsType = TLS_types::NoTLS
+                     #endif // if FEATURE_HTTP_TLS
+                    );
 #endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD

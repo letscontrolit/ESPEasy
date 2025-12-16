@@ -48,6 +48,7 @@ void ControllerSettingsStruct::reset() {
   VariousBits1.deduplicate                      = 0;
   VariousBits1.useLocalSystemTime               = 0;
   VariousBits1.TLStype                          = 0;
+  VariousBits1.mqttAutoDiscovery                = 0;
 
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
@@ -83,6 +84,11 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(MQTTLwtTopic);
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
+  ZERO_TERMINATE(ClientID);
+  ZERO_TERMINATE(MqttAutoDiscoveryTopic);
+  ZERO_TERMINATE(MqttAutoDiscoveryConfig);
+  ZERO_TERMINATE(MqttAutoDiscoveryTrigger);
+
 
   #if FEATURE_MQTT
     #if FEATURE_MQTT_TLS
@@ -320,7 +326,7 @@ bool ControllerSettingsStruct::mqtt_cleanSession() const
 }
 */
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 String ControllerSettingsStruct::getCertificateFilename() const
 {
   return getCertificateFilename(TLStype());
@@ -362,4 +368,4 @@ String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) cons
   
   return certFile;
 }
-#endif
+#endif // #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS

@@ -136,6 +136,8 @@ Sensor
 
 * **Auto-save interval** Here a time in minutes can be set after which any changed 'Set Level' via the ``config,task,<taskname>,SetLevel,<value>`` command will be saved. This *requires* that the above setting **Save 'Set Level' after change via config command** is **disabled**! When used, a setting of ca. 30 minutes, or even longer when the Set Level is changed often, seems apropriate, unless the unit often reboots, but then that cause should be investigated and solved. The timer, when activated, should survive a warm reboot.
 
+.. warning:: Saving settings too often will cause damage to the Flash memory of the unit!
+
 * **Extended functionality**:sup:`1)` Enable new functionality. Changing this will reload the form showing/hiding the new options below.
 
 * **Long time span**:sup:`1)` Timer values are per default entered in [seconds], enabling this option timing settings are tuned to long intervals using [hours] or [seconds]. Changing this will reload the form showing rescaled values and new units.
@@ -159,6 +161,8 @@ Sensor
 * **State as output value**:sup:`1)` This adds the calculated state as a second value. This can be used in rules to show what the controller is doing.
 
 :sup:`1)` Configuration may not be available due to build size limitations.
+
+.. include:: DeviceClass_binary.repl
 
 .. include:: DataAcquisition.repl
 

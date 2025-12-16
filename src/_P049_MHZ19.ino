@@ -4,6 +4,7 @@
 # include "src/PluginStructs/P049_data_struct.h"
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2025-01-03 tonhuisman: Small code size reductions
  * 2024-01-04 tonhuisman: Add Device[].ExitBeforeSeve = false so ABC can be enabled during settings save
  * 2024-01-04 tonhuisman: Start changelog, most recent change on top
@@ -74,6 +75,16 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_049));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

@@ -19,6 +19,7 @@
 // Have fun ... Dominik
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2025-01-03 tonhuisman: Small code size reductions, cleanup of DEBUG level logging
  * 2024-01-04 tonhuisman: Minor corrections, formatted source using Uncrustify
  * 2023-01-08 tonhuisman: Add Low temperature threshold setting (default 0 K/-273.15 C) to ignore temperatures below that value
@@ -282,6 +283,14 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_039));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

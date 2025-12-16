@@ -1,0 +1,13 @@
+.. |P180_name| replace:: :cyan:`I2C Generic`
+.. |P180_type| replace:: :cyan:`Generic`
+.. |P180_typename| replace:: :cyan:`Generic - I2C Generic`
+.. |P180_porttype| replace:: `.`
+.. |P180_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
+.. |P180_github| replace:: P180_I2C_generic.ino
+.. _P180_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P180_I2C_generic.ino
+.. |P180_usedby| replace:: `.`
+.. |P180_shortinfo| replace:: `User-configurable generic I2C protocol plugin`
+.. |P180_maintainer| replace:: `tonhuisman`
+.. |P180_compileinfo| replace:: `.`
+.. |P180_usedlibraries| replace:: `.`
+

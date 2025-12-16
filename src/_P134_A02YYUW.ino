@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2022-09-10 tonhuisman: Remove TESTING tag, code improvements
  * 2022-08-01 tonhuisman: Implement P134_data_struct to enable multi-instance use, set TESTING tag
  *                        Transform error numbers to meaningful text
@@ -53,6 +54,14 @@ boolean Plugin_134(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Distance, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {

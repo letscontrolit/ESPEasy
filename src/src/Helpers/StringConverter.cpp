@@ -301,6 +301,17 @@ String formatToHex_array(const uint8_t* data, size_t size)
   return res;
 }
 
+String formatToHex_wordarray(const uint16_t* data, size_t size)
+{
+  String res;
+  res.reserve(2 * size);
+  for (size_t i = 0; i < size; ++i) {
+    appendHexChar(data[i] << 8, res);
+    appendHexChar(data[i] & 0xFF, res);
+  }
+  return res;
+}
+
 String formatToHex(unsigned long value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
@@ -1369,11 +1380,39 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 
 void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode) {
+                                   struct EventStruct* event,
+                                   uint8_t             taskValueIndex,
+                                   bool                useURLencode) {
   SMART_REPL(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex));
 }
+
+#if FEATURE_MQTT_DISCOVER
+void parseDeviceClassVariable(String                   & s,
+                              const __FlashStringHelper* devclass,
+                              bool                       useURLencode) {
+  SMART_REPL(F("%devclass%"), devclass);
+}
+
+void parseUniqueIdVariable(String      & s,
+                           const String& uniqueId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%unique_id%"), uniqueId);
+}
+
+void parseElementIdVariable(String     & s,
+                           const String& elementId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%element_id%"), elementId);
+}
+#endif
+
+#if FEATURE_STRING_VARIABLES
+void parseValNameVariable(String      & s,
+                          const String& valname,
+                          bool          useURLencode) {
+  SMART_REPL(F("%valname%"), valname);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 void parseSystemVariables(String& s, bool useURLencode)
 {
@@ -1401,8 +1440,47 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
+  const bool val_found = s.indexOf(F("%val")) != -1;
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+
+  #if FEATURE_STRING_VARIABLES
+  std::map<uint8_t, String> strVarNames;
+  std::map<uint8_t, String> strVarValues;
+
+  if (Settings.SendDerivedTaskValues(event->TaskIndex, event->ControllerIndex)) {
+    String taskName = getTaskDeviceName(event->TaskIndex);
+    taskName.toLowerCase();
+    String postfix;
+    const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+
+    auto it = customStringVar.begin();
+    uint8_t varNr = VARS_PER_TASK; // %val5% and %vname5% and incrementing the number
+    while (it != customStringVar.end()) {
+      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+        const String vname2 = getDerivedValueName(taskName, valueName);
+        if (!vname2.isEmpty()) {
+          valueName = vname2;
+        }
+        if (!it->second.isEmpty()) {
+          String value(it->second);
+          value = parseTemplateAndCalculate(value);
+          strVarNames.insert(std::pair<uint8_t, String>(varNr, valueName));
+          strVarValues.insert(std::pair<uint8_t, String>(varNr, value));
+          ++varNr; // increment after to keep the values & code below consistent
+        }
+      }
+      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+        break;
+      }
+      ++it;
+    }
+
+  }
+  #endif // if FEATURE_STRING_VARIABLES
+
   if (validTaskIndex(event->TaskIndex)) {
-    if (s.indexOf(F("%val")) != -1) {
+    if (val_found) {
       const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
       for (uint8_t i = 0; i < valueCount; ++i) {
         String valstr = F("%val");
@@ -1410,12 +1488,21 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
         valstr += '%';
         SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
+
+      #if FEATURE_STRING_VARIABLES
+      auto it = strVarValues.begin();
+      while (it != strVarValues.end()) {
+        String valstr = F("%val");
+        valstr += (it->first + 1);
+        valstr += '%';
+        SMART_REPL(valstr, it->second);
+        ++it;
+      }
+      #endif // if FEATURE_STRING_VARIABLES
     }
   }
 
   SMART_REPL(F("%tskname%"), getTaskDeviceName(event->TaskIndex));
-
-  const bool vname_found = s.indexOf(F("%vname")) != -1;
 
   if (vname_found) {
     const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
@@ -1426,6 +1513,17 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
 
       SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
+    #if FEATURE_STRING_VARIABLES
+    auto it = strVarNames.begin();
+    while (it != strVarNames.end()) {
+      String vname = F("%vname");
+      vname += (it->first + 1);
+      vname += '%';
+
+      SMART_REPL(vname, it->second);
+      ++it;
+    }
+    #endif // if FEATURE_STRING_VARIABLES
   }
 }
 
@@ -1611,6 +1709,10 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #if FEATURE_STRING_VARIABLES
   SMART_CONV(F("%c_ts2wday%"),  get_weekday_from_timestamp(static_cast<uint32_t>(data.arg1)))
   #endif // if FEATURE_STRING_VARIABLES
+  #ifndef LIMIT_BUILD_SIZE
+  SMART_CONV(F("%c_d2r%"),    doubleToString(radians(data.arg1)))
+  SMART_CONV(F("%c_r2d%"),    doubleToString(degrees(data.arg1)))
+  #endif // ifndef LIMIT_BUILD_SIZE
   #undef SMART_CONV
 
   // Conversions with 2 parameters
@@ -1624,7 +1726,8 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
   #if FEATURE_STRING_VARIABLES
-  SMART_CONV(F("%c_ts2date%"),      get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2)))
+  SMART_CONV(F("%c_ts2date%"),      get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2), false))
+  SMART_CONV(F("%c_ts2isodate%"),   get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2), true))
   #endif // if FEATURE_STRING_VARIABLES
 
   #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -1649,11 +1752,12 @@ void parseStandardConversions(String& s, bool useURLencode) {
 }
 
 #if FEATURE_STRING_VARIABLES
-String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm) {
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm, bool iso_format) {
   struct tm ts;
   ts = *localtime(&unix_timestamp);
 
-  return formatDateTimeString(ts, '-', ':', ' ', am_pm);
+  return formatDateTimeString(ts, '-', ':', iso_format ? 'T' : ' ', am_pm && !iso_format)
+          + (iso_format && am_pm ? node_time.getTimeZoneOffsetString() : F("Z"));
 }
 
 String get_weekday_from_timestamp(time_t unix_timestamp) {

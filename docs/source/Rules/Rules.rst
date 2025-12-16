@@ -1549,6 +1549,25 @@ With:
 * ``<low>`` Lower end of range, if it is representing a valid numerical value.
 * ``<high>`` Higher end of range, if it is representing a valid numerical value.
 
+crc8/crc32
+^^^^^^^^^^
+
+(Added: 2025-04-15)
+
+Calculates the crc8 / crc32 for a range of bytes provided in hex format, and optionally compares it to an expected checksum.
+
+Usage: ``{crc8:<hex_bytes_range>[:<expected_crc>]}`` or ``{crc32:<hex_bytes_range>[:<expected_crc>]}``
+
+With:
+
+* ``<hex_bytes_range>`` Text and/or hex byte(s) (having 0x prefix) that will be converted to bytes and a crc calculated from. If spaces, commas, colons etc. are to be used, the bytes range should be quoted.
+* ``<expected_crc>`` An optional expected-crc value. When provided, it is compared with the calculated crc, and the function will return ``1`` if the values are equal, else ``0`` is returned.
+
+Result:
+
+* ``crc8``: 8-bit checksum or 1 if the calculated crc equals the expected crc, 0 when it doesn't match.
+* ``crc32``: 32-bit checksum or 1 if the calculated crc equals the expected crc, 0 when it doesn't match.
+
 Math Functions
 --------------
 
@@ -1568,8 +1587,10 @@ Basic Math Functions
 * ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
 * ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
-* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps value x in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
+* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps ``value`` in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
 * ``mapc(value:fromLow:fromHigh:toLow:toHigh)`` same as map, but constrains the result to the fromLow/fromHigh range.
+
+* ``fmod(x:y)`` Like the modulo operator ``%`` that returns an integer remainder, ``fmod`` returns the floating-point remainder of the division ``x / y``. Added: 2025-12-13 (Not available in limited builds)
 
 
 Rules example:
@@ -1643,6 +1664,7 @@ Radian Angle:
 * ``aSin(x)`` Arc Sine of x (radian)
 * ``aCos(x)`` Arc Cosine of x (radian)
 * ``aTan(x)`` Arc Tangent of x (radian)
+* ``aTan2(x:y)`` Arc Tangent of x / y (radian) Added: 2025-12-13
 
 Degree Angle:
 
@@ -1652,6 +1674,7 @@ Degree Angle:
 * ``aSin_d(x)`` Arc Sine of x (degree)
 * ``aCos_d(x)`` Arc Cosine of x (degree)
 * ``aTan_d(x)`` Arc Tangent of x (degree)
+* ``aTan2_d(x:y)`` Arc Tangent of x / y (degree) Added: 2025-12-13
 
 
 
@@ -2626,6 +2649,52 @@ The above example, adapted for using named variables (and %v1% .. %v200% for sto
     // Optionally, it can be stored in a Dummy Device plugin instead
     TaskValueSet,Dummy,Average,%v_avg% // Average
   endon
+
+
+2nd-order Butterworth low-pass filter
+-------------------------------------
+
+Suggested by thalesmaoa in `this GH Comment <https://github.com/letscontrolit/ESPEasy/issues/2304#issuecomment-2991103427>`_
+
+This is a simple but effective 2nd-order Butterworth low-pass filter (`Wiki page <https://en.wikipedia.org/wiki/Butterworth_filter>`_), more accurate than a moving average.
+
+It runs entirely in ESPEasy Rules, using internal variables (``Let``).
+
+Two cutoff frequencies are available:
+
+``fc = 0.2 Hz when v8 = 0``
+
+``fc = 0.1 Hz when v8 = 1``
+
+All parameters were calculated assuming a 1-second sampling interval (i.e., one event per second).
+
+If you can trigger events at a faster rate, new filter coefficients must be calculated.
+
+.. code-block:: none
+
+  On input1#ai1 Do
+    Let,8,1       // Set filter mode: 1 = 0.1 Hz, 0 = 0.2 Hz
+    Event,filt=%eventvalue1%
+  EndOn
+
+  On filt Do
+    // Shift input history
+    Let,4,[VAR#3]       // x2 ← x1
+    Let,3,[VAR#2]       // x1 ← x0
+    Let,2,%eventvalue1% // x0 ← new input
+
+    // Shift output history
+    Let,7,[VAR#6]       // y2 ← y1
+    Let,6,[VAR#5]       // y1 ← y0
+
+    // Compute filtered value, made available in %v5% / [var#5]
+    If %v8%=1
+      Let,5,0.067455*%v2%+0.134911*%v3%+0.067455*%v4%+1.14298*%v6%-0.412802*%v7%
+    Else
+      Let,5,0.2066*%v2%+0.4132*%v3%+0.2066*%v4%+0.3695*%v6%-0.1958*%v7%
+    EndIf
+  EndOn
+
 
 
 Register daily working time

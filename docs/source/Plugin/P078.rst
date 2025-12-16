@@ -55,6 +55,8 @@ To toggle between sending and listening, the ``DE`` pin must be pulled 'high' wh
 The ``/RE`` pin is logically inverted and thus can be connected to the ``DE`` pin.
 This allows for a single GPIO pin to be used to toggle between sending and receiving data.
 
+A flow  control GPIO pin can be configured on the web UI to control ``RE/DE`` while sending data if needed. 
+
 .. note:: 
   Most RS485 transceiver chips, like the MAX485, allow for a supply voltage (for the chip) higher than the 3.3V used for the ESP. Some even will not work reliable at 3.3 Volt.
   Keep in mind that on most RS485 transceiver boards, all microcontroller connected pins have a pull-up resistor to the supplied VCC.

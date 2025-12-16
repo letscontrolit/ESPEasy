@@ -123,6 +123,14 @@ More uses of these system variables can be seen in the rules section and formula
 
        Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
+   * - ``%latitude%``
+     - 50.12345
+     - Configured Latitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
+   * - ``%longitude%``
+     - 50.12345
+     - Configured Longitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
      - Current date/time (AM/PM) if NTP is enabled (YYYY-MM-DD hh:mm:ss xM).
@@ -357,6 +365,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - mm to imperial: ``%c_mm2imp%(1900)``
      - mm to imperial: ``6'2.8"``
      - Millimeter to imperial units
+   * - Degrees to radians: ``%c_d2r%(22)``
+     - Degrees to radians: ``0.38``
+     - Degrees to radians
+   * - Radians to degrees: ``%c_r2d%(0.357)``
+     - Radians to degrees: ``20.45``
+     - Radians to degrees
    * - Mins to days: ``%c_m2day%(1900)``
      - Mins to days: ``1.32``
      - Minutes expressed in days
@@ -382,6 +396,11 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Unix Timestamp to weekday: ``%c_ts2wday%(%unixtime_lcl%)``
      - Unix Timestamp to weekday: ``2``
      - Return the numeric weekday (dow) index, 0..6 (sun..sat), so it can be used with f.e. ``{lookup:%c_ts2wday%(%unixtime_lcl%):3:sunmontuewedthufrisat}`` to show a 3 character day name, that can easily be translated into your desired languag, and the length adjusted as desired.
+   * - Unix Timestamp to ISO date/time: ``%c_ts2date%(1748813303)``
+     - Unix Timestamp to ISO date/time: ``2025-06-01T21:28:32Z``
+     - Unix Timestamp to ISO 8601 yyyy-mm-ddThh:mm:ss[Z|+hh:mm] in 24 hour notation optionally including the system time-zone offset (Default ``%unixtime%`` is UTC)
+
+       Can optionally include the system configured Time-zone offset, as that's not available from a timestamp. Timestamp values should then be based on ``%unixtime_lcl%``.
    * - Random(L,H): ``%c_random%(0, 1)``
      - Random(L,H): ``0.123``
      - Generate random number in the given range L ... H (Added: 2025/04/29)

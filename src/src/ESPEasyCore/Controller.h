@@ -29,7 +29,14 @@ void MQTTDisconnect();
 /*********************************************************************************************\
 * Connect to MQTT message broker
 \*********************************************************************************************/
+#if FEATURE_MQTT_CONNECT_BACKGROUND
+bool MQTTConnectInBackground(controllerIndex_t controller_idx,
+                             bool              reportOnly);
+#endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+
 bool MQTTConnect(controllerIndex_t controller_idx);
+
+void MQTTparseSystemVariablesAndSubscribe(String subscribeTo);
 
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings);
 

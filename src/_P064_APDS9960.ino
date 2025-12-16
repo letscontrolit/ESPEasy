@@ -17,21 +17,26 @@
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
-// 2024-03-30 tonhuisman: Add 'Separate Gesture event' option (<taskname>#Swipe=<gesture>) so it doesn't interfere with light/color
-//                        measurement
-// 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
-// 2022-08-05 tonhuisman: Remove [TESTING] tag, Improvement: INIT, 10/sec and READ events now return false if errors occur during processing
-// 2022-06-17 tonhuisman: Remove I2C address selector, as there is nothing to choose...
-//   Clean up source, avoid (memory) inefficient code
-// 2022-03-21 tonhuisman: Attempt to stop the sensor from blocking ESPEasy, by dropping out after 32 loops in reading gesture data
-//   This should fix the Known BUG above.
-//   Lowered reading gesture data from 50/sec to 10/sec, as it still won't be processed quick enough
-//   Change sensor to TESTING from DEVELOPMENT
-// 2020-04-25 tonhuisman: Added Plugin Mode setting to switch between Proximity/Ambient Light Sensor or R/G/B Colors.
-//   Added settings for Gain (Gesture, Proximity, Ambient Light Sensor), Led Power (Gesture and Proximity/ALS) and Led Boost (Gesture)
-//   to allow better tuning for use of the sensor. Also adapted the SparkFun_APDS9960 driver for enabling this.
-//   R/G/B Colors mode has it's settings shared with the Gesture/Proximity/ALS as they are the exact same parameters, but with different
-//   labels only.
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for APDS9960)
+ *                        Update changelog
+ * 2024-03-30 tonhuisman: Add 'Separate Gesture event' option (<taskname>#Swipe=<gesture>) so it doesn't interfere with light/color
+ *                        measurement
+ * 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
+ * 2022-08-05 tonhuisman: Remove [TESTING] tag, Improvement: INIT, 10/sec and READ events now return false if errors occur during processing
+ * 2022-06-17 tonhuisman: Remove I2C address selector, as there is nothing to choose...
+ *   Clean up source, avoid (memory) inefficient code
+ * 2022-03-21 tonhuisman: Attempt to stop the sensor from blocking ESPEasy, by dropping out after 32 loops in reading gesture data
+ *   This should fix the Known BUG above.
+ *   Lowered reading gesture data from 50/sec to 10/sec, as it still won't be processed quick enough
+ *   Change sensor to TESTING from DEVELOPMENT
+ * 2020-04-25 tonhuisman: Added Plugin Mode setting to switch between Proximity/Ambient Light Sensor or R/G/B Colors.
+ *   Added settings for Gain (Gesture, Proximity, Ambient Light Sensor), Led Power (Gesture and Proximity/ALS) and Led Boost (Gesture)
+ *   to allow better tuning for use of the sensor. Also adapted the SparkFun_APDS9960 driver for enabling this.
+ *   R/G/B Colors mode has it's settings shared with the Gesture/Proximity/ALS as they are the exact same parameters, but with different
+ *   labels only.
+ */
 
 
 # define PLUGIN_064
@@ -82,6 +87,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -104,6 +110,22 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -172,9 +194,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           F("2x"),
           F("4x"),
           F("8x") };
-        const int optionsGainValues[]     = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
-        constexpr size_t optionsGainCount = NR_ELEMENTS(optionsGainValues);
-        constexpr int optionsGain_default_index = PGAIN_4X;
+        const int optionsGainValues[]              = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
+        constexpr size_t optionsGainCount          = NR_ELEMENTS(optionsGainValues);
+        constexpr int    optionsGain_default_index = PGAIN_4X;
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
         const __FlashStringHelper *optionsLedDrive[] = {
@@ -182,9 +204,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           F("50"),
           F("25"),
           F("12.5") };
-        const int optionsLedDriveValues[]     = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
-        constexpr size_t optionsLedDriveCount = NR_ELEMENTS(optionsLedDriveValues);
-        constexpr int optionsLedDrive_default_index = LED_DRIVE_100MA;
+        const int optionsLedDriveValues[]              = { LED_DRIVE_100MA, LED_DRIVE_50MA, LED_DRIVE_25MA, LED_DRIVE_12_5MA };
+        constexpr size_t optionsLedDriveCount          = NR_ELEMENTS(optionsLedDriveValues);
+        constexpr int    optionsLedDrive_default_index = LED_DRIVE_100MA;
 
         String lightSensorGainLabel;
         String lightSensorDriveLabel;
@@ -238,7 +260,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           addFormSubHeader(F("Proximity & Ambient Light Sensor parameters"));
           {
             const FormSelectorOptions selector(optionsGainCount, optionsGain, optionsGainValues);
-            selector.addFormSelector(F("Proximity Gain"), F("pgain"),  P064_PGAIN);
+            selector.addFormSelector(F("Proximity Gain"), F("pgain"), P064_PGAIN);
           }
 
           lightSensorGainLabel  = F("Ambient Light Sensor Gain");

@@ -303,6 +303,18 @@
     
     Example output: ``IP:192.168.10.86(DHCP)``"
     "
+    Latitude","
+    :red:`Internal`","
+    Set the latitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Latitude[,<degrees>]``
+
+    Range: -90 .. 90 (decimal, negative is southern hemisphere)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Longitude``."
+    "
     Let","
     :red:`Internal`","
     Set the value of variable n (1..INT_MAX), or use a variable name.
@@ -343,6 +355,18 @@
     Display status information about all ports
 
     ``LogPortStatus``"
+    "
+    Longitude","
+    :red:`Internal`","
+    Set the longitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Longitude[,<degrees>]``
+
+    Range: -180 .. 180 (decimal, negative is west of the prime meridian)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Latitude``."
     "
     LoopTimerSet
 
@@ -521,6 +545,12 @@
     Added: 2023-01-15
     "
     "
+    PostToHTTPS","
+    :green:`Rules`","
+    Like ``PostToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     ProvisionConfig","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
@@ -622,6 +652,12 @@
     Added: 2023-04-17
     "
     "
+    PutToHTTPS","
+    :green:`Rules`","
+    Like ``PutToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
+    "
     Reboot","
     :red:`Internal`","
     Reboot the ESP
@@ -695,6 +731,12 @@
     
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
     "
+    "
+    SendToHTTPS","
+    :green:`Rules`","
+    Like ``SendToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!
     "
     SendToUDP","
     :green:`Rules`","
@@ -797,7 +839,7 @@
     :green:`Rules`","
     Define a Derived value for a task. A Derived value is an extra value, available for the device, that can return a calculated result, based on any variable available in the system.
 
-    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>][,<VType>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
     
     ``<task nr/task name>``: Either a task number or a task name, for the task to add the derived value to.
 
@@ -805,7 +847,9 @@
 
     ``<formula>``: The formula to calculate and return as the value for the derived value. The content of the formula should be escaped, else the rules processor will fill the current values, instead of during retrieval of the derived value. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
 
-    ``<UnitOfMeasure>``: An optional Unit of Measure to be appended after the value. Must be quoted if it contains spaces or commas. (Added:2025/06/08)
+    ``<UnitOfMeasure>``: An optional Unit of Measure to be appended after the value. Must be quoted if it contains spaces or commas. Not case-sensitive, 'official' value will be used if the Unit of Measure selector is included in the build. (Added:2025/06/08)
+
+    ``<VType>``: The ValueType to be used for MQTT AutoDiscovery. The same values as available in the Value Type combobox on the Device configuration page can be used (not case-sensitive, 'official' value will be used) (Added: 2025/06/19)
 
     **Examples:**
 
@@ -815,9 +859,9 @@
 
     ``TaskValueSetDerived,BME,Fahrenheit,'\%c_c2f\%(\[BME#temperature\])'``
     
-    In other places, like rules, and in Display tasks, you can now use ``[BME#DewPoint]`` and ``[BME#Fahrenheit]`` to retrieve the freshly calculated result of the formulas. NB: If the value doesn't get updated, most likely the formula wasn't escaped properly, and the *calculate result* stored in memory, instead of the formula.
+    In other places, like rules, and in Display tasks, you can now use ``[BME#DewPoint]`` and ``[BME#Fahrenheit]`` to retrieve the freshly calculated result of the formulas. NB: If the value doesn't get updated, most likely the formula wasn't escaped properly, and the *calculated result* is stored in memory, instead of the formula.
 
-    Derived values can be shown on the Devices overview page, and included in the ``/json`` output, by enabling the **Show derived values** checkbox in the device configuration.
+    Derived values can be shown on the Devices overview page, and included in the ``/json`` output, by enabling the **Show derived values** checkbox in the device configuration. The value will be included in event generation if the per-task **Event & Log derived values** checkbox is enabled.
     "
     "
     TaskValueSetPresentation","

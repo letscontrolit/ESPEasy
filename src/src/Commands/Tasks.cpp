@@ -16,6 +16,7 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -241,7 +242,7 @@ const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, con
 #if FEATURE_STRING_VARIABLES
 const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line)
 {
-  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE));
+  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE), F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE));
 }
 
 const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line)
@@ -249,7 +250,7 @@ const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct
   return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE));
 }
 
-const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate)
+const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate, const __FlashStringHelper * vTypeTemplate)
 {
   String taskName;
   taskIndex_t tmpTaskIndex = INVALID_TASK_INDEX;
@@ -292,7 +293,48 @@ const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const 
     if (uomTemplate != nullptr) { // We have a Unit of Measure template
       if (GetArgv(Line, argument, 5)) { // check for extra argument holding UoM
         key = strformat(uomTemplate, taskName.c_str(), valueName.c_str());
-        setCustomStringVar(key, argument);
+        if (!argument.isEmpty()) {
+          #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+          uint8_t i = 1; // Index 0 is empty/None
+          String uom = toUnitOfMeasureName(i);
+          while (i < 255 && !uom.isEmpty()) {
+            if (argument.equalsIgnoreCase(uom)) {
+              setCustomStringVar(key, uom);
+              argument.clear();
+              break;
+            }
+            ++i;
+            uom = toUnitOfMeasureName(i);
+          }
+          if (!argument.isEmpty()) 
+          #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          {
+            setCustomStringVar(key, argument);
+          }
+        } else {
+          clearCustomStringVar(key);
+        }
+      }
+    }
+    if (vTypeTemplate != nullptr) { // We have a ValueType template
+      if (GetArgv(Line, argument, 6)) { // check for extra argument holding VType
+        key = strformat(vTypeTemplate, taskName.c_str(), valueName.c_str());
+        if (!argument.isEmpty()) {
+          constexpr uint8_t maxVType = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_NOT_SET);
+
+          for (uint8_t i = 0; i < maxVType; ++i) {
+            const Sensor_VType vt = static_cast<Sensor_VType>(i);
+
+            if ((getValueCountFromSensorType(vt, false) == 1) &&
+                argument.equalsIgnoreCase(getSensorTypeLabel(vt))) {
+              setCustomStringVar(key, getSensorTypeLabel(vt)); // Set 'official' VType label
+              break;
+            }
+          }
+        } else {
+          clearCustomStringVar(key);
+        }
       }
     }
     // addLog(LOG_LEVEL_INFO, strformat(F("TaskValueSetStorage: key: %s, argument: %s"), key.c_str(), argument.c_str())); // FIXME

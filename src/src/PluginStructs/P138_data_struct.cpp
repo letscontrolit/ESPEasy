@@ -18,6 +18,27 @@ const __FlashStringHelper* toString(const P138_valueOptions_e value, bool displa
   return F("*Undefined*");
 }
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_138_QueryVType(uint8_t value_nr) {
+  const P138_valueOptions_e value = static_cast<P138_valueOptions_e>(value_nr);
+
+  switch (value) {
+    case P138_valueOptions_e::None:
+    case P138_valueOptions_e::ChargeLevel:
+    case P138_valueOptions_e::PowerSource:
+      break;
+    case P138_valueOptions_e::BatteryCurrent:
+    case P138_valueOptions_e::InCurrent:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_CURRENT_ONLY);
+    case P138_valueOptions_e::StopVoltage:
+    case P138_valueOptions_e::ChargeUnderVoltage:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY);
+  }
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 // **************************************************************************/
 // Constructor
 // **************************************************************************/

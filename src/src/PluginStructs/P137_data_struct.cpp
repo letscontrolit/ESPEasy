@@ -151,6 +151,37 @@ const __FlashStringHelper* toString(const P137_PredefinedDevices_e device) {
   return F("Undefined");
 }
 
+#  if FEATURE_MQTT_DISCOVER
+int Plugin_137_QueryVType(uint8_t value_nr) {
+  const P137_valueOptions_e value = static_cast<P137_valueOptions_e>(value_nr);
+
+  switch (value) {
+    case P137_valueOptions_e::None: break;
+    case P137_valueOptions_e::BatteryDischargeCurrent:
+    case P137_valueOptions_e::BatteryChargeCurrent:
+    case P137_valueOptions_e::AcinCurrent:
+    case P137_valueOptions_e::VbusCurrent:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_CURRENT_ONLY);
+    case P137_valueOptions_e::BatteryPower:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY);
+    case P137_valueOptions_e::InternalTemperature:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+    case P137_valueOptions_e::BatteryVoltage:
+    case P137_valueOptions_e::AcinVoltage:
+    case P137_valueOptions_e::VbusVoltage:
+    case P137_valueOptions_e::ApsVoltage:
+    case P137_valueOptions_e::LDO2:
+    case P137_valueOptions_e::LDO3:
+    case P137_valueOptions_e::LDOIO:
+    case P137_valueOptions_e::DCDC2:
+    case P137_valueOptions_e::DCDC3:
+      return static_cast<int>(Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY);
+  }
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE);
+}
+
+#  endif // if FEATURE_MQTT_DISCOVER
+
 // **************************************************************************/
 // Constructor
 // **************************************************************************/

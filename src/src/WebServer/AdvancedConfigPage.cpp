@@ -179,6 +179,9 @@ void handle_advanced() {
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     Settings.ShowUnitOfMeasureOnDevicesPage(isFormItemChecked(LabelType::SHOW_UOM_ON_DEVICES_PAGE));
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    #if FEATURE_MQTT_CONNECT_BACKGROUND
+    Settings.MQTTConnectInBackground(isFormItemChecked(LabelType::MQTT_CONNECT_IN_BACKGROUND));
+    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     addHtmlError(SaveSettings());
 
@@ -354,6 +357,10 @@ void handle_advanced() {
   #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addFormCheckBox(LabelType::SHOW_UOM_ON_DEVICES_PAGE, Settings.ShowUnitOfMeasureOnDevicesPage());
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+  #if FEATURE_MQTT_CONNECT_BACKGROUND
+  addFormCheckBox(LabelType::MQTT_CONNECT_IN_BACKGROUND, Settings.MQTTConnectInBackground());
+  #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
   # ifndef NO_HTTP_UPDATER
   addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());

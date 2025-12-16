@@ -12,6 +12,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
+# if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+#include "../Helpers/_CPlugin_Helper_mqtt.h"
+# endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
 // ********************************************************************************
 // Add a separator as row start
 // ********************************************************************************
@@ -744,3 +748,45 @@ void copyFormPassword(const __FlashStringHelper * id, char *pPassword, int maxle
     safe_strncpy(pPassword, password.c_str(), maxlength);
   }
 }
+
+#if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+void addFormSelector_binarySensorDeviceClass(const __FlashStringHelper*label, 
+                                             const __FlashStringHelper*id, 
+                                             int selectedIndex,
+                                             bool addLabelAsFormSubHeader) {
+  if (addLabelAsFormSubHeader) {
+    addFormSubHeader(label);
+  }
+
+  std::vector<String> binaryDeviceClasses;
+  int devClassIndex   = 0;
+  String devClassName = MQTT_binary_deviceClassName(devClassIndex);
+  if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
+    devClassName += F("²");
+  }
+  if (MQTT_binary_deviceClassSwitch(devClassIndex)) {
+    devClassName += F("÷"); // These are multi-byte chars, so we have to use the F() macro
+  }
+
+  while (!devClassName.isEmpty() || (0 == devClassIndex)) {
+    binaryDeviceClasses.push_back(devClassName);
+    ++devClassIndex;
+    devClassName = MQTT_binary_deviceClassName(devClassIndex);
+    if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
+      devClassName += F("²");
+    }
+    if (MQTT_binary_deviceClassSwitch(devClassIndex)) {
+      devClassName += F("÷");
+    }
+  }
+  const FormSelectorOptions deviceClass(
+    devClassIndex,
+    &binaryDeviceClasses[0]);
+
+  deviceClass.addFormSelector(
+    label,
+    id,
+    selectedIndex);
+}
+
+#endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS

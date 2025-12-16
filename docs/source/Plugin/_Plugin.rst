@@ -93,15 +93,19 @@ Enabling "Stats" on a task value also extends how task values can be addressed w
 
 For example using just like normal task value data:
 
-* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
-* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
-* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
-* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+* ``[bme#temp.max]`` Refer to the maximum recorded sample in available samples (rolling maximum)
+* ``[bme#temp.maxX]`` Refer to the maximum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.maxp]`` (max-peak) Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
+* ``[bme#temp.min]`` Refer to the minimum recorded sample in available samples (rolling minimum)
+* ``[bme#temp.minX]`` Refer to the minimum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.minp]`` (min-peak) See ``[bme#temp.maxp]``.
 * ``[bme#temp.size]`` Return the number of samples in memory.
-* ``[bme#temp.sample]`` Access the last sample in memory.
-* ``[bme#temp.sampleN]`` Access the N-th last sample in memory.
+* ``[bme#temp.sample]`` Return the number of samples in memory. (Doc. reflects the actual code!)
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory, negative value accesses N-th value from the *oldest* available sample.
 
 
 Commands on "Stats" data:
@@ -247,13 +251,68 @@ On selected builds (ESP32 only, can be enabled in ESP8266 Custom builds) per val
 
 If set the UoM will be space-appended to the value when displayed on the Devices page, used in the labels for the Stats display, and later used in the MQTT AutoDiscovery messages so the receiving server can use that for presentation. When set it is also included in the JSON output as ``UoM`` per taskvalue, available at the ``/json`` endpoint of the ESP, to be used by external systems like EasyFetch.
 
-A list of 100+ Unit of Measure values is available (derived of what's supported by Home Assistant):
+A list of 165+ Unit of Measure values is available (derived of what's supported/expected by Home Assistant):
 
 ``°C, °F, K, %, Pa, hPa, bar, mbar, inHg, psi, W, kW, V, Wh, kWh, A, VA, mm, cm, m, km,`` ``L, mL, m³, ft³, m³/h, ft³/h, lx, UV index, µg/m³, mg/m³, p/m³, ppm, ppb,``
-``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, db, dBm,``
-``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s``
+``°, €, $, ¢, µs, ms, s, min, h, d, w, m, y, in, ft, yd, mi, Hz, GHz, gal, fl. oz, m²,`` ``g, kg, mg, µg, oz, lb, µS/cm, W/m², mm/h, mm/s, in/s, m/s, in/h, km/h, mph, dB, dBm,``
+``bit, kbit, Mbit, Gbit, B, kB, MB, GB, TB, PB, EB, ZB, YB, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB,`` ``bit/s, kbit/s, Mbit/s, Gbit/s, B/s, kB/s, MB/s, GB/s, KiB/s, MiB/s, GiB/s,``
+``ft/s, kn, mW, MW, GW, TW, BTU/(h·ft²), pH, cbar, mmHg, kPa, mA, µA, mV, µV, kV, cm², km², mm²,`` ``in², ft², yd², mi², ac, ha, kHz, MHz, mWh, MWh, GWh, TWh, cal, kcal, Mcal,``
+``Gcal, J, kJ, MJ, GJ, var, kvar, varh, kvarh, st, mg/dL, mmol/L, µSv, µSv/h, m³/s, ft³/min,`` ``L/h, L/min, L/s, gal/min, mL/s, g/m³, kWh/100km, Wh/km, mi/kWh, km/kWh, in/d, mm/d, Ah``
 
-Displaying the Unit of Measure can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
+Displaying the Unit of Measure in the Devices overview page can be disabled by unchecking the **Show Unit of Measure** checkbox on the Tools/Advanced page.
+
+The **Unit of Measure** selector is, because of the vast number of options, divided into categories, here's a partial preview (the 'empty' value is selected):
+
+.. image:: Task_config_page_UoM_selector_part.png
+
+Depending on the available data, the number of options is limited as much as possible, to reduce page-load time, as filling this many option in multiple comboboxes takes quite some time.
+
+Value Type
+^^^^^^^^^^
+
+(Added: 2025/06/21)
+
+On selected builds and for some plugins only, the Value Type selection is available. This selection is available when either the type of value per Value field is selectable by the user, or can have too many options to determine explicitly. De selector is using categories for easier selection of the desired Value Type.
+
+The options included here are all possible value types supported by ESPEasy that represent a *single* value, excluding options like Temp/Hum, Temp/Baro/Hum etc. ``None`` indicates no value type is selected.
+
+Available options, grouped per category:
+
+**Basic**: ``Single``
+
+**Environment**: ``Temp¹, Hum¹, Baro¹, Wind speed¹, Absolute humidity¹, Atmospheric pressure¹, Precipitation¹,`` ``Precipitation intensity¹``
+
+**Dust/Gases**: ``Dust PM2.5¹, Dust PM1.0¹, Dust PM10¹, (e)CO2¹, CO¹, TVOC¹, VOC parts¹, AQI¹, NOx¹,`` ``Gas¹, N2O¹, Ozone¹, SO2¹``
+
+**Energy**: ``Voltage¹, Current¹, Power Usage¹, Power Factor¹, Apparent Power Usage¹,`` ``Reactive Power¹, Reactive Energy¹, Energy¹, Energy storage¹, Energy distance¹``
+
+**Time**: ``Duration¹, Date¹, Timestamp¹``
+
+**Size**: ``Analog, Distance¹, Direction¹, Moisture¹, GPS, Weight¹, Data rate¹, Data size¹, Sound pressure¹, Signal strength¹,`` ``Volume¹, Volume flow rate¹, Volume storage¹, Water¹``
+
+**Light**: ``Lux¹, UV¹, UV Index¹, IR¹, Red¹, Green¹, Blue¹, Color temperature¹``
+
+**Other**: ``Switch¹, Switch (inv.)¹, Dimmer, String, UInt32 (1x), Int32 (1x), UInt64 (1x), Int64 (1x), Double (1x), Frequency¹``
+
+Value Types marked with ``¹`` are supported for use in MQTT AutoDiscovery.
+
+.. note:: When available, this setting is required for the Value to be included in the MQTT AutoDiscovery process.
+
+NB: ``Date`` and ``Timestamp`` Value Types can only be sent using Derived Values, as regular Values don't support the required formatting. Also, the Unit of Measure (when applicable) has to be provided there. The data should match ISO8601 format.
+
+Here's a partial preview (the 'None' value is selected):
+
+.. image:: Task_config_page_ValueType_selector_part.png
+
+MQTT State Class
+^^^^^^^^^^^^^^^^
+
+For some Value Types a State Class can be provided in the MQTT Discovery configuration. By default this setting is empty, but for (mostly Energy related) this can be configured for:
+
+* *Measurement*
+* *Measurement-angle*
+* *Total*
+* *Total-increasing*
 
 |
 
@@ -270,7 +329,7 @@ There are different released versions of ESP Easy:
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` (split into sets A..B) :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` (split into sets A..B) are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32 8MB Flash units (available for ESP32 Classic, ESP32-S3 and ESP32-C6).
 
@@ -449,6 +508,7 @@ There are different released versions of ESP Easy:
    ":ref:`P176_page`","|P176_status|","P176"
    ":ref:`P177_page`","|P177_status|","P177"
    ":ref:`P178_page`","|P178_status|","P178"
+   ":ref:`P180_page`","|P180_status|","P180"
 
 
 .. include:: _plugin_sets_overview.repl

@@ -1,0 +1,23 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#log]``
+    ","
+    Returns the logging state (0/1).
+    "
+    "
+    ``[<taskname>#<name>,<I2C-commands>]``
+
+    ``<name>``: A name that doesn't match any of the configured Value names in the plugin, or ``log`` (see above).
+
+    ``<I2C-commands>``: A sequence of I2C commands, as documented below, that will return a value.
+    ","
+    Returns the value remaining after executing the I2C commands.
+
+    Should not use the ``value`` I2C command, as then the last value won't be returned here. Must be wrapped in quotes when the command sequence includes commas or spaces.
+
+    ``delay`` I2C command is limited to 10 msec. similar to the 1ps/10ps/50ps events.
+    "
+

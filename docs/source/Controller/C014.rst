@@ -53,18 +53,18 @@ updates or commands can be sent by appending ``/set`` to the topics for values w
 
 ``homie/%unitname%/%devicename%/%valname%/set``
 
-Prequesites
------------
+Prerequisites
+-------------
 
-A MQTT server capable of storing messages sent with ``retain=true`` when  ``QoS=0``. Due to limitation (intentional not implemented due to low memory footprint and performance considerations) of the MQTT library (pubsubclient) used in ESPEasy it is only possible to send messages with ``QoS=0`` which basically means `fire and forget`. The current MQTT specification says that the server SHOULD store these messages when they arrive via ``QoS=0``. Some servers like the MQTT server currently build into openHAB 2.4 (moquette) is configured to ignore the retain flag and drop the message after delivery to the currently subscribed clients when ``QoS=0``. Mosquito on the other hand store messages when retain flag is set even when they are sent with ``QOS=0``.
+A MQTT server capable of storing messages sent with ``retain=true`` when  ``QoS=0``. Due to limitation (intentionally not implemented due to low memory footprint and performance considerations) of the MQTT library (pubsubclient) used in ESPEasy it is only possible to send messages with ``QoS=0`` which basically means `fire and forget`. The current MQTT specification says that the server SHOULD store these messages when they arrive via ``QoS=0``. Some servers like the MQTT server currently build into openHAB 2.4 (moquette) is configured to ignore the retain flag and drop the message after delivery to the currently subscribed clients when ``QoS=0``. Mosquito on the other hand stores messages when retain flag is set even when they are sent with ``QOS=0``.
 Check with a MQTT client like MQTTspy or MQTTfx if the auto-discover messages are stored (retained).
 
 A home automation server/controller capable talking Homie like openHAB since 2.4. (Be aware there are issues in the Homie implementation 2.4 including 2.5M1 milestone release not working as expected after restart). Recent snapshot builds should work.
 
 Setup
--------------
+-----
 
-- Add the Homie **Homie MQTT (Version 4.0.0 dev)** or **Homie MQTT (Version 3.0.1 dev)** controller to your controller lists depending on your build.
+- Add the Homie **Homie MQTT (Version 4.0.0 dev)** or **Homie MQTT (Version 3.0.1)** controller to your controller lists depending on your build.
 - Insert your broker address
 - And user credentials if necessary
 - The publish scheme is fixed to meet the homie requirements to ``homie/%sysname%/%tskname%/%valname%``
@@ -108,6 +108,7 @@ The controller currently supports these features
 - Send updates of GPIO ports to ``homie/%unitName%/SYSTEM/gpio#`` regardless from where the change is triggered (to be fully tested).
 - In conjunction with :ref:`P086_page` actuators can be used according to the Homie convetion using rules.
 - Receive values for dummy devices via ``homie/%unitName%/%dummyDeviceName%/%valueName%/set``. From there the values can be processed further by using rules.
+- Include Unit of Measure ``$unit`` in AutoDiscovery, if the Unit of Measure feature is available.
 - Handle ``$state`` attribute (for complete list see attribute table below)
 
   - ``init`` during boot process
@@ -122,9 +123,8 @@ The controller currently supports these features
 Future / planned features
 -------------------------
 
-- A special Homie Plugin is in devolopment to pass ``/set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$settable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...). See :ref:`P086_page` in :yellow:`Collection A` builds
+- A special Homie Plugin is available to pass ``/set`` messages to rules for further handling. Here ``$datatype`` and ``$format`` attributes for ``$settable`` values can be specified there. This will enable ESPEasy to handle direct inputs to plug-ins like dimmers (%,0:100), colors (RGB & HSV, 255,255,255), enum devices like remote controls (Play, Pause, Vol+, Vol-, ...). See :ref:`P086_page` in :yellow:`Collection A` builds
 - Further in field testing with different MQTT brokers and home automation systems.
-- Handling units via the ``$unit`` attribute. As ESPEasy is currenty "unitless" this needs a global concept within ESPEasy
 - Handling ``$datatype`` attribute. Currenly all values (except cmd and gpio) are defined as ``float``. See :ref:`P086_page` in :yellow:`Collection A` builds
 - Prepare some "working examples".
 

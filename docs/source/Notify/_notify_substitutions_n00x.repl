@@ -1,5 +1,5 @@
 .. |N001_type| replace:: :cyan:`Notifications`
-.. |N001_name| replace:: :cyan:`Notifications Email (SMTP)`
+.. |N001_name| replace:: :cyan:`Notifications - Email (SMTP)`
 .. |N001_typename| replace:: :cyan:`Notifications - Email (SMTP)`
 .. |N001_porttype| replace:: `.`
 .. |N001_status| replace:: :green:`NORMAL` :yellow:`CLIMATE` :yellow:`COLLECTION` :yellow:`SONOFF` :yellow:`SHELLY`
@@ -11,7 +11,7 @@
 .. |N001_page| replace:: N001
 
 .. |N002_type| replace:: :cyan:`Notifications`
-.. |N002_name| replace:: :cyan:`Notifications Buzzer`
+.. |N002_name| replace:: :cyan:`Notifications - Buzzer`
 .. |N002_typename| replace:: :cyan:`Notifications - Buzzer`
 .. |N002_porttype| replace:: `.`
 .. |N002_status| replace:: :green:`NORMAL` :yellow:`CLIMATE` :yellow:`COLLECTION` :yellow:`SONOFF` :yellow:`SHELLY`

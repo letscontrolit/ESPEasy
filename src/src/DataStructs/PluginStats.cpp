@@ -369,21 +369,27 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
       break;
     case 'm':
 
-      if (matchedCommand(command, F("min"), nrSamples)) {
+      if (equals(command, F("minp"))) { // [taskname#valuename.minp] Lowest value seen since value reset
+        value   = getPeakLow();
+        success = true;
+      } else if (matchedCommand(command, F("min"), nrSamples)) {
         success = nrSamples != 0;
 
-        if (nrSamples < 0) { // [taskname#valuename.min] Lowest value seen since value reset
-          value = getPeakLow();
+        if (nrSamples < 0) { // [taskname#valuename.min] Lowest value of all recent samples
+          value = getSampleExtreme(getNrSamples(), false);
         } else {             // Check for "minN", where N is the number of most recent samples to use.
           if (nrSamples > 0) {
             value = getSampleExtreme(nrSamples, false);
           }
         }
+      } else if (equals(command, F("maxp"))) { // [taskname#valuename.maxp] Highest value seen since value reset
+        value   = getPeakHigh();
+        success = true;
       } else if (matchedCommand(command, F("max"), nrSamples)) {
         success = nrSamples != 0;
 
-        if (nrSamples < 0) { // [taskname#valuename.max] Highest value seen since value reset
-          value = getPeakHigh();
+        if (nrSamples < 0) { // [taskname#valuename.max] Highest value of all recent samples
+          value = getSampleExtreme(getNrSamples(), true);
         } else {             // Check for "maxN", where N is the number of most recent samples to use.
           if (nrSamples > 0) {
             value = getSampleExtreme(nrSamples, true);

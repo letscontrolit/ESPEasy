@@ -154,6 +154,17 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+#if defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)
+  // Display builds are getting too large, so for now disable ETH for display builds
+  // Update: By splitting Display into A and B, there is enough space available to enable ETH for now
+  // #if FEATURE_ETHERNET
+  //   #undef FEATURE_ETHERNET
+  // #endif
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
+#endif
+
 #ifdef MEMORY_ANALYSIS
   #ifdef MQTT_ONLY
     #define USES_C002   // Domoticz MQTT
@@ -256,6 +267,8 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Collection_F, IR with AC"
   #elif defined(PLUGIN_SET_COLLECTION_G_ESP32)
     #define PLUGIN_DESCR  "Collection_G, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_H_ESP32)
+    #define PLUGIN_DESCR  "Collection_H, IR with AC"
   #else
     #define PLUGIN_DESCR  "Normal, IR with AC"
   #endif
@@ -270,7 +283,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_COLLECTION
-  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E) && !defined(PLUGIN_BUILD_COLLECTION_F) && !defined(PLUGIN_BUILD_COLLECTION_G)
+  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E) && !defined(PLUGIN_BUILD_COLLECTION_F) && !defined(PLUGIN_BUILD_COLLECTION_G) && !defined(PLUGIN_BUILD_COLLECTION_H)
     #define PLUGIN_DESCR  "Collection_A"
     #define PLUGIN_SET_COLLECTION_A
   #endif
@@ -334,13 +347,22 @@ To create/register a plugin, you have to :
   #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
+#ifdef PLUGIN_BUILD_COLLECTION_H
+  #define PLUGIN_DESCR  "Collection_H"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_H
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
+#endif
+
 #ifndef PLUGIN_BUILD_CUSTOM
   #ifndef PLUGIN_BUILD_NORMAL
     #define PLUGIN_BUILD_NORMAL // defaults to stable, if not custom
   #endif
 #endif
 
-#ifdef PLUGIN_CLIMATE_COLLECTION
+#ifdef PLUGIN_CLIMATE_A_COLLECTION
   #ifdef PLUGIN_BUILD_NORMAL
     #undef PLUGIN_BUILD_NORMAL
   #endif
@@ -370,7 +392,39 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_RULES_EASY_COLOR_CODE
     #define FEATURE_RULES_EASY_COLOR_CODE 1
   #endif
-#endif
+#endif // ifdef PLUGIN_CLIMATE_A_COLLECTION
+
+#ifdef PLUGIN_CLIMATE_B_COLLECTION
+  #ifdef PLUGIN_BUILD_NORMAL
+    #undef PLUGIN_BUILD_NORMAL
+  #endif
+  #define PLUGIN_SET_NONE // Specifically configured below
+  #define CONTROLLER_SET_STABLE
+  #define NOTIFIER_SET_STABLE
+  #ifndef FEATURE_ESPEASY_P2P
+    #define FEATURE_ESPEASY_P2P 1
+  #endif
+  #if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+    #define LIMIT_BUILD_SIZE
+  #endif
+
+  #ifndef FEATURE_I2CMULTIPLEXER
+    #define FEATURE_I2CMULTIPLEXER  1
+  #endif
+  #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
+  #endif
+  #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+  #ifndef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  1
+  #endif
+  #ifndef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  1
+  #endif
+  #ifndef FEATURE_RULES_EASY_COLOR_CODE
+    #define FEATURE_RULES_EASY_COLOR_CODE 1
+  #endif
+#endif // ifdef PLUGIN_CLIMATE_B_COLLECTION
 
 #ifdef PLUGIN_BUILD_NORMAL
     #define  PLUGIN_SET_STABLE
@@ -883,7 +937,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_ESP32
-  #if !defined(PLUGIN_SET_COLLECTION_B_ESP32) && !defined(PLUGIN_SET_COLLECTION_C_ESP32) && !defined(PLUGIN_SET_COLLECTION_D_ESP32) && !defined(PLUGIN_SET_COLLECTION_E_ESP32) && !defined(PLUGIN_SET_COLLECTION_F_ESP32) && !defined(PLUGIN_SET_COLLECTION_G_ESP32)
+  #if !defined(PLUGIN_SET_COLLECTION_B_ESP32) && !defined(PLUGIN_SET_COLLECTION_C_ESP32) && !defined(PLUGIN_SET_COLLECTION_D_ESP32) && !defined(PLUGIN_SET_COLLECTION_E_ESP32) && !defined(PLUGIN_SET_COLLECTION_F_ESP32) && !defined(PLUGIN_SET_COLLECTION_G_ESP32) && !defined(PLUGIN_SET_COLLECTION_H_ESP32)
     #ifndef PLUGIN_DESCR // COLLECTION_A_ESP32_IRExt also passes here
       #define PLUGIN_DESCR  "Collection_A ESP32"
     #endif
@@ -895,6 +949,14 @@ To create/register a plugin, you have to :
   #ifdef ESP8266
     #undef ESP8266
   #endif
+  #if !defined(PLUGIN_BUILD_MAX_ESP32)
+    #ifndef BUILD_NO_DEBUG
+      #define BUILD_NO_DEBUG
+    #endif
+    #ifndef P036_LIMIT_BUILD_SIZE
+      #define P036_LIMIT_BUILD_SIZE
+    #endif
+  #endif // if !defined(PLUGIN_BUILD_MAX_ESP32)
   // Undefine contradictionary defines
   #ifdef PLUGIN_SET_NONE
     #undef PLUGIN_SET_NONE
@@ -910,9 +972,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B_ESP32
@@ -941,9 +1000,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_C_ESP32
@@ -956,6 +1012,11 @@ To create/register a plugin, you have to :
   #ifdef ESP8266
     #undef ESP8266
   #endif
+  #if !defined(PLUGIN_BUILD_MAX_ESP32)
+    #ifndef P037_LIMIT_BUILD_SIZE
+      #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+    #endif
+  #endif // if !defined(PLUGIN_BUILD_MAX_ESP32)
   // Undefine contradictionary defines
   #ifdef PLUGIN_SET_NONE
     #undef PLUGIN_SET_NONE
@@ -972,9 +1033,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_D_ESP32
@@ -1003,9 +1061,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_E_ESP32
@@ -1034,9 +1089,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_F_ESP32
@@ -1065,9 +1117,6 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_G_ESP32
@@ -1096,9 +1145,34 @@ To create/register a plugin, you have to :
   #define  CONTROLLER_SET_COLLECTION
   #define  NOTIFIER_SET_STABLE
   #define  PLUGIN_SET_STABLE     // add stable
-  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
-  // where incompatible plugins will be disabled.
-  // TODO : Check compatibility of plugins for ESP32 board.
+#endif
+
+#ifdef PLUGIN_SET_COLLECTION_H_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_H_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_H ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_H
+  #define  CONTROLLER_SET_STABLE
+  #define  CONTROLLER_SET_COLLECTION
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
 #endif
 
 #ifdef PLUGIN_BUILD_MAX_ESP32
@@ -1121,11 +1195,17 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_ENERGY_COLLECTION
         #define PLUGIN_ENERGY_COLLECTION
     #endif
-    #ifndef PLUGIN_DISPLAY_COLLECTION
-        #define PLUGIN_DISPLAY_COLLECTION
+    #ifndef PLUGIN_DISPLAY_A_COLLECTION
+        #define PLUGIN_DISPLAY_A_COLLECTION
     #endif
-    #ifndef PLUGIN_CLIMATE_COLLECTION
-      #define PLUGIN_CLIMATE_COLLECTION
+    #ifndef PLUGIN_DISPLAY_B_COLLECTION
+        #define PLUGIN_DISPLAY_B_COLLECTION
+    #endif
+    #ifndef PLUGIN_CLIMATE_A_COLLECTION
+      #define PLUGIN_CLIMATE_A_COLLECTION
+    #endif
+    #ifndef PLUGIN_CLIMATE_B_COLLECTION
+      #define PLUGIN_CLIMATE_B_COLLECTION
     #endif
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
@@ -1141,6 +1221,7 @@ To create/register a plugin, you have to :
     #endif
     #define FEATURE_MQTT_TLS 1
     #define FEATURE_EMAIL_TLS 1
+    #define FEATURE_HTTP_TLS 1
 
     #ifdef FEATURE_CUSTOM_PROVISIONING
         #undef FEATURE_CUSTOM_PROVISIONING
@@ -1280,6 +1361,9 @@ To create/register a plugin, you have to :
   #ifdef PLUGIN_SET_COLLECTION_G
     #undef PLUGIN_SET_COLLECTION_G
   #endif
+  #ifdef PLUGIN_SET_COLLECTION_H
+    #undef PLUGIN_SET_COLLECTION_H
+  #endif
   #ifdef PLUGIN_SET_EXPERIMENTAL
     #undef PLUGIN_SET_EXPERIMENTAL
   #endif
@@ -1378,6 +1462,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef PLUGIN_SET_COLLECTION_G
     #define PLUGIN_SET_COLLECTION_G
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_H
+    #define PLUGIN_SET_COLLECTION_H
   #endif
 #endif
 
@@ -1491,7 +1578,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#if defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F) || defined(PLUGIN_SET_COLLECTION_G)
+#if defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F) || defined(PLUGIN_SET_COLLECTION_G) || defined(PLUGIN_SET_COLLECTION_H)
   #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
@@ -1544,7 +1631,7 @@ To create/register a plugin, you have to :
     #define USES_P082   // GPS
     #define USES_P089   // Ping
     #if !defined(USES_P095) && defined(ESP32) && !defined(PLUGIN_BUILD_IR_EXTENDED)
-      #define USES_P095   // TFT ILI9xxx
+//      #define USES_P095   // TFT ILI9xxx
     #endif
     #if !defined(PLUGIN_BUILD_NORMAL_IRext)
       // IRext builds do need quite a lot of build space
@@ -1559,6 +1646,14 @@ To create/register a plugin, you have to :
       #if !defined(USES_P139) && defined(ESP32)
         #define USES_P139   // AXP2101
       #endif
+    #endif
+    #if !defined(USES_P180) && defined(ESP32)
+      #define USES_P180   // Generic - I2C Generic
+    #endif
+    // Remove plugins from 'collection' builds which rely on the neopixel library
+    // to make sure those builds will fit again.
+    #ifdef USES_P038
+    #undef USES_P038
     #endif
 #endif
 
@@ -1691,6 +1786,11 @@ To create/register a plugin, you have to :
       #define USES_P163   // Environment - RadSens I2C radiation counter
     #endif
   #endif
+  #ifdef ESP32
+    #ifndef USES_P105
+      #define USES_P105
+    #endif
+  #endif
   #ifndef USES_P164
     #define USES_P164   // Gases - ENS16x TVOC\eCO2
   #endif
@@ -1703,6 +1803,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P170
     #define USES_P170   // Input - I2C Liquid level sensor
   #endif
+#endif // ifdef PLUGIN_SET_COLLECTION_G
+
+#ifdef PLUGIN_SET_COLLECTION_H
   #if !defined(USES_P173) && defined(ESP32)
     #define USES_P173   // Environment - SHTC3
   #endif
@@ -1712,7 +1815,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
-#endif // ifdef PLUGIN_SET_COLLECTION_G
+#endif // ifdef PLUGIN_SET_COLLECTION_H
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
@@ -1748,6 +1851,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P085
      #define USES_P085   // AcuDC24x
    #endif
+  #ifndef USES_P089
+    #define USES_P089 // Ping
+  #endif
    #ifndef USES_P093
      #define USES_P093   // Mitsubishi Heat Pump
    #endif
@@ -1778,94 +1884,208 @@ To create/register a plugin, you have to :
   #if !defined(USES_P176) && defined(ESP32)
     #define USES_P176   // Communication - Victron VE.Direct
   #endif
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
+  #endif
 
 #endif // ifdef PLUGIN_ENERGY_COLLECTION
 
-// Collection of all display plugins. (also NeoPixel)
-#ifdef PLUGIN_DISPLAY_COLLECTION
+// Collection of display plugins, set A (non-AdaGFX_Helper).
+#ifdef PLUGIN_DISPLAY_A_COLLECTION
   #ifndef PLUGIN_DESCR
-    #define PLUGIN_DESCR  "Display"
+    #define PLUGIN_DESCR  "Display A"
   #endif
-   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #ifndef PLUGIN_BUILD_MAX_ESP32
-       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
-       #define KEEP_I2C_MULTIPLEXER
-       #ifndef P036_LIMIT_BUILD_SIZE
-         #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
-       #endif
-       #ifndef P037_LIMIT_BUILD_SIZE
-         #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
-       #endif
-       #define NOTIFIER_SET_NONE
-       #ifdef USES_N001
-         #undef USES_N001   // Email
-       #endif
-       #ifdef USES_N002
-         #undef USES_N002   // Buzzer
-       #endif
-     #endif
-   #endif
-   #if defined(ESP8266)
-     #if defined(FEATURE_I2C_DEVICE_CHECK)
-       #undef FEATURE_I2C_DEVICE_CHECK
-     #endif
-     #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    #ifndef PLUGIN_BUILD_MAX_ESP32
+      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+      #define KEEP_I2C_MULTIPLEXER
+      #ifndef P036_LIMIT_BUILD_SIZE
+        #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+      #endif
+      #ifndef P037_LIMIT_BUILD_SIZE
+        #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+      #endif
+      #define NOTIFIER_SET_NONE
+      #ifdef USES_N001
+        #undef USES_N001   // Email
+      #endif
+      #ifdef USES_N002
+        #undef USES_N002   // Buzzer
+      #endif
+    #endif
+  #endif
+  #if defined(ESP8266)
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
     //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
     //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
     //  #endif // FEATURE_TARSTREAM_SUPPORT
-   #endif
-   #if !defined(FEATURE_SD) && !defined(ESP8266)
-     #define FEATURE_SD 1
-   #endif
-   #ifndef USES_P012
-     #define USES_P012   // LCD
-   #endif
-   #ifndef USES_P023
+  #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD 1
+  #endif
+  #ifndef USES_P012
+    #define USES_P012   // LCD
+  #endif
+  #ifndef USES_P023
     #define USES_P023   // OLED
-   #endif
-   #ifndef USES_P036
+  #endif
+  #ifndef USES_P036
     #define USES_P036   // FrameOLED
-   #endif
-   #ifdef USES_P038
+  #endif
+  #ifdef USES_P038
     #undef USES_P038   // DISABLE NeoPixel
-   #endif
-   #ifdef USES_P041
+  #endif
+  #ifdef USES_P041
     #undef USES_P041   // DISABLE NeoClock
-   #endif
-   #ifdef USES_P042
+  #endif
+  #ifdef USES_P042
     #undef USES_P042   // DISABLE Candle
-   #endif
-   #ifndef USES_P057
+  #endif
+  #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
-   #endif
-   #ifdef USES_P070
+  #endif
+  #ifdef USES_P070
     #undef USES_P070   // DISABLE NeoPixel_Clock
-   #endif
-   #ifndef USES_P075
+  #endif
+  #ifndef USES_P075
     #define USES_P075   // Nextion
-   #endif
-   #ifndef USES_P095
-    #define USES_P095  // TFT ILI9341
-   #endif
-   #ifndef USES_P096
-    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
-   #endif
-   #ifndef USES_P099
-    #define USES_P099   // XPT2046 Touchscreen
-   #endif
-   #ifndef USES_P104
+  #endif
+  //  #ifndef USES_P095
+  //   #define USES_P095  // TFT ILI9341
+  //  #endif
+  //  #ifndef USES_P096
+  //   #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  //  #endif
+  //  #ifndef USES_P099
+  //   #define USES_P099   // XPT2046 Touchscreen
+  //  #endif
+  #ifndef USES_P104
     // Plugin adds over 40k to build size
     #define USES_P104   // MAX7219 dot matrix
-   #endif
-   #if !defined(USES_P109) && defined(ESP32)
-     #define USES_P109   // ThermoOLED
-   #endif
-   #ifndef USES_P116
-     #define USES_P116   // ST77xx
-   #endif
-   #if !defined(USES_P123) && defined(ESP32)
-     #define USES_P123   // I2C Touchscreens
-   #endif
+  #endif
+  #if !defined(USES_P109) && defined(ESP32)
+    #define USES_P109   // ThermoOLED
+  #endif
+  //  #ifndef USES_P116
+  //    #define USES_P116   // ST77xx
+  //  #endif
+  //  #if !defined(USES_P123) && defined(ESP32)
+  //    #define USES_P123   // I2C Touchscreens
+  //  #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
+  #if !defined(USES_P139) && defined(ESP32)
+    #define USES_P139   // AXP2101
+  #endif
+  // #ifndef USES_P141
+  //   #define USES_P141   // PCD8544 Nokia 5110
+  // #endif
+  #ifndef USES_P143
+    #define USES_P143   // I2C Rotary encoders
+  #endif
+  #if !defined(USES_P148) && defined(ESP32)
+    #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  // #if !defined(USES_P165) && defined(ESP32)
+  //   #define USES_P165   // Display - NeoPixel (7-Segment)
+  // #endif
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
+  #endif
+#endif // ifdef PLUGIN_DISPLAY_A_COLLECTION
+
+// Collection of display plugins, set B (AdaGFX_Helper).
+#ifdef PLUGIN_DISPLAY_B_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Display B"
+  #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    #ifndef PLUGIN_BUILD_MAX_ESP32
+      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+      #define KEEP_I2C_MULTIPLEXER
+      #ifndef P036_LIMIT_BUILD_SIZE
+        #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+      #endif
+      #ifndef P037_LIMIT_BUILD_SIZE
+        #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+      #endif
+      #define NOTIFIER_SET_NONE
+      #ifdef USES_N001
+        #undef USES_N001   // Email
+      #endif
+      #ifdef USES_N002
+        #undef USES_N002   // Buzzer
+      #endif
+    #endif
+  #endif
+  #if defined(ESP8266)
+    #if defined(FEATURE_I2C_DEVICE_CHECK)
+      #undef FEATURE_I2C_DEVICE_CHECK
+    #endif
+    #define FEATURE_I2C_DEVICE_CHECK 0 // Disable I2C device check code
+    //  #if !defined(FEATURE_TARSTREAM_SUPPORT)
+    //    #define FEATURE_TARSTREAM_SUPPORT   0 // Disable TarStream support for size
+    //  #endif // FEATURE_TARSTREAM_SUPPORT
+  #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD 1
+  #endif
+  #ifdef USES_P012
+    #undef USES_P012   // DISABLE LCD
+  #endif
+  #ifdef USES_P023
+    #undef USES_P023   // DISABLE OLED
+  #endif
+  #ifndef USES_P036
+    #define USES_P036   // FrameOLED
+  #endif
+  #ifdef USES_P038
+    #undef USES_P038   // DISABLE NeoPixel
+  #endif
+  #ifdef USES_P041
+    #undef USES_P041   // DISABLE NeoClock
+  #endif
+  #ifdef USES_P042
+    #undef USES_P042   // DISABLE Candle
+  #endif
+  #ifdef USES_P057
+    #undef USES_P057   // DISABLE HT16K33_LED
+  #endif
+  #ifdef USES_P070
+    #undef USES_P070   // DISABLE NeoPixel_Clock
+  #endif
+  #ifdef USES_P075
+    #undef USES_P075   // DISABLE Nextion
+  #endif
+  #ifndef USES_P095
+    #define USES_P095  // TFT ILI9341
+  #endif
+  #ifndef USES_P096
+    #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
+  #endif
+  #ifndef USES_P099
+    #define USES_P099   // XPT2046 Touchscreen
+  #endif
+  #ifdef USES_P104
+    // Plugin adds over 40k to build size
+    #undef USES_P104   // DISABLE MAX7219 dot matrix
+  #endif
+  #if !defined(USES_P109) && defined(ESP32)
+    #define USES_P109   // ThermoOLED
+  #endif
+  #ifndef USES_P116
+    #define USES_P116   // ST77xx
+  #endif
+  #if !defined(USES_P123) && defined(ESP32)
+    #define USES_P123   // I2C Touchscreens
+  #endif
   #if !defined(USES_P137) && defined(ESP32)
     #define USES_P137   // AXP192
   #endif
@@ -1881,18 +2101,21 @@ To create/register a plugin, you have to :
   #ifndef USES_P143
     #define USES_P143   // I2C Rotary encoders
   #endif
-  #ifndef USES_P148
+  #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
-  #if !defined(USES_P165) && defined(ESP32)
-    #define USES_P165   // Display - NeoPixel (7-Segment)
+  // #if !defined(USES_P165) && defined(ESP32)
+  //   #define USES_P165   // Display - NeoPixel (7-Segment)
+  // #endif
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
   #endif
-#endif // ifdef PLUGIN_DISPLAY_COLLECTION
+#endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
 
-// Collection of all climate plugins.
-#ifdef PLUGIN_CLIMATE_COLLECTION
+// Collection of climate A plugins.
+#ifdef PLUGIN_CLIMATE_A_COLLECTION
   #ifndef PLUGIN_DESCR
-    #define PLUGIN_DESCR  "Climate"
+    #define PLUGIN_DESCR  "Climate A"
   #endif
 
   // Features and plugins cherry picked from stable set
@@ -1972,6 +2195,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P083
     #define USES_P083 // SGP30
   #endif
+  #ifndef USES_P089
+    #define USES_P089 // Ping
+  #endif
   #ifndef USES_P090
     #define USES_P090 // CCS811
   #endif
@@ -2046,7 +2272,77 @@ To create/register a plugin, you have to :
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
 
-  #ifndef USES_P169
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
+  #endif
+
+  
+  // Controllers
+  #ifndef USES_C011
+    #define USES_C011   // HTTP Advanced
+  #endif
+#endif // ifdef PLUGIN_CLIMATE_A_COLLECTION
+
+#ifdef PLUGIN_CLIMATE_B_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Climate B"
+  #endif
+
+  // Features and plugins cherry picked from stable set
+  #ifndef FEATURE_SERVO
+    #define FEATURE_SERVO 1
+  #endif
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
+  #endif
+
+  #define USES_P001   // Switch
+  #define USES_P002   // ADC
+  #define USES_P003   // Pulse
+  #define USES_P004   // Dallas
+  #define USES_P005   // DHT
+  #define USES_P006   // BMP085
+
+  #define USES_P010   // BH1750
+  #define USES_P011   // PME
+  #define USES_P012   // LCD
+  #define USES_P013   // HCSR04
+  #define USES_P014   // SI7021
+  #define USES_P015   // TSL2561
+  #define USES_P018   // Dust
+  #define USES_P019   // PCF8574
+
+  #define USES_P021   // Level
+  #define USES_P023   // OLED
+  #define USES_P024   // MLX90614
+  #define USES_P025   // ADS1x15
+  #define USES_P026   // SysInfo
+  #define USES_P028   // BME280
+  #define USES_P029   // Output
+
+  #define USES_P031   // SHT1X
+  #define USES_P032   // MS5611
+  #define USES_P033   // Dummy
+  #define USES_P034   // DHT12
+  #define USES_P036   // FrameOLED
+  #define USES_P037   // MQTTImport
+  #define USES_P038   // NeoPixel
+  #define USES_P039   // Environment - Thermocouple
+
+  #define USES_P043   // ClkOutput
+  #define USES_P044   // P1WifiGateway
+  #define USES_P049   // MHZ19
+
+  #define USES_P052   // SenseAir
+  #define USES_P053   // PMSx003
+  #define USES_P056   // SDS011-Dust
+  #define USES_P059   // Encoder
+
+  #define USES_P073   // 7DGT
+
+  // Enable extra climate-related plugins (CO2/Temp/Hum)
+
+  #if defined(USES_P169) && defined(ESP32)
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
   #if !defined(USES_P173) // && defined(ESP32)
@@ -2061,18 +2357,24 @@ To create/register a plugin, you have to :
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
+  #if !defined(USES_P180) && defined(ESP32)
+    #define USES_P180   // Generic - I2C Generic
+  #endif
 
   
   // Controllers
   #ifndef USES_C011
     #define USES_C011   // HTTP Advanced
   #endif
-#endif // ifdef PLUGIN_CLIMATE_COLLECTION
+#endif // ifdef PLUGIN_CLIMATE_B_COLLECTION
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "NeoPixel"
+  #endif
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
   #endif
   #if !defined(FEATURE_SD) && !defined(ESP8266)
     #define FEATURE_SD  1
@@ -2088,6 +2390,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P070
     #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P089
+    #define USES_P089 // Ping
   #endif
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
@@ -2127,6 +2432,11 @@ To create/register a plugin, you have to :
   #if !defined(USES_P165) // && defined(ESP32)
     #define USES_P165   // Display - NeoPixel (7-Segment)
   #endif
+
+  #ifndef USES_P180
+    #define USES_P180   // Generic - I2C Generic
+  #endif
+
 #endif // ifdef PLUGIN_NEOPIXEL_COLLECTION
 
 #ifdef CONTROLLER_SET_COLLECTION
@@ -2292,8 +2602,18 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_MQTT_TLS
     #define FEATURE_MQTT_TLS 1
   #endif
+  #ifndef FEATURE_MQTT_DISCOVER
+    #define FEATURE_MQTT_DISCOVER 1
+  #endif
   #ifndef FEATURE_EMAIL_TLS
     #define FEATURE_EMAIL_TLS 1
+  #endif
+  #ifndef FEATURE_HTTP_TLS
+    #define FEATURE_HTTP_TLS 1
+  #endif
+
+  #ifdef BUILD_NO_DEBUG
+    #undef BUILD_NO_DEBUG
   #endif
 
   // Plugins
@@ -2312,11 +2632,32 @@ To create/register a plugin, you have to :
   #ifndef USES_P046
     #define USES_P046  // VentusW266
   #endif
+  #ifndef USES_P038
+    #define USES_P038   // NeoPixel
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P057
+    #define USES_P057   // HT16K33_LED
+  #endif
+  #ifndef USES_P070
+    #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P075
+    #define USES_P075   // Nextion
+  #endif
   #ifndef USES_P087
     #define USES_P087   // Serial Proxy
   #endif
   #ifndef USES_P088
     #define USES_P088   // ToniA IR plugin
+  #endif
+  #ifndef USES_P089
+    #define USES_P089   // Ping
   #endif
   #ifndef USES_P094
     #define USES_P094  // CUL Reader
@@ -2525,12 +2866,12 @@ To create/register a plugin, you have to :
   #ifndef USES_P168
     #define USES_P168   // Light - VEML6030/VEML7700
   #endif
-  #ifndef USES_P170
-    #define USES_P170   // Input - I2C Liquid level sensor
-  #endif
-
   #ifndef USES_P169
     #define USES_P169   // Environment - AS3935 Lightning Detector
+  #endif
+
+  #ifndef USES_P170
+    #define USES_P170   // Input - I2C Liquid level sensor
   #endif
   #ifndef USES_P173
     #define USES_P173   // Environment - SHTC3
@@ -2546,6 +2887,10 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P178
     #define USES_P178   // Extra IO - LU9685 Servo controller
+  #endif
+
+  #ifndef USES_P180
+    #define USES_P180   // Generic - I2C Generic
   #endif
 
   // Controllers
@@ -2696,7 +3041,7 @@ To create/register a plugin, you have to :
 
 
 // Disable Homie plugin for now in the dev build to make it fit.
-#if defined(PLUGIN_DISPLAY_COLLECTION) && defined(USES_C014) && defined(ESP8266)
+#if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(USES_C014) && defined(ESP8266)
   #undef USES_C014
 #endif
 
@@ -3053,7 +3398,7 @@ To create/register a plugin, you have to :
 #endif
 
 // Here we can re-enable specific features in the COLLECTION sets as we have created some space there by splitting them up
-#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F) || defined(PLUGIN_SET_COLLECTION_G))
+#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E) || defined(PLUGIN_SET_COLLECTION_F) || defined(PLUGIN_SET_COLLECTION_G) || defined(PLUGIN_SET_COLLECTION_H))
   #ifndef FEATURE_RTTTL
     #define FEATURE_RTTTL 1
   #endif
@@ -3075,7 +3420,6 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-
 #ifdef ESP8266
 // It just doesn't work on ESP8266, too slow, too high memory requirements
 //#if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M)
@@ -3087,9 +3431,13 @@ To create/register a plugin, you have to :
     #undef FEATURE_EMAIL_TLS
     #define FEATURE_EMAIL_TLS 0
   #endif
+  #if FEATURE_HTTP_TLS
+    #undef FEATURE_HTTP_TLS
+    #define FEATURE_HTTP_TLS 0
+  #endif
 #endif
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_EMAIL_TLS || FEATURE_HTTP_TLS
   #if defined(FEATURE_TLS) && !FEATURE_TLS
     #undef FEATURE_TLS
   #endif
@@ -3099,15 +3447,44 @@ To create/register a plugin, you have to :
 #endif
 
 
-#if FEATURE_EMAIL_TLS
-  #if defined(FEATURE_TLS) && !FEATURE_TLS
-    #undef FEATURE_TLS
-  #endif
-  #ifndef FEATURE_TLS
-    #define FEATURE_TLS 1
+#if !defined(FEATURE_MQTT_DISCOVER) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DISCOVER 0
+  #else
+    #define FEATURE_MQTT_DISCOVER 1
   #endif
 #endif
-  
+#if !defined(FEATURE_MQTT_DEVICECLASS) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_DEVICECLASS 0
+  #else
+    #define FEATURE_MQTT_DEVICECLASS 1
+  #endif
+#endif
+#if !FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+  #undef FEATURE_MQTT_DEVICECLASS
+  #define FEATURE_MQTT_DEVICECLASS 0
+#endif
+
+#if !defined(FEATURE_MQTT_STATE_CLASS) && FEATURE_MQTT
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_MQTT_STATE_CLASS 0
+  #else
+    #define FEATURE_MQTT_STATE_CLASS 1
+  #endif
+#endif
+#if !FEATURE_MQTT_DISCOVER && FEATURE_MQTT_STATE_CLASS
+  #undef FEATURE_MQTT_STATE_CLASS
+  #define FEATURE_MQTT_STATE_CLASS 0
+#endif
+
+#ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 0
+  #else
+    #define FEATURE_CUSTOM_TASKVAR_VTYPE 1
+  #endif
+#endif // ifndef FEATURE_CUSTOM_TASKVAR_VTYPE
 
 #ifdef USES_ESPEASY_NOW
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
@@ -3389,6 +3766,14 @@ To create/register a plugin, you have to :
   #define FEATURE_HTTP_CLIENT   1 // Enable because required for these controllers/features
 #endif
 
+#ifndef FEATURE_HTTP_TLS
+  #if defined(ESP32) && (FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP)
+    #define FEATURE_HTTP_TLS 1
+  #else
+    #define FEATURE_HTTP_TLS 0
+  #endif
+#endif // ifndef FEATURE_HTTP_TLS
+
 #ifndef FEATURE_AUTO_DARK_MODE
   #ifdef LIMIT_BUILD_SIZE
     #define FEATURE_AUTO_DARK_MODE            0
@@ -3543,7 +3928,7 @@ To create/register a plugin, you have to :
 
 // Check for plugins that will use Extended Custom Settings storage when available
 #ifndef FEATURE_EXTENDED_CUSTOM_SETTINGS
-  #if defined(USES_P094) || defined(USES_P095) || defined(USES_P096) || defined(USES_P099) || defined(USES_P104) || defined(USES_P116) || defined(USES_P123) || defined(USES_P131)
+  #if defined(USES_P094) || defined(USES_P095) || defined(USES_P096) || defined(USES_P099) || defined(USES_P104) || defined(USES_P116) || defined(USES_P123) || defined(USES_P131) || defined(USES_P180)
     #define FEATURE_EXTENDED_CUSTOM_SETTINGS 1
   #else
     #define FEATURE_EXTENDED_CUSTOM_SETTINGS 0
@@ -3626,6 +4011,16 @@ To create/register a plugin, you have to :
     #undef USES_P165
   #endif
 #endif
+
+
+#ifndef FEATURE_BUSCMD_STRING
+# if defined(LIMIT_BUILD_SIZE) || defined(ESP8266)
+#  define FEATURE_BUSCMD_STRING   0
+# else // if defined(LIMIT_BUILD_SIZE) || defined(ESP8266)
+#  define FEATURE_BUSCMD_STRING   1
+# endif // if defined(LIMIT_BUILD_SIZE) || defined(ESP8266)
+#endif // ifndef FEATURE_BUSCMD_STRING
+
 
 #ifndef FEATURE_STRING_VARIABLES
   #ifdef ESP32
@@ -3733,6 +4128,37 @@ To create/register a plugin, you have to :
     #define FEATURE_TASKVALUE_ATTRIBUTES  0 // Disabled by default on ESP8266
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
+
+#ifndef FEATURE_PLUGIN_LIST
+  #ifdef ESP32
+    #define FEATURE_PLUGIN_LIST           1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_PLUGIN_LIST           0 // Disabled by default on ESP8266
+  #endif
+#endif // ifndef FEATURE_PLUGIN_LIST
+
+#ifndef FEATURE_MQTT_CONNECT_BACKGROUND
+  #ifdef ESP32
+    #define FEATURE_MQTT_CONNECT_BACKGROUND   1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_MQTT_CONNECT_BACKGROUND   0 // Disabled explicitly on ESP8266
+  #endif
+#endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if defined(ESP8266) && FEATURE_MQTT_CONNECT_BACKGROUND
+  #undef FEATURE_MQTT_CONNECT_BACKGROUND
+  #define FEATURE_MQTT_CONNECT_BACKGROUND     0 // Disable always on ESP8266
+#endif // if defined(ESP8266) && FEATURE_MQTT_CONNECT_BACKGROUND
+
+#ifndef FEATURE_LAT_LONG_VAR_CMD
+  #ifdef ESP32
+    #define FEATURE_LAT_LONG_VAR_CMD    1
+  #endif
+  #ifdef ESP8266
+    #define FEATURE_LAT_LONG_VAR_CMD    0
+  #endif
+#endif // ifndef FEATURE_LAT_LONG_VAR_CMD
 
 //-------------------HTTPResponseParser Section----------------
 #ifndef FEATURE_THINGSPEAK_EVENT

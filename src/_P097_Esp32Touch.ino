@@ -6,7 +6,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-16 tonhuisman: Move technical #defines to P097_data_struct.h to avoid Arduino compiler warning
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Touch)
  * 2024-12-11 chromoxdor: Added extra routine for ESP32S2 and ESP32S3.
  *                        Added "Wake Up from Sleep", Switch like behaviour + toggle and long press option.
  */
@@ -45,6 +47,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       dev.ValueCount     = 2;
       dev.SendDataOption = true;
       dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -62,6 +65,22 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0;
       break;
     }
+
+    #  if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #   if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #   else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #   endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    #  endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {

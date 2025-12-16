@@ -191,7 +191,6 @@ MFRC522::StatusCode MFRC522::PCD_CalculateCRC(	uint8_t *data,		///< In: Pointer 
  * Initializes the MFRC522 chip.
  */
 void MFRC522::PCD_Init() {
-	bool hardReset = false;
 
 	// Set the chipSelectPin as digital output, do not select the slave yet
 	pinMode(_chipSelectPin, OUTPUT);

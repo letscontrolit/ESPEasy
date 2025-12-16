@@ -195,10 +195,44 @@ bool I2C_write8_reg(uint8_t i2caddr, uint8_t reg, uint8_t value) {
 }
 
 // **************************************************************************/
+// Writes an 8 bit value over I2C to a 16 bit register
+// **************************************************************************/
+bool I2C_write8_reg16(uint8_t i2caddr, uint16_t reg, uint8_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(reg >> 8));
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
 // Writes an 16 bit value over I2C
 // **************************************************************************/
 bool I2C_write16(uint8_t i2caddr, uint16_t value) {
   Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes an 24 bit value over I2C
+// **************************************************************************/
+bool I2C_write24(uint8_t i2caddr, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 16));
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes an 32 bit value over I2C
+// **************************************************************************/
+bool I2C_write32(uint8_t i2caddr, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 24));
+  Wire.write((uint8_t)(value >> 16));
   Wire.write((uint8_t)(value >> 8));
   Wire.write((uint8_t)value);
   return Wire.endTransmission() == 0;
@@ -217,6 +251,31 @@ bool I2C_write16_LE(uint8_t i2caddr, uint16_t value) {
 bool I2C_write16_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes a 24 bit value over I2C to a register
+// **************************************************************************/
+bool I2C_write24_reg(uint8_t i2caddr, uint8_t reg, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 16));
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes a 32 bit value over I2C to a register
+// **************************************************************************/
+bool I2C_write32_reg(uint8_t i2caddr, uint8_t reg, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 24));
+  Wire.write((uint8_t)(value >> 16));
   Wire.write((uint8_t)(value >> 8));
   Wire.write((uint8_t)value);
   return Wire.endTransmission() == 0;
@@ -292,6 +351,26 @@ uint16_t I2C_read16(uint8_t i2caddr, bool *is_ok) {
 
   if (I2C_requestFrom(i2caddr, 2, is_ok)) {
     value = (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+uint32_t I2C_read24(uint8_t i2caddr, bool *is_ok) {
+  uint32_t value{};
+
+  if (I2C_requestFrom(i2caddr, 3, is_ok)) {
+    value = (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+uint32_t I2C_read32(uint8_t i2caddr, bool *is_ok) {
+  uint32_t value{};
+
+  if (I2C_requestFrom(i2caddr, 4, is_ok)) {
+    value = (Wire.read() << 24) | (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
   }
 
   return value;

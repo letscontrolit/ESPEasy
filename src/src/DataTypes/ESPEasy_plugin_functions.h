@@ -66,6 +66,12 @@ enum PluginFunctions_e {
    PLUGIN_FILTEROUT_CONTROLLER_DATA   , // Can be called from the controller to query a task whether the data should be processed further.
 #endif
    PLUGIN_WEBFORM_PRE_SERIAL_PARAMS   , // Before serial parameters, convert additional parameters like baudrate or specific serial config
+   #if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+   PLUGIN_GET_DISCOVERY_VTYPES        , // Fetch the Sensor_VType values for dynamic value configurations in event->Par1..Par4
+   #endif // IF FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+   #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+   PLUGIN_GET_UOM_GROUPS              , // Fetch the UoM groups in a bitmap per value, as found in ESPEasy_UnitOfMeasure.cpp unit_of_measure_labels with -1024 offset
+   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
    PLUGIN_MAX_FUNCTION  // Leave as last one.
 };

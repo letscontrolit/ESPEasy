@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-23 tonhuisman: Implement support for MQTT AutoDiscovery
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for SGP4x)
  * 2023-05-07 tonhuisman: Make Temperature and Humidity compensation selection independent, so if either setting is configured
  *                        it will still be applied, with the other value using the default. Minor UI improvement.
  * 2023-05-02 tonhuisman: Fix Low-power measurement, introducing a new State for reading the second measurement only
@@ -84,6 +86,16 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       success     = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TVOC_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NOX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {

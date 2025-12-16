@@ -15,7 +15,7 @@
 .. |P141_type| replace:: :cyan:`Display`
 .. |P141_typename| replace:: :cyan:`Display - PCD8544 Nokia 5110 LCD`
 .. |P141_porttype| replace:: `.`
-.. |P141_status| replace:: :yellow:`DISPLAY`
+.. |P141_status| replace:: :yellow:`DISPLAY B`
 .. |P141_github| replace:: P141_PCD8544_Nokia5110.ino
 .. _P141_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P141_PCD8544_Nokia5110.ino
 .. |P141_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P148_type| replace:: :cyan:`Display`
 .. |P148_typename| replace:: :cyan:`Display - POWR3xxD/THR3xxD`
 .. |P148_porttype| replace:: `.`
-.. |P148_status| replace:: :yellow:`ENERGY` :yellow:`DISPLAY`
+.. |P148_status| replace:: :yellow:`DISPLAY B` :yellow:`ENERGY`
 .. |P148_github| replace:: P148_POWRxxD_THR3xxD.ino
 .. _P148_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P148_POWRxxD_THR3xxD.ino
 .. |P148_usedby| replace:: `.`

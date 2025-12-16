@@ -26,9 +26,9 @@ Description
 
 NeoPixels are very versatile, multi-color led pixels, that can be used in a lot of situations, and only need a single GPIO to be able to control multiple leds as they are connected sequentially.
 
-This plugin offers multiple layout 7-sement displays, for use as clock, scrore-board, news-ticker etc.
+This plugin offers multiple layout 7-sement displays, for use as clock, score-board, news-ticker etc.
 
-Configurations can have from 1..7 pixels per segment, and up to 15 extra pixels, that can f.e. be used as a time-colon. Options for initial, unused, pixels and several settings for generating the number-plan for connecting the pixels in the correct order and position are available.
+Configurations can have from 1..7 pixels per segment, and up to 15 extra pixels, that can f.e. be used as a time-colon. Options for initial, unused, pixels and several settings for generating the number-plan, for connecting the pixels in the correct order and position, are available.
 
 The minimum size for a display would have 1 digit, starting from 7 pixels with 1 pixel per segment and no decimal point, and the max. configuration possible has 16 digits, split in 4 groups that can be addressed as a single display or per group, with up to 1100 pixels, though that may have issues as that number of pixels hasn't been tested. Technically, larger displays are possible, but that might cause even more (signal-timing) issues because of the huge number of pixels needed.
 

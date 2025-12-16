@@ -45,7 +45,7 @@ struct P025_VARIOUS_BITS_t {
 
 # define P025_I2C_ADDR        PCONFIG(0)
 # define P025_GAIN            PCONFIG(1)
-# define P025_MUX(x)          PCONFIG(P025_PCONFIG_INDEX(x))
+# define P025_MUX(x) PCONFIG(P025_PCONFIG_INDEX(x))
 # define P025_VARIOUS_BITS    PCONFIG(3)
 
 # define P025_CAL_ADC1    PCONFIG_LONG(0)
