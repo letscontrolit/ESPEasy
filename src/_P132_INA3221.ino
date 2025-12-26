@@ -114,7 +114,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       // set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, 0x04);    // Current
       set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_B, 0x04);          // Voltage
       set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_S, 0x04);          // Current
-      set2BitToUL(lSettings, P132_FLAG_CFG_VERSION, P132_CFG_VERSIONS); // V2
+      set2BitToUL(lSettings, P132_FLAG_CFG_VERSION, P132_CFG_VERSION); // V2
       P132_CONFIG_FLAGS = lSettings;
       P132_MAX_CURRENT  = 10;                                           // Guestimated
       P132_SHUNT        = 1;                                            // Default != 0
@@ -199,6 +199,14 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
             P132_VALUE_4 = 2;
           } else {
             P132_VALUE_3 = 6;
+          }
+
+          if (P132_DeviceType::Ina219 == deviceType) {
+            P132_SET_V2_CONVERSION_B(0b1000);
+            P132_SET_V2_CONVERSION_S(0b1000);
+          } else {
+            P132_SET_V2_CONVERSION_B(0b0100);
+            P132_SET_V2_CONVERSION_S(0b0100);
           }
 
           if (P132_DeviceType::Ina260 == deviceType) {
@@ -310,7 +318,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         const size_t optionCount = P132_DeviceType::Ina219 == deviceType ? 11 : 8;
         FormSelectorOptions selector(optionCount, conversionRates, conversionValues);
         selector.default_index = P132_DeviceType::Ina219 == deviceType ? 0b1000 : 0b0100; // 12 bit / 523 usec or 1.1ms
-        const uint8_t convB = 0 == P132_GET_CFG_VERSION ? P132_GET_CONVERSION_S : P132_GET_V2_CONVERSION_S;
+        const uint8_t convB = 0 == P132_GET_CFG_VERSION ? P132_GET_CONVERSION_B : P132_GET_V2_CONVERSION_B;
         const uint8_t convS = 0 == P132_GET_CFG_VERSION ? P132_GET_CONVERSION_S : P132_GET_V2_CONVERSION_S;
         selector.addFormSelector(F("Conversion rate Voltage"), F("conv_v"), convB);
         selector.addFormSelector(F("Conversion rate Current"), F("conv_c"), convS);
