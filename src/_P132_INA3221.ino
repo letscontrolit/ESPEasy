@@ -109,15 +109,12 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       P132_VALUE_4 = 2;
       uint32_t lSettings = 0;
       set3BitToUL(lSettings, P132_FLAG_AVERAGE, 0x00);
-
-      // set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, 0x04);    // Voltage
-      // set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, 0x04);    // Current
-      set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_B, 0x04);          // Voltage
-      set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_S, 0x04);          // Current
+      set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_B, 0x04);         // Voltage
+      set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_S, 0x04);         // Current
       set2BitToUL(lSettings, P132_FLAG_CFG_VERSION, P132_CFG_VERSION); // V2
       P132_CONFIG_FLAGS = lSettings;
-      P132_MAX_CURRENT  = 10;                                           // Guestimated
-      P132_SHUNT        = 1;                                            // Default != 0
+      P132_MAX_CURRENT  = 10;                                          // Guestimated
+      P132_SHUNT        = 1;                                           // Default != 0
       break;
     }
 
@@ -191,14 +188,14 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         const size_t optionCount = P132_DeviceTypeToMaxValues(deviceType);
 
         if (P132_INA_PREVIOUS != P132_INA_TYPE) {
-          P132_VALUE_1 = 1; // Configure randomly
+          P132_VALUE_1 = 1; // Configure 'randomly' Voltage/Current/
           P132_VALUE_2 = 0;
 
           if (P132_DeviceType::Ina3221 == deviceType) {
-            P132_VALUE_3 = 3;
+            P132_VALUE_3 = 3; // Voltage/Current
             P132_VALUE_4 = 2;
           } else {
-            P132_VALUE_3 = 6;
+            P132_VALUE_3 = 6; // Power
           }
 
           if (P132_DeviceType::Ina219 == deviceType) {
@@ -234,7 +231,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("0.005"),
           F("0.002"), // INA260 built-in
         };
-        const int shuntValues[]      = { 1, 10, 15, 20, 50 };
+        const int shuntValues[]      = { 1, 10, 7, 20, 50 };
         constexpr size_t optionCount = NR_ELEMENTS(shuntValues);
         FormSelectorOptions selector(optionCount, varShuntOptions, shuntValues);
         selector.enabled = P132_DeviceType::Ina260 != deviceType; // Built-in shunt
@@ -245,8 +242,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Measurement"));
 
-      if (P132_DeviceType::Ina219 != deviceType)
-      {
+      if (P132_DeviceType::Ina219 != deviceType) {
         const __FlashStringHelper *averagingSamples[] = {
           F("1"),
           F("4"),
@@ -261,10 +257,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         constexpr size_t optionCount = NR_ELEMENTS(averageValue);
         const FormSelectorOptions selector(optionCount, averagingSamples, averageValue);
 
-        // selector.default_index = 0b000;
         selector.addFormSelector(F("Averaging samples"), F("average"), P132_GET_AVERAGE);
-
-        // addFormNote(F("Samples &gt; 16 then min. Interval: 64= 4, 128= 7, 256= 14, 512= 26, 1024= 52 seconds!"));
       }
 
       {
@@ -294,9 +287,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           conversionValues[8]  = 0b1101;
           conversionValues[9]  = 0b1110;
           conversionValues[10] = 0b1111;
-        }
-        else
-        {
+        } else {
           conversionRates[0]  = F("140 &micro;sec");
           conversionRates[1]  = F("204 &micro;sec");
           conversionRates[2]  = F("332 &micro;sec");
@@ -345,13 +336,10 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
       uint32_t lSettings = 0;
 
-      if (P132_DeviceType::Ina219 != deviceType)
-      {
+      if (P132_DeviceType::Ina219 != deviceType) {
         set3BitToUL(lSettings, P132_FLAG_AVERAGE, getFormItemInt(F("average")));
       }
 
-      // set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, getFormItemInt(F("conv_v")));
-      // set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, getFormItemInt(F("conv_c")));
       set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_B, getFormItemInt(F("conv_v")));
       set4BitToUL(lSettings, P132_FLAG_V2_CONVERSION_S, getFormItemInt(F("conv_c")));
 
@@ -367,9 +355,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P132_data_struct(event));
       P132_data_struct *P132_data = static_cast<P132_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P132_data) {
-        success = P132_data->isInitialized();
-      }
+      success = nullptr != P132_data && P132_data->isInitialized();
 
       break;
     }
@@ -400,9 +386,6 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           case 0: // Current
           case 2: // Current
           case 4: // Current
-            // UserVar.setFloat(event->TaskIndex, r,
-            //                  (P132_data->getShuntVoltage_mV(channel) / 100.0f) * P132_SHUNT);
-
             UserVar.setFloat(event->TaskIndex, r,
                              P132_data->getBusCurrent_mA(channel));
             break;
@@ -420,8 +403,6 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
                              P132_data->getBusPower_mW(channel));
             break;
         }
-
-        // }
       }
 
       #  ifndef BUILD_NO_DEBUG
