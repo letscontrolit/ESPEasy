@@ -16,7 +16,7 @@
 // # define P132_DEBUG_LOG // Enable for some (extra) logging
 
 # if P132_EXTENDED
-#  define PLUGIN_NAME_132       "Energy (DC) - INA3221/INA226/INA228/INA260"
+#  define PLUGIN_NAME_132       "Energy (DC) - INA3221/INA226/INA228/INA231/INA260"
 # else // if P132_EXTENDED
 #  define PLUGIN_NAME_132       "Energy (DC) - INA3221"
 # endif // if P132_EXTENDED
