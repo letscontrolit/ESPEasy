@@ -575,7 +575,7 @@ uint8_t INA_Class::getDeviceType(const uint8_t deviceNumber) {
   /*! @brief     returns uint8_t type of the device specified in the input param
       @details   See function definition for list of possible return values
       @param[in] deviceNumber to return the device name of
-      @return    device name */
+      @return    device type */
   if (deviceNumber > _DeviceCount) return INA_UNKNOWN;
   readInafromEEPROM(deviceNumber);  // Load EEPROM to ina structure
   return ina.type;

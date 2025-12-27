@@ -390,9 +390,9 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         const uint8_t reg = static_cast<uint8_t>(PCONFIG(P132_CONFIG_BASE + r));
         uint8_t channel   = 0; //
 
-        if ((1 == reg) || (3 == reg) || (7 == reg)) {
+        if ((2 == reg) || (3 == reg) || (7 == reg)) {
           channel = 1;
-        } else if ((2 == reg) || (4 == reg) || (8 == reg)) {
+        } else if ((4 == reg) || (5 == reg) || (8 == reg)) {
           channel = 2;
         }
 
