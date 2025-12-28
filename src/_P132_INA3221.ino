@@ -288,14 +288,25 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           conversionValues[9]  = 0b1110;
           conversionValues[10] = 0b1111;
         } else {
-          conversionRates[0]  = F("140 &micro;sec");
-          conversionRates[1]  = F("204 &micro;sec");
-          conversionRates[2]  = F("332 &micro;sec");
-          conversionRates[3]  = F("588 &micro;sec");
-          conversionRates[4]  = F("1.1 msec");
-          conversionRates[5]  = F("2.116 msec");
-          conversionRates[6]  = F("4.156 msec");
-          conversionRates[7]  = F("8.244 msec");
+          if (P132_DeviceType::Ina228 == deviceType) {
+            conversionRates[0] = F("50 &micro;sec");
+            conversionRates[1] = F("84 &micro;sec");
+            conversionRates[2] = F("150 &micro;sec");
+            conversionRates[3] = F("280 &micro;sec");
+            conversionRates[4] = F("588 &micro;sec");
+            conversionRates[5] = F("1.052 msec");
+            conversionRates[6] = F("2.074 msec");
+            conversionRates[7] = F("4.120 msec");
+          } else {
+            conversionRates[0] = F("140 &micro;sec");
+            conversionRates[1] = F("204 &micro;sec");
+            conversionRates[2] = F("332 &micro;sec");
+            conversionRates[3] = F("588 &micro;sec");
+            conversionRates[4] = F("1.1 msec");
+            conversionRates[5] = F("2.116 msec");
+            conversionRates[6] = F("4.156 msec");
+            conversionRates[7] = F("8.244 msec");
+          }
           conversionValues[0] = 0b0000;
           conversionValues[1] = 0b0001;
           conversionValues[2] = 0b0010;
