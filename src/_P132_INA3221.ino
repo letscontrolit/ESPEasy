@@ -201,6 +201,9 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           if (P132_DeviceType::Ina219 == deviceType) {
             P132_SET_V2_CONVERSION_B(0b1000);
             P132_SET_V2_CONVERSION_S(0b1000);
+          } else if (P132_DeviceType::Ina228 == deviceType) {
+            P132_SET_V2_CONVERSION_B(0b0101);
+            P132_SET_V2_CONVERSION_S(0b0101);
           } else {
             P132_SET_V2_CONVERSION_B(0b0100);
             P132_SET_V2_CONVERSION_S(0b0100);
@@ -319,7 +322,10 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
         const size_t optionCount = P132_DeviceType::Ina219 == deviceType ? 11 : 8;
         FormSelectorOptions selector(optionCount, conversionRates, conversionValues);
-        selector.default_index = P132_DeviceType::Ina219 == deviceType ? 0b1000 : 0b0100; // 12 bit / 523 usec or 1.1ms
+
+        // INA219: 12 bit / 523 usec INA228: 1.052 msec, other INA: 1.1 msec
+        selector.default_index = P132_DeviceType::Ina219 == deviceType ? 0b1000 :
+                                 (P132_DeviceType::Ina228 == deviceType ? 0b0101 : 0b0100);
         const uint8_t convB = 0 == P132_GET_CFG_VERSION ? P132_GET_CONVERSION_B : P132_GET_V2_CONVERSION_B;
         const uint8_t convS = 0 == P132_GET_CFG_VERSION ? P132_GET_CONVERSION_S : P132_GET_V2_CONVERSION_S;
         selector.addFormSelector(F("Conversion rate Voltage"), F("conv_v"), convB);
