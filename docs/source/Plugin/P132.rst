@@ -148,6 +148,12 @@ For ``INA219`` a different **Conversion rate** selector is available:
   :alt: Conversion rate options
 
 
+Also for ``INA228`` a different **Conversion rate** selector is available:
+
+.. image:: P132_ConversionRateOptionsV2_INA228.png
+  :alt: Conversion rate options
+
+
 .. include:: DataAcquisition.repl
 
 Values
