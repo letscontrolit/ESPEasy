@@ -108,10 +108,12 @@ Other INA types the available options are:
 Hardware
 ^^^^^^^^
 
-* **Shunt resistor**: As there are different hardware configurations available for the board, using different shunt resistor values, here you can select the value that is present on the board used.
+* **Shunt resistor**: Here you can select the resistance or shunt that is used, this should match closely with the **Max. Current** setting:
 
 .. image:: P132_ShuntResistorOptionsV2.png
   :alt: Available options for shunt resistor values
+
+On many boards a shunt resistor is installed, that has one of the available resistance values. When larger currents are to be measured, an external shunt is mounted, and the sensor is connected via the Kelvin Connection that are available on the shunt (the small screws). The pre-installed shunt resistor must then be removed from the sensor-board, to avoid possible damage. These shunt are mostly specified for the current at wich a measurable voltage of 75 mV is reached. Some preselected values, up to the max. range of the sensor of ca. 1022 A, are selectable.
 
 NB: ``INA260`` has an internal shunt resistor of ``2 mOhm``, so when selecting that **INA type**, the setting is fixed at that value.
 
