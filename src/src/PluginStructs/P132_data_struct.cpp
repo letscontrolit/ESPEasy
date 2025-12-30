@@ -93,9 +93,10 @@ P132_data_struct::P132_data_struct(struct EventStruct *event) {
   if (nullptr == INA) {
     addLog(LOG_LEVEL_ERROR, F("INA Class initialization failed"));
   } else {
-    uint16_t maxCurrent = max((uint16_t)1u, (uint16_t)P132_MAX_CURRENT);
-    const uint8_t count = INA->begin(maxCurrent, (100 / P132_SHUNT) * 1000);
-    uint8_t search      = 0;
+    uint16_t maxCurrent  = max((uint16_t)1u, (uint16_t)P132_MAX_CURRENT);
+    const uint32_t shunt = P132_CFG_VERSION != P132_GET_CFG_VERSION ? (100 / P132_SHUNT) * 1000 : P132_SHUNT_V2;
+    const uint8_t  count = INA->begin(maxCurrent, shunt);
+    uint8_t search       = 0;
 
     while (search < count) {
       const P132_DeviceType foundType = P132_INATypeToDeviceType(INA->getDeviceType(search));

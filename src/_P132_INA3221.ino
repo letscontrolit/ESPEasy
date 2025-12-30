@@ -114,7 +114,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       set2BitToUL(lSettings, P132_FLAG_CFG_VERSION, P132_CFG_VERSION); // V2
       P132_CONFIG_FLAGS = lSettings;
       P132_MAX_CURRENT  = 10;                                          // Guestimated
-      P132_SHUNT        = 1;                                           // Default != 0
+      P132_SHUNT_V2     = 100000;                                      // Default != 0
       break;
     }
 
@@ -210,7 +210,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (P132_DeviceType::Ina260 == deviceType) {
-            P132_SHUNT = 50; // INA260 has 2 mOhm shunt built-in
+            P132_SHUNT_V2 = 2000; // INA260 has 2 mOhm shunt built-in
           }
         }
 
@@ -228,18 +228,38 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *varShuntOptions[] = {
-          F("0.1"),
-          F("0.01"),
-          F("0.015"), // INA228 often used
-          F("0.005"),
-          F("0.002"), // INA260 built-in
+          F("0.1 &#8486;"),
+          F("0.01 &#8486;"),
+          F("0.015 &#8486;"), // INA228 often used
+          F("0.005 &#8486;"),
+          F("0.002 &#8486;"), // INA260 built-in
+          F("20A"),
+          F("30A"),
+          F("50A"),
+          F("75A"),
+          F("100A"),
+          F("150A"),
+          F("200A"),
+          F("300A"),
+          F("400A"),
+          F("500A"),
+          F("600A"),
+          F("750A"),
+          F("1000A"),
         };
-        const int shuntValues[]      = { 1, 10, 7, 20, 50 };
+
+        /* *INDENT-OFF* */
+        const int shuntValues[] = { 100000, 10000, 15000, 5000, 2000,                                         // 'Ohm'
+                                    3750,   2500,  1500,  1000, 750, 500, 375, 250, 187, 150, 125, 100, 75 }; // Amp@75mV
+        // Values in microOhm
+ /* *INDENT-ON* */
+
         constexpr size_t optionCount = NR_ELEMENTS(shuntValues);
         FormSelectorOptions selector(optionCount, varShuntOptions, shuntValues);
         selector.enabled = P132_DeviceType::Ina260 != deviceType; // Built-in shunt
-        selector.addFormSelector(F("Shunt resistor"), F("shunt"), P132_SHUNT);
-        addUnit(F("Ohm"));
+        const uint32_t shunt = P132_CFG_VERSION != P132_GET_CFG_VERSION ? (100 / P132_SHUNT) * 1000 : P132_SHUNT_V2;
+        selector.addFormSelector(F("Shunt resistor"), F("shunt"), shunt);
+        addUnit(F("Ohm / Ampere at 75mV"));
         addFormNote(F("Select as is installed on the board."));
       }
 
@@ -349,7 +369,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t r = 0; r < min(optionCount, (size_t)VARS_PER_TASK); ++r) {
         PCONFIG(P132_CONFIG_BASE + r) = getFormItemIntCustomArgName(r);
       }
-      P132_SHUNT = getFormItemInt(F("shunt"));
+      P132_SHUNT_V2 = getFormItemInt(F("shunt"));
 
       uint32_t lSettings = 0;
 

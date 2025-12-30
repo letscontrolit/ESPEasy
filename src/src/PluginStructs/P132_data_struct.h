@@ -31,6 +31,7 @@
 # define P132_VALUE_4           PCONFIG(P132_CONFIG_BASE + 3)
 # define P132_SHUNT             PCONFIG(6)
 # define P132_MAX_CURRENT       PCONFIG_LONG(1)
+# define P132_SHUNT_V2          PCONFIG_ULONG(2)
 
 # define P132_CFG_VERSION       0x1    // Config version: 0 = V1, 1 = V2
 
