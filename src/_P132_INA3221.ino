@@ -233,19 +233,19 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           F("0.015 &#8486;"), // INA228 often used
           F("0.005 &#8486;"),
           F("0.002 &#8486;"), // INA260 built-in
-          F("20A"),
-          F("30A"),
-          F("50A"),
-          F("75A"),
-          F("100A"),
-          F("150A"),
-          F("200A"),
-          F("300A"),
-          F("400A"),
-          F("500A"),
-          F("600A"),
-          F("750A"),
-          F("1000A"),
+          F("20 A @ 75mV"),
+          F("30 A @ 75mV"),
+          F("50 A @ 75mV"),
+          F("75 A @ 75mV"),
+          F("100 A @ 75mV"),
+          F("150 A @ 75mV"),
+          F("200 A @ 75mV"),
+          F("300 A @ 75mV"),
+          F("400 A @ 75mV"),
+          F("500 A @ 75mV"),
+          F("600 A @ 75mV"),
+          F("750 A @ 75mV"),
+          F("1000 A @ 75mV"),
         };
 
         /* *INDENT-OFF* */
@@ -259,7 +259,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
         selector.enabled = P132_DeviceType::Ina260 != deviceType; // Built-in shunt
         const uint32_t shunt = P132_CFG_VERSION != P132_GET_CFG_VERSION ? (100 / P132_SHUNT) * 1000 : P132_SHUNT_V2;
         selector.addFormSelector(F("Shunt resistor"), F("shunt"), shunt);
-        addUnit(F("Ohm / Ampere at 75mV"));
+        addUnit(F("Ohm / Ampere @ 75mV"));
         addFormNote(F("Select as is installed on the board."));
       }
 
