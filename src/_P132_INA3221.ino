@@ -250,7 +250,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
         /* *INDENT-OFF* */
         const int shuntValues[] = { 100000, 10000, 15000, 5000, 2000,                                         // 'Ohm'
-                                    3750,   2500,  1500,  1000, 750, 500, 375, 250, 187, 150, 125, 100, 75 }; // Amp@75mV
+                                    3750,   2500,  1500,  1000, 750, 500, 375, 250, 188, 150, 125, 100, 75 }; // Amp@75mV
         // Values in microOhm
  /* *INDENT-ON* */
 
