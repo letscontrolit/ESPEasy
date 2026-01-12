@@ -34,7 +34,8 @@ uint8_t P073_mapCharToFontPosition(char    character,
   const String specialChars = F(" -^=/_%@.,;:+*#!?'\"<>\\()|");
   const String chnorux      = F("CHNORUX");
 
-  switch (fontset) {
+  switch (fontset)
+  {
     case 1: // Siekoo
     case 2: // Siekoo with uppercase 'CHNORUX'
 
@@ -58,16 +59,24 @@ uint8_t P073_mapCharToFontPosition(char    character,
 
   if (isDigit(character)) {
     position = character - '0';
-  } else if (isAlpha(character)) {
+  }
+  else if (isAlpha(character)) {
     position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
   } else {
-    switch (character) {
-      case ' ': position = 10; break;
-      case '-': position = 11; break;
-      case '^': position = 12; break; // degree
-      case '=': position = 13; break;
-      case '/': position = 14; break;
-      case '_': position = 15; break;
+    switch (character)
+    {
+      case ' ': position = 10;
+        break;
+      case '-': position = 11;
+        break;
+      case '^': position = 12;
+        break; // degree
+      case '=': position = 13;
+        break;
+      case '/': position = 14;
+        break;
+      case '_': position = 15;
+        break;
     }
   }
   # if P073_EXTRA_FONTS
@@ -85,7 +94,8 @@ uint8_t P073_getFontChar(uint8_t index,
                          uint8_t fontset) {
   # if P073_EXTRA_FONTS
 
-  switch (fontset) {
+  switch (fontset)
+  {
     case 1:  // Siekoo
     case 2:  // Siekoo uppercase CHNORUX
       return pgm_read_byte(&(SiekooCharTable[index]));
@@ -143,10 +153,12 @@ void P073_display_output_selector(const __FlashStringHelper *id, int16_t value) 
     P073_DISP_DATE,
   };
   const FormSelectorOptions selector(NR_ELEMENTS(disploutOptions), displout, disploutOptions);
+
   selector.addFormSelector(F("Display Output"), id, value);
 }
 
 # if P073_EXTRA_FONTS
+
 void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
   const __FlashStringHelper *fontset[] = {
     F("Default"),
@@ -154,7 +166,8 @@ void P073_font_selector(const __FlashStringHelper *id, int16_t value) {
     F("Siekoo with uppercase 'CHNORUX'"),
     F("dSEG7"),
   };
-  const FormSelectorOptions selector(NR_ELEMENTS(fontset), fontset);
+  const FormSelectorOptions  selector(NR_ELEMENTS(fontset), fontset);
+
   selector.addFormSelector(F("Font set"), id, value);
   addFormNote(F("Check documentation for examples of the font sets."));
 }
@@ -202,9 +215,9 @@ void P073_data_struct::init(struct EventStruct *event)
   # endif // if P073_SCROLL_TEXT
   rightAlignTempMAX7219 = bitRead(P073_CFG_FLAGS, P073_OPTION_RIGHTALIGN);
   suppressLeading0      = bitRead(P073_CFG_FLAGS, P073_OPTION_SUPPRESS0);
-  #if P073_BLINK_DOT
+  # if P073_BLINK_DOT
   blinkdot = bitRead(P073_CFG_FLAGS, P073_OPTION_BLINK_DOT);
-  #endif // if P073_BLINK_DOT
+  # endif // if P073_BLINK_DOT
   timesep = true;
   # if P073_EXTRA_FONTS
   fontset = P073_CFG_FONTSET;
@@ -233,11 +246,16 @@ void P073_data_struct::init(struct EventStruct *event)
   }
   # endif // if P073_USE_74HC595
 
+  if (0 == digits) {
+    digits = P073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
+  }
+
   if ((digits > 0) && (digits < 4)) {
     hideDegree = true; // Hide degree symbol on small displays
   }
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
@@ -275,6 +293,7 @@ void P073_data_struct::init(struct EventStruct *event)
 }
 
 # if P073_USE_74HC595
+
 bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   #  ifdef P073_DEBUG
   counter50++;
@@ -289,9 +308,7 @@ bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   return false;
 }
 
-bool P073_data_struct::is74HC595Matrix() {
-  return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX;
-}
+bool P073_data_struct::is74HC595Matrix() { return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX; }
 
 // ====================================
 // ---- 74HC595 specific functions ----
@@ -642,6 +659,7 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
 }
 
 # if P073_SCROLL_TEXT
+
 int P073_data_struct::getEffectiveTextLength(const String& text) {
   const int textLength = text.length();
   int p                = 0;
@@ -757,17 +775,14 @@ void P073_data_struct::setScrollSpeed(uint8_t speed) {
   scrollPos    = 0;
 }
 
-bool P073_data_struct::isScrollEnabled() {
-  return txtScrolling && scrollAllowed;
-}
+bool P073_data_struct::isScrollEnabled()             { return txtScrolling && scrollAllowed; }
 
-void P073_data_struct::setScrollEnabled(bool scroll) {
-  scrollAllowed = scroll;
-}
+void P073_data_struct::setScrollEnabled(bool scroll) { scrollAllowed = scroll; }
 
 # endif // if P073_SCROLL_TEXT
 
 # if P073_7DBIN_COMMAND
+
 void P073_data_struct::setBinaryData(const String& data) {
   binaryData = true;
   #  if P073_SCROLL_TEXT
@@ -783,6 +798,7 @@ void P073_data_struct::setBinaryData(const String& data) {
 # endif // if P073_7DBIN_COMMAND
 
 # ifdef P073_DEBUG
+
 void P073_data_struct::LogBufferContent(String prefix) {
   String log;
 
@@ -803,9 +819,7 @@ void P073_data_struct::LogBufferContent(String prefix) {
 # endif // ifdef P073_DEBUG
 
 // in case of error show all dashes
-void P073_data_struct::FillBufferWithDash() {
-  memset(showbuffer, 11, sizeof(showbuffer));
-}
+void P073_data_struct::FillBufferWithDash() { memset(showbuffer, 11, sizeof(showbuffer)); }
 
 void P073_data_struct::ClearBuffer() {
   memset(showbuffer,
@@ -820,11 +834,9 @@ void P073_data_struct::ClearBuffer() {
 }
 
 uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
-                                             uint8_t fontset) {
-  return P073_revert7bits(P073_getFontChar(index, fontset));
-}
+                                             uint8_t fontset) { return P073_revert7bits(P073_getFontChar(index, fontset)); }
 
-bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
+bool    P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if (output == P073_DISP_MANUAL) {
     return false;
   }
@@ -855,16 +867,17 @@ bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
                        );
   }
 
-  #if P073_BLINK_DOT
+  # if P073_BLINK_DOT
 
   if (blinkdot &&
       ((output == P073_DISP_CLOCK24BLNK) ||
        (output == P073_DISP_CLOCK12BLNK))) {
     showperiods[1] = timesep; // Blink dot on second digit
   }
-  #endif // if P073_BLINK_DOT
+  # endif // if P073_BLINK_DOT
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
       tm1637_ShowTimeTemp4(timesep, 0);
@@ -900,15 +913,18 @@ bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
 }
 
 # if P073_SCROLL_TEXT
+
 bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if ((output != P073_DISP_MANUAL) || !isScrollEnabled()) {
     return false;
   }
 
   if (NextScroll()) {
-    switch (displayModel) {
+    switch (displayModel)
+    {
       case P073_TM1637_4DGTCOLON:
-      case P073_TM1637_4DGTDOTS: {
+      case P073_TM1637_4DGTDOTS:
+      {
         tm1637_ShowBuffer(0, 4
                           #  if P073_7DBIN_COMMAND
                           , binaryData
@@ -916,7 +932,8 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
                           );
         break;
       }
-      case P073_TM1637_6DGT: {
+      case P073_TM1637_6DGT:
+      {
         tm1637_SwapDigitInBuffer(0); // only needed for 6-digits displays
         tm1637_ShowBuffer(0, 6
                           #  if P073_7DBIN_COMMAND
@@ -925,13 +942,15 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
                           );
         break;
       }
-      case P073_MAX7219_8DGT: {
+      case P073_MAX7219_8DGT:
+      {
         dotpos = -1; // avoid to display the dot
         max7219_ShowBuffer();
         break;
       }
       #  if P073_USE_74HC595
-      case P073_74HC595_2_8DGT: {
+      case P073_74HC595_2_8DGT:
+      {
         hc595_ToOutputBuffer();
 
         if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -981,6 +1000,7 @@ enum class p073_commands_e : int8_t {
   c7doff,
   c7db,
   c7output,
+
 };
 
 bool P073_data_struct::plugin_write(struct EventStruct *event,
@@ -1005,7 +1025,8 @@ bool P073_data_struct::plugin_write(struct EventStruct *event,
   bool success      = false;
   bool displayon    = false;
 
-  switch (cmd) {
+  switch (cmd)
+  {
     case p073_commands_e::c7dn:
       return plugin_write_7dn(event, text);
     case p073_commands_e::c7dt:
@@ -1104,7 +1125,8 @@ bool P073_data_struct::plugin_write(struct EventStruct *event,
     setScrollEnabled(newScroll);
     # endif // if P073_SCROLL_TEXT
 
-    switch (displayModel) {
+    switch (displayModel)
+    {
       case P073_TM1637_4DGTCOLON:
       case P073_TM1637_4DGTDOTS:
       case P073_TM1637_6DGT:
@@ -1167,7 +1189,8 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
     }
   }
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
       tm1637_ShowBuffer(TM1637_4DIGIT, 8);
@@ -1234,7 +1257,8 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
     FillBufferWithTemp(p073_temptemp);
   }
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
@@ -1277,6 +1301,7 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
 }
 
 # if P073_7DDT_COMMAND
+
 bool P073_data_struct::plugin_write_7ddt(const String& text) {
   if (output != P073_DISP_MANUAL) {
     return false;
@@ -1301,7 +1326,8 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
@@ -1403,7 +1429,8 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
                      # endif // if P073_SUPPRESS_ZERO
                      );
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
       tm1637_ShowTimeTemp4(timesep, 0);
@@ -1447,7 +1474,8 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
                      # endif // if P073_SUPPRESS_ZERO
                      );
 
-  switch (displayModel) {
+  switch (displayModel)
+  {
     case P073_TM1637_4DGTCOLON:
     case P073_TM1637_4DGTDOTS:
       tm1637_ShowTimeTemp4(timesep, 0);
@@ -1494,7 +1522,8 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
   {
     FillBufferWithString(text);
 
-    switch (displayModel) {
+    switch (displayModel)
+    {
       case P073_TM1637_4DGTCOLON:
       case P073_TM1637_4DGTDOTS:
         tm1637_ShowBuffer(0, 4);
@@ -1522,6 +1551,7 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
 }
 
 # if P073_EXTRA_FONTS
+
 bool P073_data_struct::plugin_write_7dfont(struct EventStruct *event,
                                            const String      & text) {
   if (!text.isEmpty()) {
@@ -1545,6 +1575,7 @@ bool P073_data_struct::plugin_write_7dfont(struct EventStruct *event,
 # endif // if P073_EXTRA_FONTS
 
 # if P073_7DBIN_COMMAND
+
 bool P073_data_struct::plugin_write_7dbin(const String& text) {
   if (!text.isEmpty()) {
     String  data;
@@ -1576,7 +1607,8 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       {
         FillBufferWithString(data, true);
 
-        switch (displayModel) {
+        switch (displayModel)
+        {
           case P073_TM1637_4DGTCOLON:
           case P073_TM1637_4DGTDOTS:
             tm1637_ShowBuffer(0, 4);
@@ -1615,7 +1647,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 # define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
 # define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
 # define DIO_HIGH() DIRECT_PINMODE_INPUT(this->pin2)
-# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) //; DIRECT_pinWrite(this->pin2, LOW)
+# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) // ; DIRECT_pinWrite(this->pin2, LOW)
 
 void P073_data_struct::tm1637_i2cStart() {
   # ifdef P073_DEBUG
@@ -1674,12 +1706,12 @@ void P073_data_struct::tm1637_i2cAck() {
 
 void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                                            uint8_t length) {
-  #ifdef P073_DEBUG
+  # ifdef P073_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, concat(F("7DGT : TM1637 databuffer: 0x"), formatToHex_array(bytesToPrint, length)));
   }
-  #endif // ifdef P073_DEBUG
+  # endif // ifdef P073_DEBUG
   tm1637_i2cStart();
 
   for (uint8_t i = 0; i < length; ++i) {
