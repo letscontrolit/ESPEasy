@@ -13,7 +13,7 @@
 // #define P145_TEST
 // #define P145_CALIBRATION_INTERVAL (5*60*1000)
 
-#  include "../Globals/ESPEasyWiFiEvent.h" // Need to know when WiFi is ruining the ADC measurements
+#  include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h" // Need to know when WiFi is ruining the ADC measurements
 
 // The table sensorDefs[] contains string items for representation.
 // Storage is in PROGMEM where a (fixed format) C-style string does not fit well
@@ -678,7 +678,7 @@ bool P145_data_struct::plugin_ten_per_second()
   // Algorithm uses mean value with exeption of max and min values
   // See declaraion of the global variables for their usage
   // Skip measurement in analog input is used to calibrate WiFi
-  if (!WiFiEventData.wifiConnectInProgress)
+//  if (!WiFiEventData.wifiConnectInProgress)
   {
     ovs.add(espeasy_analogRead(analogPin));
   }

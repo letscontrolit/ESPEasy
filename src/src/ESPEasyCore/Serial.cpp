@@ -5,7 +5,7 @@
 
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasy_Console.h"
-//#include "../Globals/Logging.h" //  For serialWriteBuffer
+#include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
@@ -31,26 +31,23 @@ bool process_serialWriteBuffer()
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
 void serialPrint(const __FlashStringHelper *text) {
-  ESPEasy_Console.addToSerialBuffer(text);
+  Logging.consolePrint(text);
 }
 
 void serialPrint(const String& text) {
-  ESPEasy_Console.addToSerialBuffer(text);
+  Logging.consolePrint(text);
 }
 
 void serialPrintln(const __FlashStringHelper *text) {
-  ESPEasy_Console.addToSerialBuffer(text);
-  serialPrintln();
+  Logging.consolePrintln(text);
 }
 
 void serialPrintln(const String& text) {
-  ESPEasy_Console.addToSerialBuffer(text);
-  serialPrintln();
+  Logging.consolePrintln(text);
 }
 
 void serialPrintln() {
-  ESPEasy_Console.addNewlineToSerialBuffer();
-  ESPEasy_Console.process_serialWriteBuffer();
+  Logging.consolePrintln();
 }
 
 // Do not add helper functions for other types, since those types can only be

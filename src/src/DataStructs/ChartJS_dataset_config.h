@@ -1,5 +1,4 @@
-#ifndef DATASTRUCTS_CHARTJS_DATASET_CONFIG_H
-#define DATASTRUCTS_CHARTJS_DATASET_CONFIG_H
+#pragma once
 
 #include "../../ESPEasy_common.h"
 
@@ -7,7 +6,8 @@
 
 # include "../DataStructs/PluginStats_Config.h"
 
-struct ChartJS_dataset_config {
+class ChartJS_dataset_config {
+public:
   ChartJS_dataset_config() = default;
 
   ChartJS_dataset_config(
@@ -26,4 +26,3 @@ struct ChartJS_dataset_config {
 };
 #endif // if FEATURE_CHART_JS
 
-#endif // ifndef DATASTRUCTS_CHARTJS_DATASET_CONFIG_H

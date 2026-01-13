@@ -38,13 +38,13 @@ bool     allocatedOnStack(const void *address);
 /********************************************************************************************\
    Get free system mem
  \*********************************************************************************************/
-unsigned long FreeMem();
+uint32_t FreeMem();
 
 #ifdef USE_SECOND_HEAP
-unsigned long FreeMem2ndHeap();
+uint32_t FreeMem2ndHeap();
 #endif
 
-unsigned long getMaxFreeBlock();
+uint32_t getMaxFreeBlock();
 
 
 #endif

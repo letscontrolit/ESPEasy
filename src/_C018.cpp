@@ -18,6 +18,7 @@
 # include "src/Controller_struct/C018_data_struct.h"
 # include "src/DataTypes/ESPEasy_plugin_functions.h"
 # include "src/Globals/CPlugins.h"
+# include "src/Helpers/_CPlugin_Helper_LoRa.h"
 # include "src/Helpers/_Plugin_Helper_serial.h"
 # include "src/Helpers/StringGenerator_GPIO.h"
 # include "src/WebServer/Markup.h"
@@ -109,18 +110,18 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
         html_add_script(false);
         addHtml(F("function joinChanged(elem){ var styleOTAA = elem.value == 0 ? '' : 'none'; var styleABP = elem.value == 1 ? '' : 'none';"));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex,
+                LoRa_Helper::add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex,
                                                                                             ControllerSettingsStruct::CONTROLLER_USER),
-                                                         true));
-        addHtml(c018_add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex,
+                                                         LoRa_Helper::LoRaWAN_JoinMethod::OTAA);
+        LoRa_Helper::add_joinChanged_script_element_line(getControllerParameterInternalName(ProtocolIndex,
                                                                                             ControllerSettingsStruct::CONTROLLER_PASS),
-                                                         true));
-        addHtml(c018_add_joinChanged_script_element_line(F("deveui"), true));
-        addHtml(c018_add_joinChanged_script_element_line(F("deveui_note"), true));
+                                                         LoRa_Helper::LoRaWAN_JoinMethod::OTAA);
+        LoRa_Helper::add_joinChanged_script_element_line(F("deveui"), LoRa_Helper::LoRaWAN_JoinMethod::OTAA);
+        LoRa_Helper::add_joinChanged_script_element_line(F("deveui_note"), LoRa_Helper::LoRaWAN_JoinMethod::OTAA);
 
-        addHtml(c018_add_joinChanged_script_element_line(F("devaddr"), false));
-        addHtml(c018_add_joinChanged_script_element_line(F("nskey"), false));
-        addHtml(c018_add_joinChanged_script_element_line(F("appskey"), false));
+        LoRa_Helper::add_joinChanged_script_element_line(F("devaddr"), LoRa_Helper::LoRaWAN_JoinMethod::ABP);
+        LoRa_Helper::add_joinChanged_script_element_line(F("nskey"), LoRa_Helper::LoRaWAN_JoinMethod::ABP);
+        LoRa_Helper::add_joinChanged_script_element_line(F("appskey"), LoRa_Helper::LoRaWAN_JoinMethod::ABP);
         addHtml('}');
         html_add_script_end();
       }
@@ -134,7 +135,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         if (ptr == nullptr) {
           break;
         }
-        std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
+        UP_C018_ConfigStruct  customConfig(new (ptr) C018_ConfigStruct);
 
         if (!customConfig) {
           break;
@@ -153,7 +154,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       if (ptr == nullptr) {
         break;
       }
-      std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
+      UP_C018_ConfigStruct  customConfig(new (ptr) C018_ConfigStruct);
 
       if (customConfig) {
         customConfig->webform_save();
@@ -206,7 +207,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
             break;
           }
     
-          std::unique_ptr<C018_queue_element> element(new (ptr) C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
+          UP_C018_queue_element  element(new (ptr) C018_queue_element(event, C018_data->getSampleSetCount(event->TaskIndex)));
           success = C018_DelayHandler->addToQueue(std::move(element));
           Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C018_DELAY_QUEUE,
                                            C018_DelayHandler->getNextScheduleTime());
@@ -225,8 +226,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     {
       // FIXME TD-er: WHen should this be scheduled?
-      // protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
-      // schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
+      // schedule_controller_event_timer(event->ControllerIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
       break;
     }
 
@@ -330,7 +330,7 @@ bool C018_init(struct EventStruct *event) {
   if (ptr == nullptr) {
     return false;
   }
-  std::shared_ptr<C018_ConfigStruct> customConfig(new (ptr) C018_ConfigStruct);
+  UP_C018_ConfigStruct  customConfig(new (ptr) C018_ConfigStruct);
 
   if (!customConfig) {
     return false;

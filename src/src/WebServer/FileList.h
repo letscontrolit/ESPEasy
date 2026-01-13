@@ -18,7 +18,7 @@ void handle_filelist();
 
 void handle_filelist_add_file(const String& filename, int filesize, int startIdx);
 
-void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent);
+void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent, bool bakFilesPresent);
 
 #endif // ifdef WEBSERVER_FILELIST
 

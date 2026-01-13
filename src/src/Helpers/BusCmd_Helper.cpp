@@ -1,5 +1,5 @@
 #include "../Helpers/BusCmd_Helper.h"
-
+#if FEATURE_BUS_COMMAND
 #include <GPIO_Direct_Access.h>
 #include "../Globals/RulesCalculate.h"
 
@@ -264,10 +264,11 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
   if (!key.isEmpty() && (_commandCache.count(key) == 1) && !update) {
     commands = _commandCache.find(key)->second;
-
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
       addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Retrieve '%s' from cache with %d commands."), name.c_str(), commands.size()));
     }
+#endif
   }
 
   if (!line.isEmpty() && ((commands.empty()) || update) && parseAndLogOK) {
@@ -508,11 +509,12 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
         if (!key.isEmpty()) {
           _commandCache[concat(key, keyPostfix)] = commands;
-
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
             addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Insert '%s%s' into cache with %d commands."),
                                              name.c_str(), keyPostfix.c_str(), commands.size()));
           }
+#endif
         }
       }
     }
@@ -943,10 +945,11 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
           if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
               addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Calculation: %s, result: %s"), toCalc.c_str(), doubleToString(tmp).c_str()));
             }
-
+#endif
             if (BusCmd_Command_e::If == _it->command) {
               if (essentiallyZero(tmp)) { // 0 = false => cancel execution
                 if (0 == _it->len) {
@@ -1135,9 +1138,11 @@ bool BusCmd_Helper_struct::parseAndExecute(BusCmd_CommandSource_e source,
   _commands      = parseBusCmdCommands(EMPTY_STRING, line);
 
   if (!_commands.empty()) {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
       addLog(LOG_LEVEL_INFO, strformat(logFormat, _commands.size()));
     }
+#endif
     _commandState = BusCmd_CommandState_e::Processing;
     result        = executeBusCmdCommands();
     _commands.clear();
@@ -1315,3 +1320,4 @@ bool BusCmd_Helper_struct::plugin_get_config(struct EventStruct *event,
 }
 
 #endif // ifndef LIMIT_BUILD_SIZE
+#endif

@@ -435,7 +435,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
                    (UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME) > P021_AUTOSAVE_TIMER))) {
                 UserVar.setUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_TIME, P021_AUTOSAVE_TIMER); // Start timer
                 # ifndef LIMIT_BUILD_SIZE
-                addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-save timer started."));
+                addLog(LOG_LEVEL_INFO, F("LEVEL: Auto-save timer started."));
                 # endif // ifndef LIMIT_BUILD_SIZE
               }
             }
@@ -603,7 +603,7 @@ void P021_check_autosave(struct EventStruct *event)
       if ((UserVar.getUint32(event->TaskIndex, P021_VALUE_AUTOSAVE_FLAG) != 0) &&
           !essentiallyEqual(P021_SETPOINT, P021_SETP_LAST_STORED)) {
         # ifndef P021_MIN_BUILD_SIZE
-        addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
+        addLog(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
         # endif // ifndef P021_MIN_BUILD_SIZE
         P021_SETP_LAST_STORED = P021_SETPOINT;
         SaveSettings();

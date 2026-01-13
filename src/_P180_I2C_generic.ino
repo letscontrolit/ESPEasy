@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-12-06 tonhuisman: Enable CustomVTypeVar and MQTTStateClass device options, as any type of sensor can be connected
  * 2025-06-04 tonhuisman: Add [<taskname>#log] to Get Config to fetch the current Parsing and execution log setting
  * 2025-06-03 tonhuisman: Restore PLUGIN_GET_CONFIG_VALUE support, to allow I2C operations to be executed and return a value without
  *                        defining extra I2C Command definitions. Not available for LIMIT_BUILD_SIZE builds
@@ -135,6 +136,8 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOptional  = true;
       dev.FormulaOption  = true;
       dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
+      dev.MqttStateClass = true;
       break;
     }
 

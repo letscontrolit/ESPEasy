@@ -119,7 +119,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
       const float tempC = P069_data->getTemperatureInDegrees();
       UserVar.setFloat(event->TaskIndex, 0, tempC);
       success = !isnan(tempC);
-
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
           addLog(LOG_LEVEL_INFO, F("LM75A: No reading!"));
@@ -129,6 +129,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event, 0)));
         }
       }
+#endif
       break;
     }
   }

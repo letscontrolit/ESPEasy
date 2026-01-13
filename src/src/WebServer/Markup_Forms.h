@@ -4,7 +4,7 @@
 #include "../WebServer/common.h"
 
 #include "../DataTypes/FormSelectorOptions.h"
-#include "../DataStructs/MAC_address.h"
+#include "../../ESPEasy/net/DataStructs/MAC_address.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -19,7 +19,6 @@ void addFormSeparator(int clspan);
 // ********************************************************************************
 void addFormNote(const __FlashStringHelper * text);
 void addFormNote(const String& text, const String& id = EMPTY_STRING);
-void addFormNote(const LabelType::Enum& label);
 
 // ********************************************************************************
 // Create Forms
@@ -49,8 +48,9 @@ void addFormCheckBox(const String& label,
                      #endif // if FEATURE_TOOLTIPS
                      );
 
+void addFormCheckBoxes(const LabelType::Enum* label, size_t nrLabels);
+
 void addFormCheckBox(LabelType::Enum label,
-                     bool         checked,
                      bool            disabled = false
                      #if FEATURE_TOOLTIPS
                      ,
@@ -58,8 +58,7 @@ void addFormCheckBox(LabelType::Enum label,
                      #endif // if FEATURE_TOOLTIPS
                      );
 
-void addFormCheckBox_disabled(LabelType::Enum label,
-                              bool         checked);
+void addFormCheckBox_disabled(LabelType::Enum label);
 void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, bool checked, bool disabled = false);
 void addFormCheckBox(const __FlashStringHelper * label, const String& id, bool checked, bool disabled = false);
 
@@ -67,7 +66,6 @@ void addFormCheckBox(const __FlashStringHelper * label, const String& id, bool c
 // Add a Numeric Box form
 // ********************************************************************************
 void addFormNumericBox(LabelType::Enum label,
-                       int             value,
                        int             min = INT_MIN,
                        int             max = INT_MAX
                        #if FEATURE_TOOLTIPS
@@ -106,7 +104,6 @@ void addFormNumericBox(const String& label,
 
 
 void addFormFloatNumberBox(LabelType::Enum label,
-                           float           value,
                            float           min,
                            float           max,
                            uint8_t         nrDecimals = 6,
@@ -355,6 +352,9 @@ float getFormItemFloat(const LabelType::Enum& id);
 bool  isFormItem(const String& id);
 
 void  copyFormPassword(const __FlashStringHelper * id,
+                       char         *pPassword,
+                       int           maxlength);
+void  copyFormPassword(const String& id,
                        char         *pPassword,
                        int           maxlength);
 

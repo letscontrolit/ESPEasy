@@ -7,6 +7,8 @@
  */
 
 #include "../../_Plugin_Helper.h"
+#if FEATURE_BUS_COMMAND
+
 #include "../Helpers/IBusCmd_Handler.h"
 #include <Wire.h>
 
@@ -89,4 +91,5 @@ private:
   TwoWire *_wire;
   bool _ok;
 };
+#endif
 #endif // ifndef _HELPERS_BUSCMD_HANDLER_I2C_H

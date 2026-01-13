@@ -113,6 +113,9 @@ uint32_t getFlashChipId() {
 
   if (flashChipId == 0) {
   #ifdef ESP32
+  #ifdef ESP32P4
+  // TODO TD-er: Implement
+  #else
     uint32_t tmp = g_rom_flashchip.device_id;
 
     for (int i = 0; i < 3; ++i) {
@@ -122,6 +125,7 @@ uint32_t getFlashChipId() {
     }
 
     //    esp_flash_read_id(nullptr, &flashChipId);
+    #endif
   #elif defined(ESP8266)
     flashChipId = ESP.getFlashChipId();
   #endif // ifdef ESP32
@@ -135,7 +139,12 @@ uint32_t getFlashRealSizeInBytes() {
 
   if (res == 0) {
     #if defined(ESP32)
+    #ifdef ESP32P4
+    // TODO TD-er: Implement
+    res = 1 << 24;
+    #else
     res = (1 << ((getFlashChipId() >> 16) & 0xFF));
+    #endif
     #else // if defined(ESP32)
     res = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
     #endif // if defined(ESP32)
@@ -214,7 +223,7 @@ String getChipFeaturesString() {
 }
 
 bool getFlashChipOPI_wired() {
-  # if defined(ESP32_CLASSIC) || defined(ESP32C2)
+  # if defined(ESP32_CLASSIC) || defined(ESP32C2) || defined(ESP32C61)
   return false;
 
   # else // ifdef ESP32_CLASSIC
@@ -238,6 +247,11 @@ uint32_t getFlashChipSpeed() {
   // for which patches have been submitted and somehow they managed to merge it completely wrong.
   return ESP.getFlashChipSpeed();
 # else // if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
+#if defined(ESP32P4) || defined(ESP32C61)
+  // TODO TD-er: Implement
+//  return 80000000;
+  return ESP.getFlashChipSpeed();
+#else
 
   // All ESP32-variants have the SPI flash wired to SPI peripheral 1
   const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(1));
@@ -253,13 +267,17 @@ uint32_t getFlashChipSpeed() {
     return getApbFrequency();
   }
   return spiClockDivToFrequency(spi_clock);
+#endif
 # endif // if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
   #endif // ifdef ESP8266
 }
 
 const __FlashStringHelper* getFlashChipMode() {
-  #ifdef ESP32
+  #ifdef ESP32P4
+  // TODO TD-er: Implement
+  #else
 
+  #ifdef ESP32
   if (getFlashChipOPI_wired()) {
     switch (ESP.getFlashChipMode()) {
       case FM_QIO:     return F("QIO (OPI Wired)");
@@ -273,7 +291,6 @@ const __FlashStringHelper* getFlashChipMode() {
       case FM_UNKNOWN: break;
     }
   }
-
   #endif // ifdef ESP32
 
   switch (ESP.getFlashChipMode()) {
@@ -287,6 +304,7 @@ const __FlashStringHelper* getFlashChipMode() {
 #endif // ifdef ESP32
     case FM_UNKNOWN: break;
   }
+#endif
   return F("Unknown");
 }
 
@@ -365,8 +383,8 @@ bool isESP8285() {
 
 #endif // ifdef ESP32
 
-
-String getChipRevision() {
+uint16_t getChipRevision_val()
+{
   static uint16_t rev = 0;
 
   #ifdef ESP32
@@ -382,6 +400,12 @@ String getChipRevision() {
     # endif // if ESP_IDF_VERSION_MAJOR < 5
   }
   #endif // ifdef ESP32
+  return rev;
+}
+
+
+String getChipRevision() {
+  const uint16_t rev = getChipRevision_val();
   return strformat(F("%d.%02d"), rev / 100, rev % 100);
 }
 

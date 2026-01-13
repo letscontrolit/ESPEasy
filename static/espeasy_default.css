@@ -576,13 +576,13 @@ canvas {
 	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
-@media screen and (max-width:780px) {
+@media screen and (max-width:830px) {
 	.showmenulabel {
 		display: none
 	}
 
 	a.menu {
-		width: 12%
+		width: 11%
 	}
 }
 

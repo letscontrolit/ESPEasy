@@ -1046,13 +1046,11 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
 
   out[iOut] = 0;
 
-  outputStr.reserve(32 + iOut);
-  outputStr += F("IRSEND,RAW2,");
-  outputStr += out;
-  outputStr += F(",38,");
-  outputStr += uint64ToString(div[0], 10);
-  outputStr += ',';
-  outputStr += uint64ToString(div[1], 10);
+  outputStr = strformat(
+    F("IRSEND,RAW2,%s,38,%s,%s"),
+    out,
+    uint64ToString(div[0], 10).c_str(),
+    uint64ToString(div[1], 10).c_str());
   addLog(LOG_LEVEL_INFO, outputStr);
   return true;
 }

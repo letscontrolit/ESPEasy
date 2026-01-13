@@ -89,4 +89,5 @@ dependencies.lock
 
 src/src/CustomBuild/CompiletimeDefines_generated.h
 
-bhutan_16m.bin
+
+sdkconfig.normal_ESP32solo1_4M316k

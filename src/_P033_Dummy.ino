@@ -37,6 +37,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       dev.PluginStats    = true;
       dev.CustomVTypeVar = true;
       dev.MqttStateClass = true;
+      dev.NoDeviceSettings = true;
       break;
     }
 

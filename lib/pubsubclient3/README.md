@@ -24,12 +24,19 @@ I appreciate every contribution to this library.
 The library comes with a number of example sketches. See File > Examples > PubSubClient
 within the Arduino application.
 
-Full API documentation is available here: https://pubsubclient.knolleary.net
+Full API documentation is available here: https://hmueller01.github.io/pubsubclient3/api
 
 ## Limitations
 
  - The client is based on the [MQTT Version 3.1.1 specification](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html) with some limitations.
- - It can only publish QoS 0 messages. It can subscribe at QoS 0 or QoS 1.
+ - It can publish at QoS 0, 1 or 2.
+
+   **WARNING:** No retransmission is supported to keep the library as much memory friendly as possible.
+
+   Note: Without retransmission support, the publish QoS is only meaningful when the broker sends your
+   message to a subscriber, supposing that the subscriber subscribes with a QoS greater then or equal to
+   the publish QoS. Consider that MQTT runs over TCP, so retransmission isn't really required in most cases, especially when publishing to the broker.
+ - It can subscribe at QoS 0 or QoS 1.
  - The maximum message size, including header, is **256 bytes** by default. This
    is configurable via `MQTT_MAX_PACKET_SIZE` in `PubSubClient.h` or can be changed
    by calling `PubSubClient::setBufferSize(size)`.

@@ -7,7 +7,9 @@ struct EventValueSourceGroup {
   enum class Enum : uint8_t {
     RESTRICTED,
     ALL
+
   };
+
 };
 
 
@@ -25,27 +27,18 @@ struct EventValueSource {
     VALUE_SOURCE_RULES_RESTRICTED = 8,
 
     VALUE_SOURCE_NR_VALUES
+
   };
 
-  static bool partOfGroup(EventValueSource::Enum source, EventValueSourceGroup::Enum group)
-  {
-    switch (source) {
-      case EventValueSource::Enum::VALUE_SOURCE_NOT_SET:
-      case EventValueSource::Enum::VALUE_SOURCE_NR_VALUES:
-        return false;
-      case EventValueSource::Enum::VALUE_SOURCE_SYSTEM:
-      case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
-      case EventValueSource::Enum::VALUE_SOURCE_UDP:
-      case EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND:
-      case EventValueSource::Enum::VALUE_SOURCE_RULES:
-        return true;
-      case EventValueSource::Enum::VALUE_SOURCE_HTTP:
-      case EventValueSource::Enum::VALUE_SOURCE_MQTT:
-      case EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED:
-        return group == EventValueSourceGroup::Enum::ALL;
-    }
-    return false;
-  }
+  static bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
+
+  static bool isExternalSource(EventValueSource::Enum eventSource);
+
+  static const __FlashStringHelper* toString(Enum);
+
+  static bool                       partOfGroup(EventValueSource::Enum      source,
+                                                EventValueSourceGroup::Enum group);
+
 };
 
 

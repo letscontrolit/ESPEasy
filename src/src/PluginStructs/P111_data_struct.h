@@ -52,7 +52,7 @@ private:
   uint8_t counter = 0;
 
   String  getCardName();
-  uint8_t readCardStatus(uint32_t *key,
+  uint8_t readCardStatus(uint64_t *key,
                          bool     *removedTag);
   bool    reset(int8_t csPin,
                 int8_t resetPin);

@@ -92,7 +92,8 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
+    // Only Controller Plugin specific call, so may call do_CPluginCall directly 
+    if (do_CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
       return name;

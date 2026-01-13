@@ -211,7 +211,7 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
         if (P014_data->chip_id == CHIP_ID_SI7013) {
           UserVar.setFloat(event->TaskIndex, 2, (P014_data->adc) >> P014_FILTER_POWER);
         }
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = strformat(F("P014: Temperature: %.2f Humidity: %.2f"),
                                  UserVar[event->BaseVarIndex + 0],
@@ -222,7 +222,7 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
           }
           addLog(LOG_LEVEL_INFO, log);
         }
-
+#endif
         P014_data->state = P014_state::Ready; // getting ready for another read cycle
         success          = true;
       }

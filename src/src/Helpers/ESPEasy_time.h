@@ -72,6 +72,10 @@ public:
   uint32_t      systemMicros_to_Localtime(const int64_t& systemMicros,
                                           uint32_t     & unix_time_frac) const;
 
+  // Try to get in the range of the current system micros using given ratio
+  // Ratio of 1000 reflects millis. Ratio of 20000 reflects 1/50 sec (20 msec)
+  int64_t internalTimestamp_to_systemMicros(const uint32_t& internalTimestamp, uint32_t internal_to_micros_ratio = 1000u) const;
+
   void          initTime();
 
   unsigned long getLocalUnixTime() const;

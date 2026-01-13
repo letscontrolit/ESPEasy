@@ -93,15 +93,19 @@ Enabling "Stats" on a task value also extends how task values can be addressed w
 
 For example using just like normal task value data:
 
-* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
-* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
-* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
-* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+* ``[bme#temp.max]`` Refer to the maximum recorded sample in available samples (rolling maximum)
+* ``[bme#temp.maxX]`` Refer to the maximum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.maxp]`` (max-peak) Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
+* ``[bme#temp.min]`` Refer to the minimum recorded sample in available samples (rolling minimum)
+* ``[bme#temp.minX]`` Refer to the minimum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.minp]`` (min-peak) See ``[bme#temp.maxp]``.
 * ``[bme#temp.size]`` Return the number of samples in memory.
-* ``[bme#temp.sample]`` Access the last sample in memory.
-* ``[bme#temp.sampleN]`` Access the N-th last sample in memory.
+* ``[bme#temp.sample]`` Return the number of samples in memory. (Doc. reflects the actual code!)
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory, negative value accesses N-th value from the *oldest* available sample.
 
 
 Commands on "Stats" data:

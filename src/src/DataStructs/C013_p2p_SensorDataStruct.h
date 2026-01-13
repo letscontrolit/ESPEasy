@@ -13,14 +13,15 @@
 # include "../DataTypes/TaskValues_Data.h"
 # include "../DataTypes/PluginID.h"
 
+struct __attribute__((__packed__)) C013_SensorDataStruct;
+DEF_UP(C013_SensorDataStruct);
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
 struct __attribute__((__packed__)) C013_SensorDataStruct
 {
   C013_SensorDataStruct() = default;
 
-  bool setData(const uint8_t *data,
-               size_t         size);
+  static UP_C013_SensorDataStruct create(const uint8_t *data, size_t size);
 
   bool prepareForSend();
 
@@ -53,6 +54,16 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
   // feed data on a different task index as is used on the sender node.
   uint32_t          IDX             = 0;
 };
+
+#include "../Helpers/Memory.h"
+
+
+#define MakeC013_SensorData(T) void * calloc_ptr = special_calloc(1,sizeof(C013_SensorDataStruct)); UP_C013_SensorDataStruct T(new (calloc_ptr)  C013_SensorDataStruct());
+
+// Check to see if MakeC013_SensorData was successful
+#define AllocatedC013_SensorData(T) (T.get() != nullptr)
+
+
 
 #endif // ifdef USES_C013
 

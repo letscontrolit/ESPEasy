@@ -183,12 +183,13 @@ void handle_devices() {
       struct EventStruct TempEvent(taskIndex);
       String dummy;
 
+      // May need to call PLUGIN_INIT, however we must make sure it is exited first
+      PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+
       if (Settings.TaskDeviceEnabled[taskIndex]) {
         if (PluginCall(PLUGIN_INIT, &TempEvent, dummy)) {
           PluginCall(PLUGIN_READ, &TempEvent, dummy);
         }
-      } else {
-        PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
       }
     }
   }
@@ -283,22 +284,23 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;
     bitWrite(flags, I2C_FLAGS_SLOW_SPEED, isFormItemChecked(F("taskdeviceflags0")));
-#if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
+# if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
     uint8_t i2cBus = 0;
-#endif
+# endif
 
-#if FEATURE_I2C_MULTIPLE
-    if ((getI2CBusCount() > 1) && (Settings.isI2CEnabled(1) 
-                                    #if FEATURE_I2C_INTERFACE_3
-                                    || Settings.isI2CEnabled(2)
-                                    #endif
+# if FEATURE_I2C_MULTIPLE
+
+    if ((getI2CBusCount() > 1) && (Settings.isI2CEnabled(1)
+                                    #  if FEATURE_I2C_INTERFACE_3
+                                   || Settings.isI2CEnabled(2)
+                                    #  endif
                                    )
-      && !Device[DeviceIndex].I2CNoBusSelection
-      ) {
+        && !Device[DeviceIndex].I2CNoBusSelection
+        ) {
       i2cBus = getFormItemInt(F("pi2cbus"));
       set3BitToUL(flags, I2C_FLAGS_BUS_NUMBER, i2cBus);
     }
-#endif // if FEATURE_I2C_MULTIPLE
+# endif // if FEATURE_I2C_MULTIPLE
 
 # if FEATURE_I2CMULTIPLEXER
 
@@ -331,7 +333,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   // Save selected output type.
-  switch (device.OutputDataType) {
+  switch (device.OutputDataType)
+  {
     case Output_Data_type_t::Default:
     {
       String dummy;
@@ -392,31 +395,34 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   Settings.TaskDevicePort[taskIndex] = getFormItemInt(F("TDP"), 0);
   update_whenset_FormItemInt(F("remoteFeed"), Settings.TaskDeviceDataFeed[taskIndex]);
   Settings.CombineTaskValues_SingleEvent(taskIndex, isFormItemChecked(F("TVSE")));
-  #if FEATURE_STRING_VARIABLES
+  # if FEATURE_STRING_VARIABLES
+
   if (!device.HideDerivedValues) {
     Settings.ShowDerivedTaskValues(taskIndex, isFormItemChecked(F("TSDV")));
     Settings.EventAndLogDerivedTaskValues(taskIndex, isFormItemChecked(F("TELD")));
   }
-  #endif // if FEATURE_STRING_VARIABLES
-  
+  # endif // if FEATURE_STRING_VARIABLES
+
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(getPluginCustomArgName(F("TDID"), controllerNr));
     Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr));
     # if FEATURE_MQTT_DISCOVER
-    
+
     if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr)) &&
         Settings.TaskDeviceSendData[controllerNr][taskIndex]) {
       discoverController = controllerNr;
     }
     # endif // if FEATURE_MQTT_DISCOVER
-    #if FEATURE_STRING_VARIABLES
-    if (!device.HideDerivedValues) 
-    Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
-    #endif // if FEATURE_STRING_VARIABLES
-    #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+    # if FEATURE_STRING_VARIABLES
+
+    if (!device.HideDerivedValues) {
+      Settings.SendDerivedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSND"), controllerNr)));
+    }
+    # endif // if FEATURE_STRING_VARIABLES
+    # if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
     Settings.SendRetainedTaskValues(taskIndex, controllerNr, isFormItemChecked(getPluginCustomArgName(F("TSRT"), controllerNr)));
-    #endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+    # endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
   }
 
   if (device.PullUpOption) {
@@ -459,17 +465,17 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     ExtraTaskSettings.setPluginStatsConfig(varNr, pluginStats_Config);
 # endif // if FEATURE_PLUGIN_STATS
-    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     ExtraTaskSettings.setTaskVarUnitOfMeasure(varNr, getFormItemInt(getPluginCustomArgName(F("TUOM"), varNr)));
-    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # if FEATURE_CUSTOM_TASKVAR_VTYPE
     ExtraTaskSettings.setTaskVarCustomVType(varNr, getFormItemInt(getPluginCustomArgName(F("TDTV"), varNr)));
-    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
-    #if FEATURE_MQTT_STATE_CLASS
+    # if FEATURE_MQTT_STATE_CLASS
     ExtraTaskSettings.setTaskVarStateClass(varNr, getFormItemInt(getPluginCustomArgName(F("TDSC"), varNr)));
-    #endif // if FEATURE_MQTT_STATE_CLASS
+    # endif // if FEATURE_MQTT_STATE_CLASS
   }
   ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
@@ -489,7 +495,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     if (device.ErrorStateValues) {
       // FIXME TD-er: Must collect these from the web page.
-      PluginCall(DeviceIndex, PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
+      PluginCall(PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
     }
 
     // Make sure the task needs to reload using the new settings.
@@ -535,9 +541,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
         Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
     {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(TempEvent.ControllerIndex);
       String dummy;
-      CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
+      CPluginCall(CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
     }
   }
 
@@ -709,7 +714,8 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           bool showpin2 = false;
           bool showpin3 = false;
 
-          switch (device.Type) {
+          switch (device.Type)
+          {
             case DEVICE_TYPE_I2C:
             {
               format_I2C_pin_description(x);
@@ -737,11 +743,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               #  endif // if FEATURE_ADC_VCC
               # endif // ifdef ESP8266
               # ifdef ESP32
-              #if SOC_ADC_SUPPORTED
+              #  if SOC_ADC_SUPPORTED
               showpin1 = true;
               addHtml(formatGpioName_ADC(Settings.TaskDevicePin1[x]));
               html_BR();
-              #endif
+              #  endif // if SOC_ADC_SUPPORTED
               # endif // ifdef ESP32
 
               break;
@@ -831,9 +837,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
-        #if FEATURE_STRING_VARIABLES
+        # if FEATURE_STRING_VARIABLES
         const DeviceStruct& device = Device[DeviceIndex];
-        #endif // #if FEATURE_STRING_VARIABLES
+        # endif // #if FEATURE_STRING_VARIABLES
         String customValuesString;
         const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
 
@@ -845,39 +851,44 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
             {
-              #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+              # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(x, varNr);
               String uom;
+
               if ((uomIndex != 0) && Settings.ShowUnitOfMeasureOnDevicesPage()) {
                 uom = concat(F(" "), toUnitOfMeasureName(uomIndex));
               }
-              #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+              # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const String value = formatUserVarNoCheck(&TempEvent, varNr);
-              #if FEATURE_STRING_VARIABLES
-              bool hasPresentation = false;
+              # if FEATURE_STRING_VARIABLES
+              bool   hasPresentation = false;
               String presentation;
-              if (!device.HideDerivedValues)
+
+              if (!device.HideDerivedValues) {
                 presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
-              #endif // if FEATURE_STRING_VARIABLES
+              }
+              # endif // if FEATURE_STRING_VARIABLES
               pluginWebformShowValue(
                 x,
                 varNr,
                 Cache.getTaskDeviceValueName(x, varNr),
-                #if FEATURE_STRING_VARIABLES
+                # if FEATURE_STRING_VARIABLES
                 hasPresentation ? presentation :
-                #endif // if FEATURE_STRING_VARIABLES
-                #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                # endif // if FEATURE_STRING_VARIABLES
+                # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
                 concat(value, uom)
-                #else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                # else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
                 value
-                #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-              );
+                # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+                );
             }
           }
 
-          #if FEATURE_STRING_VARIABLES
+          # if FEATURE_STRING_VARIABLES
+
           if (!device.HideDerivedValues) {
             int varNr = VARS_PER_TASK;
+
             if (Settings.ShowDerivedTaskValues(x)) {
               String taskName = getTaskDeviceName(x);
               taskName.toLowerCase();
@@ -885,22 +896,29 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
 
               auto it = customStringVar.begin();
+
               while (it != customStringVar.end()) {
                 if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
                   String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
                   String uom;
                   String vType;
                   const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
+
                   if (!vname2.isEmpty()) {
                     valueName = vname2;
                   }
+
                   if (!it->second.isEmpty()) {
                     String value(it->second);
                     value = parseTemplateAndCalculate(value);
-                    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
+                    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE),
+                                                                       taskName.c_str(),
+                                                                       valueName.c_str()));
+
                     if (!uom.isEmpty()) {
                       value = strformat(F("%s %s"), value.c_str(), uom.c_str());
                     }
+
                     if (!presentation.isEmpty()) {
                       stripEscapeCharacters(presentation);
                       presentation.replace(F("%value%"), value);
@@ -921,7 +939,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               }
             }
           }
-          #endif // if FEATURE_STRING_VARIABLES
+          # endif // if FEATURE_STRING_VARIABLES
         }
       }
     }
@@ -934,6 +952,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 }
 
 # if FEATURE_ESPEASY_P2P
+
 void format_originating_node(uint8_t remoteUnit) {
   addHtml(F("Unit "));
   addHtmlInt(remoteUnit);
@@ -964,17 +983,18 @@ void format_I2C_port_description(taskIndex_t x)
   }
   # endif // if FEATURE_I2C_GET_ADDRESS
   # if FEATURE_I2CMULTIPLEXER
-  #if FEATURE_I2C_MULTIPLE
+  #  if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = Settings.getI2CInterface(x);
+
   if ((i2cBus > 0) || Settings.isI2CEnabled(1) || Settings.isI2CEnabled(2)) {
     html_BR();
     addHtml(F("I2C Bus"));
     addHtml(' ');
     addHtmlInt(i2cBus);
   }
-  #else
+  #  else // if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = 0;
-  #endif // if FEATURE_I2C_MULTIPLE
+  #  endif // if FEATURE_I2C_MULTIPLE
 
   if (isI2CMultiplexerEnabled(i2cBus) && I2CMultiplexerPortSelectedForTask(x)) {
     String mux;
@@ -1014,11 +1034,12 @@ void format_SPI_port_description(int8_t spi_gpios[3])
 
 void format_I2C_pin_description(taskIndex_t x)
 {
-  #if FEATURE_I2C_MULTIPLE
+  # if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = Settings.getI2CInterface(x);
-  #else
+  # else
   const uint8_t i2cBus = 0;
-  #endif // if FEATURE_I2C_MULTIPLE
+  # endif // if FEATURE_I2C_MULTIPLE
+
   if (checkI2CConfigValid_toHtml(x)) {
     Label_Gpio_toHtml(F("SDA"), formatGpioLabel(Settings.getI2CSdaPin(i2cBus), false));
     html_BR();
@@ -1031,7 +1052,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSp
   if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     const __FlashStringHelper*labels[] = { F("CLK"), F("MISO"), F("MOSI") };
 
-    for (int i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < NR_ELEMENTS(labels); ++i) {
       if (i != 0) {
         html_BR();
       }
@@ -1088,6 +1109,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
     const uint8_t pid = Settings.getPluginID_for_task(taskIndex).value;
+
     if (pid <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
       addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
     }
@@ -1100,6 +1122,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
                     //    Settings.TaskDeviceEnabled[taskIndex].enabled,
                     Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
+    addFormSeparator(2);
 
     # if FEATURE_PLUGIN_PRIORITY
 
@@ -1126,21 +1149,22 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     # if FEATURE_ESPEASY_P2P
     const controllerIndex_t p2p_controllerIndex = findFirstEnabledControllerWithId(13);
-    const uint8_t remoteUnit = 
+    const uint8_t remoteUnit                    =
       (p2p_controllerIndex != INVALID_CONTROLLER_INDEX)
       ? Settings.TaskDeviceDataFeed[taskIndex]
       : 0;
-    #else
+    # else // if FEATURE_ESPEASY_P2P
     const uint8_t remoteUnit = 0;
-    #endif
+    # endif // if FEATURE_ESPEASY_P2P
     # if FEATURE_ESPEASY_P2P
-    if (device.SendDataOption && p2p_controllerIndex != INVALID_CONTROLLER_INDEX)
+
+    if (device.SendDataOption && (p2p_controllerIndex != INVALID_CONTROLLER_INDEX))
     {
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
       addFormNumericBox(F("Remote Unit"), F("remoteFeed"), remoteUnit, 0, 255);
 
-      if (remoteUnit != 0 && remoteUnit != 255) {
+      if ((remoteUnit != 0) && (remoteUnit != 255)) {
         const NodeStruct*node = Nodes.getNode(remoteUnit);
 
         if (node != nullptr) {
@@ -1202,7 +1226,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
 
     // add plugins content
-    if ((DEVICE_TYPE_DUMMY != device.Type) && (remoteUnit == 0)) {
+    if ((!device.NoDeviceSettings) && (remoteUnit == 0)) {
       addFormSubHeader(F("Device Settings"));
     }
 
@@ -1359,6 +1383,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 }
 
 # ifdef PLUGIN_USES_SERIAL
+
 void devicePage_show_serial_config(taskIndex_t taskIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1381,13 +1406,13 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   addFormSubHeader(F("I2C options"));
 
   if (!Settings.isI2CEnabled(0)
-     #if FEATURE_I2C_MULTIPLE
-     && (getI2CBusCount() > 1 && !Settings.isI2CEnabled(1))
-     #if FEATURE_I2C_INTERFACE_3
-     && (getI2CBusCount() > 2 && !Settings.isI2CEnabled(2))
-     #endif // if FEATURE_I2C_INTERFACE_3
-     #endif // if FEATURE_I2C_MULTIPLE
-     ) {
+     # if FEATURE_I2C_MULTIPLE
+      && (getI2CBusCount() > 1 && !Settings.isI2CEnabled(1))
+     #  if FEATURE_I2C_INTERFACE_3
+      && (getI2CBusCount() > 2 && !Settings.isI2CEnabled(2))
+     #  endif // if FEATURE_I2C_INTERFACE_3
+     # endif // if FEATURE_I2C_MULTIPLE
+      ) {
     addFormNote(F("I2C Bus is not configured yet (Hardware page)."));
   }
 
@@ -1399,19 +1424,20 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (Device[DeviceIndex].I2CMax100kHz) {
     addFormNote(F("This device is specified for max. 100 kHz operation!"));
   }
-#if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
+# if FEATURE_I2C_MULTIPLE || FEATURE_I2CMULTIPLEXER
   uint8_t i2cBus = 0;
-#endif
+# endif
 
-  #if FEATURE_I2C_MULTIPLE
+  # if FEATURE_I2C_MULTIPLE
+
   if (!Device[DeviceIndex].I2CNoBusSelection) { // If the device doesn't disallow bus selection
     i2cBus = Settings.getI2CInterface(taskIndex);
     I2CInterfaceSelector(F("I2C Bus"),
-                        F("pi2cbus"),
-                        i2cBus,
-                        true);
+                         F("pi2cbus"),
+                         i2cBus,
+                         true);
   }
-  #endif // if FEATURE_I2C_MULTIPLE
+  # endif // if FEATURE_I2C_MULTIPLE
   # if FEATURE_I2CMULTIPLEXER
 
   // Show selector for an I2C multiplexer port if a multiplexer is configured
@@ -1471,7 +1497,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       }
 
       if (taskDeviceI2CMuxPort >= static_cast<int>(mux_max)) { taskDeviceI2CMuxPort = -1; } // Reset if out of range
-      const FormSelectorOptions selector(        
+      const FormSelectorOptions selector(
         mux_max + 1,
         i2c_mux_portoptions,
         i2c_mux_portchoices);
@@ -1489,7 +1515,8 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
   struct EventStruct TempEvent(taskIndex);
   int pconfigIndex = checkDeviceVTypeForTask(&TempEvent);
 
-  switch (Device[DeviceIndex].OutputDataType) {
+  switch (Device[DeviceIndex].OutputDataType)
+  {
     case Output_Data_type_t::Default:
       return;
     case Output_Data_type_t::Simple:
@@ -1514,6 +1541,7 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
 }
 
 # if FEATURE_PLUGIN_STATS
+
 void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].PluginStats)
@@ -1527,8 +1555,11 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       #  if FEATURE_CHART_JS
 
       if (taskData->nrSamplesPresent() > 0) {
-        addRowLabel(F("Historic data"));
+        addRowColspan(2);
+
+        //        addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
+        addHtml(F("</td></tr>"));
       }
       #  endif // if FEATURE_CHART_JS
 
@@ -1553,7 +1584,6 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
 
 # endif // if FEATURE_PLUGIN_STATS
 
-
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (!validDeviceIndex(DeviceIndex)) { return; }
@@ -1576,12 +1606,13 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                   F("Unchecked: Send event per value. Checked: Send single event (%s#All) containing all values"),
                   getTaskDeviceName(taskIndex).c_str()));
 
-    #if FEATURE_STRING_VARIABLES
+    # if FEATURE_STRING_VARIABLES
+
     if (!device.HideDerivedValues) {
       addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
       addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
     }
-    #endif // if FEATURE_STRING_VARIABLES
+    # endif // if FEATURE_STRING_VARIABLES
 
     bool separatorAdded = false;
 
@@ -1598,7 +1629,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                                         (Settings.Protocol[controllerNr] != 0);
         # if FEATURE_MQTT_DISCOVER
         const bool showMqttGroup = (validProtocolIndex(ProtocolIndex) &&
-                                    getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
+                                       getProtocolStruct(ProtocolIndex).mqttAutoDiscover);
         # endif // if FEATURE_MQTT_DISCOVER
         separatorAdded = true;
         html_TR_TD();
@@ -1640,7 +1671,8 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
             getPluginCustomArgName(F("TDID"), controllerNr), // ="taskdeviceid"
             Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
         }
-        #if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+        # if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+
         if (showMqttGroup) {
           html_TD();
           addHtml(F("Retained:"));
@@ -1651,8 +1683,9 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                       #  endif // if FEATURE_TOOLTIPS
                       );
         }
-        #endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
+        # endif // if FEATURE_MQTT && FEATURE_MQTT_DISCOVER
         # if FEATURE_STRING_VARIABLES
+
         if (allowSendDerived) {
           html_TD();
           addHtml(F("Send derived:"));
@@ -1661,7 +1694,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                       #  if FEATURE_TOOLTIPS
                       , F("Send derived values")
                       #  endif // if FEATURE_TOOLTIPS
-                     );
+                      );
         }
         # endif // if FEATURE_STRING_VARIABLES
 
@@ -1747,12 +1780,12 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     }
 # endif // if FEATURE_PLUGIN_STATS
 
-    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     html_table_header(F("Unit of Measure"), 300);
     ++colCount;
     EventStruct uomEvent(taskIndex);
     String uomDummy;
-    bool limitedUom = PluginCall(DeviceIndex, PLUGIN_GET_UOM_GROUPS, &uomEvent, uomDummy);
+    bool limitedUom = PluginCall(PLUGIN_GET_UOM_GROUPS, &uomEvent, uomDummy);
     if (!limitedUom) {
       PluginCall(PLUGIN_GET_DEVICEVTYPE, &uomEvent, uomDummy); // Get Sensor_VType
       limitedUom = getDefaultUoMforSensorVType(&uomEvent);     // Populate UoM groups for known Sensor_VTypes
@@ -1786,39 +1819,42 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     }
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # if FEATURE_CUSTOM_TASKVAR_VTYPE
+
     if (device.CustomVTypeVar) {
-      html_table_header(F("Value Type"),  100);
+      html_table_header(F("Value Type"), 100);
       ++colCount;
     }
-    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
-    #if FEATURE_MQTT_STATE_CLASS
+    # if FEATURE_MQTT_STATE_CLASS
+
     if (device.MqttStateClass) {
       html_table_header(F("MQTT State Class"), 350);
       ++colCount;
     }
-    #endif // if FEATURE_MQTT_STATE_CLASS
+    # endif // if FEATURE_MQTT_STATE_CLASS
 
 
     // placeholder header
     html_table_header(F(""));
     ++colCount;
 
-    #if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # if FEATURE_CUSTOM_TASKVAR_VTYPE
     std::vector<uint8_t> singleOptions;
     
     if (device.CustomVTypeVar) {
       // Build a list of all single-value available value VTypes from PR #5199
-      constexpr uint8_t    maxVType = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_NOT_SET);
+      constexpr uint8_t maxVType = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_NOT_SET);
       singleOptions.push_back(0); // Empty/None value
+
       for (uint8_t i = 0; i < maxVType; ++i) {
         if (getValueCountFromSensorType(static_cast<Sensor_VType>(i), false) == 1) {
           singleOptions.push_back(i);
         }
       }
     }
-    #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+    # endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
     # if FEATURE_PLUGIN_STATS
     const __FlashStringHelper *chartAxis[] = {
@@ -1900,13 +1936,14 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       }
 # endif // if FEATURE_PLUGIN_STATS
 
-      #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       html_TD();
       const uint64_t uomGroups = limitedUom ? uomEvent.Par64N[varNr] : UOM_GROUP_ALL;
       addUnitOfMeasureSelector(getPluginCustomArgName(F("TUOM"), varNr), Cache.getTaskVarUnitOfMeasure(taskIndex, varNr), uomGroups);
       #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-      #if FEATURE_CUSTOM_TASKVAR_VTYPE
+      # if FEATURE_CUSTOM_TASKVAR_VTYPE
+
       if (device.CustomVTypeVar) {
         html_TD();
         sensorTypeCategoriesHelper_Selector(
@@ -1915,9 +1952,10 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
           &singleOptions[0],
           static_cast<Sensor_VType>(Cache.getTaskVarCustomVType(taskIndex, varNr)));
       }
-      #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      # endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
-      #if FEATURE_MQTT_STATE_CLASS
+      # if FEATURE_MQTT_STATE_CLASS
+
       if (device.MqttStateClass) {
         html_TD();
 
@@ -1926,7 +1964,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
           getPluginCustomArgName(F("TDSC"), varNr),
           Cache.getTaskVarStateClass(taskIndex, varNr));
       }
-      #endif // if FEATURE_MQTT_STATE_CLASS
+      # endif // if FEATURE_MQTT_STATE_CLASS
     }
     addFormSeparator(colCount);
   }

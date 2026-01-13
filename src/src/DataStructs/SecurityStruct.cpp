@@ -5,6 +5,9 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 
+#include "../Globals/SecuritySettings.h"
+
+
 SecurityStruct::SecurityStruct() {
   ZERO_FILL(WifiSSID);
   ZERO_FILL(WifiKey);
@@ -63,7 +66,7 @@ void SecurityStruct::clearWiFiCredentials() {
   ZERO_FILL(WifiKey);
   ZERO_FILL(WifiSSID2);
   ZERO_FILL(WifiKey2);
-  #ifndef BUILD_MINIMAL_OTA
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("WiFi : Clear WiFi credentials from settings"));
   #endif
 }
@@ -78,7 +81,12 @@ void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot sl
   }
 }
 
+//TODO TD-er: Let SecurityStruct load/save/handle the device specific security settings
+
 bool SecurityStruct::hasWiFiCredentials() const {
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  if (SecuritySettings_deviceSpecific.hasWiFiCredentials()) return true;
+#endif
   return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) ||
          hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second);
 }
@@ -90,6 +98,17 @@ bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot
       return (WifiSSID2[0] != 0 && !String(WifiSSID2).equalsIgnoreCase(F("ssid")));
 
   return false;
+}
+
+String SecurityStruct::getSSID(WiFiCredentialsSlot slot) const
+{
+  if (hasWiFiCredentials(slot)) {
+  if (slot == SecurityStruct::WiFiCredentialsSlot::first)
+      return WifiSSID;
+  if (slot == SecurityStruct::WiFiCredentialsSlot::second)
+      return WifiSSID2;
+  }
+  return EMPTY_STRING;
 }
 
 String SecurityStruct::getPassword() const {

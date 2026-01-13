@@ -4,7 +4,6 @@
 
 #if FEATURE_MQTT
 
-
 // MQTT client
 WiFiClient mqtt;
 # if FEATURE_MQTT_TLS
@@ -24,6 +23,7 @@ String mqtt_fingerprint;
 # endif  // if FEATURE_MQTT_TLS
 
 PubSubClient MQTTclient(mqtt);
+LongTermOnOffTimer MQTTclient_connected_stats;
 bool MQTTclient_should_reconnect        = true;
 bool MQTTclient_must_send_LWT_connected = false;
 bool MQTTclient_connected               = false;

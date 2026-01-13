@@ -3,8 +3,9 @@
 #ifdef USES_P026
 
 # include "../DataStructs/ESPEasy_packed_raw_data.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
-# include "../Globals/ESPEasyWiFiEvent.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 # include "../Helpers/ESPEasy_UnitOfMeasure.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Hardware_temperature_sensor.h"
@@ -129,13 +130,17 @@ float P026_get_value(uint8_t type)
     case P026_VALUETYPE_ip2:
     case P026_VALUETYPE_ip3:
     case P026_VALUETYPE_ip4:
-      res = NetworkLocalIP()[type - P026_VALUETYPE_ip1];
+      res = ESPEasy::net::NetworkLocalIP()[type - P026_VALUETYPE_ip1];
       break;
     case P026_VALUETYPE_web:
       res = timePassedSince(lastWeb) / 1000.0f;
       break; // respond in seconds
     case P026_VALUETYPE_freestack: res = getCurrentFreeStack(); break;
-    case P026_VALUETYPE_txpwr:     res = WiFiEventData.wifi_TX_pwr; break;
+# if FEATURE_SET_WIFI_TX_PWR
+    case P026_VALUETYPE_txpwr:     res = ESPEasy::net::wifi::GetWiFiTXpower(); break;
+#else
+    case P026_VALUETYPE_txpwr:     res = 0; break;
+#endif
 # ifdef USE_SECOND_HEAP
     case P026_VALUETYPE_free2ndheap:
       res = FreeMem2ndHeap();

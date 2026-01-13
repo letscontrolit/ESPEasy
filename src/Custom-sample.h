@@ -77,7 +77,7 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
-#define DEFAULT_AP_DONT_FORCE_SETUP          false // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_AP_FORCE_SETUP               true  // When set, start Captive Portal to redirect user to web interface when connecting to AP
 #define DEFAULT_DONT_ALLOW_START_AP          false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -308,7 +308,9 @@
 /*
 #define MENU_INDEX_CONFIG_VISIBLE        false
 #define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_NETWORK_VISIBLE       false
 #define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_BUSES_VISIBLE         false
 #define MENU_INDEX_DEVICES_VISIBLE       false
 #define MENU_INDEX_RULES_VISIBLE         false
 #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
@@ -614,7 +616,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
 // #define USES_C018   // TTN/RN2483
-
+// #define USES_C023   // AT-command LoRaWAN
 
 /*
  #######################################################################################################

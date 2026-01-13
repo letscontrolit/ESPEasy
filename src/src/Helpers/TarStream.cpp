@@ -44,7 +44,7 @@ TarStream::~TarStream() {
 
 size_t TarStream::write(uint8_t ch) {
   // TODO implement
-  addLogMove(LOG_LEVEL_ERROR, F("TarStream: write(ch) NOT IMPLEMENTED YET."));
+  addLog(LOG_LEVEL_ERROR, F("TarStream: write(ch) NOT IMPLEMENTED YET."));
   return 1u;
 }
 
@@ -305,7 +305,7 @@ size_t TarStream::write(const uint8_t *buf,
         break;
     }
 
-    if (bufOffset < size) { // We got leftover bytes
+    if (bufOffset < size && _streamState != TarStreamState_e::Error) { // We got leftover bytes
       stayInLoop = true;
     }
   }

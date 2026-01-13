@@ -27,6 +27,16 @@
   #   define LAST_TOUCH_INPUT_INDEX       14
   #   define P097_MAX_THRESHOLD_VALUE     500000 // couldn't find a max value but threshold for ESP32S2 & ESP32S3 is uint32_t
   #   define P097_DEFAULT_TOUCH_THRESHOLD 1500
+#  elif defined(ESP32P4)
+// TODO TD-er: Must use SOC_TOUCH_MIN_CHAN_ID and SOC_TOUCH_MAX_CHAN_ID from soc/soc_caps.h
+  #   define HAS_T0_INPUT                 0
+  #   define HAS_T10_TO_T14               0 // Temporary disabled since T10 to T14 are causing problems
+  #   ifdef LAST_TOUCH_INPUT_INDEX
+  #    undef LAST_TOUCH_INPUT_INDEX
+  #   endif // ifdef LAST_TOUCH_INPUT_INDEX
+  #   define LAST_TOUCH_INPUT_INDEX       14
+  #   define P097_MAX_THRESHOLD_VALUE     500000 // couldn't find a max value but threshold for ESP32S2 & ESP32S3 is uint32_t
+  #   define P097_DEFAULT_TOUCH_THRESHOLD 1500
 #  endif // if defined(ESP32_CLASSIC)
 
 #  define P097_MAX_LONGPRESS_VALUE   10000

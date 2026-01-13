@@ -270,10 +270,11 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
               UserVar.setFloat(event->TaskIndex, 0, x + 1);
               UserVar.setFloat(event->TaskIndex, 1, state);
             }
-
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLog(LOG_LEVEL_INFO, strformat(F("TCLK : State %d"), state));
             }
+#endif
             sendData(event);
           }
         }

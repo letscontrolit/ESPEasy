@@ -153,7 +153,7 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
   if (equals(cmd, F("itho")) || stateCmd) {
     # ifndef BUILD_NO_DEBUG
 
-    if (stateCmd) { addLogMove(LOG_LEVEL_ERROR, F("ITHO: Command 'state' is deprecated, use 'itho' instead, see documentation.")); }
+    if (stateCmd) { addLog(LOG_LEVEL_ERROR, F("ITHO: Command 'state' is deprecated, use 'itho' instead, see documentation.")); }
     # endif // ifndef BUILD_NO_DEBUG
     success = true;
 

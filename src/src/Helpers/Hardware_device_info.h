@@ -88,6 +88,7 @@ const __FlashStringHelper* getChipModel(
 bool                       isESP8285(uint32_t& pkg_version, bool& high_temp_version);
 bool                       isESP8285();
 
+uint16_t                   getChipRevision_val();
 String                     getChipRevision();
 
 uint32_t                   getSketchSize();

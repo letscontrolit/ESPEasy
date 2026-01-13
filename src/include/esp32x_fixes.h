@@ -32,6 +32,9 @@
  *                            -I$PROJECT_DIR/include
  *                            -include "esp32x_fixes.h"
  */
+
+//#include <sdkconfig.h>
+
 #ifdef __riscv
 
 # undef __INT32_TYPE__
@@ -41,6 +44,10 @@
 # define __UINT32_TYPE__     unsigned int
 
 #endif // __riscv
+
+#ifdef ESP32
+#include <soc/soc_caps.h>
+#endif
 
 // alias, deprecated for the chips after esp32s2
 #ifdef CONFIG_IDF_TARGET_ESP32
@@ -87,10 +94,14 @@
 #  endif // REG_SPI_BASE
 # endif  // ESP_IDF_VERSION_MAJOR < 5
 
-#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
+#else
 # define SPI_HOST    SPI1_HOST
 # define HSPI_HOST   SPI2_HOST
-# define VSPI_HOST   SPI2_HOST /* No SPI3_host on C2/C6 */
+#if SOC_SPI_PERIPH_NUM > 2
+# define VSPI_HOST   SPI3_HOST
+#else
+# define VSPI_HOST   SPI2_HOST /* No SPI3_host */
+#endif
 # define VSPI        SPI
 
 // #if ESP_IDF_VERSION_MAJOR < 5
@@ -105,3 +116,20 @@
 
 
 #endif // TARGET
+
+
+#ifndef CONFIG_SOC_WIFI_HE_SUPPORT
+#if CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 
+#define CONFIG_SOC_WIFI_HE_SUPPORT 1
+#else
+#define CONFIG_SOC_WIFI_HE_SUPPORT 0
+#endif
+#endif
+
+#ifndef CONFIG_SOC_WIFI_SUPPORT_5G
+#if CONFIG_IDF_TARGET_ESP32C5
+#define CONFIG_SOC_WIFI_SUPPORT_5G 1
+#else
+#define CONFIG_SOC_WIFI_SUPPORT_5G 0
+#endif
+#endif

@@ -8,72 +8,79 @@
 //   Plugin (Task) function calls
 // ********************************************************************************
 enum PluginFunctions_e {
-   PLUGIN_INIT_ALL                    , // Not implemented in a plugin, only called during boot
-   PLUGIN_INIT                        , // Init the task, called when task is set to enabled (also at boot)
-   PLUGIN_READ                        , // This call can yield new data (when success = true) and then send to controllers
-   PLUGIN_ONCE_A_SECOND               , // Called once a second
-   PLUGIN_TEN_PER_SECOND              , // Called 10x per second (typical for checking new data instead of waiting)
-   PLUGIN_DEVICE_ADD                  , // Called at boot for letting a plugin adding itself to list of available plugins/devices
-   PLUGIN_EVENTLIST_ADD               , // Not used.
-   PLUGIN_WEBFORM_SAVE                , // Call from web interface to save settings
-   PLUGIN_WEBFORM_LOAD                , // Call from web interface for presenting settings and status of plugin
-   PLUGIN_WEBFORM_SHOW_VALUES         , // Call from devices overview page to format values in HTML
-   PLUGIN_GET_DEVICENAME              , // Call to get the plugin description (e.g. "Switch input - Switch")
-   PLUGIN_GET_DEVICEVALUENAMES        , // Call to let the plugin generate some default value names when not defined.
-   PLUGIN_GET_DEVICEVALUECOUNT        , // Optional function call to allow tasks to specify the number of output values (e.g. P026_Sysinfo.ino)
-   PLUGIN_GET_DEVICEVTYPE             , // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
-   PLUGIN_WRITE                       , // Called to allow a task to process a command. Must return success = true when it can handle the command.
-// PLUGIN_EVENT_OUT                   , // Does not seem to be used
-   PLUGIN_WEBFORM_SHOW_CONFIG         , // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
-   PLUGIN_SERIAL_IN                   , // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
-   PLUGIN_UDP_IN                      , // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
-   PLUGIN_CLOCK_IN                    , // Called every new minute
-   PLUGIN_TASKTIMER_IN                , // Called with a previously defined event at a specific time, set via setPluginTaskTimer
-   PLUGIN_FIFTY_PER_SECOND            , // Called 50 times per second
-   PLUGIN_SET_CONFIG                  , // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
-   PLUGIN_GET_DEVICEGPIONAMES         , // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
-   PLUGIN_EXIT                        , // Called when a task no longer is enabled (or deleted)
-   PLUGIN_GET_CONFIG_VALUE            , // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.  Can also be used to access extra unused task values.
-//   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
-   PLUGIN_REQUEST                     , // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
-   PLUGIN_TIME_CHANGE                 , // Called when system time is set (e.g. via NTP)
-   PLUGIN_MONITOR                     , // Replaces PLUGIN_UNCONDITIONAL_POLL
-   PLUGIN_SET_DEFAULTS                , // Called when assigning a plugin to a task, to set some default config.
-   PLUGIN_GET_PACKED_RAW_DATA         , // Return all data in a compact binary format specific for that plugin.
-                                        // Needs FEATURE_PACKED_RAW_DATA
-   PLUGIN_DEVICETIMER_IN              , // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
-   PLUGIN_WEBFORM_SHOW_I2C_PARAMS     , // Show I2C parameters like address.
-   PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  , // When needed, show additional parameters like baudrate or specific serial config
-   PLUGIN_MQTT_CONNECTION_STATE       , // Signal when connection to MQTT broker is re-established
-   PLUGIN_MQTT_IMPORT                 , // For P037 MQTT import
-   PLUGIN_FORMAT_USERVAR              , // Allow plugin specific formatting of a task variable (event->idx = variable)
-   PLUGIN_WEBFORM_SHOW_GPIO_DESCR     , // Show GPIO description on devices overview tab
+  PLUGIN_INIT_ALL,                     // Not implemented in a plugin, only called during boot
+  PLUGIN_INIT,                         // Init the task, called when task is set to enabled (also at boot)
+  PLUGIN_READ,                         // This call can yield new data (when success = true) and then send to controllers
+  PLUGIN_ONCE_A_SECOND,                // Called once a second
+  PLUGIN_TEN_PER_SECOND,               // Called 10x per second (typical for checking new data instead of waiting)
+  PLUGIN_DEVICE_ADD,                   // Called at boot for letting a plugin adding itself to list of available plugins/devices
+  PLUGIN_EVENTLIST_ADD,                // Not used.
+  PLUGIN_WEBFORM_SAVE,                 // Call from web interface to save settings
+  PLUGIN_WEBFORM_LOAD,                 // Call from web interface for presenting settings and status of plugin
+  PLUGIN_WEBFORM_SHOW_VALUES,          // Call from devices overview page to format values in HTML
+  PLUGIN_GET_DEVICENAME,               // Call to get the plugin description (e.g. "Switch input - Switch")
+  PLUGIN_GET_DEVICEVALUENAMES,         // Call to let the plugin generate some default value names when not defined.
+  PLUGIN_GET_DEVICEVALUECOUNT,         // Optional function call to allow tasks to specify the number of output values (e.g.
+                                       // P026_Sysinfo.ino)
+  PLUGIN_GET_DEVICEVTYPE,              // Only needed when Device[deviceCount].OutputDataType is not Output_Data_type_t::Default
+  PLUGIN_WRITE,                        // Called to allow a task to process a command. Must return success = true when it can handle the
+                                       // command.
+  // PLUGIN_EVENT_OUT                   , // Does not seem to be used
+  PLUGIN_WEBFORM_SHOW_CONFIG,          // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
+  PLUGIN_SERIAL_IN,                    // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via
+                                       // serial)
+  PLUGIN_UDP_IN,                       // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for
+                                       // handling standard p2p packets)
+  PLUGIN_CLOCK_IN,                     // Called every new minute
+  PLUGIN_TASKTIMER_IN,                 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+  PLUGIN_FIFTY_PER_SECOND,             // Called 50 times per second
+  PLUGIN_SET_CONFIG,                   // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
+  PLUGIN_GET_DEVICEGPIONAMES,          // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
+  PLUGIN_EXIT,                         // Called when a task no longer is enabled (or deleted)
+  PLUGIN_GET_CONFIG_VALUE,             // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it
+                                       // can handle the command.  Can also be used to access extra unused task values.
+  //   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different
+  // technique.
+  PLUGIN_REQUEST,                      // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
+  PLUGIN_TIME_CHANGE,                  // Called when system time is set (e.g. via NTP)
+  PLUGIN_MONITOR,                      // Replaces PLUGIN_UNCONDITIONAL_POLL
+  PLUGIN_SET_DEFAULTS,                 // Called when assigning a plugin to a task, to set some default config.
+  PLUGIN_GET_PACKED_RAW_DATA,          // Return all data in a compact binary format specific for that plugin.
+                                       // Needs FEATURE_PACKED_RAW_DATA
+  PLUGIN_DEVICETIMER_IN,               // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+  PLUGIN_WEBFORM_SHOW_I2C_PARAMS,      // Show I2C parameters like address.
+  PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS,   // When needed, show additional parameters like baudrate or specific serial config
+  PLUGIN_MQTT_CONNECTION_STATE,        // Signal when connection to MQTT broker is re-established
+  PLUGIN_MQTT_IMPORT,                  // For P037 MQTT import
+  PLUGIN_FORMAT_USERVAR,               // Allow plugin specific formatting of a task variable (event->idx = variable)
+  PLUGIN_WEBFORM_SHOW_GPIO_DESCR,      // Show GPIO description on devices overview tab
 #if FEATURE_PLUGIN_STATS
-   PLUGIN_WEBFORM_LOAD_SHOW_STATS     , // Show PluginStats on task config page
+  PLUGIN_WEBFORM_LOAD_SHOW_STATS,      // Show PluginStats on task config page
 #endif // if FEATURE_PLUGIN_STATS
-   PLUGIN_I2C_HAS_ADDRESS             , // Check the I2C addresses from the plugin, output in 'success'
-   PLUGIN_I2C_GET_ADDRESS             , // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
-   PLUGIN_GET_DISPLAY_PARAMETERS      , // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-   PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT , // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-   PLUGIN_INIT_VALUE_RANGES           , // Initialize the ranges of values, called just before PLUGIN_INIT
-   PLUGIN_READ_ERROR_OCCURED          , // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
-   PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, // Show the configuration for output type and what value to set to which taskvalue
-   PLUGIN_PROCESS_CONTROLLER_DATA     , // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
-   PLUGIN_PRIORITY_INIT_ALL           , // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
-   PLUGIN_PRIORITY_INIT               , // Pre-initialize a singe plugins that is set to PowerManager priority
-   PLUGIN_WEBFORM_LOAD_ALWAYS         , // Loaded *after* PLUGIN_WEBFORM_LOAD, also shown for remote data-feed devices
+  PLUGIN_I2C_HAS_ADDRESS,              // Check the I2C addresses from the plugin, output in 'success'
+  PLUGIN_I2C_GET_ADDRESS,              // Get the current I2C addresses from the plugin, output in 'event->Par1' and 'success'
+  PLUGIN_GET_DISPLAY_PARAMETERS,       // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+  PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT,  // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+  PLUGIN_INIT_VALUE_RANGES,            // Initialize the ranges of values, called just before PLUGIN_INIT
+  PLUGIN_READ_ERROR_OCCURED,           // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+  PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR, // Show the configuration for output type and what value to set to which taskvalue
+  PLUGIN_PROCESS_CONTROLLER_DATA,      // Can be called from the controller to signal the plugin to generate (or handle) sending the data.
+  PLUGIN_PRIORITY_INIT_ALL,            // Pre-initialize all plugins that are set to PowerManager priority (not implemented in plugins)
+  PLUGIN_PRIORITY_INIT,                // Pre-initialize a singe plugins that is set to PowerManager priority
+  PLUGIN_WEBFORM_LOAD_ALWAYS,          // Loaded *after* PLUGIN_WEBFORM_LOAD, also shown for remote data-feed devices
 #ifdef USES_ESPEASY_NOW
-   PLUGIN_FILTEROUT_CONTROLLER_DATA   , // Can be called from the controller to query a task whether the data should be processed further.
+  PLUGIN_FILTEROUT_CONTROLLER_DATA,    // Can be called from the controller to query a task whether the data should be processed further.
 #endif
-   PLUGIN_WEBFORM_PRE_SERIAL_PARAMS   , // Before serial parameters, convert additional parameters like baudrate or specific serial config
+  PLUGIN_WEBFORM_PRE_SERIAL_PARAMS,    // Before serial parameters, convert additional parameters like baudrate or specific serial config
    #if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
-   PLUGIN_GET_DISCOVERY_VTYPES        , // Fetch the Sensor_VType values for dynamic value configurations in event->Par1..Par4
+  PLUGIN_GET_DISCOVERY_VTYPES,         // Fetch the Sensor_VType values for dynamic value configurations in event->Par1..Par4
    #endif // IF FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
    #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
    PLUGIN_GET_UOM_GROUPS              , // Fetch the UoM groups in a bitmap per value, as found in ESPEasy_UnitOfMeasure.cpp unit_of_measure_labels with -1024 offset
    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-   PLUGIN_MAX_FUNCTION  // Leave as last one.
+  PLUGIN_MAX_FUNCTION                  // Leave as last one.
+
 };
 
 
@@ -83,15 +90,16 @@ enum PluginFunctions_e {
 //   CPlugin (Controller) function calls
 // ********************************************************************************
 
-class CPlugin {
+class CPlugin
+{
 public:
 
   // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
 
   enum class Function {
     CPLUGIN_PROTOCOL_ADD = 127, // Called at boot for letting a controller adding itself to list of available controllers
-    CPLUGIN_CONNECT_SUCCESS,     // Only used for timing stats
-    CPLUGIN_CONNECT_FAIL,        // Only used for timing stats
+    CPLUGIN_CONNECT_SUCCESS,    // Only used for timing stats
+    CPLUGIN_CONNECT_FAIL,       // Only used for timing stats
     CPLUGIN_PROTOCOL_TEMPLATE,
     CPLUGIN_PROTOCOL_SEND,
     CPLUGIN_PROTOCOL_RECV,
@@ -106,8 +114,9 @@ public:
     CPLUGIN_TEN_PER_SECOND,   // Called 10x per second (typical for checking new data instead of waiting)
     CPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
     CPLUGIN_INIT_ALL,
+    CPLUGIN_EXIT_ALL,
     CPLUGIN_EXIT,
-    CPLUGIN_WRITE,            // Send commands to a controller.
+    CPLUGIN_WRITE, // Send commands to a controller.
 
 
     // new messages for autodiscover controller plugins (experimental) i.e. C014
@@ -118,13 +127,173 @@ public:
     CPLUGIN_ACKNOWLEDGE,             // call for sending acknowledges !ToDo done by direct function call in PluginCall() for now.
 
     CPLUGIN_WEBFORM_SHOW_HOST_CONFIG // Used for showing host information for the controller.
+
   };
-};
+
+}; // class CPlugin
+
+// ********************************************************************************
+//   NWPlugin (Network) function calls
+// ********************************************************************************
+class NWPlugin
+{
+public:
+
+  enum class ConnectionState {
+    Disabled,
+    Error,
+    Initializing, // e.g. power-on sequence of PPP modem may take quite long
+    Connecting,
+    LinkDown,
+    LinkUp,
+    Connected
+
+  };
+
+  static const __FlashStringHelper* toString(ConnectionState connectionState,
+                                             bool            asUnicodeSymbol = false);
+
+  // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
+
+  enum class Function {
+    NWPLUGIN_DRIVER_ADD = 192, // Called at boot for letting a network adapter adding itself to list of available controllers
+    NWPLUGIN_CONNECT_SUCCESS,  // Only used for timing stats
+    NWPLUGIN_CONNECT_FAIL,     // Only used for timing stats
+    NWPLUGIN_CONNECTION_STATE,
+    NWPLUGIN_DRIVER_TEMPLATE,
+    NWPLUGIN_LOAD_DEFAULTS,
+    NWPLUGIN_GET_DEVICENAME,
+    NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED,
+    NWPLUGIN_WEBFORM_SAVE,
+    NWPLUGIN_WEBFORM_LOAD,
+    NWPLUGIN_GET_PARAMETER_DISPLAY_NAME,
+    NWPLUGIN_TIMER_IN,
+    NWPLUGIN_INIT,
+    NWPLUGIN_TEN_PER_SECOND,   // Called 10x per second (typical for checking new data instead of waiting)
+    NWPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
+    NWPLUGIN_INIT_ALL,
+    NWPLUGIN_EXIT_ALL,         // Exit all network interfaces
+    NWPLUGIN_EXIT,
+    NWPLUGIN_WRITE,            // Send commands to a network adapter.
+    NWPLUGIN_CREDENTIALS_CHANGED,
+#ifdef ESP32
+    NWPLUGIN_GET_INTERFACE,
+    NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO,
+    NWPLUGIN_PRIORITY_ROUTE_CHANGED, // The default interface was changed, let other interfaces check to see if they need to do something.
+#endif // ifdef ESP32
+#if FEATURE_NETWORK_TRAFFIC_COUNT
+    NWPLUGIN_GET_TRAFFIC_COUNT,      // TX/RX count in event->Par64_1, resp. event->Par64_2
+#endif
+    NWPLUGIN_GET_CONNECTED_DURATION,
+    NWPLUGIN_PROCESS_EVENT,          // Process received event arduino_event_id_t
+    NWPLUGIN_WEBSERVER_SHOULD_RUN,   // Check whether the addressed interface is active and needs the webserver to be active
+#if FEATURE_NETWORK_STATS
+    NWPLUGIN_RECORD_STATS,
+    NWPLUGIN_WEBFORM_LOAD_SHOW_STATS,
+#endif
+    NWPLUGIN_WEBFORM_SHOW_NAME,       // Name like "ppp", "eth0", etc.
+    NWPLUGIN_WEBFORM_SHOW_ACTIVE,     // Check whether interface is active and if not, return some error value
+    NWPLUGIN_WEBFORM_SHOW_CONNECTED,  // Used for showing connected state/speed
+    NWPLUGIN_WEBFORM_SHOW_EXTENDED,   // Used for showing all connection info
+    NWPLUGIN_WEBFORM_SHOW_HOSTNAME,   // Used for showing hostname
+    NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS, // Used for showing MAC
+    NWPLUGIN_WEBFORM_SHOW_IP,         // Used for showing IP
+#ifndef LIMIT_BUILD_SIZE
+    NWPLUGIN_WEBFORM_SHOW_PORT,        // Used for showing host information for the network adapter.
+#endif
+
+    NWPLUGIN_MAX_FUNCTION  // Keep as last
+
+  };
+
+#define NrBitsNWPluginFunctions   NR_BITS(static_cast<unsigned>(NWPlugin::Function::NWPLUGIN_MAX_FUNCTION))
+
+
+#ifdef ESP32
+  static bool canQueryViaNetworkInterface(Function function);
+
+  enum class IP_type {
+    inet = 0, // Keep index at 0 as default query
+    network_id_cdr,
+    netmask,
+    broadcast,
+    gateway,
+    dns1,
+    dns2,
+# if CONFIG_LWIP_IPV6
+    ipv6_unknown,
+    ipv6_global,
+    ipv6_link_local,
+    ipv6_site_local,
+    ipv6_unique_local,
+    ipv4_mapped_ipv6
+# endif // if CONFIG_LWIP_IPV6
+
+  };
+
+
+  static const __FlashStringHelper* toString(IP_type ip_type);
+
+
+  static IPAddress                  get_IP_address(NWPlugin::IP_type ip_type,
+                                                   NetworkInterface *networkInterface);
+
+  static bool                       print_IP_address(NWPlugin::IP_type ip_type,
+                                                     NetworkInterface *networkInterface,
+                                                     Print           & out);
+
+  static bool get_subnet(NWPlugin::IP_type ip_type,
+                         NetworkInterface *networkInterface,
+                         IPAddress       & networkID,
+                         IPAddress       & broadcast);
+#endif // ifdef ESP32
+
+  static bool ipLessEqual(const IPAddress& ip,
+                          const IPAddress& high);
+
+  static bool ipInRange(const IPAddress& ip,
+                        const IPAddress& low,
+                        const IPAddress& high);
+
+#ifdef ESP32
+  static bool              IP_in_subnet(const IPAddress & ip,
+                                        NetworkInterface *networkInterface);
+
+  static NWPlugin::IP_type get_IP_type(const IPAddress& ip);
+
+
+  enum class NetforkFlags {
+    DHCP_client           = ESP_NETIF_DHCP_CLIENT,
+    DHCP_server           = ESP_NETIF_DHCP_SERVER,
+    AutoUp                = ESP_NETIF_FLAG_AUTOUP,
+    GratuituousArp        = ESP_NETIF_FLAG_GARP,
+    EventIPmodified       = ESP_NETIF_FLAG_EVENT_IP_MODIFIED,
+    isPPP                 = ESP_NETIF_FLAG_IS_PPP,
+    isBridge              = ESP_NETIF_FLAG_IS_BRIDGE,
+    MLD_v6_report         = ESP_NETIF_FLAG_MLDV6_REPORT,
+    IPv6_autoconf_enabled = ESP_NETIF_FLAG_IPV6_AUTOCONFIG_ENABLED
+
+  };
+
+  static const __FlashStringHelper* toString(NetforkFlags flag);
+
+  static bool                       isFlagSet(NetforkFlags     flag,
+                                              NetworkInterface*networkInterface);
+
+  static bool                       forceDHCP_request(NetworkInterface*networkInterface);
+
+
+#endif // ifdef ESP32
+
+
+}; // class NWPlugin
+
 
 // ********************************************************************************
 //   NPlugin (Notification) function calls
 // ********************************************************************************
-class NPlugin {
+class NPlugin
+{
 public:
 
   enum class Function {
@@ -134,8 +303,10 @@ public:
     NPLUGIN_WEBFORM_LOAD,
     NPLUGIN_WRITE,
     NPLUGIN_NOTIFY
+
   };
-};
+
+}; // class NPlugin
 
 
 #endif // DATATYPES_ESPEASY_PLUGIN_DEFS_H

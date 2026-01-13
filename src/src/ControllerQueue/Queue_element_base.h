@@ -36,4 +36,6 @@ public:
   bool _processByController;
 };
 
+DEF_UP(Queue_element_base);
+
 #endif // ifndef CONTROLLERQUEUE_QUEUE_ELEMENT_BASE_H

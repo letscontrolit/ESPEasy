@@ -13,18 +13,11 @@
 // Flash strings are not checked for duplication.
 // ********************************************************************************
 void wrap_html_tag(const __FlashStringHelper * tag, const String& text) {
-  addHtml('<');
-  addHtml(tag);
-  addHtml('>');
-  addHtml(text);
-  addHtml('<', '/');
-  addHtml(tag);
-  addHtml('>');
+  wrap_html_tag(String(tag), text);
 }
 
 void wrap_html_tag(const String& tag, const String& text) {
-  addHtml(strformat(
-    F("<%s>%s</%s>"),
+  addHtml(strformat(F("<%s>%s</%s>"),
     tag.c_str(),
     text.c_str(),
     tag.c_str()));
@@ -55,13 +48,11 @@ void html_U(const String& text) {
 }
 
 void html_TR_TD_highlight() {
-  addHtml(F("<TR class=\"highlight\">"));
-  html_TD();
+  addHtml(F("<TR class=\"highlight\"><TD>"));
 }
 
 void html_TR_TD() {
-  html_TR();
-  html_TD();
+  addHtml(F("\n<TR><TD>"));
 }
 
 void html_BR() {
@@ -69,7 +60,7 @@ void html_BR() {
 }
 
 void html_TR() {
-  addHtml(F("<TR>"));
+  addHtml(F("\n<TR>"));
 }
 
 void html_TR_TD_height(int height) {
@@ -93,7 +84,7 @@ void html_TD(int td_cnt) {
     html_TD();
   }
 }
-
+#ifdef WEBSERVER_GITHUB_COPY
 int copyTextCounter = 0;
 
 void html_reset_copyTextCounter() {
@@ -111,6 +102,7 @@ void html_copyText_TD() {
 void html_copyText_marker() {
   addHtml(F("&#x022C4;")); //   &diam; &diamond; &Diamond; &#x022C4; &#8900;
 }
+#endif
 
 void html_add_estimate_symbol() {
   addHtml(F(" &#8793; ")); //   &#8793;  &#x2259;  &wedgeq;
@@ -267,11 +259,18 @@ void html_add_form() {
   addHtml(F("<form name='frmselect' method='post'>"));
 }
 
+void html_add_JQuery_script(const __FlashStringHelper * url)
+{
+  addHtml(F("<script src=\""));
+  addHtml(url);
+  addHtml(F("\"></script>"));
+}
+
 void html_add_JQuery_script() {
   #ifndef CDN_URL_JQUERY
     #define CDN_URL_JQUERY "https://code.jquery.com/jquery-3.6.4.min.js"
   #endif // ifndef CDN_URL_JQUERY
-  addHtml(F("<script src=\"" CDN_URL_JQUERY "\"></script>"));
+  html_add_JQuery_script(F(CDN_URL_JQUERY));
 }
 
 #if FEATURE_CHART_JS
@@ -281,7 +280,7 @@ void html_add_ChartJS_script() {
   // - Select the chart.js file (may be called chart.umd.min.js) and copy the url
   // - Replace the url in below script src element, keeping the quotes
   #ifndef CDN_URL_CHART_JS
-    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+    #define CDN_URL_CHART_JS "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"
   #endif // ifndef CDN_URL_CHART_JS
 
   #ifndef CDN_URL_CHART_JS_ADAPTER_DATE
@@ -296,11 +295,23 @@ void html_add_ChartJS_script() {
     #define CDN_URL_CHART_JS_PLUGIN_ZOOM "https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"
   #endif
 
+  #ifndef CDN_URL_CHART_JS_LUXON
+    // Timestack internally uses Luxon for locale-aware time formatting.
+    #define CDN_URL_CHART_JS_LUXON "https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"
+  #endif
 
-  addHtml(F("<script src=\"" CDN_URL_CHART_JS "\"></script>"));
-  addHtml(F("<script src=\"" CDN_URL_CHART_JS_ADAPTER_DATE "\"></script>"));
-  addHtml(F("<script src=\"" CDN_URL_CHART_JS_HAMMERJS "\"></script>"));
-  addHtml(F("<script src=\"" CDN_URL_CHART_JS_PLUGIN_ZOOM "\"></script>"));
+  #ifndef CDN_URL_CHART_JS_PLUGIN_SCALE_TIMESTACK
+    // Timestack tries hard to choose the ticks looking nice for humans, i.e. 14:00, 14:30, 15:00, 15:30 in hourly view and 1, 5, 10, 15, 25 days of the month in daily view.
+    // See: https://github.com/jkmnt/chartjs-scale-timestack
+    #define CDN_URL_CHART_JS_PLUGIN_SCALE_TIMESTACK "https://cdn.jsdelivr.net/npm/chartjs-scale-timestack/dist/chartjs-scale-timestack.min.js"
+  #endif
+
+  html_add_JQuery_script(F(CDN_URL_CHART_JS));
+  html_add_JQuery_script(F(CDN_URL_CHART_JS_ADAPTER_DATE));
+  html_add_JQuery_script(F(CDN_URL_CHART_JS_HAMMERJS));
+  html_add_JQuery_script(F(CDN_URL_CHART_JS_PLUGIN_ZOOM));
+  html_add_JQuery_script(F(CDN_URL_CHART_JS_LUXON));
+  html_add_JQuery_script(F(CDN_URL_CHART_JS_PLUGIN_SCALE_TIMESTACK));
 }
 #endif // if FEATURE_CHART_JS
 
@@ -313,14 +324,14 @@ void html_add_Easy_color_code_script() {
 #endif
 
 void html_add_autosubmit_form() {
-  addHtml(F("<script><!--\n"
+  html_add_script(F("<!--\n"
             // "function dept_onchange(frmselect) {frmselect.submit();}"
             "function dept_onchange(e){e.submit()}"
             // "function task_select_onchange(frmselect) {var element = document.getElementById('nosave'); if (typeof(element) != 'undefined' && element != null) {element.disabled = false; element.checked = true;} frmselect.submit();}"
             "function task_select_onchange(e){var n=document.getElementById('nosave');void 0!==n&&null!=n&&(n.disabled=!1,n.checked=!0),e.submit()}"
             // "function rules_set_onchange(rulesselect) {document.getElementById('rules').disabled = true; rulesselect.submit();}"
             "function rules_set_onchange(e){document.getElementById('rules').disabled=!0,e.submit()}"
-            "\n//--></script>"));
+            "\n//-->"), false);
 }
 
 void html_add_script(const __FlashStringHelper * script, bool defer) {
@@ -363,6 +374,7 @@ void addHtmlError(const __FlashStringHelper * error) {
 void addHtmlError(const String& error) {
   if (error.length() > 0)
   {
+    addLog(LOG_LEVEL_ERROR, error);
     addHtml(F("<div class=\""));
 
     if (error.startsWith(F("Warn"))) {
@@ -395,6 +407,12 @@ void addHtml(const String& html) {
 
 void addHtml(String&& html) {
   TXBuffer += html;
+}
+
+void addHtml_pre(const String& html) {
+  addHtml(F("<pre>"));
+  addHtml(html);
+  addHtml(F("</pre>"));
 }
 
 void addHtmlInt(int8_t int_val) {
@@ -437,11 +455,12 @@ void addHtmlInt(uint64_t int_val) {
   addHtml(ull2String(int_val));
 }
 
-void addHtmlFloat(const float& value, unsigned int nrDecimals) {
+void addHtmlFloat(const float& value, uint8_t nrDecimals) {
   addHtml(toString(value, nrDecimals));
 }
 
-void addHtmlFloat_NaN_toNull(const float& value, unsigned int nrDecimals) {
+/*
+void addHtmlFloat_NaN_toNull(const float& value, uint8_t nrDecimals) {
   String res;
   if (toValidString(res, value, nrDecimals)) {
     addHtml(res);
@@ -449,14 +468,15 @@ void addHtmlFloat_NaN_toNull(const float& value, unsigned int nrDecimals) {
     addHtml(F("null"));
   }
 }
-
+*/
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-void addHtmlFloat(const double& value, unsigned int nrDecimals) {
+void addHtmlFloat(const double& value, uint8_t nrDecimals) {
   addHtml(doubleToString(value, nrDecimals));
 }
 
-void addHtmlFloat_NaN_toNull(const double& value, unsigned int nrDecimals) {
+/*
+void addHtmlFloat_NaN_toNull(const double& value, uint8_t nrDecimals) {
   String res;
   if (doubleToValidString(res, value, nrDecimals)) {
     addHtml(res);
@@ -464,6 +484,7 @@ void addHtmlFloat_NaN_toNull(const double& value, unsigned int nrDecimals) {
     addHtml(F("null"));
   }
 }
+*/
 
 #endif
 
@@ -502,11 +523,7 @@ void addHtmlAttribute(const __FlashStringHelper * label, float value) {
 }
 
 void addHtmlAttribute(const String& label, int value) {
-  addHtml(' ');
-  addHtml(label);
-  addHtml('=');
-  addHtmlInt(value);
-  addHtml(' ');
+  addHtml(strformat(F(" %s=%d "), label.c_str(), value));
 }
 
 void addHtmlAttribute(const __FlashStringHelper * label, const __FlashStringHelper * value) {
@@ -514,19 +531,11 @@ void addHtmlAttribute(const __FlashStringHelper * label, const __FlashStringHelp
 }
 
 void addHtmlAttribute(const __FlashStringHelper * label, const String& value) {
-  addHtml(' ');
-  addHtml(label);
-  addHtml('=', '\'');
-  addEncodedHtml(value);
-  addHtml('\'', ' ');
+  addHtmlAttribute(String(label), value);
 }
 
 void addHtmlAttribute(const String& label, const String& value) {
-  addHtml(' ');
-  addHtml(label);
-  addHtml('=', '\'');
-  addEncodedHtml(value);
-  addHtml('\'', ' ');
+  addHtml(strformat(F(" %s=\'%s\' "), label.c_str(), value.c_str()));
 }
 
 void addDisabled() {

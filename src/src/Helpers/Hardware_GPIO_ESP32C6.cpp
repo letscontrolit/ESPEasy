@@ -42,6 +42,11 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return (input || output);
 }
 
+bool isBootModePin(int gpio)
+{
+  return gpio == 9; 
+}
+
 bool isBootStrapPin(int gpio) 
 { 
   // See: https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf 
@@ -58,12 +63,15 @@ bool isBootStrapPin(int gpio)
     return true; 
   } 
  
+  // Ignoring SDIO stapping pins as this will not be used in typical use cases where ESPEasy is used.
+  /*
   if (gpio == 4 || gpio == 5) { 
     // SDIO Sampling and Driving Clock Edge 
     //  MTMS = GPIO-4 
     //  MTDI = Gpio-5 
     return true; 
   } 
+  */
  
   if (gpio == 15) { 
     // JTAG signal source 

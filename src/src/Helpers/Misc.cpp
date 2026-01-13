@@ -70,6 +70,37 @@ void delayBackground(unsigned long dsdelay)
 }
 
 /********************************************************************************************\
+   Toggle network enabled state
+ \*********************************************************************************************/
+bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex, bool enabled)
+{
+  if (!validNetworkIndex(networkIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("setNetworkEnableStatus"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  // Only enable network if it has a network interface configured
+  if (Settings.getNWPluginID_for_network(networkIndex) != ESPEasy::net::INVALID_NW_PLUGIN_ID || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.NetworkIndex = networkIndex;
+    String dummy;
+
+    if (!enabled) {
+      ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_EXIT, &TempEvent, dummy);
+    }
+    Settings.setNetworkEnabled(networkIndex, enabled);
+    if (enabled) {
+      if (!ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_INIT, &TempEvent, dummy))
+        return false;
+    }
+
+    return true;
+  }
+  return false;
+}
+
+
+/********************************************************************************************\
    Toggle controller enabled state
  \*********************************************************************************************/
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
@@ -81,6 +112,13 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.ControllerIndex = controllerIndex;
+    String dummy;
+    if (!enabled) {
+      CPluginCall(CPlugin::Function::CPLUGIN_EXIT, &TempEvent, dummy);
+    }
+
     Settings.ControllerEnabled[controllerIndex] = enabled;
     const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerIndex);
 
@@ -90,7 +128,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
       String dummy;
       const CPlugin::Function cfunction =
         enabled ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
-      return CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
+      return do_CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
     }
   }
   return false;
@@ -157,7 +195,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     #endif // ifndef BUILD_MINIMAL_OTA
     SaveTaskSettings(taskIndex);

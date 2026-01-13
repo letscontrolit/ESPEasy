@@ -65,8 +65,8 @@ void RTC_cache_handler_struct::resetpeek() {
   _peekreadpos = 0;
 }
 
-bool RTC_cache_handler_struct::peekDataAvailable() const {
-  if (fp) {
+bool RTC_cache_handler_struct::peekDataAvailable() {
+  if (openPeekFile()) {
     if ((_peekreadpos + 1) < fp.size()) { return true; }
   }
   if (_peekfilenr < RTC_cache.writeFileNr) {
@@ -90,7 +90,7 @@ bool RTC_cache_handler_struct::peekDataAvailable() const {
 int RTC_cache_handler_struct::getPeekFilePos(int& peekFileNr) {
   peekFileNr = _peekfilenr;
   constexpr size_t errorcode = (size_t)-1;
-  if (fp) {
+  if (openPeekFile()) {
     size_t pos = fp.position();
     if (pos == errorcode) {
       _peekreadpos = 0;
@@ -114,7 +114,7 @@ int RTC_cache_handler_struct::getPeekFileSize(int peekFileNr) const {
 void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekReadPos) {
   validateFilePos(newPeekFileNr, newPeekReadPos);
 
-  if (fp) {
+  if (openPeekFile(newPeekFileNr)) {
     constexpr size_t errorcode = (size_t)-1;
     size_t pos = fp.position();
     if (pos == errorcode) {
@@ -138,16 +138,7 @@ void RTC_cache_handler_struct::setPeekFilePos(int newPeekFileNr, int newPeekRead
     }
   }
 
-
-  if (!fp) {
-    String fname = createCacheFilename(newPeekFileNr);
-
-    if (fname.isEmpty()) { return; }
-
-    fp = tryOpenFile(fname, "r");
-  }
-
-  if (fp) {
+  if (openPeekFile(newPeekFileNr)) {
     _peekfilenr = newPeekFileNr;
 
     if (newPeekReadPos > 0) {
@@ -380,6 +371,31 @@ void RTC_cache_handler_struct::closeOpenFiles()
   }
 }
 
+bool RTC_cache_handler_struct::openPeekFile(int newPeekFileNr)
+{
+  if (fp) {
+    const String fname = createCacheFilename(newPeekFileNr);
+    if (!fname.endsWith(fp.name())) {
+      fp.close();
+    }
+  }
+  if (!fp) {
+    int filepos = _peekreadpos;
+    validateFilePos(newPeekFileNr, filepos);
+    _peekfilenr = newPeekFileNr;
+    _peekreadpos = filepos;
+    const String fname = createCacheFilename(_peekfilenr);
+    if (fname.isEmpty()) { return false; }
+    fp = tryOpenFile(fname, "r");
+  }
+  return !!fp; // cast to bool and force using operator::bool()
+}
+
+bool RTC_cache_handler_struct::openPeekFile()
+{
+  return openPeekFile(_peekfilenr);
+}
+
 bool RTC_cache_handler_struct::deleteAllCacheBlocks()
 {
   if (updateRTC_filenameCounters()) {
@@ -427,13 +443,7 @@ bool RTC_cache_handler_struct::deleteCacheBlock(int fileNr)
       writeError = false;
 
       // Make sure the read and peek file handles cannot be used on possibly deleted files.
-      if (fr) {
-        fr.close();
-      }
-
-      if (fp) {
-        fp.close();
-      }
+      closeOpenFiles();
 
       if (tryDeleteFile(fname)) {
         fileDeleted = true;
@@ -654,17 +664,16 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 }
 
 void RTC_cache_handler_struct::validateFilePos(int& fileNr, int& readPos) {
-  {
-    // Check to see if we try to set it to a no longer existing file
-    if (fileNr < RTC_cache.readFileNr) {
-      fileNr  = RTC_cache.readFileNr;
-      readPos = 0;
-    }
+  // Check to see if we try to set it to a no longer existing file
+  if (fileNr < RTC_cache.readFileNr) {
+    fileNr  = RTC_cache.readFileNr;
+    readPos = 0;
   }
 
   if (fileNr > RTC_cache.writeFileNr) {
     // We're trying to set it to a not yet existing file
     fileNr = RTC_cache.writeFileNr;
+    readPos = 0;
   }
 }
 

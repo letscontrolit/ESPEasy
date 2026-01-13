@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef LIMIT_BUILD_SIZE
 #include "../Globals/Plugins.h"
 
 void run_compiletime_checks();

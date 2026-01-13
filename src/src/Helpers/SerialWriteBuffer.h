@@ -3,40 +3,25 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <deque>
+#include "../Helpers/LogStreamWriter.h"
 
-#ifndef MAX_SERIALWRITEBUFFER_SIZE
-# ifdef ESP8266
-#  define MAX_SERIALWRITEBUFFER_SIZE 1024
-# endif // ifdef ESP8266
-# ifdef ESP32
-#  define MAX_SERIALWRITEBUFFER_SIZE 10240
-# endif // ifdef ESP32
-#endif // ifndef MAX_SERIALWRITEBUFFER_SIZE
-
-class SerialWriteBuffer_t {
+class SerialWriteBuffer_t : public LogStreamWriter {
 public:
 
-  SerialWriteBuffer_t(size_t maxSize = MAX_SERIALWRITEBUFFER_SIZE)
-    : _maxSize(maxSize) {}
+  SerialWriteBuffer_t(LogDestination log_destination) : LogStreamWriter(log_destination) {}
 
-  void   add(const String& line);
-  void   add(const __FlashStringHelper *line);
-  void   add(char c);
-
-  void   addNewline();
-
-  void   clear();
-
-  size_t write(Stream& stream,
-               size_t  nrBytesToWrite);
+  
 
 private:
 
-  int getRoomLeft() const;
+  size_t write_skipping(Stream& stream) override;
 
-  std::deque<char>_buffer;
-  size_t _maxSize = MAX_SERIALWRITEBUFFER_SIZE;
+  void prepare_prefix() override;
+
+
+
+  String colorize(const String& str) const;
+
 };
 
 #endif // ifndef HELPERS_SERIALWRITEBUFFER_H
