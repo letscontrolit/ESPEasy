@@ -203,7 +203,7 @@ void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type,
 
 
 void Web_StreamingBuffer::startJsonStream() {
-  startStream(true, F("application/json"), F("*"));
+  startStream(false, F("application/json"), F(""));
 }
 
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 
