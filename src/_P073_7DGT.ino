@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2026-01-17 tonhuisman: Revert to using 'regular' Arduino GPIO functions for TM1637 displays on ESP8266
  * 2026-01-12 tonhuisman: Fix initialization of number of digits when upgrading to 20260108 build,
  *                        formatted source with new Uncrustify config
  * 2024-09-28 tonhuisman: Switch to using DIRECT_PIN_IO, to get better timing-accuracy for TM1637 displays

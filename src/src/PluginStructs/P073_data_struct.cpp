@@ -2,7 +2,9 @@
 
 #ifdef USES_P073
 
-# include <GPIO_Direct_Access.h>
+# ifdef ESP32
+#  include <GPIO_Direct_Access.h>
+# endif // ifdef ESP32
 
 uint8_t P073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits) {
@@ -252,6 +254,10 @@ void P073_data_struct::init(struct EventStruct *event)
 
   if ((digits > 0) && (digits < 4)) {
     hideDegree = true; // Hide degree symbol on small displays
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, strformat(F("P073 : Digits: %d, model: %d, pins: %d, %d, %d"), digits, displayModel, pin1, pin2, pin3));
   }
 
   switch (displayModel)
@@ -1644,10 +1650,17 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-# define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
-# define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
-# define DIO_HIGH() DIRECT_PINMODE_INPUT(this->pin2)
-# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) // ; DIRECT_pinWrite(this->pin2, LOW)
+# ifdef ESP32
+#  define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
+#  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
+#  define DIO_HIGH() DIRECT_PINMODE_INPUT(this->pin2)
+#  define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) // ; DIRECT_pinWrite(this->pin2, LOW)
+# else // ifdef ESP32
+#  define CLK_HIGH() digitalWrite(this->pin1, HIGH)
+#  define CLK_LOW() digitalWrite(this->pin1, LOW)
+#  define DIO_HIGH() pinMode(this->pin2, INPUT)
+#  define DIO_LOW() pinMode(this->pin2, OUTPUT)
+# endif // ifdef ESP32
 
 void P073_data_struct::tm1637_i2cStart() {
   # ifdef P073_DEBUG
@@ -1674,7 +1687,7 @@ void P073_data_struct::tm1637_i2cStop() {
 
 void P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
-  pinMode(pin2, INPUT_PULLUP);
+  pinMode(this->pin2, INPUT_PULLUP);
 
   // DIO_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1683,7 +1696,11 @@ void P073_data_struct::tm1637_i2cAck() {
   # ifdef P073_DEBUG
   const bool dummyAck =
   # endif // ifdef P073_DEBUG
-  DIRECT_pinRead(pin2);
+  # ifdef ESP32
+  DIRECT_pinRead(this->pin2);
+  # else
+  digitalRead(this->pin2);
+  # endif // ifdef ESP32
 
   # ifdef P073_DEBUG
 
@@ -1771,8 +1788,13 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  DIRECT_PINMODE_OUTPUT(pin1);
-  DIRECT_PINMODE_OUTPUT(pin2);
+  # ifdef ESP32
+  DIRECT_PINMODE_OUTPUT(this->pin1);
+  DIRECT_PINMODE_OUTPUT(this->pin2);
+  # else // ifdef ESP32
+  pinMode(this->pin1, OUTPUT);
+  pinMode(this->pin2, OUTPUT);
+  # endif // ifdef ESP32
   CLK_HIGH();
   DIO_HIGH();
 
