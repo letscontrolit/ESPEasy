@@ -143,11 +143,13 @@ def parse_filename(file, version, variant, file_suffix):
 
         if 'NotSet' in sub_group:
             if 'climate_' in variant:
-                group = 'Climate'
+                variant_split = variant.split('_')
+                group = 'Climate {}'.format(variant_split[1])
             elif 'energy_' in variant:
                 group = 'Energy'
             elif 'display_' in variant:
-                group = 'Display'
+                variant_split = variant.split('_')
+                group = 'Display {}'.format(variant_split[1])
             elif 'neopixel_' in variant:
                 group = 'NeoPixel'
             elif 'normal_' in variant:
@@ -158,7 +160,7 @@ def parse_filename(file, version, variant, file_suffix):
                 group = 'Custom'
             elif 'collection' in variant:
                 variant_split = variant.split('_')
-                group = 'Collection{}'.format(variant_split[1])
+                group = 'Collection {}'.format(variant_split[1])
                 # Select based on "4M1M" here to keep any occasional "4M2M" build
                 # separated in another group
                 if '_4M1M' in variant:
@@ -174,7 +176,7 @@ def parse_filename(file, version, variant, file_suffix):
                 specials.append(flash_size)
                 if '_PSRAM' in variant:
                     specials.append('PSRAM')
-                if 'LittleFS' in variant:
+                if 'LittleFS' in variant and 'ESP32' not in variant:
                     specials.append('LittleFS')
                 if '_IRExt' in variant:
                     specials.append('IRExt')
@@ -220,11 +222,6 @@ def parse_filename(file, version, variant, file_suffix):
             # Thus make a separate group for the solo1
             main_group = '4M Flash ESP32-solo1'
 
-        if 'ESP32' in variant:
-            main_group += ' ESP32'
-        else:
-            main_group += ' ESP8266'
-
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
         #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
 
@@ -244,24 +241,40 @@ def parse_filename(file, version, variant, file_suffix):
             manifest['new_install_prompt_erase'] = True
             manifest['build_flags'] = build_flags
             parts = dict([('path', file), ('offset', 0)])
-            if add_improv:
-                builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
+            if not chipVariant:
+                if add_improv:
+                    builds = dict([('chipFamily', chipFamily), ('improv', True), ('parts', [parts])])
+                else:
+                    builds = dict([('chipFamily', chipFamily), ('parts', [parts])])
             else:
-                builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
+                if add_improv:
+                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
+                else:
+                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
             manifest['builds'] = [builds]
             manifest_binfiles[main_group][sub_group] = manifest
         else:
             parts = dict([('path', file), ('offset', 0)])
-            if add_improv:
-                builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
+            if not chipVariant:
+                if add_improv:
+                    builds = dict([('chipFamily', chipFamily), ('improv', True), ('parts', [parts])])
+                else:
+                    builds = dict([('chipFamily', chipFamily), ('parts', [parts])])
             else:
-                builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
+                if add_improv:
+                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
+                else:
+                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
+
             manifest_binfiles[main_group][sub_group]['builds'].append(builds)
             manifest_binfiles[main_group][sub_group]['families'].append(chipFamily)
 
         display_string = create_display_text(description, version, manifest_binfiles[main_group][sub_group]['families'])
         manifest_binfiles[main_group][sub_group]['displaytext'] = display_string
-        manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}{}'.format(sub_group, manifest_suff)
+        if 'ESP8266' in main_group:
+            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}_ESP8266{}'.format(sub_group, manifest_suff)
+        else:
+            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}{}'.format(sub_group, manifest_suff)
 
 
 
@@ -304,15 +317,6 @@ def generate_manifest_files(bin_folder, output_prefix):
         'Custom',
         'Custom Misc',
         'Misc']
-
-    main_group_list_littlefs = []
-    main_group_list_spiffs = []
-    for main_group in main_group_list:
-        main_group_list_littlefs.append("{} {}".format(main_group, 'ESP32'))
-        main_group_list_spiffs.append("{} {}".format(main_group, 'ESP8266'))
-
-    main_group_list_littlefs.extend(main_group_list_spiffs)
-    main_group_list = main_group_list_littlefs
 
 
     for main_group in main_group_list:
@@ -379,7 +383,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/tasmota-esp-web-tools@8.1.14/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@10.0.3/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',

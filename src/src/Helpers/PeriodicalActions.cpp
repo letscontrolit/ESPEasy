@@ -322,10 +322,6 @@ void scheduleNextMQTTdelayQueue() {
 }
 
 void schedule_all_MQTTimport_tasks() {
-  controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
-
-  if (!validControllerIndex(ControllerIndex)) { return; }
-
   constexpr pluginID_t PLUGIN_MQTT_IMPORT(PLUGIN_ID_MQTT_IMPORT);
 
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
@@ -420,9 +416,6 @@ void updateMQTTclient_connected() {
         addLogMove(LOG_LEVEL_ERROR, connectionError);
       }
       MQTTclient_must_send_LWT_connected = false;
-    } else {
-      // Now schedule all tasks using the MQTT controller.
-      schedule_all_MQTTimport_tasks();
     }
     if (Settings.UseRules) {
       if (MQTTclient_connected) {
@@ -431,6 +424,8 @@ void updateMQTTclient_connected() {
         eventQueue.add(F("MQTT#Disconnected"));
       }
     }
+    // Now schedule all tasks using the MQTT Import plugin.
+    schedule_all_MQTTimport_tasks();
   }
   if (!MQTTclient_connected) {
     // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356

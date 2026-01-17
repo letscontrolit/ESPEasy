@@ -1013,9 +1013,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_GET_UOM_GROUPS:
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-      // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
-      // case PLUGIN_MQTT_CONNECTION_STATE:
-      // case PLUGIN_MQTT_IMPORT:
+    #if FEATURE_MQTT
+    case PLUGIN_MQTT_CONNECTION_STATE:
+    case PLUGIN_MQTT_IMPORT:
+    #endif // if FEATURE_MQTT
     {
       START_TIMER;
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);

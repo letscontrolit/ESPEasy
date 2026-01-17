@@ -435,7 +435,6 @@ void P023_data_struct::sendStrXY(const char *string, int X, int Y) {
     for (i = 0; i < char_width && currentPixels < maxPixels; ++i,++currentPixels) { // Prevent display overflow on the pixel-level
       sendChar((i == 0 || i > 5) ? 0x00 : pgm_read_byte(baddr + i - 1)); 
     }
-    currentPixels += char_width;
     string++;
   }
 }

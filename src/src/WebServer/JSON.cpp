@@ -583,9 +583,9 @@ void handle_json()
                 PluginTaskData_base *taskData = getPluginTaskDataBaseClassOnly(TaskIndex);
 
                 if ((taskData != nullptr) && (taskData->nrSamplesPresent() > 0)) {
+                  stream_comma_newline();
                   addHtml(F("\"PluginStats\":\n"));
                   taskData->plot_ChartJS(true);
-                  stream_comma_newline();
                 }
               }
 #endif // if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
