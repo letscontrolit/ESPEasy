@@ -1746,9 +1746,8 @@ void P073_data_struct::tm1637_i2cWrite(uint8_t bytetoprint) {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
   # endif // ifdef P073_DEBUG
-  uint8_t i;
 
-  for (i = 0; i < 8; ++i) {
+  for (uint8_t i = 0; i < 8; ++i) {
     CLK_LOW();
 
     if (bytetoprint & 0b00000001) {
@@ -1775,16 +1774,15 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_INFO, F("7DGT : Set BRIGHT"));
   # endif // ifdef P073_DEBUG
-  uint8_t brightvalue = (brightlvl & 0b111);
+  brightlvl &= 0b111;
 
   if (poweron) {
-    brightvalue = TM1637_POWER_ON | brightvalue;
+    brightlvl |= TM1637_POWER_ON;
   } else {
-    brightvalue = TM1637_POWER_OFF | brightvalue;
+    brightlvl |= TM1637_POWER_OFF;
   }
 
-  const uint8_t byteToPrint = brightvalue;
-  tm1637_i2cWrite_ack(byteToPrint);
+  tm1637_i2cWrite_ack(brightlvl);
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
