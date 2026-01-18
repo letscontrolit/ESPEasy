@@ -193,16 +193,6 @@ const char Internal_commands_p[] PROGMEM =
 #endif // #if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
   "provision|"
- # ifdef PLUGIN_BUILD_MAX_ESP32 // FIXME DEPRECATED: Fallback for temporary backward compatibility
-  "provisionconfig|"
-  "provisionsecurity|"
-  #  if FEATURE_NOTIFIER
-  "provisionnotification|"
-  #  endif // #if FEATURE_NOTIFIER
-  "provisionprovision|"
-  "provisionrules|"
-  "provisionfirmware|"
- # endif // #ifdef PLUGIN_BUILD_MAX_ESP32
 #endif   // #if FEATURE_CUSTOM_PROVISIONING
   "pulse|"
 #if FEATURE_MQTT
