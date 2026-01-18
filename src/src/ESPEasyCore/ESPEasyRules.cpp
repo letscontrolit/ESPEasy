@@ -98,11 +98,11 @@ void rulesProcessing(const String& event) {
 #ifndef BUILD_NO_DEBUG
   const unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
-#ifndef BUILD_NO_DEBUG
+// #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
-#endif
+// #endif
   if (Settings.OldRulesEngine()) {
     bool eventHandled = false;
 
