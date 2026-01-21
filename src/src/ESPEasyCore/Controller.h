@@ -59,8 +59,6 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 \*********************************************************************************************/
 void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key, const String& param2, int16_t param3);
 
-bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
-
 void SendStatus(struct EventStruct *event, const __FlashStringHelper * status);
 void SendStatus(struct EventStruct *event, const String& status);
 

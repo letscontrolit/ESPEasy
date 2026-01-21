@@ -1,0 +1,58 @@
+
+
+
+.. |NW001_name| replace:: :cyan:`WiFi Station`
+.. |NW001_type| replace:: :cyan:`Network`
+.. |NW001_typename| replace:: :cyan:`Network - WiFi Station`
+.. |NW001_status| replace:: :green:`NORMAL`
+.. |NW001_github| replace:: _NW001_WiFi_STA.cpp
+.. _NW001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/ESPEasy/net/_NW001_WiFi_STA.cpp
+.. |NW001_usedby| replace:: `.`
+.. |NW001_shortinfo| replace:: `.`
+.. |NW001_maintainer| replace:: `TD-er`
+.. |NW001_compileinfo| replace:: `.`
+
+.. |NW002_name| replace:: :cyan:`WiFi AP`
+.. |NW002_type| replace:: :cyan:`Network`
+.. |NW002_typename| replace:: :cyan:`Network - WiFi AP`
+.. |NW002_status| replace:: :green:`NORMAL`
+.. |NW002_github| replace:: _NW002_WiFi_AP.cpp
+.. _NW002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/ESPEasy/net/_NW002_WiFi_AP.cpp
+.. |NW002_usedby| replace:: `.`
+.. |NW002_shortinfo| replace:: `.`
+.. |NW002_maintainer| replace:: `TD-er`
+.. |NW002_compileinfo| replace:: `.`
+
+.. |NW003_name| replace:: :cyan:`Ethernet (RMII)`
+.. |NW003_type| replace:: :cyan:`Network`
+.. |NW003_typename| replace:: :cyan:`Network - Ethernet (RMII)`
+.. |NW003_status| replace:: :green:`NORMAL`
+.. |NW003_github| replace:: _NW003_ETH_RMII.cpp
+.. _NW003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/ESPEasy/net/_NW003_ETH_RMII.cpp
+.. |NW003_usedby| replace:: `.`
+.. |NW003_shortinfo| replace:: `.`
+.. |NW003_maintainer| replace:: `TD-er`
+.. |NW003_compileinfo| replace:: `.`
+
+.. |NW004_name| replace:: :cyan:`Ethernet (SPI)`
+.. |NW004_type| replace:: :cyan:`Network`
+.. |NW004_typename| replace:: :cyan:`Network - Ethernet (SPI)`
+.. |NW004_status| replace:: :green:`NORMAL`
+.. |NW004_github| replace:: _NW004_ETH_SPI.cpp
+.. _NW004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/ESPEasy/net/_NW004_ETH_SPI.cpp
+.. |NW004_usedby| replace:: `.`
+.. |NW004_shortinfo| replace:: `.`
+.. |NW004_maintainer| replace:: `TD-er`
+.. |NW004_compileinfo| replace:: `.`
+
+.. |NW005_name| replace:: :cyan:`PPP Modem`
+.. |NW005_type| replace:: :cyan:`Network`
+.. |NW005_typename| replace:: :cyan:`Network - PPP Modem`
+.. |NW005_status| replace:: :green:`NORMAL`
+.. |NW005_github| replace:: _NW005_PPP_modem.cpp
+.. _NW005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/ESPEasy/net/_NW005_PPP_modem.cpp
+.. |NW005_usedby| replace:: `.`
+.. |NW005_shortinfo| replace:: `.`
+.. |NW005_maintainer| replace:: `TD-er`
+.. |NW005_compileinfo| replace:: `.`
+

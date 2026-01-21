@@ -1,0 +1,34 @@
+#pragma once
+
+#include "../../../ESPEasy_common.h"
+
+#include <IPAddress.h>
+#include <WiFiUdp.h>
+
+#include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
+#include "../../../src/DataTypes/NetworkMedium.h"
+
+
+// Ethernet Connectiopn status
+extern ESPEasy::net::NetworkMedium_t active_network_medium;
+
+extern bool webserverRunning;
+extern bool webserver_init;
+#if FEATURE_MDNS
+extern bool mDNS_init;
+#endif
+
+
+// NTP status
+extern bool statusNTPInitialized;
+
+
+// Setup DNS, only used if the ESP has no valid WiFi config
+extern const uint8_t DNS_PORT;
+extern IPAddress     apIP;
+
+// udp protocol stuff (syslog, global sync, node info list, ntp time)
+extern WiFiUDP portUDP;
+#ifdef ESP32
+extern bool nonDefaultNetworkInterface_gotIP;
+#endif

@@ -1,7 +1,7 @@
 #include "../PluginStructs/P099_data_struct.h"
 
 #ifdef USES_P099
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Scheduler.h"
 # include "../Helpers/StringConverter.h"

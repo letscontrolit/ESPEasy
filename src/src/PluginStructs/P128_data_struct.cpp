@@ -2,6 +2,7 @@
 #ifdef USES_P128
 
 # include "../PluginStructs/P128_data_struct.h"
+# include "../Helpers/KeyValueWriter_JSON.h"
 
 // ***************************************************************/
 // Constructor
@@ -1546,39 +1547,30 @@ void P128_data_struct::NeoPixelSendStatus(struct EventStruct *eventSource) {
 
   HsbColor hsbColor = HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)); // Calculate only once
 
-  SendStatus(
-    eventSource,
-    strformat(
-      F("{\n%s" // "plugin"
-        ",\n%s" // "mode"
-        ",\n%s" // "lastmode"
-        ",\n%s" // "fadetime"
-        ",\n%s" // "fadedelay"
-        ",\n%s" // "dim"
-        ",\n%s" // "rgb"
-        ",\n%s" // "hue"
-        ",\n%s" // "saturation"
-        ",\n%s" // "brightness"
-        ",\n%s" // "bgcolor"
-        ",\n%s" // "count"
-        ",\n%s" // "speed"
-        ",\n%s" // "pixelcount"
-        "\n}\n"),
-      to_json_object_value(F("plugin"),     128).c_str(),
-      to_json_object_value(F("mode"),       P128_modeType_toString(mode)).c_str(),
-      to_json_object_value(F("lastmode"),   P128_modeType_toString(savemode)).c_str(),
-      to_json_object_value(F("fadetime"),   static_cast<int>(fadetime)).c_str(),
-      to_json_object_value(F("fadedelay"),  static_cast<int>(fadedelay)).c_str(),
-      to_json_object_value(F("dim"),        static_cast<int>(Plugin_128_pixels->GetBrightness())).c_str(),
-      to_json_object_value(F("rgb"),        colorStr, true).c_str(),
-      to_json_object_value(F("hue"),        static_cast<int>(hsbColor.H * 360.0f)).c_str(),
-      to_json_object_value(F("saturation"), static_cast<int>(hsbColor.S * 100.0f)).c_str(),
-      to_json_object_value(F("brightness"), static_cast<int>(hsbColor.B * 100.0f)).c_str(),
-      to_json_object_value(F("bgcolor"),    backgroundcolorStr, true).c_str(),
-      to_json_object_value(F("count"),      static_cast<int>(count)).c_str(),
-      to_json_object_value(F("speed"),      static_cast<int>(speed)).c_str(),
-      to_json_object_value(F("pixelcount"), static_cast<int>(pixelCount)).c_str()
-      ));
+  static size_t statusSize = 128;
+
+  PrintToString status;
+  status.reserve(statusSize);
+  {
+    KeyValueWriter_JSON writer(true, &status);
+
+    writer.write({F("plugin"),     128});    
+    writer.write({F("mode"),       P128_modeType_toString(mode)});
+    writer.write({F("lastmode"),   P128_modeType_toString(savemode)});
+    writer.write({F("fadetime"),   static_cast<int>(fadetime)});
+    writer.write({F("fadedelay"),  static_cast<int>(fadedelay)});
+    writer.write({F("dim"),        static_cast<int>(Plugin_128_pixels->GetBrightness())});
+    writer.write({F("rgb"),        colorStr});
+    writer.write({F("hue"),        static_cast<int>(hsbColor.H * 360.0f)});
+    writer.write({F("saturation"), static_cast<int>(hsbColor.S * 100.0f)});
+    writer.write({F("brightness"), static_cast<int>(hsbColor.B * 100.0f)});
+    writer.write({F("bgcolor"),    backgroundcolorStr});
+    writer.write({F("count"),      static_cast<int>(count)});
+    writer.write({F("speed"),      static_cast<int>(speed)});
+    writer.write({F("pixelcount"), static_cast<int>(pixelCount)});
+  }
+  statusSize = status.get().length();
+  SendStatus(eventSource, status.get());
   printToWeb = false;
 }
 

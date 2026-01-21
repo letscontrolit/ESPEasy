@@ -64,7 +64,7 @@ bool allocatedOnStack(const void *address) {
 /********************************************************************************************\
    Get free system mem
  \*********************************************************************************************/
-unsigned long FreeMem()
+uint32_t FreeMem()
 {
   #if defined(ESP8266)
   return system_get_free_heap_size();
@@ -75,7 +75,7 @@ unsigned long FreeMem()
 }
 
 #ifdef USE_SECOND_HEAP
-unsigned long FreeMem2ndHeap()
+uint32_t FreeMem2ndHeap()
 {
   HeapSelectIram ephemeral;
 
@@ -85,9 +85,9 @@ unsigned long FreeMem2ndHeap()
 #endif // ifdef USE_SECOND_HEAP
 
 
-unsigned long getMaxFreeBlock()
+uint32_t getMaxFreeBlock()
 {
-  const unsigned long freemem = FreeMem();
+  const uint32_t freemem = FreeMem();
 
   // computing max free block is a rather extensive operation, so only perform when free memory is already low.
   if (freemem < 6144) {

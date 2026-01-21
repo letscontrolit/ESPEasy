@@ -31,7 +31,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   controllerenable,
 
   datetime,
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   debug,
+#endif
   dec,
   deepsleep,
   delay,
@@ -40,17 +42,12 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_PLUGIN_PRIORITY
   dns,
   dst,
-
+#if FEATURE_WIFI
   erasesdkwifi,
+#endif
   event,
   executerules,
 #if FEATURE_ETHERNET
-  ethphyadr,
-  ethpinmdc,
-  ethpinmdio,
-  ethpinpower,
-  ethphytype,
-  ethclockmode,
   ethip,
   ethgateway,
   ethsubnet,
@@ -64,7 +61,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   gateway,
   gpio,
   gpiotoggle,
+#if FEATURE_WIFI
   hiddenssid,
+#endif
 
   i2cscanner,
   inc,
@@ -76,12 +75,18 @@ enum class ESPEasy_cmd_e : uint8_t {
   jsonportstatus,
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 
+  #if FEATURE_LAT_LONG_VAR_CMD
+  latitude,
+  #endif // if FEATURE_LAT_LONG_VAR_CMD
   let,
   #if FEATURE_STRING_VARIABLES
   letstr,
   #endif // if FEATURE_STRING_VARIABLES
   load,
   logentry,
+  #if FEATURE_LAT_LONG_VAR_CMD
+  longitude,
+  #endif // if FEATURE_LAT_LONG_VAR_CMD
   looptimerset,
   looptimerset_ms,
   looptimersetandrun,
@@ -113,6 +118,12 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 
   name,
+  networkdisable,
+  networkenable,
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+  networkexportconfig,
+  networkimportconfig,
+#endif
   nosleep,
 #if FEATURE_NOTIFIER
   notify,
@@ -137,6 +148,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #ifdef USES_P019
 #if FEATURE_POST_TO_HTTP
   posttohttp,
+#if FEATURE_HTTP_TLS
+  posttohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // #if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
   provision,
@@ -158,6 +172,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
   puttohttp,
+#if FEATURE_HTTP_TLS
+  puttohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // #if FEATURE_PUT_TO_HTTP
   pwm,
 
@@ -178,6 +195,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_ESPEASY_P2P
 #if FEATURE_SEND_TO_HTTP
   sendtohttp,
+#if FEATURE_HTTP_TLS
+  sendtohttps,
+#endif // if FEATURE_HTTP_TLS
 #endif // FEATURE_SEND_TO_HTTP
   sendtoudp,
   sendtoudpmix,
@@ -226,6 +246,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   unmonitorrange,
   usentp,
 
+#if FEATURE_WIFI
   wifiallowap,
   wifiapmode,
   wificonnect,
@@ -233,10 +254,14 @@ enum class ESPEasy_cmd_e : uint8_t {
   wifikey,
   wifikey2,
   wifimode,
+#if FEATURE_OTA_FW_UPDATE_ESP_HOSTED_MCU
+  wifiotahostedmcu,
+#endif
   wifiscan,
   wifissid,
   wifissid2,
   wifistamode,
+#endif
 #ifndef LIMIT_BUILD_SIZE
   wdconfig,
   wdread,

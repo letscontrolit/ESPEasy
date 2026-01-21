@@ -104,17 +104,9 @@ uint32_t PluginStats_timestamp::systemMicros_to_internalTimestamp(const int64_t&
 
 int64_t PluginStats_timestamp::internalTimestamp_to_systemMicros(const uint32_t& internalTimestamp) const
 {
-  const uint64_t cur_micros    = getMicros64();
-  const uint64_t overflow_step = 4294967296ull * _internal_to_micros_ratio;
-
-  uint64_t sysMicros = static_cast<uint64_t>(internalTimestamp) * _internal_to_micros_ratio;
-
   // Try to get in the range of the current system micros
   // This only does play a role in high res mode, when uptime is over 994 days.
-  while ((sysMicros + overflow_step) < cur_micros) {
-    sysMicros += overflow_step;
-  }
-  return sysMicros;
+  return node_time.internalTimestamp_to_systemMicros(internalTimestamp, _internal_to_micros_ratio);
 }
 
 #endif // if FEATURE_PLUGIN_STATS

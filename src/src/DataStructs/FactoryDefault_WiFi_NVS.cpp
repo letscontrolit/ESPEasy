@@ -17,8 +17,8 @@
 
 void FactoryDefault_WiFi_NVS::fromSettings() {
   bits.IncludeHiddenSSID              = Settings.IncludeHiddenSSID();
-  bits.ApDontForceSetup               = Settings.ApDontForceSetup();
-  bits.DoNotStartAP                   = Settings.DoNotStartAP();
+  bits.ApCaptivePortal_inv            = Settings.ApCaptivePortal();
+  bits.DoNotStartAPfallback_ConnectFail                   = Settings.DoNotStartAPfallback_ConnectFail();
   bits.ForceWiFi_bg_mode              = Settings.ForceWiFi_bg_mode();
   bits.WiFiRestart_connection_lost    = Settings.WiFiRestart_connection_lost();
   bits.WifiNoneSleep                  = Settings.WifiNoneSleep();
@@ -34,8 +34,8 @@ void FactoryDefault_WiFi_NVS::fromSettings() {
 
 void FactoryDefault_WiFi_NVS::applyToSettings() const {
   Settings.IncludeHiddenSSID(bits.IncludeHiddenSSID);
-  Settings.ApDontForceSetup(bits.ApDontForceSetup);
-  Settings.DoNotStartAP(bits.DoNotStartAP);
+  Settings.ApCaptivePortal(bits.ApCaptivePortal_inv);
+  Settings.DoNotStartAPfallback_ConnectFail(bits.DoNotStartAPfallback_ConnectFail);
   Settings.ForceWiFi_bg_mode(bits.ForceWiFi_bg_mode);
   Settings.WiFiRestart_connection_lost(bits.WiFiRestart_connection_lost);
   Settings.WifiNoneSleep(bits.WifiNoneSleep);

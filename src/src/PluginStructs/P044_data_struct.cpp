@@ -3,7 +3,7 @@
 #ifdef USES_P044_ORG
 
 # include "../ESPEasyCore/Serial.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 # include "../Globals/EventQueue.h"
 
@@ -50,7 +50,7 @@ void P044_Task::startServer(uint16_t portnumber) {
   gatewayPort     = portnumber;
   P1GatewayServer = new (std::nothrow) WiFiServer(portnumber);
 
-  if ((nullptr != P1GatewayServer) && NetworkConnected()) {
+  if ((nullptr != P1GatewayServer) && ESPEasy::net::NetworkConnected()) {
     P1GatewayServer->begin();
 
     if (serverActive(P1GatewayServer)) {
@@ -64,7 +64,7 @@ void P044_Task::startServer(uint16_t portnumber) {
 }
 
 void P044_Task::checkServer() {
-  if ((nullptr != P1GatewayServer) && !serverActive(P1GatewayServer) && NetworkConnected()) {
+  if ((nullptr != P1GatewayServer) && !serverActive(P1GatewayServer) && ESPEasy::net::NetworkConnected()) {
     P1GatewayServer->close();
     P1GatewayServer->begin();
 

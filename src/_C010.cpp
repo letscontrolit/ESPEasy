@@ -74,7 +74,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
 
       if (ptr != nullptr) {
-        std::unique_ptr<C010_queue_element> element(new (ptr) C010_queue_element(event, valueCount));
+        UP_C010_queue_element  element(new (ptr) C010_queue_element(event, valueCount));
         {
           String pubname;
           {

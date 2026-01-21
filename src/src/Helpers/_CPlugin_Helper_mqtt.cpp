@@ -407,7 +407,7 @@ int Plugin_QueryVType_Weight(uint8_t value_nr) {
 }
 
 String makeHomeAssistantCompliantName(const String& name) {
-  return makeRFCCompliantName(name, '_', '_', 0);
+  return ESPEasy::net::makeRFCCompliantName(name, '_', '_', 0);
 }
 
 #  if FEATURE_MQTT_DEVICECLASS
@@ -471,9 +471,9 @@ const __FlashStringHelper* MQTT_sensor_StateClass(uint8_t index,
   switch (index) {
     case 0: return F("");
     case 1: return display ? F("Measurement") : F("measurement");
-    case 2: return display ? F("Total") : F("total");
-    case 3: return display ? F("Total-increasing") : F("total_increasing");
-    case 4: return display ? F("Measurement-angle") : F("measurement_angle");
+    case 2: return display ? F("Measurement-angle") : F("measurement_angle");
+    case 3: return display ? F("Total") : F("total");
+    case 4: return display ? F("Total-increasing") : F("total_increasing");
   }
   return F("");
 }

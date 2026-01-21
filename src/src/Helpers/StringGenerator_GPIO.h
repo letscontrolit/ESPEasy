@@ -31,7 +31,9 @@ enum class PinSelectPurpose : uint8_t {
   #endif
   SPI,
   SPI_MISO,
+#if FEATURE_ETHERNET
   Ethernet,
+#endif
   Serial_input,
   Serial_output,
   DAC,
@@ -54,6 +56,9 @@ String formatGpioLabel(int  gpio,
                        bool includeWarning);
 
 String formatGpioName(const __FlashStringHelper * label,
+                      gpio_direction direction,
+                      bool           optional = false);
+String formatGpioName(const String& label,
                       gpio_direction direction,
                       bool           optional = false);
 
@@ -96,7 +101,9 @@ String createGPIO_label(int  gpio,
                         bool output,
                         bool warning);
 
-const __FlashStringHelper * getConflictingUse(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
+const __FlashStringHelper * getConflictingUse_flashstr(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
+
+String getConflictingUse(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
 
 String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose = PinSelectPurpose::Generic, bool ignorePSRAMpin = false);
 

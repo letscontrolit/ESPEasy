@@ -33,7 +33,7 @@
 # include "src/PluginStructs/P013_data_struct.h"
 
 // map of sensors
-std::map<unsigned int, std::shared_ptr<NewPing> > P_013_sensordefs;
+std::map<unsigned int, std::unique_ptr<NewPing> > P_013_sensordefs;
 
 // Forward declarations
 float                      Plugin_013_read(struct EventStruct *event);
@@ -251,7 +251,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
       // create sensor instance and add to std::map
       P_013_sensordefs.erase(event->TaskIndex);
-      P_013_sensordefs[event->TaskIndex] = std::shared_ptr<NewPing>(new NewPing(P013_TRIGGER_PIN,
+      P_013_sensordefs[event->TaskIndex] = std::unique_ptr<NewPing>(new NewPing(P013_TRIGGER_PIN,
                                                                                 P013_ECHO_PIN,
                                                                                 max_distance_cm,
                                                                                 P013_TRIGGER_WIDTH));

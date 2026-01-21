@@ -1,0 +1,65 @@
+# This workflow generates Doxygen API documentation and deploys it to GitHub Pages.
+# I didn't manage to build a Jekyll site and deploy the content to GitHub Pages.
+# So now I use a static index.html file in the gh-pages branch.
+# It runs on pushes to the master branch and can also be triggered manually.
+name: Generate Doxygen API and deploy content to GitHub Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    if: github.repository == 'hmueller01/pubsubclient3'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update Doxyfile PROJECT_NUMBER
+        run: bash .github/doxygen-update-version.sh
+      - name: Doxygenize
+        #uses: langroodi/doxygenize@v1.7.1 # waiting for update ...
+        uses: langroodi/doxygenize@6e920681c5d838e9a1b5cd273b814d1e4023b63d
+        #uses: hmueller01/doxygenize@update-alpine-linux+patches
+        with:
+          # Doxygen configuration file path
+          doxygenconf: ./Doxyfile
+          # Generated HTML documents output folder
+          htmloutput: ./site/api
+          # GitHub Pages branch name
+          ghpagesbranch: gh-pages
+          # GitHub Pages directory path
+          ghpagesdir: ./site/api
+      # - name: List site contents
+      #   run: |
+      #     find ./site
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          #path: '.' # Upload entire repository
+          path: './site'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

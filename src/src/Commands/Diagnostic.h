@@ -17,8 +17,8 @@ const __FlashStringHelper * Command_SerialFloat(struct EventStruct *event, const
 const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_Background(struct EventStruct *event, const char* Line);
-#endif
 const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char* Line);
+#endif
 String Command_logentry(struct EventStruct *event, const char* Line);
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char* Line);
@@ -28,7 +28,7 @@ const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, con
 #endif
 
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
 // Show settings file layout in charts on sysinfo page.
 // Will be enabled after running command "meminfodetail"
 extern bool showSettingsFileLayout;

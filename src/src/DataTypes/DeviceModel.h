@@ -21,7 +21,7 @@ enum class DeviceModel : uint8_t {
   DeviceModel_Sonoff_POWr2,
   DeviceModel_Shelly1,
   DeviceModel_ShellyPLUG_S,
-# if CONFIG_ETH_USE_ESP32_EMAC
+# if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
   DeviceModel_Olimex_ESP32_PoE,
   DeviceModel_Olimex_ESP32_EVB,
   DeviceModel_Olimex_ESP32_GATEWAY,

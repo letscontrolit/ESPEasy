@@ -130,6 +130,11 @@
 #endif
 
 
+#ifndef DAT_NETWORK_INTERFACE_SIZE
+# define DAT_NETWORK_INTERFACE_SIZE        1024
+#endif 
+
+
 
 /*
 
@@ -218,6 +223,22 @@
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE               (DAT_OFFSET_TASKS + ((DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE) * TASKS_MAX))
   # endif // ifndef CONFIG_FILE_SIZE
+
+  // On ESP8266 we will not store Network Interface settings
+  // The only 2 interfaces supported on ESP8266 are:
+  // - WiFi STA
+  // - WiFi AP
+  // Both do not need extra settings for basic functionality
+  // All other network interface plugins will be ESP32-only.
+  # ifndef DAT_NETWORK_INTERFACES_OFFSET
+  #  define DAT_NETWORK_INTERFACES_OFFSET    16384
+  # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # ifndef DAT_OFFSET_DEV_CREDENTIALS
+  #  define DAT_OFFSET_DEV_CREDENTIALS       0
+  # endif
+  # ifndef DAT_DEV_CREDENTIALS_SIZE
+  #  define DAT_DEV_CREDENTIALS_SIZE         4096
+  # endif
 #endif    // if defined(ESP32)
 
 

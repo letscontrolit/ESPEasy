@@ -2,6 +2,7 @@
 #define DATATYPES_FORMSELECTOROPTIONS_H
 
 #include "../../ESPEasy_common.h"
+#include "../Helpers/StringProvider.h"
 
 class FormSelectorOptions {
 public:
@@ -39,6 +40,9 @@ public:
   void           addFormSelector(const __FlashStringHelper *label,
                                  const __FlashStringHelper *id,
                                  int                        selectedIndex) const;
+
+
+  void addFormSelector(LabelType::Enum label, int selectedIndex) const;
 
   void addFormSelector(const String             & label,
                        const __FlashStringHelper *id,

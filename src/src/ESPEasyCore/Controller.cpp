@@ -20,7 +20,7 @@
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
@@ -30,7 +30,7 @@
 
 // #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/PortStatus.h"
 
@@ -43,9 +43,9 @@ constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 void sendData(struct EventStruct *event, bool sendEvents)
 {
   START_TIMER;
-  #ifndef BUILD_NO_RAM_TRACKER
+#ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
+#endif // ifndef BUILD_NO_RAM_TRACKER
   //  LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules && sendEvents) {
@@ -65,16 +65,17 @@ void sendData(struct EventStruct *event, bool sendEvents)
         Settings.Protocol[x])
     {
       event->ControllerIndex = x;
-      const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
-      event->idx = Settings.TaskDeviceID[x][event->TaskIndex];
+      event->idx             = Settings.TaskDeviceID[x][event->TaskIndex];
 
       if (validUserVar(event)) {
         String dummy;
-        CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
+        CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_SEND, event, dummy);
       }
 #ifndef BUILD_NO_DEBUG
       else {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
+
           String log = F("Invalid value detected for controller ");
           log += getCPluginNameFromProtocolIndex(ProtocolIndex);
           addLogMove(LOG_LEVEL_DEBUG, log);
@@ -130,10 +131,8 @@ void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int leng
   }
 
   // TD-er: This one cannot set the TaskIndex, but that may seem to work out.... hopefully.
-  protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(enabledMqttController);
-
   Scheduler.schedule_mqtt_controller_event_timer(
-    ProtocolIndex,
+    enabledMqttController,
     CPlugin::Function::CPLUGIN_PROTOCOL_RECV,
     c_topic, b_payload, length);
 
@@ -159,13 +158,14 @@ void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int leng
 void MQTTDisconnect()
 {
   if (MQTTclient.connected()) {
-    #if FEATURE_MQTT_CONNECT_BACKGROUND
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+
     if (MQTT_task_data.taskHandle) {
       vTaskDelete(MQTT_task_data.taskHandle);
       MQTT_task_data.taskHandle = NULL;
     }
     MQTT_task_data.status = MQTT_connect_status_e::Disconnected;
-    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTTclient.disconnect();
     addLog(LOG_LEVEL_INFO, F("MQTT : Disconnected from broker"));
   }
@@ -188,20 +188,21 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
   }
 
   if (MQTTclient.connected()) {
-    #if FEATURE_MQTT_CONNECT_BACKGROUND
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+
     if (MQTT_task_data.status != MQTT_connect_status_e::Connecting) {
       MQTT_task_data.status = MQTT_connect_status_e::Disconnected;
     }
-    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTTclient.disconnect();
-    # if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 
     if (mqtt_tls != nullptr) {
       delete mqtt_tls;
       mqtt_tls = nullptr;
     }
     mqtt_rootCA.clear();
-    # endif // if FEATURE_MQTT_TLS
+# endif // if FEATURE_MQTT_TLS
   }
 
   updateMQTTclient_connected();
@@ -216,11 +217,11 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
 
   if ((TLS_type != TLS_types::NoTLS) && (nullptr == mqtt_tls)) {
 #  ifdef ESP32
-  #   if MQTT_MAX_PACKET_SIZE > 2000
+#   if MQTT_MAX_PACKET_SIZE > 2000
     mqtt_tls = new BearSSL::WiFiClientSecure_light(4096, 4096);
-  #   else // if MQTT_MAX_PACKET_SIZE > 2000
+#   else // if MQTT_MAX_PACKET_SIZE > 2000
     mqtt_tls = new BearSSL::WiFiClientSecure_light(2048, 2048);
-  #   endif // if MQTT_MAX_PACKET_SIZE > 2000
+#   endif // if MQTT_MAX_PACKET_SIZE > 2000
 #  else // ESP32 - ESP8266
     mqtt_tls = new BearSSL::WiFiClientSecure_light(1024, 1024);
 #  endif // ifdef ESP32
@@ -238,26 +239,26 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
     mqtt_tls_last_error = 0;
   }
 
-  switch (TLS_type) {
+  switch (TLS_type)
+  {
     case TLS_types::NoTLS:
     {
       // Ignoring the ACK from the server is probably set for a reason.
       // For example because the server does not give an acknowledgement.
       // This way, we always need the set amount of timeout to handle the request.
       // Thus we should not make the timeout dynamic here if set to ignore ack.
-      const uint32_t timeout = ControllerSettings->MustCheckReply
-      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
-      : ControllerSettings->ClientTimeout;
 
-  #  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      const uint32_t timeout = ControllerSettings->getSuggestedTimeout(Settings.Protocol[controller_idx]);
+
+#  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
       mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
       Client *pClient = &mqtt;
       pClient->setTimeout(timeout);
-  #  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+#  else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       mqtt.setTimeout(timeout); // in msec as it should be!
-  #  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+#  endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
       MQTTclient.setKeepAlive(ControllerSettings->KeepAliveTime ? ControllerSettings->KeepAliveTime : CONTROLLER_KEEP_ALIVE_TIME_DFLT);
       MQTTclient.setSocketTimeout(timeout);
@@ -347,9 +348,7 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
     // For example because the server does not give an acknowledgement.
     // This way, we always need the set amount of timeout to handle the request.
     // Thus we should not make the timeout dynamic here if set to ignore ack.
-    const uint32_t timeout = ControllerSettings->MustCheckReply
-      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
-      : ControllerSettings->ClientTimeout;
+    const uint32_t timeout = ControllerSettings->getSuggestedTimeout(Settings.Protocol[controller_idx]);
 
     if (mqtt_tls_last_error == 296) {
       // in this special case of cipher mismatch, we force enable ECDSA
@@ -393,9 +392,7 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings->MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
-    : ControllerSettings->ClientTimeout;
+  const uint32_t timeout = ControllerSettings->getSuggestedTimeout(Settings.Protocol[controller_idx]);
 
 #  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -413,18 +410,28 @@ bool MQTTConnect_prepareClient(controllerIndex_t controller_idx) {
 # endif // if FEATURE_MQTT_TLS
 
   if (ControllerSettings->UseDNS) {
-    #if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
+# if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Connecting to: %s:%u"), ControllerSettings->getHost().c_str(), ControllerSettings->Port));
     }
-    #endif // if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
+# endif // if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
     MQTTclient.setServer(ControllerSettings->getHost().c_str(), ControllerSettings->Port);
-  } else {
-    #if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Connecting to: %s:%u"), ControllerSettings->getIP().toString().c_str(), ControllerSettings->Port));
+# if FEATURE_MQTT_TLS
+
+    if (mqtt_tls) {
+      mqtt_tls->setDomainName(ControllerSettings->getHost().c_str());
     }
-    #endif // if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
+# endif // if FEATURE_MQTT_TLS
+  } else {
+# if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Connecting to: %s:%u"),
+                                       ControllerSettings->getIP().toString().c_str(),
+                                       ControllerSettings->Port));
+    }
+# endif // if !defined(BUILD_NO_DEBUG) && FEATURE_MQTT_CONNECT_BACKGROUND
     MQTTclient.setServer(ControllerSettings->getIP(), ControllerSettings->Port);
   }
   MQTTclient.setCallback(incoming_mqtt_callback);
@@ -440,37 +447,41 @@ bool MQTTConnect_clientConnect(controllerIndex_t controller_idx) {
   MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
-    #ifndef BUILD_MINIMAL_OTA
+# ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
-    #endif
+# endif
     return false;
   }
   LoadControllerSettings(controller_idx, *ControllerSettings);
 
-  bool MQTTresult                   = false;
+  bool MQTTresult = false;
 
   // MQTT needs a unique clientname to subscribe to broker
   const String clientid = getMQTTclientID(*ControllerSettings);
 
-  const String LWTTopic             = getLWT_topic(*ControllerSettings);
-  const String LWTMessageDisconnect = getLWT_messageDisconnect(*ControllerSettings);
-  const uint8_t willQos             = 0;
-  const bool    willRetain          = ControllerSettings->mqtt_willRetain() && ControllerSettings->mqtt_sendLWT();
+  const String  LWTTopic             = getLWT_topic(*ControllerSettings);
+  const String  LWTMessageDisconnect = getLWT_messageDisconnect(*ControllerSettings);
+  const uint8_t willQos              = 0;
+  const bool    willRetain           = ControllerSettings->mqtt_willRetain() && ControllerSettings->mqtt_sendLWT();
+
   // As suggested here: https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
-  const bool    cleanSession        = ControllerSettings->mqtt_cleanSession();
-  const bool    hasCredentials      = hasControllerCredentialsSet(controller_idx, *ControllerSettings);
+  const bool cleanSession   = ControllerSettings->mqtt_cleanSession();
+  const bool hasCredentials = hasControllerCredentialsSet(controller_idx, *ControllerSettings);
 
   const uint64_t statisticsTimerStart(getMicros64());
-
+# if FEATURE_MQTT_TLS
+  mqtt_tls_last_errorstr.clear();
+  mqtt_tls_last_error = 0;
+#endif
   MQTTresult =
-      MQTTclient.connect(clientid.c_str(),
-                        hasCredentials ? getControllerUser(controller_idx, *ControllerSettings).c_str() : nullptr,
-                        hasCredentials ? getControllerPass(controller_idx, *ControllerSettings).c_str() : nullptr,
-                        ControllerSettings->mqtt_sendLWT() ? LWTTopic.c_str() : nullptr,
-                        willQos,
-                        willRetain,
-                        ControllerSettings->mqtt_sendLWT() ? LWTMessageDisconnect.c_str() : nullptr,
-                        cleanSession);
+    MQTTclient.connect(clientid.c_str(),
+                       hasCredentials ? getControllerUser(controller_idx, *ControllerSettings).c_str() : nullptr,
+                       hasCredentials ? getControllerPass(controller_idx, *ControllerSettings).c_str() : nullptr,
+                       ControllerSettings->mqtt_sendLWT() ? LWTTopic.c_str() : nullptr,
+                       willQos,
+                       willRetain,
+                       ControllerSettings->mqtt_sendLWT() ? LWTMessageDisconnect.c_str() : nullptr,
+                       cleanSession);
   delay(0);
 
   count_connection_results(
@@ -486,9 +497,9 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
   MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
-    #ifndef BUILD_MINIMAL_OTA
+# ifndef BUILD_MINIMAL_OTA
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
-    #endif
+# endif
     return false;
   }
   LoadControllerSettings(controller_idx, *ControllerSettings);
@@ -497,17 +508,17 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
   const String LWTTopic   = getLWT_topic(*ControllerSettings);
   const bool   willRetain = ControllerSettings->mqtt_willRetain() && ControllerSettings->mqtt_sendLWT();
 
-  # if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 
   const TLS_types TLS_type = ControllerSettings->TLStype();
 
   if (mqtt_tls != nullptr)
   {
-    #  ifdef ESP32
+#  ifdef ESP32
     mqtt_tls_last_error = mqtt_tls->getLastError();
     mqtt_tls->clearLastError();
     mqtt_tls_last_cipher_suite = mqtt_tls->getLastCipherSuite();
-    #  endif // ifdef ESP32
+#  endif // ifdef ESP32
 
     // mqtt_tls_last_errorstr = buf;
     if (mqtt_tls_last_error == ERR_OOM) { mqtt_tls_last_errorstr = F("OutOfMemory"); }
@@ -529,8 +540,9 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
       addLog(LOG_LEVEL_DEBUG, strformat(F("TLS cipher suite: 0x%04X"), mqtt_tls_last_cipher_suite));
     }
 #  endif // ifndef BUILD_NO_DEBUG
+
   }
-  #  ifdef ESP32
+#  ifdef ESP32
 
   // FIXME TD-er: There seems to be no verify function in BearSSL used on ESP8266
   if (TLS_type == TLS_types::TLS_FINGERPRINT)
@@ -574,12 +586,12 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
        */
     }
   }
-  #  endif // ifdef ESP32
+#  endif // ifdef ESP32
 
-  # endif  // if FEATURE_MQTT_TLS
+# endif  // if FEATURE_MQTT_TLS
 
   if (!MQTTresult) {
-    # if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 
     if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("MQTT : TLS error code: ");
@@ -588,20 +600,21 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
       log += mqtt_tls_last_errorstr;
       addLog(LOG_LEVEL_ERROR, log);
     }
-    # endif // if FEATURE_MQTT_TLS
+# endif // if FEATURE_MQTT_TLS
 
-    #if FEATURE_MQTT_CONNECT_BACKGROUND
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+
     if (MQTT_task_data.status != MQTT_connect_status_e::Connecting) {
       MQTT_task_data.status = MQTT_connect_status_e::Disconnected;
     }
-    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTTclient.disconnect();
-    # if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS
 
     if (mqtt_tls != nullptr) {
       mqtt_tls->stop();
     }
-    # endif // if FEATURE_MQTT_TLS
+# endif // if FEATURE_MQTT_TLS
 
     updateMQTTclient_connected();
 
@@ -613,8 +626,8 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
     addLogMove(LOG_LEVEL_INFO, concat(F("MQTT : Connected to broker with client ID: "), clientid));
   }
 
-  # if FEATURE_MQTT_TLS
-  #  ifdef ESP32
+# if FEATURE_MQTT_TLS
+#  ifdef ESP32
 
   // FIXME TD-er: Must get certificate info
 
@@ -629,17 +642,17 @@ bool MQTTConnect_wrapUpConnect(controllerIndex_t controller_idx, bool MQTTresult
      addLogMove(LOG_LEVEL_INFO, log);
      }
    */
-  #  endif // ifdef ESP32
-  # endif  // if FEATURE_MQTT_TLS
+#  endif // ifdef ESP32
+# endif  // if FEATURE_MQTT_TLS
 
   MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->Subscribe));
 
-  # if FEATURE_MQTT_DISCOVER
+# if FEATURE_MQTT_DISCOVER
 
   if (ControllerSettings->mqtt_autoDiscovery()) {
     MQTTparseSystemVariablesAndSubscribe(String(ControllerSettings->MqttAutoDiscoveryTrigger));
   }
-  # endif // if FEATURE_MQTT_DISCOVER
+# endif // if FEATURE_MQTT_DISCOVER
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -674,7 +687,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (!MQTTConnect_prepareClient(controller_idx)) {
     return false;
   }
-  
+
   bool MQTTresult = MQTTConnect_clientConnect(controller_idx);
 
   return MQTTConnect_wrapUpConnect(controller_idx, MQTTresult);
@@ -706,19 +719,22 @@ String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
   parseSystemVariables(clientid, false);
   clientid.replace(' ', '_'); // Make sure no spaces are present in the client ID
 
-  if ((WiFiEventData.wifi_reconnects >= 1) && ControllerSettings.mqtt_uniqueMQTTclientIdReconnect()) {
+  if (                        // (WiFiEventData.wifi_reconnects >= 1) &&
+    ControllerSettings.mqtt_uniqueMQTTclientIdReconnect()) {
     // Work-around for 'lost connections' to the MQTT broker.
     // If the broker thinks the connection is still alive, a reconnect from the
     // client will be refused.
     // To overcome this issue, append the number of reconnects to the client ID to
     // make it different from the previous one.
+    static int id{};
     clientid += '_';
-    clientid += WiFiEventData.wifi_reconnects;
+    clientid += ++id; // WiFiEventData.wifi_reconnects;
   }
   return clientid;
 }
 
-#if FEATURE_MQTT_CONNECT_BACKGROUND
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+
 void MQTT_execute_connect_task(void *parameter)
 {
   MQTT_connect_request*MQTT_task_data = static_cast<MQTT_connect_request *>(parameter);
@@ -726,21 +742,25 @@ void MQTT_execute_connect_task(void *parameter)
   uint32_t timeout = MQTT_task_data->timeout;
   uint8_t  incr    = 5; // Increment timeout between connection attempts 5 times by 100 msec
 
-  while (!MQTTConnect_clientConnect(MQTT_task_data->ControllerIndex) && !MQTTclient.connected()) {
+  while (ESPEasy::net::NetworkConnected() &&
+         !MQTTConnect_clientConnect(MQTT_task_data->ControllerIndex) &&
+         !MQTTclient.connected()) {
     const TickType_t xDelay = timeout / portTICK_PERIOD_MS;
     vTaskDelay(xDelay); // Use regular controller timeout also for delay between connection attempts (range 10..4000)
+
     if (incr > 0) {
-      timeout += 100; // Increment next few (5) times with 100 msec
+      timeout += 100;   // Increment next few (5) times with 100 msec
       incr--;
     }
+
     if (timePassedSince(MQTT_task_data->startTime) > 120000) { // Quit after 120 seconds
       break;
     }
   }
-  MQTT_task_data->result     = MQTTclient.connected();
-  MQTT_task_data->status     = MQTT_task_data->result
-                               ? MQTT_connect_status_e::Connected
-                               : MQTT_connect_status_e::Failure;
+  MQTT_task_data->result = MQTTclient.connected();
+  MQTT_task_data->status = MQTT_task_data->result
+? MQTT_connect_status_e::Connected
+: MQTT_connect_status_e::Failure;
   MQTT_task_data->endTime    = millis();
   MQTT_task_data->taskHandle = NULL;
   vTaskDelete(MQTT_task_data->taskHandle);
@@ -758,12 +778,12 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
       addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Background Connect request %s, took %d msec"),
                                        FsP(MQTT_task_data.result ? F("success") : F("FAILED")),
                                        MQTT_task_data.endTime - MQTT_task_data.startTime
-                                      ));
+                                       ));
     }
 
     return result && MQTT_task_data.result;
   }
-  
+
   if ((MQTT_task_data.status == MQTT_connect_status_e::Ready) && MQTTclient.connected()) {
     if (!MQTT_task_data.logged && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, F("MQTT : Background Connect request Ready"));
@@ -777,7 +797,7 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Background waiting to Connect, %d sec"),
                                          timePassedSince(MQTT_task_data.startTime) / 1000
-                                        ));
+                                         ));
       }
       MQTT_task_data.loopTime = millis();
     }
@@ -786,9 +806,10 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
 
   if ((MQTT_task_data.status == MQTT_connect_status_e::Ready) &&
       !MQTTclient.connected() &&
-      NetworkConnected(10)) { // Unexpected network disconnect and reconnect?
+      NetworkConnected(10)) {      // Unexpected network disconnect and reconnect?
     MQTT_task_data.status = MQTT_connect_status_e::Disconnected;
     reportOnly            = false; // Reconnect ASAP
+
     if (CONTROLLER_MAX == controller_idx) {
       controller_idx = firstEnabledMQTT_ControllerIndex();
     }
@@ -804,22 +825,22 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start background connect for controller %d"), controller_idx + 1));
     }
-    MQTT_task_data.result          = false;
+    MQTT_task_data.result = false;
 
     if (MQTTConnect_prepareClient(controller_idx)) {
       MakeControllerSettings(ControllerSettings); // -V522
 
       if (!AllocatedControllerSettings()) {
-        #ifndef BUILD_MINIMAL_OTA
+#  ifndef BUILD_MINIMAL_OTA
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot load Controller settings, out of RAM"));
-        #endif
+#  endif
         return false;
       }
       LoadControllerSettings(controller_idx, *ControllerSettings);
 
-      const uint32_t timeout = ControllerSettings->MustCheckReply
-                               ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings->ClientTimeout)
-                               : ControllerSettings->ClientTimeout;
+      uint32_t timeout = ControllerSettings->MustCheckReply
+? ControllerSettings->getSuggestedTimeout(Settings.Protocol[MQTT_task_data.ControllerIndex])
+: ControllerSettings->ClientTimeout;
 
       MQTT_task_data.status          = MQTT_connect_status_e::Connecting;
       MQTT_task_data.logged          = false;
@@ -829,13 +850,13 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
       MQTT_task_data.timeout         = timeout;
 
       xTaskCreatePinnedToCore(
-        MQTT_execute_connect_task,   // Function that should be called
-        "MQTTClient.connect()",      // Name of the task (for debugging)
-        8192,                        // Stack size (bytes)
-        &MQTT_task_data,             // Parameter to pass
-        1,                           // Task priority
-        &MQTT_task_data.taskHandle,  // Task handle
-        xPortGetCoreID()             // Core you want to run the task on (0 or 1)
+        MQTT_execute_connect_task,  // Function that should be called
+        "MQTTClient.connect()",     // Name of the task (for debugging)
+        8192,                       // Stack size (bytes)
+        &MQTT_task_data,            // Parameter to pass
+        1,                          // Task priority
+        &MQTT_task_data.taskHandle, // Task handle
+        xPortGetCoreID()            // Core you want to run the task on (0 or 1)
         );
     } else {
       MQTT_task_data.status = MQTT_connect_status_e::Failure;
@@ -843,7 +864,8 @@ bool MQTTConnectInBackground(controllerIndex_t controller_idx, bool reportOnly) 
   }
   return false;
 }
-#endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
 /*********************************************************************************************\
 * Check connection MQTT message broker
@@ -900,11 +922,12 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
     if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
-      #if FEATURE_MQTT_CONNECT_BACKGROUND
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+
       if (Settings.MQTTConnectInBackground()) {
         return MQTTConnectInBackground(controller_idx, false);
       }
-      #endif // ifdef ESP32
+# endif // ifdef ESP32
       return MQTTConnect(controller_idx);
     }
 
@@ -974,35 +997,24 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 * Send status info to request source
 \*********************************************************************************************/
 void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key, const String& param2, int16_t param3) {
-  if (SourceNeedsStatusUpdate(event->Source)) {
+  if (EventValueSource::SourceNeedsStatusUpdate(event->Source)) {
     SendStatus(event, getPinStateJSON(param1, key, param2, param3));
     printToWeb = false; // SP: 2020-06-12: to avoid to add more info to a JSON structure
   }
 }
 
-bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
-{
-  switch (eventSource) {
-    case EventValueSource::Enum::VALUE_SOURCE_HTTP:
-    case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
-    case EventValueSource::Enum::VALUE_SOURCE_MQTT:
-    case EventValueSource::Enum::VALUE_SOURCE_WEB_FRONTEND:
-      return true;
-
-    default:
-      break;
-  }
-  return false;
-}
-
-void SendStatus(struct EventStruct *event, const __FlashStringHelper *status)
-{
-  SendStatus(event, String(status));
-}
+void SendStatus(struct EventStruct *event, const __FlashStringHelper *status) { SendStatus(event, String(status)); }
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
   if (status.isEmpty()) { return; }
+
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (EventValueSource::isExternalSource(event->Source)) {
+    addLog(LOG_LEVEL_NONE, status);
+  }  
+#endif
+
 
   switch (event->Source)
   {
@@ -1019,7 +1031,9 @@ void SendStatus(struct EventStruct *event, const String& status)
       break;
 #endif // if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
+#if !FEATURE_COLORIZE_CONSOLE_LOGS
       serialPrintln(status);
+#endif
       break;
 
     default:
@@ -1087,7 +1101,7 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   if (ptr != nullptr) {
     success =
       MQTTDelayHandler->addToQueue(
-        std::unique_ptr<MQTT_queue_element>(
+        UP_MQTT_queue_element (
           new (ptr) MQTT_queue_element(
             controller_idx, taskIndex,
             std::move(topic_str),
@@ -1121,7 +1135,7 @@ bool MQTTpublish(controllerIndex_t controller_idx,
   if (ptr != nullptr) {
     success =
       MQTTDelayHandler->addToQueue(
-        std::unique_ptr<MQTT_queue_element>(
+        UP_MQTT_queue_element (
           new (ptr) MQTT_queue_element(
             controller_idx, taskIndex,
             std::move(topic),
@@ -1182,7 +1196,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
 
 bool GetTLSfingerprint(String& fp)
 {
-  #  ifdef ESP32
+#  ifdef ESP32
 
   if (MQTTclient_connected && (mqtt_tls != nullptr)) {
     const uint8_t *recv_fingerprint = mqtt_tls->getRecvPubKeyFingerprint();
@@ -1193,7 +1207,8 @@ bool GetTLSfingerprint(String& fp)
       for (size_t i = 0; i < 21; ++i) {
         const String tmp(recv_fingerprint[i], HEX);
 
-        switch (tmp.length()) {
+        switch (tmp.length())
+        {
           case 0:
             fp += '0';
 
@@ -1208,13 +1223,13 @@ bool GetTLSfingerprint(String& fp)
       return true;
     }
   }
-  #  endif // ifdef ESP32
+#  endif // ifdef ESP32
   return false;
 }
 
 bool GetTLS_Certificate(String& cert, bool caRoot)
 {
-  #  ifdef ESP32
+#  ifdef ESP32
 
   // FIXME TD-er: Implement retrieval of certificate
 
@@ -1228,7 +1243,7 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
      }
      }
    */
-  #  endif // ifdef ESP32
+#  endif // ifdef ESP32
   return false;
 }
 
@@ -1253,9 +1268,9 @@ void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, 
   // If not, then it should be rescheduled after the check to see if it is enabled.
   Scheduler.reschedule_task_device_timer(event->TaskIndex, lasttimer);
 
-  #ifndef BUILD_NO_RAM_TRACKER
+#ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SensorSendTask"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
+#endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (Settings.TaskDeviceEnabled[event->TaskIndex])
   {

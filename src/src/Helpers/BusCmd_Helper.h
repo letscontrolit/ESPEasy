@@ -10,7 +10,7 @@
  */
 
 #include "../../_Plugin_Helper.h"
-
+#if FEATURE_BUS_COMMAND
 #include "../Helpers/IBusCmd_Handler.h"
 
 #define BUSCMD_EVENT_SEPARATOR     '|'
@@ -72,6 +72,7 @@ enum class BusCmd_CommandState_e :uint8_t {
 enum class BusCmd_CommandSource_e : uint8_t {
   PluginIdle = 0u,
   PluginRead,
+  PluginWrite,
   PluginOncePerSecond,
   PluginTenPerSecond,
   PluginFiftyPerSecond,
@@ -189,6 +190,14 @@ struct BusCmd_Helper_struct {
                  const String& name,
                  const String& line);
 
+  inline void setCommandSource(BusCmd_CommandSource_e commandSource) {
+    _commandSource = commandSource;
+  }
+
+  inline BusCmd_CommandSource_e getCommandSource() const {
+    return _commandSource;
+  }
+
   // Getters
   BusCmd_CommandState_e getCommandState() const {
     return _commandState;
@@ -230,4 +239,5 @@ private:
   std::vector<BusCmd_Command_struct>::iterator         _it;
   std::vector<BusCmd_Buffer>                           _buffer;
 };
+#endif
 #endif // ifndef _HELPERS_BUSCMD_HELPER_H

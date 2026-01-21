@@ -36,6 +36,11 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return (input || output);
 }
 
+bool isBootModePin(int gpio)
+{
+  return gpio == 9; 
+}
+
 bool isBootStrapPin(int gpio)
 {
   if (gpio == 8) {

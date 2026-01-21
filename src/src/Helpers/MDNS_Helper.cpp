@@ -3,11 +3,11 @@
 #if FEATURE_MDNS
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyEth.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/eth/ESPEasyEth.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 
-#include "../Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 
@@ -16,8 +16,7 @@
 
 void set_mDNS() {
   #if FEATURE_MDNS
-
-  if (!WiFiEventData.WiFiServicesInitialized()) { return; }
+  if (!ESPEasy::net::NetworkConnected(true)) return;
 
   update_mDNS();
   #endif // if FEATURE_MDNS

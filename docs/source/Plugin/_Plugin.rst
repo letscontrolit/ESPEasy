@@ -93,15 +93,19 @@ Enabling "Stats" on a task value also extends how task values can be addressed w
 
 For example using just like normal task value data:
 
-* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
-* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.stddev]`` Compute the standard deviation over the last N samples in the historic buffer (typically: 250 samples on ESP32, 16 on ESP8266)
 * ``[bme#temp.stddevX]`` Compute the standard deviation over the last X samples (or less if there are less samples available)
-* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
-* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+* ``[bme#temp.max]`` Refer to the maximum recorded sample in available samples (rolling maximum)
+* ``[bme#temp.maxX]`` Refer to the maximum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.maxp]`` (max-peak) Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
+* ``[bme#temp.min]`` Refer to the minimum recorded sample in available samples (rolling minimum)
+* ``[bme#temp.minX]`` Refer to the minimum recorded sample in the last X samples (or less if there are less samples available)
+* ``[bme#temp.minp]`` (min-peak) See ``[bme#temp.maxp]``.
 * ``[bme#temp.size]`` Return the number of samples in memory.
-* ``[bme#temp.sample]`` Access the last sample in memory.
-* ``[bme#temp.sampleN]`` Access the N-th last sample in memory.
+* ``[bme#temp.sample]`` Return the number of samples in memory. (Doc. reflects the actual code!)
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory, negative value accesses N-th value from the *oldest* available sample.
 
 
 Commands on "Stats" data:
@@ -325,7 +329,7 @@ There are different released versions of ESP Easy:
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` (split into sets A..B) :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` (split into sets A..B) :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` :yellow:`CLIMATE` (split into sets A..B) are specialized builds holding all Energy-, Display-, Infra Red- (extended), NeoPixel- and Climate- related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Available for ESP32 16MB and ESP32 8MB Flash units (available for ESP32 Classic, ESP32-S3 and ESP32-C6).
 

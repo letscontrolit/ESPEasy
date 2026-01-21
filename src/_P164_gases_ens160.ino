@@ -121,7 +121,7 @@ boolean Plugin_164(uint8_t function, struct EventStruct *event, String& string)
       P164_data_struct *P164_data = static_cast<P164_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P164_data) {
-        addLogMove(LOG_LEVEL_ERROR, F("P164: plugin_read NULLPTR"));
+        addLog(LOG_LEVEL_ERROR, F("P164: plugin_read NULLPTR"));
         break;
       }
 

@@ -32,9 +32,10 @@ appendBuilds = {'MAX'}
 
 # What build set to add plugins also
 appendAlso = {
-  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'DISPLAY A', 'DISPLAY B', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
-  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G'},
-  'DISPLAY': {'DISPLAY A', 'DISPLAY B'}
+  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'COLLECTION H', 'DISPLAY A', 'DISPLAY B', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
+  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'COLLECTION H'},
+  'DISPLAY': {'DISPLAY A', 'DISPLAY B'},
+  'CLIMATE': {'CLIMATE A', 'CLIMATE B'}
   }
 
 # Ignore these, not real build sets
@@ -42,7 +43,8 @@ excludeBuilds = {'DEVELOPMENT', 'RETIRED'}
 
 # Plugins not included
 excludePlugins = {
-  'CLIMATE': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
+  'CLIMATE A': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
+  'CLIMATE B': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
   'DISPLAY A': {'P038', 'P041', 'P042', 'P070'},
   'DISPLAY B': {'P038', 'P041', 'P042', 'P057', 'P070', 'P075', 'P104'},
   # 'MAX': {''},
@@ -60,7 +62,9 @@ buildColors = {
   'COLLECTION E': 'yellow',
   'COLLECTION F': 'yellow',
   'COLLECTION G': 'yellow',
-  'CLIMATE': 'yellow',
+  'COLLECTION H': 'yellow',
+  'CLIMATE A': 'yellow',
+  'CLIMATE B': 'yellow',
   'DISPLAY A': 'yellow',
   'DISPLAY B': 'yellow',
   'ENERGY': 'yellow',

@@ -14,8 +14,9 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
   if (!clientIPallowed()) { return HandledWebCommand_result::IP_not_allowed; }
   webrequest.trim();
   if (webrequest.isEmpty()) { return HandledWebCommand_result::NoCommand; }
-
+#ifndef BUILD_NO_DEBUG
   addLogMove(LOG_LEVEL_INFO,  concat(F("HTTP: "), webrequest));
+#endif
   webrequest = parseTemplate(webrequest);
 #ifndef BUILD_NO_DEBUG
   addLogMove(LOG_LEVEL_DEBUG, concat(F("HTTP after parseTemplate: "), webrequest));

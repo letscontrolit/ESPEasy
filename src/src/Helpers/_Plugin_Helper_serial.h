@@ -11,7 +11,7 @@
 
 struct ESPeasySerialType;
 
-String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType,
+const __FlashStringHelper* serialHelper_getSerialTypeLabel(ESPEasySerialPort serType,
                                        bool              shortName = false);
 
 void   serialHelper_log_GpioDescription(ESPEasySerialPort typeHint,

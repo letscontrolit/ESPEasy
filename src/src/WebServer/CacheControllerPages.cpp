@@ -19,7 +19,6 @@
 # include "../Helpers/ESPEasy_time_calc.h"
 # include "../Helpers/Misc.h"
 
-
 // ********************************************************************************
 // URLs needed for C016_CacheController
 // to help dump the content of the binary log files
@@ -73,9 +72,9 @@ void handle_dumpcache() {
 
 
   ESPEasyControllerCache_CSV_dumper dumper(
-    joinTimestamp, 
-    onlySetTasks, 
-    separator, 
+    joinTimestamp,
+    onlySetTasks,
+    separator,
     ESPEasyControllerCache_CSV_dumper::Target::CSV_file);
 
   dumper.generateCSVHeader(true);
@@ -94,64 +93,66 @@ void handle_cache_json() {
   C016_flush();
 
   TXBuffer.startJsonStream();
-  addHtml(F("{\"columns\": ["));
+  {
+    KeyValueWriter_JSON mainLevelWriter(true);
+    {
+      auto writer = mainLevelWriter.createChildArray(F("columns"));
 
-  //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
-  addHtml(to_json_value(F("UNIX timestamp")));
-  addHtml(',');
-  addHtml(to_json_value(F("UTC timestamp")));
-  addHtml(',');
-  addHtml(to_json_value(F("task index")));
+      if (writer) {
+        //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
+        writer->write({ EMPTY_STRING, F("UNIX timestamp") });
+        writer->write({ EMPTY_STRING, F("UTC timestamp") });
+        writer->write({ EMPTY_STRING, F("task index") });
 
-  if (hasArg(F("pluginID"))) {
-    addHtml(',');
-    addHtml(to_json_value(F("plugin ID")));
-  }
+        if (hasArg(F("pluginID"))) {
+          writer->write({ EMPTY_STRING, F("plugin ID") });
+        }
 
-  for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    for (int j = 0; j < VARS_PER_TASK; ++j) {
-      String label = getTaskDeviceName(i);
-      label += '#';
-      label += getTaskValueName(i, j);
-      addHtml(',');
-      addHtml(to_json_value(label));
-    }
-  }
-  addHtml(F("],\n"));
-  addHtml(F("\"files\": ["));
-  bool islast    = false;
-  int  filenr    = 0;
-  int  fileCount = 0;
-
-  while (!islast) {
-    const String currentFile = C016_getCacheFileName(filenr, islast);
-    ++filenr;
-
-    if (currentFile.length() > 0) {
-      if (fileCount != 0) {
-        addHtml(',');
+        for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+          for (int j = 0; j < VARS_PER_TASK; ++j) {
+            writer->write({ EMPTY_STRING, strformat(
+                              F("%s#%s"),
+                              getTaskDeviceName(i).c_str(),
+                              getTaskValueName(i, j).c_str()) });
+          }
+        }
       }
-      addHtml(to_json_value(currentFile));
-      ++fileCount;
     }
-  }
-  addHtml(F("],\n"));
-  addHtml(F("\"pluginID\": ["));
+    int fileCount = 0;
+    {
+      auto writer = mainLevelWriter.createChildArray(F("files"));
 
-  for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
-    if (taskIndex != 0) {
-      addHtml(',');
+      if (writer) {
+        bool islast = false;
+        int  filenr = 0;
+
+        while (!islast) {
+          const String currentFile = C016_getCacheFileName(filenr, islast);
+          ++filenr;
+
+          if (currentFile.length() > 0) {
+            ++fileCount;
+            writer->write({ EMPTY_STRING, currentFile });
+          }
+        }
+      }
     }
-    addHtmlInt(getPluginID_from_TaskIndex(taskIndex).value);
+    {
+      auto writer = mainLevelWriter.createChildArray(F("pluginID"));
+
+      if (writer) {
+        for (taskIndex_t taskIndex = 0; validTaskIndex(taskIndex); ++taskIndex) {
+          writer->write({ EMPTY_STRING, getPluginID_from_TaskIndex(taskIndex).value });
+        }
+      }
+    }
+    mainLevelWriter.write({ F("separator"), F(";") });
+    mainLevelWriter.write({ F("nrfiles"), fileCount });
   }
-  addHtml(F("],\n"));
-  stream_next_json_object_value(F("separator"), F(";"));
-  stream_last_json_object_value(F("nrfiles"), fileCount);
-  addHtml('\n');
   TXBuffer.endStream();
 }
 
-void handle_cache_csv() {
+void handle_cache_csv() { 
   if (!isLoggedIn()) { return; }
 }
 

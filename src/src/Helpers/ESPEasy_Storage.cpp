@@ -15,26 +15,27 @@
 # include "../ESPEasyCore/Controller.h"
 #endif // if FEATURE_MQTT
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/Cache.h"
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
+#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
@@ -61,7 +62,10 @@
 
 #ifdef ESP32
 # include <esp_partition.h>
-# include <esp_phy_init.h>
+#ifndef ESP32P4
+#  include <esp_phy_init.h>
+#endif
+
 
 String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
@@ -265,8 +269,9 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
   if (fname.length() > 0)
   {
     #if FEATURE_RTC_CACHE_STORAGE
+    const bool cacheFile = isCacheFile(fname);
 
-    if (isCacheFile(fname)) {
+    if (cacheFile) {
       ControllerCache.closeOpenFiles();
     }
     #endif // if FEATURE_RTC_CACHE_STORAGE
@@ -287,6 +292,11 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
       res = SD.remove(patch_fname(fname));
     }
     #endif // if FEATURE_SD
+#ifndef BUILD_NO_DEBUG
+    if (!res) {
+      addLog(LOG_LEVEL_ERROR, concat(F("Del  : Could not delete "), patch_fname(fname)));
+    }
+#endif
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -295,6 +305,14 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
     while (retries > 0 && GarbageCollection()) {
       --retries;
     }
+#if FEATURE_RTC_CACHE_STORAGE
+/*
+    if (cacheFile) {
+      ControllerCache.updateRTC_filenameCounters();
+      // FIXME TD-er: Tell Cache Reader a file has been deleted
+    }
+*/
+#endif
     return res;
   }
   return false;
@@ -426,11 +444,11 @@ bool BuildFixes()
 
   if (Settings.Build < 20112) {
     Settings.WiFi_TX_power           = 70; // 70 = 17.5dBm. unit: 0.25 dBm
-    Settings.WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
+    Settings.WiFi_sensitivity_margin = 5;  // Margin in dBm on top of sensitivity.
   }
 
   if (Settings.Build < 20113) {
-    Settings.NumberExtraWiFiScans = 0;
+    Settings.ConnectFailRetryCount = 0;
   }
 
   if (Settings.Build < 20114) {
@@ -678,18 +696,21 @@ bool check_and_update_WiFi_Calibration() {
 
 bool Erase_WiFi_Calibration() {
   #ifdef ESP8266
-  WifiDisconnect();
-  setWifiMode(WIFI_OFF);
+  ESPEasy::net::wifi::WifiDisconnect();
+  ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
   if (!ESP.eraseConfig())
     return false;
-  #ifndef BUILD_MINIMAL_OTA
+  #ifndef LIMIT_BUILD_SIZE
   addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
   #endif
   #endif
 
   #ifdef ESP32
-  WifiDisconnect();
-  setWifiMode(WIFI_OFF);
+  # ifndef SOC_WIFI_SUPPORTED
+  return false;
+  #else
+  ESPEasy::net::wifi::WifiDisconnect();
+  ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
   // Make sure power is stable, so wait a bit longer
   delay(1000);
   esp_phy_erase_cal_data_in_nvs();
@@ -699,6 +720,7 @@ bool Erase_WiFi_Calibration() {
   addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
   delay(200);  
   setWiFi_CalibrationVersion();
+  #endif
   #endif
   return true;
 }
@@ -821,12 +843,12 @@ String SaveSettings(bool forFactoryReset)
     return err;
   }
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef LIMIT_BUILD_SIZE
 
   // Must check this after saving, or else it is not possible to fix multiple
   // issues which can only corrected on different pages.
   if (!SettingsCheck(err)) { return err; }
-#endif // ifndef BUILD_MINIMAL_OTA
+#endif 
 
   //  }
 
@@ -853,12 +875,16 @@ String SaveSecuritySettings(bool forFactoryReset) {
                      sizeof(SecuritySettings));
 
     // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!forFactoryReset && !NetworkConnected()) {
-      if (SecuritySettings.hasWiFiCredentials() && (active_network_medium == NetworkMedium_t::WIFI)) {
-        WiFiEventData.wifiConnectAttemptNeeded = true;
-        WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
-        resetWiFi();
-        AttemptWiFiConnect();
+    if (!forFactoryReset) {
+      if (SecuritySettings.hasWiFiCredentials() && (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI)) {
+        ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+        if (!ESPEasy::net::NetworkConnected()) {
+//          WiFiEventData.wifiConnectAttemptNeeded = true;
+          ESPEasy::net::wifi::resetWiFi();
+          String dummy;
+          ESPEasy::net::NWPluginCall(
+            NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED, 0, dummy);
+        }
       }
     }
   }
@@ -871,9 +897,15 @@ String SaveSecuritySettings(bool forFactoryReset) {
   // FIXME TD-er: How to check if these have changed?
   if (forFactoryReset) {
     ExtendedControllerCredentials.clear();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    SecuritySettings_deviceSpecific.clear();
+#endif
   }
 
   ExtendedControllerCredentials.save();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  SecuritySettings_deviceSpecific.save();
+#endif
 
   if (!forFactoryReset) {
     afterloadSettings();
@@ -933,14 +965,16 @@ void afterloadSettings() {
   applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
+  #if !defined(CORE32SOLO1) && !defined(ESP32P4)
   setCpuFrequencyMhz(Settings.EcoPowerMode() ? getCPU_MinFreqMHz() : getCPU_MaxFreqMHz());
+  #endif
   #endif // ifdef ESP32
 
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
   node_time.applyTimeZone();
-  CheckRunningServices(); // To update changes in hostname.
+  ESPEasy::net::CheckRunningServices(); // To update changes in hostname.
 }
 
 /********************************************************************************************\
@@ -1009,6 +1043,10 @@ String LoadSettings()
 #endif // ifndef BUILD_NO_DEBUG
 
   ExtendedControllerCredentials.load();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  SecuritySettings_deviceSpecific.load();
+#endif
+
 
   //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
@@ -1104,6 +1142,36 @@ uint8_t disableAllNotifications(uint8_t bootFailedCount) {
 }
 
 #endif // if FEATURE_NOTIFIER
+
+/********************************************************************************************\
+   Disable Network Interfaces, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableNetwork(uint8_t bootFailedCount)
+{
+  for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.getNetworkEnabled(i)) {
+      --bootFailedCount;
+
+      if (bootFailedCount == 0) {
+        Settings.setNetworkEnabled(i, false);
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+uint8_t disableAllNetworkss(uint8_t bootFailedCount)
+{
+    if (bootFailedCount > 0) {
+    --bootFailedCount;
+
+    for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX; ++i) {
+      Settings.setNetworkEnabled(i, false);
+    }
+  }
+  return bootFailedCount;
+}
+
 
 /********************************************************************************************\
    Disable Rules, based on bootFailedCount
@@ -1361,8 +1429,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                      reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                      sizeof(struct ExtraTaskSettingsStruct));
 
-#if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
-
+#ifndef LIMIT_BUILD_SIZE
     if (err.isEmpty()) {
       err = checkTaskSettings(TaskIndex);
     }
@@ -2605,11 +2672,6 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 #if FEATURE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr)
 {
-  if (!getDownloadFiletypeChecked(filetype, filenr)) {
-    // Not selected, so not downloaded
-    return F("Not Allowed");
-  }
-
   String filename = getFileName(filetype, filenr);
   String fullUrl  = joinUrlFilename(url, filename);
   String error;
@@ -2662,6 +2724,48 @@ String downloadFileType(const String& url, const String& user, const String& pas
   }
   return error;
 }
+
+# if defined(ESP8266)
+void deleteBakFiles()
+{
+  fs::Dir dir = ESPEASY_FS.openDir("");
+
+  while (dir.next())
+  {
+    const String fname = dir.fileName();
+    if (fname.endsWith(F("_bak"))) {
+      if (tryDeleteFile(fname)) {
+        delay(1);
+      }
+    }
+  }
+}
+#endif
+#ifdef ESP32
+void deleteBakFiles()
+{
+  fs::File root = ESPEASY_FS.open("/");
+  fs::File file = root.openNextFile();
+
+  while (file)
+  {
+    if (!file.isDirectory()) {
+      const String fname = file.name();
+      // Need to open next file or else we cannot delete the file
+      file = root.openNextFile();
+
+      if (fname.endsWith(F("_bak"))) {
+        addLog(LOG_LEVEL_INFO, concat(F("Del  : Delete _bak file: "), fname));
+        if (tryDeleteFile(fname)) {
+          delay(1);
+        }
+      }
+    } else {
+      file = root.openNextFile();
+    }
+  }
+}
+#endif
 
 #endif // if FEATURE_DOWNLOAD
 

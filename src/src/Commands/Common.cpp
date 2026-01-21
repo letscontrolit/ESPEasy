@@ -5,8 +5,7 @@
 
 #include "../../ESPEasy_common.h"
 
-
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Helpers/Networking.h"
@@ -15,8 +14,8 @@
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
-const __FlashStringHelper * return_command_success_flashstr() { return F("\nOK"); }
-const __FlashStringHelper * return_command_failed_flashstr() { return F("\nFailed"); }
+const __FlashStringHelper * return_command_success_flashstr() { return F("OK"); }
+const __FlashStringHelper * return_command_failed_flashstr() { return F("Failed"); }
 
 const __FlashStringHelper * return_command_boolean_result_flashstr(bool success) 
 {
@@ -38,6 +37,17 @@ const __FlashStringHelper * return_incorrect_nr_arguments() { return F("Too many
 const __FlashStringHelper * return_incorrect_source() { return F("Command not allowed from this source!"); }
 const __FlashStringHelper * return_not_connected() { return F("Not connected to WiFi"); }
 
+String return_result(struct EventStruct *event,
+                     const __FlashStringHelper * result)
+{
+  serialPrintln();
+  serialPrintln(result);
+
+  if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
+    return return_command_success();
+  }
+  return result;
+}
 
 String return_result(struct EventStruct *event, const String& result)
 {
@@ -234,4 +244,34 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
     return return_result(event, result);
   }
   return return_command_success();
+}
+
+String Command_GetORSetFloatMinMax(struct EventStruct        *event,
+                                   const __FlashStringHelper *targetDescription,
+                                   const char                *Line,
+                                   float                     *value,
+                                   int                        arg,
+                                   float                      _min,
+                                   float                      _max)
+{
+  {
+    // Check if command is valid. Leave in separate scope to delete the TmpStr1
+    String TmpStr1;
+
+    if (GetArgv(Line, TmpStr1, arg + 1)) {
+      TmpStr1.toLowerCase();
+
+      float tmp_float{};
+
+      if (validFloatFromString(TmpStr1, tmp_float) &&
+          definitelyGreaterThan(tmp_float, _min) &&
+          definitelyLessThan(tmp_float, _max)) {
+        *value = tmp_float;
+      } else {
+        return return_command_failed();
+      }
+    }
+  }
+
+  return return_result(event, concat(targetDescription, toString(*value)));
 }

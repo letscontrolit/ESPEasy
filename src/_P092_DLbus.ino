@@ -71,7 +71,7 @@
 
 # include "src/PluginStructs/P092_data_struct.h"
 
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "ESPEasy/net/ESPEasyNetwork.h"
 
 # define PLUGIN_092
 # define PLUGIN_ID_092         92
@@ -468,7 +468,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      if (!NetworkConnected()
+      if (!ESPEasy::net::NetworkConnected()
           || !P092_init
           || (nullptr == P092_data)) {
         return false;
@@ -533,7 +533,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
-      if (!NetworkConnected()) {
+      if (!ESPEasy::net::NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: WiFi not connected!"));
         return false;

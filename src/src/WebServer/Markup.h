@@ -4,37 +4,42 @@
 #include "../WebServer/common.h"
 #include "../DataTypes/ProtocolIndex.h"
 #include "../DataTypes/CPluginID.h"
+#include "../ESPEasy/net/DataTypes/NWPluginID.h"
 #include "../DataTypes/PluginID.h"
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
-#ifdef ESP32_CLASSIC
-#define ESP32XX "esp32"
-#elif defined(ESP32C2)
-#define ESP32XX "esp32c2"
-#elif defined(ESP32C3)
-#define ESP32XX "esp32c3"
-#elif defined(ESP32C5)
-#define ESP32XX "esp32c5"
-#elif defined(ESP32C6)
-#define ESP32XX "esp32c6"
-#elif defined(ESP32C61)
-#define ESP32XX "esp32c61"
-#elif defined(ESP32H2)
-#define ESP32XX "esp32h2"
-#elif defined(ESP32H21)
-#define ESP32XX "esp32h21"
-#elif defined(ESP32H4)
-#define ESP32XX "esp32h4"
-#elif defined(ESP32S2)
-#define ESP32XX "esp32s2"
-#elif defined(ESP32S3)
-#define ESP32XX "esp32s3"
-#elif defined(ESP32P4)
-#define ESP32XX "esp32p4"
-#endif
-
+#ifdef CONFIG_ARDUINO_VARIANT
+// TD-er: Might also use CONFIG_IDF_TARGET
+# define ESP32XX CONFIG_ARDUINO_VARIANT
+#else
+# ifdef ESP32_CLASSIC
+#  define ESP32XX "esp32"
+# elif defined(ESP32C2)
+#  define ESP32XX "esp32c2"
+# elif defined(ESP32C3)
+#  define ESP32XX "esp32c3"
+# elif defined(ESP32C5)
+#  define ESP32XX "esp32c5"
+# elif defined(ESP32C6)
+#  define ESP32XX "esp32c6"
+# elif defined(ESP32C61)
+#  define ESP32XX "esp32c61"
+# elif defined(ESP32H2)
+#  define ESP32XX "esp32h2"
+# elif defined(ESP32H21)
+#  define ESP32XX "esp32h21"
+# elif defined(ESP32H4)
+#  define ESP32XX "esp32h4"
+# elif defined(ESP32S2)
+#  define ESP32XX "esp32s2"
+# elif defined(ESP32S3)
+#  define ESP32XX "esp32s3"
+# elif defined(ESP32P4)
+#  define ESP32XX "esp32p4"
+# endif // ifdef ESP32_CLASSIC
+#endif // ifdef CONFIG_ARDUINO_VARIANT
 
 #if FEATURE_TOOLTIPS
 void addTooltip(const String& tooltip);
@@ -46,58 +51,59 @@ void addTooltip(const String& tooltip);
 
 void addSelector_Head(const String& id);
 
-void addSelector_Head_reloadOnChange(const __FlashStringHelper * id);
-//void addSelector_Head_reloadOnChange(const String& id);
+void addSelector_Head_reloadOnChange(const __FlashStringHelper *id);
+
+// void addSelector_Head_reloadOnChange(const String& id);
 
 
-void addSelector_Head_reloadOnChange(const String& id,
-                                     const __FlashStringHelper * classname,
+void addSelector_Head_reloadOnChange(const String             & id,
+                                     const __FlashStringHelper *classname,
                                      bool          disabled
-                                     #if FEATURE_TOOLTIPS
+                                     #if                        FEATURE_TOOLTIPS
                                      ,
-                                     const String& tooltip = EMPTY_STRING
+                                     const String             & tooltip = EMPTY_STRING
                                      #endif // if FEATURE_TOOLTIPS
                                      );
 
-void addSelector_Head_reloadOnChange(const String& id,
-                                     const __FlashStringHelper * classname,
-                                     const String& onChangeCall,
+void addSelector_Head_reloadOnChange(const String             & id,
+                                     const __FlashStringHelper *classname,
+                                     const String             & onChangeCall,
                                      bool          disabled
-                                     #if FEATURE_TOOLTIPS
+                                     #if                        FEATURE_TOOLTIPS
                                      ,
-                                     const String& tooltip = EMPTY_STRING
+                                     const String             & tooltip = EMPTY_STRING
                                      #endif // if FEATURE_TOOLTIPS
                                      );
 
-void do_addSelector_Head(const String& id,
-                         const __FlashStringHelper * classname,
-                         const String& onChangeCall,
+void do_addSelector_Head(const String             & id,
+                         const __FlashStringHelper *classname,
+                         const String             & onChangeCall,
                          const bool& disabled
-                         #if FEATURE_TOOLTIPS
+                         #if                        FEATURE_TOOLTIPS
                          ,
-                         const String& tooltip = EMPTY_STRING
+                         const String             & tooltip = EMPTY_STRING
                          #endif // if FEATURE_TOOLTIPS
                          );
 
 void addPinSelector_Item(PinSelectPurpose purpose,
                          const String   & gpio_label,
                          int              gpio,
-                         bool          selected,
-                         bool          disabled = false,
+                         bool             selected,
+                         bool             disabled = false,
                          const String   & attr     = EMPTY_STRING);
 
 void addSelector_Item(const __FlashStringHelper *option,
                       int                        index,
-                      bool                    selected,
-                      bool                    disabled = false,
+                      bool                       selected,
+                      bool                       disabled = false,
                       const String             & attr     = EMPTY_STRING);
 void addSelector_Item(const String& option,
                       int           index,
-                      bool       selected,
-                      bool       disabled = false,
+                      bool          selected,
+                      bool          disabled = false,
                       const String& attr     = EMPTY_STRING);
 
-void addSelector_Foot(bool reloadonchange = false);
+void   addSelector_Foot(bool reloadonchange = false);
 
 void addSelector_OptGroup(const String& label);
 void addSelector_OptGroupFoot();
@@ -107,6 +113,7 @@ void addUnit(const String& unit);
 void addUnit(char unit);
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
 void   addUnitOfMeasureSelector(const String&  id,
                                 const uint8_t  unitOfMeasure,
                                 const uint64_t groupMap);
@@ -122,10 +129,15 @@ void addRowLabel_tr_id(const String& label,
 void addRowLabel(const __FlashStringHelper *label);
 void addRowLabel(const String& label,
                  const String& id = EMPTY_STRING);
-
+#ifdef WEBSERVER_GITHUB_COPY
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const __FlashStringHelper *label);
 void addRowLabel_copy(const String& label);
+#else
+#ifndef addRowLabel_copy
+#define addRowLabel_copy(L)  addRowLabel(L)
+#endif
+#endif
 
 void addRowLabel(LabelType::Enum label);
 
@@ -134,6 +146,8 @@ void addRowLabelValue(LabelType::Enum label);
 void addRowLabelValues(const LabelType::Enum labels[]);
 
 void addRowLabelValue_copy(LabelType::Enum label);
+
+void addRowColspan(int colspan);
 
 // ********************************************************************************
 // Add a header
@@ -156,13 +170,15 @@ void addFormHeader(const __FlashStringHelper *header,
 void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *helpButton,
                    const __FlashStringHelper *rtdHelpButton);
-/*                   
-void addFormHeader(const String& header,
+
+/*
+   void addFormHeader(const String& header,
                    const String& helpButton = EMPTY_STRING);
-void addFormHeader(const String& header,
+   void addFormHeader(const String& header,
                    const String& helpButton,
                    const String& rtdHelpButton);
-*/
+ */
+
 // ********************************************************************************
 // Add a sub header
 // ********************************************************************************
@@ -173,35 +189,35 @@ void addFormSubHeader(const String& header);
 // Add a checkbox
 // ********************************************************************************
 void addCheckBox(const String& id,
-                 bool       checked,
+                 bool          checked,
                  bool          disabled = false
-                 #if FEATURE_TOOLTIPS
+                 #if           FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
                  #endif // if FEATURE_TOOLTIPS
                  );
 void addCheckBox(const __FlashStringHelper *id,
-                 bool                    checked,
+                 bool                       checked,
                  bool                       disabled = false);
 
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
 #if FEATURE_TOOLTIPS
-void addNumericBox(const String& id,
-                   int           value,
-                   int           min,
-                   int           max,
-                   const __FlashStringHelper * classname,
-                   const String& tooltip = EMPTY_STRING,
-                   bool disabled = false);
+void addNumericBox(const String             & id,
+                   int                        value,
+                   int                        min,
+                   int                        max,
+                   const __FlashStringHelper *classname,
+                   const String             & tooltip  = EMPTY_STRING,
+                   bool                       disabled = false);
 #endif // if FEATURE_TOOLTIPS
 
 void addFloatNumberBox(const String& id,
                        float         value,
                        float         min,
                        float         max,
-                       unsigned int  nrDecimals = 6,
+                       uint8_t  nrDecimals = 6,
                        float         stepsize   = 0.0f
                        #if FEATURE_TOOLTIPS
                        ,
@@ -222,23 +238,23 @@ void addNumericBox(const String& id,
 // ********************************************************************************
 // Add Textbox
 // ********************************************************************************
-void addTextBox(const __FlashStringHelper * id,
-                const String& value,
-                int           maxlength,
-                const __FlashStringHelper * classname);
+void addTextBox(const __FlashStringHelper *id,
+                const String             & value,
+                int                        maxlength,
+                const __FlashStringHelper *classname);
 
-void addTextBox(const String& id,
-                const String& value,
-                int           maxlength,
-                const __FlashStringHelper * classname);
+void addTextBox(const String             & id,
+                const String             & value,
+                int                        maxlength,
+                const __FlashStringHelper *classname);
 
 
-void addTextBox(const __FlashStringHelper * id,
-                const String& value,
-                int           maxlength,
-                bool          readonly = false,
-                bool          required = false,
-                const String& pattern  = EMPTY_STRING);
+void addTextBox(const __FlashStringHelper *id,
+                const String             & value,
+                int                        maxlength,
+                bool                       readonly = false,
+                bool                       required = false,
+                const String             & pattern  = EMPTY_STRING);
 
 void addTextBox(const String& id,
                 const String& value,
@@ -252,8 +268,8 @@ void addTextBox(const String& id,
                 bool          readonly,
                 bool          required,
                 const String& pattern,
-                const __FlashStringHelper * classname
-                #if FEATURE_TOOLTIPS
+                const __FlashStringHelper *classname
+                #if           FEATURE_TOOLTIPS
                 ,
                 const String& tooltip = EMPTY_STRING
                 #endif // if FEATURE_TOOLTIPS
@@ -271,7 +287,7 @@ void addTextArea(const String& id,
                  int           columns,
                  bool          readonly,
                  bool          required
-                 #if FEATURE_TOOLTIPS
+                 #if           FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
                  #endif // if FEATURE_TOOLTIPS
@@ -292,9 +308,10 @@ void   addHelpButton(const String& url,
                      bool          isRTD);
 
 void   addRTDPluginButton(pluginID_t pluginID);
-# ifndef LIMIT_BUILD_SIZE
+#ifndef LIMIT_BUILD_SIZE
 void   addRTDControllerButton(cpluginID_t cpluginID);
-# endif // ifndef LIMIT_BUILD_SIZE
+void   addRTDNetworkDriverButton(ESPEasy::net::nwpluginID_t nwpluginID);
+#endif // ifndef LIMIT_BUILD_SIZE
 
 String makeDocLink(const String& url,
                    bool          isRTD);
@@ -309,24 +326,25 @@ void addPinSelect(PinSelectPurpose purpose,
 
 
 #ifdef ESP32
-#if SOC_ADC_SUPPORTED
+# if SOC_ADC_SUPPORTED
 enum class AdcPinSelectPurpose {
   TouchOnly,
   ADC_Touch,
-#if HAS_HALL_EFFECT_SENSOR
+#  if HAS_HALL_EFFECT_SENSOR
   ADC_Touch_HallEffect,
-#endif
+#  endif
   ADC_Touch_Optional
+
 };
 
 void addADC_PinSelect(AdcPinSelectPurpose purpose,
                       const String      & id,
                       int                 choice);
-#endif
-#if SOC_DAC_SUPPORTED
-void addDAC_PinSelect(const String& id,  
+# endif // if SOC_ADC_SUPPORTED
+# if SOC_DAC_SUPPORTED
+void addDAC_PinSelect(const String& id,
                       int           choice);
-#endif
+# endif // if SOC_DAC_SUPPORTED
 
 #endif // ifdef ESP32
 

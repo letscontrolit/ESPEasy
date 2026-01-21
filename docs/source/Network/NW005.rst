@@ -1,0 +1,56 @@
+.. include:: _network_substitutions.repl
+
+.. _NW005_page:
+
+|NW005_typename|
+==================================================
+
+|NW005_shortinfo|
+
+Network details
+---------------
+
+Type: |NW005_type|
+
+Name: |NW005_name|
+
+Status: |NW005_status|
+
+GitHub: |NW005_github|_
+
+Maintainer: |NW005_maintainer|
+
+Description
+-----------
+
+
+Configuration
+-------------
+
+
+Device Settings
+^^^^^^^^^^^^^^^
+
+
+
+Connection Settings
+^^^^^^^^^^^^^^^^^^^
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

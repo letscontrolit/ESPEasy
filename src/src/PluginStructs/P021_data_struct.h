@@ -87,6 +87,26 @@
 # define P021_FORCE_TIME            PCONFIG_ULONG(3)
 # define P021_GUID_FORCE_TIME       "f11"
 
+// Operation modes for the control algorithm
+enum class P021_opmode : uint8_t
+{
+  P021_OPMODE_CLASSIC, // Original, stateless control
+  P021_OPMODE_OFF,     // Output is fully shut down, no forced curculation
+  P021_OPMODE_STANDBY, // Output is only switched on for forced maintenance runs
+  P021_OPMODE_ON,      // Output is always switched on
+  P021_OPMODE_TEMP,    // Control algorithm based on temperature only
+  P021_OPMODE_REMOTE   // Both temperature and remote command can switch on Output
+};
+
+// Control state for the control algorithm
+enum class P021_control_state : uint8_t
+{
+  P021_STATE_IDLE,   // Output is inactive
+  P021_STATE_ACTIVE, // Output is active due to level control (based on input value)
+  P021_STATE_EXTEND, // Output is active due to minimum duration
+  P021_STATE_FORCE   // Output is forced active due to maximum inactive duration is exceeded
+};
+
 // Positions in userVar array for the output values of this plugin
 // For now we only advertise output & state. Autosave bookkeeping is hidden and used as static storage
 # define P021_VALUE_OUTPUT           0 // Switch output, logical state [inactive/active]

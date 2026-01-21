@@ -64,7 +64,7 @@ void   writeDefaultCSS(void);
 // FIXME TD-er: replace stream_xxx_json_object* into this code.
 // N.B. handling of numerical values differs (string vs. no string)
 // ********************************************************************************
-
+#ifdef WEBSERVER_NEW_UI
 extern int8_t level;
 extern int8_t lastLevel;
 
@@ -100,6 +100,7 @@ void json_prop(const String& name,
                const String& value);
 
 void json_prop(LabelType::Enum label);
+#endif
 
 // ********************************************************************************
 // Add a task select dropdown list
@@ -109,8 +110,7 @@ void json_prop(LabelType::Enum label);
 // PCONFIG() and not in extra settings
 // ********************************************************************************
 void addTaskSelect(const String& name,
-                   taskIndex_t   choice,
-                   const String& cssclass = "wide");
+                   taskIndex_t   choice);
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex

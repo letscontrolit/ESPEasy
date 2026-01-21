@@ -29,12 +29,8 @@ String toString(SchedulerIntervalTimer_e timer) {
       timer <= SchedulerIntervalTimer_e::TIMER_C025_DELAY_QUEUE) 
   {
     const int id = static_cast<int>(timer) - static_cast<int>(SchedulerIntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
-    String res;
-    res.reserve(24);
-    res = F("TIMER_");
-    res += get_formatted_Controller_number(id);
-    res += F("_DELAY_QUEUE");
-    return res;
+
+    return strformat(F("TIMER_C%03d_DELAY_QUEUE"), id);
   }
   return toString_f(timer);
 #endif // ifdef BUILD_NO_DEBUG

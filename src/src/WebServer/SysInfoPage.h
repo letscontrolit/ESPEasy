@@ -23,11 +23,9 @@ void handle_sysinfo_basicInfo();
 void handle_sysinfo_memory();
 #endif
 
-#if FEATURE_ETHERNET
-void handle_sysinfo_Ethernet();
-#endif
-
 void handle_sysinfo_Network();
+void handle_sysinfo_NetworkAdapters();
+
 
 #ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_WiFiSettings();

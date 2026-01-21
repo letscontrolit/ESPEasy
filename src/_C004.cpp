@@ -23,6 +23,9 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesPassword = true;
       proto.defaultPort  = 80;
       proto.usesID       = true;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 
@@ -77,7 +80,7 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
 
       if (ptr != nullptr) {
-        std::unique_ptr<C004_queue_element> element(new (ptr) C004_queue_element(event));
+        UP_C004_queue_element  element(new (ptr) C004_queue_element(event));
 
         success = C004_DelayHandler->addToQueue(std::move(element));
       }

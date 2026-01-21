@@ -2,6 +2,7 @@
 #include "../WebServer/Markup.h"
 
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/KeyValueWriter_WebForm.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
@@ -133,11 +134,11 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+#if FEATURE_ETHERNET
         case PinSelectPurpose::Ethernet:
-          #if FEATURE_ETHERNET
           includeEthernet = false;
-          #endif // if FEATURE_ETHERNET
           break;
+#endif
         case PinSelectPurpose::Generic:
 
           if (!input && !output) {
@@ -403,11 +404,7 @@ void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelp
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const String& id)
 {
-  if (id.isEmpty()) {
-    addRowLabel(label);
-  } else {
-    addRowLabel_tr_id(String(label), id);
-  }
+  addRowLabel_tr_id(String(label), id);
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
@@ -421,9 +418,7 @@ void addRowLabel_tr_id(const String& label, const String& id)
 
 void addRowLabel(const __FlashStringHelper *label)
 {
-  html_TR_TD();
-  addHtml(concat(label, F(":</td>")));
-  html_TD();
+  addRowLabel(String(label), EMPTY_STRING);
 }
 
 void addRowLabel(const String& label, const String& id)
@@ -443,15 +438,10 @@ void addRowLabel(const String& label, const String& id)
   addHtml(F("</td>"));
   html_TD();
 }
-
+#ifdef WEBSERVER_GITHUB_COPY
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const __FlashStringHelper *label) {
-  addHtml(F("<TR>"));
-  html_copyText_TD();
-  addHtml(label);
-  addHtml(':');
-  html_copyText_marker();
-  html_copyText_TD();
+  addRowLabel_copy(String(label));
 }
 
 void addRowLabel_copy(const String& label) {
@@ -462,6 +452,7 @@ void addRowLabel_copy(const String& label) {
   html_copyText_marker();
   html_copyText_TD();
 }
+#endif
 
 void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
@@ -470,28 +461,29 @@ void addRowLabel(LabelType::Enum label) {
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
   addHtml(getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
 }
 
 void addRowLabelValues(const LabelType::Enum labels[]) {
-  size_t i = 0;
-  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
 
-  while (true) {
-    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
-    addRowLabelValue(cur);
-    if (next == LabelType::MAX_LABEL) {
-      return;
-    }
-    ++i;
-    cur = next;
-  }
+  KeyValueWriter_WebForm writer(true);
+  writer.writeLabels(labels, true);
 }
 
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
+}
+
+void addRowColspan(int colspan) {
+  addHtml(strformat(
+    F("<TR><TD colspan=\"%d\">"),
+    colspan));
 }
 
 // ********************************************************************************
@@ -499,13 +491,7 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
-  addHtml(strformat(
-    F("</H%d></TD></TR>"),
-    h_size));
+  addTableSeparator(String(label), colspan, h_size);
 }
 
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size, const __FlashStringHelper *helpButton)
@@ -514,10 +500,8 @@ void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size
 }
 
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
+  addRowColspan(colspan);
+  addHtml(strformat(F("<H%d>%s"), h_size, label.c_str()));
 
   if (!helpButton.isEmpty()) {
     addHelpButton(helpButton);
@@ -670,7 +654,7 @@ void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 
 #endif // if FEATURE_TOOLTIPS
 
-void addFloatNumberBox(const String& id, float value, float min, float max, unsigned int nrDecimals, float stepsize
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
@@ -895,6 +879,14 @@ void addRTDControllerButton(cpluginID_t cpluginID) {
     strformat(
       F("Controller/%s.html"),
       get_formatted_Controller_number(cpluginID).c_str()));
+}
+
+void   addRTDNetworkDriverButton(ESPEasy::net::nwpluginID_t nwpluginID)
+{
+  addRTDHelpButton(
+    strformat(
+      F("Network/%s.html"),
+      nwpluginID.toDisplayString().c_str()));
 }
 # endif // ifndef LIMIT_BUILD_SIZE
 

@@ -12,6 +12,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy/net/Globals/NWPlugins.h"
+
+
 ExecuteCommandArgs::ExecuteCommandArgs(EventValueSource::Enum source,
                                        const char            *Line) :
   _taskIndex(INVALID_TASK_INDEX),
@@ -267,6 +270,13 @@ bool ExecuteCommand(ExecuteCommandArgs&& args, bool addToQueue)
       //      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
     }
 
+    if (!handled) {
+      // Try a controller
+      handled = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WRITE, &TempEvent, tmpAction);
+
+      //      if (handled) addLog(LOG_LEVEL_INFO, F("CPLUGIN_WRITE accepted"));
+    }
+
     if (handled) {
       SendStatus(&TempEvent, return_command_success());
       return true;
@@ -284,7 +294,7 @@ bool ExecuteCommand(ExecuteCommandArgs&& args, bool addToQueue)
   }
   String errorUnknown = concat(F("Command unknown: "), args._Line);
   SendStatus(&TempEvent, errorUnknown);
-  addLogMove(LOG_LEVEL_INFO, errorUnknown);
+  addLogMove(LOG_LEVEL_ERROR, errorUnknown);
   delay(0);
   return false;
 }

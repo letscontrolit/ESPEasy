@@ -145,11 +145,14 @@ bool P180_data_struct::plugin_write(struct EventStruct *event,
         cacheName = parseString(string, 5);
       }
 
+      BusCmd_CommandSource_e old = busCmd_Helper->getCommandSource();
+      busCmd_Helper->setCommandSource(BusCmd_CommandSource_e::PluginWrite);
       cmds = busCmd_Helper->parseBusCmdCommands(cacheName, par3, !cacheName.isEmpty());
+      busCmd_Helper->setCommandSource(old);
     } else if (equals(sub, F("exec")) && hasPar3 && hasBusCmd) {     // genI2c,exec,<cache_name>[,<TaskValueIndex>]
       cmds = busCmd_Helper->parseBusCmdCommands(par3, EMPTY_STRING); // Fetch commands from cache by name
     } else if (equals(sub, F("log")) && hasPar3) {                   // genI2c,log,<1|0>
-      _showLog       = event->Par3 != 0;
+      _showLog       = event->Par2 != 0;
       P180_LOG_DEBUG = _showLog ? 1 : 0;
 
       if (hasBusCmd) {

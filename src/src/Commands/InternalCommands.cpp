@@ -18,6 +18,10 @@
 #include "../Commands/InternalCommands_decoder.h"
 #include "../Commands/i2c.h"
 
+#if FEATURE_LAT_LONG_VAR_CMD
+#include "../Commands/LatitudeLongitude.h"
+#endif // if FEATURE_LAT_LONG_VAR_CMD
+
 #if FEATURE_MQTT
 # include "../Commands/MQTT.h"
 #endif // if FEATURE_MQTT
@@ -43,7 +47,9 @@
 #include "../Commands/Timer.h"
 #include "../Commands/UPD.h"
 #include "../Commands/wd.h"
+#if FEATURE_WIFI
 #include "../Commands/WiFi.h"
+#endif
 
 #include "../DataStructs/TimingStats.h"
 
@@ -180,6 +186,16 @@ bool do_command_case_check(command_case_data         & data,
     return false;
   }
 
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (EventValueSource::isExternalSource(data.event->Source)) {
+    addLog(LOG_LEVEL_NONE, 
+      strformat(
+        F("Cmd (%s) : %s"), 
+        FsP(EventValueSource::toString(data.event->Source)),
+        data.line.c_str()));
+  }  
+#endif
+
   // FIXME TD-er: Do not check nr arguments from MQTT source.
   // See https://github.com/letscontrolit/ESPEasy/issues/3344
   // C005 does recreate command partly from topic and published message
@@ -279,7 +295,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::controllerdisable:          COMMAND_CASE_R(Command_Controller_Disable, 1);           // Controller.h
     case ESPEasy_cmd_e::controllerenable:           COMMAND_CASE_R(Command_Controller_Enable,  1);           // Controller.h
     case ESPEasy_cmd_e::datetime:                   COMMAND_CASE_R(Command_DateTime,             2);         // Time.h
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::debug:                      COMMAND_CASE_R(Command_Debug,                1);         // Diagnostic.h
+#endif
     case ESPEasy_cmd_e::dec:                        COMMAND_CASE_A(Command_Rules_Dec,           -1);         // Rules.h
     case ESPEasy_cmd_e::deepsleep:                  COMMAND_CASE_R(Command_System_deepSleep,     1);         // System.h
     case ESPEasy_cmd_e::delay:                      COMMAND_CASE_R(Command_Delay,                1);         // Timers.h
@@ -289,12 +307,6 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::dns:                        COMMAND_CASE_R(Command_DNS,                  1);         // Network Command
     case ESPEasy_cmd_e::dst:                        COMMAND_CASE_R(Command_DST,                  1);         // Time.h
 #if FEATURE_ETHERNET
-    case ESPEasy_cmd_e::ethphyadr:                  COMMAND_CASE_R(Command_ETH_Phy_Addr,   1);               // Network Command
-    case ESPEasy_cmd_e::ethpinmdc:                  COMMAND_CASE_R(Command_ETH_Pin_mdc,    1);               // Network Command
-    case ESPEasy_cmd_e::ethpinmdio:                 COMMAND_CASE_R(Command_ETH_Pin_mdio,   1);               // Network Command
-    case ESPEasy_cmd_e::ethpinpower:                COMMAND_CASE_R(Command_ETH_Pin_power,  1);               // Network Command
-    case ESPEasy_cmd_e::ethphytype:                 COMMAND_CASE_R(Command_ETH_Phy_Type,   1);               // Network Command
-    case ESPEasy_cmd_e::ethclockmode:               COMMAND_CASE_R(Command_ETH_Clock_Mode, 1);               // Network Command
     case ESPEasy_cmd_e::ethip:                      COMMAND_CASE_R(Command_ETH_IP,         1);               // Network Command
     case ESPEasy_cmd_e::ethgateway:                 COMMAND_CASE_R(Command_ETH_Gateway,    1);               // Network Command
     case ESPEasy_cmd_e::ethsubnet:                  COMMAND_CASE_R(Command_ETH_Subnet,     1);               // Network Command
@@ -302,14 +314,18 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::ethdisconnect:              COMMAND_CASE_A(Command_ETH_Disconnect, 0);               // Network Command
     case ESPEasy_cmd_e::ethwifimode:                COMMAND_CASE_R(Command_ETH_Wifi_Mode,  1);               // Network Command
 #endif // FEATURE_ETHERNET
+#if FEATURE_WIFI
     case ESPEasy_cmd_e::erasesdkwifi:               COMMAND_CASE_R(Command_WiFi_Erase,     0);               // WiFi.h
+#endif
     case ESPEasy_cmd_e::event:                      COMMAND_CASE_A(Command_Rules_Events,  -1);               // Rule.h
     case ESPEasy_cmd_e::executerules:               COMMAND_CASE_A(Command_Rules_Execute, -1);               // Rule.h
     case ESPEasy_cmd_e::factoryreset:               COMMAND_CASE_R(Command_Settings_FactoryReset, 0);        // Settings.h
     case ESPEasy_cmd_e::gateway:                    COMMAND_CASE_R(Command_Gateway,     1);                  // Network Command
     case ESPEasy_cmd_e::gpio:                       COMMAND_CASE_A(Command_GPIO,        2);                  // Gpio.h
     case ESPEasy_cmd_e::gpiotoggle:                 COMMAND_CASE_A(Command_GPIO_Toggle, 1);                  // Gpio.h
+#if FEATURE_WIFI
     case ESPEasy_cmd_e::hiddenssid:                 COMMAND_CASE_R(Command_Wifi_HiddenSSID, 1);              // wifi.h
+#endif
     case ESPEasy_cmd_e::i2cscanner:                 COMMAND_CASE_R(Command_i2c_Scanner, -1);                 // i2c.h
     case ESPEasy_cmd_e::inc:                        COMMAND_CASE_A(Command_Rules_Inc,   -1);                 // Rules.h
     case ESPEasy_cmd_e::ip:                         COMMAND_CASE_R(Command_IP,           1);                 // Network Command
@@ -319,12 +335,18 @@ bool InternalCommands::executeInternalCommand()
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
     case ESPEasy_cmd_e::jsonportstatus:             COMMAND_CASE_A(Command_JSONPortStatus, -1);              // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case ESPEasy_cmd_e::latitude:                   COMMAND_CASE_A(Command_Latitude,               -1);      // LatitudeLongitude.h
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case ESPEasy_cmd_e::let:                        COMMAND_CASE_A(Command_Rules_Let,               2);      // Rules.h
     #if FEATURE_STRING_VARIABLES
     case ESPEasy_cmd_e::letstr:                     COMMAND_CASE_A(Command_Rules_LetStr,            2);      // Rules.h
     #endif // if FEATURE_STRING_VARIABLES
     case ESPEasy_cmd_e::load:                       COMMAND_CASE_A(Command_Settings_Load,           0);      // Settings.h
     case ESPEasy_cmd_e::logentry:                   COMMAND_CASE_A(Command_logentry,               -1);      // Diagnostic.h
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case ESPEasy_cmd_e::longitude:                  COMMAND_CASE_A(Command_Longitude,              -1);      // LatitudeLongitude.h
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case ESPEasy_cmd_e::looptimerset:               COMMAND_CASE_A(Command_Loop_Timer_Set,          3);      // Timers.h
     case ESPEasy_cmd_e::looptimerset_ms:            COMMAND_CASE_A(Command_Loop_Timer_Set_ms,       3);      // Timers.h
     case ESPEasy_cmd_e::looptimersetandrun:         COMMAND_CASE_A(Command_Loop_Timer_SetAndRun,    3);      // Timers.h
@@ -353,7 +375,15 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::meminfo:                    COMMAND_CASE_A(Command_MemInfo,        0);               // Diagnostic.h
     case ESPEasy_cmd_e::meminfodetail:              COMMAND_CASE_A(Command_MemInfo_detail, 0);               // Diagnostic.h
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-    case ESPEasy_cmd_e::name:                       COMMAND_CASE_R(Command_Settings_Name,        1);         // Settings.h
+    case ESPEasy_cmd_e::name:                       COMMAND_CASE_R(Command_Settings_Name,    1);             // Settings.h
+    case ESPEasy_cmd_e::networkdisable:             COMMAND_CASE_R(Command_Network_Disable,  1);             // Networks.h
+    case ESPEasy_cmd_e::networkenable:              COMMAND_CASE_R(Command_Network_Enable,   1);             // Networks.h
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    case ESPEasy_cmd_e::networkexportconfig:        COMMAND_CASE_R(Command_Network_ExportConfig,  1);        // Networks.h
+    case ESPEasy_cmd_e::networkimportconfig:        COMMAND_CASE_R(Command_Network_ImportConfig,  2);        // Networks.h
+#endif
+
+
     case ESPEasy_cmd_e::nosleep:                    COMMAND_CASE_R(Command_System_NoSleep,       1);         // System.h
 #if FEATURE_NOTIFIER
     case ESPEasy_cmd_e::notify:                     COMMAND_CASE_R(Command_Notifications_Notify, -1);        // Notifications.h
@@ -376,6 +406,9 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::password:                   COMMAND_CASE_R(Command_Settings_Password, 1);            // Settings.h
 #if FEATURE_POST_TO_HTTP
     case ESPEasy_cmd_e::posttohttp:                 COMMAND_CASE_A(Command_HTTP_PostToHTTP,  -1);            // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::posttohttps:                COMMAND_CASE_A(Command_HTTP_PostToHTTPS, -1);            // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
     case ESPEasy_cmd_e::provision:                  COMMAND_CASE_A(Command_Provisioning_Dispatcher, -1);     // Provisioning.h
@@ -399,6 +432,9 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_MQTT
 #if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::puttohttp:                  COMMAND_CASE_A(Command_HTTP_PutToHTTP,  -1);                  // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::puttohttps:                 COMMAND_CASE_A(Command_HTTP_PutToHTTPS, -1);                  // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // if FEATURE_PUT_TO_HTTP
     case ESPEasy_cmd_e::pwm:                        COMMAND_CASE_A(Command_GPIO_PWM,          4);                 // GPIO.h
     case ESPEasy_cmd_e::reboot:                     COMMAND_CASE_A(Command_System_Reboot,              0);        // System.h
@@ -421,6 +457,9 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_ESPEASY_P2P
 #if FEATURE_SEND_TO_HTTP
     case ESPEasy_cmd_e::sendtohttp:                 COMMAND_CASE_A(Command_HTTP_SendToHTTP, 3);      // HTTP.h
+#if FEATURE_HTTP_TLS
+    case ESPEasy_cmd_e::sendtohttps:                COMMAND_CASE_A(Command_HTTP_SendToHTTPS, 3);     // HTTP.h
+#endif // if FEATURE_HTTP_TLS
 #endif // FEATURE_SEND_TO_HTTP
     case ESPEasy_cmd_e::sendtoudp:                  COMMAND_CASE_A(Command_UDP_SendToUPD,   3);      // UDP.h
     case ESPEasy_cmd_e::sendtoudpmix:               COMMAND_CASE_A(Command_UDP_SendToUPDMix, 3);     // UDP.h
@@ -471,7 +510,7 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::wdconfig:                   COMMAND_CASE_R(Command_WD_Config, 3);            // WD.h
     case ESPEasy_cmd_e::wdread:                     COMMAND_CASE_R(Command_WD_Read,   2);            // WD.h
 #endif // ifndef LIMIT_BUILD_SIZE
-
+#if FEATURE_WIFI
     case ESPEasy_cmd_e::wifiallowap:                COMMAND_CASE_R(Command_Wifi_AllowAP,    0);      // WiFi.h
     case ESPEasy_cmd_e::wifiapmode:                 COMMAND_CASE_R(Command_Wifi_APMode,     0);      // WiFi.h
     case ESPEasy_cmd_e::wificonnect:                COMMAND_CASE_A(Command_Wifi_Connect,    0);      // WiFi.h
@@ -479,11 +518,14 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::wifikey:                    COMMAND_CASE_R(Command_Wifi_Key,        1);      // WiFi.h
     case ESPEasy_cmd_e::wifikey2:                   COMMAND_CASE_R(Command_Wifi_Key2,       1);      // WiFi.h
     case ESPEasy_cmd_e::wifimode:                   COMMAND_CASE_R(Command_Wifi_Mode,       1);      // WiFi.h
+#if FEATURE_OTA_FW_UPDATE_ESP_HOSTED_MCU
+    case ESPEasy_cmd_e::wifiotahostedmcu:           COMMAND_CASE_R(Command_Wifi_OTA_hosted_mcu,    1);      // WiFi.h
+#endif
     case ESPEasy_cmd_e::wifiscan:                   COMMAND_CASE_R(Command_Wifi_Scan,       0);      // WiFi.h
     case ESPEasy_cmd_e::wifissid:                   COMMAND_CASE_R(Command_Wifi_SSID,       1);      // WiFi.h
     case ESPEasy_cmd_e::wifissid2:                  COMMAND_CASE_R(Command_Wifi_SSID2,      1);      // WiFi.h
     case ESPEasy_cmd_e::wifistamode:                COMMAND_CASE_R(Command_Wifi_STAMode,    0);      // WiFi.h
-
+#endif
 
     case ESPEasy_cmd_e::NotMatched:
       return false;

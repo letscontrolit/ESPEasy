@@ -164,7 +164,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 
       // 0.25 to 60 seconds
       addFormNumericBox(F("Automatic Tag removal after"), F("removetime"), P017_REMOVAL_TIMEOUT, 250, 60000);
-      addUnit(F("mSec."));
+      addUnit(F("ms"));
 
       addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647);
 
@@ -354,13 +354,14 @@ bool P017_handle_timer_in(struct EventStruct *event)
         }
 
         tempcounter++;
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(F("PN532: %s Tag: %d %u"),
                                            FsP(new_key ? F("New") : F("Old")),
                                            key,
                                            tempcounter));
         }
+#endif
 
         if (new_key) { sendData(event); }
         uint32_t resetTimer = P017_REMOVAL_TIMEOUT;
@@ -413,6 +414,7 @@ boolean Plugin_017_Init(int8_t resetPin)
   uint32_t versiondata = getFirmwareVersion();
 
   if (versiondata) {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO,
              strformat(F("PN532: Found chip PN5%s FW: %s.%s"),
@@ -420,6 +422,7 @@ boolean Plugin_017_Init(int8_t resetPin)
                        formatToHex_no_prefix((versiondata >> 16) & 0xFF, 2).c_str(),
                        formatToHex_no_prefix((versiondata >> 8) & 0xFF,  2).c_str()));
     }
+#endif
   }
   else {
 # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT

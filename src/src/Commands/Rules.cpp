@@ -54,7 +54,7 @@ const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, cons
 {
   if (Settings.UseRules) {
     const bool executeImmediately =
-      SourceNeedsStatusUpdate(event->Source) ||
+      EventValueSource::SourceNeedsStatusUpdate(event->Source) ||
       event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES ||
       event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED;
 

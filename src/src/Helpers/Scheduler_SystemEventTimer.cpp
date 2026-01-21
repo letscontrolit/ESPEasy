@@ -3,12 +3,14 @@
 #include "../DataStructs/Scheduler_SystemEventQueueTimerID.h"
 #include "../DataStructs/TimingStats.h"
 
-#include "../Globals/CPlugins.h"
+//#include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
 #include "../Globals/NPlugins.h"
 #include "../Globals/RTC.h"
 
 #include "../Helpers/_Plugin_init.h"
+#include "../Helpers/_CPlugin_init.h"
+#include "../../ESPEasy/net/Helpers/_NWPlugin_init.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
@@ -20,13 +22,13 @@
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
 void ESPEasy_Scheduler::schedule_plugin_task_event_timer(
-  deviceIndex_t        DeviceIndex,
+  taskIndex_t          taskIndex,
   uint8_t              Function,
   struct EventStruct&& event) {
-  if (validDeviceIndex(DeviceIndex)) {
+  if (validDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex))) {
     schedule_event_timer(
       SchedulerPluginPtrType_e::TaskPlugin,
-      DeviceIndex.value,
+      taskIndex,
       Function,
       std::move(event));
   }
@@ -56,7 +58,7 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(
     // This makes sure the relatively large event will not be in memory twice.
     const SystemEventQueueTimerID timerID(
       SchedulerPluginPtrType_e::TaskPlugin,
-      DeviceIndex.value,
+      TaskIndex,
       static_cast<uint8_t>(Function));
 
     {
@@ -73,13 +75,14 @@ void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(
 #endif // if FEATURE_MQTT
 
 void ESPEasy_Scheduler::schedule_controller_event_timer(
-  protocolIndex_t      ProtocolIndex,
+  controllerIndex_t    ControllerIndex,
   uint8_t              Function,
   struct EventStruct&& event) {
-  if (validProtocolIndex(ProtocolIndex)) {
+  if (validControllerIndex(ControllerIndex)) {
+    event.ControllerIndex = ControllerIndex;
     schedule_event_timer(
       SchedulerPluginPtrType_e::ControllerPlugin,
-      ProtocolIndex,
+      ControllerIndex,
       Function,
       std::move(event));
   }
@@ -87,13 +90,14 @@ void ESPEasy_Scheduler::schedule_controller_event_timer(
 
 #if FEATURE_MQTT
 void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
-  protocolIndex_t   ProtocolIndex,
+  controllerIndex_t ControllerIndex,
   CPlugin::Function Function,
   const char       *c_topic,
   const uint8_t    *b_payload,
   unsigned int      length) {
-  if (validProtocolIndex(ProtocolIndex) && c_topic && b_payload) {
+  if (validControllerIndex(ControllerIndex) && c_topic && b_payload) {
     EventStruct  event;
+    event.ControllerIndex = ControllerIndex;
     const size_t topic_length = strlen_P(c_topic);
 
     // This is being called from a callback function, so do not try to allocate this on the 2nd heap, but rather on the default heap.
@@ -109,7 +113,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(
     // This makes sure the relatively large event will not be in memory twice.
     const SystemEventQueueTimerID timerID(
       SchedulerPluginPtrType_e::ControllerPlugin,
-      ProtocolIndex,
+      ControllerIndex,
       static_cast<uint8_t>(Function));
 
     {
@@ -188,7 +192,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
   switch (ptr_type) {
     case SchedulerPluginPtrType_e::TaskPlugin:
     {
-      const deviceIndex_t deviceIndex = deviceIndex_t::toDeviceIndex(Index);
+      const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(Index);
 
       if (validDeviceIndex(deviceIndex)) {
         if (((Function != PLUGIN_READ) &&
@@ -198,16 +202,14 @@ void ESPEasy_Scheduler::process_system_event_queue() {
           // FIXME TD-er: LoadTaskSettings should only be called when needed, not pre-emptive.
           LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
         }
-        PluginCall(deviceIndex,
-                   Function,
+        PluginCall(Function,
                    &ScheduledEventQueue.front().event,
                    tmpString);
       }
       break;
     }
     case SchedulerPluginPtrType_e::ControllerPlugin:
-      CPluginCall(Index,
-                  static_cast<CPlugin::Function>(Function),
+      CPluginCall(static_cast<CPlugin::Function>(Function),
                   &ScheduledEventQueue.front().event,
                   tmpString);
       break;

@@ -157,7 +157,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 
       if (P008_REMOVE_TIMEOUT == 0) { P008_REMOVE_TIMEOUT = 500; } // Default 500 mSec (was hardcoded value)
       addFormNumericBox(F("Automatic Tag removal after"), F("rmvtime"), P008_REMOVE_TIMEOUT, 250, 60000); // 0.25 to 60 seconds
-      addUnit(F("mSec."));
+      addUnit(F("ms"));
 
       // Max allowed is int = 0x7FFFFFFF ...
       addFormNumericBox(F("Value to set on Tag removal"), F("rmvval"), P008_REMOVE_VALUE, 0);

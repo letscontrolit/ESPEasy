@@ -34,16 +34,15 @@
   #endif
 
   #ifndef MAX_GPIO
-    #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
       #include <hal/gpio_types.h>
       #define MAX_GPIO (GPIO_NUM_MAX - 1)
-    #else // ESP32 Before IDF 4.0
-      #define MAX_GPIO  39
-    #endif
   #endif
 
 #endif
 
+#ifndef NETWORK_MAX
+  #define NETWORK_MAX                      8
+#endif
 #ifndef CONTROLLER_MAX
   #define CONTROLLER_MAX                      3 // max 4!
 #endif
@@ -95,6 +94,12 @@
 #endif
 #ifndef CPLUGIN_MAX
   #define CPLUGIN_MAX                        255
+#endif
+#ifndef NETWORKDRIVER_INDEX_MAX
+  #define NETWORKDRIVER_INDEX_MAX            255
+#endif
+#ifndef NWPLUGIN_MAX
+  #define NWPLUGIN_MAX                       255
 #endif
 #ifndef NPLUGIN_MAX
   #define NPLUGIN_MAX                         4

@@ -98,11 +98,11 @@ void rulesProcessing(const String& event) {
 #ifndef BUILD_NO_DEBUG
   const unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
-
+#endif
   if (Settings.OldRulesEngine()) {
     bool eventHandled = false;
 
@@ -1049,13 +1049,13 @@ void processMatchedRule(String& action, const String& event,
     substitute_eventvalue(action, event);
 
     const bool executeRestricted = equals(parseString(action, 1), F("restrict"));
-
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");
       actionlog += action;
       addLogMove(LOG_LEVEL_INFO, actionlog);
     }
-
+#endif
     if (executeRestricted) {
       ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2)});
     } else {

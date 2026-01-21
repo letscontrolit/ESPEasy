@@ -37,7 +37,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
   html_TR_TD();
-  addHtml(F("<TR><TD colspan='2'>"));
+  addRowColspan(2);
   addHtml(F("<input "));
   addHtmlAttribute(F("style"), F("width: 98%"));
   addHtmlAttribute(F("type"),  F("text"));
@@ -53,7 +53,8 @@ void handle_tools() {
 
   if (printWebString.length() > 0)
   {
-    addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+    addRowColspan(2);
+    addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
     addHtml(printWebString);
     addHtml(F("</textarea>"));
     free_string(printWebString);
@@ -76,7 +77,9 @@ void handle_tools() {
   addWideButtonPlusDescription(F("advanced"),    F("Advanced"),     F("Open advanced settings"));
   # endif // ifdef WEBSERVER_ADVANCED
 
+  # ifdef WEBSERVER_JSON
   addWideButtonPlusDescription(F("json"),        F("Show JSON"),    F("Open JSON output"));
+  # endif
 
   # ifdef WEBSERVER_METRICS
   addWideButtonPlusDescription(F("metrics"),        F("Show Metrics"),    F("Open Prometheus Metrics"));
@@ -93,6 +96,10 @@ void handle_tools() {
   # ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
+
+  #if FEATURE_PLUGIN_LIST
+  addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
+  #endif // if FEATURE_PLUGIN_LIST
 
   addFormSubHeader(F("Wifi"));
 

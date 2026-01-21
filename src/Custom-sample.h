@@ -77,7 +77,7 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
-#define DEFAULT_AP_DONT_FORCE_SETUP          false // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_AP_FORCE_SETUP               true  // When set, start Captive Portal to redirect user to web interface when connecting to AP
 #define DEFAULT_DONT_ALLOW_START_AP          false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -252,6 +252,23 @@
 // #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
 // #define FEATURE_BUSCMD_STRING   1  // Enable support for String data-format in Helpers/BusCmd_Handler, default disabled for LIMIT_BUILD_SIZE only
 // #define FEATURE_STRING_VARIABLES 1 // Enable String variable support (enabled on ESP32, NOT supported on ESP8266 for memory restrictions!)
+// #define FEATURE_COMMAND_OWSCAN 0 // Disable 1-wire scanner support, only feasible when 1-wire support is included in the build (P004, P080, P100), default disabled for MINIMAL_OTA builds
+// #define FEATURE_MQTT_CONNECT_BACKGROUND 1 // Enable connecting to an MQTT broker in an ESP32 RTOS background thread (not possible on ESP8266)
+// #define FEATURE_I2C_MULTIPLE 0 // Disable multiple I2C buses, only available for ESP32, default enabled on ESP32, can be disabled here
+// #define FEATURE_PLUGIN_LIST 1 // Enable the Tools / Plugin list page (default enabled for ESP32)
+// #define FEATURE_LAT_LONG_VAR_CMD 1 // Enable the %latitude% and %longitude% system variables, and Latitude and Longitude commands (default enabled for ESP32)
+
+// #define FEATURE_TASKVALUE_ATTRIBUTES 1 // Enable extra Task Value attributes (default enabled for ESP32)
+// #define FEATURE_TASKVALUE_UNIT_OF_MEASURE 1 // Enable Unit of Measure per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+// #define FEATURE_CUSTOM_TASKVAR_VTYPE 1 // Enable Custom Value Type per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+
+// #define FEATURE_MQTT_DISCOVER 1    // Enable MQTT Auto Discovery (currently only available for Home Assistant C005)
+// #define FEATURE_MQTT_DEVICECLASS 1 // Enable selectable Device Class for Auto Discovery
+// #define FEATURE_MQTT_STATE_CLASS 1 // Enable selectable State Class per Task Valie for Auto Discovery
+
+// #define FEATURE_MQTT_TLS 1 // Enable TLS support for MQTT Controller connections (only available on ESP32)
+// #define FEATURE_EMAIL_TLS 1 // Enable TLS support for Email Notifications (only available on ESP32)
+// #define FEATURE_HTTP_TLS 1 // Enable TLS support for HTTP connections (only available on ESP32)
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
@@ -291,7 +308,9 @@
 /*
 #define MENU_INDEX_CONFIG_VISIBLE        false
 #define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_NETWORK_VISIBLE       false
 #define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_BUSES_VISIBLE         false
 #define MENU_INDEX_DEVICES_VISIBLE       false
 #define MENU_INDEX_RULES_VISIBLE         false
 #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
@@ -597,7 +616,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
 // #define USES_C018   // TTN/RN2483
-
+// #define USES_C023   // AT-command LoRaWAN
 
 /*
  #######################################################################################################

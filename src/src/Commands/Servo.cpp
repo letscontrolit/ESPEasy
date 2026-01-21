@@ -59,7 +59,9 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
       tempStatus.monitor = 0;
       tempStatus.command = 0;
       savePortStatus(key, tempStatus);
+#ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, concat(log, F(" Servo detached")));
+#endif
       return return_command_success_flashstr();
 
     }

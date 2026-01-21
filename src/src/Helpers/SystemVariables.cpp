@@ -10,15 +10,16 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #if FEATURE_MQTT
 # include "../Globals/MQTT.h"
 #endif // if FEATURE_MQTT
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
@@ -31,12 +32,23 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
+#ifndef LIMIT_BUILD_SIZE
+#include <math.h>
+#include "../Helpers/StringConverter_Numerical.h"
+#endif // ifndef LIMIT_BUILD_SIZE
+
+#ifdef USES_NW005
+# include <PPP.h>
+#endif
+
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
+  #define WIFI_CONNECTED   WiFi.isConnected()
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
+  #define WIFI_CONNECTED   WiFi.STA.connected()
 #endif // if defined(ESP32)
 
 
@@ -112,6 +124,10 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
     #endif // if FEATURE_ETHERNET
     case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case SystemVariables::LATITUDE:          label = LabelType::LATITUDE; break;
+    case SystemVariables::LONGITUDE:         label = LabelType::LONGITUDE; break;
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
     case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
     case SystemVariables::SUNRISE_S:         label = LabelType::SUNRISE_S; break;
@@ -160,9 +176,9 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   switch (enumval)
   {
     case BOOT_CAUSE:        intvalue = lastBootCause; break;                         // Integer value to be used in rules
-    case BSSID:             return (WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr();
+    case BSSID:             return (!WIFI_CONNECTED) ? MAC_address().toString() : WiFi.BSSIDstr();
     case CR:                return String('\r');
-    case IP4:               intvalue = static_cast<int>(NetworkLocalIP()[3]); break; // 4th IP octet
+    case IP4:               intvalue = static_cast<int>(ESPEasy::net::NetworkLocalIP()[3]); break; // 4th IP octet
     case ISVAR_DOUBLE:      intvalue =
                             #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                             1;
@@ -190,13 +206,39 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
         0; break;
 
     case ISNTP:             intvalue = statusNTPInitialized ? 1 : 0; break;
-    case ISWIFI:            intvalue = WiFiEventData.wifiStatus; break; // 0=disconnected, 1=connected, 2=got ip, 4=services
+    case ISWIFIAP:          intvalue = ESPEasy::net::wifi::WifiIsAP(WiFi.getMode()) ? 1 : 0; break;
+    case ISWIFI:            intvalue = WIFI_CONNECTED ? 1 : 0; break;
+#ifdef USES_NW005
+    case ISPPP:             intvalue = PPP.connected() ? 1 : 0; break;
+#endif
+
+      // WiFiEventData.wifiStatus; break; // 0=disconnected, 1=connected, 2=got ip, 4=services
     // initialized
     case LCLTIME_AM:        return node_time.getDateTimeString_ampm('-', ':', ' ');
     case LF:                return String('\n');
     case MAC_INT:           intvalue = getChipId(); break; // Last 24 bit of MAC address as integer, to be used in rules.
+    #ifndef LIMIT_BUILD_SIZE
+    case S_PI:              {
+                              constexpr ESPEASY_RULES_FLOAT_TYPE _pi = M_PI;
+                              #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                              return doubleToString(_pi, maxNrDecimals_fpType(_pi));
+                              #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                              return toString(_pi, maxNrDecimals_fpType(_pi));
+                              #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                            }
+    case S_E:               {
+                              constexpr ESPEASY_RULES_FLOAT_TYPE _e = M_E;
+                              #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                              return doubleToString(_e, maxNrDecimals_fpType(_e));
+                              #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                              return toString(_e, maxNrDecimals_fpType(_e));
+                              #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+                            }
+    #endif // ifndef LIMIT_BUILD_SIZE
     case SPACE:             return String(' ');
-    case SSID:              return (WiFiEventData.WiFiDisconnected()) ? String(F("--")) : WiFi.SSID();
+    case SSID:              return (!WIFI_CONNECTED) ? String(F("--")) : WiFi.SSID();
+
+
     case SYSBUILD_DATE:     return get_build_date();
     case SYSBUILD_TIME:     return get_build_time();
     case SYSDAY:            intvalue = node_time.day(); break;
@@ -248,7 +290,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #else // if FEATURE_ADC_VCC
     case VCC:               intvalue = -1; break;
     #endif // if FEATURE_ADC_VCC
-    case WI_CH:             intvalue = (WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel(); break;
+    case WI_CH:             intvalue = !WIFI_CONNECTED ? 0 : WiFi.channel(); break;
 
     default:
       // Already handled above.
@@ -536,6 +578,10 @@ SystemVariables::Enum SystemVariables::startIndex_beginWith(const char* begincha
     case 'd': return Enum::DNS;
 #if FEATURE_ETHERNET
     case 'e': return Enum::ETHCONNECTED;
+#else // if FEATURE_ETHERNET
+#ifndef LIMIT_BUILD_SIZE
+    case 'e': return Enum::S_E;
+#endif // ifndef LIMIT_BUILD_SIZE
 #endif // if FEATURE_ETHERNET
     case 'f': return Enum::FLASH_CHIP_MODEL;
     case 'g': return Enum::GATEWAY;
@@ -547,6 +593,9 @@ SystemVariables::Enum SystemVariables::startIndex_beginWith(const char* begincha
     case 'l': return Enum::LCLTIME;
     case 'm': return Enum::SUNRISE_M;
     case 'n': return Enum::S_LF;
+#ifndef LIMIT_BUILD_SIZE
+    case 'p': return Enum::S_PI;
+#endif // ifndef LIMIT_BUILD_SIZE
     case 'r': return Enum::S_CR;
     case 's': return Enum::SPACE;
     case 'u': return Enum::UNIT_sysvar;
@@ -574,6 +623,9 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::DNS:                return F("dns");
     case Enum::DNS_1:              return F("dns1");
     case Enum::DNS_2:              return F("dns2");
+    #ifndef LIMIT_BUILD_SIZE
+    case Enum::S_E:                return F("e");
+    #endif // ifndef LIMIT_BUILD_SIZE
 #if FEATURE_ETHERNET
     case Enum::ETHCONNECTED:       return F("ethconnected");
     case Enum::ETHDUPLEX:          return F("ethduplex");
@@ -604,15 +656,26 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISMQTT:             return F("ismqtt");
     case Enum::ISMQTTIMP:          return F("ismqttimp");
     case Enum::ISNTP:              return F("isntp");
+    case Enum::ISWIFIAP:           return F("iswifiap");
+#ifdef USES_NW005
+    case Enum::ISPPP:              return F("isppp");
+#endif
     case Enum::ISWIFI:             return F("iswifi");
     case Enum::LCLTIME:            return F("lcltime");
     case Enum::LCLTIME_AM:         return F("lcltime_am");
     case Enum::LF:                 return F("LF");
+    #if FEATURE_LAT_LONG_VAR_CMD
+    case Enum::LATITUDE:           return F("latitude");
+    case Enum::LONGITUDE:          return F("longitude");
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
     case Enum::SUNRISE_M:          return F("m_sunrise");
     case Enum::SUNSET_M:           return F("m_sunset");
     case Enum::MAC:                return F("mac");
     case Enum::MAC_INT:            return F("mac_int");
     case Enum::S_LF:               return F("N");
+    #ifndef LIMIT_BUILD_SIZE
+    case Enum::S_PI:               return F("pi");
+    #endif // ifndef LIMIT_BUILD_SIZE
     case Enum::S_CR:               return F("R");
     case Enum::RSSI:               return F("rssi");
     case Enum::SPACE:              return F("SP");

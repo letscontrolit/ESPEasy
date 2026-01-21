@@ -182,13 +182,13 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       if (strlen(deviceTemplate[0]) == 0) { // IP Address missing, use default value (without webform warning).
         strcpy_P(deviceTemplate[0], PSTR(IP_STR_DEF_P101));
 
-        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Loaded Default IP = " IP_STR_DEF_P101));
+        addLog(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Loaded Default IP = " IP_STR_DEF_P101));
       }
       else if (strlen(deviceTemplate[0]) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
         strcpy_P(deviceTemplate[0], PSTR(IP_STR_DEF_P101));
 
         errorStr += F("Provided IP Invalid (Using Default). ");
-        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Provided IP Invalid (Using Default). [" IP_STR_DEF_P101 "]"));
+        addLog(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Provided IP Invalid (Using Default). [" IP_STR_DEF_P101 "]"));
       }
       else if (!validateIp(deviceTemplate[0])) { // Unexpected IP Address value. Leave as-is, but Warn User.
         errorStr += F("WARNING, Please Review IP Address. ");
@@ -207,7 +207,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(deviceTemplate[1], PSTR(MAC_STR_DEF_P101));
 
         errorStr += F("MAC Address Not Provided, Populated with Zero Values. ");
-        addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "MAC Address Not Provided, Populated with Zero Values. "));
+        addLog(LOG_LEVEL_INFO, F(LOG_NAME_P101 "MAC Address Not Provided, Populated with Zero Values. "));
       }
       else if (!validateMac(deviceTemplate[1])) { // Suspicious MAC Address. Leave as-is, but warn User.
         errorStr += F("ERROR, MAC Address Invalid. ");
@@ -311,11 +311,11 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
             // WOL.setRepeat(1, 0); // One Magic Packet, No Repeats. (Library default)
 
             if (!WOL.sendMagicPacket(paramMac, paramPort.toInt())) {
-              addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, Magic Packet Failed (check parameters)"));
+              addLog(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, Magic Packet Failed (check parameters)"));
             }
           }
           else {
-            addLogMove(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, WiFi Off-Line"));
+            addLog(LOG_LEVEL_INFO, F(LOG_NAME_P101 "Error, WiFi Off-Line"));
           }
         }
       }

@@ -66,11 +66,11 @@ void setup_wifi() {
     Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, uint8_t* payload, size_t length) {
+void callback(char* topic, uint8_t* payload, size_t plength) {
     Serial.print("Message arrived [");
     Serial.print(topic);
     Serial.print("] ");
-    for (size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < plength; i++) {
         Serial.print((char)payload[i]);
     }
     Serial.println();

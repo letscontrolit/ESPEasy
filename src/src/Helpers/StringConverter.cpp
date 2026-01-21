@@ -11,7 +11,7 @@
 #include "../Globals/Cache.h"
 #include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
@@ -56,6 +56,15 @@ String concat(const __FlashStringHelper * str, const String &val) {
 }
 
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
+  return concat(str, String(val));
+}
+
+String concat(const __FlashStringHelper * str, const char* val) {
+  return concat(String(str), String(val));
+}
+
+String concat(const String & str, const char* val)
+{
   return concat(str, String(val));
 }
 
@@ -238,150 +247,6 @@ String formatIP(const IPAddress& ip, bool includeZone) {
   return ip.toString();
 #endif
 #endif
-}
-
-
-/********************************************************************************************\
-   Handling HEX strings
- \*********************************************************************************************/
-
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
-  const unsigned long long resULL = hexToULL(input_c, nrHexDecimals);
-  return static_cast<unsigned long>(resULL & 0xFFFFFFFFull);
-}
-
-unsigned long hexToUL(const String& input_c) {
-  return hexToUL(input_c, input_c.length());
-}
-
-unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
-  return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
-}
-
-// Convert max. 16 hex decimals to unsigned long long (aka uint64_t)
-unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
-  size_t nr_decimals = nrHexDecimals;
-
-  if (nr_decimals > 16) {
-    nr_decimals = 16;
-  }
-  const size_t inputLength = input_c.length();
-
-  if (nr_decimals > inputLength) {
-    nr_decimals = inputLength;
-  } else if (input_c.startsWith(F("0x"))) { // strtoull handles that prefix nicely
-    nr_decimals += 2;
-  }
-  return strtoull(input_c.substring(0, nr_decimals).c_str(), 0, 16);
-}
-
-unsigned long long hexToULL(const String& input_c) {
-  return hexToULL(input_c, input_c.length());
-}
-
-unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
-  return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
-}
-
-void appendHexChar(uint8_t data, String& string)
-{
-  const char *hex_chars = "0123456789abcdef";
-  string += hex_chars[(data >> 4) & 0xF];
-  string += hex_chars[(data) & 0xF];
-}
-
-String formatToHex_array(const uint8_t* data, size_t size)
-{
-  String res;
-  res.reserve(2 * size);
-  for (size_t i = 0; i < size; ++i) {
-    appendHexChar(data[i], res);
-  }
-  return res;
-}
-
-String formatToHex_wordarray(const uint16_t* data, size_t size)
-{
-  String res;
-  res.reserve(2 * size);
-  for (size_t i = 0; i < size; ++i) {
-    appendHexChar(data[i] << 8, res);
-    appendHexChar(data[i] & 0xFF, res);
-  }
-  return res;
-}
-
-String formatToHex(unsigned long value, 
-                   const __FlashStringHelper * prefix,
-                   unsigned int minimal_hex_digits) {
-  return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
-}
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix) {
-  return formatToHex(value, prefix, 0);
-}
-
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
-  return formatToHex(value, F("0x"), minimal_hex_digits);
-}
-
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
-  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
-  return strformat(fmt, value);
-}
-
-String formatHumanReadable(unsigned long value, unsigned long factor) {
-  String result = formatHumanReadable(value, factor, 2);
-
-  result.replace(F(".00"), EMPTY_STRING);
-  return result;
-}
-
-String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
-  float floatValue(value);
-  uint8_t  steps = 0;
-
-  while (value >= factor) {
-    value /= factor;
-    ++steps;
-    floatValue /= float(factor);
-  }
-  String result = toString(floatValue, NrDecimals);
-
-  switch (steps) {
-    case 0: break;
-    case 1: result += 'k'; break;
-    case 2: result += 'M'; break;
-    case 3: result += 'G'; break;
-    case 4: result += 'T'; break;
-    default:
-      result += '*';
-      result += factor;
-      result += '^';
-      result += steps;
-      break;
-  }
-  return result;
-}
-
-String formatToHex_decimal(unsigned long value) {
-  return formatToHex_decimal(value, 1);
-}
-
-String formatToHex_decimal(unsigned long value, unsigned long factor) {
-  String result = formatToHex(value);
-
-  result += F(" (");
-
-  if (factor > 1) {
-    result += formatHumanReadable(value, factor);
-  } else {
-    result += value;
-  }
-  result += ')';
-  return result;
 }
 
 const __FlashStringHelper * boolToString(bool value) {
@@ -678,59 +543,6 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
-String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), String(value), wrapInQuotes);
-}
-
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), value, wrapInQuotes);
-}
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            String&& value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), value, wrapInQuotes);
-}
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            int value,
-                            bool wrapInQuotes)
-{
-  return to_json_object_value(String(object), value, wrapInQuotes);
-}
-
-String to_json_object_value(const String& object,
-                            int value,
-                            bool wrapInQuotes)
-{
-  if (wrapInQuotes) {
-    return strformat(
-      F("\"%s\":\"%d\""),
-      object.c_str(),
-      value);
-  }
-    
-  return strformat(
-    F("\"%s\":%d"), 
-    object.c_str(),
-    value);
-}
-
-String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
-  return strformat(
-    F("\"%s\":%s"), 
-    object.c_str(),
-    to_json_value(value, wrapInQuotes).c_str());
-}
-
 String to_json_value(const String& value, bool wrapInQuotes) {
   if (value.isEmpty()) {
     // Empty string
@@ -1709,6 +1521,10 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #if FEATURE_STRING_VARIABLES
   SMART_CONV(F("%c_ts2wday%"),  get_weekday_from_timestamp(static_cast<uint32_t>(data.arg1)))
   #endif // if FEATURE_STRING_VARIABLES
+  #ifndef LIMIT_BUILD_SIZE
+  SMART_CONV(F("%c_d2r%"),    doubleToString(radians(data.arg1)))
+  SMART_CONV(F("%c_r2d%"),    doubleToString(degrees(data.arg1)))
+  #endif // ifndef LIMIT_BUILD_SIZE
   #undef SMART_CONV
 
   // Conversions with 2 parameters
