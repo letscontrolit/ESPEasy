@@ -702,7 +702,7 @@ int32_t INA_Class::getBusMicroAmps(const uint8_t deviceNumber) {
       ina.type == INA3221_2)  // Doesn't compute Amps
   {
     microAmps =
-        (int64_t)getShuntMicroVolts(deviceNumber) * ((int64_t)1000000 / (int64_t)ina.microOhmR);
+        (int64_t)getShuntMicroVolts(deviceNumber) * (int64_t)1000000 / (int64_t)ina.microOhmR;
   } else {
     microAmps = (int64_t)readWord(ina.currentRegister, ina.address) * (int64_t)ina.current_LSB /
                 (int64_t)1000;
@@ -794,10 +794,7 @@ bool INA_Class::conversionFinished(const uint8_t deviceNumber) {
     case INA3221_2: cvBits = readWord(INA3221_MASK_REGISTER, ina.address) & (uint16_t)1; break;
     default: cvBits = 1;
   }  // of switch type
-  if (cvBits != 0)
-    return (true);
-  else
-    return (false);
+  return cvBits != 0;
 }  // of method "conversionFinished()"
 void INA_Class::waitForConversion(const uint8_t deviceNumber) {
   /*!
