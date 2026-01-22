@@ -419,26 +419,29 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
           channel = 2;
         }
 
-        switch (reg) {
-          case 0: // Current
-          case 2: // Current
-          case 4: // Current
-            UserVar.setFloat(event->TaskIndex, r,
-                             P132_data->getBusCurrent_mA(channel));
-            break;
-          case 1: // Voltage
-          case 3: // Voltage
-          case 5: // Voltage
-            UserVar.setFloat(event->TaskIndex, r,
-                             P132_data->getBusVoltage_V(channel)
-                             + (P132_data->getShuntVoltage_mV(channel) / 1000.0f));
-            break;
-          case 6: // Power
-          case 7: // Power
-          case 8: // Power
-            UserVar.setFloat(event->TaskIndex, r,
-                             P132_data->getBusPower_mW(channel));
-            break;
+        if (P132_data->conversionFinished(channel)) {
+          switch (reg) {
+            case 0: // Current
+            case 2: // Current
+            case 4: // Current
+              UserVar.setFloat(event->TaskIndex, r,
+                               P132_data->getBusCurrent_mA(channel));
+              break;
+            case 1: // Voltage
+            case 3: // Voltage
+            case 5: // Voltage
+              UserVar.setFloat(event->TaskIndex, r,
+                               P132_data->getBusVoltage_V(channel)
+                               + (P132_data->getShuntVoltage_mV(channel) / 1000.0f));
+              break;
+            case 6: // Power
+            case 7: // Power
+            case 8: // Power
+              UserVar.setFloat(event->TaskIndex, r,
+                               P132_data->getBusPower_mW(channel));
+              break;
+          }
+          success = true; // Only if we have read data
         }
       }
 
@@ -454,7 +457,6 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       }
       #  endif // ifndef BUILD_NO_DEBUG
 
-      success = true;
       break;
     }
   }

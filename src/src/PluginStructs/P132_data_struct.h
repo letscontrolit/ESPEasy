@@ -100,6 +100,7 @@ public:
   # if P132_EXTENDED
   float getBusCurrent_mA(uint8_t reg);
   float getBusPower_mW(uint8_t reg);
+  bool  conversionFinished(uint8_t reg);
 
   void  setCalibration(struct EventStruct *event);
 

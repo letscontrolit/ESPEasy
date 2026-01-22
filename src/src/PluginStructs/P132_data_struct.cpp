@@ -284,6 +284,13 @@ float P132_data_struct::getBusPower_mW(uint8_t reg) {
   return INA->getBusMicroWatts(_device + reg) * 0.001f;
 }
 
+bool P132_data_struct::conversionFinished(uint8_t reg) {
+  if (!isInitialized()) {
+    return false;
+  }
+  return INA->conversionFinished(_device + reg);
+}
+
 # endif // if P132_EXTENDED
 
 // **************************************************************************/
