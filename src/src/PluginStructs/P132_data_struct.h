@@ -6,7 +6,11 @@
 
 # ifndef P132_EXTENDED
 #  ifdef ESP8266
-#   define P132_EXTENDED  0
+#   ifdef PLUGIN_ENERGY_COLLECTION
+#    define P132_EXTENDED  1 // Enable for ESP8266 Energy collection, as for now it has enough space
+#   else // ifdef PLUGIN_ENERGY_COLLECTION
+#    define P132_EXTENDED  0
+#   endif // ifdef PLUGIN_ENERGY_COLLECTION
 #  endif // ifdef ESP8266
 #  ifdef ESP32
 #   define P132_EXTENDED  1
