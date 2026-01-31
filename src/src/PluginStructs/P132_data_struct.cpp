@@ -8,7 +8,7 @@ int Plugin_132_QueryVType(uint8_t value_nr) {
     const bool odd = value_nr % 2;
     return static_cast<int>(odd ? Sensor_VType::SENSOR_TYPE_CURRENT_ONLY : Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY);
   }
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE);
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY);
 }
 
 # endif // if FEATURE_MQTT_DISCOVER
