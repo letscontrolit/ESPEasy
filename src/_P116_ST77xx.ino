@@ -7,35 +7,38 @@
 // #######################################################################################################
 
 
-// History:
-// 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
-// 2025-02-20 tonhuisman: Add support for ST7735 display with 172x320 resolution
-// 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
-// 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
-//                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
-//                        By default (also) only enabled on ESP32 builds
-//                        Disabled the ST7789 alternatives for now, as that's not verified on any hardware
-// 2024-03-09 tonhuisman: Add support for alternative initialization sequences for ST7789 displays, like used on
-//                        some LilyGO models like the TTGO T-Display (16 MB Flash), and possibly the T-Display S3
-//                        By default only enabled on ESP32 builds
-// 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
-// 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
-// 2021-11-16 tonhuisman: P116: Change state from Development to Testing
-// 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
-//                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
-// 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
-//                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
-// 2021-08-16 tonhuisman: P116: Add default color settings
-// 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
-// 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
-//                        P116: Use more features of AdafruitGFX_helper
-//                        AdafruitGFX: Apply 'Text Print Mode' options
-// 2021-08 tonhuisman: Refactor into AdafruitGFX_helper
-// 2021-08 tonhuisman: Continue development, added new features, font scaling, display limits, extra text lines
-//                     update to current ESPEasy state/style of development, make multi-instance possible
-// 2020-08 tonhuisman: Adaptations for multiple ST77xx chips, ST7735s, ST7789vw (shelved temporarily)
-//                     Added several features like display button, rotation
-// 2020-04 WDS (Wolfdieter): initial plugin for ST7735, based on P012
+/** History:
+ * 2025-08-29 tonhuisman: Fix GPIO pin display on Devices page, no default GPIO pins for ESP32
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
+ * 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
+ * 2025-02-20 tonhuisman: Add support for ST7735 display with 172x320 resolution
+ * 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
+ * 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
+ *                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
+ *                        By default (also) only enabled on ESP32 builds
+ *                        Disabled the ST7789 alternatives for now, as that's not verified on any hardware
+ * 2024-03-09 tonhuisman: Add support for alternative initialization sequences for ST7789 displays, like used on
+ *                        some LilyGO models like the TTGO T-Display (16 MB Flash), and possibly the T-Display S3
+ *                        By default only enabled on ESP32 builds
+ * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
+ * 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
+ * 2021-11-16 tonhuisman: P116: Change state from Development to Testing
+ * 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
+ *                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
+ * 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
+ *                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
+ * 2021-08-16 tonhuisman: P116: Add default color settings
+ * 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
+ * 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
+ *                        P116: Use more features of AdafruitGFX_helper
+ *                        AdafruitGFX: Apply 'Text Print Mode' options
+ * 2021-08 tonhuisman: Refactor into AdafruitGFX_helper
+ * 2021-08 tonhuisman: Continue development, added new features, font scaling, display limits, extra text lines
+ *                     update to current ESPEasy state/style of development, make multi-instance possible
+ * 2020-08 tonhuisman: Adaptations for multiple ST77xx chips, ST7735s, ST7789vw (shelved temporarily)
+ *                     Added several features like display button, rotation
+ * 2020-04 WDS (Wolfdieter): initial plugin for ST7735, based on P012
+ */
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
@@ -60,6 +63,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       dev.ValueCount    = 2;
       dev.TimerOption   = true;
       dev.TimerOptional = true;
+      dev.SpiBusSelect  = true;
       break;
     }
 
@@ -84,11 +88,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       const char *separator = event->String1.c_str(); // contains the NewLine sequence
       string = strformat(
-        F("CS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
+        F("%sCS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
+        separator,
         formatGpioLabel(PIN(0),                    false).c_str(),
         separator,
         formatGpioLabel(PIN(1),                    false).c_str(),
@@ -101,21 +107,15 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+    # endif // ifndef LIMIT_BUILD_SIZE
 
     case PLUGIN_SET_DEFAULTS:
     {
-      # ifdef ESP32
-
-      if (Settings.InitSPI == 2) { // When using ESP32 H(ardware-)SPI
-        PIN(0) = P116_TFT_CS_HSPI;
-      } else {
-        PIN(0) = P116_TFT_CS;
-      }
-      # else // ifdef ESP32
+      # ifdef ESP8266
       PIN(0) = P116_TFT_CS;
-      # endif // ifdef ESP32
-      PIN(1)                        = P116_TFT_DC;
-      PIN(2)                        = P116_TFT_RST;
+      PIN(1) = P116_TFT_DC;
+      PIN(2) = P116_TFT_RST;
+      # endif // ifdef ESP8266
       P116_CONFIG_BUTTON_PIN        = -1;  // No button connected
       P116_CONFIG_BACKLIGHT_PIN     = P116_BACKLIGHT_PIN;
       P116_CONFIG_BACKLIGHT_PERCENT = 100; // Percentage backlight
@@ -342,7 +342,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+
+      if (Settings.isSPI_valid(spi_bus)) {
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P116_data_struct(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE),
                                                                P116_CONFIG_FLAG_GET_ROTATION,
@@ -355,7 +357,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
                                                                P116_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0,
+                                                               spi_bus
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P116_CONFIG_DEFAULT_FONT

@@ -11,6 +11,7 @@
  */
 
 /** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Accelerometer)
  *                        Use all relevant code from P120 (I2C variant of the same sensor)
  * 2021-12-10 tonhuisman, Start SPI interface version of ADXL345 plugin, based on P120 ADXL345 I2C plugin
@@ -51,6 +52,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOptional  = true;
       dev.PluginStats    = true;
       dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SpiBusSelect   = true;
 
       break;
     }

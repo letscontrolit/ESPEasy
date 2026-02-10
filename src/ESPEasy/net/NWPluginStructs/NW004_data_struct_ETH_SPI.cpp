@@ -3,10 +3,12 @@
 #ifdef USES_NW004
 
 # include "../../../src/Globals/Settings.h"
+# include "../../../src/Globals/SPIe.h"
 
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/Hardware_GPIO.h"
 # include "../../../src/Helpers/LongTermOnOffTimer.h"
+# include "../../../src/Helpers/SPI_Helper.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 # include "../../../src/WebServer/Markup.h"
@@ -37,8 +39,9 @@ namespace eth {
 # define NW004_KEY_GW                                8
 # define NW004_KEY_SN                                9
 # define NW004_KEY_DNS                               10
+# define NW004_KEY_SPI_BUS                           11
 
-# define NW004_MAX_KEY                               11
+# define NW004_MAX_KEY                               12
 
 const __FlashStringHelper * NW004_data_struct_ETH_SPI::getLabelString(uint32_t key, bool displayString, KVS_StorageType::Enum& storageType)
 {
@@ -52,6 +55,7 @@ const __FlashStringHelper * NW004_data_struct_ETH_SPI::getLabelString(uint32_t k
     case NW004_KEY_ETH_PIN_CS: return displayString ? F("Ethernet CS pin") : F("CS");
     case NW004_KEY_ETH_PIN_IRQ: return displayString ? F("Ethernet IRQ pin") : F("IRQ");
     case NW004_KEY_ETH_PIN_RST: return displayString ? F("Ethernet RST pin") : F("RST");
+    case NW004_KEY_SPI_BUS: return displayString ? F("SPI Bus") : F("ethspibus");
     case NW004_KEY_IP:
       storageType = KVS_StorageType::Enum::string_type;
       return F("IP");
@@ -225,6 +229,15 @@ void NW004_data_struct_ETH_SPI::webform_load(EventStruct *event)
     addFormNote(F("I&sup2;C-address of Ethernet PHY"));
   }
   {
+    if ((getSPIBusCount() > 1) && (Settings.isSPI_valid(0u) || Settings.isSPI_valid(1u))) {
+      const int key        = NW004_KEY_SPI_BUS;
+      const uint8_t spiBus = _kvs->getValueAsInt(key);
+      KVS_StorageType::Enum storageType;
+      SPIInterfaceSelector(getLabelString(key, true, storageType),
+                           getLabelString(key, false, storageType),
+                           spiBus);
+    }
+
     const int gpio_keys[] = {
       NW004_KEY_ETH_PIN_CS,
       NW004_KEY_ETH_PIN_IRQ,
@@ -302,7 +315,7 @@ bool NW004_data_struct_ETH_SPI::write_Eth_port(KeyValueWriter *writer)
 
   int8_t spi_gpios[3]{};
 
-  if (!Settings.getSPI_pins(spi_gpios)) { return false; }
+  if (!Settings.getSPI_pins(spi_gpios), (uint8_t)_kvs->getValueAsInt(NW004_KEY_SPI_BUS)) { return false; }
   const __FlashStringHelper*labels[] = {
     F("CLK"), F("MISO"), F("MOSI"), F("CS"), F("IRQ"), F("RST") };
   const int pins[] = {
@@ -367,7 +380,7 @@ void NW004_data_struct_ETH_SPI::ethPrintSettings() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
 
-    if (log.reserve(115)) {
+    if (log.reserve(125)) {
 
       const ESPEasy::net::EthPhyType_t phyType = static_cast<ESPEasy::net::EthPhyType_t>(_kvs->getValueAsInt(NW004_KEY_ETH_PHY_TYPE));
 
@@ -375,7 +388,8 @@ void NW004_data_struct_ETH_SPI::ethPrintSettings() {
       log += toString(phyType);
       log += F(" PHY Addr: ");
       log += _kvs->getValueAsInt(NW004_KEY_ETH_PHY_ADDR);
-      log += strformat(F(" CS: %d IRQ: %d RST: %d"),
+      log += strformat(F(" SPI bus: %d CS: %d IRQ: %d RST: %d"),
+                       _kvs->getValueAsInt(NW004_KEY_SPI_BUS),
                        _kvs->getValueAsInt(NW004_KEY_ETH_PIN_CS),
                        _kvs->getValueAsInt(NW004_KEY_ETH_PIN_IRQ),
                        _kvs->getValueAsInt(NW004_KEY_ETH_PIN_RST));
@@ -421,13 +435,14 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
     const int rstPin   = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_RST);
     const int csPin    = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_CS);
     const int irqPin   = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_IRQ);
+    const int spi_bus  = _kvs->getValueAsInt(NW004_KEY_SPI_BUS);
 
 
-    spi_host_device_t SPI_host = Settings.getSPI_host();
+    spi_host_device_t SPI_host = Settings.getSPI_host(spi_bus);
 
     if (SPI_host == spi_host_device_t::SPI_HOST_MAX) {
       addLog(LOG_LEVEL_ERROR, F("SPI not enabled"));
-        # ifdef ESP32C3
+      # ifdef ESP32C3
 
       // FIXME TD-er: Fallback for ETH01-EVO board
       SPI_host              = spi_host_device_t::SPI2_HOST;
@@ -435,7 +450,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
       Settings.SPI_SCLK_pin = 7;
       Settings.SPI_MISO_pin = 3;
       Settings.SPI_MOSI_pin = 10;
-        # endif // ifdef ESP32C3
+      # endif // ifdef ESP32C3
     }
 
     // else
@@ -447,7 +462,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
         csPin,
         irqPin,
         rstPin,
-        SPI);
+        SPI_host);
 # else // if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(
         to_ESP_phy_type(phyType),

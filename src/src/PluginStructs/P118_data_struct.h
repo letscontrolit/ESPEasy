@@ -9,6 +9,8 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
+# include "../Globals/SPIe.h"
+
 # define P118_DEBUG_LOG          // Enable for some (extra) logging
 # ifndef P118_FEATURE_ORCON
 #  define P118_FEATURE_ORCON   1 // Enable use of Orcon commands
@@ -60,10 +62,11 @@ struct PLUGIN_118_ExtraSettingsStruct {
 struct P118_data_struct : public PluginTaskData_base {
 public:
 
-  P118_data_struct(int8_t csPin,
-                   int8_t irqPin,
-                   bool   logData,
-                   bool   rfLog);
+  P118_data_struct(int8_t  csPin,
+                   int8_t  irqPin,
+                   bool    logData,
+                   bool    rfLog,
+                   uint8_t spi_bus);
 
   P118_data_struct() = delete;
   virtual ~P118_data_struct();
@@ -104,10 +107,11 @@ private:
   int  _OldLastIDindex = 0;
   bool _InitRunned     = false;
 
-  int8_t _csPin  = -1;
-  int8_t _irqPin = -1;
-  bool   _log    = false;
-  bool   _rfLog  = false;
+  int8_t  _csPin  = -1;
+  int8_t  _irqPin = -1;
+  bool    _log    = false;
+  bool    _rfLog  = false;
+  uint8_t _spi_bus;
 
   PLUGIN_118_ExtraSettingsStruct _ExtraSettings;
 

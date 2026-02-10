@@ -319,12 +319,22 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
       }
     }
   }
-#ifdef ESP8266
 
+  #ifdef ESP32
+  if (includeSPI) {
+    if (Settings.isSPI_pin(gpio, 0u)) {
+      return F("SPI (bus 0)");
+    }
+    else if (Settings.isSPI_pin(gpio, 1u)) {
+      return F("SPI (bus 1)");
+    }
+  }
+  #endif // ifdef ESP32
+  #ifdef ESP8266
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
-#endif // ifdef ESP8266
+  #endif // ifdef ESP8266
 
   if (includeStatusLed && (Settings.Pin_status_led == gpio) && (-1 != gpio)) {
     return F("Wifi Status LED");

@@ -366,20 +366,32 @@ public:
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
-  bool getSPI_pins(int8_t spi_gpios[3]) const;
+  bool getSPI_pins(int8_t  spi_gpios[3],
+                   uint8_t spi_bus = 0,
+                   bool    noCheck = false) const;
 
+  bool isSPI_enabled(uint8_t spi_bus) const;
   #ifdef ESP32
-  spi_host_device_t getSPI_host() const;
+  spi_host_device_t getSPI_host(uint8_t spi_bus = 0) const;
   #endif
 
   // Return true when pin is one of the SPI pins and SPI is enabled
-  bool isSPI_pin(int8_t pin) const;
+  bool isSPI_pin(int8_t  pin,
+                 uint8_t spi_bus = 0xFF) const;
 
   // Return true when SPI enabled and opt. user defined pins valid.
-  bool isSPI_valid() const;
+  bool isSPI_valid(uint8_t spi_bus) const;
 
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
+
+  uint8_t getSPIBusForTask(taskIndex_t TaskIndex) const;
+  void    setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus);
+
+  #if FEATURE_SD
+  uint8_t getSPIBusForSDCard() const;
+  void    setSPIBusForSDCard(uint8_t spi_bus);
+  #endif // if FEATURE_SD
 
   // Return true if I2C settings are correct
   bool isI2CEnabled(uint8_t i2cBus) const;
@@ -565,7 +577,11 @@ public:
   int8_t        I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t        I2C3_Multiplexer_Addr = -1;
   int8_t        I2C3_Multiplexer_ResetPin = -1;
-  uint32_t  OLD_TaskDeviceID[N_TASKS - 7] = {0};  //UNUSED: this can be reused
+  uint8_t       InitSPI1 = 0; // 0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
+  int8_t        SPI1_SCLK_pin = -1;
+  int8_t        SPI1_MISO_pin = -1;
+  int8_t        SPI1_MOSI_pin = -1;
+  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.
@@ -681,7 +697,7 @@ public:
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
   int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
-  uint8_t         I2C_Flags[N_TASKS] = {0};
+  uint8_t         I2C_SPI_bus_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
 

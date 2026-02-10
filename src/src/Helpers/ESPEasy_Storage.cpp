@@ -550,6 +550,17 @@ bool BuildFixes()
     }
   }
 
+  if (Settings.Build <= 21303) { // 2025-08-25
+    // Add second SPI bus
+    if ((Settings.SPI1_SCLK_pin == 0) &&
+        (Settings.SPI1_MISO_pin == 0) &&
+        (Settings.SPI1_MOSI_pin == 0) ){
+      Settings.SPI1_SCLK_pin = -1;
+      Settings.SPI1_MISO_pin = -1;
+      Settings.SPI1_MOSI_pin = -1;
+    }
+  }
+
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
   // This value will also be shown when building using PlatformIO, when showing the  Compile time defines

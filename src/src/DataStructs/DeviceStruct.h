@@ -47,6 +47,11 @@
 // #define I2C_PERIPHERAL_BUS_???    9 // bit-offset for I2C bus used for the ???
 #endif // if FEATURE_I2C_MULTIPLE
 
+// Stored in Settings.I2C_SPI_bus_Flags !!!
+#define SPI_FLAGS_TASK_BUS_NUMBER           0 // 2 bit, stores the configured bus for a task
+// Stored in Settings.I2C_SPI_bus_Flags for Task 1 settings
+// #define SPI_FLAGS_xxx_unused            2 // 2 bit, available
+#define SPI_FLAGS_SDCARD_BUS_NUMBER         4 // 2 bit, stores the configured bus for the SDCard
 
 /*********************************************************************************************\
 * DeviceStruct
@@ -118,7 +123,7 @@ struct DeviceStruct
       uint32_t MqttStateClass     : 1;       // MQTT StateClass setting in DevicesPage
       uint32_t HideDerivedValues  : 1;       // Hide the options for derived values
       uint32_t NoDeviceSettings   : 1;       // Indicating the device is not referencing actual hardware, like the Dummy task
-      uint32_t Dummy25            : 1;       // Dummy added to force alignment, can be re-used
+      uint32_t SpiBusSelect       : 1;       // Allow selection of the SPI bus, if multiple buses are configured
       uint32_t Dummy26            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy27            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy28            : 1;       // Dummy added to force alignment, can be re-used

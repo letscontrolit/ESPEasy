@@ -20,6 +20,7 @@
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
+#include "../Helpers/Hardware_SPI.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
@@ -35,8 +36,6 @@
   # include <WiFi.h>
 #endif // if defined(ESP32)
 
-// #include "../../ESPEasy-Globals.h"
-
 #ifdef ESP32
   # include <soc/soc.h>
   # include <soc/efuse_reg.h>
@@ -44,45 +43,14 @@
   # include <soc/spi_reg.h>
   # include <soc/rtc.h>
 
-  # if ESP_IDF_VERSION_MAJOR == 4
-    #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
-      #   include <esp32s3/rom/spi_flash.h>
-      #   include <esp32s3/spiram.h>
-      #   include <esp32s3/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
-      #   include <esp32s2/rom/spi_flash.h>
-      #   include <esp32s2/spiram.h>
-      #   include <esp32s2/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
-      #   include <esp32c3/rom/spi_flash.h>
-      #   include <esp32c3/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-      #   include <esp32/rom/spi_flash.h>
-      #   include <esp32/rom/rtc.h>
-      #   include <esp32/spiram.h>
-    #  else // if CONFIG_IDF_TARGET_ESP32S3
-      #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif // if CONFIG_IDF_TARGET_ESP32S3
-  # else // ESP32 IDF 5.x and later
-    #  include <rom/spi_flash.h>
-    #  include <rom/rtc.h>
-    #  include <bootloader_common.h>
-  # endif // if ESP_IDF_VERSION_MAJOR == 4
+  // ESP32 IDF 5.x and later
+  # include <rom/spi_flash.h>
+  # include <rom/rtc.h>
+  # include <bootloader_common.h>
 
-#if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-  #  if ESP_IDF_VERSION_MAJOR < 5
-  #   define HAS_HALL_EFFECT_SENSOR  1
-  #  else // if ESP_IDF_VERSION_MAJOR < 5
+  // Support for Hall Effect sensor was removed in ESP_IDF 5.x
+  # define HAS_HALL_EFFECT_SENSOR  0
 
-// Support for Hall Effect sensor was removed in ESP_IDF 5.x
-  #   define HAS_HALL_EFFECT_SENSOR  0
-  #  endif // if ESP_IDF_VERSION_MAJOR < 5
-# else 
-  #  define HAS_HALL_EFFECT_SENSOR  0
-# endif
-
-
-# if ESP_IDF_VERSION_MAJOR >= 5
 
 #  include <esp_chip_info.h>
 #  include <soc/soc.h>
@@ -91,26 +59,10 @@
 
 // #include <hal/ledc_hal.h>
 
-# endif // if ESP_IDF_VERSION_MAJOR >= 5
-
 # include "../Helpers/Hardware_ADC_cali.h"
-
-#if FEATURE_ETHERNET
-#include <ETH.h>
-#endif
 
 #endif // ifdef ESP32
 
-
-#if FEATURE_SD
-# include <SD.h>
-#endif // if FEATURE_SD
-
-
-#include <SPI.h>
-
-
-# define GPIO_PLUGIN_ID  1
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -206,6 +158,7 @@ void hardwareInit()
     }
   }
 
+  // Initialize I2C buses
   initI2C();
 
   #if FEATURE_PLUGIN_PRIORITY
@@ -213,77 +166,9 @@ void hardwareInit()
   PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
   #endif // if FEATURE_PLUGIN_PRIORITY
 
-  bool tryInitSPI = true;
-#if FEATURE_ETHERNET
-// FIXME TD-er: Is this still needed?
-  if ((Settings.NetworkMedium == ESPEasy::net::NetworkMedium_t::Ethernet) &&
-      isValid(Settings.ETH_Phy_Type) && 
-      ESPEasy::net::isSPI_EthernetType(Settings.ETH_Phy_Type)) 
-  {
-#if !ETH_SPI_SUPPORTS_CUSTOM
-      tryInitSPI = false;
-#endif
-  }
-#endif
-
-
-  // SPI Init
-  bool SPI_initialized = false;
-  if (tryInitSPI && Settings.isSPI_valid())
-  {
-    SPI.setHwCs(false);
-
-    // MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
-    #ifdef ESP32
-
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(Settings.InitSPI);
-    int8_t spi_gpios[3]               = {};
-
-    if (Settings.getSPI_pins(spi_gpios)) {
-      if (SPI_selection == SPI_Options_e::Vspi_Fspi) {
-        SPI.begin(); // Default SPI bus
-      } else {
-        SPI.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]);
-      }
-      SPI_initialized = true;
-    }
-    #else // ifdef ESP32
-    SPI.begin();
-    SPI_initialized = true;
-    #endif // ifdef ESP32
-  }
-
-  if (SPI_initialized)
-  {
-#ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, F("INIT : SPI Init (without CS)"));
-#endif
-    #if FEATURE_SD
-
-    if (Settings.Pin_sd_cs >= 0)
-    {
-      if (SD.begin(Settings.Pin_sd_cs))
-      {
-#ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_INFO, F("SD   : Init OK"));
-#endif
-      }
-      else
-      {
-        SD.end();
-#ifndef BUILD_NO_DEBUG
-        addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
-#endif
-      }
-    }
-#endif // if FEATURE_SD
-#ifndef BUILD_NO_DEBUG
-  } else {
-    addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
-#endif
-  }
+  // Initialize SPI buses, also initializes SD-card when available in build and configured
+  initializeSPIBuses();
 }
-
 
 void checkResetFactoryPin() {
   static uint8_t factoryResetCounter = 0;

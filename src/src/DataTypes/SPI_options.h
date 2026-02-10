@@ -2,6 +2,7 @@
 #define DATATYPES_SPI_OPTIONS_H
 
 #include "../../ESPEasy_common.h"
+#include "../Helpers/StringConverter.h"
 
 
 // ESP32 classic has default pins for HSPI.
@@ -78,7 +79,7 @@ enum class SPI_Options_e {
 
 #ifdef ESP32
 const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option);
-const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option);
+const String getSPI_optionToShortString(SPI_Options_e option, uint8_t spi_bus = 0);
 #endif // ifdef ESP32
 
 #endif // ifndef DATATYPES_SPI_OPTIONS_H

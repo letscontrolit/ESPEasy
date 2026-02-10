@@ -117,6 +117,18 @@ constexpr uint8_t          getI2CBusCount() {
 #endif
 }
 
+constexpr uint8_t getSPIBusCount() {
+#if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
+  return 2u;
+#elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C5) || defined(ESP32C6) || defined(ESP32C61) || defined(ESP32H2)
+  return 1u;
+#elif defined(ESP8266)
+  return 1u;
+#else // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
+  static_assert(false, "Implement processor architecture");
+#endif // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
+}
+
 /********************************************************************************************\
    PSRAM support
  \*********************************************************************************************/

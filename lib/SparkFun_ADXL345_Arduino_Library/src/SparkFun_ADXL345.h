@@ -21,6 +21,8 @@
 #ifndef ADXL345_h
 # define ADXL345_h
 
+# include <SPI.h>
+
 /*************************** REGISTER MAP ***************************/
 # define ADXL345_DEVID                   0x00         // Device ID
 # define ADXL345_RESERVED1               0x01         // Reserved. Do Not Access.
@@ -115,7 +117,8 @@ public:
   double gains[3]; // Counts to Gs
 
   ADXL345(uint8_t i2c_addr);
-  ADXL345(int CS);
+  ADXL345(int       CS,
+          SPIClass& spi = SPI);
   void powerOn();
   void powerOff();
   int  getDevID();
@@ -266,6 +269,7 @@ private:
   bool I2C              = true;
   unsigned long SPIfreq = 5000000;
   uint8_t _i2c_addr;
+  SPIClass& _spi = SPI;
 };
 void print_byte(byte val);
 #endif // ifndef ADXL345_h

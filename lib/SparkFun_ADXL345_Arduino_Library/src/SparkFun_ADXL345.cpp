@@ -22,7 +22,6 @@
 #include "Arduino.h"
 #include "SparkFun_ADXL345.h"
 #include <Wire.h>
-#include <SPI.h>
 
 #define ADXL345_DEVICE_DEFAULT (0x53) // Device Address for ADXL345
 #define ADXL345_DEVICE (_i2c_addr)    // Device Address for ADXL345
@@ -38,7 +37,7 @@ ADXL345::ADXL345(uint8_t i2c_addr = ADXL345_DEVICE_DEFAULT) : _i2c_addr(i2c_addr
   I2C      = true;
 }
 
-ADXL345::ADXL345(int CS) {
+ADXL345::ADXL345(int CS, SPIClass& spi) {
   status     = ADXL345_OK;
   error_code = ADXL345_NO_ERROR;
 
@@ -47,9 +46,12 @@ ADXL345::ADXL345(int CS) {
   gains[2] = 0.00349265;
   _CS      = CS;
   I2C      = false;
-  // tonhuisman: disabled as SPI is already initialized in ESPEasy core.
+
+  // 2021-12-13 tonhuisman: disabled as SPI is already initialized in ESPEasy core.
   // SPI.begin();
   // SPI.setDataMode(SPI_MODE3);
+  // 2025-08-13 tonhuisman: provide external SPI bus
+  _spi = spi;
   pinMode(_CS, OUTPUT);
   digitalWrite(_CS, HIGH);
 }
@@ -168,8 +170,8 @@ void ADXL345::readFromI2C(byte address, int num, byte _buff[]) {
 /*         Point to Destination; Write Value; Turn Off              */
 void ADXL345::writeToSPI(byte __reg_address, byte __val) {
   digitalWrite(_CS, LOW);
-  SPI.transfer(__reg_address);
-  SPI.transfer(__val);
+  _spi.transfer(__reg_address);
+  _spi.transfer(__val);
   digitalWrite(_CS, HIGH);
 }
 
@@ -185,10 +187,10 @@ void ADXL345::readFromSPI(byte __reg_address, int num, byte _buff[]) {
   }
 
   digitalWrite(_CS, LOW);
-  SPI.transfer(_address); // Transfer Starting Reg Address To Be Read
+  _spi.transfer(_address); // Transfer Starting Reg Address To Be Read
 
   for (int i = 0; i < num; i++) {
-    _buff[i] = SPI.transfer(0x00);
+    _buff[i] = _spi.transfer(0x00);
   }
   digitalWrite(_CS, HIGH);
 }

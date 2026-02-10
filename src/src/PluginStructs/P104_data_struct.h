@@ -16,6 +16,8 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 
+#include "../Globals/SPIe.h"
+
 # include <vector>
 
 // # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || ((defined(PLUGIN_DISPLAY_A_COLLECTION) ||

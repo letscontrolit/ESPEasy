@@ -99,7 +99,8 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill
+                                   bool                textBackFill,
+                                   uint8_t spi_bus
                                    # if                ADAGFX_FONTS_INCLUDED
                                    ,
                                    const uint8_t       defaultFontId
@@ -108,7 +109,7 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
   : _displayType(displayType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
   _backlightPin(backlightPin), _backlightPercentage(backlightPercentage), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _textBackFill(textBackFill)
+  _textBackFill(textBackFill), _spi_bus(spi_bus)
   # if ADAGFX_FONTS_INCLUDED
   , _defaultFontId(defaultFontId)
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -165,7 +166,18 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     } else
     # endif // if P095_ENABLE_ILI948X
     {
+      # ifdef ESP32 // PIN(0) and PIN(1) swapped!
+      tft = new (std::nothrow) Adafruit_ILI9341(0 == _spi_bus ? &SPI : &SPIe,
+                                                PIN(1),
+                                                PIN(0),
+                                                PIN(2),
+                                                static_cast<uint8_t>(_displayType),
+                                                _xpix,
+                                                _ypix);
+      # endif // ifdef ESP32
+      # ifdef ESP8266
       tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+      # endif // ifdef ESP8266
 
       if (nullptr != tft) {
         tft->begin();

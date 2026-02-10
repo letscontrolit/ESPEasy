@@ -229,7 +229,7 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
   const uint8_t i2cBus = 0;
   #endif // if FEATURE_I2C_MULTIPLE
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+  if (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(i2cBus);  // Set to slow, also switch the bus
   } else {
     I2CSelectHighClockSpeed(i2cBus); // Set to normal, also switch the bus

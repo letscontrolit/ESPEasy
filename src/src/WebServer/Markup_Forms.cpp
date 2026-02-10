@@ -465,6 +465,11 @@ void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __Fla
   addPinSelect(purpose, id, choice);
 }
 
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice) {
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);

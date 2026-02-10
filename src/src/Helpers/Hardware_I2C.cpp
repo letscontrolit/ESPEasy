@@ -263,7 +263,7 @@ void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
   const uint8_t i2cBus = 0;
   # endif // if FEATURE_I2C_MULTIPLE
 
-  if (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
+  if (!bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
     uint8_t i = Settings.I2C_Multiplexer_Channel[taskIndex];
 
     if (i > 7) { return; }
@@ -322,8 +322,8 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
   # endif // if FEATURE_I2C_MULTIPLE
 
   if (!isI2CMultiplexerEnabled(i2cBus)) { return false; }
-  return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
-         || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
+  return (!bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
+         || (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 
 #endif // if FEATURE_I2CMULTIPLEXER

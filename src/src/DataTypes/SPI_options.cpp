@@ -84,7 +84,7 @@ const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option) {
   return F("Unknown");
 }
 
-const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option) {
+const String getSPI_optionToShortString(SPI_Options_e option, uint8_t spi_bus) {
   switch (option) {
     case SPI_Options_e::None:
       return F("Disabled");
@@ -95,7 +95,12 @@ const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option) {
       return F("HSPI");
 #endif
     case SPI_Options_e::UserDefined:
+      #ifdef ESP32
+      return concat(F("User-defined SPI Bus "), spi_bus);
+      #endif // ifdef ESP32
+      #ifdef ESP8266
       return F("User-defined SPI");
+      #endif // ifdef ESP8266
   }
   return F("Unknown");
 }

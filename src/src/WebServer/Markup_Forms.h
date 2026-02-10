@@ -271,6 +271,7 @@ void addFormPinSelect(const __FlashStringHelper * label,
                       int           choice);
 */
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice);
 
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
 

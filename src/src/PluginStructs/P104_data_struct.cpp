@@ -33,8 +33,14 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    uint8_t                  _modules,
                                    uint8_t                  _zonesCount)
   : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modules), expectedZones(_zonesCount) {
-  if (Settings.isSPI_valid()) {
-    P = new (std::nothrow) MD_Parola(mod, cs_pin, modules);
+  const uint8_t spi_bus = Settings.getSPIBusForTask(taskIndex);
+
+  if (Settings.isSPI_valid(spi_bus)) {
+    P = new (std::nothrow) MD_Parola(mod,
+                                     # ifdef ESP32
+                                     0 == spi_bus ? SPI : SPIe,
+                                     # endif // ifdef ESP32
+                                     cs_pin, modules);
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
   }

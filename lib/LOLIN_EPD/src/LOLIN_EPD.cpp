@@ -16,7 +16,7 @@
 #include "Adafruit_GFX.h"
 #include "LOLIN_EPD.h"
 
-LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t spi_mosi, int8_t spi_clock, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY):Adafruit_GFX(width, height)
+LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t spi_mosi, int8_t spi_clock, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi):Adafruit_GFX(width, height)
 {
   cs = CS;
   rst = RST;
@@ -26,9 +26,10 @@ LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t spi_mosi, int8_t spi_clock, i
   busy = BUSY;
   hwSPI = false;
   singleByteTxns = false;
+  _spi = spi;
 }
 
-LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY):Adafruit_GFX(width, height)
+LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi):Adafruit_GFX(width, height)
 {
 
   dc = DC;
@@ -37,6 +38,7 @@ LOLIN_EPD::LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, in
   busy = BUSY;
   hwSPI = true;
   singleByteTxns = false;
+  _spi = spi;
 }
 
 /**************************************************************************/
@@ -90,9 +92,9 @@ void LOLIN_EPD::begin(bool reset)
   }
   else
   {
-    SPI.begin();
+    // _spi.begin(); // Already done by ESPEasy
 #ifndef SPI_HAS_TRANSACTION
-    SPI.setClockDivider(4);
+    _spi.setClockDivider(4);
 #endif
   }
 
@@ -194,12 +196,12 @@ uint8_t LOLIN_EPD::fastSPIwrite(uint8_t d)
     {
       uint8_t b;
       csLow();
-      b = SPI.transfer(d);
+      b = _spi.transfer(d);
       csHigh();
       return b;
     }
     else
-      return SPI.transfer(d);
+      return _spi.transfer(d);
   }
   else
   {
@@ -234,7 +236,7 @@ uint8_t LOLIN_EPD::fastSPIwrite(uint8_t d)
 void LOLIN_EPD::csHigh()
 {
 #ifdef SPI_HAS_TRANSACTION
-  SPI.endTransaction();
+  _spi.endTransaction();
 #endif
 #ifdef HAVE_PORTREG
   *csport |= cspinmask;
@@ -251,7 +253,7 @@ void LOLIN_EPD::csHigh()
 void LOLIN_EPD::csLow()
 {
 #ifdef SPI_HAS_TRANSACTION
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  _spi.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #endif
 #ifdef HAVE_PORTREG
   *csport &= ~cspinmask;

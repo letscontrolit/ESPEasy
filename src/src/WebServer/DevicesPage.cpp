@@ -31,6 +31,7 @@
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/I2C_Plugin_Helper.h"
+# include "../Helpers/SPI_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
 
@@ -161,7 +162,7 @@ void handle_devices() {
         const DeviceStruct& device = Device[DeviceIndex];
 
         if ((device.Type == DEVICE_TYPE_I2C) && device.I2CMax100kHz) {      // 100 kHz-only I2C device?
-          bitWrite(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
+          bitWrite(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
         }
       }
     }
@@ -281,6 +282,12 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
 
+  #ifdef ESP32
+  if (device.isSPI()) {
+    Settings.setSPIBusForTask(taskIndex, getFormItemInt(F("pspibus"), 0));
+  }
+  #endif // ifdef ESP32
+
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;
     bitWrite(flags, I2C_FLAGS_SLOW_SPEED, isFormItemChecked(F("taskdeviceflags0")));
@@ -322,7 +329,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
 # endif // if FEATURE_I2CMULTIPLEXER
 
-    Settings.I2C_Flags[taskIndex] = flags;
+    Settings.I2C_SPI_bus_Flags[taskIndex] = flags;
   }
 
   // Must load from file system to make sure all caches and checksums match.
@@ -646,7 +653,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             if (device.Type == DEVICE_TYPE_I2C) {
               format_I2C_port_description(x);
             } else if (device.isSPI()) {
-              format_SPI_port_description(spi_gpios);
+              format_SPI_port_description(spi_gpios, Settings.getSPIBusForTask(x));
             } else if (device.isSerial()) {
                 # ifdef PLUGIN_USES_SERIAL
               addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
@@ -999,7 +1006,7 @@ void format_I2C_port_description(taskIndex_t x)
   if (isI2CMultiplexerEnabled(i2cBus) && I2CMultiplexerPortSelectedForTask(x)) {
     String mux;
 
-    if (bitRead(Settings.I2C_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) { // Multi-channel
+    if (bitRead(Settings.I2C_SPI_bus_Flags[x], I2C_FLAGS_MUX_MULTICHANNEL)) { // Multi-channel
       mux = F("<BR>Multiplexer channel(s)");
       uint8_t b = 0;                                                  // For adding lineBreaks
 
@@ -1018,14 +1025,14 @@ void format_I2C_port_description(taskIndex_t x)
   # endif // if FEATURE_I2CMULTIPLEXER
 }
 
-void format_SPI_port_description(int8_t spi_gpios[3])
+void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus)
 {
-  if (!Settings.getSPI_pins(spi_gpios)) {
+  if (!Settings.getSPI_pins(spi_gpios, spi_bus)) {
     addHtml(F("SPI (Not enabled)"));
     return;
   }
   # ifdef ESP32
-  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(Settings.InitSPI)));
+  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(0 == spi_bus ? Settings.InitSPI : Settings.InitSPI1), spi_bus));
   # endif // ifdef ESP32
   # ifdef ESP8266
   addHtml(F("SPI"));
@@ -1049,7 +1056,8 @@ void format_I2C_pin_description(taskIndex_t x)
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin)
 {
-  if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
+  const uint8_t spi_bus = Settings.getSPIBusForTask(x);
+  if ((0 == spi_bus ? Settings.InitSPI : Settings.InitSPI1) > static_cast<int>(SPI_Options_e::None)) {
     const __FlashStringHelper*labels[] = { F("CLK"), F("MISO"), F("MOSI") };
 
     for (size_t i = 0; i < NR_ELEMENTS(labels); ++i) {
@@ -1321,9 +1329,8 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     addFormNote(F("Will go into effect on next input change."));
   }
 
-  if (device.isSPI()
-      && (Settings.InitSPI == static_cast<int>(SPI_Options_e::None))) {
-    addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
+  if (device.isSPI()) {
+    devicePage_show_SPI_config(taskIndex, DeviceIndex);
   }
 
   if (device.connectedToGPIOpins()) {
@@ -1399,6 +1406,22 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
 # endif // ifdef PLUGIN_USES_SERIAL
 
+void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
+{
+  if (Device[DeviceIndex].isSPI()
+      && !(Settings.isSPI_valid(0u) || (getSPIBusCount() > 1 && Settings.isSPI_valid(1u)))) {
+    addFormNote(F("SPI Bus not configured yet (Hardware page)."));
+  }
+  #ifdef ESP32
+  if (Device[DeviceIndex].SpiBusSelect && getSPIBusCount() > 1 && (Settings.isSPI_valid(0u) || Settings.isSPI_valid(1u))) {
+    uint8_t spiBus = Settings.getSPIBusForTask(taskIndex);
+    SPIInterfaceSelector(F("SPI Bus"),
+                        F("pspibus"),
+                        spiBus);
+  }
+  #endif // ifdef ESP32
+}
+
 void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1419,7 +1442,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   String dummy;
 
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
-  addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
+  addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
 
   if (Device[DeviceIndex].I2CMax100kHz) {
     addFormNote(F("This device is specified for max. 100 kHz operation!"));
@@ -1442,7 +1465,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
   // Show selector for an I2C multiplexer port if a multiplexer is configured
   if (isI2CMultiplexerEnabled(i2cBus)) {
-    bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
+    bool multipleMuxPorts = bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
       const __FlashStringHelper *i2c_mux_channels[] = {
         F("Single channel"),
