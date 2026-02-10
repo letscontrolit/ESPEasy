@@ -37,7 +37,7 @@ void format_originating_node(uint8_t remoteUnit);
 #endif
 void format_I2C_port_description(taskIndex_t x);
 
-void format_SPI_port_description(int8_t spi_gpios[3]);
+void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus);
 
 void format_I2C_pin_description(taskIndex_t x);
 
@@ -55,6 +55,8 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 #ifdef PLUGIN_USES_SERIAL
 void devicePage_show_serial_config(taskIndex_t taskIndex);
 #endif
+
+void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 

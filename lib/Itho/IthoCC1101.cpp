@@ -42,7 +42,7 @@
 #define MDMCFG2 0x02 // 16bit sync word / 16bit specific
 
 // default constructor
-IthoCC1101::IthoCC1101(int8_t CSpin, int8_t MISOpin, uint8_t counter, uint8_t sendTries) : CC1101(CSpin, MISOpin)
+IthoCC1101::IthoCC1101(int8_t CSpin, int8_t MISOpin, SPIClass& spi, uint8_t counter, uint8_t sendTries) : CC1101(CSpin, MISOpin, spi)
 {
   this->outIthoPacket.counter = counter;
   this->sendTries             = sendTries;

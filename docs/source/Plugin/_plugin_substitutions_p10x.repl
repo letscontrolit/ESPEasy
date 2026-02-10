@@ -73,6 +73,7 @@
 .. |P104-Font-Arabic_typename| replace:: `Arabic font characters`
 .. |P104-Font-Greek_typename| replace:: `Greek font characters`
 .. |P104-Font-Katakana_typename| replace:: `Katakana font characters`
+.. |P104-Font-Cyrillic-ext_typename| replace:: `Cyrillic ext. font characters`
 
 
 .. |P105_name| replace:: :cyan:`AHT1x/AHT2x/DHT20/AM2301B`

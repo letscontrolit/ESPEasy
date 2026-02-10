@@ -32,9 +32,11 @@
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P116_Nlines           24           // The number of different lines which can be displayed
+# include "../Globals/SPIe.h"
+
+# define P116_Nlines           24 // The number of different lines which can be displayed
 # define P116_Nchars           60
-# define P116_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
+# define P116_DebounceTreshold  5 // number of 20 msec (fifty per second) ticks before the button has settled
 
 // # define P116_SHOW_SPLASH                               // Enable to show splash (text)
 
@@ -137,10 +139,11 @@ public:
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true
+                   bool                textBackFill = true,
+                   uint8_t             spi_bus      = 0
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t       defaultFontId = 0
+                   const uint8_t defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
   P116_data_struct() = delete;
@@ -197,6 +200,7 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   bool                _textBackFill;
+  uint8_t             _spi_bus;
   # if ADAGFX_FONTS_INCLUDED
   uint8_t _defaultFontId;
   # endif // if ADAGFX_FONTS_INCLUDED

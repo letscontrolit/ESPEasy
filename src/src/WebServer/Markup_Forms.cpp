@@ -8,6 +8,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -460,6 +461,11 @@ void addFormSeparatorCharInput(const __FlashStringHelper *rowLabel,
 // ********************************************************************************
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice)
 {
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice) {
   addRowLabel_tr_id(label, id);
   addPinSelect(purpose, id, choice);
 }

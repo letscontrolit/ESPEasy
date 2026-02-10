@@ -632,7 +632,7 @@ void handle_json()
 # endif
                   int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
 
-                  if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
+                  if (bitRead(Settings.I2C_SPI_bus_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
 
                     KeyValueStruct kv(F("I2CBus"));
 

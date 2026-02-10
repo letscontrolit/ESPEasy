@@ -9,18 +9,23 @@
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
-P162_data_struct::P162_data_struct(int8_t csPin,
-                                   int8_t rstPin,
-                                   int8_t shdPin)
-  : _csPin(csPin), _rstPin(rstPin), _shdPin(shdPin)
-{}
+P162_data_struct::P162_data_struct(int8_t  csPin,
+                                   int8_t  rstPin,
+                                   int8_t  shdPin,
+                                   uint8_t spi_bus)
+  : _csPin(csPin), _rstPin(rstPin), _shdPin(shdPin), _spi_bus(spi_bus)
+{
+  # ifdef ESP32
+  _spi = 0 == _spi_bus ? SPI : SPIe;
+  # endif // ifdef ESP32
+}
 
 P162_data_struct::~P162_data_struct() {
   //
 }
 
 bool P162_data_struct::plugin_init(struct EventStruct *event) {
-  if (validGpio(_csPin) && Settings.isSPI_valid()) {
+  if (validGpio(_csPin) && Settings.isSPI_valid(_spi_bus)) {
     pinMode(_csPin, OUTPUT);
     _initialized = true;
   }
@@ -168,8 +173,8 @@ void P162_data_struct::write_pot(uint8_t cmd,
   digitalWrite(_csPin, LOW);
 
   // send the command and value via SPI:
-  SPI.transfer(cmd);
-  SPI.transfer(val);
+  _spi.transfer(cmd);
+  _spi.transfer(val);
 
   // Set the CS pin high to execute the command:
   digitalWrite(_csPin, HIGH);

@@ -11,10 +11,11 @@
 
 # include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(int8_t csPin,
-                                   int8_t rstPin,
-                                   int8_t irqPin)
-  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin)
+P111_data_struct::P111_data_struct(int8_t  csPin,
+                                   int8_t  rstPin,
+                                   int8_t  irqPin,
+                                   uint8_t spi_bus)
+  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin), _spi_bus(spi_bus)
 {}
 
 P111_data_struct::~P111_data_struct() {
@@ -29,7 +30,12 @@ P111_data_struct::~P111_data_struct() {
 void P111_data_struct::init() {
   delete mfrc522;
 
-  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin);        // Instantiate a MFRC522
+  // Instantiate a MFRC522
+  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin
+                                       # ifdef ESP32
+                                       , 0 == _spi_bus ? SPI : SPIe
+                                       # endif // ifdef ESP32
+                                       );
 
   if (mfrc522 != nullptr) {
     mfrc522->PCD_Init();                                        // Initialize MFRC522 reader
@@ -251,7 +257,10 @@ uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid,
   return P111_NO_ERROR;
 }
 
-void P111_data_struct::mfrc522_interrupt(P111_data_struct *self)        { self->_irq_pin_time_micros = getMicros64(); }
+void P111_data_struct::mfrc522_interrupt(P111_data_struct *self)
+{
+  self->_irq_pin_time_micros = getMicros64();
+}
 
 /*********************************************************************************************
  * Handle regular read and reset processing

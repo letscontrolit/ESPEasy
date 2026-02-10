@@ -3541,15 +3541,6 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if FEATURE_MQTT_TLS || FEATURE_EMAIL_TLS || FEATURE_HTTP_TLS
-  #if defined(FEATURE_TLS) && !FEATURE_TLS
-    #undef FEATURE_TLS
-  #endif
-  #ifndef FEATURE_TLS
-    #define FEATURE_TLS 1
-  #endif
-#endif
-
 
 #if !defined(FEATURE_MQTT_DISCOVER) && FEATURE_MQTT
   #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266) // Must enable this explicitly for ESP8266 Custom build
@@ -3933,6 +3924,16 @@ To create/register a plugin, you have to :
     #define FEATURE_HTTP_TLS 0
   #endif
 #endif // ifndef FEATURE_HTTP_TLS
+
+#if FEATURE_MQTT_TLS || FEATURE_EMAIL_TLS || FEATURE_HTTP_TLS
+  #if defined(FEATURE_TLS) && !FEATURE_TLS
+    #undef FEATURE_TLS
+  #endif
+  #ifndef FEATURE_TLS
+    #define FEATURE_TLS 1
+  #endif
+#endif
+
 
 #ifndef FEATURE_AUTO_DARK_MODE
   #ifdef LIMIT_BUILD_SIZE

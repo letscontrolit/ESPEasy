@@ -6,6 +6,8 @@
 
 # include <MFRC522.h>
 
+# include "../Globals/SPIe.h"
+
 # define P111_CS_PIN            PIN(0)
 # define P111_RST_PIN           PIN(1)
 # define P111_IRQ_PIN           PIN(2)
@@ -28,18 +30,20 @@ enum class P111_initPhases : uint8_t {
   ResetDelay1 = 0x01,
   ResetDelay2 = 0x02,
   Undefined   = 0xFF
+
 };
 
 struct P111_data_struct : public PluginTaskData_base {
-  P111_data_struct(int8_t csPin,
-                   int8_t rstPin,
-                   int8_t irqPin);
+  P111_data_struct(int8_t  csPin,
+                   int8_t  rstPin,
+                   int8_t  irqPin,
+                   uint8_t spi_bus);
   P111_data_struct() = delete;
   virtual ~P111_data_struct();
 
-  void init();
-  bool plugin_ten_per_second(struct EventStruct *event);
-  bool plugin_fifty_per_second(struct EventStruct *event);
+  void   init();
+  bool   plugin_ten_per_second(struct EventStruct *event);
+  bool   plugin_fifty_per_second(struct EventStruct *event);
 
   String PCD_getVersion(uint8_t& v);
 
@@ -51,21 +55,22 @@ private:
 
   uint8_t counter = 0;
 
-  String  getCardName();
-  uint8_t readCardStatus(uint64_t *key,
-                         bool     *removedTag);
-  bool    reset(int8_t csPin,
-                int8_t resetPin);
-  uint8_t readPassiveTargetID(uint8_t *uid,
-                              uint8_t *uidLength);
+  String      getCardName();
+  uint8_t     readCardStatus(uint64_t *key,
+                             bool     *removedTag);
+  bool        reset(int8_t csPin,
+                    int8_t resetPin);
+  uint8_t     readPassiveTargetID(uint8_t *uid,
+                                  uint8_t *uidLength);
 
-  static void mfrc522_interrupt(P111_data_struct * self);
+  static void mfrc522_interrupt(P111_data_struct *self);
 
   int32_t timeToWait = 0;
 
-  int8_t _csPin;
-  int8_t _rstPin;
-  int8_t _irqPin;
+  int8_t  _csPin;
+  int8_t  _rstPin;
+  int8_t  _irqPin;
+  uint8_t _spi_bus;
 
   uint8_t         errorCount   = 0;
   bool            removedState = true; // On startup, there will usually not be a tag nearby
@@ -74,6 +79,7 @@ private:
   int64_t _last_served_irq_pin_time_micros{};
 
   ESPEASY_VOLATILE(int64_t) _irq_pin_time_micros = -1;
+
 };
 
 #endif // ifdef USES_P111

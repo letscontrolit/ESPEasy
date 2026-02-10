@@ -4,8 +4,10 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P095
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ILI9341.h>              // include Adafruit ILI9341 TFT library
+# include <Adafruit_GFX.h>     // include Adafruit graphics library
+# include <Adafruit_ILI9341.h> // include Adafruit ILI9341 TFT library
+
+# include "../Globals/SPIe.h"
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
@@ -137,10 +139,11 @@ public:
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true
+                   bool                textBackFill = true,
+                   uint8_t             spi_bus      = 0
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t       defaultFontId = 0
+                   const uint8_t defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
   P095_data_struct() = delete;
@@ -208,6 +211,7 @@ private:
   uint16_t            _fgcolor      = ADAGFX_WHITE;
   uint16_t            _bgcolor      = ADAGFX_BLACK;
   bool                _textBackFill = false;
+  uint8_t             _spi_bus;
   # if ADAGFX_FONTS_INCLUDED
   uint8_t _defaultFontId;
   # endif // if ADAGFX_FONTS_INCLUDED

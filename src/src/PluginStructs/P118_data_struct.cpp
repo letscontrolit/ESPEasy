@@ -5,11 +5,12 @@
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P118_data_struct::P118_data_struct(int8_t csPin,
-                                   int8_t irqPin,
-                                   bool   logData,
-                                   bool   rfLog)
-  : _csPin(csPin), _irqPin(irqPin), _log(logData), _rfLog(rfLog) {}
+P118_data_struct::P118_data_struct(int8_t  csPin,
+                                   int8_t  irqPin,
+                                   bool    logData,
+                                   bool    rfLog,
+                                   uint8_t spi_bus)
+  : _csPin(csPin), _irqPin(irqPin), _log(logData), _rfLog(rfLog), _spi_bus(spi_bus) {}
 
 // **************************************************************************/
 // Destructor
@@ -30,9 +31,13 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
   int8_t   spi_pins[3];
   uint32_t startInit = 0;
 
-  if (Settings.getSPI_pins(spi_pins) && validGpio(spi_pins[1])) {
+  if (Settings.getSPI_pins(spi_pins, _spi_bus) && validGpio(spi_pins[1])) {
     startInit = millis();
-    _rf       = new (std::nothrow) IthoCC1101(_csPin, spi_pins[1]); // Pass CS and MISO
+    _rf       = new (std::nothrow) IthoCC1101(_csPin, spi_pins[1]
+                                              # ifdef ESP32
+                                              , 0 == _spi_bus ? SPI : SPIe // defaults and SPI bus for ESP32 only
+                                              # endif // ifdef ESP32
+                                              );                           // Pass CS and MISO
   } else {
     addLog(LOG_LEVEL_ERROR, F("ITHO: SPI configuration not correct!"));
   }

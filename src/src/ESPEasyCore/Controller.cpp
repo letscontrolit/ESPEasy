@@ -34,6 +34,11 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/PortStatus.h"
 
+# if FEATURE_MQTT_TLS
+  #  include <WiFiClientSecureLightBearSSL.h>
+  #  include "../CustomBuild/Certificate_CA.h"
+# endif // if FEATURE_MQTT_TLS
+
 
 constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 

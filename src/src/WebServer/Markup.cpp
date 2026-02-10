@@ -12,6 +12,7 @@
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"

@@ -8,6 +8,7 @@
 /** Changelog:
  * 2025-09-12 TD-er:      Add support for 7-byte UID
  * 2025-08-20 TD-er:      Speed-up reading + send immediate event
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for RFID)
  *                        Update changelog
@@ -52,6 +53,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       dev.HasFormatUserVar = true;
       dev.SendDataOption   = true;
       dev.CustomVTypeVar   = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 
@@ -183,7 +185,8 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN, P111_IRQ_PIN));
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN, P111_IRQ_PIN, spi_bus));
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P111_data) {

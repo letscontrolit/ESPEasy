@@ -56,6 +56,7 @@ Welcome to ESP Easy's documentation!
    Controller/C*
    Notify/N*
    Plugin/P*
+   Network/NW*
    Rules/HTTPResponseParser.rst
 
 
